@@ -118,6 +118,12 @@ class BcmAclManager {
   // BcmTableManager instance.
   ::util::Status ClearAllAclTables();
 
+  // Split an ACL control block into per-BcmAclStage control blocks. These
+  // individual blocks represent IFP, VFP, and EFP control flows.
+  ::util::Status SplitAclControlBlocks(
+      const P4ControlBlock& control_block,
+      BcmAclStageMap<P4ControlBlock>* stage_blocks) const;
+
   // Generate the set of physical vectors described in a P4 control pipeline.
   ::util::StatusOr<std::vector<PhysicalAclTable>> PhysicalAclTablesFromPipeline(
       const P4ControlBlock& control_block) const;

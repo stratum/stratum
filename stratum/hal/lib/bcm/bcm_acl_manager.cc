@@ -395,6 +395,27 @@ std::unique_ptr<BcmAclManager> BcmAclManager::CreateInstance(
   return ::util::OkStatus();
 }
 
+::util::Status BcmAclManager::SplitAclControlBlocks(
+    const P4ControlBlock& control_block,
+    BcmAclStageMap<P4ControlBlock>* stage_blocks) const {
+  for (const auto& statement : control_block.statements()) {
+    // Find the table at the root of this statement.
+    P4ControlTableRef table_reference;
+    if (!GetStatementTableReference(statement, &table_reference)) {
+      VLOG(1) << "Ignoring statement due to non-table root: "
+              << statement.ShortDebugString() << ".";
+      continue;
+    }
+    // Find the ACL stage this statement applies to (VFP, IFP, EFP).
+    BcmAclStage stage =
+        AclTable::P4PipelineToBcmAclStage(table_reference.pipeline_stage());
+    if (stage != BCM_ACL_STAGE_UNKNOWN) {
+      *(*stage_blocks)[stage].add_statements() = statement;
+    }
+  }
+  return ::util::OkStatus();
+}
+
 ::util::StatusOr<std::vector<BcmAclManager::PhysicalAclTable>>
 BcmAclManager::PhysicalAclTablesFromPipeline(
     const P4ControlBlock& control_block) const {
