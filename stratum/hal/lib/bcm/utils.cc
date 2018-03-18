@@ -31,6 +31,10 @@ std::string PrintBcmPort(const BcmPort& p) {
                              p.speed_bps());
 }
 
+std::string PrintBcmPort(uint64 port_id, const BcmPort& p) {
+  return PrintBcmPort(p);
+}
+
 namespace {
 
 std::string PrintTriState(TriState state) {
