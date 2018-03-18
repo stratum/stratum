@@ -55,8 +55,10 @@ struct SdkTrunk {
   }
 };
 
-// Prints a BcmPort message in a consistent and readable format.
+// Prints a BcmPort message in a consistent and readable format. There are two
+// versions for this function, one taking port_id as well (if available).
 std::string PrintBcmPort(const BcmPort& p);
+std::string PrintBcmPort(uint64 port_id, const BcmPort& p);
 
 // Prints BcmPortOptions message in a consistent and readable format.
 std::string PrintBcmPortOptions(const BcmPortOptions& options);
