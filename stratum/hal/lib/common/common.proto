@@ -1,0 +1,53 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file include all the common internal messages used internally.
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal;
+
+import "p4/p4runtime.proto";
+
+// Mode of operation of the stack.
+enum OperationMode {
+  OPERATION_MODE_UNKNOWN = 0;
+  OPERATION_MODE_STANDALONE = 1;  // Standalone Hercules.
+  OPERATION_MODE_COUPLED = 2;     // Hercules running as part of Sandcastle.
+  OPERATION_MODE_SIM = 3;         // Hercules running in sim mode.
+}
+
+// Tri-state boolean for the case 'false' is not a default.
+enum TriState {
+  TRI_STATE_UNKNOWN = 0;
+  TRI_STATE_TRUE = 1;
+  TRI_STATE_FALSE = 2;
+}
+
+// Defines a physical port on the chassis, associated with physical hardware
+// such as a transceiver, chip serdes core, etc.
+message PhysicalPort {
+  int32 slot = 1;
+  int32 port = 2;
+}
+
+// This message encapsulates a list of ForwardingPipelineConfig protos for
+// one or more nodes as received from the controller. This message simplifies
+// serializing/deserializing ForwardingPipelineConfig protos for multiple nodes
+// into one single file.
+message ForwardingPipelineConfigs {
+  map<uint64, p4.ForwardingPipelineConfig> node_id_to_config = 1;
+}

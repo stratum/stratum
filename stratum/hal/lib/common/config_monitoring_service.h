@@ -1,0 +1,170 @@
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+#ifndef STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_
+#define STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_
+
+#include <grpcpp/grpcpp.h>
+
+#include <memory>
+
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/hal/lib/common/common.pb.h"
+#include "third_party/stratum/hal/lib/common/error_buffer.h"
+#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
+#include "third_party/stratum/hal/lib/common/switch_interface.h"
+#include "third_party/stratum/lib/security/auth_policy_checker.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/base/thread_annotations.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/sandblaze/gnmi/gnmi.grpc.pb.h"
+
+namespace stratum {
+namespace hal {
+
+using ServerSubscribeReaderWriter =
+    ::grpc::ServerReaderWriter<::gnmi::SubscribeResponse,
+                               ::gnmi::SubscribeRequest>;
+using ServerSubscribeReaderWriterInterface =
+    ::grpc::ServerReaderWriterInterface<::gnmi::SubscribeResponse,
+                                        ::gnmi::SubscribeRequest>;
+
+// The "ConfigMonitoringService" class implements ::gnmi::gNMI::Service. It
+// handles all the RPCs that are part of the gRPC Network Management Interface
+// (gNMI) which are in charge of configuration and monitoring/telemetry:
+// https://g3doc.corp.google.com/third_party/openconfig/reference/rpc/gnmi/README.md?cl=head
+class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
+ public:
+  ConfigMonitoringService(OperationMode mode, SwitchInterface* switch_interface,
+                          AuthPolicyChecker* auth_policy_checker,
+                          ErrorBuffer* error_buffer);
+  ~ConfigMonitoringService() override;
+
+  // Sets up the service in coldboot and warmboot mode. In the coldboot mode,
+  // the function initializes the class and pushes the saved chassis config to
+  // the switch. In the warmboot mode, it only restores the internal state of
+  // the class.
+  ::util::Status Setup(bool warmboot) LOCKS_EXCLUDED(config_lock_);
+
+  // Tears down the class. Called in both warmboot or coldboot mode. It will
+  // not alter any state on the hardware when called.
+  ::util::Status Teardown() LOCKS_EXCLUDED(config_lock_);
+
+  // Public helper function called in Setup().
+  ::util::Status PushSavedChassisConfig(bool warmboot)
+      LOCKS_EXCLUDED(config_lock_);
+
+  // Returns the set of capabilities that is supported by the switch.
+  ::grpc::Status Capabilities(::grpc::ServerContext* context,
+                              const ::gnmi::CapabilityRequest* req,
+                              ::gnmi::CapabilityResponse* resp) override
+      LOCKS_EXCLUDED(config_lock_);
+
+  // Modify the state/config on the switch. The paths to modify along with the
+  // new values that the client wishes to set the value to are given in the
+  // request.
+  ::grpc::Status Set(::grpc::ServerContext* context,
+                     const ::gnmi::SetRequest* req,
+                     ::gnmi::SetResponse* resp) override
+      LOCKS_EXCLUDED(config_lock_);
+
+  // Returns snapshots a subset of the config/state tree as specified by the
+  // paths included in the request.
+  ::grpc::Status Get(::grpc::ServerContext* context,
+                     const ::gnmi::GetRequest* req,
+                     ::gnmi::GetResponse* resp) override
+      LOCKS_EXCLUDED(config_lock_);
+
+  // Subscribe allows a client to request the switch to send it values
+  // of particular paths within the config/state tree. These values may be
+  // streamed at a particular cadence (STREAM), sent one off on a long-lived
+  // channel (POLL), or sent as a one-off retrieval (ONCE).
+  ::grpc::Status Subscribe(::grpc::ServerContext* context,
+                           ServerSubscribeReaderWriter* stream) override
+      LOCKS_EXCLUDED(config_lock_);
+
+  // ConfigMonitoringService is neither copyable nor movable.
+  ConfigMonitoringService(const ConfigMonitoringService&) = delete;
+  ConfigMonitoringService& operator=(const ConfigMonitoringService&) = delete;
+
+ private:
+  // A helper function that given the current running chassis config and a
+  // OpenConfig set request, generates a new modified version of chassis config
+  // to be pushed to the switch.
+  ::util::Status ConvertOpenConfigToChassisConfig(const ::gnmi::SetRequest& req,
+                                                  ChassisConfig* config) const
+      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
+
+  // The actual method that implements 'Subscribe' that allows a client to
+  // request the switch to send it values of particular paths within the
+  // config/state tree. These values may be streamed at a particular cadence
+  // (STREAM), sent one off on a long-lived channel (POLL), or sent as a one-off
+  // retrieval (ONCE). This is implemented this way to enable unit tests of the
+  // Subscribe method whose 'stream' parameter type is marked 'final' and
+  // therefore cannot be mocked.
+  ::grpc::Status DoSubscribe(GnmiPublisher* publisher,
+                             ::grpc::ServerContext* context,
+                             ServerSubscribeReaderWriterInterface* stream)
+      LOCKS_EXCLUDED(config_lock_);
+
+  // The actual method that implements 'Get' that allows a client to
+  // request the switch to send it values of particular paths within the
+  // config/state tree. These values are sent as a one-off
+  // retrieval. This is implemented this way to enable unit tests of the
+  // Get method.
+  ::grpc::Status DoGet(::grpc::ServerContext* context,
+                       const ::gnmi::GetRequest* req, ::gnmi::GetResponse* resp)
+      LOCKS_EXCLUDED(config_lock_);
+
+  // Mutex lock for protecting the internal chassis config pushed to the switch.
+  mutable absl::Mutex config_lock_;
+
+  // Hold the ChassisConfig which is currently running on the switch.
+  std::unique_ptr<ChassisConfig> running_chassis_config_
+      GUARDED_BY(config_lock_);
+
+  // Determines the mode of operation:
+  // - OPERATION_MODE_STANDALONE: when Hercules stack runs independently and
+  // therefore needs to do all the SDK initialization itself.
+  // - OPERATION_MODE_COUPLED: when Hercules stack runs as part of Sandcastle
+  // stack, coupled with the rest of stack processes.
+  // - OPERATION_MODE_SIM: when Hercules stack runs in simulation mode.
+  // Note that this variable is set upon initialization and is never changed
+  // afterwards.
+  OperationMode mode_;
+
+  // Pointer to SwitchInterface implementation, which encapsulates all the
+  // switch capabilities. Not owned by this class.
+  SwitchInterface* switch_interface_;
+
+  // Pointer to AuthPolicyChecker. Not owned by this class.
+  AuthPolicyChecker* auth_policy_checker_;
+
+  // Pointer to ErrorBuffer to save any critical errors we encounter. Not owned
+  // by this class.
+  ErrorBuffer* error_buffer_;
+
+  // An object handling gNMI Subscribe, Set and Get requests.
+  GnmiPublisher gnmi_publisher_;
+
+  friend class ConfigMonitoringServiceTest;
+};
+
+}  // namespace hal
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_

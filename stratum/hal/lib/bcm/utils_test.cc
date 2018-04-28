@@ -1,0 +1,115 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+#include "third_party/stratum/hal/lib/bcm/utils.h"
+
+#include "third_party/stratum/lib/constants.h"
+#include "testing/base/public/gunit.h"
+
+namespace stratum {
+namespace hal {
+namespace bcm {
+
+TEST(BcmUtilsTest, PrintBcmPortForEmptyBcmPortProto) {
+  BcmPort port;
+  EXPECT_EQ("(slot: 0, port: 0)", PrintBcmPort(port));
+}
+
+TEST(BcmUtilsTest, PrintBcmPortForNonEmptyBcmPortProto) {
+  BcmPort port;
+  port.set_slot(1);
+  EXPECT_EQ("(slot: 1, port: 0)", PrintBcmPort(port));
+
+  port.set_port(10);
+  EXPECT_EQ("(slot: 1, port: 10)", PrintBcmPort(port));
+
+  port.set_channel(3);
+  EXPECT_EQ("(slot: 1, port: 10, channel: 3)", PrintBcmPort(port));
+
+  port.set_speed_bps(kFiftyGigBps);
+  EXPECT_EQ("(slot: 1, port: 10, channel: 3, speed: 50G)",
+            PrintBcmPort(port));
+
+  port.set_logical_port(33);
+  EXPECT_EQ("(slot: 1, port: 10, channel: 3, speed: 50G)",
+            PrintBcmPort(port));
+
+  port.clear_channel();
+  EXPECT_EQ("(slot: 1, port: 10, speed: 50G)", PrintBcmPort(port));
+}
+
+TEST(BcmUtilsTest, PrintBcmPortForNonEmptyBcmPortProtoAndPortId) {
+  BcmPort port;
+  port.set_slot(1);
+  port.set_port(10);
+  port.set_channel(2);
+  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, channel: 2)",
+            PrintBcmPort(1234567, port));
+
+  port.set_speed_bps(kFiftyGigBps);
+  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, channel: 2, speed: 50G)",
+            PrintBcmPort(1234567, port));
+
+  EXPECT_EQ("(slot: 1, port: 10, channel: 2, speed: 50G)",
+            PrintBcmPort(0, port));
+}
+
+TEST(BcmUtilsTest, PrintBcmPortWithDirectArgList) {
+}
+
+TEST(BcmUtilsTest, PrintBcmPortOptionsForEmptyOption) {
+  BcmPortOptions options;
+  EXPECT_EQ("()", PrintBcmPortOptions(options));
+}
+
+TEST(BcmUtilsTest, PrintBcmPortOptionsForNonEmptyOption) {
+  BcmPortOptions options;
+
+  // Example 1.
+  options.Clear();
+  options.set_enabled(TRI_STATE_TRUE);
+  options.set_blocked(TRI_STATE_FALSE);
+  options.set_speed_bps(kFiftyGigBps);
+  EXPECT_EQ("(enabled: true, blocked: false, speed: 50G)",
+            PrintBcmPortOptions(options));
+
+  // Example 2.
+  options.Clear();
+  options.set_blocked(TRI_STATE_TRUE);
+  options.set_speed_bps(kFortyGigBps);
+  options.set_max_frame_size(1200);
+  EXPECT_EQ("(blocked: true, speed: 40G, max_frame_size: 1200)",
+            PrintBcmPortOptions(options));
+
+  // Example 3.
+  options.Clear();
+  options.set_enabled(TRI_STATE_FALSE);
+  options.set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_SW);
+  EXPECT_EQ("(enabled: false, linkscan_mode: LINKSCAN_MODE_SW)",
+            PrintBcmPortOptions(options));
+
+  // Example 4.
+  options.Clear();
+  options.set_enabled(TRI_STATE_TRUE);
+  options.set_flex(TRI_STATE_FALSE);
+  options.set_autoneg(TRI_STATE_TRUE);
+  options.set_num_serdes_lanes(2);
+  EXPECT_EQ("(enabled: true, flex: false, autoneg: true, num_serdes_lanes: 2)",
+            PrintBcmPortOptions(options));
+}
+
+}  // namespace bcm
+}  // namespace hal
+}  // namespace stratum

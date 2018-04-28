@@ -1,0 +1,220 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file declares common protocol buffer enums and messages to support
+// the translation and decoding of P4 PI messages, such as table reads and
+// writes, into a form that can be understood by HAL table management code
+// that interacts with vendor-specific SDKs.
+//
+// The declarations in this file support the P4 table mapping process.  More
+// details about this process can be found here:
+//
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum;
+
+// P4 table mapping uses the next set of enums to unambiguously identify tables,
+// actions, and header fields in the mapping output.  For example, when table
+// mapping encounters a match field in a P4 TableWriteRequest that refers to
+// the destination MAC address in the Ethernet header, it identifies this field
+// with P4FieldType::P4_FIELD_TYPE_ETH_DST in the mapped output.
+//
+// Most of the enum values will be common to all vendors, but vendor-specific
+// values or even chip-specific values are likely to appear.  These values can
+// be defined in the enums below and annotated with their specific use case.
+// As an example, vendor A's parser may produce some metadata that vendor B's
+// parser does not.  In this case, a value VENDOR_A_METADATA_FOO can be added
+// to P4FieldType.  Although this value is defined here, it will only be
+// referenced in the mapping logic for vendor A's HAL implementation.
+//
+// TODO: Another approach would be to maintain generic tables, fields,
+// and actions here.  If the generic P4 mapper can't resolve an object, it
+// does what it can, then hands off the table update to a platform-specific
+// mapper.
+
+// TODO: More table types are needed.
+enum P4TableType {
+  P4_TABLE_UNKNOWN = 0;        // Default.
+  P4_TABLE_L3_IP = 1;          // Common table type for L3 IPv4/v6, host/LPM.
+  P4_TABLE_L3_CLASSIFIER = 2;  // MAC/VLAN lookup to identify routed packets.
+}
+
+// This enum defines values to identify the table mapping output for match
+// fields.  Many of these values apply to all vendors, but there may be a
+// need for some vendor-specific values.
+enum P4FieldType {
+  P4_FIELD_TYPE_UNKNOWN = 0;              // Default
+  P4_FIELD_TYPE_ANNOTATED = 1;            // Field type taken from P4Info
+                                          // annotation.
+  P4_FIELD_TYPE_ETH_SRC = 2;              // Ethernet source address (MAC).
+  P4_FIELD_TYPE_ETH_DST = 3;              // Ethernet destination address (MAC).
+  P4_FIELD_TYPE_ETH_TYPE = 4;             // Ethernet type.
+  P4_FIELD_TYPE_VLAN_VID = 5;             // VLAN ID.
+  P4_FIELD_TYPE_VLAN_PCP = 6;             // VLAN priority.
+  P4_FIELD_TYPE_IPV4_SRC = 7;             // IPv4 source address.
+  P4_FIELD_TYPE_IPV4_DST = 8;             // IPv4 destination address.
+  P4_FIELD_TYPE_IPV4_PROTO = 9;           // IPv4 protocol.
+  P4_FIELD_TYPE_IPV4_DIFFSERV = 10;       // IPv4 diffserv (DSCP and ECN).
+  P4_FIELD_TYPE_IPV4_IHL = 11;            // IPv4 Internet Header Length.
+  P4_FIELD_TYPE_IPV4_TOTAL_LENGTH = 12;   // IPv4 total packet length.
+  P4_FIELD_TYPE_IP_VERSION = 13;          // IP version - IPv4 or IPv6.
+  P4_FIELD_TYPE_NW_TTL = 14;              // IPv4 TTL or IPv6 Hop-Limit (8 bit).
+  P4_FIELD_TYPE_IPV6_SRC = 15;            // IPv6 source address.
+  P4_FIELD_TYPE_IPV6_DST = 16;            // IPv6 destination address.
+  P4_FIELD_TYPE_IPV6_NEXT_HDR = 17;       // IPv6 next header.
+  P4_FIELD_TYPE_IPV6_TRAFFIC_CLASS = 18;  // IPv6 traffic class.
+  P4_FIELD_TYPE_IPV6_PAYLOAD_SIZE = 19;   // IPv6 payload size in octets.
+  P4_FIELD_TYPE_ICMP_CODE = 20;           // ICMP code.
+  P4_FIELD_TYPE_L4_SRC_PORT = 21;         // TCP/UDP source port.
+  P4_FIELD_TYPE_L4_DST_PORT = 22;         // TCP/UDP destination port.
+  P4_FIELD_TYPE_ARP_TPA = 23;             // ARP target protocol address.
+  P4_FIELD_TYPE_VRF = 24;                 // VRF ID in metadata.
+  P4_FIELD_TYPE_CLASS_ID = 25;            // Class ID in metadata.
+  P4_FIELD_TYPE_COLOR = 26;               // Assigned color in metadata.
+  P4_FIELD_TYPE_EGRESS_PORT = 27;         // Egress singleton port in metadata.
+                                          // If set as an action parameter for
+                                          // a member, it "may" refer to an
+                                          // egress trunk as well, as P4 does
+                                          // not differentiate singleton port
+                                          // and trunks when specifiying
+                                          // nexthops.
+  P4_FIELD_TYPE_INGRESS_PORT = 28;        // Ingress singleton port in metadata.
+  P4_FIELD_TYPE_EGRESS_TRUNK = 29;        // Egress trunk port in metadata.
+  P4_FIELD_TYPE_INGRESS_TRUNK = 30;       // Ingress trunk port metadata.
+  P4_FIELD_TYPE_IN_METER = 31;            // Ingress meter index in metadata.
+  P4_FIELD_TYPE_COS = 32;                 // Class of Service (CoS).
+  P4_FIELD_TYPE_GRE_CHECKSUM_BIT = 33;    // GRE checksum present bit.
+  P4_FIELD_TYPE_GRE_ROUTING_BIT= 34;      // GRE routing present bit.
+  P4_FIELD_TYPE_GRE_KEY_BIT = 35;         // GRE key present bit.
+  P4_FIELD_TYPE_GRE_SEQUENCE_BIT = 36;    // GRE sequence number present bit.
+  P4_FIELD_TYPE_GRE_STRICT_SOURCE = 37;   // GRE strict source route bit.
+  P4_FIELD_TYPE_GRE_RECURSION = 38;       // GRE recursion control.
+  P4_FIELD_TYPE_GRE_FLAGS = 39;           // GRE flag bits.
+  P4_FIELD_TYPE_GRE_VERSION = 40;         // GRE version number.
+  P4_FIELD_TYPE_GRE_PROTOCOL = 41;        // GRE payload protocol type.
+  P4_FIELD_TYPE_GRE_FLAG_METADATA = 42;   // Metadata collection of GRE flags.
+  P4_FIELD_TYPE_CPU_QUEUE_ID = 43;        // CPU queue for punted packets.
+  P4_FIELD_TYPE_ENCAP_TYPE = 44;          // IPv4 in GRE, IPv6 in GRE, etc.
+  P4_FIELD_TYPE_ICMP_TYPE = 45;           // Type of ICMP control message.
+  P4_FIELD_TYPE_METADATA_MATCH = 46;      // Metadata assigned by one table
+                                          // to match a subsequent table.
+  P4_FIELD_TYPE_SLICED = 47;              // Field consists of bit fields for
+                                          // other types via P4 slice operator.
+  P4_FIELD_TYPE_L3_CLASS_ID = 48;         // Class ID for layer 3 tables.
+  P4_FIELD_TYPE_CLONE_PORT = 49;          // Destination port for cloned packet.
+  P4_FIELD_TYPE_MCAST_GROUP_ID = 50;      // Multicast group ID.
+  P4_FIELD_TYPE_L3_ADMIT = 51;            // L3 admit flag from L2.
+  P4_FIELD_TYPE_DSCP = 52;                // 6 high-order bits from IPv4
+                                          // diffserv or IPv6 traffic class.
+  P4_FIELD_TYPE_ECN = 53;                 // 2 low-order bits from IPv4
+                                          // diffserv or IPv6 traffic class.
+  P4_FIELD_TYPE_UDF_VALUE_SET = 54;       // UDF based on a P4 parser value set.
+  P4_FIELD_TYPE_UDP_PAYLOAD_DATA = 55;    // Parsed subset of UDP payload data.
+}
+
+// This enum defines values to identify the table mapping output for P4
+// header types of protocols recognized by Hercules P4 programs.
+enum P4HeaderType {
+  P4_HEADER_UNKNOWN = 0;
+  P4_HEADER_ARP = 1;
+  P4_HEADER_ETHERNET = 2;
+  P4_HEADER_GRE = 3;
+  P4_HEADER_ICMP = 4;
+  P4_HEADER_IPV4 = 5;
+  P4_HEADER_IPV6 = 6;
+  P4_HEADER_PACKET_IN = 7;
+  P4_HEADER_PACKET_OUT = 8;
+  P4_HEADER_TCP = 9;
+  P4_HEADER_UDP = 10;
+  P4_HEADER_VLAN = 11;
+  P4_HEADER_UDP_PAYLOAD = 12;
+}
+
+// This enum defines values to identify the mapping output for P4 actions.
+// An action in a TableWriteRequest or an ActionProfileWriteRequest can
+// identify an action function, which is composed of one or more primitive
+// actions defined by the P4 specification.  The action can also represent an
+// action profile member or group ID.  Any update request has only one of
+// these possibilities.
+enum P4ActionType {
+  P4_ACTION_TYPE_UNKNOWN = 0;            // Default: action mapping failed.
+  P4_ACTION_TYPE_FUNCTION = 1;           // Action is composed of primitive
+                                         // actions.
+  P4_ACTION_TYPE_PROFILE_MEMBER_ID = 2;  // Action has the ID of an action
+                                         // profile member.
+  P4_ACTION_TYPE_PROFILE_GROUP_ID = 3;   // Action has the ID of an action
+                                         // profile group.
+}
+
+// When the P4ActionType is P4_ACTION_TYPE_FUNCTION, the action is mapped to a
+// series of primitive operations defined by the P4 specification.  The enum
+// below represents each primitive action's operation.
+enum P4ActionOp {
+  P4_ACTION_OP_UNKNOWN = 0;  // Hercules addition for unmapped primitives.
+  P4_ACTION_OP_DROP = 1;     // Drop the packet on table hit.
+  P4_ACTION_OP_NOP = 2;      // No action on table hit.
+  P4_ACTION_OP_CLONE = 3;    // Action replicates a packet.
+
+  // TODO: This enum currently contains only primitives needed
+  // by tor.p4.  The list needs to evolve with P4 spec changes.
+}
+
+// These enum values identify colors assigned by packet meters.
+enum P4MeterColor {
+  P4_METER_COLOR_UNKNOWN = 0;
+  P4_METER_GREEN = 1;
+  P4_METER_YELLOW = 2;
+  P4_METER_RED = 3;
+}
+
+// These enum values identify header encap/decap operations.
+enum P4TunnelOp {
+  P4_TUNNEL_NONE = 0;
+  P4_TUNNEL_DECAP = 1;
+  P4_TUNNEL_ENCAP = 2;
+}
+
+// The P4AssignSourceValue message specifies one of several possible encodings
+// for P4 action parameter values and the right side of P4 assignment operators.
+//  parameter_name - identifies an action parameter being assigned to a field.
+//  constant_param - in some cases, actions pass constants to other actions
+//      or externs, or assign a constant value to a field.
+//  source_field_name - identifies the source header or metadata field in a
+//      field-to-field assignment.
+//  source_header_name - identifies the source header name in a
+//      header-to-header assignment.
+//  bit_width - width of the source value in bits.  When the source_value is
+//      a constant_param, it gives the width of the constant.  Otherwise, if
+//      a parameter_name or source_field_name is the operand of a P4 slice
+//      operator, it gives the width of the slice.  For example, the bit_width
+//      for local_metadata.gre_flags[7:3] is 5.
+// high_bit - when the source value is a slice of a parameter_name or
+//      source_field_name, this is the high-bit position of the slice.  In the
+//      example above, high_bit is 7.
+message P4AssignSourceValue {
+  oneof source_value {
+    string parameter_name = 1;
+    int64 constant_param = 2;
+    string source_field_name = 3;
+    string source_header_name = 4;
+  }
+
+  // Fields 5-9 are reserved for additional source_value fields.
+  int32 bit_width = 10;
+  int32 high_bit = 11;
+}

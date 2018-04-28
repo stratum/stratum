@@ -1,0 +1,66 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file describes protobufs used in P4 annotations accepted by the Hercules
+// SwitchStack.
+syntax = "proto3";
+
+package stratum;
+
+import "third_party/stratum/public/proto/p4_table_defs.proto";
+
+// Hercules annotations. These annotations are expected to be provided one at a
+// time in the annotation blocks of p4 entity definitions.
+//
+// Usage: In  P4 Annotation, surround the annotation with:
+//   @switchstack(<proto_string>)
+//
+// Examples:
+//   @switchstack("pipeline_stage: VLAN_ACL")
+//   @switchstack("field_type: P4_FIELD_TYPE_VRF")
+//
+// Note about "HIDDEN" tables:
+//   Tables annotated with "HIDDEN" are defined by the P4 program, but they do
+//   not directly map to a programmable section of the physical pipeline.  A
+//   common case is the encap and decap table logic, where one P4 logical table
+//   makes the encap/decap decision, but it defers the actual encap/decap
+//   operation on the packet header to a second table.  The Hercules switch
+//   stack applies the "HIDDEN" pipeline_stage annotation to the second table,
+//   indicating that the actions from both tables need to be merged into a
+//   single physical table.
+message P4Annotation {
+  // Defines the set of physical pipeline stages.
+  enum PipelineStage {
+    DEFAULT_STAGE = 0;  // Invalid. Reserved for future use.
+    VLAN_ACL = 1;
+    L2 = 2;
+    L3_LPM = 3;
+    INGRESS_ACL = 4;
+    EGRESS_ACL = 5;
+    ENCAP = 6;
+    DECAP = 7;
+    HIDDEN = 8;
+  }
+
+  // Defines the hardware pipeline stage of an entity.
+  PipelineStage pipeline_stage = 1;
+
+  // Specifies the type of a header or metadata field.  For standard protocol
+  // headers, the p4c backend can typically deduce field types by inspecting
+  // P4 parser state transitions.  For metadata and controller headers, p4c
+  // needs additional information to identify field types, which can be
+  // provided by the P4 program with this annotation.
+  P4FieldType field_type = 2;
+}

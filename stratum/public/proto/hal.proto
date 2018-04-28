@@ -1,0 +1,599 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file includes all the messages needed to configure and monitor a
+// switching platform running the Hercules switch stack. The messages are
+// carefully designed to meet the following requirements:
+// 1- Be vendor-agnostic as much as possible. Although, vendor-specific config
+// is allowed.
+// 2- Be simple. No more nested, complex proto translations. No more redundant
+// definitions of the same concept. For example, we will have one "complete"
+// proto definition for singleton ports which we carry everywhere in HAL.
+// 3- Use the best of the old code.
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum;
+
+// Target platforms (aka the type of the switch/chassis).
+enum Platform {
+  PLT_UNKNOWN = 0;  // default
+  PLT_GENERIC_TRIDENT_PLUS = 1;
+  PLT_GENERIC_TRIDENT2 = 2;
+  PLT_GENERIC_TOMAHAWK = 3;
+  PLT_MLNX_SN2700 = 9;
+  PLT_P4_SOFT_SWITCH = 10;
+  // TODO: Add all the BCM and MLNX based platforms.
+}
+
+//------------------------------------------------------------------------------
+// Definition of chassis, nodes, singleton ports, trunk ports, port groups, etc.
+//------------------------------------------------------------------------------
+// Config-related parameters for the entire chassis.
+message ChassisConfigParams {
+  // TODO: Complete this.
+}
+
+// Flow-related parameters for for switching nodes (aka chips).
+message NodeFlowParams {
+  // TODO: Complete this.
+}
+
+// Intended use of a QoS queue. IDs are assigned to be compatible with
+// SandCastle.
+// Note that the names of the enum cases are important and are used to identify
+// QoS queues in gNMI YANG model.
+enum TrafficClass {
+  UNDEFINED = 0;
+  BE1 = 20;         // Best effort
+  AF1 = 21;         // Assured forwarding priority 1
+  AF2 = 22;         // Assured forwarding priority 2
+  AF3 = 23;         // Assured forwarding priority 3
+  AF4 = 24;         // Assured forwarding priority 4
+  NC1 = 25;         // Network control
+  NC0 = 26;         // Network control
+  BE0 = 27;         // Best effort at high packet loss
+  LLQ = 28;         // Deprecated (moved to LLQ2).
+  LLQ1 = 29;        // Low-latency congestion-control queue
+  LLQ2 = 30;        // Low-latency congestion-control queue
+  ROCE_LOW = 100;   // Deprecated (moved to LLQ1).
+  ROCE_HIGH = 101;  // Deprecated (moved to LLQ2).
+};
+
+// Config-related parameters for switching nodes (aka chips).
+message NodeConfigParams {
+  // Per-VLAN configuration.
+  message VlanConfig {
+    // VLAN id.
+    int32 vlan_id = 1;
+    // Block broadcast packets for this VLAN?
+    bool block_broadcast = 2;
+    // Block known multicast packets for this VLAN?
+    bool block_known_multicast = 3;
+    // Block unknown multicast packets for this VLAN?
+    bool block_unknown_multicast = 4;
+    // Block unknown multicast packets for this VLAN?
+    bool block_unknown_unicast = 5;
+    // L2 learning needs to be disabled for this VLAN?
+    bool disable_l2_learning = 6;
+    // L2 aging for L2 entries (if L2 is enabled).
+    int32 l2_age_duration_sec = 7 [deprecated = true];
+  }
+  // Generic per node L2-related configs.
+  message L2Config {
+    // L2 aging for L2 entries. Affects VLANs with L2 learning enabled. 0
+    // (default) will disable aging timer.
+    int32 l2_age_duration_sec = 1;
+  }
+  message QosConfig {
+    int32 queue_id = 1;  // internal CoS queue number (0-7)
+    int32 scheduler_weight = 2;
+    int32 min_bandwidth_percent = 3;  // Valid range: 1-100 percent
+    int32 max_bandwidth_percent = 4;  // Valid range: 1-100 percent
+    // Admin description of the intended purpose of this queue.
+    TrafficClass purpose = 5;
+    // the mux block a cos queue is assigned to for scheduling purpose; each mux
+    // block is serviced by a scheduler (of type strict priority or weighted
+    // round robin).
+    int32 mux_block = 6;
+  }
+  bool l2_enabled = 1 [deprecated = true];
+  repeated VlanConfig vlan_configs = 2;
+  L2Config l2_config = 3;
+  repeated QosConfig qos_configs = 4;
+  // TODO: Complete this.
+}
+
+// Flow-related parameters for the ports (singleton and trunk ports).
+message PortFlowParams {
+  // TODO: Complete this.
+}
+
+// Config-related parameters for the ports (singleton and trunk ports).
+message PortConfigParams {
+  // TODO: Complete this.
+}
+
+// Chassis uniquely identifies a switch with a single management interface,
+// one or more slots (aka linecards), and one or more switching nodes (aka
+// chips) on each linecard.
+// NOTE: There is no need to specifiy a unique ID for chassis. Also, there
+// is no flow-related parameters specified for the chassis. Flow-related
+// parameters only apply to nodes and ports, as specified in this section.
+message Chassis {
+  // The chassis platforms. Required for any platform-specific code.
+  Platform platform = 1;  // required
+  // An optional arbitrary name for the chassis. WILL NOT BE PARSED.
+  // Example: device1.net.domain.com.
+  string name = 2;
+  // Parameters configured for the entire chassis when config is pushed to the
+  // the switch.
+  ChassisConfigParams config_params = 3;
+}
+
+// Node uniquely identifies a single switching node (aka chip) on a chassis
+// linecard and all its flow-related and config-related parameters.
+message Node {
+  // The unique ID of the switching node on the chassis as used by the
+  // controller.
+  uint64 id = 1;  // required
+  // An optional arbitrary name for the switching node. WILL NOT BE PARSED.
+  // Example: xyz1switch.net.domain.com.
+  string name = 2;
+  // The 1-base index of the slot (aka linecard) which this node belongs.
+  int32 slot = 3;  // required
+  // The optional 1-base index of the node within the chassis. The value
+  // must be in {1..N}, where N is the number of chips on the chassis. This
+  // index is not necessarily in the model. The stack can use this internally
+  // to index the nodes.
+  int32 index = 4;
+  // Flow-related parameters for the switching nodes.
+  NodeFlowParams flow_params = 5;
+  // Parameters configured for switching node when config is pushed to the
+  // the switch.
+  NodeConfigParams config_params = 6;
+}
+
+// SingletonPort uniquely identifies a single physical port on a single chassis
+// and all its flow-related and config-related parameters.
+// NOTE: Each implementation of SwitchInterface class is assumed to be able to
+// translate a SingletonPort to any internal presentation of port used by the
+// class. For example:
+// SaiSwitch: An implementation of SwitchInterface based on SAI. This class
+//            translates SingletonPort to SAI port of type sai_object_id_t
+//            and viceversa.
+// BcmSwitch: An implementation of SwitchInterface that uses BCM SDK directly.
+//            This class translates SingletonPort to a tuple of
+//            (int unit, bcm_port_t port) and viceversa.
+message SingletonPort {
+  // The unique ID of the singleton port. Used for operations which need a
+  // single unique integer ID for each port (e.g. flow programming). Note that
+  // all the singleton and trunk ports use a common range of integer IDs. So,
+  // using the same integer ID for a singleton port and a trunk port is not
+  // allowed.
+  uint64 id = 1;  // required
+  // An optional arbitrary name for the singleton port. WILL NOT BE
+  // PARSED. Example: "device1.net.domain.com:ce-1/32". Used only for
+  // logging purposes.
+  string name = 2;
+  // The 1-base index of the slot (aka linecard) of the port.
+  int32 slot = 3;  // required
+  // The 1-base index of the singleton port on the slot.
+  int32 port = 4;  // required
+  // The 1-base channel index (only if the port is channelized). Absence or
+  // zero means non-channelized.
+  int32 channel = 5;
+  // The speed of the ports.
+  uint64 speed_bps = 6;  // required
+  // The id of the corresponding node that the port belongs to.
+  uint64 node = 9;  // required
+  // Flow-related parameters used when SingletonPort message is used in flow
+  // programming related operations.
+  PortFlowParams flow_params = 7;
+  // Parameters configured for each singleton port when config is pushed to the
+  // the switch.
+  PortConfigParams config_params = 8;
+}
+
+// TrunkPort uniquely identifies a single trunk port on a single chassis and
+// all its flow-related and config-related parameters. This message is the
+// only message we will use to specify trunk ports in the HAL and avoid
+// defining any other message to specify trunks of any sort.
+message TrunkPort {
+  enum TrunkType {
+    UNKNOWN_TRUNK = 0;
+    STATIC_TRUNK = 1;
+    LACP_TRUNK = 2;
+  }
+  // The unique ID of the trunk port. Used for operations which need a
+  // single unique integer ID for each port (e.g. flow programming). Note that
+  // all the singleton and trunk ports use a common range of integer IDs. So,
+  // using the same integer ID for a singleton port and a trunk port is not
+  // allowed.
+  uint64 id = 1;  // required
+  // An optional arbitrary name for the trunk port. WILL NOT BE PARSED.
+  // Example: trk-df101s1i1.cbf96-2.
+  string name = 2;
+  // The type of the trunk.
+  TrunkType type = 3;  // required
+  // The id of the SingletonPorts or TrunkPorts members. This list can be empty
+  // for a LACP trunk but cannot be empty for STATIC trunks.
+  repeated int64 members = 4;
+  // Flow-related parameters used when TrunkPort message is used in flow
+  // programming related operations.
+  PortFlowParams flow_params = 5;
+  // Parameters configured for each trunk port when config is pushed to the
+  // the switch.
+  PortConfigParams config_params = 6;
+}
+
+// PortGroup uniquely identifies an ECMP/WCMP port group.
+message PortGroup {
+  message PortGroupMember {
+    // The id of the singleton port member.
+    uint64 id = 1;
+    // The weight (in WCMP mode).
+    int32 weight = 2;
+  }
+  // The unique ID of the port group used for flow programming.
+  uint64 id = 1;
+  // An optional arbitrary name for the port group. WILL NOT BE PARSED.
+  string name = 2;
+  // The port group members.
+  repeated PortGroupMember members = 3;
+}
+
+//------------------------------------------------------------------------------
+// State and stats related messages.
+//------------------------------------------------------------------------------
+
+// A generic enum for describing the operational state of a port (singleton
+// port, trunk, etc.).
+enum PortState {
+  PORT_STATE_UNKNOWN = 0;
+  PORT_STATE_UP = 1;
+  PORT_STATE_DOWN = 2;
+  PORT_STATE_FAILED = 3;
+}
+
+// A generic enum for describing the administrative state of a HW component.
+enum AdminState {
+  ADMIN_STATE_UNKNOWN = 0;
+  ADMIN_STATE_ENABLED = 1;
+  ADMIN_STATE_DISABLED = 2;
+  ADMIN_STATE_DIAG = 3;
+}
+
+// A generic enum for describing the state of HW components (e.g. QSFP module).
+// HW_STATE_UNKNOWN: Hardware is present, but details (type/state) are unknown.
+// HW_STATE_READY: Hardware is present, configured, and operational.
+// HW_STATE_PRESENT: Hardware is present, but not yet operational.
+// HW_STATE_NOT_PRESENT: No hardware is present.
+// HW_STATE_OFF: Hardware is present, but not powered on.
+// HW_STATE_CONFIGURED_OFF: Hardware is operational, but configured off.
+// HW_STATE_FAILED: A hardware failure has been detected.
+// HW_STATE_DIAGNOSTIC: Hardware is in a diagnostic mode.
+enum HwState {
+  HW_STATE_UNKNOWN = 0;
+  HW_STATE_READY = 1;
+  HW_STATE_PRESENT = 2;
+  HW_STATE_NOT_PRESENT = 3;
+  HW_STATE_OFF = 4;
+  HW_STATE_CONFIGURED_OFF = 5;
+  HW_STATE_FAILED = 6;
+  HW_STATE_DIAGNOSTIC = 7;
+}
+
+//------------------------------------------------------------------------------
+// Messages related to physical properties of ports on a chassis
+//------------------------------------------------------------------------------
+enum PhysicalPortType {
+  PHYSICAL_PORT_TYPE_UNKNOWN = 0;
+  PHYSICAL_PORT_TYPE_ETHERNET_1G = 1;
+  PHYSICAL_PORT_TYPE_IPASS = 2;
+  PHYSICAL_PORT_TYPE_SFP_CAGE = 3;
+  PHYSICAL_PORT_TYPE_QSFP_CAGE = 4;
+  PHYSICAL_PORT_TYPE_LP_CAGE = 5;
+  PHYSICAL_PORT_TYPE_CFP_CAGE = 6;
+  PHYSICAL_PORT_TYPE_BACKPLANE = 7;
+  PHYSICAL_PORT_TYPE_DWDM = 8;
+}
+
+enum MediaType {
+  MEDIA_TYPE_UNKNOWN = 0;
+  MEDIA_TYPE_QSFP_SR4 = 1;
+  MEDIA_TYPE_QSFP_LR4 = 2;
+  MEDIA_TYPE_QSFP_COPPER = 3;
+  MEDIA_TYPE_SFP = 5;
+  MEDIA_TYPE_QSFP_PSM4 = 6;
+  MEDIA_TYPE_CFP_LR4 = 7;
+  MEDIA_TYPE_CFP_COPPER = 8;
+  MEDIA_TYPE_BP_COPPER = 9;
+  MEDIA_TYPE_QSFP_CSR4 = 11;
+  MEDIA_TYPE_QSFP_CLR4 = 12;    // IEEE LR4
+  MEDIA_TYPE_QSFP_CCR4 = 14;    // 100G copper
+}
+
+message FrontPanelPortInfo {
+  PhysicalPortType physical_port_type = 1;
+  MediaType media_type = 2;
+  string vendor_name = 3;
+  string part_number = 4;
+  string serial_number = 5;
+}
+
+//------------------------------------------------------------------------------
+// Vendor-specific messages. All the messages that are used on platforms from
+// a specific vendor.
+//------------------------------------------------------------------------------
+
+// Config specific to Google-build chassis.
+message GoogleConfig {
+  // BcmKnetIntfPurpose defines which application will supposed to use a KNET
+  // interface defined on a unit and CPU queue.
+  enum BcmKnetIntfPurpose {
+    BCM_KNET_INTF_PURPOSE_UNKNOWN = 0;     // Default.
+    BCM_KNET_INTF_PURPOSE_CONTROLLER = 1;  // Packets sent to the controller
+    BCM_KNET_INTF_PURPOSE_SFLOW = 2;       // Packets sent to the sflow agent
+  }
+
+  // This message encapsulates all the info required to setup KNET interfaces
+  // on a specific node.
+  message BcmKnetConfig {
+    // KNET config for a single KNET interface on a node.
+    message BcmKnetIntfConfig {
+      int32 mtu = 1;
+      int32 cpu_queue = 2;
+      int32 vlan = 3;
+      BcmKnetIntfPurpose purpose = 4;
+      // TODO: Anything else?
+    }
+    repeated BcmKnetIntfConfig knet_intf_configs = 1;
+  }
+
+  // BcmRxConfig encapsulates all the data required to fully configure RX on a
+  // unit. This is just a proto wrapper around BcmSdkInterface::RxConfig.
+  message BcmRxConfig {
+    // BcmDmaChannelConfig encapsulates all the data required to configure an
+    // RX DMA channel.
+    message BcmDmaChannelConfig {
+      // The number of chains (DVs).
+      int32 chains = 1;
+      // Strip CRC from packets?
+      bool strip_crc = 2;
+      // Strip VLAN tag from packets?
+      bool strip_vlan = 3;
+      // Accept packets larger than bufsize?
+      bool oversized_packets_ok = 4;
+      // Do not parse received packets?
+      bool no_pkt_parsing = 5;
+      // The set of COS (classes of service) supported.
+      repeated int32 cos_set = 6;
+    }
+    // The RX pool size in packets. If non-positive, default will be used.
+    int32 rx_pool_pkt_count = 1;
+    // Bytes per packet in RX pool. If non-positive, default will be used.
+    int32 rx_pool_bytes_per_pkt = 2;
+    // Max packet size in bytes. If non-positive, default will be used.
+    int32 max_pkt_size_bytes = 3;
+    // Packets per chain. If non-positive, default will be used.
+    int32 pkts_per_chain = 4;
+    // Global rate limit in pps. If not given , we set no limit. Note that this
+    // limit can be overwritten by the value given in BcmRateLimitConfig.
+    int32 max_rate_pps = 5;
+    // Max # of pakcet received in single burst. If not given, we set no limit.
+    // Note that this limit can be overwritten by the value given in
+    // BcmRateLimitConfig.
+    int32 max_burst_pkts = 6;
+    // Are we using interrupts to generate RX callback?
+    bool use_interrupt = 7;
+    // Map from DMA channel (0-based) to DMA channel config given by
+    // BcmDmaChannelConfig.
+    map<int32, BcmDmaChannelConfig> dma_channel_configs = 8;
+  }
+
+  message BcmTxConfig {
+  }
+
+  // BcmRateLimitConfig specifies rate limit settings for a unit. This is just
+  // a proto wrapper around BcmSdkInterface::RateLimitConfig;
+  message BcmRateLimitConfig {
+    // Specifies rate limit settings for a COS.
+    message BcmPerCosRateLimitConfig {
+      // Rate limit for this cos in ppc. If not given, we set no limit.
+      int32 max_rate_pps = 1;
+      // Max # of pakcet received in single burst for this cos. If not given,
+      // we set no limit.
+      int32 max_burst_pkts = 2;
+    }
+    // Global rate limit in pps. If not given , we set no limit.
+    int32 max_rate_pps = 1;
+    // Max # of pakcet received in single burst. If not given, we set no limit.
+    int32 max_burst_pkts = 2;
+    // Map from cos (0-based) to its rate limit config given by
+    // BcmPerCosRateLimitConfig.
+    map<int32, BcmPerCosRateLimitConfig> per_cos_rate_limit_configs = 3;
+  }
+
+  // The BcmChassisMap id. Only needed if the chassis supports more than one
+  // chassis map.
+  string bcm_chassis_map_id = 1;
+  // Maps from the index of the nodes (1-based) to a KNET, RX, TX and rate limit
+  // configs for that specific node.
+  map<uint64, BcmKnetConfig> node_id_to_knet_config = 2;
+  map<uint64, BcmRxConfig> node_id_to_rx_config = 3;
+  map<uint64, BcmTxConfig> node_id_to_tx_config = 4;
+  map<uint64, BcmRateLimitConfig> node_id_to_rate_limit_config = 5;
+}
+
+message VendorConfig {
+  GoogleConfig google_config = 1;
+}
+
+//------------------------------------------------------------------------------
+// HAL config related messages.
+//------------------------------------------------------------------------------
+// ChassisConfig is the internal data structure that encapsulates the so called
+// "config" pushed to the entire chassis. The term "chassis" refers to the a
+// switching box with one or more switching nodes managed by a mgmt interface.
+// The proto includes all the not-so-frequent settings that are required before
+// the switch can accept flow programming requests from the controller.
+// NOTE: In Hercules the external interface for pushing config is gNMI. The
+// proto realization of the YANG models for the config is internally converted
+// to a ChassisConfig before it is consumed by the internal stack components.
+message ChassisConfig {
+  string description = 1;
+  Chassis chassis = 2;
+  repeated Node nodes = 3;
+  repeated SingletonPort singleton_ports = 4;
+  repeated TrunkPort trunk_ports = 5;
+  repeated PortGroup port_groups = 6;
+  VendorConfig vendor_config = 7;
+}
+
+//------------------------------------------------------------------------------
+// HAL monitoring related messages.
+//------------------------------------------------------------------------------
+// A message requesting information from the HAL.
+message DataRequest {
+  message SingleFieldRequest {
+    message FromPort {
+      uint64 node_id = 1;
+      uint64 port_id = 2;
+    }
+    message FromChassis {
+    }
+    message FromPortQueue {
+      uint64 node_id = 1;
+      uint64 port_id = 2;
+      uint32 queue_id = 3;
+    }
+    oneof request {
+      FromPort oper_status = 1;
+      FromPort admin_status = 2;
+      FromPort mac_address = 3;
+      FromPort port_speed = 4;
+      FromPort negotiated_port_speed = 5;
+      FromPort lacp_system_id_mac = 6;
+      FromPort lacp_system_priority = 7;
+      FromPort port_counters = 8;
+      FromChassis memory_error_alarm = 9;
+      FromChassis flow_programming_exception_alarm = 10;
+      FromPortQueue port_qos_counters = 11;
+    }
+  }
+
+  repeated SingleFieldRequest request = 1;
+}
+
+// A message used to return data retrieved from the HAL.
+message DataResponse {
+  message OperStatus {
+    PortState oper_status = 1;
+  }
+  message AdminStatus {
+    AdminState admin_status = 1;
+  }
+  message MacAddress {
+    // A mac address stored on 6 least-siginificant bytes.
+    uint64 mac_address = 1;
+  }
+  message PortSpeed {
+    // The speed of the ports.
+    uint64 speed_bps = 1;  // required
+  }
+  message SystemPriority {
+    uint32 priority = 1;
+  }
+  message PortCounters {
+    uint64 in_octets = 1;
+    uint64 in_unicast_pkts = 2;
+    uint64 in_broadcast_pkts = 3;
+    uint64 in_multicast_pkts = 4;
+    uint64 in_discards = 5;
+    uint64 in_errors = 6;
+    uint64 in_unknown_protos = 7;
+    uint64 out_octets = 8;
+    uint64 out_unicast_pkts = 9;
+    uint64 out_broadcast_pkts = 10;
+    uint64 out_multicast_pkts = 11;
+    uint64 out_discards = 12;
+    uint64 out_errors = 13;
+    uint64 in_fcs_errors = 14;
+  }
+  message PortQosCounters {
+    uint32 queue_id = 1;
+    uint64 out_octets = 2;
+    uint64 out_pkts = 3;
+    uint64 out_dropped_pkts = 4;
+  }
+  message Alarm {
+    enum Severity {
+      UNKNOWN = 0;
+      MINOR = 1;
+      WARNING = 2;
+      MAJOR = 3;
+      CRITICAL = 4;
+    }
+    uint64 time_created = 1;
+    string description = 2;
+    Severity severity = 3;
+    bool status = 4;
+  }
+
+  oneof response {
+    OperStatus oper_status = 1;
+    AdminStatus admin_status = 2;
+    MacAddress mac_address = 3;
+    PortSpeed port_speed = 4;
+    PortSpeed negotiated_port_speed = 5;
+    MacAddress lacp_system_id_mac = 6;
+    SystemPriority lacp_system_priority = 7;
+    PortCounters port_counters = 8;
+    Alarm memory_error_alarm = 9;
+    Alarm flow_programming_exception_alarm = 10;
+    PortQosCounters port_qos_counters = 11;
+  }
+}
+
+enum LedType {
+  UNKNOWN = 0;
+  BICOLOR_FPGA = 1;      // Green/Red non-blinking LEDs (Front Panel, PSU, Fan)
+  BICOLOR_LINK = 2;      // Green/Amber solid/blinking LEDs (10G interfaces)
+  BICOLOR_FPGA_G_R = 3;  // Non-blinking Green LED and Red LED.
+  TRICOLOR_FPGA_GR_GY = 4;  // Non-blinking Green/Red and Green/Yellow LEDs.
+  TRICOLOR_FPGA_GR_Y = 5;   // Solid/blinking Green/Red and solid Yellow LED.
+  TRICOLOR_FPGA_G_R_Y = 6;  // Non-blinking Green, Red, and Yellow LEDs.
+  BICOLOR_GPIO_G_R = 7;  // Non-blinking Green, Red LEDs controlled by multiple
+                         // GPIO pins.
+}
+
+enum LedState {
+  UNKNOWN_STATE = 0;  // Used when the state is undetermined
+                      // e.g. after warm boot
+  OFF = 1;
+  SOLID = 2;          // BICOLOR_LINK, BICOLOR_FPGA
+  BLINKING_SLOW = 3;  // BICOLOR_LINK
+  BLINKING_FAST = 4;  // BICOLOR_LINK
+}
+
+enum LedColor {
+  UNKNOWN_COLOR = 0;  // Used when the color is undetermined
+                      // e.g. after warm boot
+  GREEN = 1;          // BICOLOR_FPGA, BICOLOR_LINK
+  RED = 2;            // BICOLOR_FPGA
+  AMBER = 3;          // BICOLOR_LINK
+}

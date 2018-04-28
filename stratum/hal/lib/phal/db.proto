@@ -1,0 +1,118 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal.phal;
+
+import "third_party/stratum/public/proto/hal.proto";
+
+// IN PROGRESS
+// DO NOT USE
+
+// TODO: Flesh out the db proto definition.
+
+// The unfinished top level message in the PHAL attribute database.
+// This proto encodes all of the data that can possibly be provided
+// by the VANE-PHAL.
+message PhalDB {
+  repeated Card cards = 1;
+  repeated FanTray fan_trays = 2;
+}
+
+message Card {
+  repeated Port ports = 1;
+}
+
+// TODO: Add fan tray LED support and fan tray type.
+message FanTray {
+  message Fan {
+    double rpm = 1;
+    int32 speed_control = 2;  // Stores a percent value in [0,100]. Writable.
+  }
+  repeated Fan fans = 1;
+  HardwareInfo info = 2;
+}
+
+message Port {
+  PhysicalPortType physical_port_type = 1;
+  Transceiver transceiver = 2;
+}
+
+message AlarmStatus {
+  bool low_warn = 1;
+  bool high_warn = 2;
+  bool low_alarm = 3;
+  bool high_alarm = 4;
+}
+
+message SFPChannel {
+  bool rx_los = 1;
+  bool tx_los = 2;
+  bool tx_fault = 3;
+  bool tx_eq_fault = 4;
+  bool rx_lol = 5;
+  bool tx_lol = 6;
+  double tx_bias = 7;
+  double tx_power = 8;
+  double rx_power = 9;
+  AlarmStatus tx_bias_alarm = 10;
+  AlarmStatus tx_power_alarm = 11;
+  AlarmStatus rx_power_alarm = 12;
+  bool tx_disable = 13;
+  uint32 rate_select = 14;
+}
+
+message Transceiver {
+  bool data_ready = 1;
+  HardwareInfo info = 2;
+  MediaType media_type = 3;
+  double temperature = 4;
+  double vcc = 5;
+  AlarmStatus temperature_alarm = 6;
+  AlarmStatus vcc_alarm = 7;
+  repeated SFPChannel channels = 8;
+}
+
+// Data optionally available for every piece of hardware in the PHAL db.
+message HardwareInfo {
+  // Fields that appear in OpenConfig:
+  string id = 1;
+  string description = 2;
+  string mfg_name = 3;
+  string version = 4;
+  string serial_no = 5;
+  string part_no = 6;
+  // Google additions:
+  uint32 mfg_date = 7;
+  uint32 firmware_version_no = 8;
+  HwState state = 9;
+  repeated TemperatureData temperatures = 10;
+}
+
+message TemperatureData {
+  enum Location {
+    OTHER = 0;
+    HEATSINK = 1;
+    INLET = 2;
+    EXHAUST = 3;
+    MODULE = 4;
+  }
+  Location location = 1;
+  double celsius = 2;
+  string details = 3;
+}

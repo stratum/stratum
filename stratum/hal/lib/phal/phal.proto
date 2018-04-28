@@ -1,0 +1,84 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal;
+
+import "third_party/stratum/public/proto/hal.proto";
+
+// This message encapsulates all the data needed to specify a line card.
+message PhalCardConfig {
+  // The 1-base index of the slot (aka linecard).
+  int32 slot = 1;
+  repeated PhalPortConfig port_configs = 2;
+}
+
+// This message encapsulates all of the data needed to specify a fan tray.
+message PhalFanTrayConfig {
+  message Fan {
+    // The 1-base index of the fan within its tray.
+    int32 slot = 1;
+    // Path to read the current fan speed.
+    string fan_tachometer_path = 2;
+    // Path to set the fan speed.
+    string fan_control_path = 3;
+  }
+  string tray_presence_path = 1;
+  // Fan tray info EEPROM path.
+  string tray_info_path = 2;
+  repeated Fan fans = 3;
+}
+
+// This message encapsulates all the data needed to specify a physical port on
+// a switch chassis.
+message PhalPortConfig {
+  // The 1-base index of the singleton port corresponding the transceiver
+  // module.
+  int32 port = 1;
+  // The physical port type (QSFP, BACKPLANE, etc).
+  PhysicalPortType physical_port_type = 2;
+  // Transceiver module presence path.
+  string transceiver_presence_path = 3;
+  // Transceiver module EEPROM path (to read vendor name, part #, etc.).
+  string transceiver_info_path = 4;
+  // Transceiver module TX disable path for all the 4 channels.
+  repeated string tx_disable_paths = 5;
+}
+
+// Message used to initialize legacy PHAL on real hardware.
+message LegacyPhalInitConfig {
+  repeated PhalCardConfig card_configs = 1;
+  // Boolean which determines whether the slot filed is supposed to be
+  // automatically added by the stack. This is used for the case where slot is
+  // not known beforehand (e.g. in multi-linecard systems) and needs to be
+  // determined after pushing the chassis config. If set to true, slot must be
+  // set to zero.
+  bool auto_add_slot = 2;
+  repeated PhalFanTrayConfig fan_tray_configs = 3;
+  // TODO: Complete this.
+}
+
+message LedConfig {
+  int32 led_index = 1;
+  LedType led_type = 2;
+  // Different type of LED has different size of control path. Some of them
+  // are GPIO bus while some of them are FPGA bit path. Lets abstract all of
+  // them to led_control_path. The order of the led_control_path in config is
+  // critical.
+  repeated string led_control_path = 3;
+}

@@ -1,0 +1,313 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file declares proto messages that facilitate the mapping between P4
+// runtime RPC requests/responses and a "flow entry" that can be understood by
+// HAL table management code.
+//
+// TODO: Provide a specific reference to the "flow entry" definition.
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal;
+
+import "third_party/stratum/hal/lib/p4/common_flow_entry.proto";
+import "third_party/stratum/public/proto/p4_annotation.proto";
+import "third_party/stratum/public/proto/p4_table_defs.proto";
+import "p4/config/p4info.proto";
+
+// Each P4 object type has "descriptor" data to help define the mapping from
+// runtime RPC to HAL flow entry.  Each descriptor contains the following
+// general types of data:
+// - A type to identify the P4 object in a HAL flow entry.  For example, a
+//   P4 field match on the Ethernet destination address is identified as
+//   P4_FIELD_TYPE_ETH_DST.
+// - Optional device_data to help the HAL switch implementation determine how
+//   the P4 object behaves.  Example 1: Some P4 fields may use device_data to
+//   define UDFs in the SDK.  Example 2: Some P4 tables may use device_data to
+//   set up custom table operation via ACLs or other progammable logic in
+//   switch chip.
+// - P4 object specific data for P4 runtime RPC translation, which is defined
+//   in more detail by the descriptor messages below.
+// The p4c compiler backend for Hercules switches generates the descriptor data
+// into a P4TableMap as one of its output files.  The P4TableMap map becomes
+// part of the pipeline spec that switches receive during P4 runtime
+// configuration.
+
+// P4DeviceProgramData provides field/action/table descriptor storage for any
+// device or vendor dependent data that the HAL switch implementation needs
+// to set up the forwarding logic for the associated P4 object.  It contains:
+// - A name to uniquely identify and/or describe the data in this message.
+// - The data that the HAL switch implementation needs to specify the
+//   behavior of the P4 table/field/action in a device-specific context.  This
+//   data has meaning only to the switch implementation; it is opaque to the
+//   p4c extension, the P4TableMapper, and the P4InfoManager.
+// TODO: Consider changing the data field to google::protobuf::Any and
+//                 packing/unpacking relative to a target-specific proto.
+// TODO: Would it be useful to have the option for two sets of
+//                 P4DeviceProgramData per object, with one set for P4 config
+//                 setup and the other set to be attached to each runtime flow?
+message P4DeviceProgramData {
+  string name = 1;
+  bytes data = 2;
+}
+
+// A P4TableDescriptor has data about how to map a P4 runtime table write
+// into a common flow entry.
+message P4TableDescriptor {
+  // Mapping fields in a P4TableDescriptor are:
+  //  type - Identifies the type of table in an output flow entry.
+  //  pipeline_stage - Gives the forwarding pipeline stage that p4c has
+  //      assigned to the table.
+  //  has_static_entries - Indicates whether the P4 program defines const
+  //      entries for the table.  If true, the static entries are represented
+  //      by a P4Runtime WriteRequest in another part of the P4PipelineConfig.
+  //      In the current version of the P4 language, the presence of static
+  //      entries means the table is immutable with respect to write operations
+  //      via the P4Runtime service.
+  //  internal_match_fields - lists any match keys needed for the hardware
+  //      table that are not explicitly defined by the P4 program.  For
+  //      example, P4_TABLE_L3_IP needs additional VRF IDs for some P4
+  //      L3 table definitions.
+  //  device_data - Optional data for the HAL switch to use for defining and
+  //      setting up the table.
+  //  valid_headers - Indicate whether the P4 program restricts table usage to
+  //      certain types of protocol headers, i.e. the table apply is
+  //      conditional on a header.isValid() evaluation.  If valid_headers
+  //      is empty, the P4 program applies the table without any header type
+  //      constraints.  A single entry means that the P4 program only applies
+  //      the table when the given header type is valid.  Multiple entries
+  //      mean all of the specified header types must be valid before the
+  //      P4 program applies the table.
+  // TODO: Is it possible to deprecate the type field and
+  // replace all of its references with pipeline_stage?
+  P4TableType type = 1;
+  P4Annotation.PipelineStage pipeline_stage = 2;
+  bool has_static_entries = 3;
+  repeated MappedField internal_match_fields = 4;
+  repeated P4DeviceProgramData device_data = 5;
+  repeated P4HeaderType valid_headers = 6;
+}
+
+// A P4FieldDescriptor contains information about how to map a PI header field
+// from a TableWriteRequest into a common flow entry field.  It also has
+// information to support header field references by P4 control and action
+// statements.
+message P4FieldDescriptor {
+  // This enum specifies how table mapping should translate the PI field value
+  // into a flow entry field value.  The same field could need different
+  // conversions for different vendors.  For example, vendor A's SDK might
+  // expect to see a MAC address as a uint64, whereas vendor B's SDK might
+  // expect a byte array for a MAC address.
+  enum P4FieldValueConversion {
+    P4_CONVERT_UNKNOWN = 0;
+    P4_CONVERT_RAW = 1;                // Raw value copy for P4-aware SDKs.
+    P4_CONVERT_TO_U32 = 2;             // Example: exact match IPv4 address.
+    P4_CONVERT_TO_U32_AND_MASK = 3;    // Example: IPv4 LPM match field.
+    P4_CONVERT_TO_U64 = 4;             // Example: exact match MAC address.
+    P4_CONVERT_TO_U64_AND_MASK = 5;    // Example: ternary match MAC address.
+    P4_CONVERT_TO_BYTES = 6;           // Example: exact match IPv6 address.
+    P4_CONVERT_TO_BYTES_AND_MASK = 7;  // Example: IPv6 LPM match field.
+
+    // TODO: And so on for additional conversions.
+  }
+
+  // This message is a pseudo-map for field value conversions.  (A real proto
+  // map<p4.config.MatchField.MatchType, P4FieldValueConversion> is not allowed
+  // because enums can't be keys.)  Match field conversions depend on table
+  // context.  The same field may be an EXACT match in one table, an LPM match
+  // in another table, or even a TERNARY match in a third table.  The table's
+  // P4Info match_type for the field becomes the key to get the conversion
+  // value.
+  message P4FieldConversionEntry {
+    p4.config.MatchField.MatchType match_type = 1;
+    P4FieldValueConversion conversion = 2;
+
+    // TODO: This per-conversion width is replaced by the overall
+    // P4FieldDescriptor bit_width below.  All code references have been
+    // removed.  The field itself can be removed after all test file references
+    // are cleaned up.
+    int32 bit_width = 3 [deprecated = true];
+  }
+
+  // This message applies to local metadata fields whose only purpose is to
+  // act as match keys for tables in "hidden" stages.  In general, an action in
+  // one table will assign these fields a constant value to look up another
+  // action in the later hidden table.  Packet encap and decap use this
+  // technique to decide whether to encap/decap in one table while deferring
+  // the header push/pop actions to a later table.
+  //  table_name - Identifies a table that uses this field as a key.
+  // TODO: This is a provisional definition.  Other items for
+  // consideration:
+  //  - Should this identify tables in pairs, i.e. the table that assigns
+  //    the metadata together with the table that uses it as a key?
+  //  - Should this include a list of valid values for the key, which could
+  //    be derived at compile time from the hidden table's static entries.
+  message P4MetadataKey {
+    string table_name = 1;
+  }
+
+  // Mapping fields for match fields are:
+  //  type - Identifies the field in an output flow entry.
+  //  valid_conversions - Indicates how to derive the flow entry field value
+  //      from the P4 match field's value.
+  //  bit_offset - Gives the field's offset in bits from the beginning of
+  //      its encapsulating header to the first (most significant) bit in
+  //      the field.
+  //  bit_width - Gives the field's width in bits.
+  //  device_data - Optional data for the HAL switch to use for defining and
+  //      setting up the field.
+  //  is_local_metadata - Flags fields that are defined by the P4 program's
+  //      local metadata.
+  //  header_type - Identifies the protocol header that defines this field.
+  //  metadata_keys - When type is P4_FIELD_TYPE_METADATA_MATCH, provides
+  //      information about a local metadata field's usage in indirect table
+  //      lookups.
+  P4FieldType type = 1;
+  repeated P4FieldConversionEntry valid_conversions = 2;
+  int32 bit_offset = 3;
+  int32 bit_width = 4;
+  repeated P4DeviceProgramData device_data = 5;
+  bool is_local_metadata = 6;
+  P4HeaderType header_type = 7;
+  repeated P4MetadataKey metadata_keys = 8;
+}
+
+// A P4ActionDescriptor defines how to map a P4 runtime action into a common
+// flow entry action.  The descriptor supports mapping actions from within a PI
+// TableWriteRequest or a PI ActionProfileWriteRequest.  The P4ActionDescriptor
+// represents three general types of operations:
+// 1) Assignment of values to fields, such as:
+//    hdr.ethernet.src_addr = <action-param>;
+//    standard_metadata.egress_spec = <action-param>;
+//    local_metadata.encap_type = <constant-value>;
+// 2) P4 primitive and extern calls, such as:
+//    mark_to_drop();
+//    clone3(<clone-parameters>);
+// 3) Meter-based operations, such as:
+//    clone3(<clone-parameters>) if meter is GREEN;
+//    mark_to_drop() when meter is not GREEN;
+// A P4ActionDescriptor has multiple ways to encode operations within the
+// action, which correspond to the types of operations listed above:
+// 1) Very simple operations can be encoded as a P4ActionOp value, such as
+//    P4_ACTION_OP_DROP or P4_ACTION_OP_NOP.
+// 2) More sophisticated operations requiring parameters or operands are
+//    encoded in a P4ActionInstructions message.
+// 3) Metering operations can be encoded as either item 1 or 2 above with
+//    a set of color-based qualifiers.
+message P4ActionDescriptor {
+  // The P4ActionInstructions message defines how to map operations that involve
+  // parameters or operands.  In many cases, the target is a header-field that
+  // gets modified by a single parameter value.  In other cases, an extern
+  // method or primitive function needs one or more parameter values.
+  //  assigned_value - encodes the operand or parameter value to be assigned
+  //      to destination_field_names and/or used as an argument to primitives.
+  //  destination_field_names - identify the header-fields when the
+  //      assigned_value is the source value for one or more fields in
+  //      assignment statements.  When the assigned_value source represents a
+  //      complete header, destination_field_names contains a header name
+  //      instead of an individual field name.
+  //  primitives - indicate that the assigned_value is used as an argument
+  //      to the primitive.
+  // Some primitives could require multiple action parameters, but there are
+  // currently no known use cases.
+  message P4ActionInstructions {
+    P4AssignSourceValue assigned_value = 1;
+    repeated string destination_field_names = 2;
+    repeated P4ActionOp primitives = 3;
+  }
+
+  // The P4MeterColorAction message specifies action operations that are
+  // conditional based on packet metering decisions.
+  //  colors - list one or more colors that select the meter operations.
+  //  ops - list the operations that occur for packets matching one
+  //      of the values in colors.
+  // For example, to drop all non-green packets, the P4MeterColorAction
+  // would be encoded like this:
+  //  {
+  //    colors: P4_METER_YELLOW
+  //    colors: P4_METER_RED
+  //    ops {
+  //      primitives: P4_ACTION_OP_DROP
+  //    }
+  //  }
+  // To clone all green packets, the P4MeterColorAction would be encoded
+  // like this:
+  //  {
+  //    colors: P4_METER_GREEN
+  //    ops {
+  //      constant_param: <clone-port-ID>
+  //      primitives: P4_ACTION_OP_CLONE
+  //    }
+  //  }
+  message P4MeterColorAction {
+    repeated P4MeterColor colors = 1;
+    repeated P4ActionInstructions ops = 2;
+  }
+
+  // The P4TunnelAction message identifies any tunneling encap/decap operations
+  // that an action performs.
+  //  tunnel_op - indicates whether the action encaps or decaps a header.
+  //  header_name - name of the header to which tunnel_op applies.
+  message P4TunnelAction {
+    P4TunnelOp tunnel_op = 1;
+    string header_name = 2;
+  }
+
+  // Mapping fields in an action descriptor are:
+  //  type - always P4_ACTION_TYPE_FUNCTION in the current implementation.
+  //  assignments - instructions for how to assign action parameters, constants,
+  //      and other fields to a destination header or metadata field.
+  //  primitive_ops - lists any primitive operations that the action performs
+  //      without parameters.
+  //  color_actions - lists actions which occur based on packet metering
+  //      conditions.
+  //  device_data - Optional data for the HAL switch to use for defining and
+  //      setting up the action.
+  //  tunnel_actions - lists any tunneling encap/decap operations that the
+  //      action performs.
+  P4ActionType type = 1;
+  repeated P4ActionInstructions assignments = 2;
+  repeated P4ActionOp primitive_ops = 3;
+  repeated P4MeterColorAction color_actions = 4;
+  repeated P4DeviceProgramData device_data = 5;
+  repeated P4TunnelAction tunnel_actions = 6;
+}
+
+// A P4HeaderDescriptor maps a named P4 header to an integer type value.  It
+// is useful for encap/decap actions.  Given the P4 program statement:
+//  hdr.inner.ipv4.setInvalid();
+// a P4HeaderDescriptor for "hdr.inner.ipv4" with type P4_HEADER_IPV4 helps
+// determine that the packet's IPv4 header needs to be popped.
+message P4HeaderDescriptor {
+  // Mapping fields in a header descriptor are:
+  //  type - Identifies the type of header.
+  P4HeaderType type = 1;
+}
+
+// These messages define the map that sets up table mapping.  Each vendor will
+// specify this map via a manually generated text file (or potentially P4
+// compiler generated) that defines the mapping relative to the vendor's SDK.
+// It is also possible that vendor implementations may vary by switch chip.
+message P4TableMapValue {
+  oneof descriptor {
+    P4TableDescriptor table_descriptor = 1;
+    P4FieldDescriptor field_descriptor = 2;
+    P4ActionDescriptor action_descriptor = 3;
+    P4HeaderDescriptor header_descriptor = 4;
+  }
+}

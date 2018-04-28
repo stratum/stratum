@@ -1,0 +1,67 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This proto is for use in tests that require a basic phal attribute
+// database schema. It's intended to include simple patterns that can
+// appear in a valid schema protobuf. This is strictly for testing that
+// we can successfully configure a database based on a proto schema.
+// Any deeper testing of our database should use db.proto.
+
+syntax = "proto3";
+
+package stratum.hal.phal;
+
+message TestSubSub {
+  string meh = 1;
+}
+
+// Nested level protobuf. Test that child attribute groups work.
+message TestSub {
+  int32 val1 = 1;
+  string val2 = 2;
+  TestSubSub single_sub_sub = 3;
+  repeated TestSubSub repeated_sub_sub = 4;
+}
+
+// Make sure that enums work too.
+enum TopEnum {
+  ZERO = 0;
+  ONE = 1;
+  TWO = 2;
+  THREE = 3;
+}
+
+// Top level protobuf. Test that all of our various field types work.
+message TestTop {
+  // We want to check that a SubEnum and TopEnum are different types.
+  enum SubEnum {
+    SUB_ZERO = 0;
+    SUB_ONE = 1;
+    SUB_TWO = 2;
+    SUB_THREE = 3;
+  }
+  TestSub single_sub = 1;
+  repeated TestSub repeated_sub = 2;
+  TopEnum top_val = 3;
+  SubEnum sub_val = 4;
+  int32 int32_val = 5;
+  int64 int64_val = 6;
+  uint32 uint32_val = 7;
+  uint64 uint64_val = 8;
+  float float_val = 9;
+  double double_val = 10;
+  bool bool_val = 11;
+  string string_val = 12;
+}

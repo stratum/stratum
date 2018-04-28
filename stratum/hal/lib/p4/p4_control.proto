@@ -1,0 +1,261 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file declares proto messages for representing the P4 program control
+// flow output from the Hercules p4c backend.  It is part of the P4 pipeline
+// configuration.
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal;
+
+import "third_party/stratum/public/proto/p4_annotation.proto";
+import "third_party/stratum/public/proto/p4_table_defs.proto";
+
+// The p4c backend represents each top-level control method in the P4 program
+// with a P4Control message.  The P4Control message contains additional messages
+// that represent different types of statements from the P4 program.  It
+// organizes series of one or more statements into blocks that represent the
+// P4 program's branching logic.  See the details of P4ControlStatement,
+// P4ControlBlock, and the various messages for individual statements below.
+
+// By the time the p4c backend runs, the compiler's frontend and midend passes
+// have inlined all P4 control subfunctions into the top-level controls for
+// the applicable P4 model.  Thus, the only control methods externally
+// visible to the backend and subsequently emitted as P4Control messages are
+// the entry points defined by the architecture-dependent model.  For example,
+// the V1Switch model has five control entry points: Ingress, Egress, Deparser,
+// ComputeChecksum, and VerifyChecksum.  The example below shows the P4Control
+// output for a simple P4 ingress control snippet.
+//
+// P4 snippet
+//  apply {
+//    if (hdr.ethernet.isValid()) {
+//      if (!table1.apply().hit) {
+//        table2.apply();
+//      } else {
+//        table3.apply();
+//      }
+//    }
+//  }
+//
+// P4Control message
+//  name: "ingress"
+//  type: P4_CONTROL_INGRESS
+//  main {
+//    statements {
+//      branch {
+//        condition {
+//          is_valid {
+//            header_name: "hdr.ethernet"
+//            header_type: P4_HEADER_ETHERNET
+//          }
+//        }
+//        true_block {
+//          statements {
+//            apply {
+//              table_name: "table1"
+//              table_id: 33592054
+//              pipeline_stage: VLAN_ACL
+//            }
+//          }
+//          statements {
+//            branch {
+//              condition {
+//                not_operator: true
+//                hit {
+//                  table_name: "table1"
+//                  table_id: 33592054
+//                }
+//              }
+//              true_block {
+//                statements {
+//                  apply {
+//                    table_name: "table2"
+//                    table_id: 33568218
+//                    pipeline_stage: L2
+//                  }
+//                }
+//              }
+//              false_block {
+//                statements {
+//                  apply {
+//                    table_name: "table3"
+//                    table_id: 33575570
+//                    pipeline_stage: L3_LPM
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//        false_block {
+//          fixed_pipeline {
+//            pipeline_stage: L3_LPM
+//            tables {
+//              table_name: "table4"
+//              table_id: 33581631
+//              pipeline_stage: L3_LPM
+//            }
+//            tables {
+//              table_name: "table5"
+//              table_id: 33572896
+//              pipeline_stage: L3_LPM
+//            }
+//          }
+//        }
+//      }
+//    }
+//  }
+
+// The P4ControlTableRef message refers to a table in a P4 control statement.
+// Its use cases include table apply statements and table hit/miss tests.  It
+// identifies the target table with the following fields:
+//  table_name - gives the name of the applied/hit table.
+//  table_id - gives the numeric ID assigned to the applied/hit table.
+//  pipeline_stage - indicates the data plane pipeline stage assigned to the
+//      table.  The stage is not available in all P4ControlTableRef contexts.
+//      See specific P4ControlTableRef references for more details.
+// The table_name and table_id values refer to the name and ID from the P4 table
+// object's preamble in its P4Info entry.
+// TODO - Add the P4TableType value from the table map?
+message P4ControlTableRef {
+  string table_name = 1;
+  uint32 table_id = 2;
+  P4Annotation.PipelineStage pipeline_stage = 3;
+}
+
+// The P4IfStatement represents an if-statement in the P4 control logic:
+//  condition - identifies the condition that causes the statement to branch.
+//      The P4BranchCondition message represents decisions such as table
+//      hits/misses and header validity.  See the message below for details.
+//  true_block - contains a series of statements that execute if condition
+//      is true.
+//  false_block - contains a series of statements that execute if condition
+//      is false.  The false_block is not present when the if-statement has
+//      no else clause.
+message P4IfStatement {
+  P4BranchCondition condition = 1;
+  P4ControlBlock true_block = 2;
+  P4ControlBlock false_block = 3;
+}
+
+// The P4BranchCondition message specifies the condition that causes a
+// P4IfStatement to branch.
+//  not_operator - true if the unary not operator precedes the P4 if-statement's
+//      condition expression.   Examples: (!is_valid(foo_header)) or
+//      (!table_foo.apply().hit).
+//  hit - expresses a decision based on the hit or miss outcome of a table
+//      apply operation.  The P4ControlTableRef fields identify the
+//      hit/missed table.  For hits, the not_operator is false, and for misses
+//      the not_operator is true.  The table's pipeline stage is not available
+//      in this context.
+//  is_valid - expresses a decision based on the validity of a packet header.
+//  unknown - provides a text description of conditions that the p4c backend
+//      does not currently recognize or support.
+// TODO: Minimize the number of "unknown" conditions in existing P4
+//      programs.  The most significant unsupported condition is currently
+//      comparison of fields, such as (local_metadata.color != METER_GREEN).
+// TODO: More complex conditions, for example (is_valid(foo_header) &&
+//      metadata_field == XX) are not represented.  What does p4c do with these
+//      in the IR?
+message P4BranchCondition {
+  bool not_operator = 1;
+  oneof condition {
+    P4ControlTableRef hit = 2;
+    P4HeaderValidCondition is_valid = 3;
+    string unknown = 50;
+  }
+}
+
+// The P4HeaderValidCondition represents the result of an is_valid query on
+// a packet header:
+//  header_name - the name of the valid/invalid header, as identified by the
+//      output of the parser stage.
+//  header_type - the header type value assigned to header_name.
+message P4HeaderValidCondition {
+  string header_name = 1;
+  P4HeaderType header_type = 2;
+}
+
+// The P4ControlStatement contains all the possible encodings of the various
+// P4 control statement types above:
+//  apply - indicates an apply statement for the table identified by
+//      P4ControlTableRef fields.  The table's pipeline_stage is available
+//      with the apply statement.
+//  branch - specifies an if statement according to P4IfStatement fields.
+//  drop - represents a statement that calls P4 extern "mark_to_drop()".
+//  return/exit - represent return and exit statements in the P4 program.
+//  fixed_pipeline - provides a statement to represent all of the logic that
+//      the compiler can assign to a fixed-function pipeline stage.
+//  other - contains a text description of a statement that the Hercules
+//      backend does not know how to interpret.
+message P4ControlStatement {
+  oneof statement {
+    P4ControlTableRef apply = 1;
+    P4IfStatement branch = 2;
+    bool drop = 3;
+    bool return = 4;
+    bool exit = 5;
+    FixedPipelineTables fixed_pipeline = 6;
+    string other = 50;
+  }
+}
+
+// The FixedPipelineTables message identifies a table or series of tables that
+// the p4c backend has assigned to one of the target's fixed-function pipeline
+// stages.  When the compiler maps tables to a fixed-function pipeline, it
+// strips all of the related apply/hit/branch condition logic that should be
+// executed by the forwarding logic in the pipeline stage.
+//  pipeline_stage - indicates the pipeline stage.
+//  tables - lists the tables mapped into this fixed-function pipeline
+//      stage.  The P4ControlTableRef pipeline_stage field for each member of
+//      tables is the same as the pipeline_stage for the overall message.
+message FixedPipelineTables {
+  P4Annotation.PipelineStage pipeline_stage = 1;
+  repeated P4ControlTableRef tables = 2;
+}
+
+// The P4ControlBlock message organizes a series of statements that make up
+// one logical block within the P4 program.  The field order in statements
+// preserves the order that the statements appear in the P4 program.
+message P4ControlBlock {
+  repeated P4ControlStatement statements = 1;
+}
+
+// A P4Control message represents each control method defined by the P4 program
+// model:
+//  name - name of the control in the P4 program, such as "ingress_tor" or
+//      "egress_tor".
+//  type - type of control according to the P4 model.  P4ControlType enumerates
+//      the types of interest to a Hercules switch.
+//  main - contains the block of statements that execute at the P4 control's
+//      main entry point.  If the P4 control's main level has if-statements,
+//      additional sub-blocks appear under the P4IfStatement true_block and
+//      false_block, and these blocks can generate additional sub-blocks if
+//      they do more branching.
+message P4Control {
+  enum P4ControlType {
+    P4_CONTROL_UNKNOWN = 0;
+    P4_CONTROL_INGRESS = 1;
+    P4_CONTROL_EGRESS = 2;
+  }
+
+  string name = 1;
+  P4ControlType type = 2;
+  P4ControlBlock main = 3;
+}

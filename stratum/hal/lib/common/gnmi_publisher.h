@@ -1,0 +1,297 @@
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+#ifndef STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_H_
+#define STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_H_
+
+#include <pthread.h>
+#include <time.h>
+
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/hal/lib/common/gnmi_events.h"
+#include "third_party/stratum/hal/lib/common/yang_parse_tree.h"
+#include "third_party/stratum/lib/timer_daemon.h"
+#include "third_party/stratum/public/lib/error.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "util/gtl/flat_hash_map.h"
+#include "util/gtl/map_util.h"
+
+namespace stratum {
+namespace hal {
+
+class ConfigMonitoringServiceTest;
+class SubscriptionTest;
+
+// A container for all paremeters needed to define how often a subscriber wants
+// to receive streamed data.
+class Frequency {
+ public:
+  uint64 delay_ms_;
+  uint64 period_ms_;
+  uint64 heartbeat_ms_;
+
+ protected:
+  Frequency(uint64 delay_ms, uint64 period_ms, uint64 heartbeat_ms)
+      : delay_ms_(delay_ms),
+        period_ms_(period_ms),
+        heartbeat_ms_(heartbeat_ms) {}
+};
+
+// Specialization of the Frequency container to be used by subscriptions that
+// require updates every 'period_ms' milliseconds.
+class Periodic : public Frequency {
+ public:
+  explicit Periodic(uint64 period_ms) : Frequency(0, period_ms, 0) {}
+};
+
+// Specialization of the Frequency container to be used by subscriptions that
+// require updates every 'period_ms' milliseconds. The current state is _only_
+// reported if there is change in the value of the node unless since last update
+// 'heartbeat_ms' milliseconds have elapsed.
+class PeriodicWithHeartbeat : public Frequency {
+ public:
+  PeriodicWithHeartbeat(uint64 period_ms, uint64 heartbeat_ms)
+      : Frequency(0, period_ms, heartbeat_ms) {}
+};
+
+// The main class responsible for handling all aspects of gNMI subscriptions and
+// notifications.
+class GnmiPublisher {
+ protected:
+  using SupportOnPtr = bool (TreeNode::*)() const;
+  using GetHandlerFunc = GnmiEventHandler (TreeNode::*)() const;
+
+ public:
+  static constexpr int kMaxGnmiEventDepth = 256;
+
+  // Constructor.
+  explicit GnmiPublisher(SwitchInterface*);
+
+  virtual ~GnmiPublisher();
+
+  ::util::Status HandleChange(const GnmiEvent& event)
+      LOCKS_EXCLUDED(access_lock_);
+
+  virtual ::util::Status HandlePoll(const SubscriptionHandle& handle)
+      LOCKS_EXCLUDED(access_lock_);
+
+  virtual ::util::Status SubscribePeriodic(const Frequency& freq,
+                                           const ::gnmi::Path& path,
+                                           GnmiSubscribeStream* stream,
+                                           SubscriptionHandle* h);
+
+  virtual ::util::Status SubscribePoll(const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream,
+                                       SubscriptionHandle* h)
+      LOCKS_EXCLUDED(access_lock_);
+
+  virtual ::util::Status SubscribeOnChange(const ::gnmi::Path& path,
+                                           GnmiSubscribeStream* stream,
+                                           SubscriptionHandle* h)
+      LOCKS_EXCLUDED(access_lock_);
+
+  // One of the subscription modes, TARGET_DEFINED, leaves the decision of how
+  // to treat the received subscription request to the switch.
+  // When such request is received this method is called and the request is
+  // passed to the node implementating 'path' to modify the 'subscription'
+  // request to be what the switch would like it to be.
+  // Note that this method does not check if mode in 'request' is set to
+  // TARGET_DEFINED.
+  virtual ::util::Status UpdateSubscriptionWithTargetSpecificModeSpecification(
+      const ::gnmi::Path& path, ::gnmi::Subscription* subscription)
+      LOCKS_EXCLUDED(access_lock_);
+
+  virtual ::util::Status UnSubscribe(EventHandlerRecord* h)
+      LOCKS_EXCLUDED(access_lock_);
+
+  // The method sends a gNMI message denoting the end of initial set of values.
+  virtual ::util::Status SendSyncResponse(GnmiSubscribeStream* stream);
+
+  // Method creating the channel to be used to receive notifications from
+  // the switch.
+  virtual ::util::Status RegisterEventWriter() LOCKS_EXCLUDED(access_lock_);
+
+  // A method deleting the channel used to receive notifications from
+  // the switch and cleaning-up.
+  virtual ::util::Status UnregisterEventWriter() LOCKS_EXCLUDED(access_lock_);
+
+ private:
+  // ReaderArgs encapsulates the arguments for a Channel reader thread.
+  template <typename T>
+  struct ReaderArgs {
+    GnmiPublisher* manager;
+    std::unique_ptr<ChannelReader<T>> reader;
+  };
+
+  // A family of helper methods that simplify registration of event handlers
+  // with correct event handler list.
+  template <typename E>
+  ::util::Status Register(const EventHandlerRecordPtr& record) {
+    return EventHandlerList<E>::GetInstance()->Register(record);
+  }
+
+  // An internal method that handles an event in the context of particular event
+  // handler.
+  ::util::Status HandleEvent(const GnmiEvent& event,
+                             const EventHandlerRecordPtr& h);
+
+  // A generic method handling all types of subscriptions. Requires long list of
+  // parameters, so, it has been hidden here and specialized methods calling it
+  // have been exposed as public interface.
+  ::util::Status Subscribe(const SupportOnPtr& supports_on,
+                           const GetHandlerFunc& get_handler,
+                           const ::gnmi::Path& path,
+                           GnmiSubscribeStream* stream, SubscriptionHandle* h)
+      LOCKS_EXCLUDED(access_lock_);
+
+  // A handler of events received over the event_channel_ channel.
+  void ReadGnmiEvents(
+      const std::unique_ptr<ChannelReader<GnmiEventPtr>>& reader)
+      LOCKS_EXCLUDED(access_lock_);
+
+  // A code executed by the thread waiting for events transmitted over
+  // the event_channel_ channel.
+  static void* ThreadReadGnmiEvents(void* arg) LOCKS_EXCLUDED(access_lock_);
+
+  // A pointer to implementation of the Switch Interface - the API used to
+  // communicate with the switch.
+  SwitchInterface* switch_interface_ GUARDED_BY(access_lock_);
+
+  // A Mutex used to guard access to the list of pointers to handlers.
+  mutable absl::Mutex access_lock_;
+
+  // A tree that is used to map a YAML tree path into a functor that handles
+  // that node.
+  YangParseTree parse_tree_;
+
+  // Channel for receiving transceiver events from the SwitchInterface.
+  std::shared_ptr<Channel<GnmiEventPtr>> event_channel_
+      GUARDED_BY(access_lock_);
+
+  // Special event handler that is called when a ConfigHasBeenPushedEvent event
+  // is received.
+  std::function<::util::Status(const GnmiEvent&, GnmiSubscribeStream*)>
+      on_config_pushed_func_ GUARDED_BY(access_lock_) =
+          [this](const GnmiEvent& event_base, GnmiSubscribeStream* stream)
+              EXCLUSIVE_LOCKS_REQUIRED(access_lock_) {
+                // Special case - change of configuration.
+                VLOG(1) << "Configuration has changed.";
+                if (auto* event = dynamic_cast<const ConfigHasBeenPushedEvent*>(
+                        &event_base)) {
+                  parse_tree_.ProcessPushedConfig(*event);
+                }
+                return ::util::OkStatus();
+              };
+  SubscriptionHandle on_config_pushed_;
+
+  friend class ConfigMonitoringServiceTest;
+  friend class SubscriptionTestBase;
+};
+
+// In order to use ::gnmi::Path as a key in std::map<> a comparator functor has
+// to be defined.
+struct PathComparator {
+  bool operator()(const ::gnmi::Path& lhs, const ::gnmi::Path& rhs) const {
+    // Only elements that are present in both paths can be compared.
+    int min_size = std::min(lhs.elem_size(), rhs.elem_size());
+    for (int i = 0; i < min_size; ++i) {
+      int result = 0;
+      if ((result = lhs.elem(i).name().compare(rhs.elem(i).name())) != 0) {
+        // The elements of the path at index 'i' differ!
+        return (result < 0);
+      }
+      auto* lhs_key = gtl::FindOrNull(lhs.elem(i).key(), "name");
+      auto* rhs_key = gtl::FindOrNull(rhs.elem(i).key(), "name");
+      if (lhs_key == nullptr && rhs_key == nullptr) {
+        // No key in bot elements!
+        continue;
+      }
+      if (lhs_key != nullptr && rhs_key != nullptr) {
+        // Both have keys!
+        if ((result = lhs_key->compare(*rhs_key)) != 0) {
+          // The keys of elements of the path at index 'i' differ!
+          return (result < 0);
+        }
+        continue;
+      }
+      // Only one element has a key. So if lhs has a key then (lhs < rhs)
+      // evaluates to 'false'.
+      return (lhs_key != nullptr);
+    }
+    if (lhs.elem_size() == rhs.elem_size()) {
+      // All elements of both paths are the same. So (lhs < rhs) evaluates to
+      // 'false'.
+      return false;
+    } else {
+      // One path is longer. The shorter path is 'smaller'.
+      return lhs.elem_size() < rhs.elem_size();
+    }
+  }
+};
+
+// A compare operator for ::gnmi::Path objects.
+inline bool operator==(const ::gnmi::Path& lhs, const ::gnmi::Path& rhs) {
+  static PathComparator c;
+  // The PathComparator supports only one comparison: lhs < rhs.
+  return c(lhs, rhs) == c(rhs, lhs);
+}
+
+// A map mapping ::gnmi::Path to GnmiPublisher::Handle. Due to not being a basic
+// type, ::gnmi::Path requires a comparator functor (the third template
+// parameter).
+using PathToHandleMap =
+    std::map<::gnmi::Path, SubscriptionHandle, PathComparator>;
+
+// A helper that initializes correctly ::gnmi::Path.
+class GetPath {
+ public:
+  explicit GetPath(const std::string& name) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+  }
+
+  GetPath(const std::string& name, const std::string& search) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+    (*elem->mutable_key())["name"] = search;
+  }
+
+  GetPath operator()(const std::string& name) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+    return *this;
+  }
+
+  GetPath operator()(const std::string& name, const std::string& search) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+    (*elem->mutable_key())["name"] = search;
+    return *this;
+  }
+
+  const ::gnmi::Path& operator()() { return path_; }
+
+ private:
+  ::gnmi::Path path_;
+};
+
+}  // namespace hal
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_H_

@@ -1,0 +1,67 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum;
+
+// The custom error space for the hercules stack. Used by all the stack
+// components to propagate the errors.
+// TODO: This is still WIP.
+enum ErrorCode {
+  // These are reserved errors. Their value is the same as the corresponding
+  // error codes in util/task/codes.proto. This way the return status from
+  // functions that return a canonical error can be directly used to set the
+  // error code in the response protos in RPCs. Please see the meanings of these
+  // error codes in util/task/codes.proto. The errors from util/task/codes.proto
+  // that do not show up here have more detailed codes starting from 500 below.
+  ERR_SUCCESS = 0;  // Success (default value). Same as OK.
+  ERR_CANCELLED = 1;
+  ERR_UNKNOWN = 2;
+  ERR_PERMISSION_DENIED = 7;
+  ERR_FAILED_PRECONDITION = 9;
+  ERR_ABORTED = 10;
+  ERR_OUT_OF_RANGE = 11;
+  ERR_UNIMPLEMENTED = 12;
+  ERR_INTERNAL = 13;
+  ERR_DATA_LOSS = 15;
+  ERR_UNAUTHENTICATED = 16;
+
+  // The following errors are specific to the hercules stack. Their
+  // values start from 500, to make sure they are not conflicting with the
+  // canonical errors. DO NOT USE ANY VALUE BELOW 500 FOR THE ERRORS BEYOND
+  // THIS LINE.
+  ERR_TABLE_FULL = 500;                 // Table (e.g. flow table) full.
+  ERR_TABLE_EMPTY = 501;                // Table (e.g. flow table) empty.
+  ERR_HARDWARE_ERROR = 502;             // Generic hardware error.
+  ERR_INVALID_PARAM = 503;              // Invalid param.
+  ERR_ENTRY_NOT_FOUND = 504;            // Entry (e.g. flow) not found.
+  ERR_ENTRY_EXISTS = 505;               // Entry (e.g. flow) already exists.
+  ERR_OPER_NOT_SUPPORTED = 506;         // Unsupported operation.
+  ERR_OPER_DISABLED = 507;              // Disabled operation.
+  ERR_OPER_TIMEOUT = 508;               // Operation timeout.
+  ERR_OPER_STILL_RUNNING = 509;         // Operation still running (chip busy).
+  ERR_REBOOT_REQUIRED = 510;            // Operation cannot be done w/o reboot.
+  ERR_FEATURE_UNAVAILABLE = 511;        // Feature not available.
+  ERR_NOT_INITIALIZED = 512;            // Desired module is not initialized.
+  ERR_NO_RESOURCE = 513;                // No resource available (e.g. OOM).
+  ERR_FILE_NOT_FOUND = 514;             // The file is not found.
+  ERR_AT_LEAST_ONE_OPER_FAILED = 515;   // At least one failed (from many).
+  ERR_INVALID_P4_INFO = 516;            // Invalid P4Info pushed.
+  ERR_NO_OP = 517;                      // No operation performed.
+}
+

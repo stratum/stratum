@@ -1,0 +1,545 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file include all the internal messages used internally by the managers
+// in this folder.
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal;
+
+import "third_party/stratum/hal/lib/common/common.proto";
+import "third_party/stratum/public/proto/hal.proto";
+
+//------------------------------------------------------------------------------
+// Initialization-related protos
+//------------------------------------------------------------------------------
+
+// This message specifies all the port options for a specific BCM port. This
+// message can be used to both get and set the options.
+// NOTE: Any update in this proto needs to be added to PrintBcmPortOptions().
+// TODO: This is not complete yet.
+message BcmPortOptions {
+  enum LinkscanMode {
+    LINKSCAN_MODE_UNKNOWN = 0;  // default
+    LINKSCAN_MODE_SW = 1;
+    LINKSCAN_MODE_HW = 2;
+    LINKSCAN_MODE_NONE = 3;
+  }
+  // Is the port enabled?
+  TriState enabled = 1;
+  // Is the port blocked?
+  TriState blocked = 2;
+  // Is this a flex port?
+  TriState flex = 3;
+  // Is autoneg enabled?
+  TriState autoneg = 4;
+  // The speed in bps.
+  uint64 speed_bps = 5;
+  // Max supported frame size.
+  int32 max_frame_size = 6;
+  // Number of serdes lanes (for flex ports).
+  int32 num_serdes_lanes = 7;
+  // Linkscan mode.
+  LinkscanMode linkscan_mode = 8;
+};
+
+// Encapsulates all chassis-level properties (common to all chips on the
+// chassis) as required by BCM SDK.
+message BcmChassis {
+  // Chassis-level SDK properties (optional).
+  repeated string sdk_properties = 1;
+}
+
+// Encapsulates all chip-level properties as required by BCM SDK.
+message BcmChip {
+  enum BcmChipType {
+    UNKNOWN = 0;       // default
+    TRIDENT_PLUS = 1;  // BCM56846
+    TRIDENT2 = 2;      // BCM56850
+    TOMAHAWK = 3;      // BCM56960
+  }
+  // The BCM chip type.
+  BcmChipType type = 1;
+  // The 1-base index of the slot (aka linecard) which hosts this chip.
+  // Matches the 'slot' specified for the corresponding Node in the config.
+  int32 slot = 2;
+  // The 0-base unit (aka index) of the chip within the chassis. Must be in
+  // {0..N-1}, where N is the number of chips on the chassis. Matches the
+  // 'unit' specified for the corresponding Node in the config.
+  int32 unit = 3;
+  // Chassis-wide module number for the chip (if used).
+  int32 module = 4;
+  // PCI bus.
+  int32 pci_bus = 5;
+  // PCI slots.
+  int32 pci_slot = 6;
+  // Whether the chip is over subscribed (BCM-specific concept).
+  bool is_oversubscribed = 7;
+  // Chip-level SDK properties (optional).
+  repeated string sdk_properties = 8;
+}
+
+// Encapsulates all port-level properties as required by BCM SDK.
+message BcmPort {
+  enum BcmPortType {
+    UNKNOWN = 0;
+    MGMT = 1;
+    GE = 2;
+    XE = 3;
+    CE = 4;
+  }
+  // Internal BCM prot type.
+  BcmPortType type = 1;
+  // The 1-base index of the slot (aka linecard) which hosts this port.
+  // Matches the 'slot' specified for the corresponding SingletonPort in the
+  // config.
+  int32 slot = 2;
+  // The 1-base index of the port on the slot. Matches the 'port' specified
+  // for the corresponding SingletonPort in the config.
+  int32 port = 3;
+  // The 1-base channel index (only if the port is channelized). Absence or
+  // zero means non-channelized. Matches the 'channel' specified for the
+  // corresponding SingletonPort in the config.
+  int32 channel = 4;
+  // The 0-base unit (aka index) of the chip containing the port within the
+  // chassis. The value. Must be in {0..N-1}, where N is the number of chips
+  // on the chassis. Matches the 'unit' specified for the corresponding Node
+  // that hosts the SingletonPort in the config.
+  int32 unit = 5;
+  // The speed of the port. Matches the 'speed_bps' specified for the
+  // corresponding SingletonPort in the config.
+  uint64 speed_bps = 6;
+  // Internal BCM logical port (0-based).
+  int32 logical_port = 7;
+  // Internal BCM physical port (0-based).
+  int32 physical_port = 8;
+  // The port number showed in the BCM diag shell (0-based).
+  int32 diag_port = 9;
+  // Chassis-wide module number for the port (if used).
+  int32 module = 10;
+  // Serdes core (WarpCore, FalconCore, etc) number (0-based).
+  int32 serdes_core = 11;
+  // Serdes lane on the serdes core hosting the port (0-based).
+  int32 serdes_lane = 12;
+  // Number of serdes lanes used by the port.
+  int32 num_serdes_lanes = 13;
+  // Whether the port is a FlexPort.
+  bool flex_port = 14;
+  // TX and RX lane maps (BCM-specific concept).
+  int32 tx_lane_map = 15;
+  int32 rx_lane_map = 16;
+  // TX and RX polarity flips (BCM-specific concept).
+  int32 tx_polarity_flip = 17;
+  int32 rx_polarity_flip = 18;
+  // Phy address (used for external Phy only).
+  int32 phy_address = 19;
+  // Whether the port is an internal ports. An internal port is used internally
+  // in the chassis and is not used as a external (aka frontpanel) port. For
+  // example, all the backplane (BP) port on BG8/16 and SPICA8/16 linecards
+  // are internal.
+  bool internal = 20;
+  // Port-level SDK properties (optional).
+  repeated string sdk_properties = 21;
+}
+
+// Defines a chassis map for a BCM-based platform.
+message BcmChassisMap {
+  // Unique ID for the profile.
+  string id = 1;
+  // Boolean which determines whether the logical ports for the BcmPort fields
+  // are supposed to be automatically added by the stack.
+  bool auto_add_logical_ports = 2;
+  // Boolean which determines whether the slot for the BcmPorts and BcmChips
+  // is supposed to be automatically added by the stack. This is used for the
+  // case where slot is not known beforehand (e.g. in multi-linecard systems)
+  // and needs to be determined after pushing the chassis config. If set to
+  // true, slot must be set to zero.
+  bool auto_add_slot = 3;
+  // Chassis, chips, and ports.
+  BcmChassis bcm_chassis = 4;
+  repeated BcmChip bcm_chips = 5;
+  repeated BcmPort bcm_ports = 6;
+}
+
+// Defines a list of BcmChassisMap messages. This message is used to read a
+// list of supported chassis maps from a file for a specific platform. These
+// are usually the base chassis maps which includes all the supported chips
+// and port combinations (all speeds, etc). The chassis map which is then
+// given for initialization will be a pruned version of one of these base
+// chassis maps (the one whose ID is given through the config).
+message BcmChassisMapList {
+  repeated BcmChassisMap bcm_chassis_maps = 1;
+}
+
+//------------------------------------------------------------------------------
+// Flow/group related protos
+//------------------------------------------------------------------------------
+
+// Table entry field or action parameter values.
+message BcmTableEntryValue {
+  message U32List {
+    repeated fixed32 u32 = 1;
+  }
+  oneof data {
+    fixed32 u32 = 1;       // IPv4 addr, VRF, and most of the other fields.
+    fixed64 u64 = 2;       // metadata, MAC address, etc.
+    bytes b = 3;           // IPv6 addr, etc.
+    U32List u32_list = 4;  // Ingress Port Bitmap.
+  }
+}
+
+// BcmUdfSet contains the set of UDF chunks to be configured in hardware.
+message BcmUdfSet {
+  // PacketLayer enumerates the different layers within which a UDF chunk can be
+  // created.
+  enum PacketLayer {
+    UNKNOWN = 0;
+    PACKET_START = 1;
+    L2_HEADER = 2;
+    L3_HEADER = 3;
+    INNER_L3_HEADER = 4;
+    L4_HEADER = 5;
+  }
+  // UdfChunk defines the id and location in packet of a UDF chunk.
+  message UdfChunk {
+    uint32 id = 1;  // required
+    // The layer of the packet within which the UDF chunk is located.
+    PacketLayer layer = 2;  // required
+    // The offset in bytes from the start of the layer to the UDF chunk.
+    uint32 offset = 3;  // required
+  }
+  // The list of UDF chunks to be programmed.
+  repeated UdfChunk chunks = 1;
+}
+
+// BcmField refers to a field against which a packet is matched, including
+// packet headers, the ingress port, metadata etc. If mask is provided, it MUST
+// contain the same BcmTableEntryValue element as value. Offset is given only
+// for Google-specific UDFs.
+message BcmField {
+  enum Type {
+    UNKNOWN = 0;              // Default.
+    IN_PORT = 1;              // Logical ingress port.
+    IN_PORT_BITMAP = 2;       // Logical ingress port bit map.
+    OUT_PORT = 3;             // Logical egress port.
+    ETH_TYPE = 4;             // Ethertype.
+    IP_TYPE = 5;              // IP type (e.g. v4/v6 + options, ARP).
+    ETH_SRC = 6;              // Ethernet source address (MAC).
+    ETH_DST = 7;              // Ethernet destination address (MAC).
+    VLAN_VID = 8;             // VLAN ID.
+    VLAN_PCP = 9;             // VLAN priority.
+    IPV4_SRC = 10;            // IPv4 source address.
+    IPV4_DST = 11;            // IPv4 destination address.
+    IPV6_SRC = 12;            // IPv6 source address.
+    IPV6_DST = 13;            // IPv6 destination address.
+    IPV6_SRC_UPPER_64 = 14;   // IPv6 source prefix.
+    IPV6_DST_UPPER_64 = 15;   // IPv6 destination prefix.
+    VRF = 16;                 // VRF ID.
+    IP_DSCP_TRAF_CLASS = 17;  // IPv4 DSCP / IPv6 Traffic Class.
+    IP_TTL_HOP_LIMIT = 18;    // IPv4 TTL / IPv6 Hop Limit.
+    IP_PROTO_NEXT_HDR = 19;   // IPv4 Protocol / IPv6 Next Header.
+    L4_SRC = 20;              // TCP/UDP source port.
+    L4_DST = 21;              // TCP/UDP destination port.
+    TCP_FLAGS = 22;           // TCP Flags (8 bits).
+    ICMP_TYPE_CODE = 23;      // ICMP type and code (v4/6).
+    VFP_DST_CLASS_ID = 24;    // VFP Destination Class ID.
+    L3_DST_CLASS_ID = 25;     // L3 Destination Class ID.
+    CLONE_PORT = 26;          // Logical destination port for packet clone.
+  };
+  Type type = 1;                 // required
+  BcmTableEntryValue value = 2;  // required
+  BcmTableEntryValue mask = 3;   // optional. If not given, it will all 1's.
+  // udf_chunk_id is required for UDFs and will not be present for non-UDFs. As
+  // this is proto3, the default value of 0 implies not present. For UDFs, the
+  // Type field is irrelevant to programming and verification but can be used
+  // for bookkeeping.
+  uint32 udf_chunk_id = 4;  // optional
+}
+
+// BcmAction, as part of a flow entry, refers to the action that we take upon a
+// match, e.g. forwarding the packet to a port or modifying the packet header.
+message BcmAction {
+  enum Type {
+    UNKNOWN = 0;                // Default
+    DROP = 1;                   // Drop the packet ingress.
+    OUTPUT_PORT = 2;            // Output to singleton port.
+    OUTPUT_TRUNK = 3;           // Output to trunk port.
+    OUTPUT_L3 = 4;              // Output to L3 egress interface.
+    SET_ETH_SRC = 5;            // Set Ethernet source address (MAC).
+    SET_ETH_DST = 6;            // Set Ethernet destination address (MAC).
+    SET_IPV4_SRC = 7;           // Set IPv4 source address.
+    SET_IPV4_DST = 8;           // Set IPv4 destination address.
+    SET_IPV6_SRC = 9;           // Set IPv6 source address.
+    SET_IPV6_DST = 10;          // Set IPv6 destination address.
+    SET_VRF = 11;               // Set VRF ID.
+    SET_VFP_DST_CLASS_ID = 12;  // Set VFP Destination Class ID.
+    SET_L3_DST_CLASS_ID = 13;   // Set L3 Destination Class ID.
+    SET_VLAN_VID = 14;          // Set VLAN ID.
+    SET_VLAN_PCP = 15;          // Set VLAN priority.
+    STRIP_VLAN = 16;            // Strip VLAN tag.
+    SET_IP_DSCP = 17;           // Set IP DSCP bits in ToS field.
+    SET_IP_ECN = 18;            // Set IP ECN bits in ToS field.
+    SET_IP_TOS = 19;            // Set IP ToS field.
+    SET_COS = 20;               // Set internal CoS (priority).
+    SET_QUEUE = 21;             // Set output queue.
+    SET_COLOR = 22;             // Set packet color.
+    COPY_TO_CPU = 23;           // Copy packet to CPU port.
+    CANCEL_COPY_TO_CPU = 24;    // Cancel copy to CPU port.
+    SET_L2_MCAST_GROUP = 25;    // Set the L2 multicast group for a class of
+                                // traffic with a specific MAC.
+  };
+  // Action parameters. Each action can have zero or many parameters. Note
+  // that parameter types have many fields in common with field types.
+  // However, there are differences as well.
+  message Param {
+    enum Color {
+      NONE = 0;    // BCM_FIELD_COLOR_PRESERVE
+      GREEN = 1;   // BCM_FIELD_COLOR_GREEN
+      YELLOW = 2;  // BCM_FIELD_COLOR_YELLOW
+      RED = 3;     // BCM_FIELD_COLOR_RED
+      BLACK = 4;   // BCM_FIELD_COLOR_BLACK
+    }
+    enum Type {
+      UNKNOWN = 0;             // Default
+      EGRESS_INTF_ID = 1;      // Egress intf ID as defined by SDK.
+      ETH_SRC = 2;             // Ethernet source address (MAC).
+      ETH_DST = 3;             // Ethernet destination address (MAC).
+      IPV4_SRC = 4;            // IPv4 source address.
+      IPV4_DST = 5;            // IPv4 destination address.
+      IPV6_SRC = 6;            // IPv6 source address.
+      IPV6_DST = 7;            // IPv6 destination address.
+      VRF = 8;                 // VRF ID.
+      VFP_DST_CLASS_ID = 9;    // VFP Destination Class ID.
+      L3_DST_CLASS_ID = 10;    // L3 Destination Class ID.
+      VLAN_VID = 11;           // VLAN ID.
+      VLAN_PCP = 12;           // VLAN priority.
+      IP_DSCP = 13;            // IP DSCP (high 6 bits in ToS shifted by 2).
+      IP_ECN = 14;             // IP ECN (low 2 bits in ToS field).
+      IP_TOS = 15;             // IP protocol.
+      COS = 16;                // Internal CoS (priority).
+      QUEUE = 17;              // Output/egress queue number.
+      COLOR = 18;              // Packet color.
+      LOGICAL_PORT = 19;       // Logical port as defined by SDK.
+      TRUNK_PORT = 20;         // Trunk port as defined by SDK.
+      L2_MCAST_GROUP_ID = 21;  // L2 multicast group ID.
+    }
+    Type type = 1;
+    BcmTableEntryValue value = 2;
+  }
+  Type type = 1;              // required
+  repeated Param params = 2;  // optional, needed for some actions.
+}
+
+// BcmAclStage enumerates the different ACL stages in the BCM pipeline.
+enum BcmAclStage {
+  BCM_ACL_STAGE_UNKNOWN = 0;
+  BCM_ACL_STAGE_VFP = 1;
+  BCM_ACL_STAGE_IFP = 2;
+  BCM_ACL_STAGE_EFP = 3;
+}
+
+// BcmAclTable refers to an ACL table implemented in BCM's ContentAware TCAMs.
+// TODO: Complete this. This is still WIP and not complete.
+message BcmAclTable {
+  // Table priority.
+  uint32 priority = 1;  // required.
+  // The set of all available qualifier fields for the table.
+  repeated BcmField fields = 2;  // required.
+  // The ACL stage. This indicates n which FP/CAP the table will be installed.
+  BcmAclStage stage = 3;  // required.
+  // Table id.
+  uint32 id = 4;  // optional.
+}
+
+// BcmMeterConfig describes an RFC 2698 Two-Rate Three-Color Marker (trTCM)
+// which meters a packet stream based on two rates, Peak Information Rate (PIR)
+// and Committed Information Rate (CIR) and their associated burst sizes. A
+// packet is marked red if it exceeds PIR, else green or yellow based on whether
+// it exceeds the CIR. If only two colors (and therefore one rate) are required,
+// the CIR and PIR should be equal.
+message BcmMeterConfig {
+  // Committed information rate (kbps).
+  uint32 committed_rate = 1;
+  // Committed burst size (kb).
+  uint32 committed_burst = 2;
+  // Peak information rate (kbps).
+  uint32 peak_rate = 3;
+  // Peak burst size (kb).
+  uint32 peak_burst = 4;
+}
+
+// BcmFlowEntry refers to an element in a flow table as described by BCM SDK.
+// TODO: Complete this. This is still WIP and not complete.
+message BcmFlowEntry {
+  // List of all the supported tables that specify hardware resources on a BCM
+  // chip. The respurce could be actually a physcial table (LPM, TCAM, etc) or
+  // some sort of hardware module controlled by SDK.
+  // NOTE: Make sure to modify BcmTableManager::GetBcmTableId() if there is a
+  // change in this enum.
+  enum BcmTableType {
+    BCM_TABLE_UNKNOWN = 0;
+    BCM_TABLE_IPV4_LPM = 1;
+    BCM_TABLE_IPV6_LPM = 2;
+    BCM_TABLE_IPV4_HOST = 3;
+    BCM_TABLE_IPV6_HOST = 4;
+    BCM_TABLE_MY_STATION = 5;
+    BCM_TABLE_ACL = 6;
+    BCM_TABLE_L2_MULTICAST = 7;
+  }
+  // The unit to program this flow.
+  int32 unit = 1;  // required
+  // The internal BCM hardware table.
+  BcmTableType bcm_table_type = 2;  // required
+  // The internal BCM handle for a BCM ACL (FP/CAP/CAE) Table. Only applicable
+  // when bcm_table_type is BCM_TABLE_ACL.
+  uint32 bcm_acl_table_id = 3;  // optional.
+  // Flow match fields (possibly more than one match per FlowEntry). The match
+  // fields are common for all vendors.
+  repeated BcmField fields = 4;  // required
+  // Flow action (possibly more than one action per FlowEntry). Actions here
+  // are all BCM specific.
+  repeated BcmAction actions = 5;  // required
+  // Flow priority, required for ACL flows
+  uint32 priority = 6;  // optional
+  // ACL stage of the destination table. Required only for ACL flows.
+  BcmAclStage acl_stage = 7;  // optional
+  // Meter configuration.
+  BcmMeterConfig meter = 8;  // optional
+}
+
+// BcmPacketCounter is used to represent any type of Broadcom packet counter
+// including ACL stats and port stats counters. It contains packet counts as
+// well as associated byte counts.
+message BcmPacketCounter {
+  uint64 bytes = 1;
+  uint64 packets = 2;
+}
+
+// BcmAclStats is used to store ACL stat counter values for a particular flow.
+// Presently, colored stats will have the red and green counter fields.
+// Uncolored stats will have the total counter field. The yellow field is unused
+// at the moment, as colored stats apparently only allow for two colors.
+message BcmAclStats {
+  BcmPacketCounter total = 1;
+  BcmPacketCounter red = 2;
+  BcmPacketCounter yellow = 3;  // unused
+  BcmPacketCounter green = 4;
+}
+
+// BcmNexthop uniquely defines a nexthop.
+message BcmNonMultipathNexthop {
+  enum Type {
+    NEXTHOP_TYPE_UNKNOWN = 0;
+    NEXTHOP_TYPE_DROP = 1;
+    NEXTHOP_TYPE_PORT = 2;
+    NEXTHOP_TYPE_TRUNK = 3;
+  }
+  Type type = 1;   // required
+  int32 unit = 2;  // required. 0-based.
+  int32 vlan = 3;  // 0-based.
+  fixed64 src_mac = 4;
+  fixed64 dst_mac = 5;
+  // The BCM-specific value of the port (aka BCM logical port) or trunk (aka
+  // BCM trunk id or tid or simply trunk).
+  oneof port {
+    int32 logical_port = 6;  // For type PORT only. 0-based.
+    int32 trunk_port = 7;    // For type TRUNK only. 0-based.
+  }
+}
+
+// BcmPortGroup defines a collection of ports forming an ECMP/WCMP group.
+// TODO: Complete this. This is still WIP and not complete.
+message BcmMultipathNexthop {
+  message BcmMultipathNexthopMember {
+    // Each member of the multipath nexthop is itself a non-multipath nexthop
+    // whose egress intf ID, after creation, is used here.
+    int32 egress_intf_id = 1;
+    // The weight (used in WCMP mode only).
+    uint32 weight = 2;
+  }
+  int32 unit = 2;
+  repeated BcmMultipathNexthopMember members = 3;
+}
+
+//------------------------------------------------------------------------------
+// Packet I/O related protos
+//------------------------------------------------------------------------------
+
+// This message encapsulates all the static data required for fast encoding and
+// decoding of Knet headers for each unit.
+// NOTE: At the moment this proto is used only in coupled mode of Hercules to
+// query the static data from HAL. In standalone mode there is no use for this
+// proto.
+message BcmKnetStaticData {
+  // RCPU signatur (fixed for each unit).
+  uint32 rcpu_signature = 1;
+  // Module id (fixed for each unit)
+  int32 module = 2;
+  // map from logical port to base queue num (for each port).
+  map<int32, int32> logical_port_to_qbase = 3;
+}
+
+//------------------------------------------------------------------------------
+// Serdes-related protos
+//------------------------------------------------------------------------------
+// BcmSerdesDb encapsulates all the serdes data in form of a single message. For
+// each (media_type, vendor_name, part_number(s), speed_bps) tuple there is a
+// BcmSerdesDbEntry which includes the serdes config for all the lanes of all
+// the serdes cores. We use proto maps here for ease of lookup. The hierarchy
+// is as follows:
+// BcmSerdesDb
+//   BcmSerdesDbEntry
+//     BcmSerdesBoardConfig
+//       BcmSerdesChipConfig
+//         BcmSerdesCoreConfig
+//           BcmSerdesLaneConfig
+message BcmSerdesDb {
+  int32 version = 1;
+  repeated BcmSerdesDbEntry bcm_serdes_db_entries = 2;
+}
+
+message BcmSerdesDbEntry {
+  MediaType media_type = 1;
+  string vendor_name = 2;
+  repeated string part_numbers = 3;
+  uint64 speed_bps = 4;
+  BcmSerdesBoardConfig bcm_serdes_board_config = 5;
+}
+
+message BcmSerdesBoardConfig {
+  // Map from chip/unit number (0-based) to BcmSerdesChipConfig.
+  map<int32, BcmSerdesChipConfig> bcm_serdes_chip_configs = 1;
+}
+
+message BcmSerdesChipConfig {
+  // Map from serdes core number (0-based) to BcmSerdesCoreConfig.
+  map<int32, BcmSerdesCoreConfig> bcm_serdes_core_configs = 1;
+}
+
+message BcmSerdesCoreConfig {
+  // Map from serdes lane number (0-based) to BcmSerdesLaneConfig.
+  map<int32, BcmSerdesLaneConfig> bcm_serdes_lane_configs = 1;
+}
+
+message BcmSerdesLaneConfig {
+  // Interface type as defined by SDK (e.g. sr4).
+  string intf_type = 1;
+  // Map from register addresses to register values.
+  map<uint32, uint32> bcm_serdes_register_configs = 2;
+  // Map from serdes-related attributes to to their values.
+  map<string, uint32> bcm_serdes_attribute_configs = 3;
+}

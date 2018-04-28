@@ -1,0 +1,67 @@
+#
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
+
+load(
+    "//third_party/stratum/portage:build_defs.bzl",
+    "sc_cc_lib",
+    "sc_platform_alias",
+    "EMBEDDED_ARCHES",
+    "STRATUM_INTERNAL",
+)
+
+package(
+    default_hdrs_check = "strict",
+    default_visibility = STRATUM_INTERNAL,
+)
+
+# NOTE: All dependencies on //base should be via the glue directory so that we
+# can maintain flexible dependencies on portable google3.
+
+# There are sections of code under status/ which is guarded by HERCULES. This
+# target defines this.
+sc_cc_lib(
+    name = "define_hercules",
+    defines = [
+        "HERCULES",
+    ],
+)
+
+sc_cc_lib(
+    name = "init_google",
+    hdrs = [
+        "init_google.h",
+    ],
+    deps = [
+        "//base",
+    ],
+)
+
+sc_cc_lib(
+    name = "logging",
+    srcs = [
+        "logging.cc",
+    ],
+    hdrs = [
+        "logging.h",
+    ],
+    deps = [
+        "//base",
+    ],
+)

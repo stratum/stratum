@@ -1,0 +1,185 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+// This file declares CommonFlowEntry proto messages to store the output from
+// the mapping of P4Runtime RPC requests/responses.  These messages contain
+// general mapping output, but in some cases they may need to be supplemented
+// by vendor dependent mapping.
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal;
+
+import "third_party/stratum/public/proto/p4_table_defs.proto";
+import "third_party/stratum/public/proto/p4_annotation.proto";
+import "p4/p4runtime.proto";
+
+// This message encapsulates the info regarding a P4 table. Not all the field
+// are required.
+message P4TableInfo {
+  // Table id. Required
+  int32 id = 1;
+  // Table name as appeared in P4 file. Optional.
+  string name = 2;
+  // Type of the table. Optional.
+  P4TableType type = 3;
+  // forwarding pipeline stage that p4c has assigned to the table. Required.
+  P4Annotation.PipelineStage pipeline_stage = 4;
+  // Table annotations. Optional.
+  repeated string annotations = 5;
+}
+
+// A MappedField represents the output of one FieldMatch mapping from
+// a P4Runtime TableEntry:
+//  type: identifies the type of mapping that occurred, such as ETH_SRC,
+//      IPV6_DST, EGRESS_PORT, etc.  If mapping was unsuccessful, the type
+//      is set to UNKNOWN.
+//  value: contains the mapped field match value, which is mapped from the
+//      P4Runtime Exact, Ternary, LPM, or Range encoding for known mappings.
+//      When type is UNKNOWN, value contains a copy of the P4Runtime FieldMatch.
+//  mask: contains a mask derived from the P4Runtime Ternary mask field or the
+//      P4Runtime  LPM prefix_len field.  It is zero for all other match field
+//      types.
+//  bit_offset: contains the bit offset from the beginning of the encapsulating
+//      header to the first bit of the field.
+//  bit_width: contains the number of consecutive bits that define the field.
+//  header_type: contains the type for the field's encapsulating header.
+message MappedField {
+  // Each P4Runtime match field generally maps into one of the following:
+  //  u32 - for IPv4 addr, VRF, etc.
+  //  u64 - for MAC address, metadata, etc.
+  //  b - for IPv6 addr, etc.
+  //  raw_pi_match - original match data from P4Runtime message when no mapping
+  //      is possible or when subsequent vendor-dependent mapping is needed.
+  // In cases where the P4Runtime RPC specifes a match field as a default
+  // or don't care value, the value and mask fields are not set, e.g. the
+  // corresponding data_case() is DATA_NOT_SET.
+  message Value {
+    oneof data {
+      fixed32 u32 = 1;
+      fixed64 u64 = 2;
+      bytes b = 3;
+      p4.FieldMatch raw_pi_match = 4;
+    }
+  };
+  P4FieldType type = 1;
+  Value value = 2;
+  Value mask = 3;
+  int32 bit_offset = 4;
+  int32 bit_width = 5;
+  P4HeaderType header_type = 6;
+}
+
+// This message supports action function mapping.  It applies to actions in
+// table updates as well as actions in action-profile updates.  It enumerates
+// the primitive actions performed by an action function.
+//  modify_fields - lists all the header-field modifications that the action
+//      performs, if any.
+//  primitives - lists any non-field operations the action performs, such as
+//      dropping a packet.
+// A single action function can contain both modify_fields and primitives
+// entries.  For example, a copy-to-CPU action could be represented by a
+// modify_fields entry to set the CPU queue and a primitives entry to CLONE
+// the packet.
+message P4ActionFunction {
+  // P4ActionFields provides the data for a modify_field primitive:
+  //  type - indicates the header field to be modified.
+  //  u32/u64/b - specify the header field's new value, typically taken from
+  //      one of the action function's parameters.  The encoding depends on
+  //      the P4Info-defined bitwidth of the action parameter.
+  //  meter_colors - indicate that the field modification is conditional
+  //      based upon meter color values.  If meter_colors is empty, the
+  //      field modification is unconditional.  Otherwise, meter_colors
+  //      specify one or more metering colors, one of which must be
+  //      satisfied for the field modification to occur.
+  message P4ActionFields {
+    P4FieldType type = 1;
+    oneof value {
+      fixed32 u32 = 2;
+      fixed64 u64 = 3;
+      bytes b = 4;
+    }
+    repeated P4MeterColor meter_colors = 5;
+  }
+
+  // P4ActionPrimitive applies when an action function contains primitives
+  // other than modify_field.
+  //  op_code - identifies the primitive operation.
+  //  meter_colors - indicate that primitive execution is conditional based
+  //      upon meter color values.  If meter_colors is empty, the primitive
+  //      execution is unconditional.  Otherwise, meter_colors specify one
+  //      or more metering colors, one of which must be satisfied for the
+  //      primitive to run.
+  // TODO: Some op_codes will need one or more parameter values.
+  message P4ActionPrimitive {
+    P4ActionOp op_code = 1;
+    repeated P4MeterColor meter_colors = 2;
+  }
+
+  repeated P4ActionFields modify_fields = 1;
+  repeated P4ActionPrimitive primitives = 2;
+}
+
+// A MappedAction represents the output of TableAction mapping from
+// a P4Runtime TableEntry:
+//  type: indicates whether the action refers to an action function or
+//      an action profile.  If action mapping was unsuccessful, the type is set
+//      to P4_ACTION_TYPE_UNKNOWN.
+//  function: breaks the P4 action down into its primitive operations when type
+//      is P4_ACTION_TYPE_FUNCTION.
+//  profile_member_id/profile_group_id: identify the profile member or group
+//      when type is P4_ACTION_TYPE_PROFILE_MEMBER_ID or
+//      P4_ACTION_TYPE_PROFILE_GROUP_ID, respectively.
+// TODO: A separate mapping will be defined to convey a
+// P4ActionFunction that updates an action profile.
+message MappedAction {
+  P4ActionType type = 1;
+  oneof action_value {
+    P4ActionFunction function = 2;
+    uint32 profile_member_id = 3;
+    uint32 profile_group_id = 4;
+  }
+}
+
+// P4PacketMetadata represents a packetin or packetout metadata field:
+// type - indicates the header field corresponding to the metadata.
+// u32/u64/b - specifiy the metadata value. The encoding depends the bitwidth of
+//             the metadata in P4Info output of the compiler.
+message MappedPacketMetadata {
+  P4FieldType type = 1;
+  oneof value {
+    fixed32 u32 = 2;
+    fixed64 u64 = 3;
+    bytes b = 4;
+  }
+}
+
+// This message contains all of the mapped output for one P4Runtime TableEntry.
+//  table_info - found using the P4Runtime TableEntry's table_id from P4Info.
+//  fields - mapped output corresponding to all P4Runtime TableEntry match
+//      fields.
+//  action - mapped output corresponding to the P4Runtime TableEntry's action
+//      field.
+//  priority - copied directly from P4Runtime TableEntry.
+//  controller_metadata - copied directly from P4Runtime TableEntry.
+message CommonFlowEntry {
+  P4TableInfo table_info = 1;
+  repeated MappedField fields = 2;
+  MappedAction action = 3;
+  int32 priority = 4;
+  uint64 controller_metadata = 5;
+}
