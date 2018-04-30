@@ -103,7 +103,7 @@ class BooleanBcmStatus {
         !status.ok() \
         ? status \
         : ::util::Status(StratumErrorSpace(), __ret.error_code(), "")) \
-        .SetNoLogging() \
+        .without_logging() \
         << (status.error_message().empty() || \
             status.error_message().back() == ' ' ? "" : " ") \
         << "'" << #expr << "' failed with error message: " \

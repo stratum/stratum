@@ -232,12 +232,12 @@ sc_cc_lib(
     deps = [
         "//third_party/absl/base:core_headers",
         "//third_party/sandblaze/p4lang:p4runtime_grpc_proto",
+        "//third_party/stratum/glue/status",
         "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:statusor",
         "//third_party/stratum/lib:utils",
         "//third_party/stratum/public/lib:error",
         "//util/gtl:node_hash_set",
-        "//util/task:status",
-        "//util/task:statusor",
     ],
 )
 
@@ -600,7 +600,7 @@ sc_cc_lib(
         "//third_party/absl/synchronization",
         "//third_party/absl/time",
         "//third_party/protobuf",
-        "//third_party/sandblaze/p4lang:status_proto",
+        "//third_party/stratum:status_proto",
         "//third_party/stratum/glue:logging",
         "//third_party/stratum/glue/status:status_macros",
         "//third_party/stratum/hal/lib/common:phal_interface",

@@ -26,7 +26,7 @@
 #include "third_party/stratum/lib/channel/channel.h"
 #include "third_party/absl/base/integral_types.h"
 #include "third_party/absl/types/variant.h"
-#include "util/task/statusor.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

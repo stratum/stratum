@@ -38,8 +38,9 @@ sc_cc_lib(
         "error.h",
     ],
     deps = [
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
         "//third_party/stratum/public/proto:error_proto",
-        "//util/task:status",
     ],
 )
 
@@ -59,9 +60,9 @@ cc_test(
     deps = [
         ":error",
         ":test_main",
-        "//third_party/sandblaze/p4lang:code_proto",
-        "//third_party/sandblaze/p4lang:status_proto",
         "//third_party/sandblaze/prebuilt/grpc",
+        "//third_party/stratum:code_proto",
+        "//third_party/stratum:status_proto",
         "//third_party/stratum/glue/status:status_macros",
         "//third_party/stratum/glue/status:status_test_util",
     ],

@@ -32,34 +32,53 @@ package(
 
 sc_cc_lib(
     name = "status",
+    srcs = [
+        "canonical_errors.cc",
+        "posix_error_space.cc",
+        "status.cc",
+    ],
     hdrs = [
         "canonical_errors.h",
         "posix_error_space.h",
         "status.h",
     ],
     deps = [
-        "//util/task:status",
+        "//base",
+        "//third_party/absl/strings",
+        "//third_party/absl/synchronization",
+        "//third_party/protobuf",
+        "//third_party/stratum/glue:init_google",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
 sc_cc_lib(
     name = "statusor",
+    srcs = [
+        "statusor.cc",
+    ],
     hdrs = [
         "statusor.h",
     ],
     deps = [
-        "//util/task:statusor",
+        ":status",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
 sc_cc_lib(
     name = "status_macros",
+    srcs = [
+        "status_macros.cc",
+    ],
     hdrs = [
         "status_macros.h",
     ],
     deps = [
-        "//third_party/stratum/public/lib:error",
-        "//util/task:status",
+        ":status",
+        ":statusor",
+        "//third_party/absl/strings",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -70,6 +89,27 @@ cc_library(
         "status_test_util.h",
     ],
     deps = [
-        "//testing/base/public:status_matchers_no_google3",
+        ":status",
+        "//testing/base/public:gunit_no_google3",
+    ],
+)
+
+sc_cc_test(
+    name = "status_test",
+    size = "small",
+    srcs = [
+        "posix_error_space_test.cc",
+        "status_test.cc",
+        "status_test_util_test.cc",
+        "statusor_test.cc",
+    ],
+    deps = [
+        ":status",
+        ":status_test_util",
+        ":statusor",
+        "//testing/base/public:gunit_main_no_google3",
+        "//third_party/absl/strings",
+        "//third_party/stratum/glue:init_google",
+        "//third_party/stratum/glue:logging",
     ],
 )

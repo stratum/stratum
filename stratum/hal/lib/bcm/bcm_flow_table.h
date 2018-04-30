@@ -24,8 +24,8 @@
 #include "third_party/absl/base/integral_types.h"
 #include "third_party/sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 #include "util/gtl/node_hash_set.h"
-#include "util/task/status.h"
-#include "util/task/statusor.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

@@ -25,9 +25,9 @@
 #include "third_party/stratum/public/proto/hal.pb.h"
 #include "third_party/absl/base/integral_types.h"
 #include "third_party/absl/memory/memory.h"
-#include "util/task/status.h"
-#include "util/task/status_macros.h"
-#include "util/task/statusor.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

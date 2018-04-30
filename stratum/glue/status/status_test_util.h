@@ -21,6 +21,21 @@
 // We have to include status-matchers.h directly because it's not normally
 // included in gunit_no_google3.
 // NOLINTNEXTLINE(build/deprecated)
-#include "testing/base/public/gmock_utils/status-matchers.h"  // IWYU pragma: export
+
+#include "third_party/stratum/glue/status/status.h"
+#include "testing/base/public/gunit.h"
+
+// Macros for testing the results of functions that return ::util::Status.
+
+#define EXPECT_OK(statement) EXPECT_EQ(::util::Status::OK, (statement))
+#define ASSERT_OK(statement) ASSERT_EQ(::util::Status::OK, (statement))
+
+// There are no EXPECT_NOT_OK/ASSERT_NOT_OK macros since they would not
+// provide much value (when they fail, they would just print the OK status
+// which conveys no more information than EXPECT_FALSE(status.ok());
+// If you want to check for particular errors, better alternatives are:
+// EXPECT_EQ(::util::Status(...expected error...), status.StripMessage());
+// EXPECT_THAT(status.ToString(), HasSubstr("expected error"));
+// Also, see testing/base/public/gmock.h.
 
 #endif  // STRATUM_GLUE_STATUS_STATUS_TEST_UTIL_H_

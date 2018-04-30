@@ -18,23 +18,32 @@
 #ifndef STRATUM_PUBLIC_LIB_ERROR_H_
 #define STRATUM_PUBLIC_LIB_ERROR_H_
 
+#include "third_party/stratum/glue/status/status_macros.h"
 #include "third_party/stratum/public/proto/error.pb.h"
-#include "util/task/error_space.h"
 
 namespace stratum {
-namespace error {
-class StratumErrorSpace : public ::util::ErrorSpaceImpl<StratumErrorSpace> {
- public:
-  static ::std::string space_name();
-  static ::std::string code_to_string(int code);
-  static ::util::error::Code canonical_code(const ::util::Status& status);
-};
-}  // namespace error
 
 // StratumErrorSpace returns the singleton instance to be used through
 // out the code.
 const ::util::ErrorSpace* StratumErrorSpace();
 
 }  // namespace stratum
+
+// Allow using status_macros. For example:
+// return MAKE_ERROR(ERR_UNKNOWN) << "test";
+namespace util {
+namespace status_macros {
+
+template <>
+class ErrorCodeOptions<::stratum::ErrorCode>
+    : public BaseErrorCodeOptions {
+ public:
+  const ::util::ErrorSpace* GetErrorSpace() {
+    return ::stratum::StratumErrorSpace();
+  }
+};
+
+}  // namespace status_macros
+}  // namespace util
 
 #endif  // STRATUM_PUBLIC_LIB_ERROR_H_

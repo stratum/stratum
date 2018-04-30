@@ -40,9 +40,9 @@ sc_cc_lib(
     deps = [
         "//third_party/absl/base:core_headers",
         "//third_party/absl/types:variant",
+        "//third_party/stratum/glue/status:statusor",
         "//third_party/stratum/hal/lib/phal:db_proto",
         "//third_party/stratum/lib/channel",
-        "//util/task:statusor",
     ],
 )
 
@@ -404,9 +404,9 @@ sc_cc_lib(
     deps = [
         ":datasource",
         ":stringsource_interface",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
         "//third_party/stratum/lib:macros",
-        "//util/task:status",
-        "//util/task:statusor",
     ],
 )
 
@@ -745,8 +745,6 @@ sc_cc_lib(
         "//third_party/stratum/lib:macros",
         "//third_party/stratum/public/proto:hal_proto",
         "//util/gtl:map_util",
-        "//util/task:status",
-        "//util/task:statusor",
     ],
 )
 

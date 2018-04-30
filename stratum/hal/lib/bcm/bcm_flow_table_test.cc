@@ -26,7 +26,7 @@ namespace bcm {
 namespace {
 
 using test_utils::EqualsProto;
-using testing::status::IsOkAndHolds;
+using test_utils::IsOkAndHolds;
 
 constexpr char kMockTableEntry[] = R"PROTO(
     table_id: 1

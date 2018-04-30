@@ -42,52 +42,6 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
-    name = "cmal_service",
-    srcs = ["cmal_service.cc"],
-    hdrs = ["cmal_service.h"],
-    deps = [
-        ":config_monitoring_service",
-        ":error_buffer",
-        ":p4_service",
-        "//base",
-        "//third_party/absl/memory",
-        "//third_party/absl/synchronization",
-        "//third_party/sandblaze/prebuilt/grpc",
-        "//third_party/stratum/glue:logging",
-        "//third_party/stratum/glue/status",
-        "//third_party/stratum/glue/status:status_macros",
-        "//third_party/stratum/lib:macros",
-        "//third_party/stratum/lib:utils",
-        "//third_party/stratum/lib/sandcastle:cmal_service_grpc_proto",
-        "//third_party/stratum/public/lib:error",
-    ],
-)
-
-sc_cc_test(
-    name = "cmal_service_test",
-    srcs = [
-        "cmal_service_test.cc",
-    ],
-    data = ["//tools/test:requires_ipv4_loopback"],
-    deps = [
-        ":cmal_service",
-        ":switch_mock",
-        ":test_main",
-        "//base",
-        "//testing/base/public:gunit_no_google3",
-        "//third_party/absl/memory",
-        "//third_party/absl/strings",
-        "//third_party/sandblaze/p4lang:code_proto",
-        "//third_party/sandblaze/prebuilt/grpc",
-        "//third_party/stratum/glue/net_util:ports",
-        "//third_party/stratum/glue/status:status_test_util",
-        "//third_party/stratum/lib:utils",
-        "//third_party/stratum/lib/security:auth_policy_checker_mock",
-        "//third_party/stratum/public/lib:error",
-    ],
-)
-
 sc_proto_lib(
     name = "common_proto",
     hdrs = ["common.proto"],
@@ -258,7 +212,6 @@ sc_cc_lib(
     srcs = ["hal.cc"],
     hdrs = ["hal.h"],
     deps = [
-        ":cmal_service",
         ":common_proto",
         ":config_monitoring_service",
         ":error_buffer",
@@ -273,7 +226,6 @@ sc_cc_lib(
         "//third_party/stratum/lib:constants",
         "//third_party/stratum/lib:macros",
         "//third_party/stratum/lib:utils",
-        "//third_party/stratum/lib/sandcastle:procmon_service_grpc_proto",
         "//third_party/stratum/lib/security:auth_policy_checker",
         "//third_party/stratum/lib/security:credentials_manager",
         "//util/gtl:flat_hash_map",
@@ -296,30 +248,9 @@ sc_cc_test(
         "//third_party/stratum/glue/net_util:ports",
         "//third_party/stratum/glue/status:status_test_util",
         "//third_party/stratum/lib:utils",
-        "//third_party/stratum/lib/sandcastle:procmon_service_grpc_proto",
         "//third_party/stratum/lib/security:auth_policy_checker_mock",
         "//third_party/stratum/lib/security:credentials_manager_mock",
         "//third_party/stratum/public/lib:error",
-    ],
-)
-
-sc_cc_lib(
-    name = "hardware_status_service_test_helper",
-    srcs = ["hardware_status_service_test_helper.cc"],
-    hdrs = ["hardware_status_service_test_helper.h"],
-    deps = [
-        ":common_proto",
-        ":utils",
-        "//third_party/stratum/glue/status",
-        "//third_party/stratum/glue/status:status_macros",
-        "//third_party/stratum/glue/status:statusor",
-        "//third_party/stratum/lib:constants",
-        "//third_party/stratum/lib:macros",
-        "//third_party/stratum/lib:utils",
-        "//third_party/stratum/lib/sandcastle:hardware_status_service_proto",
-        "//third_party/stratum/public/proto:hal_proto",
-        "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
     ],
 )
 
@@ -341,11 +272,11 @@ sc_cc_lib(
         "//third_party/absl/synchronization",
         "//third_party/absl/time",
         "//third_party/protobuf",
-        "//third_party/sandblaze/p4lang:code_proto",
         "//third_party/sandblaze/p4lang:p4info_proto",
         "//third_party/sandblaze/p4lang:p4runtime_grpc_proto",
-        "//third_party/sandblaze/p4lang:status_proto",
         "//third_party/sandblaze/prebuilt/grpc",
+        "//third_party/stratum:code_proto",
+        "//third_party/stratum:status_proto",
         "//third_party/stratum/glue:logging",
         "//third_party/stratum/glue/status",
         "//third_party/stratum/glue/status:status_macros",
@@ -378,8 +309,8 @@ sc_cc_test(
         "//third_party/absl/numeric:int128",
         "//third_party/absl/strings",
         "//third_party/absl/synchronization",
-        "//third_party/sandblaze/p4lang:code_proto",
         "//third_party/sandblaze/prebuilt/grpc",
+        "//third_party/stratum:code_proto",
         "//third_party/stratum/glue/net_util:ports",
         "//third_party/stratum/glue/status:status_test_util",
         "//third_party/stratum/lib:utils",

@@ -19,6 +19,8 @@
 
 #include "third_party/stratum/glue/status/status_macros.h"
 #include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/google/rpc/code.pb.h"
+#include "third_party/stratum/google/rpc/status.pb.h"
 
 namespace stratum {
 
@@ -119,11 +121,11 @@ TEST(ErrorTest, TestMakeErrorMacro) {
   }
 }
 
-void TestCanonicalCodesHelper(ErrorCode hercules_error_code,
+void TestCanonicalCodesHelper(ErrorCode stratum_error_code,
                               ::grpc::StatusCode grpc_error_code,
                               ::google::rpc::Code google_rpc_error_code) {
   const std::string kErrorMsg = "some error!";
-  ::util::Status util_status(StratumErrorSpace(), hercules_error_code,
+  ::util::Status util_status(StratumErrorSpace(), stratum_error_code,
                              kErrorMsg);
 
   ::grpc::Status grpc_status(

@@ -68,7 +68,7 @@ inline const std::string FixMessage(const std::string& msg) {
   if (const BooleanStatus __ret = (expr)) {                                    \
   } else /* NOLINT */                                                          \
     out = APPEND_ERROR(!out.ok() ? out : __ret.status().StripMessage())        \
-              .SetNoLogging()                                                  \
+              .without_logging()                                               \
           << (out.error_message().empty() || out.error_message().back() == ' ' \
                   ? ""                                                         \
                   : " ")                                                       \

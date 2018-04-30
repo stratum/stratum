@@ -22,13 +22,39 @@ load(
     "//third_party/stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_package",
-    "sc_imageset",
     "sc_platform_select",
+    "sc_proto_lib",
 )
 
 package(
     default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
+)
+
+genrule(
+    name = "status_proto_copy",
+    srcs = ["//third_party/googleapis/google/rpc:status.proto"],
+    outs = ["google/rpc/status.proto"],
+    cmd = "cp $(location //third_party/googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
+)
+
+genrule(
+    name = "code_proto_copy",
+    srcs = ["//third_party/googleapis/google/rpc:code.proto"],
+    outs = ["google/rpc/code.proto"],
+    cmd = "cp $(location //third_party/googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
+)
+
+sc_proto_lib(
+    name = "status_proto",
+    hdrs = ["google/rpc/status.proto"],
+    proto_include = ".",
+)
+
+sc_proto_lib(
+    name = "code_proto",
+    hdrs = ["google/rpc/code.proto"],
+    proto_include = ".",
 )
 
 config_setting(

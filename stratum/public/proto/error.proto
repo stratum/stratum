@@ -24,11 +24,11 @@ package stratum;
 // TODO: This is still WIP.
 enum ErrorCode {
   // These are reserved errors. Their value is the same as the corresponding
-  // error codes in util/task/codes.proto. This way the return status from
+  // error codes in (codes.proto). This way the return status from
   // functions that return a canonical error can be directly used to set the
-  // error code in the response protos in RPCs. Please see the meanings of these
-  // error codes in util/task/codes.proto. The errors from util/task/codes.proto
-  // that do not show up here have more detailed codes starting from 500 below.
+  // error code in the response protos in RPCs.
+  // The errors from codes.proto that do not show up here have more
+  // detailed codes starting from 500 below.
   ERR_SUCCESS = 0;  // Success (default value). Same as OK.
   ERR_CANCELLED = 1;
   ERR_UNKNOWN = 2;
@@ -41,7 +41,7 @@ enum ErrorCode {
   ERR_DATA_LOSS = 15;
   ERR_UNAUTHENTICATED = 16;
 
-  // The following errors are specific to the hercules stack. Their
+  // The following errors are specific to the Stratum stack. Their
   // values start from 500, to make sure they are not conflicting with the
   // canonical errors. DO NOT USE ANY VALUE BELOW 500 FOR THE ERRORS BEYOND
   // THIS LINE.
@@ -64,4 +64,3 @@ enum ErrorCode {
   ERR_INVALID_P4_INFO = 516;            // Invalid P4Info pushed.
   ERR_NO_OP = 517;                      // No operation performed.
 }
-
