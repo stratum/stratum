@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
 
 #include <arpa/inet.h>
 #include <byteswap.h>
@@ -27,20 +27,20 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>  // IWYU pragma: keep
-#include "third_party/absl/synchronization/mutex.h"
+#include "absl/synchronization/mutex.h"
 
 #include "base/commandlineflags.h"
-#include "third_party/absl/base/macros.h"
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/absl/strings/str_split.h"
-#include "third_party/absl/strings/substitute.h"
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/hal/lib/bcm/constants.h"
-#include "third_party/stratum/hal/lib/bcm/macros.h"
-#include "third_party/stratum/hal/lib/common/constants.h"
-#include "third_party/stratum/lib/constants.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/lib/utils.h"
+#include "absl/base/macros.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/substitute.h"
+#include "stratum/glue/logging.h"
+#include "stratum/hal/lib/bcm/constants.h"
+#include "stratum/hal/lib/bcm/macros.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/flat_hash_set.h"
 #include "util/gtl/map_util.h"

@@ -21,8 +21,8 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "third_party/stratum/hal/lib/common/common.proto";
-import "third_party/stratum/public/proto/hal.proto";
+import "stratum/hal/lib/common/common.proto";
+import "stratum/public/proto/hal.proto";
 
 //------------------------------------------------------------------------------
 // Initialization-related protos

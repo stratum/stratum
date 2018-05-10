@@ -18,8 +18,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_CHANNEL_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_CHANNEL_WRITER_WRAPPER_H_
 
-#include "third_party/stratum/hal/lib/common/writer_interface.h"
-#include "third_party/stratum/lib/channel/channel.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/lib/channel/channel.h"
 
 namespace stratum {
 namespace hal {

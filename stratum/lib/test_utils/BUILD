@@ -21,7 +21,7 @@ exports_files(["LICENSE"])
 # This package contains testing libraries for Hercules.
 
 load(
-    "//third_party/stratum/portage:build_defs.bzl",
+    "//stratum/portage:build_defs.bzl",
     "sc_cc_lib",
     "STRATUM_INTERNAL",
 )
@@ -37,6 +37,6 @@ sc_cc_lib(
     hdrs = ["matchers.h"],
     deps = [
         "//testing/base/public:gunit_no_google3",
-        "//third_party/protobuf",
+        "//protobuf",
     ],
 )

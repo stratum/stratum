@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/phal/attribute_group.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
 
 #include <functional>
 #include <map>
@@ -23,14 +23,14 @@
 #include <tuple>
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/phal/datasource.h"
-#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/managed_attribute.h"
+#include "stratum/lib/macros.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 

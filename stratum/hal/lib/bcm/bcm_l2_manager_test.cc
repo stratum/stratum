@@ -13,17 +13,17 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_l2_manager.h"
+#include "stratum/hal/lib/bcm/bcm_l2_manager.h"
 
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "third_party/stratum/hal/lib/common/constants.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/strings/substitute.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
 
 using ::testing::_;
 using ::testing::HasSubstr;

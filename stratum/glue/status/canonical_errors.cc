@@ -15,7 +15,7 @@
  */
 
 
-#include "third_party/stratum/glue/status/canonical_errors.h"
+#include "stratum/glue/status/canonical_errors.h"
 
 namespace util {
 

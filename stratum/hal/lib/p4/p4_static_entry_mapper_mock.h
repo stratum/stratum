@@ -20,7 +20,7 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_STATIC_ENTRY_MAPPER_MOCK_H_
 #define STRATUM_HAL_LIB_P4_P4_STATIC_ENTRY_MAPPER_MOCK_H_
 
-#include "third_party/stratum/hal/lib/p4/p4_static_entry_mapper.h"
+#include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

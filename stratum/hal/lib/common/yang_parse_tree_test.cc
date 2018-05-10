@@ -13,18 +13,18 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/yang_parse_tree.h"
+#include "stratum/hal/lib/common/yang_parse_tree.h"
 
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
-#include "third_party/stratum/hal/lib/common/mock_subscribe_reader_writer.h"
-#include "third_party/stratum/hal/lib/common/switch_mock.h"
-#include "third_party/stratum/hal/lib/common/writer_mock.h"
-#include "third_party/stratum/lib/constants.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/lib/constants.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/sandblaze/gnmi/gnmi.host.pb.h"
+#include "absl/synchronization/mutex.h"
+#include "sandblaze/gnmi/gnmi.host.pb.h"
 
 namespace stratum {
 namespace hal {

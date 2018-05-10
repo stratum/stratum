@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_WRITER_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_WRITER_MOCK_H_
 
-#include "third_party/stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

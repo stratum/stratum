@@ -21,14 +21,14 @@
 #include <memory>
 #include <utility>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/hal/lib/bcm/bcm.pb.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_interface.h"
-#include "third_party/stratum/hal/lib/common/constants.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/proto/hal.grpc.pb.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/base/thread_annotations.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/hal.grpc.pb.h"
+#include "absl/base/integral_types.h"
+#include "absl/base/thread_annotations.h"
 #include "util/gtl/flat_hash_map.h"
 
 namespace stratum {

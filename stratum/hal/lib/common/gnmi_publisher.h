@@ -21,14 +21,14 @@
 #include <pthread.h>
 #include <time.h>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/hal/lib/common/gnmi_events.h"
-#include "third_party/stratum/hal/lib/common/yang_parse_tree.h"
-#include "third_party/stratum/lib/timer_daemon.h"
-#include "third_party/stratum/public/lib/error.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/yang_parse_tree.h"
+#include "stratum/lib/timer_daemon.h"
+#include "stratum/public/lib/error.h"
+#include "absl/synchronization/mutex.h"
+#include "sandblaze/gnmi/gnmi.grpc.pb.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 

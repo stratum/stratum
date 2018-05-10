@@ -13,10 +13,10 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/oc_to_hal_config.h"
+#include "stratum/hal/lib/common/oc_to_hal_config.h"
 
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 
@@ -95,7 +95,7 @@ class OcToHalConfigTest : public ::testing::Test {
 // configuration.
 TEST_F(OcToHalConfigTest, Generic Tomahawk40g100g) {
   ASSERT_OK(
-      ReadProtoFromTextFile("third_party/stratum/hal/lib/common/"
+      ReadProtoFromTextFile("stratum/hal/lib/common/"
                             "testdata/test_oc_config_generic_tomahawk_100g_hercules.pb.txt",
                             &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
@@ -107,7 +107,7 @@ TEST_F(OcToHalConfigTest, Generic Tomahawk40g100g) {
 // configuration.
 TEST_F(OcToHalConfigTest, Generic Tomahawk100g) {
   ASSERT_OK(ReadProtoFromTextFile(
-      "third_party/stratum/hal/lib/common/testdata/"
+      "stratum/hal/lib/common/testdata/"
       "test_oc_config_generic_tomahawk_40g_100g_hercules.pb.txt",
       &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
@@ -119,7 +119,7 @@ TEST_F(OcToHalConfigTest, Generic Tomahawk100g) {
 // configuration.
 TEST_F(OcToHalConfigTest, Generic Trident240g) {
   ASSERT_OK(ReadProtoFromTextFile(
-      "third_party/stratum/hal/lib/common/testdata/"
+      "stratum/hal/lib/common/testdata/"
       "test_oc_config_generic_trident2_40g_hercules.pb.txt",
       &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
@@ -131,7 +131,7 @@ TEST_F(OcToHalConfigTest, Generic Trident240g) {
 // configuration.
 TEST_F(OcToHalConfigTest, Generic Trident240g) {
   ASSERT_OK(ReadProtoFromTextFile(
-      "third_party/stratum/hal/lib/common/testdata/"
+      "stratum/hal/lib/common/testdata/"
       "test_oc_config_generic_trident2_40g_hercules.pb.txt",
       &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));

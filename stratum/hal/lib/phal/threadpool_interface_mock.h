@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_PHAL_THREADPOOL_INTERFACE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_THREADPOOL_INTERFACE_MOCK_H_
 
-#include "third_party/stratum/hal/lib/phal/threadpool_interface.h"
+#include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

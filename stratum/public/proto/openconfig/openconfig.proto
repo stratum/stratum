@@ -50,17 +50,17 @@
 //  - yang/openconfig-vlan.yang
 //  - yang/openconfig-yang-types.yang
 // Include paths:
-//   - third_party/stratum/public/proto/...
+//   - stratum/public/proto/...
 syntax = "proto3";
 
 package openconfig;
 
-import "third_party/stratum/public/proto/ywrapper.proto";
-import "third_party/stratum/public/proto/yext.proto";
-import "third_party/stratum/public/proto/openconfig/hercules/hercules.proto";
-import "third_party/stratum/public/proto/openconfig/openconfig_interfaces/openconfig_interfaces.proto";
-import "third_party/stratum/public/proto/openconfig/openconfig_lacp/openconfig_lacp.proto";
-import "third_party/stratum/public/proto/openconfig/openconfig_platform/openconfig_platform.proto";
+import "stratum/public/proto/ywrapper.proto";
+import "stratum/public/proto/yext.proto";
+import "stratum/public/proto/openconfig/hercules/hercules.proto";
+import "stratum/public/proto/openconfig/openconfig_interfaces/openconfig_interfaces.proto";
+import "stratum/public/proto/openconfig/openconfig_lacp/openconfig_lacp.proto";
+import "stratum/public/proto/openconfig/openconfig_platform/openconfig_platform.proto";
 
 message Device {
   openconfig_platform.Components components = 41347061 [(yext.schemapath) = "/components"];

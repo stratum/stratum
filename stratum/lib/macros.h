@@ -20,8 +20,8 @@
 
 #include <string>
 
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/public/lib/error.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/public/lib/error.h"
 
 namespace stratum {
 

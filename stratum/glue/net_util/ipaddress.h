@@ -49,10 +49,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/base/port.h"
-#include "third_party/absl/numeric/int128.h"
+#include "stratum/glue/logging.h"
+#include "absl/base/integral_types.h"
+#include "absl/base/port.h"
+#include "absl/numeric/int128.h"
 
 namespace stratum {
 

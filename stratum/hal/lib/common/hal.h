@@ -27,15 +27,15 @@
 #include <memory>
 #include <string>
 
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/hal/lib/common/config_monitoring_service.h"
-#include "third_party/stratum/hal/lib/common/error_buffer.h"
-#include "third_party/stratum/hal/lib/common/p4_service.h"
-#include "third_party/stratum/hal/lib/common/switch_interface.h"
-#include "third_party/stratum/lib/security/auth_policy_checker.h"
-#include "third_party/stratum/lib/security/credentials_manager.h"
-#include "third_party/absl/base/thread_annotations.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/config_monitoring_service.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/p4_service.h"
+#include "stratum/hal/lib/common/switch_interface.h"
+#include "stratum/lib/security/auth_policy_checker.h"
+#include "stratum/lib/security/credentials_manager.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "util/gtl/flat_hash_map.h"
 
 namespace stratum {

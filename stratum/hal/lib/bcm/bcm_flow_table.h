@@ -18,14 +18,14 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_FLOW_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_FLOW_TABLE_H_
 
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/lib/error.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
+#include "absl/base/integral_types.h"
+#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 #include "util/gtl/node_hash_set.h"
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

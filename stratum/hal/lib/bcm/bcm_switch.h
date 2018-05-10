@@ -21,12 +21,12 @@
 #include <map>
 #include <memory>
 
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_node.h"
-#include "third_party/stratum/hal/lib/common/phal_interface.h"
-#include "third_party/stratum/hal/lib/common/switch_interface.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/switch_interface.h"
+#include "absl/base/integral_types.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

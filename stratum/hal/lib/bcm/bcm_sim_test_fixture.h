@@ -18,14 +18,14 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SIM_TEST_FIXTURE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SIM_TEST_FIXTURE_H_
 
-#include "third_party/stratum/hal/lib/bcm/bcm_acl_manager.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_sim.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
-#include "third_party/stratum/hal/lib/phal/phal_sim.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/hal/lib/bcm/bcm_acl_manager.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_sim.h"
+#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
+#include "stratum/hal/lib/bcm/bcm_table_manager.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
+#include "stratum/hal/lib/phal/phal_sim.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gunit.h"
 
 namespace stratum {

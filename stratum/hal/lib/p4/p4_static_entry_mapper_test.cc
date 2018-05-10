@@ -15,18 +15,18 @@
 
 // This file contains unit tests for P4StaticEntryMapper.
 
-#include "third_party/stratum/hal/lib/p4/p4_static_entry_mapper.h"
+#include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
 
 #include <memory>
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "absl/memory/memory.h"
+#include "sandblaze/p4lang/p4/p4runtime.pb.h"
 
 DECLARE_bool(remap_hidden_table_const_entries);
 

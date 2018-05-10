@@ -22,14 +22,14 @@
 #include <memory>
 #include <tuple>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/bcm/bcm.pb.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_interface.h"
-#include "third_party/stratum/public/proto/hal.grpc.pb.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/base/thread_annotations.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
+#include "stratum/public/proto/hal.grpc.pb.h"
+#include "absl/base/integral_types.h"
+#include "absl/base/thread_annotations.h"
 
 namespace stratum {
 namespace hal {

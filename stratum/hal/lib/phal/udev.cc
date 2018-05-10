@@ -13,10 +13,10 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/phal/udev.h"
+#include "stratum/hal/lib/phal/udev.h"
 
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/absl/memory/memory.h"
+#include "stratum/lib/macros.h"
+#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

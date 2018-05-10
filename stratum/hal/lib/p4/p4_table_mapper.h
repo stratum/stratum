@@ -25,17 +25,17 @@
 #include <string>
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/hal/lib/p4/common_flow_entry.pb.h"
-#include "third_party/stratum/hal/lib/p4/p4_info_manager.h"
-#include "third_party/stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "third_party/stratum/hal/lib/p4/p4_static_entry_mapper.h"
-#include "third_party/stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/proto/hal.pb.h"
-#include "third_party/stratum/public/proto/p4_table_defs.pb.h"
-#include "third_party/sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/p4/common_flow_entry.pb.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/hal.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "sandblaze/p4lang/p4/config/p4info.pb.h"
 #include "util/gtl/flat_hash_map.h"
 
 namespace stratum {

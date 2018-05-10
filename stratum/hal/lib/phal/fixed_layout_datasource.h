@@ -23,11 +23,11 @@
 #include <memory>
 #include <vector>
 
-#include "third_party/stratum/hal/lib/phal/datasource.h"
-#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
-#include "third_party/stratum/hal/lib/phal/stringsource_interface.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/absl/memory/memory.h"
+#include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/managed_attribute.h"
+#include "stratum/hal/lib/phal/stringsource_interface.h"
+#include "stratum/lib/macros.h"
+#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

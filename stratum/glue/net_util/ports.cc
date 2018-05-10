@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/glue/net_util/ports.h"
+#include "stratum/glue/net_util/ports.h"
 
 #include <errno.h>
 #include <netinet/ip.h>
@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "third_party/stratum/glue/logging.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 

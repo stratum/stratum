@@ -15,13 +15,13 @@
  */
 
 
-#include "third_party/stratum/glue/status/status.h"
+#include "stratum/glue/status/status.h"
 
 #include <stdio.h>
 
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/stratum/glue/init_google.h"
-#include "third_party/stratum/glue/logging.h"
+#include "absl/strings/str_cat.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/logging.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 

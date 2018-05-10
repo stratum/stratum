@@ -20,13 +20,13 @@
 
 #include <unordered_map>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/hal/lib/common/gnmi_events.h"
-#include "third_party/stratum/hal/lib/common/switch_interface.h"
-#include "third_party/stratum/hal/lib/common/writer_interface.h"
-#include "third_party/stratum/public/proto/hal.grpc.pb.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/switch_interface.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/public/proto/hal.grpc.pb.h"
+#include "absl/synchronization/mutex.h"
+#include "sandblaze/gnmi/gnmi.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

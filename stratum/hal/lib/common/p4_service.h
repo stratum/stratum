@@ -25,18 +25,18 @@
 #include <sstream>
 #include <string>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/common/channel_writer_wrapper.h"
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/hal/lib/common/error_buffer.h"
-#include "third_party/stratum/hal/lib/common/switch_interface.h"
-#include "third_party/stratum/lib/security/auth_policy_checker.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/base/thread_annotations.h"
-#include "third_party/absl/numeric/int128.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/channel_writer_wrapper.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/switch_interface.h"
+#include "stratum/lib/security/auth_policy_checker.h"
+#include "absl/base/integral_types.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/numeric/int128.h"
+#include "absl/synchronization/mutex.h"
+#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

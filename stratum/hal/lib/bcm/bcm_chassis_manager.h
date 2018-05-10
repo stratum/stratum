@@ -27,20 +27,20 @@
 #include <utility>
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/bcm/bcm.pb.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_interface.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/hal/lib/common/gnmi_events.h"
-#include "third_party/stratum/hal/lib/common/phal_interface.h"
-#include "third_party/stratum/hal/lib/common/writer_interface.h"
-#include "third_party/stratum/lib/channel/channel.h"
-#include "third_party/stratum/public/proto/hal.grpc.pb.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/base/thread_annotations.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
+#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/lib/channel/channel.h"
+#include "stratum/public/proto/hal.grpc.pb.h"
+#include "absl/base/integral_types.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

@@ -21,9 +21,9 @@
 #include <string>
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/absl/base/thread_annotations.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "util/gtl/source_location.h"
 
 namespace stratum {

@@ -15,9 +15,9 @@
  */
 
 
-#include "third_party/stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/status_test_util.h"
 
-#include "third_party/stratum/glue/logging.h"
+#include "stratum/glue/logging.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit-spi.h"
 #include "testing/base/public/gunit.h"

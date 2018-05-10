@@ -13,24 +13,24 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_acl_manager.h"
+#include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 
 #include <vector>
 
-#include "third_party/stratum/glue/status/canonical_errors.h"
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_table_manager_mock.h"
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "third_party/stratum/lib/test_utils/matchers.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/proto/p4_annotation.pb.h"
+#include "stratum/glue/status/canonical_errors.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/strings/substitute.h"
+#include "absl/strings/substitute.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/flat_hash_set.h"
 #include "util/gtl/flat_map.h"

@@ -13,17 +13,17 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/phal/udev_event_handler.h"
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/phal/system_fake.h"
-#include "third_party/stratum/hal/lib/phal/udev_event_handler_mock.h"
-#include "third_party/stratum/lib/macros.h"
+#include "stratum/hal/lib/phal/udev_event_handler.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/phal/system_fake.h"
+#include "stratum/hal/lib/phal/udev_event_handler_mock.h"
+#include "stratum/lib/macros.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
