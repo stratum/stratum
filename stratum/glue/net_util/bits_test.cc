@@ -18,7 +18,7 @@
 //
 // This tests common/bits.{cc,h}
 
-#include "stratum/glue/net_util/bits.h"
+#include "third_party/stratum/glue/net_util/bits.h"
 
 #include <string.h>
 #include <algorithm>
@@ -26,10 +26,10 @@
 #include <random>
 #include <vector>
 
-#include "stratum/glue/logging.h"
+#include "third_party/stratum/glue/logging.h"
 #include "testing/base/public/gunit.h"
-#include "absl/base/integral_types.h"
-#include "absl/numeric/int128.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/numeric/int128.h"
 
 namespace stratum {
 

@@ -13,20 +13,20 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_table_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_table_manager.h"
 
 #include <string>
 
 #include "google/protobuf/message.h"
 #include "google/protobuf/repeated_field.h"
-#include "stratum/glue/logging.h"
-#include "stratum/hal/lib/bcm/constants.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "absl/base/integral_types.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/hal/lib/bcm/constants.h"
+#include "third_party/stratum/hal/lib/common/constants.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/strings/str_cat.h"
 #include "util/gtl/map_util.h"
 #include "util/gtl/stl_util.h"
 

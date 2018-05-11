@@ -23,12 +23,12 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/lib/channel/channel.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
-#include "absl/base/integral_types.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/statusor.h"
+#include "third_party/stratum/hal/lib/bcm/bcm.pb.h"
+#include "third_party/stratum/lib/channel/channel.h"
+#include "third_party/stratum/public/proto/hal.grpc.pb.h"
+#include "third_party/absl/base/integral_types.h"
 
 namespace stratum {
 namespace hal {

@@ -22,13 +22,13 @@
 #include <set>
 #include <string>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/phal/managed_attribute.h"
-#include "stratum/hal/lib/phal/threadpool_interface.h"
-#include "stratum/lib/macros.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/statusor.h"
+#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
+#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
+#include "third_party/stratum/hal/lib/phal/threadpool_interface.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

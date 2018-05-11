@@ -75,8 +75,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/glue/status/status.h"
 
 namespace util {
 

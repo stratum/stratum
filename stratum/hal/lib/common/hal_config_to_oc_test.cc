@@ -13,10 +13,10 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/hal_config_to_oc.h"
+#include "third_party/stratum/hal/lib/common/hal_config_to_oc.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 
@@ -112,7 +112,7 @@ class HalToOcConfigTest : public ::testing::Test {
 // This test verifies that HalToOcConfig correctly handles Generic Tomahawk 100G config.
 TEST_F(HalToOcConfigTest, Generic Tomahawk100g) {
   ASSERT_OK(
-      ReadProtoFromTextFile("stratum/hal/lib/common/"
+      ReadProtoFromTextFile("third_party/stratum/hal/lib/common/"
                             "testdata/test_config_generic_tomahawk_100g_hercules.pb.txt",
                             &hal_config_proto_));
   ::util::StatusOr<oc::Device> oc_config =
@@ -122,7 +122,7 @@ TEST_F(HalToOcConfigTest, Generic Tomahawk100g) {
 // This test verifies that HalToOcConfig correctly handles Generic Tomahawk 40G/100G config.
 TEST_F(HalToOcConfigTest, Generic Tomahawk40g100g) {
   ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/"
+      "third_party/stratum/hal/lib/common/testdata/"
       "test_config_generic_tomahawk_40g_100g_hercules.pb.txt",
       &hal_config_proto_));
   ::util::StatusOr<oc::Device> oc_config =
@@ -132,7 +132,7 @@ TEST_F(HalToOcConfigTest, Generic Tomahawk40g100g) {
 // This test verifies that HalToOcConfig correctly handles Generic Trident2 40G config.
 TEST_F(HalToOcConfigTest, Generic Trident240g) {
   ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/"
+      "third_party/stratum/hal/lib/common/testdata/"
       "test_config_generic_trident2_40g_hercules.pb.txt",
       &hal_config_proto_));
   ::util::StatusOr<oc::Device> oc_config =
@@ -142,7 +142,7 @@ TEST_F(HalToOcConfigTest, Generic Trident240g) {
 // This test verifies that HalToOcConfig correctly handles Generic Trident2 40G config.
 TEST_F(HalToOcConfigTest, Generic Trident240g) {
   ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/"
+      "third_party/stratum/hal/lib/common/testdata/"
       "test_config_generic_trident2_40g_hercules.pb.txt",
       &hal_config_proto_));
   ::util::StatusOr<oc::Device> oc_config =

@@ -15,7 +15,7 @@
 
 // Definition of classes IPAddress and SocketAddress.
 
-#include "stratum/glue/net_util/ipaddress.h"
+#include "third_party/stratum/glue/net_util/ipaddress.h"
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -30,12 +30,12 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/net_util/bits.h"
-#include "absl/numeric/int128.h"
-#include "absl/strings/match.h"
-#include "absl/strings/numbers.h"
-#include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
+#include "third_party/stratum/glue/net_util/bits.h"
+#include "third_party/absl/numeric/int128.h"
+#include "third_party/absl/strings/match.h"
+#include "third_party/absl/strings/numbers.h"
+#include "third_party/absl/strings/strip.h"
+#include "third_party/absl/strings/substitute.h"
 
 namespace stratum {
 

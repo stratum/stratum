@@ -15,7 +15,7 @@
 
 // Tests for IPAddress and SocketAddress classes.
 
-#include "stratum/glue/net_util/ipaddress.h"
+#include "third_party/stratum/glue/net_util/ipaddress.h"
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -30,11 +30,11 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/logging.h"
+#include "third_party/stratum/glue/logging.h"
 #include "testing/base/public/gunit.h"
-#include "absl/base/integral_types.h"
-#include "absl/numeric/int128.h"
-#include "absl/strings/substitute.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/numeric/int128.h"
+#include "third_party/absl/strings/substitute.h"
 
 namespace stratum {
 

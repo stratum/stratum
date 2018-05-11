@@ -15,21 +15,21 @@
 
 // This file contains unit tests for P4ConfigVerifier.
 
-#include "stratum/hal/lib/p4/p4_config_verifier.h"
+#include "third_party/stratum/hal/lib/p4/p4_config_verifier.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/p4/p4_info_manager.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/memory/memory.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
 #include "util/gtl/map_util.h"
 
 // P4ConfigVerifier flags to override for some tests.
@@ -46,10 +46,10 @@ class P4ConfigVerifierTest : public testing::Test {
  protected:
   void SetUpP4ConfigFromFiles() {
     const std::string kTestP4InfoFile =
-        "stratum/hal/lib/p4/testdata/test_p4_info.pb.txt";
+        "third_party/stratum/hal/lib/p4/testdata/test_p4_info.pb.txt";
     ASSERT_OK(ReadProtoFromTextFile(kTestP4InfoFile, &test_p4_info_));
     const std::string kTestP4PipelineConfigFile =
-        "stratum/hal/lib/p4/testdata/"
+        "third_party/stratum/hal/lib/p4/testdata/"
         "test_p4_pipeline_config.pb.txt";
     ASSERT_OK(ReadProtoFromTextFile(
         kTestP4PipelineConfigFile, &test_p4_pipeline_config_));

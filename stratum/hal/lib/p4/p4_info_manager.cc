@@ -15,14 +15,14 @@
 
 // P4InfoManager implementation.
 
-#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "third_party/stratum/hal/lib/p4/p4_info_manager.h"
 
 #include "base/commandlineflags.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "absl/strings/ascii.h"
-#include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/absl/strings/ascii.h"
+#include "third_party/absl/strings/strip.h"
+#include "third_party/absl/strings/substitute.h"
 #include "util/gtl/map_util.h"
 
 // This flag allows unit tests to simplify their P4Info setup.  For example,

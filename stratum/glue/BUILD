@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "sc_cc_lib",
     "sc_platform_alias",
     "EMBEDDED_ARCHES",

@@ -58,13 +58,13 @@
 //  - yang/openconfig-vlan.yang
 //  - yang/openconfig-yang-types.yang
 // Include paths:
-//   - stratum/public/proto/...
+//   - third_party/stratum/public/proto/...
 syntax = "proto3";
 
 package openconfig.hercules;
 
-import "stratum/public/proto/ywrapper.proto";
-import "stratum/public/proto/yext.proto";
+import "third_party/stratum/public/proto/ywrapper.proto";
+import "third_party/stratum/public/proto/yext.proto";
 
 message FlowControl {
   message Config {

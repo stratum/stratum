@@ -13,24 +13,24 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_packetio_manager.h"
 
 #include <sys/socket.h>
 
 #include <functional>
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "stratum/hal/lib/common/writer_mock.h"
-#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "third_party/stratum/hal/lib/common/writer_mock.h"
+#include "third_party/stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/strings/substitute.h"
+#include "third_party/absl/synchronization/mutex.h"
 #include "util/libcproxy/libcproxy.h"
 #include "util/libcproxy/libcwrapper.h"
 #include "util/libcproxy/passthrough_proxy.h"

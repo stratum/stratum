@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_acl_pipeline.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_acl_pipeline.h"
 
 #include <algorithm>
 
-#include "stratum/glue/status/canonical_errors.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
+#include "third_party/stratum/glue/status/canonical_errors.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/strings/substitute.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {

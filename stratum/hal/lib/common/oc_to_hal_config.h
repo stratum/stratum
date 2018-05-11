@@ -18,12 +18,12 @@
 #ifndef STRATUM_HAL_LIB_COMMON_OC_TO_HAL_CONFIG_H_
 #define STRATUM_HAL_LIB_COMMON_OC_TO_HAL_CONFIG_H_
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/public/proto/hal.pb.h"
-#include "stratum/public/proto/openconfig-goog-bcm.pb.h"
-#include "stratum/public/proto/openconfig.pb.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/statusor.h"
+#include "third_party/stratum/public/proto/hal.pb.h"
+#include "third_party/stratum/public/proto/openconfig-goog-bcm.pb.h"
+#include "third_party/stratum/public/proto/openconfig.pb.h"
 
 namespace stratum {
 namespace hal {

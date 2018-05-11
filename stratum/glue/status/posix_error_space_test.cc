@@ -15,7 +15,7 @@
  */
 
 
-#include "stratum/glue/status/posix_error_space.h"
+#include "third_party/stratum/glue/status/posix_error_space.h"
 
 #include <errno.h>
 #include <stddef.h>

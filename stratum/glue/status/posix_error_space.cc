@@ -15,7 +15,7 @@
  */
 
 
-#include "stratum/glue/status/posix_error_space.h"
+#include "third_party/stratum/glue/status/posix_error_space.h"
 
 #include <errno.h>
 #include <stddef.h>
@@ -23,7 +23,7 @@
 #include <string>
 
 #include "base/strerror.h"
-#include "stratum/glue/logging.h"
+#include "third_party/stratum/glue/logging.h"
 
 namespace util {
 

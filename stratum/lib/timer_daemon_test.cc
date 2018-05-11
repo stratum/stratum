@@ -13,11 +13,11 @@
 // limitations under the License.
 
 
-#include "stratum/lib/timer_daemon.h"
+#include "third_party/stratum/lib/timer_daemon.h"
 
-#include "stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
 #include "testing/base/public/gunit.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

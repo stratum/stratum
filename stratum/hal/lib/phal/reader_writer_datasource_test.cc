@@ -13,17 +13,17 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/reader_writer_datasource.h"
+#include "third_party/stratum/hal/lib/phal/reader_writer_datasource.h"
 
 #include <memory>
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/filepath_stringsource.h"
-#include "stratum/hal/lib/phal/system_fake.h"
-#include "stratum/hal/lib/phal/test_util.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/phal/filepath_stringsource.h"
+#include "third_party/stratum/hal/lib/phal/system_fake.h"
+#include "third_party/stratum/hal/lib/phal/test_util.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/memory/memory.h"
+#include "third_party/absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

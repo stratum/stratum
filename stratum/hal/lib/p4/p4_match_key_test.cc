@@ -15,16 +15,16 @@
 
 // This file contains unit tests for P4MatchKey and its subclasses.
 
-#include "stratum/hal/lib/p4/p4_match_key.h"
+#include "third_party/stratum/hal/lib/p4/p4_match_key.h"
 
 #include <string>
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "third_party/sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
 
 using ::testing::Combine;
 using ::testing::HasSubstr;

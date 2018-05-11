@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ATTRIBUTE_GROUP_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_GROUP_MOCK_H_
 
-#include "stratum/hal/lib/phal/attribute_group.h"
+#include "third_party/stratum/hal/lib/phal/attribute_group.h"
 
 #include <memory>
 #include <utility>

@@ -58,14 +58,14 @@
 //  - yang/openconfig-vlan.yang
 //  - yang/openconfig-yang-types.yang
 // Include paths:
-//   - stratum/public/proto/...
+//   - third_party/stratum/public/proto/...
 syntax = "proto3";
 
 package openconfig.openconfig_interfaces;
 
-import "stratum/public/proto/ywrapper.proto";
-import "stratum/public/proto/yext.proto";
-import "stratum/public/proto/openconfig/enums/enums.proto";
+import "third_party/stratum/public/proto/ywrapper.proto";
+import "third_party/stratum/public/proto/yext.proto";
+import "third_party/stratum/public/proto/openconfig/enums/enums.proto";
 
 message Interfaces {
   message Interface {

@@ -23,10 +23,10 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/lib/channel/channel.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/statusor.h"
+#include "third_party/stratum/lib/channel/channel.h"
+#include "third_party/stratum/public/proto/hal.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

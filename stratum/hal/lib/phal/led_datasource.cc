@@ -13,16 +13,16 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/led_datasource.h"
+#include "third_party/stratum/hal/lib/phal/led_datasource.h"
 
 #include <functional>
-#include "stratum/hal/lib/phal/filepath_stringsource.h"
-#include "stratum/hal/lib/phal/system_interface.h"
-#include "stratum/lib/macros.h"
+#include "third_party/stratum/hal/lib/phal/filepath_stringsource.h"
+#include "third_party/stratum/hal/lib/phal/system_interface.h"
+#include "third_party/stratum/lib/macros.h"
 #include "util/gtl/map_util.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/glue/status/statusor.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

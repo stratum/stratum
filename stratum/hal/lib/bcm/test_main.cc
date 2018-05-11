@@ -17,8 +17,8 @@
 #include <stdlib.h>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/init_google.h"
-#include "stratum/glue/logging.h"
+#include "third_party/stratum/glue/init_google.h"
+#include "third_party/stratum/glue/logging.h"
 #include "testing/base/public/gunit.h"
 
 DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");

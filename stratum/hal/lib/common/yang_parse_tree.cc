@@ -13,20 +13,20 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/yang_parse_tree.h"
+#include "third_party/stratum/hal/lib/common/yang_parse_tree.h"
 
 #include <grpcpp/grpcpp.h>
 #include <list>
 #include <string>
 
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/public/proto/yang_wrappers.pb.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
+#include "third_party/stratum/lib/constants.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/public/proto/yang_wrappers.pb.h"
+#include "third_party/absl/strings/str_cat.h"
+#include "third_party/absl/strings/str_format.h"
+#include "third_party/absl/synchronization/mutex.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 

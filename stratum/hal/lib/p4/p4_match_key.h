@@ -28,11 +28,11 @@
 #include <set>
 #include <string>
 
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/p4/common_flow_entry.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/hal/lib/p4/common_flow_entry.pb.h"
+#include "third_party/stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "third_party/sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

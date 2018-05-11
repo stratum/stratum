@@ -13,9 +13,9 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/dummy_threadpool.h"
-#include "stratum/hal/lib/phal/threadpool_interface.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/hal/lib/phal/dummy_threadpool.h"
+#include "third_party/stratum/hal/lib/phal/threadpool_interface.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

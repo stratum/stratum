@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/transceiver_datasources.h"
+#include "third_party/stratum/hal/lib/phal/transceiver_datasources.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/fixed_stringsource.h"
-#include "stratum/hal/lib/phal/test_util.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/phal/fixed_stringsource.h"
+#include "third_party/stratum/hal/lib/phal/test_util.h"
 #include "testing/base/public/gunit.h"
-#include "absl/time/time.h"
+#include "third_party/absl/time/time.h"
 
 namespace stratum {
 namespace hal {

@@ -18,11 +18,11 @@
 #ifndef STRATUM_HAL_LIB_PHAL_TRANSCEIVER_DATASOURCES_H_
 #define STRATUM_HAL_LIB_PHAL_TRANSCEIVER_DATASOURCES_H_
 
-#include "stratum/hal/lib/phal/fixed_layout_datasource.h"
-#include "stratum/hal/lib/phal/managed_attribute.h"
-#include "stratum/public/proto/hal.pb.h"
-#include "absl/base/integral_types.h"
-#include "absl/memory/memory.h"
+#include "third_party/stratum/hal/lib/phal/fixed_layout_datasource.h"
+#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
+#include "third_party/stratum/public/proto/hal.pb.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

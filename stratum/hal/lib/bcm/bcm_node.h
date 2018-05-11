@@ -18,14 +18,14 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 
-#include "stratum/hal/lib/bcm/bcm_acl_manager.h"
-#include "stratum/hal/lib/bcm/bcm_l2_manager.h"
-#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
-#include "stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "absl/base/integral_types.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_acl_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_l2_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_l3_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_packetio_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_table_manager.h"
+#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/system_real.h"
+#include "third_party/stratum/hal/lib/phal/system_real.h"
 
-#include "stratum/glue/status/posix_error_space.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/status/posix_error_space.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

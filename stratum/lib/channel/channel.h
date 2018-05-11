@@ -22,10 +22,10 @@
 #include <memory>
 #include <vector>
 
-#include "stratum/lib/macros.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/base/thread_annotations.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/absl/time/time.h"
 
 namespace stratum {
 

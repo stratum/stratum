@@ -13,12 +13,12 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/phal_sim.h"
+#include "third_party/stratum/hal/lib/phal/phal_sim.h"
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
-#include "absl/base/macros.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/hal/lib/common/constants.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/base/macros.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

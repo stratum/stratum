@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 
-#include "stratum/hal/lib/common/phal_interface.h"
+#include "third_party/stratum/hal/lib/common/phal_interface.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

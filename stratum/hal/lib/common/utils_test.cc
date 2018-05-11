@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/utils.h"
+#include "third_party/stratum/hal/lib/common/utils.h"
 
 #include <string>
 
-#include "stratum/lib/constants.h"
+#include "third_party/stratum/lib/constants.h"
 #include "testing/base/public/gunit.h"
-#include "absl/strings/substitute.h"
+#include "third_party/absl/strings/substitute.h"
 
 
 using protobuf::util::MessageDifferencer;

@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_cc_lib",
     "sc_cc_test",
@@ -39,10 +39,10 @@ sc_cc_lib(
         "bits.h",
     ],
     deps = [
-        "//absl/base",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//stratum/glue:logging",
+        "//third_party/absl/base",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/numeric:int128",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -53,9 +53,9 @@ sc_cc_test(
     deps = [
         ":bits",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//stratum/glue:logging",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/numeric:int128",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -73,10 +73,10 @@ sc_cc_lib(
     ],
     deps = [
         ":bits",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//absl/strings",
-        "//stratum/glue:logging",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/numeric:int128",
+        "//third_party/absl/strings",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -87,10 +87,10 @@ sc_cc_test(
     deps = [
         ":ipaddress",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//absl/strings",
-        "//stratum/glue:logging",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/numeric:int128",
+        "//third_party/absl/strings",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -103,6 +103,6 @@ sc_cc_lib(
         "ports.h",
     ],
     deps = [
-        "//stratum/glue:logging",
+        "//third_party/stratum/glue:logging",
     ],
 )

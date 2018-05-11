@@ -22,12 +22,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/public/lib/error.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/public/lib/error.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/absl/time/clock.h"
+#include "third_party/absl/time/time.h"
 
 namespace stratum {
 namespace hal {

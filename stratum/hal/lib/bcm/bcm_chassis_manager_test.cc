@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <memory>
 #include <string>
@@ -22,23 +22,23 @@
 #include <vector>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "stratum/hal/lib/bcm/bcm_serdes_db_manager_mock.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/hal/lib/common/phal_mock.h"
-#include "stratum/hal/lib/common/writer_mock.h"
-#include "stratum/lib/channel/channel_mock.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_serdes_db_manager_mock.h"
+#include "third_party/stratum/hal/lib/common/constants.h"
+#include "third_party/stratum/hal/lib/common/phal_mock.h"
+#include "third_party/stratum/hal/lib/common/writer_mock.h"
+#include "third_party/stratum/lib/channel/channel_mock.h"
+#include "third_party/stratum/lib/constants.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/strings/match.h"
+#include "third_party/absl/strings/str_cat.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 DECLARE_string(base_bcm_chassis_map_file);
 DECLARE_string(bcm_sdk_config_file);

@@ -19,7 +19,7 @@ syntax = "proto3";
 
 package oc;
 
-import "stratum/public/proto/yang_wrappers.proto";
+import "third_party/stratum/public/proto/yang_wrappers.proto";
 
 // Device represents the /device YANG schema element.
 message Device {

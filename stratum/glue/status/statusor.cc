@@ -15,12 +15,12 @@
  */
 
 
-#include "stratum/glue/status/statusor.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 #include <errno.h>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/posix_error_space.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/glue/status/posix_error_space.h"
 
 namespace util {
 namespace internal {

@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_cc_lib",
     "sc_cc_test",
@@ -36,9 +36,9 @@ sc_proto_lib(
     name = "common_flow_entry_proto",
     hdrs = ["common_flow_entry.proto"],
     deps = [
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/public/proto:p4_annotation_proto",
+        "//third_party/stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -51,17 +51,17 @@ sc_cc_lib(
         ":p4_table_map_proto",
         ":p4_write_request_differ",
         "//base",
-        "//absl/memory",
-        "//absl/strings",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue:logging",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/public/lib:error",
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//third_party/absl/memory",
+        "//third_party/absl/strings",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue:logging",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/public/lib:error",
+        "//third_party/stratum/public/proto:p4_annotation_proto",
+        "//third_party/stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:map_util",
     ],
 )
@@ -77,12 +77,12 @@ sc_cc_test(
         ":testdata",
         "//base",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
-        "//stratum/public/lib:error",
+        "//third_party/absl/memory",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/lib:error",
         "//util/gtl:map_util",
     ],
 )
@@ -94,16 +94,16 @@ sc_cc_lib(
     deps = [
         ":utils",
         "//base",
-        "//absl/strings",
-        "//protobuf",
-        "//sandblaze/p4lang:p4info_proto",
-        "//stratum/glue:logging",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//third_party/absl/strings",
+        "//third_party/protobuf",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/stratum/glue:logging",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/proto:p4_annotation_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
         "//util/gtl:map_util",
@@ -129,11 +129,11 @@ sc_cc_test(
         ":testdata",
         "//base",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//absl/strings",
-        "//sandblaze/p4lang:p4info_proto",
-        "//stratum/lib:utils",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//third_party/absl/memory",
+        "//third_party/absl/strings",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -144,12 +144,12 @@ sc_cc_lib(
     deps = [
         ":common_flow_entry_proto",
         ":p4_table_map_proto",
-        "//absl/memory",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:utils",
-        "//stratum/public/lib:error",
+        "//third_party/absl/memory",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -159,10 +159,10 @@ sc_cc_test(
     deps = [
         ":p4_match_key",
         "//testing/base/public:gunit_main_no_google3",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/public/lib:error",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -173,9 +173,9 @@ sc_cc_lib(
     deps = [
         # The p4_device_config_proto rule contains symbols that are needed
         # by the embedded p4lang prebuilt.
-        "//sandblaze/p4lang:p4_device_config_proto",
-        "//sandblaze/p4lang:util",
-        "//sandblaze/prebuilt/p4lang:vans-p4lang-pi",
+        "//third_party/sandblaze/p4lang:p4_device_config_proto",
+        "//third_party/sandblaze/p4lang:util",
+        "//third_party/sandblaze/prebuilt/p4lang:vans-p4lang-pi",
     ],
 )
 
@@ -203,8 +203,8 @@ sc_proto_lib(
     name = "p4_control_proto",
     hdrs = ["p4_control.proto"],
     deps = [
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//third_party/stratum/public/proto:p4_annotation_proto",
+        "//third_party/stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -214,8 +214,8 @@ sc_proto_lib(
     deps = [
         ":p4_control_proto",
         ":p4_table_map_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/public/proto:p4_annotation_proto",
     ],
 )
 
@@ -224,9 +224,9 @@ sc_proto_lib(
     hdrs = ["p4_table_map.proto"],
     deps = [
         ":common_flow_entry_proto",
-        "//sandblaze/p4lang:p4info_proto",
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/stratum/public/proto:p4_annotation_proto",
+        "//third_party/stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -241,8 +241,8 @@ sc_proto_lib(
 #        ":p4_pipeline_config_proto",
 #        ":p4_write_request_differ",
 #        "//base",
-#        "//stratum/glue/status",
-#        "//sandblaze/p4lang:p4runtime_proto",
+#        "//third_party/stratum/glue/status",
+#        "//third_party/sandblaze/p4lang:p4runtime_proto",
 #    ],
 #)
 
@@ -265,11 +265,11 @@ sc_cc_test(
         ":p4_table_mapper_mock",
         "//base",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
-        "//stratum/public/lib:error",
+        "//third_party/absl/memory",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -295,19 +295,19 @@ sc_cc_lib(
         ":p4_write_request_differ",
         ":utils",
         "//base",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue:logging",
-        "//stratum/glue/net_util:ipaddress",
-        "//stratum/glue/status",
-        "//stratum/hal/lib/common:common_proto",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
-        "//stratum/public/proto:hal_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/sandblaze/p4lang:p4info_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue:logging",
+        "//third_party/stratum/glue/net_util:ipaddress",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/hal/lib/common:common_proto",
+        "//third_party/stratum/hal/lib/common:constants",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/proto:hal_proto",
+        "//third_party/stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:map_util",
     ],
@@ -334,11 +334,11 @@ sc_cc_test(
         ":testdata",
         "//base",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//stratum/glue:logging",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/stratum/glue:logging",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib:utils",
     ],
 )
 
@@ -348,12 +348,12 @@ sc_cc_lib(
     hdrs = ["p4_write_request_differ.h"],
     deps = [
         "//base",
-        "//protobuf",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
-        "//stratum/public/lib:error",
+        "//third_party/protobuf",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -363,11 +363,11 @@ sc_cc_test(
     deps = [
         ":p4_write_request_differ",
         "//testing/base/public:gunit_main_no_google3",
-        "//protobuf",
-        "//sandblaze/p4lang:p4runtime_proto",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
-        "//stratum/public/lib:error",
+        "//third_party/protobuf",
+        "//third_party/sandblaze/p4lang:p4runtime_proto",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -377,7 +377,7 @@ sc_cc_lib(
     hdrs = ["utils.h"],
     deps = [
         ":p4_runtime_interface",
-        "//absl/strings",
+        "//third_party/absl/strings",
     ],
 )
 
@@ -391,9 +391,9 @@ sc_cc_test(
         ":testdata",
         ":utils",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/strings",
-        "//sandblaze/prebuilt/p4lang:vans-p4lang-pi",
-        "//stratum/lib:utils",
+        "//third_party/absl/strings",
+        "//third_party/sandblaze/prebuilt/p4lang:vans-p4lang-pi",
+        "//third_party/stratum/lib:utils",
     ],
 )
 

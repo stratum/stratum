@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_packetio_manager.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -33,12 +33,12 @@
 #include <utility>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "absl/base/integral_types.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/strings/substitute.h"
+#include "third_party/absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 #include "util/gtl/stl_util.h"
 

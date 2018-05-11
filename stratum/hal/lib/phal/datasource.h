@@ -20,12 +20,12 @@
 
 #include <memory>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/phal/managed_attribute.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
+#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
+#include "third_party/absl/base/thread_annotations.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/absl/time/time.h"
 
 namespace stratum {
 namespace hal {

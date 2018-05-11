@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_CHASSIS_MANAGER_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_CHASSIS_MANAGER_MOCK_H_
 
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

@@ -20,10 +20,10 @@
 
 #include <memory>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/hal/lib/bcm/bcm.pb.h"
+#include "third_party/stratum/public/proto/hal.grpc.pb.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

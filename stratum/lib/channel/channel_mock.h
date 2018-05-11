@@ -18,7 +18,7 @@
 #ifndef STRATUM_LIB_CHANNEL_CHANNEL_MOCK_H_
 #define STRATUM_LIB_CHANNEL_CHANNEL_MOCK_H_
 
-#include "stratum/lib/channel/channel.h"
+#include "third_party/stratum/lib/channel/channel.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

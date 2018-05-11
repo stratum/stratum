@@ -19,7 +19,7 @@ option cc_generic_services = false;
 
 package stratum.hal.phal;
 
-import "stratum/public/proto/hal.proto";
+import "third_party/stratum/public/proto/hal.proto";
 
 // IN PROGRESS
 // DO NOT USE

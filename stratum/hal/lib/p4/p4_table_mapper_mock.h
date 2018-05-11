@@ -20,7 +20,7 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_TABLE_MAPPER_MOCK_H_
 #define STRATUM_HAL_LIB_P4_P4_TABLE_MAPPER_MOCK_H_
 
-#include "stratum/hal/lib/p4/p4_table_mapper.h"
+#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

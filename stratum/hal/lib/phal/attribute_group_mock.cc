@@ -13,10 +13,10 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/attribute_group_mock.h"
+#include "third_party/stratum/hal/lib/phal/attribute_group_mock.h"
 
 #include <memory>
-#include "absl/memory/memory.h"
+#include "third_party/absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

@@ -13,14 +13,14 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/acl_table.h"
+#include "third_party/stratum/hal/lib/bcm/acl_table.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/lib/test_utils/matchers.h"
+#include "third_party/stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "third_party/sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

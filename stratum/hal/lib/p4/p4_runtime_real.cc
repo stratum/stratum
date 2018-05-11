@@ -15,7 +15,7 @@
 
 // This file implements P4RuntimeReal.
 
-#include "stratum/hal/lib/p4/p4_runtime_real.h"
+#include "third_party/stratum/hal/lib/p4/p4_runtime_real.h"
 
 namespace stratum {
 namespace hal {

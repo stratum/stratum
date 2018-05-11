@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_l3_manager.h"
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/base/integral_types.h"
-#include "absl/memory/memory.h"
+#include "third_party/stratum/hal/lib/common/constants.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/public/proto/p4_table_defs.pb.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/memory/memory.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {

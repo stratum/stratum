@@ -21,7 +21,7 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_RUNTIME_REAL_H_
 #define STRATUM_HAL_LIB_P4_P4_RUNTIME_REAL_H_
 
-#include "stratum/hal/lib/p4/p4_runtime_interface.h"
+#include "third_party/stratum/hal/lib/p4/p4_runtime_interface.h"
 
 namespace stratum {
 namespace hal {

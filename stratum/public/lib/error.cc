@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/public/lib/error.h"
 
 #include <string>
 

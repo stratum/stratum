@@ -13,20 +13,20 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/hal.h"
+#include "third_party/stratum/hal/lib/common/hal.h"
 
 #include <chrono>  // NOLINT
 #include <utility>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
-#include "stratum/lib/utils.h"
-#include "absl/base/macros.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/lib/constants.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/lib/sandcastle/procmon_service.grpc.pb.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/absl/base/macros.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 DEFINE_string(url, google::hercules::kLocalHerculesUrl,
               "External URL for server to listen to external calls.");

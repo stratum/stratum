@@ -15,18 +15,18 @@
 
 // P4InfoManager unit tests.
 
-#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "third_party/stratum/hal/lib/p4/p4_info_manager.h"
 
 #include <memory>
 
 #include "base/commandlineflags.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/proto/p4_table_defs.pb.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/strings/substitute.h"
+#include "third_party/sandblaze/p4lang/p4/config/p4info.pb.h"
 
 DECLARE_bool(skip_p4_min_objects_check);
 
@@ -156,7 +156,7 @@ class P4InfoManagerTest : public testing::Test {
   // output.
   void SetUpTorP4Info() {
     const std::string kTorP4File =
-        "stratum/hal/lib/p4/testdata/tor_p4_info.pb.txt";
+        "third_party/stratum/hal/lib/p4/testdata/tor_p4_info.pb.txt";
     ASSERT_TRUE(ReadProtoFromTextFile(kTorP4File, &p4_test_info_).ok());
     SetUpNewP4Info();
   }

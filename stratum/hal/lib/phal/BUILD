@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_cc_bin",
     "sc_cc_lib",
@@ -38,11 +38,11 @@ sc_cc_lib(
     name = "attribute_database_interface",
     hdrs = ["attribute_database_interface.h"],
     deps = [
-        "//absl/base:core_headers",
-        "//absl/types:variant",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/phal:db_proto",
-        "//stratum/lib/channel",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/types:variant",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/hal/lib/phal:db_proto",
+        "//third_party/stratum/lib/channel",
     ],
 )
 
@@ -61,7 +61,7 @@ sc_cc_lib(
     name = "buffer_tools",
     hdrs = ["buffer_tools.h"],
     deps = [
-        "//absl/base:core_headers",
+        "//third_party/absl/base:core_headers",
     ],
 )
 
@@ -70,9 +70,9 @@ sc_cc_lib(
     hdrs = ["managed_attribute.h"],
     deps = [
         ":attribute_database_interface",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -86,7 +86,7 @@ sc_cc_lib(
         ":datasource",
         ":managed_attribute",
         "//testing/base/public:gunit_no_google3",
-        "//stratum/glue/status",
+        "//third_party/stratum/glue/status",
     ],
 )
 
@@ -106,15 +106,15 @@ sc_cc_lib(
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//protobuf",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
-        "//stratum/lib/channel",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/protobuf",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib:utils",
+        "//third_party/stratum/lib/channel",
     ],
 )
 
@@ -127,13 +127,13 @@ sc_cc_lib(
         ":datasource",
         ":managed_attribute",
         ":threadpool_interface",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//protobuf",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/protobuf",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
         "//util/gtl:flat_hash_map",
         "//util/gtl:map_util",
     ],
@@ -149,9 +149,9 @@ sc_cc_test(
         ":managed_attribute",
         ":test_util",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/hal/lib/phal/test:test_proto",
+        "//third_party/absl/base:core_headers",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/hal/lib/phal/test:test_proto",
     ],
 )
 
@@ -164,7 +164,7 @@ sc_cc_lib(
     deps = [
         ":attribute_group",
         "//testing/base/public:gunit_no_google3",
-        "//absl/memory",
+        "//third_party/absl/memory",
     ],
 )
 
@@ -175,11 +175,11 @@ sc_cc_lib(
     deps = [
         ":attribute_database_interface",
         ":managed_attribute",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//absl/time",
-        "//stratum/glue/status",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status",
     ],
 )
 
@@ -191,7 +191,7 @@ sc_cc_lib(
     deps = [
         ":datasource",
         "//testing/base/public:gunit_no_google3",
-        "//stratum/glue/status",
+        "//third_party/stratum/glue/status",
     ],
 )
 
@@ -200,7 +200,7 @@ sc_proto_lib(
     hdrs = ["db.proto"],
     python_support = True,
     deps = [
-        "//stratum/public/proto:hal_proto",
+        "//third_party/stratum/public/proto:hal_proto",
     ],
 )
 
@@ -210,9 +210,9 @@ sc_cc_lib(
     hdrs = ["dummy_threadpool.h"],
     deps = [
         ":threadpool_interface",
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//stratum/glue/status",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue/status",
     ],
 )
 
@@ -222,10 +222,10 @@ sc_cc_lib(
     deps = [
         ":stringsource_interface",
         ":system_interface",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:utils",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:utils",
     ],
 )
 
@@ -238,8 +238,8 @@ sc_cc_lib(
         ":datasource",
         ":managed_attribute",
         ":stringsource_interface",
-        "//absl/memory",
-        "//stratum/lib:macros",
+        "//third_party/absl/memory",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -251,9 +251,9 @@ sc_cc_test(
         ":fixed_stringsource",
         ":test_util",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/hal/lib/phal/test:test_proto",
+        "//third_party/absl/memory",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/hal/lib/phal/test:test_proto",
     ],
 )
 
@@ -262,9 +262,9 @@ sc_cc_lib(
     hdrs = ["fixed_stringsource.h"],
     deps = [
         ":stringsource_interface",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:statusor",
     ],
 )
 
@@ -277,10 +277,10 @@ sc_cc_lib(
         ":datasource",
         ":managed_attribute",
         ":stringsource_interface",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/glue/status",
-        "//stratum/lib:macros",
+        "//third_party/absl/memory",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/lib:macros",
         "//util/gtl:map_util",
     ],
 )
@@ -293,9 +293,9 @@ sc_cc_test(
         ":google_eeprom_datasource",
         ":test_util",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/absl/memory",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )
 
@@ -308,14 +308,14 @@ sc_cc_lib(
         ":attribute_database_interface",
         ":system_interface",
         "//base",
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//absl/time",
-        "//stratum/glue/status",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/hal/lib/common:phal_interface",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:hal_grpc_proto",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/synchronization",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/hal/lib/common:constants",
+        "//third_party/stratum/hal/lib/common:phal_interface",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/public/proto:hal_grpc_proto",
     ],
 )
 
@@ -326,12 +326,12 @@ sc_cc_test(
         ":attribute_database_mock",
         ":google_phal",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//absl/time",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib/channel:channel_mock",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib/channel:channel_mock",
     ],
 )
 
@@ -349,12 +349,12 @@ sc_cc_lib(
         ":system_interface",
         ":transceiver_datasources",
         ":udev_event_handler",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
+        "//third_party/absl/memory",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib:utils",
     ],
 )
 
@@ -370,9 +370,9 @@ sc_cc_test(
         ":test_util",
         ":udev_event_handler_mock",
         "//testing/base/public:gunit_main_no_google3",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib:utils",
     ],
 )
 
@@ -390,11 +390,11 @@ sc_cc_bin(
         ":attribute_database_interface",
         ":system_real",
         "//base",
-        "//absl/strings",
-        "//stratum/glue:init_google",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
+        "//third_party/absl/strings",
+        "//third_party/stratum/glue:init_google",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -404,9 +404,9 @@ sc_cc_lib(
     deps = [
         ":datasource",
         ":stringsource_interface",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -419,8 +419,8 @@ cc_test(
         ":system_fake",
         ":test_util",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/absl/memory",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )
 
@@ -433,9 +433,9 @@ sc_cc_lib(
         ":managed_attribute",
         ":stringsource_interface",
         "//base",
-        "//absl/memory",
-        "//stratum/glue/status",
-        "//stratum/lib:macros",
+        "//third_party/absl/memory",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/lib:macros",
         "//util/regexp/re2",
     ],
 )
@@ -449,8 +449,8 @@ sc_cc_test(
         ":regex_datasource",
         ":test_util",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/absl/memory",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )
 
@@ -458,8 +458,8 @@ sc_cc_lib(
     name = "stringsource_interface",
     hdrs = ["stringsource_interface.h"],
     deps = [
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
     ],
 )
 
@@ -471,11 +471,11 @@ sc_cc_lib(
     arches = HOST_ARCHES,
     deps = [
         ":system_interface",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -483,8 +483,8 @@ sc_cc_lib(
     name = "system_interface",
     hdrs = ["system_interface.h"],
     deps = [
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
     ],
 )
 
@@ -495,13 +495,13 @@ sc_cc_lib(
     arches = EMBEDDED_ARCHES,
     deps = [
         ":system_interface",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/sandblaze/prebuilt/eudev",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib:utils",
     ],
 )
 
@@ -526,7 +526,7 @@ sc_cc_lib(
         ":datasource",
         ":managed_attribute",
         "//testing/base/public:gunit_no_google3",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )
 
@@ -534,8 +534,8 @@ sc_cc_lib(
     name = "threadpool_interface",
     hdrs = ["threadpool_interface.h"],
     deps = [
-        "//absl/base:core_headers",
-        "//stratum/glue/status",
+        "//third_party/absl/base:core_headers",
+        "//third_party/stratum/glue/status",
     ],
 )
 
@@ -557,11 +557,11 @@ sc_cc_lib(
     deps = [
         ":fixed_layout_datasource",
         ":managed_attribute",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:hal_proto",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/absl/time",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/public/proto:hal_proto",
     ],
 )
 
@@ -573,8 +573,8 @@ sc_cc_test(
         ":test_util",
         ":transceiver_datasources",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/time",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )
 
@@ -585,12 +585,12 @@ sc_cc_lib(
     deps = [
         ":system_interface",
         "//base",
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/lib:macros",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/hal/lib/common:constants",
+        "//third_party/stratum/lib:macros",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
         "//util/gtl:map_util",
@@ -616,12 +616,12 @@ sc_cc_test(
         ":udev_event_handler",
         ":udev_event_handler_mock",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:macros",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -632,14 +632,14 @@ sc_cc_lib(
     deps = [
         ":udev_interface",
         "//base",
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//stratum/glue:logging",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/hal/lib/common:phal_interface",
-        "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue:logging",
+        "//third_party/stratum/hal/lib/common:constants",
+        "//third_party/stratum/hal/lib/common:phal_interface",
+        "//third_party/stratum/hal/lib/phal:phal_proto",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib:utils",
         "//util/gtl:stl_util",
     ],
 )
@@ -649,7 +649,7 @@ sc_proto_lib(
     hdrs = ["phal.proto"],
     python_support = True,
     deps = [
-        "//stratum/public/proto:hal_proto",
+        "//third_party/stratum/public/proto:hal_proto",
     ],
 )
 
@@ -659,18 +659,18 @@ sc_cc_lib(
     hdrs = ["phal_proxy.h"],
     deps = [
         ":phal_proto",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//sandblaze/prebuilt/grpc",
-        "//stratum/hal/lib/common:client_sync_reader_writer",
-        "//stratum/hal/lib/common:common_proto",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/hal/lib/common:phal_interface",
-        "//stratum/lib:constants",
-        "//stratum/lib:macros",
-        "//stratum/lib/sandcastle:hardware_status_service_grpc_proto",
-        "//stratum/public/proto:error_proto",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/sandblaze/prebuilt/grpc",
+        "//third_party/stratum/hal/lib/common:client_sync_reader_writer",
+        "//third_party/stratum/hal/lib/common:common_proto",
+        "//third_party/stratum/hal/lib/common:constants",
+        "//third_party/stratum/hal/lib/common:phal_interface",
+        "//third_party/stratum/lib:constants",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/lib/sandcastle:hardware_status_service_grpc_proto",
+        "//third_party/stratum/public/proto:error_proto",
     ],
 )
 
@@ -680,11 +680,11 @@ sc_cc_lib(
     hdrs = ["phal_sim.h"],
     deps = [
         ":phal_proto",
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/hal/lib/common:phal_interface",
-        "//stratum/lib:macros",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/hal/lib/common:constants",
+        "//third_party/stratum/hal/lib/common:phal_interface",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -695,13 +695,13 @@ sc_cc_lib(
     arches = EMBEDDED_ARCHES,
     deps = [
         ":udev_interface",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/sandblaze/prebuilt/eudev",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
     ],
 )
 
@@ -709,8 +709,8 @@ sc_cc_lib(
     name = "udev_interface",
     hdrs = ["udev_interface.h"],
     deps = [
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
     ],
 )
 
@@ -736,14 +736,14 @@ sc_cc_lib(
         ":reader_writer_datasource",
         ":stringsource_interface",
         ":system_interface",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:hal_proto",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/memory",
+        "//third_party/absl/synchronization",
+        "//third_party/sandblaze/prebuilt/eudev",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:statusor",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/public/proto:hal_proto",
         "//util/gtl:map_util",
     ],
 )
@@ -756,9 +756,9 @@ sc_cc_test(
         ":phal_proto",
         ":system_interface_mock",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//protobuf",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/public/proto:hal_proto",
+        "//third_party/absl/memory",
+        "//third_party/protobuf",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/public/proto:hal_proto",
     ],
 )

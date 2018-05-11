@@ -13,12 +13,12 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/udev_event_handler.h"
+#include "third_party/stratum/hal/lib/phal/udev_event_handler.h"
 
 #include "base/commandlineflags.h"
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/hal/lib/common/constants.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 
 DEFINE_int32(udev_polling_interval_ms, 200,

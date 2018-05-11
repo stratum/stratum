@@ -17,29 +17,29 @@
 #include <vector>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/init_google.h"
-#include "stratum/glue/logging.h"
-#include "stratum/hal/lib/bcm/bcm_acl_manager.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
-#include "stratum/hal/lib/bcm/bcm_l2_manager.h"
-#include "stratum/hal/lib/bcm/bcm_l3_manager.h"
-#include "stratum/hal/lib/bcm/bcm_node.h"
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_sim.h"
-#include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
-#include "stratum/hal/lib/bcm/bcm_switch.h"
-#include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/p4/p4_runtime_real.h"
-#include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "stratum/hal/lib/phal/phal_sim.h"
-#include "stratum/lib/security/auth_policy_checker.h"
-#include "stratum/lib/security/credentials_manager.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/init_google.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_acl_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_l2_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_l3_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_node.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_packetio_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sdk_sim.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_switch.h"
+#include "third_party/stratum/hal/lib/common/hal.h"
+#include "third_party/stratum/hal/lib/p4/p4_runtime_real.h"
+#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
+#include "third_party/stratum/hal/lib/phal/phal_sim.h"
+#include "third_party/stratum/lib/security/auth_policy_checker.h"
+#include "third_party/stratum/lib/security/credentials_manager.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 DEFINE_string(
     bcm_sdk_sim_bin,
-    "stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8",
+    "third_party/stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8",
     "Path to look for BCMSIM or PCID binary.");
 DEFINE_int32(max_units, 1,
              "Maximum number of units supported on the switch platform.");

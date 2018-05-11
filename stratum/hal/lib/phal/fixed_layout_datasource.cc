@@ -13,11 +13,11 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/fixed_layout_datasource.h"
+#include "third_party/stratum/hal/lib/phal/fixed_layout_datasource.h"
 
 #include <algorithm>
 
-#include "stratum/hal/lib/phal/buffer_tools.h"
+#include "third_party/stratum/hal/lib/phal/buffer_tools.h"
 
 namespace stratum {
 namespace hal {

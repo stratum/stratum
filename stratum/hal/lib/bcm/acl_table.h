@@ -18,11 +18,11 @@
 #ifndef STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/hal/lib/bcm/bcm_flow_table.h"
-#include "stratum/hal/lib/p4/common_flow_entry.pb.h"
-#include "stratum/public/proto/p4_annotation.pb.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "third_party/stratum/hal/lib/bcm/bcm.pb.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_flow_table.h"
+#include "third_party/stratum/hal/lib/p4/common_flow_entry.pb.h"
+#include "third_party/stratum/public/proto/p4_annotation.pb.h"
+#include "third_party/stratum/public/proto/p4_table_defs.pb.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/flat_hash_set.h"
 

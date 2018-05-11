@@ -20,10 +20,10 @@
 
 #include <string>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/phal/stringsource_interface.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/statusor.h"
+#include "third_party/stratum/hal/lib/phal/stringsource_interface.h"
 
 namespace stratum {
 namespace hal {

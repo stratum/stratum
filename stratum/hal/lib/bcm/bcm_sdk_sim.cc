@@ -13,21 +13,21 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_sdk_sim.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sdk_sim.h"
 
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "absl/synchronization/mutex.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/hal/lib/bcm/macros.h"
-#include "stratum/lib/macros.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/substitute.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/hal/lib/bcm/macros.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/strings/str_cat.h"
+#include "third_party/absl/strings/substitute.h"
 #include "util/gtl/map_util.h"
 #include "util/gtl/stl_util.h"
 

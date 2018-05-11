@@ -23,9 +23,9 @@ extern "C" {
 #include "soc/error.h"
 }
 
-#include "stratum/glue/status/status.h"
-#include "stratum/lib/macros.h"
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/public/lib/error.h"
 
 namespace stratum {
 namespace hal {

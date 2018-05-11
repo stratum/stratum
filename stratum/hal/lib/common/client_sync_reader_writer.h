@@ -21,9 +21,9 @@
 #include <grpcpp/grpcpp.h>
 #include <memory>
 
-#include "stratum/glue/logging.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/absl/base/thread_annotations.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

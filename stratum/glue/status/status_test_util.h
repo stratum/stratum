@@ -22,7 +22,7 @@
 // included in gunit_no_google3.
 // NOLINTNEXTLINE(build/deprecated)
 
-#include "stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status.h"
 #include "testing/base/public/gunit.h"
 
 // Macros for testing the results of functions that return ::util::Status.

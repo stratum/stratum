@@ -18,8 +18,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_MOCK_GNMI_PUBLISHER_H_
 #define STRATUM_HAL_LIB_COMMON_MOCK_GNMI_PUBLISHER_H_
 
-#include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/common/switch_mock.h"
+#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
+#include "third_party/stratum/hal/lib/common/switch_mock.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

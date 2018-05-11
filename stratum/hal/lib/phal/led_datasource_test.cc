@@ -13,11 +13,11 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/led_datasource.h"
+#include "third_party/stratum/hal/lib/phal/led_datasource.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface_mock.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/phal/phal.pb.h"
+#include "third_party/stratum/hal/lib/phal/system_interface_mock.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 

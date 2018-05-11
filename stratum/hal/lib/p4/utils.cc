@@ -15,10 +15,10 @@
 
 // Implementation of p4_utils functions.
 
-#include "stratum/hal/lib/p4/utils.h"
+#include "third_party/stratum/hal/lib/p4/utils.h"
 
-#include "stratum/hal/lib/p4/p4_runtime_interface.h"
-#include "absl/strings/substitute.h"
+#include "third_party/stratum/hal/lib/p4/p4_runtime_interface.h"
+#include "third_party/absl/strings/substitute.h"
 
 namespace stratum {
 namespace hal {

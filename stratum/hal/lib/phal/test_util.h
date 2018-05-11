@@ -18,10 +18,10 @@
 #ifndef STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
 #define STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/managed_attribute.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
+#include "third_party/stratum/hal/lib/phal/datasource.h"
+#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

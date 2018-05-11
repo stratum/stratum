@@ -15,7 +15,7 @@
  */
 
 
-#include "stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -25,10 +25,10 @@
 #include <utility>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/logging.h"
-#include "absl/strings/ascii.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/absl/strings/ascii.h"
+#include "third_party/absl/strings/str_cat.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace util {
 

@@ -19,7 +19,7 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "stratum/public/proto/hal.proto";
+import "third_party/stratum/public/proto/hal.proto";
 
 // This message encapsulates all the data needed to specify a line card.
 message PhalCardConfig {

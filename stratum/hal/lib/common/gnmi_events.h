@@ -18,12 +18,12 @@
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
-#include "stratum/glue/status/status.h"
-#include "stratum/lib/timer_daemon.h"
-#include "stratum/public/proto/hal.pb.h"
-#include "absl/base/integral_types.h"
-#include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/lib/timer_daemon.h"
+#include "third_party/stratum/public/proto/hal.pb.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/sandblaze/gnmi/gnmi.grpc.pb.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 

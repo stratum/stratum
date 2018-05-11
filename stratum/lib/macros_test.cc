@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "stratum/lib/macros.h"
+#include "third_party/stratum/lib/macros.h"
 
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"

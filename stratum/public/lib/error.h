@@ -18,8 +18,8 @@
 #ifndef STRATUM_PUBLIC_LIB_ERROR_H_
 #define STRATUM_PUBLIC_LIB_ERROR_H_
 
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/public/proto/error.pb.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/public/proto/error.pb.h"
 
 namespace stratum {
 

@@ -18,10 +18,10 @@
 //
 // Derived from code by Moses Charikar
 
-#include "stratum/glue/net_util/bits.h"
+#include "third_party/stratum/glue/net_util/bits.h"
 
 #include <assert.h>
-#include "absl/numeric/int128.h"
+#include "third_party/absl/numeric/int128.h"
 
 namespace stratum {
 

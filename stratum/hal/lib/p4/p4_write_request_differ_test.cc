@@ -14,15 +14,15 @@
 
 // This file contains P4WriteRequestDiffer unit tests.
 
-#include "stratum/hal/lib/p4/p4_write_request_differ.h"
+#include "third_party/stratum/hal/lib/p4/p4_write_request_differ.h"
 
 #include <vector>
 
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
+#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/lib/utils.h"
 
 using ::testing::HasSubstr;
 

@@ -13,10 +13,10 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_flow_table.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_flow_table.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/test_utils/matchers.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/lib/test_utils/matchers.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 

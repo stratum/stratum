@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_cc_lib",
 )
@@ -38,9 +38,9 @@ sc_cc_lib(
         "error.h",
     ],
     deps = [
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/public/proto:error_proto",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/public/proto:error_proto",
     ],
 )
 
@@ -50,7 +50,7 @@ cc_library(
     srcs = ["test_main.cc"],
     deps = [
         "//testing/base/public:gunit_no_google3",
-        "//stratum/glue:init_google",
+        "//third_party/stratum/glue:init_google",
     ],
 )
 
@@ -60,10 +60,10 @@ cc_test(
     deps = [
         ":error",
         ":test_main",
-        "//sandblaze/prebuilt/grpc",
-        "//stratum:code_proto",
-        "//stratum:status_proto",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/sandblaze/prebuilt/grpc",
+        "//third_party/stratum:code_proto",
+        "//third_party/stratum:status_proto",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )

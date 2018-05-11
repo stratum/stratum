@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status.h"
 
 namespace util {
 

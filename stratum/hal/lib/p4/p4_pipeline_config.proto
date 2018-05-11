@@ -23,9 +23,9 @@ option cc_generic_services = false;
 package stratum.hal;
 
 import "p4/p4runtime.proto";
-import "stratum/hal/lib/p4/p4_control.proto";
-import "stratum/hal/lib/p4/p4_table_map.proto";
-import "stratum/public/proto/p4_annotation.proto";
+import "third_party/stratum/hal/lib/p4/p4_control.proto";
+import "third_party/stratum/hal/lib/p4/p4_table_map.proto";
+import "third_party/stratum/public/proto/p4_annotation.proto";
 
 // The P4PipelineConfig message conists of these fields:
 //  table_map - contains a map from P4 object name to descriptor data that

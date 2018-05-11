@@ -13,12 +13,12 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/utils.h"
+#include "third_party/stratum/hal/lib/bcm/utils.h"
 
 #include <sstream>  // IWYU pragma: keep
 
-#include "stratum/hal/lib/common/utils.h"
-#include "stratum/lib/constants.h"
+#include "third_party/stratum/hal/lib/common/utils.h"
+#include "third_party/stratum/lib/constants.h"
 
 namespace stratum {
 namespace hal {

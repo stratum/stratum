@@ -13,16 +13,16 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_sim_test_fixture.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sim_test_fixture.h"
 
 #include "base/commandlineflags.h"
 #include "devtools/build/runtime/get_runfiles_dir.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/p4/p4_runtime_real.h"
-#include "stratum/hal/lib/phal/phal_sim.h"
-#include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/p4/p4_runtime_real.h"
+#include "third_party/stratum/hal/lib/phal/phal_sim.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 DECLARE_string(base_bcm_chassis_map_file);
 DECLARE_string(bcm_serdes_db_proto_file);
@@ -49,19 +49,19 @@ namespace {
 // File path to BCM SDK simulator binary used by the BcmSdkSim. Note, the
 // extension ".k8" is truncated.
 constexpr char kBcmSimBin[] =
-    "stratum/hal/bin/bcm/sim/bcm_pcid_sim";
+    "third_party/stratum/hal/bin/bcm/sim/bcm_pcid_sim";
 // File path to chassis config which is used by chassis manager to generate on
 // fly the BCM config file loaded by the SDK simulator.
 constexpr char kTestChassisConfigGeneric Trident2[] =
-    "stratum/testing/protos/test_chassis_config_40g.pb.txt";
+    "third_party/stratum/testing/protos/test_chassis_config_40g.pb.txt";
 // File path to BCM serdes db which is required by chassis manager
 // initialization.
 constexpr char kTestBcmSerdesDb[] =
-    "stratum/hal/config/bcm_serdes_db.pb.bin";
+    "third_party/stratum/hal/config/bcm_serdes_db.pb.bin";
 // File path to BCM chassis map which is required by chassis manager
 // initialization.
 constexpr char kTestBaseBcmChassisMapFile[] =
-    "stratum/hal/config/base_bcm_chassis_map.pb.txt";
+    "third_party/stratum/hal/config/base_bcm_chassis_map.pb.txt";
 // File path for chassis manager to dump the BCM config file loaded by the SDK
 // simulator.
 constexpr char kTestBcmSdkConfigFile[] = "/tmp/config.bcm";

@@ -18,16 +18,16 @@
 #ifndef STRATUM_HAL_LIB_PHAL_LED_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_LED_DATASOURCE_H_
 
-#include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
-#include "stratum/lib/macros.h"
-#include "stratum/public/proto/hal.pb.h"
-#include "absl/base/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/glue/status/statusor.h"
+#include "third_party/stratum/hal/lib/phal/datasource.h"
+#include "third_party/stratum/hal/lib/phal/phal.pb.h"
+#include "third_party/stratum/hal/lib/phal/system_interface.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/public/proto/hal.pb.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

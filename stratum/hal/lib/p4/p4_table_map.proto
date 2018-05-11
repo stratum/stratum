@@ -25,9 +25,9 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "stratum/hal/lib/p4/common_flow_entry.proto";
-import "stratum/public/proto/p4_annotation.proto";
-import "stratum/public/proto/p4_table_defs.proto";
+import "third_party/stratum/hal/lib/p4/common_flow_entry.proto";
+import "third_party/stratum/public/proto/p4_annotation.proto";
+import "third_party/stratum/public/proto/p4_table_defs.proto";
 import "p4/config/p4info.proto";
 
 // Each P4 object type has "descriptor" data to help define the mapping from

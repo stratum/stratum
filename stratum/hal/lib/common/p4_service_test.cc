@@ -13,26 +13,26 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/p4_service.h"
+#include "third_party/stratum/hal/lib/common/p4_service.h"
 
 #include <grpcpp/grpcpp.h>
 #include <memory>
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/net_util/ports.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/error_buffer.h"
-#include "stratum/hal/lib/common/switch_mock.h"
-#include "stratum/lib/security/auth_policy_checker_mock.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/glue/net_util/ports.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/common/error_buffer.h"
+#include "third_party/stratum/hal/lib/common/switch_mock.h"
+#include "third_party/stratum/lib/security/auth_policy_checker_mock.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/base/integral_types.h"
-#include "absl/memory/memory.h"
-#include "absl/numeric/int128.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/numeric/int128.h"
+#include "third_party/absl/strings/substitute.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 DECLARE_int32(max_num_controllers_per_node);
 DECLARE_int32(max_num_controller_connections);

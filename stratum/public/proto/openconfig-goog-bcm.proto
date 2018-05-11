@@ -34,7 +34,7 @@ syntax = "proto3";
 
 package oc.Bcm;
 
-import "stratum/public/proto/yang_wrappers.proto";
+import "third_party/stratum/public/proto/yang_wrappers.proto";
 
 // Components.Component.Chassis represents the
 // /openconfig-platform/components/component/chassis YANG schema element.

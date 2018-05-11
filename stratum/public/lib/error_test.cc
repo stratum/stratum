@@ -13,14 +13,14 @@
 // limitations under the License.
 
 
-#include "stratum/public/lib/error.h"
+#include "third_party/stratum/public/lib/error.h"
 
 #include <grpcpp/grpcpp.h>
 
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/google/rpc/code.pb.h"
-#include "stratum/google/rpc/status.pb.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/google/rpc/code.pb.h"
+#include "third_party/stratum/google/rpc/status.pb.h"
 
 namespace stratum {
 

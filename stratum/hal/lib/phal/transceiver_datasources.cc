@@ -13,12 +13,12 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/transceiver_datasources.h"
+#include "third_party/stratum/hal/lib/phal/transceiver_datasources.h"
 
 #include <sstream>
 
-#include "stratum/lib/macros.h"
-#include "absl/time/time.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/time/time.h"
 
 namespace stratum {
 namespace hal {

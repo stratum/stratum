@@ -23,8 +23,8 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

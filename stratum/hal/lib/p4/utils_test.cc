@@ -15,14 +15,14 @@
 
 // Unit tests for p4_utils.
 
-#include "stratum/hal/lib/p4/utils.h"
+#include "third_party/stratum/hal/lib/p4/utils.h"
 
 #include "PI/proto/util.h"
-#include "stratum/hal/lib/p4/p4_runtime_mock.h"
-#include "stratum/lib/utils.h"
+#include "third_party/stratum/hal/lib/p4/p4_runtime_mock.h"
+#include "third_party/stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "absl/strings/substitute.h"
+#include "third_party/absl/strings/substitute.h"
 
 using ::testing::HasSubstr;
 using ::testing::Return;

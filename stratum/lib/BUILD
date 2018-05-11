@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_cc_lib",
     "sc_cc_test",
@@ -34,7 +34,7 @@ sc_cc_lib(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
-        "//absl/base:core_headers",
+        "//third_party/absl/base:core_headers",
     ],
 )
 
@@ -42,8 +42,8 @@ sc_cc_lib(
     name = "macros",
     hdrs = ["macros.h"],
     deps = [
-        "//stratum/glue/status:status_macros",
-        "//stratum/public/lib:error",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -53,7 +53,7 @@ sc_cc_test(
     deps = [
         ":macros",
         "//testing/base/public:gunit_main_no_google3",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )
 
@@ -64,8 +64,8 @@ cc_library(
     deps = [
         "//base",
         "//testing/base/public:gunit_no_google3",
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
+        "//third_party/stratum/glue:init_google",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -74,11 +74,11 @@ sc_cc_lib(
     srcs = ["timer_daemon.cc"],
     hdrs = ["timer_daemon.h"],
     deps = [
-        "//absl/synchronization",
-        "//absl/time",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/public/lib:error",
+        "//third_party/absl/synchronization",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -89,11 +89,11 @@ sc_cc_test(
         ":test_main",
         ":timer_daemon",
         "//testing/base/public:gunit_no_google3",
-        "//absl/synchronization",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/public/lib:error",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -103,14 +103,14 @@ sc_cc_lib(
     hdrs = ["utils.h"],
     deps = [
         ":macros",
-        "//absl/base:core_headers",
-        "//absl/strings",
-        "//protobuf",
-        "//sandblaze/prebuilt/grpc",
-        "//stratum:code_proto",
-        "//stratum:status_proto",
-        "//stratum/glue/status",
-        "//stratum/public/lib:error",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/strings",
+        "//third_party/protobuf",
+        "//third_party/sandblaze/prebuilt/grpc",
+        "//third_party/stratum:code_proto",
+        "//third_party/stratum:status_proto",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -122,9 +122,9 @@ sc_cc_test(
         ":utils",
         "//base",
         "//testing/base/public:gunit_no_google3",
-        "//sandblaze/p4lang:p4runtime_grpc_proto",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/public/lib:error",
-        "//stratum/public/proto:hal_grpc_proto",
+        "//third_party/sandblaze/p4lang:p4runtime_grpc_proto",
+        "//third_party/stratum/glue/status:status_test_util",
+        "//third_party/stratum/public/lib:error",
+        "//third_party/stratum/public/proto:hal_grpc_proto",
     ],
 )

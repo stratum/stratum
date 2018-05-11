@@ -16,7 +16,7 @@
 // This is the main entry for public library tests.
 #include <stdlib.h>
 
-#include "stratum/glue/init_google.h"
+#include "third_party/stratum/glue/init_google.h"
 #include "testing/base/public/gunit.h"
 
 int main(int argc, char **argv) {

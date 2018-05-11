@@ -21,11 +21,11 @@
 #include <map>
 #include <string>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
-#include "absl/base/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
+#include "third_party/absl/base/integral_types.h"
+#include "third_party/absl/base/thread_annotations.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_diag_shell.h"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -24,12 +24,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "absl/synchronization/mutex.h"
+#include "third_party/absl/synchronization/mutex.h"
 
 #include "base/commandlineflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/macros.h"
-#include "absl/base/macros.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/absl/base/macros.h"
 
 DEFINE_int32(bcm_diag_shell_port, 5020,
              "Port to listen to for user telnet sessions.");

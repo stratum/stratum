@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "stratum/glue/logging.h"
+#include "third_party/stratum/glue/logging.h"
 
 #include <syslog.h>
 #include <memory>

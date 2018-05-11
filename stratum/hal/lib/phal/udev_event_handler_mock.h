@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_EVENT_HANDLER_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_EVENT_HANDLER_MOCK_H_
 
-#include "stratum/hal/lib/phal/udev_event_handler.h"
+#include "third_party/stratum/hal/lib/phal/udev_event_handler.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

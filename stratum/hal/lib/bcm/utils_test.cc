@@ -13,9 +13,9 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/utils.h"
+#include "third_party/stratum/hal/lib/bcm/utils.h"
 
-#include "stratum/lib/constants.h"
+#include "third_party/stratum/lib/constants.h"
 #include "testing/base/public/gunit.h"
 
 namespace stratum {

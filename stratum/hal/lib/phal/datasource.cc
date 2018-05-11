@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/phal/datasource.h"
+#include "third_party/stratum/hal/lib/phal/datasource.h"
 
-#include "stratum/glue/status/status.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/synchronization/mutex.h"
+#include "third_party/absl/time/clock.h"
+#include "third_party/absl/time/time.h"
 
 namespace stratum {
 namespace hal {

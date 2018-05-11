@@ -15,12 +15,12 @@
 
 // This file contains the implementation of P4StaticEntryMapper.
 
-#include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
+#include "third_party/stratum/hal/lib/p4/p4_static_entry_mapper.h"
 
 #include "base/commandlineflags.h"
 #include "base/logging.h"
-#include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "stratum/hal/lib/p4/p4_write_request_differ.h"
+#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
+#include "third_party/stratum/hal/lib/p4/p4_write_request_differ.h"
 
 // Hercules P4 programs contain some "hidden" tables with const entries.  These
 // tables have no direct mapping to physical tables on the target switch.  They

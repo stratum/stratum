@@ -18,8 +18,8 @@
 #ifndef STRATUM_HAL_LIB_PHAL_DATASOURCE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_DATASOURCE_MOCK_H_
 
-#include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/phal/datasource.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/hal/lib/phal/datasource.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

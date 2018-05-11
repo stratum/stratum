@@ -21,7 +21,7 @@ exports_files(["LICENSE"])
 # This package contains message-passing libraries for Hercules.
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//third_party/stratum/portage:build_defs.bzl",
     "sc_cc_lib",
     "sc_cc_test",
     "STRATUM_INTERNAL",
@@ -38,14 +38,14 @@ sc_cc_lib(
         "channel.h",
     ],
     deps = [
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//absl/time",
-        "//stratum/glue:logging",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
-        "//stratum/public/lib:error",
+        "//third_party/absl/base:core_headers",
+        "//third_party/absl/synchronization",
+        "//third_party/absl/time",
+        "//third_party/stratum/glue:logging",
+        "//third_party/stratum/glue/status",
+        "//third_party/stratum/glue/status:status_macros",
+        "//third_party/stratum/lib:macros",
+        "//third_party/stratum/public/lib:error",
     ],
 )
 
@@ -68,8 +68,8 @@ cc_library(
     deps = [
         "//base",
         "//testing/base/public:gunit_no_google3",
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
+        "//third_party/stratum/glue:init_google",
+        "//third_party/stratum/glue:logging",
     ],
 )
 
@@ -82,7 +82,7 @@ sc_cc_test(
         ":channel",
         ":test_main",
         "//testing/base/public:gunit_no_google3",
-        "//absl/synchronization",
-        "//stratum/glue/status:status_test_util",
+        "//third_party/absl/synchronization",
+        "//third_party/stratum/glue/status:status_test_util",
     ],
 )

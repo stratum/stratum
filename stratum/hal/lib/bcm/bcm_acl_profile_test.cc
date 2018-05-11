@@ -13,10 +13,10 @@
 // limitations under the License.
 
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/bcm/bcm_sim_test_fixture.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/glue/status/status_test_util.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_sim_test_fixture.h"
+#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -25,11 +25,11 @@ namespace bcm {
 namespace {
 
 constexpr char kTestP4InfoFile[] =
-    "stratum/testing/protos/"
+    "third_party/stratum/testing/protos/"
     "test_p4_info_hercules_tor.pb.txt";
 
 constexpr char kTestP4PipelineConfigFile[] =
-    "stratum/testing/protos/"
+    "third_party/stratum/testing/protos/"
     "test_p4_pipeline_config_hercules_tor.pb.txt";
 
 }  // namespace

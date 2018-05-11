@@ -22,7 +22,7 @@
 #include <string>
 
 #include "google/protobuf/stubs/atomicops.h"
-#include "stratum/glue/logging.h"
+#include "third_party/stratum/glue/logging.h"
 
 // TODO: Move to Abseil-status when it is available.
 //

@@ -13,20 +13,20 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/config_monitoring_service.h"
+#include "third_party/stratum/hal/lib/common/config_monitoring_service.h"
 
 #include "base/commandlineflags.h"
 #include "google/protobuf/any.pb.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/common/hal_config_to_oc.h"
-#include "stratum/hal/lib/common/oc_to_hal_config.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
+#include "third_party/stratum/hal/lib/common/hal_config_to_oc.h"
+#include "third_party/stratum/hal/lib/common/oc_to_hal_config.h"
+#include "third_party/stratum/lib/macros.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/lib/error.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",

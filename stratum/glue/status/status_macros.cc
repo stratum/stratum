@@ -15,12 +15,12 @@
  */
 
 
-#include "stratum/glue/status/status_macros.h"
+#include "third_party/stratum/glue/status/status_macros.h"
 
 #include <algorithm>
 
-#include "absl/strings/str_cat.h"
-#include "stratum/glue/logging.h"
+#include "third_party/absl/strings/str_cat.h"
+#include "third_party/stratum/glue/logging.h"
 
 DEFINE_bool(status_macros_log_stack_trace, false,
             "If set, all errors generated will log a stack trace.");

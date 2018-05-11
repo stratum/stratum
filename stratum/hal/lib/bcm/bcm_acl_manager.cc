@@ -13,15 +13,15 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_acl_manager.h"
+#include "third_party/stratum/hal/lib/bcm/bcm_acl_manager.h"
 
 #include <iterator>
 
-#include "stratum/hal/lib/bcm/acl_table.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_annotation.pb.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_join.h"
+#include "third_party/stratum/hal/lib/bcm/acl_table.h"
+#include "third_party/stratum/lib/utils.h"
+#include "third_party/stratum/public/proto/p4_annotation.pb.h"
+#include "third_party/absl/memory/memory.h"
+#include "third_party/absl/strings/str_join.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {

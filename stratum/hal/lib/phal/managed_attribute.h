@@ -21,10 +21,10 @@
 #include <functional>
 #include <memory>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/lib/macros.h"
+#include "third_party/stratum/glue/status/status.h"
+#include "third_party/stratum/glue/status/status_macros.h"
+#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
+#include "third_party/stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

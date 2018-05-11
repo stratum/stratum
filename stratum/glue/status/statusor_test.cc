@@ -17,14 +17,14 @@
 
 // Unit tests for StatusOr
 
-#include "stratum/glue/status/statusor.h"
+#include "third_party/stratum/glue/status/statusor.h"
 
 #include <errno.h>
 #include <memory>
 #include <vector>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/posix_error_space.h"
+#include "third_party/stratum/glue/logging.h"
+#include "third_party/stratum/glue/status/posix_error_space.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 
