@@ -20,7 +20,7 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_INFO_MANAGER_MOCK_H_
 #define STRATUM_HAL_LIB_P4_P4_INFO_MANAGER_MOCK_H_
 
-#include "third_party/stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

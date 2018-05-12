@@ -35,9 +35,9 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_STATIC_ENTRY_MAPPER_H_
 #define STRATUM_HAL_LIB_P4_P4_STATIC_ENTRY_MAPPER_H_
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "sandblaze/p4lang/p4/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

@@ -13,14 +13,14 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
 
 #include <list>
 #include <string>
 
-#include "third_party/stratum/hal/lib/common/channel_writer_wrapper.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/sandblaze/gnmi/gnmi.pb.h"
+#include "stratum/hal/lib/common/channel_writer_wrapper.h"
+#include "absl/synchronization/mutex.h"
+#include "sandblaze/gnmi/gnmi.pb.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <pthread.h>
 
@@ -23,18 +23,18 @@
 
 #include "base/commandlineflags.h"
 #include "google/protobuf/message.h"
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/hal/lib/bcm/utils.h"
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/hal/lib/common/constants.h"
-#include "third_party/stratum/hal/lib/common/utils.h"
-#include "third_party/stratum/lib/constants.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/lib/error.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/logging.h"
+#include "stratum/hal/lib/bcm/utils.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
+#include "absl/base/integral_types.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 #include "util/gtl/stl_util.h"

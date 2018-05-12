@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/p4/p4_runtime_interface.h"
+#include "stratum/hal/lib/p4/p4_runtime_interface.h"
 
 namespace stratum {
 namespace hal {

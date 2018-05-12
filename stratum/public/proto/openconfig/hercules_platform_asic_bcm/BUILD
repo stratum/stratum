@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//third_party/stratum/portage:build_defs.bzl",
+    "//stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_proto_lib",
 )
@@ -35,7 +35,7 @@ sc_proto_lib(
         "hercules_platform_asic_bcm.proto",
     ],
     deps = [
-        "//third_party/stratum/public/proto:sc_yang_proto",
-        "//third_party/stratum/public/proto/openconfig/enums:enums_proto",
+        "//stratum/public/proto:sc_yang_proto",
+        "//stratum/public/proto/openconfig/enums:enums_proto",
     ],
 )

@@ -13,9 +13,9 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/phal/regex_datasource.h"
+#include "stratum/hal/lib/phal/regex_datasource.h"
 
-#include "third_party/stratum/lib/macros.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

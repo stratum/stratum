@@ -13,24 +13,24 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/p4_service.h"
+#include "stratum/hal/lib/common/p4_service.h"
 
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/hal/lib/common/server_writer_wrapper.h"
-#include "third_party/stratum/lib/channel/channel.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/lib/error.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/numeric/int128.h"
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/absl/time/time.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/common/server_writer_wrapper.h"
+#include "stratum/lib/channel/channel.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
+#include "absl/memory/memory.h"
+#include "absl/numeric/int128.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "util/gtl/cleanup.h"
 #include "util/gtl/map_util.h"
 

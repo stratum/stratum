@@ -15,13 +15,13 @@
 
 // This file contains the implementation of P4MatchKey and its subclasses.
 
-#include "third_party/stratum/hal/lib/p4/p4_match_key.h"
+#include "stratum/hal/lib/p4/p4_match_key.h"
 
 #include <string>
 
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/lib/error.h"
-#include "third_party/absl/memory/memory.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
+#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

@@ -58,13 +58,13 @@
 //  - yang/openconfig-vlan.yang
 //  - yang/openconfig-yang-types.yang
 // Include paths:
-//   - third_party/stratum/public/proto/...
+//   - stratum/public/proto/...
 syntax = "proto3";
 
 package openconfig.enums;
 
-import "third_party/stratum/public/proto/ywrapper.proto";
-import "third_party/stratum/public/proto/yext.proto";
+import "stratum/public/proto/ywrapper.proto";
+import "stratum/public/proto/yext.proto";
 
 // HerculesPlatformAsicBcmBCMKNETIFPURPOSE represents an enumerated type generated for the YANG identity BCM_KNET_IF_PURPOSE.
 enum HerculesPlatformAsicBcmBCMKNETIFPURPOSE {

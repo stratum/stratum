@@ -22,16 +22,16 @@
 
 #include <memory>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/hal/lib/common/error_buffer.h"
-#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
-#include "third_party/stratum/hal/lib/common/switch_interface.h"
-#include "third_party/stratum/lib/security/auth_policy_checker.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/base/thread_annotations.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/switch_interface.h"
+#include "stratum/lib/security/auth_policy_checker.h"
+#include "absl/base/integral_types.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
+#include "sandblaze/gnmi/gnmi.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -45,8 +45,7 @@ using ServerSubscribeReaderWriterInterface =
 
 // The "ConfigMonitoringService" class implements ::gnmi::gNMI::Service. It
 // handles all the RPCs that are part of the gRPC Network Management Interface
-// (gNMI) which are in charge of configuration and monitoring/telemetry:
-// https://g3doc.corp.google.com/third_party/openconfig/reference/rpc/gnmi/README.md?cl=head
+// (gNMI) which are in charge of configuration and monitoring/telemetry.
 class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
  public:
   ConfigMonitoringService(OperationMode mode, SwitchInterface* switch_interface,

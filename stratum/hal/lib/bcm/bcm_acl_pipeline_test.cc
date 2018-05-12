@@ -13,12 +13,12 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_acl_pipeline.h"
+#include "stratum/hal/lib/bcm/bcm_acl_pipeline.h"
 
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/p4/p4_control.pb.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/p4/p4_control.pb.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 

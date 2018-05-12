@@ -15,16 +15,16 @@
 
 // This file contains P4ConfigVerifier's implementation.
 
-#include "third_party/stratum/hal/lib/p4/p4_config_verifier.h"
+#include "stratum/hal/lib/p4/p4_config_verifier.h"
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/hal/lib/p4/p4_write_request_differ.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/public/lib/error.h"
-#include "third_party/stratum/public/proto/p4_annotation.pb.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/strings/substitute.h"
-#include "third_party/sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "stratum/hal/lib/p4/p4_write_request_differ.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/lib/error.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "sandblaze/p4lang/p4/p4runtime.pb.h"
 #include "util/gtl/map_util.h"
 
 // These flags control the strictness of error reporting for certain

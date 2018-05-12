@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_NODE_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_NODE_MOCK_H_
 
-#include "third_party/stratum/hal/lib/bcm/bcm_node.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

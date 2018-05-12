@@ -13,22 +13,22 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_node.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 
-#include "third_party/stratum/glue/status/canonical_errors.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_acl_manager_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_l2_manager_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_l3_manager_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_packetio_manager_mock.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_table_manager_mock.h"
-#include "third_party/stratum/hal/lib/common/writer_mock.h"
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/status/canonical_errors.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/bcm/bcm_acl_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_l2_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_l3_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_packetio_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
+#include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 
 using ::testing::_;
 using ::testing::DoAll;

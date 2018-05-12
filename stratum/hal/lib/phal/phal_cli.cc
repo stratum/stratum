@@ -14,15 +14,15 @@
 
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/glue/init_google.h"
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/hal/lib/phal/attribute_database.h"
-#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
-#include "third_party/stratum/hal/lib/phal/system_real.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/absl/time/clock.h"
-#include "third_party/absl/time/time.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/attribute_database_interface.h"
+#include "stratum/hal/lib/phal/system_real.h"
+#include "stratum/lib/macros.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 
 DEFINE_string(legacy_phal_config_path, "",
               "The path to read the LegacyPhalInitConfig proto from.");

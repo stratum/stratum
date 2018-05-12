@@ -15,16 +15,16 @@
 
 #include <memory>
 
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/phal/attribute_group.h"
-#include "third_party/stratum/hal/lib/phal/datasource.h"
-#include "third_party/stratum/hal/lib/phal/dummy_threadpool.h"
-#include "third_party/stratum/hal/lib/phal/managed_attribute.h"
-#include "third_party/stratum/hal/lib/phal/test/test.pb.h"
-#include "third_party/stratum/hal/lib/phal/test_util.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
+#include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/dummy_threadpool.h"
+#include "stratum/hal/lib/phal/managed_attribute.h"
+#include "stratum/hal/lib/phal/test/test.pb.h"
+#include "stratum/hal/lib/phal/test_util.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/base/integral_types.h"
+#include "absl/base/integral_types.h"
 
 namespace stratum {
 namespace hal {

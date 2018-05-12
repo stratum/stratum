@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/lib/utils.h"
 
 #include <libgen.h>
 #include <stdlib.h>
@@ -28,9 +28,9 @@
 
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "third_party/absl/strings/substitute.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/public/lib/error.h"
+#include "absl/strings/substitute.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/lib/error.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 

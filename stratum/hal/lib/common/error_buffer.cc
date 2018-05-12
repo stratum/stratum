@@ -13,14 +13,14 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/error_buffer.h"
 
 #include "base/commandlineflags.h"
 #include "file/base/path.h"
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
 
 DEFINE_int32(max_num_errors_to_track, 10,
              "Max number of error statuses to track/save in the buffer.");

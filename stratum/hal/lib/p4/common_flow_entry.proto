@@ -24,8 +24,8 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "third_party/stratum/public/proto/p4_table_defs.proto";
-import "third_party/stratum/public/proto/p4_annotation.proto";
+import "stratum/public/proto/p4_table_defs.proto";
+import "stratum/public/proto/p4_annotation.proto";
 import "p4/p4runtime.proto";
 
 // This message encapsulates the info regarding a P4 table. Not all the field

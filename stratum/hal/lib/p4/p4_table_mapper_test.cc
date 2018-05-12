@@ -13,22 +13,22 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
 
 #include <cstdarg>
 #include <memory>
 #include <set>
 #include <string>
 
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/p4/p4_info_manager.h"
-#include "third_party/stratum/hal/lib/p4/p4_static_entry_mapper_mock.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_static_entry_mapper_mock.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/memory/memory.h"
+#include "absl/base/integral_types.h"
+#include "absl/memory/memory.h"
 
 using ::testing::_;
 using ::testing::HasSubstr;
@@ -58,13 +58,13 @@ std::string EncodeByteValue(int arg_count...) {
 }
 
 constexpr char kTestP4InfoFile[] =
-    "third_party/stratum/hal/lib/p4/testdata/"
+    "stratum/hal/lib/p4/testdata/"
     "test_p4_info.pb.txt";
 constexpr char kTestP4PipelineConfigFile[] =
-    "third_party/stratum/hal/lib/p4/testdata/"
+    "stratum/hal/lib/p4/testdata/"
     "test_p4_pipeline_config.pb.txt";
 constexpr char kEmptyP4PipelineConfigFile[] =
-    "third_party/stratum/hal/lib/p4/testdata/"
+    "stratum/hal/lib/p4/testdata/"
     "empty_p4_pipeline_config.pb.txt";
 
 }  // namespace

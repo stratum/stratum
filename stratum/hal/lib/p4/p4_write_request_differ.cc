@@ -15,13 +15,13 @@
 // This file contains the P4WriteRequestDiffer and P4WriteRequestReporter
 // implementations.
 
-#include "third_party/stratum/hal/lib/p4/p4_write_request_differ.h"
+#include "stratum/hal/lib/p4/p4_write_request_differ.h"
 
 #include "base/logging.h"
 #include "google/protobuf/generated_message_reflection.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/public/lib/error.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/lib/error.h"
 
 namespace stratum {
 namespace hal {

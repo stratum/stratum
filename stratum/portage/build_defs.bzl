@@ -149,7 +149,7 @@ def sc_platform_select(host=None, ppc=None, x86=None, default=None):
   if default == None and (host == None or ppc == None or x86 == None):
     fail("Missing a select value for at least one platform in " +
          "sc_platform_select. Please add.")
-  config_label_prefix = "//third_party/stratum:stratum_"
+  config_label_prefix = "//stratum:stratum_"
   return select({
       "//conditions:default": (host or default),
       config_label_prefix + "ppc": (ppc or default),
@@ -182,7 +182,7 @@ def sc_platform_alias(name, host=None, ppc=None, x86=None, default=None,
   native.alias(
       name = name,
       actual = sc_platform_select(
-          default = default or "//third_party/stratum/portage:dummy",
+          default = default or "//stratum/portage:dummy",
           host = host, ppc = ppc, x86 = x86),
       visibility = visibility,
   )
@@ -212,7 +212,7 @@ _ARCH_DEFINES = sc_platform_select(
 )
 
 STRATUM_INTERNAL = [
-    "//third_party/stratum:__subpackages__",
+    "//stratum:__subpackages__",
 ]
 
 #
@@ -260,11 +260,11 @@ _EMBEDDED_LDFLAGS = [
 
 # PPC ======================================================================
 
-_PPC_GRTE = "//third_party/unsupported_toolchains/crosstoolng_powerpc32_8540/sysroot"
+_PPC_GRTE = "//unsupported_toolchains/crosstoolng_powerpc32_8540/sysroot"
 
 # X86 ======================================================================
 
-_X86_GRTE = "//third_party/grte/v4_x86/release/usr/grte/v4"
+_X86_GRTE = "//grte/v4_x86/release/usr/grte/v4"
 
 # Portability definitions ===================================================
 
@@ -293,7 +293,7 @@ def sc_cc_test(name, size = None, srcs = None, deps = None, data = None,
       srcs = sc_platform_select(host = srcs or [], default = []),
       deps = sc_platform_select(
           host = deps or [],
-          default = ["//third_party/stratum/portage:dummy_with_main"],
+          default = ["//stratum/portage:dummy_with_main"],
       ),
       data = data or [],
       defines = defines,
@@ -391,7 +391,7 @@ def sc_cc_bin(name, deps = None, srcs = None, arches = None, copts = None,
   native.cc_binary(name = name,
                    deps = sc_platform_filter(
                        deps,
-                       ["//third_party/stratum/portage:dummy_with_main"],
+                       ["//stratum/portage:dummy_with_main"],
                        arches),
                    srcs = sc_platform_filter(srcs, [], arches),
                    copts = copts, defines = defs_plus, includes = includes,
@@ -405,17 +405,17 @@ register_extension_info(
 # Protobuf =================================================================
 
 _SC_GRPC_DEPS = [
-    "//third_party/sandblaze/prebuilt/grpc",
-    "//third_party/sandblaze/prebuilt/grpc:grpc++_codegen_base",
-    "//third_party/sandblaze/prebuilt/grpc:grpc++_codegen_proto_lib",
+    "//sandblaze/prebuilt/grpc",
+    "//sandblaze/prebuilt/grpc:grpc++_codegen_base",
+    "//sandblaze/prebuilt/grpc:grpc++_codegen_proto_lib",
 ]
 
-_PROTOC = "//third_party/protobuf:protoc"
+_PROTOC = "//protobuf:protoc"
 
-_PROTOBUF = "//third_party/protobuf"
+_PROTOBUF = "//protobuf"
 
-_SC_GRPC_PLUGIN = "//third_party/sandblaze/prebuilt/protobuf:grpc_cpp_plugin"
-_GRPC_PLUGIN = "//third_party/grpc:grpc_cpp_plugin"
+_SC_GRPC_PLUGIN = "//sandblaze/prebuilt/protobuf:grpc_cpp_plugin"
+_GRPC_PLUGIN = "//grpc:grpc_cpp_plugin"
 
 def _loc(target):
   """Return target location for constructing commands.
@@ -462,7 +462,7 @@ def _gen_proto_lib(name, srcs, hdrs, deps, arch, visibility, testonly,
   protobuf_label = _PROTOBUF
   protobuf_hdrs = "%s:well_known_types_srcs" % protobuf_label
   protobuf_srcs = [protobuf_hdrs]
-  protobuf_include = "$${g3}/third_party/protobuf/src"
+  protobuf_include = "$${g3}/protobuf/src"
   if arch in EMBEDDED_ARCHES:
     grpc_plugin = _SC_GRPC_PLUGIN
   else:

@@ -13,11 +13,11 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/oc_to_hal_config.h"
+#include "stratum/hal/lib/common/oc_to_hal_config.h"
 
 #include <iostream>
-#include "third_party/stratum/lib/constants.h"
-#include "third_party/stratum/public/proto/yang_wrappers.pb.h"
+#include "stratum/lib/constants.h"
+#include "stratum/public/proto/yang_wrappers.pb.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {

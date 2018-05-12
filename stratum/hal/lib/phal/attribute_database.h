@@ -23,18 +23,18 @@
 #include <tuple>
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
-#include "third_party/stratum/hal/lib/phal/attribute_group.h"
-#include "third_party/stratum/hal/lib/phal/db.pb.h"
-#include "third_party/stratum/hal/lib/phal/google_switch_configurator.h"
-#include "third_party/stratum/hal/lib/phal/phal.pb.h"
-#include "third_party/stratum/hal/lib/phal/system_interface.h"
-#include "third_party/stratum/hal/lib/phal/threadpool_interface.h"
-#include "third_party/stratum/hal/lib/phal/udev_event_handler.h"
-#include "third_party/stratum/lib/channel/channel.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/attribute_database_interface.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
+#include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/hal/lib/phal/google_switch_configurator.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/system_interface.h"
+#include "stratum/hal/lib/phal/threadpool_interface.h"
+#include "stratum/hal/lib/phal/udev_event_handler.h"
+#include "stratum/lib/channel/channel.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

@@ -20,13 +20,13 @@
 
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/common/gnmi_events.h"
-#include "third_party/stratum/hal/lib/common/writer_interface.h"
-#include "third_party/stratum/lib/channel/channel.h"
-#include "third_party/stratum/public/proto/hal.grpc.pb.h"
-#include "third_party/sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/lib/channel/channel.h"
+#include "stratum/public/proto/hal.grpc.pb.h"
+#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

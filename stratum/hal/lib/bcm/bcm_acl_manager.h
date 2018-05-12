@@ -18,16 +18,16 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_ACL_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_ACL_MANAGER_H_
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_acl_pipeline.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_chassis_manager.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_sdk_interface.h"
-#include "third_party/stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "third_party/stratum/hal/lib/p4/p4_control.pb.h"
-#include "third_party/stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
-#include "third_party/absl/base/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/bcm/bcm_acl_pipeline.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
+#include "stratum/hal/lib/bcm/bcm_table_manager.h"
+#include "stratum/hal/lib/p4/p4_control.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
+#include "absl/base/integral_types.h"
 #include "util/gtl/flat_hash_map.h"
 
 namespace stratum {

@@ -13,21 +13,21 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_switch.h"
+#include "stratum/hal/lib/bcm/bcm_switch.h"
 
 #include <algorithm>
 #include <map>
 #include <set>
 #include <vector>
 
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/glue/status/status_macros.h"
-#include "third_party/stratum/lib/constants.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "third_party/absl/time/clock.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "absl/base/integral_types.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {

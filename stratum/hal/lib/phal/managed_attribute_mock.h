@@ -20,9 +20,9 @@
 
 #include <memory>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/hal/lib/phal/attribute_database_interface.h"
-#include "third_party/stratum/hal/lib/phal/datasource.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/phal/attribute_database_interface.h"
+#include "stratum/hal/lib/phal/datasource.h"
 #include "testing/base/public/gmock.h"
 
 namespace stratum {

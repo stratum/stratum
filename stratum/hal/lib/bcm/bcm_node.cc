@@ -13,13 +13,13 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/bcm/bcm_node.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 
 #include <utility>
 
 #include "base/commandlineflags.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 
 // TODO: This flag is currently false to skip static entry writes
 // until all related hardware tables and related mapping are implemented.

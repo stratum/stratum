@@ -13,15 +13,15 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
 
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/common/mock_subscribe_reader_writer.h"
-#include "third_party/stratum/hal/lib/common/switch_mock.h"
-#include "third_party/stratum/lib/utils.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/sandblaze/gnmi/gnmi.host.pb.h"
+#include "sandblaze/gnmi/gnmi.host.pb.h"
 
 using ::testing::_;
 using ::testing::HasSubstr;

@@ -13,20 +13,20 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/hal.h"
+#include "stratum/hal/lib/common/hal.h"
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/glue/net_util/ports.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/common/switch_mock.h"
-#include "third_party/stratum/lib/sandcastle/procmon_service.grpc.pb.h"
-#include "third_party/stratum/lib/security/auth_policy_checker_mock.h"
-#include "third_party/stratum/lib/security/credentials_manager_mock.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/lib/error.h"
+#include "stratum/glue/net_util/ports.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
+#include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/security/credentials_manager_mock.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/strings/substitute.h"
+#include "absl/strings/substitute.h"
 
 DECLARE_bool(warmboot);
 DECLARE_string(chassis_config_file);

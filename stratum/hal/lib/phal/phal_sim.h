@@ -20,9 +20,9 @@
 
 #include <functional>
 
-#include "third_party/stratum/hal/lib/common/phal_interface.h"
-#include "third_party/stratum/hal/lib/phal/phal.pb.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

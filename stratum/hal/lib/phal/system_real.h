@@ -25,9 +25,9 @@
 #include <vector>
 
 #include "eudev/libudev.h"
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/phal/system_interface.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/system_interface.h"
 
 namespace stratum {
 namespace hal {

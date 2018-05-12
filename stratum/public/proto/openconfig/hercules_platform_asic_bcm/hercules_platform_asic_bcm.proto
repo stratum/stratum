@@ -50,14 +50,14 @@
 //  - yang/openconfig-vlan.yang
 //  - yang/openconfig-yang-types.yang
 // Include paths:
-//   - third_party/stratum/public/proto/...
+//   - stratum/public/proto/...
 syntax = "proto3";
 
 package openconfig.hercules_platform_asic_bcm;
 
-import "third_party/stratum/public/proto/ywrapper.proto";
-import "third_party/stratum/public/proto/yext.proto";
-import "third_party/stratum/public/proto/openconfig/enums/enums.proto";
+import "stratum/public/proto/ywrapper.proto";
+import "stratum/public/proto/yext.proto";
+import "stratum/public/proto/openconfig/enums/enums.proto";
 
 message ClassesOfService {
   message ClassOfService {

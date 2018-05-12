@@ -13,27 +13,27 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/common/config_monitoring_service.h"
+#include "stratum/hal/lib/common/config_monitoring_service.h"
 
 #include <grpcpp/grpcpp.h>
 #include <memory>
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/glue/status/status_test_util.h"
-#include "third_party/stratum/hal/lib/common/error_buffer.h"
-#include "third_party/stratum/hal/lib/common/gnmi_events.h"
-#include "third_party/stratum/hal/lib/common/gnmi_publisher.h"
-#include "third_party/stratum/hal/lib/common/mock_gnmi_publisher.h"
-#include "third_party/stratum/hal/lib/common/mock_subscribe_reader_writer.h"
-#include "third_party/stratum/hal/lib/common/switch_mock.h"
-#include "third_party/stratum/lib/security/auth_policy_checker_mock.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/stratum/public/lib/error.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/mock_gnmi_publisher.h"
+#include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/memory/memory.h"
-#include "third_party/absl/strings/substitute.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
 
 DECLARE_string(chassis_config_file);
 DECLARE_string(test_tmpdir);

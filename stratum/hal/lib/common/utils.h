@@ -21,9 +21,9 @@
 #include <functional>
 #include <string>
 
-#include "third_party/stratum/hal/lib/common/common.pb.h"
-#include "third_party/stratum/public/proto/hal.pb.h"
-#include "third_party/absl/base/integral_types.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/public/proto/hal.pb.h"
+#include "absl/base/integral_types.h"
 
 namespace stratum {
 namespace hal {

@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//third_party/stratum/portage:build_defs.bzl",
+    "//stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_cc_lib",
     "sc_cc_test",
@@ -44,11 +44,11 @@ sc_cc_lib(
     ],
     deps = [
         "//base",
-        "//third_party/absl/strings",
-        "//third_party/absl/synchronization",
-        "//third_party/protobuf",
-        "//third_party/stratum/glue:init_google",
-        "//third_party/stratum/glue:logging",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//protobuf",
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
     ],
 )
 
@@ -62,7 +62,7 @@ sc_cc_lib(
     ],
     deps = [
         ":status",
-        "//third_party/stratum/glue:logging",
+        "//stratum/glue:logging",
     ],
 )
 
@@ -77,8 +77,8 @@ sc_cc_lib(
     deps = [
         ":status",
         ":statusor",
-        "//third_party/absl/strings",
-        "//third_party/stratum/glue:logging",
+        "//absl/strings",
+        "//stratum/glue:logging",
     ],
 )
 
@@ -108,8 +108,8 @@ sc_cc_test(
         ":status_test_util",
         ":statusor",
         "//testing/base/public:gunit_main_no_google3",
-        "//third_party/absl/strings",
-        "//third_party/stratum/glue:init_google",
-        "//third_party/stratum/glue:logging",
+        "//absl/strings",
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
     ],
 )

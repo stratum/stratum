@@ -25,10 +25,10 @@
 #include <utility>
 #include <vector>
 
-#include "third_party/stratum/glue/status/status.h"
-#include "third_party/stratum/glue/status/statusor.h"
-#include "third_party/stratum/hal/lib/phal/system_interface.h"
-#include "third_party/absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/system_interface.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

@@ -19,7 +19,7 @@ syntax = "proto3";
 
 package stratum;
 
-import "third_party/stratum/public/proto/p4_table_defs.proto";
+import "stratum/public/proto/p4_table_defs.proto";
 
 // Hercules annotations. These annotations are expected to be provided one at a
 // time in the annotation blocks of p4 entity definitions.

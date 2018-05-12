@@ -22,11 +22,11 @@
 #include <tuple>
 #include <vector>
 
-#include "third_party/stratum/hal/lib/phal/db.pb.h"
-#include "third_party/stratum/lib/channel/channel.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/types/variant.h"
-#include "third_party/stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/lib/channel/channel.h"
+#include "absl/base/integral_types.h"
+#include "absl/types/variant.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

@@ -13,21 +13,21 @@
 // limitations under the License.
 
 
-#include "third_party/stratum/hal/lib/p4/p4_table_mapper.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
 
 #include <set>
 
 #include "base/commandlineflags.h"
-#include "third_party/stratum/glue/logging.h"
-#include "third_party/stratum/glue/net_util/ipaddress.h"
-#include "third_party/stratum/hal/lib/common/constants.h"
-#include "third_party/stratum/hal/lib/p4/p4_config_verifier.h"
-#include "third_party/stratum/hal/lib/p4/p4_match_key.h"
-#include "third_party/stratum/hal/lib/p4/utils.h"
-#include "third_party/stratum/lib/macros.h"
-#include "third_party/stratum/lib/utils.h"
-#include "third_party/absl/base/integral_types.h"
-#include "third_party/absl/memory/memory.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/net_util/ipaddress.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/hal/lib/p4/p4_config_verifier.h"
+#include "stratum/hal/lib/p4/p4_match_key.h"
+#include "stratum/hal/lib/p4/utils.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "absl/base/integral_types.h"
+#include "absl/memory/memory.h"
 #include "util/gtl/map_util.h"
 
 // This is the bit width of an assigned constant for any case where the

@@ -19,7 +19,7 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//third_party/stratum/portage:build_defs.bzl",
+    "//stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
     "sc_package",
     "sc_platform_select",
@@ -33,16 +33,16 @@ package(
 
 genrule(
     name = "status_proto_copy",
-    srcs = ["//third_party/googleapis/google/rpc:status.proto"],
+    srcs = ["//googleapis/google/rpc:status.proto"],
     outs = ["google/rpc/status.proto"],
-    cmd = "cp $(location //third_party/googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
+    cmd = "cp $(location //googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
 )
 
 genrule(
     name = "code_proto_copy",
-    srcs = ["//third_party/googleapis/google/rpc:code.proto"],
+    srcs = ["//googleapis/google/rpc:code.proto"],
     outs = ["google/rpc/code.proto"],
-    cmd = "cp $(location //third_party/googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
+    cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
 )
 
 sc_proto_lib(
@@ -60,7 +60,7 @@ sc_proto_lib(
 config_setting(
     name = "stratum_ppc",
     values = {
-        "crosstool_top": "//third_party/unsupported_toolchains/crosstoolng_powerpc32_8540",
+        "crosstool_top": "//unsupported_toolchains/crosstoolng_powerpc32_8540",
         "copt": "-DSTRATUM_ARCH_PPC",
     },
 )
@@ -68,7 +68,7 @@ config_setting(
 config_setting(
     name = "stratum_x86",
     values = {
-        "crosstool_top": "//third_party/crosstool:stable",
+        "crosstool_top": "//crosstool:stable",
         "copt": "-DSTRATUM_ARCH_X86",
     },
 )
@@ -76,7 +76,7 @@ config_setting(
 sc_package(
     name = "stratum_package_standalone",
     deps = [
-        "//third_party/stratum/hal/bin/bcm/standalone:stratum_hal_pkg",
-        "//third_party/stratum/hal/stub/embedded:stratum_stub_pkg",
+        "//stratum/hal/bin/bcm/standalone:stratum_hal_pkg",
+        "//stratum/hal/stub/embedded:stratum_stub_pkg",
     ],
 )
