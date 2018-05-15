@@ -1,4 +1,4 @@
-[Stratum - A P4 Runtime based reference framework](https://github.com/stratum/stratum.git)
+[Stratum - A P4 Runtime based reference framework](https://github.com/opennetworkinglab/stratum.git)
 
 Copyright 2018 Google LLC
 
