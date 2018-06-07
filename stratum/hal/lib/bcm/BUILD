@@ -230,14 +230,16 @@ sc_cc_lib(
     name = "bcm_flow_table",
     hdrs = ["bcm_flow_table.h"],
     deps = [
-        "//absl/base:core_headers",
-        "//sandblaze/p4lang:p4runtime_grpc_proto",
+#        "//absl/base:core_headers",
+	"@com_google_absl//absl/base:core_headers",
+#        "//sandblaze/p4lang:p4runtime_grpc_proto",
+        "@com_github_p4lang_PI//:p4runtime_grpc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
-        "//util/gtl:node_hash_set",
+#        "//util/gtl:node_hash_set",
     ],
 )
 
