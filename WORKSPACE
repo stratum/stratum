@@ -86,6 +86,20 @@ remote_workspace(
     branch = "master",
 )
 
+# ----- Google Test -----
+remote_workspace(
+    name = "com_google_googletest",
+    remote = "https://github.com/google/googletest",
+    branch = "master",
+)
+
+# ----- re2 ------
+remote_workspace(
+    name = "com_googlesource_code_re2",
+    remote = "https://github.com/google/re2",
+    branch = "master",
+)
+
 # -----------------------------------------------------------------------------
 #        Load transitive deps
 # -----------------------------------------------------------------------------
