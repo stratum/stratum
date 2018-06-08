@@ -21,9 +21,9 @@ exports_files(["LICENSE"])
 load(
     "//stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
-    "sc_package",
-    "sc_platform_select",
-    "sc_proto_lib",
+    #"sc_package",
+    #"sc_platform_select",
+    "stratum_cc_proto_library",
 )
 
 package(
@@ -48,13 +48,13 @@ genrule(
 sc_proto_lib(
     name = "status_proto",
     hdrs = ["google/rpc/status.proto"],
-    proto_include = ".",
+    #proto_include = ".",
 )
 
 sc_proto_lib(
     name = "code_proto",
     hdrs = ["google/rpc/code.proto"],
-    proto_include = ".",
+    #proto_include = ".",
 )
 
 config_setting(

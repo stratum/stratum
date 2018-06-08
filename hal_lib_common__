@@ -1,0 +1,41 @@
+//stratum/hal/lib/common:utils_test
+//stratum/hal/lib/common:phal_mock
+//stratum/hal/lib/common:phal_interface
+//stratum/hal/lib/common:p4_service_test
+//stratum/hal/lib/common:oc_to_hal_config_test
+//stratum/hal/lib/common:hal_test
+//stratum/hal/lib/common:hal_config_to_oc_test
+//stratum/hal/lib/common:utils
+//stratum/hal/lib/common:hal
+//stratum/hal/lib/common:p4_service
+//stratum/hal/lib/common:server_writer_wrapper
+//stratum/hal/lib/common:error_buffer_test
+//stratum/hal/lib/common:config_monitoring_service_test
+//stratum/hal/lib/common:writer_mock
+//stratum/hal/lib/common:subscribe_reader_writer_mock
+//stratum/hal/lib/common:gnmi_publisher_mock
+//stratum/hal/lib/common:switch_mock
+
+
+## Build fails on base/init_google.h
+//stratum/hal/lib/common:test_main
+
+
+
+## Build fails with channel:channel or glue or constants
+## 'deps' in 'cc_library' rule: invalid package name 'grpc++':
+//stratum/hal/lib/common:config_monitoring_service
+//stratum/hal/lib/common:switch_interface
+//stratum/hal/lib/common:error_buffer
+//stratum/hal/lib/common:conversion
+//stratum/hal/lib/common:channel_writer_wrapper
+
+
+
+## Builds succesfully
+//stratum/hal/lib/common:testdata
+//stratum/hal/lib/common:constants
+//stratum/hal/lib/common:common_proto
+//stratum/hal/lib/common:common_proto.pb
+//stratum/hal/lib/common:client_sync_reader_writer
+//stratum/hal/lib/common:writer_interface

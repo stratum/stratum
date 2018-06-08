@@ -20,7 +20,7 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "p4/p4runtime.proto";
+import "github.com/p4lang/PI/p4/v1/p4runtime.proto";
 
 // Mode of operation of the stack.
 enum OperationMode {
@@ -49,5 +49,5 @@ message PhysicalPort {
 // serializing/deserializing ForwardingPipelineConfig protos for multiple nodes
 // into one single file.
 message ForwardingPipelineConfigs {
-  map<uint64, p4.ForwardingPipelineConfig> node_id_to_config = 1;
+  map<uint64, p4.v1.ForwardingPipelineConfig> node_id_to_config = 1;
 }

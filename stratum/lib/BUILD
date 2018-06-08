@@ -34,7 +34,7 @@ sc_cc_lib(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
-        "//absl/base:core_headers",
+        "@com_google_absl//absl/base:core_headers",
     ],
 )
 
@@ -74,8 +74,8 @@ sc_cc_lib(
     srcs = ["timer_daemon.cc"],
     hdrs = ["timer_daemon.h"],
     deps = [
-        "//absl/synchronization",
-        "//absl/time",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/public/lib:error",
@@ -89,7 +89,7 @@ sc_cc_test(
         ":test_main",
         ":timer_daemon",
         "//testing/base/public:gunit_no_google3",
-        "//absl/synchronization",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
@@ -103,10 +103,10 @@ sc_cc_lib(
     hdrs = ["utils.h"],
     deps = [
         ":macros",
-        "//absl/base:core_headers",
-        "//absl/strings",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/strings",
         "//protobuf",
-        "//sandblaze/prebuilt/grpc",
+        "@com_google_grpc//grpc++",
         "//stratum:code_proto",
         "//stratum:status_proto",
         "//stratum/glue/status",
