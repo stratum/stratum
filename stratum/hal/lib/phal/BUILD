@@ -436,7 +436,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "//stratum/glue/status",
         "//stratum/lib:macros",
-        "//util/regexp/re2",
+        "@com_googlesource_code_re2//",
     ],
 )
 
