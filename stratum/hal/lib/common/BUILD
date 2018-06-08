@@ -180,7 +180,7 @@ stratum_cc_library(
     hdrs = ["error_buffer.h"],
     deps = [
         "@com_github_google_glog//:glog",
-        "//file/base:path",
+        #FIXME "//file/base:path",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
