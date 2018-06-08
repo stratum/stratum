@@ -43,7 +43,7 @@ stratum_cc_library(
         "status.h",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "//protobuf",

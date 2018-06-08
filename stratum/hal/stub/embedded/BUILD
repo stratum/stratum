@@ -39,7 +39,7 @@ stratum_cc_binary(
         "-lrt",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/numeric:int128",

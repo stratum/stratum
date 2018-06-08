@@ -49,7 +49,7 @@ stratum_cc_library(
         "init_google.h",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
     ],
 )
 
@@ -62,6 +62,6 @@ stratum_cc_library(
         "logging.h",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
     ],
 )

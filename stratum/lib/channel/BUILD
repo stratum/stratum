@@ -66,7 +66,7 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
         "//testing/base/public:gunit_no_google3",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",

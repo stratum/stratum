@@ -44,7 +44,7 @@ stratum_cc_binary(
         "-lutil",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue:init_google",

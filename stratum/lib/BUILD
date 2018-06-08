@@ -62,7 +62,7 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
         "//testing/base/public:gunit_no_google3",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
@@ -121,7 +121,7 @@ stratum_cc_test(
     deps = [
         ":test_main",
         ":utils",
-        "//base",
+        "@com_github_google_glog//:glog",
         "//testing/base/public:gunit_no_google3",
         "//sandblaze/p4lang:p4runtime_grpc_proto",
         "//stratum/glue/status:status_test_util",
