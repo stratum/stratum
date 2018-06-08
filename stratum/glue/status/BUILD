@@ -44,8 +44,8 @@ stratum_cc_library(
     ],
     deps = [
         "//base",
-        "//absl/strings",
-        "//absl/synchronization",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
         "//protobuf",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
@@ -77,7 +77,7 @@ stratum_cc_library(
     deps = [
         ":status",
         ":statusor",
-        "//absl/strings",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
     ],
 )
@@ -108,7 +108,7 @@ stratum_cc_test(
         ":status_test_util",
         ":statusor",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/strings",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],

@@ -38,9 +38,9 @@ stratum_cc_library(
         "channel.h",
     ],
     deps = [
-        "//absl/base:core_headers",
-        "//absl/synchronization",
-        "//absl/time",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -82,7 +82,7 @@ stratum_cc_test(
         ":channel",
         ":test_main",
         "//testing/base/public:gunit_no_google3",
-        "//absl/synchronization",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status:status_test_util",
     ],
 )

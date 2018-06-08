@@ -45,8 +45,8 @@ stratum_cc_binary(
     ],
     deps = [
         "//base",
-        "//absl/memory",
-        "//absl/synchronization",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/bcm:bcm_acl_manager",

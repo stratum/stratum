@@ -39,9 +39,9 @@ stratum_cc_library(
         "bits.h",
     ],
     deps = [
-        "//absl/base",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
     ],
 )
@@ -53,8 +53,8 @@ stratum_cc_test(
     deps = [
         ":bits",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
     ],
 )
@@ -73,9 +73,9 @@ stratum_cc_library(
     ],
     deps = [
         ":bits",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//absl/strings",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
     ],
 )
@@ -87,9 +87,9 @@ stratum_cc_test(
     deps = [
         ":ipaddress",
         "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//absl/strings",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
     ],
 )
