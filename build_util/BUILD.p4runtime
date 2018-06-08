@@ -1,0 +1,69 @@
+load(
+    "@com_github_stratum_stratum//build_util/rules:proto_rule.bzl",
+    "stratum_cc_proto_library",
+    "wrapped_cc_proto_library",
+)
+
+PREFIX = "github.com/p4lang/PI/p4"
+OLD_PREFIX = "p4"
+SOURCES_ROOT = "proto"
+
+package(
+    default_visibility = [ "//visibility:public" ],
+)
+
+wrapped_cc_proto_library(
+    name = "p4types_proto",
+    prefix = PREFIX,
+    old_prefix = OLD_PREFIX,
+    proto_source_root = SOURCES_ROOT,
+    srcs = [
+        "proto/p4/p4types.proto",
+    ],
+    with_grpc = False,
+    include_wkt = False,
+    rewrite_proto_imports = True,
+)
+
+wrapped_cc_proto_library(
+    name = "p4config_proto",
+    prefix = PREFIX,
+    old_prefix = OLD_PREFIX,
+    proto_source_root = SOURCES_ROOT,
+    srcs = [
+        "proto/p4/tmp/p4config.proto",
+    ],
+    with_grpc = False,
+    include_wkt = False,
+    rewrite_proto_imports = True,
+)
+
+wrapped_cc_proto_library(
+    name = "p4info_proto",
+    prefix = PREFIX,
+    old_prefix = OLD_PREFIX,
+    proto_source_root = SOURCES_ROOT,
+    srcs = ["proto/p4/config/p4info.proto"],
+    deps = [":p4types_proto"],
+    with_grpc = False,
+    include_wkt = True,
+    rewrite_proto_imports = True,
+)
+
+wrapped_cc_proto_library(
+    name = "p4runtime_proto",
+    prefix = PREFIX,
+    old_prefix = OLD_PREFIX,
+    proto_source_root = SOURCES_ROOT,
+    srcs = [
+        "proto/p4/p4runtime.proto",
+    ],
+    deps = [
+        ":p4types_proto",
+        ":p4info_proto",
+        "@com_github_googleapis//:status_proto",
+    ],
+    with_grpc = True,
+    include_wkt = True,
+    rewrite_proto_imports = True,
+)
