@@ -45,7 +45,7 @@ stratum_cc_binary(
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "//sandblaze/gnmi:gnmi_grpc_proto",
+        "@com_github_openconfig_gnmi//:gnmi_grpc_proto",
         "@com_github_p4lang_PI//:code_proto",
         "@com_github_p4lang_PI//:p4runtime_grpc_proto",
         "@com_github_p4lang_PI//:util",
