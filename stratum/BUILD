@@ -27,7 +27,7 @@ load(
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
