@@ -123,7 +123,7 @@ stratum_cc_test(
         ":utils",
         "@com_github_google_glog//:glog",
         "//testing/base/public:gunit_no_google3",
-        "//sandblaze/p4lang:p4runtime_grpc_proto",
+        "@com_github_p4lang_PI//:p4runtime_grpc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/public/lib:error",
         "//stratum/public/proto:hal_grpc_proto",
