@@ -67,7 +67,7 @@ cc_library(
     srcs = ["test_main.cc"],
     deps = [
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],
@@ -81,7 +81,7 @@ stratum_cc_test(
     deps = [
         ":channel",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue/status:status_test_util",
     ],

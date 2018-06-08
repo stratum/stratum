@@ -49,7 +49,7 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
     ],
 )

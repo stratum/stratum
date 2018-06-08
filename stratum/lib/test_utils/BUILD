@@ -36,7 +36,7 @@ stratum_cc_library(
     testonly = 1,
     hdrs = ["matchers.h"],
     deps = [
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
     ],
 )

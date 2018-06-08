@@ -90,7 +90,7 @@ cc_library(
     ],
     deps = [
         ":status",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -107,7 +107,7 @@ stratum_cc_test(
         ":status",
         ":status_test_util",
         ":statusor",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",

@@ -76,7 +76,7 @@ stratum_cc_test(
         ":bcm_sdk_mock",
         ":bcm_table_manager_mock",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/strings",
         "//stratum/glue/status",
         "//stratum/glue/status:status_test_util",
@@ -99,7 +99,7 @@ cc_library(
     hdrs = ["bcm_acl_manager_mock.h"],
     deps = [
         ":bcm_acl_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -129,7 +129,7 @@ stratum_cc_test(
     deps = [
         ":bcm_acl_pipeline",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/p4:p4_control_proto",
@@ -179,7 +179,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_chassis_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -192,7 +192,7 @@ stratum_cc_test(
         ":bcm_serdes_db_manager_mock",
         ":test_main",
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
@@ -247,7 +247,7 @@ stratum_cc_test(
     deps = [
         ":bcm_flow_table",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
     ],
@@ -281,7 +281,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_l2_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -293,7 +293,7 @@ stratum_cc_test(
         ":bcm_l2_manager",
         ":bcm_sdk_mock",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "//stratum/glue/status:status_test_util",
@@ -330,7 +330,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_l3_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -341,7 +341,7 @@ stratum_cc_test(
         ":bcm_l3_manager",
         ":bcm_sdk_mock",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
@@ -385,7 +385,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_packetio_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -397,7 +397,7 @@ stratum_cc_test(
         ":bcm_packetio_manager",
         ":bcm_sdk_mock",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
@@ -431,7 +431,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_sdk_interface",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -513,7 +513,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_serdes_db_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -524,7 +524,7 @@ stratum_cc_test(
         ":bcm_serdes_db_manager",
         ":test_main",
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
@@ -561,7 +561,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_node",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -576,7 +576,7 @@ stratum_cc_test(
         ":bcm_packetio_manager_mock",
         ":bcm_table_manager_mock",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
@@ -621,7 +621,7 @@ stratum_cc_test(
         ":bcm_packetio_manager_mock",
         ":bcm_switch",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "//stratum/glue/status",
         "//stratum/glue/status:status_test_util",
@@ -678,7 +678,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":bcm_table_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -689,7 +689,7 @@ stratum_cc_test(
         ":bcm_chassis_manager_mock",
         ":bcm_table_manager",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
@@ -734,7 +734,7 @@ stratum_cc_test(
     deps = [
         ":macros",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
     ],
@@ -752,7 +752,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],
@@ -776,7 +776,7 @@ stratum_cc_test(
     deps = [
         ":test_main",
         ":utils",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/lib:constants",
     ],
 )
@@ -799,7 +799,7 @@ cc_library(
         ":bcm_table_manager",
         "@com_github_google_glog//:glog",
         "//devtools/build/runtime:get_runfiles_dir",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue/status:status_test_util",
@@ -846,7 +846,7 @@ stratum_cc_test(
     deps = [
         ":acl_table",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_github_p4lang_PI//:p4runtime_grpc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",

@@ -53,7 +53,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":attribute_database_interface",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -85,7 +85,7 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":datasource",
         ":managed_attribute",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status",
     ],
 )
@@ -148,7 +148,7 @@ stratum_cc_test(
         ":dummy_threadpool",
         ":managed_attribute",
         ":test_util",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_proto",
@@ -163,7 +163,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":attribute_group",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
     ],
 )
@@ -190,7 +190,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":datasource",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status",
     ],
 )
@@ -250,7 +250,7 @@ stratum_cc_test(
         ":fixed_layout_datasource",
         ":fixed_stringsource",
         ":test_util",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_proto",
@@ -292,7 +292,7 @@ stratum_cc_test(
         ":fixed_stringsource",
         ":google_eeprom_datasource",
         ":test_util",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/time",
         "//stratum/glue/status:status_test_util",
@@ -325,7 +325,7 @@ stratum_cc_test(
     deps = [
         ":attribute_database_mock",
         ":google_phal",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
@@ -369,7 +369,7 @@ stratum_cc_test(
         ":system_fake",
         ":test_util",
         ":udev_event_handler_mock",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "//stratum/glue/status",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
@@ -418,7 +418,7 @@ cc_test(
         ":reader_writer_datasource",
         ":system_fake",
         ":test_util",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
     ],
@@ -448,7 +448,7 @@ stratum_cc_test(
         ":fixed_stringsource",
         ":regex_datasource",
         ":test_util",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
     ],
@@ -512,7 +512,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":system_interface",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -525,7 +525,7 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":datasource",
         ":managed_attribute",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
     ],
 )
@@ -546,7 +546,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":threadpool_interface",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -572,7 +572,7 @@ stratum_cc_test(
         ":fixed_stringsource",
         ":test_util",
         ":transceiver_datasources",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/time",
         "//stratum/glue/status:status_test_util",
     ],
@@ -604,7 +604,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":udev_event_handler",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -615,7 +615,7 @@ stratum_cc_test(
         ":system_fake",
         ":udev_event_handler",
         ":udev_event_handler_mock",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
@@ -721,7 +721,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":udev_interface",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -755,7 +755,7 @@ stratum_cc_test(
         ":led_datasource",
         ":phal_proto",
         ":system_interface_mock",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_google_protobuf//:protobuf",
         "//stratum/glue/status:status_test_util",

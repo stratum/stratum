@@ -52,7 +52,7 @@ stratum_cc_test(
     srcs = ["bits_test.cc"],
     deps = [
         ":bits",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
@@ -86,7 +86,7 @@ stratum_cc_test(
     srcs = ["ipaddress_test.cc"],
     deps = [
         ":ipaddress",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",

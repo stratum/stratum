@@ -76,7 +76,7 @@ stratum_cc_test(
         ":p4_table_map_proto",
         ":testdata",
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_github_p4lang_PI//:p4info_proto",
         "@com_github_p4lang_PI//:p4runtime_proto",
@@ -117,7 +117,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":p4_info_manager",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -128,7 +128,7 @@ stratum_cc_test(
         ":p4_info_manager",
         ":testdata",
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_PI//:p4info_proto",
@@ -158,7 +158,7 @@ stratum_cc_test(
     srcs = ["p4_match_key_test.cc"],
     deps = [
         ":p4_match_key",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_github_p4lang_PI//:p4info_proto",
         "@com_github_p4lang_PI//:p4runtime_proto",
         "//stratum/glue/status:status_test_util",
@@ -186,7 +186,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":p4_runtime_interface",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -253,7 +253,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":p4_table_mapper",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -264,7 +264,7 @@ stratum_cc_test(
         ":p4_table_mapper",
         ":p4_table_mapper_mock",
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_github_p4lang_PI//:p4runtime_proto",
         "//stratum/glue/status:status_test_util",
@@ -320,7 +320,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":p4_table_mapper",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -333,7 +333,7 @@ stratum_cc_test(
         ":p4_table_mapper",
         ":testdata",
         "@com_github_google_glog//:glog",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "//stratum/glue:logging",
@@ -362,7 +362,7 @@ stratum_cc_test(
     srcs = ["p4_write_request_differ_test.cc"],
     deps = [
         ":p4_write_request_differ",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_protobuf//:protobuf",
         "@com_github_p4lang_PI//:p4runtime_proto",
         "//stratum/glue/status:status_test_util",
@@ -390,7 +390,7 @@ stratum_cc_test(
         ":p4_runtime_mock",
         ":testdata",
         ":utils",
-        "//testing/base/public:gunit_main_no_google3",
+        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_PI//:p4runtime_proto",
         "//stratum/lib:utils",
