@@ -33,14 +33,14 @@ package(
 
 genrule(
     name = "status_proto_copy",
-    srcs = ["//googleapis/google/rpc:status.proto"],
+    srcs = ["@com_github_googleapis//:status.proto"],
     outs = ["google/rpc/status.proto"],
     cmd = "cp $(location //googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
 )
 
 genrule(
     name = "code_proto_copy",
-    srcs = ["//googleapis/google/rpc:code.proto"],
+    srcs = ["@com_github_googleapis//:code.proto"],
     outs = ["google/rpc/code.proto"],
     cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
 )
