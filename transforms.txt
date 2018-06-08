@@ -1,0 +1,41 @@
+NEED TO FIGURE OUT *_grpc_proto rules
+
+BUILD files permanent / one-time
+--------------------------------
+//stratum/portage:build_defs.bzl        //build_util:rules.bzl
+sc_cc_lib                               stratum_cc_library
+sc_proto_lib                            stratum_cc_proto_library
+sc_cc_bin                               stratum_cc_binary
+sc_cc_test                              stratum_cc_test
+sc_platform_select                      stratum_platform_select
+sc_platform_filter                      stratum_platform_filter
+sc_platform_alias                       stratum_platform_alias
+sc_package                              stratum_package
+
+BUILD files copybara
+--------------------
+default_hdrs_check = "strict",              #default_hdrs_check = "strict",
+proto_include = ".",                        #proto_include = ".",
+
+//absl                                      @com_google_absl//absl
+//base                                      @com_github_google_glog//:glog
+//file/base:path                            #//file/base:path
+//googleapis/google/rpc:status.proto        @com_github_googleapis//:status_proto
+//googleapis/google/rpc:code.proto          @com_github_googleapis//:code_proto
+//protobuf                                  @com_google_protobuf//:protobuf
+//sandblaze/p4lang                          @com_github_p4lang_PI//
+//sandblaze/gnmi                            @com_github_openconfig_gnmi//
+//sandblaze/prebuilt/grpc                   @com_google_grpc//:grpc++
+//sandblaze/prebuilt/p4lang:vans-p4lang-pi  @com_github_p4lang_PI//:p4runtime_proto #WARNING conflicts with //sandblaze/p4lang
+//sandblaze/prebuilt/openssl                #//sandblaze/prebuilt/openssl           #NOTE replace with boring ssl if required
+//stratum:code_proto                        @com_github_googleapis//:code_proto     #WARNING conflicts with //googleapis/google/rpc
+//stratum:status_proto                      @com_github_googleapis//:status_proto   #WARNING conflicts with //googleapis/google/rpc
+//testing/base/public:gunit_no_google3      @com_google_googletest//:gtest
+//testing/base/public:gunit_main_no_google3 @com_google_googletest//:gtest_main
+//util/regexp/re2                           @com_googlesource_code_re2//
+
+
+C files copybara
+----------------
+#include "base/commandlineflags.h"      #include "gflags/gflags.h"
+
