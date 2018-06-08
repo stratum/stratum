@@ -19,11 +19,11 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
-    "sc_proto_lib",
+    "stratum_cc_library",
+    "stratum_cc_test",
+    "stratum_cc_proto_library",
     "HOST_ARCHES",
 )
 
@@ -32,7 +32,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "bcm_proto",
     hdrs = ["bcm.proto"],
     deps = [
@@ -41,7 +41,7 @@ sc_proto_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_acl_manager",
     srcs = ["bcm_acl_manager.cc"],
     hdrs = ["bcm_acl_manager.h"],
@@ -67,7 +67,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_acl_manager_test",
     srcs = ["bcm_acl_manager_test.cc"],
     deps = [
@@ -103,7 +103,7 @@ cc_library(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_acl_pipeline",
     srcs = ["bcm_acl_pipeline.cc"],
     hdrs = ["bcm_acl_pipeline.h"],
@@ -123,7 +123,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_acl_pipeline_test",
     srcs = ["bcm_acl_pipeline_test.cc"],
     deps = [
@@ -137,7 +137,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_chassis_manager",
     srcs = ["bcm_chassis_manager.cc"],
     hdrs = ["bcm_chassis_manager.h"],
@@ -172,7 +172,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_chassis_manager_mock",
     testonly = 1,
     hdrs = ["bcm_chassis_manager_mock.h"],
@@ -183,7 +183,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_chassis_manager_test",
     srcs = ["bcm_chassis_manager_test.cc"],
     deps = [
@@ -208,7 +208,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_diag_shell",
     srcs = ["bcm_diag_shell.cc"],
     hdrs = ["bcm_diag_shell.h"],
@@ -226,7 +226,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_flow_table",
     hdrs = ["bcm_flow_table.h"],
     deps = [
@@ -243,7 +243,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_flow_table_test",
     srcs = ["bcm_flow_table_test.cc"],
     deps = [
@@ -255,7 +255,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_l2_manager",
     srcs = ["bcm_l2_manager.cc"],
     hdrs = ["bcm_l2_manager.h"],
@@ -276,7 +276,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_l2_manager_mock",
     testonly = 1,
     hdrs = ["bcm_l2_manager_mock.h"],
@@ -287,7 +287,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_l2_manager_test",
     srcs = ["bcm_l2_manager_test.cc"],
     deps = [
@@ -304,7 +304,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_l3_manager",
     srcs = ["bcm_l3_manager.cc"],
     hdrs = ["bcm_l3_manager.h"],
@@ -325,7 +325,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_l3_manager_mock",
     testonly = 1,
     hdrs = ["bcm_l3_manager_mock.h"],
@@ -336,7 +336,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_l3_manager_test",
     srcs = ["bcm_l3_manager_test.cc"],
     deps = [
@@ -351,7 +351,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_packetio_manager",
     srcs = ["bcm_packetio_manager.cc"],
     hdrs = ["bcm_packetio_manager.h"],
@@ -380,7 +380,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_packetio_manager_mock",
     testonly = 1,
     hdrs = ["bcm_packetio_manager_mock.h"],
@@ -391,7 +391,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_packetio_manager_test",
     srcs = ["bcm_packetio_manager_test.cc"],
     deps = [
@@ -413,7 +413,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_sdk_interface",
     hdrs = ["bcm_sdk_interface.h"],
     deps = [
@@ -426,7 +426,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_sdk_mock",
     testonly = 1,
     hdrs = ["bcm_sdk_mock.h"],
@@ -437,7 +437,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_sdk_sim",
     srcs = ["bcm_sdk_sim.cc"],
     hdrs = ["bcm_sdk_sim.h"],
@@ -458,7 +458,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_sdk_wrapper",
     srcs = ["bcm_sdk_wrapper.cc"],
     hdrs = ["bcm_sdk_wrapper.h"],
@@ -489,7 +489,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_serdes_db_manager",
     srcs = ["bcm_serdes_db_manager.cc"],
     hdrs = ["bcm_serdes_db_manager.h"],
@@ -508,7 +508,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_serdes_db_manager_mock",
     testonly = 1,
     hdrs = ["bcm_serdes_db_manager_mock.h"],
@@ -519,7 +519,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_serdes_db_manager_test",
     srcs = ["bcm_serdes_db_manager_test.cc"],
     deps = [
@@ -533,7 +533,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_node",
     srcs = ["bcm_node.cc"],
     hdrs = ["bcm_node.h"],
@@ -556,7 +556,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_node_mock",
     testonly = 1,
     hdrs = ["bcm_node_mock.h"],
@@ -567,7 +567,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_node_test",
     srcs = ["bcm_node_test.cc"],
     deps = [
@@ -589,7 +589,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_switch",
     srcs = ["bcm_switch.cc"],
     hdrs = ["bcm_switch.h"],
@@ -614,7 +614,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_switch_test",
     srcs = ["bcm_switch_test.cc"],
     deps = [
@@ -636,7 +636,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_table_manager",
     srcs = ["bcm_table_manager.cc"],
     hdrs = ["bcm_table_manager.h"],
@@ -673,7 +673,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bcm_table_manager_mock",
     testonly = 1,
     hdrs = ["bcm_table_manager_mock.h"],
@@ -684,7 +684,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bcm_table_manager_test",
     srcs = ["bcm_table_manager_test.cc"],
     deps = [
@@ -710,7 +710,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
@@ -718,7 +718,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     defines = ["NDEBUG"],
@@ -730,7 +730,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "macros_test",
     srcs = ["macros_test.cc"],
     deps = [
@@ -742,12 +742,12 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "sdk_build_undef",
     hdrs = ["sdk_build_undef.h"],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
@@ -760,7 +760,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
@@ -772,7 +772,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "utils_test",
     srcs = ["utils_test.cc"],
     deps = [
@@ -826,7 +826,7 @@ cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "acl_table",
     srcs = ["acl_table.cc"],
     hdrs = ["acl_table.h"],
@@ -842,7 +842,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "acl_table_test",
     srcs = ["acl_table_test.cc"],
     deps = [

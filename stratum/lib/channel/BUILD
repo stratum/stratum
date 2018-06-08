@@ -21,9 +21,9 @@ exports_files(["LICENSE"])
 # This package contains message-passing libraries for Hercules.
 
 load(
-    "//stratum/portage:build_defs.bzl",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "//build_util:rules.bzl",
+    "stratum_cc_library",
+    "stratum_cc_test",
     "STRATUM_INTERNAL",
 )
 
@@ -32,7 +32,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "channel",
     hdrs = [
         "channel.h",
@@ -49,7 +49,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "channel_mock",
     testonly = 1,
     hdrs = [
@@ -73,7 +73,7 @@ cc_library(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "channel_test",
     srcs = [
         "channel_test.cc",

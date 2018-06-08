@@ -19,12 +19,12 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_bin",
-    "sc_cc_lib",
-    "sc_cc_test",
-    "sc_proto_lib",
+    "stratum_cc_binary",
+    "stratum_cc_library",
+    "stratum_cc_test",
+    "stratum_cc_proto_library",
     "EMBEDDED_ARCHES",
     "HOST_ARCHES",
 )
@@ -34,7 +34,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "attribute_database_interface",
     hdrs = ["attribute_database_interface.h"],
     deps = [
@@ -46,7 +46,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "attribute_database_mock",
     testonly = 1,
     hdrs = ["attribute_database_mock.h"],
@@ -57,7 +57,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "buffer_tools",
     hdrs = ["buffer_tools.h"],
     deps = [
@@ -65,7 +65,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "managed_attribute",
     hdrs = ["managed_attribute.h"],
     deps = [
@@ -76,7 +76,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "managed_attribute_mock",
     testonly = 1,
     hdrs = ["managed_attribute_mock.h"],
@@ -90,7 +90,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "attribute_database",
     srcs = ["attribute_database.cc"],
     hdrs = ["attribute_database.h"],
@@ -118,7 +118,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "attribute_group",
     srcs = ["attribute_group.cc"],
     hdrs = ["attribute_group.h"],
@@ -139,7 +139,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "attribute_group_test",
     srcs = ["attribute_group_test.cc"],
     deps = [
@@ -155,7 +155,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "attribute_group_mock",
     testonly = 1,
     srcs = ["attribute_group_mock.cc"],
@@ -168,7 +168,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "datasource",
     srcs = ["datasource.cc"],
     hdrs = ["datasource.h"],
@@ -183,7 +183,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "datasource_mock",
     testonly = 1,
     hdrs = ["datasource_mock.h"],
@@ -195,7 +195,7 @@ sc_cc_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "db_proto",
     hdrs = ["db.proto"],
     python_support = True,
@@ -204,7 +204,7 @@ sc_proto_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "dummy_threadpool",
     srcs = ["dummy_threadpool.cc"],
     hdrs = ["dummy_threadpool.h"],
@@ -216,7 +216,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "filepath_stringsource",
     hdrs = ["filepath_stringsource.h"],
     deps = [
@@ -229,7 +229,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "fixed_layout_datasource",
     srcs = ["fixed_layout_datasource.cc"],
     hdrs = ["fixed_layout_datasource.h"],
@@ -243,7 +243,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "fixed_layout_datasource_test",
     srcs = ["fixed_layout_datasource_test.cc"],
     deps = [
@@ -257,7 +257,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "fixed_stringsource",
     hdrs = ["fixed_stringsource.h"],
     deps = [
@@ -268,7 +268,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "google_eeprom_datasource",
     srcs = ["google_eeprom_datasource.cc"],
     hdrs = ["google_eeprom_datasource.h"],
@@ -285,7 +285,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "google_eeprom_datasource_test",
     srcs = ["google_eeprom_datasource_test.cc"],
     deps = [
@@ -299,7 +299,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "google_phal",
     srcs = ["google_phal.cc"],
     hdrs = ["google_phal.h"],
@@ -319,7 +319,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "google_phal_test",
     srcs = ["google_phal_test.cc"],
     deps = [
@@ -335,7 +335,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "google_switch_configurator",
     srcs = ["google_switch_configurator.cc"],
     hdrs = ["google_switch_configurator.h"],
@@ -358,7 +358,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "google_switch_configurator_test",
     srcs = ["google_switch_configurator_test.cc"],
     deps = [
@@ -376,7 +376,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_bin(
+stratum_cc_binary(
     name = "phal_cli",
     srcs = ["phal_cli.cc"],
     arches = EMBEDDED_ARCHES,
@@ -398,7 +398,7 @@ sc_cc_bin(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "reader_writer_datasource",
     hdrs = ["reader_writer_datasource.h"],
     deps = [
@@ -424,7 +424,7 @@ cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "regex_datasource",
     srcs = ["regex_datasource.cc"],
     hdrs = ["regex_datasource.h"],
@@ -440,7 +440,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "regex_datasource_test",
     srcs = ["regex_datasource_test.cc"],
     deps = [
@@ -454,7 +454,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "stringsource_interface",
     hdrs = ["stringsource_interface.h"],
     deps = [
@@ -463,7 +463,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "system_fake",
     testonly = 1,
     srcs = ["system_fake.cc"],
@@ -479,7 +479,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "system_interface",
     hdrs = ["system_interface.h"],
     deps = [
@@ -488,7 +488,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "system_real",
     srcs = ["system_real.cc"],
     hdrs = ["system_real.h"],
@@ -505,7 +505,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "system_interface_mock",
     testonly = 1,
     hdrs = ["system_interface_mock.h"],
@@ -516,7 +516,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "test_util",
     testonly = 1,
     hdrs = ["test_util.h"],
@@ -530,7 +530,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "threadpool_interface",
     hdrs = ["threadpool_interface.h"],
     deps = [
@@ -539,7 +539,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "threadpool_interface_mock",
     testonly = 1,
     hdrs = ["threadpool_interface_mock.h"],
@@ -550,7 +550,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "transceiver_datasources",
     srcs = ["transceiver_datasources.cc"],
     hdrs = ["transceiver_datasources.h"],
@@ -565,7 +565,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "transceiver_datasources_test",
     srcs = ["transceiver_datasources_test.cc"],
     deps = [
@@ -578,7 +578,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "udev_event_handler",
     srcs = ["udev_event_handler.cc"],
     hdrs = ["udev_event_handler.h"],
@@ -597,7 +597,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "udev_event_handler_mock",
     testonly = 1,
     hdrs = ["udev_event_handler_mock.h"],
@@ -608,7 +608,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "udev_event_handler_test",
     srcs = ["udev_event_handler_test.cc"],
     deps = [
@@ -625,7 +625,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "legacy_phal",
     srcs = ["legacy_phal.cc"],
     hdrs = ["legacy_phal.h"],
@@ -644,7 +644,7 @@ sc_cc_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "phal_proto",
     hdrs = ["phal.proto"],
     python_support = True,
@@ -653,7 +653,7 @@ sc_proto_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "phal_proxy",
     srcs = ["phal_proxy.cc"],
     hdrs = ["phal_proxy.h"],
@@ -674,7 +674,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "phal_sim",
     srcs = ["phal_sim.cc"],
     hdrs = ["phal_sim.h"],
@@ -688,7 +688,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "udev",
     srcs = ["udev.cc"],
     hdrs = ["udev.h"],
@@ -705,7 +705,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "udev_interface",
     hdrs = ["udev_interface.h"],
     deps = [
@@ -714,7 +714,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "udev_mock",
     testonly = 1,
     hdrs = ["udev_mock.h"],
@@ -725,7 +725,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "led_datasource",
     srcs = ["led_datasource.cc"],
     hdrs = ["led_datasource.h"],
@@ -748,7 +748,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "led_datasource_test",
     srcs = ["led_datasource_test.cc"],
     deps = [

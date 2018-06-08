@@ -19,9 +19,9 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_proto_lib",
+    "stratum_cc_proto_library",
 )
 
 package(
@@ -29,7 +29,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "openconfig_proto",
     hdrs = [
         "openconfig.proto",

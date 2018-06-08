@@ -19,10 +19,10 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_bin",
-    "sc_package",
+    "stratum_cc_binary",
+    "stratum_package",
 )
 
 package(
@@ -30,7 +30,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_bin(
+stratum_cc_binary(
     name = "stratum_stub",
     srcs = ["main.cc"],
     copts = [
@@ -66,7 +66,7 @@ sc_cc_bin(
     ],
 )
 
-sc_package(
+stratum_package(
     name = "stratum_stub_pkg",
     bins = [
         ":stratum_stub",

@@ -19,10 +19,10 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    #"sc_package",
-    #"sc_platform_select",
+    "stratum_package",
+    "stratum_platform_select",
     "stratum_cc_proto_library",
 )
 
@@ -45,13 +45,13 @@ genrule(
     cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "status_proto",
     hdrs = ["google/rpc/status.proto"],
     #proto_include = ".",
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "code_proto",
     hdrs = ["google/rpc/code.proto"],
     #proto_include = ".",
@@ -73,7 +73,7 @@ config_setting(
     },
 )
 
-sc_package(
+stratum_package(
     name = "stratum_package_standalone",
     deps = [
         "//stratum/hal/bin/bcm/standalone:stratum_hal_pkg",

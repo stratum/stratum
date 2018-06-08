@@ -19,10 +19,10 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 package(
@@ -30,7 +30,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
@@ -38,7 +38,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "macros",
     hdrs = ["macros.h"],
     deps = [
@@ -47,7 +47,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "macros_test",
     srcs = ["macros_test.cc"],
     deps = [
@@ -69,7 +69,7 @@ cc_library(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "timer_daemon",
     srcs = ["timer_daemon.cc"],
     hdrs = ["timer_daemon.h"],
@@ -82,7 +82,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "timer_daemon_test",
     srcs = ["timer_daemon_test.cc"],
     deps = [
@@ -97,7 +97,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
@@ -115,7 +115,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "utils_test",
     srcs = ["utils_test.cc"],
     deps = [

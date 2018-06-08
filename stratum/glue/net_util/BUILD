@@ -19,10 +19,10 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 package(
@@ -30,7 +30,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bits",
     srcs = [
         "bits.cc",
@@ -46,7 +46,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bits_test",
     size = "small",
     srcs = ["bits_test.cc"],
@@ -59,7 +59,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "ipaddress",
     srcs = [
         "ipaddress.cc",
@@ -80,7 +80,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "ipaddress_test",
     size = "small",
     srcs = ["ipaddress_test.cc"],
@@ -94,7 +94,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "ports",
     srcs = [
         "ports.cc",

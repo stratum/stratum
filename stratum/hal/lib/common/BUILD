@@ -19,11 +19,11 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
-    "sc_proto_lib",
+    "stratum_cc_library",
+    "stratum_cc_test",
+    "stratum_cc_proto_library",
 )
 
 package(
@@ -31,7 +31,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "client_sync_reader_writer",
     hdrs = ["client_sync_reader_writer.h"],
     deps = [
@@ -42,7 +42,7 @@ sc_cc_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "common_proto",
     hdrs = ["common.proto"],
     deps = [
@@ -50,7 +50,7 @@ sc_proto_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "config_monitoring_service",
     srcs = [
         "config_monitoring_service.cc",
@@ -95,7 +95,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "config_monitoring_service_test",
     srcs = [
         "config_monitoring_service_test.cc",
@@ -166,7 +166,7 @@ cc_library(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
@@ -174,7 +174,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "error_buffer",
     srcs = ["error_buffer.cc"],
     hdrs = ["error_buffer.h"],
@@ -191,7 +191,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "error_buffer_test",
     srcs = [
         "error_buffer_test.cc",
@@ -207,7 +207,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "hal",
     srcs = ["hal.cc"],
     hdrs = ["hal.h"],
@@ -232,7 +232,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "hal_test",
     srcs = [
         "hal_test.cc",
@@ -254,7 +254,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_service",
     srcs = ["p4_service.cc"],
     hdrs = ["p4_service.h"],
@@ -291,7 +291,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_service_test",
     srcs = [
         "p4_service_test.cc",
@@ -319,7 +319,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "phal_interface",
     hdrs = ["phal_interface.h"],
     deps = [
@@ -340,7 +340,7 @@ cc_library(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "writer_interface",
     hdrs = ["writer_interface.h"],
 )
@@ -355,7 +355,7 @@ cc_library(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "server_writer_wrapper",
     hdrs = ["server_writer_wrapper.h"],
     deps = [
@@ -364,7 +364,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "channel_writer_wrapper",
     hdrs = ["channel_writer_wrapper.h"],
     deps = [
@@ -373,7 +373,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "switch_interface",
     hdrs = [
         "gnmi_events.h",
@@ -417,7 +417,7 @@ cc_library(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
@@ -432,7 +432,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "utils_test",
     srcs = ["utils_test.cc"],
     deps = [
@@ -445,7 +445,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "conversion",
     srcs = [
         "hal_config_to_oc.cc",

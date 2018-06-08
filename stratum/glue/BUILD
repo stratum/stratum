@@ -19,9 +19,9 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
-    "sc_cc_lib",
-    "sc_platform_alias",
+    "//build_util:rules.bzl",
+    "stratum_cc_library",
+    "stratum_platform_alias",
     "EMBEDDED_ARCHES",
     "STRATUM_INTERNAL",
 )
@@ -36,14 +36,14 @@ package(
 
 # There are sections of code under status/ which is guarded by HERCULES. This
 # target defines this.
-sc_cc_lib(
+stratum_cc_library(
     name = "define_hercules",
     defines = [
         "HERCULES",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "init_google",
     hdrs = [
         "init_google.h",
@@ -53,7 +53,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "logging",
     srcs = [
         "logging.cc",

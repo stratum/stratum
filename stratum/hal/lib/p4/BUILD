@@ -19,11 +19,11 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
-    "sc_proto_lib",
+    "stratum_cc_library",
+    "stratum_cc_test",
+    "stratum_cc_proto_library",
     "HOST_ARCHES",
 )
 
@@ -32,7 +32,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "common_flow_entry_proto",
     hdrs = ["common_flow_entry.proto"],
     deps = [
@@ -42,7 +42,7 @@ sc_proto_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_config_verifier",
     srcs = ["p4_config_verifier.cc"],
     hdrs = ["p4_config_verifier.h"],
@@ -66,7 +66,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_config_verifier_test",
     srcs = ["p4_config_verifier_test.cc"],
     deps = [
@@ -87,7 +87,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_info_manager",
     srcs = ["p4_info_manager.cc"],
     hdrs = ["p4_info_manager.h"],
@@ -110,7 +110,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_info_manager_mock",
     testonly = 1,
     hdrs = ["p4_info_manager_mock.h"],
@@ -121,7 +121,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_info_manager_test",
     srcs = ["p4_info_manager_test.cc"],
     deps = [
@@ -137,7 +137,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_match_key",
     srcs = ["p4_match_key.cc"],
     hdrs = ["p4_match_key.h"],
@@ -153,7 +153,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_match_key_test",
     srcs = ["p4_match_key_test.cc"],
     deps = [
@@ -166,7 +166,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_runtime_interface",
     srcs = ["p4_runtime_interface.cc"],
     hdrs = ["p4_runtime_interface.h"],
@@ -179,7 +179,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_runtime_mock",
     testonly = 1,
     hdrs = ["p4_runtime_mock.h"],
@@ -190,7 +190,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_runtime_real",
     srcs = ["p4_runtime_real.cc"],
     hdrs = ["p4_runtime_real.h"],
@@ -199,7 +199,7 @@ sc_cc_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "p4_control_proto",
     hdrs = ["p4_control.proto"],
     deps = [
@@ -208,7 +208,7 @@ sc_proto_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "p4_pipeline_config_proto",
     hdrs = ["p4_pipeline_config.proto"],
     deps = [
@@ -219,7 +219,7 @@ sc_proto_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "p4_table_map_proto",
     hdrs = ["p4_table_map.proto"],
     deps = [
@@ -232,7 +232,7 @@ sc_proto_lib(
 
 # TODO: Restore this rule if circular dependencies between
 # p4_static_entry_mapper and p4_table_mapper can be resolved.
-#sc_cc_lib(
+#stratum_cc_library(
 #    name = "p4_static_entry_mapper",
 #    srcs = ["p4_static_entry_mapper.cc"],
 #    hdrs = ["p4_static_entry_mapper.h"],
@@ -246,7 +246,7 @@ sc_proto_lib(
 #    ],
 #)
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_static_entry_mapper_mock",
     testonly = 1,
     hdrs = ["p4_static_entry_mapper_mock.h"],
@@ -257,7 +257,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_static_entry_mapper_test",
     srcs = ["p4_static_entry_mapper_test.cc"],
     deps = [
@@ -275,7 +275,7 @@ sc_cc_test(
 
 # P4StaticEntryMapper and P4TableMapper are closely coupled and
 # exist in the same library to avoid a circular dependency.
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_table_mapper",
     srcs = [
         "p4_static_entry_mapper.cc",
@@ -313,7 +313,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_table_mapper_mock",
     testonly = 1,
     hdrs = ["p4_table_mapper_mock.h"],
@@ -324,7 +324,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_table_mapper_test",
     srcs = ["p4_table_mapper_test.cc"],
     deps = [
@@ -342,7 +342,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_write_request_differ",
     srcs = ["p4_write_request_differ.cc"],
     hdrs = ["p4_write_request_differ.h"],
@@ -357,7 +357,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_write_request_differ_test",
     srcs = ["p4_write_request_differ_test.cc"],
     deps = [
@@ -371,7 +371,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
@@ -381,7 +381,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "utils_test",
     srcs = [
         "utils_test.cc",
@@ -397,7 +397,7 @@ sc_cc_test(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "testdata",
     arches = HOST_ARCHES,
     data = glob(["testdata/**"]),

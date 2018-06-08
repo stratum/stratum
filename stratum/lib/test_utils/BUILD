@@ -21,8 +21,8 @@ exports_files(["LICENSE"])
 # This package contains testing libraries for Hercules.
 
 load(
-    "//stratum/portage:build_defs.bzl",
-    "sc_cc_lib",
+    "//build_util:rules.bzl",
+    "stratum_cc_library",
     "STRATUM_INTERNAL",
 )
 
@@ -31,7 +31,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "matchers",
     testonly = 1,
     hdrs = ["matchers.h"],

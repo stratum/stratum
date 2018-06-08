@@ -1,5 +1,5 @@
 load(
-  "//third_party/stratum/portage:build_defs.bzl",
+  "//stratum/portage:build_defs.bzl",
   "sc_cc_lib",
   "sc_cc_bin",
   "sc_cc_test",

@@ -19,10 +19,10 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//build_util:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 package(
@@ -30,7 +30,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "status",
     srcs = [
         "canonical_errors.cc",
@@ -52,7 +52,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "statusor",
     srcs = [
         "statusor.cc",
@@ -66,7 +66,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "status_macros",
     srcs = [
         "status_macros.cc",
@@ -94,7 +94,7 @@ cc_library(
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "status_test",
     size = "small",
     srcs = [
