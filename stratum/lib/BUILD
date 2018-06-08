@@ -106,7 +106,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
-#        "//sandblaze/prebuilt/grpc",
+        "//sandblaze/prebuilt/grpc",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
         "//stratum:status_proto",
