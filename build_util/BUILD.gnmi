@@ -9,6 +9,8 @@ package(
     default_visibility = [ "//visibility:public" ],
 )
 
+'''FIXME require non-gRPC and gRPC rules'''
+
 wrapped_cc_proto_library(
     name = "gnmi_ext_proto",
     prefix = PREFIX,

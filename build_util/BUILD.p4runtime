@@ -12,6 +12,17 @@ package(
     default_visibility = [ "//visibility:public" ],
 )
 
+''' FIXME
+Required targets:
+p4info_proto
+p4runtime_proto
+p4_device_config_proto
+util
+code_proto
+
+Note: separate targets for gRPC and non-gRPC
+'''
+
 wrapped_cc_proto_library(
     name = "p4types_proto",
     prefix = PREFIX,

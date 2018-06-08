@@ -9,7 +9,14 @@ package(
 
 stratum_cc_proto_library(
     name = "status_proto",
-    srcs = ["@com_github_googleapis//:status_proto"],
+    srcs = [google/rpc/status.proto"],
+    with_grpc = False,
+    include_wkt = True,
+)
+
+stratum_cc_proto_library(
+    name = "code_proto",
+    srcs = ["google/rpc/code.proto"],
     with_grpc = False,
     include_wkt = True,
 )
