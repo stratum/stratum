@@ -61,7 +61,7 @@ cc_test(
         ":error",
         ":test_main",
         "//sandblaze/prebuilt/grpc",
-        "//stratum:code_proto",
+        "@com_github_googleapis//:code_proto",
         "//stratum:status_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",

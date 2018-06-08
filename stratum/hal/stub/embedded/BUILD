@@ -44,7 +44,7 @@ stratum_cc_binary(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/synchronization",
-        "//protobuf",
+        "@com_google_protobuf//:protobuf",
         "//sandblaze/gnmi:gnmi_grpc_proto",
         "//sandblaze/p4lang:code_proto",
         "//sandblaze/p4lang:p4runtime_grpc_proto",

@@ -95,7 +95,7 @@ stratum_cc_library(
         ":utils",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
-        "//protobuf",
+        "@com_google_protobuf//:protobuf",
         "//sandblaze/p4lang:p4info_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -348,7 +348,7 @@ stratum_cc_library(
     hdrs = ["p4_write_request_differ.h"],
     deps = [
         "@com_github_google_glog//:glog",
-        "//protobuf",
+        "@com_google_protobuf//:protobuf",
         "//sandblaze/p4lang:p4runtime_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -363,7 +363,7 @@ stratum_cc_test(
     deps = [
         ":p4_write_request_differ",
         "//testing/base/public:gunit_main_no_google3",
-        "//protobuf",
+        "@com_google_protobuf//:protobuf",
         "//sandblaze/p4lang:p4runtime_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",

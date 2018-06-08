@@ -46,7 +46,7 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "//protobuf",
+        "@com_google_protobuf//:protobuf",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],
