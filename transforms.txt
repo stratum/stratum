@@ -19,8 +19,6 @@ BUILD files copybara
 default_hdrs_check = "strict"               #default_hdrs_check = "strict"
 proto_include = "."                         #proto_include = "."
 
-
-
 //absl                                      @com_google_absl//absl
 //base                                      @com_github_google_glog//:glog
 //file/base:path                            #//file/base:path
@@ -36,7 +34,7 @@ proto_include = "."                         #proto_include = "."
 //stratum:status_proto                      @com_github_googleapis//:status_proto   #WARNING conflicts with //googleapis/google/rpc
 //testing/base/public:gunit_no_google3      @com_google_googletest//:gtest
 //testing/base/public:gunit_main_no_google3 @com_google_googletest//:gtest_main
-//util/regexp/re2                           @com_googlesource_code_re2//
+//util/regexp/re2                           @com_googlesource_code_re2//:re2
 
 
 C files copybara
