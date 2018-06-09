@@ -31,31 +31,32 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-genrule(
-    name = "status_proto_copy",
-    srcs = ["@com_github_googleapis//:status.proto"],
-    outs = ["google/rpc/status.proto"],
-    cmd = "cp $(location //googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
-)
-
-genrule(
-    name = "code_proto_copy",
-    srcs = ["@com_github_googleapis//:code.proto"],
-    outs = ["google/rpc/code.proto"],
-    cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
-)
-
-stratum_cc_proto_library(
-    name = "status_proto",
-    hdrs = ["google/rpc/status.proto"],
-    #proto_include = ".",
-)
-
-stratum_cc_proto_library(
-    name = "code_proto",
-    hdrs = ["google/rpc/code.proto"],
-    #proto_include = ".",
-)
+# Removing Stratum's local copies of googleapis protos
+#genrule(
+#    name = "status_proto_copy",
+#    srcs = ["//googleapis/google/rpc:status.proto"],
+#    outs = ["google/rpc/status.proto"],
+#    cmd = "cp $(location //googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
+#)
+#
+#genrule(
+#    name = "code_proto_copy",
+#    srcs = ["//googleapis/google/rpc:code.proto"],
+#    outs = ["google/rpc/code.proto"],
+#    cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
+#)
+#
+#stratum_cc_proto_library(
+#    name = "status_proto",
+#    hdrs = ["google/rpc/status.proto"],
+#    proto_include = ".",
+#)
+#
+#stratum_cc_proto_library(
+#    name = "code_proto",
+#    hdrs = ["google/rpc/code.proto"],
+#    proto_include = ".",
+#)
 
 config_setting(
     name = "stratum_ppc",
@@ -73,7 +74,7 @@ config_setting(
     },
 )
 
-stratum_package(
+sc_package(
     name = "stratum_package_standalone",
     deps = [
         "//stratum/hal/bin/bcm/standalone:stratum_hal_pkg",
