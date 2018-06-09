@@ -21,7 +21,7 @@ exports_files(["LICENSE"])
 # This package contains testing libraries for Hercules.
 
 load(
-    "//build_util:rules.bzl",
+    "//bazel:rules.bzl",
     "stratum_cc_library",
     "STRATUM_INTERNAL",
 )

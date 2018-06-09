@@ -1,6 +1,6 @@
 workspace(name = "com_github_stratum_stratum")
 
-load("//build_util:workspace_rule.bzl", "remote_workspace")
+load("//bazel:workspace_rule.bzl", "remote_workspace")
 
 # TODO move remote_workspaces to stratum_deps macro in a .bzl file
 
@@ -35,7 +35,7 @@ remote_workspace(
     name = "com_github_googleapis",
     remote = "https://github.com/googleapis/googleapis",
     commit = "a19256f36347fde5f2ab44e24e6e6c6b2a314041",
-    build_file = "build_util/BUILD.googleapis",
+    build_file = "bazel/external/googleapis.BUILD",
 )
 
 # ----- P4 Runtime -----
@@ -43,7 +43,7 @@ remote_workspace(
     name = "com_github_p4lang_PI",
     remote = "https://github.com/p4lang/PI",
     branch = "master",
-    build_file = "build_util/BUILD.p4runtime",
+    build_file = "bazel/external/p4runtime.BUILD",
 )
 
 # ----- gNMI -----
@@ -51,7 +51,7 @@ remote_workspace(
     name = "com_github_openconfig_gnmi",
     remote = "https://github.com/openconfig/gnmi",
     branch = "master",
-    build_file = "build_util/BUILD.gnmi",
+    build_file = "bazel/external/gnmi.BUILD",
 )
 
 # -----------------------------------------------------------------------------

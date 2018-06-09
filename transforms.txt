@@ -2,7 +2,7 @@ NEED TO FIGURE OUT *_grpc_proto rules
 
 BUILD files permanent / one-time
 --------------------------------
-//stratum/portage:build_defs.bzl        //build_util:rules.bzl
+//stratum/portage:build_defs.bzl        //bazel:rules.bzl
 sc_cc_lib                               stratum_cc_library
 sc_proto_lib                            stratum_cc_proto_library
 sc_cc_bin                               stratum_cc_binary

@@ -21,7 +21,7 @@ exports_files(["LICENSE"])
 # This package contains message-passing libraries for Hercules.
 
 load(
-    "//build_util:rules.bzl",
+    "//bazel:rules.bzl",
     "stratum_cc_library",
     "stratum_cc_test",
     "STRATUM_INTERNAL",

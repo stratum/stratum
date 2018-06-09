@@ -1,5 +1,5 @@
 load(
-    "@com_github_stratum_stratum//build_util/rules:proto_rule.bzl",
+    "@com_github_stratum_stratum//bazel/rules:proto_rule.bzl",
     "wrapped_cc_proto_library",
 )
 
