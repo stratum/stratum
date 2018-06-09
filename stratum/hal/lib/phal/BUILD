@@ -198,7 +198,7 @@ stratum_cc_library(
 stratum_cc_proto_library(
     name = "db_proto",
     hdrs = ["db.proto"],
-    python_support = True,
+    #python_support = True,
     deps = [
         "//stratum/public/proto:hal_proto",
     ],
@@ -647,7 +647,7 @@ stratum_cc_library(
 stratum_cc_proto_library(
     name = "phal_proto",
     hdrs = ["phal.proto"],
-    python_support = True,
+    #python_support = True,
     deps = [
         "//stratum/public/proto:hal_proto",
     ],

@@ -41,8 +41,8 @@ stratum_cc_proto_library(
     hdrs = [
         "hal.proto",
     ],
-    python_support = True,
-    services = ["grpc"],
+    #python_support = True,
+    with_grpc = True,
 )
 
 stratum_cc_proto_library(

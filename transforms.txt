@@ -11,11 +11,15 @@ sc_platform_select                      stratum_platform_select
 sc_platform_filter                      stratum_platform_filter
 sc_platform_alias                       stratum_platform_alias
 sc_package                              stratum_package
+services = ["grpc"]                     with_grpc = True
+python_support = True                   #python_support = True
 
 BUILD files copybara
 --------------------
-default_hdrs_check = "strict",              #default_hdrs_check = "strict",
-proto_include = ".",                        #proto_include = ".",
+default_hdrs_check = "strict"               #default_hdrs_check = "strict"
+proto_include = "."                         #proto_include = "."
+
+
 
 //absl                                      @com_google_absl//absl
 //base                                      @com_github_google_glog//:glog
