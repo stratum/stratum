@@ -17,6 +17,8 @@
 //
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 package oc;
 
 import "stratum/public/proto/yang_wrappers.proto";

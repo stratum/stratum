@@ -32,6 +32,8 @@
 // is generated.
 syntax = "proto3";
 
+import "google/protobuf/descriptor.proto";
+
 package yext;
 
 extend google.protobuf.FieldOptions {

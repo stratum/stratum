@@ -61,6 +61,8 @@
 //   - stratum/public/proto/...
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 package openconfig.openconfig_platform;
 
 import "stratum/public/proto/ywrapper.proto";
