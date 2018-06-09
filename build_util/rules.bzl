@@ -4,4 +4,5 @@ load("//build_util/rules:proto_rule.bzl", "stratum_cc_proto_library")
 load("//build_util/rules:test_rule.bzl", "stratum_cc_test")
 load("//build_util/rules:platform_rules.bzl",
      "stratum_platform_select", "stratum_platform_filter", "stratum_platform_alias")
+load("//build_util/rules:package_rule.bzl", "stratum_package")
 load(":defs.bzl", "EMBEDDED_ARCHES", "HOST_ARCHES", "STRATUM_INTERNAL")

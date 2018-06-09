@@ -7,6 +7,7 @@ load(
   "sc_platform_select",
   "sc_platform_filter",
   "sc_platform_alias",
+  "sc_package"
   "EMBEDDED_ARCHES",
   "HOST_ARCHES",
 )
@@ -41,3 +42,4 @@ def stratum_cc_proto_library(name, deps = [], srcs = [], arches = [],
 stratum_platform_select = sc_platform_select
 stratum_platform_alias = sc_platform_alias
 stratum_platform_select = sc_platform_select
+stratum_package = sc_package
