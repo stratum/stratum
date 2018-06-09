@@ -436,7 +436,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "//stratum/glue/status",
         "//stratum/lib:macros",
-        "@com_googlesource_code_re2//",
+        "@com_googlesource_code_re2//:re2",
     ],
 )
 
@@ -662,7 +662,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//sandblaze/prebuilt/grpc",
+        "@com_google_grpc//:grpc++",
         "//stratum/hal/lib/common:client_sync_reader_writer",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:constants",

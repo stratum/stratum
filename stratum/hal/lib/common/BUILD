@@ -276,7 +276,7 @@ stratum_cc_library(
         "@com_github_p4lang_PI//:p4runtime_proto",
         "@com_google_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
-        "//stratum:status_proto",
+        "@com_github_googleapis//:status_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",

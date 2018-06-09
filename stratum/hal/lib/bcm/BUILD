@@ -600,7 +600,7 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
-        "//stratum:status_proto",
+        "@com_github_googleapis//:status_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/common:phal_interface",

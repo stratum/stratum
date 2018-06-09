@@ -60,9 +60,9 @@ cc_test(
     deps = [
         ":error",
         ":test_main",
-        "//sandblaze/prebuilt/grpc",
+        "@com_google_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
-        "//stratum:status_proto",
+        "@com_github_googleapis//:status_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
     ],
