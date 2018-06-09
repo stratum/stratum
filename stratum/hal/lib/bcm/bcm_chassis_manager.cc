@@ -21,7 +21,7 @@
 #include <set>
 #include <sstream>  // IWYU pragma: keep
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/message.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"

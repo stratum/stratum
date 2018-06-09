@@ -17,7 +17,7 @@
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "absl/strings/ascii.h"

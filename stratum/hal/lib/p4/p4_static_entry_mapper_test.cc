@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"

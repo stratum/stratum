@@ -29,7 +29,7 @@
 #include <sstream>  // IWYU pragma: keep
 #include "absl/synchronization/mutex.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "absl/base/macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"

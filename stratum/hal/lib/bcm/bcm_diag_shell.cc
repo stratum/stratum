@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include "absl/synchronization/mutex.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "absl/base/macros.h"

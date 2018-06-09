@@ -18,7 +18,7 @@
 #ifndef STRATUM_GLUE_LOGGING_H_
 #define STRATUM_GLUE_LOGGING_H_
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "base/logging.h"  // IWYU pragma: export
 
 #ifdef STRATUM_ARCH_PPC

@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/bcm/bcm_sim_test_fixture.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "devtools/build/runtime/get_runfiles_dir.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_runtime_real.h"

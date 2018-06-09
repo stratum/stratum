@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"

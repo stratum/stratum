@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/lib/utils.h"

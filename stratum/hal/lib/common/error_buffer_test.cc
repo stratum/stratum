@@ -18,7 +18,7 @@
 #include <pthread.h>
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"

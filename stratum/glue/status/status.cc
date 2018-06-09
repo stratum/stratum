@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"

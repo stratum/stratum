@@ -17,7 +17,7 @@
 
 #include "stratum/hal/lib/p4/p4_config_verifier.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"

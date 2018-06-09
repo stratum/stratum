@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"

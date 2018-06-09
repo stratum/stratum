@@ -22,7 +22,7 @@
 #include <sys/wait.h>
 #include "absl/synchronization/mutex.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/macros.h"
 #include "stratum/lib/macros.h"

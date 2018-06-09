@@ -15,7 +15,7 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"

@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
 #include "testing/base/public/gmock.h"

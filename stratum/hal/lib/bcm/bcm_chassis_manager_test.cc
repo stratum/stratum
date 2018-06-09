@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"

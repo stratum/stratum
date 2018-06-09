@@ -17,7 +17,7 @@
 
 #include <set>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/net_util/ipaddress.h"
 #include "stratum/hal/lib/common/constants.h"

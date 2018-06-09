@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/phal/udev_event_handler.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"

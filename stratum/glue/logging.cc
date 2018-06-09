@@ -18,7 +18,7 @@
 #include <syslog.h>
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 
 #ifdef STRATUM_ARCH_PPC
 

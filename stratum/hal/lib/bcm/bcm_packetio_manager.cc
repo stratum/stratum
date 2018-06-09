@@ -32,7 +32,7 @@
 #include <memory>
 #include <utility>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"

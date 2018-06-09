@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/switch_mock.h"

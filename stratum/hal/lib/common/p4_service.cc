@@ -18,7 +18,7 @@
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"

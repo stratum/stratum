@@ -18,7 +18,7 @@
 #include <grpcpp/grpcpp.h>
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
