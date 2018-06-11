@@ -30,21 +30,26 @@ DEFINE_bool(logtostderr, false,
 DEFINE_bool(logtosyslog, true,
             "log messages also go to syslog.");
 
+using google::LogSeverity;
+using google::LogToStderr;
+using google::ProgramInvocationShortName;
+
 namespace stratum {
 namespace {
 // This LogSink outputs every log message to syslog.
-class SyslogSink : public base_logging::LogSink {
+class SyslogSink : public google::LogSink {
  public:
-  void Send(const absl::LogEntry& e) override {
-    static const int kSeverityToLevel[] = {
-        base_logging::INFO, base_logging::WARNING, base_logging::ERROR,
-        base_logging::FATAL};
+  void send(LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line,
+                    const struct ::tm* tm_time,
+                    const char* message, size_t message_len) override {
+    static const int kSeverityToLevel[] = {INFO, WARNING, ERROR, FATAL};
     static const char* const kSeverityToLabel[] = {"INFO", "WARNING", "ERROR",
                                                    "FATAL"};
-    int severity = static_cast<int>(e.severity);
-    syslog(LOG_USER | kSeverityToLevel[severity], "%s %s:%d] %.*s",
-           kSeverityToLabel[severity], e.base_filename, e.line,
-           static_cast<int>(e.message_len), e.message);
+    int severity_int = static_cast<int>(severity);
+    syslog(LOG_USER | kSeverityToLevel[severity_int], "%s %s:%d] %.*s",
+           kSeverityToLabel[severity_int], base_filename, line,
+           static_cast<int>(message_len), message);
   }
 };
 }  // namespace
@@ -53,7 +58,7 @@ void InitHerculesLogging() {
   // Make sure we only setup log_sink once.
   static SyslogSink* log_sink = nullptr;
   if (FLAGS_logtosyslog && log_sink == nullptr) {
-    openlog(base::ProgramInvocationShortName(), LOG_CONS | LOG_PID | LOG_NDELAY,
+    openlog(ProgramInvocationShortName(), LOG_CONS | LOG_PID | LOG_NDELAY,
             LOG_USER);
     log_sink = new SyslogSink();
     AddLogSink(log_sink);

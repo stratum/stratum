@@ -19,7 +19,7 @@
 #define STRATUM_GLUE_LOGGING_H_
 
 #include "gflags/gflags.h"
-#include "base/logging.h"  // IWYU pragma: export
+#include "glog/logging.h"  // IWYU pragma: export
 
 #ifdef STRATUM_ARCH_PPC
 
@@ -32,10 +32,10 @@ DECLARE_bool(logtosyslog);
 
 
 // These are exported in open source glog but not base/logging.h
-using base_logging::ERROR;
-using base_logging::FATAL;
-using base_logging::INFO;
-using base_logging::WARNING;
+using google::ERROR;
+using google::FATAL;
+using google::INFO;
+using google::WARNING;
 #define LOG_EXT(facility, level) LOG(level)
 
 namespace stratum {
