@@ -18,7 +18,7 @@
 #include <string>
 
 #include "stratum/lib/constants.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
 

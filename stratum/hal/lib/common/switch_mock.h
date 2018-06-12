@@ -19,7 +19,7 @@
 #define STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {

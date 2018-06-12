@@ -23,8 +23,8 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "sandblaze/p4lang/p4/p4runtime.pb.h"
 

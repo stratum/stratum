@@ -19,8 +19,8 @@
 #include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "sandblaze/gnmi/gnmi.host.pb.h"
 
 using ::testing::_;

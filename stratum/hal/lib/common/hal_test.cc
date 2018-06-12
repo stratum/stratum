@@ -24,8 +24,8 @@
 #include "stratum/lib/security/credentials_manager_mock.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
 DECLARE_bool(warmboot);

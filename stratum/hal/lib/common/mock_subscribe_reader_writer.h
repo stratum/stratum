@@ -18,8 +18,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_MOCK_SUBSCRIBE_READER_WRITER_H_
 #define STRATUM_HAL_LIB_COMMON_MOCK_SUBSCRIBE_READER_WRITER_H_
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
 
 // A mockup class of a ServerReaderWriter stream.

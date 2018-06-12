@@ -20,8 +20,8 @@
 #include "PI/proto/util.h"
 #include "stratum/hal/lib/p4/p4_runtime_mock.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
 using ::testing::HasSubstr;

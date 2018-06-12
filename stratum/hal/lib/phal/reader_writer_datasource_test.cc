@@ -21,8 +21,8 @@
 #include "stratum/hal/lib/phal/filepath_stringsource.h"
 #include "stratum/hal/lib/phal/system_fake.h"
 #include "stratum/hal/lib/phal/test_util.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {

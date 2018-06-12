@@ -36,7 +36,7 @@
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "sandblaze/p4lang/p4/config/p4info.pb.h"
 #include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 #include "util/gtl/flat_hash_map.h"

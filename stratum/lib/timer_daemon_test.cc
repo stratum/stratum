@@ -16,7 +16,7 @@
 #include "stratum/lib/timer_daemon.h"
 
 #include "stratum/glue/status/status_test_util.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

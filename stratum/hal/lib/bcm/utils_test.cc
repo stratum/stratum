@@ -16,7 +16,7 @@
 #include "stratum/hal/lib/bcm/utils.h"
 
 #include "stratum/lib/constants.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace hal {

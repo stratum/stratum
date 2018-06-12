@@ -18,8 +18,8 @@
 
 #include <vector>
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "sandblaze/p4lang/p4/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"

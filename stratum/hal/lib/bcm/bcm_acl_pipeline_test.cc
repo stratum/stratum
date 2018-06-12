@@ -19,8 +19,8 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace hal {

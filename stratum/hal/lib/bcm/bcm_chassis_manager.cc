@@ -32,7 +32,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "util/gtl/flat_hash_map.h"
@@ -63,7 +63,7 @@ constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
-ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex chassis_lock/*absl::kConstInit*/;
 
 bool shutdown = false;
 

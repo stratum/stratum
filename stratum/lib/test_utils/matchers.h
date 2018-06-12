@@ -22,8 +22,8 @@
 #include <type_traits>
 
 #include "google/protobuf/util/message_differencer.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace test_utils {

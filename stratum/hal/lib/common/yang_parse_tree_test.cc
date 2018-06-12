@@ -21,8 +21,8 @@
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/constants.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.host.pb.h"
 

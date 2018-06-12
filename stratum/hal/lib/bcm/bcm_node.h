@@ -24,7 +24,7 @@
 #include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "stratum/glue/status/status.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 
 namespace stratum {
 namespace hal {

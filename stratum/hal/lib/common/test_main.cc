@@ -19,7 +19,7 @@
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
 

@@ -19,8 +19,8 @@
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 using ::testing::HasSubstr;

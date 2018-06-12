@@ -23,7 +23,7 @@
 #include <memory>
 #include <utility>
 
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {

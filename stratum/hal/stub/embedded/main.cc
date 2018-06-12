@@ -37,7 +37,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
 #include "stratum/public/proto/openconfig.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
@@ -745,7 +745,7 @@ class HalServiceClient {
   static absl::Mutex lock_;
 };
 
-ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_/*absl::kConstInit*/;
 
 int Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);

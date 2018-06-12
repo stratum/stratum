@@ -2,20 +2,20 @@ NEED TO FIGURE OUT *_grpc_proto rules
 
 BUILD files permanent / one-time
 --------------------------------
-//stratum/portage:build_defs.bzl        //bazel:rules.bzl
-sc_cc_lib                               stratum_cc_library
-sc_proto_lib                            stratum_cc_proto_library
-sc_cc_bin                               stratum_cc_binary
-sc_cc_test                              stratum_cc_test
-sc_platform_select                      stratum_platform_select
-sc_platform_filter                      stratum_platform_filter
-sc_platform_alias                       stratum_platform_alias
-sc_package                              stratum_package
-services = ["grpc"]                     with_grpc = True
-python_support = True                   #python_support = True
+//stratum/portage:build_defs.bzl            //bazel:rules.bzl
+sc_cc_lib                                   stratum_cc_library
+sc_proto_lib                                stratum_cc_proto_library
+sc_cc_bin                                   stratum_cc_binary
+sc_cc_test                                  stratum_cc_test
+sc_platform_select                          stratum_platform_select
+sc_platform_filter                          stratum_platform_filter
+sc_platform_alias                           stratum_platform_alias
+sc_package                                  stratum_package
+services = ["grpc"]                         with_grpc = True
+python_support = True                       #python_support = True
 
-//stratum:code_proto                    @com_github_googleapis//:code_proto
-//stratum:status_proto                  @com_github_googleapis//:status_proto
+//stratum:code_proto                        @com_github_googleapis//:code_proto
+//stratum:status_proto                      @com_github_googleapis//:status_proto
 
 BUILD files copybara
 --------------------
@@ -38,6 +38,11 @@ proto_include = "."                         #proto_include = "."
 //util/regexp/re2                           @com_googlesource_code_re2//:re2
 
 
+C files permanent/one-time
+--------------------------
+#include "absl/base/integral_types.h"       #include "stratum/glue/net_util/integral_types.h"
+
+
 C files copybara
 ----------------
 #include "base/commandlineflags.h"          #include "gflags/gflags.h"
@@ -54,3 +59,4 @@ using base_logging::INFO;                   using google::INFO;
 using base_logging::WARNING;                using google::WARNING;
 using base::ProgramInvocationShortName;     using google::ProgramInvocationShortName;
 
+(absl::kConstInit)                          /*absl::kConstInit*/

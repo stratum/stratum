@@ -19,7 +19,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 
 DECLARE_string(test_tmpdir);

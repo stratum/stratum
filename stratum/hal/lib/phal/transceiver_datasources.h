@@ -21,7 +21,7 @@
 #include "stratum/hal/lib/phal/fixed_layout_datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/public/proto/hal.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {

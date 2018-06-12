@@ -19,8 +19,8 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 DECLARE_string(test_tmpdir);
 DECLARE_string(bcm_serdes_db_proto_file);

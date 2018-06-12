@@ -21,7 +21,7 @@
 #include <set>
 
 #include "stratum/glue/status/status_test_util.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
@@ -225,7 +225,7 @@ TEST(ChannelTest, TestBlockingWrite) {
 
 namespace {
 
-ABSL_CONST_INIT absl::Mutex arr_dst_lock(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex arr_dst_lock/*absl::kConstInit*/;
 absl::CondVar arr_dst_done(base::LINKER_INITIALIZED);
 constexpr size_t kArrTestSize = 5;
 int test_arr_src[kArrTestSize];

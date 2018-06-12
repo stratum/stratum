@@ -18,7 +18,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/fixed_stringsource.h"
 #include "stratum/hal/lib/phal/test_util.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/time/time.h"
 
 namespace stratum {

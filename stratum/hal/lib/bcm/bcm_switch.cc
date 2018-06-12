@@ -24,7 +24,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"

@@ -22,9 +22,9 @@
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/hal/lib/phal/test/test.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
-#include "absl/base/integral_types.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/net_util/integral_types.h"
 
 namespace stratum {
 namespace hal {

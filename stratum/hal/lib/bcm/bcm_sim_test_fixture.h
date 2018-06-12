@@ -26,7 +26,7 @@
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace hal {

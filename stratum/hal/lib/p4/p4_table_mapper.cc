@@ -26,7 +26,7 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/memory/memory.h"
 #include "util/gtl/map_util.h"
 

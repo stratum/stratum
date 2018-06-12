@@ -24,7 +24,7 @@
 #include <string>
 
 #include "google/protobuf/message.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "stratum/glue/status/status.h"
 
 namespace stratum {

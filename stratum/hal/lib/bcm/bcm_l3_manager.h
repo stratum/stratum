@@ -27,7 +27,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "util/gtl/flat_hash_map.h"
 

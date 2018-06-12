@@ -25,9 +25,9 @@
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_static_entry_mapper_mock.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
-#include "absl/base/integral_types.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/net_util/integral_types.h"
 #include "absl/memory/memory.h"
 
 using ::testing::_;
