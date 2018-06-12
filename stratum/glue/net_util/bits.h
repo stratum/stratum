@@ -51,7 +51,7 @@
 
 #include "stratum/glue/logging.h"
 #include "absl/base/casts.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/numeric/int128.h"
 
 namespace stratum {
