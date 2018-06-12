@@ -43,6 +43,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
+        "//stratum/glue:integral_types",
     ],
 )
 
@@ -56,6 +57,7 @@ stratum_cc_test(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
+        "//stratum/glue:integral_types",
     ],
 )
 
@@ -77,6 +79,7 @@ stratum_cc_library(
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
+        "//stratum/glue:integral_types",
     ],
 )
 
@@ -91,6 +94,7 @@ stratum_cc_test(
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
+        "//stratum/glue:integral_types",
     ],
 )
 
@@ -105,4 +109,13 @@ stratum_cc_library(
     deps = [
         "//stratum/glue:logging",
     ],
+)
+
+cc_test(
+  name = "absl_test",
+  srcs = ["absl_test.cc"],
+  deps = [
+      "@com_google_absl//absl/strings",
+      "@com_google_googletest//:gtest_main",
+  ],
 )
