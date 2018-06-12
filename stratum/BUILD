@@ -74,7 +74,7 @@ config_setting(
     },
 )
 
-sc_package(
+stratum_package(
     name = "stratum_package_standalone",
     deps = [
         "//stratum/hal/bin/bcm/standalone:stratum_hal_pkg",
