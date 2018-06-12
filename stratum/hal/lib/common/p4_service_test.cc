@@ -28,7 +28,7 @@
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"

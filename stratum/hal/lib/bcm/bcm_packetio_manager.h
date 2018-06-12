@@ -36,7 +36,7 @@
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"

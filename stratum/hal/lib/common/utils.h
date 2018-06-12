@@ -23,7 +23,7 @@
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/public/proto/hal.pb.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {

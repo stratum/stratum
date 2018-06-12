@@ -18,7 +18,7 @@
 #ifndef STRATUM_LIB_CONSTANTS_H_
 #define STRATUM_LIB_CONSTANTS_H_
 
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 

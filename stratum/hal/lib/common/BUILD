@@ -132,7 +132,7 @@ cc_library(
     testonly = 1,
     hdrs = ["mock_subscribe_reader_writer.h"],
     deps = [
-        "//testing/base/public:gmock_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_github_openconfig_gnmi//:gnmi_proto",
         "@com_google_grpc//:grpc++",
     ],
@@ -151,7 +151,7 @@ cc_library(
         ":switch_interface",
         ":switch_mock",
         ":writer_interface",
-        "//testing/base/public:gmock_no_google3",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
@@ -351,7 +351,7 @@ cc_library(
     hdrs = ["writer_mock.h"],
     deps = [
         ":writer_interface",
-        "//testing/base/public:gmock_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -424,6 +424,7 @@ stratum_cc_library(
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
+        "//stratum/glue:integral_types",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
@@ -441,6 +442,7 @@ stratum_cc_test(
         "@com_google_googletest//:gtest",
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
+        "//stratum/glue:integral_types",
         "//stratum/lib:constants",
     ],
 )

@@ -20,7 +20,7 @@
 
 #include <cstddef>
 
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {

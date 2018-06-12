@@ -315,7 +315,7 @@ stratum_cc_library(
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
-        "//stratum/public/proto:hal_grpc_proto",
+        "//stratum/public/proto:hal_proto",
     ],
 )
 
@@ -669,7 +669,7 @@ stratum_cc_library(
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
-        "//stratum/lib/sandcastle:hardware_status_service_grpc_proto",
+        "//stratum/lib/sandcastle:hardware_status_service_proto",
         "//stratum/public/proto:error_proto",
     ],
 )

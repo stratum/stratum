@@ -27,7 +27,7 @@
 #include "stratum/lib/utils.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 
 using ::testing::_;

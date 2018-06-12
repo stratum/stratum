@@ -57,7 +57,7 @@ stratum_cc_library(
     ],
     deps = [
         ":channel",
-        "@com_github_google_googletest//:gtest",
+        "@com_google_googletest//:gtest",
     ],
 )
 

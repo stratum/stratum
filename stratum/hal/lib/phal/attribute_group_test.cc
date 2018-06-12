@@ -24,7 +24,7 @@
 #include "stratum/hal/lib/phal/test_util.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {

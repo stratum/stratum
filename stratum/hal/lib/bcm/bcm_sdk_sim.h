@@ -23,7 +23,7 @@
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
 

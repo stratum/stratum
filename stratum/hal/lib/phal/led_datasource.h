@@ -23,7 +23,7 @@
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/hal.pb.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"

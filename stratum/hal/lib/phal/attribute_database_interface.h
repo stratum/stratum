@@ -24,7 +24,7 @@
 
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/types/variant.h"
 #include "stratum/glue/status/statusor.h"
 

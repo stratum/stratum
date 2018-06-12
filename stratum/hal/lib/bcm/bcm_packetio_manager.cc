@@ -36,7 +36,7 @@
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"

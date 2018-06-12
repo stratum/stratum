@@ -21,7 +21,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/proto/hal.pb.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
 #include "util/gtl/flat_hash_map.h"

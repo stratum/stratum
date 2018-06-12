@@ -24,7 +24,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "util/gtl/map_util.h"

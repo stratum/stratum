@@ -37,7 +37,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
 #include "stratum/public/proto/openconfig.pb.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"

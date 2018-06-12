@@ -25,7 +25,7 @@
 #include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "stratum/glue/net_util/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
