@@ -60,7 +60,7 @@ cc_test(
     deps = [
         ":error",
         ":test_main",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
         "@com_github_googleapis//:status_proto",
         "//stratum/glue/status:status_macros",

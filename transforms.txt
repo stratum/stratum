@@ -35,6 +35,7 @@ proto_include = "."                         #proto_include = "."
 //sandblaze/prebuilt/openssl                #//sandblaze/prebuilt/openssl           #NOTE replace with boring ssl if required
 //testing/base/public:gunit_no_google3      @com_google_googletest//:gtest
 //testing/base/public:gunit_main_no_google3 @com_google_googletest//:gtest_main
+//testing/base/public:gmock_no_google3      @com_google_googletest//:gtest          #WARNING conflicts with //testing/base/public:gunit_no_google3
 //util/regexp/re2                           @com_googlesource_code_re2//:re2
 //util/gtl:map_util                         //stratum/glue/gtl:map_util
 //util/gtl:stl_util                         //stratum/glue/gtl:stl_util
@@ -42,7 +43,6 @@ proto_include = "."                         #proto_include = "."
 //util/gtl:flat_hash_set                    //stratum/glue/gtl:flat_hash_set
 //util/gtl:cleanup                          //stratum/glue/gtl:cleanup
 :google_switch_configurator                 #:google_switch_configurator
-
 
 C files permanent/one-time
 --------------------------
