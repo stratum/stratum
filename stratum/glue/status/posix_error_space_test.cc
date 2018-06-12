@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <string>
 
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 namespace util {
 

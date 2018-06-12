@@ -18,9 +18,9 @@
 #include "stratum/glue/status/status_test_util.h"
 
 #include "stratum/glue/logging.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit-spi.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest-spi.h"
+#include "gtest/gtest.h"
 
 TEST(StatusTestUtil, ExpectOkSuccess) { EXPECT_OK(::util::Status::OK); }
 

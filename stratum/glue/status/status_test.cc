@@ -22,8 +22,8 @@
 #include "absl/strings/str_cat.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

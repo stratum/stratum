@@ -22,8 +22,10 @@
 #include <stdio.h>
 #include <string>
 
-#include "base/strerror.h"
+#include "glog/logging.h"
 #include "stratum/glue/logging.h"
+
+using google::StrError;
 
 namespace util {
 

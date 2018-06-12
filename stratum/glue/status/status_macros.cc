@@ -20,6 +20,7 @@
 #include <algorithm>
 
 #include "absl/strings/str_cat.h"
+#include "absl/base/optimization.h"
 #include "stratum/glue/logging.h"
 
 DEFINE_bool(status_macros_log_stack_trace, false,
@@ -29,12 +30,13 @@ DECLARE_bool(util_status_save_stack_trace);
 namespace util {
 namespace status_macros {
 
-using base_logging::LogSeverity;
-using base_logging::NUM_SEVERITIES;
-using base_logging::ERROR;
-using base_logging::FATAL;
-using base_logging::INFO;
-using base_logging::WARNING;
+using google::LogMessage;
+using google::LogSeverity;
+using google::NUM_SEVERITIES;
+using google::ERROR;
+using google::FATAL;
+using google::INFO;
+using google::WARNING;
 
 static ::util::Status MakeStatus(const util::ErrorSpace* error_space, int code,
                                  const std::string& message) {

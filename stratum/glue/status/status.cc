@@ -28,6 +28,7 @@
 #include "stratum/glue/logging.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 
 namespace util {
@@ -44,7 +45,7 @@ struct InternalStatusPayload {
 // Global registry
 typedef std::unordered_map<std::string, ErrorSpace*, std::hash<std::string> >
     ErrorSpaceTable;
-ABSL_CONST_INIT absl::Mutex registry_lock(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex registry_lock/*absl::kConstInit*/;
 static ErrorSpaceTable* error_space_table;
 
 // Convert canonical code to a value known to this binary.
@@ -134,7 +135,7 @@ class GenericErrorSpace : public ErrorSpace {
   }
 };
 
-ABSL_CONST_INIT absl::Mutex init_lock(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex init_lock/*absl::kConstInit*/;
 static bool initialized = false;
 static const ErrorSpace* generic_space = NULL;
 static const std::string* empty_string;
@@ -369,13 +370,13 @@ std::string Status::ToString() const {
     status = "OK";
   } else {
     const ErrorSpace* const space = error_space();
-    absl::StrAppend(
-        &status, "%s::%s: %s", space->SpaceName().c_str(),
+    absl::SubstituteAndAppend(
+        &status, "$0::$1: $2", space->SpaceName().c_str(),
         space->String(code).c_str(), error_message().c_str());
     if (rep_->payload != NULL) {
       std::string payload_text;
       rep_->payload->ToShortASCII(&payload_text);
-      absl::StrAppend(&status, " %s", payload_text.c_str());
+      absl::SubstituteAndAppend(&status, " $0", payload_text.c_str());
     }
   }
   return status;

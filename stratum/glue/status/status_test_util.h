@@ -23,7 +23,7 @@
 // NOLINTNEXTLINE(build/deprecated)
 
 #include "stratum/glue/status/status.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 // Macros for testing the results of functions that return ::util::Status.
 

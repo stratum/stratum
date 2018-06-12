@@ -23,6 +23,7 @@
 
 #include "google/protobuf/stubs/atomicops.h"
 #include "stratum/glue/logging.h"
+#include "absl/base/attributes.h"
 
 // TODO: Move to Abseil-status when it is available.
 //
@@ -69,7 +70,7 @@ namespace util {
 class ErrorSpace;
 
 // Used by ::util::Status to store proto payload. Not for public use
-class InternalStatusPayload;
+struct InternalStatusPayload;
 
 // Returned Status objects may not be ignored.
 // Note: Disabled for SWIG as it doesn't parse attributes correctly.
@@ -140,7 +141,7 @@ class Status final {
   void Clear();
 
   // Accessor
-  bool ok() const MUST_USE_RESULT;
+  bool ok() const ABSL_MUST_USE_RESULT;
   int error_code() const;
   const std::string& error_message() const;
   const ErrorSpace* error_space() const;

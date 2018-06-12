@@ -25,8 +25,8 @@
 
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/posix_error_space.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace util {
 namespace {
