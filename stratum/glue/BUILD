@@ -65,3 +65,10 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
     ],
 )
+
+stratum_cc_library(
+    name = "integral_types",
+    hdrs = [
+        "integral_types.h",
+    ],
+)
