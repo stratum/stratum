@@ -23,6 +23,7 @@
 #include <sstream>  // IWYU pragma: keep
 #include <string>
 
+#include "google/rpc/code.pb.h"
 #include "google/protobuf/message.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
