@@ -1,0 +1,21 @@
+bazel test \
+//stratum/glue/...:all \
+//stratum/public/proto:all \
+//stratum/public/lib:error //stratum/public/lib:test_main \
+//stratum/lib:test_main \
+//stratum/lib:macros_test \
+//stratum/lib:macros \
+//stratum/lib:constants \
+//stratum/lib/channel:test_main \
+//stratum/lib/channel:channel_mock \
+//stratum/lib/channel:channel \
+//stratum/lib/test_utils:matchers \
+
+# Not building
+#//stratum/public/lib:error_test
+#//stratum/lib:utils_test
+#//stratum/lib:utils
+#//stratum/lib:timer_daemon_test
+#//stratum/lib:timer_daemon
+#//stratum/lib/channel:channel_test
+#//stratum/lib/security:all
