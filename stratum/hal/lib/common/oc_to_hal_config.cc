@@ -28,11 +28,11 @@ namespace {
 // converts:
 //   oc::Device + oc::Components::Component
 // into:
-//   google::hercules::Chassis
+//   stratum::Chassis
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<google::hercules::Chassis> ComponentToChassis(
+::util::StatusOr<stratum::Chassis> ComponentToChassis(
     const oc::Device &device, const oc::Components::Component &component) {
-  google::hercules::Chassis to;
+  stratum::Chassis to;
 
   to.set_name(component.chassis().config().name().value());
 
@@ -55,11 +55,11 @@ namespace {
 // converts:
 //   oc::Device + oc::Components::Component
 // into:
-//   google::hercules::Node
+//   stratum::Node
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<google::hercules::Node> ComponentToNode(
+::util::StatusOr<stratum::Node> ComponentToNode(
     const oc::Device &device, const oc::Components::Component &component) {
-  google::hercules::Node to;
+  stratum::Node to;
 
   to.set_id(component.node().config().uid().value());
   to.set_name(component.config().name().value());
@@ -94,12 +94,12 @@ namespace {
 // converts:
 //   oc::Device + oc::Components::Component
 // into:
-//   google::hercules::GoogleConfig
+//   stratum::GoogleConfig
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<google::hercules::GoogleConfig>
+::util::StatusOr<stratum::GoogleConfig>
 ComponentToChassisBcmChipSpecific(const oc::Device &device,
                                   const oc::Components::Component &component) {
-  google::hercules::GoogleConfig to;
+  stratum::GoogleConfig to;
 
   if (component.chassis()
           .config()
@@ -113,18 +113,18 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
 
     // map<int32, NodeIdToKnetConfig> node_id_to_knet_config
     for (const auto &entry : bcm_specific.node_id_to_knet_config()) {
-      google::hercules::GoogleConfig::BcmKnetConfig conf;
+      stratum::GoogleConfig::BcmKnetConfig conf;
       for (const auto &config : entry.second.knet_intf_configs()) {
-        google::hercules::GoogleConfig::BcmKnetConfig::BcmKnetIntfConfig intf;
+        stratum::GoogleConfig::BcmKnetConfig::BcmKnetIntfConfig intf;
 
         switch (config.second.purpose()) {
           case oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_CONTROLLER:
-            intf.set_purpose(google::hercules::GoogleConfig::
+            intf.set_purpose(stratum::GoogleConfig::
                                  BCM_KNET_INTF_PURPOSE_CONTROLLER);
             break;
           case oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_SFLOW:
             intf.set_purpose(
-                google::hercules::GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW);
+                stratum::GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW);
             break;
           default:
             break;
@@ -141,13 +141,13 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
 
     // map<int32, NodeIdToTxConfig> node_id_to_tx_config
     for (const auto &entry : bcm_specific.node_id_to_tx_config()) {
-      google::hercules::GoogleConfig::BcmTxConfig config;
+      stratum::GoogleConfig::BcmTxConfig config;
       (*to.mutable_node_id_to_tx_config())[entry.first] = config;
     }
 
     // map<int32, NodeIdToRxConfig> node_id_to_rx_config
     for (const auto &entry : bcm_specific.node_id_to_rx_config()) {
-      google::hercules::GoogleConfig::BcmRxConfig conf;
+      stratum::GoogleConfig::BcmRxConfig conf;
 
       conf.set_rx_pool_pkt_count(entry.second.rx_pool_pkt_count().value());
       conf.set_rx_pool_bytes_per_pkt(
@@ -159,7 +159,7 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
       conf.set_use_interrupt(entry.second.use_interrupt().value());
 
       for (const auto &config : entry.second.dma_channel_configs()) {
-        google::hercules::GoogleConfig::BcmRxConfig::BcmDmaChannelConfig a;
+        stratum::GoogleConfig::BcmRxConfig::BcmDmaChannelConfig a;
 
         a.set_chains(config.second.chains().value());
         a.set_strip_crc(config.second.strip_crc().value());
@@ -180,12 +180,12 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
 
     // map<uint64, BcmRateLimitConfig> node_id_to_rate_limit_config
     for (const auto &entry : bcm_specific.node_id_to_rate_limit_config()) {
-      google::hercules::GoogleConfig::BcmRateLimitConfig conf;
+      stratum::GoogleConfig::BcmRateLimitConfig conf;
 
       conf.set_max_rate_pps(entry.second.max_rate_pps().value());
       conf.set_max_burst_pkts(entry.second.max_burst_pkts().value());
       for (const auto &config : entry.second.per_cos_rate_limit_configs()) {
-        google::hercules::GoogleConfig::BcmRateLimitConfig::
+        stratum::GoogleConfig::BcmRateLimitConfig::
             BcmPerCosRateLimitConfig per_cos;
 
         per_cos.set_max_rate_pps(config.second.max_rate_pps().value());
@@ -204,21 +204,21 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
 // converts:
 //   oc::Device + oc::Interfaces::Interface
 // into:
-//   google::hercules::TrunkPort
+//   stratum::TrunkPort
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<google::hercules::TrunkPort> InterfaceToTrunkPort(
+::util::StatusOr<stratum::TrunkPort> InterfaceToTrunkPort(
     const oc::Device &device, const oc::Interfaces::Interface &interface) {
-  google::hercules::TrunkPort to;
+  stratum::TrunkPort to;
 
   to.set_id(interface.hercules_interface().config().uid().value());
   to.set_name(interface.config().name().value());
 
   switch (interface.aggregation().config().lag_type()) {
     case oc::OpenconfigIfAggregate::AGGREGATION_TYPE_LACP:
-      to.set_type(google::hercules::TrunkPort::LACP_TRUNK);
+      to.set_type(stratum::TrunkPort::LACP_TRUNK);
       break;
     case oc::OpenconfigIfAggregate::AGGREGATION_TYPE_STATIC:
-      to.set_type(google::hercules::TrunkPort::STATIC_TRUNK);
+      to.set_type(stratum::TrunkPort::STATIC_TRUNK);
       break;
     default:
       break;
@@ -241,11 +241,11 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
 // converts:
 //   oc::Device + oc::Interfaces::Interface
 // into:
-//   google::hercules::SingletonPort
+//   stratum::SingletonPort
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<google::hercules::SingletonPort> InterfaceToSingletonPort(
+::util::StatusOr<stratum::SingletonPort> InterfaceToSingletonPort(
     const oc::Device &device, const oc::Interfaces::Interface &interface) {
-  google::hercules::SingletonPort to;
+  stratum::SingletonPort to;
 
   to.set_id(interface.hercules_interface().config().uid().value());
   to.set_name(interface.config().name().value());
@@ -300,12 +300,12 @@ ComponentToChassisBcmChipSpecific(const oc::Device &device,
 // converts:
 //   oc::Device
 // into:
-//   google::hercules::ChassisConfig
+//   stratum::ChassisConfig
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<google::hercules::ChassisConfig>
+::util::StatusOr<stratum::ChassisConfig>
 OpenConfigToHalConfigProtoConverter::DeviceToChassisConfig(
     const oc::Device &in) {
-  google::hercules::ChassisConfig to;
+  stratum::ChassisConfig to;
 
   // Check if the input protobuf is correct. Any found problem is logged inside
   // IsCorrectProtoDevice() method.

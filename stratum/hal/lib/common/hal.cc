@@ -28,12 +28,12 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 
-DEFINE_string(url, google::hercules::kLocalHerculesUrl,
+DEFINE_string(url, stratum::kLocalHerculesUrl,
               "External URL for server to listen to external calls.");
-DEFINE_string(local_hercules_url, google::hercules::kLocalHerculesUrl,
+DEFINE_string(local_hercules_url, stratum::kLocalHerculesUrl,
               "URL for listening to local calls from hercules stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
-DEFINE_string(procmon_service_addr, ::google::hercules::kProcmonServiceUrl,
+DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
               "URL of the procmon service to connect to.");
 DEFINE_string(persistent_config_dir, "",
               "The persistent dir where all the config files will be stored.");

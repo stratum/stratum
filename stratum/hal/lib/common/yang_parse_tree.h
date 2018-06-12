@@ -282,8 +282,8 @@ class TreeNode {
   bool supports_on_change_;
   bool supports_on_poll_;
 
-  friend class google::hercules::hal::YangParseTreeTest;
-  friend class google::hercules::hal::SubscriptionTestBase;
+  friend class stratum::hal::YangParseTreeTest;
+  friend class stratum::hal::SubscriptionTestBase;
 };
 
 // A class implementing a YANG model tree. It uses TreeNode objects to
@@ -372,7 +372,7 @@ class YangParseTree {
         return ::util::OkStatus();
       };
 
-  friend class google::hercules::hal::YangParseTreeTest;
+  friend class stratum::hal::YangParseTreeTest;
 };
 
 // A class that implements a channel that is used to return the data values

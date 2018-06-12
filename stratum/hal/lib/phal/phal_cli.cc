@@ -51,7 +51,7 @@ namespace phal {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  ::util::Status status = google::hercules::hal::phal::Main(argc, argv);
+  ::util::Status status = stratum::hal::phal::Main(argc, argv);
   if (status.ok())
     return 0;
   else

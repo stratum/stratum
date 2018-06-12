@@ -99,7 +99,7 @@ TEST_F(OcToHalConfigTest, Generic Tomahawk40g100g) {
                             "testdata/test_oc_config_generic_tomahawk_100g_hercules.pb.txt",
                             &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
-  ::util::StatusOr<google::hercules::ChassisConfig> hal_config =
+  ::util::StatusOr<stratum::ChassisConfig> hal_config =
       converter_.DeviceToChassisConfig(oc_proto_);
 }
 
@@ -111,7 +111,7 @@ TEST_F(OcToHalConfigTest, Generic Tomahawk100g) {
       "test_oc_config_generic_tomahawk_40g_100g_hercules.pb.txt",
       &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
-  ::util::StatusOr<google::hercules::ChassisConfig> hal_config =
+  ::util::StatusOr<stratum::ChassisConfig> hal_config =
       converter_.DeviceToChassisConfig(oc_proto_);
 }
 
@@ -123,7 +123,7 @@ TEST_F(OcToHalConfigTest, Generic Trident240g) {
       "test_oc_config_generic_trident2_40g_hercules.pb.txt",
       &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
-  ::util::StatusOr<google::hercules::ChassisConfig> hal_config =
+  ::util::StatusOr<stratum::ChassisConfig> hal_config =
       converter_.DeviceToChassisConfig(oc_proto_);
 }
 
@@ -135,7 +135,7 @@ TEST_F(OcToHalConfigTest, Generic Trident240g) {
       "test_oc_config_generic_trident2_40g_hercules.pb.txt",
       &oc_proto_));
   ASSERT_TRUE(converter_.IsCorrectProtoDevice(oc_proto_));
-  ::util::StatusOr<google::hercules::ChassisConfig> hal_config =
+  ::util::StatusOr<stratum::ChassisConfig> hal_config =
       converter_.DeviceToChassisConfig(oc_proto_);
 }
 

@@ -136,5 +136,5 @@ int Main(int argc, char** argv) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  return google::hercules::hal::bcm::Main(argc, argv);
+  return stratum::hal::bcm::Main(argc, argv);
 }

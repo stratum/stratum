@@ -41,6 +41,7 @@ proto_include = "."                         #proto_include = "."
 C files permanent/one-time
 --------------------------
 #include "absl/base/integral_types.h"       #include "stratum/glue/net_util/integral_types.h"
+google::hercules::                          stratum::
 
 
 C files copybara

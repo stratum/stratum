@@ -1,4 +1,5 @@
 bazel test \
+//stratum:all \
 //stratum/glue/...:all \
 //stratum/public/proto:all \
 //stratum/public/lib:error //stratum/public/lib:test_main \
@@ -17,7 +18,13 @@ bazel test \
 //stratum/hal/lib/common:common_proto.pb \
 //stratum/hal/lib/common:client_sync_reader_writer \
 //stratum/hal/lib/common:writer_interface \
-
+//stratum/hal/lib/common:test_main \
+//stratum/hal/lib/common:phal_mock \
+//stratum/hal/lib/common:phal_interface \
+//stratum/hal/lib/common:utils \
+//stratum/hal/lib/common:writer_mock \
+//stratum/hal/lib/common:subscribe_reader_writer_mock \
+//stratum/hal/lib/common:server_writer_wrapper \
 
 exit 0
 
@@ -28,8 +35,36 @@ exit 0
 //stratum/lib:timer_daemon_test
 //stratum/lib:timer_daemon
 //stratum/lib/channel:channel_test
-//stratum/lib/security:all
+//stratum/hal/lib/common:oc_to_hal_config_test
+//stratum/hal/lib/common:hal_config_to_oc_test
+//stratum/hal/lib/common:config_monitoring_service
+//stratum/hal/lib/common:switch_interface
+//stratum/hal/lib/common:error_buffer
+//stratum/hal/lib/common:conversion
+//stratum/hal/lib/common:channel_writer_wrapper
+//stratum/hal/lib/common:utils_test
+//stratum/hal/lib/common:p4_service_test
+//stratum/hal/lib/common:hal_test
+//stratum/hal/lib/common:hal
+//stratum/hal/lib/common:p4_service
+//stratum/hal/lib/common:error_buffer_test
+//stratum/hal/lib/common:config_monitoring_service_test
+//stratum/hal/lib/common:switch_mock
+//stratum/hal/lib/common:gnmi_publisher_mock
+//stratum/hal/stub/embedded:stratum_stub
 
+//stratum/lib/security:aaa_membership_proto
+//stratum/lib/security:aaa_membership_proto.pb
+//stratum/lib/security:aaa_membership_proto_srcs
+//stratum/lib/security:authorization_policy_proto
+//stratum/lib/security:authorization_policy_proto.pb
+//stratum/lib/security:authorization_policy_proto_srcs
+//stratum/lib/security:auth_policy_checker
+//stratum/lib/security:auth_policy_checker_mock
+//stratum/lib/security:auth_policy_checker_test
+//stratum/lib/security:credentials_manager
+//stratum/lib/security:credentials_manager_mock
+//stratum/lib/security:test_main
 
 #--------------- TBD --------------------
 //stratum/hal/bin/bcm/sim:stratum_sim
@@ -82,36 +117,6 @@ exit 0
 //stratum/hal/lib/bcm:test_main
 //stratum/hal/lib/bcm:utils
 //stratum/hal/lib/bcm:utils_test
-
-//stratum/hal/lib/common:channel_writer_wrapper
-//stratum/hal/lib/common:client_sync_reader_writer
-//stratum/hal/lib/common:common_proto
-//stratum/hal/lib/common:common_proto.pb
-//stratum/hal/lib/common:config_monitoring_service
-//stratum/hal/lib/common:config_monitoring_service_test
-//stratum/hal/lib/common:constants
-//stratum/hal/lib/common:conversion
-//stratum/hal/lib/common:error_buffer
-//stratum/hal/lib/common:error_buffer_test
-//stratum/hal/lib/common:gnmi_publisher_mock
-//stratum/hal/lib/common:hal
-//stratum/hal/lib/common:hal_config_to_oc_test
-//stratum/hal/lib/common:hal_test
-//stratum/hal/lib/common:oc_to_hal_config_test
-//stratum/hal/lib/common:p4_service
-//stratum/hal/lib/common:p4_service_test
-//stratum/hal/lib/common:phal_interface
-//stratum/hal/lib/common:phal_mock
-//stratum/hal/lib/common:server_writer_wrapper
-//stratum/hal/lib/common:subscribe_reader_writer_mock
-//stratum/hal/lib/common:switch_interface
-//stratum/hal/lib/common:switch_mock
-//stratum/hal/lib/common:testdata
-//stratum/hal/lib/common:test_main
-//stratum/hal/lib/common:utils
-//stratum/hal/lib/common:utils_test
-//stratum/hal/lib/common:writer_interface
-//stratum/hal/lib/common:writer_mock
 
 //stratum/hal/lib/p4:common_flow_entry_proto
 //stratum/hal/lib/p4:common_flow_entry_proto.pb
@@ -196,21 +201,3 @@ exit 0
 //stratum/hal/lib/phal:udev_event_handler_test
 //stratum/hal/lib/phal:udev_interface
 //stratum/hal/lib/phal:udev_mock
-
-//stratum/hal/stub/embedded:stratum_stub
-
-//stratum/lib/security:aaa_membership_proto
-//stratum/lib/security:aaa_membership_proto.pb
-//stratum/lib/security:aaa_membership_proto_srcs
-//stratum/lib/security:authorization_policy_proto
-//stratum/lib/security:authorization_policy_proto.pb
-//stratum/lib/security:authorization_policy_proto_srcs
-//stratum/lib/security:auth_policy_checker
-//stratum/lib/security:auth_policy_checker_mock
-//stratum/lib/security:auth_policy_checker_test
-//stratum/lib/security:credentials_manager
-//stratum/lib/security:credentials_manager_mock
-//stratum/lib/security:test_main
-
-//stratum:stratum_ppc
-//stratum:stratum_x86

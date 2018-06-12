@@ -22,7 +22,7 @@
 #include "stratum/lib/constants.h"
 #include "stratum/public/proto/yang_wrappers.pb.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/map_util.h"
+//#include "util/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -30,12 +30,12 @@ namespace hal {
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::Node
+//   stratum::Node
 // into:
 //   std::list<oc::Components::Component>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Components::Component>> NodeToComponent(
-    const google::hercules::Node& in) {
+    const stratum::Node& in) {
   std::string linecard_name = absl::Substitute(":lc-$0", in.slot());
 
   oc::Components::Component linecard;
@@ -74,12 +74,12 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::Chassis
+//   stratum::Chassis
 // into:
 //   std::list<oc::Components::Component>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Components::Component>> ChassisToComponent(
-    const google::hercules::Chassis& in) {
+    const stratum::Chassis& in) {
   oc::Components::Component component;
 
   component.set_type(oc::OpenconfigPlatformTypes::HW_BCM_BASED_CHASSIS);
@@ -88,16 +88,16 @@ namespace {
       in.name());
   oc::Bcm::Chassis::Config bcm_config;
   switch (in.platform()) {
-    case google::hercules::Platform::PLT_GENERIC_TRIDENT2:
+    case stratum::Platform::PLT_GENERIC_TRIDENT2:
       break;
-    case google::hercules::Platform::PLT_GENERIC_TRIDENT2:
+    case stratum::Platform::PLT_GENERIC_TRIDENT2:
       break;
-    case google::hercules::Platform::PLT_GENERIC_TOMAHAWK:
+    case stratum::Platform::PLT_GENERIC_TOMAHAWK:
       break;
-    case google::hercules::Platform::PLT_P4_SOFT_SWITCH:
+    case stratum::Platform::PLT_P4_SOFT_SWITCH:
       bcm_config.set_platform(oc::Bcm::HerculesChassis::P4_SOFT_SWITCH);
       break;
-    case google::hercules::Platform::PLT_MLNX_SN2700:
+    case stratum::Platform::PLT_MLNX_SN2700:
       bcm_config.set_platform(oc::Bcm::HerculesChassis::MLNX_SN2700);
       break;
     default:
@@ -114,12 +114,12 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::VendorConfig
+//   stratum::VendorConfig
 // into:
 //   std::list<oc::Components::Component>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Components::Component>> VendorConfigToComponent(
-    const google::hercules::VendorConfig& in) {
+    const stratum::VendorConfig& in) {
   oc::Components::Component component;
 
   oc::Bcm::Chassis::Config bcm_config;
@@ -138,14 +138,14 @@ namespace {
       vval.mutable_cpu_queue()->set_value(limit.cpu_queue());
 
       switch (limit.purpose()) {
-        case google::hercules::GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER:
+        case stratum::GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER:
           vval.set_purpose(
               oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_CONTROLLER);
           break;
-        case google::hercules::GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW:
+        case stratum::GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW:
           vval.set_purpose(oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_SFLOW);
           break;
-        case google::hercules::GoogleConfig::BCM_KNET_INTF_PURPOSE_UNKNOWN:
+        case stratum::GoogleConfig::BCM_KNET_INTF_PURPOSE_UNKNOWN:
           vval.set_purpose(
               oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_UNKNOWN);
           break;
@@ -233,12 +233,12 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::SingletonPort
+//   stratum::SingletonPort
 // into:
 //   std::list<oc::Components::Component>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Components::Component>>
-SingletonPortToComponents(const google::hercules::SingletonPort& in) {
+SingletonPortToComponents(const stratum::SingletonPort& in) {
   std::list<oc::Components::Component> ret;
 
   std::string transceiver_name =
@@ -276,12 +276,12 @@ SingletonPortToComponents(const google::hercules::SingletonPort& in) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::SingletonPort
+//   stratum::SingletonPort
 // into:
 //   std::list<oc::Interfaces::Interface>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Interfaces::Interface>>
-SingletonPortToInterfaces(const google::hercules::SingletonPort& in) {
+SingletonPortToInterfaces(const stratum::SingletonPort& in) {
   oc::Interfaces::Interface singleton;
 
   singleton.mutable_name()->set_value(in.name());
@@ -353,12 +353,12 @@ SingletonPortToInterfaces(const google::hercules::SingletonPort& in) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::TrunkPOrt
+//   stratum::TrunkPOrt
 // into:
 //   std::list<oc::Components::Component>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Components::Component>> TrunkPortToComponents(
-    const google::hercules::TrunkPort& in) {
+    const stratum::TrunkPort& in) {
   std::list<oc::Components::Component> ret;
 
   oc::Components::Component port;
@@ -371,13 +371,13 @@ SingletonPortToInterfaces(const google::hercules::SingletonPort& in) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::TrunkPort
+//   stratum::TrunkPort
 // into:
 //   std::list<oc::Interfaces::Interface>
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<std::list<oc::Interfaces::Interface>> TrunkPortToInterfaces(
-    const google::hercules::ChassisConfig& root,
-    const google::hercules::TrunkPort& in) {
+    const stratum::ChassisConfig& root,
+    const stratum::TrunkPort& in) {
   std::list<oc::Interfaces::Interface> ret;
   oc::Interfaces::Interface trunk;
 
@@ -426,7 +426,7 @@ SingletonPortToInterfaces(const google::hercules::SingletonPort& in) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   google::hercules::ChassisConfig
+//   stratum::ChassisConfig
 // into:
 //   oc::Device
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +446,7 @@ SingletonPortToInterfaces(const google::hercules::SingletonPort& in) {
 
 ::util::StatusOr<oc::Device>
 HalConfigToOpenConfigProtoConverter::ChassisConfigToDevice(
-    const google::hercules::ChassisConfig& in) {
+    const stratum::ChassisConfig& in) {
   oc::Device to;
 
   // Handle 'description' field.

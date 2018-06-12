@@ -30,8 +30,8 @@ namespace hal {
 
 class OpenConfigToHalConfigProtoConverter {
  public:
-  // Converts oc::Device into google::hercules::ChassisConfig.
-  ::util::StatusOr<google::hercules::ChassisConfig> DeviceToChassisConfig(
+  // Converts oc::Device into stratum::ChassisConfig.
+  ::util::StatusOr<stratum::ChassisConfig> DeviceToChassisConfig(
       const oc::Device &in);
   // Checks if oc:Device proto is consistent.
   bool IsCorrectProtoDevice(const oc::Device &in);

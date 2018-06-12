@@ -47,7 +47,7 @@
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 
-DEFINE_string(url, google::hercules::kLocalHerculesUrl,
+DEFINE_string(url, stratum::kLocalHerculesUrl,
               "URL for Hercules server to connect to.");
 DEFINE_bool(push_open_config, false,
             "Issue gNMI Set RPC to Hercules to push OpenConfig-based config "
@@ -783,5 +783,5 @@ int Main(int argc, char** argv) {
 
 int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
-  return google::hercules::hal::stub::Main(argc, argv);
+  return stratum::hal::stub::Main(argc, argv);
 }

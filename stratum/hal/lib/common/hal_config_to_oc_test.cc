@@ -104,7 +104,7 @@ class HalToOcConfigTest : public ::testing::Test {
 
   // 'protected' members can be used by all TEST_Fs using this fixture.
 
-  google::hercules::ChassisConfig hal_config_proto_;
+  stratum::ChassisConfig hal_config_proto_;
 
   HalConfigToOpenConfigProtoConverter converter_;
 };
