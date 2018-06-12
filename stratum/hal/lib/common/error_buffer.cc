@@ -16,7 +16,9 @@
 #include "stratum/hal/lib/common/error_buffer.h"
 
 #include "gflags/gflags.h"
-#include "file/base/path.h"
+//#include "file/base/path.h"
+#include <string>
+#include <libgen.h>
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "absl/strings/str_cat.h"
@@ -28,16 +30,22 @@ DEFINE_int32(max_num_errors_to_track, 10,
 namespace stratum {
 namespace hal {
 
+std::string Basename(std::string path) {
+  //file::Basename(location.file_name())
+  char* c_path = strdup(path.c_str());
+  return basename(c_path);
+}
+
 void ErrorBuffer::AddError(const ::util::Status& error,
                            const std::string& msg_to_prepend,
                            gtl::source_location location) {
   absl::WriterMutexLock l(&lock_);
-  string error_message = absl::StrCat(
-      "(", file::Basename(location.file_name()), ":", location.line(),
+  std::string error_message = absl::StrCat(
+      "(", Basename(location.file_name()), ":", location.line(),
       "): ", msg_to_prepend, error.error_message());
   LOG(ERROR) << error_message;
   if (static_cast<int>(errors_.size()) > FLAGS_max_num_errors_to_track) return;
-  ::util::Status status = APPEND_ERROR(error.StripMessage()).SetNoLogging()
+  ::util::Status status = APPEND_ERROR(error.StripMessage())//.SetNoLogging() FIXME
                           << error_message;
   errors_.push_back(status);
 }

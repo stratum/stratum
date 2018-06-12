@@ -47,3 +47,8 @@ cc_test(
         "//stratum/glue:integral_types",
     ],
 )
+
+cc_library(
+    name = "source_location",
+    hdrs = ["source_location.h"],
+)
