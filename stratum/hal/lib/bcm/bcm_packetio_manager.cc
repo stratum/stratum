@@ -39,8 +39,8 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_int32(knet_rx_buf_size, 512 * 1024,
              "KNET RX socket buffer size (0 = kernel default).");

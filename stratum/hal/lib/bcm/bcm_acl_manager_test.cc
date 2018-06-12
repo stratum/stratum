@@ -35,7 +35,7 @@
 #include "util/gtl/flat_hash_set.h"
 #include "util/gtl/flat_map.h"
 #include "util/gtl/flat_set.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

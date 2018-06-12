@@ -22,7 +22,7 @@
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

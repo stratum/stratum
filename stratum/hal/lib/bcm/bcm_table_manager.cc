@@ -27,8 +27,8 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 namespace stratum {
 namespace hal {

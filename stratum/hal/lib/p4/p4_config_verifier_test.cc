@@ -30,7 +30,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "sandblaze/p4lang/p4/p4runtime.pb.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // P4ConfigVerifier flags to override for some tests.
 DECLARE_string(match_field_error_level);

@@ -21,7 +21,7 @@
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.pb.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

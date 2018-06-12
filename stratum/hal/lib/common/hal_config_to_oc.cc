@@ -22,7 +22,7 @@
 #include "stratum/lib/constants.h"
 #include "stratum/public/proto/yang_wrappers.pb.h"
 #include "absl/strings/substitute.h"
-//#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

@@ -135,7 +135,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -281,7 +281,7 @@ stratum_cc_library(
         "@com_google_absl//absl/time",
         "//stratum/glue/status",
         "//stratum/lib:macros",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -593,7 +593,7 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -640,7 +640,7 @@ stratum_cc_library(
         "//stratum/hal/lib/phal:phal_proto",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//util/gtl:stl_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 
@@ -744,7 +744,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//stratum/public/proto:hal_proto",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 

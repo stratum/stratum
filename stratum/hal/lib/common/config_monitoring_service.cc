@@ -27,7 +27,7 @@
 #include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",
               "The latest verified ChassisConfig proto pushed to the switch. "

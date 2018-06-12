@@ -20,7 +20,7 @@
 #include "stratum/glue/status/canonical_errors.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

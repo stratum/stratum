@@ -28,7 +28,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // This is the bit width of an assigned constant for any case where the
 // compiler does not report a bit width in the action descriptor.

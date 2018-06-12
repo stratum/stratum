@@ -20,7 +20,7 @@
 #include "stratum/public/proto/p4_table_defs.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

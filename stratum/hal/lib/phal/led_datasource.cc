@@ -19,7 +19,7 @@
 #include "stratum/hal/lib/phal/filepath_stringsource.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"

@@ -23,7 +23,7 @@
 #include "absl/strings/ascii.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // This flag allows unit tests to simplify their P4Info setup.  For example,
 // a test that only wants to verify something about a Counter can enable this

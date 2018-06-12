@@ -45,7 +45,7 @@
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
 #include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
 #include "util/gtl/flat_hash_map.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(url, stratum::kLocalHerculesUrl,
               "URL for Hercules server to connect to.");

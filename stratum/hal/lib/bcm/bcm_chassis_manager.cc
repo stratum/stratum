@@ -36,8 +36,8 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "util/gtl/flat_hash_map.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");

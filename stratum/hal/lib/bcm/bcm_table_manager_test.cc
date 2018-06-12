@@ -35,7 +35,7 @@
 #include "absl/strings/substitute.h"
 #include "sandblaze/p4lang/p4/config/p4info.pb.h"
 #include "util/gtl/flat_hash_map.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 using ::stratum::test_utils::EqualsProto;
 using ::stratum::test_utils::UnorderedEqualsProto;

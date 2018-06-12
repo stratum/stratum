@@ -25,7 +25,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "sandblaze/p4lang/p4/p4runtime.pb.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // These flags control the strictness of error reporting for certain
 // anomalies in the pipeline config.  Each flag has one of the following values:

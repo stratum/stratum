@@ -64,7 +64,7 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/public/proto:p4_annotation_proto",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -90,7 +90,7 @@ stratum_cc_test(
         "//util/gtl:flat_hash_set",
         "//util/gtl:flat_map",
         "//util/gtl:flat_set",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -120,7 +120,7 @@ stratum_cc_library(
         "//stratum/hal/lib/p4:p4_table_map_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -169,8 +169,8 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/public/proto:hal_proto",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
-        "//util/gtl:stl_util",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 
@@ -324,7 +324,7 @@ stratum_cc_library(
         "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -379,8 +379,8 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/public/proto:hal_proto",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
-        "//util/gtl:stl_util",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 
@@ -459,8 +459,8 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/lib:macros",
-        "//util/gtl:map_util",
-        "//util/gtl:stl_util",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 
@@ -490,8 +490,8 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
-        "//util/gtl:map_util",
-        "//util/gtl:stl_util",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 
@@ -619,7 +619,7 @@ stratum_cc_library(
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -678,8 +678,8 @@ stratum_cc_library(
         "//stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
-        "//util/gtl:map_util",
-        "//util/gtl:stl_util",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 
@@ -716,7 +716,7 @@ stratum_cc_test(
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -850,7 +850,7 @@ stratum_cc_library(
         "//stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 

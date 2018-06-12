@@ -19,7 +19,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_int32(udev_polling_interval_ms, 200,
              "Polling interval for checking udev events in the udev thread.");

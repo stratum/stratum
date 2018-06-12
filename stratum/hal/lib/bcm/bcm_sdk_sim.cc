@@ -28,8 +28,8 @@
 #include "stratum/lib/macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 #define MAX_SIM_ARGS 20
 #define MAX_WAIT_TIME_TO_TERM_SIM_SECS 3

@@ -36,6 +36,8 @@ proto_include = "."                         #proto_include = "."
 //testing/base/public:gunit_no_google3      @com_google_googletest//:gtest
 //testing/base/public:gunit_main_no_google3 @com_google_googletest//:gtest_main
 //util/regexp/re2                           @com_googlesource_code_re2//:re2
+//util/gtl:map_util                         //stratum/glue/gtl:map_util
+//util/gtl:stl_util                         //stratum/glue/gtl:stl_util
 
 
 C files permanent/one-time
@@ -50,6 +52,8 @@ C files copybara
 #include "testing/base/public/gunit.h"      #include "gtest/gtest.h"
 #include "testing/base/public/gunit-spi.h"  #include "gtest/gtest-spi.h"
 #include "testing/base/public/gmock.h"      #include "gmock/gmock.h"
+#include "util/gtl/map_util.h"              #include "stratum/glue/gtl/map_util.h"
+#include "util/gtl/stl_util.h"              #include "stratum/glue/gtl/stl_util.h"
 
 using base_logging::LogSeverity;            using google::LogSeverity;
 using base_logging::LogToStderr;            using google::LogToStderr;

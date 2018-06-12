@@ -62,7 +62,7 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -83,7 +83,7 @@ stratum_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -106,7 +106,7 @@ stratum_cc_library(
         "//stratum/public/proto:p4_annotation_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:flat_hash_set",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -309,7 +309,7 @@ stratum_cc_library(
         "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 

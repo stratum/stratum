@@ -43,8 +43,8 @@
 #include "stratum/lib/utils.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/flat_hash_set.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_int64(linkscan_interval_in_usec, 200000, "Linkscan interval in usecs.");
 DEFINE_int32(max_num_linkscan_writers, 10,
