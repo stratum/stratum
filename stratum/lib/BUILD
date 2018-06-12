@@ -77,6 +77,7 @@ stratum_cc_library(
     deps = [
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
+        "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/public/lib:error",

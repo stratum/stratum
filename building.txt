@@ -7,6 +7,8 @@ bazel test \
 //stratum/lib:macros_test \
 //stratum/lib:macros \
 //stratum/lib:constants \
+//stratum/lib:timer_daemon_test \
+//stratum/lib:timer_daemon \
 //stratum/lib/channel:test_main \
 //stratum/lib/channel:channel_mock \
 //stratum/lib/channel:channel \
@@ -32,8 +34,6 @@ exit 0
 //stratum/public/lib:error_test
 //stratum/lib:utils_test
 //stratum/lib:utils
-//stratum/lib:timer_daemon_test
-//stratum/lib:timer_daemon
 //stratum/lib/channel:channel_test
 //stratum/hal/lib/common:oc_to_hal_config_test
 //stratum/hal/lib/common:hal_config_to_oc_test
