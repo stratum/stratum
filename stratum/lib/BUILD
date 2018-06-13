@@ -106,7 +106,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
-        "@com_google_grpc//:grpc++",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
         "@com_github_googleapis//:status_proto",

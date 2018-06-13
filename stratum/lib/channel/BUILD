@@ -57,7 +57,7 @@ stratum_cc_library(
     ],
     deps = [
         ":channel",
-        "//testing/base/public:gmock_no_google3",
+        "@com_github_google_googletest//:gtest",
     ],
 )
 
