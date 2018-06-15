@@ -134,7 +134,7 @@ stratum_cc_library(
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
-        "//util/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -536,6 +536,7 @@ stratum_cc_library(
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "//stratum/glue/status",
+        "//stratum/glue:integral_types",
     ],
 )
 
@@ -591,8 +592,8 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:constants",
         "//stratum/lib:macros",
-        "//util/gtl:flat_hash_map",
-        "//util/gtl:flat_hash_set",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_set",
         "//stratum/glue/gtl:map_util",
     ],
 )
