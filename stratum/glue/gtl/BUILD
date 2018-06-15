@@ -52,3 +52,31 @@ cc_library(
     name = "source_location",
     hdrs = ["source_location.h"],
 )
+
+cc_library(
+    name = "flat_hash_map",
+    hdrs = ["flat_hash_map.h"],
+)
+
+cc_test(
+    name = "flat_hash_map_test",
+    srcs = ["flat_hash_map_test.cc"],
+    deps = [
+        ":flat_hash_map",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "flat_hash_set",
+    hdrs = ["flat_hash_set.h"],
+)
+
+cc_test(
+    name = "flat_hash_set_test",
+    srcs = ["flat_hash_set_test.cc"],
+    deps = [
+        ":flat_hash_set",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
