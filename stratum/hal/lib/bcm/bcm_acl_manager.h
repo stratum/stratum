@@ -28,7 +28,7 @@
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/glue/integral_types.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -98,7 +98,7 @@ class BcmAclManager {
  private:
   template <typename T>
   using BcmAclStageMap =
-      gtl::flat_hash_map<BcmAclStage, T, EnumHash<BcmAclStage>>;
+      stratum::gtl::flat_hash_map<BcmAclStage, T, EnumHash<BcmAclStage>>;
 
   // A physical ACL table represented by its component logical tables and the
   // ACL stage.
@@ -142,7 +142,7 @@ class BcmAclManager {
       const PhysicalAclTable& physical_acl_table) const;
 
   // Get the set of BcmField types supported by an AclTable.
-  ::util::StatusOr<gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
+  ::util::StatusOr<stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
   GetTableMatchTypes(const AclTable& table) const;
 
   // The last P4PipelineConfig pushed to the class.

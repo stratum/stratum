@@ -89,7 +89,7 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:openconfig_proto",
-        #"//util/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
         #"//util/time:clock",
     ],
@@ -161,7 +161,7 @@ cc_library(
         "//stratum/lib:timer_daemon",
         "//stratum/public/lib:error",
         "//stratum/public/proto:hal_proto",
-        "//util/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -228,7 +228,7 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
-        "//util/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_map",
     ],
 )
 
@@ -390,7 +390,7 @@ stratum_cc_library(
         "//stratum/lib:timer_daemon",
         "//stratum/lib/channel",
         "//stratum/public/proto:hal_proto",
-        #"//util/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )

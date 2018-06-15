@@ -34,7 +34,7 @@
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
 #include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 using ::stratum::test_utils::EqualsProto;
@@ -215,9 +215,9 @@ class BcmTableManagerTest : public ::testing::Test {
 
   // Insert a simple set of table entries and return a map from table_id to
   // table entry vector. Should only be run one time per node.
-  gtl::flat_hash_map<uint32, std::vector<::p4::TableEntry>>
+  stratum::gtl::flat_hash_map<uint32, std::vector<::p4::TableEntry>>
   InsertSimpleTableEntries(std::vector<uint32> tables, int entries_per_table) {
-    gtl::flat_hash_map<uint32, std::vector<::p4::TableEntry>> entry_map;
+    stratum::gtl::flat_hash_map<uint32, std::vector<::p4::TableEntry>> entry_map;
     if (!InsertSimpleActionProfileMember(kMemberId1).ok()) {
       return entry_map;
     }
@@ -640,7 +640,7 @@ enum Color { kRed = 1, kYellow, kGreen };
 constexpr int kNumColors = 3;
 
 struct ColorSet {
-  gtl::flat_hash_set<Color> colors;
+  stratum::gtl::flat_hash_set<Color> colors;
   std::size_t hash() {
     return (colors.count(kRed) << kRed) + (colors.count(kYellow) << kYellow) +
            (colors.count(kGreen) << kGreen);
@@ -791,7 +791,7 @@ void FillBcmCopyToCpuAction(uint32 cpu_queue, CopyDropColors params,
 
 const std::vector<ColorTestCase>& SendToCpuTestCases() {
   static const auto* test_cases = []() {
-    const gtl::flat_hash_set<Color> all = {kRed, kYellow, kGreen};
+    const stratum::gtl::flat_hash_set<Color> all = {kRed, kYellow, kGreen};
     auto* test_cases = new std::vector<ColorTestCase>();
     ColorTestCase test_case;
     // NO Drop
@@ -930,7 +930,7 @@ const std::vector<ColorTestCase>& SendToCpuTestCases() {
 
 const std::vector<ColorTestCase>& CopyToCpuTestCases() {
   static const auto* test_cases = []() {
-    const gtl::flat_hash_set<Color> all = {kRed, kYellow, kGreen};
+    const stratum::gtl::flat_hash_set<Color> all = {kRed, kYellow, kGreen};
     auto* test_cases = new std::vector<ColorTestCase>();
     ColorTestCase test_case;
     // NO Drop

@@ -31,8 +31,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/flat_hash_set.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_set.h"
 #include "util/gtl/flat_map.h"
 #include "util/gtl/flat_set.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -58,10 +58,10 @@ using ::testing::UnorderedElementsAreArray;
 using ::testing::status::IsOkAndHolds;
 using ::testing::status::StatusIs;
 
-using StageToTablesMap = gtl::flat_hash_map<P4Annotation::PipelineStage,
+using StageToTablesMap = stratum::gtl::flat_hash_map<P4Annotation::PipelineStage,
                                             std::vector<::p4::config::Table>>;
 using StageToControlBlockMap =
-    gtl::flat_hash_map<P4Annotation::PipelineStage, P4ControlBlock>;
+    stratum::gtl::flat_hash_map<P4Annotation::PipelineStage, P4ControlBlock>;
 
 // *****************************************************************************
 // Matchers (and supporting functions)
@@ -282,8 +282,8 @@ constexpr uint64 kNodeId = 123456;
 constexpr int kTableSize = 10;
 
 // Map of P4 field IDs to their type.
-const gtl::flat_hash_map<int, P4FieldType>& FieldIdToType() {
-  static const auto* field_type_map = new gtl::flat_hash_map<int, P4FieldType>({
+const stratum::gtl::flat_hash_map<int, P4FieldType>& FieldIdToType() {
+  static const auto* field_type_map = new stratum::gtl::flat_hash_map<int, P4FieldType>({
       {1, P4_FIELD_TYPE_ETH_SRC},
       {2, P4_FIELD_TYPE_ETH_DST},
       {3, P4_FIELD_TYPE_ETH_TYPE},
@@ -959,7 +959,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
   }
 
   // There should be 4 unique ids: Table[0], Table[1-3], Table[4], Table[5-7]
-  gtl::flat_hash_set<int> physical_table_ids = {
+  stratum::gtl::flat_hash_set<int> physical_table_ids = {
       acl_tables[0].PhysicalTableId()};
   EXPECT_TRUE(physical_table_ids.insert(acl_tables[1].PhysicalTableId()).second)
       << "Duplicate physical table ID found for table index 1.";
@@ -989,7 +989,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
   // exclusive fields. The table should have one of each unique field from the
   // input tables.
   ++bcm_table;
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> expected_fields;
+  stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> expected_fields;
   for (int i = 1; i < 4; ++i) {
     SCOPED_TRACE(absl::StrCat("Failed verification against table index ", i));
     expected_table = ifp_bcm_tables.at(tables[i].preamble().id());
@@ -999,7 +999,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
     }
   }
   // Compare the fields.
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
+  stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
   for (const BcmField& field : bcm_table->fields()) {
     bcm_fields.insert(field.type());
   }
@@ -1316,7 +1316,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_Reconfigure) {
         .WillOnce(Return(::util::OkStatus()));
   }
   // Expect all the tables to be removed from hardware and software.
-  gtl::flat_hash_set<int> physical_table_ids;
+  stratum::gtl::flat_hash_set<int> physical_table_ids;
   for (int table_id : bcm_table_manager_->GetAllAclTableIDs()) {
     ASSERT_OK_AND_ASSIGN(const AclTable* table,
                          bcm_table_manager_->GetReadOnlyAclTable(table_id));

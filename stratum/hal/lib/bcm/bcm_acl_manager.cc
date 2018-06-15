@@ -345,7 +345,7 @@ std::unique_ptr<BcmAclManager> BcmAclManager::CreateInstance(
     RETURN_IF_ERROR(DeleteTableEntry(*acl_table_entry));
   }
   // Remove all the ACL tables from hardware & software.
-  gtl::flat_hash_set<uint32> unique_physical_table_ids;
+  stratum::gtl::flat_hash_set<uint32> unique_physical_table_ids;
   for (uint32 acl_table_id : acl_table_ids) {
     ASSIGN_OR_RETURN(const AclTable* table,
                      bcm_table_manager_->GetReadOnlyAclTable(acl_table_id));
@@ -437,7 +437,7 @@ BcmAclManager::GeneratePhysicalAclTables(
                                        "table. This is likely a bug.";
   }
   // Get the field types.
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
+  stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
   for (const AclTable& table : physical_acl_table.logical_tables) {
     ASSIGN_OR_RETURN(auto fields, GetTableMatchTypes(table));
     for (const BcmField::Type field : fields) {
@@ -463,9 +463,9 @@ BcmAclManager::GeneratePhysicalAclTables(
   return install_result.ValueOrDie();
 }
 
-::util::StatusOr<gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
+::util::StatusOr<stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
 BcmAclManager::GetTableMatchTypes(const AclTable& table) const {
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
+  stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
   for (uint32 field_id : table.MatchFields()) {
     MappedField field;
     RETURN_IF_ERROR_WITH_APPEND(

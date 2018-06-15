@@ -29,7 +29,7 @@
 #include "stratum/public/lib/error.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {

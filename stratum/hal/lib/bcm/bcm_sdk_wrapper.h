@@ -30,7 +30,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -325,15 +325,15 @@ class BcmSdkWrapper : public BcmSdkInterface {
 
   // Map from unit number to the current MTU used for all the interfaces of
   // the unit.
-  gtl::flat_hash_map<int, int> unit_to_mtu_ GUARDED_BY(data_lock_);
+  stratum::gtl::flat_hash_map<int, int> unit_to_mtu_ GUARDED_BY(data_lock_);
 
   // Map from unit to chip type specified.
-  gtl::flat_hash_map<int, BcmChip::BcmChipType> unit_to_chip_type_
+  stratum::gtl::flat_hash_map<int, BcmChip::BcmChipType> unit_to_chip_type_
       GUARDED_BY(data_lock_);
 
   // Map from each unit to the BcmSocDevice data struct associated with that
   // unit.
-  gtl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
+  stratum::gtl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
       GUARDED_BY(data_lock_);
 
   // Pointer to BcmDiagShell singleton instance. Not owned by this class.

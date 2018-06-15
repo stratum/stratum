@@ -245,7 +245,7 @@ class AttributeGroupInternal : public AttributeGroup,
   // Store a count of the number of attributes in this group that are owned by
   // each datasource. Whenever one of these counts hits zero, we can remove the
   // corresponding datasource from this map.
-  gtl::flat_hash_map<std::shared_ptr<DataSource>, int> required_data_sources_;
+  stratum::gtl::flat_hash_map<std::shared_ptr<DataSource>, int> required_data_sources_;
   const protobuf::Descriptor* descriptor_;
   std::map<std::string, ManagedAttribute*> attributes_;
   std::map<std::string, std::unique_ptr<AttributeGroupInternal>> sub_groups_;

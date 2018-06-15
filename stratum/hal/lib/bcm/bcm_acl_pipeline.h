@@ -29,7 +29,7 @@
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
 #include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -177,7 +177,7 @@ class BcmAclPipeline {
   std::vector<PhysicalTableAsVector> logical_pipeline_;
   // Map of table references to the pipeline stage. This is equivalent to a map
   // from table references to PhysicalTableAsVectors.
-  gtl::flat_hash_map<P4ControlTableRef, int, P4ControlTableRefHash,
+  stratum::gtl::flat_hash_map<P4ControlTableRef, int, P4ControlTableRefHash,
                      P4ControlTableRefEq>
       pipeline_stages_;
 };

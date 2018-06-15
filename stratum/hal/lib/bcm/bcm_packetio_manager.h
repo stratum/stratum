@@ -41,7 +41,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -449,16 +449,16 @@ class BcmPacketioManager {
   // translate the port where a packet is received from to port_id as well as
   // to translate the port_id received on a TX packet to logical port to
   // transmit the packet.
-  gtl::flat_hash_map<int, uint64> logical_port_to_port_id_;
-  gtl::flat_hash_map<uint64, int> port_id_to_logical_port_;
+  stratum::gtl::flat_hash_map<int, uint64> logical_port_to_port_id_;
+  stratum::gtl::flat_hash_map<uint64, int> port_id_to_logical_port_;
 
   // Map from trunk ID to the set of member port IDs on the node this class is
   // mapped to. Used to pick a member randomly when packet is sent to a trunk.
-  gtl::flat_hash_map<uint64, std::set<uint64>> trunk_id_to_member_port_ids_;
+  stratum::gtl::flat_hash_map<uint64, std::set<uint64>> trunk_id_to_member_port_ids_;
 
   // Map from port ID to its parent trunk ID on the node this class is mapped
   // to. A port exists as a key iff it is part of a trunk.
-  gtl::flat_hash_map<uint64, uint64> port_id_to_parent_trunk_id_;
+  stratum::gtl::flat_hash_map<uint64, uint64> port_id_to_parent_trunk_id_;
 
   // Map from node ID to a copy of BcmRxConfig received from pushed config.
   // Updated only after the config push is successful to make sure at any point

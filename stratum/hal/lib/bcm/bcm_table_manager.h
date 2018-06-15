@@ -39,8 +39,8 @@
 #include "stratum/glue/integral_types.h"
 #include "sandblaze/p4lang/p4/config/p4info.pb.h"
 #include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/flat_hash_set.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_set.h"
 
 namespace stratum {
 namespace hal {
@@ -355,15 +355,15 @@ class BcmTableManager {
 
  private:
   // Typedefs for ::p4::TableEntry storage.
-  typedef gtl::flat_hash_set<::p4::TableEntry, TableEntryHash, TableEntryEqual>
+  typedef stratum::gtl::flat_hash_set<::p4::TableEntry, TableEntryHash, TableEntryEqual>
       TableEntrySet;
-  typedef gtl::flat_hash_map<uint32, TableEntrySet> TableIdToTableEntrySetMap;
+  typedef stratum::gtl::flat_hash_map<uint32, TableEntrySet> TableIdToTableEntrySetMap;
 
   // Typedefs for ::p4::ActionProfileMember storage.
-  typedef gtl::flat_hash_set<::p4::ActionProfileMember, ActionProfileMemberHash,
+  typedef stratum::gtl::flat_hash_set<::p4::ActionProfileMember, ActionProfileMemberHash,
                              ActionProfileMemberEqual>
       ActionProfileMemberSet;
-  typedef gtl::flat_hash_set<::p4::ActionProfileGroup, ActionProfileGroupHash,
+  typedef stratum::gtl::flat_hash_set<::p4::ActionProfileGroup, ActionProfileGroupHash,
                              ActionProfileGroupEqual>
       ActionProfileGroupSet;
 
@@ -476,12 +476,12 @@ class BcmTableManager {
 
   // Map from member_id given by the controller to its corresponding
   // BcmNonMultipathNexthopInfo for the programmed member.
-  gtl::flat_hash_map<uint32, BcmNonMultipathNexthopInfo*>
+  stratum::gtl::flat_hash_map<uint32, BcmNonMultipathNexthopInfo*>
       member_id_to_nexthop_info_;
 
   // Map from group_id given by the controller to its corresponding
   // BcmMultipathNexthopInfo for the programmed ECMP/WCMP group.
-  gtl::flat_hash_map<uint32, BcmMultipathNexthopInfo*>
+  stratum::gtl::flat_hash_map<uint32, BcmMultipathNexthopInfo*>
       group_id_to_nexthop_info_;
 
   // Set of ECMP/WCMP groups programmed on the node.
@@ -495,10 +495,10 @@ class BcmTableManager {
   // ***************************************************************************
 
   // Map of generic flow tables indexed by table id.
-  gtl::flat_hash_map<uint32, BcmFlowTable> generic_flow_tables_;
+  stratum::gtl::flat_hash_map<uint32, BcmFlowTable> generic_flow_tables_;
 
   // Map of ACL tables indexed by table id.
-  gtl::flat_hash_map<uint32, AclTable> acl_tables_;
+  stratum::gtl::flat_hash_map<uint32, AclTable> acl_tables_;
 
   // ***************************************************************************
   // Utilities

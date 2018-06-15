@@ -32,8 +32,8 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/flat_hash_set.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_set.h"
 
 namespace stratum {
 namespace hal {
@@ -228,8 +228,8 @@ class P4InfoManager {
     const std::string resource_type_;  // String used in errors and logs.
 
     // These maps facilitate lookups from P4 name/ID to resource type T.
-    gtl::flat_hash_map<uint32_t, const T*> id_to_resource_map_;
-    gtl::flat_hash_map<std::string, const T*> name_to_resource_map_;
+    stratum::gtl::flat_hash_map<uint32_t, const T*> id_to_resource_map_;
+    stratum::gtl::flat_hash_map<std::string, const T*> name_to_resource_map_;
   };
 
   // Does common processing of Preamble fields embedded in any resource,
@@ -260,8 +260,8 @@ class P4InfoManager {
 
   // These containers verify that all P4 names and IDs are unique across all
   // types of resources that have an embedded Preamble.
-  gtl::flat_hash_set<uint32> all_resource_ids_;
-  gtl::flat_hash_map<std::string, const p4::config::Preamble*>
+  stratum::gtl::flat_hash_set<uint32> all_resource_ids_;
+  stratum::gtl::flat_hash_map<std::string, const p4::config::Preamble*>
       all_resource_names_;
 };
 

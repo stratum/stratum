@@ -35,7 +35,7 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 
@@ -518,7 +518,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   }
 
   // Validate the speed_bps and channels for all (slot, port) pairs.
-  gtl::flat_hash_map<uint64, std::set<int>> speed_bps_to_expected_channels = {
+  stratum::gtl::flat_hash_map<uint64, std::set<int>> speed_bps_to_expected_channels = {
       {kHundredGigBps, {0}},
       {kFortyGigBps, {0}},
       {kFiftyGigBps, {1, 2}},

@@ -106,12 +106,12 @@ class UdevEventHandler {
   struct UdevMonitorInfo {
     std::unique_ptr<UdevMonitor> monitor;
     // Maps device paths onto the most recent associated udev event.
-    gtl::flat_hash_map<std::string, Udev::Event> dev_path_to_last_action;
-    gtl::flat_hash_map<std::string, UdevEventCallback*> dev_path_to_callback;
+    stratum::gtl::flat_hash_map<std::string, Udev::Event> dev_path_to_last_action;
+    stratum::gtl::flat_hash_map<std::string, UdevEventCallback*> dev_path_to_callback;
     // This set is used to temporarily hold device paths that have seen some
     // sort of action. If a dev_path in this table has a corresponding entry in
     // dev_path_to_callback, the callback will be called.
-    gtl::flat_hash_set<std::string> dev_paths_to_update;
+    stratum::gtl::flat_hash_set<std::string> dev_paths_to_update;
   };
   // Initializes everything necessary to listen for udev events.
   ::util::Status InitializeUdev();
@@ -151,7 +151,7 @@ class UdevEventHandler {
   absl::Mutex udev_lock_;
   absl::CondVar udev_cond_var_;
   std::unique_ptr<Udev> udev_ GUARDED_BY(udev_lock_);
-  gtl::flat_hash_map<std::string, UdevMonitorInfo> udev_monitors_
+  stratum::gtl::flat_hash_map<std::string, UdevMonitorInfo> udev_monitors_
       GUARDED_BY(udev_lock_);
   // This pointer is set whenever we are currently executing a callback.
   // This lets us freely call (Un)RegisterEventCallback for any callback except

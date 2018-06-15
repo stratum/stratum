@@ -36,7 +36,7 @@
 #include "stratum/lib/security/credentials_manager.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -152,7 +152,7 @@ class Hal final {
   // Map from signals for which we registered handlers to their old handlers.
   // This map is used to restore the signal handlers to their previous state
   // in the class destructor.
-  gtl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
+  stratum::gtl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
 
   // The lock used for initialization of the singleton.
   static absl::Mutex init_lock_;

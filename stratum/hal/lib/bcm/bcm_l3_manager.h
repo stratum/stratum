@@ -29,7 +29,7 @@
 #include "stratum/public/proto/hal.grpc.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -172,7 +172,7 @@ class BcmL3Manager {
   // this router intf).
   // TODO: We keep this map as there is no good way to get this
   // directly from SDK. Investigate.
-  gtl::flat_hash_map<int, uint32> router_intf_ref_count_;
+  stratum::gtl::flat_hash_map<int, uint32> router_intf_ref_count_;
 
   // Pointer to a BcmSdkInterface implementation that wraps all the SDK calls.
   BcmSdkInterface* bcm_sdk_interface_;  // not owned by this class.

@@ -36,15 +36,15 @@ namespace bcm {
 
 namespace {
 
-const gtl::flat_hash_set<P4MeterColor>& AllColors() {
-  static auto* all_colors = new gtl::flat_hash_set<P4MeterColor>(
+const stratum::gtl::flat_hash_set<P4MeterColor>& AllColors() {
+  static auto* all_colors = new stratum::gtl::flat_hash_set<P4MeterColor>(
       {P4_METER_GREEN, P4_METER_YELLOW, P4_METER_RED});
   return *all_colors;
 }
 
 template <class MessageType>
 inline void EraseReferencesFromRepeatedField(
-    const gtl::flat_hash_set<const ::google::protobuf::Message*> references,
+    const stratum::gtl::flat_hash_set<const ::google::protobuf::Message*> references,
     ::google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
   repeated_field->erase(
       std::remove_if(repeated_field->begin(), repeated_field->end(),
@@ -130,7 +130,7 @@ void FillBcmField(BcmField::Type type, const MappedField& source,
 // (CommonFlowEntry field type --> BCM field type).
 BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
   static const auto* conversion_map =
-      new gtl::flat_hash_map<P4FieldType, BcmField::Type,
+      new stratum::gtl::flat_hash_map<P4FieldType, BcmField::Type,
                              EnumHash<P4FieldType>>({
           {P4_FIELD_TYPE_UNKNOWN, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_ETH_SRC, BcmField::ETH_SRC},
@@ -199,7 +199,7 @@ void AddBcmActionColorParam(P4MeterColor color, BcmAction* bcm_action) {
 // (CommonFlowEntry color --> BCM color).
 bool P4ColorToBcm(P4MeterColor p4_color, BcmAction::Param::Color* bcm_color) {
   static const auto* color_map =
-      new gtl::flat_hash_map<P4MeterColor, BcmAction::Param::Color>{
+      new stratum::gtl::flat_hash_map<P4MeterColor, BcmAction::Param::Color>{
           {P4_METER_GREEN, BcmAction::Param::GREEN},
           {P4_METER_YELLOW, BcmAction::Param::YELLOW},
           {P4_METER_RED, BcmAction::Param::RED},
@@ -1542,7 +1542,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
                                             "both be present as actions.";
   }
   // Grab the set of colors for the copy action.
-  gtl::flat_hash_set<P4MeterColor> copy_colors;
+  stratum::gtl::flat_hash_set<P4MeterColor> copy_colors;
   if (clone_action) {
     for (int color : clone_action->meter_colors()) {
       copy_colors.insert(static_cast<P4MeterColor>(color));
@@ -1556,7 +1556,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     copy_colors = AllColors();
   }
   // Grab the set of colors for the drop action.
-  gtl::flat_hash_set<P4MeterColor> drop_colors;
+  stratum::gtl::flat_hash_set<P4MeterColor> drop_colors;
   if (drop_action) {
     for (int color : drop_action->meter_colors()) {
       drop_colors.insert(static_cast<P4MeterColor>(color));
@@ -1633,7 +1633,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   }
 
   // Remove the used actions.
-  gtl::flat_hash_set<const ::google::protobuf::Message*> messages = {
+  stratum::gtl::flat_hash_set<const ::google::protobuf::Message*> messages = {
       cpu_queue_action, egress_to_cpu_action, clone_action, drop_action,
       clone_port_action};
   messages.erase(nullptr);
@@ -1718,7 +1718,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   bcm_actions->push_back(bcm_egress_port_action);
 
   // Remove the used actions.
-  gtl::flat_hash_set<const ::google::protobuf::Message*> messages = {
+  stratum::gtl::flat_hash_set<const ::google::protobuf::Message*> messages = {
       eth_source_action, eth_dest_action, egress_port_action};
   EraseReferencesFromRepeatedField(messages,
                                    action_function->mutable_modify_fields());

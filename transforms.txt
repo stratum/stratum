@@ -38,6 +38,8 @@ proto_include = "."                         #proto_include = "."
 //util/regexp/re2                           @com_googlesource_code_re2//:re2
 //util/gtl:map_util                         //stratum/glue/gtl:map_util
 //util/gtl:stl_util                         //stratum/glue/gtl:stl_util
+//util/gtl:flat_hash_map                    //stratum/glue/gtl:flat_hash_map
+//util/gtl:flat_hash_set                    //stratum/glue/gtl:flat_hash_set
 
 
 C files permanent/one-time
@@ -54,6 +56,8 @@ C files copybara
 #include "testing/base/public/gmock.h"      #include "gmock/gmock.h"
 #include "util/gtl/map_util.h"              #include "stratum/glue/gtl/map_util.h"
 #include "util/gtl/stl_util.h"              #include "stratum/glue/gtl/stl_util.h"
+#include "util/gtl/flat_hash_map.h"         #include "stratum/glue/gtl/flat_hash_map.h"
+#include "util/gtl/flat_hash_set.h"         #include "stratum/glue/gtl/flat_hash_set.h"
                                             #include "google/protobuf/descriptor.h"
 
 using base_logging::LogSeverity;            using google::LogSeverity;
@@ -66,3 +70,6 @@ using base_logging::WARNING;                using google::WARNING;
 using base::ProgramInvocationShortName;     using google::ProgramInvocationShortName;
 
 (absl::kConstInit)                          /*absl::kConstInit*/
+
+gtl::flat_hash_map                          stratum::gtl::flat_hash_map
+gtl::flat_hash_set                          stratum::gtl::flat_hash_set

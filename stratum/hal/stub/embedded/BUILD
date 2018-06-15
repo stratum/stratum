@@ -61,7 +61,7 @@ stratum_cc_binary(
         "//stratum/lib:utils",
         "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:openconfig_proto",
-        "//util/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )

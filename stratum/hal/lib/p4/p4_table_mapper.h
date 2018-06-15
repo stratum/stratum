@@ -36,16 +36,16 @@
 #include "stratum/public/proto/hal.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
 #include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
 
 // Packet in (out) metadata map types.
-typedef gtl::flat_hash_map<P4FieldType, std::pair<uint32, int>,
+typedef stratum::gtl::flat_hash_map<P4FieldType, std::pair<uint32, int>,
                            EnumHash<P4FieldType>>
     MetadataTypeToIdBitwidthMap;
-typedef gtl::flat_hash_map<uint32, std::pair<P4FieldType, int>>
+typedef stratum::gtl::flat_hash_map<uint32, std::pair<P4FieldType, int>>
     MetadataIdToTypeBitwidthMap;
 
 // The P4TableMapper is responsible for mapping P4 forwarding entries (e.g
@@ -264,7 +264,7 @@ class P4TableMapper {
   // descriptor is possible with object IDs from a TableWriteRequest RPC.
   // P4 tables and actions have global object IDs, i.e. every table and action
   // in a given P4Info specification has a unique ID.
-  typedef gtl::flat_hash_map<int, const P4TableMapValue*> P4GlobalIDTableMap;
+  typedef stratum::gtl::flat_hash_map<int, const P4TableMapValue*> P4GlobalIDTableMap;
 
   // These types support a map for field value conversion:
   // P4FieldConvertKey - IDs in P4Info MatchFields have unique scope within the
@@ -371,7 +371,7 @@ class P4TableMapper {
     // fields or pass to other actions.  The action ID is the key, and the
     // value is a container of entries that define the constant assignments.
     typedef std::vector<P4ActionParamEntry> P4ActionConstants;
-    typedef gtl::flat_hash_map<int, P4ActionConstants> P4ActionConstantMap;
+    typedef stratum::gtl::flat_hash_map<int, P4ActionConstants> P4ActionConstantMap;
 
     // Updates param_entry with target header field assignments from
     // param_entry's param_descriptor.  In most cases, the param_descriptor

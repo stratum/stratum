@@ -27,7 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
@@ -1890,7 +1890,7 @@ void YangParseTree::ProcessPushedConfig(
   absl::WriterMutexLock r(&root_access_lock_);
 
   // Translation from node ID to an object describing the node.
-  gtl::flat_hash_map<uint64, const Node*> node_id_to_node;
+  stratum::gtl::flat_hash_map<uint64, const Node*> node_id_to_node;
   for (const auto& node : change.new_config_.nodes()) {
     node_id_to_node[node.id()] = &node;
   }
@@ -1899,7 +1899,7 @@ void YangParseTree::ProcessPushedConfig(
   const NodeConfigParams empty_node_config;
 
   // Translation from port ID to node ID.
-  gtl::flat_hash_map<uint64, uint64> port_id_to_node_id;
+  stratum::gtl::flat_hash_map<uint64, uint64> port_id_to_node_id;
   for (const auto& singleton : change.new_config_.singleton_ports()) {
     const NodeConfigParams& node_config =
         node_id_to_node[singleton.node()]

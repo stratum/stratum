@@ -44,7 +44,7 @@
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
 #include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(url, stratum::kLocalHerculesUrl,
@@ -589,7 +589,7 @@ class HalServiceClient {
     req.mutable_subscribe()->set_mode(::gnmi::SubscriptionList::ONCE);
 
     // A map translating port ID into port name.
-    gtl::flat_hash_map<uint64, string> id_to_name;
+    stratum::gtl::flat_hash_map<uint64, string> id_to_name;
 
     LOG(INFO) << "Sending ONCE subscription: " << req.ShortDebugString();
     if (!stream->Write(req)) {

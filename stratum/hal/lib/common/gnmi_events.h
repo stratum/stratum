@@ -24,7 +24,7 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
@@ -460,7 +460,7 @@ class EventHandlerListBase {
   mutable absl::Mutex access_lock_;
 
   // A list of event handlers that are interested in this ('E') type of events.
-  gtl::flat_hash_map<EventHandlerRecord*, EventHandlerRecordPtr> handlers_
+  stratum::gtl::flat_hash_map<EventHandlerRecord*, EventHandlerRecordPtr> handlers_
       GUARDED_BY(access_lock_);
 };
 
