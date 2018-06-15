@@ -21,6 +21,12 @@ remote_workspace(
     remote = "https://github.com/grpc/grpc",
     tag = "1.12.1",
 )
+# TODO this is a hack for the pubref rules
+remote_workspace(
+    name = "com_google_grpc",
+    remote = "https://github.com/grpc/grpc",
+    tag = "1.12.1",
+)
 
 # ----- protoc w/ gRPC compiler -----
 #FIXME update to upstream when pull requests are merged

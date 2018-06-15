@@ -37,7 +37,7 @@ stratum_cc_library(
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
     ],
 )
@@ -77,7 +77,7 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
         "@com_github_openconfig_gnmi//:gnmi_proto",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -117,7 +117,7 @@ stratum_cc_test(
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
         "@com_github_openconfig_gnmi//:gnmi_proto",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:constants",
         "//stratum/lib:timer_daemon",
@@ -134,7 +134,7 @@ cc_library(
     deps = [
         "@com_google_googletest//:gtest",
         "@com_github_openconfig_gnmi//:gnmi_proto",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
     ],
 )
 
@@ -221,7 +221,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
@@ -274,7 +274,7 @@ stratum_cc_library(
         "@com_google_protobuf//:protobuf",
         "@com_github_p4lang_PI//:p4info_proto",
         "@com_github_p4lang_PI//:p4runtime_proto",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
         "@com_github_googleapis//:status_proto",
         "//stratum/glue:logging",
@@ -309,7 +309,7 @@ stratum_cc_test(
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
@@ -360,7 +360,7 @@ stratum_cc_library(
     hdrs = ["server_writer_wrapper.h"],
     deps = [
         ":writer_interface",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
     ],
 )
 

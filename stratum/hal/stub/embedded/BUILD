@@ -49,7 +49,7 @@ stratum_cc_binary(
         "@com_github_p4lang_PI//:code_proto",
         "@com_github_p4lang_PI//:p4runtime_proto",
         "@com_github_p4lang_PI//:util",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         #FIXME "//sandblaze/prebuilt/openssl",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
