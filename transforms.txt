@@ -74,3 +74,7 @@ using base::ProgramInvocationShortName;     using google::ProgramInvocationShort
 gtl::flat_hash_map                          stratum::gtl::flat_hash_map
 gtl::flat_hash_set                          stratum::gtl::flat_hash_set
 protobuf::                                  google::protobuf::
+
+.proto files copybara
+---------------------
+import "p4/                                 import "github.com/p4lang/PI/p4/

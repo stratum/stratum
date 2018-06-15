@@ -34,8 +34,13 @@ bazel test \
 //stratum/hal/lib/common:error_buffer_test \
 //stratum/hal/lib/common:channel_writer_wrapper \
 //stratum/hal/lib/common:conversion \
+//stratum/hal/lib/common:gnmi_publisher_mock \
 //stratum/hal/lib/phal:attribute_database_interface \
 //stratum/hal/lib/phal:managed_attribute \
+//stratum/hal/lib/p4:common_flow_entry_proto \
+//stratum/hal/lib/p4:p4_control_proto \
+//stratum/hal/lib/p4:p4_pipeline_config_proto \
+//stratum/hal/lib/p4:p4_table_map_proto \
 
 exit 0
 
@@ -54,7 +59,6 @@ exit 0
 //stratum/hal/lib/common:p4_service_test
 //stratum/hal/lib/common:config_monitoring_service
 //stratum/hal/lib/common:config_monitoring_service_test
-//stratum/hal/lib/common:gnmi_publisher_mock
 //stratum/hal/lib/common:hal
 //stratum/hal/lib/common:hal_test
 
@@ -125,19 +129,14 @@ exit 0
 //stratum/hal/lib/bcm:utils
 //stratum/hal/lib/bcm:utils_test
 
-//stratum/hal/lib/p4:common_flow_entry_proto
-//stratum/hal/lib/p4:common_flow_entry_proto.pb
+
 //stratum/hal/lib/p4:p4_config_verifier
 //stratum/hal/lib/p4:p4_config_verifier_test
-//stratum/hal/lib/p4:p4_control_proto
-//stratum/hal/lib/p4:p4_control_proto.pb
 //stratum/hal/lib/p4:p4_info_manager
 //stratum/hal/lib/p4:p4_info_manager_mock
 //stratum/hal/lib/p4:p4_info_manager_test
 //stratum/hal/lib/p4:p4_match_key
 //stratum/hal/lib/p4:p4_match_key_test
-//stratum/hal/lib/p4:p4_pipeline_config_proto
-//stratum/hal/lib/p4:p4_pipeline_config_proto.pb
 //stratum/hal/lib/p4:p4_runtime_interface
 //stratum/hal/lib/p4:p4_runtime_mock
 //stratum/hal/lib/p4:p4_runtime_real
@@ -146,8 +145,6 @@ exit 0
 //stratum/hal/lib/p4:p4_table_mapper
 //stratum/hal/lib/p4:p4_table_mapper_mock
 //stratum/hal/lib/p4:p4_table_mapper_test
-//stratum/hal/lib/p4:p4_table_map_proto
-//stratum/hal/lib/p4:p4_table_map_proto.pb
 //stratum/hal/lib/p4:p4_write_request_differ
 //stratum/hal/lib/p4:p4_write_request_differ_test
 //stratum/hal/lib/p4:testdata

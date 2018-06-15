@@ -28,7 +28,7 @@ package stratum.hal;
 import "stratum/hal/lib/p4/common_flow_entry.proto";
 import "stratum/public/proto/p4_annotation.proto";
 import "stratum/public/proto/p4_table_defs.proto";
-import "p4/config/p4info.proto";
+import "github.com/p4lang/PI/p4/config/v1/p4info.proto";
 
 // Each P4 object type has "descriptor" data to help define the mapping from
 // runtime RPC to HAL flow entry.  Each descriptor contains the following
@@ -127,14 +127,14 @@ message P4FieldDescriptor {
   }
 
   // This message is a pseudo-map for field value conversions.  (A real proto
-  // map<p4.config.MatchField.MatchType, P4FieldValueConversion> is not allowed
+  // map<p4.config.v1.MatchField.MatchType, P4FieldValueConversion> is not allowed
   // because enums can't be keys.)  Match field conversions depend on table
   // context.  The same field may be an EXACT match in one table, an LPM match
   // in another table, or even a TERNARY match in a third table.  The table's
   // P4Info match_type for the field becomes the key to get the conversion
   // value.
   message P4FieldConversionEntry {
-    p4.config.MatchField.MatchType match_type = 1;
+    p4.config.v1.MatchField.MatchType match_type = 1;
     P4FieldValueConversion conversion = 2;
 
     // TODO: This per-conversion width is replaced by the overall

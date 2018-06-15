@@ -26,7 +26,7 @@ package stratum.hal;
 
 import "stratum/public/proto/p4_table_defs.proto";
 import "stratum/public/proto/p4_annotation.proto";
-import "p4/p4runtime.proto";
+import "github.com/p4lang/PI/p4/v1/p4runtime.proto";
 
 // This message encapsulates the info regarding a P4 table. Not all the field
 // are required.
@@ -73,7 +73,7 @@ message MappedField {
       fixed32 u32 = 1;
       fixed64 u64 = 2;
       bytes b = 3;
-      p4.FieldMatch raw_pi_match = 4;
+      p4.v1.FieldMatch raw_pi_match = 4;
     }
   };
   P4FieldType type = 1;

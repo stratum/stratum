@@ -22,7 +22,7 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "p4/p4runtime.proto";
+import "github.com/p4lang/PI/p4/v1/p4runtime.proto";
 import "stratum/hal/lib/p4/p4_control.proto";
 import "stratum/hal/lib/p4/p4_table_map.proto";
 import "stratum/public/proto/p4_annotation.proto";
@@ -41,5 +41,5 @@ message P4PipelineConfig {
   map<string, P4TableMapValue> table_map = 1;
   repeated P4Control p4_controls = 2;
   repeated P4Annotation.PipelineStage idle_pipeline_stages = 3;
-  p4.WriteRequest static_table_entries = 4;
+  p4.v1.WriteRequest static_table_entries = 4;
 }
