@@ -31,6 +31,7 @@
 DECLARE_bool(skip_p4_min_objects_check);
 
 using ::testing::HasSubstr;
+using gflags::FlagSaver;
 
 namespace stratum {
 namespace hal {
