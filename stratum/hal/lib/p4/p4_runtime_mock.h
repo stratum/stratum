@@ -28,7 +28,7 @@ namespace hal {
 
 class P4RuntimeMock : public P4RuntimeInterface {
  public:
-  MOCK_METHOD1(GetResourceTypeFromID, pi::proto::util::P4ResourceType(
+  MOCK_METHOD1(GetResourceTypeFromID, p4::config::v1::P4Ids::Prefix(
       pi::proto::util::p4_id_t object_id));
 };
 

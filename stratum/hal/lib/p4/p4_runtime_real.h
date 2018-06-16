@@ -30,7 +30,7 @@ class P4RuntimeReal : P4RuntimeInterface {
  public:
   virtual ~P4RuntimeReal() {}
 
-  pi::proto::util::P4ResourceType GetResourceTypeFromID(
+  p4::config::v1::P4Ids::Prefix GetResourceTypeFromID(
       pi::proto::util::p4_id_t object_id) override;
 
   // Factory method for getting the P4RuntimeReal instance; creates a new

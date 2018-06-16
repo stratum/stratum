@@ -20,7 +20,7 @@
 namespace stratum {
 namespace hal {
 
-pi::proto::util::P4ResourceType P4RuntimeReal::GetResourceTypeFromID(
+p4::config::v1::P4Ids::Prefix P4RuntimeReal::GetResourceTypeFromID(
     pi::proto::util::p4_id_t object_id) {
   return pi::proto::util::resource_type_from_id(object_id);
 }

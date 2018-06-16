@@ -27,7 +27,7 @@
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::_;
-using pi::proto::util::P4ResourceType;
+using p4::config::v1::P4Ids;
 
 namespace stratum {
 namespace hal {
@@ -50,7 +50,7 @@ class PrintP4ObjectIDTest : public testing::Test {
 namespace {
 
 // P4 uses upper 8-bits of 32 bits to store the type.
-int MakeP4ID(P4ResourceType resource_type, int base_id) {
+int MakeP4ID(P4Ids::Prefix resource_type, int base_id) {
   return (static_cast<int>(resource_type) << 24) + base_id;
 }
 
@@ -58,9 +58,9 @@ int MakeP4ID(P4ResourceType resource_type, int base_id) {
 
 TEST_F(PrintP4ObjectIDTest, TestTableID) {
   const int kBaseID = 12345;
-  const int test_p4_id = MakeP4ID(P4ResourceType::TABLE, kBaseID);
+  const int test_p4_id = MakeP4ID(P4Ids::TABLE, kBaseID);
   EXPECT_CALL(mock_api_, GetResourceTypeFromID(_))
-      .WillOnce(Return(P4ResourceType::TABLE));
+      .WillOnce(Return(P4Ids::TABLE));
   const std::string printed_id = PrintP4ObjectID(test_p4_id);
   EXPECT_FALSE(printed_id.empty());
   const std::string expected_print =
@@ -70,9 +70,9 @@ TEST_F(PrintP4ObjectIDTest, TestTableID) {
 
 TEST_F(PrintP4ObjectIDTest, TestActionID) {
   const int kBaseID = 54321;
-  const int test_p4_id = MakeP4ID(P4ResourceType::ACTION, kBaseID);
+  const int test_p4_id = MakeP4ID(P4Ids::ACTION, kBaseID);
   EXPECT_CALL(mock_api_, GetResourceTypeFromID(_))
-      .WillOnce(Return(P4ResourceType::ACTION));
+      .WillOnce(Return(P4Ids::ACTION));
   const std::string printed_id = PrintP4ObjectID(test_p4_id);
   EXPECT_FALSE(printed_id.empty());
   const std::string expected_print =
@@ -82,9 +82,9 @@ TEST_F(PrintP4ObjectIDTest, TestActionID) {
 
 TEST_F(PrintP4ObjectIDTest, TestCounterID) {
   const int kBaseID = 0x13579b;
-  const int test_p4_id = MakeP4ID(P4ResourceType::COUNTER, kBaseID);
+  const int test_p4_id = MakeP4ID(P4Ids::COUNTER, kBaseID);
   EXPECT_CALL(mock_api_, GetResourceTypeFromID(_))
-      .WillOnce(Return(P4ResourceType::COUNTER));
+      .WillOnce(Return(P4Ids::COUNTER));
   const std::string printed_id = PrintP4ObjectID(test_p4_id);
   EXPECT_FALSE(printed_id.empty());
   const std::string expected_print =
@@ -92,10 +92,10 @@ TEST_F(PrintP4ObjectIDTest, TestCounterID) {
   EXPECT_THAT(printed_id, HasSubstr(expected_print));
 }
 
-TEST_F(PrintP4ObjectIDTest, TestInvalidID) {
-  const int test_p4_id = MakeP4ID(P4ResourceType::INVALID, 1);
+TEST_F(PrintP4ObjectIDTest, TestUnspecificedID) {
+  const int test_p4_id = MakeP4ID(P4Ids::UNSPECIFIED, 1);
   EXPECT_CALL(mock_api_, GetResourceTypeFromID(_))
-      .WillOnce(Return(P4ResourceType::INVALID));
+      .WillOnce(Return(P4Ids::UNSPECIFIED));
   const std::string printed_id = PrintP4ObjectID(test_p4_id);
   EXPECT_FALSE(printed_id.empty());
   EXPECT_THAT(printed_id, HasSubstr("INVALID/"));

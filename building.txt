@@ -47,6 +47,8 @@ bazel test \
 //stratum/hal/lib/p4:testdata \
 //stratum/hal/lib/p4:p4_match_key \
 //stratum/hal/lib/p4:p4_runtime_interface \
+//stratum/hal/lib/p4:utils \
+//stratum/hal/lib/p4:utils_test \
 
 exit 0
 
@@ -82,6 +84,19 @@ exit 0
 //stratum/lib/security:credentials_manager
 //stratum/lib/security:credentials_manager_mock
 //stratum/lib/security:test_main
+
+//stratum/hal/lib/p4:p4_config_verifier_test
+//stratum/hal/lib/p4:p4_info_manager
+//stratum/hal/lib/p4:p4_info_manager_mock
+//stratum/hal/lib/p4:p4_info_manager_test
+//stratum/hal/lib/p4:p4_match_key_test
+//stratum/hal/lib/p4:p4_runtime_mock
+//stratum/hal/lib/p4:p4_runtime_real
+//stratum/hal/lib/p4:p4_static_entry_mapper_mock
+//stratum/hal/lib/p4:p4_static_entry_mapper_test
+//stratum/hal/lib/p4:p4_table_mapper
+//stratum/hal/lib/p4:p4_table_mapper_mock
+//stratum/hal/lib/p4:p4_table_mapper_test
 
 #--------------- TBD --------------------
 //stratum/hal/bin/bcm/sim:stratum_sim
@@ -134,21 +149,6 @@ exit 0
 //stratum/hal/lib/bcm:test_main
 //stratum/hal/lib/bcm:utils
 //stratum/hal/lib/bcm:utils_test
-
-//stratum/hal/lib/p4:utils
-//stratum/hal/lib/p4:utils_test
-//stratum/hal/lib/p4:p4_config_verifier_test
-//stratum/hal/lib/p4:p4_info_manager
-//stratum/hal/lib/p4:p4_info_manager_mock
-//stratum/hal/lib/p4:p4_info_manager_test
-//stratum/hal/lib/p4:p4_match_key_test
-//stratum/hal/lib/p4:p4_runtime_mock
-//stratum/hal/lib/p4:p4_runtime_real
-//stratum/hal/lib/p4:p4_static_entry_mapper_mock
-//stratum/hal/lib/p4:p4_static_entry_mapper_test
-//stratum/hal/lib/p4:p4_table_mapper
-//stratum/hal/lib/p4:p4_table_mapper_mock
-//stratum/hal/lib/p4:p4_table_mapper_test
 
 //stratum/hal/lib/phal:attribute_database
 //stratum/hal/lib/phal:attribute_database_mock

@@ -18,12 +18,13 @@
 #include "stratum/hal/lib/p4/utils.h"
 
 #include "stratum/hal/lib/p4/p4_runtime_interface.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
 #include "absl/strings/substitute.h"
 
 namespace stratum {
 namespace hal {
 
-using pi::proto::util::P4ResourceType;
+using p4::config::v1::P4Ids;
 
 // Decodes a P4 object ID into a human-readable form.
 std::string PrintP4ObjectID(int object_id) {
@@ -38,25 +39,25 @@ std::string PrintP4ObjectID(int object_id) {
   // some deprecated P4-14 objects may appear as "INVALID".
   std::string resource_name = "INVALID";
   if (p4_api != nullptr) {
-    P4ResourceType resource_type = p4_api->GetResourceTypeFromID(
+    P4Ids::Prefix resource_type = p4_api->GetResourceTypeFromID(
         static_cast<pi::proto::util::p4_id_t>(object_id));
     switch (resource_type) {
-      case P4ResourceType::INVALID:
-      case P4ResourceType::INVALID_MAX:
+      case P4Ids::UNSPECIFIED:
+      case P4Ids::MAX:
         break;
-      case P4ResourceType::ACTION:
+      case P4Ids::ACTION:
         resource_name = "ACTION";
         break;
-      case P4ResourceType::TABLE:
+      case P4Ids::TABLE:
         resource_name = "TABLE";
         break;
-      case P4ResourceType::ACTION_PROFILE:
+      case P4Ids::ACTION_PROFILE:
         resource_name = "ACTION_PROFILE";
         break;
-      case P4ResourceType::COUNTER:
+      case P4Ids::COUNTER:
         resource_name = "COUNTER";
         break;
-      case P4ResourceType::METER:
+      case P4Ids::METER:
         resource_name = "METER";
         break;
     }

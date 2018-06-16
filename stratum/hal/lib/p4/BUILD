@@ -377,6 +377,7 @@ stratum_cc_library(
     hdrs = ["utils.h"],
     deps = [
         ":p4_runtime_interface",
+        "@com_github_p4lang_PI//:p4info_proto",
         "@com_google_absl//absl/strings",
     ],
 )
