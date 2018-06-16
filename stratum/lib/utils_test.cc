@@ -26,6 +26,10 @@ DECLARE_string(test_tmpdir);
 
 namespace stratum {
 
+//std::string str(const unsigned char* chars) {
+//  return reinterpret_cast<const char*>(chars);
+//}
+
 TEST(CommonUtilsTest, PrintArrayForEmptyArray) {
   int iarray[] = {};
   std::string sarray[] = {};

@@ -2,18 +2,9 @@ bazel test \
 //stratum:all \
 //stratum/glue/...:all \
 //stratum/public/proto:all \
-//stratum/public/lib:error //stratum/public/lib:test_main \
-//stratum/lib:test_main \
-//stratum/lib:macros_test \
-//stratum/lib:macros \
-//stratum/lib:constants \
-//stratum/lib:timer_daemon_test \
-//stratum/lib:timer_daemon \
-//stratum/lib:utils \
-//stratum/lib/channel:test_main \
-//stratum/lib/channel:channel_mock \
-//stratum/lib/channel:channel \
-//stratum/lib/test_utils:matchers \
+//stratum/public/lib:error \
+//stratum/public/lib:test_main \
+//stratum/lib/...:all \
 //stratum/portage:all \
 //stratum/hal/lib/common:all \
 //stratum/hal/lib/phal:attribute_database_interface \
@@ -78,9 +69,6 @@ exit 0
 //stratum/public/lib:error_test
 
 # Not building
-//stratum/lib:utils_test <-- problem for Google involving std::string
-
-//stratum/lib/channel:channel_test
 
 //stratum/hal/stub/embedded:stratum_stub
 
