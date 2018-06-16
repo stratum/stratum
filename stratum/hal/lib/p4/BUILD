@@ -174,7 +174,7 @@ stratum_cc_library(
         # The p4_device_config_proto rule contains symbols that are needed
         # by the embedded p4lang prebuilt.
         #"@com_github_p4lang_PI//:p4_device_config_proto",
-        #"@com_github_p4lang_PI//:util",
+        "@com_github_p4lang_PI//:util",
         "@com_github_p4lang_PI//:p4runtime_proto",
     ],
 )

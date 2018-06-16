@@ -29,7 +29,7 @@ class P4RuntimeInterface {
  public:
   virtual ~P4RuntimeInterface() {}
 
-  virtual pi::proto::util::P4ResourceType GetResourceTypeFromID(
+  virtual p4::config::v1::P4Ids::Prefix GetResourceTypeFromID(
       pi::proto::util::p4_id_t object_id) = 0;
 
   // This static accessor fetches the singleton instance.
