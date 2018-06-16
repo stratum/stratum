@@ -32,11 +32,11 @@
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 
-using ::google::protobuf::util::MessageDifferencer;
+using google::protobuf::util::MessageDifferencer;
 
 namespace stratum {
 
-::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
+::util::Status WriteProtoToBinFile(const google::protobuf::Message& message,
                                    const std::string& filename) {
   std::string buffer;
   if (!message.SerializeToString(&buffer)) {
@@ -50,7 +50,7 @@ namespace stratum {
 }
 
 ::util::Status ReadProtoFromBinFile(const std::string& filename,
-                                    ::google::protobuf::Message* message) {
+                                    google::protobuf::Message* message) {
   std::string buffer;
   RETURN_IF_ERROR(ReadFileToString(filename, &buffer));
   if (!message->ParseFromString(buffer)) {
@@ -61,7 +61,7 @@ namespace stratum {
   return ::util::OkStatus();
 }
 
-::util::Status WriteProtoToTextFile(const ::google::protobuf::Message& message,
+::util::Status WriteProtoToTextFile(const google::protobuf::Message& message,
                                     const std::string& filename) {
   std::string text;
   RETURN_IF_ERROR(PrintProtoToString(message, &text));
@@ -71,7 +71,7 @@ namespace stratum {
 }
 
 ::util::Status ReadProtoFromTextFile(const std::string& filename,
-                                     ::google::protobuf::Message* message) {
+                                     google::protobuf::Message* message) {
   std::string text;
   RETURN_IF_ERROR(ReadFileToString(filename, &text));
   RETURN_IF_ERROR(ParseProtoFromString(text, message));
@@ -79,9 +79,9 @@ namespace stratum {
   return ::util::OkStatus();
 }
 
-::util::Status PrintProtoToString(const ::google::protobuf::Message& message,
+::util::Status PrintProtoToString(const google::protobuf::Message& message,
                                   std::string* text) {
-  if (!::google::protobuf::TextFormat::PrintToString(message, text)) {
+  if (!google::protobuf::TextFormat::PrintToString(message, text)) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "Failed to print proto to string: " << message.ShortDebugString();
   }
@@ -90,8 +90,8 @@ namespace stratum {
 }
 
 ::util::Status ParseProtoFromString(const std::string& text,
-                                    ::google::protobuf::Message* message) {
-  if (!::google::protobuf::TextFormat::ParseFromString(text, message)) {
+                                    google::protobuf::Message* message) {
+  if (!google::protobuf::TextFormat::ParseFromString(text, message)) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "Failed to parse proto from the following string: " << text;
   }
@@ -208,13 +208,13 @@ std::string BaseName(const std::string& path) {
 
 // TODO: At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
-bool ProtoLess(const ::google::protobuf::Message& m1,
-               const ::google::protobuf::Message& m2) {
+bool ProtoLess(const google::protobuf::Message& m1,
+               const google::protobuf::Message& m2) {
   return m1.SerializeAsString() < m2.SerializeAsString();
 }
 
-bool ProtoEqual(const ::google::protobuf::Message& m1,
-                const ::google::protobuf::Message& m2) {
+bool ProtoEqual(const google::protobuf::Message& m1,
+                const google::protobuf::Message& m2) {
   MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
@@ -222,7 +222,7 @@ bool ProtoEqual(const ::google::protobuf::Message& m1,
 
 // TODO: At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
-size_t ProtoHash(const ::google::protobuf::Message& m) {
+size_t ProtoHash(const google::protobuf::Message& m) {
   std::hash<std::string> string_hasher;
   std::string s;
   m.SerializeToString(&s);

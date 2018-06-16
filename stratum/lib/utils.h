@@ -118,28 +118,28 @@ inline std::string PrintVector(const std::vector<T>& vec,
 }
 
 // Writes a proto message in binary format to the given file path.
-::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
+::util::Status WriteProtoToBinFile(const google::protobuf::Message& message,
                                    const std::string& filename);
 
 // Reads proto from a file containing the proto message in binary format.
 ::util::Status ReadProtoFromBinFile(const std::string& filename,
-                                    ::google::protobuf::Message* message);
+                                    google::protobuf::Message* message);
 
 // Writes a proto message in text format to the given file path.
-::util::Status WriteProtoToTextFile(const ::google::protobuf::Message& message,
+::util::Status WriteProtoToTextFile(const google::protobuf::Message& message,
                                     const std::string& filename);
 
 // Reads proto from a text file containing the proto message in text format.
 ::util::Status ReadProtoFromTextFile(const std::string& filename,
-                                     ::google::protobuf::Message* message);
+                                     google::protobuf::Message* message);
 
 // Serializes proto to a string. Wrapper around TextFormat::PrintToString().
-::util::Status PrintProtoToString(const ::google::protobuf::Message& message,
+::util::Status PrintProtoToString(const google::protobuf::Message& message,
                                   std::string* text);
 
 // Parses a proto from a string. Wrapper around TextFormat::ParseFromString().
 ::util::Status ParseProtoFromString(const std::string& text,
-                                    ::google::protobuf::Message* message);
+                                    google::protobuf::Message* message);
 
 // Writes a string buffer to a text file. 'append' (default false) specifies
 // whether the string need to appended to the end of the file as opposed to
@@ -175,18 +175,18 @@ std::string BaseName(const std::string& path);
 
 // Compares two protos m1 and m2 and returns true if m1 < m2. This method does
 // a simple comparison on SerializeAsString output of the protos.
-bool ProtoLess(const ::google::protobuf::Message& m1,
-               const ::google::protobuf::Message& m2);
+bool ProtoLess(const google::protobuf::Message& m1,
+               const google::protobuf::Message& m2);
 
 // Compares two protos m1 and m2 and returns true if m1 == m2. This method does
 // a simple comparison on SerializeAsString output of the protos and cannot
 // handle the case where the order of repeated fields are not important for
 // example.
-bool ProtoEqual(const ::google::protobuf::Message& m1,
-                const ::google::protobuf::Message& m2);
+bool ProtoEqual(const google::protobuf::Message& m1,
+                const google::protobuf::Message& m2);
 
 // Custom hash function for proto messages.
-size_t ProtoHash(const ::google::protobuf::Message& m);
+size_t ProtoHash(const google::protobuf::Message& m);
 
 // Helper for converting an int error code to a GRPC canonical error code.
 constexpr ::grpc::StatusCode kGrpcCodeMin = ::grpc::StatusCode::OK;

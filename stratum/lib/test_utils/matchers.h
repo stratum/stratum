@@ -37,14 +37,14 @@ class ProtoMatcher {
 
   bool MatchAndExplain(const T& m,
                        ::testing::MatchResultListener* listener) const {
-    ::google::protobuf::util::MessageDifferencer differencer;
+    google::protobuf::util::MessageDifferencer differencer;
     if (as_set_) {
       differencer.set_repeated_field_comparison(
-          ::google::protobuf::util::MessageDifferencer::AS_SET);
+          google::protobuf::util::MessageDifferencer::AS_SET);
     }
     if (partial_) {
       differencer.set_scope(
-          ::google::protobuf::util::MessageDifferencer::PARTIAL);
+          google::protobuf::util::MessageDifferencer::PARTIAL);
     }
     std::string result;
     differencer.ReportDifferencesToString(&result);

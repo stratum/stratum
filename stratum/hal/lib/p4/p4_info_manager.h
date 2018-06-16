@@ -157,7 +157,7 @@ class P4InfoManager {
     // Iterates over all the P4 resources of type T and builds the internal
     // maps for ID and name lookup.
     ::util::Status BuildMaps(
-        const ::google::protobuf::RepeatedPtrField<T>& p4_resources,
+        const google::protobuf::RepeatedPtrField<T>& p4_resources,
         PreambleCallback preamble_cb) {
       ::util::Status status = ::util::OkStatus();
       for (const auto& resource : p4_resources) {

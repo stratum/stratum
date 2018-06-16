@@ -44,8 +44,8 @@ const stratum::gtl::flat_hash_set<P4MeterColor>& AllColors() {
 
 template <class MessageType>
 inline void EraseReferencesFromRepeatedField(
-    const stratum::gtl::flat_hash_set<const ::google::protobuf::Message*> references,
-    ::google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
+    const stratum::gtl::flat_hash_set<const google::protobuf::Message*> references,
+    google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
   repeated_field->erase(
       std::remove_if(repeated_field->begin(), repeated_field->end(),
                      [&references](const MessageType& field) {
@@ -1633,7 +1633,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   }
 
   // Remove the used actions.
-  stratum::gtl::flat_hash_set<const ::google::protobuf::Message*> messages = {
+  stratum::gtl::flat_hash_set<const google::protobuf::Message*> messages = {
       cpu_queue_action, egress_to_cpu_action, clone_action, drop_action,
       clone_port_action};
   messages.erase(nullptr);
@@ -1718,7 +1718,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   bcm_actions->push_back(bcm_egress_port_action);
 
   // Remove the used actions.
-  stratum::gtl::flat_hash_set<const ::google::protobuf::Message*> messages = {
+  stratum::gtl::flat_hash_set<const google::protobuf::Message*> messages = {
       eth_source_action, eth_dest_action, egress_port_action};
   EraseReferencesFromRepeatedField(messages,
                                    action_function->mutable_modify_fields());

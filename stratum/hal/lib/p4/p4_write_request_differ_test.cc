@@ -132,7 +132,7 @@ class P4WriteRequestDifferTest : public testing::Test {
   p4::WriteRequest unchanged_;
 
   // Tests can use this MessageDifferencer to verify test expectations.
-  ::google::protobuf::util::MessageDifferencer msg_differencer_;
+  google::protobuf::util::MessageDifferencer msg_differencer_;
 };
 
 void P4WriteRequestDifferTest::SetUpTestRequest(
@@ -218,7 +218,7 @@ TEST_F(P4WriteRequestDifferTest, TestAddMultipleTableEntries) {
   EXPECT_EQ(0, deletions_.updates_size());
   ASSERT_EQ(3, additions_.updates_size());
   msg_differencer_.set_repeated_field_comparison(
-      ::google::protobuf::util::MessageDifferencer::AS_SET);
+      google::protobuf::util::MessageDifferencer::AS_SET);
   EXPECT_TRUE(msg_differencer_.Compare(new_request_, additions_));
   EXPECT_EQ(0, modified_.updates_size());
   EXPECT_EQ(0, unchanged_.updates_size());
@@ -254,7 +254,7 @@ TEST_F(P4WriteRequestDifferTest, TestDeleteMultipleTableEntries) {
   ASSERT_EQ(3, deletions_.updates_size());
   EXPECT_EQ(0, additions_.updates_size());
   msg_differencer_.set_repeated_field_comparison(
-      ::google::protobuf::util::MessageDifferencer::AS_SET);
+      google::protobuf::util::MessageDifferencer::AS_SET);
   p4::WriteRequest expected_deletes = old_request_;
   expected_deletes.mutable_updates(0)->set_type(p4::Update::DELETE);
   expected_deletes.mutable_updates(1)->set_type(p4::Update::DELETE);

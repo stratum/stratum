@@ -90,7 +90,7 @@ class P4InfoManagerTest : public testing::Test {
   }
 
   void SetUpTestP4Tables(bool need_actions = true) {
-    ::google::protobuf::int32 dummy_action_id = kFirstActionID;
+    google::protobuf::int32 dummy_action_id = kFirstActionID;
 
     // Each table entry is assigned an ID and name in the preamble.  Each table
     // optionally gets a set of action IDs.
@@ -109,7 +109,7 @@ class P4InfoManagerTest : public testing::Test {
   void SetUpTestP4Actions() {
     const int kNumTestActions = kNumTestTables * kNumActionsPerTable;
     const int kNumParamsPerAction = 2;
-    ::google::protobuf::int32 dummy_param_id = 100000;
+    google::protobuf::int32 dummy_param_id = 100000;
 
     for (int a = 0; a < kNumTestActions; ++a) {
       p4::config::Action* new_action = p4_test_info_.add_actions();

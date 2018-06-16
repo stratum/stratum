@@ -720,7 +720,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
     CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
                                       base_bcm_chassis_map.bcm_chips().end(),
-                                      [&bcm_chip](const ::google::protobuf::Message& x) {
+                                      [&bcm_chip](const google::protobuf::Message& x) {
                                         return ProtoEqual(x, bcm_chip);
                                       }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
@@ -735,7 +735,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
     CHECK_RETURN_IF_FALSE(std::any_of(
         base_bcm_chassis_map.bcm_ports().begin(),
         base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) { return ProtoEqual(x, p); }))
+        [&p](const google::protobuf::Message& x) { return ProtoEqual(x, p); }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }

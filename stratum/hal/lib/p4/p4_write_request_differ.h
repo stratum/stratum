@@ -106,40 +106,40 @@ class P4WriteRequestDiffer {
 // P4WriteRequestReporter expects its enclosing MessageDifferencer to be
 // using the "AS_SET" mode of repeated field comparison.
 class P4WriteRequestReporter
-    : public ::google::protobuf::util::MessageDifferencer::Reporter {
+    : public google::protobuf::util::MessageDifferencer::Reporter {
  public:
   // This type simplifies the declaration of the member overrides below.
   typedef std::vector<
-      ::google::protobuf::util::MessageDifferencer::SpecificField>
+      google::protobuf::util::MessageDifferencer::SpecificField>
       FieldVector;
 
   P4WriteRequestReporter();
   ~P4WriteRequestReporter() override {}
 
   // Reports that a field has been added into message2.
-  void ReportAdded(const ::google::protobuf::Message& message1,
-                   const ::google::protobuf::Message& message2,
+  void ReportAdded(const google::protobuf::Message& message1,
+                   const google::protobuf::Message& message2,
                    const FieldVector& field_path) override;
 
   // Reports that a field has been deleted from message1.
-  void ReportDeleted(const ::google::protobuf::Message& message1,
-                     const ::google::protobuf::Message& message2,
+  void ReportDeleted(const google::protobuf::Message& message1,
+                     const google::protobuf::Message& message2,
                      const FieldVector& field_path) override;
 
   // Reports that a field in message1 has been modified by message2.
-  void ReportModified(const ::google::protobuf::Message& message1,
-                      const ::google::protobuf::Message& message2,
+  void ReportModified(const google::protobuf::Message& message1,
+                      const google::protobuf::Message& message2,
                       const FieldVector& field_path) override;
 
   // Reports that a field in message1 has been moved in message2, but no
   // other changes exist.
-  void ReportMoved(const ::google::protobuf::Message& message1,
-                   const ::google::protobuf::Message& message2,
+  void ReportMoved(const google::protobuf::Message& message1,
+                   const google::protobuf::Message& message2,
                    const FieldVector& field_path) override;
 
   // Reports that message1 and message2 match.
-  void ReportMatched(const ::google::protobuf::Message& message1,
-                     const ::google::protobuf::Message& message2,
+  void ReportMatched(const google::protobuf::Message& message1,
+                     const google::protobuf::Message& message2,
                      const FieldVector& field_path) override;
 
   // Accessors to containers with indices of added/deleted/modified/unchanged
@@ -182,15 +182,15 @@ class P4WriteRequestReporter
 // in other fields, then P4WriteRequestDiffer considers the change to be a
 // modification of the same update.
 class P4WriteRequestComparator
-    : public ::google::protobuf::util::MessageDifferencer::MapKeyComparator {
+    : public google::protobuf::util::MessageDifferencer::MapKeyComparator {
  public:
   P4WriteRequestComparator() {}
   ~P4WriteRequestComparator() override{};
 
-  bool IsMatch(const ::google::protobuf::Message& message1,
-               const ::google::protobuf::Message& message2,
+  bool IsMatch(const google::protobuf::Message& message1,
+               const google::protobuf::Message& message2,
                const std::vector<
-                   ::google::protobuf::util::MessageDifferencer::SpecificField>&
+                   google::protobuf::util::MessageDifferencer::SpecificField>&
                    parent_fields) const override;
 
   // P4WriteRequestComparator is neither copyable nor movable.
