@@ -97,6 +97,7 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
         "@com_github_p4lang_PI//:p4info_proto",
+        "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",

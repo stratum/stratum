@@ -49,6 +49,8 @@ bazel test \
 //stratum/hal/lib/p4:p4_runtime_interface \
 //stratum/hal/lib/p4:utils \
 //stratum/hal/lib/p4:utils_test \
+//stratum/hal/lib/p4:p4_info_manager \
+//stratum/hal/lib/p4:p4_info_manager_mock \
 
 exit 0
 
@@ -86,8 +88,6 @@ exit 0
 //stratum/lib/security:test_main
 
 //stratum/hal/lib/p4:p4_config_verifier_test
-//stratum/hal/lib/p4:p4_info_manager
-//stratum/hal/lib/p4:p4_info_manager_mock
 //stratum/hal/lib/p4:p4_info_manager_test
 //stratum/hal/lib/p4:p4_match_key_test
 //stratum/hal/lib/p4:p4_runtime_mock
