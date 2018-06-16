@@ -35,6 +35,8 @@ bazel test \
 //stratum/hal/lib/common:channel_writer_wrapper \
 //stratum/hal/lib/common:conversion \
 //stratum/hal/lib/common:gnmi_publisher_mock \
+//stratum/hal/lib/common:oc_to_hal_config_test \
+//stratum/hal/lib/common:hal_config_to_oc_test \
 //stratum/hal/lib/phal:attribute_database_interface \
 //stratum/hal/lib/phal:attribute_database_mock \
 //stratum/hal/lib/phal:buffer_tools \
@@ -87,11 +89,9 @@ exit 0
 
 # failing tests
 //stratum/public/lib:error_test
-//stratum/lib:utils_test
-//stratum/hal/lib/common:oc_to_hal_config_test
-//stratum/hal/lib/common:hal_config_to_oc_test
 
 # Not building
+//stratum/lib:utils_test <-- problem for Google involving std::string
 
 //stratum/lib/channel:channel_test
 

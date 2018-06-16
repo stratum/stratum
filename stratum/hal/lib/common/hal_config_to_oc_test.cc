@@ -109,6 +109,8 @@ class HalToOcConfigTest : public ::testing::Test {
   HalConfigToOpenConfigProtoConverter converter_;
 };
 
+//FIXME figure out a better way to enable/disable these
+#ifdef WITH_GOOGLE_TEST_FILES
 // This test verifies that HalToOcConfig correctly handles Generic Tomahawk 100G config.
 TEST_F(HalToOcConfigTest, Generic Tomahawk100g) {
   ASSERT_OK(
@@ -148,6 +150,7 @@ TEST_F(HalToOcConfigTest, Generic Trident240g) {
   ::util::StatusOr<oc::Device> oc_config =
         converter_.ChassisConfigToDevice(hal_config_proto_);
 }
+#endif  // WITH_GOOGLE_TEST_FILES
 
 }  // namespace hal
 }  // namespace stratum
