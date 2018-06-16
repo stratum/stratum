@@ -49,7 +49,7 @@ const ::util::Status SetState(LedDataSource* led_datasource,
 // LED light.
 TEST(LEDDatasourceTest, InitializeAndControlBicolorFpgaLedSucceed) {
   hal::LedConfig led_config;
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : BICOLOR_FPGA_G_R"
       " led_control_path : \"test_control_path_1\""
@@ -104,7 +104,7 @@ TEST(LEDDatasourceTest, InitializeAndControlBicolorFpgaLedSucceed) {
 
 TEST(LEDDatasourceTest, MakeLedDataSourceFailInConfiguredControlPath) {
   hal::LedConfig led_config;
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : BICOLOR_FPGA_G_R"
       " led_control_path : \"test_control_path_1\""
@@ -119,7 +119,7 @@ TEST(LEDDatasourceTest, MakeLedDataSourceFailInConfiguredControlPath) {
 
 TEST(LEDDatasourceTest, MakeLedDataSourceFailInLedType) {
   hal::LedConfig led_config;
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : UNKNOWN"
       " led_control_path : \"test_control_path_1\""
@@ -139,7 +139,7 @@ TEST(LEDDatasourceTest, MakeLedDataSourceFailInLedType) {
 // FPGA LED light.
 TEST(LEDDatasourceTest, InitializeAndControlTricolorFpgaLedSucceed) {
   hal::LedConfig led_config;
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : TRICOLOR_FPGA_GR_GY"
       " led_control_path : \"test_control_path_1\""
@@ -155,7 +155,7 @@ TEST(LEDDatasourceTest, InitializeAndControlTricolorFpgaLedSucceed) {
                        HasSubstr("Control path size mismatch")));
 
   // Correct the config and try again.
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : TRICOLOR_FPGA_GR_GY"
       " led_control_path : \"test_control_path_1\""
@@ -261,7 +261,7 @@ TEST(LEDDatasourceTest, InitializeAndControlTricolorFpgaLedSucceed) {
 TEST(LEDDatasourceTest,
      InitializeAndControlTricolorThreeControlFpgaLedSucceed) {
   hal::LedConfig led_config;
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : TRICOLOR_FPGA_G_R_Y"
       " led_control_path : \"test_control_path_1\""
@@ -276,7 +276,7 @@ TEST(LEDDatasourceTest,
               StatusIs(_, ERR_INVALID_PARAM,
                        HasSubstr("Control path size mismatch")));
   // Correct the config and try again.
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : TRICOLOR_FPGA_G_R_Y"
       " led_control_path : \"test_control_path_1\""
@@ -362,7 +362,7 @@ TEST(LEDDatasourceTest,
 // light LED light.
 TEST(LEDDatasourceTest, InitializeAndControlForBicolorGPIOLedSucceed) {
   hal::LedConfig led_config;
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : BICOLOR_GPIO_G_R"
       " led_control_path : \"test_control_path_1\""
@@ -377,7 +377,7 @@ TEST(LEDDatasourceTest, InitializeAndControlForBicolorGPIOLedSucceed) {
               StatusIs(_, ERR_INVALID_PARAM,
                        HasSubstr("Control path size mismatch")));
   // Correct the config and try again.
-  protobuf::TextFormat::ParseFromString(
+  google::protobuf::TextFormat::ParseFromString(
       " led_index : 1"
       " led_type : BICOLOR_GPIO_G_R"
       " led_control_path : \"test_control_path_1\""

@@ -350,7 +350,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
     }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Two Read() calls are expected:
@@ -386,7 +386,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
     }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Two Read() calls are expected:
@@ -441,7 +441,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
     }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Two Read() calls are expected:
@@ -488,7 +488,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
     }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq1, &req1))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq1, &req1))
       << "Failed to parse proto from the following string: " << kReq1;
 
   // Build actual poll request.
@@ -497,7 +497,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
   poll {
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq2, &req2))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq2, &req2))
       << "Failed to parse proto from the following string: " << kReq2;
 
   // Three Read() calls are expected:
@@ -540,7 +540,7 @@ TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
     }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Three Read() calls are expected:
@@ -598,7 +598,7 @@ TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
     }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Two Read() calls are expected:
@@ -651,7 +651,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
    }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Two Read() calls are expected:
@@ -710,7 +710,7 @@ TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
    }
   }
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // The 'heart' of the test.
@@ -769,7 +769,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfigBeforePush) {
   type: CONFIG
   encoding: PROTO
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Run the method that processes the GET request.
@@ -797,7 +797,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonConfig) {
   type: STATE
   encoding: PROTO
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Run the method that processes the GET request.
@@ -825,7 +825,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonProto) {
   type: CONFIG
   encoding: JSON
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Run the method that processes the GET request.
@@ -853,7 +853,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfig) {
   type: CONFIG
   encoding: PROTO
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Run the method that processes the GET request.
@@ -889,7 +889,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetBlah) {
   type: CONFIG
   encoding: PROTO
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Run the method that processes the GET request.
@@ -923,7 +923,7 @@ TEST_P(ConfigMonitoringServiceTest,
   type: CONFIG
   encoding: PROTO
   )PROTO";
-  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
       << "Failed to parse proto from the following string: " << kReq;
 
   // Run the method that processes the GET request.

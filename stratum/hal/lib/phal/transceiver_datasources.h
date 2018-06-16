@@ -28,7 +28,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-using protobuf::EnumValueDescriptor;
+using google::protobuf::EnumValueDescriptor;
 
 // Note that some EEPROM fields may change over time (e.g. temperature), while
 // others remain fixed between reads. If EEPROM reads become a bottleneck, it

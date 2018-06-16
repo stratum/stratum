@@ -22,7 +22,7 @@
 #include "absl/strings/substitute.h"
 
 
-using protobuf::util::MessageDifferencer;
+using google::protobuf::util::MessageDifferencer;
 
 namespace stratum {
 namespace hal {

@@ -57,7 +57,7 @@ LedDataSource::LedDataSource(const LedConfig& led_config,
     RETURN_IF_ERROR(led_color_.AssignValue(value));
     ASSIGN_OR_RETURN(
         auto led_state_index,
-        led_state_.ReadValue<const protobuf::EnumValueDescriptor*>());
+        led_state_.ReadValue<const google::protobuf::EnumValueDescriptor*>());
     RETURN_IF_ERROR(
         SetLedColorState(static_cast<LedState>(led_state_index->index()),
                          static_cast<LedColor>(value->index())));
@@ -70,7 +70,7 @@ LedDataSource::LedDataSource(const LedConfig& led_config,
     RETURN_IF_ERROR(led_state_.AssignValue(value));
     ASSIGN_OR_RETURN(
         auto led_color_index,
-        led_color_.ReadValue<const protobuf::EnumValueDescriptor*>());
+        led_color_.ReadValue<const google::protobuf::EnumValueDescriptor*>());
     RETURN_IF_ERROR(
         SetLedColorState(static_cast<LedState>(value->index()),
                          static_cast<LedColor>(led_color_index->index())));

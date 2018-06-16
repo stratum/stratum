@@ -175,18 +175,18 @@ class FixedDataSource : public DataSource {
 
 // A FixedDataSource that makes fixed enum values less tedious to add.
 class FixedEnumDataSource
-    : public FixedDataSource<const protobuf::EnumValueDescriptor*> {
+    : public FixedDataSource<const google::protobuf::EnumValueDescriptor*> {
  public:
   // Factory function, since actual datasources must be handled by a shared_ptr.
   static std::shared_ptr<FixedEnumDataSource> Make(
-      const protobuf::EnumDescriptor* type, int index) {
+      const google::protobuf::EnumDescriptor* type, int index) {
     return std::shared_ptr<FixedEnumDataSource>(
         new FixedEnumDataSource(type, index));
   }
 
  protected:
-  FixedEnumDataSource(const protobuf::EnumDescriptor* type, int index)
-      : FixedDataSource<const protobuf::EnumValueDescriptor*>(
+  FixedEnumDataSource(const google::protobuf::EnumDescriptor* type, int index)
+      : FixedDataSource<const google::protobuf::EnumValueDescriptor*>(
             type->value(index)) {}
 };
 

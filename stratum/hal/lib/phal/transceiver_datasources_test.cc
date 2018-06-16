@@ -25,7 +25,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-using protobuf::EnumValueDescriptor;
+using google::protobuf::EnumValueDescriptor;
 
 class QSFPDataSourceTest : public ::testing::Test {
  public:

@@ -46,7 +46,7 @@ const float kFloatTestVal = 0.5;
 const double kDoubleTestVal = 1.5;
 const bool kBoolTestVal = true;
 const std::string kStringTestVal = "i am the walrus";  // NOLINT(runtime/string)
-const protobuf::EnumValueDescriptor* kEnumTestVal =
+const google::protobuf::EnumValueDescriptor* kEnumTestVal =
     TopEnum_descriptor()->FindValueByName("TWO");
 
 template <typename T>
@@ -84,8 +84,8 @@ std::string GetTestVal<std::string>() {
   return kStringTestVal;
 }
 template <>
-const protobuf::EnumValueDescriptor*
-GetTestVal<const protobuf::EnumValueDescriptor*>() {
+const google::protobuf::EnumValueDescriptor*
+GetTestVal<const google::protobuf::EnumValueDescriptor*>() {
   return kEnumTestVal;
 }
 
@@ -271,7 +271,7 @@ TEST_F(AttributeGroupTest, CanAccessOtherAttributes) {
 TEST_F(AttributeGroupTest, CanAccessEnumAttributes) {
   auto mutable_group = group_->AcquireMutable();
   ASSERT_OK(mutable_group->AddAttribute(
-      "top_val", TestAttr<const protobuf::EnumValueDescriptor*>()));
+      "top_val", TestAttr<const google::protobuf::EnumValueDescriptor*>()));
   EXPECT_THAT(mutable_group->GetAttribute("top_val"),
               IsOkAndContainsValue(kEnumTestVal));
 }
@@ -760,7 +760,7 @@ TEST_F(AttributeGroupQueryTest, CanGetAllFieldTypes) {
     ASSERT_OK(
         mutable_group->AddAttribute("string_val", TestAttr<std::string>()));
     ASSERT_OK(mutable_group->AddAttribute(
-        "top_val", TestAttr<const protobuf::EnumValueDescriptor*>()));
+        "top_val", TestAttr<const google::protobuf::EnumValueDescriptor*>()));
   }
   DummyThreadpool threadpool;
   AttributeGroupQuery query(group_.get(), &threadpool);

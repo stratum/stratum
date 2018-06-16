@@ -32,7 +32,7 @@ namespace hal {
 namespace phal {
 namespace {
 // DatabaseQuery is a wrapper for AttributeGroupQuery that transforms query
-// responses from protobuf::Message into PhalDB.
+// responses from google::protobuf::Message into PhalDB.
 // TODO: The subscription polling thread should probably be
 // implemented at this level rather than on a per-attribute group basis.
 class DatabaseQuery : public Query {

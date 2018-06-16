@@ -34,7 +34,7 @@ std::unique_ptr<MutableAttributeGroup> MakeMockGroup(AttributeGroupMock* group);
 
 class AttributeGroupMock : public AttributeGroup, public MutableAttributeGroup {
  public:
-  explicit AttributeGroupMock(const protobuf::Descriptor* descriptor)
+  explicit AttributeGroupMock(const google::protobuf::Descriptor* descriptor)
       : descriptor_(descriptor) {}
 
   std::unique_ptr<ReadableAttributeGroup> AcquireReadable() override {
@@ -89,12 +89,12 @@ class AttributeGroupMock : public AttributeGroup, public MutableAttributeGroup {
                                              std::vector<Path> paths));
   MOCK_METHOD1(UnregisterQuery, void(AttributeGroupQuery* query));
 
-  const protobuf::Descriptor* GetDescriptor() const override {
+  const google::protobuf::Descriptor* GetDescriptor() const override {
     return descriptor_;
   }
 
  private:
-  const protobuf::Descriptor* descriptor_;
+  const google::protobuf::Descriptor* descriptor_;
 };
 
 // This class just points all calls directly back to the
@@ -163,7 +163,7 @@ class LockedAttributeGroupMock : public MutableAttributeGroup {
       const std::string& name) const override {
     return group_->GetRepeatedChildGroupSize(name);
   }
-  const protobuf::Descriptor* GetDescriptor() const override {
+  const google::protobuf::Descriptor* GetDescriptor() const override {
     return group_->GetDescriptor();
   }
   AttributeGroupVersionId GetVersionId() const override {

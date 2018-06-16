@@ -51,7 +51,7 @@ class AttributeGroup {
   // A factory function to produce a AttributeGroup that matches
   // the structure of the given protobuf.
   static std::unique_ptr<AttributeGroup> From(
-      const protobuf::Descriptor* descriptor);
+      const google::protobuf::Descriptor* descriptor);
 
   // The following two functions lock this attribute group as appropriate,
   // and expose subsets of its interface. The returned classes are invalid
@@ -128,7 +128,7 @@ class ReadableAttributeGroup {
 
   // Returns the protobuf descriptor that constrains this attribute group. And
   // fields in this protobuf must exist in the passed descriptor.
-  virtual const protobuf::Descriptor* GetDescriptor() const = 0;
+  virtual const google::protobuf::Descriptor* GetDescriptor() const = 0;
 
   // Returns the current version of this attribute group. This id is changed
   // every time any structural changes are made to this attribute group.
@@ -209,8 +209,8 @@ class AttributeGroupQuery {
                       ThreadpoolInterface* threadpool)
       : root_group_(root_group), threadpool_(threadpool) {
     auto descriptor = root_group->AcquireReadable()->GetDescriptor();
-    const protobuf::Message* prototype_message =
-        protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
+    const google::protobuf::Message* prototype_message =
+        google::protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
     CHECK_NOTNULL(prototype_message);
     query_result_.reset(prototype_message->New());
   }
