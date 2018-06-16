@@ -46,38 +46,38 @@ namespace stratum {
 namespace hal {
 namespace bcm {
 
-// Custom hash and equal function for ::p4::ActionProfileMember protos. For
+// Custom hash and equal function for ::p4::v1::ActionProfileMember protos. For
 // members, all that matters is the member_id (local to each node). If anything
 // else id different (for example when a member with a fixed ID is modified), we
 // expect to remove the old member from the container and replace it with the
 // new one.
 struct ActionProfileMemberHash {
-  size_t operator()(const ::p4::ActionProfileMember& x) const {
+  size_t operator()(const ::p4::v1::ActionProfileMember& x) const {
     return static_cast<size_t>(x.member_id());
   }
 };
 
 struct ActionProfileMemberEqual {
-  bool operator()(const ::p4::ActionProfileMember& x,
-                  const ::p4::ActionProfileMember& y) const {
+  bool operator()(const ::p4::v1::ActionProfileMember& x,
+                  const ::p4::v1::ActionProfileMember& y) const {
     return x.member_id() == y.member_id();
   }
 };
 
-// Custom hash and equal function for ::p4::ActionProfileGroup protos. For
+// Custom hash and equal function for ::p4::v1::ActionProfileGroup protos. For
 // groups, all that matters is the group_id (local to each node). If anything
 // else id different (for example when a group with a fixed ID is modified), we
 // expect to remove the old group from the container and replace it with the new
 // one.
 struct ActionProfileGroupHash {
-  size_t operator()(const ::p4::ActionProfileGroup& x) const {
+  size_t operator()(const ::p4::v1::ActionProfileGroup& x) const {
     return static_cast<size_t>(x.group_id());
   }
 };
 
 struct ActionProfileGroupEqual {
-  bool operator()(const ::p4::ActionProfileGroup& x,
-                  const ::p4::ActionProfileGroup& y) const {
+  bool operator()(const ::p4::v1::ActionProfileGroup& x,
+                  const ::p4::v1::ActionProfileGroup& y) const {
     return x.group_id() == y.group_id();
   }
 };
@@ -135,14 +135,14 @@ class BcmTableManager {
                                              uint64 node_id);
 
   // Pushes the P4-based forwarding pipeline configuration for the node. The
-  // ::p4::ForwardingPipelineConfig proto includes the config for one node. This
+  // ::p4::v1::ForwardingPipelineConfig proto includes the config for one node. This
   // method is expected to be called after PushChassisConfig().
   virtual ::util::Status PushForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
 
   // Verifies the P4-based forwarding pipeline configuration for the node.
   virtual ::util::Status VerifyForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
 
   // Performs coldboot shutdown. Note that there is no public Initialize().
   // Initialization is done as part of PushChassisConfig() if the class is not
@@ -160,109 +160,109 @@ class BcmTableManager {
       const CommonFlowEntry& common_flow_entry,
       BcmFlowEntry* bcm_flow_entry) const;
 
-  // Given a ::p4::TableEntry, populates the BCM specific BcmFlowEntry message
+  // Given a ::p4::v1::TableEntry, populates the BCM specific BcmFlowEntry message
   // to be passed to low-level managers to program to the ASIC.
-  virtual ::util::Status FillBcmFlowEntry(const ::p4::TableEntry& table_entry,
-                                          ::p4::Update::Type type,
+  virtual ::util::Status FillBcmFlowEntry(const ::p4::v1::TableEntry& table_entry,
+                                          ::p4::v1::Update::Type type,
                                           BcmFlowEntry* bcm_flow_entry) const;
 
-  // Given a ::p4::ActionProfileMember, populates the BCM-specific
+  // Given a ::p4::v1::ActionProfileMember, populates the BCM-specific
   // BcmNonMultipathNexthop message to be passed to low-level managers to
   // program to the ASIC.
   virtual ::util::Status FillBcmNonMultipathNexthop(
-      const ::p4::ActionProfileMember& action_profile_member,
+      const ::p4::v1::ActionProfileMember& action_profile_member,
       BcmNonMultipathNexthop* bcm_non_multipath_nexthop) const;
 
-  // Given a ::p4::ActionProfileGroup, populates the BCM specific
+  // Given a ::p4::v1::ActionProfileGroup, populates the BCM specific
   // BcmMultipathNexthop message to be passed to low-level managers to program
   // to the ASIC.
   virtual ::util::Status FillBcmMultipathNexthop(
-      const ::p4::ActionProfileGroup& action_profile_group,
+      const ::p4::v1::ActionProfileGroup& action_profile_group,
       BcmMultipathNexthop* bcm_multipath_nexthop) const;
 
-  // Transer meter configuration from ::p4::MeterConfig to BcmMeterConfig.
-  ::util::Status FillBcmMeterConfig(const ::p4::MeterConfig& p4_meter,
+  // Transer meter configuration from ::p4::v1::MeterConfig to BcmMeterConfig.
+  ::util::Status FillBcmMeterConfig(const ::p4::v1::MeterConfig& p4_meter,
                                     BcmMeterConfig* bcm_meter) const;
 
-  // Saves a copy of ::p4::TableEntry for sending back to controller later. This
+  // Saves a copy of ::p4::v1::TableEntry for sending back to controller later. This
   // is called after the flow is programmed on hardware. This should not be
   // called in conjunction with AddAclTableEntry.
-  virtual ::util::Status AddTableEntry(const ::p4::TableEntry& table_entry);
+  virtual ::util::Status AddTableEntry(const ::p4::v1::TableEntry& table_entry);
 
   // Add an ACL table entry. This function is the same as AddTableEntry, but it
   // also associates the entry with a BCM flow ID. For any table entry, only one
   // of AddTableEntry or AddAclTableEntry should be called.
-  virtual ::util::Status AddAclTableEntry(const ::p4::TableEntry& table_entry,
+  virtual ::util::Status AddAclTableEntry(const ::p4::v1::TableEntry& table_entry,
                                           int bcm_flow_id);
 
-  // Replaces an existing copy of ::p4::TableEntry with the one passed to
+  // Replaces an existing copy of ::p4::v1::TableEntry with the one passed to
   // the function and matches the copy (assumes there is one copy that matches
-  // the given ::p4::TableEntry). This is called after the flow is modified on
+  // the given ::p4::v1::TableEntry). This is called after the flow is modified on
   // hardware.
-  virtual ::util::Status UpdateTableEntry(const ::p4::TableEntry& table_entry);
+  virtual ::util::Status UpdateTableEntry(const ::p4::v1::TableEntry& table_entry);
 
-  // Deletes an existing copy of ::p4::TableEntry which is matching the one
+  // Deletes an existing copy of ::p4::v1::TableEntry which is matching the one
   // passed to the function. This is called after the flow is removed from
   // hardware.
-  virtual ::util::Status DeleteTableEntry(const ::p4::TableEntry& table_entry);
+  virtual ::util::Status DeleteTableEntry(const ::p4::v1::TableEntry& table_entry);
 
   // Updates the meter configuration for the table entry specified inside the
   // given DirectMeterEntry argument.
   virtual ::util::Status UpdateTableEntryMeter(
-      const ::p4::DirectMeterEntry& meter);
+      const ::p4::v1::DirectMeterEntry& meter);
 
-  // Saves a copy of the ::p4::ActionProfileMember for sending back to the
+  // Saves a copy of the ::p4::v1::ActionProfileMember for sending back to the
   // controller later. This function also adds a BcmNonMultipathNexthopInfo for
-  // the ECMP/WCMP group member corresponding to the ::p4::ActionProfileMember
+  // the ECMP/WCMP group member corresponding to the ::p4::v1::ActionProfileMember
   // giving its type and egress intf ID. This is called after the member is
   // added to hardware.
   virtual ::util::Status AddActionProfileMember(
-      const ::p4::ActionProfileMember& action_profile_member,
+      const ::p4::v1::ActionProfileMember& action_profile_member,
       BcmNonMultipathNexthop::Type type, int egress_intf_id);
 
-  // Saves a copy of the ::p4::ActionProfileGroup for sending back to the
+  // Saves a copy of the ::p4::v1::ActionProfileGroup for sending back to the
   // controller later. This function also adds a BcmMultipathNexthopInfo for the
-  // ECMP/WCMP group corresponding to the ::p4::ActionProfileGroup, giving its
+  // ECMP/WCMP group corresponding to the ::p4::v1::ActionProfileGroup, giving its
   // egress intf ID (there is no type for BcmMultipathNexthopInfo). This is
   // called after the group is added to hardware.
   virtual ::util::Status AddActionProfileGroup(
-      const ::p4::ActionProfileGroup& action_profile_group, int egress_intf_id);
+      const ::p4::v1::ActionProfileGroup& action_profile_group, int egress_intf_id);
 
-  // Replaces an existing copy of ::p4::ActionProfileMember with the one passed
+  // Replaces an existing copy of ::p4::v1::ActionProfileMember with the one passed
   // to the function and matches the copy (assumes there is one copy that
-  // matches the given ::p4::ActionProfileMember). This function also updates an
+  // matches the given ::p4::v1::ActionProfileMember). This function also updates an
   // existing BcmNonMultipathNexthopInfo for the ECMP/WCMP group member
-  // corresponding to the ::p4::ActionProfileMember. The egress intf ID of the
+  // corresponding to the ::p4::v1::ActionProfileMember. The egress intf ID of the
   // ECMP/WCMP group member and/or its type may change as part of a member
   // update. This is called after the member is modified on hardware.
   virtual ::util::Status UpdateActionProfileMember(
-      const ::p4::ActionProfileMember& action_profile_member,
+      const ::p4::v1::ActionProfileMember& action_profile_member,
       BcmNonMultipathNexthop::Type type);
 
-  // Replaces an existing copy of ::p4::ActionProfileGroup with the one passed
+  // Replaces an existing copy of ::p4::v1::ActionProfileGroup with the one passed
   // to the function and matches the copy (assumes there is one copy that
-  // matches the given ::p4::ActionProfileGroup). This function also updates an
+  // matches the given ::p4::v1::ActionProfileGroup). This function also updates an
   // existing BcmMultipathNexthopInfo for the ECMP/WCMP group corresponding to
-  // the ::p4::ActionProfileGroup. This is called after the group is modified on
+  // the ::p4::v1::ActionProfileGroup. This is called after the group is modified on
   // hardware.
   virtual ::util::Status UpdateActionProfileGroup(
-      const ::p4::ActionProfileGroup& action_profile_group);
+      const ::p4::v1::ActionProfileGroup& action_profile_group);
 
-  // Deletes an existing copy of ::p4::ActionProfileMember which is matching the
+  // Deletes an existing copy of ::p4::v1::ActionProfileMember which is matching the
   // one passed to the function. This function also deletes the
   // BcmNonMultipathNexthopInfo for the ECMP/WCMP group member corresponding to
-  // the ::p4::ActionProfileMember. This is called after the member is removed
+  // the ::p4::v1::ActionProfileMember. This is called after the member is removed
   // from hardware.
   virtual ::util::Status DeleteActionProfileMember(
-      const ::p4::ActionProfileMember& action_profile_member);
+      const ::p4::v1::ActionProfileMember& action_profile_member);
 
-  // Deletes an existing copy of ::p4::ActionProfileGroup which is matching the
+  // Deletes an existing copy of ::p4::v1::ActionProfileGroup which is matching the
   // one passed to the function. This function also deletes the
   // BcmNonMultipathNexthopInfo for the ECMP/WCMP group corresponding to the
-  // ::p4::ActionProfileGroup. This is called after the group is removed from
+  // ::p4::v1::ActionProfileGroup. This is called after the group is removed from
   // hardware.
   virtual ::util::Status DeleteActionProfileGroup(
-      const ::p4::ActionProfileGroup& action_profile_group);
+      const ::p4::v1::ActionProfileGroup& action_profile_group);
 
   // Returns the vector of the IDs of all the groups which a member is part of.
   virtual ::util::StatusOr<std::set<uint32>> GetGroupsForMember(
@@ -307,37 +307,37 @@ class BcmTableManager {
   // way to fully remove an ACL table.
   virtual ::util::Status DeleteTable(uint32 table_id);
 
-  // Reads the ::p4::TableEntry(s) programmed in the given set of tables (given
+  // Reads the ::p4::v1::TableEntry(s) programmed in the given set of tables (given
   // by table_ids) on the node. If table_ids is empty, return all the entries
   // programmed on the node. Assembles a list of pointers to the returned
   // entries which have counters to be read.
   virtual ::util::Status ReadTableEntries(
-      const std::set<uint32>& table_ids, ::p4::ReadResponse* resp,
-      std::vector<::p4::TableEntry*>* acl_flows) const;
+      const std::set<uint32>& table_ids, ::p4::v1::ReadResponse* resp,
+      std::vector<::p4::v1::TableEntry*>* acl_flows) const;
 
-  // Finds the and returns the stored ::p4::TableEntry that matches the given
+  // Finds the and returns the stored ::p4::v1::TableEntry that matches the given
   // entry.
-  virtual util::StatusOr<p4::TableEntry> LookupTableEntry(
-      const ::p4::TableEntry& entry) const;
+  virtual util::StatusOr<p4::v1::TableEntry> LookupTableEntry(
+      const ::p4::v1::TableEntry& entry) const;
 
-  // Reads the ::p4::ActionProfileMember(s) whose action_profile_id fields are
+  // Reads the ::p4::v1::ActionProfileMember(s) whose action_profile_id fields are
   // in action_profile_ids on the node. If action_profile_ids is empty, returns
-  // all the ::p4::ActionProfileMember(s) programmed on the node.
+  // all the ::p4::v1::ActionProfileMember(s) programmed on the node.
   virtual ::util::Status ReadActionProfileMembers(
       const std::set<uint32>& action_profile_ids,
-      WriterInterface<::p4::ReadResponse>* writer) const;
+      WriterInterface<::p4::v1::ReadResponse>* writer) const;
 
-  // Reads the ::p4::ActionProfileGroup(s) whose action_profile_id fields are in
+  // Reads the ::p4::v1::ActionProfileGroup(s) whose action_profile_id fields are in
   // in action_profile_ids on the node. If action_profile_ids is empty, returns
-  // all the ::p4::ActionProfileGroup(s) programmed on the node.
+  // all the ::p4::v1::ActionProfileGroup(s) programmed on the node.
   virtual ::util::Status ReadActionProfileGroups(
       const std::set<uint32>& action_profile_ids,
-      WriterInterface<::p4::ReadResponse>* writer) const;
+      WriterInterface<::p4::v1::ReadResponse>* writer) const;
 
   // Takes the input P4 table_entry for the given node and maps it to the output
   // flow_entry.
-  virtual ::util::Status MapFlowEntry(const ::p4::TableEntry& table_entry,
-                                      ::p4::Update::Type type,
+  virtual ::util::Status MapFlowEntry(const ::p4::v1::TableEntry& table_entry,
+                                      ::p4::v1::Update::Type type,
                                       CommonFlowEntry* flow_entry) const;
 
   // Factory function for creating the instance of the class.
@@ -354,16 +354,16 @@ class BcmTableManager {
   BcmTableManager();
 
  private:
-  // Typedefs for ::p4::TableEntry storage.
-  typedef stratum::gtl::flat_hash_set<::p4::TableEntry, TableEntryHash, TableEntryEqual>
+  // Typedefs for ::p4::v1::TableEntry storage.
+  typedef stratum::gtl::flat_hash_set<::p4::v1::TableEntry, TableEntryHash, TableEntryEqual>
       TableEntrySet;
   typedef stratum::gtl::flat_hash_map<uint32, TableEntrySet> TableIdToTableEntrySetMap;
 
-  // Typedefs for ::p4::ActionProfileMember storage.
-  typedef stratum::gtl::flat_hash_set<::p4::ActionProfileMember, ActionProfileMemberHash,
+  // Typedefs for ::p4::v1::ActionProfileMember storage.
+  typedef stratum::gtl::flat_hash_set<::p4::v1::ActionProfileMember, ActionProfileMemberHash,
                              ActionProfileMemberEqual>
       ActionProfileMemberSet;
-  typedef stratum::gtl::flat_hash_set<::p4::ActionProfileGroup, ActionProfileGroupHash,
+  typedef stratum::gtl::flat_hash_set<::p4::v1::ActionProfileGroup, ActionProfileGroupHash,
                              ActionProfileGroupEqual>
       ActionProfileGroupSet;
 

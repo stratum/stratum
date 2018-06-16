@@ -126,7 +126,7 @@ class P4TableMapperTest : public testing::Test {
       // have empty values indicating a default/don't care match.  Tests
       // can adjust as needed.  EXACT field bit widths for by multi-field
       // tests are expected to be 64 bits.
-      if (match_field.match_type() == p4::config::MatchField::EXACT) {
+      if (match_field.match_type() == p4::config::v1::MatchField::EXACT) {
         ASSERT_EQ(64, match_field.bitwidth());
         new_match->mutable_exact()->set_value(
             EncodeByteValue(8, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88));
@@ -175,17 +175,17 @@ class P4TableMapperTest : public testing::Test {
   P4StaticEntryMapperMock* static_entry_mapper_mock_;
 
   // Test ForwardingPipelineConfig proto for testing.
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config_;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config_;
 
   // Table proto in P4Info for table in table_entry_.
-  ::p4::config::Table table_;
+  ::p4::config::v1::Table table_;
 
   // For tests to setup table mapping.
-  ::p4::TableEntry table_entry_;
+  ::p4::v1::TableEntry table_entry_;
 
   // For action profile mapping tests.
-  ::p4::ActionProfileMember action_profile_member_;
-  ::p4::ActionProfileGroup action_profile_group_;
+  ::p4::v1::ActionProfileMember action_profile_member_;
+  ::p4::v1::ActionProfileGroup action_profile_group_;
 };
 
 // Pushes a normal valid forwarding pipeline spec.
@@ -234,7 +234,7 @@ TEST_F(P4TableMapperTest, PushForwardingPipelineConfigReboot) {
   // This test first pushes a modified version of pipeline config. When the
   // original pipeline config is subsequently verified ERR_REBOOT_REQUIRED
   // status is returned.
-  ::p4::ForwardingPipelineConfig modified_pipeline_config =
+  ::p4::v1::ForwardingPipelineConfig modified_pipeline_config =
       forwarding_pipeline_config_;
   {
     // Mutate the config. Add an extra static entry.
@@ -242,13 +242,13 @@ TEST_F(P4TableMapperTest, PushForwardingPipelineConfigReboot) {
     p4_pipeline_config.ParseFromString(
         forwarding_pipeline_config_.p4_device_config());
     ASSERT_LE(1, forwarding_pipeline_config_.p4info().tables_size());
-    p4::TableEntry static_table_entry;
+    p4::v1::TableEntry static_table_entry;
     static_table_entry.set_table_id(
         forwarding_pipeline_config_.p4info().tables(0).preamble().id());
-    p4::WriteRequest* test_write_request =
+    p4::v1::WriteRequest* test_write_request =
         p4_pipeline_config.mutable_static_table_entries();
-    p4::Update* update = test_write_request->add_updates();
-    update->set_type(p4::Update::INSERT);
+    p4::v1::Update* update = test_write_request->add_updates();
+    update->set_type(p4::v1::Update::INSERT);
     *(update->mutable_entity()->mutable_table_entry()) = static_table_entry;
     ASSERT_TRUE(p4_pipeline_config.SerializeToString(
         modified_pipeline_config.mutable_p4_device_config()));
@@ -276,7 +276,7 @@ TEST_F(P4TableMapperTest, TestPipelneStageIsPopulated) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   ASSERT_EQ(1, flow_entry.fields_size());
@@ -305,7 +305,7 @@ TEST_F(P4TableMapperTest, TestU32ExactField) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   ASSERT_EQ(1, flow_entry.fields_size());
@@ -334,7 +334,7 @@ TEST_F(P4TableMapperTest, TestU32LPMField) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   ASSERT_EQ(1, flow_entry.fields_size());
@@ -364,7 +364,7 @@ TEST_F(P4TableMapperTest, TestU64ExactField) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   ASSERT_EQ(1, flow_entry.fields_size());
@@ -393,7 +393,7 @@ TEST_F(P4TableMapperTest, TestU128ExactField) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   ASSERT_EQ(1, flow_entry.fields_size());
@@ -422,7 +422,7 @@ TEST_F(P4TableMapperTest, TestU128LPMField) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   ASSERT_EQ(1, flow_entry.fields_size());
@@ -452,7 +452,7 @@ TEST_F(P4TableMapperTest, TestTableActionProfileMemberID) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -471,7 +471,7 @@ TEST_F(P4TableMapperTest, TestTableActionProfileGroupID) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -493,7 +493,7 @@ TEST_F(P4TableMapperTest, TestTableActionNOP) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -521,7 +521,7 @@ TEST_F(P4TableMapperTest, TestTableActionU32Param) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -552,7 +552,7 @@ TEST_F(P4TableMapperTest, TestTableActionU64Param) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -584,7 +584,7 @@ TEST_F(P4TableMapperTest, TestTableActionByteParam) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -628,7 +628,7 @@ TEST_F(P4TableMapperTest, TestTableActionMultiParam) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -660,7 +660,7 @@ TEST_F(P4TableMapperTest, TestTableActionConstantAssignment) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -692,7 +692,7 @@ TEST_F(P4TableMapperTest, TestTableActionDropNotGreen) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -730,7 +730,7 @@ TEST_F(P4TableMapperTest, TestTableActionAssignWhenGreen) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_LT(0, flow_entry.fields_size());
   EXPECT_TRUE(flow_entry.has_action());
@@ -795,7 +795,7 @@ TEST_F(P4TableMapperTest, TestInternalMatchField) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
 
   // The flow_entry should have 3 fields, 2 internal fields from the pipeline
@@ -827,7 +827,7 @@ TEST_F(P4TableMapperTest, TestPriorityAndMetadataMapping) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_EQ(table_entry_.priority(), flow_entry.priority());
   EXPECT_EQ(table_entry_.controller_metadata(),
@@ -839,7 +839,7 @@ TEST_F(P4TableMapperTest, TestTableMapNoConfig) {
   SetUpMatchFieldTest("lpm-match-bytes-table");
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INTERNAL, map_status.error_code());
   EXPECT_THAT(map_status.error_message(),
@@ -868,7 +868,7 @@ TEST_F(P4TableMapperTest, TestTableMapBadTableID) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_P4_INFO, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("not found"));
@@ -883,7 +883,7 @@ TEST_F(P4TableMapperTest, TestTableMapNewDefaultAction) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_TRUE(flow_entry.has_action());
   EXPECT_EQ(0, flow_entry.fields_size());  // No fields = new default action.
@@ -900,7 +900,7 @@ TEST_F(P4TableMapperTest, TestTableMapNewConstDefaultAction) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("change default action"));
@@ -915,7 +915,7 @@ TEST_F(P4TableMapperTest, TestTableMapNoAction) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("no action"));
@@ -930,7 +930,7 @@ TEST_F(P4TableMapperTest, TestTableMapMissingFieldID) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("no field_id"));
@@ -945,7 +945,7 @@ TEST_F(P4TableMapperTest, TestTableMapFieldIDNotInTable) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_OPER_NOT_SUPPORTED, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("not recognized in table"));
@@ -959,7 +959,7 @@ TEST_F(P4TableMapperTest, TestTableMapLPMFieldMissingValue) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   ASSERT_EQ(1, flow_entry.fields_size());
   EXPECT_EQ(P4_FIELD_TYPE_ETH_DST, flow_entry.fields(0).type());
@@ -974,7 +974,7 @@ TEST_F(P4TableMapperTest, TestTableMapExactFieldMissingValue) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr(table_.preamble().name()));
@@ -994,7 +994,7 @@ TEST_F(P4TableMapperTest, TestTableMapFieldEncodeError) {
       EncodeByteValue(1, 127));
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr(table_.preamble().name()));
@@ -1015,7 +1015,7 @@ TEST_F(P4TableMapperTest, TestTableMapFieldBadValue) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr(table_.preamble().name()));
@@ -1034,7 +1034,7 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFields) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_EQ(3, flow_entry.fields_size());
 }
@@ -1049,7 +1049,7 @@ TEST_F(P4TableMapperTest, TestTableMapDuplicateFieldID) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("multiple match field"));
@@ -1064,8 +1064,8 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFieldsDontCareLPM) {
   ASSERT_EQ(3, table_.match_fields_size());
 
   // This test removes the LPM field from the tested table_entry_.
-  const p4::FieldMatch exact_field = table_entry_.match(1);
-  const p4::FieldMatch ternary_field = table_entry_.match(2);
+  const p4::v1::FieldMatch exact_field = table_entry_.match(1);
+  const p4::v1::FieldMatch ternary_field = table_entry_.match(2);
   table_entry_.mutable_match()->Clear();
   *table_entry_.add_match() = exact_field;
   *table_entry_.add_match() = ternary_field;
@@ -1073,7 +1073,7 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFieldsDontCareLPM) {
   // All three fields should be present in the output flow entry.
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_EQ(3, flow_entry.fields_size());
 }
@@ -1086,8 +1086,8 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFieldsDontCareTernary) {
   ASSERT_EQ(3, table_.match_fields_size());
 
   // This test removes the ternary field from the tested table_entry_.
-  const p4::FieldMatch lpm_field = table_entry_.match(0);
-  const p4::FieldMatch exact_field = table_entry_.match(1);
+  const p4::v1::FieldMatch lpm_field = table_entry_.match(0);
+  const p4::v1::FieldMatch exact_field = table_entry_.match(1);
   table_entry_.mutable_match()->Clear();
   *table_entry_.add_match() = lpm_field;
   *table_entry_.add_match() = exact_field;
@@ -1095,7 +1095,7 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFieldsDontCareTernary) {
   // All three fields should be present in the output flow entry.
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_OK(map_status);
   EXPECT_EQ(3, flow_entry.fields_size());
 }
@@ -1108,8 +1108,8 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFieldsDontCareExact) {
   ASSERT_EQ(3, table_.match_fields_size());
 
   // This test removes the exact field from the tested table_entry_.
-  const p4::FieldMatch lpm_field = table_entry_.match(0);
-  const p4::FieldMatch ternary_field = table_entry_.match(2);
+  const p4::v1::FieldMatch lpm_field = table_entry_.match(0);
+  const p4::v1::FieldMatch ternary_field = table_entry_.match(2);
   table_entry_.mutable_match()->Clear();
   *table_entry_.add_match() = lpm_field;
   *table_entry_.add_match() = ternary_field;
@@ -1117,7 +1117,7 @@ TEST_F(P4TableMapperTest, TestTableMapMultipleFieldsDontCareExact) {
   // This mapping should fail because exact match fields don't have defaults.
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(),
@@ -1133,7 +1133,7 @@ TEST_F(P4TableMapperTest, TestTableMissingActionData) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(),
@@ -1149,7 +1149,7 @@ TEST_F(P4TableMapperTest, TestTableMapMissingActionID) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(), HasSubstr("no action_id"));
@@ -1216,7 +1216,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Deparse ingress port for a packet to be sent to the controller.
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_INGRESS_PORT);
@@ -1250,7 +1250,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataFailure) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Deparse an unknown metadata.
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_VLAN_VID);
@@ -1290,7 +1290,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataDuplicateType) {
   // The egress port type should deparse as the original field (id 3),
   // not the field with the duplicate type.
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_PORT);
   mapped_packet_metadata.set_u32(0x1234);
   ASSERT_OK(p4_table_mapper_->DeparsePacketInMetadata(mapped_packet_metadata,
@@ -1303,7 +1303,7 @@ TEST_F(P4TableMapperTest, ParsePacketOutMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Parse egress port from a packet received from controller.
   p4_packet_metadata.set_metadata_id(1);
@@ -1326,7 +1326,7 @@ TEST_F(P4TableMapperTest, ParsePacketOutMetadataFailure) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Unknown metadata ID
   p4_packet_metadata.set_metadata_id(100);
@@ -1342,7 +1342,7 @@ TEST_F(P4TableMapperTest, DeparsePacketOutMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Deparse egress port for a packet to be sent to the switch.
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_PORT);
@@ -1361,7 +1361,7 @@ TEST_F(P4TableMapperTest, DeparsePacketOutMetadataFailure) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Deparse an unknown metadata.
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_VLAN_VID);
@@ -1387,7 +1387,7 @@ TEST_F(P4TableMapperTest, ParsePacketInMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Parse ingress port from a packet received from switch.
   p4_packet_metadata.set_metadata_id(1);
@@ -1426,7 +1426,7 @@ TEST_F(P4TableMapperTest, ParsePacketInMetadataFailure) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   MappedPacketMetadata mapped_packet_metadata;
-  ::p4::PacketMetadata p4_packet_metadata;
+  ::p4::v1::PacketMetadata p4_packet_metadata;
 
   // Unknown metadata ID
   p4_packet_metadata.set_metadata_id(100);
@@ -1450,7 +1450,7 @@ TEST_F(P4TableMapperTest, TestMapMatchField) {
   expected_mapped_field.set_bit_offset(128);
   expected_mapped_field.set_header_type(P4_HEADER_IPV4);
 
-  const ::p4::FieldMatch& field_match = table_entry_.match(0);
+  const ::p4::v1::FieldMatch& field_match = table_entry_.match(0);
   MappedField mapped_field;
   EXPECT_OK(p4_table_mapper_->MapMatchField(
       table_entry_.table_id(), field_match.field_id(), &mapped_field));
@@ -1473,7 +1473,7 @@ TEST_F(P4TableMapperTest, TestLookupTable) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
   ASSERT_NO_FATAL_FAILURE(SetUpTableID("exact-match-32-table"));
-  ::p4::config::Table table;
+  ::p4::config::v1::Table table;
   ASSERT_OK(p4_table_mapper_->LookupTable(table_.preamble().id(), &table));
   EXPECT_THAT(table, EqualsProto(table_));
 }
@@ -1482,7 +1482,7 @@ TEST_F(P4TableMapperTest, TestLookupTable) {
 TEST_F(P4TableMapperTest, TestLookupTableFailure) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));
-  ::p4::config::Table table;
+  ::p4::config::v1::Table table;
   ::util::Status lookup_status = p4_table_mapper_->LookupTable(999, &table);
   EXPECT_FALSE(lookup_status.ok());
   EXPECT_THAT(lookup_status.error_message(), HasSubstr("999"));
@@ -1496,7 +1496,7 @@ TEST_F(P4TableMapperTest, TestHiddenStaticTableUpdateFails) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(),
@@ -1513,7 +1513,7 @@ TEST_F(P4TableMapperTest, TestHiddenTableUpdateFailsStaticEnabled) {
 
   CommonFlowEntry flow_entry;
   EXPECT_OK(p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry));
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry));
 }
 
 // Tests expected failure of static table update.
@@ -1524,7 +1524,7 @@ TEST_F(P4TableMapperTest, TestStaticTableUpdateFails) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(),
@@ -1540,7 +1540,7 @@ TEST_F(P4TableMapperTest, TestStaticTableUpdateOKAfterEnable) {
 
   CommonFlowEntry flow_entry;
   EXPECT_OK(p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry));
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry));
 }
 
 // Tests expected failure of static table update after Enable/Disable sequence.
@@ -1553,7 +1553,7 @@ TEST_F(P4TableMapperTest, TestStaticTableUpdateFailsEnableDisable) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
 }
 
@@ -1563,8 +1563,8 @@ TEST_F(P4TableMapperTest, TestPrePushStaticEntryChanges) {
       forwarding_pipeline_config_));
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePrePushChanges(_, _))
       .WillOnce(Return(::util::OkStatus()));
-  p4::WriteRequest dummy_static_config;
-  p4::WriteRequest dummy_out;
+  p4::v1::WriteRequest dummy_static_config;
+  p4::v1::WriteRequest dummy_out;
   EXPECT_OK(p4_table_mapper_->HandlePrePushStaticEntryChanges(
       dummy_static_config, &dummy_out));
 }
@@ -1574,8 +1574,8 @@ TEST_F(P4TableMapperTest, TestPrePushStaticEntryChanges) {
 TEST_F(P4TableMapperTest, TestPrePushStaticEntryChangesNoPipeline) {
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePrePushChanges(_, _))
       .WillOnce(Return(::util::OkStatus()));
-  p4::WriteRequest dummy_static_config;
-  p4::WriteRequest dummy_out;
+  p4::v1::WriteRequest dummy_static_config;
+  p4::v1::WriteRequest dummy_out;
   EXPECT_OK(p4_table_mapper_->HandlePrePushStaticEntryChanges(
       dummy_static_config, &dummy_out));
 }
@@ -1589,8 +1589,8 @@ TEST_F(P4TableMapperTest, TestPrePushStaticEntryChangesError) {
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePrePushChanges(_, _))
       .WillOnce(Return(
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
-  p4::WriteRequest dummy_static_config;
-  p4::WriteRequest dummy_out;
+  p4::v1::WriteRequest dummy_static_config;
+  p4::v1::WriteRequest dummy_out;
   ::util::Status status = p4_table_mapper_->HandlePrePushStaticEntryChanges(
       dummy_static_config, &dummy_out);
   EXPECT_FALSE(status.ok());
@@ -1604,8 +1604,8 @@ TEST_F(P4TableMapperTest, TestPostPushStaticEntryChanges) {
       forwarding_pipeline_config_));
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePostPushChanges(_, _))
       .WillOnce(Return(::util::OkStatus()));
-  p4::WriteRequest dummy_static_config;
-  p4::WriteRequest dummy_out;
+  p4::v1::WriteRequest dummy_static_config;
+  p4::v1::WriteRequest dummy_out;
   EXPECT_OK(p4_table_mapper_->HandlePostPushStaticEntryChanges(
       dummy_static_config, &dummy_out));
 }
@@ -1614,8 +1614,8 @@ TEST_F(P4TableMapperTest, TestPostPushStaticEntryChanges) {
 // pipeline config push.  As the name implies, this should fail.
 TEST_F(P4TableMapperTest, TestPostPushStaticEntryChangesNoPipeline) {
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePostPushChanges(_, _)).Times(0);
-  p4::WriteRequest dummy_static_config;
-  p4::WriteRequest dummy_out;
+  p4::v1::WriteRequest dummy_static_config;
+  p4::v1::WriteRequest dummy_out;
   ::util::Status status = p4_table_mapper_->HandlePostPushStaticEntryChanges(
       dummy_static_config, &dummy_out);
   EXPECT_FALSE(status.ok());
@@ -1630,8 +1630,8 @@ TEST_F(P4TableMapperTest, TestPostPushStaticEntryChangesError) {
   EXPECT_CALL(*static_entry_mapper_mock_, HandlePostPushChanges(_, _))
       .WillOnce(Return(
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
-  p4::WriteRequest dummy_static_config;
-  p4::WriteRequest dummy_out;
+  p4::v1::WriteRequest dummy_static_config;
+  p4::v1::WriteRequest dummy_out;
   ::util::Status status = p4_table_mapper_->HandlePostPushStaticEntryChanges(
       dummy_static_config, &dummy_out);
   EXPECT_FALSE(status.ok());
@@ -1647,7 +1647,7 @@ TEST_F(P4TableMapperTest, TestHiddenNonStaticTableUpdateFails) {
 
   CommonFlowEntry flow_entry;
   auto map_status = p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry);
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry);
   EXPECT_FALSE(map_status.ok());
   EXPECT_EQ(ERR_INVALID_PARAM, map_status.error_code());
   EXPECT_THAT(map_status.error_message(),
@@ -1656,7 +1656,7 @@ TEST_F(P4TableMapperTest, TestHiddenNonStaticTableUpdateFails) {
   // Failure is also expected after EnableStaticTableUpdates.
   p4_table_mapper_->EnableStaticTableUpdates();
   EXPECT_FALSE(p4_table_mapper_->MapFlowEntry(
-      table_entry_, ::p4::Update::INSERT, &flow_entry).ok());
+      table_entry_, ::p4::v1::Update::INSERT, &flow_entry).ok());
 }
 
 // Tests hidden stage status of normal P4 table.

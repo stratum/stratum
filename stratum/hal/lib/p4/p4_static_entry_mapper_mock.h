@@ -29,11 +29,11 @@ namespace hal {
 class P4StaticEntryMapperMock : public P4StaticEntryMapper {
  public:
   MOCK_METHOD2(HandlePrePushChanges,
-               ::util::Status(const p4::WriteRequest& new_static_config,
-                              p4::WriteRequest* out_request));
+               ::util::Status(const p4::v1::WriteRequest& new_static_config,
+                              p4::v1::WriteRequest* out_request));
   MOCK_METHOD2(HandlePostPushChanges,
-               ::util::Status(const p4::WriteRequest& new_static_config,
-                              p4::WriteRequest* out_request));
+               ::util::Status(const p4::v1::WriteRequest& new_static_config,
+                              p4::v1::WriteRequest* out_request));
 };
 
 }  // namespace hal

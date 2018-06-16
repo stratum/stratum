@@ -285,7 +285,7 @@ class BcmPacketioManager {
   // on the node which this class is mapped to.
   virtual ::util::Status RegisterPacketReceiveWriter(
       GoogleConfig::BcmKnetIntfPurpose purpose,
-      const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer);
+      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer);
 
   virtual ::util::Status UnregisterPacketReceiveWriter(
       GoogleConfig::BcmKnetIntfPurpose purpose);
@@ -293,7 +293,7 @@ class BcmPacketioManager {
   // Transmits a packet to the KNET interface which is created for a specific
   // application (given by 'purpose') on the node which this class is mapped to.
   virtual ::util::Status TransmitPacket(
-      GoogleConfig::BcmKnetIntfPurpose purpose, const ::p4::PacketOut& packet);
+      GoogleConfig::BcmKnetIntfPurpose purpose, const ::p4::v1::PacketOut& packet);
 
   // Return copies of BcmKnetTxStats/BcmKnetRxStats for a given purpose
   // respectively. Returns error if the given purpose is not found in the
@@ -399,10 +399,10 @@ class BcmPacketioManager {
                                   int sock, int netif_index,
                                   std::string* header, std::string* payload);
 
-  // Deparses the given PacketInMetadata to the a set of ::p4::PacketMetadata
-  // protos in the given ::p4::PacketIn which is then sent to the controller.
+  // Deparses the given PacketInMetadata to the a set of ::p4::v1::PacketMetadata
+  // protos in the given ::p4::v1::PacketIn which is then sent to the controller.
   ::util::Status DeparsePacketInMetadata(const PacketInMetadata& meta,
-                                         ::p4::PacketIn* packet);
+                                         ::p4::v1::PacketIn* packet);
 
   // Helper called by TransmitPacket() to send packet (KNET headers + payload).
   ::util::Status TxPacket(GoogleConfig::BcmKnetIntfPurpose purpose, int sock,
@@ -410,10 +410,10 @@ class BcmPacketioManager {
                           const std::string& header,
                           const std::string& payload);
 
-  // Parses the ::p4::PacketMetadata protos in the given ::p4::PacketOut and
+  // Parses the ::p4::v1::PacketMetadata protos in the given ::p4::v1::PacketOut and
   // fills in the given PacketOutMetadata proto, which is then used to transmit
   // the packet (directly to a port or to ingress pipeline).
-  ::util::Status ParsePacketOutMetadata(const ::p4::PacketOut& packet,
+  ::util::Status ParsePacketOutMetadata(const ::p4::v1::PacketOut& packet,
                                         PacketOutMetadata* meta);
 
   // KNET interface RX thread function.
@@ -484,7 +484,7 @@ class BcmPacketioManager {
   // Map from purpose for a KNET interface to the RX packet handler. This map
   // is updated every time a controller is connected.
   std::map<GoogleConfig::BcmKnetIntfPurpose,
-           std::shared_ptr<WriterInterface<::p4::PacketIn>>>
+           std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>>
       purpose_to_rx_writer_ GUARDED_BY(rx_writer_lock_);
 
   // A vector of KnetIntfRxThreadData pointers.

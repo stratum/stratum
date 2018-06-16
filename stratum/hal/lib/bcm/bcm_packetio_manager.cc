@@ -349,7 +349,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
 ::util::Status BcmPacketioManager::RegisterPacketReceiveWriter(
     GoogleConfig::BcmKnetIntfPurpose purpose,
-    const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer) {
+    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped registering packet RX writer in "
                  << "BcmPacketioManager in sim mode for node with ID "
@@ -402,7 +402,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
 }
 
 ::util::Status BcmPacketioManager::TransmitPacket(
-    GoogleConfig::BcmKnetIntfPurpose purpose, const ::p4::PacketOut& packet) {
+    GoogleConfig::BcmKnetIntfPurpose purpose, const ::p4::v1::PacketOut& packet) {
   ASSIGN_OR_RETURN(const BcmKnetIntf* intf, GetBcmKnetIntf(purpose));
   CHECK_RETURN_IF_FALSE(intf->tx_sock > 0)  // MUST NOT HAPPEN!
       << "KNET interface with purpose "
@@ -1007,12 +1007,12 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
       // We have data to receive. Try to read max of
       // FLAGS_knet_max_num_packets_to_read_at_once packets before we try to
       // check for exit criteria.
-      std::vector<::p4::PacketIn> packets;
+      std::vector<::p4::v1::PacketIn> packets;
       for (int i = 0; i < FLAGS_knet_max_num_packets_to_read_at_once; ++i) {
         absl::ReaderMutexLock l(&chassis_lock);
         if (shutdown) break;
         std::string header = "";
-        ::p4::PacketIn packet;
+        ::p4::v1::PacketIn packet;
         ASSIGN_OR_RETURN(bool retry,
                          RxPacket(purpose, rx_sock, netif_index, &header,
                                   packet.mutable_payload()));
@@ -1207,7 +1207,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
 }
 
 ::util::Status BcmPacketioManager::DeparsePacketInMetadata(
-    const PacketInMetadata& meta, ::p4::PacketIn* packet) {
+    const PacketInMetadata& meta, ::p4::v1::PacketIn* packet) {
   // Note: We are down-casting to uint32 for the port/trunk IDs in this method.
   // This should not cause an issue as controller is already using 32 bit port
   // or trunk IDs.
@@ -1350,7 +1350,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
 }
 
 ::util::Status BcmPacketioManager::ParsePacketOutMetadata(
-    const ::p4::PacketOut& packet, PacketOutMetadata* meta) {
+    const ::p4::v1::PacketOut& packet, PacketOutMetadata* meta) {
   meta->cos = kDefaultCos;  // default
   for (const auto& metadata : packet.metadata()) {
     // Query P4TableMapper to understand what this metadata refers to.

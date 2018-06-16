@@ -28,19 +28,19 @@ namespace hal {
 
 // Creates a sub-class instance according to p4_field_match's type.
 std::unique_ptr<P4MatchKey> P4MatchKey::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   switch (p4_field_match.field_match_type_case()) {
-    case p4::FieldMatch::kExact:
+    case p4::v1::FieldMatch::kExact:
       return P4MatchKeyExact::CreateInstance(p4_field_match);
-    case p4::FieldMatch::kTernary:
+    case p4::v1::FieldMatch::kTernary:
       return P4MatchKeyTernary::CreateInstance(p4_field_match);
-    case p4::FieldMatch::kLpm:
+    case p4::v1::FieldMatch::kLpm:
       return P4MatchKeyLPM::CreateInstance(p4_field_match);
-    case p4::FieldMatch::kRange:
+    case p4::v1::FieldMatch::kRange:
       return P4MatchKeyRange::CreateInstance(p4_field_match);
-    case p4::FieldMatch::kValid:
+    case p4::v1::FieldMatch::kValid:
       return P4MatchKeyValid::CreateInstance(p4_field_match);
-    case p4::FieldMatch::FIELD_MATCH_TYPE_NOT_SET:
+    case p4::v1::FieldMatch::FIELD_MATCH_TYPE_NOT_SET:
       // A FieldMatch that does not set a match value of any type is
       // a valid default setting for some fields and invalid for other fields.
       // The P4MatchKeyUnspecified::Convert method figures this out when it
@@ -50,8 +50,8 @@ std::unique_ptr<P4MatchKey> P4MatchKey::CreateInstance(
   return nullptr;
 }
 
-P4MatchKey::P4MatchKey(const p4::FieldMatch& p4_field_match,
-                       p4::config::MatchField::MatchType allowed_match_type)
+P4MatchKey::P4MatchKey(const p4::v1::FieldMatch& p4_field_match,
+                       p4::config::v1::MatchField::MatchType allowed_match_type)
     : p4_field_match_(p4_field_match),
       allowed_match_type_(allowed_match_type) {}
 
@@ -63,7 +63,7 @@ P4MatchKey::P4MatchKey(const p4::FieldMatch& p4_field_match,
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "P4 TableEntry match field " << p4_field_match_.ShortDebugString()
            << " cannot convert to "
-           << p4::config::MatchField_MatchType_Name(
+           << p4::config::v1::MatchField_MatchType_Name(
                   conversion_entry.match_type());
   }
 
@@ -260,7 +260,7 @@ std::string P4MatchKey::CreateStringMask(int field_width, int mask_length) {
 
 // P4MatchKey subclass implementations start here.
 std::unique_ptr<P4MatchKeyExact> P4MatchKeyExact::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyExact(p4_field_match));
 }
 
@@ -276,7 +276,7 @@ std::unique_ptr<P4MatchKeyExact> P4MatchKeyExact::CreateInstance(
 }
 
 std::unique_ptr<P4MatchKeyTernary> P4MatchKeyTernary::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyTernary(p4_field_match));
 }
 
@@ -314,7 +314,7 @@ std::unique_ptr<P4MatchKeyTernary> P4MatchKeyTernary::CreateInstance(
 }
 
 std::unique_ptr<P4MatchKeyLPM> P4MatchKeyLPM::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyLPM(p4_field_match));
 }
 
@@ -337,17 +337,17 @@ std::unique_ptr<P4MatchKeyLPM> P4MatchKeyLPM::CreateInstance(
 }
 
 std::unique_ptr<P4MatchKeyValid> P4MatchKeyValid::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyValid(p4_field_match));
 }
 
 std::unique_ptr<P4MatchKeyRange> P4MatchKeyRange::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyRange(p4_field_match));
 }
 
 std::unique_ptr<P4MatchKeyUnspecified> P4MatchKeyUnspecified::CreateInstance(
-    const p4::FieldMatch& p4_field_match) {
+    const p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyUnspecified(p4_field_match));
 }
 
@@ -355,9 +355,9 @@ std::unique_ptr<P4MatchKeyUnspecified> P4MatchKeyUnspecified::CreateInstance(
     const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
     int /*bit_width*/, MappedField* mapped_field) {
   switch (conversion_entry.match_type()) {
-    case p4::config::MatchField::LPM:
-    case p4::config::MatchField::TERNARY:
-    case p4::config::MatchField::RANGE:
+    case p4::config::v1::MatchField::LPM:
+    case p4::config::v1::MatchField::TERNARY:
+    case p4::config::v1::MatchField::RANGE:
       // These types allow the default match to be defined by an empty value.
       // The default is communicated by not setting any value in mapped_field.
       break;
@@ -366,7 +366,7 @@ std::unique_ptr<P4MatchKeyUnspecified> P4MatchKeyUnspecified::CreateInstance(
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "P4 TableEntry match field "
              << p4_field_match().ShortDebugString() << " with P4 MatchType "
-             << p4::config::MatchField_MatchType_Name(
+             << p4::config::v1::MatchField_MatchType_Name(
                     conversion_entry.match_type())
              << " has no default value";
   }

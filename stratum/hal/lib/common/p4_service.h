@@ -42,13 +42,13 @@ namespace stratum {
 namespace hal {
 
 // Typedefs for more readable reference.
-typedef ::grpc::ServerReaderWriter<::p4::StreamMessageResponse,
-                                   ::p4::StreamMessageRequest>
+typedef ::grpc::ServerReaderWriter<::p4::v1::StreamMessageResponse,
+                                   ::p4::v1::StreamMessageRequest>
     ServerStreamChannelReaderWriter;
 
-// The "P4Service" class implements ::p4::P4Runtime::Service. It handles all
+// The "P4Service" class implements ::p4::v1::P4Runtime::Service. It handles all
 // the RPCs that are part of the P4-based PI API.
-class P4Service final : public ::p4::P4Runtime::Service {
+class P4Service final : public ::p4::v1::P4Runtime::Service {
  public:
   // This class encapsulates the connection information for a connected
   // controller.
@@ -118,29 +118,29 @@ class P4Service final : public ::p4::P4Runtime::Service {
   // API. Entries include tables entries, action profile members/groups, meter
   // entries, and counter entries.
   ::grpc::Status Write(::grpc::ServerContext* context,
-                       const ::p4::WriteRequest* req,
-                       ::p4::WriteResponse* resp) override;
+                       const ::p4::v1::WriteRequest* req,
+                       ::p4::v1::WriteResponse* resp) override;
 
   // Streams the forwarding entries, previously written on the target, out as
   // part of P4 Runtime API.
   ::grpc::Status Read(
-      ::grpc::ServerContext* context, const ::p4::ReadRequest* req,
-      ::grpc::ServerWriter<::p4::ReadResponse>* writer) override;
+      ::grpc::ServerContext* context, const ::p4::v1::ReadRequest* req,
+      ::grpc::ServerWriter<::p4::v1::ReadResponse>* writer) override;
 
   // Pushes the P4-based forwarding pipeline configuration of one or more
   // switching nodes.
   ::grpc::Status SetForwardingPipelineConfig(
       ::grpc::ServerContext* context,
-      const ::p4::SetForwardingPipelineConfigRequest* req,
-      ::p4::SetForwardingPipelineConfigResponse* resp) override
+      const ::p4::v1::SetForwardingPipelineConfigRequest* req,
+      ::p4::v1::SetForwardingPipelineConfigResponse* resp) override
       LOCKS_EXCLUDED(config_lock_);
 
   // Gets the P4-based forwarding pipeline configuration of one or more
   // switching nodes previously pushed to the switch.
   ::grpc::Status GetForwardingPipelineConfig(
       ::grpc::ServerContext* context,
-      const ::p4::GetForwardingPipelineConfigRequest* req,
-      ::p4::GetForwardingPipelineConfigResponse* resp) override
+      const ::p4::v1::GetForwardingPipelineConfigRequest* req,
+      ::p4::v1::GetForwardingPipelineConfigResponse* resp) override
       LOCKS_EXCLUDED(config_lock_);
 
   // Bidirectional channel between controller and the switch for packet I/O and
@@ -210,12 +210,12 @@ class P4Service final : public ::p4::P4Runtime::Service {
   // Blocks on the Channel registered with SwitchInterface to read received
   // packets.
   void* ReceivePackets(uint64 node_id,
-                       std::unique_ptr<ChannelReader<::p4::PacketIn>> reader)
+                       std::unique_ptr<ChannelReader<::p4::v1::PacketIn>> reader)
       LOCKS_EXCLUDED(controller_lock_);
 
   // Callback to be called whenever we receive a packet on the specified node
   // which is destined to controller.
-  void PacketReceiveHandler(uint64 node_id, const ::p4::PacketIn& packet)
+  void PacketReceiveHandler(uint64 node_id, const ::p4::v1::PacketIn& packet)
       LOCKS_EXCLUDED(controller_lock_);
 
   // Mutex lock used to protect node_id_to_controllers_ which is updated
@@ -244,7 +244,7 @@ class P4Service final : public ::p4::P4Runtime::Service {
 
   // Map of per-node Channels which are used to forward received packets to
   // P4Service.
-  std::map<uint64, std::shared_ptr<Channel<::p4::PacketIn>>> packet_in_channels_
+  std::map<uint64, std::shared_ptr<Channel<::p4::v1::PacketIn>>> packet_in_channels_
       GUARDED_BY(packet_in_thread_lock_);
 
   // Holds the IDs of all streaming connections. Every time there is a new

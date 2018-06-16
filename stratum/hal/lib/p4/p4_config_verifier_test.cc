@@ -64,7 +64,7 @@ class P4ConfigVerifierTest : public testing::Test {
   bool FirstTableHasDescriptor() {
     bool descriptor_ok = false;
     CHECK_LT(0, test_p4_info_.tables_size()) << "Test P4Info has no tables";
-    const ::p4::config::Table& first_p4_table = test_p4_info_.tables(0);
+    const ::p4::config::v1::Table& first_p4_table = test_p4_info_.tables(0);
     P4TableMapValue* value =
         gtl::FindOrNull(*test_p4_pipeline_config_.mutable_table_map(),
                         first_p4_table.preamble().name());
@@ -79,7 +79,7 @@ class P4ConfigVerifierTest : public testing::Test {
   bool FirstMatchFieldHasDescriptor() {
     bool descriptor_ok = false;
     CHECK_LT(0, test_p4_info_.tables_size()) << "Test P4Info has no tables";
-    const ::p4::config::Table& first_p4_table = test_p4_info_.tables(0);
+    const ::p4::config::v1::Table& first_p4_table = test_p4_info_.tables(0);
     CHECK_LT(0, first_p4_table.match_fields_size())
         << "First table in test P4Info has no match fields";
     P4TableMapValue* value =
@@ -96,7 +96,7 @@ class P4ConfigVerifierTest : public testing::Test {
   bool FirstActionHasDescriptor() {
     bool descriptor_ok = false;
     CHECK_LT(0, test_p4_info_.actions_size()) << "Test P4Info has no actions";
-    const ::p4::config::Action& first_p4_action = test_p4_info_.actions(0);
+    const ::p4::config::v1::Action& first_p4_action = test_p4_info_.actions(0);
     P4TableMapValue* value =
         gtl::FindOrNull(*test_p4_pipeline_config_.mutable_table_map(),
                         first_p4_action.preamble().name());
@@ -110,28 +110,28 @@ class P4ConfigVerifierTest : public testing::Test {
   // has attributes set according to the first table in test_p4_info_.
   void SetUpStaticTableEntry() {
     ASSERT_LE(1, test_p4_info_.tables_size());
-    const ::p4::config::Table& p4_table = test_p4_info_.tables(0);
-    p4::TableEntry static_table_entry;
+    const ::p4::config::v1::Table& p4_table = test_p4_info_.tables(0);
+    p4::v1::TableEntry static_table_entry;
     static_table_entry.set_table_id(p4_table.preamble().id());
 
     // For simplicity, each FieldMatch value is empty to use the default.
     // The P4ConfigVerifier currently does not validate any field values.
     for (const auto& match_field : p4_table.match_fields()) {
-      p4::FieldMatch* static_match = static_table_entry.add_match();
+      p4::v1::FieldMatch* static_match = static_table_entry.add_match();
       static_match->set_field_id(match_field.id());
     }
 
-    p4::WriteRequest* test_write_request =
+    p4::v1::WriteRequest* test_write_request =
         test_p4_pipeline_config_.mutable_static_table_entries();
-    p4::Update* new_update = test_write_request->add_updates();
-    new_update->set_type(p4::Update::INSERT);
+    p4::v1::Update* new_update = test_write_request->add_updates();
+    new_update->set_type(p4::v1::Update::INSERT);
     *(new_update->mutable_entity()->mutable_table_entry()) = static_table_entry;
   }
 
   // Tests typically create p4_verifier_ after setting test_p4_info_ and
   // test_p4_pipeline_config_ according to their needs.
   std::unique_ptr<P4ConfigVerifier> p4_verifier_;
-  ::p4::config::P4Info test_p4_info_;
+  ::p4::config::v1::P4Info test_p4_info_;
   P4PipelineConfig test_p4_pipeline_config_;
 
   // P4InfoManager used for verifying P4Info.
@@ -152,7 +152,7 @@ TEST_F(P4ConfigVerifierTest, TestValidP4ConfigFirstCompare) {
   SetUpP4ConfigFromFiles();
   p4_verifier_ = P4ConfigVerifier::CreateInstance(
       test_p4_info_, test_p4_pipeline_config_);
-  ::p4::config::P4Info empty_p4_info;
+  ::p4::config::v1::P4Info empty_p4_info;
   P4PipelineConfig empty_p4_pipeline;
   EXPECT_OK(p4_verifier_->VerifyAndCompare(empty_p4_info, empty_p4_pipeline));
 }
@@ -462,9 +462,9 @@ TEST_F(P4ConfigVerifierTest, TestValidStaticTableEntry) {
 TEST_F(P4ConfigVerifierTest, TestStaticTableEntryBadUpdateType) {
   SetUpP4ConfigFromFiles();
   SetUpStaticTableEntry();
-  p4::Update* test_update = test_p4_pipeline_config_.
+  p4::v1::Update* test_update = test_p4_pipeline_config_.
       mutable_static_table_entries()->mutable_updates(0);
-  test_update->set_type(p4::Update::DELETE);  // DELETE is an unexpected type.
+  test_update->set_type(p4::v1::Update::DELETE);  // DELETE is an unexpected type.
   p4_verifier_ = P4ConfigVerifier::CreateInstance(
       test_p4_info_, test_p4_pipeline_config_);
   ::util::Status status = p4_verifier_->Verify();
@@ -476,7 +476,7 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryBadUpdateType) {
 TEST_F(P4ConfigVerifierTest, TestStaticTableEntryNotTableEntry) {
   SetUpP4ConfigFromFiles();
   SetUpStaticTableEntry();
-  p4::Entity* test_entity = test_p4_pipeline_config_.
+  p4::v1::Entity* test_entity = test_p4_pipeline_config_.
       mutable_static_table_entries()->mutable_updates(0)->mutable_entity();
   test_entity->clear_table_entry();  // Clears the expected table_entry.
   p4_verifier_ = P4ConfigVerifier::CreateInstance(
@@ -489,7 +489,7 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryNotTableEntry) {
 TEST_F(P4ConfigVerifierTest, TestStaticTableEntryBadTableID) {
   SetUpP4ConfigFromFiles();
   SetUpStaticTableEntry();
-  p4::Entity* test_entity = test_p4_pipeline_config_.
+  p4::v1::Entity* test_entity = test_p4_pipeline_config_.
       mutable_static_table_entries()->mutable_updates(0)->mutable_entity();
   test_entity->mutable_table_entry()->set_table_id(0xf123f);
   p4_verifier_ = P4ConfigVerifier::CreateInstance(
@@ -502,7 +502,7 @@ TEST_F(P4ConfigVerifierTest, TestStaticTableEntryBadTableID) {
 TEST_F(P4ConfigVerifierTest, TestStaticTableEntryNoFieldMatches) {
   SetUpP4ConfigFromFiles();
   SetUpStaticTableEntry();
-  p4::Entity* test_entity = test_p4_pipeline_config_.
+  p4::v1::Entity* test_entity = test_p4_pipeline_config_.
       mutable_static_table_entries()->mutable_updates(0)->mutable_entity();
   test_entity->mutable_table_entry()->clear_match();  // Clears expected match.
   p4_verifier_ = P4ConfigVerifier::CreateInstance(

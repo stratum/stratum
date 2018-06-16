@@ -85,7 +85,7 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::PushForwardingPipelineConfig(
-    uint64 node_id, const ::p4::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
@@ -102,7 +102,7 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::VerifyForwardingPipelineConfig(
-    uint64 node_id, const ::p4::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
@@ -147,7 +147,7 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::WriteForwardingEntries(
-    const ::p4::WriteRequest& req, std::vector<::util::Status>* results) {
+    const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
   CHECK_RETURN_IF_FALSE(results != nullptr)
@@ -163,7 +163,7 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::ReadForwardingEntries(
-    const ::p4::ReadRequest& req, WriterInterface<::p4::ReadResponse>* writer,
+    const ::p4::v1::ReadRequest& req, WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
@@ -180,7 +180,7 @@ BcmSwitch::~BcmSwitch() {}
 
 ::util::Status BcmSwitch::RegisterPacketReceiveWriter(
     uint64 node_id,
-    const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer) {
+    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
@@ -201,7 +201,7 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::TransmitPacket(uint64 node_id,
-                                         const ::p4::PacketOut& packet) {
+                                         const ::p4::v1::PacketOut& packet) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
@@ -404,7 +404,7 @@ std::unique_ptr<BcmSwitch> BcmSwitch::CreateInstance(
 }
 
 ::util::Status BcmSwitch::DoVerifyForwardingPipelineConfig(
-    uint64 node_id, const ::p4::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   // Get the BcmNode pointer first. No need to continue if we cannot find one.
   ASSIGN_OR_RETURN(auto* bcm_node, GetBcmNodeFromNodeId(node_id));
   // Verify the forwarding config in all the managers and nodes.

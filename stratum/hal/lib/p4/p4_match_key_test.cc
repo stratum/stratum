@@ -64,7 +64,7 @@ class P4MatchKeyTest : public testing::Test {
   }
 
   // P4 runtime FieldMatch that tests to use to create P4MatchKey instances.
-  p4::FieldMatch test_match_;
+  p4::v1::FieldMatch test_match_;
 
   // Portion of P4 table map field descriptor specifying conversion attributes.
   P4FieldDescriptor::P4FieldConversionEntry field_conversion_;
@@ -100,7 +100,7 @@ TEST_F(P4MatchKeyTest, TestCreateExactMatch) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::EXACT, match_key->allowed_match_type());
+  EXPECT_EQ(p4::config::v1::MatchField::EXACT, match_key->allowed_match_type());
 }
 
 TEST_F(P4MatchKeyTest, TestCreateLPMMatch) {
@@ -108,7 +108,7 @@ TEST_F(P4MatchKeyTest, TestCreateLPMMatch) {
   SetUpLPMMatch(kLpmValue, 24);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::LPM, match_key->allowed_match_type());
+  EXPECT_EQ(p4::config::v1::MatchField::LPM, match_key->allowed_match_type());
 }
 
 TEST_F(P4MatchKeyTest, TestCreateTernaryMatch) {
@@ -117,7 +117,7 @@ TEST_F(P4MatchKeyTest, TestCreateTernaryMatch) {
   SetUpTernaryMatch(kTernaryValue, kTernaryMask);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::TERNARY, match_key->allowed_match_type());
+  EXPECT_EQ(p4::config::v1::MatchField::TERNARY, match_key->allowed_match_type());
 }
 
 TEST_F(P4MatchKeyTest, TestCreateRangeMatch) {
@@ -126,21 +126,21 @@ TEST_F(P4MatchKeyTest, TestCreateRangeMatch) {
   SetUpRangeMatch(kLowValue, kHighValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::RANGE, match_key->allowed_match_type());
+  EXPECT_EQ(p4::config::v1::MatchField::RANGE, match_key->allowed_match_type());
 }
 
 TEST_F(P4MatchKeyTest, TestCreateValidMatch) {
   SetUpValidMatch(true);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::VALID, match_key->allowed_match_type());
+  EXPECT_EQ(p4::config::v1::MatchField::VALID, match_key->allowed_match_type());
 }
 
 TEST_F(P4MatchKeyTest, TestCreateUnspecifiedMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::UNSPECIFIED,
+  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
             match_key->allowed_match_type());
 }
 
@@ -152,7 +152,7 @@ TEST_F(P4MatchKeyTest, TestMatchTypeConflict) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   ::util::Status status =
       match_key->Convert(field_conversion_, 0, &mapped_field_);
   EXPECT_FALSE(status.ok());
@@ -167,7 +167,7 @@ TEST_F(P4MatchKeyTest, TestConvertExactMatch32) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 31, &mapped_field_);
@@ -184,7 +184,7 @@ TEST_F(P4MatchKeyTest, TestConvertExactMatch64) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U64);
   ::util::Status status =
       match_key->Convert(field_conversion_, 63, &mapped_field_);
@@ -202,7 +202,7 @@ TEST_F(P4MatchKeyTest, TestConvertLPMMatch32) {
   SetUpLPMMatch(kLPMValue, kPrefixLength);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -223,7 +223,7 @@ TEST_F(P4MatchKeyTest, TestConvertLPMMatch64) {
   SetUpLPMMatch(kLPMValue, kPrefixLength);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U64_AND_MASK);
   ::util::Status status =
@@ -243,7 +243,7 @@ TEST_F(P4MatchKeyTest, TestConvertLPMMatchBytes) {
   SetUpLPMMatch(kLPMValue, kPrefixLength);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_BYTES_AND_MASK);
   ::util::Status status =
@@ -267,7 +267,7 @@ TEST_F(P4MatchKeyTest, TestConvertTernaryMatch32) {
   SetUpTernaryMatch(kTernaryValue, kTernaryMask);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -288,7 +288,7 @@ TEST_F(P4MatchKeyTest, TestConvertTernaryMatch64) {
   SetUpTernaryMatch(kTernaryValue, kTernaryMask);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U64_AND_MASK);
   ::util::Status status =
@@ -307,7 +307,7 @@ TEST_F(P4MatchKeyTest, TestConvertTernaryMatchBytes) {
   SetUpTernaryMatch(kTernaryValue, kTernaryMask);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_BYTES_AND_MASK);
   ::util::Status status =
@@ -325,7 +325,7 @@ TEST_F(P4MatchKeyTest, TestConvertUnknown) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_UNKNOWN);
   ::util::Status status =
       match_key->Convert(field_conversion_, 16, &mapped_field_);
@@ -341,7 +341,7 @@ TEST_F(P4MatchKeyTest, TestConvertRaw) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_RAW);
   ::util::Status status =
       match_key->Convert(field_conversion_, 16, &mapped_field_);
@@ -357,7 +357,7 @@ TEST_F(P4MatchKeyTest, TestConvertValidMatch) {
   SetUpValidMatch(true);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::VALID);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::VALID);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_RAW);
   ::util::Status status =
       match_key->Convert(field_conversion_, 1, &mapped_field_);
@@ -375,7 +375,7 @@ TEST_F(P4MatchKeyTest, TestConvertRangeMatch) {
   SetUpRangeMatch(kLowValue, kHighValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::RANGE);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::RANGE);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_RAW);
   ::util::Status status =
       match_key->Convert(field_conversion_, 1, &mapped_field_);
@@ -390,9 +390,9 @@ TEST_F(P4MatchKeyTest, TestConvertDefaultLPMMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::UNSPECIFIED,
+  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
             match_key->allowed_match_type());
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -407,9 +407,9 @@ TEST_F(P4MatchKeyTest, TestConvertDefaultTernaryMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::UNSPECIFIED,
+  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
             match_key->allowed_match_type());
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -424,9 +424,9 @@ TEST_F(P4MatchKeyTest, TestConvertDefaultRangeMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::UNSPECIFIED,
+  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
             match_key->allowed_match_type());
-  field_conversion_.set_match_type(p4::config::MatchField::RANGE);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::RANGE);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 32, &mapped_field_);
@@ -440,9 +440,9 @@ TEST_F(P4MatchKeyTest, TestConvertUnspecifiedExactMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::UNSPECIFIED,
+  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
             match_key->allowed_match_type());
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 32, &mapped_field_);
@@ -458,9 +458,9 @@ TEST_F(P4MatchKeyTest, TestConvertUnspecifiedValidMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::MatchField::UNSPECIFIED,
+  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
             match_key->allowed_match_type());
-  field_conversion_.set_match_type(p4::config::MatchField::VALID);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::VALID);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 32, &mapped_field_);
@@ -478,7 +478,7 @@ TEST_F(P4MatchKeyTest, TestInvalidBitWidth) {
   SetUpExactMatch(kExactValue);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 33, &mapped_field_);
@@ -496,7 +496,7 @@ TEST_F(P4MatchKeyTest, TestConvertLPMNoMaskConversion) {
   SetUpLPMMatch(kLPMValue, kPrefixLength);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 32, &mapped_field_);
@@ -515,7 +515,7 @@ TEST_F(P4MatchKeyTest, TestConvertTernaryNoMaskConversion) {
   SetUpTernaryMatch(kTernaryValue, kTernaryMask);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 12, &mapped_field_);
@@ -531,7 +531,7 @@ TEST_F(P4MatchKeyTest, TestExactMatchEmptyValue) {
   SetUpExactMatch({});
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, 31, &mapped_field_);
@@ -545,7 +545,7 @@ TEST_F(P4MatchKeyTest, TestLPMMatchEmptyValue) {
   SetUpLPMMatch({}, 24);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -561,7 +561,7 @@ TEST_F(P4MatchKeyTest, TestLPMMatchZeroPrefix) {
   SetUpLPMMatch({192, 168, 1, 0}, 0);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -577,7 +577,7 @@ TEST_F(P4MatchKeyTest, TestTernaryMatchEmptyValue) {
   SetUpTernaryMatch({}, {0xff, 0x00, 0xff, 0x00});
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -593,7 +593,7 @@ TEST_F(P4MatchKeyTest, TestTernaryMatchEmptyMask) {
   SetUpTernaryMatch({192, 168, 1, 0}, {});
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::TERNARY);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::TERNARY);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status =
@@ -614,7 +614,7 @@ TEST_P(P4MatchKeyBitWidthTest, TestExactMatchBitWidths1to8) {
   SetUpExactMatch(match_value);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, max_width_param(), &mapped_field_);
@@ -642,7 +642,7 @@ TEST_P(P4MatchKeyBitWidthTest, TestExactMatchBitWidths25to32) {
   SetUpExactMatch(match_value);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status = match_key->Convert(
       field_conversion_, max_width_param() + 24, &mapped_field_);
@@ -671,7 +671,7 @@ TEST_P(P4MatchKeyBitWidthTest, TestExactMatchBitWidths57to64) {
   SetUpExactMatch(match_value);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U64);
   ::util::Status status = match_key->Convert(
       field_conversion_, max_width_param() + 56, &mapped_field_);
@@ -696,7 +696,7 @@ TEST_P(P4MatchKeyBitWidthTest, TestExactMatchBitLeadingZeroes) {
   SetUpExactMatch(match_value);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::EXACT);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::EXACT);
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
   ::util::Status status =
       match_key->Convert(field_conversion_, max_width_param(), &mapped_field_);
@@ -731,7 +731,7 @@ TEST_P(P4MatchKeyLPMPrefixWidthTest, TestLPMPrefixLength32) {
   SetUpLPMMatch(lpm_match_value, prefix_length_param());
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U32_AND_MASK);
   ::util::Status status = match_key->Convert(
@@ -774,7 +774,7 @@ TEST_P(P4MatchKeyLPMPrefixWidthTest, TestLPMPrefixLength64) {
   SetUpLPMMatch(lpm_match_value, prefix_length);
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_U64_AND_MASK);
   ::util::Status status =
@@ -810,7 +810,7 @@ TEST_P(P4MatchKeyLPMPrefixWidthTest, TestLPMPrefixLengthBytes) {
   SetUpLPMMatch(lpm_match_value, prefix_length_param());
   std::unique_ptr<P4MatchKey> match_key =
       P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::MatchField::LPM);
+  field_conversion_.set_match_type(p4::config::v1::MatchField::LPM);
   field_conversion_.set_conversion(
       P4FieldDescriptor::P4_CONVERT_TO_BYTES_AND_MASK);
   ::util::Status status = match_key->Convert(

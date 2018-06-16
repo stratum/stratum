@@ -119,7 +119,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::PushForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   // The pipeline config is stored as raw bytes in the p4_device_config.
   P4PipelineConfig p4_pipeline_config;
   if (!p4_pipeline_config.ParseFromString(config.p4_device_config())) {
@@ -188,7 +188,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::VerifyForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   // TODO: Implement if needed.
   return ::util::OkStatus();
 }
@@ -199,7 +199,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::InsertTableEntry(
-    const ::p4::TableEntry& entry) const {
+    const ::p4::v1::TableEntry& entry) const {
   VLOG(3) << "Inserting table entry " << entry.ShortDebugString();
   // Verify this entry can be added to the software state.
   ASSIGN_OR_RETURN(const AclTable* table,
@@ -209,7 +209,7 @@ BcmAclManager::~BcmAclManager() {}
   // Convert the entry to a BcmFlowEntry.
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR_WITH_APPEND(bcm_table_manager_->FillBcmFlowEntry(
-      entry, ::p4::Update::INSERT, &bcm_flow_entry))
+      entry, ::p4::v1::Update::INSERT, &bcm_flow_entry))
       << " Failed to insert table entry: " << entry.ShortDebugString() << ".";
 
   // TODO: Implement stat coloring options.
@@ -229,16 +229,16 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::ModifyTableEntry(
-    const ::p4::TableEntry& entry) const {
+    const ::p4::v1::TableEntry& entry) const {
   VLOG(3) << "Modifying table entry: " << entry.ShortDebugString() << ".";
   ASSIGN_OR_RETURN(const AclTable* table,
                    bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
   ASSIGN_OR_RETURN(int bcm_acl_id, table->BcmAclId(entry));
 
-  // Convert: ::p4::TableEntry --> CommonFlowEntry --> BcmFlowEntry.
+  // Convert: ::p4::v1::TableEntry --> CommonFlowEntry --> BcmFlowEntry.
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR_WITH_APPEND(bcm_table_manager_->FillBcmFlowEntry(
-      entry, ::p4::Update::MODIFY, &bcm_flow_entry))
+      entry, ::p4::v1::Update::MODIFY, &bcm_flow_entry))
       << " Failed to modify table entry: " << entry.ShortDebugString() << ".";
 
   // Perform the flow modification.
@@ -255,7 +255,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::DeleteTableEntry(
-    const ::p4::TableEntry& entry) const {
+    const ::p4::v1::TableEntry& entry) const {
   VLOG(3) << "Deleting table entry: " << entry.ShortDebugString() << ".";
   ASSIGN_OR_RETURN(const AclTable* table,
                    bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
@@ -268,8 +268,8 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::UpdateTableEntryMeter(
-    const ::p4::DirectMeterEntry& meter) const {
-  const ::p4::TableEntry& entry = meter.table_entry();
+    const ::p4::v1::DirectMeterEntry& meter) const {
+  const ::p4::v1::TableEntry& entry = meter.table_entry();
   ASSIGN_OR_RETURN(const AclTable* table,
                    bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
   ASSIGN_OR_RETURN(int bcm_acl_id, table->BcmAclId(entry));
@@ -289,7 +289,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::GetTableEntryStats(
-    const ::p4::TableEntry& entry, ::p4::CounterData* counter) const {
+    const ::p4::v1::TableEntry& entry, ::p4::v1::CounterData* counter) const {
   if (counter == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null counter.";
   }
@@ -337,11 +337,11 @@ std::unique_ptr<BcmAclManager> BcmAclManager::CreateInstance(
   std::set<uint32> acl_table_ids = bcm_table_manager_->GetAllAclTableIDs();
   if (acl_table_ids.empty()) return util::OkStatus();
   // Remove all the ACL table entries from hardware & software.
-  ::p4::ReadResponse response;
-  std::vector<::p4::TableEntry*> all_acl_entries;
+  ::p4::v1::ReadResponse response;
+  std::vector<::p4::v1::TableEntry*> all_acl_entries;
   RETURN_IF_ERROR(bcm_table_manager_->ReadTableEntries(acl_table_ids, &response,
                                                        &all_acl_entries));
-  for (::p4::TableEntry* acl_table_entry : all_acl_entries) {
+  for (::p4::v1::TableEntry* acl_table_entry : all_acl_entries) {
     RETURN_IF_ERROR(DeleteTableEntry(*acl_table_entry));
   }
   // Remove all the ACL tables from hardware & software.
@@ -422,7 +422,7 @@ BcmAclManager::GeneratePhysicalAclTables(
   physical_acl_table.stage = stage;
   for (const BcmAclPipelineTable& pipeline_table : physical_table) {
     uint32 table_id = pipeline_table.table.table_id();
-    ::p4::config::Table p4_table;
+    ::p4::config::v1::Table p4_table;
     RETURN_IF_ERROR(p4_table_mapper_->LookupTable(table_id, &p4_table));
     physical_acl_table.logical_tables.emplace_back(p4_table, stage,
                                                    pipeline_table.priority);

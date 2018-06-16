@@ -106,7 +106,7 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::PushForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
   P4PipelineConfig p4_pipeline_config;
   CHECK_RETURN_IF_FALSE(
@@ -122,7 +122,7 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::VerifyForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&lock_);
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(
@@ -158,7 +158,7 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::WriteForwardingEntries(
-    const ::p4::WriteRequest& req, std::vector<::util::Status>* results) {
+    const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   CHECK_RETURN_IF_FALSE(results) << "Results pointer must be non-null.";
 
   absl::WriterMutexLock l(&lock_);
@@ -171,7 +171,7 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::ReadForwardingEntries(
-    const ::p4::ReadRequest& req, WriterInterface<::p4::ReadResponse>* writer,
+    const ::p4::v1::ReadRequest& req, WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
@@ -190,49 +190,49 @@ BcmNode::~BcmNode() {}
   for (const auto& entity : req.entities()) {
     ::util::Status status = ::util::OkStatus();
     switch (entity.entity_case()) {
-      case ::p4::Entity::kExternEntry:
+      case ::p4::v1::Entity::kExternEntry:
         // TODO: Implement this.
         return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                << "Extern entries are not currently supported.";
-      case ::p4::Entity::kTableEntry:
+      case ::p4::v1::Entity::kTableEntry:
         table_ids.insert(entity.table_entry().table_id());
         table_entries_requested = true;
         break;
-      case ::p4::Entity::kActionProfileMember:
+      case ::p4::v1::Entity::kActionProfileMember:
         action_profile_ids.insert(
             entity.action_profile_member().action_profile_id());
         action_profile_members_requested = true;
         break;
-      case ::p4::Entity::kActionProfileGroup:
+      case ::p4::v1::Entity::kActionProfileGroup:
         action_profile_ids.insert(
             entity.action_profile_group().action_profile_id());
         action_profile_groups_requested = true;
         break;
-      case ::p4::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kMeterEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Meter entries are not currently supported: "
                  << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
         break;
-      case ::p4::Entity::kDirectMeterEntry:
+      case ::p4::v1::Entity::kDirectMeterEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Direct meter entries are not currently supported: "
                  << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
         break;
-      case ::p4::Entity::kCounterEntry:
+      case ::p4::v1::Entity::kCounterEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Counter entries are not currently supported: "
                  << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
         break;
-      case ::p4::Entity::kDirectCounterEntry: {
+      case ::p4::v1::Entity::kDirectCounterEntry: {
         // Attempt to read ACL stats for table entry identified in request.
-        ::p4::ReadResponse resp;
-        ::p4::CounterData* counter =
+        ::p4::v1::ReadResponse resp;
+        ::p4::v1::CounterData* counter =
             resp.add_entities()->mutable_direct_counter_entry()->mutable_data();
         RETURN_IF_ERROR(bcm_acl_manager_->GetTableEntryStats(
             entity.direct_counter_entry().table_entry(), counter));
@@ -242,7 +242,7 @@ BcmNode::~BcmNode() {}
         }
         break;
       }
-      case ::p4::Entity::ENTITY_NOT_SET:
+      case ::p4::v1::Entity::ENTITY_NOT_SET:
         status = MAKE_ERROR(ERR_INVALID_PARAM)
                  << "Empty entity: " << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
@@ -260,8 +260,8 @@ BcmNode::~BcmNode() {}
   if (action_profile_ids.count(0)) action_profile_ids.clear();  // request all
 
   if (table_entries_requested) {
-    ::p4::ReadResponse resp;
-    std::vector<::p4::TableEntry*> acl_flows;
+    ::p4::v1::ReadResponse resp;
+    std::vector<::p4::v1::TableEntry*> acl_flows;
     // Populate response with table entries and obtain list of pointers into the
     // response to entries for which stats need to be collected.
     RETURN_IF_ERROR(
@@ -289,7 +289,7 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::RegisterPacketReceiveWriter(
-    const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer) {
+    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -307,7 +307,7 @@ BcmNode::~BcmNode() {}
       GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER);
 }
 
-::util::Status BcmNode::TransmitPacket(const ::p4::PacketOut& packet) {
+::util::Status BcmNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
   absl::ReaderMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -328,7 +328,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 
 ::util::Status BcmNode::StaticEntryWrite(const P4PipelineConfig& config,
                                          bool post_push) {
-  ::p4::WriteRequest static_write_request;
+  ::p4::v1::WriteRequest static_write_request;
 
   // Separate sets of static entries apply before and after the
   // ForwardingPipelineConfig change takes place.
@@ -374,36 +374,36 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 }
 
 ::util::Status BcmNode::DoWriteForwardingEntries(
-    const ::p4::WriteRequest& req, std::vector<::util::Status>* results) {
+    const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   bool success = true;
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
-      case ::p4::Entity::kExternEntry:
+      case ::p4::v1::Entity::kExternEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Extern entries are not currently supported.";
         break;
-      case ::p4::Entity::kTableEntry:
+      case ::p4::v1::Entity::kTableEntry:
         status = TableWrite(update.entity().table_entry(), update.type());
         break;
-      case ::p4::Entity::kActionProfileMember:
+      case ::p4::v1::Entity::kActionProfileMember:
         status = ActionProfileMemberWrite(
             update.entity().action_profile_member(), update.type());
         break;
-      case ::p4::Entity::kActionProfileGroup:
+      case ::p4::v1::Entity::kActionProfileGroup:
         status = ActionProfileGroupWrite(update.entity().action_profile_group(),
                                          update.type());
         break;
-      case ::p4::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kMeterEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Meter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
         break;
-      case ::p4::Entity::kDirectMeterEntry:
+      case ::p4::v1::Entity::kDirectMeterEntry:
         // For direct meter entry, only modify action is expected.
-        if (update.type() != ::p4::Update::MODIFY) {
+        if (update.type() != ::p4::v1::Update::MODIFY) {
           status = MAKE_ERROR(ERR_INVALID_PARAM)
                    << "Direct meter entries can only be modified: "
                    << update.ShortDebugString() << ".";
@@ -412,19 +412,19 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
               update.entity().direct_meter_entry());
         }
         break;
-      case ::p4::Entity::kCounterEntry:
+      case ::p4::v1::Entity::kCounterEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Counter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
         break;
-      case ::p4::Entity::kDirectCounterEntry:
+      case ::p4::v1::Entity::kDirectCounterEntry:
         // TODO: Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Direct counter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
         break;
-      case ::p4::Entity::ENTITY_NOT_SET:
+      case ::p4::v1::Entity::ENTITY_NOT_SET:
         status = MAKE_ERROR(ERR_INVALID_PARAM)
                  << "Empty entity: " << update.ShortDebugString() << ".";
         break;
@@ -450,9 +450,9 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 }
 
 // TODO: Complete this function for all the update types.
-::util::Status BcmNode::TableWrite(const ::p4::TableEntry& entry,
-                                   ::p4::Update::Type type) {
-  CHECK_RETURN_IF_FALSE(type != ::p4::Update::UNSPECIFIED);
+::util::Status BcmNode::TableWrite(const ::p4::v1::TableEntry& entry,
+                                   ::p4::v1::Update::Type type) {
+  CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED);
 
   // We populate BcmFlowEntry based on the given TableEntry.
   BcmFlowEntry bcm_flow_entry;
@@ -462,7 +462,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   // Try to program the flow.
   bool consumed = false;  // will be set to true if we know what to do
   switch (type) {
-    case ::p4::Update::INSERT: {
+    case ::p4::v1::Update::INSERT: {
       switch (bcm_table_type) {
         case BcmFlowEntry::BCM_TABLE_IPV4_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
@@ -497,7 +497,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       }
       break;
     }
-    case ::p4::Update::MODIFY: {
+    case ::p4::v1::Update::MODIFY: {
       switch (bcm_table_type) {
         case BcmFlowEntry::BCM_TABLE_IPV4_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
@@ -518,7 +518,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       }
       break;
     }
-    case ::p4::Update::DELETE: {
+    case ::p4::v1::Update::DELETE: {
       switch (bcm_table_type) {
         case BcmFlowEntry::BCM_TABLE_IPV4_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
@@ -559,21 +559,21 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 
   CHECK_RETURN_IF_FALSE(consumed)
       << "Do not know what to do with the following BcmTableType when doing "
-      << "table update of type " << ::p4::Update::Type_Name(type) << ": "
+      << "table update of type " << ::p4::v1::Update::Type_Name(type) << ": "
       << BcmFlowEntry::BcmTableType_Name(bcm_table_type)
-      << ". p4::TableEntry: " << entry.ShortDebugString() << ".";
+      << ". p4::v1::TableEntry: " << entry.ShortDebugString() << ".";
 
   return ::util::OkStatus();
 }
 
 ::util::Status BcmNode::ActionProfileMemberWrite(
-    const ::p4::ActionProfileMember& member, ::p4::Update::Type type) {
+    const ::p4::v1::ActionProfileMember& member, ::p4::v1::Update::Type type) {
   bool consumed = false;  // will be set to true if we know what to do
   // Here, we only support ActionProfiles for nexthop members which will be part
   // of an ECMP/WCMP group.
   uint32 member_id = member.member_id();
   switch (type) {
-    case ::p4::Update::INSERT: {
+    case ::p4::v1::Update::INSERT: {
       // Member must not exist. Instead of re-add, controller must use modify.
       CHECK_RETURN_IF_FALSE(
           !bcm_table_manager_->ActionProfileMemberExists(member_id))
@@ -595,7 +595,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       consumed = true;
       break;
     }
-    case ::p4::Update::MODIFY: {
+    case ::p4::v1::Update::MODIFY: {
       // Member mod can happen even when the member is being referenced by flows
       // and/or groups. Member mod means keep the egress intf ID the same and
       // but modify the nexthop info of the egress intf.
@@ -619,7 +619,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       consumed = true;
       break;
     }
-    case ::p4::Update::DELETE: {
+    case ::p4::v1::Update::DELETE: {
       // Removing a member which does not exist or is already being used by a
       // group or a flow (i.e. has non-zero ref count) is not allowed. If
       // member has not been used by any group or flow yet (i.e. has zero ref
@@ -654,7 +654,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 
 namespace {
 
-::util::Status CheckForUniqueMemberIds(const ::p4::ActionProfileGroup& group) {
+::util::Status CheckForUniqueMemberIds(const ::p4::v1::ActionProfileGroup& group) {
   std::set<uint32> member_ids = {};
   for (const auto& member : group.members()) {
     uint32 member_id = member.member_id();
@@ -672,12 +672,12 @@ namespace {
 }  // namespace
 
 ::util::Status BcmNode::ActionProfileGroupWrite(
-    const ::p4::ActionProfileGroup& group, ::p4::Update::Type type) {
+    const ::p4::v1::ActionProfileGroup& group, ::p4::v1::Update::Type type) {
   bool consumed = false;  // will be set to true if we know what to do
   // Here, we only support ActionProfiles for ECMP/WCMP groups.
   uint32 group_id = group.group_id();
   switch (type) {
-    case ::p4::Update::INSERT: {
+    case ::p4::v1::Update::INSERT: {
       // All the members that are being added to the group must exist. But the
       // group itself must not exist.
       CHECK_RETURN_IF_FALSE(
@@ -699,7 +699,7 @@ namespace {
       consumed = true;
       break;
     }
-    case ::p4::Update::MODIFY: {
+    case ::p4::v1::Update::MODIFY: {
       // Group mod can happen even when the group is being referenced by flows.
       // Group mod is nothing but mutating the list of the members of an
       // existing group or the weights of the members. Note that all the new
@@ -728,7 +728,7 @@ namespace {
       consumed = true;
       break;
     }
-    case ::p4::Update::DELETE: {
+    case ::p4::v1::Update::DELETE: {
       // Note that removing groups will not remove the members.
       BcmMultipathNexthopInfo info;
       RETURN_IF_ERROR(bcm_table_manager_->GetBcmMultipathNexthopInfo(

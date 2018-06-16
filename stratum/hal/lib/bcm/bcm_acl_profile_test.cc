@@ -50,7 +50,7 @@ TEST_F(BcmAclProfileTest, VerifyAclProfileQualifiers) {
       << "We only support one node with ID " << kNodeId << ".";
 
   // Construct FowardingPipelineConfig proto.
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
   ASSERT_OK(ReadProtoFromTextFile(kTestP4InfoFile,
                                   forwarding_pipeline_config.mutable_p4info()))
       << "Failed to read p4 info config proto from file " << kTestP4InfoFile

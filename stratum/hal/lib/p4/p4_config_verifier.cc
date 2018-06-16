@@ -55,7 +55,7 @@ namespace stratum {
 namespace hal {
 
 std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
-    const ::p4::config::P4Info& p4_info,
+    const ::p4::config::v1::P4Info& p4_info,
     const P4PipelineConfig& p4_pipeline_config) {
   return absl::WrapUnique(new P4ConfigVerifier(p4_info, p4_pipeline_config));
 }
@@ -90,14 +90,14 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyAndCompare(
-    const ::p4::config::P4Info& old_p4_info,
+    const ::p4::config::v1::P4Info& old_p4_info,
     const P4PipelineConfig& old_p4_pipeline_config) {
   RETURN_IF_ERROR(Verify());
 
   // VerifyAndCompare accepts unchanged static entries or addition of new
   // static entries.  Static entry deletions and modifications require reboot.
-  p4::WriteRequest delete_request;
-  p4::WriteRequest modify_request;
+  p4::v1::WriteRequest delete_request;
+  p4::v1::WriteRequest modify_request;
   P4WriteRequestDiffer static_entry_differ(
       old_p4_pipeline_config.static_table_entries(),
       p4_pipeline_config_.static_table_entries());
@@ -127,7 +127,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyTable(
-    const ::p4::config::Table& p4_table) {
+    const ::p4::config::v1::Table& p4_table) {
   ::util::Status table_status = ::util::OkStatus();
 
   // Every P4 table needs a p4_pipeline_config_ table descriptor.
@@ -173,7 +173,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyAction(
-    const ::p4::config::Action& p4_action) {
+    const ::p4::config::v1::Action& p4_action) {
   ::util::Status action_status = ::util::OkStatus();
 
   // Every P4 action needs a valid p4_pipeline_config_ action descriptor.
@@ -211,9 +211,9 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyStaticTableEntry(
-    const p4::Update& static_entry) {
+    const p4::v1::Update& static_entry) {
   ::util::Status entry_status = ::util::OkStatus();
-  if (static_entry.type() != p4::Update::INSERT) {
+  if (static_entry.type() != p4::v1::Update::INSERT) {
     ::util::Status bad_type_status =
         MAKE_ERROR(ERR_INTERNAL)
         << "P4PipelineConfig static table entry has unexpected type: "
@@ -230,7 +230,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
     return entry_status;  // Nothing more to do if TableEntry is missing.
   }
 
-  const p4::TableEntry& table_entry = static_entry.entity().table_entry();
+  const p4::v1::TableEntry& table_entry = static_entry.entity().table_entry();
   bool table_found = false;
   for (const auto& p4_table : p4_info_.tables()) {
     if (table_entry.table_id() == p4_table.preamble().id()) {
@@ -273,7 +273,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyMatchField(
-    const ::p4::config::MatchField& match_field,
+    const ::p4::config::v1::MatchField& match_field,
     const std::string& table_name) {
   // Every P4 table match_field needs a p4_pipeline_config_ field descriptor.
   const std::string& field_name = match_field.name();
@@ -291,7 +291,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 
   // The field's match type should have a corresponding field descriptor
   // conversion.
-  if (match_field.match_type() != ::p4::config::MatchField::UNSPECIFIED) {
+  if (match_field.match_type() != ::p4::config::v1::MatchField::UNSPECIFIED) {
     bool match_ok = false;
     for (const auto& conversion : field_descriptor->valid_conversions()) {
       if (match_field.match_type() == conversion.match_type()) {
@@ -304,7 +304,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
              << "P4PipelineConfig descriptor for match field " << field_name
              << " in P4 table " << table_name << " has no conversion entry for"
              << " match type "
-             << ::p4::config::MatchField_MatchType_Name(
+             << ::p4::config::v1::MatchField_MatchType_Name(
                  match_field.match_type());
     }
   }

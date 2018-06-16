@@ -228,13 +228,13 @@ class BcmPacketioManagerTest : public ::testing::TestWithParam<OperationMode> {
 
   ::util::Status RegisterPacketReceiveWriter(
       GoogleConfig::BcmKnetIntfPurpose purpose,
-      const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer) {
+      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
     absl::ReaderMutexLock l(&chassis_lock);
     return bcm_packetio_manager_->RegisterPacketReceiveWriter(purpose, writer);
   }
 
   ::util::Status TransmitPacket(GoogleConfig::BcmKnetIntfPurpose purpose,
-                                const ::p4::PacketOut& packet) {
+                                const ::p4::v1::PacketOut& packet) {
     absl::ReaderMutexLock l(&chassis_lock);
     return bcm_packetio_manager_->TransmitPacket(purpose, packet);
   }
@@ -997,7 +997,7 @@ TEST_P(BcmPacketioManagerTest, VerifyChassisConfigFailureForInvalidNodeId) {
 
 TEST_P(BcmPacketioManagerTest,
        RegisterPacketReceiveWriterBeforeChassisConfigPush) {
-  auto writer = std::make_shared<WriterMock<::p4::PacketIn>>();
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
   ::util::Status status = RegisterPacketReceiveWriter(
       GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, writer);
   ASSERT_FALSE(status.ok());
@@ -1086,7 +1086,7 @@ TEST_P(BcmPacketioManagerTest,
 
   EXPECT_CALL(*p4_table_mapper_mock_, DeparsePacketInMetadata(_, _))
       .WillRepeatedly(
-          DoAll(WithArgs<1>(Invoke([](::p4::PacketMetadata* m) {
+          DoAll(WithArgs<1>(Invoke([](::p4::v1::PacketMetadata* m) {
                   ParseProtoFromString(kTestPacketMetadata1, m).IgnoreError();
                 })),
                 Return(::util::OkStatus())));
@@ -1098,7 +1098,7 @@ TEST_P(BcmPacketioManagerTest,
   //--------------------------------------------------------------
   // Register packet receive handler
   //--------------------------------------------------------------
-  auto writer = std::make_shared<WriterMock<::p4::PacketIn>>();
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
   EXPECT_CALL(*writer, Write(_))
       .WillOnce(DoAll(InvokeWithoutArgs([this] {
                         absl::WriterMutexLock l(&rx_lock_);
@@ -1270,7 +1270,7 @@ TEST_P(BcmPacketioManagerTest,
       .WillOnce(Return(
           ::util::Status(StratumErrorSpace(), ERR_HARDWARE_ERROR, "Blah")))
       .WillRepeatedly(
-          DoAll(WithArgs<1>(Invoke([](::p4::PacketMetadata* m) {
+          DoAll(WithArgs<1>(Invoke([](::p4::v1::PacketMetadata* m) {
                   ParseProtoFromString(kTestPacketMetadata1, m).IgnoreError();
                 })),
                 Return(::util::OkStatus())));
@@ -1282,7 +1282,7 @@ TEST_P(BcmPacketioManagerTest,
   //--------------------------------------------------------------
   // Register packet receive handler
   //--------------------------------------------------------------
-  auto writer = std::make_shared<WriterMock<::p4::PacketIn>>();
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
   EXPECT_CALL(*writer, Write(_))
       .WillOnce(DoAll(InvokeWithoutArgs([this] {
                         absl::WriterMutexLock l(&rx_lock_);
@@ -1362,7 +1362,7 @@ TEST_P(BcmPacketioManagerTest,
 }
 
 TEST_P(BcmPacketioManagerTest, TransmitPacketBeforeChassisConfigPush) {
-  ::p4::PacketOut packet;
+  ::p4::v1::PacketOut packet;
 
   ::util::Status status =
       TransmitPacket(GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, packet);
@@ -1436,7 +1436,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   //--------------------------------------------------------------
   // Packet TX
   //--------------------------------------------------------------
-  ::p4::PacketOut packet;
+  ::p4::v1::PacketOut packet;
 
   // 1- A packet with bad (unknown) port and some unknown meta (discarded).
   packet.set_payload(std::string(kTestPacket, sizeof(kTestPacket)));

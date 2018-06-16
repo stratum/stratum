@@ -46,18 +46,18 @@ P4StaticEntryMapper::P4StaticEntryMapper(P4TableMapper* p4_table_mapper)
 P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
 
 ::util::Status P4StaticEntryMapper::HandlePrePushChanges(
-    const p4::WriteRequest& new_static_config, p4::WriteRequest* out_request) {
+    const p4::v1::WriteRequest& new_static_config, p4::v1::WriteRequest* out_request) {
   out_request->Clear();
-  p4::WriteRequest physical_request;
-  p4::WriteRequest hidden_request;
+  p4::v1::WriteRequest physical_request;
+  p4::v1::WriteRequest hidden_request;
   RETURN_IF_ERROR(
       SplitRequest(new_static_config, &physical_request, &hidden_request));
 
   // Physical static entries that have been deleted relative to the current
   // pipeline config are identified here.  Static entry additions and
   // modifications are not applicable during the pre-push step.
-  p4::WriteRequest physical_deletes;
-  p4::WriteRequest physical_unchanged;
+  p4::v1::WriteRequest physical_deletes;
+  p4::v1::WriteRequest physical_unchanged;
   P4WriteRequestDiffer physical_differ(
       physical_static_entries_, physical_request);
   RETURN_IF_ERROR(physical_differ.Compare(
@@ -66,8 +66,8 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   // Hidden static entries that have been deleted relative to the current
   // pipeline config are identified here.  Static entry additions and
   // modifications are not applicable during the pre-push step.
-  p4::WriteRequest hidden_deletes;
-  p4::WriteRequest hidden_unchanged;
+  p4::v1::WriteRequest hidden_deletes;
+  p4::v1::WriteRequest hidden_unchanged;
   P4WriteRequestDiffer hidden_differ(hidden_static_entries_, hidden_request);
   RETURN_IF_ERROR(hidden_differ.Compare(
       &hidden_deletes, nullptr, nullptr, &hidden_unchanged));
@@ -82,20 +82,20 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
 }
 
 ::util::Status P4StaticEntryMapper::HandlePostPushChanges(
-    const p4::WriteRequest& new_static_config,
-    p4::WriteRequest* out_request) {
+    const p4::v1::WriteRequest& new_static_config,
+    p4::v1::WriteRequest* out_request) {
   out_request->Clear();
-  p4::WriteRequest physical_request;
-  p4::WriteRequest hidden_request;
+  p4::v1::WriteRequest physical_request;
+  p4::v1::WriteRequest hidden_request;
   RETURN_IF_ERROR(
       SplitRequest(new_static_config, &physical_request, &hidden_request));
 
   // Physical static entries that have been added or modified in the new
   // pipeline config are identified here.  Static entry deletions should have
   // already been handled by HandlePrePushChanges.
-  p4::WriteRequest physical_deletes;
-  p4::WriteRequest physical_adds;
-  p4::WriteRequest physical_mods;
+  p4::v1::WriteRequest physical_deletes;
+  p4::v1::WriteRequest physical_adds;
+  p4::v1::WriteRequest physical_mods;
   P4WriteRequestDiffer physical_differ(
       physical_static_entries_, physical_request);
   RETURN_IF_ERROR(physical_differ.Compare(
@@ -108,9 +108,9 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   // Hidden static entries that have been added or modified in the new
   // pipeline config are identified here.  Static entry deletions should have
   // already been handled by HandlePrePushChanges.
-  p4::WriteRequest hidden_deletes;
-  p4::WriteRequest hidden_adds;
-  p4::WriteRequest hidden_mods;
+  p4::v1::WriteRequest hidden_deletes;
+  p4::v1::WriteRequest hidden_adds;
+  p4::v1::WriteRequest hidden_mods;
   P4WriteRequestDiffer hidden_differ(hidden_static_entries_, hidden_request);
   RETURN_IF_ERROR(hidden_differ.Compare(
       &hidden_deletes, &hidden_adds, &hidden_mods, nullptr));
@@ -130,8 +130,8 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
 }
 
 ::util::Status P4StaticEntryMapper::SplitRequest(
-    const p4::WriteRequest& new_request,
-    p4::WriteRequest* physical_request, p4::WriteRequest* hidden_request) {
+    const p4::v1::WriteRequest& new_request,
+    p4::v1::WriteRequest* physical_request, p4::v1::WriteRequest* hidden_request) {
   for (const auto& update : new_request.updates()) {
     CHECK_RETURN_IF_FALSE(update.entity().has_table_entry())
         << "Static update in P4 WriteRequest has no table_entry: "
@@ -139,7 +139,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
     int table_id = update.entity().table_entry().table_id();
 
     auto hidden_status = p4_table_mapper_->IsTableStageHidden(table_id);
-    p4::Update* out_update = nullptr;
+    p4::v1::Update* out_update = nullptr;
     if (hidden_status == TRI_STATE_UNKNOWN) {
       // TRI_STATE_UNKNOWN is not an error when called from pre-push because
       // the table_id may represent a new table in the pipeline config that

@@ -26,20 +26,20 @@
 namespace stratum {
 namespace hal {
 
-P4WriteRequestDiffer::P4WriteRequestDiffer(const p4::WriteRequest& old_request,
-                                           const p4::WriteRequest& new_request)
+P4WriteRequestDiffer::P4WriteRequestDiffer(const p4::v1::WriteRequest& old_request,
+                                           const p4::v1::WriteRequest& new_request)
     : old_request_(old_request), new_request_(new_request) {}
 
 ::util::Status P4WriteRequestDiffer::Compare(
-    p4::WriteRequest* delete_request, p4::WriteRequest* add_request,
-    p4::WriteRequest* modify_request, p4::WriteRequest* unchanged_request) {
+    p4::v1::WriteRequest* delete_request, p4::v1::WriteRequest* add_request,
+    p4::v1::WriteRequest* modify_request, p4::v1::WriteRequest* unchanged_request) {
   return DoCompare(delete_request, add_request, modify_request,
                    unchanged_request);
 }
 
 ::util::Status P4WriteRequestDiffer::DoCompare(
-    p4::WriteRequest* delete_request, p4::WriteRequest* add_request,
-    p4::WriteRequest* modify_request, p4::WriteRequest* unchanged_request) {
+    p4::v1::WriteRequest* delete_request, p4::v1::WriteRequest* add_request,
+    p4::v1::WriteRequest* modify_request, p4::v1::WriteRequest* unchanged_request) {
   google::protobuf::util::MessageDifferencer msg_differencer;
   P4WriteRequestReporter reporter;
   msg_differencer.ReportDifferencesTo(&reporter);
@@ -49,13 +49,13 @@ P4WriteRequestDiffer::P4WriteRequestDiffer(const p4::WriteRequest& old_request,
 
   // The custom comparator treats table_id and all match fields as the
   // key value for comparing updates.
-  auto write_desc = p4::WriteRequest::default_instance().GetDescriptor();
+  auto write_desc = p4::v1::WriteRequest::default_instance().GetDescriptor();
   P4WriteRequestComparator comparator;
   msg_differencer.TreatAsMapUsingKeyComparator(
       write_desc->FindFieldByName("updates"), &comparator);
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
-  auto update_desc = p4::Update::default_instance().GetDescriptor();
+  auto update_desc = p4::v1::Update::default_instance().GetDescriptor();
   msg_differencer.IgnoreField(update_desc->FindFieldByName("type"));
 
   if (!msg_differencer.Compare(old_request_, new_request_)) {
@@ -63,15 +63,15 @@ P4WriteRequestDiffer::P4WriteRequestDiffer(const p4::WriteRequest& old_request,
     // updates field indices accumulated by the P4WriteRequestReporter.
     if (delete_request) {
       FillOutputFromReporterIndexes(old_request_, reporter.deleted_indexes(),
-                                    p4::Update::DELETE, delete_request);
+                                    p4::v1::Update::DELETE, delete_request);
     }
     if (add_request) {
       FillOutputFromReporterIndexes(new_request_, reporter.added_indexes(),
-                                    p4::Update::INSERT, add_request);
+                                    p4::v1::Update::INSERT, add_request);
     }
     if (modify_request) {
       FillOutputFromReporterIndexes(new_request_, reporter.modified_indexes(),
-                                    p4::Update::MODIFY, modify_request);
+                                    p4::v1::Update::MODIFY, modify_request);
     }
   }
 
@@ -88,12 +88,12 @@ P4WriteRequestDiffer::P4WriteRequestDiffer(const p4::WriteRequest& old_request,
 }
 
 void P4WriteRequestDiffer::FillOutputFromReporterIndexes(
-    const p4::WriteRequest& source_request,
-    const std::vector<int>& reporter_indexes, p4::Update::Type type,
-    p4::WriteRequest* output_request) {
+    const p4::v1::WriteRequest& source_request,
+    const std::vector<int>& reporter_indexes, p4::v1::Update::Type type,
+    p4::v1::WriteRequest* output_request) {
   output_request->Clear();
   for (int i : reporter_indexes) {
-    p4::Update* update = output_request->add_updates();
+    p4::v1::Update* update = output_request->add_updates();
     *update = source_request.updates(i);
     update->set_type(type);
   }
@@ -104,7 +104,7 @@ P4WriteRequestReporter::P4WriteRequestReporter()
 
 // ReportAdded and ReportDeleted are interested only in changes that roll up
 // to the first-level repeated Update message nested inside the compared
-// p4::WriteRequests.   Details at lower levels of the field_path are not
+// p4::v1::WriteRequests.   Details at lower levels of the field_path are not
 // processed.
 void P4WriteRequestReporter::ReportAdded(
     const google::protobuf::Message& message1,
@@ -166,11 +166,11 @@ bool P4WriteRequestComparator::IsMatch(
     const std::vector<
         google::protobuf::util::MessageDifferencer::SpecificField>&
         parent_fields) const {
-  const p4::Update& update1 =
-      *google::protobuf::internal::DynamicCastToGenerated<const p4::Update>(
+  const p4::v1::Update& update1 =
+      *google::protobuf::internal::DynamicCastToGenerated<const p4::v1::Update>(
           &message1);
-  const p4::Update& update2 =
-      *google::protobuf::internal::DynamicCastToGenerated<const p4::Update>(
+  const p4::v1::Update& update2 =
+      *google::protobuf::internal::DynamicCastToGenerated<const p4::v1::Update>(
           &message2);
   if (!update1.entity().has_table_entry()) return false;
   if (!update2.entity().has_table_entry()) return false;
@@ -183,8 +183,8 @@ bool P4WriteRequestComparator::IsMatch(
   // can be in any order, so the comparison treats them as a map with field_id
   // as the key.
   google::protobuf::util::MessageDifferencer msg_differencer;
-  auto entry_desc = p4::TableEntry::default_instance().GetDescriptor();
-  auto match_desc = p4::FieldMatch::default_instance().GetDescriptor();
+  auto entry_desc = p4::v1::TableEntry::default_instance().GetDescriptor();
+  auto match_desc = p4::v1::FieldMatch::default_instance().GetDescriptor();
   auto match_field_desc = entry_desc->FindFieldByName("match");
   msg_differencer.TreatAsMap(match_field_desc,
                              match_desc->FindFieldByName("field_id"));

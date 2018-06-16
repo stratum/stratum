@@ -34,7 +34,7 @@ DEFINE_bool(skip_p4_min_objects_check, false, "When true, the check for minimum"
 namespace stratum {
 namespace hal {
 
-P4InfoManager::P4InfoManager(const p4::config::P4Info& p4_info)
+P4InfoManager::P4InfoManager(const p4::config::v1::P4Info& p4_info)
     : p4_info_(p4_info),
       table_map_("Table"),
       action_map_("Action"),
@@ -83,52 +83,52 @@ P4InfoManager::~P4InfoManager() {
   return status;
 }
 
-::util::StatusOr<const p4::config::Table> P4InfoManager::FindTableByID(
+::util::StatusOr<const p4::config::v1::Table> P4InfoManager::FindTableByID(
     uint32_t table_id) const {
   return table_map_.FindByID(table_id);
 }
 
-::util::StatusOr<const p4::config::Table> P4InfoManager::FindTableByName(
+::util::StatusOr<const p4::config::v1::Table> P4InfoManager::FindTableByName(
     std::string table_name) const {
   return table_map_.FindByName(table_name);
 }
 
-::util::StatusOr<const p4::config::Action> P4InfoManager::FindActionByID(
+::util::StatusOr<const p4::config::v1::Action> P4InfoManager::FindActionByID(
     uint32_t action_id) const {
   return action_map_.FindByID(action_id);
 }
 
-::util::StatusOr<const p4::config::Action> P4InfoManager::FindActionByName(
+::util::StatusOr<const p4::config::v1::Action> P4InfoManager::FindActionByName(
     std::string action_name) const {
   return action_map_.FindByName(action_name);
 }
 
-::util::StatusOr<const p4::config::ActionProfile>
+::util::StatusOr<const p4::config::v1::ActionProfile>
 P4InfoManager::FindActionProfileByID(uint32_t profile_id) const {
   return action_profile_map_.FindByID(profile_id);
 }
 
-::util::StatusOr<const p4::config::ActionProfile>
+::util::StatusOr<const p4::config::v1::ActionProfile>
 P4InfoManager::FindActionProfileByName(std::string profile_name) const {
   return action_profile_map_.FindByName(profile_name);
 }
 
-::util::StatusOr<const p4::config::Counter> P4InfoManager::FindCounterByID(
+::util::StatusOr<const p4::config::v1::Counter> P4InfoManager::FindCounterByID(
     uint32_t counter_id) const {
   return counter_map_.FindByID(counter_id);
 }
 
-::util::StatusOr<const p4::config::Counter> P4InfoManager::FindCounterByName(
+::util::StatusOr<const p4::config::v1::Counter> P4InfoManager::FindCounterByName(
     std::string counter_name) const {
   return counter_map_.FindByName(counter_name);
 }
 
-::util::StatusOr<const p4::config::Meter> P4InfoManager::FindMeterByID(
+::util::StatusOr<const p4::config::v1::Meter> P4InfoManager::FindMeterByID(
     uint32_t meter_id) const {
   return meter_map_.FindByID(meter_id);
 }
 
-::util::StatusOr<const p4::config::Meter> P4InfoManager::FindMeterByName(
+::util::StatusOr<const p4::config::v1::Meter> P4InfoManager::FindMeterByName(
     std::string meter_name) const {
   return meter_map_.FindByName(meter_name);
 }
@@ -142,7 +142,7 @@ P4InfoManager::FindActionProfileByName(std::string profile_name) const {
            << "not contain a Preamble";
   }
 
-  const p4::config::Preamble* preamble_ptr = *preamble_ptr_ptr;
+  const p4::config::v1::Preamble* preamble_ptr = *preamble_ptr_ptr;
   P4Annotation p4_annotation;
   for (const auto& annotation : preamble_ptr->annotations()) {
     // TODO: Investigate to what degree p4c enforces annotation
@@ -203,7 +203,7 @@ void P4InfoManager::DumpNamesToIDs() const {
 // Validates preamble's name and ID fields and makes sure they are globally
 // unique.
 ::util::Status P4InfoManager::ProcessPreamble(
-    const p4::config::Preamble& preamble, const std::string& resource_type) {
+    const p4::config::v1::Preamble& preamble, const std::string& resource_type) {
   auto status = P4InfoManager::VerifyID(preamble, resource_type);
   auto name_status = P4InfoManager::VerifyName(preamble, resource_type);
   APPEND_STATUS_IF_ERROR(status, name_status);
@@ -257,7 +257,7 @@ void P4InfoManager::DumpNamesToIDs() const {
 }
 
 ::util::Status P4InfoManager::VerifyID(
-    const p4::config::Preamble& preamble, const std::string& resource_type) {
+    const p4::config::v1::Preamble& preamble, const std::string& resource_type) {
   if (preamble.id() == 0) {
     return MAKE_ERROR(ERR_INVALID_P4_INFO)
         << "P4Info " << resource_type << " requires a non-zero ID in preamble";
@@ -266,7 +266,7 @@ void P4InfoManager::DumpNamesToIDs() const {
 }
 
 ::util::Status P4InfoManager::VerifyName(
-    const p4::config::Preamble& preamble, const std::string& resource_type) {
+    const p4::config::v1::Preamble& preamble, const std::string& resource_type) {
   if (preamble.name().empty()) {
     return MAKE_ERROR(ERR_INVALID_P4_INFO)
         << "P4Info " << resource_type

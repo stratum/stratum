@@ -317,13 +317,13 @@ BcmTableManager::~BcmTableManager() {}
 }
 
 ::util::Status BcmTableManager::PushForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   // TODO: Implement this function if needed.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmTableManager::VerifyForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   // TODO: Implement this function if needed.
   return ::util::OkStatus();
 }
@@ -514,7 +514,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 }
 
 ::util::Status BcmTableManager::FillBcmFlowEntry(
-    const ::p4::TableEntry& table_entry, ::p4::Update::Type type,
+    const ::p4::v1::TableEntry& table_entry, ::p4::v1::Update::Type type,
     BcmFlowEntry* bcm_flow_entry) const {
   std::string error_message =
       " TableEntry is " + table_entry.ShortDebugString() + ".";
@@ -552,7 +552,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 }
 
 ::util::Status BcmTableManager::FillBcmMeterConfig(
-    const ::p4::MeterConfig& p4_meter, BcmMeterConfig* bcm_meter) const {
+    const ::p4::v1::MeterConfig& p4_meter, BcmMeterConfig* bcm_meter) const {
   // Ensure that meter configuration values can be casted safely to uint32.
   if ((p4_meter.cir() < 0) || (p4_meter.cburst() < 0) ||
       (p4_meter.cir() >= 0xffffffffLL) || (p4_meter.cburst() >= 0xffffffffLL) ||
@@ -627,7 +627,7 @@ namespace {
 }  // namespace
 
 ::util::Status BcmTableManager::FillBcmNonMultipathNexthop(
-    const ::p4::ActionProfileMember& action_profile_member,
+    const ::p4::v1::ActionProfileMember& action_profile_member,
     BcmNonMultipathNexthop* bcm_non_multipath_nexthop) const {
   bcm_non_multipath_nexthop->set_unit(unit_);
 
@@ -727,7 +727,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::FillBcmMultipathNexthop(
-    const ::p4::ActionProfileGroup& action_profile_group,
+    const ::p4::v1::ActionProfileGroup& action_profile_group,
     BcmMultipathNexthop* bcm_multipath_nexthop) const {
   bcm_multipath_nexthop->set_unit(unit_);
 
@@ -753,7 +753,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::AddTableEntry(
-    const ::p4::TableEntry& table_entry) {
+    const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
   if (table_id == 0) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
@@ -786,12 +786,12 @@ namespace {
 }
 
 ::util::Status BcmTableManager::UpdateTableEntry(
-    const ::p4::TableEntry& table_entry) {
+    const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
   ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id),
                    _ << "Could not find table " << table_id << ".");
   ASSIGN_OR_RETURN(
-      ::p4::TableEntry old_entry, table->ModifyEntry(table_entry),
+      ::p4::v1::TableEntry old_entry, table->ModifyEntry(table_entry),
       _ << "Failed to update flow " << table_entry.ShortDebugString() << ".");
 
   // Update the flow_ref_count for the old/new member or group.
@@ -822,12 +822,12 @@ namespace {
 }
 
 ::util::Status BcmTableManager::DeleteTableEntry(
-    const ::p4::TableEntry& table_entry) {
+    const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
   ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id),
                    _ << "Could not find table " << table_id << ".");
   ASSIGN_OR_RETURN(
-      ::p4::TableEntry old_entry, table->DeleteEntry(table_entry),
+      ::p4::v1::TableEntry old_entry, table->DeleteEntry(table_entry),
       _ << "Failed to delete flow " << table_entry.ShortDebugString() << ".");
 
   // Update the flow_ref_count for the member or group.
@@ -849,8 +849,8 @@ namespace {
 }
 
 ::util::Status BcmTableManager::UpdateTableEntryMeter(
-    const ::p4::DirectMeterEntry& meter) {
-  const ::p4::TableEntry& table_entry = meter.table_entry();
+    const ::p4::v1::DirectMeterEntry& meter) {
+  const ::p4::v1::TableEntry& table_entry = meter.table_entry();
   uint32 table_id = table_entry.table_id();
   // Only ACL flows support meters.
   if (acl_tables_.count(table_id) == 0) {
@@ -863,7 +863,7 @@ namespace {
   ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id),
                    _ << "Could not find table " << table_id << ".");
   ASSIGN_OR_RETURN(
-      ::p4::TableEntry modified_entry, table->Lookup(table_entry),
+      ::p4::v1::TableEntry modified_entry, table->Lookup(table_entry),
       _ << "Failed to find flow " << table_entry.ShortDebugString() << ".");
   *modified_entry.mutable_meter_config() = meter.config();
   RETURN_IF_ERROR(table->ModifyEntry(modified_entry).status())
@@ -873,7 +873,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::AddActionProfileMember(
-    const ::p4::ActionProfileMember& action_profile_member,
+    const ::p4::v1::ActionProfileMember& action_profile_member,
     BcmNonMultipathNexthop::Type type, int egress_intf_id) {
   // Sanity checking.
   if (!action_profile_member.member_id() ||
@@ -911,7 +911,7 @@ namespace {
            << "Cannot add already existing member_id: " << member_id << ".";
   }
 
-  // Save a copy of ::p4::ActionProfileMember.
+  // Save a copy of ::p4::v1::ActionProfileMember.
   if (!gtl::InsertIfNotPresent(&members_, action_profile_member)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Inconsistent state. Member with ID " << member_id << " already "
@@ -922,7 +922,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::AddActionProfileGroup(
-    const ::p4::ActionProfileGroup& action_profile_group, int egress_intf_id) {
+    const ::p4::v1::ActionProfileGroup& action_profile_group, int egress_intf_id) {
   // Sanity checking.
   if (!action_profile_group.group_id() ||
       !action_profile_group.action_profile_id()) {
@@ -969,7 +969,7 @@ namespace {
            << "Cannot add already existing group_id: " << group_id << ".";
   }
 
-  // Save a copy of ::p4::ActionProfileGroup.
+  // Save a copy of ::p4::v1::ActionProfileGroup.
   if (!gtl::InsertIfNotPresent(&groups_, action_profile_group)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Inconsistent state. Group with ID " << group_id << " already "
@@ -980,7 +980,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::UpdateActionProfileMember(
-    const ::p4::ActionProfileMember& action_profile_member,
+    const ::p4::v1::ActionProfileMember& action_profile_member,
     BcmNonMultipathNexthop::Type type) {
   uint32 member_id = action_profile_member.member_id();
 
@@ -991,7 +991,7 @@ namespace {
                    GetBcmNonMultipathNexthopInfo(member_id));
   member_nexthop_info->type = type;
 
-  // Update the copy of ::p4::ActionProfileMember matching the input (remove the
+  // Update the copy of ::p4::v1::ActionProfileMember matching the input (remove the
   // old match and add the new one instead).
   CHECK_RETURN_IF_FALSE(members_.erase(action_profile_member) == 1)
       << "Inconsistent state. Old member with ID " << member_id << " did not "
@@ -1002,7 +1002,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::UpdateActionProfileGroup(
-    const ::p4::ActionProfileGroup& action_profile_group) {
+    const ::p4::v1::ActionProfileGroup& action_profile_group) {
   uint32 group_id = action_profile_group.group_id();
 
   // The group and all the members to add and remove to the group must exist
@@ -1040,7 +1040,7 @@ namespace {
     }
   }
 
-  // Update the copy of ::p4::ActionProfileGroup matching the input (remove the
+  // Update the copy of ::p4::v1::ActionProfileGroup matching the input (remove the
   // old match and add the new one instead).
   CHECK_RETURN_IF_FALSE(groups_.erase(action_profile_group) == 1)
       << "Inconsistent state. Old group with ID " << group_id << " did not "
@@ -1051,7 +1051,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::DeleteActionProfileMember(
-    const ::p4::ActionProfileMember& action_profile_member) {
+    const ::p4::v1::ActionProfileMember& action_profile_member) {
   uint32 member_id = action_profile_member.member_id();
 
   // Member must exist when calling this function. Find the corresponding
@@ -1063,7 +1063,7 @@ namespace {
   delete member_nexthop_info;
   member_id_to_nexthop_info_.erase(member_id);
 
-  // Delete the copy of ::p4::ActionProfileMember matching the input.
+  // Delete the copy of ::p4::v1::ActionProfileMember matching the input.
   CHECK_RETURN_IF_FALSE(members_.erase(action_profile_member) == 1)
       << "Inconsistent state. Old member with ID " << member_id << " did not "
       << "exist in members_.";
@@ -1072,7 +1072,7 @@ namespace {
 }
 
 ::util::Status BcmTableManager::DeleteActionProfileGroup(
-    const ::p4::ActionProfileGroup& action_profile_group) {
+    const ::p4::v1::ActionProfileGroup& action_profile_group) {
   uint32 group_id = action_profile_group.group_id();
 
   // group and all its members must exist when calling this function. Find the
@@ -1090,7 +1090,7 @@ namespace {
   delete group_nexthop_info;
   group_id_to_nexthop_info_.erase(group_id);
 
-  // Delete the copy of ::p4::ActionProfileGroup matching the input.
+  // Delete the copy of ::p4::v1::ActionProfileGroup matching the input.
   CHECK_RETURN_IF_FALSE(groups_.erase(action_profile_group) == 1)
       << "Inconsistent state. Old group with ID " << group_id << " did not "
       << "exist in groups_.";
@@ -1168,7 +1168,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
 }
 
 ::util::Status BcmTableManager::AddAclTableEntry(
-    const ::p4::TableEntry& table_entry, int bcm_flow_id) {
+    const ::p4::v1::TableEntry& table_entry, int bcm_flow_id) {
   uint32 table_id = table_entry.table_id();
   AclTable* table = gtl::FindOrNull(acl_tables_, table_id);
   if (table == nullptr) {
@@ -1196,7 +1196,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   const BcmFlowTable* table;
   ASSIGN_OR_RETURN(table, GetConstantFlowTable(table_id),
                    _ << "Could not find table " << table_id << " to delete.");
-  std::vector<p4::TableEntry> entries;
+  std::vector<p4::v1::TableEntry> entries;
   for (const auto& entry : *table) {
     entries.emplace_back(entry);
   }
@@ -1217,8 +1217,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 }
 
 ::util::Status BcmTableManager::ReadTableEntries(
-    const std::set<uint32>& table_ids, ::p4::ReadResponse* resp,
-    std::vector<::p4::TableEntry*>* acl_flows) const {
+    const std::set<uint32>& table_ids, ::p4::v1::ReadResponse* resp,
+    std::vector<::p4::v1::TableEntry*>* acl_flows) const {
   if (resp == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null resp.";
   }
@@ -1271,12 +1271,12 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   return ::util::OkStatus();
 }
 
-util::StatusOr<p4::TableEntry> BcmTableManager::LookupTableEntry(
-    const ::p4::TableEntry& entry) const {
+util::StatusOr<p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
+    const ::p4::v1::TableEntry& entry) const {
   ASSIGN_OR_RETURN(const BcmFlowTable* table,
                    GetConstantFlowTable(entry.table_id()),
                    _ << "Could not find table " << entry.table_id() << ".");
-  ASSIGN_OR_RETURN(::p4::TableEntry lookup, table->Lookup(entry),
+  ASSIGN_OR_RETURN(::p4::v1::TableEntry lookup, table->Lookup(entry),
                    _ << "Table " << entry.table_id()
                      << " does not contain a matching flow for "
                      << entry.ShortDebugString() << ".");
@@ -1286,12 +1286,12 @@ util::StatusOr<p4::TableEntry> BcmTableManager::LookupTableEntry(
 
 ::util::Status BcmTableManager::ReadActionProfileMembers(
     const std::set<uint32>& action_profile_ids,
-    WriterInterface<::p4::ReadResponse>* writer) const {
+    WriterInterface<::p4::v1::ReadResponse>* writer) const {
   if (writer == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null writer.";
   }
 
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadResponse resp;
   for (const auto& member : members_) {
     if (action_profile_ids.empty() ||
         action_profile_ids.count(member.action_profile_id())) {
@@ -1308,12 +1308,12 @@ util::StatusOr<p4::TableEntry> BcmTableManager::LookupTableEntry(
 
 ::util::Status BcmTableManager::ReadActionProfileGroups(
     const std::set<uint32>& action_profile_ids,
-    WriterInterface<::p4::ReadResponse>* writer) const {
+    WriterInterface<::p4::v1::ReadResponse>* writer) const {
   if (writer == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null writer.";
   }
 
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadResponse resp;
   for (const auto& group : groups_) {
     if (action_profile_ids.empty() ||
         action_profile_ids.count(group.action_profile_id())) {
@@ -1329,7 +1329,7 @@ util::StatusOr<p4::TableEntry> BcmTableManager::LookupTableEntry(
 }
 
 ::util::Status BcmTableManager::MapFlowEntry(
-    const ::p4::TableEntry& table_entry, ::p4::Update::Type type,
+    const ::p4::v1::TableEntry& table_entry, ::p4::v1::Update::Type type,
     CommonFlowEntry* flow_entry) const {
   return p4_table_mapper_->MapFlowEntry(table_entry, type, flow_entry);
 }

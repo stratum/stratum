@@ -48,7 +48,7 @@ class P4ConfigVerifier {
   // to verify.  The caller must assure that both messages remain in scope
   // throughout the life of the P4ConfigVerifier instance.
   static std::unique_ptr<P4ConfigVerifier> CreateInstance(
-      const ::p4::config::P4Info& p4_info,
+      const ::p4::config::v1::P4Info& p4_info,
       const P4PipelineConfig& p4_pipeline_config);
   virtual ~P4ConfigVerifier() {}
 
@@ -74,12 +74,12 @@ class P4ConfigVerifier {
   // VerifyAndCompare assumes that the old versions of both inputs have
   // previously passed verification.
   virtual ::util::Status VerifyAndCompare(
-      const ::p4::config::P4Info& old_p4_info,
+      const ::p4::config::v1::P4Info& old_p4_info,
       const P4PipelineConfig& old_p4_pipeline_config);
 
  private:
   // The constructor is private; use public CreateInstance method.
-  P4ConfigVerifier(const ::p4::config::P4Info& p4_info,
+  P4ConfigVerifier(const ::p4::config::v1::P4Info& p4_info,
                    const P4PipelineConfig& p4_pipeline_config)
       : p4_info_(p4_info),
         p4_pipeline_config_(p4_pipeline_config) {
@@ -87,18 +87,18 @@ class P4ConfigVerifier {
 
   // Verifies the input p4_table, which comes from one of the P4Info table
   // entries.
-  ::util::Status VerifyTable(const ::p4::config::Table& p4_table);
+  ::util::Status VerifyTable(const ::p4::config::v1::Table& p4_table);
 
   // Verifies the input p4_action, which comes from one of the P4Info action
   // entries.
-  ::util::Status VerifyAction(const ::p4::config::Action& p4_action);
+  ::util::Status VerifyAction(const ::p4::config::v1::Action& p4_action);
 
   // Verifies the input static_entry, which comes from one of the static table
   // entries in the P4PipelineConfig.
-  ::util::Status VerifyStaticTableEntry(const p4::Update& static_entry);
+  ::util::Status VerifyStaticTableEntry(const p4::v1::Update& static_entry);
 
   // Verifies the input match_field, which is part of the P4Info for table_name.
-  ::util::Status VerifyMatchField(const ::p4::config::MatchField& match_field,
+  ::util::Status VerifyMatchField(const ::p4::config::v1::MatchField& match_field,
                                   const std::string& table_name);
 
   // Verifies the input action instructions, which are part of the action
@@ -127,7 +127,7 @@ class P4ConfigVerifier {
                                     const std::string& filter_level);
 
   // P4 configuration messages to verify.
-  const ::p4::config::P4Info& p4_info_;
+  const ::p4::config::v1::P4Info& p4_info_;
   const P4PipelineConfig& p4_pipeline_config_;
 };
 

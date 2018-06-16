@@ -128,7 +128,7 @@ TEST(CommonUtilsTest, RecursivelyCreateDirThenCheckThePath) {
 }
 
 TEST(CommonUtilsTest, ProtoEqualProtoLessProtoHash) {
-  ::p4::TableEntry e1, e2;
+  ::p4::v1::TableEntry e1, e2;
   const std::string kTableEntryText1 = R"(
       table_id: 12
       match {
@@ -176,11 +176,11 @@ TEST(CommonUtilsTest, ProtoEqualProtoLessProtoHash) {
   // After sorting the repeated fields, we expect the protos to be equal and
   // hash to the same value.
   std::sort(e1.mutable_match()->begin(), e1.mutable_match()->end(),
-            [](const ::p4::FieldMatch& l, const ::p4::FieldMatch& r) {
+            [](const ::p4::v1::FieldMatch& l, const ::p4::v1::FieldMatch& r) {
               return ProtoLess(l, r);
             });
   std::sort(e2.mutable_match()->begin(), e2.mutable_match()->end(),
-            [](const ::p4::FieldMatch& l, const ::p4::FieldMatch& r) {
+            [](const ::p4::v1::FieldMatch& l, const ::p4::v1::FieldMatch& r) {
               return ProtoLess(l, r);
             });
   EXPECT_TRUE(ProtoEqual(e1, e2));

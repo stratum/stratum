@@ -211,7 +211,7 @@ namespace {
 }
 
 // Helper to facilitate logging the write requests to the desired log file.
-void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
+void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                      const std::vector<::util::Status>& results,
                      const absl::Time timestamp) {
   if (results.size() != req.updates_size()) {
@@ -238,8 +238,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
 }  // namespace
 
 ::grpc::Status P4Service::Write(::grpc::ServerContext* context,
-                                const ::p4::WriteRequest* req,
-                                ::p4::WriteResponse* resp) {
+                                const ::p4::v1::WriteRequest* req,
+                                ::p4::v1::WriteResponse* resp) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service, Write, context);
 
   if (!req->updates_size()) return ::grpc::Status::OK;  // Nothing to do.
@@ -282,8 +282,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
 }
 
 ::grpc::Status P4Service::Read(
-    ::grpc::ServerContext* context, const ::p4::ReadRequest* req,
-    ::grpc::ServerWriter<::p4::ReadResponse>* writer) {
+    ::grpc::ServerContext* context, const ::p4::v1::ReadRequest* req,
+    ::grpc::ServerWriter<::p4::v1::ReadResponse>* writer) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service, Read, context);
 
   if (!req->entities_size()) return ::grpc::Status::OK;
@@ -292,7 +292,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
                           "Invalid device ID.");
   }
 
-  ServerWriterWrapper<::p4::ReadResponse> wrapper(writer);
+  ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
   std::vector<::util::Status> details = {};
   ::util::Status status =
       switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
@@ -306,8 +306,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
 
 ::grpc::Status P4Service::SetForwardingPipelineConfig(
     ::grpc::ServerContext* context,
-    const ::p4::SetForwardingPipelineConfigRequest* req,
-    ::p4::SetForwardingPipelineConfigResponse* resp) {
+    const ::p4::v1::SetForwardingPipelineConfigRequest* req,
+    ::p4::v1::SetForwardingPipelineConfigResponse* resp) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service,
                            SetForwardingPipelineConfig, context);
 
@@ -320,12 +320,12 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
 
   ::util::Status status = ::util::OkStatus();
   switch (req->action()) {
-    case ::p4::SetForwardingPipelineConfigRequest::VERIFY:
+    case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY:
       APPEND_STATUS_IF_ERROR(status,
                              switch_interface_->VerifyForwardingPipelineConfig(
                                  node_id, req->config()));
       break;
-    case ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT: {
+    case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT: {
       // We need valid election ID for commit.
       absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
                                                     req->election_id().low());
@@ -396,8 +396,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
 
 ::grpc::Status P4Service::GetForwardingPipelineConfig(
     ::grpc::ServerContext* context,
-    const ::p4::GetForwardingPipelineConfigRequest* req,
-    ::p4::GetForwardingPipelineConfigResponse* resp) {
+    const ::p4::v1::GetForwardingPipelineConfigRequest* req,
+    ::p4::v1::GetForwardingPipelineConfigResponse* resp) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, P4Service,
                            GetForwardingPipelineConfig, context);
 
@@ -458,10 +458,10 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
     this->RemoveController(node_id, connection_id);
   });
 
-  ::p4::StreamMessageRequest req;
+  ::p4::v1::StreamMessageRequest req;
   while (stream->Read(&req)) {
     switch (req.update_case()) {
-      case ::p4::StreamMessageRequest::kArbitration: {
+      case ::p4::v1::StreamMessageRequest::kArbitration: {
         if (req.arbitration().device_id() == 0) {
           return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                                 "Invalid node (aka device) ID.");
@@ -489,7 +489,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
         }
         break;
       }
-      case ::p4::StreamMessageRequest::kPacket: {
+      case ::p4::v1::StreamMessageRequest::kPacket: {
         // If this stream is not the master stream do not do anything.
         if (!IsMasterController(node_id, connection_id)) break;
         // If master, try to transmit the packet. No error reporting.
@@ -500,7 +500,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
         }
         break;
       }
-      case ::p4::StreamMessageRequest::UPDATE_NOT_SET:
+      case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                               "Need to specify either arbitration or packet.");
         break;
@@ -540,19 +540,19 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
     // This is the first time we are hearing about this node. Lets try to add
     // an RX packet writer for it. If the node_id is invalid, registration will
     // fail.
-    std::shared_ptr<Channel<::p4::PacketIn>> channel =
-        Channel<::p4::PacketIn>::Create(128);
+    std::shared_ptr<Channel<::p4::v1::PacketIn>> channel =
+        Channel<::p4::v1::PacketIn>::Create(128);
     // Create the writer and register with the SwitchInterface.
-    auto writer = std::make_shared<ChannelWriterWrapper<::p4::PacketIn>>(
-        ChannelWriter<::p4::PacketIn>::Create(channel));
+    auto writer = std::make_shared<ChannelWriterWrapper<::p4::v1::PacketIn>>(
+        ChannelWriter<::p4::v1::PacketIn>::Create(channel));
     RETURN_IF_ERROR(
         switch_interface_->RegisterPacketReceiveWriter(node_id, writer));
     // Create the reader and pass it to a new thread.
-    auto reader = ChannelReader<::p4::PacketIn>::Create(channel);
+    auto reader = ChannelReader<::p4::v1::PacketIn>::Create(channel);
     pthread_t tid = 0;
     int ret = pthread_create(
         &tid, nullptr, PacketReceiveThreadFunc,
-        new ReaderArgs<::p4::PacketIn>{this, std::move(reader), node_id});
+        new ReaderArgs<::p4::v1::PacketIn>{this, std::move(reader), node_id});
     if (ret) {
       // Clean up state and return error.
       RETURN_IF_ERROR(
@@ -610,7 +610,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::WriteRequest& req,
   // - If this new controller is not master now and it was not master before,
   //   we just need to send the arbitration token with non-OK status to this
   //   controller.
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageResponse resp;
   resp.mutable_arbitration()->set_device_id(node_id);
   resp.mutable_arbitration()->mutable_election_id()->set_high(
       master->election_id_high());
@@ -678,7 +678,7 @@ void P4Service::RemoveController(uint64 node_id, uint64 connection_id) {
                   << it->second.begin()->Name();
         // We need to let all the connected controller know about this
         // mastership change.
-        ::p4::StreamMessageResponse resp;
+        ::p4::v1::StreamMessageResponse resp;
         resp.mutable_arbitration()->set_device_id(node_id);
         resp.mutable_arbitration()->mutable_election_id()->set_high(
             it->second.begin()->election_id_high());
@@ -725,7 +725,7 @@ bool P4Service::IsMasterController(uint64 node_id, uint64 connection_id) const {
 }
 
 void* P4Service::PacketReceiveThreadFunc(void* arg) {
-  auto* args = reinterpret_cast<ReaderArgs<::p4::PacketIn>*>(arg);
+  auto* args = reinterpret_cast<ReaderArgs<::p4::v1::PacketIn>*>(arg);
   auto* p4_service = args->p4_service;
   auto node_id = args->node_id;
   auto reader = std::move(args->reader);
@@ -734,9 +734,9 @@ void* P4Service::PacketReceiveThreadFunc(void* arg) {
 }
 
 void* P4Service::ReceivePackets(
-    uint64 node_id, std::unique_ptr<ChannelReader<::p4::PacketIn>> reader) {
+    uint64 node_id, std::unique_ptr<ChannelReader<::p4::v1::PacketIn>> reader) {
   do {
-    ::p4::PacketIn packet_in;
+    ::p4::v1::PacketIn packet_in;
     // Block on next packet RX from Channel.
     int code = reader->Read(&packet_in, absl::InfiniteDuration()).error_code();
     // Exit if the Channel is closed.
@@ -753,12 +753,12 @@ void* P4Service::ReceivePackets(
 }
 
 void P4Service::PacketReceiveHandler(uint64 node_id,
-                                     const ::p4::PacketIn& packet) {
+                                     const ::p4::v1::PacketIn& packet) {
   // We send the packets only to the master controller stream for this node.
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageResponse resp;
   *resp.mutable_packet() = packet;
   it->second.begin()->stream()->Write(resp);
 }

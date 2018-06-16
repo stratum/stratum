@@ -31,40 +31,40 @@ class P4InfoManagerMock : public P4InfoManager {
   MOCK_METHOD0(InitializeAndVerify, ::util::Status());
   MOCK_CONST_METHOD1(
       FindTableByID,
-      ::util::StatusOr<const p4::config::Table>(uint32_t table_id));
+      ::util::StatusOr<const p4::config::v1::Table>(uint32_t table_id));
   MOCK_CONST_METHOD1(
       FindTableByName,
-      ::util::StatusOr<const p4::config::Table>(std::string table_name));
+      ::util::StatusOr<const p4::config::v1::Table>(std::string table_name));
   MOCK_CONST_METHOD1(
       FindActionByID,
-      ::util::StatusOr<const p4::config::Action>(uint32_t action_id));
+      ::util::StatusOr<const p4::config::v1::Action>(uint32_t action_id));
   MOCK_CONST_METHOD1(
       FindActionByName,
-      ::util::StatusOr<const p4::config::Action>(std::string action_name));
+      ::util::StatusOr<const p4::config::v1::Action>(std::string action_name));
   MOCK_CONST_METHOD1(
       FindActionProfileByID,
-      ::util::StatusOr<const p4::config::ActionProfile>(uint32_t profile_id));
+      ::util::StatusOr<const p4::config::v1::ActionProfile>(uint32_t profile_id));
   MOCK_CONST_METHOD1(
       FindActionProfileByName,
-      ::util::StatusOr<const p4::config::ActionProfile>(
+      ::util::StatusOr<const p4::config::v1::ActionProfile>(
           std::string profile_name));
   MOCK_CONST_METHOD1(
       FindCounterByID,
-      ::util::StatusOr<const p4::config::Counter>(uint32_t counter_id));
+      ::util::StatusOr<const p4::config::v1::Counter>(uint32_t counter_id));
   MOCK_CONST_METHOD1(
       FindCounterByName,
-      ::util::StatusOr<const p4::config::Counter>(std::string counter_name));
+      ::util::StatusOr<const p4::config::v1::Counter>(std::string counter_name));
   MOCK_CONST_METHOD1(
       FindMeterByID,
-      ::util::StatusOr<const p4::config::Meter>(uint32_t meter_id));
+      ::util::StatusOr<const p4::config::v1::Meter>(uint32_t meter_id));
   MOCK_CONST_METHOD1(
       FindMeterByName,
-      ::util::StatusOr<const p4::config::Meter>(std::string meter_name));
+      ::util::StatusOr<const p4::config::v1::Meter>(std::string meter_name));
   MOCK_CONST_METHOD1(
       GetSwitchStackAnnotations,
       ::util::StatusOr<P4Annotation>(const std::string& p4_object_name));
   MOCK_CONST_METHOD0(DumpNamesToIDs, void());
-  MOCK_CONST_METHOD0(p4_info, const p4::config::P4Info&());
+  MOCK_CONST_METHOD0(p4_info, const p4::config::v1::P4Info&());
   MOCK_METHOD0(VerifyRequiredObjects, ::util::Status());
 };
 

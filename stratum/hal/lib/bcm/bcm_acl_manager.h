@@ -52,12 +52,12 @@ class BcmAclManager {
 
   // Pushes a ForwardingPipelineConfig and setup ACL tables based on that.
   virtual ::util::Status PushForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
 
   // Verfied a ForwardingPipelineConfig for the node without changing anything
   // on the HW.
   virtual ::util::Status VerifyForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
 
   // Performs coldboot shutdown. Note that there is no public Initialize().
   // Initialization is done as part of PushChassisConfig() if the class is not
@@ -65,21 +65,21 @@ class BcmAclManager {
   virtual ::util::Status Shutdown();
 
   // Add an entry to an ACL table.
-  virtual ::util::Status InsertTableEntry(const ::p4::TableEntry& entry) const;
+  virtual ::util::Status InsertTableEntry(const ::p4::v1::TableEntry& entry) const;
 
   // Modify an entry in an ACL table. Only actions can be modified.
-  virtual ::util::Status ModifyTableEntry(const ::p4::TableEntry& entry) const;
+  virtual ::util::Status ModifyTableEntry(const ::p4::v1::TableEntry& entry) const;
 
   // Delete an entry from an ACL table.
-  virtual ::util::Status DeleteTableEntry(const ::p4::TableEntry& entry) const;
+  virtual ::util::Status DeleteTableEntry(const ::p4::v1::TableEntry& entry) const;
 
   // Add/Modify direct meter (meter bound to a TableEntry) in hardware.
   virtual ::util::Status UpdateTableEntryMeter(
-      const ::p4::DirectMeterEntry& meter) const;
+      const ::p4::v1::DirectMeterEntry& meter) const;
 
   // Get ACL table entry stats from hardware.
-  virtual ::util::Status GetTableEntryStats(const ::p4::TableEntry& entry,
-                                            ::p4::CounterData* counter) const;
+  virtual ::util::Status GetTableEntryStats(const ::p4::v1::TableEntry& entry,
+                                            ::p4::v1::CounterData* counter) const;
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BcmAclManager> CreateInstance(

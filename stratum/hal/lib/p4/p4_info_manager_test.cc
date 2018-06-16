@@ -95,7 +95,7 @@ class P4InfoManagerTest : public testing::Test {
     // Each table entry is assigned an ID and name in the preamble.  Each table
     // optionally gets a set of action IDs.
     for (int t = 1; t <= kNumTestTables; ++t) {
-      p4::config::Table* new_table = p4_test_info_.add_tables();
+      p4::config::v1::Table* new_table = p4_test_info_.add_tables();
       new_table->mutable_preamble()->set_id(t);
       new_table->mutable_preamble()->set_name(absl::Substitute("Table-$0", t));
       for (int a = 0; need_actions && a < kNumActionsPerTable; ++a) {
@@ -112,7 +112,7 @@ class P4InfoManagerTest : public testing::Test {
     google::protobuf::int32 dummy_param_id = 100000;
 
     for (int a = 0; a < kNumTestActions; ++a) {
-      p4::config::Action* new_action = p4_test_info_.add_actions();
+      p4::config::v1::Action* new_action = p4_test_info_.add_actions();
       new_action->mutable_preamble()->set_id(a + kFirstActionID);
       new_action->mutable_preamble()->set_name(
           absl::Substitute("Action-$0", a));
@@ -161,7 +161,7 @@ class P4InfoManagerTest : public testing::Test {
     SetUpNewP4Info();
   }
 
-  p4::config::P4Info p4_test_info_;  // Tests use this to set up their P4Info.
+  p4::config::v1::P4Info p4_test_info_;  // Tests use this to set up their P4Info.
   std::unique_ptr<P4InfoManager> p4_test_manager_;  // P4InfoManager for tests.
   FlagSaver flag_saver_;  // Reverts FLAGS_skip_p4_min_objects_check to default.
 };
@@ -247,7 +247,7 @@ TEST_F(P4InfoManagerTest, TestInitializeTwice) {
 
 // Tests InitializeAndVerify when the input P4Info has a bad table ID.
 TEST_F(P4InfoManagerTest, TestInitializeBadTableID) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(0);  // 0 is an invalid ID.
   new_table->mutable_preamble()->set_name("Table-0");
   SetUpNewP4Info();
@@ -261,7 +261,7 @@ TEST_F(P4InfoManagerTest, TestInitializeBadTableID) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined table ID.
 TEST_F(P4InfoManagerTest, TestInitializeNoTableID) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_name("Table-X");
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -289,7 +289,7 @@ TEST_F(P4InfoManagerTest, TestInitializeDuplicateTableID) {
 
 // Tests InitializeAndVerify when the input P4Info has a bad table name.
 TEST_F(P4InfoManagerTest, TestInitializeBadTableName) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(1);
   new_table->mutable_preamble()->set_name("");  // Empty string is invalid.
   SetUpNewP4Info();
@@ -303,7 +303,7 @@ TEST_F(P4InfoManagerTest, TestInitializeBadTableName) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined table name.
 TEST_F(P4InfoManagerTest, TestInitializeNoTableName) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(1);
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -335,7 +335,7 @@ TEST_F(P4InfoManagerTest, TestInitializeDuplicateTableName) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined action ID.
 TEST_F(P4InfoManagerTest, TestInitializeNoActionID) {
-  p4::config::Action* new_action = p4_test_info_.add_actions();
+  p4::config::v1::Action* new_action = p4_test_info_.add_actions();
   new_action->mutable_preamble()->set_name("Action-X");
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();

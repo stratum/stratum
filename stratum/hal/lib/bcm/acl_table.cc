@@ -59,7 +59,7 @@ BcmAclStage AclTable::P4PipelineToBcmAclStage(
     return ::util::OkStatus();
 }
 
-util::StatusOr<int> AclTable::BcmAclId(const ::p4::TableEntry& entry) const {
+util::StatusOr<int> AclTable::BcmAclId(const ::p4::v1::TableEntry& entry) const {
   // Search for the entry.
   const auto iter = bcm_acl_id_map_.find(entry);
   if (iter != bcm_acl_id_map_.end()) {
@@ -78,7 +78,7 @@ util::StatusOr<int> AclTable::BcmAclId(const ::p4::TableEntry& entry) const {
          << entry.ShortDebugString() << ".";
 }
 
-util::Status AclTable::DryRunInsertEntry(const ::p4::TableEntry& entry) const {
+util::Status AclTable::DryRunInsertEntry(const ::p4::v1::TableEntry& entry) const {
   const auto result = entries_.find(entry);
   // Duplicate entry check.
   if (result != entries_.end()) {
@@ -107,14 +107,14 @@ util::Status AclTable::DryRunInsertEntry(const ::p4::TableEntry& entry) const {
   return BcmFlowTable::DryRunInsertEntry(entry);
 }
 
-util::Status AclTable::InsertEntry(const ::p4::TableEntry& entry,
+util::Status AclTable::InsertEntry(const ::p4::v1::TableEntry& entry,
                                    int bcm_acl_id) {
   RETURN_IF_ERROR(InsertEntry(entry));
   RETURN_IF_ERROR(SetBcmAclId(entry, bcm_acl_id));
   return util::OkStatus();
 }
 
-util::Status AclTable::SetBcmAclId(const ::p4::TableEntry& entry,
+util::Status AclTable::SetBcmAclId(const ::p4::v1::TableEntry& entry,
                                    int bcm_acl_id) {
   if (!HasEntry(entry)) {
     return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)

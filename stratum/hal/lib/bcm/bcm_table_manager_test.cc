@@ -123,10 +123,10 @@ class BcmTableManagerTest : public ::testing::Test {
     return ::util::OkStatus();
   }
 
-  ::util::Status VerifyTableEntry(const ::p4::TableEntry& entry,
+  ::util::Status VerifyTableEntry(const ::p4::v1::TableEntry& entry,
                                   bool table_id_exists, bool key_match,
                                   bool proto_match) {
-    util::StatusOr<p4::TableEntry> result =
+    util::StatusOr<p4::v1::TableEntry> result =
         bcm_table_manager_->LookupTableEntry(entry);
     util::Status status = result.status();
     if (!table_id_exists) {
@@ -150,7 +150,7 @@ class BcmTableManagerTest : public ::testing::Test {
   }
 
   ::util::Status VerifyActionProfileMember(
-      const ::p4::ActionProfileMember& member,
+      const ::p4::v1::ActionProfileMember& member,
       BcmNonMultipathNexthop::Type type, int egress_intf_id,
       uint32 group_ref_count, uint32 flow_ref_count) {
     CHECK_RETURN_IF_FALSE(
@@ -171,7 +171,7 @@ class BcmTableManagerTest : public ::testing::Test {
   }
 
   ::util::Status VerifyActionProfileGroup(
-      const ::p4::ActionProfileGroup& group, int egress_intf_id,
+      const ::p4::v1::ActionProfileGroup& group, int egress_intf_id,
       uint32 flow_ref_count,
       std::map<uint32, std::pair<uint32, uint32>>
           member_id_to_weight_group_ref_count) {
@@ -202,7 +202,7 @@ class BcmTableManagerTest : public ::testing::Test {
 
   // Insert a simple action profile member with nexthop type port.
   ::util::Status InsertSimpleActionProfileMember(uint32 member_id) {
-    ::p4::ActionProfileMember member;
+    ::p4::v1::ActionProfileMember member;
     member.set_member_id(member_id);
     member.set_action_profile_id(kActionProfileId1);
     ::util::Status profile_member_status =
@@ -215,15 +215,15 @@ class BcmTableManagerTest : public ::testing::Test {
 
   // Insert a simple set of table entries and return a map from table_id to
   // table entry vector. Should only be run one time per node.
-  stratum::gtl::flat_hash_map<uint32, std::vector<::p4::TableEntry>>
+  stratum::gtl::flat_hash_map<uint32, std::vector<::p4::v1::TableEntry>>
   InsertSimpleTableEntries(std::vector<uint32> tables, int entries_per_table) {
-    stratum::gtl::flat_hash_map<uint32, std::vector<::p4::TableEntry>> entry_map;
+    stratum::gtl::flat_hash_map<uint32, std::vector<::p4::v1::TableEntry>> entry_map;
     if (!InsertSimpleActionProfileMember(kMemberId1).ok()) {
       return entry_map;
     }
     for (uint32 table : tables) {
       for (int i = 0; i < entries_per_table; ++i) {
-        ::p4::TableEntry entry;
+        ::p4::v1::TableEntry entry;
         entry.set_table_id(table);
         entry.add_match()->set_field_id(kFieldId1 + i);
         entry.mutable_action()->set_action_profile_member_id(kMemberId1);
@@ -1069,7 +1069,7 @@ const std::vector<ColorTestCase>& CopyToCpuTestCases() {
 AclTable CreateAclTable(uint32 p4_id, std::vector<uint32> match_fields,
                         BcmAclStage stage, int size, int16 priority = 0,
                         int physical_table_id = 0) {
-  ::p4::config::Table p4_table;
+  ::p4::config::v1::Table p4_table;
   p4_table.mutable_preamble()->set_id(p4_id);
   for (uint32 match_field : match_fields) {
     p4_table.add_match_fields()->set_id(match_field);
@@ -1155,7 +1155,7 @@ TEST_F(BcmTableManagerTest, Shutdown) {
 }
 
 TEST_F(BcmTableManagerTest, PushForwardingPipelineConfigSuccess) {
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_OK(bcm_table_manager_->PushForwardingPipelineConfig(config));
 }
 
@@ -1164,7 +1164,7 @@ TEST_F(BcmTableManagerTest, PushForwardingPipelineConfigFailure) {
 }
 
 TEST_F(BcmTableManagerTest, VerifyForwardingPipelineConfigSuccess) {
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_OK(bcm_table_manager_->VerifyForwardingPipelineConfig(config));
 }
 
@@ -1181,9 +1181,9 @@ TEST_F(BcmTableManagerTest, FillBcmFlowEntryFailure) {
 }
 
 // Test that valid meter configuration for ACL flow is correctly copied from
-// ::p4::TableEntry to BcmFlowEntry.
+// ::p4::v1::TableEntry to BcmFlowEntry.
 TEST_F(BcmTableManagerTest, FillBcmMeterConfigSuccess) {
-  ::p4::MeterConfig p4_meter;
+  ::p4::v1::MeterConfig p4_meter;
   p4_meter.set_cir(512);
   p4_meter.set_cburst(64);
   p4_meter.set_pir(1024);
@@ -1203,7 +1203,7 @@ TEST_F(BcmTableManagerTest, FillBcmMeterConfigSuccess) {
 // Test failure to copy bad meter configuration to BcmMeterConfig.
 TEST_F(BcmTableManagerTest, FillBcmMeterConfigBadValueFailure) {
   BcmMeterConfig bcm_meter;
-  ::p4::MeterConfig p4_meter;
+  ::p4::v1::MeterConfig p4_meter;
   p4_meter.set_cir(-1);
   EXPECT_FALSE(
       bcm_table_manager_->FillBcmMeterConfig(p4_meter, &bcm_meter).ok());
@@ -1596,7 +1596,7 @@ TEST_F(BcmTableManagerTest,
   BcmFlowEntry expected;
 
   // We first need to add one member before.
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
 
   member.set_member_id(kMemberId1);
   member.set_action_profile_id(kActionProfileId1);
@@ -1640,7 +1640,7 @@ TEST_F(BcmTableManagerTest,
   BcmFlowEntry expected;
 
   // We first need to add one member before.
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
 
   member.set_member_id(kMemberId1);
   member.set_action_profile_id(kActionProfileId1);
@@ -1684,7 +1684,7 @@ TEST_F(BcmTableManagerTest,
   BcmFlowEntry expected;
 
   // We first need to add one member before.
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
 
   member.set_member_id(kMemberId1);
   member.set_action_profile_id(kActionProfileId1);
@@ -1728,8 +1728,8 @@ TEST_F(BcmTableManagerTest,
   BcmFlowEntry expected;
 
   // We first need to add one group with one member before.
-  ::p4::ActionProfileMember member;
-  ::p4::ActionProfileGroup group;
+  ::p4::v1::ActionProfileMember member;
+  ::p4::v1::ActionProfileGroup group;
 
   member.set_member_id(kMemberId1);
   member.set_action_profile_id(kActionProfileId1);
@@ -1881,7 +1881,7 @@ TEST_F(BcmTableManagerTest,
   CommonFlowEntry source;
 
   // We first need to add one member before.
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
 
   member.set_member_id(kMemberId1);
   member.set_action_profile_id(kActionProfileId1);
@@ -2126,7 +2126,7 @@ TEST_F(BcmTableManagerTest,
 
 TEST_F(BcmTableManagerTest,
        CommonFlowEntryToBcmFlowEntry_InvalidCopyOrSendToCpuAction) {
-  ::p4::config::Table p4_acl_table;
+  ::p4::config::v1::Table p4_acl_table;
   AclTable acl_table = CreateAclTable(/*p4_id=*/88, /*match_fields=*/{},
                                       /*stage=*/BCM_ACL_STAGE_IFP, /*size=*/10);
   // Setup the preconditions.
@@ -2270,7 +2270,7 @@ TEST_F(BcmTableManagerTest, CommonFlowEntryToBcmFlowEntry_InValidPortFields) {
 TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForCpuPort) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
   MappedAction mapped_action;
   mapped_action.set_type(P4_ACTION_TYPE_FUNCTION);
   auto* function = mapped_action.mutable_function();
@@ -2298,7 +2298,7 @@ TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForCpuPort) {
 TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForRegularPort) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
   MappedAction mapped_action;
   mapped_action.set_type(P4_ACTION_TYPE_FUNCTION);
   auto* function = mapped_action.mutable_function();
@@ -2334,7 +2334,7 @@ TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForRegularPort) {
 TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForTrunk) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
   MappedAction mapped_action;
   mapped_action.set_type(P4_ACTION_TYPE_FUNCTION);
   auto* function = mapped_action.mutable_function();
@@ -2370,7 +2370,7 @@ TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForTrunk) {
 TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForDrop) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
   MappedAction mapped_action;
   mapped_action.set_type(P4_ACTION_TYPE_FUNCTION);
   auto* function = mapped_action.mutable_function();
@@ -2397,7 +2397,7 @@ TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopSuccessForDrop) {
 TEST_F(BcmTableManagerTest, FillBcmNonMultipathNexthopFailure) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member;
+  ::p4::v1::ActionProfileMember member;
   BcmNonMultipathNexthop nexthop;
 
   // Should fail if the action profile member cannot be translated.
@@ -2500,9 +2500,9 @@ TEST_F(BcmTableManagerTest, FillBcmMultipathNexthopFailure) {
 TEST_F(BcmTableManagerTest, AddTableEntrySuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::ActionProfileGroup group1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::ActionProfileGroup group1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2544,7 +2544,7 @@ TEST_F(BcmTableManagerTest, AddTableEntrySuccess) {
 TEST_F(BcmTableManagerTest, AddTableEntryFailureWhenNoTableIdInEntry) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::TableEntry entry1;
+  ::p4::v1::TableEntry entry1;
 
   entry1.add_match()->set_field_id(kFieldId1);
   entry1.mutable_action()->set_action_profile_member_id(kMemberId1);
@@ -2557,8 +2557,8 @@ TEST_F(BcmTableManagerTest, AddTableEntryFailureWhenNoTableIdInEntry) {
 TEST_F(BcmTableManagerTest, AddTableEntryFailureWhenTableEntryExists) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::TableEntry entry1;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::TableEntry entry1;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2582,7 +2582,7 @@ TEST_F(BcmTableManagerTest, AddTableEntryFailureWhenTableEntryExists) {
 TEST_F(BcmTableManagerTest, AddTableEntryFailureWhenRefrencedMemberNotFound) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::TableEntry entry1;
+  ::p4::v1::TableEntry entry1;
 
   entry1.set_table_id(kTableId1);
   entry1.add_match()->set_field_id(kFieldId1);
@@ -2597,9 +2597,9 @@ TEST_F(BcmTableManagerTest, AddTableEntryFailureWhenRefrencedMemberNotFound) {
 TEST_F(BcmTableManagerTest, UpdateTableEntrySuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2;
-  ::p4::ActionProfileGroup group1;
-  ::p4::TableEntry entry1, entry2, entry3;
+  ::p4::v1::ActionProfileMember member1, member2;
+  ::p4::v1::ActionProfileGroup group1;
+  ::p4::v1::TableEntry entry1, entry2, entry3;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2658,7 +2658,7 @@ TEST_F(BcmTableManagerTest, UpdateTableEntrySuccess) {
 TEST_F(BcmTableManagerTest, UpdateTableEntryFailureWhenNodeNotFound) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::TableEntry entry1;
+  ::p4::v1::TableEntry entry1;
 
   entry1.set_table_id(kTableId1);
   entry1.add_match()->set_field_id(kFieldId1);
@@ -2671,8 +2671,8 @@ TEST_F(BcmTableManagerTest, UpdateTableEntryFailureWhenNodeNotFound) {
 TEST_F(BcmTableManagerTest, UpdateTableEntryFailureWhenTableNotFound) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2698,8 +2698,8 @@ TEST_F(BcmTableManagerTest, UpdateTableEntryFailureWhenTableNotFound) {
 TEST_F(BcmTableManagerTest, UpdateTableEntryFailureWhenEntryNotFoundInTable) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2727,9 +2727,9 @@ TEST_F(BcmTableManagerTest, UpdateTableEntryFailureWhenEntryNotFoundInTable) {
 TEST_F(BcmTableManagerTest, DeleteTableEntrySuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::ActionProfileGroup group1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::ActionProfileGroup group1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2791,7 +2791,7 @@ TEST_F(BcmTableManagerTest, DeleteTableEntryFailure) {
 TEST_F(BcmTableManagerTest, DeleteTableEntryFailureWhenNodeNotFound) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::TableEntry entry1;
+  ::p4::v1::TableEntry entry1;
 
   entry1.set_table_id(kTableId1);
   entry1.add_match()->set_field_id(kFieldId1);
@@ -2805,8 +2805,8 @@ TEST_F(BcmTableManagerTest, DeleteTableEntryFailureWhenNodeNotFound) {
 TEST_F(BcmTableManagerTest, DeleteTableEntryFailureWhenTableNotFound) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2833,8 +2833,8 @@ TEST_F(BcmTableManagerTest, DeleteTableEntryFailureWhenTableNotFound) {
 TEST_F(BcmTableManagerTest, DeleteTableEntryFailureWhenEntryNotFoundInTable) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -2863,7 +2863,7 @@ TEST_F(BcmTableManagerTest, AddAndDeleteAclTable) {
   PushTestConfig();
 
   // Need to first add the members and groups the flow will point to.
-  ::p4::ActionProfileMember member1;
+  ::p4::v1::ActionProfileMember member1;
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
   ASSERT_OK(bcm_table_manager_->AddActionProfileMember(
@@ -2877,7 +2877,7 @@ TEST_F(BcmTableManagerTest, AddAndDeleteAclTable) {
   EXPECT_OK(bcm_table_manager_->AddAclTable(table));
 
   // Add an entry.
-  ::p4::TableEntry entry;
+  ::p4::v1::TableEntry entry;
   entry.set_table_id(kTableId1);
   entry.add_match()->set_field_id(kFieldId1);
   entry.mutable_action()->set_action_profile_member_id(kMemberId1);
@@ -2904,7 +2904,7 @@ TEST_F(BcmTableManagerTest, AddAndDeleteAclTable) {
 TEST_F(BcmTableManagerTest, GetReadOnlyAclTable) {
   PushTestConfig();
   // Need to first add the members and groups the flow will point to.
-  ::p4::ActionProfileMember member1;
+  ::p4::v1::ActionProfileMember member1;
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
   ASSERT_OK(bcm_table_manager_->AddActionProfileMember(
@@ -2918,7 +2918,7 @@ TEST_F(BcmTableManagerTest, GetReadOnlyAclTable) {
   EXPECT_OK(bcm_table_manager_->AddAclTable(table));
 
   // Add a non-ACL table.
-  ::p4::TableEntry entry;
+  ::p4::v1::TableEntry entry;
   entry.set_table_id(kTableId2);
   entry.add_match()->set_field_id(kFieldId1);
   entry.mutable_action()->set_action_profile_member_id(kMemberId1);
@@ -2940,7 +2940,7 @@ TEST_F(BcmTableManagerTest, GetReadOnlyAclTable) {
 TEST_F(BcmTableManagerTest, AddAclTableEntry) {
   PushTestConfig();
   // Need to first add the members and groups the flow will point to.
-  ::p4::ActionProfileMember member1;
+  ::p4::v1::ActionProfileMember member1;
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
   ASSERT_OK(bcm_table_manager_->AddActionProfileMember(
@@ -2954,7 +2954,7 @@ TEST_F(BcmTableManagerTest, AddAclTableEntry) {
   EXPECT_OK(bcm_table_manager_->AddAclTable(table));
 
   // Create the table entry.
-  ::p4::TableEntry entry;
+  ::p4::v1::TableEntry entry;
   entry.set_table_id(kTableId1);
   entry.add_match()->set_field_id(kFieldId1);
   entry.mutable_action()->set_action_profile_member_id(kMemberId1);
@@ -2972,14 +2972,14 @@ TEST_F(BcmTableManagerTest, AddAclTableEntry) {
 
 TEST_F(BcmTableManagerTest, AddAclTableEntryRejection) {
   // Need to first add the members and groups the flow will point to.
-  ::p4::ActionProfileMember member1;
+  ::p4::v1::ActionProfileMember member1;
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
   ASSERT_OK(bcm_table_manager_->AddActionProfileMember(
       member1, BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT, kEgressIntfId1));
 
   // Create the table entry.
-  ::p4::TableEntry entry;
+  ::p4::v1::TableEntry entry;
   entry.set_table_id(kTableId1);
   entry.add_match()->set_field_id(kFieldId1);
   entry.mutable_action()->set_action_profile_member_id(kMemberId1);
@@ -3002,9 +3002,9 @@ TEST_F(BcmTableManagerTest, DeleteTableSuccess) {
                      /*priority=*/20);
   EXPECT_OK(bcm_table_manager_->AddAclTable(table1));
 
-  ::p4::ActionProfileMember member1;
-  ::p4::ActionProfileGroup group1;
-  ::p4::TableEntry entry1, entry2;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::ActionProfileGroup group1;
+  ::p4::v1::TableEntry entry1, entry2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3079,13 +3079,13 @@ TEST_F(BcmTableManagerTest, UpdateTableEntryMeterSuccess) {
   ASSERT_OK(bcm_table_manager_->AddAclTable(acl_table));
 
   // Add dummy flow for which to modify meter.
-  ::p4::TableEntry entry;
+  ::p4::v1::TableEntry entry;
   entry.set_priority(1);
   entry.set_table_id(kTableId1);
   entry.add_match()->set_field_id(kFieldId1);
   ASSERT_OK(bcm_table_manager_->AddAclTableEntry(entry, 1));
 
-  ::p4::DirectMeterEntry meter;
+  ::p4::v1::DirectMeterEntry meter;
   *meter.mutable_table_entry() = entry;
   meter.mutable_config()->set_pir(512);
   meter.mutable_config()->set_pburst(128);
@@ -3104,7 +3104,7 @@ TEST_F(BcmTableManagerTest, UpdateTableEntryMeterSuccess) {
 TEST_F(BcmTableManagerTest, UpdateTableEntryMeterFailure) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::DirectMeterEntry meter;
+  ::p4::v1::DirectMeterEntry meter;
   auto* entry = meter.mutable_table_entry();
   entry->set_priority(1);
   entry->set_table_id(1234);
@@ -3129,7 +3129,7 @@ TEST_F(BcmTableManagerTest, UpdateTableEntryMeterFailure) {
 TEST_F(BcmTableManagerTest, AddActionProfileMemberSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2;
+  ::p4::v1::ActionProfileMember member1, member2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3155,7 +3155,7 @@ TEST_F(BcmTableManagerTest, AddActionProfileMemberSuccess) {
 TEST_F(BcmTableManagerTest, AddActionProfileMemberFailureForNoMemberId) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
+  ::p4::v1::ActionProfileMember member1;
 
   member1.set_action_profile_id(kActionProfileId1);
 
@@ -3169,7 +3169,7 @@ TEST_F(BcmTableManagerTest, AddActionProfileMemberFailureForNoMemberId) {
 TEST_F(BcmTableManagerTest, AddActionProfileMemberFailureForNoActionProfileId) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1;
+  ::p4::v1::ActionProfileMember member1;
 
   member1.set_member_id(kMemberId1);
 
@@ -3183,8 +3183,8 @@ TEST_F(BcmTableManagerTest, AddActionProfileMemberFailureForNoActionProfileId) {
 TEST_F(BcmTableManagerTest, AddActionProfileGroupSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2, member3;
-  ::p4::ActionProfileGroup group1, group2;
+  ::p4::v1::ActionProfileMember member1, member2, member3;
+  ::p4::v1::ActionProfileGroup group1, group2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3225,7 +3225,7 @@ TEST_F(BcmTableManagerTest, AddActionProfileGroupSuccess) {
 TEST_F(BcmTableManagerTest, AddActionProfileGroupFailureForNoGroupId) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileGroup group1;
+  ::p4::v1::ActionProfileGroup group1;
 
   group1.set_action_profile_id(kActionProfileId1);
 
@@ -3239,7 +3239,7 @@ TEST_F(BcmTableManagerTest, AddActionProfileGroupFailureForNoGroupId) {
 TEST_F(BcmTableManagerTest, AddActionProfileGroupFailureForNoActionProfileId) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileGroup group1;
+  ::p4::v1::ActionProfileGroup group1;
 
   group1.set_group_id(kGroupId1);
 
@@ -3253,7 +3253,7 @@ TEST_F(BcmTableManagerTest, AddActionProfileGroupFailureForNoActionProfileId) {
 TEST_F(BcmTableManagerTest, UpdateActionProfileMemberSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2, member3;
+  ::p4::v1::ActionProfileMember member1, member2, member3;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3290,8 +3290,8 @@ TEST_F(BcmTableManagerTest, UpdateActionProfileMemberFailure) {
 TEST_F(BcmTableManagerTest, UpdateActionProfileGroupSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2, member3;
-  ::p4::ActionProfileGroup group1, group2, group3, group4;
+  ::p4::v1::ActionProfileMember member1, member2, member3;
+  ::p4::v1::ActionProfileGroup group1, group2, group3, group4;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3353,7 +3353,7 @@ TEST_F(BcmTableManagerTest, UpdateActionProfileGroupFailure) {
 TEST_F(BcmTableManagerTest, DeleteActionProfileMemberSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2;
+  ::p4::v1::ActionProfileMember member1, member2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3392,8 +3392,8 @@ TEST_F(BcmTableManagerTest, DeleteActionProfileMemberFailure) {
 TEST_F(BcmTableManagerTest, DeleteActionProfileGroupSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  ::p4::ActionProfileMember member1, member2;
-  ::p4::ActionProfileGroup group1, group2;
+  ::p4::v1::ActionProfileMember member1, member2;
+  ::p4::v1::ActionProfileGroup group1, group2;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3484,25 +3484,25 @@ TEST_F(BcmTableManagerTest, GetBcmMultipathNexthopInfoFailure) {
 TEST_F(BcmTableManagerTest, ReadActionProfileMembersSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
-  WriterMock<::p4::ReadResponse> writer_mock;
+  WriterMock<::p4::v1::ReadResponse> writer_mock;
 
   // First make sure read works even before anything is added. At this time
   // a read should not should return empty response.
   {
-    ::p4::ReadResponse resp;
+    ::p4::v1::ReadResponse resp;
     EXPECT_CALL(writer_mock, Write(EqualsProto(resp)))
         .Times(2)
         .WillRepeatedly(Return(true));
-    std::vector<::p4::TableEntry*> acl_flows;
+    std::vector<::p4::v1::TableEntry*> acl_flows;
     ASSERT_OK(bcm_table_manager_->ReadTableEntries({}, &resp, &acl_flows));
     ASSERT_OK(bcm_table_manager_->ReadActionProfileMembers({}, &writer_mock));
     ASSERT_OK(bcm_table_manager_->ReadActionProfileGroups({}, &writer_mock));
   }
 
   // Now try to add some members, groups and flow.
-  ::p4::ActionProfileMember member1;
-  ::p4::ActionProfileGroup group1;
-  ::p4::TableEntry entry1;
+  ::p4::v1::ActionProfileMember member1;
+  ::p4::v1::ActionProfileGroup group1;
+  ::p4::v1::TableEntry entry1;
 
   member1.set_member_id(kMemberId1);
   member1.set_action_profile_id(kActionProfileId1);
@@ -3522,21 +3522,21 @@ TEST_F(BcmTableManagerTest, ReadActionProfileMembersSuccess) {
 
   // Now try to read the entries back.
   {
-    ::p4::ReadResponse resp;
+    ::p4::v1::ReadResponse resp;
     *resp.add_entities()->mutable_action_profile_member() = member1;
     EXPECT_CALL(writer_mock, Write(EqualsProto(resp))).WillOnce(Return(true));
     ASSERT_OK(bcm_table_manager_->ReadActionProfileMembers({}, &writer_mock));
   }
   {
-    ::p4::ReadResponse resp;
+    ::p4::v1::ReadResponse resp;
     *resp.add_entities()->mutable_action_profile_group() = group1;
     EXPECT_CALL(writer_mock, Write(EqualsProto(resp))).WillOnce(Return(true));
     ASSERT_OK(bcm_table_manager_->ReadActionProfileGroups({}, &writer_mock));
   }
   {
-    ::p4::ReadResponse resp;
+    ::p4::v1::ReadResponse resp;
     *resp.add_entities()->mutable_table_entry() = entry1;
-    std::vector<::p4::TableEntry*> acl_flows;
+    std::vector<::p4::v1::TableEntry*> acl_flows;
     ASSERT_OK(bcm_table_manager_->ReadTableEntries({}, &resp, &acl_flows));
   }
 }

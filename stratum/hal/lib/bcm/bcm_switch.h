@@ -44,29 +44,29 @@ class BcmSwitch : public SwitchInterface {
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status PushForwardingPipelineConfig(
-      uint64 node_id, const ::p4::ForwardingPipelineConfig& config) override
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status VerifyForwardingPipelineConfig(
-      uint64 node_id, const ::p4::ForwardingPipelineConfig& config) override
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status Shutdown() override LOCKS_EXCLUDED(chassis_lock);
   ::util::Status Freeze() override;
   ::util::Status Unfreeze() override;
-  ::util::Status WriteForwardingEntries(const ::p4::WriteRequest& req,
+  ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
                                         std::vector<::util::Status>* results)
       override LOCKS_EXCLUDED(chassis_lock);
   ::util::Status ReadForwardingEntries(
-      const ::p4::ReadRequest& req, WriterInterface<::p4::ReadResponse>* writer,
+      const ::p4::v1::ReadRequest& req, WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterPacketReceiveWriter(
       uint64 node_id,
-      const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer) override
+      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::PacketOut& packet) override
+                                const ::p4::v1::PacketOut& packet) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterEventNotifyWriter(
       const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) override
@@ -100,7 +100,7 @@ class BcmSwitch : public SwitchInterface {
 
   // Internal version of VerifyForwardingPipelineConfig() which takes no locks.
   ::util::Status DoVerifyForwardingPipelineConfig(
-      uint64 node_id, const ::p4::ForwardingPipelineConfig& config)
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Helper to get BcmNode pointer from unit number or return error indicating

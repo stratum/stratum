@@ -31,15 +31,15 @@ namespace stratum {
 namespace hal {
 namespace bcm {
 
-// Custom hash and equal function for ::p4::TableEntry protos. We need a way
+// Custom hash and equal function for ::p4::v1::TableEntry protos. We need a way
 // to differeniate flows in the following way: If we have 2 flows f1 and f2
 // with f2 being the modified version of f1 as intended by the controller, f1
 // = f2. In any other case they should not.
 struct TableEntryHash {
-  size_t operator()(const ::p4::TableEntry& x) const {
+  size_t operator()(const ::p4::v1::TableEntry& x) const {
     // Save a copy of the input proto, clear action and controller metadata
     // and hash the rest.
-    ::p4::TableEntry a = x;
+    ::p4::v1::TableEntry a = x;
     a.clear_table_id();
     a.clear_action();
     a.clear_controller_metadata();
@@ -47,7 +47,7 @@ struct TableEntryHash {
     a.clear_counter_data();
     // Hash on match field combination, not on permutation.
     std::sort(a.mutable_match()->begin(), a.mutable_match()->end(),
-              [](const ::p4::FieldMatch& l, const ::p4::FieldMatch& r) {
+              [](const ::p4::v1::FieldMatch& l, const ::p4::v1::FieldMatch& r) {
                 return ProtoLess(l, r);
               });
     return ProtoHash(a);
@@ -55,10 +55,10 @@ struct TableEntryHash {
 };
 
 struct TableEntryEqual {
-  bool operator()(const ::p4::TableEntry& x, const ::p4::TableEntry& y) const {
+  bool operator()(const ::p4::v1::TableEntry& x, const ::p4::v1::TableEntry& y) const {
     // Save copies of the input protos, clear actions and controller metadata
     // and compare the rest.
-    ::p4::TableEntry a = x, b = y;
+    ::p4::v1::TableEntry a = x, b = y;
     a.clear_table_id();
     a.clear_action();
     a.clear_controller_metadata();
@@ -74,7 +74,7 @@ struct TableEntryEqual {
     if (a.match_size() != b.match_size() ||
         !std::is_permutation(
             a.match().begin(), a.match().end(), b.match().begin(),
-            [](const ::p4::FieldMatch& l, const ::p4::FieldMatch& r) {
+            [](const ::p4::v1::FieldMatch& l, const ::p4::v1::FieldMatch& r) {
               return ProtoEqual(l, r);
             })) {
       return false;
@@ -87,7 +87,7 @@ struct TableEntryEqual {
 };
 
 using TableEntrySet =
-    gtl::node_hash_set<::p4::TableEntry, TableEntryHash, TableEntryEqual>;
+    gtl::node_hash_set<::p4::v1::TableEntry, TableEntryHash, TableEntryEqual>;
 
 // Class for managing a BCM table.
 class BcmFlowTable {
@@ -103,7 +103,7 @@ class BcmFlowTable {
   BcmFlowTable(uint32 p4_table_id, absl::string_view name)
       : id_(p4_table_id), name_(name), entries_() {}
 
-  explicit BcmFlowTable(const ::p4::config::Table& table)
+  explicit BcmFlowTable(const ::p4::config::v1::Table& table)
       : id_(table.preamble().id()),
         name_(table.preamble().name()),
         entries_() {}
@@ -132,7 +132,7 @@ class BcmFlowTable {
   virtual string Name() const { return name_; }
 
   // Returns true if this table already has this entry.
-  virtual bool HasEntry(const ::p4::TableEntry& entry) const {
+  virtual bool HasEntry(const ::p4::v1::TableEntry& entry) const {
     return entries_.count(entry) > 0;
   }
 
@@ -142,10 +142,10 @@ class BcmFlowTable {
   // Returns true if this table has no entries.
   virtual bool Empty() const { return entries_.empty(); }
 
-  // Returns the ::p4::TableEntry that matches a given entry key.
+  // Returns the ::p4::v1::TableEntry that matches a given entry key.
   // Returns ERR_ENTRY_NOT_FOUND if a matching entry is not found.
-  virtual util::StatusOr<p4::TableEntry> Lookup(
-      const ::p4::TableEntry& key) const {
+  virtual util::StatusOr<p4::v1::TableEntry> Lookup(
+      const ::p4::v1::TableEntry& key) const {
     auto lookup = entries_.find(key);
     if (lookup == entries_.end()) {
       return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
@@ -172,7 +172,7 @@ class BcmFlowTable {
   // 3) is_default_action
   //
   // See TableEntryEqual below.
-  virtual util::Status InsertEntry(const ::p4::TableEntry& entry) {
+  virtual util::Status InsertEntry(const ::p4::v1::TableEntry& entry) {
     auto result = entries_.insert(entry);
     if (!result.second) {
       return MAKE_ERROR(ERR_ENTRY_EXISTS)
@@ -186,7 +186,7 @@ class BcmFlowTable {
 
   // Performs a dry-run of InsertEntry. Returns errors if the entry cannot be
   // inserted. If the entry can be inserted, returns util::OkStatus().
-  virtual util::Status DryRunInsertEntry(const ::p4::TableEntry& entry) const {
+  virtual util::Status DryRunInsertEntry(const ::p4::v1::TableEntry& entry) const {
     const auto result = entries_.find(entry);
     if (result != entries_.end()) {
       return MAKE_ERROR(ERR_ENTRY_EXISTS)
@@ -201,9 +201,9 @@ class BcmFlowTable {
   // entry on success.
   // Returns ERR_ENTRY_NOT_FOUND if a matching entry does not already exist.
   // Returns an error if the entry cannot be added.
-  virtual util::StatusOr<p4::TableEntry> ModifyEntry(
-      const ::p4::TableEntry& entry) {
-    ASSIGN_OR_RETURN(p4::TableEntry old_entry, DeleteEntry(entry));
+  virtual util::StatusOr<p4::v1::TableEntry> ModifyEntry(
+      const ::p4::v1::TableEntry& entry) {
+    ASSIGN_OR_RETURN(p4::v1::TableEntry old_entry, DeleteEntry(entry));
     entries_.insert(entry);
     return old_entry;
   }
@@ -211,8 +211,8 @@ class BcmFlowTable {
   // Attempts to delete an existing entry in this table. Returns the deleted
   // entry on success.
   // Returns ERR_ENTRY_NOT_FOUND if a matching entry does not already exist.
-  virtual util::StatusOr<p4::TableEntry> DeleteEntry(
-      const ::p4::TableEntry& key) {
+  virtual util::StatusOr<p4::v1::TableEntry> DeleteEntry(
+      const ::p4::v1::TableEntry& key) {
     const auto lookup = entries_.find(key);
     if (lookup == entries_.end()) {
       return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
@@ -220,7 +220,7 @@ class BcmFlowTable {
              << " does not contain TableEntry: " << key.ShortDebugString()
              << ".";
     }
-    ::p4::TableEntry entry = *lookup;
+    ::p4::v1::TableEntry entry = *lookup;
     entries_.erase(lookup);
     return entry;
   }

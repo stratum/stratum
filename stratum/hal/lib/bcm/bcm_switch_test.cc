@@ -349,7 +349,7 @@ TEST_F(BcmSwitchTest, ShutdownFailureWhenSomeManagerShutdownFails) {
 TEST_F(BcmSwitchTest, PushForwardingPipelineConfigSuccess) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   {
     InSequence sequence;
     // Verify should always be called before push.
@@ -368,7 +368,7 @@ TEST_F(BcmSwitchTest, PushForwardingPipelineConfigSuccess) {
 TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenVerifyFails) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_CALL(*bcm_node_mock_,
               VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(DefaultError()));
@@ -382,7 +382,7 @@ TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenVerifyFails) {
 TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenPushFails) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_CALL(*bcm_node_mock_,
               VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(::util::OkStatus()));
@@ -396,7 +396,7 @@ TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenPushFails) {
 TEST_F(BcmSwitchTest, VerifyForwardingPipelineConfigSuccess) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   {
     InSequence sequence;
     // Verify should always be called before push.

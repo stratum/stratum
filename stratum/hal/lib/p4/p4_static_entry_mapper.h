@@ -88,11 +88,11 @@ class P4StaticEntryMapper {
   // non-physical tables, but a change in the entries for such tables results
   // in an ERR_REBOOT_REQUIRED status.
   virtual ::util::Status HandlePrePushChanges(
-      const p4::WriteRequest& new_static_config,
-      p4::WriteRequest* out_request);
+      const p4::v1::WriteRequest& new_static_config,
+      p4::v1::WriteRequest* out_request);
   virtual ::util::Status HandlePostPushChanges(
-      const p4::WriteRequest& new_static_config,
-      p4::WriteRequest* out_request);
+      const p4::v1::WriteRequest& new_static_config,
+      p4::v1::WriteRequest* out_request);
 
   // P4StaticEntryMapper is neither copyable nor movable.
   P4StaticEntryMapper(const P4StaticEntryMapper&) = delete;
@@ -106,9 +106,9 @@ class P4StaticEntryMapper {
   // Splits the input new_request into two P4 WriteRequests, one with
   // static entries for physical tables and one with static entries for
   // hidden tables.
-  ::util::Status SplitRequest(const p4::WriteRequest& new_request,
-                              p4::WriteRequest* physical_request,
-                              p4::WriteRequest* hidden_request);
+  ::util::Status SplitRequest(const p4::v1::WriteRequest& new_request,
+                              p4::v1::WriteRequest* physical_request,
+                              p4::v1::WriteRequest* hidden_request);
 
   // This member is the injected table mapper for the P4 device.
   P4TableMapper* p4_table_mapper_;
@@ -118,14 +118,14 @@ class P4StaticEntryMapper {
   // from the P4PipelineConfig's static_table_entries when entries for
   // "hidden" tables are present or when a P4PipelineConfig push is in
   // progress.
-  p4::WriteRequest physical_static_entries_;
+  p4::v1::WriteRequest physical_static_entries_;
 
   // This P4 WriteRequest contains the subset of entries that apply only
   // to hidden non-physical tables.
   // TODO: These probably need to be known by p4_table_mapper_,
   // but this form facilitates easier change detection during P4PipelineConfig
   // pushes.
-  p4::WriteRequest hidden_static_entries_;
+  p4::v1::WriteRequest hidden_static_entries_;
 };
 
 }  // namespace hal

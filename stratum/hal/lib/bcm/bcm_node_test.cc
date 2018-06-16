@@ -577,7 +577,7 @@ TEST_F(BcmNodeTest, ShutdownFailureWhenSomeManagerShutdownFails) {
 TEST_F(BcmNodeTest, PushForwardingPipelineConfigSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   {
     InSequence sequence;
     // P4TableMapper should check for static entry pre-push before other pushes.
@@ -601,7 +601,7 @@ TEST_F(BcmNodeTest, PushForwardingPipelineConfigSuccess) {
 TEST_F(BcmNodeTest, PushForwardingPipelineConfigFailueOnAnyManagerPushFailure) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   // Order matters here as if an earlier push fails, following pushes must not
   // be attempted.
   EXPECT_CALL(*p4_table_mapper_mock_, HandlePrePushStaticEntryChanges(_, _))
@@ -633,7 +633,7 @@ TEST_F(BcmNodeTest, PushForwardingPipelineConfigFailueOnAnyManagerPushFailure) {
 TEST_F(BcmNodeTest, VerifyForwardingPipelineConfigSuccess) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   {
     InSequence sequence;
     EXPECT_CALL(*p4_table_mapper_mock_,
@@ -652,7 +652,7 @@ TEST_F(BcmNodeTest,
        VerifyForwardingPipelineConfigFailueOnAnyManagerVerifyFailure) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_CALL(*p4_table_mapper_mock_,
               VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(DefaultError()))
@@ -669,29 +669,29 @@ TEST_F(BcmNodeTest,
 
 namespace {
 
-::p4::TableEntry* SetupTableEntryToInsert(::p4::WriteRequest* req,
+::p4::v1::TableEntry* SetupTableEntryToInsert(::p4::v1::WriteRequest* req,
                                           uint64 node_id) {
   req->set_device_id(node_id);
   auto* update = req->add_updates();
-  update->set_type(::p4::Update::INSERT);
+  update->set_type(::p4::v1::Update::INSERT);
   auto* entity = update->mutable_entity();
   return entity->mutable_table_entry();
 }
 
-::p4::TableEntry* SetupTableEntryToModify(::p4::WriteRequest* req,
+::p4::v1::TableEntry* SetupTableEntryToModify(::p4::v1::WriteRequest* req,
                                           uint64 node_id) {
   req->set_device_id(node_id);
   auto* update = req->add_updates();
-  update->set_type(::p4::Update::MODIFY);
+  update->set_type(::p4::v1::Update::MODIFY);
   auto* entity = update->mutable_entity();
   return entity->mutable_table_entry();
 }
 
-::p4::TableEntry* SetupTableEntryToDelete(::p4::WriteRequest* req,
+::p4::v1::TableEntry* SetupTableEntryToDelete(::p4::v1::WriteRequest* req,
                                           uint64 node_id) {
   req->set_device_id(node_id);
   auto* update = req->add_updates();
-  update->set_type(::p4::Update::DELETE);
+  update->set_type(::p4::v1::Update::DELETE);
   auto* entity = update->mutable_entity();
   return entity->mutable_table_entry();
 }
@@ -701,12 +701,12 @@ namespace {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv4Lpm) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
                       })),
@@ -725,12 +725,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv4Lpm) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv4Host) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV4_HOST);
@@ -750,12 +750,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv4Host) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv6Lpm) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV6_LPM);
                       })),
@@ -774,12 +774,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv6Lpm) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv6Host) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV6_HOST);
@@ -799,12 +799,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv6Host) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_L2Multicat) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_L2_MULTICAST);
@@ -824,12 +824,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_L2Multicat) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_MyStation) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_MY_STATION);
@@ -849,12 +849,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_MyStation) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Acl) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::INSERT, _))
+                               ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_ACL);
                       })),
@@ -870,12 +870,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Acl) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv4Lpm) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::MODIFY, _))
+                               ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
                       })),
@@ -894,12 +894,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv4Lpm) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv4Host) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::MODIFY, _))
+                               ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV4_HOST);
@@ -919,12 +919,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv4Host) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv6Lpm) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::MODIFY, _))
+                               ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV6_LPM);
                       })),
@@ -943,12 +943,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv6Lpm) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv6Host) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::MODIFY, _))
+                               ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV6_HOST);
@@ -968,12 +968,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv6Host) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Acl) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::MODIFY, _))
+                               ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_ACL);
                       })),
@@ -989,12 +989,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Acl) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv4Lpm) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
                       })),
@@ -1013,12 +1013,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv4Lpm) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv4Host) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV4_HOST);
@@ -1038,12 +1038,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv4Host) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv6Lpm) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV6_LPM);
                       })),
@@ -1062,12 +1062,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv6Lpm) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv6Host) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV6_HOST);
@@ -1088,12 +1088,12 @@ TEST_F(BcmNodeTest,
        WriteForwardingEntriesSuccess_DeleteTableEntry_L2Multicast) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_L2_MULTICAST);
@@ -1113,12 +1113,12 @@ TEST_F(BcmNodeTest,
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_MyStation) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_MY_STATION);
@@ -1138,12 +1138,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_MyStation) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Acl) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
   EXPECT_CALL(*bcm_table_manager_mock_,
               FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::Update::DELETE, _))
+                               ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_ACL);
                       })),
@@ -1159,10 +1159,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Acl) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   req.set_device_id(kNodeId);
   auto* update = req.add_updates();
-  update->set_type(::p4::Update::INSERT);
+  update->set_type(::p4::v1::Update::INSERT);
   auto* entity = update->mutable_entity();
   auto* member = entity->mutable_action_profile_member();
   member->set_member_id(kMemberId);
@@ -1192,10 +1192,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   req.set_device_id(kNodeId);
   auto* update = req.add_updates();
-  update->set_type(::p4::Update::MODIFY);
+  update->set_type(::p4::v1::Update::MODIFY);
   auto* entity = update->mutable_entity();
   auto* member = entity->mutable_action_profile_member();
   member->set_member_id(kMemberId);
@@ -1230,10 +1230,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileMember) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   req.set_device_id(kNodeId);
   auto* update = req.add_updates();
-  update->set_type(::p4::Update::DELETE);
+  update->set_type(::p4::v1::Update::DELETE);
   auto* entity = update->mutable_entity();
   auto* member = entity->mutable_action_profile_member();
   member->set_member_id(kMemberId);
@@ -1260,10 +1260,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileMember) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   req.set_device_id(kNodeId);
   auto* update = req.add_updates();
-  update->set_type(::p4::Update::INSERT);
+  update->set_type(::p4::v1::Update::INSERT);
   auto* entity = update->mutable_entity();
   auto* group = entity->mutable_action_profile_group();
   group->set_group_id(kGroupId);
@@ -1289,10 +1289,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileGroup) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   req.set_device_id(kNodeId);
   auto* update = req.add_updates();
-  update->set_type(::p4::Update::MODIFY);
+  update->set_type(::p4::v1::Update::MODIFY);
   auto* entity = update->mutable_entity();
   auto* group = entity->mutable_action_profile_group();
   group->set_group_id(kGroupId);
@@ -1321,10 +1321,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileGroup) {
 TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileGroup) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  ::p4::WriteRequest req;
+  ::p4::v1::WriteRequest req;
   req.set_device_id(kNodeId);
   auto* update = req.add_updates();
-  update->set_type(::p4::Update::DELETE);
+  update->set_type(::p4::v1::Update::DELETE);
   auto* entity = update->mutable_entity();
   auto* group = entity->mutable_action_profile_group();
   group->set_group_id(kGroupId);
@@ -1351,7 +1351,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileGroup) {
 TEST_F(BcmNodeTest, RegisterPacketReceiveWriter) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
-  auto writer = std::make_shared<WriterMock<::p4::PacketIn>>();
+  auto writer = std::make_shared<WriterMock<::p4::v1::PacketIn>>();
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               RegisterPacketReceiveWriter(
                   GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, Eq(writer)))

@@ -52,12 +52,12 @@ class BcmNode {
 
   // Configures the P4-based forwarding pipeline configuration for this node.
   virtual ::util::Status PushForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
+      const ::p4::v1::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
 
   // Verifies a P4-based forwarding pipeline configuration intended for this
   // node.
   virtual ::util::Status VerifyForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
+      const ::p4::v1::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
 
   // Performs the shutdown sequence in coldboot mode for per-node managers
   // handled by this BcmNode instance.
@@ -74,20 +74,20 @@ class BcmNode {
   // Writes P4-based forwarding entries (table entries, action profile members,
   // action profile groups, meters, counters) to this node.
   virtual ::util::Status WriteForwardingEntries(
-      const ::p4::WriteRequest& req, std::vector<::util::Status>* results)
+      const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results)
       LOCKS_EXCLUDED(lock_);
 
   // Reads P4-based forwarding entries (table entries, action profile members,
   // action profile groups, meters, counters) from this node.
   virtual ::util::Status ReadForwardingEntries(
-      const ::p4::ReadRequest& req, WriterInterface<::p4::ReadResponse>* writer,
+      const ::p4::v1::ReadRequest& req, WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) LOCKS_EXCLUDED(lock_);
 
   // Registers a writer to be invoked on receipt of a packet on any port on this
-  // node. The sent ::p4::PacketIn instance includes all the info on where the
+  // node. The sent ::p4::v1::PacketIn instance includes all the info on where the
   // packet was received on this node as well as its payload.
   virtual ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer)
+      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
       LOCKS_EXCLUDED(lock_);
 
   // Unregisters writer registered in RegisterPacketReceiveWriter().
@@ -95,9 +95,9 @@ class BcmNode {
 
   // Transmits a packet received from controller directly to a port on this node
   // or to the ingress pipeline of the node to let the chip route the packet.
-  // The given ::p4::PacketOut instance includes all the info on where to
+  // The given ::p4::v1::PacketOut instance includes all the info on where to
   // transmit the packet as well as its payload.
-  virtual ::util::Status TransmitPacket(const ::p4::PacketOut& packet)
+  virtual ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
       LOCKS_EXCLUDED(lock_);
 
   // Factory function for creating a BcmNode instance.
@@ -134,20 +134,20 @@ class BcmNode {
 
   // Non-locking internal version of WriteForwardingEntries().
   virtual ::util::Status DoWriteForwardingEntries(
-      const ::p4::WriteRequest& req, std::vector<::util::Status>* results)
+      const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results)
       EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
-  // Write a single ::p4::TableEntry.
-  ::util::Status TableWrite(const ::p4::TableEntry& entry,
-                            ::p4::Update::Type type);
+  // Write a single ::p4::v1::TableEntry.
+  ::util::Status TableWrite(const ::p4::v1::TableEntry& entry,
+                            ::p4::v1::Update::Type type);
 
-  // Write a single ::p4::ActionProfileMember.
+  // Write a single ::p4::v1::ActionProfileMember.
   ::util::Status ActionProfileMemberWrite(
-      const ::p4::ActionProfileMember& member, ::p4::Update::Type type);
+      const ::p4::v1::ActionProfileMember& member, ::p4::v1::Update::Type type);
 
-  // Write a single ::p4::ActionProfileGroup.
-  ::util::Status ActionProfileGroupWrite(const ::p4::ActionProfileGroup& group,
-                                         ::p4::Update::Type type);
+  // Write a single ::p4::v1::ActionProfileGroup.
+  ::util::Status ActionProfileGroupWrite(const ::p4::v1::ActionProfileGroup& group,
+                                         ::p4::v1::Update::Type type);
 
   // Reader-writer lock used to protect access to node-specific state.
   mutable absl::Mutex lock_;

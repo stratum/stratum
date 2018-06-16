@@ -62,7 +62,7 @@ class P4InfoManager {
   // The constructor makes a copy of the input p4_info, but it takes no other
   // actions.  A call to InitializeAndVerify is necessary to fully define the
   // state of this P4InfoManager.
-  explicit P4InfoManager(const p4::config::P4Info& p4_info);
+  explicit P4InfoManager(const p4::config::v1::P4Info& p4_info);
   virtual ~P4InfoManager();
 
   // Derives all internal state and lookup maps based on p4_info_.
@@ -79,25 +79,25 @@ class P4InfoManager {
   // ID or name.  A successful lookup returns a copy of the resource data
   // from the P4Info.  The lookup fails and returns an error if the requested
   // resource does not exist.
-  virtual ::util::StatusOr<const p4::config::Table> FindTableByID(
+  virtual ::util::StatusOr<const p4::config::v1::Table> FindTableByID(
       uint32_t table_id) const;
-  virtual ::util::StatusOr<const p4::config::Table> FindTableByName(
+  virtual ::util::StatusOr<const p4::config::v1::Table> FindTableByName(
       std::string table_name) const;
-  virtual ::util::StatusOr<const p4::config::Action> FindActionByID(
+  virtual ::util::StatusOr<const p4::config::v1::Action> FindActionByID(
       uint32_t action_id) const;
-  virtual ::util::StatusOr<const p4::config::Action> FindActionByName(
+  virtual ::util::StatusOr<const p4::config::v1::Action> FindActionByName(
       std::string action_name) const;
-  virtual ::util::StatusOr<const p4::config::ActionProfile>
+  virtual ::util::StatusOr<const p4::config::v1::ActionProfile>
   FindActionProfileByID(uint32_t profile_id) const;
-  virtual ::util::StatusOr<const p4::config::ActionProfile>
+  virtual ::util::StatusOr<const p4::config::v1::ActionProfile>
   FindActionProfileByName(std::string profile_name) const;
-  virtual ::util::StatusOr<const p4::config::Counter> FindCounterByID(
+  virtual ::util::StatusOr<const p4::config::v1::Counter> FindCounterByID(
       uint32_t counter_id) const;
-  virtual ::util::StatusOr<const p4::config::Counter> FindCounterByName(
+  virtual ::util::StatusOr<const p4::config::v1::Counter> FindCounterByName(
       std::string counter_name) const;
-  virtual ::util::StatusOr<const p4::config::Meter> FindMeterByID(
+  virtual ::util::StatusOr<const p4::config::v1::Meter> FindMeterByID(
       uint32_t meter_id) const;
-  virtual ::util::StatusOr<const p4::config::Meter> FindMeterByName(
+  virtual ::util::StatusOr<const p4::config::v1::Meter> FindMeterByName(
       std::string meter_name) const;
 
   // GetSwitchStackAnnotations attempts to parse any @switchstack annotations
@@ -122,7 +122,7 @@ class P4InfoManager {
   virtual void DumpNamesToIDs() const;
 
   // Accesses the P4Info - virtual for mock access.
-  virtual const p4::config::P4Info& p4_info() const { return p4_info_; }
+  virtual const p4::config::v1::P4Info& p4_info() const { return p4_info_; }
 
   // P4InfoManager is neither copyable nor movable.
   P4InfoManager(const P4InfoManager&) = delete;
@@ -139,7 +139,7 @@ class P4InfoManager {
 
  private:
   // This type defines a callback that verifies the Preamble content.
-  typedef std::function<::util::Status(const p4::config::Preamble& preamble,
+  typedef std::function<::util::Status(const p4::config::v1::Preamble& preamble,
                                        const std::string& resource_type)>
       PreambleCallback;
 
@@ -234,34 +234,34 @@ class P4InfoManager {
 
   // Does common processing of Preamble fields embedded in any resource,
   // returning an error status if the name or ID is invalid or non-unique.
-  ::util::Status ProcessPreamble(const p4::config::Preamble& preamble,
+  ::util::Status ProcessPreamble(const p4::config::v1::Preamble& preamble,
                                  const std::string& resource_type);
 
   // Verifies cross-references from Tables to Actions and Header Fields.
   ::util::Status VerifyTableXrefs();
 
   // Functions to validate name and ID presence in message preamble.
-  static ::util::Status VerifyID(const p4::config::Preamble& preamble,
+  static ::util::Status VerifyID(const p4::config::v1::Preamble& preamble,
                                  const std::string& resource_type);
-  static ::util::Status VerifyName(const p4::config::Preamble& preamble,
+  static ::util::Status VerifyName(const p4::config::v1::Preamble& preamble,
                                    const std::string& resource_type);
 
   // Stores a copy of the injected P4Info.
-  const p4::config::P4Info p4_info_;
+  const p4::config::v1::P4Info p4_info_;
 
   // One P4ResourceMap exists for every type of P4 resource that this
   // instance manages.
-  P4ResourceMap<p4::config::Table> table_map_;
-  P4ResourceMap<p4::config::Action> action_map_;
-  P4ResourceMap<p4::config::ActionProfile> action_profile_map_;
-  P4ResourceMap<p4::config::Counter> counter_map_;
-  P4ResourceMap<p4::config::Meter> meter_map_;
+  P4ResourceMap<p4::config::v1::Table> table_map_;
+  P4ResourceMap<p4::config::v1::Action> action_map_;
+  P4ResourceMap<p4::config::v1::ActionProfile> action_profile_map_;
+  P4ResourceMap<p4::config::v1::Counter> counter_map_;
+  P4ResourceMap<p4::config::v1::Meter> meter_map_;
   // TODO: Need a way to handle Action::Param, which has no Preamble.
 
   // These containers verify that all P4 names and IDs are unique across all
   // types of resources that have an embedded Preamble.
   stratum::gtl::flat_hash_set<uint32> all_resource_ids_;
-  stratum::gtl::flat_hash_map<std::string, const p4::config::Preamble*>
+  stratum::gtl::flat_hash_map<std::string, const p4::config::v1::Preamble*>
       all_resource_names_;
 };
 
