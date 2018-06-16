@@ -22,7 +22,7 @@
 
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
-#include "stratum/hal/lib/phal/google_switch_configurator.h"
+//#include "stratum/hal/lib/phal/google_switch_configurator.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "absl/memory/memory.h"
@@ -78,14 +78,14 @@ AttributeDatabase::MakeGoogle(const std::string& legacy_phal_config_path,
       AttributeGroup::From(PhalDB::descriptor());
   ASSIGN_OR_RETURN(std::unique_ptr<UdevEventHandler> udev,
                    UdevEventHandler::MakeUdevEventHandler(system_interface));
-  auto configurator =
-      absl::make_unique<GoogleSwitchConfigurator>(system_interface, udev.get());
-  RETURN_IF_ERROR(configurator->ConfigureSwitch(config, root_group.get()));
+  //auto configurator =
+  //    absl::make_unique<GoogleSwitchConfigurator>(system_interface, udev.get());
+  //RETURN_IF_ERROR(configurator->ConfigureSwitch(config, root_group.get()));
   ASSIGN_OR_RETURN(
       std::unique_ptr<AttributeDatabase> database,
       Make(std::move(root_group), absl::make_unique<DummyThreadpool>()));
   database->udev_ = std::move(udev);
-  database->google_switch_configurator_ = std::move(configurator);
+  //database->google_switch_configurator_ = std::move(configurator);
   return std::move(database);
 }
 

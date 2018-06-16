@@ -33,6 +33,8 @@ bazel test \
 //stratum/hal/lib/common:error_buffer_test \
 //stratum/hal/lib/common:channel_writer_wrapper \
 //stratum/hal/lib/common:conversion \
+//stratum/hal/lib/phal:attribute_database_interface \
+//stratum/hal/lib/phal:managed_attribute \
 
 exit 0
 
@@ -151,7 +153,6 @@ exit 0
 //stratum/hal/lib/p4:utils_test
 
 //stratum/hal/lib/phal:attribute_database
-//stratum/hal/lib/phal:attribute_database_interface
 //stratum/hal/lib/phal:attribute_database_mock
 //stratum/hal/lib/phal:attribute_group
 //stratum/hal/lib/phal:attribute_group_mock
@@ -175,7 +176,6 @@ exit 0
 //stratum/hal/lib/phal:led_datasource
 //stratum/hal/lib/phal:led_datasource_test
 //stratum/hal/lib/phal:legacy_phal
-//stratum/hal/lib/phal:managed_attribute
 //stratum/hal/lib/phal:managed_attribute_mock
 //stratum/hal/lib/phal:phal_cli
 //stratum/hal/lib/phal:phal_proto

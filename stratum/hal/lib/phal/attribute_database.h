@@ -28,7 +28,7 @@
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/db.pb.h"
-#include "stratum/hal/lib/phal/google_switch_configurator.h"
+//#include "stratum/hal/lib/phal/google_switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/hal/lib/phal/threadpool_interface.h"
@@ -80,7 +80,8 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   // database structure.
   std::unique_ptr<UdevEventHandler> udev_;
   // The configurator used for google switches.
-  std::unique_ptr<GoogleSwitchConfigurator> google_switch_configurator_;
+  // TODO: Figure out if we really need this.
+  //std::unique_ptr<GoogleSwitchConfigurator> google_switch_configurator_;
 };
 
 }  // namespace phal

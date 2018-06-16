@@ -43,6 +43,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/phal:db_proto",
         "//stratum/lib/channel",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -100,7 +101,7 @@ stratum_cc_library(
         ":datasource",
         ":db_proto",
         ":dummy_threadpool",
-        ":google_switch_configurator",
+       # ":google_switch_configurator",
         ":managed_attribute",
         ":phal_proto",
         ":system_interface",
@@ -334,7 +335,7 @@ stratum_cc_test(
         "//stratum/lib/channel:channel_mock",
     ],
 )
-
+"""
 stratum_cc_library(
     name = "google_switch_configurator",
     srcs = ["google_switch_configurator.cc"],
@@ -375,7 +376,7 @@ stratum_cc_test(
         "//stratum/lib:utils",
     ],
 )
-
+"""
 stratum_cc_binary(
     name = "phal_cli",
     srcs = ["phal_cli.cc"],

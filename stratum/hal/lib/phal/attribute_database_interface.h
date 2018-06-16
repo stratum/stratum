@@ -27,13 +27,14 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/types/variant.h"
 #include "stratum/glue/status/statusor.h"
+#include "google/protobuf/descriptor.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 using Attribute =
     absl::variant<int32, int64, uint32, uint64, float, double, bool,
-                  std::string, const protobuf::EnumValueDescriptor*>;
+                  std::string, const google::protobuf::EnumValueDescriptor*>;
 
 // TODO: Add an 'optional' flag to PathEntry. This flag indicates
 // that it is okay to skip querying this path if the marked PathEntry is not

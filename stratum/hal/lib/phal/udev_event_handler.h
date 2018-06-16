@@ -27,8 +27,8 @@
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/flat_hash_set.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_set.h"
 
 namespace stratum {
 namespace hal {

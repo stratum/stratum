@@ -31,7 +31,7 @@
 #include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
