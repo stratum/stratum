@@ -80,3 +80,21 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "cleanup",
+    hdrs = ["cleanup.h"],
+    deps = [
+        "@com_google_absl//absl/base:core_headers",
+    ],
+)
+
+cc_test(
+    name = "cleanup_test",
+    srcs = ["cleanup_test.cc"],
+    deps = [
+        ":cleanup",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue:integral_types",
+    ],
+)

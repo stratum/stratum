@@ -287,7 +287,7 @@ stratum_cc_library(
         "//stratum/lib/channel",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
-        "//util/gtl:cleanup",
+        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
     ],
 )

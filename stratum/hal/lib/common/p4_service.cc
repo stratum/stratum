@@ -31,7 +31,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
-#include "util/gtl/cleanup.h"
+#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(forwarding_pipeline_configs_file, "",
