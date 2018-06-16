@@ -191,20 +191,21 @@ class P4MatchKeyLPM : public P4MatchKey {
       int bit_width, MappedField* mapped_field) override;
 };
 
+//FIXME not present in p4info
 // P4MatchKey subclass for p4::config::v1::MatchField::VALID.
-class P4MatchKeyValid : public P4MatchKey {
- public:
-  static std::unique_ptr<P4MatchKeyValid> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
-
-  ~P4MatchKeyValid() override {}
-
- protected:
-  explicit P4MatchKeyValid(const p4::v1::FieldMatch& p4_field_match)
-      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::VALID) {}
-
-  // TODO: P4MatchKeyValid needs a ConvertValue override.
-};
+//class P4MatchKeyValid : public P4MatchKey {
+// public:
+//  static std::unique_ptr<P4MatchKeyValid> CreateInstance(
+//      const p4::v1::FieldMatch& p4_field_match);
+//
+//  ~P4MatchKeyValid() override {}
+//
+// protected:
+//  explicit P4MatchKeyValid(const p4::v1::FieldMatch& p4_field_match)
+//      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::VALID) {}
+//
+//  // TODO: P4MatchKeyValid needs a ConvertValue override.
+//};
 
 // P4MatchKey subclass for p4::config::v1::MatchField::RANGE.
 class P4MatchKeyRange : public P4MatchKey {

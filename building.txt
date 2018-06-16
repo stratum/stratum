@@ -45,6 +45,7 @@ bazel test \
 //stratum/hal/lib/p4:p4_write_request_differ \
 //stratum/hal/lib/p4:p4_write_request_differ_test \
 //stratum/hal/lib/p4:testdata \
+//stratum/hal/lib/p4:p4_match_key \
 
 exit 0
 
@@ -133,7 +134,7 @@ exit 0
 //stratum/hal/lib/bcm:utils
 //stratum/hal/lib/bcm:utils_test
 
-//stratum/hal/lib/p4:p4_match_key
+//stratum/hal/lib/p4:p4_runtime_interface
 //stratum/hal/lib/p4:utils
 //stratum/hal/lib/p4:utils_test
 //stratum/hal/lib/p4:p4_config_verifier_test
@@ -141,7 +142,6 @@ exit 0
 //stratum/hal/lib/p4:p4_info_manager_mock
 //stratum/hal/lib/p4:p4_info_manager_test
 //stratum/hal/lib/p4:p4_match_key_test
-//stratum/hal/lib/p4:p4_runtime_interface
 //stratum/hal/lib/p4:p4_runtime_mock
 //stratum/hal/lib/p4:p4_runtime_real
 //stratum/hal/lib/p4:p4_static_entry_mapper_mock

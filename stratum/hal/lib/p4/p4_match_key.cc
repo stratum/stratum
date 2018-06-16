@@ -38,8 +38,9 @@ std::unique_ptr<P4MatchKey> P4MatchKey::CreateInstance(
       return P4MatchKeyLPM::CreateInstance(p4_field_match);
     case p4::v1::FieldMatch::kRange:
       return P4MatchKeyRange::CreateInstance(p4_field_match);
-    case p4::v1::FieldMatch::kValid:
-      return P4MatchKeyValid::CreateInstance(p4_field_match);
+    //FIXME not present in p4info
+//    case p4::v1::FieldMatch::kValid:
+//      return P4MatchKeyValid::CreateInstance(p4_field_match);
     case p4::v1::FieldMatch::FIELD_MATCH_TYPE_NOT_SET:
       // A FieldMatch that does not set a match value of any type is
       // a valid default setting for some fields and invalid for other fields.
@@ -336,10 +337,11 @@ std::unique_ptr<P4MatchKeyLPM> P4MatchKeyLPM::CreateInstance(
   return status;
 }
 
-std::unique_ptr<P4MatchKeyValid> P4MatchKeyValid::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
-  return absl::WrapUnique(new P4MatchKeyValid(p4_field_match));
-}
+//FIXME not present in p4info
+//std::unique_ptr<P4MatchKeyValid> P4MatchKeyValid::CreateInstance(
+//    const p4::v1::FieldMatch& p4_field_match) {
+//  return absl::WrapUnique(new P4MatchKeyValid(p4_field_match));
+//}
 
 std::unique_ptr<P4MatchKeyRange> P4MatchKeyRange::CreateInstance(
     const p4::v1::FieldMatch& p4_field_match) {
