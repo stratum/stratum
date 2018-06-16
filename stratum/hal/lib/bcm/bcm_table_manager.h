@@ -37,8 +37,8 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
 #include "stratum/glue/integral_types.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
+#include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/flat_hash_set.h"
 

@@ -43,7 +43,7 @@
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
 #include "sandblaze/gnmi/gnmi.grpc.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 

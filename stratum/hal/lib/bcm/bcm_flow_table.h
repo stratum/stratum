@@ -22,7 +22,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/glue/integral_types.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
 #include "util/gtl/node_hash_set.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"

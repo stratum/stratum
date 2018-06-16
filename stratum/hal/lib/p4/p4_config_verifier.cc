@@ -24,7 +24,7 @@
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "github.com/p4lang/PI/p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 
 // These flags control the strictness of error reporting for certain

@@ -23,8 +23,8 @@
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
+#include "github.com/p4lang/PI/p4/v1/p4runtime.pb.h"
 
 using ::testing::Combine;
 using ::testing::HasSubstr;

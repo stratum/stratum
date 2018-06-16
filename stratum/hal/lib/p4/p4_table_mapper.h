@@ -35,7 +35,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/hal.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {

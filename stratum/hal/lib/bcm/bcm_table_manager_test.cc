@@ -33,7 +33,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 

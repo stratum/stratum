@@ -26,7 +26,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
 
 DECLARE_bool(skip_p4_min_objects_check);
 

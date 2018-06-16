@@ -24,7 +24,7 @@
 #include <string>
 
 #include "google/protobuf/repeated_field.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
