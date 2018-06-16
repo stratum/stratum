@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.host.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.host.pb.h"
 
 namespace stratum {
 namespace hal {

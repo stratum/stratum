@@ -28,7 +28,7 @@
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/lib/error.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 

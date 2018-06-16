@@ -31,7 +31,7 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

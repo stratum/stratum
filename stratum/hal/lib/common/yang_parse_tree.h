@@ -26,7 +26,7 @@
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

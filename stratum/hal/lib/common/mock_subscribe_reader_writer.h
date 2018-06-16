@@ -20,7 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 
 // A mockup class of a ServerReaderWriter stream.
 // Used to test if the GnmiPublisher correctly transmits data to the controller.

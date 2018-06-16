@@ -20,7 +20,7 @@
 
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {

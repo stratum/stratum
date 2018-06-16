@@ -21,7 +21,7 @@
 #include "stratum/lib/utils.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "sandblaze/gnmi/gnmi.host.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.host.pb.h"
 
 using ::testing::_;
 using ::testing::HasSubstr;
