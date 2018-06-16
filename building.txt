@@ -37,6 +37,7 @@ bazel test \
 //stratum/hal/lib/common:gnmi_publisher_mock \
 //stratum/hal/lib/common:oc_to_hal_config_test \
 //stratum/hal/lib/common:hal_config_to_oc_test \
+//stratum/hal/lib/common:utils_test \
 //stratum/hal/lib/phal:attribute_database_interface \
 //stratum/hal/lib/phal:attribute_database_mock \
 //stratum/hal/lib/phal:buffer_tools \
@@ -95,7 +96,6 @@ exit 0
 
 //stratum/lib/channel:channel_test
 
-//stratum/hal/lib/common:utils_test
 //stratum/hal/lib/common:p4_service
 //stratum/hal/lib/common:p4_service_test
 //stratum/hal/lib/common:config_monitoring_service

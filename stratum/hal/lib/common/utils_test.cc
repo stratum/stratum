@@ -20,7 +20,7 @@
 #include "stratum/lib/constants.h"
 #include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
-
+#include "google/protobuf/util/message_differencer.h"
 
 using google::protobuf::util::MessageDifferencer;
 
