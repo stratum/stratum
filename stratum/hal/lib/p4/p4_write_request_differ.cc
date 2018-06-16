@@ -17,7 +17,7 @@
 
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "google/protobuf/generated_message_reflection.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"

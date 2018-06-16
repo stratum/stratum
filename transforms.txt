@@ -51,6 +51,7 @@ google::hercules::                          stratum::
 C files copybara
 ----------------
 #include "base/commandlineflags.h"          #include "gflags/gflags.h"
+#include "base/logging.h"                   #include "stratum/glue/logging.h"
 #include "testing/base/public/gunit.h"      #include "gtest/gtest.h"
 #include "testing/base/public/gunit-spi.h"  #include "gtest/gtest-spi.h"
 #include "testing/base/public/gmock.h"      #include "gmock/gmock.h"
