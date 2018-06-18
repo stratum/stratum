@@ -2,7 +2,7 @@
 
 PULL_DOCKER=NO
 MOUNT_SSH=NO
-BAZEL_CACHE=/home/$USER/.cache
+BAZEL_CACHE=$HOME/.cache
 
 print_help() {
 cat << EOF
@@ -17,9 +17,9 @@ build the first time this script is run.
 
 Usage: $0
     [--pull]                        pull the latest debian base image
-    [--mount-ssh]                   mount the ~/.ssh directory into the docker image
+    [--mount-ssh]                   mount the HOME/.ssh directory into the docker image
     [--bazel-cache <path>]          mount the provided directory into the docker image and use it as the Bazel cache;
-                                    default is ~/.cache
+                                    default is HOME/.cache
     [--git-name <name>]             use the provided name for git commits
     [--git-email <email>]           use the provided email for git commits
     [--git-editor <editor command>] use the provided editor for git
@@ -90,7 +90,7 @@ docker build $DOCKER_BUILD_OPTIONS -f $THIS_DIR/Dockerfile.dev $THIS_DIR
 
 DOCKER_RUN_OPTIONS="--rm -v $THIS_DIR:/stratum"
 if [ "$MOUNT_SSH" == YES ]; then
-    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v ~/.ssh:/home/$USER/.ssh"
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi
-DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $BAZEL_CACHE:$BAZEL_CACHE"
+DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $BAZEL_CACHE:/home/$USER/.cache"
 docker run $DOCKER_RUN_OPTIONS -w /stratum --user $USER -ti $IMAGE_NAME bash

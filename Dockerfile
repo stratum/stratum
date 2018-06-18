@@ -8,7 +8,7 @@ FROM debian:jessie
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image builds the Stratum project code on a Debian distribution"
 
-ARG BAZEL_VERSION=0.13.1
+ARG BAZEL_VERSION=0.14.1
 
 # bazel dependencies
 # + wget to download bazel binary
