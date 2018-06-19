@@ -19,6 +19,7 @@
 #include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/utils.h"
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "github.com/openconfig/gnmi/proto/gnmi/gnmi.host.pb.h"

@@ -34,6 +34,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include <google/protobuf/text_format.h>
 
 DECLARE_string(chassis_config_file);
 DECLARE_string(test_tmpdir);

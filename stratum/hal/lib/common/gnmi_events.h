@@ -18,6 +18,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
+#include <list>
+
 #include "stratum/glue/status/status.h"
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/proto/hal.pb.h"
