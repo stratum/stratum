@@ -253,9 +253,10 @@ class ChannelReader {
   // Private constructor which initializes a ChannelReader from the given
   // Channel.
   explicit ChannelReader(std::shared_ptr<Channel<T>> channel)
-      : channel_(ABSL_DIE_IF_NULL(std::move(channel))) {}
+      //FIXME ABSL_DIE_IF_NULL not available in absl
+      : channel_(/*FIXME ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
 
-  std::shared_ptr<Channel<T>> channel_;
+ std::shared_ptr<Channel<T>> channel_;
 };
 
 template <typename T>
@@ -297,7 +298,8 @@ class ChannelWriter {
  private:
   // Private constructor which initializes a ChannelWriter to the given Channel.
   explicit ChannelWriter(std::shared_ptr<Channel<T>> channel)
-      : channel_(ABSL_DIE_IF_NULL(std::move(channel))) {}
+      //FIXME ABSL_DIE_IF_NULL not available in absl
+      : channel_(/*ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
 
   std::shared_ptr<Channel<T>> channel_;
 };
