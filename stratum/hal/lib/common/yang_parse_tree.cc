@@ -25,7 +25,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/yang_wrappers.pb.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
+#include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -322,10 +322,13 @@ std::string ConvertSeverityToYangEnumString(
 // following format: "XX:XX:XX:XX:XX:XX").
 std::string MacAddressToYangString(
     const google::protobuf::uint64& mac_address) {
-  return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
-                         (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
-                         (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
-                         mac_address & 0xFF);
+  return absl::Substitute("$0:$1:$2:$3:$4:$5",
+                          absl::Hex((mac_address >> 40) & 0xFF),
+                          absl::Hex((mac_address >> 32) & 0xFF),
+                          absl::Hex((mac_address >> 24) & 0xFF),
+                          absl::Hex((mac_address >> 16) & 0xFF),
+                          absl::Hex((mac_address >> 8) & 0xFF),
+                          absl::Hex(mac_address & 0xFF));
 }
 
 // A family of helper methods that request a value of type U from the switch
