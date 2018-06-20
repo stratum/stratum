@@ -90,7 +90,9 @@ cc_library(
     ],
     deps = [
         ":status",
+        ":statusor",
         "//testing/base/public:gunit_no_google3",
+        "//stratum/public/proto:error_proto",
     ],
 )
 

@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_GLUE_STATUS_STATUS_H_
 #define STRATUM_GLUE_STATUS_STATUS_H_
 
+#include <atomic>
 #include <iosfwd>
 #include <string>
 
-#include "google/protobuf/stubs/atomicops.h"
 #include "stratum/glue/logging.h"
 
 // TODO: Move to Abseil-status when it is available.
@@ -48,7 +47,6 @@ enum Code {
   DATA_LOSS = 15,
   DO_NOT_USE_RESERVED_FOR_FUTURE_EXPANSION_USE_DEFAULT_IN_SWITCH_INSTEAD_ = 20,
   // **DO NOT ADD ANYTHING TO THIS**
-  // This list is owned by google3 core language team.
 };
 static const enum Code Code_MIN = Code::OK;
 static const enum Code Code_MAX = Code::DATA_LOSS;
@@ -68,15 +66,6 @@ namespace util {
 // new error space per API
 class ErrorSpace;
 
-// Used by ::util::Status to store proto payload. Not for public use
-class InternalStatusPayload;
-
-// Returned Status objects may not be ignored.
-// Note: Disabled for SWIG as it doesn't parse attributes correctly.
-#if defined(CLANG_WARN_UNUSED_RESULT) && !defined(SWIG)
-class CLANG_WARN_UNUSED_RESULT Status;
-#endif
-
 class Status final {
  public:
   // Creates a "successful" status.
@@ -89,9 +78,8 @@ class Status final {
   Status(::util::error::Code code, const std::string& error_message);
 
   // Creates a status in the specified "space", "code" and the
-  // associated error message and optional payload.  If "code == 0",
-  // (space,msg,payload) are ignored and a Status object identical to
-  // Status::OK is constructed.
+  // associated error message.  If "code == 0", (space,msg) are ignored
+  // and a Status object identical to Status::OK is constructed.
   //
   // New APIs should use the canonical error space and the preceding
   // two-argument constructor.
@@ -119,14 +107,14 @@ class Status final {
   // Return the canonical error space.
   static const ErrorSpace* canonical_space();
 
-  // Store the specified error and optional payload in this Status object.
-  // If "code == 0", (space,msg,payload) are ignored and a Status object
-  // identical to Status::OK is constructed.  Sets any payload to NULL.
+  // Store the specified error in this Status object. If "code == 0",
+  // (space,msg) are ignored and a Status object identical to Status::OK
+  // is constructed.
   // REQUIRES: code == 0 OR space != NULL
   void SetError(const ErrorSpace* space, int code, const std::string& msg);
 
   // If "ok()", stores "new_status" into *this.  If "!ok()", preserves
-  // the current "error_code()/error_message()/error_space()/payload()",
+  // the current "error_code()/error_message()/error_space()",
   // but may augment with additional information about "new_status".
   //
   // Convenient way of keeping track of the first error encountered.
@@ -161,7 +149,7 @@ class Status final {
 
   // Returns true iff this has the same error_space, error_code,
   // and canonical_code as "x".  I.e., the two Status objects are
-  // identical except possibly for the error message and payload.
+  // identical except possibly for the error message.
   bool Matches(const Status& x) const;
 
   // Return a combination of the error code name and message.
@@ -188,62 +176,40 @@ class Status final {
     that->rep_ = t;
   }
 
-  // Returns a copy of the status object with error message and
-  // payload stripped off. Useful for comparing against expected
-  // status when error message might vary, e.g.
+  // Returns a copy of the status object with error message stripped off.
+  // Useful for comparing against expected status when error message
+  // might vary, e.g.
   //     EXPECT_EQ(expected_status, real_status.StripMessage());
   Status StripMessage() const;
 
  private:
-  // Use atomic ops from the protobuf library.
-  typedef google::protobuf::internal::Atomic32 Atomic32;
-
-  inline static bool RefCountDec(volatile Atomic32* ptr) {
-    return google::protobuf::internal::Barrier_AtomicIncrement(ptr, -1) != 0;
-  }
-
-  inline static void RefCountInc(volatile Atomic32* ptr) {
-    google::protobuf::internal::NoBarrier_AtomicIncrement(ptr, 1);
-  }
-
-  inline static Atomic32 NoBarrier_Load(volatile const Atomic32* ptr) {
-    return google::protobuf::internal::NoBarrier_Load(ptr);
-  }
-
-  inline static bool RefCountIsOne(const volatile Atomic32* ptr) {
-    return google::protobuf::internal::Acquire_Load(ptr) == 1;
-  }
-
-  typedef InternalStatusPayload Payload;
-
   // Reference-counted representation
-  static const Atomic32 kGlobalRef = ~static_cast<Atomic32>(0);
+  static const unsigned int kGlobalRef = 0;
   struct Rep {
-    Atomic32 ref;
-    int code;                     // code >= 0
-    int canonical_code;           // 0 means use space to calculate
-    const ErrorSpace* space_ptr;  // NULL means canonical_space()
-    std::string* message_ptr;     // NULL means empty
-    Payload* payload;             // If non-NULL, owned by this object
+    std::atomic<unsigned int> ref;  // reference count.
+    int code;                       // code >= 0
+    int canonical_code;             // 0 means use space to calculate
+    const ErrorSpace* space_ptr;    // NULL means canonical_space()
+    std::string* message_ptr;       // NULL means empty
   };
   Rep* rep_;  // Never NULL.
 
   static void UnrefSlow(Rep*);
   inline static void Ref(Rep* r) {
     // Do not adjust refs for globals
-    if (NoBarrier_Load(&r->ref) != kGlobalRef) {
-      RefCountInc(&r->ref);
+    if (r->ref != kGlobalRef) {
+      ++r->ref;
     }
   }
   inline static void Unref(Rep* r) {
     // Do not adjust refs for globals
-    if (NoBarrier_Load(&r->ref) != kGlobalRef) {
+    if (r->ref != kGlobalRef) {
       UnrefSlow(r);
     }
   }
 
   void InternalSet(const ErrorSpace* space, int code, const std::string& msg,
-                   Payload* payload, int canonical_code);
+                   int canonical_code);
 
   // Returns the canonical code from the status protocol buffer (if present) or
   // the result of passing this status to the ErrorSpace CanonicalCode method.
@@ -253,12 +219,10 @@ class Status final {
   // Ensures rep_ is not shared with any other Status.
   void PrepareToModify();
 
-  // Takes ownership of payload.
-  static Rep* NewRep(const ErrorSpace*, int, const std::string&,
-                     Payload* payload, int canonical_code);
-  // Takes ownership of payload.
-  static void ResetRep(Rep* rep, const ErrorSpace*, int, const std::string&,
-                       Payload* payload, int canonical_code);
+  static Rep* NewRep(const ErrorSpace*, int code, const std::string&,
+                     int canonical_code);
+  static void ResetRep(Rep* rep, const ErrorSpace*, int code,
+                       const std::string&, int canonical_code);
   static bool EqualsSlow(const ::util::Status& a, const ::util::Status& b);
 
   // Machinery for linker initialization of the global Status objects.

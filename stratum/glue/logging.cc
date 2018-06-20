@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/glue/logging.h"
 
 #include <syslog.h>
@@ -27,8 +26,7 @@ DEFINE_bool(logtostderr, false,
 
 #endif  // STRATUM_ARCH_PPC
 
-DEFINE_bool(logtosyslog, true,
-            "log messages also go to syslog.");
+DEFINE_bool(logtosyslog, true, "log messages also go to syslog.");
 
 namespace stratum {
 namespace {
@@ -41,10 +39,10 @@ class SyslogSink : public base_logging::LogSink {
         base_logging::FATAL};
     static const char* const kSeverityToLabel[] = {"INFO", "WARNING", "ERROR",
                                                    "FATAL"};
-    int severity = static_cast<int>(e.severity);
+    int severity = static_cast<int>(e.log_severity());
     syslog(LOG_USER | kSeverityToLevel[severity], "%s %s:%d] %.*s",
-           kSeverityToLabel[severity], e.base_filename, e.line,
-           static_cast<int>(e.message_len), e.message);
+           kSeverityToLabel[severity], e.source_basename(), e.source_line(),
+           static_cast<int>(e.text_message().size()), e.text_message().data());
   }
 };
 }  // namespace
