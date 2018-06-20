@@ -85,6 +85,9 @@ sc_cc_lib(
 cc_library(
     name = "status_test_util",
     testonly = 1,
+    srcs = [
+        "status_test_util.cc",
+    ],
     hdrs = [
         "status_test_util.h",
     ],
