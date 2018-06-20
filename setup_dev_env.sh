@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ $EUID -eq 0 ]]; then
+   echo "This script should not be run as root, run it as the user who owns the Stratum source directory"
+   exit 1
+fi
+
 PULL_DOCKER=NO
 MOUNT_SSH=NO
 BAZEL_CACHE=$HOME/.cache
