@@ -41,6 +41,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/types:variant",
         "//stratum/glue/status:statusor",
+        "//stratum/glue:integral_types",
         "//stratum/hal/lib/phal:db_proto",
         "//stratum/lib/channel",
         "@com_google_protobuf//:protobuf",
@@ -269,6 +270,7 @@ stratum_cc_library(
     ],
 )
 
+"""
 stratum_cc_library(
     name = "google_eeprom_datasource",
     srcs = ["google_eeprom_datasource.cc"],
@@ -335,7 +337,7 @@ stratum_cc_test(
         "//stratum/lib/channel:channel_mock",
     ],
 )
-"""
+
 stratum_cc_library(
     name = "google_switch_configurator",
     srcs = ["google_switch_configurator.cc"],
@@ -377,6 +379,7 @@ stratum_cc_test(
     ],
 )
 """
+
 stratum_cc_binary(
     name = "phal_cli",
     srcs = ["phal_cli.cc"],
@@ -498,7 +501,7 @@ stratum_cc_library(
         ":system_interface",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
+        #"//sandblaze/prebuilt/eudev",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
@@ -627,6 +630,7 @@ stratum_cc_test(
     ],
 )
 
+"""
 stratum_cc_library(
     name = "legacy_phal",
     srcs = ["legacy_phal.cc"],
@@ -645,6 +649,7 @@ stratum_cc_library(
         "//stratum/glue/gtl:stl_util",
     ],
 )
+"""
 
 stratum_cc_proto_library(
     name = "phal_proto",
@@ -655,6 +660,7 @@ stratum_cc_proto_library(
     ],
 )
 
+"""
 stratum_cc_library(
     name = "phal_proxy",
     srcs = ["phal_proxy.cc"],
@@ -675,6 +681,7 @@ stratum_cc_library(
         "//stratum/public/proto:error_proto",
     ],
 )
+"""
 
 stratum_cc_library(
     name = "phal_sim",
@@ -700,7 +707,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
+        #"//sandblaze/prebuilt/eudev",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
@@ -741,7 +748,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
+        #"//sandblaze/prebuilt/eudev",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",

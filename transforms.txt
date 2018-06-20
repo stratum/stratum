@@ -40,6 +40,7 @@ proto_include = "."                         #proto_include = "."
 //util/gtl:stl_util                         //stratum/glue/gtl:stl_util
 //util/gtl:flat_hash_map                    //stratum/glue/gtl:flat_hash_map
 //util/gtl:flat_hash_set                    //stratum/glue/gtl:flat_hash_set
+:google_switch_configurator                 #:google_switch_configurator
 
 
 C files permanent/one-time
@@ -62,6 +63,7 @@ C files copybara
 ?                                           #include "google/protobuf/descriptor.h"
 #include "sandblaze/p4lang/p4/              #include "github.com/p4lang/PI/p4/
 #include "sandblaze/gnmi                    #include "github.com/openconfig/gnmi/proto/gnmi
+#include "eudev/libudev.h"                  #include <libudev.h>
 
 using base_logging::LogSeverity;            using google::LogSeverity;
 using base_logging::LogToStderr;            using google::LogToStderr;

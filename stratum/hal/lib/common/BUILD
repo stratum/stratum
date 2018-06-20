@@ -171,6 +171,7 @@ stratum_cc_library(
     hdrs = ["constants.h"],
     deps = [
         "@com_google_absl//absl/base:core_headers",
+        "//stratum/glue:integral_types",
     ],
 )
 

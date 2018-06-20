@@ -21,8 +21,8 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <libudev.h>
 
-#include "eudev/libudev.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/udev_interface.h"
