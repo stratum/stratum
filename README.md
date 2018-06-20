@@ -30,3 +30,8 @@ We provide a script to create a Docker development environment for Stratum. Run
 The script will build a Docker image using Dockerfile.dev and run a bash session
 in it. This directory will be mounted in the Docker image and you will be able
 to run git, edit code, and build Stratum / run tests using Bazel.
+
+If you are using Docker on Linux, make sure that you can use Docker as a
+non-root user, otherwise you will not be able to run setup_dev_env.sh:
+
+    sudo usermod -aG docker $USER
