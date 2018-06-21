@@ -297,7 +297,7 @@ stratum_cc_test(
     srcs = [
         "p4_service_test.cc",
     ],
-    data = ["//tools/test:requires_ipv4_loopback"],
+    #data = ["//tools/test:requires_ipv4_loopback"],
     deps = [
         ":error_buffer",
         ":p4_service",
