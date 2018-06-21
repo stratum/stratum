@@ -37,6 +37,7 @@ DECLARE_string(match_field_error_level);
 DECLARE_string(action_field_error_level);
 
 using ::testing::HasSubstr;
+using ::gflags::FlagSaver;
 
 namespace stratum {
 namespace hal {
