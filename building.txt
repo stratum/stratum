@@ -51,6 +51,7 @@ bazel test \
 //stratum/hal/lib/p4:p4_static_entry_mapper_mock \
 //stratum/hal/lib/p4:p4_table_mapper_mock \
 //stratum/hal/lib/p4:p4_static_entry_mapper_test \
+//stratum/hal/lib/p4:p4_match_key_test \
 //stratum/hal/lib/bcm:bcm_proto \
 //stratum/hal/lib/bcm:constants \
 //stratum/hal/lib/bcm:bcm_sdk_interface \
@@ -71,7 +72,6 @@ exit 0
 //stratum/hal/lib/p4:p4_info_manager_test
 //stratum/hal/lib/p4:p4_table_mapper_test
 //stratum/hal/lib/p4:p4_config_verifier_test
-//stratum/hal/lib/p4:p4_match_key_test
 
 #--------------- TBD --------------------
 //stratum/hal/bin/bcm/sim:stratum_sim

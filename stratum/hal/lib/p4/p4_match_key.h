@@ -191,7 +191,7 @@ class P4MatchKeyLPM : public P4MatchKey {
       int bit_width, MappedField* mapped_field) override;
 };
 
-//FIXME not present in p4info
+//FIXME match VALID not present in p4info
 // P4MatchKey subclass for p4::config::v1::MatchField::VALID.
 //class P4MatchKeyValid : public P4MatchKey {
 // public:

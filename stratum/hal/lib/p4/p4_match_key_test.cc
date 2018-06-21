@@ -58,10 +58,11 @@ class P4MatchKeyTest : public testing::Test {
     test_match_.mutable_range()->set_low(low);
     test_match_.mutable_range()->set_high(high);
   }
-  void SetUpValidMatch(bool valid) {
-    test_match_.set_field_id(1);  // The ID is a don't care for all tests.
-    test_match_.mutable_valid()->set_value(valid);
-  }
+//FIXME match VALID not present in p4info
+//  void SetUpValidMatch(bool valid) {
+//    test_match_.set_field_id(1);  // The ID is a don't care for all tests.
+//    test_match_.mutable_valid()->set_value(valid);
+//  }
 
   // P4 runtime FieldMatch that tests to use to create P4MatchKey instances.
   p4::v1::FieldMatch test_match_;
@@ -129,12 +130,13 @@ TEST_F(P4MatchKeyTest, TestCreateRangeMatch) {
   EXPECT_EQ(p4::config::v1::MatchField::RANGE, match_key->allowed_match_type());
 }
 
-TEST_F(P4MatchKeyTest, TestCreateValidMatch) {
-  SetUpValidMatch(true);
-  std::unique_ptr<P4MatchKey> match_key =
-      P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::v1::MatchField::VALID, match_key->allowed_match_type());
-}
+//FIXME match VALID not present in p4info
+//TEST_F(P4MatchKeyTest, TestCreateValidMatch) {
+//  SetUpValidMatch(true);
+//  std::unique_ptr<P4MatchKey> match_key =
+//      P4MatchKey::CreateInstance(test_match_);
+//  EXPECT_EQ(p4::config::v1::MatchField::VALID, match_key->allowed_match_type());
+//}
 
 TEST_F(P4MatchKeyTest, TestCreateUnspecifiedMatch) {
   test_match_.set_field_id(1);  // The ID is a don't care for all tests.
@@ -353,18 +355,19 @@ TEST_F(P4MatchKeyTest, TestConvertRaw) {
 // Tests conversion of a match against a boolean "valid" key.
 // TODO: This is currently just a raw conversion until support for
 // this key type is implemented.
-TEST_F(P4MatchKeyTest, TestConvertValidMatch) {
-  SetUpValidMatch(true);
-  std::unique_ptr<P4MatchKey> match_key =
-      P4MatchKey::CreateInstance(test_match_);
-  field_conversion_.set_match_type(p4::config::v1::MatchField::VALID);
-  field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_RAW);
-  ::util::Status status =
-      match_key->Convert(field_conversion_, 1, &mapped_field_);
-  EXPECT_TRUE(status.ok());
-  EXPECT_TRUE(mapped_field_.has_value());
-  EXPECT_TRUE(mapped_field_.value().has_raw_pi_match());
-}
+//FIXME match VALID not present in p4info
+//TEST_F(P4MatchKeyTest, TestConvertValidMatch) {
+//  SetUpValidMatch(true);
+//  std::unique_ptr<P4MatchKey> match_key =
+//      P4MatchKey::CreateInstance(test_match_);
+//  field_conversion_.set_match_type(p4::config::v1::MatchField::VALID);
+//  field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_RAW);
+//  ::util::Status status =
+//      match_key->Convert(field_conversion_, 1, &mapped_field_);
+//  EXPECT_TRUE(status.ok());
+//  EXPECT_TRUE(mapped_field_.has_value());
+//  EXPECT_TRUE(mapped_field_.value().has_raw_pi_match());
+//}
 
 // Tests conversion of a match against a range key.
 // TODO: This is currently just a raw conversion until support for
@@ -454,21 +457,22 @@ TEST_F(P4MatchKeyTest, TestConvertUnspecifiedExactMatch) {
 
 // Tests conversion when the match request does not specify any data in
 // the FieldMatch::field_match_type for a VALID match.
-TEST_F(P4MatchKeyTest, TestConvertUnspecifiedValidMatch) {
-  test_match_.set_field_id(1);  // The ID is a don't care for all tests.
-  std::unique_ptr<P4MatchKey> match_key =
-      P4MatchKey::CreateInstance(test_match_);
-  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
-            match_key->allowed_match_type());
-  field_conversion_.set_match_type(p4::config::v1::MatchField::VALID);
-  field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
-  ::util::Status status =
-      match_key->Convert(field_conversion_, 32, &mapped_field_);
-  EXPECT_FALSE(status.ok());
-  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
-  EXPECT_THAT(status.ToString(), HasSubstr("VALID"));
-  EXPECT_THAT(status.ToString(), HasSubstr("has no default value"));
-}
+//FIXME match VALID not present in p4info
+//TEST_F(P4MatchKeyTest, TestConvertUnspecifiedValidMatch) {
+//  test_match_.set_field_id(1);  // The ID is a don't care for all tests.
+//  std::unique_ptr<P4MatchKey> match_key =
+//      P4MatchKey::CreateInstance(test_match_);
+//  EXPECT_EQ(p4::config::v1::MatchField::UNSPECIFIED,
+//            match_key->allowed_match_type());
+//  field_conversion_.set_match_type(p4::config::v1::MatchField::VALID);
+//  field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
+//  ::util::Status status =
+//      match_key->Convert(field_conversion_, 32, &mapped_field_);
+//  EXPECT_FALSE(status.ok());
+//  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+//  EXPECT_THAT(status.ToString(), HasSubstr("VALID"));
+//  EXPECT_THAT(status.ToString(), HasSubstr("has no default value"));
+//}
 
 // Tests mismatch between a field's bitwidth and the specified conversion type.
 // The most likely cause of this error is invalid table map data. For example,
