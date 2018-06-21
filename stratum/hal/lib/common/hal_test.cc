@@ -19,7 +19,7 @@
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/switch_mock.h"
-#include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
+//#include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/security/credentials_manager_mock.h"
 #include "stratum/lib/utils.h"
