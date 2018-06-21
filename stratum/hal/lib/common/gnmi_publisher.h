@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <time.h>
 
+#include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
@@ -191,7 +192,10 @@ class GnmiPublisher {
           [this](const GnmiEvent& event_base, GnmiSubscribeStream* stream)
               EXCLUSIVE_LOCKS_REQUIRED(access_lock_) {
                 // Special case - change of configuration.
-                VLOG(1) << "Configuration has changed.";
+                //FIXME VLOG(1) does not appear to work inside of a lambda
+                //VLOG(1) << "Configuration has changed.";
+                //FIXME the following statement is a temporary hack
+                if(FLAGS_v >= 1) LOG(INFO) << "Configuration has changed.";
                 if (auto* event = dynamic_cast<const ConfigHasBeenPushedEvent*>(
                         &event_base)) {
                   parse_tree_.ProcessPushedConfig(*event);

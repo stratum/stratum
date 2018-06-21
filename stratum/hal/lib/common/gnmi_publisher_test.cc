@@ -22,7 +22,7 @@
 #include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.host.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 
 using ::testing::_;
 using ::testing::HasSubstr;
