@@ -30,5 +30,5 @@ RUN wget -q https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION
 
 # TODO(antonin): build the whole code base once it is fixed, in the mean time we
 # just build the P4Runtime dependency
-RUN @com_github_p4lang_PI//:p4runtime_proto
+RUN bazel build @com_github_p4lang_PI//:p4runtime_proto
 # RUN bazel build ...
