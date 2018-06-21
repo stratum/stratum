@@ -56,6 +56,12 @@ bazel test \
 //stratum/hal/lib/p4:utils_test \
 //stratum/hal/lib/p4:p4_info_manager \
 //stratum/hal/lib/p4:p4_info_manager_mock \
+//stratum/hal/lib/p4:p4_runtime_mock \
+//stratum/hal/lib/p4:p4_table_mapper \
+//stratum/hal/lib/p4:p4_runtime_real \
+//stratum/hal/lib/p4:p4_static_entry_mapper_mock \
+//stratum/hal/lib/p4:p4_table_mapper_mock \
+//stratum/hal/lib/p4:p4_static_entry_mapper_test \
 //stratum/hal/lib/bcm:bcm_proto \
 //stratum/hal/lib/bcm:constants \
 //stratum/hal/lib/bcm:bcm_sdk_interface \
@@ -77,29 +83,10 @@ exit 0
 
 //stratum/hal/stub/embedded:stratum_stub
 
-//stratum/lib/security:aaa_membership_proto
-//stratum/lib/security:aaa_membership_proto.pb
-//stratum/lib/security:aaa_membership_proto_srcs
-//stratum/lib/security:authorization_policy_proto
-//stratum/lib/security:authorization_policy_proto.pb
-//stratum/lib/security:authorization_policy_proto_srcs
-//stratum/lib/security:auth_policy_checker
-//stratum/lib/security:auth_policy_checker_mock
-//stratum/lib/security:auth_policy_checker_test
-//stratum/lib/security:credentials_manager
-//stratum/lib/security:credentials_manager_mock
-//stratum/lib/security:test_main
-
-//stratum/hal/lib/p4:p4_config_verifier_test
 //stratum/hal/lib/p4:p4_info_manager_test
-//stratum/hal/lib/p4:p4_match_key_test
-//stratum/hal/lib/p4:p4_runtime_mock
-//stratum/hal/lib/p4:p4_runtime_real
-//stratum/hal/lib/p4:p4_static_entry_mapper_mock
-//stratum/hal/lib/p4:p4_static_entry_mapper_test
-//stratum/hal/lib/p4:p4_table_mapper
-//stratum/hal/lib/p4:p4_table_mapper_mock
 //stratum/hal/lib/p4:p4_table_mapper_test
+//stratum/hal/lib/p4:p4_config_verifier_test
+//stratum/hal/lib/p4:p4_match_key_test
 
 #--------------- TBD --------------------
 //stratum/hal/bin/bcm/sim:stratum_sim
