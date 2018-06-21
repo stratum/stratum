@@ -82,6 +82,20 @@ cc_test(
 )
 
 cc_library(
+    name = "node_hash_set",
+    hdrs = ["node_hash_set.h"],
+)
+
+cc_test(
+    name = "node_hash_set_test",
+    srcs = ["node_hash_set_test.cc"],
+    deps = [
+        ":node_hash_set",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "cleanup",
     hdrs = ["cleanup.h"],
     deps = [

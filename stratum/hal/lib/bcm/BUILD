@@ -240,7 +240,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
-#        "//util/gtl:node_hash_set",
+        "//stratum/glue/gtl:node_hash_set",
     ],
 )
 

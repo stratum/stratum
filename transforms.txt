@@ -41,6 +41,7 @@ proto_include = "."                         #proto_include = "."
 //util/gtl:stl_util                         //stratum/glue/gtl:stl_util
 //util/gtl:flat_hash_map                    //stratum/glue/gtl:flat_hash_map
 //util/gtl:flat_hash_set                    //stratum/glue/gtl:flat_hash_set
+//util/gtl:node_hash_set                    //stratum/glue/gtl:node_hash_set
 //util/gtl:cleanup                          //stratum/glue/gtl:cleanup
 :google_switch_configurator                 #:google_switch_configurator
 
@@ -61,6 +62,7 @@ C files copybara
 #include "util/gtl/stl_util.h"              #include "stratum/glue/gtl/stl_util.h"
 #include "util/gtl/flat_hash_map.h"         #include "stratum/glue/gtl/flat_hash_map.h"
 #include "util/gtl/flat_hash_set.h"         #include "stratum/glue/gtl/flat_hash_set.h"
+#include "util/gtl/node_hash_set.h"         #include "stratum/glue/gtl/node_hash_set.h"
 #include "util/gtl/cleanup.h"               #include "stratum/glue/gtl/cleanup.h"
 ?                                           #include "google/protobuf/descriptor.h"
 ?                                           #include "google/protobuf/util/message_differencer.h"

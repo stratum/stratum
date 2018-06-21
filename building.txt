@@ -69,6 +69,7 @@ bazel test \
 //stratum/hal/lib/bcm:bcm_serdes_db_manager_mock \
 //stratum/hal/lib/bcm:bcm_serdes_db_manager_test \
 //stratum/hal/lib/bcm:sdk_build_undef \
+//stratum/hal/lib/bcm:bcm_flow_table \
 //stratum/lib/security:all \
 
 exit 0
@@ -103,7 +104,6 @@ exit 0
 //stratum/hal/lib/bcm:bcm_chassis_manager_mock
 //stratum/hal/lib/bcm:bcm_chassis_manager_test
 //stratum/hal/lib/bcm:bcm_diag_shell
-//stratum/hal/lib/bcm:bcm_flow_table
 //stratum/hal/lib/bcm:bcm_flow_table_test
 //stratum/hal/lib/bcm:bcm_l2_manager
 //stratum/hal/lib/bcm:bcm_l2_manager_mock
