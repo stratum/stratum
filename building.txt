@@ -40,6 +40,12 @@ bazel test \
 //stratum/hal/lib/bcm:bcm_serdes_db_manager_test \
 //stratum/hal/lib/bcm:sdk_build_undef \
 //stratum/hal/lib/bcm:bcm_flow_table \
+//stratum/hal/lib/bcm:bcm_sdk_mock \
+//stratum/hal/lib/bcm:test_main \
+//stratum/hal/lib/bcm:utils \
+//stratum/hal/lib/bcm:utils_test \
+//stratum/hal/lib/bcm:acl_table \
+
 
 exit 0
 
@@ -50,9 +56,9 @@ exit 0
 //stratum/hal/stub/embedded:stratum_stub
 
 #--------------- TBD --------------------
+
 //stratum/hal/bin/bcm/sim:stratum_sim
 //stratum/hal/bin/bcm/standalone:stratum_hal
-//stratum/hal/lib/bcm:acl_table
 //stratum/hal/lib/bcm:acl_table_test
 //stratum/hal/lib/bcm:bcm_acl_manager
 //stratum/hal/lib/bcm:bcm_acl_manager_mock
@@ -77,7 +83,6 @@ exit 0
 //stratum/hal/lib/bcm:bcm_packetio_manager
 //stratum/hal/lib/bcm:bcm_packetio_manager_mock
 //stratum/hal/lib/bcm:bcm_packetio_manager_test
-//stratum/hal/lib/bcm:bcm_sdk_mock
 //stratum/hal/lib/bcm:bcm_sdk_sim
 //stratum/hal/lib/bcm:bcm_sdk_wrapper
 //stratum/hal/lib/bcm:bcm_sim_test_fixture
@@ -88,9 +93,6 @@ exit 0
 //stratum/hal/lib/bcm:bcm_table_manager_test
 //stratum/hal/lib/bcm:macros
 //stratum/hal/lib/bcm:macros_test
-//stratum/hal/lib/bcm:test_main
-//stratum/hal/lib/bcm:utils
-//stratum/hal/lib/bcm:utils_test
 
 //stratum/hal/lib/phal:attribute_database
 //stratum/hal/lib/phal:attribute_group

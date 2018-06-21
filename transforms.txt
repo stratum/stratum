@@ -24,7 +24,7 @@ proto_include = "."                         #proto_include = "."
 
 //absl                                      @com_google_absl//absl
 //base                                      @com_github_google_glog//:glog
-//file/base:path                            #//file/base:path
+"//file/base:path"                          #"//file/base:path"
 //googleapis/google/rpc:status.proto        @com_github_googleapis//:status_proto
 //googleapis/google/rpc:code.proto          @com_github_googleapis//:code_proto
 //protobuf                                  @com_google_protobuf//:protobuf
@@ -43,7 +43,8 @@ proto_include = "."                         #proto_include = "."
 //util/gtl:flat_hash_set                    //stratum/glue/gtl:flat_hash_set
 //util/gtl:node_hash_set                    //stratum/glue/gtl:node_hash_set
 //util/gtl:cleanup                          //stratum/glue/gtl:cleanup
-:google_switch_configurator                 #:google_switch_configurator
+":google_switch_configurator"               #":google_switch_configurator"
+"//sandblaze/prebuilt/broadcom:bcm-sdk"     #"//sandblaze/prebuilt/broadcom:bcm-sdk"
 
 C files permanent/one-time
 --------------------------

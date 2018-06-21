@@ -27,6 +27,11 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 
+#include "absl/strings/string_view.h"
+#include "absl/strings/str_cat.h"
+
+using std::string;
+
 namespace stratum {
 namespace hal {
 namespace bcm {
