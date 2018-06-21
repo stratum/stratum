@@ -15,6 +15,7 @@
 
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
@@ -24,7 +25,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.host.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 
 namespace stratum {
 namespace hal {
