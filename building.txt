@@ -5,6 +5,7 @@ bazel test \
 //stratum/lib/...:all \
 //stratum/portage:all \
 //stratum/hal/lib/common:all \
+//stratum/hal/lib/p4:all \
 //stratum/hal/lib/phal:attribute_database_interface \
 //stratum/hal/lib/phal:attribute_database_mock \
 //stratum/hal/lib/phal:buffer_tools \
@@ -31,27 +32,6 @@ bazel test \
 //stratum/hal/lib/phal:udev_event_handler_test \
 //stratum/hal/lib/phal:udev_interface \
 //stratum/hal/lib/phal:udev_mock \
-//stratum/hal/lib/p4:common_flow_entry_proto \
-//stratum/hal/lib/p4:p4_control_proto \
-//stratum/hal/lib/p4:p4_pipeline_config_proto \
-//stratum/hal/lib/p4:p4_table_map_proto \
-//stratum/hal/lib/p4:p4_config_verifier \
-//stratum/hal/lib/p4:p4_write_request_differ \
-//stratum/hal/lib/p4:p4_write_request_differ_test \
-//stratum/hal/lib/p4:testdata \
-//stratum/hal/lib/p4:p4_match_key \
-//stratum/hal/lib/p4:p4_runtime_interface \
-//stratum/hal/lib/p4:utils \
-//stratum/hal/lib/p4:utils_test \
-//stratum/hal/lib/p4:p4_info_manager \
-//stratum/hal/lib/p4:p4_info_manager_mock \
-//stratum/hal/lib/p4:p4_runtime_mock \
-//stratum/hal/lib/p4:p4_table_mapper \
-//stratum/hal/lib/p4:p4_runtime_real \
-//stratum/hal/lib/p4:p4_static_entry_mapper_mock \
-//stratum/hal/lib/p4:p4_table_mapper_mock \
-//stratum/hal/lib/p4:p4_static_entry_mapper_test \
-//stratum/hal/lib/p4:p4_match_key_test \
 //stratum/hal/lib/bcm:bcm_proto \
 //stratum/hal/lib/bcm:constants \
 //stratum/hal/lib/bcm:bcm_sdk_interface \
@@ -68,10 +48,6 @@ exit 0
 # Not building
 
 //stratum/hal/stub/embedded:stratum_stub
-
-//stratum/hal/lib/p4:p4_info_manager_test
-//stratum/hal/lib/p4:p4_table_mapper_test
-//stratum/hal/lib/p4:p4_config_verifier_test
 
 #--------------- TBD --------------------
 //stratum/hal/bin/bcm/sim:stratum_sim
