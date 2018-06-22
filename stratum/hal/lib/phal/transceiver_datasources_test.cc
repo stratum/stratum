@@ -48,7 +48,7 @@ class QSFPDataSourceTest : public ::testing::Test {
 
   template <typename T>
   T ReadAttribute(const std::string& name) {
-    return *datasource_->GetAttribute(name).ValueOrDie()->GetValue().get<T>();
+    return absl::get<T>(*datasource_->GetAttribute(name).ValueOrDie()->GetValue());
   }
 
   template <typename T>

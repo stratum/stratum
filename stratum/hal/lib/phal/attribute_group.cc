@@ -432,7 +432,7 @@ void AttributeGroupQueryNode::RemoveAllFields() {
 template <typename T>
 ::util::Status AttributeGroupInternal::AttemptAddAttribute(
     const std::string& name, ManagedAttribute* value) {
-  if (!value->GetValue().is<T>()) {
+  if (!absl::holds_alternative<T>(value->GetValue())) {
     RETURN_ERROR() << "Attempted to assign incorrect type to attribute " << name
                    << ".";
   }
@@ -484,11 +484,11 @@ template <typename T>
     case FieldDescriptor::CppType::CPPTYPE_ENUM:
       // In addition to checking that the given ManagedAttribute is
       // an enum, we also need to check that it has a compatible enum type.
-      if (!value->GetValue().is<const google::protobuf::EnumValueDescriptor*>()) {
+      if (!absl::holds_alternative<const google::protobuf::EnumValueDescriptor*>(value->GetValue())) {
         RETURN_ERROR() << "Attempted to assign non-enum type to enum "
                        << "attribute " << name << ".";
       }
-      if ((*value->GetValue().get<const google::protobuf::EnumValueDescriptor*>())
+      if ((absl::get<const google::protobuf::EnumValueDescriptor*>(value->GetValue()))
               ->type() != field->enum_type()) {
         RETURN_ERROR() << "Attempted to assign incorrect enum type to " << name
                        << ".";

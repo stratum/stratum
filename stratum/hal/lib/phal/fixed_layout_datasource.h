@@ -291,7 +291,7 @@ class ValidationByteField : public TypedField<int32> {
 
   ::util::Status UpdateAttribute(const char* buffer) override {
     RETURN_IF_ERROR(TypedField::UpdateAttribute(buffer));
-    int32 actual_val = *attribute_->GetValue().get<int32>();
+    int32 actual_val = absl::get<int32>(attribute_->GetValue());
     if (byte_vals_.find(actual_val) == byte_vals_.end())
       RETURN_ERROR() << error_message_;
     return ::util::OkStatus();

@@ -42,7 +42,7 @@ class DataSource;
 // the value on the system.
 // Example:
 //   std::shared_ptr<ManagedAttribute> attr = ...
-//   int32 value = *attr->GetValue().get<int32>();
+//   int32 value = absl::get<int32>(*attr->GetValue());
 //   if (attr.CanSet())
 //      attr.Set(value + 1);
 class ManagedAttribute {
@@ -82,9 +82,9 @@ class TypedAttribute : public ManagedAttribute {
   ::util::Status Set(Attribute value) override {
     if (setter_ == nullptr)
       RETURN_ERROR() << "Selected attribute cannot be set.";
-    if (!value.is<T>())
+    if (!absl::holds_alternative<T>(value))
       RETURN_ERROR() << "Called Set with incorrect attribute type.";
-    return setter_(*value.get<T>());
+    return setter_(absl::get<T>(value));
   }
   void AddSetter(std::function<::util::Status(T value)> setter) {
     setter_ = setter;
