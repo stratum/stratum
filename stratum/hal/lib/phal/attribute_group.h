@@ -220,7 +220,7 @@ class AttributeGroupQuery {
   // Executes this query, and writes all of the values read from the attribute
   // database into the given output protobuf. The passed protobuf must be of the
   // same type used for the descriptor of root_group.
-  ::util::Status Get(protobuf::Message* out) LOCKS_EXCLUDED(query_lock_);
+  ::util::Status Get(google::protobuf::Message* out) LOCKS_EXCLUDED(query_lock_);
   ::util::Status Subscribe(std::unique_ptr<ChannelWriter<PhalDB>> subscriber,
                            absl::Duration polling_interval)
       LOCKS_EXCLUDED(query_lock_);
@@ -230,7 +230,7 @@ class AttributeGroupQuery {
 
   AttributeGroup* root_group_;
   ThreadpoolInterface* threadpool_;
-  std::unique_ptr<protobuf::Message> query_result_;
+  std::unique_ptr<google::protobuf::Message> query_result_;
   absl::Mutex query_lock_;
   bool query_updated_ GUARDED_BY(query_lock_);
   std::vector<std::unique_ptr<ChannelWriter<PhalDB>>> subscribers_

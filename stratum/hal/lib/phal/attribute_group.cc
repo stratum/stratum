@@ -360,7 +360,7 @@ void AttributeGroupQueryNode::RemoveAllFields() {
   node_->Clear();
 }
 
-::util::Status AttributeGroupQuery::Get(protobuf::Message* out) {
+::util::Status AttributeGroupQuery::Get(google::protobuf::Message* out) {
   std::queue<std::unique_ptr<ReadableAttributeGroup>> group_locks;
   std::map<
       DataSource*,
