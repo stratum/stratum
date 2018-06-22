@@ -84,7 +84,7 @@ LedDataSource::LedDataSource(const LedConfig& led_config,
     const LedConfig& led_config, const SystemInterface* system_interface,
     CachePolicy* cache_policy) {
   ::util::Status status = VerifyLedConfig(led_config);
-  RETURN_IF_ERROR(VerifyLedConfig(led_config))
+  RETURN_IF_ERROR_WITH_APPEND(VerifyLedConfig(led_config))
       << "Invalid LED config, Failed to make LED DataSource.";
   ASSIGN_OR_RETURN(LedMap* led_map, GetLedMap(led_config.led_type()));
   return std::shared_ptr<LedDataSource>(

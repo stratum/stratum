@@ -459,7 +459,7 @@ template <typename T>
 ::util::Status AttributeGroupInternal::AddAttribute(const std::string& name,
                                                     ManagedAttribute* value) {
   if (attributes_.find(name) != attributes_.end()) {
-    RETURN_IF_ERROR(RemoveAttribute(name))
+    RETURN_IF_ERROR_WITH_APPEND(RemoveAttribute(name))
         << "Unexpected error when removing the old definition of attribute \""
         << name << "\".";
   }
