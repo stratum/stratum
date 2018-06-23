@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/glue/logging.h"
 
 #include <syslog.h>
@@ -27,17 +26,17 @@ DEFINE_bool(logtostderr, false,
 
 #endif  // STRATUM_ARCH_PPC
 
-DEFINE_bool(logtosyslog, true,
-            "log messages also go to syslog.");
+DEFINE_bool(logtosyslog, true, "log messages also go to syslog.");
 
 using google::LogSeverity;
 using google::LogToStderr;
 using google::ProgramInvocationShortName;
+using google::LogSink;
 
 namespace stratum {
 namespace {
 // This LogSink outputs every log message to syslog.
-class SyslogSink : public google::LogSink {
+class SyslogSink : public LogSink {
  public:
   void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 #include "stratum/glue/status/status.h"
 
 #include <stdint.h>
@@ -25,22 +24,13 @@
 #include <utility>
 
 #include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/glue/logging.h"
 
 namespace util {
-
-struct InternalStatusPayload {
-  void MergeFrom(const InternalStatusPayload& /* unused */) { /* No-op. */
-  }
-  void SerializeToCord(std::string* /* unused */) { /* No-op. */
-  }
-  void ToShortASCII(std::string* /* unused */) { /* No-op. */
-  }
-};
 
 // Global registry
 typedef std::unordered_map<std::string, ErrorSpace*, std::hash<std::string> >
@@ -137,7 +127,7 @@ class GenericErrorSpace : public ErrorSpace {
 
 ABSL_CONST_INIT absl::Mutex init_lock/*absl::kConstInit*/;
 static bool initialized = false;
-static const ErrorSpace* generic_space = NULL;
+static const ErrorSpace* generic_space = nullptr;
 static const std::string* empty_string;
 
 static void InitModule() {
@@ -189,9 +179,9 @@ struct Status::Pod {
   Rep* rep_;
 };
 Status::Rep Status::global_reps[3] = {
-    {kGlobalRef, OK_CODE, 0, NULL, NULL, NULL},
-    {kGlobalRef, CANCELLED_CODE, 0, NULL, NULL, NULL},
-    {kGlobalRef, UNKNOWN_CODE, 0, NULL, NULL, NULL}};
+    {ATOMIC_VAR_INIT(kGlobalRef), OK_CODE, 0, nullptr, nullptr},
+    {ATOMIC_VAR_INIT(kGlobalRef), CANCELLED_CODE, 0, nullptr, nullptr},
+    {ATOMIC_VAR_INIT(kGlobalRef), UNKNOWN_CODE, 0, nullptr, nullptr}};
 
 const Status::Pod Status::globals[3] = {{&Status::global_reps[0]},
                                         {&Status::global_reps[1]},
@@ -207,49 +197,41 @@ const Status& Status::UNKNOWN = *reinterpret_cast<const Status*>(&globals[2]);
 #pragma GCC diagnostic pop
 
 void Status::UnrefSlow(Rep* r) {
-  DCHECK(NoBarrier_Load(&r->ref) != kGlobalRef);
+  DCHECK(r->ref != kGlobalRef);
   // Fast path: if ref==1, there is no need for a RefCountDec (since
   // this is the only reference and therefore no other thread is
   // allowed to be mucking with r).
-  if (RefCountIsOne(&r->ref) || !RefCountDec(&r->ref)) {
-    delete r->payload;
+  if (r->ref == 1 || --r->ref == 0) {
     delete r->message_ptr;
     delete r;
   }
 }
 
 Status::Rep* Status::NewRep(const ErrorSpace* space, int code,
-                            const std::string& msg, Payload* payload,
-                            int canonical_code) {
-  DCHECK(space != NULL);
+                            const std::string& msg, int canonical_code) {
+  DCHECK(space != nullptr);
   DCHECK_NE(code, 0);
   Rep* rep = new Rep;
   rep->ref = 1;
-  rep->message_ptr = NULL;
-  rep->payload = NULL;
-  ResetRep(rep, space, code, msg, payload, canonical_code);
+  rep->message_ptr = nullptr;
+  ResetRep(rep, space, code, msg, canonical_code);
   return rep;
 }
 
 void Status::ResetRep(Rep* rep, const ErrorSpace* space, int code,
-                      const std::string& msg, Payload* payload,
-                      int canonical_code) {
-  DCHECK(rep != NULL);
+                      const std::string& msg, int canonical_code) {
+  DCHECK(rep != nullptr);
   DCHECK_EQ(rep->ref, 1);
   DCHECK(space != canonical_space() || canonical_code == 0);
   rep->code = code;
   rep->space_ptr = space;
   rep->canonical_code = canonical_code;
-  if (rep->message_ptr == NULL) {
+  if (rep->message_ptr == nullptr) {
     rep->message_ptr = new std::string(msg.data(), msg.size());
   } else if (msg != *rep->message_ptr) {
     // msg is not identical to current rep->message.
     std::string copy = msg;
     swap(*rep->message_ptr, copy);
-  }
-  if (rep->payload != payload) {
-    delete rep->payload;
-    rep->payload = payload;  // takes ownership
   }
 }
 
@@ -258,17 +240,17 @@ Status::Status(error::Code code, const std::string& msg) {
     // Construct an OK status
     rep_ = &global_reps[0];
   } else {
-    rep_ = NewRep(canonical_space(), code, msg, NULL, 0);
+    rep_ = NewRep(canonical_space(), code, msg, 0);
   }
 }
 
 Status::Status(const ErrorSpace* space, int code, const std::string& msg) {
-  DCHECK(space != NULL);
+  DCHECK(space != nullptr);
   if (code == 0) {
     // Construct an OK status
     rep_ = &global_reps[0];
   } else {
-    rep_ = NewRep(space, code, msg, NULL, 0);
+    rep_ = NewRep(space, code, msg, 0);
   }
 }
 
@@ -305,42 +287,34 @@ void Status::Clear() {
 
 void Status::SetError(const ErrorSpace* space, int code,
                       const std::string& msg) {
-  InternalSet(space, code, msg, reinterpret_cast<Payload*>(NULL), 0);
+  InternalSet(space, code, msg, 0);
 }
 
 void Status::PrepareToModify() {
   DCHECK(!ok());
-  if (!RefCountIsOne(&rep_->ref)) {
+  if (rep_->ref != 1) {
     Rep* old_rep = rep_;
-    Payload* payload = NULL;
-    if (rep_->payload != NULL) {
-      payload = new Payload;
-      payload->MergeFrom(*rep_->payload);
-    }
-    rep_ = NewRep(error_space(), error_code(), error_message(), payload,
+    rep_ = NewRep(error_space(), error_code(), error_message(),
                   old_rep->canonical_code);
     Unref(old_rep);
   }
 }
 
 void Status::InternalSet(const ErrorSpace* space, int code,
-                         const std::string& msg, Payload* payload,
-                         int canonical_code) {
-  DCHECK(space != NULL);
+                         const std::string& msg, int canonical_code) {
+  DCHECK(space != nullptr);
   if (code == 0) {
     // Construct an OK status
     Clear();
-    delete payload;
-  } else if (RefCountIsOne(&rep_->ref)) {
+  } else if (rep_->ref == 1) {
     // Update in place
-    ResetRep(rep_, space, code, msg, payload, canonical_code);
+    ResetRep(rep_, space, code, msg, canonical_code);
   } else {
-    // If we are doing an update, then msg or payload may point
-    // into rep_.  Wait to Unref rep_ *after* we copy these into
-    // the new rep_, so that it will stay alive and unmodified
-    // while we're working.
+    // If we are doing an update, then msg may point into rep_.
+    // Wait to Unref rep_ *after* we copy these into the new rep_,
+    // so that it will stay alive and unmodified while we're working.
     Rep* old_rep = rep_;
-    rep_ = NewRep(space, code, msg, payload, canonical_code);
+    rep_ = NewRep(space, code, msg, canonical_code);
     Unref(old_rep);
   }
 }
@@ -349,16 +323,8 @@ bool Status::EqualsSlow(const ::util::Status& a, const ::util::Status& b) {
   if ((a.error_code() == b.error_code()) &&
       (a.error_space() == b.error_space()) &&
       (a.error_message() == b.error_message()) &&
-      (a.RawCanonicalCode() == b.RawCanonicalCode()) &&
-      ((a.rep_->payload == NULL) == (b.rep_->payload == NULL))) {
-    if (a.rep_->payload != NULL) {
-      std::string a_serialized, b_serialized;
-      a.rep_->payload->SerializeToCord(&a_serialized);
-      b.rep_->payload->SerializeToCord(&b_serialized);
-      return a_serialized == b_serialized;
-    } else {
-      return true;
-    }
+      (a.RawCanonicalCode() == b.RawCanonicalCode())) {
+    return true;
   }
   return false;
 }
@@ -373,11 +339,6 @@ std::string Status::ToString() const {
     absl::SubstituteAndAppend(
         &status, "$0::$1: $2", space->SpaceName().c_str(),
         space->String(code).c_str(), error_message().c_str());
-    if (rep_->payload != NULL) {
-      std::string payload_text;
-      rep_->payload->ToShortASCII(&payload_text);
-      absl::SubstituteAndAppend(&status, " $0", payload_text.c_str());
-    }
   }
   return status;
 }
@@ -401,7 +362,7 @@ Status Status::StripMessage() const {
 
 ErrorSpace::ErrorSpace(const char* name) : name_(name) {
   absl::MutexLock l(&registry_lock);
-  if (error_space_table == NULL) {
+  if (error_space_table == nullptr) {
     error_space_table = new ErrorSpaceTable;
   }
   (*error_space_table)[name_] = this;
@@ -418,12 +379,12 @@ ErrorSpace::~ErrorSpace() {
 ErrorSpace* ErrorSpace::Find(const std::string& name) {
   InitModule();
   absl::MutexLock l(&registry_lock);
-  if (error_space_table == NULL) {
-    return NULL;
+  if (error_space_table == nullptr) {
+    return nullptr;
   } else {
     ErrorSpaceTable::const_iterator iter = error_space_table->find(name);
     if (iter == error_space_table->end()) {
-      return NULL;
+      return nullptr;
     } else {
       return iter->second;
     }

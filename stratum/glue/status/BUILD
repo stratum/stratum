@@ -86,12 +86,17 @@ stratum_cc_library(
 cc_library(
     name = "status_test_util",
     testonly = 1,
+    srcs = [
+        "status_test_util.cc",
+    ],
     hdrs = [
         "status_test_util.h",
     ],
     deps = [
         ":status",
+        ":statusor",
         "@com_google_googletest//:gtest",
+        "//stratum/public/proto:error_proto",
     ],
 )
 
