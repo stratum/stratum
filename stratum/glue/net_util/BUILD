@@ -73,6 +73,7 @@ sc_cc_lib(
     ],
     deps = [
         ":bits",
+        "//strings",
         "//absl/base:core_headers",
         "//absl/numeric:int128",
         "//absl/strings",

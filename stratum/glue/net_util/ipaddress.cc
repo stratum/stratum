@@ -30,12 +30,13 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/net_util/bits.h"
+#include "strings/numbers.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
+#include "stratum/glue/net_util/bits.h"
 
 namespace stratum {
 
@@ -273,7 +274,7 @@ bool InternalParseHexUInt64(const std::string& hex_str, uint64* out) {
       return false;
     }
   }
-  return safe_strtou64_base(hex_str, out, 16);
+  return strings::safe_strtou64_base(hex_str, out, 16);
 }
 
 }  // namespace
@@ -912,7 +913,7 @@ bool InternalStringToNetmaskLength(const char* str, int host_address_family,
   }
 
   int32 parsed_length = 0;
-  if (!safe_strto32(str, &parsed_length)) {
+  if (!strings::safe_strto32(str, &parsed_length)) {
     // Malformed or missing prefix length, or junk after it.
     // Continue on to the next test...
     parsed_length = -1;
