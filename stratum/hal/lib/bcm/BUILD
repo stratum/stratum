@@ -112,6 +112,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_PI//:p4info_proto",
+        "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
@@ -121,7 +122,6 @@ stratum_cc_library(
         "//stratum/public/proto:p4_table_defs_proto",
         "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
-        "//stratum/glue:integral_types",
     ],
 )
 
@@ -737,6 +737,7 @@ stratum_cc_library(
     defines = ["NDEBUG"],
     deps = [
         #"//sandblaze/prebuilt/broadcom:bcm-sdk",
+        "@com_github_bcm_sdklt//:error",
         "//stratum/glue/status",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",

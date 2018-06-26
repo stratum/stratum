@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
@@ -30,7 +31,6 @@
 #include "stratum/public/proto/p4_table_defs.pb.h"
 #include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
-#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {

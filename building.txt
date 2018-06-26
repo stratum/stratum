@@ -66,6 +66,8 @@ bazel test \
 //stratum/hal/lib/bcm:bcm_acl_pipeline_test \
 //stratum/hal/lib/bcm:macros \
 //stratum/hal/lib/bcm:macros_test \
+//stratum/hal/lib/bcm:bcm_acl_pipeline \
+//stratum/hal/lib/bcm:bcm_acl_pipeline_test \
 
 
 exit 0
