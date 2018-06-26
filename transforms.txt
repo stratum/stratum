@@ -72,6 +72,8 @@ C files copybara
 #include "sandblaze/p4lang/p4/              #include "github.com/p4lang/PI/p4/
 #include "sandblaze/gnmi                    #include "github.com/openconfig/gnmi/proto/gnmi
 #include "eudev/libudev.h"                  #include <libudev.h>
+#include "bcm/error.h"                      #include "shr/shr_error.h"
+#include "soc/error.h"                      //#include "soc/error.h"
 
 using base_logging::LogSeverity;            using google::LogSeverity;
 using base_logging::LogToStderr;            using google::LogToStderr;
@@ -89,6 +91,10 @@ using base_logging::LogSing;                using google::LogSink;
 gtl::flat_hash_map                          stratum::gtl::flat_hash_map
 gtl::flat_hash_set                          stratum::gtl::flat_hash_set
 protobuf::                                  google::protobuf::
+
+BCM_E_                                      SHR_E_
+BCM_SUCCESS                                 SHR_SUCCESS
+bcm_errmsg                                  shr_errmsg
 
 .proto files copybara
 ---------------------

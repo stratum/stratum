@@ -70,7 +70,7 @@ def stratum_deps():
             #build_file = "bazel/external/gnmi.BUILD",
         )
 # -----------------------------------------------------------------------------
-#        Third party C++ libraries
+#        Third party C++ libraries for common
 # -----------------------------------------------------------------------------
     if "com_google_absl" not in native.existing_rules():
         remote_workspace(
@@ -121,4 +121,14 @@ def stratum_deps():
             remote = "https://github.com/systemd/systemd",
             branch = "master",
             build_file = "bazel/external/systemd.BUILD",
+        )
+# -----------------------------------------------------------------------------
+#        Chipset and Platform specific C++ libraries
+# -----------------------------------------------------------------------------
+    if "com_github_bcm_sdklt" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_bcm_sdklt",
+            remote = "https://github.com/Broadcom-Network-Switching-Software/SDKLT",
+            branch = "master",
+            build_file = "bazel/external/sdklt.BUILD",
         )

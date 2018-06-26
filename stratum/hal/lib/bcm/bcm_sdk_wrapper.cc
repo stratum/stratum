@@ -687,7 +687,7 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
                              uint32* mask) {
   T t_value, t_mask;
   int retval = func(unit, flow_id, &t_value, &t_mask);
-  if (BCM_SUCCESS(retval)) {
+  if (SHR_SUCCESS(retval)) {
     *value = static_cast<uint32>(t_value);
     *mask = static_cast<uint32>(t_mask);
   }
