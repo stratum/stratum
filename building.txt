@@ -68,6 +68,8 @@ bazel test \
 //stratum/hal/lib/bcm:macros_test \
 //stratum/hal/lib/bcm:bcm_acl_pipeline \
 //stratum/hal/lib/bcm:bcm_acl_pipeline_test \
+//stratum/hal/lib/bcm:bcm_chassis_manager \
+//stratum/hal/lib/bcm:bcm_chassis_manager_mock \
 
 
 exit 0
@@ -80,14 +82,15 @@ exit 0
 
 #--------------- TBD --------------------
 
+//stratum/hal/lib/bcm:bcm_table_manager
+//stratum/hal/lib/bcm:bcm_table_manager_mock
+//stratum/hal/lib/bcm:bcm_table_manager_test
 //stratum/hal/bin/bcm/sim:stratum_sim
 //stratum/hal/bin/bcm/standalone:stratum_hal
 //stratum/hal/lib/bcm:bcm_acl_manager
 //stratum/hal/lib/bcm:bcm_acl_manager_mock
 //stratum/hal/lib/bcm:bcm_acl_manager_test
 //stratum/hal/lib/bcm:bcm_acl_profile_test
-//stratum/hal/lib/bcm:bcm_chassis_manager
-//stratum/hal/lib/bcm:bcm_chassis_manager_mock
 //stratum/hal/lib/bcm:bcm_chassis_manager_test
 //stratum/hal/lib/bcm:bcm_diag_shell
 //stratum/hal/lib/bcm:bcm_flow_table_test
@@ -108,9 +111,6 @@ exit 0
 //stratum/hal/lib/bcm:bcm_sim_test_fixture
 //stratum/hal/lib/bcm:bcm_switch
 //stratum/hal/lib/bcm:bcm_switch_test
-//stratum/hal/lib/bcm:bcm_table_manager
-//stratum/hal/lib/bcm:bcm_table_manager_mock
-//stratum/hal/lib/bcm:bcm_table_manager_test
 
 //stratum/hal/lib/phal:phal_cli
 //stratum/hal/lib/phal:regex_datasource

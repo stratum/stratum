@@ -388,7 +388,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
         << "No positive slot in " << node.ShortDebugString();
     CHECK_RETURN_IF_FALSE(node.id() > 0)
         << "No positive ID in " << node.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+    CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
         << "The id for Node " << PrintNode(node) << " was already recorded "
         << "for another Node in the config.";
   }
