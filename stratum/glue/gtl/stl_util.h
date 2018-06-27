@@ -26,6 +26,8 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
+using std::string;
+
 namespace stratum {
 namespace gtl {
 
