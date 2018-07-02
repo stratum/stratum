@@ -46,8 +46,8 @@ using ::testing::Pair;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAre;
-using ::testing::status::IsOkAndHolds;
-using ::testing::status::StatusIs;
+using stratum::test_utils::IsOkAndHolds;
+using stratum::test_utils::StatusIs;
 
 namespace stratum {
 namespace hal {

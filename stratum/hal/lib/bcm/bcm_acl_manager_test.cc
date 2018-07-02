@@ -55,8 +55,8 @@ using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAreArray;
-using ::testing::status::IsOkAndHolds;
-using ::testing::status::StatusIs;
+using stratum::test_utils::IsOkAndHolds;
+using stratum::test_utils::StatusIs;
 
 using StageToTablesMap = stratum::gtl::flat_hash_map<P4Annotation::PipelineStage,
                                             std::vector<::p4::config::v1::Table>>;

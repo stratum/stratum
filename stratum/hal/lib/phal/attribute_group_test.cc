@@ -34,7 +34,7 @@ using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::MockFunction;
 using ::testing::Return;
-using ::testing::status::StatusIs;
+using stratum::test_utils::StatusIs;
 
 namespace {
 

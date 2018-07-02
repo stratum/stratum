@@ -50,6 +50,7 @@ C files permanent/one-time
 --------------------------
 #include "absl/base/integral_types.h"       #include "stratum/glue/integral_types.h"
 google::hercules::                          stratum::
+::testing::status::                         stratum::test_utils::
 ::google::protobuf::                        google::protobuf::
 
 C files copybara

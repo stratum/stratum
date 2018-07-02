@@ -31,8 +31,8 @@ using test_utils::EqualsProto;
 using testing::_;
 using testing::HasSubstr;
 using testing::UnorderedElementsAreArray;
-using testing::status::IsOkAndHolds;
-using testing::status::StatusIs;
+using stratum::test_utils::IsOkAndHolds;
+using stratum::test_utils::StatusIs;
 
 constexpr char kDefaultP4Table[] = R"PROTO(
     preamble {

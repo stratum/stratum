@@ -29,7 +29,7 @@ using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::SaveArg;
-using ::testing::status::StatusIs;
+using stratum::test_utils::StatusIs;
 
 namespace {
 // Helper functions that helps to set LED color and LED state.

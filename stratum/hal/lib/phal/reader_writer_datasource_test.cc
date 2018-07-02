@@ -33,7 +33,7 @@ namespace {
 using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::HasSubstr;
-using ::testing::status::StatusIs;
+using stratum::test_utils::StatusIs;
 
 // Note that the filesystem is faked in all of these tests, so this file is
 // never actually created.
