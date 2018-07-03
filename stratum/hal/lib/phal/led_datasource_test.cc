@@ -18,6 +18,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface_mock.h"
+#include "google/protobuf/text_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
