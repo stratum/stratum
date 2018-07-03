@@ -368,6 +368,12 @@ inline matchers_internal::StatusIsMatcher StatusIs(
 #define ASSERT_OK(statement) \
   ASSERT_THAT(statement, ::stratum::test_utils::IsOk())
 
+// Macros for testing the results of functions that return ::util::StatusOr.
+
+#define ASSERT_OK_AND_ASSIGN(lhs, statement) \
+  ASSERT_OK(statement); \
+  lhs = statement.ConsumeValueOrDie()
+
 // There are no EXPECT_NOT_OK/ASSERT_NOT_OK macros since they would not
 // provide much value (when they fail, they would just print the OK status
 // which conveys no more information than EXPECT_FALSE(status.ok());
