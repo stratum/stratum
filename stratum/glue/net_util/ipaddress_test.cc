@@ -30,11 +30,12 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/logging.h"
 #include "testing/base/public/gunit.h"
 #include "absl/base/integral_types.h"
+#include "absl/container/node_hash_set.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 
@@ -50,7 +51,7 @@ namespace stratum {
 using testing::ScopedMockLog;
 #endif
 
-using __gnu_cxx::hash_set;
+using absl::node_hash_set;
 
 // Tests for IPAddress.
 TEST(IPAddressTest, BasicTests) {

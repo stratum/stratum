@@ -89,6 +89,7 @@ sc_cc_test(
         ":ipaddress",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/base:core_headers",
+        "//absl/container:node_hash_set",
         "//absl/numeric:int128",
         "//absl/strings",
         "//stratum/glue:logging",
