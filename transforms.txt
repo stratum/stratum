@@ -83,7 +83,6 @@ using base::ProgramInvocationShortName;     using google::ProgramInvocationShort
 using base_logging::LogSing;                using google::LogSink;
 ?                                           using gflags::FlagSaver;
 
-(absl::kConstInit)                          /*absl::kConstInit*/
 (base::LINKER_INITIALIZED)                  /*base::LINKER_INITIALIZED*/
 
 gtl::flat_hash_map                          stratum::gtl::flat_hash_map

@@ -63,7 +63,11 @@ constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
-ABSL_CONST_INIT absl::Mutex chassis_lock/*absl::kConstInit*/;
+#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
+ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
+#else
+absl::Mutex chassis_lock;
+#endif
 
 bool shutdown = false;
 

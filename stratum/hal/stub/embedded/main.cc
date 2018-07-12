@@ -745,7 +745,11 @@ class HalServiceClient {
   static absl::Mutex lock_;
 };
 
-ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_/*absl::kConstInit*/;
+#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
+ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
+#else
+absl::Mutex HalServiceClient::lock_;
+#endif
 
 int Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);

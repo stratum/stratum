@@ -74,7 +74,11 @@ void SetGrpcServerKeepAliveArgs(::grpc::ServerBuilder* builder) {
 }  // namespace
 
 Hal* Hal::singleton_ = nullptr;
-ABSL_CONST_INIT absl::Mutex Hal::init_lock_/*absl::kConstInit*/;
+#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
+ABSL_CONST_INIT absl::Mutex Hal::init_lock_(absl::kConstInit);
+#else
+absl::Mutex Hal::init_lock_;
+#endif
 
 Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
          AuthPolicyChecker* auth_policy_checker,

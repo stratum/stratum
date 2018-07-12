@@ -24,7 +24,11 @@ namespace stratum {
 namespace hal {
 
 PhalSim* PhalSim::singleton_ = nullptr;
-ABSL_CONST_INIT absl::Mutex PhalSim::init_lock_/*absl::kConstInit*/;
+#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
+ABSL_CONST_INIT absl::Mutex PhalSim::init_lock_(absl::kConstInit);
+#else
+absl::Mutex PhalSim::init_lock_;
+#endif
 
 PhalSim::PhalSim() {}
 

@@ -35,7 +35,11 @@ namespace util {
 // Global registry
 typedef std::unordered_map<std::string, ErrorSpace*, std::hash<std::string> >
     ErrorSpaceTable;
-ABSL_CONST_INIT absl::Mutex registry_lock/*absl::kConstInit*/;
+#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
+ABSL_CONST_INIT absl::Mutex registry_lock(absl::kConstInit);
+#else
+absl::Mutex registry_lock;
+#endif
 static ErrorSpaceTable* error_space_table;
 
 // Convert canonical code to a value known to this binary.
@@ -125,7 +129,11 @@ class GenericErrorSpace : public ErrorSpace {
   }
 };
 
-ABSL_CONST_INIT absl::Mutex init_lock/*absl::kConstInit*/;
+#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
+ABSL_CONST_INIT absl::Mutex init_lock(absl::kConstInit);
+#else
+absl::Mutex init_lock;
+#endif
 static bool initialized = false;
 static const ErrorSpace* generic_space = nullptr;
 static const std::string* empty_string;
