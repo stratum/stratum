@@ -41,6 +41,7 @@
 #include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/flat_hash_set.h"
+#include "stratum/glue/gtl/enum_set.h"
 
 namespace stratum {
 namespace hal {

@@ -36,8 +36,8 @@ namespace bcm {
 
 namespace {
 
-const stratum::gtl::flat_hash_set<P4MeterColor>& AllColors() {
-  static auto* all_colors = new stratum::gtl::flat_hash_set<P4MeterColor>(
+const stratum::gtl::enum_set<P4MeterColor>& AllColors() {
+  static auto* all_colors = new stratum::gtl::enum_set<P4MeterColor>(
       {P4_METER_GREEN, P4_METER_YELLOW, P4_METER_RED});
   return *all_colors;
 }
@@ -1542,7 +1542,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
                                             "both be present as actions.";
   }
   // Grab the set of colors for the copy action.
-  stratum::gtl::flat_hash_set<P4MeterColor> copy_colors;
+  stratum::gtl::enum_set<P4MeterColor> copy_colors;
   if (clone_action) {
     for (int color : clone_action->meter_colors()) {
       copy_colors.insert(static_cast<P4MeterColor>(color));
@@ -1556,7 +1556,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     copy_colors = AllColors();
   }
   // Grab the set of colors for the drop action.
-  stratum::gtl::flat_hash_set<P4MeterColor> drop_colors;
+  stratum::gtl::enum_set<P4MeterColor> drop_colors;
   if (drop_action) {
     for (int color : drop_action->meter_colors()) {
       drop_colors.insert(static_cast<P4MeterColor>(color));

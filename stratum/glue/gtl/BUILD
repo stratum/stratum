@@ -82,6 +82,20 @@ cc_test(
 )
 
 cc_library(
+    name = "enum_set",
+    hdrs = ["enum_set.h"],
+)
+
+cc_test(
+    name = "enum_set_test",
+    srcs = ["enum_set_test.cc"],
+    deps = [
+        ":enum_set",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "node_hash_set",
     hdrs = ["node_hash_set.h"],
 )
