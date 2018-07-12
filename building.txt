@@ -62,6 +62,8 @@ bazel test \
 //stratum/hal/lib/bcm:utils \
 //stratum/hal/lib/bcm:utils_test \
 //stratum/hal/lib/bcm:acl_table \
+//stratum/hal/lib/bcm:bcm_acl_pipeline \
+//stratum/hal/lib/bcm:bcm_acl_pipeline_test \
 
 
 exit 0
@@ -79,8 +81,6 @@ exit 0
 //stratum/hal/lib/bcm:bcm_acl_manager
 //stratum/hal/lib/bcm:bcm_acl_manager_mock
 //stratum/hal/lib/bcm:bcm_acl_manager_test
-//stratum/hal/lib/bcm:bcm_acl_pipeline
-//stratum/hal/lib/bcm:bcm_acl_pipeline_test
 //stratum/hal/lib/bcm:bcm_acl_profile_test
 //stratum/hal/lib/bcm:bcm_chassis_manager
 //stratum/hal/lib/bcm:bcm_chassis_manager_mock

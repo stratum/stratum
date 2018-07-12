@@ -240,7 +240,7 @@ std::string BcmAclPipeline::LogicalPipelineAsString() {
         // Add dividers, names, and priorities for present tables.
         table_divs.push_back(stage_div_templates.at(stage));
         // Add the right-justified table name.
-        string formatted_name = stage_str_templates.at(stage);
+        std::string formatted_name = stage_str_templates.at(stage);
         const auto& table_name = stage_tables.at(depth).table.table_name();
         formatted_name.replace(formatted_name.size() - table_name.size(),
                                table_name.size(), table_name);

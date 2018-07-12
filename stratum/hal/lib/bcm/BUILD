@@ -121,6 +121,7 @@ stratum_cc_library(
         "//stratum/public/proto:p4_table_defs_proto",
         "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue:integral_types",
     ],
 )
 
@@ -676,6 +677,7 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/glue/gtl:enum_set",
         "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:flat_hash_set",
         "//stratum/glue/gtl:map_util",
