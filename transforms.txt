@@ -30,6 +30,7 @@ proto_include = "."                         #proto_include = "."
 //protobuf                                  @com_google_protobuf//:protobuf
 //sandblaze/p4lang                          @com_github_p4lang_PI//
 //sandblaze/gnmi                            @com_github_openconfig_gnmi//
+//sandblaze/prebuilt/eudev                  @com_github_systemd_systemd//:libudev
 //sandblaze/prebuilt/grpc                   @com_google_grpc//:grpc++
 //sandblaze/prebuilt/p4lang:vans-p4lang-pi  @com_github_p4lang_PI//:p4runtime_proto #WARNING conflicts with //sandblaze/p4lang
 //sandblaze/prebuilt/openssl                #//sandblaze/prebuilt/openssl           #NOTE replace with boring ssl if required

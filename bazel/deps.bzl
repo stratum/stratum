@@ -114,3 +114,11 @@ def stratum_deps():
             remote = "https://github.com/google/re2",
             branch = "master",
         )
+
+    if "com_github_systemd_systemd" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_systemd_systemd",
+            remote = "https://github.com/systemd/systemd",
+            branch = "master",
+            build_file = "bazel/external/systemd.BUILD",
+        )
