@@ -48,22 +48,22 @@ do
         shift
         ;;
     --bazel-cache)
-        BAZEL_CACHE="$1"
+        BAZEL_CACHE="$2"
         shift
         shift
         ;;
     --git-name)
-        GIT_NAME="$1"
+        GIT_NAME="$2"
         shift
         shift
         ;;
     --git-email)
-        GIT_EMAIL="$1"
+        GIT_EMAIL="$2"
         shift
         shift
         ;;
     --git-editor)
-        GIT_EDITOR="$1"
+        GIT_EDITOR="$2"
         shift
         shift
         ;;
@@ -81,17 +81,22 @@ DOCKER_BUILD_OPTIONS="-t $IMAGE_NAME"
 if [ "$PULL_DOCKER" == YES ]; then
     DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --pull"
 fi
-DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg USER_NAME=$USER --build-arg USER_ID=$UID"
+DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg USER_NAME=\"$USER\" --build-arg USER_ID=\"$UID\""
 if [ ! -z "$GIT_NAME" ]; then
-    DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_NAME='$GIT_NAME'"
+    DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_NAME=\"$GIT_NAME\""
 fi
 if [ ! -z "$GIT_EMAIL" ]; then
-    DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EMAIL='$GIT_EMAIL'"
+    DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EMAIL=\"$GIT_EMAIL\""
 fi
 if [ ! -z "$GIT_EDITOR" ]; then
-    DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR='$GIT_EDITOR'"
+    DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR=\"$GIT_EDITOR\""
 fi
-docker build $DOCKER_BUILD_OPTIONS -f $THIS_DIR/Dockerfile.dev $THIS_DIR
+eval docker build $DOCKER_BUILD_OPTIONS -f $THIS_DIR/Dockerfile.dev $THIS_DIR
+ERR=$?
+if [ $ERR -ne 0 ]; then
+    >&2 echo "ERROR: Error while building dockering development image"
+    exit $ERR
+fi
 
 DOCKER_RUN_OPTIONS="--rm -v $THIS_DIR:/stratum"
 if [ "$MOUNT_SSH" == YES ]; then
