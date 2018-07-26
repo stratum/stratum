@@ -69,7 +69,7 @@ C files copybara
 #include "util/gtl/cleanup.h"               #include "stratum/glue/gtl/cleanup.h"
 ?                                           #include "google/protobuf/descriptor.h"
 ?                                           #include "google/protobuf/util/message_differencer.h"
-#include "sandblaze/p4lang/p4/              #include "github.com/p4lang/PI/p4/
+#include "sandblaze/p4lang/p4/              #include "p4/
 #include "sandblaze/gnmi                    #include "github.com/openconfig/gnmi/proto/gnmi
 #include "eudev/libudev.h"                  #include <libudev.h>
 #include "bcm/error.h"                      #include "shr/shr_error.h"
@@ -98,4 +98,4 @@ bcm_errmsg                                  shr_errmsg
 
 .proto files copybara
 ---------------------
-import "p4/                                 import "github.com/p4lang/PI/p4/
+import "p4/                                 import "p4/

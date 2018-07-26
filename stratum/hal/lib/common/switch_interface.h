@@ -26,7 +26,7 @@
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/public/proto/hal.grpc.pb.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

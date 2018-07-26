@@ -20,7 +20,7 @@
 #include "stratum/lib/utils.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

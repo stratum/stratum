@@ -27,7 +27,7 @@
 
 #include "google/protobuf/message.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 
 namespace stratum {

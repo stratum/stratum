@@ -20,7 +20,7 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "github.com/p4lang/PI/p4/v1/p4runtime.proto";
+import "p4/v1/p4runtime.proto";
 
 // Mode of operation of the stack.
 enum OperationMode {

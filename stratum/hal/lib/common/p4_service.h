@@ -36,7 +36,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

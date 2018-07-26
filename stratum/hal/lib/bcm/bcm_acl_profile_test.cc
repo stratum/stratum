@@ -16,7 +16,7 @@
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_sim_test_fixture.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

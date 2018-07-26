@@ -37,7 +37,7 @@
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

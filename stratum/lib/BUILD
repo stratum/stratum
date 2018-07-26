@@ -125,7 +125,7 @@ stratum_cc_test(
         ":utils",
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
-        "@com_github_p4lang_PI//:p4runtime_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/public/lib:error",
         "//stratum/public/proto:hal_proto",

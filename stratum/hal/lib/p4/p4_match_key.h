@@ -31,8 +31,8 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
-#include "github.com/p4lang/PI/p4/v1/p4runtime.pb.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {

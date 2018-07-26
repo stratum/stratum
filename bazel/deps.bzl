@@ -43,14 +43,24 @@ def stratum_deps():
             build_file = "bazel/external/googleapis.BUILD",
         )
 
-    if "com_github_p4lang_PI" not in native.existing_rules():
+    if "com_github_p4lang_p4runtime" not in native.existing_rules():
         # ----- P4 Runtime -----
-        #FIXME move to p4runtime repo when the protos are moved
+        remote_workspace(
+            name = "com_github_p4lang_p4runtime",
+            remote = "https://github.com/p4lang/p4runtime",
+            # FIXME: move to release tag for P4Runtime v1.0.0-rc2
+            branch = "master",
+            build_file = "bazel/external/p4runtime.BUILD",
+        )
+
+    if "com_github_p4lang_PI" not in native.existing_rules():
+        # ----- PI -----
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI",
+            # FIXME: move to release tag for P4Runtime v1.0.0-rc2
             branch = "master",
-            build_file = "bazel/external/p4runtime.BUILD",
+            build_file = "bazel/external/PI.BUILD",
         )
 
     if "com_github_openconfig_gnmi" not in native.existing_rules():

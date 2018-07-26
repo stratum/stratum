@@ -46,7 +46,7 @@ stratum_cc_proto_library(
     name = "common_proto",
     hdrs = ["common.proto"],
     deps = [
-        "@com_github_p4lang_PI//:p4runtime_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
     ],
 )
 
@@ -274,8 +274,8 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
-        "@com_github_p4lang_PI//:p4info_proto",
-        "@com_github_p4lang_PI//:p4runtime_proto",
+        "@com_github_p4lang_p4runtime//:p4info_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_googleapis//:code_proto",
         "@com_github_googleapis//:status_proto",
@@ -386,7 +386,7 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
         "@com_github_openconfig_gnmi//:gnmi_proto",
-        "@com_github_p4lang_PI//:p4runtime_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:timer_daemon",

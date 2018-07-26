@@ -29,7 +29,7 @@
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {

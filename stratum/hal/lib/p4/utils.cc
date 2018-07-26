@@ -18,7 +18,7 @@
 #include "stratum/hal/lib/p4/utils.h"
 
 #include "stratum/hal/lib/p4/p4_runtime_interface.h"
-#include "github.com/p4lang/PI/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "absl/strings/substitute.h"
 
 namespace stratum {
