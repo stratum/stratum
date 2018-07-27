@@ -27,7 +27,7 @@ ARG GIT_GLOBAL_NAME=
 ARG GIT_GLOBAL_EMAIL=
 ARG GIT_GLOBAL_EDITOR=vim
 
-RUN useradd -ms /bin/bash -u $USER_ID $USER_NAME && \
+RUN useradd -ms /bin/bash -l -u $USER_ID $USER_NAME && \
     adduser $USER_NAME sudo && \
     echo "%sudo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers
 
