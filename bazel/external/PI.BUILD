@@ -23,6 +23,6 @@ cc_library(
     hdrs = ["util_h"],
     srcs = ["util_cpp"],
     deps = [
-        "@com_github_p4lang_p4runtime//:p4info_proto",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
     ],
 )

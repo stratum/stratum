@@ -47,7 +47,7 @@ stratum_cc_binary(
         "@com_google_protobuf//:protobuf",
         "@com_github_openconfig_gnmi//:gnmi_proto",
         "@com_github_p4lang_p4runtime//:code_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_github_p4lang_PI//:util",
         "@com_github_grpc_grpc//:grpc++",
         #FIXME "//sandblaze/prebuilt/openssl",

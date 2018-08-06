@@ -47,14 +47,14 @@ def oss_transformations():
     ),
     core.replace(
         before = "//googleapis/google/rpc:status.proto",
-        after = "@com_github_googleapis//:status_proto",
+        after = "@com_github_googleapis//:status_cc_proto",
         paths = glob(
             include = ["**BUILD"],
         ),
     ),
     core.replace(
         before = "//googleapis/google/rpc:code.proto",
-        after = "@com_github_googleapis//:code_proto",
+        after = "@com_github_googleapis//:code_cc_proto",
         paths = glob(
             include = ["**BUILD"],
         ),
@@ -96,7 +96,7 @@ def oss_transformations():
     ),
     core.replace(
         before = "//sandblaze/prebuilt/p4lang:vans-p4lang-pi",
-        after = "@com_github_p4lang_PI//:p4runtime_proto",
+        after = "@com_github_p4lang_p4runtime//:p4runtime_grpc_proto",
         paths = glob(
             include = ["**BUILD"],
         ),

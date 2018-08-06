@@ -31,7 +31,9 @@ def stratum_deps():
         #FIXME update to upstream when pull requests are merged
         remote_workspace(
             name = "org_pubref_rules_protobuf",
-            remote = "https://github.com/bocon13/rules_protobuf",
+            # remote = "https://github.com/bocon13/rules_protobuf",
+            # branch = "master",
+            remote = "https://github.com/pubref/rules_protobuf",
             branch = "master",
         )
 
@@ -48,9 +50,8 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4runtime",
             remote = "https://github.com/p4lang/p4runtime",
-            # FIXME: move to release tag for P4Runtime v1.0.0-rc2
-            branch = "master",
-            build_file = "bazel/external/p4runtime.BUILD",
+            # FIXME: move to release tag for P4Runtime v1.0.0-rc3
+            commit = "3aac4271d2f034f55509ea40d93665e50ba9288b",
         )
 
     if "com_github_p4lang_PI" not in native.existing_rules():
@@ -58,7 +59,6 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI",
-            # FIXME: move to release tag for P4Runtime v1.0.0-rc2
             branch = "master",
             build_file = "bazel/external/PI.BUILD",
         )

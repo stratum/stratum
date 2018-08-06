@@ -14,8 +14,8 @@ sc_package                                  stratum_package
 services = ["grpc"]                         with_grpc = True
 python_support = True                       #python_support = True
 
-//stratum:code_proto                        @com_github_googleapis//:code_proto
-//stratum:status_proto                      @com_github_googleapis//:status_proto
+//stratum:code_proto                        @com_github_googleapis//:code_cc_proto
+//stratum:status_proto                      @com_github_googleapis//:status_cc_proto
 
 BUILD files copybara
 --------------------
@@ -32,7 +32,7 @@ proto_include = "."                         #proto_include = "."
 //sandblaze/gnmi                            @com_github_openconfig_gnmi//
 //sandblaze/prebuilt/eudev                  @com_github_systemd_systemd//:libudev
 //sandblaze/prebuilt/grpc                   @com_google_grpc//:grpc++
-//sandblaze/prebuilt/p4lang:vans-p4lang-pi  @com_github_p4lang_PI//:p4runtime_proto #WARNING conflicts with //sandblaze/p4lang
+//sandblaze/prebuilt/p4lang:vans-p4lang-pi  @com_github_p4lang_p4runtime//:p4runtime_cc_grpc #WARNING conflicts with //sandblaze/p4lang
 //sandblaze/prebuilt/openssl                #//sandblaze/prebuilt/openssl           #NOTE replace with boring ssl if required
 //testing/base/public:gunit_no_google3      @com_google_googletest//:gtest
 //testing/base/public:gunit_main_no_google3 @com_google_googletest//:gtest_main
