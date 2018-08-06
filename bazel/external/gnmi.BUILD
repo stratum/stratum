@@ -27,3 +27,6 @@ wrapped_cc_proto_library(
     with_grpc = True,
     include_wkt = True,
 )
+
+# hack for com_github_p4lang_PI
+cc_library(name = "gnmi_cc_grpc", deps = [":gnmi_proto"])
