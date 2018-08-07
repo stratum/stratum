@@ -1,0 +1,32 @@
+""" Copybara config for Stratum outbound transformations from Google repo to
+    Github repo.
+"""
+
+def move_files():
+  return [
+    core.move("google3/third_party/stratum", "stratum"),
+    core.move(
+        before = "stratum/LICENSE",
+        after = "LICENSE",
+    ),
+    core.move(
+        before = "stratum/README.md",
+        after = "README.md",
+    ),
+    core.move(
+        before = "stratum/CONTRIBUTING.md",
+        after = "CONTRIBUTING.md",
+    ),]
+
+def replace_header_paths():
+  return [
+    core.replace(
+        before = "third_party/",
+        after = "",
+        paths = glob(
+            include = ["**"],
+        ),
+    ),]
+
+def stratum_outbound_transforms():
+  return move_files() + replace_header_paths()
