@@ -30,12 +30,12 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/net_util/bits.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
+#include "stratum/glue/net_util/bits.h"
 
 //TODO not required for Google internally
 using absl::numbers_internal::safe_strto32_base;

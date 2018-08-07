@@ -91,6 +91,7 @@ stratum_cc_test(
         ":ipaddress",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
+        #"@com_google_absl//absl/container:node_hash_set",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
