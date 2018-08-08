@@ -1,0 +1,18 @@
+load("google_to_github", "stratum_outbound_transforms")
+url = "git@github.com:opennetworkinglab/stratum.git"
+
+core.workflow(
+    name = "default",
+    origin = git.origin(
+        url = url,
+        ref = "master",
+    ),
+    destination = git.destination(
+        url = url,
+        fetch = "master",
+        push = "brian-copybara-test",
+    ),
+    destination_files = glob(["**"]),
+    authoring = authoring.pass_thru("Default email <default@default.com>"),
+    transformations = core.reverse(stratum_outbound_transforms()),
+)

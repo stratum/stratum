@@ -20,13 +20,118 @@ def move_files():
 
 def replace_header_paths():
   return [
+    # core.replace(
+    #     before = "third_party/",
+    #     after = "",
+    #     paths = glob(
+    #         include = ["**"],
+    #     ),
+    # ),
+  ]
+
+def oss_transformations():
+  return [
     core.replace(
-        before = "third_party/",
-        after = "",
+        before = "//absl",
+        after = "@com_google_absl//absl",
         paths = glob(
-            include = ["**"],
+            include = ["**BUILD"],
         ),
-    ),]
+    ),
+    core.replace(
+        before = "//base",
+        after = "@com_github_google_glog//:glog",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//googleapis/google/rpc:status.proto",
+        after = "@com_github_googleapis//:status_proto",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//googleapis/google/rpc:code.proto",
+        after = "@com_github_googleapis//:code_proto",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//protobuf",
+        after = "@com_google_protobuf//:protobuf",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//sandblaze/p4lang",
+        after = "@com_github_p4lang_PI//",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//sandblaze/gnmi",
+        after = "@com_github_openconfig_gnmi//",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//sandblaze/prebuilt/eudev",
+        after = "@com_github_systemd_systemd//:libudev",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//sandblaze/prebuilt/grpc",
+        after = "@com_google_grpc//:grpc++",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//sandblaze/prebuilt/p4lang:vans-p4lang-pi",
+        after = "@com_github_p4lang_PI//:p4runtime_proto",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//testing/base/public:gunit_no_google3",
+        after = "@com_google_googletest//:gtest",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//testing/base/public:gunit_main_no_google3",
+        after = "@com_google_googletest//:gtest_main",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//testing/base/public:gmock_no_google3",
+        after = "@com_google_googletest//:gtest",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+    core.replace(
+        before = "//util/regexp/re2",
+        after = "@com_googlesource_code_re2//:re2",
+        paths = glob(
+            include = ["**BUILD"],
+        ),
+    ),
+  ]
 
 def stratum_outbound_transforms():
-  return move_files() + replace_header_paths()
+  return ( move_files() +
+           replace_header_paths() +
+           oss_transformations() )
