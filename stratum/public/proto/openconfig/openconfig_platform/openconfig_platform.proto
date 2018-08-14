@@ -61,10 +61,9 @@
 //   - stratum/public/proto/...
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-
 package openconfig.openconfig_platform;
 
+import "google/protobuf/any.proto";
 import "stratum/public/proto/ywrapper.proto";
 import "stratum/public/proto/yext.proto";
 import "stratum/public/proto/openconfig/enums/enums.proto";
