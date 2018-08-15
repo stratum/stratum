@@ -26,6 +26,7 @@
 #include "google/protobuf/message.h"
 #include "absl/base/integral_types.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/google/rpc/code.pb.h"
 
 namespace stratum {
 
