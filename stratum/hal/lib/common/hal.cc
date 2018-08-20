@@ -43,6 +43,8 @@ DEFINE_int32(grpc_keepalive_timeout_ms, 20000,
 DEFINE_int32(grpc_keepalive_min_ping_interval, 10000,
              "grpc keep alive minimum ping interval");
 DEFINE_int32(grpc_keepalive_permit, 1, "grpc keep alive permit");
+DEFINE_uint32(grpc_max_recv_msg_size, 0,
+              "grpc server max receive message size in MB");
 
 namespace stratum {
 namespace hal {
@@ -164,6 +166,10 @@ Hal::~Hal() {
                    << FLAGS_local_hercules_url;
     } else {
       builder.AddListeningPort(FLAGS_url, server_credentials);
+    }
+    if (FLAGS_grpc_max_recv_msg_size > 0) {
+      builder.SetMaxReceiveMessageSize(
+          FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
     }
     builder.RegisterService(config_monitoring_service_.get());
     builder.RegisterService(p4_service_.get());
