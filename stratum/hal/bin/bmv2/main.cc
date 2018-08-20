@@ -28,34 +28,60 @@
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
+DEFINE_string(initial_pipeline, "stratum/hal/bin/bmv2/dummy.json",
+              "Path to initial pipeline for BMv2 (required for starting BMv2)");
+DEFINE_uint32(device_id, 1,
+              "BMv2 device id");
+DEFINE_uint32(cpu_port, 64,
+              "BMv2 port number for CPU port (used for packet I/O)");
+DEFINE_bool(console_logging, true,
+            "Log BMv2 message to console.");
+
 using ::pi::fe::proto::DeviceMgr;
 
 namespace stratum {
 namespace hal {
 namespace bmv2 {
 
-int
-Main(int argc, char* argv[]) {
+void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
+  for (int i = 1; i < argc; i++) {
+    char* intf;
+    if((intf = strchr(argv[i], '@')) != nullptr) {
+      // Found an interface
+      int intf_num = strtol(argv[i], &intf, 10);
+      intf += 1; // Point to the start of the interface name
+      LOG(INFO) << "Parsed intf from command line: port " << intf_num << " -> " << intf;
+      parser.ifaces.add(intf_num, intf);
+    }
+    else {
+      LOG(ERROR) << "Ignoring extraneous non-option argument: " << argv[i];
+    }
+  }
+}
+
+int Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
 
   DeviceMgr::init(256 /* max devices */);
 
   using ::bm::sswitch::SimpleSwitchRunner;
 
-  // TODO(antonin): parse command line flags, in particular interface list (can
-  // be done with OptionsParser::parse)
+  // Build BMv2 parser from command line values
   bm::OptionsParser parser;
-  parser.console_logging = true;
+  parser.console_logging = FLAGS_console_logging;
   // We need a "starting" P4 pipeline otherwise init_and_start() will block
   // TODO(antonin): figure out how to package the file with the binary
-  parser.config_file_path = "stratum/hal/bin/bmv2/dummy.json";
-  parser.device_id = 1;
-  uint32_t cpu_port(64);
+  parser.config_file_path = FLAGS_initial_pipeline;
+  parser.device_id = FLAGS_device_id;
+  // TODO(antonin): There may be a better way to parse the interface list
+  // (e.g. it can be done with OptionsParser::parse)
+  ParseInterfaces(argc, argv, parser);
 
-  SimpleSwitchRunner *runner = new SimpleSwitchRunner(cpu_port);
+  SimpleSwitchRunner *runner = new SimpleSwitchRunner(FLAGS_cpu_port);
   {
     using ::pi::fe::proto::LogWriterIface;
     using ::pi::fe::proto::LoggerConfig;
+
     class P4RuntimeLogger : public LogWriterIface {
       void write(Severity severity, const char *msg) override {
         auto severity_map = [&severity]() {
