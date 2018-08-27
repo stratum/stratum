@@ -31,7 +31,13 @@ $ cd onos
 $ export ONOS_APPS=drivers.bmv2,proxyarp,lldpprovider,hostprovider,fwd
 $ bazel run onos-local -- clean
 
-3. Stratum with built BMv2 target
+If you need more instructions, you can find them here:
+https://wiki.onosproject.org/display/ONOS/Developer+Quick+Start
+
+3. Install BMv2 dependencies per
+https://github.com/opennetworkinglab/stratum/blob/master/stratum/hal/bin/bmv2/README.md
+
+4. Stratum with built BMv2 target
 $ git clone https://github.com/opennetworkinglab/stratum
 $ cd stratum
 $ bazel build //stratum/hal/bin/bmv2:stratum_bmv2
@@ -52,6 +58,9 @@ the same, except after starting the switch it will push device
 information to ONOS, so that ONOS can connect.
 
 $ sudo mn --custom tools/mininet/stratum.py --switch onos-stratum-bmv2 --controller remote[,ip=<ONOS IP>]
+
+If you've installed BMv2 in a custom install path (e.g. $BMV2_INSTALL), then you'll need to update the LD_LIBRARY_PATH when you run Mininet:
+$ sudo env LD_LIBRARY_PATH=$BMV2_INSTALL/lib mn [... rest of the command]
 
 Advanced Usage
 --------------
