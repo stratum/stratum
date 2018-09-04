@@ -58,7 +58,7 @@ extern bool shutdown;
 // functionalities needed in BcmSwitch class.
 // NOTE: The maps in this class may be accessed in such a way where the order of
 // the keys are important. That is why we chose to use std::map as opposed to
-// std::unordered_map or gtl::flat_hash_map and accept a little bit of
+// std::unordered_map or absl::flat_hash_map and accept a little bit of
 // performance hit when doing lookup.
 class BcmChassisManager {
  public:
