@@ -1,6 +1,7 @@
 def stratum_cc_binary(name, deps = None, srcs = None, data = None, args = None,
                       copts = None, defines = None, includes = None,
-                      testonly = None, visibility = None, arches = None):
+                      linkopts = None, testonly = None, visibility = None,
+                      arches = None):
   if arches and arches != ["x86"] and arches != ["host"]:
     fail("Stratum does not currently support non-x86 architectures")
   native.cc_binary(
@@ -12,6 +13,7 @@ def stratum_cc_binary(name, deps = None, srcs = None, data = None, args = None,
       copts = copts,
       defines = defines,
       includes = includes,
+      linkopts = linkopts,
       testonly = testonly,
       visibility = visibility,
   )
