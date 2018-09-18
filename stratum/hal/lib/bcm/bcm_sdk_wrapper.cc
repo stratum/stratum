@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>  // IWYU pragma: keep
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 
 #include "base/commandlineflags.h"
@@ -41,6 +43,7 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
+#include "util/endian/endian.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/flat_hash_set.h"
 #include "util/gtl/map_util.h"
@@ -290,6 +293,20 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   return ::util::OkStatus();
 }
 
+::util::StatusOr<BcmPortOptions::LinkscanMode>
+BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
+  int linkscan_mode = BCM_LINKSCAN_MODE_NONE;
+  RETURN_IF_BCM_ERROR(bcm_port_linkscan_get(unit, port, &linkscan_mode));
+  // Convert the BCM returned int value to the enum value defined in bcm.proto
+  // Note that BCM_LINKSCAN_MODE_COUNT = 3 will never be returned by
+  // bcm_port_linkscan_get
+  if (static_cast<bcm_linkscan_mode_e>(linkscan_mode) ==
+      BCM_LINKSCAN_MODE_NONE) {
+    return BcmPortOptions::LINKSCAN_MODE_NONE;
+  }
+  return static_cast<BcmPortOptions::LinkscanMode>(linkscan_mode);
+}
+
 ::util::Status BcmSdkWrapper::SetMtu(int unit, int mtu) {
   absl::WriterMutexLock l(&data_lock_);
   CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
@@ -483,7 +500,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   return ::util::OkStatus();
 }
 
-::util::StatusOr<int> BcmSdkWrapper::AddMyStationEntry(int unit, int vlan,
+::util::StatusOr<int> BcmSdkWrapper::AddMyStationEntry(int unit, int priority,
+                                                       int vlan, int vlan_mask,
                                                        uint64 dst_mac,
                                                        int priority) {
   // TODO: Implement this function.

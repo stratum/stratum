@@ -22,11 +22,11 @@
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
+#include "sandblaze/p4lang/p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -80,7 +80,7 @@ class SwitchInterface {
   // before any flow/group programming can be done. Calling this function after
   // the switch is initialized may require reboot.
   virtual ::util::Status PushForwardingPipelineConfig(
-      uint64 node_id, const ::p4::ForwardingPipelineConfig& config) = 0;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) = 0;
 
   // Verifies the P4-based forwarding pipeline specifications of a switching
   // node without programming anything to the hardware. It is expected that
@@ -89,7 +89,7 @@ class SwitchInterface {
   // this funcation can be called at any point before/after the switch is
   // initialize or the chassis config is pushed.
   virtual ::util::Status VerifyForwardingPipelineConfig(
-      uint64 node_id, const ::p4::ForwardingPipelineConfig& config) = 0;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) = 0;
 
   // Performs the shutdown sequence in coldboot mode. This function is not
   // called to prepare for shutdown in warmboot mode. The warmboot shutdown
@@ -125,7 +125,8 @@ class SwitchInterface {
   // same as entries in `req`, with element #i in result holding the result of
   // writing forwarding entry #i in `req`.
   virtual ::util::Status WriteForwardingEntries(
-      const ::p4::WriteRequest& req, std::vector<::util::Status>* results) = 0;
+      const ::p4::v1::WriteRequest& req,
+      std::vector<::util::Status>* results) = 0;
 
   // Reads P4-based forwarding entries (table entries, action profile members,
   // action profile groups, meters, counters) from a specific switching node.
@@ -138,7 +139,8 @@ class SwitchInterface {
   // still be OK and the non supported entries will be specified in `details`).
   // Note that there is no requirement on the order of entries in this vector.
   virtual ::util::Status ReadForwardingEntries(
-      const ::p4::ReadRequest& req, WriterInterface<::p4::ReadResponse>* writer,
+      const ::p4::v1::ReadRequest& req,
+      WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details) = 0;
 
   // Registers a writer to be invoked when we receive a packet on any port on
@@ -147,7 +149,7 @@ class SwitchInterface {
   // received on this node as well as its payload.
   virtual ::util::Status RegisterPacketReceiveWriter(
       uint64 node_id,
-      const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer) = 0;
+      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) = 0;
 
   // Unregisters the writer registered to this node by
   // RegisterPacketReceiveWriter().
@@ -159,11 +161,11 @@ class SwitchInterface {
   // includes all the info on where to transmit the packet as well as its
   // payload.
   virtual ::util::Status TransmitPacket(uint64 node_id,
-                                        const ::p4::PacketOut& packet) = 0;
+                                        const ::p4::v1::PacketOut& packet) = 0;
 
   // Registers a writer for sending gNMI events.
   virtual ::util::Status RegisterEventNotifyWriter(
-      const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) = 0;
+      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) = 0;
 
   // Unregisters the previously registered event notify writer after calling
   // RegisterEventNotifyWriter().
@@ -173,9 +175,18 @@ class SwitchInterface {
   // All types of data that can be retrieved using this method are defined in
   // hal.proto
   virtual ::util::Status RetrieveValue(
-      uint64 node_id, const DataRequest& requests,
+      uint64 node_id, const DataRequest& request,
       WriterInterface<DataResponse>* writer,
       std::vector<::util::Status>* details) = 0;
+
+  // A generic method to set a value specified by 'request'. All types of data
+  // that can be set using this method are defined in hal.proto.
+  // The 'request' will be processed in the context of the node identified by
+  // 'node_id' and the result of each sub-request that is part of the 'request'
+  // will be stored in 'details'. The order of statuses in 'details' is the
+  // same as they are present in 'request'.
+  virtual ::util::Status SetValue(uint64 node_id, const SetRequest& request,
+                                  std::vector<::util::Status>* details) = 0;
 
   // Runs state consistency checks for all internal modules. This generally
   // entails a comparison of software and hardware state. It is guaranteed that

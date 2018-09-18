@@ -22,6 +22,7 @@
 
 #include <memory>
 
+#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/error_buffer.h"
@@ -31,7 +32,6 @@
 #include "absl/base/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -63,8 +63,15 @@ class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
   // not alter any state on the hardware when called.
   ::util::Status Teardown() LOCKS_EXCLUDED(config_lock_);
 
-  // Public helper function called in Setup().
-  ::util::Status PushSavedChassisConfig(bool warmboot)
+  // Public helper function called in Setup(). It deserializes the contents
+  // of the FLAGS_chassis_config_file file and calls PushChassisConfig().
+  ::util::Status PushSavedChassisConfig(bool warmboot);
+
+  // Public helper function that is called to perform actual config push. It is
+  // called by PushSavedChassisConfig(). It takes ownership of the 'config'
+  // pointer and passes it to 'running_chassis_config_'.
+  ::util::Status PushChassisConfig(bool warmboot,
+                                   std::unique_ptr<ChassisConfig> config)
       LOCKS_EXCLUDED(config_lock_);
 
   // Returns the set of capabilities that is supported by the switch.
@@ -101,13 +108,6 @@ class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
   ConfigMonitoringService& operator=(const ConfigMonitoringService&) = delete;
 
  private:
-  // A helper function that given the current running chassis config and a
-  // OpenConfig set request, generates a new modified version of chassis config
-  // to be pushed to the switch.
-  ::util::Status ConvertOpenConfigToChassisConfig(const ::gnmi::SetRequest& req,
-                                                  ChassisConfig* config) const
-      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
-
   // The actual method that implements 'Subscribe' that allows a client to
   // request the switch to send it values of particular paths within the
   // config/state tree. These values may be streamed at a particular cadence
@@ -127,6 +127,14 @@ class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
   // Get method.
   ::grpc::Status DoGet(::grpc::ServerContext* context,
                        const ::gnmi::GetRequest* req, ::gnmi::GetResponse* resp)
+      LOCKS_EXCLUDED(config_lock_);
+
+  // The actual method that implements 'Set' that allows a client to
+  // request the switch to change values of particular paths within the
+  // config/state tree. This is implemented this way to enable unit tests of the
+  // Set method.
+  ::grpc::Status DoSet(::grpc::ServerContext* context,
+                       const ::gnmi::SetRequest* req, ::gnmi::SetResponse* resp)
       LOCKS_EXCLUDED(config_lock_);
 
   // Mutex lock for protecting the internal chassis config pushed to the switch.

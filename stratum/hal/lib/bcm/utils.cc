@@ -25,18 +25,17 @@ namespace hal {
 namespace bcm {
 
 std::string PrintBcmPort(const BcmPort& p) {
-  return PrintSingletonPort(0, p.slot(), p.port(), p.channel(), p.speed_bps());
-}
-
-std::string PrintBcmPort(uint64 port_id, const BcmPort& p) {
-  return PrintSingletonPort(port_id, p.slot(), p.port(), p.channel(),
-                            p.speed_bps());
+  return PrintPortProperties(/*node_id=*/0, /*port_id=*/0, p.slot(), p.port(),
+                             p.channel(), p.unit(), p.logical_port(),
+                             p.speed_bps());
 }
 
 namespace {
+
 std::string PrintTriState(TriState state) {
   return (state ? (state == TRI_STATE_TRUE ? "true" : "false") : "unknown");
 }
+
 }  // namespace
 
 std::string PrintBcmPortOptions(const BcmPortOptions& options) {

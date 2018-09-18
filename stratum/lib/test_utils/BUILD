@@ -23,6 +23,7 @@ exports_files(["LICENSE"])
 load(
     "//stratum/portage:build_defs.bzl",
     "sc_cc_lib",
+    "sc_cc_test",
     "STRATUM_INTERNAL",
 )
 
@@ -37,6 +38,34 @@ sc_cc_lib(
     hdrs = ["matchers.h"],
     deps = [
         "//testing/base/public:gunit_no_google3",
+        "//testing/base/public:status_matchers_no_google3",
         "//protobuf",
+    ],
+)
+
+sc_cc_lib(
+    name = "p4_proto_builders",
+    testonly = 1,
+    srcs = ["p4_proto_builders.cc"],
+    hdrs = ["p4_proto_builders.h"],
+    deps = [
+        "//platforms/networking/hercules/hal/lib/p4:p4_control_proto",
+        "//platforms/networking/hercules/public/proto:p4_annotation_proto",
+        "//platforms/networking/hercules/public/proto:p4_table_defs_proto",
+        "//absl/strings",
+        "//sandblaze/p4lang:p4info_v1_proto",
+    ],
+)
+
+sc_cc_test(
+    name = "p4_proto_builders_test",
+    srcs = ["p4_proto_builders_test.cc"],
+    deps = [
+        ":matchers",
+        ":p4_proto_builders",
+        "//platforms/networking/hercules/lib:test_main",
+        "//platforms/networking/hercules/lib:utils",
+        "//testing/base/public:gunit_no_google3",
+        "//absl/strings",
     ],
 )

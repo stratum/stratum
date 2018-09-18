@@ -71,6 +71,7 @@ MATCHER_P(DerivedFromStatus, status, "") {
 constexpr uint64 kNodeId = 13579;
 constexpr int kUnit = 2;
 constexpr char kErrorMsg[] = "Test error message";
+constexpr uint32 kPortId = 2468;
 
 const std::map<uint64, int>& NodeIdToUnitMap() {
   static auto* map = new std::map<uint64, int>({{kNodeId, kUnit}});
@@ -349,7 +350,7 @@ TEST_F(BcmSwitchTest, ShutdownFailureWhenSomeManagerShutdownFails) {
 TEST_F(BcmSwitchTest, PushForwardingPipelineConfigSuccess) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   {
     InSequence sequence;
     // Verify should always be called before push.
@@ -368,7 +369,7 @@ TEST_F(BcmSwitchTest, PushForwardingPipelineConfigSuccess) {
 TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenVerifyFails) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_CALL(*bcm_node_mock_,
               VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(DefaultError()));
@@ -382,7 +383,7 @@ TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenVerifyFails) {
 TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenPushFails) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   EXPECT_CALL(*bcm_node_mock_,
               VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(::util::OkStatus()));
@@ -396,7 +397,7 @@ TEST_F(BcmSwitchTest, PushForwardingPipelineConfigFailureWhenPushFails) {
 TEST_F(BcmSwitchTest, VerifyForwardingPipelineConfigSuccess) {
   PushChassisConfigSuccess();
 
-  ::p4::ForwardingPipelineConfig config;
+  ::p4::v1::ForwardingPipelineConfig config;
   {
     InSequence sequence;
     // Verify should always be called before push.
@@ -423,23 +424,134 @@ TEST_F(BcmSwitchTest, RegisterEventNotifyWriterTest) {
               DerivedFromStatus(DefaultError()));
 }
 
+namespace {
+
+void ExpectMockWriteDataResponse(WriterMock<DataResponse>* writer,
+                                 DataResponse* resp) {
+  // Mock implementation of Write() that saves the response to local variable.
+  EXPECT_CALL(*writer, Write(_))
+      .WillOnce(DoAll(WithArg<0>(Invoke([resp](DataResponse r) {
+                        // Copy the response.
+                        *resp = r;
+                      })),
+                      Return(true)));
+}
+
+}  // namespace
+
+TEST_F(BcmSwitchTest, GetPortOperStatus) {
+  PushChassisConfigSuccess();
+
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+
+  // Expect successful retrieval followed by failure.
+  ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
+  EXPECT_CALL(*bcm_chassis_manager_mock_, GetPortState(kNodeId, kPortId))
+      .WillOnce(Return(PORT_STATE_UP))
+      .WillOnce(Return(error));
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* req_info = req.add_requests()->mutable_oper_status();
+  req_info->set_node_id(kNodeId);
+  req_info->set_port_id(kPortId);
+  std::vector<::util::Status> details;
+
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_oper_status());
+  EXPECT_EQ(PORT_STATE_UP, resp.oper_status().state());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+
+  details.clear();
+  resp.Clear();
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_FALSE(resp.has_oper_status());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_EQ(error.ToString(), details.at(0).ToString());
+}
+
+TEST_F(BcmSwitchTest, GetPortAdminStatus) {
+  PushChassisConfigSuccess();
+
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+
+  // Expect successful retrieval followed by failure.
+  ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
+  EXPECT_CALL(*bcm_chassis_manager_mock_, GetPortAdminState(kNodeId, kPortId))
+      .WillOnce(Return(ADMIN_STATE_ENABLED))
+      .WillOnce(Return(error));
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* req_info = req.add_requests()->mutable_admin_status();
+  req_info->set_node_id(kNodeId);
+  req_info->set_port_id(kPortId);
+  std::vector<::util::Status> details;
+
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_admin_status());
+  EXPECT_EQ(ADMIN_STATE_ENABLED, resp.admin_status().state());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+
+  details.clear();
+  resp.Clear();
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_FALSE(resp.has_admin_status());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_EQ(error.ToString(), details.at(0).ToString());
+}
+
+TEST_F(BcmSwitchTest, GetPortSpeed) {
+  PushChassisConfigSuccess();
+
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+
+  // Expect successful retrieval followed by failure.
+  const uint64 kSpeedBps = 100000000000;
+  BcmPort port;
+  port.set_speed_bps(kSpeedBps);
+  ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
+  EXPECT_CALL(*bcm_chassis_manager_mock_, GetBcmPort(kNodeId, kPortId))
+      .WillOnce(Return(port))
+      .WillOnce(Return(error));
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* req_info = req.add_requests()->mutable_port_speed();
+  req_info->set_node_id(kNodeId);
+  req_info->set_port_id(kPortId);
+  std::vector<::util::Status> details;
+
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_port_speed());
+  EXPECT_EQ(kSpeedBps, resp.port_speed().speed_bps());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+
+  details.clear();
+  resp.Clear();
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_FALSE(resp.has_port_speed());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_EQ(error.ToString(), details.at(0).ToString());
+}
+
 TEST_F(BcmSwitchTest, GetMemoryErrorAlarmStatePass) {
   WriterMock<DataResponse> writer;
   DataResponse resp;
-  // Mock implementation of Write() that saves the response to local variable.
-  EXPECT_CALL(writer, Write(_))
-      .WillOnce(DoAll(WithArg<0>(Invoke([&resp](DataResponse r) {
-                        // Copy the response.
-                        resp = r;
-                      })),
-                      Return(true)));
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
 
   DataRequest req;
-  *req.add_request()->mutable_memory_error_alarm() =
-      DataRequest::SingleFieldRequest::FromChassis();
+  *req.add_requests()->mutable_memory_error_alarm() =
+      DataRequest::Request::Chassis();
   std::vector<::util::Status> details;
-  EXPECT_OK(bcm_switch_->RetrieveValue(
-      /* node_id */ 0, req, &writer, &details));
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
   EXPECT_TRUE(resp.has_memory_error_alarm());
   ASSERT_EQ(details.size(), 1);
   EXPECT_THAT(details.at(0), ::util::OkStatus());
@@ -448,48 +560,194 @@ TEST_F(BcmSwitchTest, GetMemoryErrorAlarmStatePass) {
 TEST_F(BcmSwitchTest, GetFlowProgrammingExceptionAlarmStatePass) {
   WriterMock<DataResponse> writer;
   DataResponse resp;
-  // Mock implementation of Write() that saves the response to local variable.
-  EXPECT_CALL(writer, Write(_))
-      .WillOnce(DoAll(WithArg<0>(Invoke([&resp](DataResponse r) {
-                        // Copy the response.
-                        resp = r;
-                      })),
-                      Return(true)));
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
 
   DataRequest req;
-  *req.add_request()->mutable_flow_programming_exception_alarm() =
-      DataRequest::SingleFieldRequest::FromChassis();
+  *req.add_requests()->mutable_flow_programming_exception_alarm() =
+      DataRequest::Request::Chassis();
   std::vector<::util::Status> details;
-  EXPECT_OK(bcm_switch_->RetrieveValue(
-      /* node_id */ 0, req, &writer, &details));
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
   EXPECT_TRUE(resp.has_flow_programming_exception_alarm());
   ASSERT_EQ(details.size(), 1);
   EXPECT_THAT(details.at(0), ::util::OkStatus());
 }
 
-TEST_F(BcmSwitchTest, GetpQosQueueCountersPass) {
+TEST_F(BcmSwitchTest, GetHealthIndicatorPass) {
   WriterMock<DataResponse> writer;
   DataResponse resp;
-  // Mock implementation of Write() that saves the response to local variable.
-  EXPECT_CALL(writer, Write(_))
-      .WillOnce(DoAll(WithArg<0>(Invoke([&resp](DataResponse r) {
-                        // Copy the response.
-                        resp = r;
-                      })),
-                      Return(true)));
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
 
   DataRequest req;
-  auto* request = req.add_request()->mutable_port_qos_counters();
+  auto* request = req.add_requests()->mutable_health_indicator();
+  request->set_node_id(1);
+  request->set_port_id(2);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_health_indicator());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, GetForwardingViablePass) {
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* request = req.add_requests()->mutable_forwarding_viability();
+  request->set_node_id(1);
+  request->set_port_id(2);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_forwarding_viability());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, GetQosQueueCountersPass) {
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* request = req.add_requests()->mutable_port_qos_counters();
   request->set_node_id(1);
   request->set_port_id(2);
   request->set_queue_id(4);
 
   std::vector<::util::Status> details;
-  EXPECT_OK(bcm_switch_->RetrieveValue(
-      /* node_id */ 0, req, &writer, &details));
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
   EXPECT_TRUE(resp.has_port_qos_counters());
   ASSERT_EQ(details.size(), 1);
   EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, GetNodePacketIoDebugInfoPass) {
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+  // Expect Write() call and store data in resp.
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* request = req.add_requests()->mutable_node_packetio_debug_info();
+  request->set_node_id(1);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_node_packetio_debug_info());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortAdminStatusPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_admin_status()->set_state(AdminState::ADMIN_STATE_ENABLED);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortMacAddressPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_mac_address()->set_mac_address(0x112233445566);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortSpeedPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_port_speed()->set_speed_bps(40000000000);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortLacpSystemIdMacPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_lacp_router_mac()->set_mac_address(0x112233445566);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortLacpSystemPriorityPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_lacp_system_priority()->set_priority(10);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortHealthIndicatorPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_health_indicator()->set_state(HealthState::HEALTH_STATE_BAD);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortNoContentsPass) {
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(/* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0).ToString(), HasSubstr("Not supported yet"));
+}
+
+TEST_F(BcmSwitchTest, SetNoContentsPass) {
+  SetRequest req;
+  req.add_requests();
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(/* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0).ToString(), HasSubstr("Not supported yet"));
 }
 
 // TODO: Complete unit test coverage.

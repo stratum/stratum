@@ -21,8 +21,6 @@ exports_files(["LICENSE"])
 load(
     "//stratum/portage:build_defs.bzl",
     "sc_cc_lib",
-    "sc_platform_alias",
-    "EMBEDDED_ARCHES",
     "STRATUM_INTERNAL",
 )
 

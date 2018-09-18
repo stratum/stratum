@@ -24,6 +24,7 @@ load(
     "sc_cc_bin",
     "sc_cc_lib",
     "sc_cc_test",
+    "sc_package",
     "sc_proto_lib",
     "EMBEDDED_ARCHES",
     "HOST_ARCHES",
@@ -39,10 +40,13 @@ sc_cc_lib(
     hdrs = ["attribute_database_interface.h"],
     deps = [
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/types:variant",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/phal:db_proto",
         "//stratum/lib/channel",
+        "//util/gtl:flat_hash_map",
+        "//util/hash:mix",
     ],
 )
 
@@ -54,6 +58,7 @@ sc_cc_lib(
     deps = [
         ":attribute_database_interface",
         "//testing/base/public:gunit_no_google3",
+        "//util/gtl:flat_hash_map",
     ],
 )
 
@@ -100,14 +105,15 @@ sc_cc_lib(
         ":datasource",
         ":db_proto",
         ":dummy_threadpool",
-        ":google_switch_configurator",
         ":managed_attribute",
         ":phal_proto",
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
+        "//absl/container:flat_hash_set",
         "//absl/memory",
         "//absl/synchronization",
+        "//absl/time",
         "//protobuf",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -115,6 +121,36 @@ sc_cc_lib(
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
+        "//util/gtl:flat_hash_map",
+        "//util/gtl:flat_hash_set",
+    ],
+)
+
+sc_cc_test(
+    name = "attribute_database_test",
+    srcs = ["attribute_database_test.cc"],
+    data = [
+        "//platforms/networking/hercules/hal/config:legacy_phal_init_config_generic_trident2_hercules.pb.txt",
+    ],
+    deps = [
+        "system_fake",
+        ":attribute_database",
+        ":attribute_group_mock",
+        ":db_proto",
+        ":dummy_threadpool",
+        "//testing/base/public:gunit_main_no_google3",
+        "//absl/memory",
+        "//absl/synchronization",
+        "//absl/time",
+        "//protobuf",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/channel",
+        "//stratum/lib/channel:channel_mock",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -127,8 +163,10 @@ sc_cc_lib(
         ":datasource",
         ":managed_attribute",
         ":threadpool_interface",
+        "//absl/container:flat_hash_map",
         "//absl/memory",
         "//absl/synchronization",
+        "//absl/time",
         "//protobuf",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -145,13 +183,16 @@ sc_cc_test(
     deps = [
         ":attribute_group",
         ":datasource",
+        ":datasource_mock",
         ":dummy_threadpool",
         ":managed_attribute",
+        ":managed_attribute_mock",
         ":test_util",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/base:core_headers",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_proto",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -165,6 +206,7 @@ sc_cc_lib(
         ":attribute_group",
         "//testing/base/public:gunit_no_google3",
         "//absl/memory",
+        "//util/gtl:flat_hash_map",
     ],
 )
 
@@ -186,6 +228,7 @@ sc_cc_lib(
 sc_cc_lib(
     name = "datasource_mock",
     testonly = 1,
+    srcs = ["datasource_mock.cc"],
     hdrs = ["datasource_mock.h"],
     arches = HOST_ARCHES,
     deps = [
@@ -200,7 +243,7 @@ sc_proto_lib(
     hdrs = ["db.proto"],
     python_support = True,
     deps = [
-        "//stratum/public/proto:hal_proto",
+        "//stratum/hal/lib/common:common_proto",
     ],
 )
 
@@ -225,6 +268,7 @@ sc_cc_lib(
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
         "//stratum/lib:utils",
     ],
 )
@@ -254,6 +298,7 @@ sc_cc_test(
         "//absl/memory",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_proto",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -263,39 +308,8 @@ sc_cc_lib(
     deps = [
         ":stringsource_interface",
         "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
-    ],
-)
-
-sc_cc_lib(
-    name = "google_eeprom_datasource",
-    srcs = ["google_eeprom_datasource.cc"],
-    hdrs = ["google_eeprom_datasource.h"],
-    deps = [
-        ":buffer_tools",
-        ":datasource",
-        ":managed_attribute",
-        ":stringsource_interface",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/glue/status",
         "//stratum/lib:macros",
-        "//util/gtl:map_util",
-    ],
-)
-
-sc_cc_test(
-    name = "google_eeprom_datasource_test",
-    srcs = ["google_eeprom_datasource_test.cc"],
-    deps = [
-        ":fixed_stringsource",
-        ":google_eeprom_datasource",
-        ":test_util",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/glue/status:status_test_util",
     ],
 )
 
@@ -312,10 +326,10 @@ sc_cc_lib(
         "//absl/synchronization",
         "//absl/time",
         "//stratum/glue/status",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
-        "//stratum/public/proto:hal_grpc_proto",
     ],
 )
 
@@ -332,47 +346,7 @@ sc_cc_test(
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/channel:channel_mock",
-    ],
-)
-
-sc_cc_lib(
-    name = "google_switch_configurator",
-    srcs = ["google_switch_configurator.cc"],
-    hdrs = ["google_switch_configurator.h"],
-    deps = [
-        ":attribute_group",
-        ":datasource",
-        ":filepath_stringsource",
-        ":google_eeprom_datasource",
-        ":phal_proto",
-        ":reader_writer_datasource",
-        ":system_interface",
-        ":transceiver_datasources",
-        ":udev_event_handler",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
-    ],
-)
-
-sc_cc_test(
-    name = "google_switch_configurator_test",
-    srcs = ["google_switch_configurator_test.cc"],
-    deps = [
-        ":attribute_group_mock",
-        ":db_proto",
-        ":fixed_stringsource",
-        ":google_switch_configurator",
-        ":system_fake",
-        ":test_util",
-        ":udev_event_handler_mock",
-        "//testing/base/public:gunit_main_no_google3",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -391,11 +365,20 @@ sc_cc_bin(
         ":system_real",
         "//base",
         "//absl/strings",
+        "//absl/time",
         "//stratum/glue:init_google",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:macros",
+        "//util/regexp/re2",
+        "//util/task:status",
     ],
+)
+
+sc_package(
+    name = "phal_cli_pkg",
+    arches = EMBEDDED_ARCHES,
+    bins = [":phal_cli"],
 )
 
 sc_cc_lib(
@@ -421,6 +404,7 @@ cc_test(
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -451,6 +435,7 @@ sc_cc_test(
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -527,6 +512,7 @@ sc_cc_lib(
         ":managed_attribute",
         "//testing/base/public:gunit_no_google3",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -551,34 +537,6 @@ sc_cc_lib(
 )
 
 sc_cc_lib(
-    name = "transceiver_datasources",
-    srcs = ["transceiver_datasources.cc"],
-    hdrs = ["transceiver_datasources.h"],
-    deps = [
-        ":fixed_layout_datasource",
-        ":managed_attribute",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/time",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:hal_proto",
-    ],
-)
-
-sc_cc_test(
-    name = "transceiver_datasources_test",
-    srcs = ["transceiver_datasources_test.cc"],
-    deps = [
-        ":fixed_stringsource",
-        ":test_util",
-        ":transceiver_datasources",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/time",
-        "//stratum/glue/status:status_test_util",
-    ],
-)
-
-sc_cc_lib(
     name = "udev_event_handler",
     srcs = ["udev_event_handler.cc"],
     hdrs = ["udev_event_handler.h"],
@@ -586,6 +544,8 @@ sc_cc_lib(
         ":system_interface",
         "//base",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
+        "//absl/container:flat_hash_set",
         "//absl/synchronization",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -622,6 +582,7 @@ sc_cc_test(
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -649,7 +610,7 @@ sc_proto_lib(
     hdrs = ["phal.proto"],
     python_support = True,
     deps = [
-        "//stratum/public/proto:hal_proto",
+        "//stratum/hal/lib/common:common_proto",
     ],
 )
 
@@ -722,43 +683,5 @@ sc_cc_lib(
     deps = [
         ":udev_interface",
         "//testing/base/public:gunit_no_google3",
-    ],
-)
-
-sc_cc_lib(
-    name = "led_datasource",
-    srcs = ["led_datasource.cc"],
-    hdrs = ["led_datasource.h"],
-    deps = [
-        ":datasource",
-        ":filepath_stringsource",
-        ":phal_proto",
-        ":reader_writer_datasource",
-        ":stringsource_interface",
-        ":system_interface",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//sandblaze/prebuilt/eudev",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/public/proto:hal_proto",
-        "//util/gtl:map_util",
-    ],
-)
-
-sc_cc_test(
-    name = "led_datasource_test",
-    srcs = ["led_datasource_test.cc"],
-    deps = [
-        ":led_datasource",
-        ":phal_proto",
-        ":system_interface_mock",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//protobuf",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/public/proto:hal_proto",
     ],
 )

@@ -26,7 +26,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -120,6 +120,28 @@ class PhalInterface {
   // given (slot, port) yet.
   virtual ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info) = 0;
+
+  // Set the color/state of a frontpanel port LED, corresponding to the physical
+  // port specified by (slot, port, channel). The caller assumes each physical
+  // port has one frontpanel port LED, i.e., if a transceiver has 4 channels we
+  // assume logically there are 4 LEDs for this transceiver. However, please
+  // note the following:
+  // 1- Not all platforms support frontpanel port LEDs. If a chassis does
+  //    not support port LEDs, a call to this function will be NOOP, with
+  //    possibly logging a warning message.
+  // 2- Some platforms do not have per-channel LEDs on each transceiver port.
+  //    We assume PHAL will aggregate the per-channel LED colors/states into
+  //    one LED color/state for that transceiver. The rule for aggregation is
+  //    the following:
+  //    - If the color and state of all the per channel LEDs are the same, the
+  //      aggregate color and state will be the same as all the per channel
+  //      color and states.
+  //    - If we have a conflict, show "Blinking Amber" if there is at least one
+  //      "Blinking Amber" and show "Solid Amber" otherwise.
+  // This function shall return an error if and only if there is an internal
+  // issue accessing HW.
+  virtual ::util::Status SetPortLedState(int slot, int port, int channel,
+                                         LedColor color, LedState state) = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance or any

@@ -30,40 +30,45 @@ class SwitchMock : public SwitchInterface {
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
   MOCK_METHOD1(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config));
-  MOCK_METHOD2(PushForwardingPipelineConfig,
-               ::util::Status(uint64 node_id,
-                              const ::p4::ForwardingPipelineConfig& config));
-  MOCK_METHOD2(VerifyForwardingPipelineConfig,
-               ::util::Status(uint64 node_id,
-                              const ::p4::ForwardingPipelineConfig& config));
+  MOCK_METHOD2(
+      PushForwardingPipelineConfig,
+      ::util::Status(uint64 node_id,
+                     const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD2(
+      VerifyForwardingPipelineConfig,
+      ::util::Status(uint64 node_id,
+                     const ::p4::v1::ForwardingPipelineConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
   MOCK_METHOD0(Freeze, ::util::Status());
   MOCK_METHOD0(Unfreeze, ::util::Status());
   MOCK_METHOD2(WriteForwardingEntries,
-               ::util::Status(const ::p4::WriteRequest& req,
+               ::util::Status(const ::p4::v1::WriteRequest& req,
                               std::vector<::util::Status>* results));
   MOCK_METHOD3(ReadForwardingEntries,
-               ::util::Status(const ::p4::ReadRequest& req,
-                              WriterInterface<::p4::ReadResponse>* writer,
+               ::util::Status(const ::p4::v1::ReadRequest& req,
+                              WriterInterface<::p4::v1::ReadResponse>* writer,
                               std::vector<::util::Status>* details));
   MOCK_METHOD2(
       RegisterPacketReceiveWriter,
       ::util::Status(
           uint64 node_id,
-          const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer));
+          std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer));
   MOCK_METHOD1(UnregisterPacketReceiveWriter, ::util::Status(uint64 node_id));
   MOCK_METHOD2(TransmitPacket,
-               ::util::Status(uint64 node_id, const ::p4::PacketOut& packet));
+               ::util::Status(uint64 node_id,
+                              const ::p4::v1::PacketOut& packet));
   MOCK_METHOD1(
       RegisterEventNotifyWriter,
-      ::util::Status(
-          const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer));
+      ::util::Status(std::shared_ptr<WriterInterface<GnmiEventPtr>> writer));
   MOCK_METHOD0(UnregisterEventNotifyWriter, ::util::Status());
   MOCK_METHOD4(RetrieveValue,
-               ::util::Status(uint64 node_id, const DataRequest& requests,
+               ::util::Status(uint64 node_id, const DataRequest& request,
                               WriterInterface<DataResponse>* writer,
                               std::vector<::util::Status>* details));
   MOCK_METHOD0(VerifyState, ::util::StatusOr<std::vector<std::string>>());
+  MOCK_METHOD3(SetValue,
+               ::util::Status(uint64 node_id, const SetRequest& request,
+                              std::vector<::util::Status>* details));
   SwitchMock() {
     ::testing::DefaultValue<::util::Status>::Set(::util::OkStatus());
   }

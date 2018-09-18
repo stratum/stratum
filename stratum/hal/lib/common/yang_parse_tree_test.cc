@@ -13,33 +13,39 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/yang_parse_tree.h"
+#include "stratum/hal/lib/common/yang_parse_tree_mock.h"
 
+#include "google/protobuf/text_format.h"
+#include "stratum/glue/gnmi/gnmi.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
+#include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/lib/constants.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.host.pb.h"
 
 namespace stratum {
 namespace hal {
 
 using ::testing::_;
+using ::testing::ContainsRegex;
 using ::testing::DoAll;
+using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::WithArg;
 using ::testing::WithArgs;
+using ::testing::status::StatusIs;
 
 class YangParseTreeTest : public ::testing::Test {
  protected:
   using OnEventAction = GnmiEventHandler (TreeNode::*)() const;
+  using OnSetAction = GnmiSetHandler (TreeNode::*)() const;
 
   static constexpr int kInterface1NodeId = 3;
   static constexpr int kInterface1PortId = 3;
@@ -47,12 +53,11 @@ class YangParseTreeTest : public ::testing::Test {
   static constexpr char kInterface1QueueName[] = "BE1";
   static constexpr char kAlarmDescription[] = "alarm";
   static constexpr char kAlarmSeverityText[] = "CRITICAL";
-  static constexpr DataResponse::Alarm::Severity kAlarmSeverityEnum =
-      DataResponse::Alarm::CRITICAL;
+  static constexpr Alarm::Severity kAlarmSeverityEnum = Alarm::CRITICAL;
   static constexpr uint64 kAlarmTimeCreated = 12345ull;
   static constexpr bool kAlarmStatusTrue = true;
 
-  YangParseTreeTest() : root_(&switch_) {}
+  YangParseTreeTest() : parse_tree_(&switch_) {}
 
   void SetUp() override {}
 
@@ -77,44 +82,79 @@ class YangParseTreeTest : public ::testing::Test {
     LOG(INFO) << path.ShortDebugString();
   }
 
-  const TreeNode& GetRoot() const { return root_.root_; }
+  const TreeNode& GetRoot() const { return parse_tree_.root_; }
+
+  TreeNode* AddNode(const ::gnmi::Path& path) {
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+    return parse_tree_.AddNode(path);
+  }
 
   // A proxy for YangParseTree::PerformActionForAllNonWildcardNodes().
   ::util::Status PerformActionForAllNonWildcardNodes(
       const gnmi::Path& path, const gnmi::Path& subpath,
       const std::function<::util::Status(const TreeNode& leaf)>& action) const {
-    absl::WriterMutexLock l(&root_.root_access_lock_);
-    return root_.PerformActionForAllNonWildcardNodes(path, subpath, action);
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
+    return parse_tree_.PerformActionForAllNonWildcardNodes(path, subpath,
+                                                           action);
+  }
+
+  // A proxy for YangParseTree::gnmi_event_writer_.
+  void SetGnmiEventWriter(WriterInterface<GnmiEventPtr>* channel) {
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
+    parse_tree_.gnmi_event_writer_.reset(channel);
   }
 
   // A proxy for YangParseTree::AddSubtreeInterface().
   void AddSubtreeInterface(const std::string& name) {
-    absl::WriterMutexLock l(&root_.root_access_lock_);
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
     // Add one singleton port.
     SingletonPort singleton;
     singleton.set_name(name);
     singleton.set_node(kInterface1NodeId);
     singleton.set_id(kInterface1PortId);
     singleton.set_speed_bps(kTwentyFiveGigBps);
-    // Add one egress BE1 QoS-per-port-queue.
+    // Add one per port per queue stat for this interface.
     NodeConfigParams node_config;
-    auto* queue = node_config.add_qos_configs();
-    queue->set_queue_id(kInterface1QueueId);
-    queue->set_purpose(TrafficClass::BE1);
-    root_.AddSubtreeInterfaceFromSingleton(singleton, node_config);
+    {
+      auto* entry =
+          node_config.mutable_qos_config()->add_traffic_class_mapping();
+      entry->set_internal_priority(2);  // some internal priority
+      entry->set_traffic_class(TrafficClass::BE1);
+    }
+    {
+      auto* entry = node_config.mutable_qos_config()->add_cosq_mapping();
+      entry->set_internal_priority(2);  // some internal priority
+      entry->set_q_num(kInterface1QueueId);
+    }
+    parse_tree_.AddSubtreeInterfaceFromSingleton(singleton, node_config);
   }
 
   // A proxy for YangParseTree::AddSubtreeChassis().
   void AddSubtreeChassis(const std::string& name) {
-    absl::WriterMutexLock l(&root_.root_access_lock_);
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
     Chassis chassis;
     chassis.set_name(name);
-    root_.AddSubtreeChassis(chassis);
+    parse_tree_.AddSubtreeChassis(chassis);
+  }
+
+  // A proxy for YangParseTree::AddSubtreeNode().
+  void AddSubtreeNode(const std::string& name, uint64 node_id) {
+    absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
+
+    Node node;
+    node.set_name(name);
+    node.set_id(node_id);
+    parse_tree_.AddSubtreeNode(node);
   }
 
   // A method helping testing if the OnXxx method of a leaf specified by 'path'.
   // It takes care of all the boiler plate code:
   // - adds an interface named "interface-1"
+  // - adds a node named "node-1"
   // - creates a stream that will write the response proto-buf into 'resp'
   // - finds the node in the parse three
   // - gets the requested handler
@@ -130,10 +170,12 @@ class YangParseTreeTest : public ::testing::Test {
 
     // The test requires one interface branch to be added.
     AddSubtreeInterface("interface-1");
+    // The test requires one node branch to be added.
+    AddSubtreeNode("node-1", kInterface1NodeId);
 
     // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
     // of the 'resp' variable is then checked.
-    MockServerReaderWriter stream;
+    SubscribeReaderWriterMock stream;
     EXPECT_CALL(stream, Write(_, _))
         .WillOnce(DoAll(
             WithArgs<0>(Invoke(
@@ -227,11 +269,11 @@ class YangParseTreeTest : public ::testing::Test {
   // - checks if the received response in field that is read using 'get_value'
   //   of type 'U' is equal to 'expected_value' of type 'V'
   template <class U, class V, class W, class Y>
-  void TestOnPollAlarmLeaf(
-      const ::gnmi::Path& path, U (::gnmi::TypedValue::*get_value)() const,
-      DataResponse::Alarm* (DataResponse::*mutable_alarm)(),
-      void (DataResponse::Alarm::*set_value)(Y), V expected_value,
-      W conf_value) {
+  void TestOnPollAlarmLeaf(const ::gnmi::Path& path,
+                           U (::gnmi::TypedValue::*get_value)() const,
+                           Alarm* (DataResponse::*mutable_alarm)(),
+                           void (Alarm::*set_value)(Y), V expected_value,
+                           W conf_value) {
     // The test requires chassis component branch to be added.
     AddSubtreeChassis("chassis-1");
 
@@ -263,18 +305,114 @@ class YangParseTreeTest : public ::testing::Test {
   // A specialization of generic template method TestOnPollAlarmLeaf().
   // It is used when 'expected_value' and 'conf_value' are the same.
   template <class U, class V>
-  void TestOnPollAlarmLeaf(
-      const ::gnmi::Path& path, U (::gnmi::TypedValue::*get_value)() const,
-      DataResponse::Alarm* (DataResponse::*mutable_alarm)(),
-      void (DataResponse::Alarm::*set_value)(U), V expected_value) {
+  void TestOnPollAlarmLeaf(const ::gnmi::Path& path,
+                           U (::gnmi::TypedValue::*get_value)() const,
+                           Alarm* (DataResponse::*mutable_alarm)(),
+                           void (Alarm::*set_value)(U), V expected_value) {
     TestOnPollAlarmLeaf(path, get_value, mutable_alarm, set_value,
                         expected_value, expected_value);
+  }
+
+  // A method helping testing if the OnXxx method of a leaf specified by 'path'.
+  // It takes care of all the boiler plate code:
+  // - adds an interface named "interface-1"
+  // - adds a node named "node-1"
+  // - creates a mock method that will write the set request proto-buf into
+  //   'req'
+  // - finds the node in the parse three
+  // - gets the requested handler
+  // - calls the handler with 'val'
+  // - returns status produced by execution of the handler.
+  ::util::Status ExecuteOnSet(const ::gnmi::Path& path,
+                              const OnSetAction& action,
+                              const ::google::protobuf::Message& val,
+                              SetRequest* req, GnmiEventPtr* notification) {
+    // After tree creation only two leafs are defined:
+    // /interfaces/interface[name=*]/state/ifindex
+    // /interfaces/interface[name=*]/state/name
+
+    // The test requires one interface branch to be added.
+    AddSubtreeInterface("interface-1");
+    // The test requires one node branch to be added.
+    AddSubtreeNode("node-1", kInterface1NodeId);
+    // Make a copy-on-write pointer to current chassis configuration.
+    ChassisConfig chassis_config;
+    CopyOnWriteChassisConfig config(&chassis_config);
+
+    // Expect the SetValue() call only if the 'req' is not nullptr.
+    if (req) {
+      EXPECT_CALL(switch_, SetValue(_, _, _))
+          .WillOnce(DoAll(
+              WithArgs<1>(Invoke([req](const SetRequest& r) { *req = r; })),
+              Return(::util::OkStatus())));
+    } else {
+      EXPECT_CALL(switch_, SetValue(_, _, _)).Times(0);
+    }
+
+    if (notification) {
+      EXPECT_CALL(parse_tree_, SendNotification(_))
+          .WillOnce(WithArg<0>(Invoke(
+              [notification](const GnmiEventPtr& n) { *notification = n; })));
+    } else {
+      EXPECT_CALL(parse_tree_, SendNotification(_)).Times(0);
+    }
+    // Find the leaf under test.
+    auto* node = GetRoot().FindNodeOrNull(path);
+    if (node == nullptr) {
+      return MAKE_ERROR() << "Cannot find the requested path.";
+    }
+
+    // Get its 'action' handler and call it.
+    const auto& handler = (node->*action)();
+    auto status = handler(path, val, &config);
+    if (config.HasBeenChanged()) delete config.PassOwnership();
+    return status;
+  }
+
+  // A method helping testing if the OnUpdate method of a leaf specified by
+  // 'path'. It calls ExecuteOnSet() that takes care of all the boiler plate
+  // code:
+  // - adds an interface named "interface-1"
+  // - adds a node named "node-1"
+  // - creates a mock method that will write the set request proto-buf into
+  //   'req'
+  // - finds the node in the parse three
+  // - gets the requested OnUpdate handler
+  // - calls the handler with 'val'
+  // - returns status produced by execution of the handler.
+  // The caller can then check if the contents of 'req' is the expected one
+  // (assuming the returned status is ::util::OkStatus())
+  ::util::Status ExecuteOnUpdate(const ::gnmi::Path& path,
+                                 const ::google::protobuf::Message& val,
+                                 SetRequest* req, GnmiEventPtr* notification) {
+    return ExecuteOnSet(path, &TreeNode::GetOnUpdateHandler, val, req,
+                        notification);
+  }
+
+  // A method helping testing if the OnReplace method of a leaf specified by
+  // 'path'. It calls ExecuteOnSet() that takes care of all the boiler plate
+  // code:
+  // - adds an interface named "interface-1"
+  // - adds a node named "node-1"
+  // - creates a mock method that will write the set request proto-buf into
+  //   'req'
+  // - finds the node in the parse three
+  // - gets the requested OnReplace handler
+  // - calls the handler with 'val'
+  // - returns status produced by execution of the handler.
+  // The caller can then check if the contents of 'req' is the expected one
+  // (assuming the returned status is ::util::OkStatus())
+  ::util::Status ExecuteOnReplace(const ::gnmi::Path& path,
+                                  const ::google::protobuf::Message& val,
+                                  SetRequest* req, GnmiEventPtr* notification) {
+    return ExecuteOnSet(path, &TreeNode::GetOnReplaceHandler, val, req,
+                        notification);
   }
 
   // A mock of a switch that implements the switch interface.
   SwitchMock switch_;
   // The implementation under test.
-  YangParseTree root_;
+  YangParseTreeMock parse_tree_;
   // A gnmi::Path comparator.
   PathComparator compare_;
 };
@@ -285,6 +423,44 @@ constexpr char YangParseTreeTest::kAlarmSeverityText[];
 constexpr uint64 YangParseTreeTest::kAlarmTimeCreated;
 constexpr bool YangParseTreeTest::kAlarmStatusTrue;
 constexpr uint32 YangParseTreeTest::kInterface1QueueId;
+
+TEST_F(YangParseTreeTest, LazyOneTimeCopyOnWritePtrModifiedViaPtr) {
+  ChassisConfig config;
+  CopyOnWriteChassisConfig lazy_config(&config);
+
+  // Check that the lazy copy has not been modified.
+  // const std::string description = lazy_config->description();
+  // EXPECT_EQ(description.size(), 0);
+  EXPECT_EQ(lazy_config->nodes_size(), 0);
+  EXPECT_FALSE(lazy_config.HasBeenChanged());
+
+  // Modify the lazy copy
+  lazy_config.writable()->set_description("test");
+
+  // Check that only the lazy copy has been modified.
+  EXPECT_TRUE(lazy_config.HasBeenChanged());
+  EXPECT_THAT(lazy_config->description(), HasSubstr("test"));
+  EXPECT_EQ(config.description().size(), 0);
+}
+
+TEST_F(YangParseTreeTest, LazyOneTimeCopyOnWritePtrModifiedViaRef) {
+  ChassisConfig config;
+  CopyOnWriteChassisConfig lazy_config(&config);
+
+  // Check that the lazy copy has not been modified.
+  const std::string description = (*lazy_config).description();
+  EXPECT_EQ(description.size(), 0);
+  EXPECT_FALSE(lazy_config.HasBeenChanged());
+
+  // Modify the lazy copy
+  (*lazy_config.writable()).set_description("test");
+
+  // Check that only the lazy copy has been modified.
+  EXPECT_TRUE(lazy_config.HasBeenChanged());
+  EXPECT_THAT((*lazy_config).description(), HasSubstr("test"));
+  EXPECT_EQ(config.description().size(), 0);
+  delete lazy_config.PassOwnership();
+}
 
 TEST_F(YangParseTreeTest, CopySubtree) { PrintNode(GetRoot(), ""); }
 
@@ -299,6 +475,18 @@ TEST_F(YangParseTreeTest, AllSupportOnChange) {
 
 TEST_F(YangParseTreeTest, AllSupportOnPoll) {
   EXPECT_TRUE(GetRoot().AllSubtreeLeavesSupportOnPoll());
+}
+
+TEST_F(YangParseTreeTest, AllSupportOnUpdate) {
+  EXPECT_FALSE(GetRoot().AllSubtreeLeavesSupportOnUpdate());
+}
+
+TEST_F(YangParseTreeTest, AllSupportOnReplace) {
+  EXPECT_FALSE(GetRoot().AllSubtreeLeavesSupportOnReplace());
+}
+
+TEST_F(YangParseTreeTest, AllSupportOnDelete) {
+  EXPECT_FALSE(GetRoot().AllSubtreeLeavesSupportOnDelete());
 }
 
 TEST_F(YangParseTreeTest, GetPathWithoutKey) {
@@ -323,6 +511,25 @@ TEST_F(YangParseTreeTest, GetPathWithKey) {
   EXPECT_EQ(path.elem(1).name(), "interface");
   ASSERT_EQ(path.elem(1).key_size(), 1);
   EXPECT_EQ(path.elem(1).key().at("name"), "*");
+}
+
+TEST_F(YangParseTreeTest, FindRoot) {
+  auto path = GetPath()();
+  ASSERT_EQ(path.elem_size(), 0);
+  auto node = GetRoot().FindNodeOrNull(path);
+  ASSERT_NE(node, nullptr);
+  ASSERT_EQ(node, &GetRoot());
+  auto root = AddNode(GetPath()());
+  ASSERT_EQ(node, root);
+  // Prepare a SET request.
+  ::gnmi::TypedValue req;
+  constexpr char kReq[] = R"PROTO(bytes_val: "")PROTO";
+  ASSERT_TRUE(protobuf::TextFormat::ParseFromString(kReq, &req))
+      << "Failed to parse proto from the following string: " << kReq;
+
+  ChassisConfig config;
+  CopyOnWriteChassisConfig copy_on_write_config(&config);
+  ASSERT_OK(node->GetOnReplaceHandler()(path, req, &copy_on_write_config));
 }
 
 TEST_F(YangParseTreeTest, PerformActionForAllNodesNonePresent) {
@@ -399,8 +606,7 @@ TEST_F(YangParseTreeTest, GetDataFromSwitchInterfaceDataCopied) {
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_oper_status()->set_oper_status(
-                            PORT_STATE_UP);
+                        resp.mutable_oper_status()->set_state(PORT_STATE_UP);
                         // Send it to the caller.
                         w->Write(resp);
                       })),
@@ -420,7 +626,64 @@ TEST_F(YangParseTreeTest, GetDataFromSwitchInterfaceDataCopied) {
   EXPECT_OK(switch_interface.RetrieveValue(node_id, req, &writer, nullptr));
   // Check that the data has been modified.
   ASSERT_TRUE(resp.has_oper_status());
-  EXPECT_EQ(resp.oper_status().oper_status(), PORT_STATE_UP);
+  EXPECT_EQ(resp.oper_status().state(), PORT_STATE_UP);
+}
+
+// A class that implements a channel that is used by the YANG tree node handlers
+// to send notifications to GnmiPublisher.
+class GnmiEventWriterMock : public WriterInterface<GnmiEventPtr> {
+ public:
+  GnmiEventWriterMock() {}
+
+  // The only work method defined by the interface - it is called every time
+  // there is a data to be processed.
+  MOCK_METHOD1(Write, bool(const GnmiEventPtr& resp));
+};
+
+// Check if the notification message is send correctly.
+TEST_F(YangParseTreeTest, SendNotificationPass) {
+  // Always forward SendNotifications to YangParseTree::SendNotification().
+  EXPECT_CALL(parse_tree_, SendNotification(_))
+      .WillRepeatedly(WithArg<0>(Invoke([this](const GnmiEventPtr& n) {
+        this->parse_tree_.YangParseTree::SendNotification(n);
+      })));
+
+  // Test SendNotification() without seting up the channel
+  SetGnmiEventWriter(nullptr);
+  parse_tree_.SendNotification(GnmiEventPtr(new PortHealthIndicatorChangedEvent(
+      /*node_id*/ 0, /*port_id*/ 0, HealthState::HEALTH_STATE_BAD)));
+
+  // Test SendNotification() with channel set up.
+  // Scenario #1: correct processing.
+  auto* channel = new GnmiEventWriterMock();
+  SetGnmiEventWriter(channel);
+  GnmiEventPtr notification;
+  EXPECT_CALL(*channel, Write(_))
+      .WillOnce(
+          DoAll(WithArgs<0>(Invoke([&notification](const GnmiEventPtr& n) {
+                  notification = n;
+                })),
+                Return(true)));
+
+  EXPECT_CALL(parse_tree_, SendNotification(_))
+      .WillRepeatedly(WithArg<0>(Invoke([this](const GnmiEventPtr& n) {
+        this->parse_tree_.YangParseTree::SendNotification(n);
+      })));
+
+  parse_tree_.SendNotification(GnmiEventPtr(new PortHealthIndicatorChangedEvent(
+      /*node_id*/ 0, /*port_id*/ 0, HealthState::HEALTH_STATE_BAD)));
+
+  // Test SendNotification() with channel set up.
+  // Scenario #3: incorrect processing.
+  EXPECT_CALL(*channel, Write(_))
+      .WillOnce(
+          DoAll(WithArgs<0>(Invoke([&notification](const GnmiEventPtr& n) {
+                  notification = n;
+                })),
+                Return(false)));
+
+  parse_tree_.SendNotification(GnmiEventPtr(new PortHealthIndicatorChangedEvent(
+      /*node_id*/ 0, /*port_id*/ 0, HealthState::HEALTH_STATE_BAD)));
 }
 
 // Check if the action is executed for all qualified leafs.
@@ -438,8 +701,7 @@ TEST_F(YangParseTreeTest, GetDataFromSwitchInterfaceDataConvertedCorrectly) {
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_oper_status()->set_oper_status(
-                            PORT_STATE_UP);
+                        resp.mutable_oper_status()->set_state(PORT_STATE_UP);
                         // Send it to the caller.
                         w->Write(resp);
                       })),
@@ -447,7 +709,7 @@ TEST_F(YangParseTreeTest, GetDataFromSwitchInterfaceDataConvertedCorrectly) {
 
   // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
   // of the 'resp' variable is then checked.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::gnmi::SubscribeResponse resp;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
@@ -508,7 +770,7 @@ TEST_F(YangParseTreeTest, DefaultTargetDefinedModeIsSampleForCounters) {
   ::gnmi::Subscription subscription;
   ASSERT_OK(node->ApplyTargetDefinedModeToSubscription(&subscription));
   EXPECT_EQ(subscription.mode(), ::gnmi::SubscriptionMode::SAMPLE);
-  EXPECT_EQ(subscription.sample_interval(), 10000);
+  EXPECT_EQ(subscription.sample_interval(), 1000);
 }
 
 // Check if the 'oper-status' OnPoll action works correctly.
@@ -522,8 +784,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateOperStatusOnPollSuccess) {
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_oper_status()->set_oper_status(
-                            PORT_STATE_UP);
+                        resp.mutable_oper_status()->set_state(PORT_STATE_UP);
                         // Send it to the caller.
                         w->Write(resp);
                       })),
@@ -564,7 +825,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateAdminStatusOnPollSuccess) {
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_admin_status()->set_admin_status(
+                        resp.mutable_admin_status()->set_state(
                             ADMIN_STATE_ENABLED);
                         // Send it to the caller.
                         w->Write(resp);
@@ -606,7 +867,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateNameOnPollSuccess) {
 
   // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
   // of the 'resp' variable is then checked.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::gnmi::SubscribeResponse resp;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
@@ -639,7 +900,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
 
   // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
   // of the 'resp' variable is then checked.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::gnmi::SubscribeResponse resp;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
@@ -915,7 +1176,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInOctets = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_octets(kInOctets);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -969,7 +1230,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kOutOctets = 44;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_out_octets(kOutOctets);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1023,7 +1284,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInUnicastPkts = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_unicast_pkts(kInUnicastPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1107,7 +1368,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kOutUnicastPkts = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_out_unicast_pkts(kOutUnicastPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1131,7 +1392,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInBroadcastPkts = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_broadcast_pkts(kInBroadcastPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1185,7 +1446,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kOutBroadcastPkts = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_out_broadcast_pkts(kOutBroadcastPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1239,7 +1500,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInDiscards = 11;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_discards(kInDiscards);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1293,7 +1554,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kOutDiscards = 11;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_out_discards(kOutDiscards);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1347,7 +1608,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInMulticastPkts = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_multicast_pkts(kInMulticastPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1401,7 +1662,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInUnknownProtos = 19;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_unknown_protos(kInUnknownProtos);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1454,7 +1715,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInErrors = 16;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_errors(kInErrors);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1508,7 +1769,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kOutErrors = 16;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_out_errors(kOutErrors);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1534,15 +1795,15 @@ TEST_F(YangParseTreeTest,
   // Mock implementation of RetrieveValue() that sends a response set to
   // kInFcsErrors.
   EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
-      .WillOnce(
-          DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
-                  DataResponse resp;
-                  // Set the response.
-                  resp.mutable_port_counters()->set_in_fcs_errors(kInFcsErrors);
-                  // Send it to the caller.
-                  w->Write(resp);
-                })),
-                Return(::util::OkStatus())));
+      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_port_counters()->set_in_fcs_errors(
+                            kInFcsErrors);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
 
   // Call the event handler. 'resp' will contain the message that is sent to the
   // controller.
@@ -1562,7 +1823,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kInFcsErrors = 16;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_in_fcs_errors(kInFcsErrors);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1616,7 +1877,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kOutMulticastPkts = 5;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortCounters counters;
+  PortCounters counters;
   counters.set_out_multicast_pkts(kOutMulticastPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -1646,7 +1907,7 @@ TEST_F(YangParseTreeTest,
       .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_lacp_system_id_mac()->set_mac_address(
+                        resp.mutable_lacp_router_mac()->set_mac_address(
                             kSystemIdMac);
                         // Send it to the caller.
                         w->Write(resp);
@@ -1683,6 +1944,345 @@ TEST_F(YangParseTreeTest,
   // Check that the result of the call is what is expected.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().string_val(), kSystemIdMacAsString);
+}
+
+// Check if the '/interfaces/interface/ethernet/state/forwarding-viable' OnPoll
+// action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetStateForwardingViabilityOnPollSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("state")("forwarding-viable")();
+  static constexpr bool kForwardingViableTrue = true;
+  static constexpr TrunkMemberBlockState kTrunkMemberBlockStateForwarding =
+      TRUNK_MEMBER_BLOCK_STATE_FORWARDING;
+
+  // Mock implementation of RetrieveValue() that sends a response set to
+  // kForwardingViableTrue.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_forwarding_viability()->set_state(
+                            kTrunkMemberBlockStateForwarding);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().bool_val(), kForwardingViableTrue);
+}
+
+// Check if the '/interfaces/interface/ethernet/state/forwarding-viable'
+// OnChange action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetStateForwardingViabilityOnChangeSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("state")("forwarding-viable")();
+  static constexpr bool kForwardingViableTrue = true;
+  static constexpr TrunkMemberBlockState kTrunkMemberBlockStateForwarding =
+      TRUNK_MEMBER_BLOCK_STATE_FORWARDING;
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortForwardingViabilityChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                          kTrunkMemberBlockStateForwarding),
+      &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().bool_val(), kForwardingViableTrue);
+}
+
+// Check if the '/interfaces/interface/ethernet/config/forwarding-viable' OnPoll
+// action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetConfigForwardingViabilityOnPollSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("config")("forwarding-viable")();
+  static constexpr bool kTrunkMemberBlockStateForwarding = true;
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().bool_val(),
+            kTrunkMemberBlockStateForwarding);
+}
+
+// Check if the '/interfaces/interface/state/last-change' OnPoll
+// action works correctly.
+TEST_F(YangParseTreeTest, InterfacesInterfaceStateLastChangeOnPollSuccess) {
+  auto path = GetPath("interfaces")("interface",
+                                    "interface-1")("state")("last-change")();
+  static constexpr char kUnsupportedString[] = "unsupported yet";
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kUnsupportedString);
+}
+
+// Check if the '/interfaces/interface/ethernet/config/forwarding-viable'
+// OnChange action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetConfigForwardingViabilityOnChangeSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("config")("forwarding-viable")();
+  // TODO(tmadejski): add test when gNMI SET operation is implemented.
+}
+
+// Check if the '/interfaces/interface/state/health-indicator' OnPoll
+// action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceStateHealthIndicatorOnPollSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("state")("health-indicator")();
+  static constexpr auto kHealthIndicatorGood = HEALTH_STATE_GOOD;
+  static constexpr char kHealthIndicatorGoodString[] = "GOOD";
+
+  // Mock implementation of RetrieveValue() that sends a response set to
+  // kHealthIndicatorGood.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(DoAll(WithArg<2>(Invoke([](WriterInterface<DataResponse>* w) {
+                        DataResponse resp;
+                        // Set the response.
+                        resp.mutable_health_indicator()->set_state(
+                            kHealthIndicatorGood);
+                        // Send it to the caller.
+                        w->Write(resp);
+                      })),
+                      Return(::util::OkStatus())));
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorGoodString);
+}
+
+// Check if the '/interfaces/interface/state/health-indicator'
+// OnChange action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceStateHealthIndicatorOnChangeSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("state")("health-indicator")();
+  static constexpr auto kHealthIndicatorGood = HEALTH_STATE_GOOD;
+  static constexpr char kHealthIndicatorGoodString[] = "GOOD";
+  static constexpr auto kHealthIndicatorBad = HEALTH_STATE_BAD;
+  static constexpr char kHealthIndicatorBadString[] = "BAD";
+  static constexpr auto kHealthIndicatorInvalid =
+      static_cast<HealthState>(HealthState_MAX + 1);
+  static constexpr char kHealthIndicatorInvalidString[] = "UNKNOWN";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('GOOD' case).
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortHealthIndicatorChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                      kHealthIndicatorGood),
+      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorGoodString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('BAD' case).
+  resp.Clear();
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortHealthIndicatorChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                      kHealthIndicatorBad),
+      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorBadString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('UNKNOWN' case).
+  resp.Clear();
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortHealthIndicatorChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                      kHealthIndicatorInvalid),
+      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorInvalidString);
+}
+
+// Check if the '/interfaces/interface/config/health-indicator' OnPoll
+// action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceConfigHealthIndicatorOnPollSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("config")("health-indicator")();
+  static constexpr char kHealthIndicatorGoodString[] = "GOOD";
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorGoodString);
+}
+
+// Check if the '/interfaces/interface/config/health-indicator'
+// OnChange action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceConfigHealthIndicatorOnChangeSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("config")("health-indicator")();
+  static constexpr auto kHealthIndicatorGood = HealthState::HEALTH_STATE_GOOD;
+  static constexpr char kHealthIndicatorGoodString[] = "GOOD";
+  static constexpr auto kHealthIndicatorBad = HealthState::HEALTH_STATE_BAD;
+  static constexpr char kHealthIndicatorBadString[] = "BAD";
+  static constexpr auto kHealthIndicatorUnknown = static_cast<HealthState>(3);
+  static constexpr char kHealthIndicatorUnknownString[] = "UNKNOWN";
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('GOOD' case).
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortHealthIndicatorChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                      kHealthIndicatorGood),
+      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorGoodString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('BAD' case).
+  resp.Clear();
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortHealthIndicatorChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                      kHealthIndicatorBad),
+      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorBadString);
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller ('UNKNOWN' case).
+  resp.Clear();
+  ASSERT_OK(ExecuteOnChange(
+      path,
+      PortHealthIndicatorChangedEvent(kInterface1NodeId, kInterface1PortId,
+                                      kHealthIndicatorUnknown),
+      &resp));
+  // Check that the result of the call is what is expected.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(),
+            kHealthIndicatorUnknownString);
+}
+
+// Check if the '/interfaces/interface/ethernet/config/health-indicator'
+// OnUpdate action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceConfigHealthIndicatorOnUpdateSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("config")("health-indicator")();
+  static constexpr char kHealthIndicatorBadString[] = "BAD";
+  static constexpr auto kHealthIndicatorBad = HealthState::HEALTH_STATE_BAD;
+  static constexpr char kHealthIndicatorSomethingString[] = "SOMETHING";
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  SetRequest req;
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kHealthIndicatorBadString);
+  ASSERT_OK(ExecuteOnUpdate(path, val, &req, &notification));
+
+  // Check that the set request sent via SwitchInterface has correct content.
+  ASSERT_THAT(req.requests(), SizeIs(1));
+  EXPECT_EQ(req.requests(0).port().health_indicator().state(),
+            kHealthIndicatorBad);
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  PortHealthIndicatorChangedEvent* event =
+      dynamic_cast<PortHealthIndicatorChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetState(), kHealthIndicatorBad);
+
+  // Check reaction to wrong value.
+  val.set_string_val(kHealthIndicatorSomethingString);
+  EXPECT_THAT(ExecuteOnUpdate(path, val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("wrong value")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+}
+
+// Check if the '/interfaces/interface/ethernet/config/health-indicator'
+// OnReplace action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceConfigHealthIndicatorOnReplaceSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("config")("health-indicator")();
+  static constexpr char kHealthIndicatorBadString[] = "BAD";
+  static constexpr auto kHealthIndicatorBad = HealthState::HEALTH_STATE_BAD;
+  static constexpr char kHealthIndicatorSomethingString[] = "SOMETHING";
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  SetRequest req;
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kHealthIndicatorBadString);
+  ASSERT_OK(ExecuteOnReplace(path, val, &req, &notification));
+
+  // Check that the set request sent via SwitchInterface has correct content.
+  ASSERT_THAT(req.requests(), SizeIs(1));
+  EXPECT_EQ(req.requests(0).port().health_indicator().state(),
+            kHealthIndicatorBad);
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  PortHealthIndicatorChangedEvent* event =
+      dynamic_cast<PortHealthIndicatorChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetState(), kHealthIndicatorBad);
+
+  // Check reaction to wrong value.
+  val.set_string_val(kHealthIndicatorSomethingString);
+  EXPECT_THAT(ExecuteOnReplace(path, val,
+                               /* SetValue will not be called */ nullptr,
+                               /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("wrong value")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnReplace(path, wrong_type_val,
+                               /* SetValue will not be called */ nullptr,
+                               /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 }
 
 // Check if the 'alarms/memory-error' OnPoll action works correctly.
@@ -1735,7 +2335,7 @@ TEST_F(YangParseTreeTest,
                       Return(::util::OkStatus())));
 
   // Mock gRPC stream that checks the contents of the 'resp' parameter.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
           DoAll(WithArgs<0>(Invoke([](const ::gnmi::SubscribeResponse& resp) {
@@ -1791,7 +2391,7 @@ TEST_F(YangParseTreeTest,
   AddSubtreeChassis("chassis-1");
 
   // Mock gRPC stream that checks the contents of the 'resp' parameter.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
           DoAll(WithArgs<0>(Invoke([](const ::gnmi::SubscribeResponse& resp) {
@@ -1845,7 +2445,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("memory-error")("status")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::bool_val,
                       &DataResponse::mutable_memory_error_alarm,
-                      &DataResponse::Alarm::set_status, kAlarmStatusTrue);
+                      &Alarm::set_status, kAlarmStatusTrue);
 }
 
 // Check if the 'alarms/memory-error/status' OnChange action works correctly.
@@ -1864,7 +2464,7 @@ TEST_F(YangParseTreeTest,
       "component", "chassis-1")("chassis")("alarms")("memory-error")("info")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::string_val,
                       &DataResponse::mutable_memory_error_alarm,
-                      &DataResponse::Alarm::set_description, kAlarmDescription);
+                      &Alarm::set_description, kAlarmDescription);
 }
 
 // Check if the 'alarms/memory-error/info' OnChange action works correctly.
@@ -1884,8 +2484,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("memory-error")("time-created")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::uint_val,
                       &DataResponse::mutable_memory_error_alarm,
-                      &DataResponse::Alarm::set_time_created,
-                      kAlarmTimeCreated);
+                      &Alarm::set_time_created, kAlarmTimeCreated);
 }
 
 // Check if the 'alarms/memory-error/time-created' OnChange action works
@@ -1905,7 +2504,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("memory-error")("severity")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::string_val,
                       &DataResponse::mutable_memory_error_alarm,
-                      &DataResponse::Alarm::set_severity, kAlarmSeverityText,
+                      &Alarm::set_severity, kAlarmSeverityText,
                       kAlarmSeverityEnum);
 }
 
@@ -1974,7 +2573,7 @@ TEST_F(YangParseTreeTest,
           Return(::util::OkStatus())));
 
   // Mock gRPC stream that checks the contents of the 'resp' parameter.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
           DoAll(WithArgs<0>(Invoke([](const ::gnmi::SubscribeResponse& resp) {
@@ -2031,7 +2630,7 @@ TEST_F(YangParseTreeTest,
   AddSubtreeChassis("chassis-1");
 
   // Mock gRPC stream that checks the contents of the 'resp' parameter.
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(
           DoAll(WithArgs<0>(Invoke([](const ::gnmi::SubscribeResponse& resp) {
@@ -2087,7 +2686,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("flow-programming-exception")("status")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::bool_val,
                       &DataResponse::mutable_flow_programming_exception_alarm,
-                      &DataResponse::Alarm::set_status, kAlarmStatusTrue);
+                      &Alarm::set_status, kAlarmStatusTrue);
 }
 
 // Check if the 'alarms/flow-programming-exception/status' OnChange action works
@@ -2108,7 +2707,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("flow-programming-exception")("info")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::string_val,
                       &DataResponse::mutable_flow_programming_exception_alarm,
-                      &DataResponse::Alarm::set_description, kAlarmDescription);
+                      &Alarm::set_description, kAlarmDescription);
 }
 
 // Check if the 'alarms/flow-programming-exception/info' OnChange action works
@@ -2129,8 +2728,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("flow-programming-exception")("time-created")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::uint_val,
                       &DataResponse::mutable_flow_programming_exception_alarm,
-                      &DataResponse::Alarm::set_time_created,
-                      kAlarmTimeCreated);
+                      &Alarm::set_time_created, kAlarmTimeCreated);
 }
 
 // Check if the 'alarms/flow-programming-exception/time-created' OnChange action
@@ -2152,7 +2750,7 @@ TEST_F(YangParseTreeTest,
       "alarms")("flow-programming-exception")("severity")();
   TestOnPollAlarmLeaf(path, &::gnmi::TypedValue::string_val,
                       &DataResponse::mutable_flow_programming_exception_alarm,
-                      &DataResponse::Alarm::set_severity, kAlarmSeverityText,
+                      &Alarm::set_severity, kAlarmSeverityText,
                       kAlarmSeverityEnum);
 }
 
@@ -2347,7 +2945,7 @@ TEST_F(YangParseTreeTest,
       "output")("queues")("queue", "BE1")("state")("id")();
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortQosCounters counters;
+  PortQosCounters counters;
   counters.set_queue_id(kInterface1QueueId);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -2404,7 +3002,7 @@ TEST_F(
   constexpr uint64 kTransmitPkts = 20;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortQosCounters counters;
+  PortQosCounters counters;
   counters.set_out_pkts(kTransmitPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -2462,7 +3060,7 @@ TEST_F(
   constexpr uint64 kTransmitOctets = 20;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortQosCounters counters;
+  PortQosCounters counters;
   counters.set_out_octets(kTransmitOctets);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -2518,7 +3116,7 @@ TEST_F(YangParseTreeTest,
   constexpr uint64 kDroppedPkts = 20;
 
   // Prepare the structure that stores the counters.
-  DataResponse::PortQosCounters counters;
+  PortQosCounters counters;
   counters.set_out_dropped_pkts(kDroppedPkts);
 
   // Call the event handler. 'resp' will contain the message that is sent to the
@@ -2532,6 +3130,37 @@ TEST_F(YangParseTreeTest,
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
   EXPECT_EQ(resp.update().update(0).val().uint_val(), kDroppedPkts);
+}
+
+// Check if /debug/nodes/node/packet-io/debug-string
+// OnPoll action works correctly.
+TEST_F(YangParseTreeTest, DebugNodesNodePacketIoDebugStringOnPollSuccess) {
+  auto path = GetPath("debug")("nodes")(
+      "node", "node-1")("packet-io")("debug-string")();
+  constexpr char kTestString[] = "test string";
+
+  // Mock implementation of RetrieveValue() that sends a response set to
+  // kDroppedPkts.
+  EXPECT_CALL(switch_, RetrieveValue(_, _, _, _))
+      .WillOnce(
+          DoAll(WithArg<2>(Invoke([&](WriterInterface<DataResponse>* w) {
+                  DataResponse resp;
+                  // Set the response.
+                  resp.mutable_node_packetio_debug_info()->set_debug_string(
+                      kTestString);
+                  // Send it to the caller.
+                  w->Write(resp);
+                })),
+                Return(::util::OkStatus())));
+
+  // Call the event handler. 'resp' will contain the message that is sent to the
+  // controller.
+  ::gnmi::SubscribeResponse resp;
+  EXPECT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that the result of the call is what is expected.
+  ASSERT_EQ(resp.update().update_size(), 1);
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kTestString);
 }
 
 }  // namespace hal

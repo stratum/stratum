@@ -19,12 +19,13 @@
 
 #include "base/commandlineflags.h"
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
+#include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
 #include "util/gtl/map_util.h"
 
 // These flags control the strictness of error reporting for certain
@@ -55,7 +56,7 @@ namespace stratum {
 namespace hal {
 
 std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
-    const ::p4::config::P4Info& p4_info,
+    const ::p4::config::v1::P4Info& p4_info,
     const P4PipelineConfig& p4_pipeline_config) {
   return absl::WrapUnique(new P4ConfigVerifier(p4_info, p4_pipeline_config));
 }
@@ -80,6 +81,14 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
     APPEND_STATUS_IF_ERROR(verify_status, action_status);
   }
 
+  for (const auto& iter : p4_pipeline_config_.table_map()) {
+    if (iter.second.has_internal_action()) {
+      ::util::Status internal_action_status =
+          VerifyInternalAction(iter.second.internal_action(), iter.first);
+      APPEND_STATUS_IF_ERROR(verify_status, internal_action_status);
+    }
+  }
+
   for (const auto& static_entry :
        p4_pipeline_config_.static_table_entries().updates()) {
     ::util::Status entry_status = VerifyStaticTableEntry(static_entry);
@@ -90,14 +99,14 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyAndCompare(
-    const ::p4::config::P4Info& old_p4_info,
+    const ::p4::config::v1::P4Info& old_p4_info,
     const P4PipelineConfig& old_p4_pipeline_config) {
   RETURN_IF_ERROR(Verify());
 
   // VerifyAndCompare accepts unchanged static entries or addition of new
   // static entries.  Static entry deletions and modifications require reboot.
-  p4::WriteRequest delete_request;
-  p4::WriteRequest modify_request;
+  ::p4::v1::WriteRequest delete_request;
+  ::p4::v1::WriteRequest modify_request;
   P4WriteRequestDiffer static_entry_differ(
       old_p4_pipeline_config.static_table_entries(),
       p4_pipeline_config_.static_table_entries());
@@ -127,37 +136,24 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyTable(
-    const ::p4::config::Table& p4_table) {
+    const ::p4::config::v1::Table& p4_table) {
   ::util::Status table_status = ::util::OkStatus();
 
   // Every P4 table needs a p4_pipeline_config_ table descriptor.
   const std::string& table_name = p4_table.preamble().name();
-  auto* map_value =
-      gtl::FindOrNull(p4_pipeline_config_.table_map(), table_name);
-  if (map_value != nullptr) {
-    if (map_value->has_table_descriptor()) {
-      // The pipeline stage must be known for all tables.
-      if (map_value->table_descriptor().pipeline_stage() ==
-          P4Annotation::DEFAULT_STAGE) {
-        ::util::Status bad_stage_status =
-            MAKE_ERROR(ERR_INTERNAL)
-            << "P4PipelineConfig table map descriptor for P4 table "
-            << table_name << " does not specify a pipeline stage";
-        APPEND_STATUS_IF_ERROR(table_status, bad_stage_status);
-      }
-    } else {
-      ::util::Status bad_descriptor_status =
+  auto descriptor_status = GetTableMapValueWithDescriptorCase(
+      p4_pipeline_config_, table_name, P4TableMapValue::kTableDescriptor, "");
+  APPEND_STATUS_IF_ERROR(table_status, descriptor_status.status());
+  if (descriptor_status.status().ok()) {
+    // The pipeline stage must be known for all tables.
+    if (descriptor_status.ValueOrDie()->table_descriptor().pipeline_stage() ==
+        P4Annotation::DEFAULT_STAGE) {
+      ::util::Status bad_stage_status =
           MAKE_ERROR(ERR_INTERNAL)
-          << "P4PipelineConfig table map descriptor for P4 table " << table_name
-          << " is not a table descriptor: " << map_value->ShortDebugString();
-      APPEND_STATUS_IF_ERROR(table_status, bad_descriptor_status);
+          << "P4PipelineConfig table map descriptor for P4 table "
+          << table_name << " does not specify a pipeline stage";
+      APPEND_STATUS_IF_ERROR(table_status, bad_stage_status);
     }
-  } else {
-    ::util::Status no_descriptor_status =
-        MAKE_ERROR(ERR_INTERNAL)
-        << "P4PipelineConfig table map has no descriptor for P4 table "
-        << table_name;
-    APPEND_STATUS_IF_ERROR(table_status, no_descriptor_status);
   }
 
   // All of the table's match fields need to be verified.
@@ -173,35 +169,19 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyAction(
-    const ::p4::config::Action& p4_action) {
+    const ::p4::config::v1::Action& p4_action) {
   ::util::Status action_status = ::util::OkStatus();
 
   // Every P4 action needs a valid p4_pipeline_config_ action descriptor.
   const std::string& action_name = p4_action.preamble().name();
-  auto* map_value =
-      gtl::FindOrNull(p4_pipeline_config_.table_map(), action_name);
-  if (map_value != nullptr) {
-    if (map_value->has_action_descriptor()) {
-      const auto& action_descriptor = map_value->action_descriptor();
-      for (const auto& assignment : action_descriptor.assignments()) {
-        ::util::Status assign_status =
-            VerifyActionInstructions(assignment, action_name);
-        APPEND_STATUS_IF_ERROR(action_status, assign_status);
-      }
-    } else {
-      ::util::Status bad_descriptor_status =
-          MAKE_ERROR(ERR_INTERNAL)
-          << "P4PipelineConfig table map descriptor for P4 action "
-          << action_name << " is not an action descriptor: "
-          << map_value->ShortDebugString();
-      APPEND_STATUS_IF_ERROR(action_status, bad_descriptor_status);
-    }
-  } else {
-    ::util::Status no_descriptor_status =
-        MAKE_ERROR(ERR_INTERNAL)
-        << "P4PipelineConfig table map has no descriptor for P4 action "
-        << action_name;
-    APPEND_STATUS_IF_ERROR(action_status, no_descriptor_status);
+  auto descriptor_status = GetTableMapValueWithDescriptorCase(
+      p4_pipeline_config_, action_name, P4TableMapValue::kActionDescriptor, "");
+  APPEND_STATUS_IF_ERROR(action_status, descriptor_status.status());
+  if (descriptor_status.status().ok()) {
+    const auto& action_descriptor =
+        descriptor_status.ValueOrDie()->action_descriptor();
+    APPEND_STATUS_IF_ERROR(action_status, VerifyActionDescriptor(
+        action_descriptor, action_name, true));
   }
 
   VLOG(1) << "P4 action " << action_name << " verification "
@@ -211,9 +191,9 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyStaticTableEntry(
-    const p4::Update& static_entry) {
+    const ::p4::v1::Update& static_entry) {
   ::util::Status entry_status = ::util::OkStatus();
-  if (static_entry.type() != p4::Update::INSERT) {
+  if (static_entry.type() != ::p4::v1::Update::INSERT) {
     ::util::Status bad_type_status =
         MAKE_ERROR(ERR_INTERNAL)
         << "P4PipelineConfig static table entry has unexpected type: "
@@ -230,7 +210,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
     return entry_status;  // Nothing more to do if TableEntry is missing.
   }
 
-  const p4::TableEntry& table_entry = static_entry.entity().table_entry();
+  const ::p4::v1::TableEntry& table_entry = static_entry.entity().table_entry();
   bool table_found = false;
   for (const auto& p4_table : p4_info_.tables()) {
     if (table_entry.table_id() == p4_table.preamble().id()) {
@@ -273,7 +253,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyMatchField(
-    const ::p4::config::MatchField& match_field,
+    const ::p4::config::v1::MatchField& match_field,
     const std::string& table_name) {
   // Every P4 table match_field needs a p4_pipeline_config_ field descriptor.
   const std::string& field_name = match_field.name();
@@ -291,7 +271,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 
   // The field's match type should have a corresponding field descriptor
   // conversion.
-  if (match_field.match_type() != ::p4::config::MatchField::UNSPECIFIED) {
+  if (match_field.match_type() != ::p4::config::v1::MatchField::UNSPECIFIED) {
     bool match_ok = false;
     for (const auto& conversion : field_descriptor->valid_conversions()) {
       if (match_field.match_type() == conversion.match_type()) {
@@ -304,12 +284,51 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
              << "P4PipelineConfig descriptor for match field " << field_name
              << " in P4 table " << table_name << " has no conversion entry for"
              << " match type "
-             << ::p4::config::MatchField_MatchType_Name(
-                 match_field.match_type());
+             << ::p4::config::v1::MatchField_MatchType_Name(
+                    match_field.match_type());
     }
   }
 
   return ::util::OkStatus();
+}
+
+::util::Status P4ConfigVerifier::VerifyActionDescriptor(
+    const P4ActionDescriptor& action_descriptor,
+    const std::string& action_name, bool check_action_redirects) {
+  ::util::Status action_status = ::util::OkStatus();
+  for (const auto& assignment : action_descriptor.assignments()) {
+    ::util::Status assign_status =
+        VerifyActionInstructions(assignment, action_name);
+    APPEND_STATUS_IF_ERROR(action_status, assign_status);
+  }
+
+  if (check_action_redirects) {
+    APPEND_STATUS_IF_ERROR(action_status, VerifyInternalActionLinks(
+        action_descriptor, action_name));
+  }
+
+  return action_status;
+}
+
+::util::Status P4ConfigVerifier::VerifyInternalAction(
+    const P4ActionDescriptor& action_descriptor,
+    const std::string& action_name) {
+  ::util::Status action_status = ::util::OkStatus();
+  if (action_descriptor.action_redirects_size() != 0) {
+    ::util::Status redirects_status =
+        MAKE_ERROR(ERR_INTERNAL)
+        << "P4PipelineConfig internal action entry " << action_name
+        << " has unexpected redirects to other actions: "
+        << action_descriptor.ShortDebugString();
+    APPEND_STATUS_IF_ERROR(action_status, redirects_status);
+  }
+
+  // The third parameter is false since internal actions aren't allowed to
+  // have links to other actions, as verified above.
+  APPEND_STATUS_IF_ERROR(action_status, VerifyActionDescriptor(
+      action_descriptor, action_name, false));
+
+  return action_status;
 }
 
 ::util::Status P4ConfigVerifier::VerifyActionInstructions(
@@ -319,19 +338,63 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 
   // Instructions with assignments to headers and header fields are verified.
   // Simple action primitives are ignored.
-  for (const auto& field_name : instructions.destination_field_names()) {
+  // TODO(teverman): This code currently recognizes both the new singleton
+  // destination_field_name as well as the deprecating repeated
+  // destination_field_names.  Remove the latter when the transition is
+  // complete.
+  std::string destination_field_name = instructions.destination_field_name();
+  if (destination_field_name.empty() &&
+      instructions.destination_field_names_size() == 1) {
+    destination_field_name = instructions.destination_field_names(0);
+  }
+  if (instructions.destination_field_names_size() > 1 ||
+      (destination_field_name.empty() && instructions.primitives_size() == 0)) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "P4PipelineConfig has unexpected assignment in descriptor for "
+           << "action " << action_name << ": "
+           << instructions.ShortDebugString();
+  }
+  if (!destination_field_name.empty()) {
     if (instructions.assigned_value().source_value_case() ==
         P4AssignSourceValue::kSourceHeaderName) {
       auto header_assign_status = VerifyHeaderAssignment();
       APPEND_STATUS_IF_ERROR(action_status, header_assign_status);
-      continue;
+    } else {
+      auto field_assign_status = VerifyFieldAssignment(
+          destination_field_name,
+          instructions.assigned_value(), action_name);
+      APPEND_STATUS_IF_ERROR(action_status, field_assign_status);
     }
-    auto field_assign_status = VerifyFieldAssignment(
-        field_name, instructions.assigned_value(), action_name);
-    APPEND_STATUS_IF_ERROR(action_status, field_assign_status);
   }
 
   return action_status;
+}
+
+::util::Status P4ConfigVerifier::VerifyInternalActionLinks(
+    const P4ActionDescriptor& action_descriptor,
+    const std::string& action_name) {
+  ::util::Status link_status = ::util::OkStatus();
+
+  // If the action redirects to any internal actions, the internal action's
+  // descriptor needs to be present in the table map.
+  for (const auto& action_redirect : action_descriptor.action_redirects()) {
+    for (const auto& internal_link : action_redirect.internal_links()) {
+      auto internal_action_status = GetInternalActionDescriptor(
+          internal_link.internal_action_name(), action_name);
+      APPEND_STATUS_IF_ERROR(link_status, internal_action_status.status());
+
+      // If the internal_link is qualified by any specific applied tables,
+      // those tables should exist.
+      for (const auto& applied_table : internal_link.applied_tables()) {
+        APPEND_STATUS_IF_ERROR(link_status, GetTableMapValueWithDescriptorCase(
+            p4_pipeline_config_, applied_table,
+            P4TableMapValue::kTableDescriptor,
+            internal_link.internal_action_name()).status());
+      }
+    }
+  }
+
+  return link_status;
 }
 
 ::util::Status P4ConfigVerifier::VerifyHeaderAssignment() {
@@ -396,26 +459,23 @@ bool P4ConfigVerifier::VerifyKnownFieldType(
 
 ::util::StatusOr<const P4FieldDescriptor*> P4ConfigVerifier::GetFieldDescriptor(
     const std::string& field_name, const std::string& log_object) {
-  auto* map_value =
-      gtl::FindOrNull(p4_pipeline_config_.table_map(), field_name);
-  if (map_value != nullptr) {
-    if (!map_value->has_field_descriptor()) {
-      ::util::Status bad_descriptor_status =
-          MAKE_ERROR(ERR_INTERNAL)
-          << "P4PipelineConfig descriptor for field " << field_name
-          << " referenced by P4 object " << log_object
-          << " is not a field descriptor: " << map_value->ShortDebugString();
-      return bad_descriptor_status;
-    }
-  } else {
-    ::util::Status no_descriptor_status =
-        MAKE_ERROR(ERR_INTERNAL)
-        << "P4PipelineConfig table map has no descriptor for field "
-        << field_name << " referenced by P4 object " << log_object;
-    return no_descriptor_status;
-  }
+  auto descriptor_status = GetTableMapValueWithDescriptorCase(
+      p4_pipeline_config_, field_name,
+      P4TableMapValue::kFieldDescriptor, log_object);
+  RETURN_IF_ERROR(descriptor_status.status());
 
-  return &map_value->field_descriptor();
+  return &descriptor_status.ValueOrDie()->field_descriptor();
+}
+
+::util::StatusOr<const P4ActionDescriptor*>
+P4ConfigVerifier::GetInternalActionDescriptor(
+    const std::string& internal_action_name, const std::string& log_object) {
+  auto descriptor_status = GetTableMapValueWithDescriptorCase(
+      p4_pipeline_config_, internal_action_name,
+      P4TableMapValue::kInternalAction, log_object);
+  RETURN_IF_ERROR(descriptor_status.status());
+
+  return &descriptor_status.ValueOrDie()->internal_action();
 }
 
 ::util::Status P4ConfigVerifier::FilterError(

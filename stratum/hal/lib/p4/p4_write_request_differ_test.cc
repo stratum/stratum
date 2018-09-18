@@ -18,10 +18,12 @@
 
 #include <vector>
 
+#include "google/protobuf/util/message_differencer.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
 using ::testing::HasSubstr;
@@ -113,12 +115,12 @@ class P4WriteRequestDifferTest : public testing::Test {
   // Adds update entries to the output WriteRequest by parsing each string in
   // updates_text.
   static void SetUpTestRequest(const std::vector<const char*>& updates_text,
-                               p4::WriteRequest* request);
+                               ::p4::v1::WriteRequest* request);
 
   // Tests can use these WriteRequests to set up inputs for testing
   // P4WriteRequestDiffer.
-  p4::WriteRequest old_request_;
-  p4::WriteRequest new_request_;
+  ::p4::v1::WriteRequest old_request_;
+  ::p4::v1::WriteRequest new_request_;
 
   // The P4WriteRequestDifferTest constructor sets up this vector for
   // common use as a SetUpTestRequest input.
@@ -126,20 +128,21 @@ class P4WriteRequestDifferTest : public testing::Test {
 
   // Tests can use these WriteRequests to store output from
   // P4WriteRequestDiffer::Compare.
-  p4::WriteRequest additions_;
-  p4::WriteRequest deletions_;
-  p4::WriteRequest modified_;
-  p4::WriteRequest unchanged_;
+  ::p4::v1::WriteRequest additions_;
+  ::p4::v1::WriteRequest deletions_;
+  ::p4::v1::WriteRequest modified_;
+  ::p4::v1::WriteRequest unchanged_;
 
   // Tests can use this MessageDifferencer to verify test expectations.
   ::google::protobuf::util::MessageDifferencer msg_differencer_;
 };
 
 void P4WriteRequestDifferTest::SetUpTestRequest(
-    const std::vector<const char*>& updates_text, p4::WriteRequest* request) {
+    const std::vector<const char*>& updates_text,
+    ::p4::v1::WriteRequest* request) {
   request->Clear();
   for (auto update_text : updates_text) {
-    p4::Update update;
+    ::p4::v1::Update update;
     ASSERT_OK(ParseProtoFromString(update_text, &update));
     *request->add_updates() = update;
   }
@@ -236,8 +239,8 @@ TEST_F(P4WriteRequestDifferTest, TestDeleteTableEntry) {
       test_differ.Compare(&deletions_, &additions_, &modified_, &unchanged_));
   ASSERT_EQ(1, deletions_.updates_size());
   EXPECT_EQ(0, additions_.updates_size());
-  p4::Update expected_update = old_request_.updates(1);
-  expected_update.set_type(p4::Update::DELETE);
+  ::p4::v1::Update expected_update = old_request_.updates(1);
+  expected_update.set_type(::p4::v1::Update::DELETE);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, deletions_.updates(0)));
   EXPECT_EQ(0, modified_.updates_size());
   EXPECT_EQ(2, unchanged_.updates_size());
@@ -255,10 +258,10 @@ TEST_F(P4WriteRequestDifferTest, TestDeleteMultipleTableEntries) {
   EXPECT_EQ(0, additions_.updates_size());
   msg_differencer_.set_repeated_field_comparison(
       ::google::protobuf::util::MessageDifferencer::AS_SET);
-  p4::WriteRequest expected_deletes = old_request_;
-  expected_deletes.mutable_updates(0)->set_type(p4::Update::DELETE);
-  expected_deletes.mutable_updates(1)->set_type(p4::Update::DELETE);
-  expected_deletes.mutable_updates(2)->set_type(p4::Update::DELETE);
+  ::p4::v1::WriteRequest expected_deletes = old_request_;
+  expected_deletes.mutable_updates(0)->set_type(::p4::v1::Update::DELETE);
+  expected_deletes.mutable_updates(1)->set_type(::p4::v1::Update::DELETE);
+  expected_deletes.mutable_updates(2)->set_type(::p4::v1::Update::DELETE);
   EXPECT_TRUE(msg_differencer_.Compare(expected_deletes, deletions_));
   EXPECT_EQ(0, modified_.updates_size());
   EXPECT_EQ(0, unchanged_.updates_size());
@@ -280,8 +283,8 @@ TEST_F(P4WriteRequestDifferTest, TestModifyActionID) {
   ASSERT_EQ(0, deletions_.updates_size());
   EXPECT_EQ(0, additions_.updates_size());
   ASSERT_EQ(1, modified_.updates_size());
-  p4::Update expected_mod = new_request_.updates(0);
-  expected_mod.set_type(p4::Update::MODIFY);
+  ::p4::v1::Update expected_mod = new_request_.updates(0);
+  expected_mod.set_type(::p4::v1::Update::MODIFY);
   EXPECT_TRUE(msg_differencer_.Compare(expected_mod, modified_.updates(0)));
   ASSERT_EQ(2, unchanged_.updates_size());
   EXPECT_TRUE(
@@ -305,11 +308,11 @@ TEST_F(P4WriteRequestDifferTest, TestModifyAddMatchField) {
       test_differ.Compare(&deletions_, &additions_, &modified_, &unchanged_));
   ASSERT_EQ(1, deletions_.updates_size());
   ASSERT_EQ(1, additions_.updates_size());
-  p4::Update expected_update = old_request_.updates(2);
-  expected_update.set_type(p4::Update::DELETE);
+  ::p4::v1::Update expected_update = old_request_.updates(2);
+  expected_update.set_type(::p4::v1::Update::DELETE);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, deletions_.updates(0)));
   expected_update = new_request_.updates(2);
-  expected_update.set_type(p4::Update::INSERT);
+  expected_update.set_type(::p4::v1::Update::INSERT);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, additions_.updates(0)));
   EXPECT_EQ(0, modified_.updates_size());
   ASSERT_EQ(2, unchanged_.updates_size());
@@ -332,11 +335,11 @@ TEST_F(P4WriteRequestDifferTest, TestModifyDeleteMatchField) {
       test_differ.Compare(&deletions_, &additions_, &modified_, &unchanged_));
   ASSERT_EQ(1, deletions_.updates_size());
   ASSERT_EQ(1, additions_.updates_size());
-  p4::Update expected_update = old_request_.updates(2);
-  expected_update.set_type(p4::Update::DELETE);
+  ::p4::v1::Update expected_update = old_request_.updates(2);
+  expected_update.set_type(::p4::v1::Update::DELETE);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, deletions_.updates(0)));
   expected_update = new_request_.updates(2);
-  expected_update.set_type(p4::Update::INSERT);
+  expected_update.set_type(::p4::v1::Update::INSERT);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, additions_.updates(0)));
   EXPECT_EQ(0, modified_.updates_size());
   ASSERT_EQ(2, unchanged_.updates_size());
@@ -365,8 +368,8 @@ TEST_F(P4WriteRequestDifferTest, TestModifyActionIDAndReorder) {
   EXPECT_EQ(0, deletions_.updates_size());
   EXPECT_EQ(0, additions_.updates_size());
   ASSERT_EQ(1, modified_.updates_size());
-  p4::Update expected_update = new_request_.updates(0);
-  expected_update.set_type(p4::Update::MODIFY);
+  ::p4::v1::Update expected_update = new_request_.updates(0);
+  expected_update.set_type(::p4::v1::Update::MODIFY);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, modified_.updates(0)));
   ASSERT_EQ(2, unchanged_.updates_size());
   EXPECT_TRUE(
@@ -389,11 +392,11 @@ TEST_F(P4WriteRequestDifferTest, TestModifyTableID) {
       test_differ.Compare(&deletions_, &additions_, &modified_, &unchanged_));
   ASSERT_EQ(1, deletions_.updates_size());
   ASSERT_EQ(1, additions_.updates_size());
-  p4::Update expected_update = old_request_.updates(2);
-  expected_update.set_type(p4::Update::DELETE);
+  ::p4::v1::Update expected_update = old_request_.updates(2);
+  expected_update.set_type(::p4::v1::Update::DELETE);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, deletions_.updates(0)));
   expected_update = new_request_.updates(2);
-  expected_update.set_type(p4::Update::INSERT);
+  expected_update.set_type(::p4::v1::Update::INSERT);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, additions_.updates(0)));
   EXPECT_EQ(0, modified_.updates_size());
   ASSERT_EQ(2, unchanged_.updates_size());
@@ -417,11 +420,11 @@ TEST_F(P4WriteRequestDifferTest, TestModifyMatchValue) {
       test_differ.Compare(&deletions_, &additions_, &modified_, &unchanged_));
   ASSERT_EQ(1, deletions_.updates_size());
   ASSERT_EQ(1, additions_.updates_size());
-  p4::Update expected_update = old_request_.updates(1);
-  expected_update.set_type(p4::Update::DELETE);
+  ::p4::v1::Update expected_update = old_request_.updates(1);
+  expected_update.set_type(::p4::v1::Update::DELETE);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, deletions_.updates(0)));
   expected_update = new_request_.updates(1);
-  expected_update.set_type(p4::Update::INSERT);
+  expected_update.set_type(::p4::v1::Update::INSERT);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, additions_.updates(0)));
   EXPECT_EQ(0, modified_.updates_size());
   ASSERT_EQ(2, unchanged_.updates_size());
@@ -439,7 +442,7 @@ TEST_F(P4WriteRequestDifferTest, TestReorderMatchFields) {
   auto modify_entry =
       new_request_.mutable_updates(1)->mutable_entity()->mutable_table_entry();
   ASSERT_EQ(2, modify_entry->match_size());
-  p4::FieldMatch swap_match = modify_entry->match(0);
+  ::p4::v1::FieldMatch swap_match = modify_entry->match(0);
   *modify_entry->mutable_match(0) = modify_entry->match(1);
   *modify_entry->mutable_match(1) = swap_match;
 
@@ -556,12 +559,12 @@ TEST_F(P4WriteRequestDifferTest, TestModifyAndAdd) {
       test_differ.Compare(&deletions_, &additions_, &modified_, &unchanged_));
   ASSERT_EQ(0, deletions_.updates_size());
   ASSERT_EQ(1, additions_.updates_size());
-  p4::Update expected_update = new_request_.updates(1);
-  expected_update.set_type(p4::Update::INSERT);
+  ::p4::v1::Update expected_update = new_request_.updates(1);
+  expected_update.set_type(::p4::v1::Update::INSERT);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, additions_.updates(0)));
   ASSERT_EQ(1, modified_.updates_size());
   expected_update = new_request_.updates(2);
-  expected_update.set_type(p4::Update::MODIFY);
+  expected_update.set_type(::p4::v1::Update::MODIFY);
   EXPECT_TRUE(msg_differencer_.Compare(expected_update, modified_.updates(0)));
   ASSERT_EQ(1, unchanged_.updates_size());
   EXPECT_TRUE(
@@ -573,9 +576,9 @@ TEST_F(P4WriteRequestDifferTest, TestIgnoreUpdateType) {
   SetUpTestRequest(three_text_updates_, &new_request_);
   ASSERT_EQ(3, new_request_.updates_size());
   old_request_ = new_request_;
-  new_request_.mutable_updates(0)->set_type(p4::Update::MODIFY);
-  new_request_.mutable_updates(1)->set_type(p4::Update::DELETE);
-  new_request_.mutable_updates(2)->set_type(p4::Update::UNSPECIFIED);
+  new_request_.mutable_updates(0)->set_type(::p4::v1::Update::MODIFY);
+  new_request_.mutable_updates(1)->set_type(::p4::v1::Update::DELETE);
+  new_request_.mutable_updates(2)->set_type(::p4::v1::Update::UNSPECIFIED);
 
   P4WriteRequestDiffer test_differ(old_request_, new_request_);
   EXPECT_OK(

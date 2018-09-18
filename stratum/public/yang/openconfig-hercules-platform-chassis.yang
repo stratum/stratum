@@ -1,0 +1,178 @@
+submodule openconfig-hercules-platform-chassis {
+
+  yang-version "1";
+
+  belongs-to openconfig-hercules-platform {
+    prefix "herc-platform";
+  }
+
+  // import some basic types
+  import openconfig-platform { prefix oc-platform; }
+  import openconfig-alarm-types { prefix oc-alarm-types; }
+  import openconfig-types { prefix oc-types; }
+  import openconfig-extensions { prefix oc-ext; }
+
+  // meta
+  organization
+    "OpenConfig Hercules Working Group";
+
+  contact
+    "openconfig-hercules@googlegroups.com";
+
+  description
+    "This submodule defines schema extensions to the
+    OpenConfig platform model for a chassis component in the
+    Hercules switch profile.";
+
+  oc-ext:openconfig-version "0.2.0";
+
+  revision 2017-12-20 {
+    description
+      "Initial version";
+    reference "0.2.0";
+  }
+
+  // extension statements
+
+  // feature statements
+
+  // identity statements
+  identity PLATFORM_TYPE {
+    description
+      "Base identity for platform variants of the vendor-agnostic
+      switch";
+  }
+
+  identity GENERIC {
+    base PLATFORM_TYPE;
+    description
+      "Generic platform type";
+  }
+
+  // typedef statements
+
+  // grouping statements
+
+  grouping hercules-chassis-asic-config {
+    description
+      "Configuration data specific to a partcular vendor or
+      ASIC";
+  }
+
+  grouping hercules-chassis-alarms-state {
+    description
+      "Chassis-level alarm operational state data";
+
+    leaf status {
+      type boolean;
+      description
+        "The alarm status is false, until the alarm is raised or asserted,
+        at which point it is updated to true.";
+    }
+
+    leaf time-created {
+      type oc-types:timeticks64;
+      description
+        "The time at which the alarm was raised by the system.
+        This value is expressed as nanoseconds since the Unix Epoch";
+    }
+
+    leaf info {
+      type string;
+      description
+        "Text information accompanying the alarm to provide further
+        information.";
+    }
+
+    leaf severity {
+      type identityref {
+        base oc-alarm-types:OPENCONFIG_ALARM_SEVERITY;
+      }
+      description
+        "The severity level indicating the criticality and impact
+        of the alarm";
+    }
+  }
+
+  grouping hercules-chassis-alarms-structure {
+    description
+      "Structural nodes for the list of switch alarms";
+
+    container alarms {
+      config false;
+
+      description
+        "Enclosing container for list of switch alarms.";
+
+      container memory-error {
+        description
+          "This alarm indicates that the switch software has detected
+          a physical memory error.";
+
+        uses hercules-chassis-alarms-state;
+      }
+
+      container flow-programming-exception {
+        description
+          "This alarm indicates that an error has been detected when
+          trying to complete a flow programming operation.";
+
+        uses hercules-chassis-alarms-state;
+      }
+    }
+  }
+
+  grouping hercules-chassis-config {
+    description
+      "Configuration data for vendor-agnostic switch chassis
+      components";
+
+    leaf platform {
+      type identityref {
+        base PLATFORM_TYPE;
+      }
+      description
+        "Platform type associated with the chassis component";
+    }
+  }
+
+  grouping hercules-chassis-state {
+    description
+      "Operational state data for vendor-agnostic switch chassis
+      components";
+
+  }
+
+  // data definition statements
+
+  // augment statements
+  augment "/oc-platform:components/oc-platform:component/" +
+    "oc-platform:chassis/oc-platform:config" {
+    description
+      "Configuration data for chassis";
+
+    uses hercules-chassis-config;
+  }
+
+  augment "/oc-platform:components/oc-platform:component/" +
+    "oc-platform:chassis/oc-platform:state" {
+    description
+      "Operational state data for chassis";
+
+    uses hercules-chassis-config;
+    uses hercules-chassis-state;
+  }
+
+  augment "/oc-platform:components/oc-platform:component/" +
+    "oc-platform:chassis" {
+    description
+      "Augments alarms data in base chassis model.";
+
+    uses hercules-chassis-alarms-structure;
+  }
+
+  // rpc statements
+
+  // notification statements
+
+}

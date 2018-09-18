@@ -36,9 +36,54 @@ sc_proto_lib(
     name = "common_flow_entry_proto",
     hdrs = ["common_flow_entry.proto"],
     deps = [
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
+    ],
+)
+
+sc_proto_lib(
+    name = "forwarding_pipeline_configs_proto",
+    hdrs = ["forwarding_pipeline_configs.proto"],
+    deps = [
+        "//sandblaze/p4lang:p4runtime_v1_proto",
+    ],
+)
+
+sc_cc_lib(
+    name = "p4_action_mapper",
+    srcs = ["p4_action_mapper.cc"],
+    hdrs = ["p4_action_mapper.h"],
+    deps = [
+        ":p4_info_manager",
+        ":p4_pipeline_config_proto",
+        ":p4_table_map_proto",
+        ":utils",
+        "//platforms/networking/hercules/lib:macros",
+        "//absl/container:flat_hash_map",
+        "//absl/memory",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//util/gtl:map_util",
+        "//util/gtl:stl_util",
+    ],
+)
+
+sc_cc_test(
+    name = "p4_action_mapper_test",
+    srcs = ["p4_action_mapper_test.cc"],
+    deps = [
+        ":p4_action_mapper",
+        ":p4_info_manager_mock",
+        ":p4_pipeline_config_proto",
+        ":p4_table_map_proto",
+        ":testdata",
+        "//platforms/networking/hercules/lib:utils",
+        "//platforms/networking/hercules/lib/test_utils:matchers",
+        "//testing/base/public:gunit_main_no_google3",
+        "//absl/memory",
+        "//absl/strings",
+        "//sandblaze/p4lang:p4info_v1_proto",
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
+        "//util/gtl:map_util",
     ],
 )
 
@@ -50,11 +95,12 @@ sc_cc_lib(
         ":p4_pipeline_config_proto",
         ":p4_table_map_proto",
         ":p4_write_request_differ",
+        ":utils",
         "//base",
         "//absl/memory",
         "//absl/strings",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -78,10 +124,11 @@ sc_cc_test(
         "//base",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
         "//util/gtl:map_util",
     ],
@@ -96,7 +143,7 @@ sc_cc_lib(
         "//base",
         "//absl/strings",
         "//protobuf",
-        "//sandblaze/p4lang:p4info_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -131,7 +178,7 @@ sc_cc_test(
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//absl/strings",
-        "//sandblaze/p4lang:p4info_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
         "//stratum/lib:utils",
         "//stratum/public/proto:p4_table_defs_proto",
     ],
@@ -144,9 +191,10 @@ sc_cc_lib(
     deps = [
         ":common_flow_entry_proto",
         ":p4_table_map_proto",
+        "//base",
         "//absl/memory",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
@@ -159,43 +207,10 @@ sc_cc_test(
     deps = [
         ":p4_match_key",
         "//testing/base/public:gunit_main_no_google3",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/public/lib:error",
-    ],
-)
-
-sc_cc_lib(
-    name = "p4_runtime_interface",
-    srcs = ["p4_runtime_interface.cc"],
-    hdrs = ["p4_runtime_interface.h"],
-    deps = [
-        # The p4_device_config_proto rule contains symbols that are needed
-        # by the embedded p4lang prebuilt.
-        "//sandblaze/p4lang:p4_device_config_proto",
-        "//sandblaze/p4lang:util",
-        "//sandblaze/prebuilt/p4lang:vans-p4lang-pi",
-    ],
-)
-
-sc_cc_lib(
-    name = "p4_runtime_mock",
-    testonly = 1,
-    hdrs = ["p4_runtime_mock.h"],
-    arches = HOST_ARCHES,
-    deps = [
-        ":p4_runtime_interface",
-        "//testing/base/public:gunit_no_google3",
-    ],
-)
-
-sc_cc_lib(
-    name = "p4_runtime_real",
-    srcs = ["p4_runtime_real.cc"],
-    hdrs = ["p4_runtime_real.h"],
-    deps = [
-        ":p4_runtime_interface",
     ],
 )
 
@@ -214,7 +229,7 @@ sc_proto_lib(
     deps = [
         ":p4_control_proto",
         ":p4_table_map_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/public/proto:p4_annotation_proto",
     ],
 )
@@ -224,10 +239,15 @@ sc_proto_lib(
     hdrs = ["p4_table_map.proto"],
     deps = [
         ":common_flow_entry_proto",
-        "//sandblaze/p4lang:p4info_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
     ],
+)
+
+filegroup(
+    name = "proto_srcs",
+    srcs = glob(["*.proto"]),
 )
 
 # TODO: Restore this rule if circular dependencies between
@@ -242,7 +262,7 @@ sc_proto_lib(
 #        ":p4_write_request_differ",
 #        "//base",
 #        "//stratum/glue/status",
-#        "//sandblaze/p4lang:p4runtime_proto",
+#        "//sandblaze/p4lang:p4runtime_v1_proto",
 #    ],
 #)
 
@@ -266,9 +286,10 @@ sc_cc_test(
         "//base",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -296,9 +317,10 @@ sc_cc_lib(
         ":utils",
         "//base",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/memory",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue:logging",
         "//stratum/glue/net_util:ipaddress",
         "//stratum/glue/status",
@@ -306,7 +328,6 @@ sc_cc_lib(
         "//stratum/hal/lib/common:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:map_util",
@@ -339,6 +360,7 @@ sc_cc_test(
         "//stratum/glue:logging",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -349,7 +371,7 @@ sc_cc_lib(
     deps = [
         "//base",
         "//protobuf",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:macros",
@@ -364,9 +386,10 @@ sc_cc_test(
         ":p4_write_request_differ",
         "//testing/base/public:gunit_main_no_google3",
         "//protobuf",
-        "//sandblaze/p4lang:p4runtime_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -376,8 +399,14 @@ sc_cc_lib(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
-        ":p4_runtime_interface",
+        ":p4_pipeline_config_proto",
+        ":p4_table_map_proto",
+        "//platforms/networking/hercules/lib:macros",
+        "//platforms/networking/hercules/public/lib:error",
         "//absl/strings",
+        "//absl/strings:str_format",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//util/gtl:map_util",
     ],
 )
 
@@ -387,13 +416,16 @@ sc_cc_test(
         "utils_test.cc",
     ],
     deps = [
-        ":p4_runtime_mock",
+        ":p4_pipeline_config_proto",
+        ":p4_table_map_proto",
         ":testdata",
         ":utils",
+        "//platforms/networking/hercules/lib/test_utils:matchers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/strings",
-        "//sandblaze/prebuilt/p4lang:vans-p4lang-pi",
+        "//sandblaze/p4lang:p4info_v1_proto",
         "//stratum/lib:utils",
+        "//util/gtl:map_util",
     ],
 )
 

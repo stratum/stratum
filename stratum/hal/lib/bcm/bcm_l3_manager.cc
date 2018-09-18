@@ -26,17 +26,22 @@ namespace stratum {
 namespace hal {
 namespace bcm {
 
-BcmL3Manager::BcmL3Manager(BcmSdkInterface* bcm_sdk_interface, int unit)
+BcmL3Manager::BcmL3Manager(BcmSdkInterface* bcm_sdk_interface,
+                           BcmTableManager* bcm_table_manager, int unit)
     : router_intf_ref_count_(),
-      bcm_sdk_interface_(CHECK_NOTNULL(bcm_sdk_interface)),
+      bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
+      bcm_table_manager_(ABSL_DIE_IF_NULL(bcm_table_manager)),
       node_id_(0),
-      unit_(unit) {}
+      unit_(unit),
+      default_drop_intf_(-1) {}
 
 BcmL3Manager::BcmL3Manager()
     : router_intf_ref_count_(),
       bcm_sdk_interface_(nullptr),
+      bcm_table_manager_(nullptr),
       node_id_(0),
-      unit_(-1) {}
+      unit_(-1),
+      default_drop_intf_(-1) {}
 
 BcmL3Manager::~BcmL3Manager() {}
 
@@ -45,6 +50,10 @@ BcmL3Manager::~BcmL3Manager() {}
   node_id_ = node_id;  // Save node_id ASAP to ensure all the methods can refer
                        // to correct ID in the messages/errors.
 
+  if (default_drop_intf_ < 0) {
+    ASSIGN_OR_RETURN(default_drop_intf_,
+                     bcm_sdk_interface_->FindOrCreateL3DropIntf(unit_));
+  }
   // TODO: Any other thing we need to do as part of config push?
 
   return ::util::OkStatus();
@@ -68,40 +77,6 @@ BcmL3Manager::~BcmL3Manager() {}
   router_intf_ref_count_.clear();
   return ::util::OkStatus();
 }
-
-namespace {
-
-// A helper to find the sorted vector of the member egress intf ids of an
-// ECMP group. The output vector is going to have the following format:
-// [a,...,a,b,...,b,c,...,c,...] where each egress intf id is repeated based on
-// its weight.
-::util::StatusOr<std::vector<int>> FindEcmpGroupMembers(
-    const BcmMultipathNexthop& nexthop) {
-  if (nexthop.members_size() == 0) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Zero member for group: " << nexthop.ShortDebugString() << ".";
-  }
-  std::vector<int> member_ids;
-  for (const auto& member : nexthop.members()) {
-    if (member.weight() == 0) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Zero weight: " << nexthop.ShortDebugString() << ".";
-    }
-    if (member.egress_intf_id() <= 0) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Invalid member egress_intf_id: " << nexthop.ShortDebugString()
-             << ".";
-    }
-    for (size_t i = 0; i < member.weight(); ++i) {
-      member_ids.push_back(member.egress_intf_id());
-    }
-  }
-  std::sort(member_ids.begin(), member_ids.end());  // sort the member ids
-
-  return member_ids;
-}
-
-}  // namespace
 
 ::util::StatusOr<int> BcmL3Manager::FindOrCreateNonMultipathNexthop(
     const BcmNonMultipathNexthop& nexthop) {
@@ -345,6 +320,17 @@ namespace {
   return ::util::OkStatus();
 }
 
+::util::Status BcmL3Manager::InsertTableEntry(
+    const ::p4::v1::TableEntry& entry) {
+  BcmFlowEntry bcm_flow_entry;
+  RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
+      entry, ::p4::v1::Update::INSERT, &bcm_flow_entry));
+  RETURN_IF_ERROR(InsertLpmOrHostFlow(bcm_flow_entry));
+  RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmL3Manager::InsertLpmOrHostFlow(
     const BcmFlowEntry& bcm_flow_entry) {
   CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
@@ -382,6 +368,17 @@ namespace {
   }
 }
 
+::util::Status BcmL3Manager::ModifyTableEntry(
+    const ::p4::v1::TableEntry& entry) {
+  BcmFlowEntry bcm_flow_entry;
+  RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
+      entry, ::p4::v1::Update::MODIFY, &bcm_flow_entry));
+  RETURN_IF_ERROR(ModifyLpmOrHostFlow(bcm_flow_entry));
+  RETURN_IF_ERROR(bcm_table_manager_->UpdateTableEntry(entry));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmL3Manager::ModifyLpmOrHostFlow(
     const BcmFlowEntry& bcm_flow_entry) {
   const auto bcm_table_type = bcm_flow_entry.bcm_table_type();
@@ -415,6 +412,29 @@ namespace {
   }
 }
 
+::util::Status BcmL3Manager::DeleteTableEntry(
+    const ::p4::v1::TableEntry& entry) {
+  BcmFlowEntry bcm_flow_entry;
+  RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
+      entry, ::p4::v1::Update::DELETE, &bcm_flow_entry));
+  RETURN_IF_ERROR(DeleteLpmOrHostFlow(bcm_flow_entry));
+  RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmL3Manager::UpdateMultipathGroupsForPort(uint32 port_id) {
+  // Generate map from BCM multipath group id to data for all groups which
+  // reference the given port.
+  ASSIGN_OR_RETURN(
+      auto nexthops,
+      bcm_table_manager_->FillBcmMultipathNexthopsWithPort(port_id));
+  for (const auto& nexthop : nexthops) {
+    RETURN_IF_ERROR(ModifyMultipathNexthop(nexthop.first, nexthop.second));
+  }
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmL3Manager::DeleteLpmOrHostFlow(
     const BcmFlowEntry& bcm_flow_entry) {
   CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
@@ -445,8 +465,10 @@ namespace {
 }
 
 std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
-    BcmSdkInterface* bcm_sdk_interface, int unit) {
-  return absl::WrapUnique(new BcmL3Manager(bcm_sdk_interface, unit));
+    BcmSdkInterface* bcm_sdk_interface, BcmTableManager* bcm_table_manager,
+    int unit) {
+  return absl::WrapUnique(
+      new BcmL3Manager(bcm_sdk_interface, bcm_table_manager, unit));
 }
 
 ::util::Status BcmL3Manager::ExtractLpmOrHostKey(
@@ -646,6 +668,32 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
   }
 
   return ::util::OkStatus();
+}
+
+::util::StatusOr<std::vector<int>> BcmL3Manager::FindEcmpGroupMembers(
+    const BcmMultipathNexthop& nexthop) {
+  // If this group has no members, it has been pruned due to member singleton or
+  // trunk ports being down or blocked. Add the default drop interface in that
+  // case.
+  if (!nexthop.members_size()) return std::vector<int>(1, default_drop_intf_);
+  std::vector<int> member_ids;
+  for (const auto& member : nexthop.members()) {
+    if (member.weight() == 0) {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Zero weight: " << nexthop.ShortDebugString() << ".";
+    }
+    if (member.egress_intf_id() <= 0) {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Invalid member egress_intf_id: " << nexthop.ShortDebugString()
+             << ".";
+    }
+    for (size_t i = 0; i < member.weight(); ++i) {
+      member_ids.push_back(member.egress_intf_id());
+    }
+  }
+  std::sort(member_ids.begin(), member_ids.end());  // sort the member ids
+
+  return member_ids;
 }
 
 ::util::Status BcmL3Manager::IncrementRefCount(int router_intf_id) {

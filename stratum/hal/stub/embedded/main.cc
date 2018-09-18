@@ -27,24 +27,26 @@
 #include <string>
 
 #include "base/commandlineflags.h"
+#include "google/protobuf/any.pb.h"
+#include "google/rpc/code.pb.h"
+#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "stratum/hal/lib/common/oc_to_hal_config.h"
+#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
-#include "stratum/public/proto/openconfig.pb.h"
 #include "absl/base/integral_types.h"
 #include "absl/base/macros.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "sandblaze/p4lang/p4/v1/p4runtime.grpc.pb.h"
 #include "util/gtl/map_util.h"
 
 DEFINE_string(url, google::hercules::kLocalHerculesUrl,
@@ -110,8 +112,8 @@ namespace hal {
 namespace stub {
 
 using ClientStreamChannelReaderWriter =
-    ::grpc::ClientReaderWriter<::p4::StreamMessageRequest,
-                               ::p4::StreamMessageResponse>;
+    ::grpc::ClientReaderWriter<::p4::v1::StreamMessageRequest,
+                               ::p4::v1::StreamMessageResponse>;
 using ClientSubscribeReaderWriterInterface =
     std::unique_ptr<::grpc::ClientReaderWriterInterface<
         ::gnmi::SubscribeRequest, ::gnmi::SubscribeResponse>>;
@@ -271,7 +273,7 @@ class HalServiceClient {
   explicit HalServiceClient(const std::string& url)
       : config_monitoring_service_stub_(::gnmi::gNMI::NewStub(
             ::grpc::CreateChannel(url, ::grpc::InsecureChannelCredentials()))),
-        p4_service_stub_(::p4::P4Runtime::NewStub(::grpc::CreateChannel(
+        p4_service_stub_(::p4::v1::P4Runtime::NewStub(::grpc::CreateChannel(
             url, ::grpc::InsecureChannelCredentials()))) {}
 
   void PushOpenConfig(const std::string& oc_device_file) {
@@ -279,11 +281,9 @@ class HalServiceClient {
     ::gnmi::SetResponse resp;
     ::grpc::ClientContext context;
     auto* replace = req.add_replace();
-    replace->mutable_path()->add_element("/");
-    replace->mutable_value()->set_type(::gnmi::PROTO);
     ::oc::Device oc_device;
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
-    oc_device.SerializeToString(replace->mutable_value()->mutable_value());
+    oc_device.SerializeToString(replace->mutable_val()->mutable_bytes_val());
     CALL_RPC_AND_CHECK_RESULTS(config_monitoring_service_stub_, Set, context,
                                req, resp, ToString);
   }
@@ -297,13 +297,14 @@ class HalServiceClient {
       return;
     }
 
-    ::p4::SetForwardingPipelineConfigRequest req;
-    ::p4::SetForwardingPipelineConfigResponse resp;
+    ::p4::v1::SetForwardingPipelineConfigRequest req;
+    ::p4::v1::SetForwardingPipelineConfigResponse resp;
     ::grpc::ClientContext context;
     req.set_device_id(node_id);
     req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
-    req.set_action(::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+    req.set_action(
+        ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(
         p4_info_file, req.mutable_config()->mutable_p4info()));
     LOG_RETURN_IF_ERROR(
@@ -321,8 +322,8 @@ class HalServiceClient {
       return;
     }
 
-    ::p4::WriteRequest req;
-    ::p4::WriteResponse resp;
+    ::p4::v1::WriteRequest req;
+    ::p4::v1::WriteResponse resp;
     ::grpc::ClientContext context;
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(write_request_file, &req));
     req.set_device_id(node_id);
@@ -339,13 +340,13 @@ class HalServiceClient {
     }
 
     ::grpc::ClientContext context;
-    ::p4::ReadRequest req;
-    ::p4::ReadResponse resp;
+    ::p4::v1::ReadRequest req;
+    ::p4::v1::ReadResponse resp;
     req.set_device_id(node_id);
     req.add_entities()->mutable_table_entry();
     req.add_entities()->mutable_action_profile_group();
     req.add_entities()->mutable_action_profile_member();
-    std::unique_ptr<::grpc::ClientReader<::p4::ReadResponse>> reader =
+    std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
         p4_service_stub_->Read(&context, req);
     while (reader->Read(&resp)) {
       LOG(INFO) << "Read the following entities:\n" << resp.DebugString();
@@ -359,9 +360,9 @@ class HalServiceClient {
 
   static void* TxPacket(void* arg) {
     TxThreadData* data = static_cast<TxThreadData*>(arg);
-    ClientStreamChannelReaderWriter* stream = CHECK_NOTNULL(data->stream);
-    P4TableMapper* p4_table_mapper = CHECK_NOTNULL(data->p4_table_mapper);
-    ::p4::StreamMessageRequest req;
+    ClientStreamChannelReaderWriter* stream = ABSL_DIE_IF_NULL(data->stream);
+    P4TableMapper* p4_table_mapper = ABSL_DIE_IF_NULL(data->p4_table_mapper);
+    ::p4::v1::StreamMessageRequest req;
     switch (test_packet_type) {
       case LLDP:
         req.mutable_packet()->set_payload(
@@ -418,8 +419,8 @@ class HalServiceClient {
     //    it will be either master or slave.
     // 2- Listen to all the packets received from the switch. And loops the
     //    packets back to the switch.
-    ::p4::StreamMessageRequest req;
-    ::p4::StreamMessageResponse resp;
+    ::p4::v1::StreamMessageRequest req;
+    ::p4::v1::StreamMessageResponse resp;
     req.mutable_arbitration()->set_device_id(node_id);
     req.mutable_arbitration()->mutable_election_id()->set_high(
         absl::Uint128High64(election_id));
@@ -438,21 +439,16 @@ class HalServiceClient {
       // and before being able to use it we need to push configs to it. So read
       // the config from the file and push it to P4TableMapper before doing
       // any packet I/O.
-      OpenConfigToHalConfigProtoConverter converter;
       ::oc::Device oc_device;
       LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
-      if (!converter.IsCorrectProtoDevice(oc_device)) {
-        LOG(ERROR) << "::oc::Device proto is invalid.";
-        return;
-      }
-      auto ret = converter.DeviceToChassisConfig(oc_device);
+      auto ret = OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
       if (!ret.ok()) {
         LOG(ERROR) << "Failed to convert ::oc::Device to ChassisConfig: "
                    << ret.status().error_message();
         return;
       }
       ChassisConfig chassis_config = ret.ValueOrDie();
-      ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+      ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
       LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(
           p4_info_file, forwarding_pipeline_config.mutable_p4info()));
       LOG_RETURN_IF_ERROR(ReadFileToString(
@@ -479,13 +475,13 @@ class HalServiceClient {
     bool exit = false;
     while (stream->Read(&resp)) {
       switch (resp.update_case()) {
-        case ::p4::StreamMessageResponse::kArbitration: {
+        case ::p4::v1::StreamMessageResponse::kArbitration: {
           master = (resp.arbitration().status().code() == ::google::rpc::OK);
           LOG(INFO) << "Mastership change. I am now "
                     << (master ? "MASTER!" : "SLAVE!");
           break;
         }
-        case ::p4::StreamMessageResponse::kPacket: {
+        case ::p4::v1::StreamMessageResponse::kPacket: {
           // First try to find the ingress port by parsing the packet metadata.
           uint32 ingress_port = 0;
           for (const auto& metadata : resp.packet().metadata()) {
@@ -543,7 +539,10 @@ class HalServiceClient {
           }
           break;
         }
-        case ::p4::StreamMessageResponse::UPDATE_NOT_SET:
+        case ::p4::v1::StreamMessageResponse::kDigest:
+        case ::p4::v1::StreamMessageResponse::kIdleTimeoutNotification:
+        case ::p4::v1::StreamMessageResponse::UPDATE_NOT_SET:
+          // TODO(hercules-dev): Handle kDigest and kIdleTimeoutNotification.
           LOG(ERROR) << "Invalid message received from the switch: "
                      << resp.ShortDebugString();
           break;
@@ -589,7 +588,7 @@ class HalServiceClient {
     req.mutable_subscribe()->set_mode(::gnmi::SubscriptionList::ONCE);
 
     // A map translating port ID into port name.
-    gtl::flat_hash_map<uint64, string> id_to_name;
+    absl::flat_hash_map<uint64, string> id_to_name;
 
     LOG(INFO) << "Sending ONCE subscription: " << req.ShortDebugString();
     if (!stream->Write(req)) {
@@ -740,7 +739,7 @@ class HalServiceClient {
 
  protected:
   std::unique_ptr<::gnmi::gNMI::Stub> config_monitoring_service_stub_;
-  std::unique_ptr<::p4::P4Runtime::Stub> p4_service_stub_;
+  std::unique_ptr<::p4::v1::P4Runtime::Stub> p4_service_stub_;
   // Synchronizes Write method in two streaming channels.
   static absl::Mutex lock_;
 };

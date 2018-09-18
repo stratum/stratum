@@ -50,6 +50,9 @@ class BcmSdkMock : public BcmSdkInterface {
       ::util::StatusOr<int>(std::unique_ptr<ChannelWriter<LinkscanEvent>>,
                             int priority));
   MOCK_METHOD1(UnregisterLinkscanEventWriter, ::util::Status(int id));
+  MOCK_METHOD2(GetPortLinkscanMode,
+               ::util::StatusOr<BcmPortOptions::LinkscanMode>(int unit,
+                                                              int port));
   MOCK_METHOD2(SetMtu, ::util::Status(int unit, int mtu));
   MOCK_METHOD3(FindOrCreateL3RouterIntf,
                ::util::StatusOr<int>(int unit, uint64 router_mac, int vlan));
@@ -120,13 +123,14 @@ class BcmSdkMock : public BcmSdkInterface {
                ::util::Status(int unit, int vrf, uint32 ipv4));
   MOCK_METHOD3(DeleteL3HostIpv6,
                ::util::Status(int unit, int vrf, const std::string& ipv6));
-  MOCK_METHOD4(AddMyStationEntry,
-               ::util::StatusOr<int>(int unit, int vlan, uint64 dst_mac,
-                                     int priority));
+  MOCK_METHOD6(AddMyStationEntry,
+               ::util::StatusOr<int>(int unit, int priority, int vlan,
+                                     int vlan_mask, uint64 dst_mac,
+                                     uint64 dst_mac_mask));
   MOCK_METHOD2(DeleteMyStationEntry, ::util::Status(int unit, int station_id));
   MOCK_METHOD2(DeleteL2EntriesByVlan, ::util::Status(int unit, int vlan));
   MOCK_METHOD2(AddVlanIfNotFound, ::util::Status(int unit, int vlan));
-  MOCK_METHOD2(DeleteVlan, ::util::Status(int unit, int vlan));
+  MOCK_METHOD2(DeleteVlanIfFound, ::util::Status(int unit, int vlan));
   MOCK_METHOD6(ConfigureVlanBlock,
                ::util::Status(int unit, int vlan, bool block_broadcast,
                               bool block_known_multicast,

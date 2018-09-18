@@ -65,5 +65,7 @@ cc_test(
         "//stratum:status_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
     ],
 )

@@ -44,12 +44,13 @@ class BcmL3ManagerMock : public BcmL3Manager {
                               const BcmMultipathNexthop& nexthop));
   MOCK_METHOD1(DeleteNonMultipathNexthop, ::util::Status(int egress_intf_id));
   MOCK_METHOD1(DeleteMultipathNexthop, ::util::Status(int egress_intf_id));
-  MOCK_METHOD1(InsertLpmOrHostFlow,
-               ::util::Status(const BcmFlowEntry& bcm_flow_entry));
-  MOCK_METHOD1(ModifyLpmOrHostFlow,
-               ::util::Status(const BcmFlowEntry& bcm_flow_entry));
-  MOCK_METHOD1(DeleteLpmOrHostFlow,
-               ::util::Status(const BcmFlowEntry& bcm_flow_entry));
+  MOCK_METHOD1(InsertTableEntry,
+               ::util::Status(const ::p4::v1::TableEntry& entry));
+  MOCK_METHOD1(ModifyTableEntry,
+               ::util::Status(const ::p4::v1::TableEntry& entry));
+  MOCK_METHOD1(DeleteTableEntry,
+               ::util::Status(const ::p4::v1::TableEntry& entry));
+  MOCK_METHOD1(UpdateMultipathGroupsForPort, ::util::Status(uint32 port_id));
 };
 
 }  // namespace bcm

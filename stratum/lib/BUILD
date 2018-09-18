@@ -54,6 +54,7 @@ sc_cc_test(
         ":macros",
         "//testing/base/public:gunit_main_no_google3",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -93,6 +94,7 @@ sc_cc_test(
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -122,9 +124,10 @@ sc_cc_test(
         ":utils",
         "//base",
         "//testing/base/public:gunit_no_google3",
-        "//sandblaze/p4lang:p4runtime_grpc_proto",
+        "//sandblaze/p4lang:p4runtime_v1_proto",
         "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
-        "//stratum/public/proto:hal_grpc_proto",
     ],
 )

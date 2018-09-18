@@ -50,12 +50,31 @@ constexpr uint16 kArpVlan = 4050;
 constexpr uint64 kCpuPortId = 0xFFFFFFFD;
 
 // Constant broadcast MAC.
-constexpr uint64 kBroadcastMac = 0xFFFFFFFFFFFF;
+constexpr uint64 kBroadcastMac = 0xFFFFFFFFFFFFULL;
+
+// The dst_mac_mask that matches all but multicast packets.
+constexpr uint64 kNonMulticastDstMacMask = 0x010000000000ULL;
 
 // Names of the packet in and packet out controller metadata preambles in
 // P4Info.
 constexpr char kIngressMetadataPreambleName[] = "packet_in";
 constexpr char kEgressMetadataPreambleName[] = "packet_out";
+
+// Ethertype (L3 protocol) values specified in IEEE 802.3.
+// Source:
+//   https://en.wikipedia.org/wiki/EtherType.
+constexpr uint16 kEtherTypeIPv4 = 0x0800;
+constexpr uint16 kEtherTypeIPv6 = 0x86dd;
+constexpr uint16 kEtherTypeArp = 0x0806;
+
+// L4 IP Protocol Values specified in RFC 5237 and RFC 7045.
+// Source:
+//   https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+constexpr uint8 kIpProtoIcmp = 1;
+constexpr uint8 kIpProtoIPv6Icmp = 58;
+constexpr uint8 kIpProtoTcp = 6;
+constexpr uint8 kIpProtoUdp = 17;
+constexpr uint8 kIpProtoGre = 47;
 
 }  // namespace hal
 }  // namespace stratum

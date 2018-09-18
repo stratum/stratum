@@ -68,7 +68,7 @@ config_setting(
 config_setting(
     name = "stratum_x86",
     values = {
-        "crosstool_top": "//crosstool:stable",
+        "crosstool_top": "//unsupported_toolchains/crosstoolng_planetx86",
         "copt": "-DSTRATUM_ARCH_X86",
     },
 )

@@ -23,6 +23,7 @@
 
 #include "google/protobuf/util/message_differencer.h"
 #include "testing/base/public/gmock.h"
+#include "testing/base/public/gmock_utils/status-matchers.h"  // NOLINT
 #include "testing/base/public/gunit.h"
 
 namespace stratum {

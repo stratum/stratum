@@ -17,58 +17,66 @@
 
 #include "stratum/hal/lib/p4/utils.h"
 
-#include "stratum/hal/lib/p4/p4_runtime_interface.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/substitute.h"
+#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/lib/error.h"
+#include "util/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
 
-using pi::proto::util::P4ResourceType;
-
-// Decodes a P4 object ID into a human-readable form.
+// Decodes a P4 object ID into a human-readable form.  The high-order byte of
+// the 32-bit ID is a resource type, as specified by the P4Ids::Prefix enum.
 std::string PrintP4ObjectID(int object_id) {
-  P4RuntimeInterface* p4_api = P4RuntimeInterface::instance();
+  int base_id = object_id & 0xffffff;
+  ::p4::config::v1::P4Ids::Prefix resource_type =
+      static_cast<::p4::config::v1::P4Ids::Prefix>((object_id >> 24) & 0xff);
+  std::string resource_name =
+      ::p4::config::v1::P4Ids::Prefix_Name(resource_type);
+  if (resource_name.empty()) resource_name = "INVALID";
+  return absl::StrFormat("%s/0x%x (0x%x)", resource_name.c_str(),
+                         base_id, object_id);
+}
 
-  // In order to spare unit tests from mocking an interface they mostly
-  // don't even know exists, this code assumes that if the runtime API
-  // instance isn't present, then a test is running, and it uses the
-  // special "TEST" resource name.  Tests that don't like this behavior
-  // can set up a mock P4RuntimeInterface.
-  // TODO: During the conversion to the new P4-16 compatible P4Info,
-  // some deprecated P4-14 objects may appear as "INVALID".
-  std::string resource_name = "INVALID";
-  if (p4_api != nullptr) {
-    P4ResourceType resource_type = p4_api->GetResourceTypeFromID(
-        static_cast<pi::proto::util::p4_id_t>(object_id));
-    switch (resource_type) {
-      case P4ResourceType::INVALID:
-      case P4ResourceType::INVALID_MAX:
-        break;
-      case P4ResourceType::ACTION:
-        resource_name = "ACTION";
-        break;
-      case P4ResourceType::TABLE:
-        resource_name = "TABLE";
-        break;
-      case P4ResourceType::ACTION_PROFILE:
-        resource_name = "ACTION_PROFILE";
-        break;
-      case P4ResourceType::COUNTER:
-        resource_name = "COUNTER";
-        break;
-      case P4ResourceType::METER:
-        resource_name = "METER";
-        break;
+// This unnamed namespace hides a function that forms a status string to refer
+// to a P4 object.
+namespace {
+
+std::string AddP4ObjectReferenceString(const std::string& log_p4_object) {
+  std::string referenced_object;
+  if (!log_p4_object.empty()) {
+    referenced_object = absl::Substitute(" referenced by P4 object $0",
+                                         log_p4_object.c_str());
+  }
+  return referenced_object;
+}
+
+}  // namespace
+
+::util::StatusOr<const P4TableMapValue*> GetTableMapValueWithDescriptorCase(
+    const P4PipelineConfig& p4_pipeline_config,
+    const std::string& table_map_key,
+    P4TableMapValue::DescriptorCase descriptor_case,
+    const std::string& log_p4_object) {
+  auto* map_value =
+      gtl::FindOrNull(p4_pipeline_config.table_map(), table_map_key);
+  if (map_value != nullptr) {
+    if (map_value->descriptor_case() != descriptor_case) {
+      return MAKE_ERROR(ERR_INTERNAL)
+          << "P4PipelineConfig descriptor for " << table_map_key
+          << AddP4ObjectReferenceString(log_p4_object)
+          << " does not have the expected descriptor case: "
+          << map_value->ShortDebugString();
     }
   } else {
-    resource_name = "TEST";
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "P4PipelineConfig table map has no descriptor for "
+        << table_map_key << AddP4ObjectReferenceString(log_p4_object);
   }
 
-  // TODO: Put a function into PI/proto/utils to do this conversion
-  // and eliminate the hack below.
-  int base_id = object_id & 0xffffff;
-  return absl::Substitute("$0/$1 ($2)", resource_name.c_str(), base_id,
-                          object_id);
+  return map_value;
 }
 
 }  // namespace hal

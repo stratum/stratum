@@ -14,25 +14,16 @@
 
 #include "stratum/lib/utils.h"
 
-#include <libgen.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <algorithm>
+#include <stdio.h>
 #include <fstream>  // IWYU pragma: keep
-#include <iostream>
-#include <sstream>  // IWYU pragma: keep
 #include <string>
 
+#include "google/protobuf/message.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "absl/strings/substitute.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
-
-using ::google::protobuf::util::MessageDifferencer;
 
 namespace stratum {
 
@@ -206,23 +197,21 @@ std::string BaseName(const std::string& path) {
   return base;
 }
 
-// TODO: At the moment this function will not work well for
+// TODO(aghaffar): At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
-bool ProtoLess(const ::google::protobuf::Message& m1,
-               const ::google::protobuf::Message& m2) {
+bool ProtoLess(const protobuf::Message& m1, const protobuf::Message& m2) {
   return m1.SerializeAsString() < m2.SerializeAsString();
 }
 
-bool ProtoEqual(const ::google::protobuf::Message& m1,
-                const ::google::protobuf::Message& m2) {
+bool ProtoEqual(const protobuf::Message& m1, const protobuf::Message& m2) {
   MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
 }
 
-// TODO: At the moment this function will not work well for
+// TODO(aghaffar): At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
-size_t ProtoHash(const ::google::protobuf::Message& m) {
+size_t ProtoHash(const protobuf::Message& m) {
   std::hash<std::string> string_hasher;
   std::string s;
   m.SerializeToString(&s);

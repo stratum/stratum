@@ -20,6 +20,7 @@
 
 #include "base/commandlineflags.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"

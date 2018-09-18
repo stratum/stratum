@@ -106,6 +106,13 @@ UdevEventHandler::~UdevEventHandler() {
   return perform_update;
 }
 
+void UdevEventHandler::AddUpdateCallback(
+    std::function<void(::util::Status)> callback) {
+  absl::MutexLock lock(&udev_lock_);
+  while (executing_callback_) udev_cond_var_.Wait(&udev_lock_);
+  update_callback_ = std::move(callback);
+}
+
 ::util::Status UdevEventHandler::RegisterEventCallback(
     UdevEventCallback* callback) {
   absl::MutexLock lock(&udev_lock_);
@@ -282,8 +289,13 @@ void UdevEventHandler::UdevMonitorLoop() {
     // We release udev_lock_ while executing this callback. This enables
     // callbacks to register or unregister other callbacks (but not
     // themselves, thanks to executing_callback_).
-    // TODO: Handle errors in callbacks.
-    callback_to_execute->HandleUdevEvent(action_to_send).IgnoreError();
+    ::util::Status result =
+        callback_to_execute->HandleUdevEvent(action_to_send);
+    if (!result.ok()) {
+      LOG(ERROR) << "A callback failed for a udev event of type '"
+                 << action_to_send << "' with status " << result;
+    }
+    if (update_callback_) update_callback_(result);
     {
       absl::MutexLock lock(&udev_lock_);
       executing_callback_ = nullptr;

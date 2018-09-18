@@ -1,0 +1,1140 @@
+// oc is generated as a protobuf representation of a YANG schema.
+//
+syntax = "proto3";
+
+package oc;
+
+import "google/protobuf/any.proto";
+import "platforms/networking/hercules/public/proto/openconfig/old/ywrappers.proto";
+
+// Device represents the /device YANG schema element.
+message Device {
+  Components components = 1;                   //[(yext.path) = ""];
+  Interfaces interfaces = 2;                   //[(yext.path) = ""];
+  HerculesExtensions hercules_extensions = 3;  //[(yext.path) = ""];
+  Lacp lacp = 4;                               //[(yext.path) = ""];
+}
+
+// Components represents the /openconfig-platform/components YANG schema
+// element.
+message Components {
+  message Component {
+    // Components.Component.Config represents the
+    // /openconfig-platform/components/component/config YANG schema element.
+    message Config {
+      ywrappers.Uint32Value slot_id = 1;     //[(yext.path) = "slot-id"];
+      ywrappers.Uint32Value port_id = 2;     //[(yext.path) = "port-id"];
+      ywrappers.Uint32Value channel_id = 3;  //[(yext.path) = "channel-id"];
+      ywrappers.StringValue name = 4;        //[(yext.path) = "name"];
+      ywrappers.StringValue linecard = 5;    //[(yext.path) = "linecard"];
+    }
+
+    // Components.Component.State represents the
+    // /openconfig-platform/components/component/state YANG schema element.
+    message State {
+      ywrappers.Uint32Value slot_id = 1;     //[(yext.path) = "slot-id"];
+      ywrappers.Uint32Value port_id = 2;     //[(yext.path) = "port-id"];
+      ywrappers.Uint32Value channel_id = 3;  //[(yext.path) = "channel-id"];
+      ywrappers.StringValue name = 4;        //[(yext.path) = "name"];
+      ywrappers.StringValue linecard = 5;    //[(yext.path) = "linecard"];
+    }
+
+    // Components.Component.Subcomponents represents the
+    // /openconfig-platform/components/component/subcomponents YANG schema
+    // element.
+    message Subcomponents {
+      // Components.Component.Subcomponents.Subcomponent represents the
+      // /openconfig-platform/components/component/subcomponents/subcomponent
+      // YANG schema element.
+      message Subcomponent {
+        // Components.Component.Subcomponents.Subcomponent.Config represents the
+        // /openconfig-platform/components/component/subcomponents/subcomponent/config
+        // YANG schema element.
+        message Config {
+          ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        }
+        // Components.Component.Subcomponents.Subcomponent.State represents the
+        // /openconfig-platform/components/component/subcomponents/subcomponent/state
+        // YANG schema element.
+        message State {
+          ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        }
+
+        ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        Config config = 2;               //[(yext.path) = "config"];
+        State state = 3;                 //[(yext.path) = "state"];
+      }
+
+      map<string, Subcomponent> subcomponent =
+          1;  //[(yext.path) = "subcomponent"];
+    }
+
+    // Components.Component.Chassis represents the
+    // /openconfig-platform/components/component/chassis YANG schema element.
+    message Chassis {
+      // Components.Component.Chassis.Config represents the
+      // /openconfig-platform/components/component/chassis/config YANG schema
+      // element.
+      message Config {
+        ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        google.protobuf.Any vendor_specific = 2; //[(yext.path) = "vendor-specific"];
+      }
+
+      // Components.Component.Chassis.State represents the
+      // /openconfig-platform/components/component/chassis/state YANG schema
+      // element.
+      message State {
+        ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        google.protobuf.Any vendor_specific = 2; //[(yext.path) = "vendor-specific"];
+      }
+
+      Config config = 1;  //[(yext.path) = "config"];
+      State state = 2;    //[(yext.path) = "state"];
+    }
+
+    // Components.Component.Linecard represents the
+    // /openconfig-platform/components/component/linecard YANG schema element.
+    message Linecard {
+      // Components.Component.Linecard.Config represents the
+      // /openconfig-platform/components/component/linecard/config YANG schema
+      // element.
+      message Config {
+        ywrappers.Uint32Value slot_id = 1;  //[(yext.path) = "slot-id"];
+        GooglePlatformExt.ComponentPowerType power =
+            2;  //[(yext.path) = "power"];
+      }
+
+      // Components.Component.Linecard.State represents the
+      // /openconfig-platform/components/component/linecard/state YANG schema
+      // element.
+      message State {
+        ywrappers.Uint32Value slot_id = 1;  //[(yext.path) = "slot-id"];
+        GooglePlatformExt.ComponentPowerType power =
+            2;  //[(yext.path) = "power"];
+      }
+      Config config = 1;  //[(yext.path) = "config"];
+      State state = 2;    //[(yext.path) = "state"];
+    }
+
+    // Components.Component.Node represents the
+    // /openconfig-platform/components/component/node YANG schema element.
+    message Node {
+      // Components.Component.Node.Config represents the
+      // /openconfig-platform/components/component/node/config YANG schema
+      // element.
+      message Config {
+        // Components.Component.Node.Conf.ConfigParams represents the
+        // /openconfig-platform/components/component/node/conf/config-params
+        // YANG schema element.
+        message ConfigParams {
+          ywrappers.BoolValue l2_enabled = 1;  //[(yext.path) = "l2_enabled"];
+        }
+
+        ConfigParams config_params = 1;      //[(yext.path) = "config-params"];
+        ywrappers.Uint64Value uid = 2;       //[(yext.path) = "uid"];
+        ywrappers.StringValue linecard = 3;  //[(yext.path) = "linecard"];
+        ywrappers.Int32Value index = 4;      //[(yext.path) = "index"];
+        ywrappers.StringValue flow_params = 5;  //[(yext.path) = "flow-params"];
+      }
+
+      // Components.Component.Node.State represents the
+      // /openconfig-platform/components/component/node/state YANG schema
+      // element.
+      message State {
+        // Components.Component.Node.State.ConfigParams represents the
+        // /openconfig-platform/components/component/node/state/config-params
+        // YANG schema element.
+        message ConfigParams {
+          ywrappers.BoolValue l2_enabled = 1;  //[(yext.path) = "l2_enabled"];
+        }
+
+        ConfigParams config_params = 1;      //[(yext.path) = "config-params"];
+        ywrappers.Uint64Value uid = 2;       //[(yext.path) = "uid"];
+        ywrappers.StringValue linecard = 3;  //[(yext.path) = "linecard"];
+        ywrappers.Int32Value index = 4;      //[(yext.path) = "index"];
+        ywrappers.StringValue flow_params = 5;  //[(yext.path) = "flow-params"];
+      }
+
+      State state = 1;    //[(yext.path) = "state"];
+      Config config = 2;  //[(yext.path) = "config"];
+    }
+
+    // Components.Component.Properties represents the
+    // /openconfig-platform/components/component/properties YANG schema element.
+    message Properties {
+      // Components.Component.Properties.Property represents the
+      // /openconfig-platform/components/component/properties/property YANG
+      // schema element.
+      message Property {
+        message Config {
+          // MISSING!!!
+        }
+        message State {
+          // MISSING!!!
+        }
+        Config config = 1;               //[(yext.path) = "config"];
+        State state = 2;                 //[(yext.path) = "state"];
+        ywrappers.StringValue name = 3;  //[(yext.path) = "name"];
+      }
+
+      map<string, Property> property = 1;  //[(yext.path) = "property"];
+    }
+
+    // Components.Component.BreakoutMode represents the
+    // /openconfig-platform/components/component/breakout-mode YANG schema
+    // element.
+    message BreakoutMode {
+      // Components.Component.BreakoutMode.Config represents the
+      // /openconfig-platform/components/component/breakout-mode/config YANG
+      // schema element.
+      message Config {
+        OpenconfigIfEthernet.EthernetSpeed channel_speed =
+            1;  //[(yext.path) = "channel-speed"];
+        ywrappers.Uint8Value num_channels =
+            2;  //[(yext.path) = "num-channels"];
+      }
+
+      // Components.Component.BreakoutMode.State represents the
+      // /openconfig-platform/components/component/breakout-mode/state YANG
+      // schema element.
+      message State {
+        ywrappers.Uint8Value num_channels =
+            1;  //[(yext.path) = "num-channels"];
+        OpenconfigIfEthernet.EthernetSpeed channel_speed =
+            2;  //[(yext.path) = "channel-speed"];
+      }
+
+      Config config = 1;  //[(yext.path) = "config"];
+      State state = 2;    //[(yext.path) = "state"];
+    }
+
+    // Components_Component_Transceiver represents the
+    // /openconfig-platform/components/component/transceiver YANG schema
+    // element.
+    message Transceiver {
+      // Components_Component_Transceiver_Config represents the
+      // /openconfig-platform/components/component/transceiver/config YANG
+      // schema element.
+      message Config {
+        ywrappers.BoolValue enabled = 1;  // [(yext.path)="enabled"];
+        OpenconfigTransportTypes.TransceiverFromFactorType form_factor =
+            2;  // [(yext.path)="form-factor"];
+      }
+
+      // Components_Component_Transceiver_State represents the
+      // /openconfig-platform/components/component/transceiver/state YANG schema
+      // element.
+      message State {
+        enum Present {
+          UNSET = 0;
+          PRESENT = 1;
+          NOT_PRESENT = 2;
+        }
+        ywrappers.StringValue date_code = 1;  // [(yext.path)="date-code"];
+        OpenconfigTransportTypes.OtnApplicationCode otn_compliance_code =
+            2;  // [(yext.path)="otn-compliance-code"];
+        ywrappers.BoolValue enabled = 3;  // [(yext.path)="enabled"];
+        OpenconfigTransportTypes.EthernetPmdType ethernet_compliance_code =
+            4;  // [(yext.path)="ethernet-compliance-code"];
+        ywrappers.BoolValue fault_condition =
+            5;  // [(yext.path)="fault-condition"];
+        ywrappers.StringValue vendor_part = 6;  // [(yext.path)="vendor-part"];
+        ywrappers.StringValue vendor = 7;       // [(yext.path)="vendor"];
+        ywrappers.StringValue serial_no = 8;    // [(yext.path)="serial-no"];
+        Present present = 9;                    // [(yext.path)="present"];
+        ywrappers.Int16Value internal_temp =
+            10;  // [(yext.path)="internal-temp"];
+        OpenconfigTransportTypes.SonetApplicationCode
+            sonet_sdh_compliance_code =
+            11;  // [(yext.path)="sonet-sdh-compliance-code"];
+        ywrappers.StringValue vendor_rev = 12;  // [(yext.path)="vendor-rev"];
+        OpenconfigTransportTypes.TransceiverFromFactorType form_factor =
+            13;  // [(yext.path)="form-factor"];
+        OpenconfigTransportTypes.FiberConnectorType connector_type =
+            14;  // [(yext.path)="connector-type"];
+      }
+
+      // Components_Component_Transceiver_PhysicalChannels represents the
+      // /openconfig-platform/components/component/transceiver/physical-channels
+      // YANG schema element.
+      message PhysicalChannels {
+        // Components_Component_Transceiver_PhysicalChannels_Channel represents
+        // the
+        // /openconfig-platform/components/component/transceiver/physical-channels/channel
+        // YANG schema element.
+        message Channel {
+          // Components_Component_Transceiver_PhysicalChannels_Channel_Config
+          // represents the
+          // /openconfig-platform/components/component/transceiver/physical-channels/channel/config
+          // YANG schema element.
+          message Config {
+            ywrappers.Decimal64Value target_output_power =
+                1;  // [(yext.path)="target-output-power"];
+            ywrappers.Uint16Value index = 2;  // [(yext.path)="index"];
+            ywrappers.StringValue description =
+                3;                             // [(yext.path)="description"];
+            ywrappers.BoolValue tx_laser = 4;  // [(yext.path)="tx-laser"];
+          }
+
+          // Components_Component_Transceiver_PhysicalChannels_Channel_State
+          // represents the
+          // /openconfig-platform/components/component/transceiver/physical-channels/channel/state
+          // YANG schema element.
+          message State {
+            // Components_Component_Transceiver_PhysicalChannels_Channel_State_OutputPower
+            // represents the
+            // /openconfig-platform/components/component/transceiver/physical-channels/channel/state/output-power
+            // YANG schema element.
+            message OutputPower {
+              ywrappers.Decimal64Value avg = 1;      // [(yext.path)="avg"];
+              ywrappers.Decimal64Value min = 2;      // [(yext.path)="min"];
+              ywrappers.Decimal64Value max = 3;      // [(yext.path)="max"];
+              ywrappers.Decimal64Value instant = 4;  // [(yext.path)="instant"];
+            }
+
+            // Components_Component_Transceiver_PhysicalChannels_Channel_State_LaserBiasCurrent
+            // represents the
+            // /openconfig-platform/components/component/transceiver/physical-channels/channel/state/laser-bias-current
+            // YANG schema element.
+            message LaserBiasCurrent {
+              ywrappers.Decimal64Value instant = 1;  // [(yext.path)="instant"];
+              ywrappers.Decimal64Value avg = 2;      // [(yext.path)="avg"];
+              ywrappers.Decimal64Value min = 3;      // [(yext.path)="min"];
+              ywrappers.Decimal64Value max = 4;      // [(yext.path)="max"];
+            }
+
+            // Components_Component_Transceiver_PhysicalChannels_Channel_State_InputPower
+            // represents the
+            // /openconfig-platform/components/component/transceiver/physical-channels/channel/state/input-power
+            // YANG schema element.
+            message InputPower {
+              ywrappers.Decimal64Value instant = 1;  // [(yext.path)="instant"];
+              ywrappers.Decimal64Value avg = 2;      // [(yext.path)="avg"];
+              ywrappers.Decimal64Value min = 3;      // [(yext.path)="min"];
+              ywrappers.Decimal64Value max = 4;      // [(yext.path)="max"];
+            }
+
+            LaserBiasCurrent laser_bias_current =
+                1;  // [(yext.path)="laser-bias-current"];
+            ywrappers.Uint64Value output_frequency =
+                2;  // [(yext.path)="output-frequency"];
+            ywrappers.BoolValue tx_laser = 3;  // [(yext.path)="tx-laser"];
+            ywrappers.Uint16Value index = 4;   // [(yext.path)="index"];
+            ywrappers.Decimal64Value target_output_power =
+                5;  // [(yext.path)="target-output-power"];
+            ywrappers.StringValue description =
+                6;                         // [(yext.path)="description"];
+            InputPower input_power = 7;    // [(yext.path)="input-power"];
+            OutputPower output_power = 8;  // [(yext.path)="output-power"];
+          }
+
+          ywrappers.Uint16Value index = 1;  // [(yext.path)="index"];
+          Config config = 2;                // [(yext.path)="config"];
+          State state = 3;                  // [(yext.path)="state"];
+        }
+        map<int32, Channel> channel = 1;  // [(yext.path)="channel"];
+      }
+
+      Config config = 1;  // [(yext.path)="config"];
+      State state = 2;    // [(yext.path)="state"];
+      PhysicalChannels physical_channels =
+          3;  // [(yext.path)="physical-channels"];
+    }
+
+    OpenconfigPlatformTypes.OpenConfigComponent type = 1;
+    Config config = 2;
+    State state = 3;
+
+    // An attempt to implement YANG extension mechanism. In this case the
+    // Component message is extended to include chassis, node, linecard, port
+    // and channel specific parameters.
+    oneof derived {
+      Chassis chassis = 4;
+      Node node = 5;
+      Linecard linecard = 6;
+      BreakoutMode breakout_mode = 7;
+      Transceiver transceiver = 8;
+    }
+
+    Subcomponents subcomponents = 9;
+    Properties properties = 10;
+  }
+
+  map<string, Component> component =
+      1;  //[(yext.path) = "components/component"];
+}
+
+// Interfaces represents the /openconfig-interfaces/interfaces YANG schema
+// element.
+message Interfaces {
+  // Interfaces.Interface represents the
+  // /openconfig-interfaces/interfaces/interface YANG schema element.
+  message Interface {
+    // Interfaces.Interface.Config represents the
+    // /openconfig-interfaces/interfaces/interface/config YANG schema element.
+    message Config {
+      IetfInterfaces.InterfaceType type = 1;  //[(yext.path) = "type"];
+      ywrappers.Uint16Value mtu = 2;          //[(yext.path) = "mtu"];
+      ywrappers.StringValue hardware_port =
+          3;                                  //[(yext.path) = "hardware-port"];
+      ywrappers.BoolValue enabled = 4;        //[(yext.path) = "enabled"];
+      ywrappers.StringValue name = 5;         //[(yext.path) = "name"];
+      ywrappers.StringValue description = 6;  //[(yext.path) = "description"];
+    }
+
+    // Interfaces.Interface.State represents the
+    // /openconfig-interfaces/interfaces/interface/state YANG schema element.
+    message State {
+      // Interfaces.Interface.State.Counters represents the
+      // /openconfig-interfaces/interfaces/interface/state/counters YANG schema
+      // element.
+      message Counters {
+        ywrappers.Uint64Value in_octets = 1;   //[(yext.path) = "in-octets"];
+        ywrappers.Uint64Value in_errors = 2;   //[(yext.path) = "in-errors"];
+        ywrappers.Uint64Value out_octets = 3;  //[(yext.path) = "out-octets"];
+        ywrappers.Uint64Value out_unicast_pkts =
+            4;  //[(yext.path) = "out-unicast-pkts"];
+        ywrappers.Uint64Value in_discards = 5;  //[(yext.path) = "in-discards"];
+        ywrappers.Uint64Value out_broadcast_pkts =
+            6;  //[(yext.path) = "out-broadcast-pkts"];
+        ywrappers.Uint32Value in_unknown_protos =
+            7;  //[(yext.path) = "in-unknown-protos"];
+        ywrappers.StringValue last_clear = 8;  //[(yext.path) = "last-clear"];
+        ywrappers.Uint64Value out_discards =
+            9;  //[(yext.path) = "out-discards"];
+        ywrappers.Uint64Value out_errors = 10;  //[(yext.path) = "out-errors"];
+        ywrappers.Uint64Value in_broadcast_pkts =
+            11;  //[(yext.path) = "in-broadcast-pkts"];
+        ywrappers.Uint64Value out_multicast_pkts =
+            12;  //[(yext.path) = "out-multicast-pkts"];
+        ywrappers.Uint64Value in_multicast_pkts =
+            13;  //[(yext.path) = "in-multicast-pkts"];
+        ywrappers.Uint64Value in_unicast_pkts =
+            14;  //[(yext.path) = "in-unicast-pkts"];
+      }
+
+      enum AdminStatus {
+        ADMIN_STATUS_UNSET = 0;
+        ADMIN_STATUS_TESTING = 1;
+        ADMIN_STATUS_UP = 2;
+        ADMIN_STATUS_DOWN = 3;
+      }
+      enum OperStatus {
+        OPER_STATUS_UNSET = 0;
+        OPER_STATUS_DORMANT = 1;
+        OPER_STATUS_NOT_PRESENT = 2;
+        OPER_STATUS_LOWER_LAYER_DOWN = 3;
+        OPER_STATUS_UP = 4;
+        OPER_STATUS_DOWN = 5;
+        OPER_STATUS_TESTING = 6;
+        OPER_STATUS_UNKNOWN = 7;
+      }
+      ywrappers.StringValue description = 1;  //[(yext.path) = "description"];
+      ywrappers.Uint32Value last_change = 2;  //[(yext.path) = "last-change"];
+      OperStatus oper_status = 3;             //[(yext.path) = "oper-status"];
+      Counters counters = 4;                  //[(yext.path) = "counters"];
+      ywrappers.StringValue hardware_port =
+          5;                                  //[(yext.path) = "hardware-port"];
+      IetfInterfaces.InterfaceType type = 6;  //[(yext.path) = "type"];
+      AdminStatus admin_status = 7;           //[(yext.path) = "admin-status"];
+      ywrappers.BoolValue enabled = 8;        //[(yext.path) = "enabled"];
+      ywrappers.StringValue name = 9;         //[(yext.path) = "name"];
+      ywrappers.Uint32Value ifindex = 10;     //[(yext.path) = "ifindex"];
+      ywrappers.Uint16Value mtu = 11;         //[(yext.path) = "mtu"];
+    }
+
+    // Interfaces.Interface.Subinterfaces represents the
+    // /openconfig-interfaces/interfaces/interface/subinterfaces YANG schema
+    // element.
+    message Subinterfaces {
+      // Interfaces.Interface.Subinterfaces.Subinterface represents the
+      // /openconfig-interfaces/interfaces/interface/subinterfaces/subinterface
+      // YANG schema element.
+      message Subinterface {
+        // Interfaces.Interface.Subinterfaces.Subinterface.Config represents the
+        // /openconfig-interfaces/interfaces/interface/subinterfaces/subinterface/config
+        // YANG schema element.
+        message Config {
+          ywrappers.Uint32Value index = 1;  //[(yext.path) = "index"];
+          ywrappers.StringValue description =
+              2;                            //[(yext.path) = "description"];
+          ywrappers.BoolValue enabled = 3;  //[(yext.path) = "enabled"];
+          ywrappers.StringValue name = 4;   //[(yext.path) = "name"];
+        }
+
+        // Interfaces.Interface.Subinterfaces.Subinterface.State represents the
+        // /openconfig-interfaces/interfaces/interface/subinterfaces/subinterface/state
+        // YANG schema element.
+        message State {
+          // Interfaces.Interface.Subinterfaces.Subinterface.State.Counters
+          // represents the
+          // /openconfig-interfaces/interfaces/interface/subinterfaces/subinterface/state/counters
+          // YANG schema element.
+          message Counters {
+            ywrappers.StringValue last_clear =
+                1;  //[(yext.path) = "last-clear"];
+            ywrappers.Uint64Value in_octets = 2;  //[(yext.path) = "in-octets"];
+            ywrappers.Uint64Value out_octets =
+                3;  //[(yext.path) = "out-octets"];
+            ywrappers.Uint64Value out_multicast_pkts =
+                4;  //[(yext.path) = "out-multicast-pkts"];
+            ywrappers.Uint64Value in_broadcast_pkts =
+                5;  //[(yext.path) = "in-broadcast-pkts"];
+            ywrappers.Uint64Value in_errors = 6;  //[(yext.path) = "in-errors"];
+            ywrappers.Uint32Value in_unknown_protos =
+                7;  //[(yext.path) = "in-unknown-protos"];
+            ywrappers.Uint64Value in_multicast_pkts =
+                8;  //[(yext.path) = "in-multicast-pkts"];
+            ywrappers.Uint64Value out_errors =
+                9;  //[(yext.path) = "out-errors"];
+            ywrappers.Uint64Value out_discards =
+                10;  //[(yext.path) = "out-discards"];
+            ywrappers.Uint64Value out_unicast_pkts =
+                11;  //[(yext.path) = "out-unicast-pkts"];
+            ywrappers.Uint64Value in_unicast_pkts =
+                12;  //[(yext.path) = "in-unicast-pkts"];
+            ywrappers.Uint64Value in_discards =
+                13;  //[(yext.path) = "in-discards"];
+            ywrappers.Uint64Value out_broadcast_pkts =
+                14;  //[(yext.path) = "out-broadcast-pkts"];
+          }
+
+          enum AdminStatus {
+            ADMIN_STATUS_UNSET = 0;
+            ADMIN_STATUS_TESTING = 1;
+            ADMIN_STATUS_UP = 2;
+            ADMIN_STATUS_DOWN = 3;
+          }
+          enum OperStatus {
+            OPER_STATUS_UNSET = 0;
+            OPER_STATUS_DORMANT = 1;
+            OPER_STATUS_NOT_PRESENT = 2;
+            OPER_STATUS_LOWER_LAYER_DOWN = 3;
+            OPER_STATUS_UP = 4;
+            OPER_STATUS_DOWN = 5;
+            OPER_STATUS_TESTING = 6;
+            OPER_STATUS_UNKNOWN = 7;
+          }
+          ywrappers.StringValue name = 1;     //[(yext.path) = "name"];
+          Counters counters = 2;              //[(yext.path) = "counters"];
+          ywrappers.Uint32Value ifindex = 3;  //[(yext.path) = "ifindex"];
+          ywrappers.Uint32Value last_change =
+              4;  //[(yext.path) = "last-change"];
+          ywrappers.StringValue description =
+              5;                            //[(yext.path) = "description"];
+          AdminStatus admin_status = 6;     //[(yext.path) = "admin-status"];
+          ywrappers.BoolValue enabled = 7;  //[(yext.path) = "enabled"];
+          ywrappers.Uint32Value index = 8;  //[(yext.path) = "index"];
+          OperStatus oper_status = 9;       //[(yext.path) = "oper-status"];
+        }
+
+        Config config = 1;                //[(yext.path) = "config"];
+        State state = 2;                  //[(yext.path) = "state"];
+        ywrappers.StringValue index = 3;  //[(yext.path) = "index"];
+      }
+
+      map<string, Subinterface> subinterface =
+          1;  //[(yext.path) = "subinterface"];
+    }
+
+    // Interfaces.Interface.HoldTime represents the
+    // /openconfig-interfaces/interfaces/interface/hold-time YANG schema
+    // element.
+    message HoldTime {
+      // Interfaces.Interface.HoldTime.Config represents the
+      // /openconfig-interfaces/interfaces/interface/hold-time/config YANG
+      // schema element.
+      message Config {
+        ywrappers.Uint32Value up = 1;    //[(yext.path) = "up"];
+        ywrappers.Uint32Value down = 2;  //[(yext.path) = "down"];
+      }
+      // Interfaces.Interface.HoldTime.State represents the
+      // /openconfig-interfaces/interfaces/interface/hold-time/state YANG schema
+      // element.
+      message State {
+        ywrappers.Uint32Value up = 1;    //[(yext.path) = "up"];
+        ywrappers.Uint32Value down = 2;  //[(yext.path) = "down"];
+      }
+
+      State state = 1;    //[(yext.path) = "state"];
+      Config config = 2;  //[(yext.path) = "config"];
+    }
+
+    // Interfaces.Interface.Ethernet represents the
+    // /openconfig-interfaces/interfaces/interface/ethernet YANG schema element.
+    message Ethernet {
+      // Interfaces.Interface.Ethernet.Config represents the
+      // /openconfig-interfaces/interfaces/interface/ethernet/config YANG schema
+      // element.
+      message Config {
+        enum DuplexMode {
+          UNSET = 0;
+          FULL = 1;
+          HALF = 2;
+        }
+        DuplexMode duplex_mode = 1;  //[(yext.path) = "duplex-mode"];
+        OpenconfigIfEthernet.EthernetSpeed port_speed =
+            2;  //[(yext.path) = "port-speed"];
+        ywrappers.BoolValue enable_flow_control =
+            3;  //[(yext.path) = "enable-flow-control"];
+        ywrappers.StringValue mac_address = 4;  //[(yext.path) = "mac-address"];
+        ywrappers.StringValue aggregate_id = 5;  //[(yext.path)="aggregate-id"];
+        ywrappers.BoolValue auto_negotiate =
+            6;  // [(yext.path)="auto-negotiate"];
+      }
+
+      // Interfaces.Interface.Ethernet.State represents the
+      // /openconfig-interfaces/interfaces/interface/ethernet/state YANG schema
+      // element.
+      message State {
+        // Interfaces.Interface.Ethernet.State.Counters represents the
+        // /openconfig-interfaces/interfaces/interface/ethernet/state/counters
+        // YANG schema element.
+        message Counters {
+          ywrappers.Uint64Value in_crc_errors =
+              1;  //[(yext.path) = "in-crc-errors"];
+          ywrappers.Uint64Value out_mac_control_frames =
+              2;  //[(yext.path) = "out-mac-control-frames"];
+          ywrappers.Uint64Value in_8021q_frames =
+              3;  //[(yext.path) = "in-8021q-frames"];
+          ywrappers.Uint64Value in_jabber_frames =
+              4;  //[(yext.path) = "in-jabber-frames"];
+          ywrappers.Uint64Value in_oversize_frames =
+              5;  //[(yext.path) = "in-oversize-frames"];
+          ywrappers.Uint64Value in_mac_control_frames =
+              6;  //[(yext.path) = "in-mac-control-frames"];
+          ywrappers.Uint64Value out_8021q_frames =
+              7;  //[(yext.path) = "out-8021q-frames"];
+          ywrappers.Uint64Value in_fragment_frames =
+              8;  //[(yext.path) = "in-fragment-frames"];
+          ywrappers.Uint64Value out_mac_pause_frames =
+              9;  //[(yext.path) = "out-mac-pause-frames"];
+          ywrappers.Uint64Value in_mac_pause_frames =
+              10;  //[(yext.path) = "in-mac-pause-frames"];
+        }
+
+        enum DuplexMode {
+          UNSET = 0;
+          HALF = 1;
+          FULL = 2;
+        }
+        ywrappers.BoolValue enable_flow_control =
+            1;                  //[(yext.path) = "enable-flow-control"];
+        Counters counters = 2;  //[(yext.path) = "counters"];
+        ywrappers.Uint32Value effective_speed =
+            3;  //[(yext.path) = "effective-speed"];
+        ywrappers.BoolValue auto_negotiate =
+            4;  //[(yext.path) = "auto-negotiate"];
+        ywrappers.StringValue mac_address = 5;  //[(yext.path) = "mac-address"];
+        DuplexMode duplex_mode = 6;             //[(yext.path) = "duplex-mode"];
+        ywrappers.StringValue hw_mac_address =
+            7;  //[(yext.path) = "hw-mac-address"];
+        OpenconfigIfEthernet.EthernetSpeed port_speed =
+            8;  //[(yext.path) = "port-speed"];
+        ywrappers.StringValue aggregate_id =
+            9;  // [(yext.path)="aggregate-id"];
+      }
+
+      State state = 1;    //[(yext.path) = "state"];
+      Config config = 2;  //[(yext.path) = "config"];
+    }
+    // Interfaces_Interface_Aggregation represents the
+    // /openconfig-interfaces/interfaces/interface/aggregation YANG schema
+    // element.
+    message Aggregation {
+      // Interfaces_Interface_Aggregation_Config represents the
+      // /openconfig-interfaces/interfaces/interface/aggregation/config YANG
+      // schema element.
+      message Config {
+        ywrappers.Uint16Value min_links = 1;  // [(yext.path) = "min-links"];
+        OpenconfigIfAggregate.AggregationType lag_type = 2;
+        //[(yext.path) = "lag-type"];
+      }
+
+      // Interfaces_Interface_Aggregation_State represents the
+      // /openconfig-interfaces/interfaces/interface/aggregation/state YANG
+      // schema element.
+      message State {
+        repeated ywrappers.StringValue member = 1;  // [(yext.path)="member"];
+        ywrappers.Uint32Value lag_speed = 2;  // [(yext.path)="lag-speed"];
+        OpenconfigIfAggregate.AggregationType lag_type =
+            3;                                // [(yext.path)="lag-type"];
+        ywrappers.Uint16Value min_links = 4;  // [(yext.path)="min-links"];
+      }
+
+      State state = 1;    // [(yext.path)="state"];
+      Config config = 2;  // [(yext.path)="config"];
+    }
+
+    // Interfaces.Interface.HerculesInterface represents the
+    // /openconfig-interfaces/interfaces/interface/hercules-interface YANG
+    // schema element.
+    message HerculesInterface {
+      // Interfaces.Interface.HerculesInterface.Config represents the
+      // /openconfig-interfaces/interfaces/interface/hercules-interface/conf
+      // YANG schema element.
+      message Config {
+        ywrappers.Uint64Value uid = 1;          //[(yext.path) = "uid"];
+        ywrappers.StringValue flow_params = 2;  //[(yext.path) = "flow-params"];
+      }
+
+      // Interfaces.Interface.HerculesInterface.State represents the
+      // /openconfig-interfaces/interfaces/interface/hercules-interface/state
+      // YANG schema element.
+      message State {
+        ywrappers.StringValue flow_params = 1;  //[(yext.path) = "flow-params"];
+        ywrappers.Uint64Value uid = 2;          //[(yext.path) = "uid"];
+      }
+
+      State state = 1;    //[(yext.path) = "state"];
+      Config config = 2;  //[(yext.path) = "config"];
+    }
+
+    ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+    Config config = 2;               //[(yext.path) = "config"];
+    State state = 3;                 //[(yext.path) = "state"];
+    HoldTime hold_time = 4;          //[(yext.path) = "hold-time"];
+    Ethernet ethernet = 5;           //[(yext.path) = "ethernet"];
+    HerculesInterface hercules_interface =
+        6;                            //[(yext.path) = "hercules-interface"];
+    Subinterfaces subinterfaces = 7;  //[(yext.path) = "subinterfaces"];
+    Aggregation aggregation = 8;      // [(yext.path)="aggregation"];
+  }
+  map<string, Interface> interface =
+      1;  //[(yext.path) = "interfaces/interface"];
+}
+
+// HerculesExtensions represents the /hercules-extensions/hercules-extensions
+// YANG schema element.
+message HerculesExtensions {
+  // HerculesExtensions.InterfaceFlowParameters represents the
+  // /hercules-extensions/hercules-extensions/interface-flow-parameters YANG
+  // schema element.
+  message InterfaceFlowParameters {
+    // HerculesExtensions.InterfaceFlowParameters.Config represents the
+    // /hercules-extensions/hercules-extensions/interface-flow-parameters/conf
+    // YANG schema element.
+    message Config {
+    }
+
+    // HerculesExtensions.InterfaceFlowParameters.State represents the
+    // /hercules-extensions/hercules-extensions/interface-flow-parameters/state
+    // YANG schema element.
+    message State {
+    }
+
+    // HerculesExtensions.InterfaceFlowParameters.Sets represents the
+    // /hercules-extensions/hercules-extensions/interface-flow-parameters/sets
+    // YANG schema element.
+    message Sets {
+      // HerculesExtensions.InterfaceFlowParameters.Sets.Set represents the
+      // /hercules-extensions/hercules-extensions/interface-flow-parameters/sets/set
+      // YANG schema element.
+      message Set {
+        // HerculesExtensions.InterfaceFlowParameters.Sets.Set.Config represents
+        // the
+        // /hercules-extensions/hercules-extensions/interface-flow-parameters/sets/set/conf
+        // YANG schema element.
+        message Config {
+          ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        }
+
+        // HerculesExtensions.InterfaceFlowParameters.Sets.Set.State represents
+        // the
+        // /hercules-extensions/hercules-extensions/interface-flow-parameters/sets/set/state
+        // YANG schema element.
+        message State {
+          ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        }
+
+        ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        Config config = 2;               //[(yext.path) = "config"];
+        State state = 3;                 //[(yext.path) = "state"];
+      }
+
+      map<string, Set> set = 1;  //[(yext.path) = "set"];
+    }
+
+    Config config = 1;  //[(yext.path) = "config"];
+    State state = 2;    //[(yext.path) = "state"];
+    Sets sets = 3;      //[(yext.path) = "sets"];
+  }
+
+  // HerculesExtensions.NodeFlowParameters represents the
+  // /hercules-extensions/hercules-extensions/node-flow-parameters YANG schema
+  // element.
+  message NodeFlowParameters {
+    // HerculesExtensions.NodeFlowParameters.State represents the
+    // /hercules-extensions/hercules-extensions/node-flow-parameters/state YANG
+    // schema element.
+    message State {
+    }
+
+    // HerculesExtensions.NodeFlowParameters.Config represents the
+    // /hercules-extensions/hercules-extensions/node-flow-parameters/config YANG
+    // schema element.
+    message Config {
+    }
+
+    // HerculesExtensions.NodeFlowParameters.Sets represents the
+    // /hercules-extensions/hercules-extensions/node-flow-parameters/sets YANG
+    // schema element.
+    message Sets {
+      // HerculesExtensions.NodeFlowParameters.Sets.Set represents the
+      // /hercules-extensions/hercules-extensions/node-flow-parameters/sets/set
+      // YANG schema element.
+      message Set {
+        // HerculesExtensions.NodeFlowParameters.Sets.Set.Config represents the
+        // /hercules-extensions/hercules-extensions/node-flow-parameters/sets/set/conf
+        // YANG schema element.
+        message Config {
+          ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        }
+
+        // HerculesExtensions.NodeFlowParameters.Sets.Set.State represents the
+        // /hercules-extensions/hercules-extensions/node-flow-parameters/sets/set/state
+        // YANG schema element.
+        message State {
+          ywrappers.StringValue name = 1;  //[(yext.path) = "name"];
+        }
+
+        State state = 1;                 //[(yext.path) = "state"];
+        ywrappers.StringValue name = 2;  //[(yext.path) = "name"];
+        Config config = 3;               //[(yext.path) = "config"];
+      }
+
+      map<string, Set> set = 1;  //[(yext.path) = "set"];
+    }
+
+    Config config = 1;  //[(yext.path) = "config"];
+    State state = 2;    //[(yext.path) = "state"];
+    Sets sets = 3;      //[(yext.path) = "sets"];
+  }
+
+  // HerculesExtensions.Config represents the
+  // /hercules-extensions/hercules-extensions/config YANG schema element.
+  message Config {
+  }
+
+  // HerculesExtensions.State represents the
+  // /hercules-extensions/hercules-extensions/state YANG schema element.
+  message State {
+  }
+
+  State state = 1;    //[(yext.path) = "hercules-extensions/state"];
+  Config config = 2;  //[(yext.path) = "hercules-extensions/conf"];
+  InterfaceFlowParameters interface_flow_parameters =
+      3;  //[(yext.path) = "hercules-extensions/interface-flow-parameters"];
+  NodeFlowParameters node_flow_parameters =
+      4;  //[(yext.path) = "hercules-extensions/node-flow-parameters"];
+}
+
+// OpenconfigIfEthernet_ETHERNET_SPEED represents the corresponding enumerated
+// node in the YANG schema.
+message OpenconfigIfEthernet {
+  enum EthernetSpeed {
+    UNSET = 0;
+    SPEED_100GB = 1;
+    SPEED_100MB = 2;
+    SPEED_10GB = 3;
+    SPEED_10MB = 4;
+    SPEED_1GB = 5;
+    SPEED_25GB = 6;
+    SPEED_40GB = 7;
+    SPEED_50GB = 8;
+    SPEED_UNKNOWN = 9;
+  }
+}
+
+// GooglePlatformExt_ComponentPowerType represents the corresponding enumerated
+// node in the YANG schema.
+message GooglePlatformExt {
+  enum ComponentPowerType {
+    UNSET = 0;
+    POWER_ENABLED = 1;
+    POWER_DISABLED = 2;
+  }
+}
+
+message OpenconfigPlatformTypes {
+  enum OpenConfigComponent {
+    UNSET = 0;
+    // OpenconfigPlatformTypes_OPENCONFIG_HARDWARE_COMPONENT represents the
+    // corresponding enumerated node in the YANG schema.
+    HW_BACKPLANE = 1;
+    HW_BCM_BASED_CHASSIS = 2;
+    HW_CHANNEL = 3;
+    HW_CHASSIS = 4;
+    HW_CPU = 5;
+    HW_FAN = 6;
+    HW_LINECARD = 7;
+    HW_MODULE = 8;
+    HW_NODE = 9;
+    HW_PORT = 10;
+    HW_POWER_SUPPLY = 11;
+    HW_SENSOR = 12;
+    HW_TRANSCEIVER = 13;
+
+    // OpenconfigPlatformTypes_OPENCONFIG_SOFTWARE_COMPONENT represents the
+    // corresponding enumerated node in the YANG schema.
+    SW_OPERATING_SYSTEM = 100;
+  }
+}
+
+// OpenconfigTransportTypes_FIBER_CONNECTOR_TYPE represents the corresponding
+// enumerated node in the YANG schema.
+message OpenconfigTransportTypes {
+  enum FiberConnectorType {
+    FIBER_CONNECTOR_TYPE_UNSET = 0;
+    FIBER_CONNECTOR_TYPE_LC_CONNECTOR = 1;
+    FIBER_CONNECTOR_TYPE_MPO_CONNECTOR = 2;
+    FIBER_CONNECTOR_TYPE_SC_CONNECTOR = 3;
+  }
+
+  // OTN_APPLICATION_CODE represents the corresponding
+  // enumerated node in the YANG schema.
+  enum OtnApplicationCode {
+    OTN_APPLICATION_CODE_UNSET = 0;
+    OTN_APPLICATION_CODE_OTN_UNDEFINED = 1;
+    OTN_APPLICATION_CODE_P1L1_2D1 = 2;
+    OTN_APPLICATION_CODE_P1L1_2D2 = 3;
+    OTN_APPLICATION_CODE_P1S1_2D2 = 4;
+  }
+
+  // ETHERNET_PMD_TYPE represents the corresponding
+  // enumerated node in the YANG schema.
+  enum EthernetPmdType {
+    ETHERNET_PMD_TYPE_UNSET = 0;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_CLR4 = 1;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_CR4 = 2;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_CWDM4 = 3;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_ER4 = 4;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_LR4 = 5;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_PSM4 = 6;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_SR10 = 7;
+    ETHERNET_PMD_TYPE_ETH_100GBASE_SR4 = 8;
+    ETHERNET_PMD_TYPE_ETH_100G_ACC = 9;
+    ETHERNET_PMD_TYPE_ETH_100G_AOC = 10;
+    ETHERNET_PMD_TYPE_ETH_10GBASE_ER = 11;
+    ETHERNET_PMD_TYPE_ETH_10GBASE_LR = 12;
+    ETHERNET_PMD_TYPE_ETH_10GBASE_LRM = 13;
+    ETHERNET_PMD_TYPE_ETH_10GBASE_SR = 14;
+    ETHERNET_PMD_TYPE_ETH_10GBASE_ZR = 15;
+    ETHERNET_PMD_TYPE_ETH_40GBASE_CR4 = 16;
+    ETHERNET_PMD_TYPE_ETH_40GBASE_ER4 = 17;
+    ETHERNET_PMD_TYPE_ETH_40GBASE_LR4 = 18;
+    ETHERNET_PMD_TYPE_ETH_40GBASE_PSM4 = 19;
+    ETHERNET_PMD_TYPE_ETH_40GBASE_SR4 = 20;
+    ETHERNET_PMD_TYPE_ETH_4X10GBASE_LR = 21;
+    ETHERNET_PMD_TYPE_ETH_4X10GBASE_SR = 22;
+    ETHERNET_PMD_TYPE_ETH_UNDEFINED = 23;
+  }
+
+  // TRANSCEIVER_FORM_FACTOR_TYPE represents the corresponding enumerated node
+  // in the YANG schema.
+  enum TransceiverFromFactorType {
+    TRANSCEIVER_FORM_FACTOR_TYPE_UNSET = 0;
+    TRANSCEIVER_FORM_FACTOR_TYPE_CFP = 1;
+    TRANSCEIVER_FORM_FACTOR_TYPE_CFP2 = 2;
+    TRANSCEIVER_FORM_FACTOR_TYPE_CFP2_ACO = 3;
+    TRANSCEIVER_FORM_FACTOR_TYPE_CFP4 = 4;
+    TRANSCEIVER_FORM_FACTOR_TYPE_NON_PLUGGABLE = 5;
+    TRANSCEIVER_FORM_FACTOR_TYPE_OTHER = 6;
+    TRANSCEIVER_FORM_FACTOR_TYPE_QSFP = 7;
+    TRANSCEIVER_FORM_FACTOR_TYPE_QSFP28 = 8;
+    TRANSCEIVER_FORM_FACTOR_TYPE_SFP = 9;
+    TRANSCEIVER_FORM_FACTOR_TYPE_SFP_PLUS = 10;
+    TRANSCEIVER_FORM_FACTOR_TYPE_X2 = 11;
+    TRANSCEIVER_FORM_FACTOR_TYPE_XFP = 12;
+  }
+
+  // SONET_APPLICATION_CODE represents the corresponding enumerated node in the
+  // YANG schema.
+  enum SonetApplicationCode {
+    SONET_APPLICATION_CODE_UNSET = 0;
+    SONET_APPLICATION_CODE_SONET_UNDEFINED = 1;
+    SONET_APPLICATION_CODE_VSR2000_3R2 = 2;
+    SONET_APPLICATION_CODE_VSR2000_3R3 = 3;
+    SONET_APPLICATION_CODE_VSR2000_3R5 = 4;
+  }
+}
+
+// IetfInterfaces_InterfaceType represents the corresponding enumerated node in
+// the YANG schema.
+message IetfInterfaces {
+  enum InterfaceType {
+    UNSET = 0;
+    // Other types should go here...
+    ETHERNET_CSMACD = 80;
+    // Other types should go here...
+    IEEE_8023_AD_LAG = 125;
+    // Other types should go here...
+  }
+}
+
+// Lacp represents the /openconfig-lacp/lacp YANG schema element.
+message Lacp {
+  // Lacp_Config represents the /openconfig-lacp/lacp/config YANG schema
+  // element.
+  message Config {
+    ywrappers.Uint16Value system_priority =
+        1;  // [(yext.path) = "system-priority"];
+  }
+
+  // Lacp_State represents the /openconfig-lacp/lacp/state YANG schema element.
+  message State {
+    ywrappers.Uint16Value system_priority =
+        1;  // [(yext.path) = "system-priority"];
+  }
+
+  // Lacp_Interfaces represents the /openconfig-lacp/lacp/interfaces YANG schema
+  // element.
+  message Interfaces {
+    // Lacp_Interfaces_Interface represents the
+    // /openconfig-lacp/lacp/interfaces/interface YANG schema element.
+    message Interface {
+      // Lacp_Interfaces_Interface_Config represents the
+      // /openconfig-lacp/lacp/interfaces/interface/config YANG schema element.
+      message Config {
+        ywrappers.StringValue system_id_mac =
+            1;  // [(yext.path) = "system-id-mac"];
+        ywrappers.Uint16Value system_priority =
+            2;                           // [(yext.path) = "system-priority"];
+        ywrappers.StringValue name = 3;  // [(yext.path) = "name"];
+        OpenconfigLacp.LacpPeriodType interval =
+            4;  // [(yext.path) = "interval"];
+        OpenconfigLacp.LacpActivityType lacp_mode =
+            5;  // [(yext.path) = "lacp-mode"];
+      }
+
+      // Lacp_Interfaces_Interface_State represents the
+      // /openconfig-lacp/lacp/interfaces/interface/state YANG schema element.
+      message State {
+        OpenconfigLacp.LacpPeriodType interval =
+            1;  // [(yext.path) = "interval"];
+        OpenconfigLacp.LacpActivityType lacp_mode =
+            2;  // [(yext.path) = "lacp-mode"];
+        ywrappers.StringValue system_id_mac =
+            3;  // [(yext.path) = "system-id-mac"];
+        ywrappers.Uint16Value system_priority =
+            4;                           // [(yext.path) = "system-priority"];
+        ywrappers.StringValue name = 5;  // [(yext.path) = "name"];
+      }
+
+      // Lacp_Interfaces_Interface_Members represents the
+      // /openconfig-lacp/lacp/interfaces/interface/members YANG schema element.
+      message Members {
+        // Lacp_Interfaces_Interface_Members_Member represents the
+        // /openconfig-lacp/lacp/interfaces/interface/members/member YANG schema
+        // element.
+        message Member {
+          // Lacp_Interfaces_Interface_Members_Member_State represents the
+          // /openconfig-lacp/lacp/interfaces/interface/members/member/state
+          // YANG schema element.
+          message State {
+            // Lacp_Interfaces_Interface_Members_Member_State_Counters
+            // represents the
+            // /openconfig-lacp/lacp/interfaces/interface/members/member/state/counters
+            // YANG schema element.
+            message Counters {
+              ywrappers.Uint64Value lacp_rx_errors =
+                  1;  // [(yext.path) = "lacp-rx-errors"];
+              ywrappers.Uint64Value lacp_tx_errors =
+                  2;  // [(yext.path) = "lacp-tx-errors"];
+              ywrappers.Uint64Value lacp_unknown_errors =
+                  3;  // [(yext.path) = "lacp-unknown-errors"];
+              ywrappers.Uint64Value lacp_errors =
+                  4;  // [(yext.path) = "lacp-errors"];
+              ywrappers.Uint64Value lacp_in_pkts =
+                  5;  // [(yext.path) = "lacp-in-pkts"];
+              ywrappers.Uint64Value lacp_out_pkts =
+                  6;  // [(yext.path) = "lacp-out-pkts"];
+            }
+
+            ywrappers.StringValue partner_id =
+                1;  // [(yext.path) = "partner-id"];
+            OpenconfigLacp.LacpActivityType activity =
+                2;  // [(yext.path) = "activity"];
+            ywrappers.BoolValue collecting =
+                3;  // [(yext.path) = "collecting"];
+            ywrappers.StringValue system_id =
+                4;                  // [(yext.path) = "system-id"];
+            Counters counters = 5;  // [(yext.path) = "counters"];
+            ywrappers.BoolValue aggregatable =
+                6;  // [(yext.path) = "aggregatable"];
+            ywrappers.BoolValue distributing =
+                7;  // [(yext.path) = "distributing"];
+            OpenconfigLacp.LacpSynchronizationType synchronization =
+                8;  // [(yext.path) = "synchronization"];
+            ywrappers.Uint16Value oper_key = 9;  // [(yext.path) = "oper-key"];
+            ywrappers.StringValue interface =
+                10;  // [(yext.path) = "interface"];
+            OpenconfigLacp.LacpTimeoutType timeout =
+                11;  // [(yext.path) = "timeout"];
+            ywrappers.Uint16Value partner_key =
+                12;  // [(yext.path) = "partner-key"];
+          }
+
+          ywrappers.StringValue interface = 1;  // [(yext.path) = "interface"];
+          State state = 2;                      // [(yext.path) = "state"];
+        }
+        map<string, Member> member = 1;  // [(yext.path) = "member"];
+      }
+
+      State state = 1;                 // [(yext.path) = "state"];
+      Members members = 2;             // [(yext.path) = "members"];
+      ywrappers.StringValue name = 3;  // [(yext.path) = "name"];
+      Config config = 4;               // [(yext.path) = "config"];
+    }
+
+    map<string, Interface> interface = 1;  // [(yext.path) = "interface"];
+  }
+
+  Config config = 1;          // [(yext.path) = "lacp/config"];
+  State state = 2;            // [(yext.path) = "lacp/state"];
+  Interfaces interfaces = 3;  // [(yext.path) = "lacp/interfaces"];
+}
+
+message OpenconfigLacp {
+  // LacpPeriodType represents the corresponding enumerated node in
+  // the YANG schema.
+  enum LacpPeriodType {
+    LACP_PERIOD_TYPE_UNSET = 0;
+    LACP_PERIOD_TYPE_FAST = 1;
+    LACP_PERIOD_TYPE_SLOW = 2;
+  }
+
+  // LacpActivityType represents the corresponding enumerated node
+  // in the YANG schema.
+  enum LacpActivityType {
+    LACP_ACTIVITY_TYPE_UNSET = 0;
+    LACP_ACTIVITY_TYPE_ACTIVE = 1;
+    LACP_ACTIVITY_TYPE_PASSIVE = 2;
+  }
+
+  // LacpSynchronizationType represents the corresponding
+  // enumerated node in the YANG schema.
+  enum LacpSynchronizationType {
+    LACP_SYNCHRONIZATION_TYPE_UNSET = 0;
+    LACP_SYNCHRONIZATION_TYPE_IN_SYNC = 1;
+    LACP_SYNCHRONIZATION_TYPE_OUT_SYNC = 2;
+  }
+
+  // LacpTimeoutType represents the corresponding enumerated node
+  // in the YANG schema.
+  enum LacpTimeoutType {
+    LACP_TIMEOUT_TYPE_UNSET = 0;
+    LACP_TIMEOUT_TYPE_LONG = 1;
+    LACP_TIMEOUT_TYPE_SHORT = 2;
+  }
+}
+
+// OpenconfigIfAggregate_AggregationType represents the corresponding enumerated
+// node in the YANG schema.
+message OpenconfigIfAggregate {
+  enum AggregationType {
+    AGGREGATION_TYPE_UNSET = 0;
+    AGGREGATION_TYPE_LACP = 1;
+    AGGREGATION_TYPE_STATIC = 2;
+  }
+}

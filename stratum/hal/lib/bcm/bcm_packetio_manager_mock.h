@@ -36,12 +36,12 @@ class BcmPacketioManagerMock : public BcmPacketioManager {
       RegisterPacketReceiveWriter,
       ::util::Status(
           GoogleConfig::BcmKnetIntfPurpose purpose,
-          const std::shared_ptr<WriterInterface<::p4::PacketIn>>& writer));
+          const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer));
   MOCK_METHOD1(UnregisterPacketReceiveWriter,
                ::util::Status(GoogleConfig::BcmKnetIntfPurpose purpose));
   MOCK_METHOD2(TransmitPacket,
                ::util::Status(GoogleConfig::BcmKnetIntfPurpose purpose,
-                              const ::p4::PacketOut& packet));
+                              const ::p4::v1::PacketOut& packet));
 };
 
 }  // namespace bcm

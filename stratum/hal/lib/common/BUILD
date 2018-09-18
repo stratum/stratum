@@ -32,6 +32,118 @@ package(
 )
 
 sc_cc_lib(
+    name = "admin_service",
+    srcs = [
+        "admin_service.cc",
+    ],
+    hdrs = [
+        "admin_service.h",
+    ],
+    deps = [
+        ":common_proto",
+        ":error_buffer",
+        ":switch_interface",
+        "//base",
+        "//absl/base:core_headers",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue:logging",
+        "//stratum/glue/gnoi:system_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/public/lib:error",
+        "//util/gtl:map_util",
+        "//util/task:status",
+    ],
+)
+
+sc_cc_test(
+    name = "admin_service_test",
+    srcs = [
+        "admin_service_test.cc",
+    ],
+    deps = [
+        ":admin_service",
+        ":error_buffer",
+        ":switch_mock",
+        ":test_main",
+        "//base",
+        "//net/util:ports",
+        "//testing/base/public:gunit_no_google3",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue/gnoi:system_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+    ],
+)
+
+sc_cc_lib(
+    name = "certificate_management_service",
+    srcs = [
+        "certificate_management_service.cc",
+    ],
+    hdrs = [
+        "certificate_management_service.h",
+    ],
+    deps = [
+        ":common_proto",
+        ":error_buffer",
+        ":switch_interface",
+        "//base",
+        "//absl/base:core_headers",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue:logging",
+        "//stratum/glue/gnoi:cert_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/public/lib:error",
+        "//util/gtl:map_util",
+        "//util/task:status",
+    ],
+)
+
+sc_cc_test(
+    name = "certificate_management_service_test",
+    srcs = [
+        "certificate_management_service_test.cc",
+    ],
+    deps = [
+        ":certificate_management_service",
+        ":error_buffer",
+        ":switch_mock",
+        ":test_main",
+        "//base",
+        "//net/util:ports",
+        "//testing/base/public:gunit_no_google3",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue/gnoi:system_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+    ],
+)
+
+sc_cc_lib(
     name = "client_sync_reader_writer",
     hdrs = ["client_sync_reader_writer.h"],
     deps = [
@@ -45,9 +157,7 @@ sc_cc_lib(
 sc_proto_lib(
     name = "common_proto",
     hdrs = ["common.proto"],
-    deps = [
-        "//sandblaze/p4lang:p4runtime_proto",
-    ],
+    python_support = True,
 )
 
 sc_cc_lib(
@@ -56,29 +166,34 @@ sc_cc_lib(
         "config_monitoring_service.cc",
         "gnmi_publisher.cc",
         "yang_parse_tree.cc",
+        "yang_parse_tree_paths.cc",
     ],
     hdrs = [
         "config_monitoring_service.h",
         "gnmi_publisher.h",
         "yang_parse_tree.h",
+        "yang_parse_tree_paths.h",
     ],
     deps = [
         ":channel_writer_wrapper",
         ":common_proto",
-        ":conversion",
         ":error_buffer",
+        ":openconfig_converter",
         ":switch_interface",
         ":writer_interface",
         "//base",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/memory",
         "//absl/strings",
         "//absl/strings:str_format",
         "//absl/synchronization",
+        "//absl/time",
         "//protobuf",
-        "//sandblaze/gnmi:gnmi_grpc_proto",
         "//sandblaze/prebuilt/grpc",
+        "//stratum:gnmi_grpc_proto",
         "//stratum/glue:logging",
+        "//stratum/glue/openconfig/proto:openconfig_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:constants",
@@ -87,8 +202,6 @@ sc_cc_lib(
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
-        "//stratum/public/proto:hal_grpc_proto",
-        "//stratum/public/proto:openconfig_proto",
         "//util/gtl:flat_hash_map",
         "//util/gtl:map_util",
         "//util/time:clock",
@@ -100,6 +213,7 @@ sc_cc_test(
     srcs = [
         "config_monitoring_service_test.cc",
         "gnmi_publisher_test.cc",
+        "yang_parse_tree_mock.h",
         "yang_parse_tree_test.cc",
     ],
     deps = [
@@ -116,13 +230,14 @@ sc_cc_test(
         "//absl/strings",
         "//absl/synchronization",
         "//protobuf",
-        "//sandblaze/gnmi:gnmi_grpc_proto",
         "//sandblaze/prebuilt/grpc",
+        "//stratum:gnmi_grpc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:constants",
         "//stratum/lib:timer_daemon",
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -130,11 +245,11 @@ sc_cc_test(
 cc_library(
     name = "subscribe_reader_writer_mock",
     testonly = 1,
-    hdrs = ["mock_subscribe_reader_writer.h"],
+    hdrs = ["subscribe_reader_writer_mock.h"],
     deps = [
         "//testing/base/public:gmock_no_google3",
-        "//sandblaze/gnmi:gnmi_grpc_proto",
         "//sandblaze/prebuilt/grpc",
+        "//stratum:gnmi_grpc_proto",
     ],
 )
 
@@ -144,20 +259,23 @@ cc_library(
     hdrs = [
         "gnmi_events.h",
         "gnmi_publisher.h",
-        "mock_gnmi_publisher.h",
+        "gnmi_publisher_mock.h",
         "yang_parse_tree.h",
     ],
     deps = [
+        ":common_proto",
         ":switch_interface",
         ":switch_mock",
         ":writer_interface",
         "//testing/base/public:gmock_no_google3",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/synchronization",
         "//protobuf",
-        "//sandblaze/gnmi:gnmi_grpc_proto",
+        "//stratum:gnmi_grpc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
+        "//stratum/lib:macros",
         "//stratum/lib:timer_daemon",
         "//stratum/public/lib:error",
         "//stratum/public/proto:hal_grpc_proto",
@@ -171,6 +289,61 @@ sc_cc_lib(
     hdrs = ["constants.h"],
     deps = [
         "//absl/base:core_headers",
+    ],
+)
+
+sc_cc_lib(
+    name = "diag_service",
+    srcs = [
+        "diag_service.cc",
+    ],
+    hdrs = [
+        "diag_service.h",
+    ],
+    deps = [
+        ":common_proto",
+        ":error_buffer",
+        ":switch_interface",
+        "//base",
+        "//absl/base:core_headers",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue:logging",
+        "//stratum/glue/gnoi:diag_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/public/lib:error",
+        "//util/gtl:map_util",
+    ],
+)
+
+sc_cc_test(
+    name = "diag_service_test",
+    srcs = [
+        "diag_service_test.cc",
+    ],
+    deps = [
+        ":diag_service",
+        ":error_buffer",
+        ":switch_mock",
+        ":test_main",
+        "//base",
+        "//net/util:ports",
+        "//testing/base/public:gunit_no_google3",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue/gnoi:system_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
     ],
 )
 
@@ -203,6 +376,63 @@ sc_cc_test(
         "//testing/base/public:gunit_no_google3",
         "//absl/memory",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+    ],
+)
+
+sc_cc_lib(
+    name = "file_service",
+    srcs = [
+        "file_service.cc",
+    ],
+    hdrs = [
+        "file_service.h",
+    ],
+    deps = [
+        ":common_proto",
+        ":error_buffer",
+        ":switch_interface",
+        "//base",
+        "//absl/base:core_headers",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue:logging",
+        "//stratum/glue/gnoi:file_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/public/lib:error",
+        "//util/gtl:map_util",
+        "//util/task:status",
+    ],
+)
+
+sc_cc_test(
+    name = "file_service_test",
+    srcs = [
+        "file_service_test.cc",
+    ],
+    deps = [
+        ":error_buffer",
+        ":file_service",
+        ":switch_mock",
+        ":test_main",
+        "//base",
+        "//net/util:ports",
+        "//testing/base/public:gunit_no_google3",
+        "//absl/memory",
+        "//absl/strings",
+        "//absl/synchronization",
+        "//sandblaze/prebuilt/grpc",
+        "//stratum/glue/gnoi:system_grpc_proto",
+        "//stratum/lib:constants",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -212,14 +442,20 @@ sc_cc_lib(
     srcs = ["hal.cc"],
     hdrs = ["hal.h"],
     deps = [
+        ":admin_service",
+        ":certificate_management_service",
         ":common_proto",
         ":config_monitoring_service",
+        ":diag_service",
         ":error_buffer",
+        ":file_service",
         ":p4_service",
         ":switch_interface",
         "//base",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/memory",
+        "//absl/strings",
         "//absl/synchronization",
         "//sandblaze/prebuilt/grpc",
         "//stratum/glue:logging",
@@ -237,7 +473,6 @@ sc_cc_test(
     srcs = [
         "hal_test.cc",
     ],
-    data = ["//tools/test:requires_ipv4_loopback"],
     deps = [
         ":hal",
         ":switch_mock",
@@ -250,6 +485,7 @@ sc_cc_test(
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/security:credentials_manager_mock",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -272,11 +508,12 @@ sc_cc_lib(
         "//absl/synchronization",
         "//absl/time",
         "//protobuf",
-        "//sandblaze/p4lang:p4info_proto",
-        "//sandblaze/p4lang:p4runtime_grpc_proto",
+        "//sandblaze/p4lang:p4info_v1_proto",
+        "//sandblaze/p4lang:p4runtime_v1_grpc_proto",
         "//sandblaze/prebuilt/grpc",
         "//stratum:code_proto",
         "//stratum:status_proto",
+        "//stratum//hal/lib/p4:forwarding_pipeline_configs_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -296,7 +533,6 @@ sc_cc_test(
     srcs = [
         "p4_service_test.cc",
     ],
-    data = ["//tools/test:requires_ipv4_loopback"],
     deps = [
         ":error_buffer",
         ":p4_service",
@@ -315,6 +551,7 @@ sc_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -323,10 +560,10 @@ sc_cc_lib(
     name = "phal_interface",
     hdrs = ["phal_interface.h"],
     deps = [
+        ":common_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib/channel",
-        "//stratum/public/proto:hal_grpc_proto",
     ],
 )
 
@@ -380,11 +617,13 @@ sc_cc_lib(
         "switch_interface.h",
     ],
     deps = [
+        ":common_proto",
         ":writer_interface",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/synchronization",
-        "//sandblaze/gnmi:gnmi_grpc_proto",
-        "//sandblaze/p4lang:p4runtime_grpc_proto",
+        "//sandblaze/p4lang:p4runtime_v1_grpc_proto",
+        "//stratum:gnmi_grpc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:timer_daemon",
@@ -422,13 +661,13 @@ sc_cc_lib(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
+        ":common_proto",
         "//absl/base:core_headers",
         "//absl/strings",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
-        "//stratum/public/proto:hal_grpc_proto",
     ],
 )
 
@@ -439,54 +678,41 @@ sc_cc_test(
         ":test_main",
         ":utils",
         "//testing/base/public:gunit_no_google3",
+        "//absl/container:flat_hash_set",
         "//absl/strings",
         "//protobuf",
         "//stratum/lib:constants",
+        "//util/gtl:flat_hash_set",
     ],
 )
 
 sc_cc_lib(
-    name = "conversion",
+    name = "openconfig_converter",
     srcs = [
-        "hal_config_to_oc.cc",
-        "oc_to_hal_config.cc",
+        "openconfig_converter.cc",
     ],
     hdrs = [
-        "hal_config_to_oc.h",
-        "oc_to_hal_config.h",
+        "openconfig_converter.h",
     ],
     deps = [
+        ":common_proto",
         "//absl/strings",
         "//stratum/glue:logging",
+        "//stratum/glue/openconfig/proto:old_openconfig_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/lib:constants",
-        "//stratum/public/proto:hal_proto",
-        "//stratum/public/proto:openconfig_proto",
+        "//stratum/lib:macros",
         "//util/gtl:map_util",
     ],
 )
 
-cc_test(
-    name = "oc_to_hal_config_test",
-    srcs = ["oc_to_hal_config_test.cc"],
+sc_cc_test(
+    name = "openconfig_converter_test",
+    srcs = ["openconfig_converter_test.cc"],
     deps = [
-        ":conversion",
-        ":test_main",
-        ":testdata",
-        ":utils",
-        "//testing/base/public:gunit_no_google3",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:utils",
-    ],
-)
-
-cc_test(
-    name = "hal_config_to_oc_test",
-    srcs = ["hal_config_to_oc_test.cc"],
-    deps = [
-        ":conversion",
+        ":openconfig_converter",
         ":test_main",
         ":testdata",
         ":utils",

@@ -17,12 +17,18 @@
 
 #include <iterator>
 
+#include "base/commandlineflags.h"
 #include "stratum/hal/lib/bcm/acl_table.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
 #include "util/gtl/map_util.h"
+
+DEFINE_string(bcm_hardware_specs_file,
+              "/opt/watchtower/share/bcm_hardware_specs.pb.txt",
+              "Path to the file containing the Broadcom hardware map proto.");
 
 namespace stratum {
 namespace hal {
@@ -42,6 +48,20 @@ constexpr BcmSdkInterface::AclControl kDefaultAclControl = {
     // Enable stats read through.
     {true, true}                  // stats_read_through_enable.{enable, apply}
 };
+
+BcmChip::BcmChipType PlatformChip(Platform platform) {
+  switch (platform) {
+    case PLT_GENERIC_TRIDENT_PLUS:
+      return BcmChip::TRIDENT_PLUS;
+    case PLT_GENERIC_TRIDENT2:
+      return BcmChip::TRIDENT2;
+    case PLT_GENERIC_TOMAHAWK:
+      return BcmChip::TOMAHAWK;
+    case PLT_UNKNOWN:
+    default:
+      return BcmChip::UNKNOWN;
+  }
+}
 
 // Return the table reference at the root of a p4 control statement.
 bool GetStatementTableReference(const P4ControlStatement& statement,
@@ -70,21 +90,22 @@ bool GetStatementTableReference(const P4ControlStatement& statement,
 
 }  // namespace
 
-BcmAclManager::BcmAclManager(BcmChassisManager* bcm_chassis_manager,
+BcmAclManager::BcmAclManager(BcmChassisRoInterface* bcm_chassis_ro_interface,
                              BcmTableManager* bcm_table_manager,
                              BcmSdkInterface* bcm_sdk_interface,
                              P4TableMapper* p4_table_mapper, int unit)
     : initialized_(false),
-      bcm_chassis_manager_(CHECK_NOTNULL(bcm_chassis_manager)),
-      bcm_table_manager_(CHECK_NOTNULL(bcm_table_manager)),
-      bcm_sdk_interface_(CHECK_NOTNULL(bcm_sdk_interface)),
+      bcm_chassis_ro_interface_(ABSL_DIE_IF_NULL(bcm_chassis_ro_interface)),
+      bcm_table_manager_(ABSL_DIE_IF_NULL(bcm_table_manager)),
+      bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
       p4_table_mapper_(p4_table_mapper),
       node_id_(0),
-      unit_(unit) {}
+      unit_(unit),
+      chip_hardware_description_() {}
 
 BcmAclManager::BcmAclManager()
     : initialized_(false),
-      bcm_chassis_manager_(nullptr),
+      bcm_chassis_ro_interface_(nullptr),
       bcm_table_manager_(nullptr),
       bcm_sdk_interface_(nullptr),
       p4_table_mapper_(nullptr),
@@ -97,6 +118,27 @@ BcmAclManager::~BcmAclManager() {}
                                                 uint64 node_id) {
   node_id_ = node_id;  // Save node_id ASAP to ensure all the methods can refer
                        // to correct ID in the messages/errors.
+  // Grab the chip hardware description.
+  BcmHardwareSpecs hardware_specs;
+  RETURN_IF_ERROR(
+      ReadProtoFromTextFile(FLAGS_bcm_hardware_specs_file, &hardware_specs))
+      << "Failed to read hardware map.";
+  Platform platform = config.chassis().platform();
+  BcmChip::BcmChipType chip = PlatformChip(platform);
+  bool found_chip_spec = false;
+  for (auto& chip_spec : hardware_specs.chip_specs()) {
+    if (chip_spec.chip_type() == chip) {
+      chip_hardware_description_ = chip_spec;
+      found_chip_spec = true;
+      break;
+    }
+  }
+  if (!found_chip_spec) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Unable to find ChipModelSpec for chip type: "
+           << BcmChip::BcmChipType_Name(chip) << " from platform "
+           << Platform_Name(platform);
+  }
 
   RETURN_IF_ERROR(OneTimeSetup())
       << "Failed to configure ACL hardware for node " << node_id
@@ -119,7 +161,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::PushForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   // The pipeline config is stored as raw bytes in the p4_device_config.
   P4PipelineConfig p4_pipeline_config;
   if (!p4_pipeline_config.ParseFromString(config.p4_device_config())) {
@@ -188,7 +230,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::VerifyForwardingPipelineConfig(
-    const ::p4::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   // TODO: Implement if needed.
   return ::util::OkStatus();
 }
@@ -199,7 +241,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::InsertTableEntry(
-    const ::p4::TableEntry& entry) const {
+    const ::p4::v1::TableEntry& entry) const {
   VLOG(3) << "Inserting table entry " << entry.ShortDebugString();
   // Verify this entry can be added to the software state.
   ASSIGN_OR_RETURN(const AclTable* table,
@@ -209,7 +251,7 @@ BcmAclManager::~BcmAclManager() {}
   // Convert the entry to a BcmFlowEntry.
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR_WITH_APPEND(bcm_table_manager_->FillBcmFlowEntry(
-      entry, ::p4::Update::INSERT, &bcm_flow_entry))
+      entry, ::p4::v1::Update::INSERT, &bcm_flow_entry))
       << " Failed to insert table entry: " << entry.ShortDebugString() << ".";
 
   // TODO: Implement stat coloring options.
@@ -229,16 +271,16 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::ModifyTableEntry(
-    const ::p4::TableEntry& entry) const {
+    const ::p4::v1::TableEntry& entry) const {
   VLOG(3) << "Modifying table entry: " << entry.ShortDebugString() << ".";
   ASSIGN_OR_RETURN(const AclTable* table,
                    bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
   ASSIGN_OR_RETURN(int bcm_acl_id, table->BcmAclId(entry));
 
-  // Convert: ::p4::TableEntry --> CommonFlowEntry --> BcmFlowEntry.
+  // Convert: P4 TableEntry --> CommonFlowEntry --> BcmFlowEntry.
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR_WITH_APPEND(bcm_table_manager_->FillBcmFlowEntry(
-      entry, ::p4::Update::MODIFY, &bcm_flow_entry))
+      entry, ::p4::v1::Update::MODIFY, &bcm_flow_entry))
       << " Failed to modify table entry: " << entry.ShortDebugString() << ".";
 
   // Perform the flow modification.
@@ -255,7 +297,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::DeleteTableEntry(
-    const ::p4::TableEntry& entry) const {
+    const ::p4::v1::TableEntry& entry) const {
   VLOG(3) << "Deleting table entry: " << entry.ShortDebugString() << ".";
   ASSIGN_OR_RETURN(const AclTable* table,
                    bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
@@ -268,8 +310,8 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::UpdateTableEntryMeter(
-    const ::p4::DirectMeterEntry& meter) const {
-  const ::p4::TableEntry& entry = meter.table_entry();
+    const ::p4::v1::DirectMeterEntry& meter) const {
+  const ::p4::v1::TableEntry& entry = meter.table_entry();
   ASSIGN_OR_RETURN(const AclTable* table,
                    bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
   ASSIGN_OR_RETURN(int bcm_acl_id, table->BcmAclId(entry));
@@ -289,7 +331,7 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 ::util::Status BcmAclManager::GetTableEntryStats(
-    const ::p4::TableEntry& entry, ::p4::CounterData* counter) const {
+    const ::p4::v1::TableEntry& entry, ::p4::v1::CounterData* counter) const {
   if (counter == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null counter.";
   }
@@ -313,11 +355,11 @@ BcmAclManager::~BcmAclManager() {}
 }
 
 std::unique_ptr<BcmAclManager> BcmAclManager::CreateInstance(
-    BcmChassisManager* bcm_chassis_manager, BcmTableManager* bcm_table_manager,
-    BcmSdkInterface* bcm_sdk_interface, P4TableMapper* p4_table_mapper,
-    int unit) {
+    BcmChassisRoInterface* bcm_chassis_ro_interface,
+    BcmTableManager* bcm_table_manager, BcmSdkInterface* bcm_sdk_interface,
+    P4TableMapper* p4_table_mapper, int unit) {
   return absl::WrapUnique(
-      new BcmAclManager(bcm_chassis_manager, bcm_table_manager,
+      new BcmAclManager(bcm_chassis_ro_interface, bcm_table_manager,
                         bcm_sdk_interface, p4_table_mapper, unit));
 }
 
@@ -335,17 +377,17 @@ std::unique_ptr<BcmAclManager> BcmAclManager::CreateInstance(
 
 ::util::Status BcmAclManager::ClearAllAclTables() {
   std::set<uint32> acl_table_ids = bcm_table_manager_->GetAllAclTableIDs();
-  if (acl_table_ids.empty()) return util::OkStatus();
+  if (acl_table_ids.empty()) return ::util::OkStatus();
   // Remove all the ACL table entries from hardware & software.
-  ::p4::ReadResponse response;
-  std::vector<::p4::TableEntry*> all_acl_entries;
+  ::p4::v1::ReadResponse response;
+  std::vector<::p4::v1::TableEntry*> all_acl_entries;
   RETURN_IF_ERROR(bcm_table_manager_->ReadTableEntries(acl_table_ids, &response,
                                                        &all_acl_entries));
-  for (::p4::TableEntry* acl_table_entry : all_acl_entries) {
+  for (::p4::v1::TableEntry* acl_table_entry : all_acl_entries) {
     RETURN_IF_ERROR(DeleteTableEntry(*acl_table_entry));
   }
   // Remove all the ACL tables from hardware & software.
-  gtl::flat_hash_set<uint32> unique_physical_table_ids;
+  absl::flat_hash_set<uint32> unique_physical_table_ids;
   for (uint32 acl_table_id : acl_table_ids) {
     ASSIGN_OR_RETURN(const AclTable* table,
                      bcm_table_manager_->GetReadOnlyAclTable(acl_table_id));
@@ -356,59 +398,32 @@ std::unique_ptr<BcmAclManager> BcmAclManager::CreateInstance(
     // Remove unique physical tables from the hardware.
     RETURN_IF_ERROR(bcm_sdk_interface_->DestroyAclTable(unit_, id));
   }
-  return util::OkStatus();
-}
-
-::util::Status BcmAclManager::SplitAclControlBlocks(
-    const P4ControlBlock& control_block,
-    BcmAclStageMap<P4ControlBlock>* stage_blocks) const {
-  for (const auto& statement : control_block.statements()) {
-    // Find the table at the root of this statement.
-    P4ControlTableRef table_reference;
-    if (!GetStatementTableReference(statement, &table_reference)) {
-      VLOG(1) << "Ignoring statement due to non-table root: "
-              << statement.ShortDebugString() << ".";
-      continue;
-    }
-    // Find the ACL stage this statement applies to (VFP, IFP, EFP).
-    BcmAclStage stage =
-        AclTable::P4PipelineToBcmAclStage(table_reference.pipeline_stage());
-    if (stage != BCM_ACL_STAGE_UNKNOWN) {
-      *(*stage_blocks)[stage].add_statements() = statement;
-    }
-  }
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<std::vector<BcmAclManager::PhysicalAclTable>>
 BcmAclManager::PhysicalAclTablesFromPipeline(
     const P4ControlBlock& control_block) const {
-  // Generate per-stage pipelines.
-  BcmAclStageMap<P4ControlBlock> stage_blocks;
-  RETURN_IF_ERROR(SplitAclControlBlocks(control_block, &stage_blocks));
-  // Create pipelines for each stage.
-  BcmAclStageMap<std::unique_ptr<BcmAclPipeline>> stage_pipelines;
-  for (const auto& pair : stage_blocks) {
-    BcmAclStage stage = pair.first;
-    auto pipeline_status = BcmAclPipeline::CreateBcmAclPipeline(pair.second);
-    RETURN_IF_ERROR_WITH_APPEND(pipeline_status.status())
-        << " Failed while generating pipeline for stage "
-        << BcmAclStage_Name(stage) << ".";
-    stage_pipelines.insert(
-        std::make_pair(stage, std::move(pipeline_status.ValueOrDie())));
-  }
-  // Insert per-stage pipelines.
+  ASSIGN_OR_RETURN(std::unique_ptr<PipelineProcessor> pipeline_processor,
+                   PipelineProcessor::CreateInstance(control_block));
   std::vector<PhysicalAclTable> physical_acl_tables;
-  for (const auto& pair : stage_pipelines) {
-    BcmAclStage stage = pair.first;
-    const std::vector<BcmAclPipeline::PhysicalTableAsVector>& pipeline =
-        pair.second->pipeline();
-    // Create a physical table for each physical table in the pipeline.
-    for (const auto& physical_table : pipeline) {
-      auto result = GeneratePhysicalAclTables(stage, physical_table);
-      RETURN_IF_ERROR(result.status());
-      physical_acl_tables.emplace_back(std::move(result.ValueOrDie()));
+  for (const auto& physical_table : pipeline_processor->PhysicalPipeline()) {
+    if (physical_table.empty()) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Physical pipeline contains an empty "
+                                         "physical table. This is a bug.";
     }
+    BcmAclStage acl_stage = AclTable::P4PipelineToBcmAclStage(
+        physical_table.front().table.pipeline_stage());
+    if (acl_stage == BCM_ACL_STAGE_UNKNOWN) {
+      VLOG(1) << "Skipping non-ACL physical table starting with table: "
+              << physical_table.front().table.ShortDebugString() << ".";
+      continue;
+    }
+    auto generate_physical_acl_tables =
+        GeneratePhysicalAclTables(acl_stage, physical_table);
+    RETURN_IF_ERROR(generate_physical_acl_tables.status());
+    physical_acl_tables.emplace_back(
+        std::move(generate_physical_acl_tables.ValueOrDie()));
   }
   return physical_acl_tables;
 }
@@ -416,16 +431,17 @@ BcmAclManager::PhysicalAclTablesFromPipeline(
 ::util::StatusOr<BcmAclManager::PhysicalAclTable>
 BcmAclManager::GeneratePhysicalAclTables(
     BcmAclStage stage,
-    const BcmAclPipeline::PhysicalTableAsVector& physical_table) const {
+    const PipelineProcessor::PhysicalTableAsVector& physical_table) const {
   // Create all the AclTables in the physical table.
   PhysicalAclTable physical_acl_table;
   physical_acl_table.stage = stage;
-  for (const BcmAclPipelineTable& pipeline_table : physical_table) {
+  for (const PipelineTable& pipeline_table : physical_table) {
     uint32 table_id = pipeline_table.table.table_id();
-    ::p4::config::Table p4_table;
+    ::p4::config::v1::Table p4_table;
     RETURN_IF_ERROR(p4_table_mapper_->LookupTable(table_id, &p4_table));
-    physical_acl_table.logical_tables.emplace_back(p4_table, stage,
-                                                   pipeline_table.priority);
+    physical_acl_table.logical_tables.emplace_back(
+        p4_table, stage, pipeline_table.priority,
+        pipeline_table.valid_conditions);
   }
   return physical_acl_table;
 }
@@ -437,11 +453,16 @@ BcmAclManager::GeneratePhysicalAclTables(
                                        "table. This is likely a bug.";
   }
   // Get the field types.
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
+  absl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
   for (const AclTable& table : physical_acl_table.logical_tables) {
     ASSIGN_OR_RETURN(auto fields, GetTableMatchTypes(table));
     for (const BcmField::Type field : fields) {
       bcm_fields.insert(field);
+    }
+    ASSIGN_OR_RETURN(auto const_fields,
+                     BcmTableManager::ConstConditionsToBcmFields(table));
+    for (const BcmField& bcm_field : const_fields) {
+      bcm_fields.insert(bcm_field.type());
     }
   }
   // Set up and install the BcmAclTable.
@@ -463,9 +484,9 @@ BcmAclManager::GeneratePhysicalAclTables(
   return install_result.ValueOrDie();
 }
 
-::util::StatusOr<gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
+::util::StatusOr<absl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
 BcmAclManager::GetTableMatchTypes(const AclTable& table) const {
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
+  absl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
   for (uint32 field_id : table.MatchFields()) {
     MappedField field;
     RETURN_IF_ERROR_WITH_APPEND(

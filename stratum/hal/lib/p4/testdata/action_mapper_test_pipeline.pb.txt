@@ -1,0 +1,192 @@
+# This file contains some data for P4ActionMapper testing.  It consists of
+# P4 program action descriptors with various types of links to internal actions.
+# The action descriptor assignments, primitives, and metering operations are
+# not important for these tests.  The assignments exist primarily to make
+# each action uniquely identifiable to tests.
+
+# Common set of internal actions for use in internal links from
+# original actions.
+table_map {
+  key: "internal-action-1"
+  value {
+    internal_action {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 1
+        }
+        destination_field_name: "internal-action-1-field"
+      }
+    }
+  }
+}
+table_map {
+  key: "internal-action-2"
+  value {
+    internal_action {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 2
+        }
+        destination_field_name: "internal-action-2-field"
+      }
+    }
+  }
+}
+table_map {
+  key: "internal-action-3"
+  value {
+    internal_action {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 3
+        }
+        destination_field_name: "internal-action-3-field"
+      }
+    }
+  }
+}
+table_map {
+  key: "internal-action-4"
+  value {
+    internal_action {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 4
+        }
+        destination_field_name: "internal-action-4-field"
+      }
+    }
+  }
+}
+
+# A basic action with no links to internal actions.
+table_map {
+  key: "action-no-internal-links"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      primitive_ops: P4_ACTION_OP_NOP
+    }
+  }
+}
+
+# An action for various combinations of internal action links, with and/or
+# without applied tables according to test parameters.
+table_map {
+  key: "parameterized-action"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 2
+        }
+        destination_field_name: "action2-field"
+      }
+    }
+  }
+}
+
+# An action with one link to an internal action, qualified by an applied table.
+table_map {
+  key: "action-applied-table"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 3
+        }
+        destination_field_name: "action3-field"
+      }
+      action_redirects {
+        internal_links {
+          internal_action_name: "internal-action-2"
+          applied_tables: "applied-table"
+        }
+      }
+    }
+  }
+}
+
+# An action with a link to an internal action that does not exist.
+table_map {
+  key: "action-bad-internal-link"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 4
+        }
+        destination_field_name: "bad-internal-link-field"
+      }
+      action_redirects {
+        internal_links {
+          internal_action_name: "missing-internal-action"
+        }
+      }
+    }
+  }
+}
+
+# An action with an internal link that applies the same table multiple times.
+table_map {
+  key: "action-bad-applied-tables"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 4
+        }
+        destination_field_name: "bad-applied-tables-field"
+      }
+      action_redirects {
+        internal_links {
+          internal_action_name: "internal-action-1"
+          applied_tables: "duplicate-applied-table"
+          applied_tables: "duplicate-applied-table"
+        }
+      }
+    }
+  }
+}
+
+# An additional action with internal links that apply the same table
+# multiple times, with the table appearing in different internal_links.
+table_map {
+  key: "action-bad-applied-tables-2"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 4
+        }
+        destination_field_name: "bad-applied-tables-2-field"
+      }
+      action_redirects {
+        internal_links {
+          internal_action_name: "internal-action-1"
+          applied_tables: "duplicate-applied-table"
+        }
+      }
+      action_redirects {
+        internal_links {
+          internal_action_name: "internal-action-2"
+        }
+      }
+      action_redirects {
+        internal_links {
+          internal_action_name: "internal-action-3"
+          applied_tables: "duplicate-applied-table"
+        }
+      }
+    }
+  }
+}

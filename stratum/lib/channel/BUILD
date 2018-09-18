@@ -34,11 +34,16 @@ package(
 
 sc_cc_lib(
     name = "channel",
+    srcs = [
+        "channel.cc",
+    ],
     hdrs = [
         "channel.h",
+        "channel_internal.h",
     ],
     deps = [
         "//absl/base:core_headers",
+        "//absl/memory",
         "//absl/synchronization",
         "//absl/time",
         "//stratum/glue:logging",

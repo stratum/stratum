@@ -22,11 +22,12 @@
 #include "base/commandlineflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
-#include "sandblaze/p4lang/p4/p4runtime.pb.h"
+#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
 
 DECLARE_bool(remap_hidden_table_const_entries);
 
@@ -108,15 +109,15 @@ class P4StaticEntryMapperTest : public testing::Test {
   std::unique_ptr<P4StaticEntryMapper> test_mapper_;
 
   // Messages for test use.
-  p4::WriteRequest pipeline_static_entries_;
-  p4::WriteRequest test_request_out_;
+  ::p4::v1::WriteRequest pipeline_static_entries_;
+  ::p4::v1::WriteRequest test_request_out_;
 };
 
 void P4StaticEntryMapperTest::SetUpTestRequest(
     const std::vector<const char*>& updates_text) {
   pipeline_static_entries_.Clear();
   for (auto update_text : updates_text) {
-    p4::Update update;
+    ::p4::v1::Update update;
     ASSERT_OK(ParseProtoFromString(
         update_text, pipeline_static_entries_.add_updates()));
   }
@@ -149,7 +150,7 @@ void P4StaticEntryMapperTest::SetUpFirstPipelinePush(
       pipeline_static_entries_, &test_request_out_));
 }
 
-// Verifies that the output p4::WriteRequest is cleared when no static
+// Verifies that the output P4 WriteRequest is cleared when no static
 // entry deletions are needed.
 TEST_F(P4StaticEntryMapperTest, TestClearDelete) {
   test_request_out_.add_updates();
@@ -158,7 +159,7 @@ TEST_F(P4StaticEntryMapperTest, TestClearDelete) {
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
-// Verifies that the output p4::WriteRequest is cleared when no static
+// Verifies that the output P4 WriteRequest is cleared when no static
 // entry additions are needed.
 TEST_F(P4StaticEntryMapperTest, TestClearAdd) {
   test_request_out_.add_updates();
@@ -264,7 +265,7 @@ TEST_F(P4StaticEntryMapperTest, TestPipelinePushHiddenDeletion) {
   EXPECT_EQ(0, test_request_out_.updates_size());
 }
 
-// A malformed p4::WriteRequest input should produce an error status.
+// A malformed P4 WriteRequest input should produce an error status.
 TEST_F(P4StaticEntryMapperTest, TestPipelinePushBadStaticWriteRequest) {
   SetUpFirstPipelinePush(
       {kTestUpdatePhysical1, kTestUpdateHidden1, kTestUpdateHidden2});

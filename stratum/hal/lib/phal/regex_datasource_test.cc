@@ -19,6 +19,8 @@
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/fixed_stringsource.h"
 #include "stratum/hal/lib/phal/test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 

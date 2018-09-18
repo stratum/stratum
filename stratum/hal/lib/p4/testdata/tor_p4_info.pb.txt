@@ -1,0 +1,690 @@
+tables {
+  preamble {
+    id: 33576202
+    name: "class_id_assignment_table"
+    alias: "class_id_assignment_table"
+    annotations: "@switchstack(\"pipeline_stage: VLAN_ACL\")"
+  }
+  match_fields {
+    name: "ethernet.etherType"
+    bitwidth: 16
+    match_type: EXACT
+  }
+  match_fields {
+    id: 1
+    name: "ipv4_base.ttl"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 2
+    name: "ipv6_base.hopLimit"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 3
+    name: "ipv4_base.dstAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 4
+    name: "ipv6_base.dstAddr"
+    bitwidth: 128
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 5
+    name: "ipv4_base.protocol"
+    bitwidth: 8
+    match_type: EXACT
+  }
+  match_fields {
+    id: 6
+    name: "ipv6_base.nextHeader"
+    bitwidth: 8
+    match_type: EXACT
+  }
+  match_fields {
+    id: 7
+    name: "local_metadata.l4SrcPort"
+    bitwidth: 16
+    match_type: EXACT
+  }
+  match_fields {
+    id: 8
+    name: "local_metadata.l4DstPort"
+    bitwidth: 16
+    match_type: EXACT
+  }
+  match_fields {
+    id: 9
+    name: "vlan_tag[0].vid"
+    bitwidth: 12
+    match_type: EXACT
+  }
+  match_fields {
+    id: 10
+    name: "vlan_tag[0].pcp"
+    bitwidth: 3
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16803779
+  }
+  const_default_action_id: 16803779
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33565887
+    name: "l3_routing_classifier_table"
+    alias: "l3_routing_classifier_table"
+    annotations: "@switchstack(\"pipeline_stage: L2\")"
+  }
+  match_fields {
+    name: "ethernet.dstAddr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16819938
+  }
+  action_refs {
+    id: 16818867
+  }
+  const_default_action_id: 16818867
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33612522
+    name: "process_cpu_header"
+    alias: "process_cpu_header"
+  }
+  action_refs {
+    id: 16833975
+  }
+  const_default_action_id: 16833975
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33560847
+    name: "vrf_classifier_table"
+    alias: "vrf_classifier_table"
+    annotations: "@switchstack(\"pipeline_stage: VLAN_ACL\")"
+  }
+  match_fields {
+    name: "ethernet.etherType"
+    bitwidth: 16
+    match_type: EXACT
+  }
+  match_fields {
+    id: 1
+    name: "ethernet.srcAddr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  match_fields {
+    id: 2
+    name: "ethernet.dstAddr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  match_fields {
+    id: 3
+    name: "standard_metadata.ingress_port"
+    bitwidth: 9
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16816036
+  }
+  const_default_action_id: 16816036
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33558954
+    name: "ingress_lpm_forwarding.ingress_ipv4_l3_forwarding.l3_ipv4_fallback_table"
+    alias: "l3_ipv4_fallback_table"
+    annotations: "@table(\"foo_table\")"
+    annotations: "@table_opt(\"fallback\")"
+    annotations: "@switchstack(\"pipeline_stage: L3_LPM\")"
+  }
+  match_fields {
+    name: "ipv4_base.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 16831742
+  }
+  action_refs {
+    id: 16800567
+  }
+  implementation_id: 285245635
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33600876
+    name: "ingress_lpm_forwarding.ingress_ipv4_l3_forwarding.l3_ipv4_override_table"
+    alias: "l3_ipv4_override_table"
+    annotations: "@table(\"foo_table\")"
+    annotations: "@table_opt(\"override\")"
+    annotations: "@switchstack(\"pipeline_stage: L3_LPM\")"
+  }
+  match_fields {
+    name: "ipv4_base.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 16831742
+  }
+  action_refs {
+    id: 16800567
+  }
+  implementation_id: 285245635
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33619185
+    name: "ingress_lpm_forwarding.ingress_ipv4_l3_forwarding.l3_ipv4_vrf_table"
+    alias: "l3_ipv4_vrf_table"
+    annotations: "@table(\"foo_table\")"
+    annotations: "@table_opt(\"vrf\")"
+    annotations: "@switchstack(\"pipeline_stage: L3_LPM\")"
+  }
+  match_fields {
+    name: "local_metadata.vrf_id"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  match_fields {
+    id: 1
+    name: "ipv4_base.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 16831742
+  }
+  action_refs {
+    id: 16800567
+  }
+  implementation_id: 285245635
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33599104
+    name: "ingress_lpm_forwarding.ingress_ipv6_l3_forwarding.l3_ipv6_fallback_table"
+    alias: "l3_ipv6_fallback_table"
+    annotations: "@switchstack(\"pipeline_stage: L3_LPM\")"
+  }
+  match_fields {
+    name: "ipv6_base.dstAddr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16835579
+  }
+  action_refs {
+    id: 16800567
+  }
+  implementation_id: 285245635
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33607812
+    name: "ingress_lpm_forwarding.ingress_ipv6_l3_forwarding.l3_ipv6_override_table"
+    alias: "l3_ipv6_override_table"
+    annotations: "@switchstack(\"pipeline_stage: L3_LPM\")"
+  }
+  match_fields {
+    name: "ipv6_base.dstAddr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16835579
+  }
+  action_refs {
+    id: 16800567
+  }
+  implementation_id: 285245635
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33558888
+    name: "ingress_lpm_forwarding.ingress_ipv6_l3_forwarding.l3_ipv6_vrf_table"
+    alias: "l3_ipv6_vrf_table"
+    annotations: "@switchstack(\"pipeline_stage: L3_LPM\")"
+  }
+  match_fields {
+    name: "local_metadata.vrf_id"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  match_fields {
+    id: 1
+    name: "ipv6_base.dstAddr"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 16835579
+  }
+  action_refs {
+    id: 16800567
+  }
+  implementation_id: 285245635
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33582727
+    name: "process_punt_packets.ingress_port_meter_policy_table"
+    alias: "ingress_port_meter_policy_table"
+    annotations: "@switchstack(\"pipeline_stage: INGRESS_ACL\")"
+  }
+  match_fields {
+    name: "local_metadata.color"
+    bitwidth: 2
+    match_type: EXACT
+  }
+  match_fields {
+    id: 1
+    name: "local_metadata.ingress_meter_index"
+    bitwidth: 16
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16805466
+  }
+  action_refs {
+    id: 16836567
+  }
+  action_refs {
+    id: 16800567
+  }
+  direct_resource_ids: 302011022
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33613106
+    name: "process_punt_packets.ingress_port_meter_table"
+    alias: "ingress_port_meter_table"
+    annotations: "@switchstack(\"pipeline_stage: INGRESS_ACL\")"
+  }
+  match_fields {
+    name: "standard_metadata.ingress_port"
+    bitwidth: 9
+    match_type: EXACT
+  }
+  match_fields {
+    id: 1
+    name: "standard_metadata.egress_spec"
+    bitwidth: 9
+    match_type: EXACT
+  }
+  match_fields {
+    id: 2
+    name: "ethernet.etherType"
+    bitwidth: 16
+    match_type: EXACT
+  }
+  match_fields {
+    id: 3
+    name: "ipv4_base.dstAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 4
+    name: "arp.protoDstAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 5
+    name: "local_metadata.class_id"
+    bitwidth: 8
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16788096
+  }
+  action_refs {
+    id: 16800567
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33616733
+    name: "process_punt_packets.punt_table"
+    alias: "punt_table"
+    annotations: "@switchstack(\"pipeline_stage: INGRESS_ACL\")"
+  }
+  match_fields {
+    name: "standard_metadata.ingress_port"
+    bitwidth: 9
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 1
+    name: "standard_metadata.egress_spec"
+    bitwidth: 9
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 2
+    name: "ethernet.etherType"
+    bitwidth: 16
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 3
+    name: "ipv4_base.diffserv"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 4
+    name: "ipv6_base.traffic_class"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 5
+    name: "ipv4_base.ttl"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 6
+    name: "ipv6_base.hopLimit"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 7
+    name: "ipv4_base.srcAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 8
+    name: "ipv4_base.dstAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 9
+    name: "ipv6_base.srcAddr"
+    bitwidth: 128
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 10
+    name: "ipv6_base.dstAddr"
+    bitwidth: 128
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 11
+    name: "ipv4_base.protocol"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 12
+    name: "ipv6_base.nextHeader"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 13
+    name: "arp.protoDstAddr"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 14
+    name: "local_metadata.icmp_code"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 15
+    name: "vlan_tag[1].vid"
+    bitwidth: 12
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 16
+    name: "vlan_tag[1].pcp"
+    bitwidth: 3
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 17
+    name: "local_metadata.class_id"
+    bitwidth: 8
+    match_type: TERNARY
+  }
+  match_fields {
+    id: 18
+    name: "local_metadata.vrf_id"
+    bitwidth: 32
+    match_type: TERNARY
+  }
+  action_refs {
+    id: 16815491
+  }
+  action_refs {
+    id: 16811684
+  }
+  action_refs {
+    id: 16800567
+  }
+  size: 1024
+}
+actions {
+  preamble {
+    id: 16800567
+    name: "NoAction"
+    alias: "NoAction"
+  }
+}
+actions {
+  preamble {
+    id: 16803779
+    name: "set_class_id"
+    alias: "set_class_id"
+  }
+  params {
+    name: "class_id"
+    bitwidth: 8
+  }
+}
+actions {
+  preamble {
+    id: 16819938
+    name: "nop"
+    alias: "nop"
+  }
+}
+actions {
+  preamble {
+    id: 16818867
+    name: "drop_packet"
+    alias: "drop_packet"
+  }
+}
+actions {
+  preamble {
+    id: 16833975
+    name: "set_egress_port_and_decap_cpu_header"
+    alias: "set_egress_port_and_decap_cpu_header"
+  }
+}
+actions {
+  preamble {
+    id: 16816036
+    name: "set_vrf"
+    alias: "set_vrf"
+  }
+  params {
+    name: "vrf_id"
+    bitwidth: 32
+  }
+}
+actions {
+  preamble {
+    id: 16831742
+    name: "ingress_lpm_forwarding.ingress_ipv4_l3_forwarding.set_ecmp_nexthop_info_port"
+    alias: "ingress_ipv4_l3_forwarding.set_ecmp_nexthop_info_port"
+    annotations: "@action(\"foo_action\")"
+  }
+  params {
+    name: "port"
+    bitwidth: 9
+  }
+  params {
+    id: 1
+    name: "smac"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "dmac"
+    bitwidth: 48
+  }
+}
+actions {
+  preamble {
+    id: 16835579
+    name: "ingress_lpm_forwarding.ingress_ipv6_l3_forwarding.set_ecmp_nexthop_info_port"
+    alias: "ingress_ipv6_l3_forwarding.set_ecmp_nexthop_info_port"
+    annotations: "@action(\"foo_action\")"
+  }
+  params {
+    name: "port"
+    bitwidth: 9
+  }
+  params {
+    id: 1
+    name: "smac"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "dmac"
+    bitwidth: 48
+  }
+}
+actions {
+  preamble {
+    id: 16805466
+    name: "process_punt_packets.meter_permit"
+    alias: "meter_permit"
+  }
+}
+actions {
+  preamble {
+    id: 16836567
+    name: "process_punt_packets.meter_deny"
+    alias: "meter_deny"
+  }
+}
+actions {
+  preamble {
+    id: 16788096
+    name: "process_punt_packets.meter_packet"
+    alias: "meter_packet"
+  }
+  params {
+    name: "meter_index"
+    bitwidth: 16
+  }
+}
+actions {
+  preamble {
+    id: 16815491
+    name: "process_punt_packets.set_queue_and_copy_to_cpu"
+    alias: "set_queue_and_copy_to_cpu"
+    annotations: "@action(\"bar_action\")"
+  }
+  params {
+    name: "qid"
+    bitwidth: 5
+  }
+  params {
+    id: 1
+    name: "reason"
+    bitwidth: 8
+  }
+}
+actions {
+  preamble {
+    id: 16811684
+    name: "process_punt_packets.set_queue_and_send_to_cpu"
+    alias: "set_queue_and_send_to_cpu"
+  }
+  params {
+    name: "qid"
+    bitwidth: 5
+  }
+  params {
+    id: 1
+    name: "reason"
+    bitwidth: 16
+  }
+}
+action_profiles {
+  preamble {
+    id: 285245635
+    name: "ecmp_action_profile"
+    alias: "ecmp_action_profile"
+  }
+  table_ids: 33558954
+  table_ids: 33600876
+  table_ids: 33619185
+  table_ids: 33599104
+  table_ids: 33607812
+  table_ids: 33558888
+  with_selector: true
+}
+direct_counters {
+  preamble {
+    id: 302011022
+    name: "meter_stats"
+    alias: "meter_stats"
+  }
+  spec {
+    unit: PACKETS
+  }
+  direct_table_id: 33582727
+}
+meters {
+  preamble {
+    id: 318830624
+    name: "process_punt_packets.ingress_port_meter"
+    alias: "ingress_port_meter"
+  }
+  spec {
+    unit: BYTES
+  }
+  size: 256
+}

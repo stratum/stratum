@@ -66,6 +66,10 @@ class DataSource : public std::enable_shared_from_this<DataSource> {
   virtual ::util::Status UpdateValuesAndLock()
       EXCLUSIVE_LOCK_FUNCTION(data_lock_);
   virtual void Unlock() UNLOCK_FUNCTION(data_lock_);
+  // This function may block for lock contention or I/O requests.
+  // If this function returns success, any pending writes to attributes managed
+  // by this datasource have been succesfully written to the system.
+  virtual ::util::Status LockAndFlushWrites();
   // Returns a shared_ptr to this DataSource. May only be called on a DataSource
   // that is already held by a shared_ptr. We use this to acquire partial
   // ownership of this datasource via one of its attributes. Note that an
@@ -75,7 +79,9 @@ class DataSource : public std::enable_shared_from_this<DataSource> {
   // safely acquire a shared_ptr to a datasource without the ability to pass
   // this shared_ptr around normally. std::enable_shared_from_this gives us this
   // behavior.
-  std::shared_ptr<DataSource> GetSharedPointer() { return shared_from_this(); }
+  virtual std::shared_ptr<DataSource> GetSharedPointer() {
+    return shared_from_this();
+  }
 
   // Updates this datasource without acquiring a lock, and skips all caching
   // behavior. This is generally unsafe, and should never be called while this
@@ -88,10 +94,16 @@ class DataSource : public std::enable_shared_from_this<DataSource> {
   // Construct a datasource that will use the given CachePolicy to determine
   // when to call UpdateValues(). Takes ownership of the given pointer.
   explicit DataSource(CachePolicy* cache_type);
-  // The only function to be overridden by datasource implementations.
+  // The only function to be overridden by most datasource implementations.
   // Implementations should perform any necessary operations to populate each
   // managed attribute with its most up to date value.
   virtual ::util::Status UpdateValues() = 0;
+  // A function to be optionally overridden by datasource implementations.
+  // This function is called once on each datasource after a database write
+  // operation has occurred. This should be used in cases where a datasource
+  // expects to write multiple values to the system simultaneously, e.g. when
+  // the RGB value of an LED.
+  virtual ::util::Status FlushWrites() { return ::util::OkStatus(); }
 
   // Attempts to read a value of the given type from the given status or
   // attribute. This is a helper function for various datasource

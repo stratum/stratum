@@ -19,11 +19,13 @@
 #include <memory>
 
 #include "base/commandlineflags.h"
+#include "google/rpc/code.pb.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
@@ -53,8 +55,8 @@ using ::testing::WithArgs;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
-typedef ::grpc::ClientReaderWriter<::p4::StreamMessageRequest,
-                                   ::p4::StreamMessageResponse>
+typedef ::grpc::ClientReaderWriter<::p4::v1::StreamMessageRequest,
+                                   ::p4::v1::StreamMessageResponse>
     ClientStreamChannelReaderWriter;
 
 class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
@@ -67,13 +69,16 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     p4_service_ = absl::make_unique<P4Service>(mode_, switch_mock_.get(),
                                                auth_policy_checker_mock_.get(),
                                                error_buffer_.get());
-    std::string url = "localhost:" + std::to_string(PickUnusedIpv4PortOrDie());
+    std::string url =
+        "localhost:" + std::to_string(net_util::PickUnusedPortOrDie());
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(url, ::grpc::InsecureServerCredentials());
     builder.RegisterService(p4_service_.get());
     server_ = builder.BuildAndStart();
-    stub_ = ::p4::P4Runtime::NewStub(
+    ASSERT_NE(server_, nullptr);
+    stub_ = ::p4::v1::P4Runtime::NewStub(
         ::grpc::CreateChannel(url, ::grpc::InsecureChannelCredentials()));
+    ASSERT_NE(stub_, nullptr);
     FLAGS_max_num_controllers_per_node = 5;
     FLAGS_max_num_controller_connections = 20;
     FLAGS_forwarding_pipeline_configs_file =
@@ -87,7 +92,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
 
   void TearDown() override { server_->Shutdown(); }
 
-  void OnPacketReceive(const ::p4::PacketIn& packet) {
+  void OnPacketReceive(const ::p4::v1::PacketIn& packet) {
     p4_service_->PacketReceiveHandler(kNodeId1, packet);
   }
 
@@ -178,7 +183,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   std::unique_ptr<ErrorBuffer> error_buffer_;
   std::unique_ptr<P4Service> p4_service_;
   std::unique_ptr<::grpc::Server> server_;
-  std::unique_ptr<::p4::P4Runtime::Stub> stub_;
+  std::unique_ptr<::p4::v1::P4Runtime::Stub> stub_;
 };
 
 constexpr char P4ServiceTest::kForwardingPipelineConfigsTemplate[];
@@ -361,13 +366,13 @@ TEST_P(P4ServiceTest, SetupAndPushForwardingPipelineConfigSuccess) {
       .WillOnce(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   configs.mutable_node_id_to_config()->at(kNodeId1).set_p4_device_config(
       "fake");  // emulate a modification in the config
   *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
@@ -395,12 +400,12 @@ TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigSuccess) {
       .WillRepeatedly(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
-  request.set_action(::p4::SetForwardingPipelineConfigRequest::VERIFY);
+  request.set_action(::p4::v1::SetForwardingPipelineConfigRequest::VERIFY);
   *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
 
   ::grpc::Status status =
@@ -416,10 +421,10 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForAuthError) {
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kAggrErrorMsg)));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -433,10 +438,10 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForNoNodeId) {
       .WillOnce(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -450,11 +455,11 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForNoElectionId) {
       .WillOnce(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -469,13 +474,13 @@ TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForNonMaster) {
       .WillOnce(Return(::util::OkStatus()));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
@@ -494,13 +499,13 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigFailureWhenPushFails) {
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kAggrErrorMsg)));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
@@ -519,13 +524,13 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
                                       "reboot required")));
 
   ::grpc::ServerContext context;
-  ::p4::SetForwardingPipelineConfigRequest request;
-  ::p4::SetForwardingPipelineConfigResponse response;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
   request.set_device_id(kNodeId1);
   request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(
-      ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
   AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
@@ -540,12 +545,12 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigReportsRebootRequired) {
 
 TEST_P(P4ServiceTest, WriteSuccess) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
-  req.add_updates()->set_type(::p4::Update::INSERT);
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
   AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
@@ -567,8 +572,8 @@ TEST_P(P4ServiceTest, WriteSuccess) {
 
 TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -582,9 +587,9 @@ TEST_P(P4ServiceTest, WriteSuccessForNoUpdatesToWrite) {
 
 TEST_P(P4ServiceTest, WriteFailureForNoDeviceId) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
-  req.add_updates()->set_type(::p4::Update::INSERT);
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -598,10 +603,10 @@ TEST_P(P4ServiceTest, WriteFailureForNoDeviceId) {
 
 TEST_P(P4ServiceTest, WriteFailureForNoElectionId) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
   req.set_device_id(kNodeId1);
-  req.add_updates()->set_type(::p4::Update::INSERT);
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -615,12 +620,12 @@ TEST_P(P4ServiceTest, WriteFailureForNoElectionId) {
 
 TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
-  req.add_updates()->set_type(::p4::Update::INSERT);
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -634,13 +639,13 @@ TEST_P(P4ServiceTest, WriteFailureWhenNonMaster) {
 
 TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
   req.set_device_id(kNodeId1);
   req.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
   req.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
-  req.add_updates()->set_type(::p4::Update::INSERT);
-  req.add_updates()->set_type(::p4::Update::MODIFY);
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
+  req.add_updates()->set_type(::p4::v1::Update::MODIFY);
   AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
@@ -677,9 +682,9 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
 
 TEST_P(P4ServiceTest, WriteFailureForAuthError) {
   ::grpc::ClientContext context;
-  ::p4::WriteRequest req;
-  ::p4::WriteResponse resp;
-  req.add_updates()->set_type(::p4::Update::INSERT);
+  ::p4::v1::WriteRequest req;
+  ::p4::v1::WriteResponse resp;
+  req.add_updates()->set_type(::p4::v1::Update::INSERT);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Write", _))
       .WillOnce(Return(
@@ -694,8 +699,8 @@ TEST_P(P4ServiceTest, WriteFailureForAuthError) {
 
 TEST_P(P4ServiceTest, ReadSuccess) {
   ::grpc::ClientContext context;
-  ::p4::ReadRequest req;
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
@@ -705,7 +710,7 @@ TEST_P(P4ServiceTest, ReadSuccess) {
       .WillOnce(Return(::util::OkStatus()));
 
   // Invoke the RPC and validate the results.
-  std::unique_ptr<::grpc::ClientReader<::p4::ReadResponse>> reader =
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
       stub_->Read(&context, req);
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
@@ -714,14 +719,14 @@ TEST_P(P4ServiceTest, ReadSuccess) {
 
 TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
   ::grpc::ClientContext context;
-  ::p4::ReadRequest req;
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
       .WillOnce(Return(::util::OkStatus()));
 
   // Invoke the RPC and validate the results.
-  std::unique_ptr<::grpc::ClientReader<::p4::ReadResponse>> reader =
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
       stub_->Read(&context, req);
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
@@ -730,15 +735,15 @@ TEST_P(P4ServiceTest, ReadSuccessForNoEntitiesToRead) {
 
 TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
   ::grpc::ClientContext context;
-  ::p4::ReadRequest req;
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("P4Service", "Read", _))
       .WillOnce(Return(::util::OkStatus()));
 
   // Invoke the RPC and validate the results.
-  std::unique_ptr<::grpc::ClientReader<::p4::ReadResponse>> reader =
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
       stub_->Read(&context, req);
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
@@ -748,8 +753,8 @@ TEST_P(P4ServiceTest, ReadFailureForNoDeviceId) {
 
 TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
   ::grpc::ClientContext context;
-  ::p4::ReadRequest req;
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
@@ -764,7 +769,7 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
                                             kAggrErrorMsg))));
 
   // Invoke the RPC and validate the results.
-  std::unique_ptr<::grpc::ClientReader<::p4::ReadResponse>> reader =
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
       stub_->Read(&context, req);
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
@@ -783,8 +788,8 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
 
 TEST_P(P4ServiceTest, ReadFailureForAuthError) {
   ::grpc::ClientContext context;
-  ::p4::ReadRequest req;
-  ::p4::ReadResponse resp;
+  ::p4::v1::ReadRequest req;
+  ::p4::v1::ReadResponse resp;
   req.set_device_id(kNodeId1);
   req.add_entities()->mutable_table_entry()->set_table_id(kTableId1);
 
@@ -793,7 +798,7 @@ TEST_P(P4ServiceTest, ReadFailureForAuthError) {
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kAggrErrorMsg)));
 
   // Invoke the RPC and validate the results.
-  std::unique_ptr<::grpc::ClientReader<::p4::ReadResponse>> reader =
+  std::unique_ptr<::grpc::ClientReader<::p4::v1::ReadResponse>> reader =
       stub_->Read(&context, req);
   ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
@@ -810,13 +815,13 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
   ::grpc::ClientContext context3;
-  ::p4::StreamMessageRequest req;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
 
   // Sample packets. We dont care about payload.
-  ::p4::PacketOut packet1;
-  ::p4::PacketOut packet2;
-  ::p4::PacketIn packet3;
+  ::p4::v1::PacketOut packet1;
+  ::p4::v1::PacketOut packet2;
+  ::p4::v1::PacketIn packet3;
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata1, packet1.add_metadata()));
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata2, packet2.add_metadata()));
   ASSERT_OK(ParseProtoFromString(kTestPacketMetadata3, packet3.add_metadata()));
@@ -1080,8 +1085,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyConnections) {
 
 TEST_P(P4ServiceTest, StreamChannelFailureForZeroDeviceId) {
   ::grpc::ClientContext context;
-  ::p4::StreamMessageRequest req;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
@@ -1099,8 +1104,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForZeroDeviceId) {
 
 TEST_P(P4ServiceTest, StreamChannelFailureForInvalidDeviceId) {
   ::grpc::ClientContext context;
-  ::p4::StreamMessageRequest req;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
@@ -1119,8 +1124,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForInvalidDeviceId) {
 
 TEST_P(P4ServiceTest, StreamChannelFailureForZeroElectionId) {
   ::grpc::ClientContext context;
-  ::p4::StreamMessageRequest req;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
@@ -1139,8 +1144,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForZeroElectionId) {
 
 TEST_P(P4ServiceTest, StreamChannelFailureWhenRegisterHandlerFails) {
   ::grpc::ClientContext context;
-  ::p4::StreamMessageRequest req;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))
@@ -1168,8 +1173,8 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyControllersPerNode) {
   FLAGS_max_num_controllers_per_node = 1;  // max one controller per node.
   ::grpc::ClientContext context1;
   ::grpc::ClientContext context2;
-  ::p4::StreamMessageRequest req;
-  ::p4::StreamMessageResponse resp;
+  ::p4::v1::StreamMessageRequest req;
+  ::p4::v1::StreamMessageResponse resp;
 
   EXPECT_CALL(*auth_policy_checker_mock_,
               Authorize("P4Service", "StreamChannel", _))

@@ -40,12 +40,12 @@ RegexDataSource::RegexDataSource(
     // This error could be due to either the regex failing to match, or the
     // capture groups failing to parse. Disambiguate.
     if (args_.empty() || !RE2::FullMatch(str, regex_)) {
-      RETURN_ERROR() << "Could not parse \"" << str << "\" with regex \""
-                     << regex_.pattern() << "\".";
+      return MAKE_ERROR() << "Could not parse \"" << str << "\" with regex \""
+                          << regex_.pattern() << "\".";
     } else {
-      RETURN_ERROR() << "Could not parse \"" << str << "\" with regex \""
-                     << regex_.pattern()
-                     << "\" into attributes of the requested types.";
+      return MAKE_ERROR() << "Could not parse \"" << str << "\" with regex \""
+                          << regex_.pattern()
+                          << "\" into attributes of the requested types.";
     }
   }
   for (auto& field : fields_) {

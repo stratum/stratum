@@ -1,0 +1,109 @@
+module openconfig-hercules-qos {
+  yang-version "1";
+
+  // namespace
+  namespace "http://openconfig.net/yang/hercules/qos";
+
+  prefix  "herc-qos";
+
+  // import some basic types
+  import openconfig-qos { prefix oc-qos; }
+  import openconfig-extensions { prefix oc-ext; }
+
+  // include sub-modules
+
+  // meta
+  organization
+    "OpenConfig Hercules Working Group";
+
+  contact
+    "openconfig-hercules@googlegroups.com";
+
+  description
+    "Defines extensions to the OpenConfig QoS model for the
+    Hercules switch profile.";
+
+  oc-ext:openconfig-version "0.1.0";
+
+  revision 2018-02-09 {
+    description "Still a draft. Expect significant changes.";
+    reference "0.1.0";
+  }
+
+  // extension statements
+
+  // feature statements
+
+  // identity statements
+
+  // typedef statements
+
+  // grouping statements
+  grouping hercules-qos-interface-queue-state {
+    description
+      "Additional Hercules read-only data for queues associated to an
+      interface.";
+
+    leaf id {
+      type uint32;
+      description
+        "Unique ID of the queue";
+    }
+
+  }
+
+  grouping hercules-qos-queue {
+    description
+      "Additional Hercules data related to a queue element.";
+
+    leaf id {
+      type uint32;
+      description
+        "Unique ID of the queue";
+    }
+
+  }
+
+  // data definition statements
+
+  // augment statements
+  augment "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:input/" +
+          "oc-qos:queues/oc-qos:queue/oc-qos:state" {
+
+    description
+      "Adds Hercules-specific status information to the qos module";
+
+    uses hercules-qos-interface-queue-state;
+  }
+
+  augment "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/" +
+          "oc-qos:queues/oc-qos:queue/oc-qos:state" {
+
+    description
+      "Adds Hercules-specific status information to the qos module";
+
+    uses hercules-qos-interface-queue-state;
+  }
+
+  // augment statements
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:config" {
+
+    description
+      "Adds Hercules-specific status information to the qos module";
+
+    uses hercules-qos-queue;
+  }
+
+  augment "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:state" {
+
+    description
+      "Adds Hercules-specific status information to the qos module";
+
+    uses hercules-qos-queue;
+  }
+
+  // rpc statements
+
+  // notification statements
+
+}

@@ -21,10 +21,14 @@
 #include <set>
 
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
+
+using channel_internal::ChannelBase;
 
 // Test Channel creation, IsOpen() check, Close(), and destruction.
 TEST(ChannelTest, TestCreateChannelClose) {
@@ -390,7 +394,7 @@ void* StressTestChannelReaderFunc(void* arg) {
 // depth, and there are more ChannelReaders and more ChannelWriters than that
 // depth. Additionally, ChannelReaders and ChannelWriters may utilize the
 // non-blocking calls.
-TEST(ChannelTest, StressTest) {
+TEST(ChannelTest, ReadWriteStressTest) {
   pthread_t reader_tids[kChannelReaderCnt];
   pthread_t writer_tids[kChannelWriterCnt];
   std::shared_ptr<Channel<int>> channel = Channel<int>::Create(kMaxDepth);
@@ -406,7 +410,7 @@ TEST(ChannelTest, StressTest) {
   }
   // Create ChannelWriter threads.
   for (size_t i = 0; i < kChannelWriterCnt; i++) {
-    writers[i].writer = ChannelWriter<int>::Create(channel);
+    ASSERT_NE(nullptr, writers[i].writer = ChannelWriter<int>::Create(channel));
     writers[i].src = &src;
     writers[i].src_lock = &src_lock;
     pthread_create(&writer_tids[i], nullptr, StressTestChannelWriterFunc,
@@ -414,7 +418,7 @@ TEST(ChannelTest, StressTest) {
   }
   // Create ChannelReader threads.
   for (size_t i = 0; i < kChannelReaderCnt; i++) {
-    readers[i].reader = ChannelReader<int>::Create(channel);
+    ASSERT_NE(nullptr, readers[i].reader = ChannelReader<int>::Create(channel));
     readers[i].dst = &dst;
     readers[i].dst_lock = &dst_lock;
     readers[i].dst_cond = &dst_cond;
@@ -435,6 +439,169 @@ TEST(ChannelTest, StressTest) {
   // Join ChannelReader threads.
   for (auto reader_tid : reader_tids) {
     pthread_join(reader_tid, nullptr);
+  }
+  // Check success.
+  EXPECT_EQ(src_copy, dst);
+}
+
+TEST(ChannelTest, BasicSelectTest) {
+  std::shared_ptr<Channel<int>> channel = Channel<int>::Create(2);
+  auto writer = ChannelWriter<int>::Create(channel);
+  auto reader = ChannelReader<int>::Create(channel);
+
+  // When Channel is empty, Select() should fail.
+  auto status_or_ready = Select({channel.get()}, absl::Milliseconds(100));
+  EXPECT_EQ(ERR_ENTRY_NOT_FOUND, status_or_ready.status().error_code());
+
+  EXPECT_OK(writer->TryWrite(1));
+  // When Channel has data, Select() should succeed.
+  status_or_ready = Select({channel.get()}, absl::InfiniteDuration());
+  EXPECT_TRUE(status_or_ready.ok());
+  if (status_or_ready.ok()) {
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(channel.get()));
+  }
+
+  // Select should not modify the Channel queue.
+  status_or_ready = Select({channel.get()}, absl::InfiniteDuration());
+  EXPECT_TRUE(status_or_ready.ok());
+  EXPECT_OK(Select({channel.get()}, absl::InfiniteDuration()));
+  if (status_or_ready.ok()) {
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(channel.get()));
+  }
+  int dummy = 0;
+  EXPECT_OK(reader->TryRead(&dummy));
+  EXPECT_EQ(1, dummy);
+
+  EXPECT_TRUE(channel->Close());
+  // When Channel is closed, Select() should fail.
+  status_or_ready = Select({channel.get()}, absl::InfiniteDuration());
+  EXPECT_EQ(ERR_CANCELLED, status_or_ready.status().error_code());
+}
+
+TEST(ChannelTest, BasicSelectTestMultiChannel) {
+  std::shared_ptr<Channel<int>> int_channel = Channel<int>::Create(2);
+  auto int_writer = ChannelWriter<int>::Create(int_channel);
+  auto int_reader = ChannelReader<int>::Create(int_channel);
+  std::shared_ptr<Channel<std::string>> str_channel =
+      Channel<std::string>::Create(2);
+  auto str_writer = ChannelWriter<std::string>::Create(str_channel);
+  auto str_reader = ChannelReader<std::string>::Create(str_channel);
+  std::vector<ChannelBase*> channels = {int_channel.get(), str_channel.get()};
+
+  // When Channels are empty, Select() should fail.
+  auto status_or_ready = Select(channels, absl::Milliseconds(100));
+  EXPECT_EQ(ERR_ENTRY_NOT_FOUND, status_or_ready.status().error_code());
+
+  // When one Channel is ready_flags, regardless of order, Select() should set
+  // its flag.
+  EXPECT_OK(int_writer->TryWrite(1));
+  status_or_ready = Select(channels, absl::InfiniteDuration());
+  EXPECT_TRUE(status_or_ready.ok());
+  if (status_or_ready.ok()) {
+    // Only int_channel should be ready.
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(int_channel.get()));
+    EXPECT_FALSE(status_or_ready.ValueOrDie()(str_channel.get()));
+  }
+  EXPECT_OK(str_writer->TryWrite("1"));
+  status_or_ready = Select(channels, absl::InfiniteDuration());
+  EXPECT_TRUE(status_or_ready.ok());
+  if (status_or_ready.ok()) {
+    // Both int_channel and str_channel should be ready.
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(int_channel.get()));
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(str_channel.get()));
+  }
+  int dummy = 0;
+  EXPECT_OK(int_reader->TryRead(&dummy));
+  status_or_ready = Select(channels, absl::InfiniteDuration());
+  EXPECT_TRUE(status_or_ready.ok());
+  if (status_or_ready.ok()) {
+    // Only str_channel should be ready.
+    EXPECT_FALSE(status_or_ready.ValueOrDie()(int_channel.get()));
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(str_channel.get()));
+  }
+
+  // Select() should ignore a closed Channel if there are any open ones.
+  EXPECT_TRUE(int_channel->Close());
+  status_or_ready = Select(channels, absl::InfiniteDuration());
+  EXPECT_TRUE(status_or_ready.ok());
+  if (status_or_ready.ok()) {
+    // Only str_channel should be ready.
+    EXPECT_FALSE(status_or_ready.ValueOrDie()(int_channel.get()));
+    EXPECT_TRUE(status_or_ready.ValueOrDie()(str_channel.get()));
+  }
+
+  // Select() should fail with ERR_CANCELLED if all Channels are closed.
+  EXPECT_TRUE(str_channel->Close());
+  status_or_ready = Select(channels, absl::InfiniteDuration());
+  EXPECT_EQ(ERR_CANCELLED, status_or_ready.status().error_code());
+}
+
+namespace {
+
+void SelectStressTestProcessChannel(ChannelReader<int>* reader,
+                                    std::set<int>* set, bool* done) {
+  std::vector<int> data;
+  ASSERT_OK(reader->ReadAll(&data));
+  for (auto datum : data) {
+    EXPECT_TRUE(set->insert(datum).second);
+  }
+  read_cnt += data.size();
+  if (read_cnt >= kSetSize) {
+    *done = true;
+    EXPECT_EQ(kSetSize, read_cnt);
+    read_cnt = 0;
+  }
+}
+
+}  // namespace
+
+// Similar to ReadWriteStressTest but creates a separate Channel for each writer
+// to use. The main thread Selects on and processes all of the messages.
+TEST(ChannelTest, SelectStressTest) {
+  const int kChannelCnt = 10;
+  pthread_t writer_tids[kChannelCnt];
+  std::shared_ptr<Channel<int>> channels[kChannelCnt];
+  std::unique_ptr<ChannelReader<int>> readers[kChannelCnt];
+  StressTestChannelWriterArgs writers[kChannelCnt];
+  std::vector<ChannelBase*> channel_ptrs;
+  std::set<int> src, src_copy, dst;
+  absl::Mutex src_lock, dst_lock;
+  bool dst_cond = false;
+  // Initialize source set and copy to compare against at end.
+  for (size_t i = 0; i < kSetSize; ++i) {
+    src.insert(i);
+    src_copy.insert(i);
+  }
+  // Create ChannelWriter threads.
+  for (size_t i = 0; i < kChannelCnt; ++i) {
+    channels[i] = Channel<int>::Create(kMaxDepth);
+    ASSERT_NE(nullptr,
+              writers[i].writer = ChannelWriter<int>::Create(channels[i]));
+    writers[i].src = &src;
+    writers[i].src_lock = &src_lock;
+    pthread_create(&writer_tids[i], nullptr, StressTestChannelWriterFunc,
+                   &writers[i]);
+    ASSERT_NE(nullptr, readers[i] = ChannelReader<int>::Create(channels[i]));
+    channel_ptrs.push_back(channels[i].get());
+  }
+  // Keep reading until the array has been copied.
+  while (!dst_cond) {
+    auto status_or_ready = Select(channel_ptrs, absl::InfiniteDuration());
+    // The Channels should not be closed and Select() should not return without
+    // at least one Channel being ready.
+    ASSERT_TRUE(status_or_ready.ok());
+    const auto& ready = status_or_ready.ValueOrDie();
+    // Check if each Channel has data to be read.
+    for (int i = 0; i < kChannelCnt; ++i) {
+      if (ready(channel_ptrs[i])) {
+        SelectStressTestProcessChannel(readers[i].get(), &dst, &dst_cond);
+      }
+    }
+  }
+  // Join ChannelWriter threads.
+  for (int i = 0; i < kChannelCnt; ++i) {
+    EXPECT_TRUE(channels[i]->Close());
+    pthread_join(writer_tids[i], nullptr);
   }
   // Check success.
   EXPECT_EQ(src_copy, dst);

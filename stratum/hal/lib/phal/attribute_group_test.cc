@@ -18,10 +18,13 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/datasource_mock.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
+#include "stratum/hal/lib/phal/managed_attribute_mock.h"
 #include "stratum/hal/lib/phal/test/test.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
+#include "platforms/networking/hercules/lib/test_utils/matchers.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/base/integral_types.h"
@@ -679,7 +682,7 @@ TEST_F(AttributeGroupQueryTest, CanTraverseQuery) {
       {{PathEntry("single_sub"), PathEntry("val1")}}));
   MockFunction<::util::Status(std::unique_ptr<ReadableAttributeGroup>)>
       group_function;
-  MockFunction<::util::Status(ManagedAttribute*,
+  MockFunction<::util::Status(ManagedAttribute*, const Path& querying_path,
                               const AttributeSetterFunction& setter)>
       attribute_function;
 
@@ -687,7 +690,7 @@ TEST_F(AttributeGroupQueryTest, CanTraverseQuery) {
   EXPECT_CALL(group_function, Call(_))
       .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(attribute_function, Call(_, _))
+  EXPECT_CALL(attribute_function, Call(_, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(group_->TraverseQuery(&query, group_function.AsStdFunction(),
                                   attribute_function.AsStdFunction()));
@@ -701,7 +704,7 @@ TEST_F(AttributeGroupQueryTest, CanTraverseQueryAfterModification) {
       {{PathEntry("single_sub"), PathEntry("val1")}}));
   MockFunction<::util::Status(std::unique_ptr<ReadableAttributeGroup>)>
       group_function;
-  MockFunction<::util::Status(ManagedAttribute*,
+  MockFunction<::util::Status(ManagedAttribute*, const Path& querying_path,
                               const AttributeSetterFunction& setter)>
       attribute_function;
 
@@ -716,7 +719,7 @@ TEST_F(AttributeGroupQueryTest, CanTraverseQueryAfterModification) {
   EXPECT_CALL(group_function, Call(_))
       .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(attribute_function, Call(_, _))
+  EXPECT_CALL(attribute_function, Call(_, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(group_->TraverseQuery(&query, group_function.AsStdFunction(),
                                   attribute_function.AsStdFunction()));
@@ -931,6 +934,108 @@ TEST_F(AttributeGroupQueryTest, CanQueryTerminalGroup) {
   ASSERT_OK(query.Get(&result));
   ASSERT_TRUE(result.has_single_sub());
   EXPECT_EQ(result.single_sub().val1(), kInt32TestVal);
+}
+
+TEST_F(AttributeGroupQueryTest, CanQueryRepeatedTerminalGroup) {
+  DummyThreadpool threadpool;
+  AttributeGroupQuery query(group_.get(), &threadpool);
+  PathEntry terminal_group("repeated_sub", 1);
+  terminal_group.terminal_group = true;
+  ASSERT_OK(
+      group_->AcquireReadable()->RegisterQuery(&query, {{terminal_group}}));
+
+  TestTop result;
+
+  ASSERT_OK(query.Get(&result));
+  EXPECT_EQ(result.repeated_sub_size(), 0);
+
+  ASSERT_OK(AddRepeatedQueryPath());
+
+  ASSERT_OK(query.Get(&result));
+  EXPECT_EQ(result.repeated_sub_size(), 0);
+
+  ASSERT_OK(AddRepeatedQueryPath());
+
+  ASSERT_OK(query.Get(&result));
+  ASSERT_EQ(result.repeated_sub_size(), 2);
+  EXPECT_EQ(result.repeated_sub(1).val1(), kInt32TestVal);
+}
+
+class AttributeGroupSetTest : public ::testing::Test {
+ public:
+  AttributeGroupSetTest() {
+    group_ = AttributeGroup::From(TestTop::descriptor());
+  }
+
+ protected:
+  std::unique_ptr<AttributeGroup> group_;
+};
+
+TEST_F(AttributeGroupSetTest, CanSetSingleAttribute) {
+  DataSourceMock datasource;
+  ManagedAttributeMock attribute;
+
+  EXPECT_CALL(attribute, GetValue()).WillOnce(Return(0));
+  EXPECT_CALL(attribute, CanSet()).WillOnce(Return(true));
+  EXPECT_CALL(attribute, Set(Attribute(1234)))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(attribute, GetDataSource())
+      .Times(2)
+      .WillRepeatedly(Return(&datasource));
+  EXPECT_CALL(datasource, LockAndFlushWrites())
+      .WillOnce(Return(::util::OkStatus()));
+
+  Path path{PathEntry("int32_val")};
+  DummyThreadpool threadpool;
+  ASSERT_OK(group_->AcquireMutable()->AddAttribute("int32_val", &attribute));
+  EXPECT_OK(group_->Set({{path, 1234}}, &threadpool));
+}
+
+TEST_F(AttributeGroupSetTest, CanSetMultipleAttributesWithSameDataSource) {
+  DataSourceMock datasource;
+  ManagedAttributeMock attribute1;
+  ManagedAttributeMock attribute2;
+
+  EXPECT_CALL(attribute1, GetValue()).WillOnce(Return(0));
+  EXPECT_CALL(attribute1, CanSet()).WillOnce(Return(true));
+  EXPECT_CALL(attribute1, Set(Attribute(1234)))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(attribute1, GetDataSource())
+      .Times(2)
+      .WillRepeatedly(Return(&datasource));
+  EXPECT_CALL(attribute2, GetValue()).WillOnce(Return(int64{0}));
+  EXPECT_CALL(attribute2, CanSet()).WillOnce(Return(true));
+  EXPECT_CALL(attribute2, Set(Attribute(5678)))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(attribute2, GetDataSource())
+      .Times(2)
+      .WillRepeatedly(Return(&datasource));
+  // LockAndFlushWrites is only called once, since both attributes have the same
+  // datasource.
+  EXPECT_CALL(datasource, LockAndFlushWrites())
+      .WillOnce(Return(::util::OkStatus()));
+
+  Path path1{PathEntry("int32_val")};
+  Path path2{PathEntry("int64_val")};
+  DummyThreadpool threadpool;
+  ASSERT_OK(group_->AcquireMutable()->AddAttribute("int32_val", &attribute1));
+  ASSERT_OK(group_->AcquireMutable()->AddAttribute("int64_val", &attribute2));
+  EXPECT_OK(group_->Set({{path1, 1234}, {path2, 5678}}, &threadpool));
+}
+
+TEST_F(AttributeGroupSetTest, CannotSetUnsettableAttribute) {
+  DataSourceMock datasource;
+  ManagedAttributeMock attribute;
+
+  EXPECT_CALL(attribute, GetValue()).WillOnce(Return(0));
+  EXPECT_CALL(attribute, CanSet()).WillOnce(Return(false));
+  EXPECT_CALL(attribute, GetDataSource()).WillOnce(Return(&datasource));
+
+  Path path{PathEntry("int32_val")};
+  DummyThreadpool threadpool;
+  ASSERT_OK(group_->AcquireMutable()->AddAttribute("int32_val", &attribute));
+  // TODO(swiggett): Replace with a status matcher.
+  EXPECT_FALSE(group_->Set({{path, 1234}}, &threadpool).ok());
 }
 
 }  // namespace

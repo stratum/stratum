@@ -28,31 +28,31 @@
 // This flag allows unit tests to simplify their P4Info setup.  For example,
 // a test that only wants to verify something about a Counter can enable this
 // flag to avoid adding Actions, Tables, and Header Fields to its tested P4Info.
-DEFINE_bool(skip_p4_min_objects_check, false, "When true, the check for minimum"
-            " required P4 objects is not enforced.");
+DEFINE_bool(skip_p4_min_objects_check, false,
+            "When true, the check for minimum required P4 objects is not "
+            "enforced.");
 
 namespace stratum {
 namespace hal {
 
-P4InfoManager::P4InfoManager(const p4::config::P4Info& p4_info)
+P4InfoManager::P4InfoManager(const ::p4::config::v1::P4Info& p4_info)
     : p4_info_(p4_info),
       table_map_("Table"),
       action_map_("Action"),
       action_profile_map_("Action-Profile"),
       counter_map_("Counter"),
-      meter_map_("Meter") {
-}
+      meter_map_("Meter"),
+      value_set_map_("ValueSet") {}
 
 P4InfoManager::P4InfoManager()
     : table_map_("Table"),
       action_map_("Action"),
       action_profile_map_("Action-Profile"),
       counter_map_("Counter"),
-      meter_map_("Meter") {
-}
+      meter_map_("Meter"),
+      value_set_map_("ValueSet") {}
 
-P4InfoManager::~P4InfoManager() {
-}
+P4InfoManager::~P4InfoManager() {}
 
 // Since P4InfoManager can be used in a verify role, it attempts to continue
 // processing after most errors in order to describe every problem it
@@ -64,73 +64,84 @@ P4InfoManager::~P4InfoManager() {
 
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(status, VerifyRequiredObjects());
-  PreambleCallback preamble_cb = std::bind(
-      &P4InfoManager::ProcessPreamble, this,
-      std::placeholders::_1, std::placeholders::_2);
-  APPEND_STATUS_IF_ERROR(status, table_map_.BuildMaps(
-      p4_info_.tables(), preamble_cb));
-  APPEND_STATUS_IF_ERROR(status, action_map_.BuildMaps(
-      p4_info_.actions(), preamble_cb));
+  PreambleCallback preamble_cb =
+      std::bind(&P4InfoManager::ProcessPreamble, this, std::placeholders::_1,
+                std::placeholders::_2);
+  APPEND_STATUS_IF_ERROR(status,
+                         table_map_.BuildMaps(p4_info_.tables(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(
+      status, action_map_.BuildMaps(p4_info_.actions(), preamble_cb));
   APPEND_STATUS_IF_ERROR(status, action_profile_map_.BuildMaps(
-      p4_info_.action_profiles(), preamble_cb));
-  APPEND_STATUS_IF_ERROR(status, counter_map_.BuildMaps(
-      p4_info_.counters(), preamble_cb));
-  APPEND_STATUS_IF_ERROR(status, meter_map_.BuildMaps(
-      p4_info_.meters(), preamble_cb));
+                                     p4_info_.action_profiles(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(
+      status, counter_map_.BuildMaps(p4_info_.counters(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(status,
+                         meter_map_.BuildMaps(p4_info_.meters(), preamble_cb));
+  APPEND_STATUS_IF_ERROR(
+      status, value_set_map_.BuildMaps(p4_info_.value_sets(), preamble_cb));
 
   APPEND_STATUS_IF_ERROR(status, VerifyTableXrefs());
 
   return status;
 }
 
-::util::StatusOr<const p4::config::Table> P4InfoManager::FindTableByID(
-    uint32_t table_id) const {
+::util::StatusOr<const ::p4::config::v1::Table> P4InfoManager::FindTableByID(
+    uint32 table_id) const {
   return table_map_.FindByID(table_id);
 }
 
-::util::StatusOr<const p4::config::Table> P4InfoManager::FindTableByName(
-    std::string table_name) const {
+::util::StatusOr<const ::p4::config::v1::Table> P4InfoManager::FindTableByName(
+    const std::string& table_name) const {
   return table_map_.FindByName(table_name);
 }
 
-::util::StatusOr<const p4::config::Action> P4InfoManager::FindActionByID(
-    uint32_t action_id) const {
+::util::StatusOr<const ::p4::config::v1::Action> P4InfoManager::FindActionByID(
+    uint32 action_id) const {
   return action_map_.FindByID(action_id);
 }
 
-::util::StatusOr<const p4::config::Action> P4InfoManager::FindActionByName(
-    std::string action_name) const {
+::util::StatusOr<const ::p4::config::v1::Action>
+P4InfoManager::FindActionByName(const std::string& action_name) const {
   return action_map_.FindByName(action_name);
 }
 
-::util::StatusOr<const p4::config::ActionProfile>
-P4InfoManager::FindActionProfileByID(uint32_t profile_id) const {
+::util::StatusOr<const ::p4::config::v1::ActionProfile>
+P4InfoManager::FindActionProfileByID(uint32 profile_id) const {
   return action_profile_map_.FindByID(profile_id);
 }
 
-::util::StatusOr<const p4::config::ActionProfile>
-P4InfoManager::FindActionProfileByName(std::string profile_name) const {
+::util::StatusOr<const ::p4::config::v1::ActionProfile>
+P4InfoManager::FindActionProfileByName(const std::string& profile_name) const {
   return action_profile_map_.FindByName(profile_name);
 }
 
-::util::StatusOr<const p4::config::Counter> P4InfoManager::FindCounterByID(
-    uint32_t counter_id) const {
+::util::StatusOr<const ::p4::config::v1::Counter>
+P4InfoManager::FindCounterByID(uint32 counter_id) const {
   return counter_map_.FindByID(counter_id);
 }
 
-::util::StatusOr<const p4::config::Counter> P4InfoManager::FindCounterByName(
-    std::string counter_name) const {
+::util::StatusOr<const ::p4::config::v1::Counter>
+P4InfoManager::FindCounterByName(const std::string& counter_name) const {
   return counter_map_.FindByName(counter_name);
 }
 
-::util::StatusOr<const p4::config::Meter> P4InfoManager::FindMeterByID(
-    uint32_t meter_id) const {
+::util::StatusOr<const ::p4::config::v1::Meter> P4InfoManager::FindMeterByID(
+    uint32 meter_id) const {
   return meter_map_.FindByID(meter_id);
 }
 
-::util::StatusOr<const p4::config::Meter> P4InfoManager::FindMeterByName(
-    std::string meter_name) const {
+::util::StatusOr<const ::p4::config::v1::Meter> P4InfoManager::FindMeterByName(
+    const std::string& meter_name) const {
   return meter_map_.FindByName(meter_name);
+}
+::util::StatusOr<const ::p4::config::v1::ValueSet>
+P4InfoManager::FindValueSetByID(uint32 value_set_id) const {
+  return value_set_map_.FindByID(value_set_id);
+}
+
+::util::StatusOr<const ::p4::config::v1::ValueSet>
+P4InfoManager::FindValueSetByName(const std::string& value_set_name) const {
+  return value_set_map_.FindByName(value_set_name);
 }
 
 ::util::StatusOr<P4Annotation> P4InfoManager::GetSwitchStackAnnotations(
@@ -142,7 +153,7 @@ P4InfoManager::FindActionProfileByName(std::string profile_name) const {
            << "not contain a Preamble";
   }
 
-  const p4::config::Preamble* preamble_ptr = *preamble_ptr_ptr;
+  const ::p4::config::v1::Preamble* preamble_ptr = *preamble_ptr_ptr;
   P4Annotation p4_annotation;
   for (const auto& annotation : preamble_ptr->annotations()) {
     // TODO: Investigate to what degree p4c enforces annotation
@@ -177,6 +188,7 @@ void P4InfoManager::DumpNamesToIDs() const {
   action_profile_map_.DumpNamesToIDs();
   counter_map_.DumpNamesToIDs();
   meter_map_.DumpNamesToIDs();
+  value_set_map_.DumpNamesToIDs();
 }
 
 ::util::Status P4InfoManager::VerifyRequiredObjects() {
@@ -194,7 +206,7 @@ void P4InfoManager::DumpNamesToIDs() const {
 
   if (!missing_objects.empty()) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "P4Info is missing these required resources:" << missing_objects;
+           << "P4Info is missing these required resources:" << missing_objects;
   }
 
   return ::util::OkStatus();
@@ -203,18 +215,20 @@ void P4InfoManager::DumpNamesToIDs() const {
 // Validates preamble's name and ID fields and makes sure they are globally
 // unique.
 ::util::Status P4InfoManager::ProcessPreamble(
-    const p4::config::Preamble& preamble, const std::string& resource_type) {
+    const ::p4::config::v1::Preamble& preamble,
+    const std::string& resource_type) {
   auto status = P4InfoManager::VerifyID(preamble, resource_type);
   auto name_status = P4InfoManager::VerifyName(preamble, resource_type);
   APPEND_STATUS_IF_ERROR(status, name_status);
 
   if (status.ok()) {
-    uint32_t id_key = preamble.id();
+    uint32 id_key = preamble.id();
     auto id_result = all_resource_ids_.insert(id_key);
     if (!id_result.second) {
       ::util::Status insert_id_status = MAKE_ERROR(ERR_INVALID_P4_INFO)
-          << "P4Info " << resource_type << " ID " << PrintP4ObjectID(id_key)
-          << " is not unique";
+                                        << "P4Info " << resource_type << " ID "
+                                        << PrintP4ObjectID(id_key)
+                                        << " is not unique";
       APPEND_STATUS_IF_ERROR(status, insert_id_status);
     }
 
@@ -223,8 +237,9 @@ void P4InfoManager::DumpNamesToIDs() const {
         all_resource_names_.insert(std::make_pair(name_key, &preamble));
     if (!name_result.second) {
       ::util::Status insert_name_status = MAKE_ERROR(ERR_INVALID_P4_INFO)
-          << "P4Info " << resource_type << " name " << name_key
-          << " is not unique";
+                                          << "P4Info " << resource_type
+                                          << " name " << name_key
+                                          << " is not unique";
       APPEND_STATUS_IF_ERROR(status, insert_name_status);
     }
   }
@@ -244,7 +259,8 @@ void P4InfoManager::DumpNamesToIDs() const {
 
     for (const auto& action_ref : table.action_refs()) {
       if (!action_map_.FindByID(action_ref.id()).ok()) {
-        ::util::Status action_xref_status = MAKE_ERROR(ERR_INVALID_P4_INFO)
+        ::util::Status action_xref_status =
+            MAKE_ERROR(ERR_INVALID_P4_INFO)
             << "P4Info Table " << table.preamble().name() << " refers to an "
             << "invalid " << action_map_.resource_type() << " with ID "
             << PrintP4ObjectID(action_ref.id());
@@ -257,20 +273,23 @@ void P4InfoManager::DumpNamesToIDs() const {
 }
 
 ::util::Status P4InfoManager::VerifyID(
-    const p4::config::Preamble& preamble, const std::string& resource_type) {
+    const ::p4::config::v1::Preamble& preamble,
+    const std::string& resource_type) {
   if (preamble.id() == 0) {
     return MAKE_ERROR(ERR_INVALID_P4_INFO)
-        << "P4Info " << resource_type << " requires a non-zero ID in preamble";
+           << "P4Info " << resource_type
+           << " requires a non-zero ID in preamble";
   }
   return ::util::OkStatus();
 }
 
 ::util::Status P4InfoManager::VerifyName(
-    const p4::config::Preamble& preamble, const std::string& resource_type) {
+    const ::p4::config::v1::Preamble& preamble,
+    const std::string& resource_type) {
   if (preamble.name().empty()) {
     return MAKE_ERROR(ERR_INVALID_P4_INFO)
-        << "P4Info " << resource_type
-        << " requires a non-empty name in preamble";
+           << "P4Info " << resource_type
+           << " requires a non-empty name in preamble";
   }
   return ::util::OkStatus();
 }

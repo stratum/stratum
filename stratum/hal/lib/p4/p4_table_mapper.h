@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
@@ -33,19 +34,17 @@
 #include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
-#include "stratum/public/proto/hal.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "util/gtl/flat_hash_map.h"
+#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {
 
 // Packet in (out) metadata map types.
-typedef gtl::flat_hash_map<P4FieldType, std::pair<uint32, int>,
-                           EnumHash<P4FieldType>>
+typedef absl::flat_hash_map<P4FieldType, std::pair<uint32, int>,
+                            EnumHash<P4FieldType>>
     MetadataTypeToIdBitwidthMap;
-typedef gtl::flat_hash_map<uint32, std::pair<P4FieldType, int>>
+typedef absl::flat_hash_map<uint32, std::pair<P4FieldType, int>>
     MetadataIdToTypeBitwidthMap;
 
 // The P4TableMapper is responsible for mapping P4 forwarding entries (e.g
@@ -78,13 +77,13 @@ class P4TableMapper {
   // stream to its internal P4PipelineConfig proto (and reports error if
   // decoding is not possible).
   virtual ::util::Status PushForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
 
   // Verifies the P4-based forwarding pipeline configuration of the single
   // switching node this class is mapped to. This function makes sure that every
   // applicable P4 object has a known mapping.
   virtual ::util::Status VerifyForwardingPipelineConfig(
-      const ::p4::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
 
   // Performs coldboot shutdown. Note that there is no public Initialize().
   // Initialization is done as part of PushChassisConfig() if the class is not
@@ -106,8 +105,8 @@ class P4TableMapper {
   // ERR_INTERNAL - other errors making flow_entry output invalid.
   // This functions is expected to be called by MapFlowEntry() in
   // P4TableMapper.
-  virtual ::util::Status MapFlowEntry(const ::p4::TableEntry& table_entry,
-                                      ::p4::Update::Type update_type,
+  virtual ::util::Status MapFlowEntry(const ::p4::v1::TableEntry& table_entry,
+                                      ::p4::v1::Update::Type update_type,
                                       CommonFlowEntry* flow_entry) const;
 
   // Takes the input P4 ActionProfileMember, validate it and maps it to the
@@ -122,7 +121,7 @@ class P4TableMapper {
   //     and mapped_action output is not provided.
   // ERR_INTERNAL - other errors making mapped_action output invalid.
   virtual ::util::Status MapActionProfileMember(
-      const ::p4::ActionProfileMember& member,
+      const ::p4::v1::ActionProfileMember& member,
       MappedAction* mapped_action) const;
 
   // Takes the input P4 ActionProfileGroup and validate it. The output
@@ -133,34 +132,35 @@ class P4TableMapper {
   // OK - the input group is valid.
   // ERR_INVALID_P4_INFO - group could not be found in P4Info.
   virtual ::util::Status MapActionProfileGroup(
-      const ::p4::ActionProfileGroup& group, MappedAction* mapped_action) const;
+      const ::p4::v1::ActionProfileGroup& group,
+      MappedAction* mapped_action) const;
 
-  // Converts a given MappedPacketMetadata to a ::p4::PacketMetadata to be
+  // Converts a given MappedPacketMetadata to a P4 PacketMetadata to be
   // added to the packet before sending it to controller (used for packet in at
   // the server/switch side).
   virtual ::util::Status DeparsePacketInMetadata(
       const MappedPacketMetadata& mapped_packet_metadata,
-      ::p4::PacketMetadata* p4_packet_metadata) const;
+      ::p4::v1::PacketMetadata* p4_packet_metadata) const;
 
-  // Converts a ::p4::PacketMetadata received from an incoming packet from
+  // Converts a P4 PacketMetadata received from an incoming packet from
   // controller to a MappedPacketMetadata which determines the output port,
   // cos, etc of the packet (used for packet out at the server/switch side).
   virtual ::util::Status ParsePacketOutMetadata(
-      const ::p4::PacketMetadata& p4_packet_metadata,
+      const ::p4::v1::PacketMetadata& p4_packet_metadata,
       MappedPacketMetadata* mapped_packet_metadata) const;
 
-  // Converts a given MappedPacketMetadata to a ::p4::PacketMetadata to be
+  // Converts a given MappedPacketMetadata to a P4 PacketMetadata to be
   // added to the packet before sending it to switch (used for packet out at the
   // client/controller side).
   virtual ::util::Status DeparsePacketOutMetadata(
       const MappedPacketMetadata& mapped_packet_metadata,
-      ::p4::PacketMetadata* p4_packet_metadata) const;
+      ::p4::v1::PacketMetadata* p4_packet_metadata) const;
 
-  // Converts a ::p4::PacketMetadata received from an incoming packet from
+  // Converts a P4 PacketMetadata received from an incoming packet from
   // switch to a MappedPacketMetadata which determines the input port,
   // cos, etc of the packet (used for packet in at the client/controller side).
   virtual ::util::Status ParsePacketInMetadata(
-      const ::p4::PacketMetadata& p4_packet_metadata,
+      const ::p4::v1::PacketMetadata& p4_packet_metadata,
       MappedPacketMetadata* mapped_packet_metadata) const;
 
   // Fills in the MappedField for the associated table_id & field_id. Returns
@@ -168,9 +168,9 @@ class P4TableMapper {
   virtual ::util::Status MapMatchField(int table_id, uint32 field_id,
                                        MappedField* mapped_field) const;
 
-  // Lookup the p4::config::Table from the given table_id.
+  // Lookup the P4 config Table from the given table_id.
   virtual ::util::Status LookupTable(int table_id,
-                                     ::p4::config::Table* table) const;
+                                     ::p4::config::v1::Table* table) const;
 
   // These methods control updates to P4 tables with static entries, i.e.
   // tables that contain "const entries" in the P4 program.  By default,
@@ -223,9 +223,11 @@ class P4TableMapper {
   virtual void EnableStaticTableUpdates();
   virtual void DisableStaticTableUpdates();
   virtual ::util::Status HandlePrePushStaticEntryChanges(
-      const p4::WriteRequest& new_static_config, p4::WriteRequest* out_request);
+      const ::p4::v1::WriteRequest& new_static_config,
+      ::p4::v1::WriteRequest* out_request);
   virtual ::util::Status HandlePostPushStaticEntryChanges(
-      const p4::WriteRequest& new_static_config, p4::WriteRequest* out_request);
+      const ::p4::v1::WriteRequest& new_static_config,
+      ::p4::v1::WriteRequest* out_request);
 
   // IsTableStageHidden determines whether the input table_id maps to a
   // "HIDDEN" pipeline stage.  The "HIDDEN" stage applies to P4 logical tables
@@ -264,7 +266,7 @@ class P4TableMapper {
   // descriptor is possible with object IDs from a TableWriteRequest RPC.
   // P4 tables and actions have global object IDs, i.e. every table and action
   // in a given P4Info specification has a unique ID.
-  typedef gtl::flat_hash_map<int, const P4TableMapValue*> P4GlobalIDTableMap;
+  typedef absl::flat_hash_map<int, const P4TableMapValue*> P4GlobalIDTableMap;
 
   // These types support a map for field value conversion:
   // P4FieldConvertKey - IDs in P4Info MatchFields have unique scope within the
@@ -290,12 +292,13 @@ class P4TableMapper {
     return std::make_pair(table_id, match_field_id);
   }
   inline static P4FieldConvertKey MakeP4FieldConvertKey(
-      const p4::config::Table& table, const p4::FieldMatch& match_field) {
+      const ::p4::config::v1::Table& table,
+      const ::p4::v1::FieldMatch& match_field) {
     return MakeP4FieldConvertKey(table.preamble().id(), match_field.field_id());
   }
   inline static P4FieldConvertKey MakeP4FieldConvertKey(
-      const p4::config::Table& table,
-      const p4::config::MatchField& match_field) {
+      const ::p4::config::v1::Table& table,
+      const ::p4::config::v1::MatchField& match_field) {
     return MakeP4FieldConvertKey(table.preamble().id(), match_field.id());
   }
 
@@ -323,7 +326,8 @@ class P4TableMapper {
 
     // Maps the PI action parameter in param to new modify_fields and/or
     // primitives in mapped_action.
-    ::util::Status MapActionParam(int action_id, const p4::Action::Param& param,
+    ::util::Status MapActionParam(int action_id,
+                                  const ::p4::v1::Action::Param& param,
                                   MappedAction* mapped_action) const;
 
     // Maps the action's constant assignments to header fields or parameters
@@ -371,7 +375,7 @@ class P4TableMapper {
     // fields or pass to other actions.  The action ID is the key, and the
     // value is a container of entries that define the constant assignments.
     typedef std::vector<P4ActionParamEntry> P4ActionConstants;
-    typedef gtl::flat_hash_map<int, P4ActionConstants> P4ActionConstantMap;
+    typedef absl::flat_hash_map<int, P4ActionConstants> P4ActionConstantMap;
 
     // Updates param_entry with target header field assignments from
     // param_entry's param_descriptor.  In most cases, the param_descriptor
@@ -395,7 +399,8 @@ class P4TableMapper {
 
     // Converts a PI-encoded parameter value to the appropriate type for
     // the value output.
-    static void ConvertParamValue(const p4::Action::Param& param, int bit_width,
+    static void ConvertParamValue(const ::p4::v1::Action::Param& param,
+                                  int bit_width,
                                   P4ActionFunction::P4ActionFields* value);
 
     // The constructor injects these members, which are not owned by this class.
@@ -419,12 +424,13 @@ class P4TableMapper {
 
   // Creates the global_id_table_map_ entry for the object represented by the
   // input preamble.
-  ::util::Status AddMapEntryFromPreamble(const p4::config::Preamble& preamble);
+  ::util::Status AddMapEntryFromPreamble(
+      const ::p4::config::v1::Preamble& preamble);
 
   // Finds the object name string in the P4 object preamble.  The name becomes
   // the key for P4PipelineConfig table map lookups.  If no name is found, the
   // return string is empty.
-  std::string GetMapperNameKey(const p4::config::Preamble& preamble);
+  std::string GetMapperNameKey(const ::p4::config::v1::Preamble& preamble);
 
   // Validates all of the match fields in the table_entry from a P4Runtime
   // WriteRequest message.  The input table_p4_info provides information
@@ -434,54 +440,58 @@ class P4TableMapper {
   // Upon successful return, all_match_fields combines the match fields
   // in the original WriteRequest with any additional don't care fields,
   // yielding the full set of match fields as specified by table_p4_info.
-  util::Status PrepareMatchFields(
-      const p4::config::Table& table_p4_info, const p4::TableEntry& table_entry,
-      std::vector<p4::FieldMatch>* all_match_fields) const;
+  ::util::Status PrepareMatchFields(
+      const ::p4::config::v1::Table& table_p4_info,
+      const ::p4::v1::TableEntry& table_entry,
+      std::vector<::p4::v1::FieldMatch>* all_match_fields) const;
 
   // Processes the identified table and updates table-level flow_entry output.
   // Output always includes table_info with id, name, and type.  If the table's
   // P4Info contains annotations, they are also included in the output.  The
   // output may include internal match fields if they have been defined
   // in the P4PipelineConfig table map.
-  util::Status ProcessTableID(const p4::config::Table& table_p4_info,
-                              int table_id, CommonFlowEntry* flow_entry) const;
+  ::util::Status ProcessTableID(const ::p4::config::v1::Table& table_p4_info,
+                                int table_id,
+                                CommonFlowEntry* flow_entry) const;
 
   // Processes one match_field from a table entry.  If successful, a new
   // MappedField will be added to flow_entry.
-  util::Status ProcessMatchField(const p4::config::Table& table_p4_info,
-                                 const p4::FieldMatch& match_field,
-                                 CommonFlowEntry* flow_entry) const;
+  ::util::Status ProcessMatchField(const ::p4::config::v1::Table& table_p4_info,
+                                   const ::p4::v1::FieldMatch& match_field,
+                                   CommonFlowEntry* flow_entry) const;
 
   // Processes the action from a table entry.  If successful, the
   // MappedAction will be populated in flow_entry.
-  util::Status ProcessTableAction(const p4::config::Table& table_p4_info,
-                                  const p4::TableAction& table_action,
-                                  CommonFlowEntry* flow_entry) const;
+  ::util::Status ProcessTableAction(
+      const ::p4::config::v1::Table& table_p4_info,
+      const ::p4::v1::TableAction& table_action,
+      CommonFlowEntry* flow_entry) const;
 
   // These methods both handle action function processing.  The first one is
   // for actions in table updates.  The second one is for actions in action
   // profile updates.  Both of them produce mapped_action output when
   // successful.
-  util::Status ProcessTableActionFunction(
-      const p4::config::Table& table_p4_info, const p4::Action& action,
-      MappedAction* mapped_action) const;
-  util::Status ProcessProfileActionFunction(
-      const p4::config::ActionProfile& profile_p4_info,
-      const p4::Action& action, MappedAction* mapped_action) const;
+  ::util::Status ProcessTableActionFunction(
+      const ::p4::config::v1::Table& table_p4_info,
+      const ::p4::v1::Action& action, MappedAction* mapped_action) const;
+  ::util::Status ProcessProfileActionFunction(
+      const ::p4::config::v1::ActionProfile& profile_p4_info,
+      const ::p4::v1::Action& action, MappedAction* mapped_action) const;
 
   // Handles action function processing that is common to either a table entry
   // or an action profile update.  If successful, the output mapped_action will
   // be filled.
-  util::Status ProcessActionFunction(const p4::Action& action,
-                                     MappedAction* mapped_action) const;
+  ::util::Status ProcessActionFunction(const ::p4::v1::Action& action,
+                                       MappedAction* mapped_action) const;
 
   // Evaluates the attributes in the table descriptor along with the current
   // state of static_table_updates_enabled_ to see if a mapping request is
   // allowed.
-  util::Status IsTableUpdateAllowed(const p4::config::Table& table_p4_info,
-                                    const P4TableDescriptor& descriptor) const;
+  ::util::Status IsTableUpdateAllowed(
+      const ::p4::config::v1::Table& table_p4_info,
+      const P4TableDescriptor& descriptor) const;
 
-  // Clears all entries in the containers that support the mapping process.
+  // Clears all the entries in the containers that support the mapping process.
   void ClearMaps();
 
   // The p4_pipeline_config_ contains data to convert P4Info objects into

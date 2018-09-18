@@ -19,6 +19,7 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
+#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -53,9 +54,9 @@ constexpr char kMockTableEntry[] = R"PROTO(
       action_profile_member_id: 11
     })PROTO";
 
-const ::p4::TableEntry& MockTableEntry() {
-  static const ::p4::TableEntry* entry = []() {
-    auto* entry = new ::p4::TableEntry();
+const ::p4::v1::TableEntry& MockTableEntry() {
+  static const ::p4::v1::TableEntry* entry = []() {
+    auto* entry = new ::p4::v1::TableEntry();
     CHECK_OK(ParseProtoFromString(kMockTableEntry, entry));
     return entry;
   }();
@@ -70,6 +71,7 @@ TEST(BcmFlowTableTest, Initialize) {
   EXPECT_FALSE(table.HasEntry(MockTableEntry()));
   EXPECT_EQ(table.Lookup(MockTableEntry()).status().error_code(),
             ERR_ENTRY_NOT_FOUND);
+  EXPECT_FALSE(table.IsConst());
 }
 
 // Verify properties of a table when installing and removing a single entry.
@@ -92,7 +94,7 @@ TEST(BcmFlowTableTest, InstallRemoveSingleEntry) {
 TEST(BcmFlowTableTest, InstallRemoveMultipleEntries) {
   // Set up mock entries.
   constexpr int kNumEntries = 4;
-  std::vector<p4::TableEntry> mock_entries;
+  std::vector<::p4::v1::TableEntry> mock_entries;
   for (int i = 0; i < kNumEntries; ++i) {
     mock_entries.push_back(MockTableEntry());
     mock_entries.back().mutable_match(0)->set_field_id(100 + i);
@@ -132,7 +134,7 @@ TEST(BcmFlowTableTest, RejectInsertDuplicateEntry) {
 
 // Verify that an entry's action can be modified.
 TEST(BcmFlowTableTest, ModifyEntryAction) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.mutable_action()->set_action_profile_member_id(
       mod.action().action_profile_member_id() + 1);
 
@@ -149,7 +151,7 @@ TEST(BcmFlowTableTest, ModifyEntryAction) {
 
 // Verify that an entry's controller metadata can be modified.
 TEST(BcmFlowTableTest, ModifyEntryControllerMetadata) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.set_controller_metadata(mod.controller_metadata() + 1);
 
   BcmFlowTable table(1);
@@ -165,7 +167,7 @@ TEST(BcmFlowTableTest, ModifyEntryControllerMetadata) {
 
 // Verify that an entry's meter config can be modified.
 TEST(BcmFlowTableTest, ModifyEntryMeterConfig) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.mutable_meter_config()->set_cir(mod.meter_config().cir() + 1);
 
   BcmFlowTable table(1);
@@ -181,7 +183,7 @@ TEST(BcmFlowTableTest, ModifyEntryMeterConfig) {
 
 // Verify that an entry's counter data can be modified.
 TEST(BcmFlowTableTest, ModifyEntryCounterData) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.mutable_counter_data()->set_packet_count(
       mod.counter_data().packet_count() + 1);
 
@@ -198,7 +200,7 @@ TEST(BcmFlowTableTest, ModifyEntryCounterData) {
 
 // Verify that multiple valid entry parameters can be modified at once.
 TEST(BcmFlowTableTest, ModifyEntryMultipleFields) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.mutable_action()->set_action_profile_member_id(
       mod.action().action_profile_member_id() + 1);
   mod.set_controller_metadata(mod.controller_metadata() + 1);
@@ -229,7 +231,7 @@ TEST(BcmFlowTableTest, ModifyEntryMultipleFields) {
 
 // Verify that lookup fails when the match parameters are removed.
 TEST(BcmFlowTableTest, LookupRemovedMatchFailure) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.clear_match();
 
   BcmFlowTable table(1);
@@ -239,7 +241,7 @@ TEST(BcmFlowTableTest, LookupRemovedMatchFailure) {
 
 // Verify that lookup fails when a match parameter is missing.
 TEST(BcmFlowTableTest, LookupMissingMatchFailure) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.mutable_match()->erase(mod.mutable_match()->begin());
 
   BcmFlowTable table(1);
@@ -249,7 +251,7 @@ TEST(BcmFlowTableTest, LookupMissingMatchFailure) {
 
 // Verify that lookup fails when a match parameter is added.
 TEST(BcmFlowTableTest, LookupExtraMatchFailure) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   *mod.add_match() = mod.match(0);
 
   BcmFlowTable table(1);
@@ -259,7 +261,7 @@ TEST(BcmFlowTableTest, LookupExtraMatchFailure) {
 
 // Verify that lookup fails when a match parameter is modified.
 TEST(BcmFlowTableTest, LookupModifiedMatchFailure) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.mutable_match(1)->set_field_id(mod.match(1).field_id() + 1);
 
   BcmFlowTable table(1);
@@ -269,7 +271,7 @@ TEST(BcmFlowTableTest, LookupModifiedMatchFailure) {
 
 // Verify that lookup fails when the priority is modified.
 TEST(BcmFlowTableTest, LookupPriorityFailure) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.set_priority(mod.priority() + 1);
 
   BcmFlowTable table(1);
@@ -279,7 +281,7 @@ TEST(BcmFlowTableTest, LookupPriorityFailure) {
 
 // Verify that lookup fails when is_default_action is modified.
 TEST(BcmFlowTableTest, LookupIsDefaultActionFailure) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.set_is_default_action(!mod.is_default_action());
 
   BcmFlowTable table(1);
@@ -290,7 +292,7 @@ TEST(BcmFlowTableTest, LookupIsDefaultActionFailure) {
 // Verify that an equivalent entry can be deleted even if it is not exactly the
 // same.
 TEST(BcmFlowTableTest, DeleteEquivalentEntry) {
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.clear_action();
 
   BcmFlowTable table(1);
@@ -305,9 +307,23 @@ TEST(BcmFlowTableTest, DeleteMissingEntryFailure) {
   ASSERT_EQ(table.DeleteEntry(MockTableEntry()).status().error_code(),
             ERR_ENTRY_NOT_FOUND);
   ASSERT_OK(table.InsertEntry(MockTableEntry()));
-  ::p4::TableEntry mod = MockTableEntry();
+  ::p4::v1::TableEntry mod = MockTableEntry();
   mod.clear_match();
   ASSERT_EQ(table.DeleteEntry(mod).status().error_code(), ERR_ENTRY_NOT_FOUND);
+}
+
+// Verify the properties a BcmFlowTable inherits from a source
+// P4 config Table.
+TEST(BcmFlowTableTest, ConstructFromP4ConfigTable) {
+  ::p4::config::v1::Table p4_table;
+  p4_table.mutable_preamble()->set_id(1);
+  p4_table.mutable_preamble()->set_name("table");
+  p4_table.set_is_const_table(true);
+
+  BcmFlowTable bcm_table(p4_table);
+  EXPECT_EQ(1, bcm_table.Id());
+  EXPECT_EQ("table", bcm_table.Name());
+  EXPECT_EQ(true, bcm_table.IsConst());
 }
 
 }  // namespace

@@ -92,12 +92,13 @@ class FixedLayoutDataSource : public DataSource {
   ::util::Status UpdateValues() override {
     ASSIGN_OR_RETURN(std::string buffer, contents_->GetString());
     if (buffer.size() < required_buffer_size_)
-      RETURN_ERROR() << "Buffer is not large enough for all specified fields.";
+      return MAKE_ERROR()
+             << "Buffer is not large enough for all specified fields.";
     for (auto& field : fields_) {
       ::util::Status ret = field.second->UpdateAttribute(buffer.c_str());
       if (!ret.ok()) {
-        RETURN_ERROR() << "Encountered error while updating field "
-                       << field.first << ".";
+        return MAKE_ERROR() << "Encountered error while updating field "
+                            << field.first << ".";
       }
     }
     return ::util::OkStatus();
@@ -109,7 +110,7 @@ class FixedLayoutDataSource : public DataSource {
   ::util::StatusOr<ManagedAttribute*> GetAttribute(const std::string& name) {
     auto field = fields_.find(name);
     if (field == fields_.end())
-      RETURN_ERROR() << "No such field defined: " << name << ".";
+      return MAKE_ERROR() << "No such field defined: " << name << ".";
     return field->second->GetAttribute();
   }
 
@@ -291,9 +292,9 @@ class ValidationByteField : public TypedField<int32> {
 
   ::util::Status UpdateAttribute(const char* buffer) override {
     RETURN_IF_ERROR(TypedField::UpdateAttribute(buffer));
-    int32 actual_val = *attribute_->GetValue().get<int32>();
+    int32 actual_val = absl::get<int32>(attribute_->GetValue());
     if (byte_vals_.find(actual_val) == byte_vals_.end())
-      RETURN_ERROR() << error_message_;
+      return MAKE_ERROR() << error_message_;
     return ::util::OkStatus();
   }
 
@@ -406,8 +407,8 @@ class EnumField : public FixedLayoutField {
         *attribute_ = default_value_;
         return ::util::OkStatus();
       }
-      RETURN_ERROR() << "No enum value for byte value "
-                     << static_cast<int32>(buffer[offset_]);
+      return MAKE_ERROR() << "No enum value for byte value "
+                          << static_cast<int32>(buffer[offset_]);
     }
     // TODO: Change operator= to another AssignValue.
     *attribute_ = found->second;

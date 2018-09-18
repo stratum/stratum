@@ -26,8 +26,8 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
 #include "absl/base/integral_types.h"
 
 namespace stratum {
@@ -247,6 +247,10 @@ class BcmSdkInterface {
   // Unregisters a linkscan callback given its ID.
   virtual ::util::Status UnregisterLinkscanEventWriter(int id) = 0;
 
+  // Gets port linkscan mode
+  virtual ::util::StatusOr<BcmPortOptions::LinkscanMode> GetPortLinkscanMode(
+      int unit, int port) = 0;
+
   // Sets the MTU for all the L3 intf of a given unit. The MTU value will be
   // saved and used for all the L3 intf created later on.
   virtual ::util::Status SetMtu(int unit, int mtu) = 0;
@@ -442,15 +446,15 @@ class BcmSdkInterface {
   virtual ::util::Status DeleteL3HostIpv6(int unit, int vrf,
                                           const std::string& ipv6) = 0;
 
-  // Adds a (vlan, dst_mac) to the my station TCAM with a specific priority.
-  // All the IPv4/IPv6 packets, independent of the src port, will be matched
-  // against this entries and if they do not match any entry, they will not be
-  // forwarded in L3 mode. If vlan == 0, the entry will match all the VLANs. If
-  // dst_mac == 0, the entry will match the all the dst_macs (except broadcast
-  // MAC). The return value is the station_id assigned to the entry.
-  virtual ::util::StatusOr<int> AddMyStationEntry(int unit, int vlan,
+  // Adds an entry to match the given (vlan, vlan_mask, dst_mac, dst_mac_mask)
+  // to the my station TCAM, with the given priority. NOOP if the entry already
+  // exists. All the IPv4/IPv6 packets, independent of the src port, will be
+  // matched against the entries in my station TCAM and if they do not match
+  // any entry, no L3 forwarding action will be taken.
+  virtual ::util::StatusOr<int> AddMyStationEntry(int unit, int priority,
+                                                  int vlan, int vlan_mask,
                                                   uint64 dst_mac,
-                                                  int priority) = 0;
+                                                  uint64 dst_mac_mask) = 0;
 
   // Removes a previously added entry to my station TCAM using its ID. Will
   // return error if the entry does not exist.
@@ -467,8 +471,9 @@ class BcmSdkInterface {
   // sending the packet out.
   virtual ::util::Status AddVlanIfNotFound(int unit, int vlan) = 0;
 
-  // Delete a VLAN given its ID.
-  virtual ::util::Status DeleteVlan(int unit, int vlan) = 0;
+  // Delete a VLAN given its ID if it exists (NOOP if the VLAN is already
+  // deleted).
+  virtual ::util::Status DeleteVlanIfFound(int unit, int vlan) = 0;
 
   // Configures VLAN traffic blocking behavior.
   virtual ::util::Status ConfigureVlanBlock(int unit, int vlan,

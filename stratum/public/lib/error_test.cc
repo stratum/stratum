@@ -19,6 +19,10 @@
 
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "testing/base/public/gmock.h"
+#include "testing/base/public/gunit.h"
 #include "stratum/google/rpc/code.pb.h"
 #include "stratum/google/rpc/status.pb.h"
 

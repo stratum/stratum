@@ -20,6 +20,7 @@
 #include "stratum/hal/lib/phal/system_fake.h"
 #include "stratum/hal/lib/phal/udev_event_handler_mock.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"

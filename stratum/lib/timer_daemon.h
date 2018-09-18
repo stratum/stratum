@@ -20,11 +20,14 @@
 
 #include <pthread.h>
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
+#include "absl/public/lib/error.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
@@ -109,18 +112,25 @@ class TimerDaemon final {
 
   // Creates a one-shot timer that will execute 'action' 'delay_ms' milliseconds
   // from now.
-  static ::util::Status RequestOneShotTimer(
-      uint64 delay_ms, const Action& action,
-      DescriptorPtr* desc);
+  static ::util::Status RequestOneShotTimer(uint64 delay_ms,
+                                            const Action& action,
+                                            DescriptorPtr* desc);
   // Creates a periodic timier that will first time execute the 'action'
   // 'delay_ms' milliseconds from now and then will execute the 'action' every
   // 'period_ms' missilseconds.
-  static ::util::Status RequestPeriodicTimer(
-      uint64 delay_ms, uint64 period_ms, const Action& action,
-      DescriptorPtr* desc);
+  static ::util::Status RequestPeriodicTimer(uint64 delay_ms, uint64 period_ms,
+                                             const Action& action,
+                                             DescriptorPtr* desc);
 
  private:
   TimerDaemon() : started_(false) {}
+
+  // If there is an action to be executed at this moment of time a non-null
+  // pointer is returned.
+  DescriptorPtr GetAction();
+
+  // Returns true if the timer daemon is stopped.
+  bool IsStopped();
 
   static TimerDaemon* GetInstance() {
     static TimerDaemon* singleton = new TimerDaemon();
@@ -129,8 +139,7 @@ class TimerDaemon final {
   }
   // Internal method creating requested timer.
   ::util::Status RequestTimer(bool repeat, uint64 delay_ms, uint64 period_ms,
-                              Action action,
-                              DescriptorPtr* desc)
+                              Action action, DescriptorPtr* desc)
       LOCKS_EXCLUDED(access_lock_);
 
   // A Mutex used to guard access to the list of pointers to timer requests and

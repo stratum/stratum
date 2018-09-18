@@ -19,7 +19,7 @@ option cc_generic_services = false;
 
 package stratum.hal.phal;
 
-import "stratum/public/proto/hal.proto";
+import "stratum/hal/lib/common/common.proto";
 
 // IN PROGRESS
 // DO NOT USE
@@ -67,9 +67,9 @@ message SFPChannel {
   bool tx_eq_fault = 4;
   bool rx_lol = 5;
   bool tx_lol = 6;
-  double tx_bias = 7;
-  double tx_power = 8;
-  double rx_power = 9;
+  double tx_bias = 7;   // Measured in milliAmps.
+  double tx_power = 8;  // Measured in dBm.
+  double rx_power = 9;  // Measured in dBm.
   AlarmStatus tx_bias_alarm = 10;
   AlarmStatus tx_power_alarm = 11;
   AlarmStatus rx_power_alarm = 12;
@@ -81,8 +81,8 @@ message Transceiver {
   bool data_ready = 1;
   HardwareInfo info = 2;
   MediaType media_type = 3;
-  double temperature = 4;
-  double vcc = 5;
+  double temperature = 4;  // Measured in degrees Celsius.
+  double vcc = 5;          // Measured in volts.
   AlarmStatus temperature_alarm = 6;
   AlarmStatus vcc_alarm = 7;
   repeated SFPChannel channels = 8;

@@ -17,11 +17,11 @@
 
 #include "base/commandlineflags.h"
 #include "google/protobuf/any.pb.h"
+#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/common/hal_config_to_oc.h"
-#include "stratum/hal/lib/common/oc_to_hal_config.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
@@ -44,9 +44,9 @@ ConfigMonitoringService::ConfigMonitoringService(
     AuthPolicyChecker* auth_policy_checker, ErrorBuffer* error_buffer)
     : running_chassis_config_(nullptr),
       mode_(mode),
-      switch_interface_(CHECK_NOTNULL(switch_interface)),
-      auth_policy_checker_(CHECK_NOTNULL(auth_policy_checker)),
-      error_buffer_(CHECK_NOTNULL(error_buffer)),
+      switch_interface_(ABSL_DIE_IF_NULL(switch_interface)),
+      auth_policy_checker_(ABSL_DIE_IF_NULL(auth_policy_checker)),
+      error_buffer_(ABSL_DIE_IF_NULL(error_buffer)),
       gnmi_publisher_(switch_interface) {
   if (TimerDaemon::Start() != ::util::OkStatus()) {
     LOG(ERROR) << "Could not start the timer subsystem.";
@@ -96,8 +96,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
   // config push will initialize the switch if it is done for the first time.
   LOG(INFO) << "Pushing the saved chassis config read from "
             << FLAGS_chassis_config_file << "...";
-  absl::WriterMutexLock l(&config_lock_);
-  std::unique_ptr<ChassisConfig> config = absl::make_unique<ChassisConfig>();
+  auto config = absl::make_unique<ChassisConfig>();
   ::util::Status status =
       ReadProtoFromTextFile(FLAGS_chassis_config_file, config.get());
   if (!status.ok()) {
@@ -112,9 +111,16 @@ ConfigMonitoringService::~ConfigMonitoringService() {
                             "Could not read saved chassis config: ", GTL_LOC);
     return status;
   }
+
+  return PushChassisConfig(warmboot, std::move(config));
+}
+
+::util::Status ConfigMonitoringService::PushChassisConfig(
+    bool warmboot, std::unique_ptr<ChassisConfig> config) {
+  absl::WriterMutexLock l(&config_lock_);
   // Push the config to hardware only if it is a coltboot setup.
   if (!warmboot) {
-    status = switch_interface_->PushChassisConfig(*config);
+    ::util::Status status = switch_interface_->PushChassisConfig(*config);
     if (!status.ok()) {
       error_buffer_->AddError(status,
                               "Pushing saved chassis config failed: ", GTL_LOC);
@@ -144,43 +150,78 @@ ConfigMonitoringService::~ConfigMonitoringService() {
                                             ::gnmi::SetResponse* resp) {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, ConfigMonitoringService, Set,
                            context);
+  return DoSet(context, req, resp);
+}
 
+::grpc::Status ConfigMonitoringService::DoSet(::grpc::ServerContext* context,
+                                              const ::gnmi::SetRequest* req,
+                                              ::gnmi::SetResponse* resp) {
   absl::WriterMutexLock l(&config_lock_);
-  std::unique_ptr<ChassisConfig> config = absl::make_unique<ChassisConfig>();
-  ::util::Status status = ConvertOpenConfigToChassisConfig(*req, config.get());
-  if (!status.ok()) {
-    LOG(ERROR) << "OpenConfig to ChassisConfig conversion failed: "
-               << status.error_message();
-    return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
-                          status.error_message());
+
+  CopyOnWriteChassisConfig config(running_chassis_config_.get());
+
+  for (const auto& path : req->delete_()) {
+    VLOG(1) << "SET(DELETE): " << path.ShortDebugString();
+    ::util::Status status;
+    ::gnmi::TypedValue val;
+    if (!(status = gnmi_publisher_.HandleDelete(path, &config)).ok()) {
+      // Something went wrong. Abort the whole gNMI SET operation.
+      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                            status.error_message());
+    }
   }
-  status = switch_interface_->PushChassisConfig(*config);
-  // If the config push was successful or reported reboot required, save the
-  // config on the switch. Any other config push error is considered blocking.
-  if (status.ok() || status.error_code() == ERR_REBOOT_REQUIRED) {
+  for (const auto& replace : req->replace()) {
+    const auto& path = replace.path();
+    VLOG(1) << "SET(REPLACE): " << path.ShortDebugString();
+    ::util::Status status;
+    if (!(status = gnmi_publisher_.HandleReplace(path, replace.val(), &config))
+             .ok()) {
+      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                            status.error_message());
+    }
+  }
+  for (const auto& update : req->update()) {
+    const auto& path = update.path();
+    VLOG(1) << "SET(UPDATE): " << path.ShortDebugString();
+    ::util::Status status;
+    if (!(status = gnmi_publisher_.HandleUpdate(path, update.val(), &config))
+             .ok()) {
+      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                            status.error_message());
+    }
+  }
+
+  if (config.HasBeenChanged()) {
+    // ChassisConfig has changed, so, we need to push it now!
+    ::util::Status status = switch_interface_->PushChassisConfig(*config);
+    // If the config push was successful or reported reboot required, save the
+    // config on the switch. Any other config push error is considered
+    // blocking.
+    if (status.ok() || status.error_code() == ERR_REBOOT_REQUIRED) {
+      APPEND_STATUS_IF_ERROR(
+          status, WriteProtoToTextFile(*config, FLAGS_chassis_config_file));
+    }
+    if (!status.ok()) {
+      error_buffer_->AddError(status,
+                              "Pushing chassis config failed: ", GTL_LOC);
+      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                            status.error_message());
+    }
+
+    // Save running_chassis_config_ after everything went OK.
+    running_chassis_config_.reset(config.PassOwnership());
+
+    // Notify the gNMI GnmiPublisher that the config has changed.
     APPEND_STATUS_IF_ERROR(
-        status, WriteProtoToTextFile(*config, FLAGS_chassis_config_file));
+        status, gnmi_publisher_.HandleChange(
+                    ConfigHasBeenPushedEvent(*running_chassis_config_)));
+    if (!status.ok()) {
+      error_buffer_->AddError(
+          status, "Failed to handle config change at GnmiPublisher: ", GTL_LOC);
+      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
+                            status.error_message());
+    }
   }
-  if (!status.ok()) {
-    error_buffer_->AddError(status, "Pushing chassis config failed: ", GTL_LOC);
-    return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
-                          status.error_message());
-  }
-
-  // Save running_chassis_config_ after everything went OK.
-  running_chassis_config_ = std::move(config);
-
-  // Notify the gNMI GnmiPublisher that the config has changed.
-  APPEND_STATUS_IF_ERROR(
-      status, gnmi_publisher_.HandleChange(
-                  ConfigHasBeenPushedEvent(*running_chassis_config_)));
-  if (!status.ok()) {
-    error_buffer_->AddError(
-        status, "Failed to handle config change at GnmiPublisher: ", GTL_LOC);
-    return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
-                          status.error_message());
-  }
-
   return ::grpc::Status::OK;
 }
 
@@ -222,9 +263,9 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       auto* update = notification->add_update();
       *update->mutable_path() = path;
       // Convert the configuration from the internal format.
-      HalConfigToOpenConfigProtoConverter converter;
       ::util::StatusOr<oc::Device> out =
-          converter.ChassisConfigToDevice(*running_chassis_config_);
+          OpenconfigConverter::ChassisConfigToOcDevice(
+              *running_chassis_config_);
       if (out.ok()) {
         // Serialize the proto and add it to the response.
         update->mutable_val()->mutable_any_val()->PackFrom(out.ValueOrDie());
@@ -266,31 +307,6 @@ ConfigMonitoringService::~ConfigMonitoringService() {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, ConfigMonitoringService,
                            Subscribe, context);
   return DoSubscribe(&gnmi_publisher_, context, stream);
-}
-
-::util::Status ConfigMonitoringService::ConvertOpenConfigToChassisConfig(
-    const ::gnmi::SetRequest& req, ChassisConfig* config) const {
-  // TODO: OK, this is a hack till we have YANG models sorted out.
-  // Need to fix this. This is temporary.
-  OpenConfigToHalConfigProtoConverter converter;
-  for (const auto& replace : req.replace()) {
-    // TODO path.element is deprecated. Use path.elem!
-    if (replace.path().element_size() == 1 &&
-        replace.path().element(0) == "/" &&
-        replace.value().type() == ::gnmi::PROTO) {
-      oc::Device in;
-      // Deserialize the input proto.
-      CHECK_RETURN_IF_FALSE(in.ParseFromString(replace.value().value()));
-      // Check if the input proto is consistent.
-      CHECK_RETURN_IF_FALSE(converter.IsCorrectProtoDevice(in));
-      // Convert the input proto into the internal format.
-      ASSIGN_OR_RETURN(*config, converter.DeviceToChassisConfig(in));
-      return ::util::OkStatus();
-    }
-  }
-
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
-         << "Chassis config not found in the req: " << req.ShortDebugString();
 }
 
 namespace {

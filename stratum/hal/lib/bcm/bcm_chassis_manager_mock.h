@@ -31,22 +31,23 @@ class BcmChassisManagerMock : public BcmChassisManager {
   MOCK_METHOD1(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
-  MOCK_METHOD0(ReadTransceiverEvents, void());
-  MOCK_CONST_METHOD1(GetBcmChip, ::util::StatusOr<BcmChip>(int unit));
-  MOCK_CONST_METHOD3(GetBcmPort, ::util::StatusOr<BcmPort>(int slot, int port,
-                                                           int channel));
-  MOCK_CONST_METHOD0(GetNodeIdToUnitMap,
-                     ::util::StatusOr<std::map<uint64, int>>());
-  MOCK_CONST_METHOD1(GetUnitFromNodeId, ::util::StatusOr<int>(uint64 node_id));
-  MOCK_CONST_METHOD0(GetPortIdToUnitLogicalPortMap,
-                     ::util::StatusOr<std::map<uint64, std::pair<int, int>>>());
-  MOCK_CONST_METHOD0(GetTrunkIdToUnitTrunkPortMap,
-                     ::util::StatusOr<std::map<uint64, std::pair<int, int>>>());
-  MOCK_CONST_METHOD1(GetPortState, ::util::StatusOr<PortState>(uint64 port_id));
+  MOCK_METHOD1(SetUnitToBcmNodeMap,
+               void(const std::map<int, BcmNode*>& unit_to_bcm_node));
+  MOCK_CONST_METHOD1(GetPortState,
+                     ::util::StatusOr<PortState>(const SdkPort& sdk_port));
   MOCK_METHOD1(
       RegisterEventNotifyWriter,
-      ::util::Status(
-          const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer));
+      ::util::Status(std::shared_ptr<WriterInterface<GnmiEventPtr>> writer));
+  MOCK_METHOD0(UnregisterEventNotifyWriter, ::util::Status());
+  MOCK_CONST_METHOD2(GetBcmPort,
+                     ::util::StatusOr<BcmPort>(uint64 node_id, uint32 port_id));
+  MOCK_CONST_METHOD2(GetPortState, ::util::StatusOr<PortState>(uint64 node_id,
+                                                               uint32 port_id));
+  MOCK_CONST_METHOD2(GetPortAdminState,
+                     ::util::StatusOr<AdminState>(uint64 node_id,
+                                                  uint32 port_id));
+  MOCK_CONST_METHOD0(GetNodeIdToUnitMap,
+                     ::util::StatusOr<std::map<uint64, int>>());
 };
 
 }  // namespace bcm

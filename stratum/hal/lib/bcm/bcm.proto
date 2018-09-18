@@ -22,7 +22,6 @@ option cc_generic_services = false;
 package stratum.hal;
 
 import "stratum/hal/lib/common/common.proto";
-import "stratum/public/proto/hal.proto";
 
 //------------------------------------------------------------------------------
 // Initialization-related protos
@@ -49,7 +48,8 @@ message BcmPortOptions {
   TriState autoneg = 4;
   // The speed in bps.
   uint64 speed_bps = 5;
-  // Max supported frame size.
+  // Max frame size (aka MTU) for this port. Different from the MTU set for
+  // L3 interface.
   int32 max_frame_size = 6;
   // Number of serdes lanes (for flex ports).
   int32 num_serdes_lanes = 7;
@@ -66,6 +66,7 @@ message BcmChassis {
 
 // Encapsulates all chip-level properties as required by BCM SDK.
 message BcmChip {
+  // Enumerates all the BCM chips in use.
   enum BcmChipType {
     UNKNOWN = 0;       // default
     TRIDENT_PLUS = 1;  // BCM56846
@@ -185,6 +186,56 @@ message BcmChassisMapList {
   repeated BcmChassisMap bcm_chassis_maps = 1;
 }
 
+// Defines BCM hardware-specific information for each BcmChipType. This message
+// is used to determine relevant hardware properties of the current BCM hardware
+// chip.
+message BcmHardwareSpecs {
+  // Description of a single BCM chip model referred to by chip type.
+  message ChipModelSpec {
+    // ACL hardware description.
+    message AclSpec {
+      // Field processor hardware description.
+      message FieldProcessor {
+        // Enumeration of all field processor stages.
+        enum FieldProcessorStage {
+          FP_UNKNOWN = 0;  // Default.
+          VLAN = 1;        // (Aliases: VFP, VCAP).
+          INGRESS = 2;     // (Aliases: IFP, ICAP).
+          EGRESS = 3;      // (Aliases: EFP, ECAP).
+        };
+
+        // Physical tables in a field processor are implemented as TCAM slices.
+        message Slice {
+          uint32 count = 1;  // Number of physical slices matching this profile.
+          uint32 width = 2;  // Entry match key width.
+          uint32 size = 3;   // Maximum number of single-wide entries available.
+        }
+
+        FieldProcessorStage stage = 1;  // This field processor's stage.
+        repeated Slice slices = 2;      // Descriptions of each TCAM slice.
+      };
+
+      // Descriptions of all field processors in this chip.
+      repeated FieldProcessor field_processors = 1;
+    };
+
+    // UDF hardware description.
+    message UdfSpec {
+      uint32 chunk_bits = 1;      // The UDF chunk size in bits.
+      uint32 chunks_per_set = 2;  // The number of UDF chunks per UDF set.
+      uint32 set_count = 3;       // The number of UDF sets.
+    };
+
+    BcmChip.BcmChipType chip_type = 1;   // The chip this profile describes.
+    AclSpec acl = 2;  // ACL description.
+    UdfSpec udf = 3;  // UDF description.
+  }
+
+  // Hardware specifications for each known BCM chip model.
+  // Models are identified by BcmChipType names (ChipModelSpec.chip_type).
+  repeated ChipModelSpec chip_specs = 1;
+}
+
 //------------------------------------------------------------------------------
 // Flow/group related protos
 //------------------------------------------------------------------------------
@@ -301,6 +352,7 @@ message BcmAction {
     CANCEL_COPY_TO_CPU = 24;    // Cancel copy to CPU port.
     SET_L2_MCAST_GROUP = 25;    // Set the L2 multicast group for a class of
                                 // traffic with a specific MAC.
+    ADD_OUTER_VLAN = 26;        // Add outer VLAN tag.
   };
   // Action parameters. Each action can have zero or many parameters. Note
   // that parameter types have many fields in common with field types.
@@ -386,9 +438,9 @@ message BcmMeterConfig {
 // TODO: Complete this. This is still WIP and not complete.
 message BcmFlowEntry {
   // List of all the supported tables that specify hardware resources on a BCM
-  // chip. The respurce could be actually a physcial table (LPM, TCAM, etc) or
+  // chip. The resource could be actually a physical table (LPM, TCAM, etc) or
   // some sort of hardware module controlled by SDK.
-  // NOTE: Make sure to modify BcmTableManager::GetBcmTableId() if there is a
+  // NOTE: Make sure to modify BcmTableManager::GetBcmTableType() if there is a
   // change in this enum.
   enum BcmTableType {
     BCM_TABLE_UNKNOWN = 0;
@@ -399,6 +451,7 @@ message BcmFlowEntry {
     BCM_TABLE_MY_STATION = 5;
     BCM_TABLE_ACL = 6;
     BCM_TABLE_L2_MULTICAST = 7;
+    BCM_TABLE_TUNNEL = 8;
   }
   // The unit to program this flow.
   int32 unit = 1;  // required

@@ -18,13 +18,13 @@
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
+#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/timer_daemon.h"
-#include "stratum/public/proto/hal.pb.h"
 #include "absl/base/integral_types.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
-#include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {
@@ -137,21 +137,21 @@ class PerNodeGnmiEvent : public GnmiEventProcess<E> {
 template <typename E>
 class PerPortGnmiEvent : public PerNodeGnmiEvent<E> {
  public:
-  PerPortGnmiEvent(uint64 node_id, uint64 port_id)
+  PerPortGnmiEvent(uint64 node_id, uint32 port_id)
       : PerNodeGnmiEvent<E>(node_id), port_id_(port_id) {}
   ~PerPortGnmiEvent() override {}
 
   uint64 GetPortId() const { return port_id_; }
 
  private:
-  uint64 port_id_;
+  uint32 port_id_;
 };
 
 // A Port's Operational State Has Changed event.
 class PortOperStateChangedEvent
     : public PerPortGnmiEvent<PortOperStateChangedEvent> {
  public:
-  PortOperStateChangedEvent(uint64 node_id, uint64 port_id,
+  PortOperStateChangedEvent(uint64 node_id, uint32 port_id,
                             const PortState& new_state)
       : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
   ~PortOperStateChangedEvent() override {}
@@ -166,7 +166,7 @@ class PortOperStateChangedEvent
 class PortAdminStateChangedEvent
     : public PerPortGnmiEvent<PortAdminStateChangedEvent> {
  public:
-  PortAdminStateChangedEvent(uint64 node_id, uint64 port_id,
+  PortAdminStateChangedEvent(uint64 node_id, uint32 port_id,
                              const AdminState& new_state)
       : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
   ~PortAdminStateChangedEvent() override {}
@@ -181,7 +181,7 @@ class PortAdminStateChangedEvent
 class PortSpeedBpsChangedEvent
     : public PerPortGnmiEvent<PortSpeedBpsChangedEvent> {
  public:
-  PortSpeedBpsChangedEvent(uint64 node_id, uint64 port_id, uint64 new_speed_bps)
+  PortSpeedBpsChangedEvent(uint64 node_id, uint32 port_id, uint64 new_speed_bps)
       : PerPortGnmiEvent(node_id, port_id), new_speed_bps_(new_speed_bps) {}
   ~PortSpeedBpsChangedEvent() override {}
 
@@ -195,7 +195,7 @@ class PortSpeedBpsChangedEvent
 class PortNegotiatedSpeedBpsChangedEvent
     : public PerPortGnmiEvent<PortNegotiatedSpeedBpsChangedEvent> {
  public:
-  PortNegotiatedSpeedBpsChangedEvent(uint64 node_id, uint64 port_id,
+  PortNegotiatedSpeedBpsChangedEvent(uint64 node_id, uint32 port_id,
                                      uint64 new_negotiated_speed_bps)
       : PerPortGnmiEvent(node_id, port_id),
         new_negotiated_speed_bps_(new_negotiated_speed_bps) {}
@@ -211,7 +211,7 @@ class PortNegotiatedSpeedBpsChangedEvent
 class PortLacpSystemPriorityChangedEvent
     : public PerPortGnmiEvent<PortLacpSystemPriorityChangedEvent> {
  public:
-  PortLacpSystemPriorityChangedEvent(uint64 node_id, uint64 port_id,
+  PortLacpSystemPriorityChangedEvent(uint64 node_id, uint32 port_id,
                                      uint64 new_system_priority)
       : PerPortGnmiEvent(node_id, port_id),
         new_system_priority_(new_system_priority) {}
@@ -227,7 +227,7 @@ class PortLacpSystemPriorityChangedEvent
 class PortMacAddressChangedEvent
     : public PerPortGnmiEvent<PortMacAddressChangedEvent> {
  public:
-  PortMacAddressChangedEvent(uint64 node_id, uint64 port_id,
+  PortMacAddressChangedEvent(uint64 node_id, uint32 port_id,
                              uint64 new_mac_address)
       : PerPortGnmiEvent(node_id, port_id), new_mac_address_(new_mac_address) {}
   ~PortMacAddressChangedEvent() override {}
@@ -245,7 +245,7 @@ class PortMacAddressChangedEvent
 class PortLacpSystemIdMacChangedEvent
     : public PerPortGnmiEvent<PortLacpSystemIdMacChangedEvent> {
  public:
-  PortLacpSystemIdMacChangedEvent(uint64 node_id, uint64 port_id,
+  PortLacpSystemIdMacChangedEvent(uint64 node_id, uint32 port_id,
                                   uint64 new_system_id_mac)
       : PerPortGnmiEvent(node_id, port_id),
         new_system_id_mac_(new_system_id_mac) {}
@@ -264,8 +264,8 @@ class PortLacpSystemIdMacChangedEvent
 class PortCountersChangedEvent
     : public PerPortGnmiEvent<PortCountersChangedEvent> {
  public:
-  PortCountersChangedEvent(uint64 node_id, uint64 port_id,
-                           const DataResponse::PortCounters& new_counters)
+  PortCountersChangedEvent(uint64 node_id, uint32 port_id,
+                           const PortCounters& new_counters)
       : PerPortGnmiEvent(node_id, port_id), new_counters_(new_counters) {}
   ~PortCountersChangedEvent() override {}
 
@@ -295,15 +295,15 @@ class PortCountersChangedEvent
   uint64 GetInFcsErrors() const { return new_counters_.in_fcs_errors(); }
 
  private:
-  const DataResponse::PortCounters new_counters_;
+  const PortCounters new_counters_;
 };
 
 // A Port's Qos Counters Have Changed event.
 class PortQosCountersChangedEvent
     : public PerPortGnmiEvent<PortQosCountersChangedEvent> {
  public:
-  PortQosCountersChangedEvent(uint64 node_id, uint64 port_id,
-                              const DataResponse::PortQosCounters& new_counters)
+  PortQosCountersChangedEvent(uint64 node_id, uint32 port_id,
+                              const PortQosCounters& new_counters)
       : PerPortGnmiEvent(node_id, port_id), new_counters_(new_counters) {}
   ~PortQosCountersChangedEvent() override {}
 
@@ -313,7 +313,37 @@ class PortQosCountersChangedEvent
   uint32 GetQueueId() const { return new_counters_.queue_id(); }
 
  private:
-  const DataResponse::PortQosCounters new_counters_;
+  const PortQosCounters new_counters_;
+};
+
+// A Port's Forwarding Viable state has changed event.
+class PortForwardingViabilityChangedEvent
+    : public PerPortGnmiEvent<PortForwardingViabilityChangedEvent> {
+ public:
+  PortForwardingViabilityChangedEvent(uint64 node_id, uint32 port_id,
+                                      const TrunkMemberBlockState& new_state)
+      : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
+  ~PortForwardingViabilityChangedEvent() override {}
+
+  const TrunkMemberBlockState& GetState() const { return new_state_; }
+
+ private:
+  const TrunkMemberBlockState new_state_;
+};
+
+// A Port's Health Indicator  state has changed event.
+class PortHealthIndicatorChangedEvent
+    : public PerPortGnmiEvent<PortHealthIndicatorChangedEvent> {
+ public:
+  PortHealthIndicatorChangedEvent(uint64 node_id, uint32 port_id,
+                                  const HealthState& new_state)
+      : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
+  ~PortHealthIndicatorChangedEvent() override {}
+
+  const HealthState& GetState() const { return new_state_; }
+
+ private:
+  const HealthState new_state_;
 };
 
 // Configuration Has Been Pushed event.
@@ -360,6 +390,84 @@ class InlineGnmiSubscribeStream : public GnmiSubscribeStream {
 
 using GnmiEventHandler = std::function<::util::Status(
     const GnmiEvent& event, GnmiSubscribeStream* stream)>;
+
+// A class that provides limited (but sufficient) copy-on-write
+// functionality - it makes a copy of the original chassis config only if a
+// mutable pointer is requested. It is used to avoid unnecessary copies of
+// ChassisConfig object when processing gNMI SET requests. Note that the class
+// does not take ownership of the pointer passed in the constructor, so, it will
+// not be deleted if a copy is made. Note also that it assusmes that the
+// ownership of the newly allocated memory will be taken over before the object
+// is destroyed.
+class CopyOnWriteChassisConfig {
+ public:
+  explicit CopyOnWriteChassisConfig(ChassisConfig* ptr)
+      : copied_(false), delete_active_(false), original_(ptr), active_(ptr) {
+    if (ptr == nullptr) {
+      // ative_ cannot be nullptr. If it is, allocate a new object.
+      active_ = new ChassisConfig();
+      delete_active_ = true;
+    }
+  }
+
+  virtual ~CopyOnWriteChassisConfig() {
+    if (delete_active_) {
+      // If this is the object that has been allocated by this class and its
+      // ownership has not been taken over - delete it to avoid memory leak.
+      delete active_;
+    }
+  }
+
+  bool HasBeenChanged() const { return copied_; }
+
+  // Read operation. Do not make copy.
+  const ChassisConfig* operator->() const { return active_; }
+
+  // Read operation. Do not make copy.
+  const ChassisConfig& operator*() const { return *active_; }
+
+  // The only way to get mutable/writable access.
+  ChassisConfig* writable() {
+    // If it has not been copied yet, make a copy.
+    if (!copied_) copy();
+    return active_;
+  }
+
+  // Pass ownership of the allocated buffer and update the state.
+  ChassisConfig* PassOwnership() {
+    auto result = active_;
+    delete_active_ = false;
+    active_ = nullptr;
+    return result;
+  }
+
+ private:
+  // Makes a copy of the original chassis config.
+  void copy() {
+    if (original_ != nullptr) {
+      ChassisConfig* new_active = new ChassisConfig();
+      *new_active = *original_;
+      active_ = new_active;
+      delete_active_ = true;
+    }
+    copied_ = true;
+  }
+
+  // Set to true if the ative_ pointer is pointing to a copy.
+  bool copied_;
+  // Set to true if the buffer pointed by active_ should be deleted by
+  // the destructor.
+  bool delete_active_;
+  ChassisConfig* original_;  // The pointer passed to the constructor.
+  ChassisConfig* active_;    // The 'active' pointer. Can be a copy.
+};
+
+using GnmiSetHandler = std::function<::util::Status(
+    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+    CopyOnWriteChassisConfig* config)>;
+
+using GnmiDeleteHandler = std::function<::util::Status(
+    const ::gnmi::Path& path, CopyOnWriteChassisConfig* config)>;
 
 // A class used to keep information about a subscription.
 class EventHandlerRecord {
@@ -460,7 +568,7 @@ class EventHandlerListBase {
   mutable absl::Mutex access_lock_;
 
   // A list of event handlers that are interested in this ('E') type of events.
-  gtl::flat_hash_map<EventHandlerRecord*, EventHandlerRecordPtr> handlers_
+  absl::flat_hash_map<EventHandlerRecord*, EventHandlerRecordPtr> handlers_
       GUARDED_BY(access_lock_);
 };
 

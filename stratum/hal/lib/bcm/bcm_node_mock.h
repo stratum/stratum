@@ -31,24 +31,29 @@ class BcmNodeMock : public BcmNode {
                ::util::Status(const ChassisConfig& config, uint64 node_id));
   MOCK_METHOD2(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config, uint64 node_id));
-  MOCK_METHOD1(PushForwardingPipelineConfig,
-               ::util::Status(const ::p4::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(VerifyForwardingPipelineConfig,
-               ::util::Status(const ::p4::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      PushForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      VerifyForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
   MOCK_METHOD0(Freeze, ::util::Status());
   MOCK_METHOD0(Unfreeze, ::util::Status());
   MOCK_METHOD2(WriteForwardingEntries,
-               ::util::Status(const ::p4::WriteRequest& req,
+               ::util::Status(const ::p4::v1::WriteRequest& req,
                               std::vector<::util::Status>* results));
   MOCK_METHOD3(ReadForwardingEntries,
-               ::util::Status(const ::p4::ReadRequest& req,
-                              WriterInterface<::p4::ReadResponse>* writer,
+               ::util::Status(const ::p4::v1::ReadRequest& req,
+                              WriterInterface<::p4::v1::ReadResponse>* writer,
                               std::vector<::util::Status>* details));
-  MOCK_METHOD1(RegisterPacketReceiveHandler,
-               ::util::Status(
-                   std::function<void(const ::p4::PacketIn& packet)> callback));
-  MOCK_METHOD1(TransmitPacket, ::util::Status(const ::p4::PacketOut& packet));
+  MOCK_METHOD1(
+      RegisterPacketReceiveHandler,
+      ::util::Status(
+          std::function<void(const ::p4::v1::PacketIn& packet)> callback));
+  MOCK_METHOD1(TransmitPacket,
+               ::util::Status(const ::p4::v1::PacketOut& packet));
+  MOCK_METHOD1(UpdatePortState, ::util::Status(uint32 port_id));
 };
 
 }  // namespace bcm

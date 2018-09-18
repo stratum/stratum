@@ -25,11 +25,13 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "absl/base/integral_types.h"
 #include "absl/base/thread_annotations.h"
+#include "absl/strings/str_cat.h"
 
 namespace stratum {
 namespace hal {
@@ -123,7 +125,7 @@ class BcmL2Manager {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BcmL2Manager> CreateInstance(
-      BcmChassisManager* bcm_chassis_manager,
+      BcmChassisRoInterface* bcm_chassis_ro_interface,
       BcmSdkInterface* bcm_sdk_interface, int unit);
 
   // BcmL2Manager is neither copyable nor movable.
@@ -135,12 +137,82 @@ class BcmL2Manager {
   BcmL2Manager();
 
  private:
+  //  An struct that encapsulates a my station TCAM entry.
+  struct MyStationEntry {
+    // The priority of the my station entry. We use two values:
+    // 1- kL3PromoteMyStationEntryPriority: The priority used for the L3 promote
+    //    entry for default VLAN (vlan = kDefaultVlan, vlan_mask = 0xfff,
+    //    dst_mac = 0x0, dst_mac_mask = 0x010000000000).
+    // 2- kRegularMyStationEntryPriority: The priority used for all the my
+    //    station entries which typically match a specific dst MAC.
+    // The default value is -1 to point to a uninitialized/invalid case. We
+    // require the priority to be explicitly given for each entry.
+    int priority;
+    // The VLAN for my station entry and it's corresponding mask (12 bit max).
+    // Typical valid entries are:
+    // 1- A positive value with mask = 0xfff: A specific VLAN.
+    // 2- A zero value with zero mask: all VLANs.
+    // If vlan is not given for a my station TCAM entry, we assume the entry is
+    // applied to all VLANs. Therefore we use zero as the default value of
+    // vlan and vlan_mask.
+    int vlan;
+    int vlan_mask;
+    // The dst MAC for the station entry and it's corresponding mask. Typical
+    // valid entries are:
+    // 1- A positive value with mask = 0xffffffffffff: A specific dst MAC.
+    // 2- A zero value with mask 0x010000000000: all dst MAC, except multicast
+    //    MAC, for cases where multicast are not allowed (for example for L3
+    //    promote entry for default VLAN).
+    // The default value for dst_mac_mask is 0xffffffffffff so that when mask
+    // is not given the entry matches only the given dst MAC.
+    uint64 dst_mac;
+    uint64 dst_mac_mask;
+    MyStationEntry()
+        : priority(-1),
+          vlan(0),
+          vlan_mask(0),
+          dst_mac(0),
+          dst_mac_mask(0xffffffffffffULL) {}
+    MyStationEntry(int _priority, int _vlan, int _vlan_mask, uint64 _dst_mac,
+                   uint64 _dst_mac_mask)
+        : priority(_priority),
+          vlan(_vlan),
+          vlan_mask(_vlan_mask),
+          dst_mac(_dst_mac),
+          dst_mac_mask(_dst_mac_mask) {}
+    bool operator<(const MyStationEntry& other) const {
+      return (priority < other.priority ||
+              (priority == other.priority &&
+               (vlan < other.vlan ||
+                (vlan == other.vlan &&
+                 (vlan_mask < other.vlan_mask ||
+                  (vlan_mask == other.vlan_mask &&
+                   (dst_mac < other.dst_mac ||
+                    (dst_mac == other.dst_mac &&
+                     (dst_mac_mask < other.dst_mac_mask)))))))));
+    }
+    bool operator==(const MyStationEntry& other) const {
+      return (priority == other.priority && vlan == other.vlan &&
+              vlan_mask == other.vlan_mask && dst_mac == other.dst_mac &&
+              dst_mac_mask == other.dst_mac_mask);
+    }
+    std::string ToString() const {
+      return absl::StrCat("(priority:", priority, ", vlan:", vlan,
+                          ", vlan_mask:", absl::Hex(vlan_mask),
+                          ", dst_mac:", absl::Hex(dst_mac),
+                          ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
+    }
+  };
+
+  // The priority used for all the my station entries which are typically
+  // match a specific dst MAC.
   static constexpr int kRegularMyStationEntryPriority = 100;
-  static constexpr int kPromotedMyStationEntryPriority = 1;
+  // The priority used for the L3 promote entry for default VLAN.
+  static constexpr int kL3PromoteMyStationEntryPriority = 1;
 
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BcmL2Manager(BcmChassisManager* bcm_chassis_manager,
+  BcmL2Manager(BcmChassisRoInterface* bcm_chassis_ro_interface,
                BcmSdkInterface* bcm_sdk_interface, int unit);
 
   // Configure a given VLAN based on the VlanConfig proto received from the
@@ -149,20 +221,19 @@ class BcmL2Manager {
   ::util::Status ConfigureVlan(const NodeConfigParams::VlanConfig& vlan_config);
 
   // Helper to validate a BcmFlowEntry given to update my station TCAM. Returns
-  // the tuple of (vlan, dst_mac, priority) after successful parsing of the
-  // BcmFlowEntry.
-  ::util::StatusOr<std::tuple<int, uint64, int>> ValidateAndParseMyStationEntry(
+  // a MyStationEntry struct corresponding to the entry after successful
+  // parsing of the BcmFlowEntry.
+  ::util::StatusOr<MyStationEntry> ValidateAndParseMyStationEntry(
       const BcmFlowEntry& bcm_flow_entry) const;
 
-  // Map from (vlan, dst_mac, priority) of the entries added to my station TCAM
-  // of all the units to their corresponding station ID returned by SDK.
-  std::map<std::tuple<int, uint64, int>, int>
-      vlan_dst_mac_priority_to_station_id_;
+  // Map from MyStationEntry structs, corresponding to the entries added to my
+  // station TCAM, to their corresponding station ID returned by SDK.
+  std::map<MyStationEntry, int> my_station_entry_to_station_id_;
 
-  // Pointer to BcmChassisManager class to get the most updated node & port
+  // Pointer to BcmChassisRoInterface class to get the most updated node & port
   // maps after the config is pushed. THIS CLASS MUST NOT CALL ANY METHOD WHICH
-  // CAN MODIFY THE STATE OF BcmChassisManager OBJECT.
-  BcmChassisManager* bcm_chassis_manager_;  // not owned by this class.
+  // CAN MODIFY THE STATE OF BcmChassisRoInterface OBJECT.
+  BcmChassisRoInterface* bcm_chassis_ro_interface_;  // not owned by this class.
 
   // Pointer to a BcmSdkInterface implementation that wraps all the SDK calls.
   BcmSdkInterface* bcm_sdk_interface_;  // not owned by this class.

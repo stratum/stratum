@@ -80,10 +80,10 @@ class TypedAttribute : public ManagedAttribute {
   bool CanSet() const override { return setter_ != nullptr; }
   ::util::Status Set(Attribute value) override {
     if (setter_ == nullptr)
-      RETURN_ERROR() << "Selected attribute cannot be set.";
-    if (!value.is<T>())
-      RETURN_ERROR() << "Called Set with incorrect attribute type.";
-    return setter_(*value.get<T>());
+      return MAKE_ERROR() << "Selected attribute cannot be set.";
+    if (!absl::holds_alternative<T>(value))
+      return MAKE_ERROR() << "Called Set with incorrect attribute type.";
+    return setter_(absl::get<T>(value));
   }
   void AddSetter(std::function<::util::Status(T value)> setter) {
     setter_ = setter;
@@ -109,9 +109,10 @@ class EnumAttribute
   }
   ::util::Status AssignValue(const protobuf::EnumValueDescriptor* value) {
     if (value->type() != value_->type()) {
-      RETURN_ERROR() << "Attempted to assign incorrect enum type "
-                     << value->type()->name() << " to enum attribute of type "
-                     << value_->type()->name();
+      return MAKE_ERROR() << "Attempted to assign incorrect enum type "
+                          << value->type()->name()
+                          << " to enum attribute of type "
+                          << value_->type()->name();
     }
     value_ = value;
     return ::util::OkStatus();
@@ -119,6 +120,10 @@ class EnumAttribute
   EnumAttribute& operator=(int index) {
     value_ = value_->type()->value(index);
     return *this;
+  }
+  template <typename E>
+  E ReadEnumValue() {
+    return static_cast<E>(value_->index());
   }
 };
 

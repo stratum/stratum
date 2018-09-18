@@ -15,6 +15,7 @@
 
 #include "stratum/lib/macros.h"
 
+#include "platforms/networking/hercules/lib/test_utils/matchers.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 

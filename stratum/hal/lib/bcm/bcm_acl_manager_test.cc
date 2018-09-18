@@ -21,21 +21,28 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "platforms/networking/hercules/lib/test_utils/p4_proto_builders.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/flat_hash_set.h"
 #include "util/gtl/flat_map.h"
 #include "util/gtl/flat_set.h"
 #include "util/gtl/map_util.h"
+#include "util/task/canonical_errors.h"
+#include "util/task/status.h"
+#include "util/task/statusor.h"
+
+DECLARE_string(bcm_hardware_specs_file);
+DECLARE_string(test_tmpdir);
 
 namespace stratum {
 namespace hal {
@@ -44,6 +51,9 @@ namespace {
 
 using test_utils::EqualsProto;
 using test_utils::PartiallyUnorderedEqualsProto;
+using test_utils::p4_proto_builders::ApplyTable;
+using test_utils::p4_proto_builders::IsValidBuilder;
+using test_utils::p4_proto_builders::P4ControlTableRefBuilder;
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::AtLeast;
@@ -58,10 +68,31 @@ using ::testing::UnorderedElementsAreArray;
 using ::testing::status::IsOkAndHolds;
 using ::testing::status::StatusIs;
 
-using StageToTablesMap = gtl::flat_hash_map<P4Annotation::PipelineStage,
-                                            std::vector<::p4::config::Table>>;
+using StageToTablesMap =
+    absl::flat_hash_map<P4Annotation::PipelineStage,
+                        std::vector<::p4::config::v1::Table>>;
 using StageToControlBlockMap =
-    gtl::flat_hash_map<P4Annotation::PipelineStage, P4ControlBlock>;
+    absl::flat_hash_map<P4Annotation::PipelineStage, P4ControlBlock>;
+
+constexpr char kDefaultBcmHardwareSpecsText[] = R"PROTO(
+  chip_specs {
+    chip_type: UNKNOWN
+    acl {
+      field_processors {
+        stage: VLAN
+        slices { count: 4 width: 200 size: 256 } }
+      field_processors {
+        stage: INGRESS
+        slices { count: 8 width: 200 size: 256 }
+      }
+      field_processors {
+        stage: EGRESS
+        slices { count: 4 width: 200 size: 256 }
+      }
+    }
+    udf { chunk_bits: 16 chunks_per_set: 8 set_count: 2 }
+  }
+)PROTO";
 
 // *****************************************************************************
 // Matchers (and supporting functions)
@@ -125,39 +156,35 @@ MATCHER_P(DerivedFromStatus, status, "") {
 // *****************************************************************************
 // Helper Classes
 // *****************************************************************************
-// This class provides convenient methods for building table references.
-class TableReferenceHelper {
- public:
-  // Construct an empty table.
-  TableReferenceHelper() : reference_() {}
-  // Construct a table reference with the ID & name of a table.
-  explicit TableReferenceHelper(const ::p4::config::Preamble& preamble)
-      : reference_() {
-    reference_.set_table_id(preamble.id());
-    reference_.set_table_name(preamble.name());
-  }
 
-  // Set the ID of this table reference.
-  TableReferenceHelper& id(int table_id) {
-    reference_.set_table_id(table_id);
-    return *this;
+// Fills a vector with all the tables applied in a control block.
+void GetTablesFromControlBlock(const P4ControlBlock& control_block,
+                               std::vector<::p4::config::v1::Table>* tables) {
+  auto add_table = [tables](const P4ControlTableRef& ref) {
+    ::p4::config::v1::Table table;
+    table.mutable_preamble()->set_id(ref.table_id());
+    table.mutable_preamble()->set_name(ref.table_name());
+    tables->push_back(table);
+  };
+  for (const P4ControlStatement& statement : control_block.statements()) {
+    switch (statement.statement_case()) {
+      case P4ControlStatement::kApply:
+        add_table(statement.apply());
+        break;
+      case P4ControlStatement::kBranch:
+        GetTablesFromControlBlock(statement.branch().true_block(), tables);
+        GetTablesFromControlBlock(statement.branch().false_block(), tables);
+        break;
+      case P4ControlStatement::kFixedPipeline:
+        for (const auto& table_ref : statement.fixed_pipeline().tables()) {
+          add_table(table_ref);
+        }
+        break;
+      default:
+        break;
+    }
   }
-  // Set the name of this table reference.
-  TableReferenceHelper& name(const string& table_name) {
-    reference_.set_table_name(table_name);
-    return *this;
-  }
-  // Set the stage of this table reference.
-  TableReferenceHelper& stage(P4Annotation::PipelineStage table_stage) {
-    reference_.set_pipeline_stage(table_stage);
-    return *this;
-  }
-  // Return this table reference.
-  const P4ControlTableRef& operator()() const { return reference_; }
-
- private:
-  P4ControlTableRef reference_;
-};
+}
 
 // This class provides convenient methods for building P4ControlBlock pipelines.
 class ControlBlockHelper {
@@ -195,11 +222,11 @@ class ControlBlockHelper {
   // Same as above, but crafts the references from tables. Applies the latest
   // stage provided by stage() or INGRESS_ACL if stage() has not been called.
   ControlBlockHelper& append_nested(
-      const std::vector<p4::config::Table>& tables) {
+      const std::vector<::p4::config::v1::Table>& tables) {
     std::vector<P4ControlTableRef> references;
-    for (const ::p4::config::Table& table : tables) {
+    for (const ::p4::config::v1::Table& table : tables) {
       references.push_back(
-          TableReferenceHelper(table.preamble()).stage(stage_)());
+          P4ControlTableRefBuilder(table.preamble()).Stage(stage_).Build());
     }
     return append_nested(references);
   }
@@ -214,8 +241,9 @@ class ControlBlockHelper {
   // Same as above, but crafts the reference from a table and a stage. Applies
   // the latest stage provided by stage() or INGRESS_ACL if stage() has not been
   // called.
-  ControlBlockHelper& append(const ::p4::config::Table& table) {
-    return append(TableReferenceHelper(table.preamble()).stage(stage_)());
+  ControlBlockHelper& append(const ::p4::config::v1::Table& table) {
+    return append(
+        P4ControlTableRefBuilder(table.preamble()).Stage(stage_).Build());
   }
 
   // Returns the control block.
@@ -281,151 +309,75 @@ constexpr uint64 kNodeId = 123456;
 // Default table size.
 constexpr int kTableSize = 10;
 
-// Map of P4 field IDs to their type.
-const gtl::flat_hash_map<int, P4FieldType>& FieldIdToType() {
-  static const auto* field_type_map = new gtl::flat_hash_map<int, P4FieldType>({
-      {1, P4_FIELD_TYPE_ETH_SRC},
-      {2, P4_FIELD_TYPE_ETH_DST},
-      {3, P4_FIELD_TYPE_ETH_TYPE},
-      {4, P4_FIELD_TYPE_IPV4_SRC},
-      {5, P4_FIELD_TYPE_IPV4_DST},
-      {6, P4_FIELD_TYPE_IPV6_SRC},
-      {7, P4_FIELD_TYPE_IPV6_DST},
-  });
-  return *field_type_map;
-}
-
 // Map of default P4 tables indexed by table id.
-const gtl::flat_map<int, ::p4::config::Table>& DefaultP4Tables() {
+const gtl::flat_map<int, ::p4::config::v1::Table>& DefaultP4Tables() {
   static const auto* tables = []() {
-    auto* tables = new gtl::flat_map<int, ::p4::config::Table>();
-    ::p4::config::Table table;
+    auto* tables = new gtl::flat_map<int, ::p4::config::v1::Table>();
+    ::p4::config::v1::Table table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 1 name: "table_1" }
-        match_fields {
-          id: 1
-          name: "P4_FIELD_TYPE_ETH_SRC"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 1 name: "table_1" }
+      match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_SRC" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(1, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 2 name: "table_2" }
-        match_fields {
-          id: 2
-          name: "P4_FIELD_TYPE_ETH_DST"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 2 name: "table_2" }
+      match_fields { id: 2 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(2, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 3 name: "table_3" }
-        match_fields {
-          id: 3
-          name: "P4_FIELD_TYPE_ETH_TYPE"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 3 name: "table_3" }
+      match_fields { id: 3 name: "P4_FIELD_TYPE_ETH_TYPE" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(3, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 4 name: "table_4" }
-        match_fields {
-          id: 4
-          name: "P4_FIELD_TYPE_IPV4_SRC"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 4 name: "table_4" }
+      match_fields { id: 4 name: "P4_FIELD_TYPE_IPV4_SRC" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(4, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 5 name: "table_5" }
-        match_fields {
-          id: 5
-          name: "P4_FIELD_TYPE_IPV4_DST"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 5 name: "table_5" }
+      match_fields { id: 5 name: "P4_FIELD_TYPE_IPV4_DST" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(5, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 6 name: "table_6" }
-        match_fields {
-          id: 6
-          name: "P4_FIELD_TYPE_IPV6_SRC"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 6 name: "table_6" }
+      match_fields { id: 6 name: "P4_FIELD_TYPE_IPV6_SRC" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(6, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 7 name: "table_7" }
-        match_fields {
-          id: 7
-          name: "P4_FIELD_TYPE_IPV6_DST"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 7 name: "table_7" }
+      match_fields { id: 7 name: "P4_FIELD_TYPE_IPV6_DST" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(7, table));
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 8 name: "table_8" }
-        match_fields {
-          id: 1
-          name: "P4_FIELD_TYPE_ETH_SRC"
-          match_type: TERNARY
-        }
-        match_fields {
-          id: 2
-          name: "P4_FIELD_TYPE_ETH_DST"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 8 name: "table_8" }
+      match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_SRC" match_type: TERNARY }
+      match_fields { id: 2 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(8, table));
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 9 name: "table_9" }
-        match_fields {
-          id: 4
-          name: "P4_FIELD_TYPE_IPV4_SRC"
-          match_type: TERNARY
-        }
-        match_fields {
-          id: 5
-          name: "P4_FIELD_TYPE_IPV4_DST"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 9 name: "table_9" }
+      match_fields { id: 4 name: "P4_FIELD_TYPE_IPV4_SRC" match_type: TERNARY }
+      match_fields { id: 5 name: "P4_FIELD_TYPE_IPV4_DST" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(9, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-        preamble { id: 10 name: "table_10" }
-        match_fields {
-          id: 6
-          name: "P4_FIELD_TYPE_IPV6_SRC"
-          match_type: TERNARY
-        }
-        match_fields {
-          id: 7
-          name: "P4_FIELD_TYPE_IPV6_DST"
-          match_type: TERNARY
-        }
-        size: 10
-        )PROTO",
-                                  &table));
+      preamble { id: 10 name: "table_10" }
+      match_fields { id: 6 name: "P4_FIELD_TYPE_IPV6_SRC" match_type: TERNARY }
+      match_fields { id: 7 name: "P4_FIELD_TYPE_IPV6_DST" match_type: TERNARY }
+      size: 10
+    )PROTO", &table));
     tables->insert(std::make_pair(10, table));
     return tables;
   }();
@@ -433,9 +385,9 @@ const gtl::flat_map<int, ::p4::config::Table>& DefaultP4Tables() {
 }
 
 // Returns a vector of just the tables in DefaultP4Tables().
-const std::vector<::p4::config::Table> DefaultP4TablesVector() {
+const std::vector<::p4::config::v1::Table> DefaultP4TablesVector() {
   static const auto* tables = []() {
-    auto* tables = new std::vector<::p4::config::Table>();
+    auto* tables = new std::vector<::p4::config::v1::Table>();
     for (const auto& pair : DefaultP4Tables()) {
       tables->push_back(pair.second);
     }
@@ -452,51 +404,41 @@ const gtl::flat_map<int, BcmAclTable>& DefaultBcmAclTables() {
     auto tables = new gtl::flat_map<int, BcmAclTable>();
     BcmAclTable table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_SRC })PROTO",
-                                  &table));
+      fields { type: ETH_SRC })PROTO", &table));
     tables->insert(std::make_pair(1, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_DST })PROTO",
-                                  &table));
+      fields { type: ETH_DST })PROTO", &table));
     tables->insert(std::make_pair(2, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_TYPE })PROTO",
-                                  &table));
+      fields { type: ETH_TYPE })PROTO", &table));
     tables->insert(std::make_pair(3, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV4_SRC })PROTO",
-                                  &table));
+      fields { type: IPV4_SRC })PROTO", &table));
     tables->insert(std::make_pair(4, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV4_DST })PROTO",
-                                  &table));
+      fields { type: IPV4_DST })PROTO", &table));
     tables->insert(std::make_pair(5, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV6_SRC_UPPER_64 })PROTO",
-                                  &table));
+      fields { type: IPV6_SRC_UPPER_64 })PROTO", &table));
     tables->insert(std::make_pair(6, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV6_DST_UPPER_64 })PROTO",
-                                  &table));
+      fields { type: IPV6_DST_UPPER_64 })PROTO", &table));
     tables->insert(std::make_pair(7, table));
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
       fields { type: ETH_SRC }
       fields { type: ETH_DST }
-      )PROTO",
-                                  &table));
+    )PROTO", &table));
     tables->insert(std::make_pair(8, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
       fields { type: IPV4_SRC }
       fields { type: IPV4_DST }
-      )PROTO",
-                                  &table));
+    )PROTO", &table));
     tables->insert(std::make_pair(9, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
       fields { type: IPV6_SRC_UPPER_64 }
       fields { type: IPV6_DST_UPPER_64 }
-      )PROTO",
-                                  &table));
+    )PROTO", &table));
     tables->insert(std::make_pair(10, table));
     return tables;
   }();
@@ -506,7 +448,7 @@ const gtl::flat_map<int, BcmAclTable>& DefaultBcmAclTables() {
 // Default control block using the tables in DefaultP4Tables.
 const P4ControlBlock& DefaultControlBlock() {
   static const P4ControlBlock* control_block = []() {
-    std::vector<p4::config::Table> tables;
+    std::vector<::p4::config::v1::Table> tables;
     for (const auto& pair : DefaultP4Tables()) {
       tables.push_back(pair.second);
     }
@@ -541,9 +483,9 @@ const gtl::flat_map<int, BcmAclTable> SetStage(
 }
 
 // Build a simple entry that uses the first match fields in a table.
-::p4::TableEntry BuildSimpleEntry(const ::p4::config::Table& table,
-                                  int match_value) {
-  ::p4::TableEntry entry;
+::p4::v1::TableEntry BuildSimpleEntry(const ::p4::config::v1::Table& table,
+                                      int match_value) {
+  ::p4::v1::TableEntry entry;
   entry.set_table_id(table.preamble().id());
   entry.add_match()->set_field_id(table.match_fields(0).id());
   entry.mutable_match(0)->mutable_ternary()->set_value(
@@ -551,13 +493,13 @@ const gtl::flat_map<int, BcmAclTable> SetStage(
   return entry;
 }
 
-// Build a ::p4::ForwardingPipelineConfig that holds a given control block.
-::p4::ForwardingPipelineConfig BuildForwardingPipelineConfig(
+// Build a P4 ForwardingPipelineConfig that holds a given control block.
+::p4::v1::ForwardingPipelineConfig BuildForwardingPipelineConfig(
     const P4ControlBlock& control_block) {
   P4PipelineConfig p4_pipeline_config;
   *p4_pipeline_config.add_p4_controls()->mutable_main() = control_block;
   p4_pipeline_config.mutable_p4_controls(0)->set_name("test_control");
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
   p4_pipeline_config.SerializeToString(
       forwarding_pipeline_config.mutable_p4_device_config());
   return forwarding_pipeline_config;
@@ -570,15 +512,19 @@ const gtl::flat_map<int, BcmAclTable> SetStage(
 class BcmAclManagerTest : public ::testing::Test {
  protected:
   BcmAclManagerTest() {
-    bcm_chassis_manager_mock_ = absl::make_unique<BcmChassisManagerMock>();
+    FLAGS_bcm_hardware_specs_file =
+        FLAGS_test_tmpdir + "/bcm_hardware_specs.pb.txt";
+    CHECK_OK(WriteStringToFile(kDefaultBcmHardwareSpecsText,
+                               FLAGS_bcm_hardware_specs_file));
+    bcm_chassis_ro_mock_ = absl::make_unique<BcmChassisRoMock>();
     bcm_table_manager_mock_ = absl::make_unique<BcmTableManagerMock>();
-    bcm_sdk_mock_ = absl::make_unique<BcmSdkMock>();
+    bcm_sdk_mock_ = absl::make_unique<testing::NiceMock<BcmSdkMock>>();
     p4_table_mapper_mock_ = absl::make_unique<P4TableMapperMock>();
     bcm_acl_manager_ = BcmAclManager::CreateInstance(
-        bcm_chassis_manager_mock_.get(), bcm_table_manager_mock_.get(),
+        bcm_chassis_ro_mock_.get(), bcm_table_manager_mock_.get(),
         bcm_sdk_mock_.get(), p4_table_mapper_mock_.get(), kUnit);
     bcm_table_manager_ = BcmTableManager::CreateInstance(
-        bcm_chassis_manager_mock_.get(), p4_table_mapper_mock_.get(), kUnit);
+        bcm_chassis_ro_mock_.get(), p4_table_mapper_mock_.get(), kUnit);
   }
 
   ::util::Status DefaultError() {
@@ -591,12 +537,18 @@ class BcmAclManagerTest : public ::testing::Test {
   void SetUpBcmTableManagerMock();
   void SetUpBcmSdkMock();
 
+  // Installs the provided set of tables.
+  ::util::Status SetUpTables(const std::vector<::p4::config::v1::Table>& tables,
+                             const P4ControlBlock& control_block);
+
   // Installs the default tables.
-  ::util::Status SetUpDefaultTables();
+  ::util::Status SetUpDefaultTables() {
+    return SetUpTables(DefaultP4TablesVector(), DefaultControlBlock());
+  }
 
   // Looks up tables from mock_tables_ by table id. This should be used in lieu
   // of P4TableMapper::LookupTable.
-  ::util::Status LookupTable(int id, ::p4::config::Table* table);
+  ::util::Status LookupTable(int id, ::p4::config::v1::Table* table);
 
   // Fill a mapped_field field_type based on a table match_field. Fail if
   // table_id/match_id pair is unknown. This should be used in lieu of
@@ -604,34 +556,31 @@ class BcmAclManagerTest : public ::testing::Test {
   ::util::Status MapMatchField(int table_id, int match_id,
                                MappedField* mapped_field);
 
-  // Mock config state.
-  gtl::flat_map<int, ::p4::config::Table> mock_tables_;
+  // Mock config state. Map of table ID to table.
+  gtl::flat_map<int, ::p4::config::v1::Table> mock_tables_;
 
   // Class instances used for testing (real and mocked). Note that in addition
   // to a mocked version of BcmTableManager passed to BcmAclManager, we use a
   // real BcmTableManager as well to test logical table creation/insertion.
   std::unique_ptr<BcmAclManager> bcm_acl_manager_;
-  std::unique_ptr<BcmChassisManagerMock> bcm_chassis_manager_mock_;
+  std::unique_ptr<BcmChassisRoMock> bcm_chassis_ro_mock_;
   std::unique_ptr<BcmTableManagerMock> bcm_table_manager_mock_;
-  std::unique_ptr<BcmSdkMock> bcm_sdk_mock_;
+  std::unique_ptr<testing::NiceMock<BcmSdkMock>> bcm_sdk_mock_;
   std::unique_ptr<BcmTableManager> bcm_table_manager_;
   std::unique_ptr<P4TableMapperMock> p4_table_mapper_mock_;
 };
 
 void BcmAclManagerTest::SetUp() {
-  SetUpP4InfoManagerMock();
   SetUpP4TableMapperMock();
   SetUpBcmTableManagerMock();
   SetUpBcmSdkMock();
 }
 
-void BcmAclManagerTest::SetUpP4InfoManagerMock() {
+void BcmAclManagerTest::SetUpP4TableMapperMock() {
   ON_CALL(*p4_table_mapper_mock_, LookupTable(_, _))
       .WillByDefault(Invoke(this, &BcmAclManagerTest::LookupTable));
   EXPECT_CALL(*p4_table_mapper_mock_, LookupTable(_, _)).Times(AnyNumber());
-}
 
-void BcmAclManagerTest::SetUpP4TableMapperMock() {
   ON_CALL(*p4_table_mapper_mock_, MapMatchField(_, _, _))
       .WillByDefault(Invoke(this, &BcmAclManagerTest::MapMatchField));
   EXPECT_CALL(*p4_table_mapper_mock_, MapMatchField(_, _, _))
@@ -665,6 +614,8 @@ void BcmAclManagerTest::SetUpBcmTableManagerMock() {
   ON_CALL(*bcm_table_manager_mock_, GetReadOnlyAclTable(_))
       .WillByDefault(Invoke(bcm_table_manager_.get(),
                             &BcmTableManager::GetReadOnlyAclTable));
+  EXPECT_CALL(*bcm_table_manager_mock_, GetReadOnlyAclTable(_))
+      .Times(AnyNumber());
   ON_CALL(*bcm_table_manager_mock_, GetAllAclTableIDs())
       .WillByDefault(Invoke(bcm_table_manager_.get(),
                             &BcmTableManager::GetAllAclTableIDs));
@@ -685,11 +636,11 @@ void BcmAclManagerTest::SetUpBcmSdkMock() {
         return ++table_id;
       }));
   ON_CALL(*bcm_sdk_mock_, DestroyAclTable(_, _))
-      .WillByDefault(Return(util::OkStatus()));
+      .WillByDefault(Return(::util::OkStatus()));
 }
 
 ::util::Status BcmAclManagerTest::LookupTable(int id,
-                                              ::p4::config::Table* table) {
+                                              ::p4::config::v1::Table* table) {
   auto result = gtl::FindOrNull(mock_tables_, id);
   if (result == nullptr) {
     return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "Table " << id << " not found.";
@@ -700,11 +651,14 @@ void BcmAclManagerTest::SetUpBcmSdkMock() {
 
 ::util::Status BcmAclManagerTest::MapMatchField(int table_id, int match_id,
                                                 MappedField* mapped_field) {
-  ::p4::config::Table table;
+  ::p4::config::v1::Table table;
   RETURN_IF_ERROR(LookupTable(table_id, &table));
   for (const auto& match : table.match_fields()) {
     if (match.id() == match_id) {
-      mapped_field->set_type(FieldIdToType().at(match_id));
+      P4FieldType field_type = P4_FIELD_TYPE_UNKNOWN;
+      CHECK(P4FieldType_Parse(match.name(), &field_type))
+          << "Failed to parse P4FieldType: " << match.name();
+      mapped_field->set_type(field_type);
       return ::util::OkStatus();
     }
   }
@@ -713,30 +667,28 @@ void BcmAclManagerTest::SetUpBcmSdkMock() {
          << match_id << ".";
 }
 
-::util::Status BcmAclManagerTest::SetUpDefaultTables() {
-  mock_tables_ = DefaultP4Tables();
-  P4ControlBlock control_block = DefaultControlBlock();
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config =
-      BuildForwardingPipelineConfig(control_block);
+::util::Status BcmAclManagerTest::SetUpTables(
+    const std::vector<::p4::config::v1::Table>& tables,
+    const P4ControlBlock& control_block) {
+  for (const auto& table : tables) {
+    mock_tables_[table.preamble().id()] = table;
+  }
 
   EXPECT_CALL(*bcm_table_manager_mock_, GetAllAclTableIDs()).Times(AtLeast(1));
   EXPECT_CALL(*bcm_table_manager_mock_, P4FieldTypeToBcmFieldType(_))
       .Times(AtLeast(1));
   EXPECT_CALL(*bcm_table_manager_mock_, AddAclTable(_))
-      .Times(AtLeast(DefaultP4Tables().size()));
-  EXPECT_CALL(*bcm_table_manager_mock_, GetReadOnlyAclTable(_))
-      .Times(AtLeast(1));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateAclTable(kUnit, _)).Times(AtLeast(1));
+      .Times(AtLeast(tables.size()));
 
   return bcm_acl_manager_->PushForwardingPipelineConfig(
-      forwarding_pipeline_config);
+      BuildForwardingPipelineConfig(control_block));
 }
 
 // *****************************************************************************
 // Tests
 // *****************************************************************************
 
-TEST_F(BcmAclManagerTest, PushChassisConfigSuccess) {
+TEST_F(BcmAclManagerTest, PushChassisConfig_Success) {
   ChassisConfig config;
   config.add_nodes()->set_id(kNodeId);
 
@@ -748,7 +700,38 @@ TEST_F(BcmAclManagerTest, PushChassisConfigSuccess) {
   ASSERT_OK(bcm_acl_manager_->PushChassisConfig(config, kNodeId));
 }
 
-TEST_F(BcmAclManagerTest, PushChassisConfigFailure) {
+TEST_F(BcmAclManagerTest, PushChassisConfig_NoBcmHardwareSpecs) {
+  ChassisConfig config;
+  config.add_nodes()->set_id(kNodeId);
+  FLAGS_bcm_hardware_specs_file = "tmp/nothing_to_see_here";
+
+  // Push config and evaluate the error return.
+  EXPECT_FALSE(bcm_acl_manager_->PushChassisConfig(config, kNodeId).ok());
+}
+
+TEST_F(BcmAclManagerTest, PushChassisConfig_BadBcmHardwareSpecs) {
+  ChassisConfig config;
+  config.add_nodes()->set_id(kNodeId);
+  ASSERT_OK(WriteStringToFile("random_text", FLAGS_bcm_hardware_specs_file));
+
+  // Push config and evaluate the error return.
+  EXPECT_FALSE(bcm_acl_manager_->PushChassisConfig(config, kNodeId).ok());
+}
+
+TEST_F(BcmAclManagerTest, PushChassisConfig_UnknownChip) {
+  ChassisConfig config;
+  config.add_nodes()->set_id(kNodeId);
+  config.mutable_chassis()->set_platform(PLT_GENERIC_TRIDENT2);
+  ASSERT_OK(WriteStringToFile("chip_specs { chip_type: TOMAHAWK }",
+                              FLAGS_bcm_hardware_specs_file));
+
+  // Push config and evaluate the error return.
+  EXPECT_THAT(bcm_acl_manager_->PushChassisConfig(config, kNodeId),
+              StatusIs(HerculesErrorSpace(), ERR_INTERNAL,
+                       HasSubstr("Unable to find ChipModelSpec")));
+}
+
+TEST_F(BcmAclManagerTest, PushChassisConfig_AclControlFailure) {
   ChassisConfig config;
   config.add_nodes()->set_id(kNodeId);
 
@@ -760,6 +743,11 @@ TEST_F(BcmAclManagerTest, PushChassisConfigFailure) {
   // Push config and evaluate the error return.
   EXPECT_THAT(bcm_acl_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
+}
+
+TEST_F(BcmAclManagerTest, PushChassisConfig_InitAclHardwareFailure) {
+  ChassisConfig config;
+  config.add_nodes()->set_id(kNodeId);
 
   // Expect failure when the SDK can't initialize the ACL hardware.
   EXPECT_CALL(*bcm_sdk_mock_, InitAclHardware(kUnit))
@@ -817,7 +805,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneLinearStage) {
   mock_tables_ = DefaultP4Tables();
 
   // Create a single ordered list for the tables.
-  std::vector<::p4::config::Table> tables;
+  std::vector<::p4::config::v1::Table> tables;
   for (const auto& pair : DefaultP4Tables()) {
     tables.push_back(pair.second);
   }
@@ -826,8 +814,9 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneLinearStage) {
   P4ControlBlock control_block;
   for (const auto& table : tables) {
     *control_block.add_statements()->mutable_apply() =
-        TableReferenceHelper(table.preamble())
-            .stage(P4Annotation::INGRESS_ACL)();
+        P4ControlTableRefBuilder(table.preamble())
+            .Stage(P4Annotation::INGRESS_ACL)
+            .Build();
   }
   SCOPED_TRACE(
       absl::StrCat("Input control block:\n", control_block.DebugString()));
@@ -847,11 +836,11 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneLinearStage) {
         .WillOnce(Return(100 + id));
   }
 
-  // Set up the ::p4::ForwardingPipelineConfig object.
+  // Set up the P4 ForwardingPipelineConfig object.
   P4PipelineConfig p4_pipeline_config;
   *p4_pipeline_config.add_p4_controls()->mutable_main() = control_block;
   p4_pipeline_config.mutable_p4_controls(0)->set_name("test_control");
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
   p4_pipeline_config.SerializeToString(
       forwarding_pipeline_config.mutable_p4_device_config());
 
@@ -887,7 +876,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
   // We will only use the first 8 tables.
   ASSERT_GE(DefaultP4Tables().size(), 8)
       << "There are not enough default tables for this test.";
-  std::vector<::p4::config::Table> tables;
+  std::vector<::p4::config::v1::Table> tables;
   for (const auto& pair : DefaultP4Tables()) {
     tables.push_back(pair.second);
   }
@@ -922,11 +911,11 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
             return ++table_id;
           }));
 
-  // Set up the ::p4::ForwardingPipelineConfig object.
+  // Set up the P4 ForwardingPipelineConfig object.
   P4PipelineConfig p4_pipeline_config;
   *p4_pipeline_config.add_p4_controls()->mutable_main() = control_block;
   p4_pipeline_config.mutable_p4_controls(0)->set_name("test_control");
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
   p4_pipeline_config.SerializeToString(
       forwarding_pipeline_config.mutable_p4_device_config());
 
@@ -959,7 +948,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
   }
 
   // There should be 4 unique ids: Table[0], Table[1-3], Table[4], Table[5-7]
-  gtl::flat_hash_set<int> physical_table_ids = {
+  absl::flat_hash_set<int> physical_table_ids = {
       acl_tables[0].PhysicalTableId()};
   EXPECT_TRUE(physical_table_ids.insert(acl_tables[1].PhysicalTableId()).second)
       << "Duplicate physical table ID found for table index 1.";
@@ -989,7 +978,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
   // exclusive fields. The table should have one of each unique field from the
   // input tables.
   ++bcm_table;
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> expected_fields;
+  absl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> expected_fields;
   for (int i = 1; i < 4; ++i) {
     SCOPED_TRACE(absl::StrCat("Failed verification against table index ", i));
     expected_table = ifp_bcm_tables.at(tables[i].preamble().id());
@@ -999,7 +988,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
     }
   }
   // Compare the fields.
-  gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
+  absl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>> bcm_fields;
   for (const BcmField& field : bcm_table->fields()) {
     bcm_fields.insert(field.type());
   }
@@ -1040,9 +1029,9 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_SplitLinearStages) {
   ASSERT_GE(DefaultP4Tables().size(), kMinimumRequiredTables)
       << "There are not enough default tables for this test.";
 
-  std::vector<::p4::config::Table> ifp_tables;
-  std::vector<::p4::config::Table> vfp_tables;
-  std::vector<::p4::config::Table> efp_tables;
+  std::vector<::p4::config::v1::Table> ifp_tables;
+  std::vector<::p4::config::v1::Table> vfp_tables;
+  std::vector<::p4::config::v1::Table> efp_tables;
   int i = 0;
   for (const auto& pair : DefaultP4Tables()) {
     if (i < DefaultP4Tables().size() / 3) {
@@ -1058,15 +1047,15 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_SplitLinearStages) {
   // Create each stage within the control block with sequential tables.
   ControlBlockHelper control_block_helper;
   control_block_helper.stage(P4Annotation::INGRESS_ACL);
-  for (const ::p4::config::Table& table : ifp_tables) {
+  for (const ::p4::config::v1::Table& table : ifp_tables) {
     control_block_helper.append(table);
   }
   control_block_helper.stage(P4Annotation::VLAN_ACL);
-  for (const ::p4::config::Table& table : vfp_tables) {
+  for (const ::p4::config::v1::Table& table : vfp_tables) {
     control_block_helper.append(table);
   }
   control_block_helper.stage(P4Annotation::EGRESS_ACL);
-  for (const ::p4::config::Table& table : efp_tables) {
+  for (const ::p4::config::v1::Table& table : efp_tables) {
     control_block_helper.append(table);
   }
   P4ControlBlock control_block = control_block_helper();
@@ -1077,7 +1066,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_SplitLinearStages) {
 
   // Expect to install each table separately into the SDK. We will mock the Bcm
   // table IDs as 100 + the P4 table ID (e.g. P4 ID 1 --> BCM ID 101).
-  for (const ::p4::config::Table& table : ifp_tables) {
+  for (const ::p4::config::v1::Table& table : ifp_tables) {
     int id = table.preamble().id();
     BcmAclTable ifp_bcm_table = DefaultBcmAclTables().at(id);
     ifp_bcm_table.set_stage(BCM_ACL_STAGE_IFP);
@@ -1086,7 +1075,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_SplitLinearStages) {
         CreateAclTable(kUnit, PartiallyUnorderedEqualsProto(ifp_bcm_table)))
         .WillOnce(Return(100 + id));
   }
-  for (const ::p4::config::Table& table : vfp_tables) {
+  for (const ::p4::config::v1::Table& table : vfp_tables) {
     int id = table.preamble().id();
     BcmAclTable vfp_bcm_table = DefaultBcmAclTables().at(id);
     vfp_bcm_table.set_stage(BCM_ACL_STAGE_VFP);
@@ -1095,7 +1084,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_SplitLinearStages) {
         CreateAclTable(kUnit, PartiallyUnorderedEqualsProto(vfp_bcm_table)))
         .WillOnce(Return(100 + id));
   }
-  for (const ::p4::config::Table& table : efp_tables) {
+  for (const ::p4::config::v1::Table& table : efp_tables) {
     int id = table.preamble().id();
     BcmAclTable efp_bcm_table = DefaultBcmAclTables().at(id);
     efp_bcm_table.set_stage(BCM_ACL_STAGE_EFP);
@@ -1108,11 +1097,11 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_SplitLinearStages) {
   SCOPED_TRACE(
       absl::StrCat("Input control block:\n", control_block.DebugString()));
 
-  // Set up the ::p4::ForwardingPipelineConfig object.
+  // Set up the P4 ForwardingPipelineConfig object.
   P4PipelineConfig p4_pipeline_config;
   *p4_pipeline_config.add_p4_controls()->mutable_main() = control_block;
   p4_pipeline_config.mutable_p4_controls(0)->set_name("test_control");
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
   p4_pipeline_config.SerializeToString(
       forwarding_pipeline_config.mutable_p4_device_config());
 
@@ -1182,11 +1171,11 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_NoACLTables) {
   EXPECT_CALL(*bcm_table_manager_mock_, AddAclTable(_)).Times(0);
   EXPECT_CALL(*bcm_sdk_mock_, CreateAclTable(kUnit, _)).Times(0);
 
-  // Set up the ::p4::ForwardingPipelineConfig object.
+  // Set up the P4 ForwardingPipelineConfig object.
   P4PipelineConfig p4_pipeline_config;
   *p4_pipeline_config.add_p4_controls()->mutable_main() = control_block;
   p4_pipeline_config.mutable_p4_controls(0)->set_name("test_control");
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config;
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config;
   p4_pipeline_config.SerializeToString(
       forwarding_pipeline_config.mutable_p4_device_config());
 
@@ -1202,12 +1191,12 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_PipelineFailure) {
   mock_tables_ = DefaultP4Tables();
 
   // Generate a pipeline with bad references.
-  ::p4::config::Table table = DefaultP4Tables().begin()->second;
+  ::p4::config::v1::Table table = DefaultP4Tables().begin()->second;
   table.mutable_preamble()->set_id(99999);
 
   ControlBlockHelper control_block;
   control_block.stage(P4Annotation::INGRESS_ACL).append(table);
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config =
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config =
       BuildForwardingPipelineConfig(control_block());
 
   SCOPED_TRACE(
@@ -1231,10 +1220,10 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_HardwareFailure) {
   mock_tables_ = DefaultP4Tables();
 
   // Generate a pipeline with bad references.
-  ::p4::config::Table table = DefaultP4Tables().begin()->second;
+  ::p4::config::v1::Table table = DefaultP4Tables().begin()->second;
   ControlBlockHelper control_block;
   control_block.stage(P4Annotation::INGRESS_ACL).append(table);
-  ::p4::ForwardingPipelineConfig forwarding_pipeline_config =
+  ::p4::v1::ForwardingPipelineConfig forwarding_pipeline_config =
       BuildForwardingPipelineConfig(control_block());
 
   SCOPED_TRACE(
@@ -1257,7 +1246,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_IdenticalConfig) {
   // Generate the control block using the default table set.
   mock_tables_ = DefaultP4Tables();
 
-  ::p4::ForwardingPipelineConfig config =
+  ::p4::v1::ForwardingPipelineConfig config =
       BuildForwardingPipelineConfig(DefaultControlBlock());
   // Expect all tables to created on the first push.
   EXPECT_CALL(*bcm_table_manager_mock_, AddAclTable(_))
@@ -1287,11 +1276,11 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_Reconfigure) {
       .Times(AnyNumber());
 
   // Fill the tables.
-  std::vector<::p4::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   int bcm_flow_id = 0;
   for (const auto& table : DefaultP4TablesVector()) {
     for (int i = 0; i < kEntriesPerTable; ++i) {
-      ::p4::TableEntry entry = BuildSimpleEntry(table, i);
+      ::p4::v1::TableEntry entry = BuildSimpleEntry(table, i);
       // Mock the hw responses.
       EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(_, _, _, _))
           .WillOnce(Return(++bcm_flow_id));
@@ -1307,7 +1296,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_Reconfigure) {
   EXPECT_CALL(*bcm_table_manager_mock_, DeleteTable(_)).Times(AnyNumber());
 
   // Expect all the table entries to be removed from hardware and software.
-  for (const ::p4::TableEntry& entry : entries) {
+  for (const ::p4::v1::TableEntry& entry : entries) {
     ASSERT_OK_AND_ASSIGN(
         const AclTable* table,
         bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
@@ -1316,7 +1305,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_Reconfigure) {
         .WillOnce(Return(::util::OkStatus()));
   }
   // Expect all the tables to be removed from hardware and software.
-  gtl::flat_hash_set<int> physical_table_ids;
+  absl::flat_hash_set<int> physical_table_ids;
   for (int table_id : bcm_table_manager_->GetAllAclTableIDs()) {
     ASSERT_OK_AND_ASSIGN(const AclTable* table,
                          bcm_table_manager_->GetReadOnlyAclTable(table_id));
@@ -1329,7 +1318,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_Reconfigure) {
 
   // Create a 4-table sequential control block.
   ASSERT_LE(4, DefaultP4TablesVector().size());
-  std::vector<::p4::config::Table> new_tables = DefaultP4TablesVector();
+  std::vector<::p4::config::v1::Table> new_tables = DefaultP4TablesVector();
   new_tables.resize(4);
   ControlBlockHelper control_block;
   control_block.stage(P4Annotation::INGRESS_ACL);
@@ -1338,7 +1327,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_Reconfigure) {
     control_block.append(table);
     new_table_ids.push_back(table.preamble().id());
   }
-  ::p4::ForwardingPipelineConfig config =
+  ::p4::v1::ForwardingPipelineConfig config =
       BuildForwardingPipelineConfig(control_block());
   // Expect all tables to created.
   EXPECT_CALL(*bcm_table_manager_mock_, AddAclTable(_))
@@ -1361,16 +1350,17 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntry) {
   constexpr int kEntriesPerTable = 8;
 
   // Fill the tables.
-  std::vector<::p4::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   int bcm_flow_id = 0;
   for (const auto& table : DefaultP4TablesVector()) {
     for (int i = 0; i < kEntriesPerTable; ++i) {
-      ::p4::TableEntry entry = BuildSimpleEntry(table, i);
+      ::p4::v1::TableEntry entry = BuildSimpleEntry(table, i);
       // Mock the CommonFlowEntry conversion.
       BcmFlowEntry bfe;
       bfe.set_priority(i);
-      EXPECT_CALL(*bcm_table_manager_mock_,
-                  FillBcmFlowEntry(EqualsProto(entry), ::p4::Update::INSERT, _))
+      EXPECT_CALL(
+          *bcm_table_manager_mock_,
+          FillBcmFlowEntry(EqualsProto(entry), ::p4::v1::Update::INSERT, _))
           .WillOnce(DoAll(SetArgPointee<2>(bfe), Return(::util::OkStatus())));
       // Mock the conversion & hw responses.
       EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(kUnit, EqualsProto(bfe), _, _))
@@ -1387,7 +1377,7 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntry) {
 
   // Expect that the software state is correct.
   bcm_flow_id = 0;
-  for (const ::p4::TableEntry& entry : entries) {
+  for (const ::p4::v1::TableEntry& entry : entries) {
     ASSERT_OK_AND_ASSIGN(
         const AclTable* table,
         bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
@@ -1401,7 +1391,7 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntry) {
 TEST_F(BcmAclManagerTest, TestInsertTableEntryConversionFailures) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
 
   // No table should be added to hardware for conversion failures.
@@ -1418,7 +1408,7 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntryConversionFailures) {
 TEST_F(BcmAclManagerTest, TestInsertTableEntryHardwareFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
 
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
@@ -1435,12 +1425,12 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntryHardwareFailure) {
 TEST_F(BcmAclManagerTest, TestInsertTableEntryRejectionFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry;
+  ::p4::v1::TableEntry entry;
   entry.set_table_id(9999999);  // Unknown table id.
 
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_, CommonFlowEntryToBcmFlowEntry(_, _))
+  EXPECT_CALL(*bcm_table_manager_mock_, CommonFlowEntryToBcmFlowEntry(_, _, _))
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(_, _, _, _)).Times(0);
   EXPECT_CALL(*bcm_table_manager_mock_, AddTableEntry(_)).Times(0);
@@ -1459,7 +1449,7 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntry) {
   int bcm_flow_id = 0;
   for (const auto& table : DefaultP4TablesVector()) {
     for (int i = 0; i < kEntriesPerTable; ++i) {
-      ::p4::TableEntry entry = BuildSimpleEntry(table, i);
+      ::p4::v1::TableEntry entry = BuildSimpleEntry(table, i);
       // Mock the conversions.
       EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
           .WillOnce(Return(::util::OkStatus()));
@@ -1473,22 +1463,23 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntry) {
 
   // Modify the entries.
   bcm_flow_id = 0;
-  std::vector<::p4::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   for (const auto& table : DefaultP4TablesVector()) {
     for (int i = 0; i < kEntriesPerTable; ++i) {
       // Create the entries from above, but with different actions.
-      ::p4::TableEntry entry = BuildSimpleEntry(table, i);
+      ::p4::v1::TableEntry entry = BuildSimpleEntry(table, i);
       entry.mutable_action()->mutable_action()->set_action_id(i);
       // Mock the CommonFlowEntry conversion.
       BcmFlowEntry bfe;
       bfe.set_priority(i);
-      EXPECT_CALL(*bcm_table_manager_mock_,
-                  FillBcmFlowEntry(EqualsProto(entry), ::p4::Update::MODIFY, _))
+      EXPECT_CALL(
+          *bcm_table_manager_mock_,
+          FillBcmFlowEntry(EqualsProto(entry), ::p4::v1::Update::MODIFY, _))
           .WillOnce(DoAll(SetArgPointee<2>(bfe), Return(::util::OkStatus())));
       // Mock the conversion & hw responses.
       EXPECT_CALL(*bcm_sdk_mock_,
                   ModifyAclFlow(kUnit, ++bcm_flow_id, EqualsProto(bfe)))
-          .WillOnce(Return(util::OkStatus()));
+          .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bcm_table_manager_mock_,
                   UpdateTableEntry(EqualsProto(entry)))
           .WillOnce(Invoke(bcm_table_manager_.get(),
@@ -1501,7 +1492,7 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntry) {
 
   // Expect that the software state is correct.
   bcm_flow_id = 0;
-  for (const ::p4::TableEntry& entry : entries) {
+  for (const ::p4::v1::TableEntry& entry : entries) {
     ASSERT_OK_AND_ASSIGN(
         const AclTable* table,
         bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
@@ -1514,13 +1505,13 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntry) {
 TEST_F(BcmAclManagerTest, TestModifyTableEntryLookupFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
 
   // Conversions are okay.
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_, CommonFlowEntryToBcmFlowEntry(_, _))
+  EXPECT_CALL(*bcm_table_manager_mock_, CommonFlowEntryToBcmFlowEntry(_, _, _))
       .WillRepeatedly(Return(::util::OkStatus()));
   // The hardware installation should not occur.
   EXPECT_CALL(*bcm_sdk_mock_, ModifyAclFlow(_, _, _)).Times(0);
@@ -1540,7 +1531,7 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntryConversionFailure) {
   ASSERT_OK(SetUpDefaultTables());
 
   // Set up the entry.
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
 
   // Insert the original entry.
@@ -1548,7 +1539,7 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntryConversionFailure) {
   ASSERT_OK(bcm_acl_manager_->InsertTableEntry(entry));
 
   // Modify the entry action.
-  ::p4::TableEntry modified_entry = entry;
+  ::p4::v1::TableEntry modified_entry = entry;
   modified_entry.mutable_action()->mutable_action()->set_action_id(10);
 
   // Fake conversion failures.
@@ -1585,7 +1576,7 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntryHardwareFailure) {
   ASSERT_OK(SetUpDefaultTables());
 
   // Set up the entry.
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
 
   // Insert the original entry.
@@ -1593,7 +1584,7 @@ TEST_F(BcmAclManagerTest, TestModifyTableEntryHardwareFailure) {
   ASSERT_OK(bcm_acl_manager_->InsertTableEntry(entry));
 
   // Modify the entry action.
-  ::p4::TableEntry modified_entry = entry;
+  ::p4::v1::TableEntry modified_entry = entry;
   modified_entry.mutable_action()->mutable_action()->set_action_id(10);
 
   // Fake the hardware failure.
@@ -1628,10 +1619,10 @@ TEST_F(BcmAclManagerTest, TestDeleteTableEntry) {
   constexpr int kEntriesPerTable = 8;
   // Fill the tables.
   int bcm_flow_id = 0;
-  std::vector<::p4::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   for (const auto& table : DefaultP4TablesVector()) {
     for (int i = 0; i < kEntriesPerTable; ++i) {
-      ::p4::TableEntry entry = BuildSimpleEntry(table, i);
+      ::p4::v1::TableEntry entry = BuildSimpleEntry(table, i);
       // Mock the conversions.
       EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(_, _, _, _))
           .WillOnce(Return(++bcm_flow_id));
@@ -1665,7 +1656,7 @@ TEST_F(BcmAclManagerTest, TestDeleteTableEntry) {
 TEST_F(BcmAclManagerTest, TestDeleteTableEntryLookupFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   // No hardware operations are expected.
   EXPECT_CALL(*bcm_sdk_mock_, RemoveAclFlow(_, _)).Times(0);
@@ -1677,7 +1668,7 @@ TEST_F(BcmAclManagerTest, TestDeleteTableEntryLookupFailure) {
 TEST_F(BcmAclManagerTest, TestDeleteTableEntryHardwareFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   // Insert the entry.
   EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(_, _, _, _)).WillOnce(Return(1));
@@ -1694,7 +1685,7 @@ TEST_F(BcmAclManagerTest, TestDeleteTableEntryHardwareFailure) {
 TEST_F(BcmAclManagerTest, TestGetTableEntryStats) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(Return(::util::OkStatus()));
@@ -1706,7 +1697,7 @@ TEST_F(BcmAclManagerTest, TestGetTableEntryStats) {
   stats.mutable_total()->set_packets(8);
   EXPECT_CALL(*bcm_sdk_mock_, GetAclStats(kUnit, 100, _))
       .WillOnce(DoAll(SetArgPointee<2>(stats), Return(::util::OkStatus())));
-  ::p4::CounterData received, expected;
+  ::p4::v1::CounterData received, expected;
   EXPECT_OK(bcm_acl_manager_->GetTableEntryStats(entry, &received));
   expected.set_byte_count(1024);
   expected.set_packet_count(8);
@@ -1717,9 +1708,9 @@ TEST_F(BcmAclManagerTest, TestGetTableEntryStats) {
 TEST_F(BcmAclManagerTest, TestGetTableEntryStatsLookupFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
-  ::p4::CounterData counter;
+  ::p4::v1::CounterData counter;
   EXPECT_CALL(*bcm_sdk_mock_, GetAclStats(_, _, _)).Times(0);
   EXPECT_FALSE(bcm_acl_manager_->GetTableEntryStats(entry, &counter).ok());
 }
@@ -1728,7 +1719,7 @@ TEST_F(BcmAclManagerTest, TestGetTableEntryStatsLookupFailure) {
 TEST_F(BcmAclManagerTest, TestGetTableEntryStatsBcmFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(Return(::util::OkStatus()));
@@ -1740,7 +1731,7 @@ TEST_F(BcmAclManagerTest, TestGetTableEntryStatsBcmFailure) {
   stats.mutable_total()->set_packets(8);
   EXPECT_CALL(*bcm_sdk_mock_, GetAclStats(kUnit, 100, _))
       .WillOnce(DoAll(SetArgPointee<2>(stats), Return(DefaultError())));
-  ::p4::CounterData counter;
+  ::p4::v1::CounterData counter;
   EXPECT_FALSE(bcm_acl_manager_->GetTableEntryStats(entry, &counter).ok());
 }
 
@@ -1749,16 +1740,15 @@ TEST_F(BcmAclManagerTest, TestGetTableEntryStatsBcmFailure) {
 TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeter) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(_, _, _, _)).WillOnce(Return(100));
   EXPECT_OK(bcm_acl_manager_->InsertTableEntry(entry));
 
-
   // Test valid meter configuration.
-  ::p4::DirectMeterEntry p4_meter;
+  ::p4::v1::DirectMeterEntry p4_meter;
   *p4_meter.mutable_table_entry() = entry;
   p4_meter.mutable_config()->set_cir(512);
   p4_meter.mutable_config()->set_cburst(8);
@@ -1781,7 +1771,7 @@ TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeter) {
   ASSERT_OK_AND_ASSIGN(
       const AclTable* table,
       bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
-  ASSERT_OK_AND_ASSIGN(::p4::TableEntry lookup, table->Lookup(entry));
+  ASSERT_OK_AND_ASSIGN(::p4::v1::TableEntry lookup, table->Lookup(entry));
   EXPECT_THAT(lookup.meter_config(), EqualsProto(p4_meter.config()));
 }
 
@@ -1789,8 +1779,8 @@ TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeterLookupFailure) {
   ASSERT_OK(SetUpDefaultTables());
 
   // Test valid meter configuration.
-  ::p4::DirectMeterEntry p4_meter;
-  ::p4::TableEntry entry =
+  ::p4::v1::DirectMeterEntry p4_meter;
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   *p4_meter.mutable_table_entry() = entry;
   p4_meter.mutable_config()->set_cir(512);
@@ -1805,7 +1795,7 @@ TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeterLookupFailure) {
 TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeterBcmFailure) {
   // Perform the initial configuration.
   ASSERT_OK(SetUpDefaultTables());
-  ::p4::TableEntry entry =
+  ::p4::v1::TableEntry entry =
       BuildSimpleEntry(*DefaultP4TablesVector().begin(), 0);
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(Return(::util::OkStatus()));
@@ -1813,7 +1803,7 @@ TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeterBcmFailure) {
   EXPECT_OK(bcm_acl_manager_->InsertTableEntry(entry));
 
   // Test valid meter configuration.
-  ::p4::DirectMeterEntry p4_meter;
+  ::p4::v1::DirectMeterEntry p4_meter;
   *p4_meter.mutable_table_entry() = entry;
   p4_meter.mutable_config()->set_cir(512);
   p4_meter.mutable_config()->set_cburst(8);
@@ -1827,8 +1817,115 @@ TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeterBcmFailure) {
   ASSERT_OK_AND_ASSIGN(
       const AclTable* table,
       bcm_table_manager_->GetReadOnlyAclTable(entry.table_id()));
-  ASSERT_OK_AND_ASSIGN(::p4::TableEntry lookup, table->Lookup(entry));
+  ASSERT_OK_AND_ASSIGN(::p4::v1::TableEntry lookup, table->Lookup(entry));
   EXPECT_FALSE(lookup.has_meter_config());
+}
+
+TEST_F(BcmAclManagerTest, TestInstallPhysicalTableWithConstConditions) {
+  std::vector<string> table_strings = {
+      R"PROTO(
+        preamble { id: 1 name: "table_1" }
+        match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_SRC" match_type: TERNARY }
+        size: 10
+      )PROTO",
+      R"PROTO(
+        preamble { id: 2 name: "table_2" }
+        match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
+        size: 10
+      )PROTO",
+      R"PROTO(
+        preamble { id: 3 name: "table_3" }
+        match_fields {
+          id: 1
+          name: "P4_FIELD_TYPE_IPV4_SRC"
+          match_type: TERNARY
+        }
+        size: 10
+      )PROTO"};
+
+  std::vector<::p4::config::v1::Table> tables;
+  for (const string& table_string : table_strings) {
+    ::p4::config::v1::Table table;
+    CHECK_OK(ParseProtoFromString(table_string, &table));
+    tables.push_back(table);
+  }
+
+  P4ControlBlock control_block;
+  *control_block.add_statements() =
+      ApplyTable(tables[0], P4Annotation::INGRESS_ACL);
+  *control_block.add_statements() =
+      IsValidBuilder()
+          .Header(P4HeaderType::P4_HEADER_IPV4)
+          .DoIfValid(ApplyTable(tables[1], P4Annotation::INGRESS_ACL))
+          .DoIfValid(ApplyTable(tables[2], P4Annotation::INGRESS_ACL))
+          .Build();
+
+  std::vector<string> bcm_table_strings = {
+      R"PROTO(fields { type: ETH_SRC })PROTO",
+      R"PROTO(fields { type: ETH_DST } fields { type: IP_TYPE })PROTO",
+      R"PROTO(fields { type: IPV4_SRC } fields { type: IP_TYPE })PROTO",
+  };
+  std::vector<BcmAclTable> expected_bcm_tables;
+  for (const string& table_string : bcm_table_strings) {
+    BcmAclTable table;
+    CHECK_OK(ParseProtoFromString(table_string, &table));
+    expected_bcm_tables.push_back(table);
+  }
+
+  EXPECT_CALL(*bcm_sdk_mock_,
+              CreateAclTable(
+                  kUnit, PartiallyUnorderedEqualsProto(expected_bcm_tables[0])))
+      .Times(1);
+  EXPECT_CALL(*bcm_sdk_mock_,
+              CreateAclTable(
+                  kUnit, PartiallyUnorderedEqualsProto(expected_bcm_tables[1])))
+      .Times(1);
+  EXPECT_CALL(*bcm_sdk_mock_,
+              CreateAclTable(
+                  kUnit, PartiallyUnorderedEqualsProto(expected_bcm_tables[2])))
+      .Times(1);
+
+  ASSERT_OK(SetUpTables(tables, control_block));
+}
+
+TEST_F(BcmAclManagerTest, TestInsertTableEntryWithConstConditions) {
+  ::p4::config::v1::Table table;
+  CHECK_OK(ParseProtoFromString(R"PROTO(
+    preamble { id: 2 name: "table_2" }
+    match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
+    size: 10
+  )PROTO", &table));
+
+  P4ControlBlock control_block;
+  *control_block.add_statements() =
+      IsValidBuilder()
+          .Header(P4HeaderType::P4_HEADER_IPV4)
+          .DoIfValid(ApplyTable(table, P4Annotation::INGRESS_ACL))
+          .Build();
+
+  ::p4::v1::TableEntry table_entry;
+  CHECK_OK(ParseProtoFromString(R"PROTO(
+    table_id: 2
+    match { field_id: 1 ternary { value: "\00A" } }
+    priority: 15
+  )PROTO", &table_entry));
+
+  BcmFlowEntry bcm_flow_entry;
+  CHECK_OK(ParseProtoFromString(R"PROTO(
+    bcm_table_type: BCM_TABLE_ACL
+    fields { type: ETH_DST value { u32: 10 } }
+    fields { type: IP_TYPE value { u32: 0x800 } }
+  )PROTO", &bcm_flow_entry));
+
+  ASSERT_OK(SetUpTables({table}, control_block));
+  EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
+      .WillOnce(
+          DoAll(SetArgPointee<2>(bcm_flow_entry), Return(util::OkStatus())));
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      InsertAclFlow(_, PartiallyUnorderedEqualsProto(bcm_flow_entry), _, _))
+      .WillOnce(Return(1));
+  EXPECT_OK(bcm_acl_manager_->InsertTableEntry(table_entry));
 }
 
 }  // namespace

@@ -26,7 +26,7 @@
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
+#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
 
 DECLARE_bool(skip_p4_min_objects_check);
 
@@ -44,6 +44,7 @@ class P4InfoManagerTest : public testing::Test {
   static const int kFirstActionProfileID = 20000;
   static const int kFirstCounterID = 10000000;
   static const int kFirstMeterID = 20000000;
+  static const int kFirstValueSetID = 30000000;
 
   // The default constructor creates p4_test_manager_ with empty p4_test_info_.
   P4InfoManagerTest() : p4_test_manager_(new P4InfoManager(p4_test_info_)) {}
@@ -80,6 +81,7 @@ class P4InfoManagerTest : public testing::Test {
   //      for test use.
   //  SetUpTestP4Counters: populates p4_test_info_ with test counters.
   //  SetUpTestP4Meters: populates p4_test_info_ with test meters.
+  //  SetUpTestP4ValueSets: populates p4_test_info_ with value sets.
   void SetUpAllTestP4Info() {
     FLAGS_skip_p4_min_objects_check = false;  // Minimum object set is present.
     SetUpTestP4Tables();
@@ -87,6 +89,7 @@ class P4InfoManagerTest : public testing::Test {
     SetUpTestP4ActionProfiles();
     SetUpTestP4Counters();
     SetUpTestP4Meters();
+    SetUpTestP4ValueSets();
   }
 
   void SetUpTestP4Tables(bool need_actions = true) {
@@ -95,7 +98,7 @@ class P4InfoManagerTest : public testing::Test {
     // Each table entry is assigned an ID and name in the preamble.  Each table
     // optionally gets a set of action IDs.
     for (int t = 1; t <= kNumTestTables; ++t) {
-      p4::config::Table* new_table = p4_test_info_.add_tables();
+      ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
       new_table->mutable_preamble()->set_id(t);
       new_table->mutable_preamble()->set_name(absl::Substitute("Table-$0", t));
       for (int a = 0; need_actions && a < kNumActionsPerTable; ++a) {
@@ -112,7 +115,7 @@ class P4InfoManagerTest : public testing::Test {
     ::google::protobuf::int32 dummy_param_id = 100000;
 
     for (int a = 0; a < kNumTestActions; ++a) {
-      p4::config::Action* new_action = p4_test_info_.add_actions();
+      ::p4::config::v1::Action* new_action = p4_test_info_.add_actions();
       new_action->mutable_preamble()->set_id(a + kFirstActionID);
       new_action->mutable_preamble()->set_name(
           absl::Substitute("Action-$0", a));
@@ -151,6 +154,15 @@ class P4InfoManagerTest : public testing::Test {
     SetUpNewP4Info();
   }
 
+  void SetUpTestP4ValueSets() {
+    // TODO(teverman): Tests get only one basic value set preamble at present.
+    auto new_value_set = p4_test_info_.add_value_sets();
+    new_value_set->mutable_preamble()->set_id(kFirstValueSetID);
+    new_value_set->mutable_preamble()->set_name("Value-Set-1");
+    new_value_set->set_bitwidth(8);
+    SetUpNewP4Info();
+  }
+
   // Populates p4_test_info_ with all resources from the tor.p4 spec.  This
   // data provides assurance that P4InfoManager can handle real P4 compiler
   // output.
@@ -161,7 +173,7 @@ class P4InfoManagerTest : public testing::Test {
     SetUpNewP4Info();
   }
 
-  p4::config::P4Info p4_test_info_;  // Tests use this to set up their P4Info.
+  ::p4::config::v1::P4Info p4_test_info_;           // Sets up test P4Info.
   std::unique_ptr<P4InfoManager> p4_test_manager_;  // P4InfoManager for tests.
   FlagSaver flag_saver_;  // Reverts FLAGS_skip_p4_min_objects_check to default.
 };
@@ -247,7 +259,7 @@ TEST_F(P4InfoManagerTest, TestInitializeTwice) {
 
 // Tests InitializeAndVerify when the input P4Info has a bad table ID.
 TEST_F(P4InfoManagerTest, TestInitializeBadTableID) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(0);  // 0 is an invalid ID.
   new_table->mutable_preamble()->set_name("Table-0");
   SetUpNewP4Info();
@@ -261,7 +273,7 @@ TEST_F(P4InfoManagerTest, TestInitializeBadTableID) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined table ID.
 TEST_F(P4InfoManagerTest, TestInitializeNoTableID) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_name("Table-X");
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -289,7 +301,7 @@ TEST_F(P4InfoManagerTest, TestInitializeDuplicateTableID) {
 
 // Tests InitializeAndVerify when the input P4Info has a bad table name.
 TEST_F(P4InfoManagerTest, TestInitializeBadTableName) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(1);
   new_table->mutable_preamble()->set_name("");  // Empty string is invalid.
   SetUpNewP4Info();
@@ -303,7 +315,7 @@ TEST_F(P4InfoManagerTest, TestInitializeBadTableName) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined table name.
 TEST_F(P4InfoManagerTest, TestInitializeNoTableName) {
-  p4::config::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(1);
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -335,7 +347,7 @@ TEST_F(P4InfoManagerTest, TestInitializeDuplicateTableName) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined action ID.
 TEST_F(P4InfoManagerTest, TestInitializeNoActionID) {
-  p4::config::Action* new_action = p4_test_info_.add_actions();
+  ::p4::config::v1::Action* new_action = p4_test_info_.add_actions();
   new_action->mutable_preamble()->set_name("Action-X");
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -592,6 +604,46 @@ TEST_F(P4InfoManagerTest, TestFindMeterUnknownName) {
   SetUpTestP4Meters();
   ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
   auto status = p4_test_manager_->FindMeterByName("unknown-meter");
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// All valid value sets in p4_test_info_ should have successful name/ID
+// lookups, and the returned data should match the value set's original
+// p4_test_info_ entry.
+TEST_F(P4InfoManagerTest, TestFindValueSet) {
+  SetUpTestP4ValueSets();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  for (const auto& value_set : p4_test_info_.value_sets()) {
+    auto id_status = p4_test_manager_->FindValueSetByID(
+        value_set.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(value_set, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindValueSetByName(value_set.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(value_set, name_status.ValueOrDie()));
+  }
+}
+
+// Verifies lookup failure with an unknown value set ID.
+TEST_F(P4InfoManagerTest, TestFindValueSetUnknownID) {
+  SetUpTestP4ValueSets();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindValueSetByID(0xfedcba);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// Verifies lookup failure with an unknown unknown meter name.
+TEST_F(P4InfoManagerTest, TestFindValueSetUnknownName) {
+  SetUpTestP4ValueSets();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindValueSetByName("unknown-value-set");
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
   EXPECT_FALSE(status.status().error_message().empty());

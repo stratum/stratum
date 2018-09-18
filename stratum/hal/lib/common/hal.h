@@ -27,16 +27,21 @@
 #include <memory>
 #include <string>
 
+#include "stratum/hal/lib/common/admin_service.h"
+#include "stratum/hal/lib/common/certificate_management_service.h"
+#include "stratum/hal/lib/common/cmal_service.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/config_monitoring_service.h"
+#include "stratum/hal/lib/common/diag_service.h"
 #include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/file_service.h"
 #include "stratum/hal/lib/common/p4_service.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 #include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -51,6 +56,11 @@ namespace hal {
 class Hal final {
  public:
   virtual ~Hal();
+
+  // All the pre-setup sanity checks that need to be done before anything else.
+  // Typically an error returned from this method is an indicator that we should
+  // not continue running Hal.
+  ::util::Status SanityCheck();
 
   // Sets up HAL in coldboot and warmboot mode.
   ::util::Status Setup();
@@ -144,6 +154,10 @@ class Hal final {
   // Unique pointer to the HAL service classes. Owned by the class.
   std::unique_ptr<ConfigMonitoringService> config_monitoring_service_;
   std::unique_ptr<P4Service> p4_service_;
+  std::unique_ptr<AdminService> admin_service_;
+  std::unique_ptr<CertificateManagementService> certificate_management_service_;
+  std::unique_ptr<DiagService> diag_service_;
+  std::unique_ptr<FileService> file_service_;
 
   // Unique pointer to the gRPC server serving the external RPC connections
   // serviced by ConfigMonitoringService and P4Service. Owned by the class.
@@ -152,7 +166,7 @@ class Hal final {
   // Map from signals for which we registered handlers to their old handlers.
   // This map is used to restore the signal handlers to their previous state
   // in the class destructor.
-  gtl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
+  absl::flat_hash_map<int, sighandler_t> old_signal_handlers_;
 
   // The lock used for initialization of the singleton.
   static absl::Mutex init_lock_;

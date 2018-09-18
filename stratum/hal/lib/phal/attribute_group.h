@@ -22,6 +22,7 @@
 #include <set>
 #include <string>
 
+#include "google/protobuf/message.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
@@ -29,6 +30,7 @@
 #include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
+#include "util/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -42,14 +44,14 @@ using AttributeGroupVersionId = uint32;
 
 using AttributeSetterFunction = std::function<::util::Status(Attribute value)>;
 
-// A single node in a AttributeDatabase. Can be used to configure
-// the structure of a database to match the structure of a protobuf.
+// A single node in an AttributeDatabase. The contents of an AttributeGroup are
+// required to follow the structure of a schema protobuf message.
 class AttributeGroup {
  public:
-  virtual ~AttributeGroup() {}
+  virtual ~AttributeGroup() = default;
 
-  // A factory function to produce a AttributeGroup that matches
-  // the structure of the given protobuf.
+  // A factory function to produce a AttributeGroup that uses the given protobuf
+  // message as its schema.
   static std::unique_ptr<AttributeGroup> From(
       const protobuf::Descriptor* descriptor);
 
@@ -65,15 +67,20 @@ class AttributeGroup {
   // IMPORTANT NOTE: The ReadableAttributeGroups passed in *must* be deleted in
   // the order in which they are passed to avoid data races. As long as this
   // ordering is kept, it is perfectly safe for the caller to store the
-  // ReadableAttributeGroups for later use.
+  // ReadableAttributeGroups for later use or to temporarily freeze the database
+  // structure.
   virtual ::util::Status TraverseQuery(
       AttributeGroupQuery* query,
       std::function<
           ::util::Status(std::unique_ptr<ReadableAttributeGroup> group)>
           group_function,
       std::function<::util::Status(ManagedAttribute* attribute,
+                                   const Path& querying_path,
                                    const AttributeSetterFunction& setter)>
           attribute_function) = 0;
+
+  virtual ::util::Status Set(const AttributeValueMap& values,
+                             ThreadpoolInterface* threadpool) = 0;
 
   // A RuntimeConfigurator is responsible for altering the structure of an
   // attribute database at runtime. Derived classes of RuntimeConfigurator
@@ -211,9 +218,11 @@ class AttributeGroupQuery {
     auto descriptor = root_group->AcquireReadable()->GetDescriptor();
     const protobuf::Message* prototype_message =
         protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
-    CHECK_NOTNULL(prototype_message);
+    CHECK(prototype_message != nullptr);
     query_result_.reset(prototype_message->New());
   }
+  AttributeGroupQuery(const AttributeGroupQuery& other) = delete;
+  AttributeGroupQuery& operator=(const AttributeGroupQuery& other) = delete;
   ~AttributeGroupQuery() {
     root_group_->AcquireReadable()->UnregisterQuery(this);
   }
@@ -225,6 +234,10 @@ class AttributeGroupQuery {
                            absl::Duration polling_interval)
       LOCKS_EXCLUDED(query_lock_);
 
+  bool IsUpdated() LOCKS_EXCLUDED(query_lock_);
+  void MarkUpdated() LOCKS_EXCLUDED(query_lock_);
+  void ClearUpdated() LOCKS_EXCLUDED(query_lock_);
+
  private:
   friend class AttributeGroupQueryNode;
 
@@ -232,9 +245,9 @@ class AttributeGroupQuery {
   ThreadpoolInterface* threadpool_;
   std::unique_ptr<protobuf::Message> query_result_;
   absl::Mutex query_lock_;
-  bool query_updated_ GUARDED_BY(query_lock_);
-  std::vector<std::unique_ptr<ChannelWriter<PhalDB>>> subscribers_
-      GUARDED_BY(query_lock_);
+  // If true, the result of this query has changed and a streaming message
+  // should shortly be sent to all subscribers.
+  bool query_updated_ GUARDED_BY(query_lock_) = false;
 };
 
 }  // namespace phal

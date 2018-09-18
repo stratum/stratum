@@ -31,22 +31,24 @@ class BcmAclManagerMock : public BcmAclManager {
                ::util::Status(const ChassisConfig& config, uint64 node_id));
   MOCK_METHOD2(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config, uint64 node_id));
-  MOCK_METHOD1(PushForwardingPipelineConfig,
-               ::util::Status(const ::p4::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(VerifyForwardingPipelineConfig,
-               ::util::Status(const ::p4::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      PushForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      VerifyForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
   MOCK_CONST_METHOD1(InsertTableEntry,
-                     ::util::Status(const ::p4::TableEntry& entry));
+                     ::util::Status(const ::p4::v1::TableEntry& entry));
   MOCK_CONST_METHOD1(ModifyTableEntry,
-                     ::util::Status(const ::p4::TableEntry& entry));
+                     ::util::Status(const ::p4::v1::TableEntry& entry));
   MOCK_CONST_METHOD1(DeleteTableEntry,
-                     ::util::Status(const ::p4::TableEntry& entry));
+                     ::util::Status(const ::p4::v1::TableEntry& entry));
   MOCK_CONST_METHOD1(UpdateTableEntryMeter,
-                     ::util::Status(const ::p4::DirectMeterEntry& meter));
+                     ::util::Status(const ::p4::v1::DirectMeterEntry& meter));
   MOCK_CONST_METHOD2(GetTableEntryStats,
-                     ::util::Status(const ::p4::TableEntry& entry,
-                                    ::p4::CounterData* counter));
+                     ::util::Status(const ::p4::v1::TableEntry& entry,
+                                    ::p4::v1::CounterData* counter));
 };
 
 }  // namespace bcm

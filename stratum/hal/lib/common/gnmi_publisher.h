@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <time.h>
 
+#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
@@ -28,7 +29,6 @@
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/lib/error.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
 #include "util/gtl/flat_hash_map.h"
 #include "util/gtl/map_util.h"
 
@@ -84,6 +84,20 @@ class GnmiPublisher {
   explicit GnmiPublisher(SwitchInterface*);
 
   virtual ~GnmiPublisher();
+
+  virtual ::util::Status HandleUpdate(const ::gnmi::Path& path,
+                                      const ::google::protobuf::Message& val,
+                                      CopyOnWriteChassisConfig* config)
+      LOCKS_EXCLUDED(access_lock_);
+
+  virtual ::util::Status HandleReplace(const ::gnmi::Path& path,
+                                       const ::google::protobuf::Message& val,
+                                       CopyOnWriteChassisConfig* config)
+      LOCKS_EXCLUDED(access_lock_);
+
+  virtual ::util::Status HandleDelete(const ::gnmi::Path& path,
+                                      CopyOnWriteChassisConfig* config)
+      LOCKS_EXCLUDED(access_lock_);
 
   ::util::Status HandleChange(const GnmiEvent& event)
       LOCKS_EXCLUDED(access_lock_);
@@ -149,7 +163,8 @@ class GnmiPublisher {
   // An internal method that handles an event in the context of particular event
   // handler.
   ::util::Status HandleEvent(const GnmiEvent& event,
-                             const EventHandlerRecordPtr& h);
+                             const EventHandlerRecordPtr& h)
+      LOCKS_EXCLUDED(access_lock_);
 
   // A generic method handling all types of subscriptions. Requires long list of
   // parameters, so, it has been hidden here and specialized methods calling it
@@ -178,7 +193,7 @@ class GnmiPublisher {
 
   // A tree that is used to map a YAML tree path into a functor that handles
   // that node.
-  YangParseTree parse_tree_;
+  YangParseTree parse_tree_ GUARDED_BY(access_lock_);
 
   // Channel for receiving transceiver events from the SwitchInterface.
   std::shared_ptr<Channel<GnmiEventPtr>> event_channel_
@@ -271,6 +286,8 @@ class GetPath {
     elem->set_name(name);
     (*elem->mutable_key())["name"] = search;
   }
+
+  GetPath() {}
 
   GetPath operator()(const std::string& name) {
     auto* elem = path_.add_elem();
