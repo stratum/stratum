@@ -38,7 +38,7 @@ using base_logging::WARNING;
 
 static ::util::Status MakeStatus(const util::ErrorSpace* error_space, int code,
                                  const std::string& message) {
-  return ::util::Status(error_space, code, message);
+  return ::util::MakeStatus(error_space, code, message);
 }
 
 // Log the error at the given severity, optionally with a stack trace.

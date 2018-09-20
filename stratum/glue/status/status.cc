@@ -276,7 +276,7 @@ void Status::SetCanonicalCode(int canonical_code) {
 
 Status Status::ToCanonical() const {
   int code = RawCanonicalCode();
-  return Status(canonical_space(), code, error_message());
+  return ::util::MakeStatus(canonical_space(), code, error_message());
 }
 
 void Status::Clear() {
@@ -355,7 +355,7 @@ void Status::IgnoreError() const {
 }
 
 Status Status::StripMessage() const {
-  return Status(error_space(), error_code(), std::string());
+  return ::util::MakeStatus(error_space(), error_code(), std::string());
 }
 
 ErrorSpace::ErrorSpace(const char* name) : name_(name) {
