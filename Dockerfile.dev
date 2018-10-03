@@ -11,7 +11,7 @@ ARG BAZEL_VERSION=0.14.1
 # + wget to download bazel binary
 # + ca-certificates for wget HTPPS connection
 ENV PKG_DEPS pkg-config zip g++ zlib1g-dev unzip python wget ca-certificates \
-    ssh git gdb vim emacs-nox sudo libudev-dev
+    ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
