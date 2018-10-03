@@ -43,6 +43,7 @@
 # CLion
 /.idea/
 /.project/
+/.clwb/
 
 # emacs
 *~
