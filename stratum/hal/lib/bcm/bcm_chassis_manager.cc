@@ -23,6 +23,10 @@
 
 #include "base/commandlineflags.h"
 #include "google/protobuf/message.h"
+#include "absl/base/integral_types.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -32,10 +36,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/base/integral_types.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 #include "util/gtl/stl_util.h"
 

@@ -21,16 +21,16 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/integral_types.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "stratum/lib/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
-#include "absl/base/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {

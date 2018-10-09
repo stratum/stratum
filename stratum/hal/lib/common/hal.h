@@ -27,6 +27,9 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
 #include "stratum/hal/lib/common/cmal_service.h"
@@ -39,9 +42,6 @@
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

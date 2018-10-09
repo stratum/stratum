@@ -19,11 +19,13 @@
 #include <list>
 #include <string>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

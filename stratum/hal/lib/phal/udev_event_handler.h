@@ -22,13 +22,13 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/system_interface.h"
 
 namespace stratum {
 namespace hal {

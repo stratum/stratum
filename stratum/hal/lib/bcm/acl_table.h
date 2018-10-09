@@ -18,13 +18,13 @@
 #ifndef STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_flow_table.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 
 namespace stratum {
 namespace hal {
@@ -37,10 +37,7 @@ class AclTable : public BcmFlowTable {
   //***************************************************************************
   //  Constructors
   //***************************************************************************
-  AclTable(const ::p4::config::v1::Table& table, BcmAclStage stage,
-           int priority,
-           absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
-               const_conditions)
+  AclTable(const ::p4::config::Table& table, BcmAclStage stage, int priority)
       : BcmFlowTable(table),
         stage_(stage),
         match_fields_(),
@@ -48,19 +45,15 @@ class AclTable : public BcmFlowTable {
         max_entries_(table.size()),
         priority_(priority),
         udf_set_id_(-1),
-        udf_match_fields_(),
-        const_conditions_(std::move(const_conditions)) {
+        udf_match_fields_() {
     for (const auto& match_field : table.match_fields()) {
       match_fields_.insert(match_field.id());
     }
   }
 
-  AclTable(const ::p4::config::v1::Table& table,
-           P4Annotation::PipelineStage stage, int priority,
-           absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
-               const_conditions)
-      : AclTable(table, P4PipelineToBcmAclStage(stage), priority,
-                 std::move(const_conditions)) {}
+  AclTable(const ::p4::config::Table& table, P4Annotation::PipelineStage stage,
+           int priority)
+      : AclTable(table, P4PipelineToBcmAclStage(stage), priority) {}
 
   AclTable(const AclTable& other)
       : BcmFlowTable(other),
@@ -70,8 +63,7 @@ class AclTable : public BcmFlowTable {
         max_entries_(other.max_entries_),
         priority_(other.priority_),
         udf_set_id_(other.udf_set_id_),
-        udf_match_fields_(other.udf_match_fields_),
-        const_conditions_(other.const_conditions_) {}
+        udf_match_fields_(other.udf_match_fields_) {}
 
   AclTable(AclTable&& other)
       : BcmFlowTable(std::move(other)),
@@ -81,8 +73,7 @@ class AclTable : public BcmFlowTable {
         max_entries_(other.max_entries_),
         priority_(other.priority_),
         udf_set_id_(other.udf_set_id_),
-        udf_match_fields_(std::move(other.udf_match_fields_)),
-        const_conditions_(std::move(other.const_conditions_)) {}
+        udf_match_fields_(std::move(other.udf_match_fields_)) {}
 
   //***************************************************************************
   //  Static translators
@@ -112,22 +103,15 @@ class AclTable : public BcmFlowTable {
   const absl::flat_hash_set<uint32>& MatchFields() const {
     return match_fields_;
   }
-  const absl::flat_hash_set<uint32>& UdfMatchFields() const {
-    return udf_match_fields_;
-  }
   bool HasField(uint32 field) const { return match_fields_.count(field); }
   bool IsUdfField(uint32 field) const { return udf_match_fields_.count(field); }
   bool HasUdf() const { return !udf_match_fields_.empty(); }
   int UdfSetId() const { return udf_set_id_; }
-  const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
-  ConstConditions() const {
-    return const_conditions_;
-  }
 
   // Returns the BCM ACL ID for an entry in this table.
   // Returns ERR_ENTRY_NOT_FOUND if the entry does not exist in this table.
   // Returns ERR_NOT_INITIALIZED if the entry exists but no mapping is found.
-  ::util::StatusOr<int> BcmAclId(const ::p4::v1::TableEntry& entry) const;
+  util::StatusOr<int> BcmAclId(const ::p4::TableEntry& entry) const;
 
   //***************************************************************************
   //  Table Entry Management
@@ -136,30 +120,29 @@ class AclTable : public BcmFlowTable {
   // Returns ERR_ENTRY_EXISTS if the entry already exists.
   // Returns ERR_NO_RESOURCE if the table is full.
   // Returns ERR_INVALID_PARAM if the entry contains an unsupported match field.
-  ::util::Status InsertEntry(const ::p4::v1::TableEntry& entry) override {
+  util::Status InsertEntry(const ::p4::TableEntry& entry) override {
     RETURN_IF_ERROR(DryRunInsertEntry(entry));
     return BcmFlowTable::InsertEntry(entry);
   }
 
   // Performs a dry-run of InsertEntry. Returns an error if the entry cannot be
-  // inserted into the table. Returns ::util::OkStatus if it can.
-  ::util::Status DryRunInsertEntry(
-      const ::p4::v1::TableEntry& entry) const override;
+  // inserted into the table. Returns util::OkStatus if it can.
+  util::Status DryRunInsertEntry(const ::p4::TableEntry& entry) const override;
 
   // Attempts to add the entry to this table with the provided Bcm ACL ID
   // mapping.
   // Returns ERR_ENTRY_EXISTS if the entry already exists.
   // Returns ERR_NO_RESOURCE if the table is full.
-  ::util::Status InsertEntry(const ::p4::v1::TableEntry& entry, int bcm_acl_id);
+  util::Status InsertEntry(const ::p4::TableEntry& entry, int bcm_acl_id);
 
   // Attempts to modify an existing entry in this table. Returns the original
   // entry on success.
   // Returns ERR_ENTRY_NOT_FOUND if a matching entry does not already exist.
   // Returns an error if the entry cannot be added.
-  ::util::StatusOr<::p4::v1::TableEntry> ModifyEntry(
-      const ::p4::v1::TableEntry& entry) override {
+  util::StatusOr<p4::TableEntry> ModifyEntry(
+      const ::p4::TableEntry& entry) override {
     // Remove the entry, but don't remove the record in bcm_acl_id_map_.
-    ASSIGN_OR_RETURN(::p4::v1::TableEntry old_entry,
+    ASSIGN_OR_RETURN(p4::TableEntry old_entry,
                      BcmFlowTable::DeleteEntry(entry));
     entries_.insert(entry);
     return old_entry;
@@ -167,12 +150,12 @@ class AclTable : public BcmFlowTable {
 
   // Attempts to set the Bcm ACL ID for an entry in this table.
   // Returns ERR_ENTRY_NOT_FOUND if the entry is not found.
-  ::util::Status SetBcmAclId(const ::p4::v1::TableEntry& entry, int bcm_acl_id);
+  util::Status SetBcmAclId(const ::p4::TableEntry& entry, int bcm_acl_id);
 
   // Attempts to delete the entry from this table.
   // Returns ERR_ENTRY_NOT_FOUND if a matching entry does not already exist.
-  ::util::StatusOr<::p4::v1::TableEntry> DeleteEntry(
-      const ::p4::v1::TableEntry& entry) override {
+  util::StatusOr<p4::TableEntry> DeleteEntry(
+      const ::p4::TableEntry& entry) override {
     // We aren't interested in the return for erase since it's possible nobody
     // ever set the associated Bcm ACL ID.
     bcm_acl_id_map_.erase(entry);
@@ -191,7 +174,7 @@ class AclTable : public BcmFlowTable {
   uint32 physical_table_id_;
   // The maximum number of entries that can be programmed into the logical table
   // during runtime. This does not include the default_action entry.
-  // Type is int64 to match P4 config Table.size
+  // Type is int64 to match ::p4::config::Table.size
   int max_entries_;
   // Relative table priority. This is generated by the stack.
   int16 priority_;
@@ -202,13 +185,8 @@ class AclTable : public BcmFlowTable {
   // match_fields_.
   absl::flat_hash_set<uint32> udf_match_fields_;
   // Mapping from entries to their respective Bcm ACL IDs.
-  absl::flat_hash_map<::p4::v1::TableEntry, uint32, TableEntryHash,
-                       TableEntryEqual>
+  absl::flat_hash_map<::p4::TableEntry, uint32, TableEntryHash, TableEntryEqual>
       bcm_acl_id_map_;
-  // Mapping from const header conditions to their respective condition.
-  //   true: valid; false: invalid.
-  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
-      const_conditions_;
 };
 
 }  // namespace bcm

@@ -17,6 +17,12 @@
 
 #include <vector>
 
+#include "platforms/networking/hercules/lib/test_utils/p4_proto_builders.h"
+#include "testing/base/public/gmock.h"
+#include "testing/base/public/gunit.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/strings/substitute.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_test_util.h"
@@ -26,14 +32,8 @@
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/test_utils/p4_proto_builders.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/strings/substitute.h"
 #include "util/gtl/flat_map.h"
 #include "util/gtl/flat_set.h"
 #include "util/gtl/map_util.h"

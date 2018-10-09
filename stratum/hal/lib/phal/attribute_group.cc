@@ -24,14 +24,14 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/lib/macros.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 
 namespace stratum {
