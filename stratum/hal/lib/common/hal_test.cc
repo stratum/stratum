@@ -28,7 +28,7 @@
 #include "testing/base/public/gunit.h"
 #include "absl/strings/substitute.h"
 
-extern base::Flag<std::vector<string>> FLAGS_external_hercules_urls;
+extern absl::Flag<std::vector<string>> FLAGS_external_hercules_urls;
 DECLARE_bool(warmboot);
 DECLARE_string(chassis_config_file);
 DECLARE_string(forwarding_pipeline_configs_file);
