@@ -82,6 +82,23 @@ class SwitchInterface {
   virtual ::util::Status PushForwardingPipelineConfig(
       uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) = 0;
 
+  // Saves a new P4-based forwarding pipeline configuration for the switching
+  // node but does not commit it to HW (see P4Runtime
+  // ::p4::SetForwardingPipelineConfigRequest::VERIFY_AND_SAVE action). After
+  // this call completes, the underlying switch should keep processing packets
+  // with the previous forwarding pipeline configuration but should start
+  // accepting flows for the new forwarding pipeline configuration. This call
+  // must be followed by a call to CommitForwardingPipelineConfig.
+  virtual ::util::Status SaveForwardingPipelineConfig(
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) = 0;
+
+  // Commits the forwarding pipeline configuration which was previously saved
+  // with SaveForwardingPipelineConfig. See the P4Runtime
+  // ::p4::SetForwardingPipelineConfigRequest::COMMIT action. After this call
+  // completes, the underlying switch should be processing packets according to
+  // the new forwarding pipeline configuration.
+  virtual ::util::Status CommitForwardingPipelineConfig(uint64 node_id) = 0;
+
   // Verifies the P4-based forwarding pipeline specifications of a switching
   // node without programming anything to the hardware. It is expected that
   // PushForwardingPipelineConfig() calls VerifyForwardingPipelineConfig() to

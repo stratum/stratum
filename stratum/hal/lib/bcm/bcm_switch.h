@@ -47,6 +47,11 @@ class BcmSwitch : public SwitchInterface {
   ::util::Status PushForwardingPipelineConfig(
       uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
       LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status SaveForwardingPipelineConfig(
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
+      LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status CommitForwardingPipelineConfig(uint64 node_id) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status VerifyForwardingPipelineConfig(
       uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
       LOCKS_EXCLUDED(chassis_lock);

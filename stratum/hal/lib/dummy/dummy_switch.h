@@ -51,6 +51,12 @@ class DummySwitch : public SwitchInterface {
       uint64 node_id,
       const ::p4::v1::ForwardingPipelineConfig& config)
   LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status SaveForwardingPipelineConfig(
+      uint64 node_id,
+      const ::p4::v1::ForwardingPipelineConfig& config)
+  LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status CommitForwardingPipelineConfig(uint64 node_id)
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status VerifyForwardingPipelineConfig(
       uint64 node_id,
       const ::p4::v1::ForwardingPipelineConfig& config)

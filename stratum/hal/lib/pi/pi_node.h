@@ -42,6 +42,9 @@ class PINode final {
                                      uint64 node_id);
   ::util::Status PushForwardingPipelineConfig(
        const ::p4::v1::ForwardingPipelineConfig& config);
+  ::util::Status SaveForwardingPipelineConfig(
+       const ::p4::v1::ForwardingPipelineConfig& config);
+  ::util::Status CommitForwardingPipelineConfig();
   ::util::Status VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config);
   ::util::Status Shutdown();

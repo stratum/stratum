@@ -108,6 +108,23 @@ PINode::~PINode() = default;
   return toUtilStatus(status);
 }
 
+::util::Status PINode::SaveForwardingPipelineConfig(
+    const ::p4::v1::ForwardingPipelineConfig& config) {
+  auto status = device_mgr_->pipeline_config_set(
+      ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE,
+      config);
+  // This is required by DeviceMgr in case the device is re-assigned internally
+  device_mgr_->packet_in_register_cb(PacketInCb, static_cast<void*>(this));
+  return toUtilStatus(status);
+}
+
+::util::Status PINode::CommitForwardingPipelineConfig() {
+  auto status = device_mgr_->pipeline_config_set(
+      ::p4::v1::SetForwardingPipelineConfigRequest_Action_COMMIT,
+      ::p4::v1::ForwardingPipelineConfig());
+  return toUtilStatus(status);
+}
+
 ::util::Status PINode::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   auto status = device_mgr_->pipeline_config_set(

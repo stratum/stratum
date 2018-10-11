@@ -103,6 +103,25 @@ BcmSwitch::~BcmSwitch() {}
   return ::util::OkStatus();
 }
 
+::util::Status BcmSwitch::SaveForwardingPipelineConfig(
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  absl::ReaderMutexLock l(&chassis_lock);
+  if (shutdown) {
+    return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
+  }
+  return MAKE_ERROR(ERR_UNIMPLEMENTED)
+      << "SaveForwardingPipelineConfig not implemented for this target";
+}
+
+::util::Status BcmSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
+  absl::ReaderMutexLock l(&chassis_lock);
+  if (shutdown) {
+    return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
+  }
+  return MAKE_ERROR(ERR_UNIMPLEMENTED)
+      << "CommitForwardingPipelineConfig not implemented for this target";
+}
+
 ::util::Status BcmSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&chassis_lock);

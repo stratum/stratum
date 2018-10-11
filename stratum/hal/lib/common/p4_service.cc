@@ -328,8 +328,9 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                              switch_interface_->VerifyForwardingPipelineConfig(
                                  node_id, req->config()));
       break;
-    case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT: {
-      // We need valid election ID for commit.
+    case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT:
+    case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_SAVE: {
+      // We need valid election ID for save and commit.
       absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
                                                     req->election_id().low());
       if (election_id == 0) {
@@ -358,12 +359,21 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
         forwarding_pipeline_configs_ =
             absl::make_unique<ForwardingPipelineConfigs>();
       }
-      ::util::Status error = switch_interface_->PushForwardingPipelineConfig(
-          node_id, req->config());
+      ::util::Status error;
+      if (req->action() ==
+          ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT) {
+        switch_interface_->PushForwardingPipelineConfig(
+             node_id, req->config());
+      } else {  // VERIFY_AND_SAVE
+        error = switch_interface_->SaveForwardingPipelineConfig(
+             node_id, req->config());
+      }
       APPEND_STATUS_IF_ERROR(status, error);
       // If the config push was successful or reported reboot required, save
       // the config in file. But only mutate the internal copy if we status
       // was OK.
+      // TODO: this may not be appropriate for the VERIFY_AND_SAVE -> COMMIT
+      // sequence of operations.
       if (error.ok() || error.error_code() == ERR_REBOOT_REQUIRED) {
         (*configs_to_save_in_file.mutable_node_id_to_config())[node_id] =
             req->config();
@@ -378,6 +388,34 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       }
       break;
     }
+    case ::p4::v1::SetForwardingPipelineConfigRequest::COMMIT: {
+      // We need valid election ID for commit.
+      absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
+                                                    req->election_id().low());
+      if (election_id == 0) {
+        return ::grpc::Status(
+            ::grpc::StatusCode::INVALID_ARGUMENT,
+            absl::StrCat("Invalid election ID for node ", node_id, "."));
+      }
+      // Make sure this node already has a master controller and the given
+      // election_id and the uri of the client matches those of the master.
+      if (!IsWritePermitted(node_id, election_id, context->peer())) {
+        return ::grpc::Status(
+            ::grpc::StatusCode::PERMISSION_DENIED,
+            absl::StrCat("SetForwardingPipelineConfig from non-master is not "
+                         "permitted for node ",
+                         node_id, "."));
+      }
+
+      ::util::Status error = switch_interface_->CommitForwardingPipelineConfig(
+           node_id);
+      APPEND_STATUS_IF_ERROR(status, error);
+      break;
+    }
+    case ::p4::v1::SetForwardingPipelineConfigRequest::RECONCILE_AND_COMMIT:
+      return ::grpc::Status(
+          ::grpc::StatusCode::UNIMPLEMENTED,
+          "RECONCILE_AND_COMMIT action not supported yet");
     default:
       return ::grpc::Status(
           ::grpc::StatusCode::INVALID_ARGUMENT,

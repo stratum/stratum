@@ -80,6 +80,27 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
+::util::Status BFSwitch::SaveForwardingPipelineConfig(
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
+  RETURN_IF_ERROR(pi_node->SaveForwardingPipelineConfig(config));
+
+  LOG(INFO) << "P4-based forwarding pipeline config saved successfully to "
+            << "node with ID " << node_id << ".";
+
+  return ::util::OkStatus();
+}
+
+::util::Status BFSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
+  ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
+  RETURN_IF_ERROR(pi_node->CommitForwardingPipelineConfig());
+
+  LOG(INFO) << "P4-based forwarding pipeline config committed successfully to "
+            << "node with ID " << node_id << ".";
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BFSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));

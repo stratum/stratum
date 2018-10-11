@@ -39,6 +39,10 @@ class Bmv2Switch : public SwitchInterface {
   ::util::Status PushForwardingPipelineConfig(
       uint64 node_id,
       const ::p4::v1::ForwardingPipelineConfig& config) override;
+  ::util::Status SaveForwardingPipelineConfig(
+      uint64 node_id,
+      const ::p4::v1::ForwardingPipelineConfig& config) override;
+  ::util::Status CommitForwardingPipelineConfig(uint64 node_id) override;
   ::util::Status VerifyForwardingPipelineConfig(
       uint64 node_id,
       const ::p4::v1::ForwardingPipelineConfig& config) override;
