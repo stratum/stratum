@@ -1,16 +1,29 @@
-#include "platforms/networking/hercules/hal/lib/common/diag_service.h"
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "stratum/hal/lib/common/diag_service.h"
 
 #include "base/commandlineflags.h"
-#include "platforms/networking/hercules/glue/logging.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/public/lib/error.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 DiagService::DiagService(OperationMode mode, SwitchInterface* switch_interface,
@@ -22,26 +35,26 @@ DiagService::DiagService(OperationMode mode, SwitchInterface* switch_interface,
       error_buffer_(ABSL_DIE_IF_NULL(error_buffer)) {}
 
 ::util::Status DiagService::Setup(bool warmboot) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::util::OkStatus();
 }
 
 ::util::Status DiagService::Teardown() {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::util::OkStatus();
 }
 
 ::grpc::Status DiagService::StartBERT(::grpc::ServerContext* context,
                                       const ::gnoi::diag::StartBERTRequest* req,
                                       ::gnoi::diag::StartBERTResponse* resp) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
 ::grpc::Status DiagService::StopBERT(::grpc::ServerContext* context,
                                      const ::gnoi::diag::StopBERTRequest* req,
                                      ::gnoi::diag::StopBERTResponse* resp) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
@@ -49,10 +62,9 @@ DiagService::DiagService(OperationMode mode, SwitchInterface* switch_interface,
     ::grpc::ServerContext* context,
     const ::gnoi::diag::GetBERTResultRequest* req,
     ::gnoi::diag::GetBERTResultResponse* resp) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

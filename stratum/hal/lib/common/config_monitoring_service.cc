@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
@@ -257,7 +271,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
                               "Get '/' can be done for CONFIG elements only.");
       }
       auto* notification = resp->add_notification();
-      // TODO Set correct timestamp.
+      // TODO: Set correct timestamp.
       notification->set_timestamp(0ll);
       // Prepare the update information.
       auto* update = notification->add_update();
@@ -318,7 +332,7 @@ void ReportError(const std::string& msg,
   LOG(ERROR) << msg;
   // Report error to the remote side.
   ::gnmi::Error error;
-  // TODO make the error code an input parameter.
+  // TODO: make the error code an input parameter.
   error.set_code(1);
   error.set_message(msg);
   ::gnmi::SubscribeResponse resp;
@@ -485,7 +499,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
     ++problems_found;
   }
 
-  // TODO Find out what to do if one (or more) of many subscription
+  // TODO: Find out what to do if one (or more) of many subscription
   // paths is unsupported. For now this functions returns OK and expect the
   // remote end to close the connection.
   return ::util::OkStatus();

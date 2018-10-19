@@ -14,6 +14,22 @@
  * limitations under the License.
  */
 
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 
 #ifndef STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 #define STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
@@ -372,8 +388,8 @@ class TreeNode {
   bool supports_on_replace_;
   bool supports_on_delete_;
 
-  friend class google::hercules::hal::YangParseTreeTest;
-  friend class google::hercules::hal::SubscriptionTestBase;
+  friend class stratum::hal::YangParseTreeTest;
+  friend class stratum::hal::SubscriptionTestBase;
 };
 
 // A class implementing a YANG model tree. It uses TreeNode objects to
@@ -494,7 +510,7 @@ class YangParseTree {
   // In most cases the TARGET_DEFINED mode is ON_CHANGE mode as this mode
   // is the least resource-hungry. But to make the gNMI demo more realistic it
   // is changed to SAMPLE with the period of 1s.
-  // TODO remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   TreeNode::TargetDefinedModeFunc stream_sample_mode_ =
       [](::gnmi::Subscription* subscription) {
@@ -505,8 +521,8 @@ class YangParseTree {
         return ::util::OkStatus();
       };
 
-  friend class google::hercules::hal::YangParseTreePaths;
-  friend class google::hercules::hal::YangParseTreeTest;
+  friend class stratum::hal::YangParseTreePaths;
+  friend class stratum::hal::YangParseTreeTest;
 };
 
 // A class that implements a channel that is used to return the data values

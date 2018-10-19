@@ -1,17 +1,30 @@
-#include "platforms/networking/hercules/hal/lib/common/yang_parse_tree_paths.h"
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "platforms/networking/hercules/glue/gnmi/gnmi.pb.h"
-#include "platforms/networking/hercules/glue/openconfig/proto/old_openconfig.pb.h"
-#include "platforms/networking/hercules/hal/lib/common/gnmi_publisher.h"
-#include "platforms/networking/hercules/hal/lib/common/openconfig_converter.h"
-#include "platforms/networking/hercules/lib/constants.h"
+#include "stratum/hal/lib/common/yang_parse_tree_paths.h"
+
+#include "stratum/glue/gnmi/gnmi.pb.h"
+#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
+#include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
+#include "stratum/lib/constants.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/time/clock.h"
 #include "util/gtl/map_util.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 namespace {
@@ -1192,7 +1205,7 @@ void SetUpInterfacesInterfaceStateCountersInOctets(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1215,7 +1228,7 @@ void SetUpInterfacesInterfaceStateCountersOutOctets(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1238,7 +1251,7 @@ void SetUpInterfacesInterfaceStateCountersInUnicastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1261,7 +1274,7 @@ void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1284,7 +1297,7 @@ void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1305,7 +1318,7 @@ void SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1328,7 +1341,7 @@ void SetUpInterfacesInterfaceStateCountersInDiscards(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1351,7 +1364,7 @@ void SetUpInterfacesInterfaceStateCountersOutDiscards(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1374,7 +1387,7 @@ void SetUpInterfacesInterfaceStateCountersInUnknownProtos(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1397,7 +1410,7 @@ void SetUpInterfacesInterfaceStateCountersInMulticastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1420,7 +1433,7 @@ void SetUpInterfacesInterfaceStateCountersInErrors(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1443,7 +1456,7 @@ void SetUpInterfacesInterfaceStateCountersOutErrors(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1466,7 +1479,7 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1487,7 +1500,7 @@ void SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO(tmadejski) remove/update this functor once the support for reading
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -2250,5 +2263,4 @@ void YangParseTreePaths::AddRoot(YangParseTree* tree) {
 }
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

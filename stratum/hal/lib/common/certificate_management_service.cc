@@ -1,15 +1,28 @@
-#include "platforms/networking/hercules/hal/lib/common/certificate_management_service.h"
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "platforms/networking/hercules/glue/logging.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/public/lib/error.h"
+#include "stratum/hal/lib/common/certificate_management_service.h"
+
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "util/gtl/map_util.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 using RotateCertificateServerReaderWriter =
@@ -28,26 +41,26 @@ CertificateManagementService::CertificateManagementService(
       error_buffer_(ABSL_DIE_IF_NULL(error_buffer)) {}
 
 ::util::Status CertificateManagementService::Setup(bool warmboot) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::util::OkStatus();
 }
 
 ::util::Status CertificateManagementService::Teardown() {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::util::OkStatus();
 }
 
 ::grpc::Status CertificateManagementService::Rotate(
     ::grpc::ServerContext* context,
     RotateCertificateServerReaderWriter* stream) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
 ::grpc::Status CertificateManagementService::Install(
     ::grpc::ServerContext* context,
     InstallCertificateServerReaderWriter* stream) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
@@ -55,7 +68,7 @@ CertificateManagementService::CertificateManagementService(
     ::grpc::ServerContext* context,
     const ::gnoi::certificate::GetCertificatesRequest* req,
     ::gnoi::certificate::GetCertificatesResponse* resp) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
@@ -63,7 +76,7 @@ CertificateManagementService::CertificateManagementService(
     ::grpc::ServerContext* context,
     const ::gnoi::certificate::RevokeCertificatesRequest* req,
     ::gnoi::certificate::RevokeCertificatesResponse* resp) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
@@ -71,10 +84,9 @@ CertificateManagementService::CertificateManagementService(
     ::grpc::ServerContext* context,
     const ::gnoi::certificate::CanGenerateCSRRequest* req,
     ::gnoi::certificate::CanGenerateCSRResponse* resp) {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::grpc::Status::OK;
 }
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

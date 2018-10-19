@@ -1,23 +1,36 @@
-#include "platforms/networking/hercules/hal/lib/common/certificate_management_service.h"
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "stratum/hal/lib/common/certificate_management_service.h"
 
 #include <grpc++/grpc++.h>
 #include <memory>
 
 #include "net/util/ports.h"
-#include "platforms/networking/hercules/hal/lib/common/error_buffer.h"
-#include "platforms/networking/hercules/hal/lib/common/switch_mock.h"
-#include "platforms/networking/hercules/lib/security/auth_policy_checker_mock.h"
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/public/lib/error.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
@@ -167,5 +180,4 @@ INSTANTIATE_TEST_CASE_P(CertificateManagementServiceTestWithMode,
                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum
