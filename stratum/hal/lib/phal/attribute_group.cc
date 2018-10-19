@@ -32,7 +32,7 @@
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/lib/macros.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -49,7 +49,7 @@ class AttributeGroupQueryNode {
         node_(root_query->query_result_.get()),
         reflection_(node_->GetReflection()) {}
   AttributeGroupQueryNode(AttributeGroupQuery* parent_query,
-                          protobuf::Message* node)
+                          google::protobuf::Message* node)
       : parent_query_(parent_query),
         node_(node),
         reflection_(node->GetReflection()) {}
@@ -70,9 +70,9 @@ class AttributeGroupQueryNode {
   void RemoveAllFields();
 
  private:
-  ::util::StatusOr<const protobuf::FieldDescriptor*> GetFieldDescriptor(
+  ::util::StatusOr<const google::protobuf::FieldDescriptor*> GetFieldDescriptor(
       const std::string& name) {
-    const protobuf::FieldDescriptor* descriptor =
+    const google::protobuf::FieldDescriptor* descriptor =
         node_->GetDescriptor()->FindFieldByName(name);
     CHECK_RETURN_IF_FALSE(descriptor)
         << node_->GetDescriptor()->name() << " has no such field: \"" << name
@@ -81,12 +81,12 @@ class AttributeGroupQueryNode {
   }
 
   AttributeGroupQuery* parent_query_;
-  protobuf::Message* node_;
-  const protobuf::Reflection* reflection_;
+  google::protobuf::Message* node_;
+  const google::protobuf::Reflection* reflection_;
 };
 
 namespace {
-using protobuf::FieldDescriptor;
+using google::protobuf::FieldDescriptor;
 
 class AttributeGroupInternal;
 
@@ -110,7 +110,7 @@ class LockedAttributeGroup : public MutableAttributeGroup {
   std::set<std::string> GetRepeatedChildGroupNames() const override;
   ::util::StatusOr<int> GetRepeatedChildGroupSize(
       const std::string& name) const override;
-  const protobuf::Descriptor* GetDescriptor() const override;
+  const google::protobuf::Descriptor* GetDescriptor() const override;
   AttributeGroupVersionId GetVersionId() const override;
   ::util::StatusOr<ManagedAttribute*> GetAttribute(
       const std::string& name) const override;
@@ -145,7 +145,7 @@ class LockedAttributeGroup : public MutableAttributeGroup {
 class AttributeGroupInternal : public AttributeGroup,
                                public MutableAttributeGroup {
  public:
-  explicit AttributeGroupInternal(const protobuf::Descriptor* descriptor,
+  explicit AttributeGroupInternal(const google::protobuf::Descriptor* descriptor,
                                   int depth)
       : descriptor_(descriptor), depth_(depth) {}
 
@@ -183,7 +183,7 @@ class AttributeGroupInternal : public AttributeGroup,
   ::util::StatusOr<int> GetRepeatedChildGroupSize(
       const std::string& name) const;
 
-  const protobuf::Descriptor* GetDescriptor() const { return descriptor_; }
+  const google::protobuf::Descriptor* GetDescriptor() const { return descriptor_; }
   AttributeGroupVersionId GetVersionId() const { return version_id_; }
 
   ::util::Status RegisterQuery(AttributeGroupQuery* query,
@@ -266,7 +266,7 @@ class AttributeGroupInternal : public AttributeGroup,
   // each datasource. Whenever one of these counts hits zero, we can remove the
   // corresponding datasource from this map.
   absl::flat_hash_map<std::shared_ptr<DataSource>, int> required_data_sources_;
-  const protobuf::Descriptor* descriptor_;
+  const google::protobuf::Descriptor* descriptor_;
   // The number of parents above this attribute group. The root attribute group
   // has depth_ == 0.
   int depth_;
@@ -308,7 +308,7 @@ class AttributeGroupInternal : public AttributeGroup,
   parent_query_->query_updated_ = true;
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
   CHECK_RETURN_IF_FALSE(field->cpp_type() !=
-                        protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE)
+                        google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE)
       << "Attempted to query \"" << name
       << "\" as an attribute, but it's an attribute group. This shouldn't "
          "happen!";
@@ -332,7 +332,7 @@ class AttributeGroupInternal : public AttributeGroup,
       return ATTRIBUTE_SETTER_FUNCTION(SetString, std::string);
     case FieldDescriptor::CppType::CPPTYPE_ENUM:
       return ATTRIBUTE_SETTER_FUNCTION(SetEnum,
-                                       const protobuf::EnumValueDescriptor*);
+                                       const google::protobuf::EnumValueDescriptor*);
     default:
       return MAKE_ERROR() << "Invalid protobuf field type passed to "
                           << "QuerySingleAttribute!";
@@ -348,7 +348,7 @@ AttributeGroupQueryNode::AddChildGroup(const std::string& name) {
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
   CHECK_RETURN_IF_FALSE(
       field->cpp_type() ==
-          protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
+          google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
       !field->is_repeated())
       << "Called AddChildGroup for \"" << name
       << "\", which is not a singular child group. This shouldn't happen!";
@@ -364,7 +364,7 @@ AttributeGroupQueryNode::AddRepeatedChildGroup(const std::string& name,
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
   CHECK_RETURN_IF_FALSE(
       field->cpp_type() ==
-          protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
+          google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE &&
       field->is_repeated())
       << "Called AddChildGroup for \"" << name
       << "\", which is not a repeated child group. This shouldn't happen!";
@@ -390,7 +390,7 @@ void AttributeGroupQueryNode::RemoveAllFields() {
   node_->Clear();
 }
 
-::util::Status AttributeGroupQuery::Get(protobuf::Message* out) {
+::util::Status AttributeGroupQuery::Get(google::protobuf::Message* out) {
   std::queue<std::unique_ptr<ReadableAttributeGroup>> group_locks;
   absl::flat_hash_map<
       DataSource*,
@@ -529,17 +529,17 @@ template <typename T>
     case FieldDescriptor::CppType::CPPTYPE_ENUM:
       // In addition to checking that the given ManagedAttribute is
       // an enum, we also need to check that it has a compatible enum type.
-      if (!absl::holds_alternative<const protobuf::EnumValueDescriptor*>(
+      if (!absl::holds_alternative<const google::protobuf::EnumValueDescriptor*>(
               value->GetValue())) {
         return MAKE_ERROR() << "Attempted to assign non-enum type to enum "
                             << "attribute " << name << ".";
       }
-      if ((absl::get<const protobuf::EnumValueDescriptor*>(value->GetValue()))
+      if ((absl::get<const google::protobuf::EnumValueDescriptor*>(value->GetValue()))
               ->type() != field->enum_type()) {
         return MAKE_ERROR()
                << "Attempted to assign incorrect enum type to " << name << ".";
       }
-      return AttemptAddAttribute<const protobuf::EnumValueDescriptor*>(name,
+      return AttemptAddAttribute<const google::protobuf::EnumValueDescriptor*>(name,
                                                                        value);
     default:
       return MAKE_ERROR() << "Field " << name << " has unexpected type.";
@@ -557,7 +557,7 @@ template <typename T>
     return MAKE_ERROR() << "Attempted to create a singular child group in a "
                         << "repeated field. Use AddRepeatedChildGroup instead.";
   }
-  const protobuf::Descriptor* sub_descriptor = field->message_type();
+  const google::protobuf::Descriptor* sub_descriptor = field->message_type();
   AttributeGroupInternal* sub_group =
       new AttributeGroupInternal(sub_descriptor, depth_ + 1);
   auto ret =
@@ -588,7 +588,7 @@ template <typename T>
     return MAKE_ERROR() << "Attempted to create a repeated child group in an "
                         << "unrepeated field.";
   }
-  const protobuf::Descriptor* sub_descriptor = field->message_type();
+  const google::protobuf::Descriptor* sub_descriptor = field->message_type();
   AttributeGroupInternal* sub_group =
       new AttributeGroupInternal(sub_descriptor, depth_ + 1);
   repeated_sub_groups_[name].push_back(absl::WrapUnique(sub_group));
@@ -897,7 +897,7 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
 ::util::Status AttributeGroupInternal::ValidateQuery(
     const std::vector<Path>& paths) {
   for (const auto& path : paths) {
-    const protobuf::Descriptor* descriptor = descriptor_;
+    const google::protobuf::Descriptor* descriptor = descriptor_;
     for (int i = 0; i < path.size(); i++) {
       const PathEntry& entry = path[i];
       const FieldDescriptor* field = descriptor->FindFieldByName(entry.name);
@@ -1028,7 +1028,7 @@ void AttributeGroupInternal::UnregisterQuery(AttributeGroupQuery* query) {
 }
 
 std::unique_ptr<AttributeGroup> AttributeGroup::From(
-    const protobuf::Descriptor* descriptor) {
+    const google::protobuf::Descriptor* descriptor) {
   // We pass in zero as the depth to indicate that this is the root of the
   // attribute group tree. All children of this group will be added with
   // AddChildGroup and AddRepeatedChildGroup, both of which increment this value
@@ -1086,7 +1086,7 @@ std::set<std::string> LockedAttributeGroup::GetRepeatedChildGroupNames() const {
     const std::string& name) const {
   return group_->GetRepeatedChildGroupSize(name);
 }
-const protobuf::Descriptor* LockedAttributeGroup::GetDescriptor() const {
+const google::protobuf::Descriptor* LockedAttributeGroup::GetDescriptor() const {
   return group_->GetDescriptor();
 }
 AttributeGroupVersionId LockedAttributeGroup::GetVersionId() const {

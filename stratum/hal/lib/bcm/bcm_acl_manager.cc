@@ -17,14 +17,14 @@
 
 #include <iterator>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/hal/lib/bcm/acl_table.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(bcm_hardware_specs_file,
               "/opt/watchtower/share/bcm_hardware_specs.pb.txt",

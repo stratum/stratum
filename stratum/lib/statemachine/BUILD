@@ -1,30 +1,30 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "state_machine",
     hdrs = [
         "state_machine.h",
     ],
     deps = [
-        "//base",
-        "//absl/container:flat_hash_map",
-        "//absl/synchronization",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/synchronization",
         "//util/task:status",
         "//util/task:statusor",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "example_state_machine",
     testonly = 1,
     srcs = [
@@ -36,12 +36,12 @@ sc_cc_lib(
     deps = [
         ":state_machine",
         "//testing/base/public:gunit",
-        "//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_map",
         "//util/task:status",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "state_machine_test",
     srcs = [
         "state_machine_test.cc",

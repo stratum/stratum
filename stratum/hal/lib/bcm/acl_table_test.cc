@@ -18,10 +18,10 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -153,7 +153,7 @@ TEST(AclTableTest, InsertEntry) {
   // Insert the entries and verify the table state.
   // We use the string representation since:
   //   1. The protobufs are simple enough for the strings to be stable.
-  //   2. Strings show up better than google::protobuf::Message in the error
+  //   2. Strings show up better than google::google::protobuf::Message in the error
   //      output of *ElementsAre*.
   std::vector<string> inserted_entries;
   for (const auto& entry : entries) {

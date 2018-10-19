@@ -1,13 +1,13 @@
-#include "platforms/networking/hercules/procmon/procmon.h"
+#include "stratum/procmon/procmon.h"
 
 #include <map>
 #include <queue>
 
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/procmon/procmon.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/procmon/procmon.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 

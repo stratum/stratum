@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/lib/statemachine/example_state_machine.h"
+#include "stratum/lib/statemachine/example_state_machine.h"
 
 namespace google {
 namespace hercules {

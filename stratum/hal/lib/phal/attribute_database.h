@@ -31,7 +31,7 @@
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/db.pb.h"
-#include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+//#include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/hal/lib/phal/threadpool_interface.h"
@@ -136,7 +136,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
 };
 
 // DatabaseQuery is a wrapper for AttributeGroupQuery that transforms query
-// responses from protobuf::Message into PhalDB. It also handles polling for
+// responses from google::protobuf::Message into PhalDB. It also handles polling for
 // streaming queries.
 class DatabaseQuery : public Query {
  public:

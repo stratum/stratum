@@ -18,12 +18,12 @@
 #include <string>
 
 #include "stratum/lib/constants.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
 
 
-using protobuf::util::MessageDifferencer;
+using google::protobuf::util::MessageDifferencer;
 
 namespace stratum {
 namespace hal {

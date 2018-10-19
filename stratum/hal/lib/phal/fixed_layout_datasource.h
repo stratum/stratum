@@ -388,7 +388,7 @@ class EnumField : public FixedLayoutField {
   //                     value produced.
   // (has_)default_value: Set a default value to use for any byte values not
   //                      explicitly defined in byte_to_enum_value.
-  EnumField(size_t offset, const protobuf::EnumDescriptor* enum_type,
+  EnumField(size_t offset, const google::protobuf::EnumDescriptor* enum_type,
             const std::map<char, int>& byte_to_enum_value,
             bool has_default_value = false, int default_value = 0)
       : offset_(offset),
@@ -421,7 +421,7 @@ class EnumField : public FixedLayoutField {
  private:
   std::string name_;
   size_t offset_;
-  const protobuf::EnumDescriptor* enum_type_;
+  const google::protobuf::EnumDescriptor* enum_type_;
   std::map<char, int> byte_to_enum_value_;
   bool has_default_value_;
   int default_value_;

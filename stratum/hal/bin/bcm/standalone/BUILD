@@ -1,17 +1,17 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
-    "sc_cc_bin",
-    "sc_package",
+    "stratum_cc_binary",
+    "stratum_package",
     "EMBEDDED_ARCHES",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
-sc_cc_bin(
+stratum_cc_binary(
     name = "hercules",
     srcs = [
         "main.cc",
@@ -24,33 +24,33 @@ sc_cc_bin(
         "-lutil",
     ],
     deps = [
-        "//base",
-        "//platforms/networking/hercules/glue:init_google",
-        "//platforms/networking/hercules/glue:logging",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_acl_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_chassis_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_diag_shell",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_l2_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_l3_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_node",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_packetio_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_sdk_wrapper",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_serdes_db_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_switch",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_table_manager",
-        "//platforms/networking/hercules/hal/lib/bcm:bcm_tunnel_manager",
-        "//platforms/networking/hercules/hal/lib/common:hal",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_mapper",
-        "//platforms/networking/hercules/hal/lib/phal:legacy_phal",
-        "//platforms/networking/hercules/hal/lib/phal:udev",
-        "//platforms/networking/hercules/lib/security:auth_policy_checker",
-        "//platforms/networking/hercules/lib/security:credentials_manager",
-        "//absl/memory",
-        "//absl/synchronization",
+        "@com_github_google_glog//:glog",
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/hal/lib/bcm:bcm_acl_manager",
+        "//stratum/hal/lib/bcm:bcm_chassis_manager",
+        "//stratum/hal/lib/bcm:bcm_diag_shell",
+        "//stratum/hal/lib/bcm:bcm_l2_manager",
+        "//stratum/hal/lib/bcm:bcm_l3_manager",
+        "//stratum/hal/lib/bcm:bcm_node",
+        "//stratum/hal/lib/bcm:bcm_packetio_manager",
+        "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
+        "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
+        "//stratum/hal/lib/bcm:bcm_switch",
+        "//stratum/hal/lib/bcm:bcm_table_manager",
+        "//stratum/hal/lib/bcm:bcm_tunnel_manager",
+        "//stratum/hal/lib/common:hal",
+        "//stratum/hal/lib/p4:p4_table_mapper",
+        "//stratum/hal/lib/phal:legacy_phal",
+        "//stratum/hal/lib/phal:udev",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/lib/security:credentials_manager",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
-sc_package(
+stratum_package(
     name = "hercules_pkg",
     bins = [
         ":hercules",

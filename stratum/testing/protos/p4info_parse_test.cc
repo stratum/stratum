@@ -5,15 +5,15 @@
 #include <memory>
 #include <string>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "platforms/networking/hercules/hal/lib/common/utils.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_mapper.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 // P4ConfigVerifier flags to override in test environment.
 DECLARE_string(match_field_error_level);
@@ -197,7 +197,7 @@ TEST_P(P4InfoFilesTest, TestPipelineConfigTextEqualsBinary) {
   ASSERT_TRUE(
       ReadProtoFromBinFile(p4_pipeline_bin_file, &p4_pipeline_config_bin)
           .ok());
-  protobuf::util::MessageDifferencer msg_differencer;
+  google::protobuf::util::MessageDifferencer msg_differencer;
   EXPECT_TRUE(msg_differencer.Equivalent(
       p4_pipeline_config_, p4_pipeline_config_bin));
 }

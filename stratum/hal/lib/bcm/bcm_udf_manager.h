@@ -5,13 +5,13 @@
 #include <memory>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/bcm/acl_table.h"
-#include "platforms/networking/hercules/hal/lib/bcm/bcm.pb.h"
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_sdk_interface.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_mapper.h"
+#include "stratum/hal/lib/bcm/acl_table.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "absl/container/flat_hash_set.h"
-#include "util/gtl/flat_map.h"
-#include "util/gtl/flat_set.h"
+#include "stratum/glue/gtl/flat_map.h"
+#include "stratum/glue/gtl/flat_set.h"
 
 namespace google {
 namespace hercules {

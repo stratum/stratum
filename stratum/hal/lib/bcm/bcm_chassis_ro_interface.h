@@ -4,11 +4,11 @@
 #include <map>
 #include <string>
 
-#include "platforms/networking/hercules/hal/lib/bcm/bcm.pb.h"
-#include "platforms/networking/hercules/hal/lib/bcm/utils.h"
-#include "platforms/networking/hercules/hal/lib/common/common.pb.h"
-#include "platforms/networking/hercules/hal/lib/common/utils.h"
-#include "absl/base/integral_types.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/utils.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/glue/integral_types.h"
 #include "util/task/status.h"
 #include "util/task/statusor.h"
 

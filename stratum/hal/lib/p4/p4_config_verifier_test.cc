@@ -21,17 +21,17 @@
 #include <string>
 #include <vector>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/lib/utils.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/public/lib/error.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // P4ConfigVerifier flags to override for some tests.
 DECLARE_string(match_field_error_level);

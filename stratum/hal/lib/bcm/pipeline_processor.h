@@ -4,15 +4,15 @@
 #include <memory>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/p4/common_flow_entry.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_control.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.pb.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.pb.h"
+#include "stratum/hal/lib/p4/common_flow_entry.pb.h"
+#include "stratum/hal/lib/p4/p4_control.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/node_hash_map.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
-#include "util/gtl/flat_hash_set.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/flat_hash_set.h"
 #include "util/task/status.h"
 #include "util/task/statusor.h"
 

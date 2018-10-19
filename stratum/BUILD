@@ -19,42 +19,42 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_package",
-    "sc_platform_select",
-    "sc_proto_lib",
+    "stratum_package",
+    "stratum_platform_select",
+    "stratum_cc_proto_library",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
 genrule(
     name = "status_proto_copy",
-    srcs = ["//googleapis/google/rpc:status.proto"],
+    srcs = ["@com_github_googleapis//:status_proto"],
     outs = ["google/rpc/status.proto"],
-    cmd = "cp $(location //googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
+    cmd = "cp $(location @com_github_googleapis//:status_proto) $(location google/rpc/status.proto)",
 )
 
 genrule(
     name = "code_proto_copy",
-    srcs = ["//googleapis/google/rpc:code.proto"],
+    srcs = ["@com_github_googleapis//:code_proto"],
     outs = ["google/rpc/code.proto"],
-    cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
+    cmd = "cp $(location @com_github_googleapis//:code_proto) $(location google/rpc/code.proto)",
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "status_proto",
     hdrs = ["google/rpc/status.proto"],
-    proto_include = ".",
+    #proto_include = ".",
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "code_proto",
     hdrs = ["google/rpc/code.proto"],
-    proto_include = ".",
+    #proto_include = ".",
 )
 
 config_setting(
@@ -73,7 +73,7 @@ config_setting(
     },
 )
 
-sc_package(
+stratum_package(
     name = "stratum_package_standalone",
     deps = [
         "//stratum/hal/bin/bcm/standalone:stratum_hal_pkg",

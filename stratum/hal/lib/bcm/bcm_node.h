@@ -24,10 +24,10 @@
 #include "stratum/hal/lib/bcm/bcm_l3_manager.h"
 #include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_tunnel_manager.h"
+#include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

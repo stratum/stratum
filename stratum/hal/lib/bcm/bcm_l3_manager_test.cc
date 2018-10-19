@@ -20,11 +20,11 @@
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
-#include "util/gtl/source_location.h"
+#include "stratum/glue/gtl/source_location.h"
 
 namespace stratum {
 namespace hal {

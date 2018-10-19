@@ -19,14 +19,14 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 
 DECLARE_bool(skip_p4_min_objects_check);
 
@@ -93,7 +93,7 @@ class P4InfoManagerTest : public testing::Test {
   }
 
   void SetUpTestP4Tables(bool need_actions = true) {
-    ::google::protobuf::int32 dummy_action_id = kFirstActionID;
+    ::google::google::protobuf::int32 dummy_action_id = kFirstActionID;
 
     // Each table entry is assigned an ID and name in the preamble.  Each table
     // optionally gets a set of action IDs.
@@ -112,7 +112,7 @@ class P4InfoManagerTest : public testing::Test {
   void SetUpTestP4Actions() {
     const int kNumTestActions = kNumTestTables * kNumActionsPerTable;
     const int kNumParamsPerAction = 2;
-    ::google::protobuf::int32 dummy_param_id = 100000;
+    ::google::google::protobuf::int32 dummy_param_id = 100000;
 
     for (int a = 0; a < kNumTestActions; ++a) {
       ::p4::config::v1::Action* new_action = p4_test_info_.add_actions();

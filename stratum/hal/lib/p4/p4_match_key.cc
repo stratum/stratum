@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"

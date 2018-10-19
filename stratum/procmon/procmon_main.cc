@@ -1,20 +1,20 @@
 #include <grpc++/grpc++.h>
 #include <memory>
 
-#include "base/commandlineflags.h"
-#include "platforms/networking/hercules/glue/init_google.h"
-#include "platforms/networking/hercules/glue/logging.h"
-#include "platforms/networking/hercules/lib/constants.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/procmon/procmon.h"
-#include "platforms/networking/hercules/procmon/procmon.pb.h"
-#include "platforms/networking/hercules/procmon/procmon_service_impl.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/procmon/procmon.h"
+#include "stratum/procmon/procmon.pb.h"
+#include "stratum/procmon/procmon_service_impl.h"
 #include "util/task/status.h"
 
 DEFINE_string(procmon_config_file, "",
               "Path to Procmon configuration proto file.");
-DEFINE_string(procmon_service_addr, ::google::hercules::kProcmonServiceUrl,
+DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
               "Url of the procmon service to listen to.");
 
 namespace google {
@@ -57,6 +57,6 @@ namespace procmon {
 }  // namespace google
 
 int main(int argc, char** argv) {
-  ::util::Status ret = google::hercules::procmon::Main(argc, argv);
+  ::util::Status ret = stratum::procmon::Main(argc, argv);
   return ret.ok() ? 0 : 1;
 }

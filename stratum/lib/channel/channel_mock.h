@@ -19,7 +19,7 @@
 #define STRATUM_LIB_CHANNEL_CHANNEL_MOCK_H_
 
 #include "stratum/lib/channel/channel.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 

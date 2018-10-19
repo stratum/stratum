@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #include "stratum/glue/init_google.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -1,11 +1,11 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
-    "sc_package",
+    "stratum_package",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
@@ -13,23 +13,23 @@ genrule(
     name = "phal_config_generic_trident2",
     outs = ["legacy_phal_init_config_generic_trident2_hercules.pb.txt"],
     cmd = (
-        "$(location //platforms/networking/hercules/hal/config/tools:google_config_generator) " +
+        "$(location //stratum/hal/config/tools:google_config_generator) " +
         "--platform=generic_trident2 --config_type=phal --output=$@"
     ),
-    tools = ["//platforms/networking/hercules/hal/config/tools:google_config_generator"],
+    tools = ["//stratum/hal/config/tools:google_config_generator"],
 )
 
 genrule(
     name = "phal_config_generic_trident2",
     outs = ["legacy_phal_init_config_generic_trident2_hercules.pb.txt"],
     cmd = (
-        "$(location //platforms/networking/hercules/hal/config/tools:google_config_generator) " +
+        "$(location //stratum/hal/config/tools:google_config_generator) " +
         "--platform=generic_trident2 --config_type=phal --output=$@"
     ),
-    tools = ["//platforms/networking/hercules/hal/config/tools:google_config_generator"],
+    tools = ["//stratum/hal/config/tools:google_config_generator"],
 )
 
-sc_package(
+stratum_package(
     name = "hercules_config_files",
     data = glob(["*.txt"]) + glob(["*.bin"]) + [
         "legacy_phal_init_config_generic_trident2_hercules.pb.txt",

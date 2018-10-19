@@ -19,18 +19,18 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "status",
     srcs = [
         "canonical_errors.cc",
@@ -43,16 +43,16 @@ sc_cc_lib(
         "status.h",
     ],
     deps = [
-        "//base",
-        "//absl/strings",
-        "//absl/synchronization",
-        "//protobuf",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_protobuf//:protobuf",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "statusor",
     srcs = [
         "statusor.cc",
@@ -66,7 +66,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "status_macros",
     srcs = [
         "status_macros.cc",
@@ -77,7 +77,7 @@ sc_cc_lib(
     deps = [
         ":status",
         ":statusor",
-        "//absl/strings",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
     ],
 )
@@ -94,12 +94,12 @@ cc_library(
     deps = [
         ":status",
         ":statusor",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/public/proto:error_proto",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "status_test",
     size = "small",
     srcs = [
@@ -112,8 +112,8 @@ sc_cc_test(
         ":status",
         ":status_test_util",
         ":statusor",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/strings",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],

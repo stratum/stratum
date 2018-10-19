@@ -26,8 +26,8 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "sandblaze/p4lang/p4/config/p4info.pb.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"

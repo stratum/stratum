@@ -45,8 +45,8 @@
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/lib/error.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -102,12 +102,12 @@ class GnmiPublisher {
   virtual ~GnmiPublisher();
 
   virtual ::util::Status HandleUpdate(const ::gnmi::Path& path,
-                                      const ::google::protobuf::Message& val,
+                                      const ::google::google::protobuf::Message& val,
                                       CopyOnWriteChassisConfig* config)
       LOCKS_EXCLUDED(access_lock_);
 
   virtual ::util::Status HandleReplace(const ::gnmi::Path& path,
-                                       const ::google::protobuf::Message& val,
+                                       const ::google::google::protobuf::Message& val,
                                        CopyOnWriteChassisConfig* config)
       LOCKS_EXCLUDED(access_lock_);
 

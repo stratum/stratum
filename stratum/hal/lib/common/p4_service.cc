@@ -18,7 +18,7 @@
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
@@ -34,8 +34,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
-#include "util/gtl/cleanup.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/cleanup.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(forwarding_pipeline_configs_file, "",
               "The latest set of verified ForwardingPipelineConfig protos "

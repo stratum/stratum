@@ -30,9 +30,9 @@
 #include <string>
 #include <vector>
 
-#include "testing/base/public/gunit.h"
-#include "absl/base/integral_types.h"
-#include "absl/container/node_hash_set.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/gtl/node_hash_set.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"
 #include "stratum/glue/logging.h"

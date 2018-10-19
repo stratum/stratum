@@ -19,24 +19,24 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_proto_lib",
+    "stratum_cc_proto_library",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "error_proto",
     hdrs = [
         "error.proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "p4_annotation_proto",
     hdrs = [
         "p4_annotation.proto",
@@ -46,7 +46,7 @@ sc_proto_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "p4_table_defs_proto",
     hdrs = [
         "p4_table_defs.proto",

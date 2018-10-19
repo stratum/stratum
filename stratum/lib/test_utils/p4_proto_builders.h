@@ -3,11 +3,11 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
 #define PLATFORMS_NETWORKING_HERCULES_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_control.pb.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.pb.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.pb.h"
+#include "stratum/hal/lib/p4/p4_control.pb.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/strings/str_cat.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace google {
 namespace hercules {

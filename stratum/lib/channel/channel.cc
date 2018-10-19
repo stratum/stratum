@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/lib/channel/channel.h"
+#include "stratum/lib/channel/channel.h"
 #include "absl/synchronization/mutex.h"
 
 namespace google {

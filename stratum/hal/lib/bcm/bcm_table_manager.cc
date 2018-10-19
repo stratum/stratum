@@ -25,13 +25,13 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 namespace stratum {
 namespace hal {
@@ -47,8 +47,8 @@ const absl::flat_hash_set<P4MeterColor>& AllColors() {
 
 template <class MessageType>
 inline void EraseReferencesFromRepeatedField(
-    const absl::flat_hash_set<const ::google::protobuf::Message*> references,
-    ::google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
+    const absl::flat_hash_set<const ::google::google::protobuf::Message*> references,
+    ::google::google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
   repeated_field->erase(
       std::remove_if(repeated_field->begin(), repeated_field->end(),
                      [&references](const MessageType& field) {
@@ -1860,7 +1860,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   }
 
   // Remove the used actions.
-  absl::flat_hash_set<const ::google::protobuf::Message*> messages = {
+  absl::flat_hash_set<const ::google::google::protobuf::Message*> messages = {
       cpu_queue_action, egress_to_cpu_action, clone_action, drop_action,
       clone_port_action};
   messages.erase(nullptr);
@@ -1945,7 +1945,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   bcm_actions->push_back(bcm_egress_port_action);
 
   // Remove the used actions.
-  absl::flat_hash_set<const ::google::protobuf::Message*> messages = {
+  absl::flat_hash_set<const ::google::google::protobuf::Message*> messages = {
       eth_source_action, eth_dest_action, egress_port_action};
   EraseReferencesFromRepeatedField(messages,
                                    action_function->mutable_modify_fields());

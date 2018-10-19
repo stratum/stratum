@@ -24,7 +24,7 @@
 // behavior.
 #if !GOOGLE_BASE_HAS_INITGOOGLE
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 
 inline void InitGoogle(const char *usage, int *argc, char ***argv,
                        bool remove_flags) {

@@ -28,7 +28,7 @@
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {

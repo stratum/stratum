@@ -19,15 +19,15 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 DECLARE_bool(remap_hidden_table_const_entries);
 

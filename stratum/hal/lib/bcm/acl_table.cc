@@ -14,7 +14,7 @@
 
 
 #include "stratum/hal/lib/bcm/acl_table.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

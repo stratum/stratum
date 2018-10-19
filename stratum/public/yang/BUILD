@@ -51,8 +51,8 @@ yang_lint_test(
     src = "openconfig-hercules-interfaces.yang",
     warnings_are_errors = False,
     deps = [
-        "//platforms/networking/hercules/public/yang:hercules_extensions",
-        "//platforms/networking/hercules/public/yang:hercules_interfaces",
+        "//stratum/public/yang:hercules_extensions",
+        "//stratum/public/yang:hercules_interfaces",
         "//openconfig/ietf:ietf_yang_modules",
         "//openconfig/public/release/models:openconfig_modules",
     ],
@@ -63,8 +63,8 @@ yang_lint_test(
     src = "openconfig-hercules-platform.yang",
     warnings_are_errors = False,
     deps = [
-        "//platforms/networking/hercules/public/yang:hercules_extensions",
-        "//platforms/networking/hercules/public/yang:hercules_platform",
+        "//stratum/public/yang:hercules_extensions",
+        "//stratum/public/yang:hercules_platform",
         "//openconfig/ietf:ietf_yang_modules",
         "//openconfig/public/release/models:openconfig_modules",
     ],
@@ -75,7 +75,7 @@ yang_lint_test(
     src = "openconfig-hercules-qos.yang",
     warnings_are_errors = False,
     deps = [
-        "//platforms/networking/hercules/public/yang:hercules_qos",
+        "//stratum/public/yang:hercules_qos",
         "//openconfig/ietf:ietf_yang_modules",
         "//openconfig/public/release/models:openconfig_modules",
     ],

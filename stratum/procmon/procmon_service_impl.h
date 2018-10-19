@@ -3,7 +3,7 @@
 
 #include <grpc++/grpc++.h>
 
-#include "platforms/networking/hercules/procmon/procmon.grpc.pb.h"
+#include "stratum/procmon/procmon.grpc.pb.h"
 
 namespace google {
 namespace hercules {

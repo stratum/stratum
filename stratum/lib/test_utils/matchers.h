@@ -22,9 +22,9 @@
 #include <type_traits>
 
 #include "google/protobuf/util/message_differencer.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gmock_utils/status-matchers.h"  // NOLINT
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gmock/gmock-matchers.h"  // NOLINT
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace test_utils {
@@ -38,14 +38,14 @@ class ProtoMatcher {
 
   bool MatchAndExplain(const T& m,
                        ::testing::MatchResultListener* listener) const {
-    ::google::protobuf::util::MessageDifferencer differencer;
+    ::google::google::protobuf::util::MessageDifferencer differencer;
     if (as_set_) {
       differencer.set_repeated_field_comparison(
-          ::google::protobuf::util::MessageDifferencer::AS_SET);
+          ::google::google::protobuf::util::MessageDifferencer::AS_SET);
     }
     if (partial_) {
       differencer.set_scope(
-          ::google::protobuf::util::MessageDifferencer::PARTIAL);
+          ::google::google::protobuf::util::MessageDifferencer::PARTIAL);
     }
     std::string result;
     differencer.ReportDifferencesToString(&result);

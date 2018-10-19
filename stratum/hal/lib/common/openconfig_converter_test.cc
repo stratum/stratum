@@ -1,9 +1,9 @@
-#include "platforms/networking/hercules/hal/lib/common/openconfig_converter.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
 
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace google {
 namespace hercules {

@@ -25,7 +25,7 @@
 
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/types/variant.h"
 #include "util/hash/mix.h"
@@ -36,7 +36,7 @@ namespace hal {
 namespace phal {
 using Attribute =
     absl::variant<int32, int64, uint32, uint64, float, double, bool,
-                  std::string, const protobuf::EnumValueDescriptor*>;
+                  std::string, const google::protobuf::EnumValueDescriptor*>;
 
 // TODO: Add an 'optional' flag to PathEntry. This flag indicates
 // that it is okay to skip querying this path if the marked PathEntry is not
@@ -81,7 +81,7 @@ struct PathEntry {
 typedef std::vector<PathEntry> Path;
 
 struct PathHasher {
-  size_t operator()(const google::hercules::hal::phal::Path& path) const {
+  size_t operator()(const stratum::hal::phal::Path& path) const {
     HashMix mix(0);
     for (const auto& path_entry : path)
       mix.Mix(std::hash<std::string>()(path_entry.name));

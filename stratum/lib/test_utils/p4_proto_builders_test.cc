@@ -1,9 +1,9 @@
-#include "platforms/networking/hercules/lib/test_utils/p4_proto_builders.h"
+#include "stratum/lib/test_utils/p4_proto_builders.h"
 
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
 namespace google {

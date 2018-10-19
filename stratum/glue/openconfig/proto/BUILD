@@ -1,20 +1,20 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
-    "sc_proto_lib",
+    "stratum_cc_proto_library",
 )
 
 package(default_visibility = SANDBLAZE_INTERNAL)
 
 # This command edits the old/deprecated openconfig protos to be compiled by
-# sc_proto_lib rule. This command is expected to go away as soon as we move
+# stratum_cc_proto_library rule. This command is expected to go away as soon as we move
 # to the new protos.
 old_proto_edit_cmd = ("cat $(SRCS) " +
                       "| sed 's|platforms/networking/hercules/public/proto/openconfig/old/|platforms/networking/hercules/glue/openconfig/proto/|g' " +
                       "| sed 's|/ywrappers|/old_ywrapper|g' > $@")
 
 # This command edits the third_party openconfig protos to be compiled by
-# sc_proto_lib rule.
+# stratum_cc_proto_library rule.
 proto_edit_cmd = ("cat $(SRCS) " +
                   "| sed 's|golang/ygot/proto/ywrapper/|platforms/networking/hercules/glue/openconfig/proto/|g' " +
                   "| sed 's|golang/ygot/proto/yext/|platforms/networking/hercules/glue/openconfig/proto/|g' " +
@@ -32,7 +32,7 @@ proto_edit_cmd = ("cat $(SRCS) " +
 genrule(
     name = "old_yext_proto_srcs",
     srcs = [
-        "//platforms/networking/hercules/public/proto/openconfig/old:yext_proto_srcs",
+        "//stratum/public/proto/openconfig/old:yext_proto_srcs",
     ],
     outs = ["old_yext.proto"],
     cmd = old_proto_edit_cmd,
@@ -42,7 +42,7 @@ genrule(
 genrule(
     name = "old_ywrapper_proto_srcs",
     srcs = [
-        "//platforms/networking/hercules/public/proto/openconfig/old:ywrapper_proto_srcs",
+        "//stratum/public/proto/openconfig/old:ywrapper_proto_srcs",
     ],
     outs = ["old_ywrapper.proto"],
     cmd = proto_edit_cmd,
@@ -52,7 +52,7 @@ genrule(
 genrule(
     name = "old_openconfig_proto_srcs",
     srcs = [
-        "//platforms/networking/hercules/public/proto/openconfig/old:openconfig_proto_srcs",
+        "//stratum/public/proto/openconfig/old:openconfig_proto_srcs",
     ],
     outs = ["old_openconfig.proto"],
     cmd = old_proto_edit_cmd,
@@ -62,7 +62,7 @@ genrule(
 genrule(
     name = "old_openconfig_google_bcm_proto_srcs",
     srcs = [
-        "//platforms/networking/hercules/public/proto/openconfig/old:openconfig_google_bcm_proto_srcs",
+        "//stratum/public/proto/openconfig/old:openconfig_google_bcm_proto_srcs",
     ],
     outs = ["old_openconfig_google_bcm.proto"],
     cmd = old_proto_edit_cmd,
@@ -170,7 +170,7 @@ genrule(
 )
 
 # TODO(aghaffar): Remove the old proto rule when we start using the new protos.
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "old_openconfig_proto",
     hdrs = [
         "old_openconfig.proto",
@@ -180,7 +180,7 @@ sc_proto_lib(
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "openconfig_proto",
     hdrs = [
         "enums.proto",

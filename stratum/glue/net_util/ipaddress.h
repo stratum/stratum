@@ -50,7 +50,7 @@
 #include <vector>
 
 #include "stratum/glue/logging.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/port.h"
 #include "absl/numeric/int128.h"
 

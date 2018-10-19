@@ -19,39 +19,39 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
-    "sc_cc_lib",
+    "//bazel:rules.bzl",
+    "stratum_cc_library",
     "STRATUM_INTERNAL",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-# NOTE: All dependencies on //base should be via the glue directory so that we
+# NOTE: All dependencies on @com_github_google_glog//:glog should be via the glue directory so that we
 # can maintain flexible dependencies on portable google3.
 
 # There are sections of code under status/ which is guarded by HERCULES. This
 # target defines this.
-sc_cc_lib(
+stratum_cc_library(
     name = "define_hercules",
     defines = [
         "HERCULES",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "init_google",
     hdrs = [
         "init_google.h",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "logging",
     srcs = [
         "logging.cc",
@@ -60,6 +60,6 @@ sc_cc_lib(
         "logging.h",
     ],
     deps = [
-        "//base",
+        "@com_github_google_glog//:glog",
     ],
 )

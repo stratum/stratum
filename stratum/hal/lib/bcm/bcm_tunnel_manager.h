@@ -6,11 +6,11 @@
 #include <memory>
 #include <utility>
 
-#include "platforms/networking/hercules/hal/lib/bcm/bcm.pb.h"
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_sdk_interface.h"
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_table_manager.h"
-#include "absl/base/integral_types.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
+#include "stratum/hal/lib/bcm/bcm_table_manager.h"
+#include "stratum/glue/integral_types.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "util/task/status.h"
 
 namespace google {

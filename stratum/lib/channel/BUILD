@@ -21,18 +21,18 @@ exports_files(["LICENSE"])
 # This package contains message-passing libraries for Hercules.
 
 load(
-    "//stratum/portage:build_defs.bzl",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "//bazel:rules.bzl",
+    "stratum_cc_library",
+    "stratum_cc_test",
     "STRATUM_INTERNAL",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "channel",
     srcs = [
         "channel.cc",
@@ -42,10 +42,10 @@ sc_cc_lib(
         "channel_internal.h",
     ],
     deps = [
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
-        "//absl/time",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -54,7 +54,7 @@ sc_cc_lib(
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "channel_mock",
     testonly = 1,
     hdrs = [
@@ -62,7 +62,7 @@ sc_cc_lib(
     ],
     deps = [
         ":channel",
-        "//testing/base/public:gmock_no_google3",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -71,14 +71,14 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "//base",
-        "//testing/base/public:gunit_no_google3",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "channel_test",
     srcs = [
         "channel_test.cc",
@@ -86,8 +86,8 @@ sc_cc_test(
     deps = [
         ":channel",
         ":test_main",
-        "//testing/base/public:gunit_no_google3",
-        "//absl/synchronization",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status:status_test_util",
     ],
 )

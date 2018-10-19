@@ -22,7 +22,7 @@
 #include <string>
 #include <utility>
 
-#include "eudev/libudev.h"
+#include <libudev.h>
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/udev_interface.h"

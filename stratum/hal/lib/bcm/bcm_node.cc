@@ -17,8 +17,8 @@
 
 #include <utility>
 
-#include "base/commandlineflags.h"
-#include "platforms/networking/hercules/lib/macros.h"
+#include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 

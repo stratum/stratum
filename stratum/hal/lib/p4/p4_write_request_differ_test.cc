@@ -19,9 +19,9 @@
 #include <vector>
 
 #include "google/protobuf/util/message_differencer.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -134,7 +134,7 @@ class P4WriteRequestDifferTest : public testing::Test {
   ::p4::v1::WriteRequest unchanged_;
 
   // Tests can use this MessageDifferencer to verify test expectations.
-  ::google::protobuf::util::MessageDifferencer msg_differencer_;
+  ::google::google::protobuf::util::MessageDifferencer msg_differencer_;
 };
 
 void P4WriteRequestDifferTest::SetUpTestRequest(
@@ -221,7 +221,7 @@ TEST_F(P4WriteRequestDifferTest, TestAddMultipleTableEntries) {
   EXPECT_EQ(0, deletions_.updates_size());
   ASSERT_EQ(3, additions_.updates_size());
   msg_differencer_.set_repeated_field_comparison(
-      ::google::protobuf::util::MessageDifferencer::AS_SET);
+      ::google::google::protobuf::util::MessageDifferencer::AS_SET);
   EXPECT_TRUE(msg_differencer_.Compare(new_request_, additions_));
   EXPECT_EQ(0, modified_.updates_size());
   EXPECT_EQ(0, unchanged_.updates_size());
@@ -257,7 +257,7 @@ TEST_F(P4WriteRequestDifferTest, TestDeleteMultipleTableEntries) {
   ASSERT_EQ(3, deletions_.updates_size());
   EXPECT_EQ(0, additions_.updates_size());
   msg_differencer_.set_repeated_field_comparison(
-      ::google::protobuf::util::MessageDifferencer::AS_SET);
+      ::google::google::protobuf::util::MessageDifferencer::AS_SET);
   ::p4::v1::WriteRequest expected_deletes = old_request_;
   expected_deletes.mutable_updates(0)->set_type(::p4::v1::Update::DELETE);
   expected_deletes.mutable_updates(1)->set_type(::p4::v1::Update::DELETE);

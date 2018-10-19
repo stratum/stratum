@@ -33,11 +33,11 @@
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/p4/forwarding_pipeline_configs.pb.h"
 #include "stratum/lib/security/auth_policy_checker.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

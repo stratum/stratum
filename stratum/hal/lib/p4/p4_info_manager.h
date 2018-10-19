@@ -26,7 +26,7 @@
 #include "google/protobuf/repeated_field.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -162,7 +162,7 @@ class P4InfoManager {
     // Iterates over all the P4 resources of type T and builds the internal
     // maps for ID and name lookup.
     ::util::Status BuildMaps(
-        const ::google::protobuf::RepeatedPtrField<T>& p4_resources,
+        const ::google::google::protobuf::RepeatedPtrField<T>& p4_resources,
         PreambleCallback preamble_cb) {
       ::util::Status status = ::util::OkStatus();
       for (const auto& resource : p4_resources) {

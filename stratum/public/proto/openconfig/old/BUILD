@@ -1,5 +1,5 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
 )
 

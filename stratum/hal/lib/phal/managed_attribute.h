@@ -99,15 +99,15 @@ class TypedAttribute : public ManagedAttribute {
 // A single attribute of a specific protobuf enum type, to be held internally
 // by a data source.
 class EnumAttribute
-    : public TypedAttribute<const protobuf::EnumValueDescriptor*> {
+    : public TypedAttribute<const google::protobuf::EnumValueDescriptor*> {
  public:
   // Does not transfer ownership of datasource.
-  explicit EnumAttribute(const protobuf::EnumDescriptor* descriptor,
+  explicit EnumAttribute(const google::protobuf::EnumDescriptor* descriptor,
                          DataSource* datasource)
-      : TypedAttribute<const protobuf::EnumValueDescriptor*>(datasource) {
+      : TypedAttribute<const google::protobuf::EnumValueDescriptor*>(datasource) {
     value_ = descriptor->value(0);  // Default enum value.
   }
-  ::util::Status AssignValue(const protobuf::EnumValueDescriptor* value) {
+  ::util::Status AssignValue(const google::protobuf::EnumValueDescriptor* value) {
     if (value->type() != value_->type()) {
       return MAKE_ERROR() << "Attempted to assign incorrect enum type "
                           << value->type()->name()

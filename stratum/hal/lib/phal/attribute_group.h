@@ -30,7 +30,7 @@
 #include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -53,7 +53,7 @@ class AttributeGroup {
   // A factory function to produce a AttributeGroup that uses the given protobuf
   // message as its schema.
   static std::unique_ptr<AttributeGroup> From(
-      const protobuf::Descriptor* descriptor);
+      const google::protobuf::Descriptor* descriptor);
 
   // The following two functions lock this attribute group as appropriate,
   // and expose subsets of its interface. The returned classes are invalid
@@ -135,7 +135,7 @@ class ReadableAttributeGroup {
 
   // Returns the protobuf descriptor that constrains this attribute group. And
   // fields in this protobuf must exist in the passed descriptor.
-  virtual const protobuf::Descriptor* GetDescriptor() const = 0;
+  virtual const google::protobuf::Descriptor* GetDescriptor() const = 0;
 
   // Returns the current version of this attribute group. This id is changed
   // every time any structural changes are made to this attribute group.
@@ -216,8 +216,8 @@ class AttributeGroupQuery {
                       ThreadpoolInterface* threadpool)
       : root_group_(root_group), threadpool_(threadpool) {
     auto descriptor = root_group->AcquireReadable()->GetDescriptor();
-    const protobuf::Message* prototype_message =
-        protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
+    const google::protobuf::Message* prototype_message =
+        google::protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
     CHECK(prototype_message != nullptr);
     query_result_.reset(prototype_message->New());
   }
@@ -229,7 +229,7 @@ class AttributeGroupQuery {
   // Executes this query, and writes all of the values read from the attribute
   // database into the given output protobuf. The passed protobuf must be of the
   // same type used for the descriptor of root_group.
-  ::util::Status Get(protobuf::Message* out) LOCKS_EXCLUDED(query_lock_);
+  ::util::Status Get(google::protobuf::Message* out) LOCKS_EXCLUDED(query_lock_);
   ::util::Status Subscribe(std::unique_ptr<ChannelWriter<PhalDB>> subscriber,
                            absl::Duration polling_interval)
       LOCKS_EXCLUDED(query_lock_);
@@ -243,7 +243,7 @@ class AttributeGroupQuery {
 
   AttributeGroup* root_group_;
   ThreadpoolInterface* threadpool_;
-  std::unique_ptr<protobuf::Message> query_result_;
+  std::unique_ptr<google::protobuf::Message> query_result_;
   absl::Mutex query_lock_;
   // If true, the result of this query has changed and a streaming message
   // should shortly be sent to all subscribers.

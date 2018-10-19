@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_node_mock.h"
@@ -35,8 +35,8 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"

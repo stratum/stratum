@@ -1,16 +1,16 @@
-#include "platforms/networking/hercules/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/attribute_database.h"
 
 #include "google/protobuf/util/message_differencer.h"
-#include "platforms/networking/hercules/hal/lib/phal/attribute_group_mock.h"
-#include "platforms/networking/hercules/hal/lib/phal/db.pb.h"
-#include "platforms/networking/hercules/hal/lib/phal/dummy_threadpool.h"
-#include "platforms/networking/hercules/hal/lib/phal/system_fake.h"
-#include "platforms/networking/hercules/lib/channel/channel.h"
-#include "platforms/networking/hercules/lib/channel/channel_mock.h"
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/hal/lib/phal/attribute_group_mock.h"
+#include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/hal/lib/phal/dummy_threadpool.h"
+#include "stratum/hal/lib/phal/system_fake.h"
+#include "stratum/lib/channel/channel.h"
+#include "stratum/lib/channel/channel_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
@@ -240,7 +240,7 @@ class RealAttributeDatabaseTest : public ::testing::Test {
       RETURN_IF_ERROR(reader->Read(&query_result, absl::Seconds(30)));
     }
 
-    CHECK_RETURN_IF_FALSE(protobuf::util::MessageDifferencer::Equals(
+    CHECK_RETURN_IF_FALSE(google::protobuf::util::MessageDifferencer::Equals(
         query_result, hardware_not_present_));
     return ::util::OkStatus();
   }

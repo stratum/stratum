@@ -1,12 +1,12 @@
-#include "platforms/networking/hercules/hal/lib/bcm/pipeline_processor.h"
+#include "stratum/hal/lib/bcm/pipeline_processor.h"
 
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/public/lib/error.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.pb.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/lib/error.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace google {
 namespace hercules {

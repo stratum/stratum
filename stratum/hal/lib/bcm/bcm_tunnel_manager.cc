@@ -1,6 +1,6 @@
 // BcmTunnelManager stubs.
 
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_tunnel_manager.h"
+#include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 
 namespace google {
 namespace hercules {

@@ -21,9 +21,9 @@
 #include <set>
 #include <sstream>  // IWYU pragma: keep
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/message.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
@@ -36,8 +36,8 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");
@@ -976,7 +976,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
     CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
                                       base_bcm_chassis_map.bcm_chips().end(),
-                                      [&bcm_chip](const ::google::protobuf::Message& x) {
+                                      [&bcm_chip](const ::google::google::protobuf::Message& x) {
                                         return ProtoEqual(x, bcm_chip);
                                       }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
@@ -992,7 +992,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     CHECK_RETURN_IF_FALSE(std::any_of(
         base_bcm_chassis_map.bcm_ports().begin(),
         base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) { return ProtoEqual(x, p); }))
+        [&p](const ::google::google::protobuf::Message& x) { return ProtoEqual(x, p); }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }

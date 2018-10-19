@@ -1,10 +1,10 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_OPENCONFIG_CONVERTER_H_
 #define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_OPENCONFIG_CONVERTER_H_
 
-#include "platforms/networking/hercules/glue/openconfig/proto/old_openconfig.pb.h"
-#include "platforms/networking/hercules/glue/openconfig/proto/old_openconfig_google_bcm.pb.h"
-#include "platforms/networking/hercules/hal/lib/common/common.pb.h"
-#include "platforms/networking/hercules/lib/macros.h"
+#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
+#include "stratum/glue/openconfig/proto/old_openconfig_google_bcm.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
 #include "util/task/status.h"
 #include "util/task/statusor.h"
 

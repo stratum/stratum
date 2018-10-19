@@ -1,12 +1,12 @@
-#include "platforms/networking/hercules/glue/logging.h"
-#include "platforms/networking/hercules/hal/lib/common/writer_interface.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/testing/tests/bcm_sim_test_fixture.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/glue/logging.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/testing/tests/bcm_sim_test_fixture.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/strings/str_cat.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace google {
 namespace hercules {

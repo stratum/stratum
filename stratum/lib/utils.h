@@ -38,7 +38,7 @@
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
 #include "stratum/glue/status/status.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/google/rpc/code.pb.h"
 
 namespace stratum {
@@ -107,28 +107,28 @@ inline std::string PrintVector(const std::vector<T>& vec,
 }
 
 // Writes a proto message in binary format to the given file path.
-::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
+::util::Status WriteProtoToBinFile(const ::google::google::protobuf::Message& message,
                                    const std::string& filename);
 
 // Reads proto from a file containing the proto message in binary format.
 ::util::Status ReadProtoFromBinFile(const std::string& filename,
-                                    ::google::protobuf::Message* message);
+                                    ::google::google::protobuf::Message* message);
 
 // Writes a proto message in text format to the given file path.
-::util::Status WriteProtoToTextFile(const ::google::protobuf::Message& message,
+::util::Status WriteProtoToTextFile(const ::google::google::protobuf::Message& message,
                                     const std::string& filename);
 
 // Reads proto from a text file containing the proto message in text format.
 ::util::Status ReadProtoFromTextFile(const std::string& filename,
-                                     ::google::protobuf::Message* message);
+                                     ::google::google::protobuf::Message* message);
 
 // Serializes proto to a string. Wrapper around TextFormat::PrintToString().
-::util::Status PrintProtoToString(const ::google::protobuf::Message& message,
+::util::Status PrintProtoToString(const ::google::google::protobuf::Message& message,
                                   std::string* text);
 
 // Parses a proto from a string. Wrapper around TextFormat::ParseFromString().
 ::util::Status ParseProtoFromString(const std::string& text,
-                                    ::google::protobuf::Message* message);
+                                    ::google::google::protobuf::Message* message);
 
 // Writes a string buffer to a text file. 'append' (default false) specifies
 // whether the string need to appended to the end of the file as opposed to
@@ -190,14 +190,14 @@ inline std::string BaseName(const std::string& path) {
 // serialized strings are always the same. Note that m1 == m2 means m1 and m2
 // are equal (not equivalent). Note that for equality the order of repeated
 // fields are important.
-inline std::string ProtoSerialize(const protobuf::Message& m) {
+inline std::string ProtoSerialize(const google::protobuf::Message& m) {
   const size_t size = m.ByteSizeLong();
   std::string out;
   out.resize(size);
   char* out_buf = out.empty() ? nullptr : &(*out.begin());
-  ::google::protobuf::io::ArrayOutputStream array_out_stream(
+  ::google::google::protobuf::io::ArrayOutputStream array_out_stream(
       out_buf, static_cast<int>(size));
-  ::google::protobuf::io::CodedOutputStream coded_out_stream(&array_out_stream);
+  ::google::google::protobuf::io::CodedOutputStream coded_out_stream(&array_out_stream);
   coded_out_stream.SetSerializationDeterministic(true);
   m.SerializeWithCachedSizes(&coded_out_stream);
   return out;
@@ -207,11 +207,11 @@ inline std::string ProtoSerialize(const protobuf::Message& m) {
 // order of repeated fields. In other words checks for equality (not
 // equivalence) of the protos assuming that the order of the repeated fields
 // are not important.
-inline bool ProtoEqual(const protobuf::Message& m1,
-                       const protobuf::Message& m2) {
-  ::google::protobuf::util::MessageDifferencer differencer;
+inline bool ProtoEqual(const google::protobuf::Message& m1,
+                       const google::protobuf::Message& m2) {
+  ::google::google::protobuf::util::MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(
-      ::google::protobuf::util::MessageDifferencer::AS_SET);
+      ::google::google::protobuf::util::MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
 }
 

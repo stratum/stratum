@@ -1,14 +1,14 @@
 // This file contains the P4ActionMapper implementation.
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_action_mapper.h"
+#include "stratum/hal/lib/p4/p4_action_mapper.h"
 
 #include <memory>
 
-#include "platforms/networking/hercules/hal/lib/p4/utils.h"
-#include "platforms/networking/hercules/lib/macros.h"
+#include "stratum/hal/lib/p4/utils.h"
+#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 namespace google {
 namespace hercules {

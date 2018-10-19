@@ -19,18 +19,18 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "bits",
     srcs = [
         "bits.cc",
@@ -39,27 +39,27 @@ sc_cc_lib(
         "bits.h",
     ],
     deps = [
-        "//absl/base",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "bits_test",
     size = "small",
     srcs = ["bits_test.cc"],
     deps = [
         ":bits",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
         "//stratum/glue:logging",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "ipaddress",
     srcs = [
         "ipaddress.cc",
@@ -74,29 +74,29 @@ sc_cc_lib(
     deps = [
         ":bits",
         "//strings",
-        "//absl/base:core_headers",
-        "//absl/numeric:int128",
-        "//absl/strings",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "ipaddress_test",
     size = "small",
     srcs = ["ipaddress_test.cc"],
     deps = [
         ":ipaddress",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/container:node_hash_set",
-        "//absl/numeric:int128",
-        "//absl/strings",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:node_hash_set",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "ports",
     srcs = [
         "ports.cc",

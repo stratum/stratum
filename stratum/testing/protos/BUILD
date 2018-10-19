@@ -1,15 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
-    "sc_package",
+    "//bazel:rules.bzl",
+    "stratum_package",
 )
 load(
-    "//platforms/networking/hercules/p4c_backend/common:build_defs.bzl",
+    "//stratum/p4c_backend/common:build_defs.bzl",
     "p4_hercules_config",
 )
 
-sc_package(
+stratum_package(
     name = "hercules_test_protos",
     data = glob(["*.txt"]) + glob(["*.bin"]),
 )
@@ -111,15 +111,15 @@ cc_test(
         ":protos_to_validate",
     ],
     deps = [
-        "//base",
-        "//platforms/networking/hercules/hal/lib/common:utils",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_mapper",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//absl/strings",
-        "//protobuf",
-        "//sandblaze/p4lang:p4runtime_v1_proto",
+        "@com_github_google_glog//:glog",
+        "//stratum/hal/lib/common:utils",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_table_mapper",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
     ],
 )
 
@@ -130,12 +130,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_tor_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_tor_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_tor_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -145,12 +145,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_spine_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_spine_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_spine_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -160,12 +160,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_middleblock_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_middleblock_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_middleblock_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -175,12 +175,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_fbr_s2_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_fbr_s2_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_fbr_s2_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -190,12 +190,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_fbr_s3_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_fbr_s3_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_fbr_s3_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -205,12 +205,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_b4_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_b4_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_b4_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -220,12 +220,12 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_minicluster_s2_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_minicluster_s2_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_minicluster_s2_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
 p4_hercules_config(
@@ -235,10 +235,10 @@ p4_hercules_config(
         "//platforms/networking/orion/p4/spec:p4behaviors",
     ],
     annotation_maps = [
-        "//platforms/networking/hercules/p4c_backend/switch:annotation_map_files",
+        "//stratum/p4c_backend/switch:annotation_map_files",
     ],
     out_p4_info = "hercules_minicluster_s3_p4_info.pb.txt",
     out_p4_pipeline_binary = "hercules_minicluster_s3_p4_pipeline.pb.bin",
     out_p4_pipeline_text = "hercules_minicluster_s3_p4_pipeline.pb.txt",
-    parser_map = "//platforms/networking/hercules/p4c_backend/switch:parser_map_files",
+    parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )

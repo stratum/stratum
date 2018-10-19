@@ -1,8 +1,8 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
 #define PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
 
-#include "platforms/networking/hercules/lib/statemachine/state_machine.h"
-#include "testing/base/public/gmock.h"
+#include "stratum/lib/statemachine/state_machine.h"
+#include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
 #include "util/task/status.h"
 

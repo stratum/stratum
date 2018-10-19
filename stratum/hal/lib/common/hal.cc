@@ -18,7 +18,7 @@
 #include <chrono>  // NOLINT
 #include <utility>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -33,10 +33,10 @@
 DEFINE_FLAG(std::vector<string>, external_hercules_urls, {},
             "Comma-separated list of URLs for server to listen to for external"
             " calls from SDN controller, etc.");
-DEFINE_string(local_hercules_url, google::hercules::kLocalHerculesUrl,
+DEFINE_string(local_hercules_url, stratum::kLocalHerculesUrl,
               "URL for listening to local calls from hercules stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
-DEFINE_string(procmon_service_addr, ::google::hercules::kProcmonServiceUrl,
+DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
               "URL of the procmon service to connect to.");
 DEFINE_string(persistent_config_dir, "",
               "The persistent dir where all the config files will be stored.");

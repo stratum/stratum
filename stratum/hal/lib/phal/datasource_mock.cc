@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/hal/lib/phal/datasource_mock.h"
+#include "stratum/hal/lib/phal/datasource_mock.h"
 
 namespace google {
 namespace hercules {

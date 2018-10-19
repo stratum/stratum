@@ -36,7 +36,7 @@
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -54,7 +54,7 @@ GnmiPublisher::GnmiPublisher(SwitchInterface* switch_interface)
 GnmiPublisher::~GnmiPublisher() {}
 
 ::util::Status GnmiPublisher::HandleUpdate(
-    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config) {
   absl::WriterMutexLock l(&access_lock_);
 
@@ -73,7 +73,7 @@ GnmiPublisher::~GnmiPublisher() {}
 }
 
 ::util::Status GnmiPublisher::HandleReplace(
-    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config) {
   absl::WriterMutexLock l(&access_lock_);
 

@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/lib/test_utils/p4_proto_builders.h"
+#include "stratum/lib/test_utils/p4_proto_builders.h"
 
 namespace google {
 namespace hercules {

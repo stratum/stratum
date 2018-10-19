@@ -29,7 +29,7 @@
 
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
 #include "stratum/glue/logging.h"
@@ -41,7 +41,7 @@
 #include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",
               "The latest verified ChassisConfig proto pushed to the switch. "

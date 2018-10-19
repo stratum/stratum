@@ -19,10 +19,10 @@
 
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 using ::testing::HasSubstr;
 

@@ -6,7 +6,7 @@
 #include <queue>
 #include <utility>
 
-#include "platforms/networking/hercules/procmon/procmon.pb.h"
+#include "stratum/procmon/procmon.pb.h"
 #include "absl/synchronization/mutex.h"
 #include "util/task/status.h"
 

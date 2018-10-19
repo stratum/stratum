@@ -98,10 +98,10 @@ namespace hercules_error_impl {
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc,
                                                int code) {
   return ::util::StatusBuilder(
-      ::util::Status(::google::hercules::HerculesErrorSpace(), code, ""), loc);
+      ::util::Status(::stratum::HerculesErrorSpace(), code, ""), loc);
 }
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc) {
-  return MakeStatusBuilder(loc, ::google::hercules::ERR_UNKNOWN);
+  return MakeStatusBuilder(loc, ::stratum::ERR_UNKNOWN);
 }
 }  // namespace hercules_error_impl
 

@@ -17,7 +17,7 @@
 
 #include "stratum/hal/lib/p4/p4_config_verifier.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
@@ -25,8 +25,8 @@
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // These flags control the strictness of error reporting for certain
 // anomalies in the pipeline config.  Each flag has one of the following values:

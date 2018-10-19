@@ -141,7 +141,7 @@ namespace util {
 
 namespace status_macros {
 
-using base_logging::LogSeverity;
+using google::LogSeverity;
 
 // Base class for options attached to a project-specific error code enum.
 // Projects that use non-canonical error codes should specialize the

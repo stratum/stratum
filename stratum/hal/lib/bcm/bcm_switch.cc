@@ -24,11 +24,11 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

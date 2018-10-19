@@ -17,7 +17,7 @@
 
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 
-#include "base/logging.h"
+#include "glog/logging.h"
 #include "google/protobuf/generated_message_reflection.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
@@ -43,7 +43,7 @@ P4WriteRequestDiffer::P4WriteRequestDiffer(
     ::p4::v1::WriteRequest* delete_request, ::p4::v1::WriteRequest* add_request,
     ::p4::v1::WriteRequest* modify_request,
     ::p4::v1::WriteRequest* unchanged_request) {
-  ::google::protobuf::util::MessageDifferencer msg_differencer;
+  ::google::google::protobuf::util::MessageDifferencer msg_differencer;
   P4WriteRequestReporter reporter;
   msg_differencer.ReportDifferencesTo(&reporter);
   if (unchanged_request) {
@@ -57,7 +57,7 @@ P4WriteRequestDiffer::P4WriteRequestDiffer(
   msg_differencer.TreatAsMapUsingKeyComparator(
       write_desc->FindFieldByName("updates"), &comparator);
   msg_differencer.set_repeated_field_comparison(
-      ::google::protobuf::util::MessageDifferencer::AS_SET);
+      ::google::google::protobuf::util::MessageDifferencer::AS_SET);
   auto update_desc = ::p4::v1::Update::default_instance().GetDescriptor();
   msg_differencer.IgnoreField(update_desc->FindFieldByName("type"));
 
@@ -110,8 +110,8 @@ P4WriteRequestReporter::P4WriteRequestReporter()
 // P4 WriteRequests.   Details at lower levels of the field_path are not
 // processed.
 void P4WriteRequestReporter::ReportAdded(
-    const ::google::protobuf::Message& message1,
-    const ::google::protobuf::Message& message2,
+    const ::google::google::protobuf::Message& message1,
+    const ::google::google::protobuf::Message& message2,
     const FieldVector& field_path) {
   if (field_path.size() != 1) return;
   VLOG(1) << "ReportAdded " << field_path[0].field->full_name() << " index "
@@ -120,8 +120,8 @@ void P4WriteRequestReporter::ReportAdded(
 }
 
 void P4WriteRequestReporter::ReportDeleted(
-    const ::google::protobuf::Message& message1,
-    const ::google::protobuf::Message& message2,
+    const ::google::google::protobuf::Message& message1,
+    const ::google::google::protobuf::Message& message2,
     const FieldVector& field_path) {
   if (field_path.size() != 1) return;
   VLOG(1) << "ReportAdded " << field_path[0].field->full_name() << " index "
@@ -130,8 +130,8 @@ void P4WriteRequestReporter::ReportDeleted(
 }
 
 void P4WriteRequestReporter::ReportModified(
-    const ::google::protobuf::Message& message1,
-    const ::google::protobuf::Message& message2,
+    const ::google::google::protobuf::Message& message1,
+    const ::google::google::protobuf::Message& message2,
     const FieldVector& field_path) {
   if (field_path.size() != 2) return;
   VLOG(1) << "ReportModified " << field_path[0].field->full_name() << " index "
@@ -140,8 +140,8 @@ void P4WriteRequestReporter::ReportModified(
 }
 
 void P4WriteRequestReporter::ReportMoved(
-    const ::google::protobuf::Message& message1,
-    const ::google::protobuf::Message& message2,
+    const ::google::google::protobuf::Message& message1,
+    const ::google::google::protobuf::Message& message2,
     const FieldVector& field_path) {
   if (field_path.size() != 1) return;
   VLOG(1) << "ReportMoved " << field_path[0].field->full_name() << " index "
@@ -150,8 +150,8 @@ void P4WriteRequestReporter::ReportMoved(
 }
 
 void P4WriteRequestReporter::ReportMatched(
-    const ::google::protobuf::Message& message1,
-    const ::google::protobuf::Message& message2,
+    const ::google::google::protobuf::Message& message1,
+    const ::google::google::protobuf::Message& message2,
     const FieldVector& field_path) {
   if (field_path.size() != 1) return;
   VLOG(1) << "ReportMatched " << field_path[0].field->full_name() << " index "
@@ -164,14 +164,14 @@ void P4WriteRequestReporter::ReportMatched(
 //  - Table IDs must be equal.
 //  - Both entries must have the same match fields.
 bool P4WriteRequestComparator::IsMatch(
-    const protobuf::Message& message1, const protobuf::Message& message2,
-    const std::vector<protobuf::util::MessageDifferencer::SpecificField>&
+    const google::protobuf::Message& message1, const google::protobuf::Message& message2,
+    const std::vector<google::protobuf::util::MessageDifferencer::SpecificField>&
     parent_fields) const {
   const ::p4::v1::Update& update1 =
-      *protobuf::internal::DynamicCastToGenerated<const ::p4::v1::Update>(
+      *google::protobuf::internal::DynamicCastToGenerated<const ::p4::v1::Update>(
           &message1);
   const ::p4::v1::Update& update2 =
-      *protobuf::internal::DynamicCastToGenerated<const ::p4::v1::Update>(
+      *google::protobuf::internal::DynamicCastToGenerated<const ::p4::v1::Update>(
           &message2);
   if (!update1.entity().has_table_entry()) return false;
   if (!update2.entity().has_table_entry()) return false;
@@ -183,13 +183,13 @@ bool P4WriteRequestComparator::IsMatch(
   // Another MessageDifferencer compares the match fields.  The match fields
   // can be in any order, so the comparison treats them as a map with field_id
   // as the key.
-  ::google::protobuf::util::MessageDifferencer msg_differencer;
+  ::google::google::protobuf::util::MessageDifferencer msg_differencer;
   auto entry_desc = ::p4::v1::TableEntry::default_instance().GetDescriptor();
   auto match_desc = ::p4::v1::FieldMatch::default_instance().GetDescriptor();
   auto match_field_desc = entry_desc->FindFieldByName("match");
   msg_differencer.TreatAsMap(match_field_desc,
                              match_desc->FindFieldByName("field_id"));
-  std::vector<const ::google::protobuf::FieldDescriptor*> compare_fields = {
+  std::vector<const ::google::google::protobuf::FieldDescriptor*> compare_fields = {
       match_field_desc};
   return msg_differencer.CompareWithFields(table_entry1, table_entry2,
                                            compare_fields, compare_fields);

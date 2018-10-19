@@ -26,18 +26,18 @@
 #include <sstream>
 #include <string>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
-#include "sandblaze/gnmi/gnmi.grpc.pb.h"
-#include "sandblaze/p4lang/p4/p4runtime.grpc.pb.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+#include "p4/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -49,9 +49,9 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
-DEFINE_string(url, google::hercules::kLocalHerculesUrl,
+DEFINE_string(url, stratum::kLocalHerculesUrl,
               "URL for Hercules server to connect to.");
 DEFINE_bool(push_open_config, false,
             "Issue gNMI Set RPC to Hercules to push OpenConfig-based config "
@@ -784,5 +784,5 @@ int Main(int argc, char** argv) {
 
 int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
-  return google::hercules::hal::stub::Main(argc, argv);
+  return stratum::hal::stub::Main(argc, argv);
 }

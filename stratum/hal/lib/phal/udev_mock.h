@@ -19,7 +19,7 @@
 #define STRATUM_HAL_LIB_PHAL_UDEV_MOCK_H_
 
 #include "stratum/hal/lib/phal/udev_interface.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {

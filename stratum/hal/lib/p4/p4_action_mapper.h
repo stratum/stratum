@@ -9,11 +9,11 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_P4_P4_ACTION_MAPPER_H_
 #define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_P4_P4_ACTION_MAPPER_H_
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "absl/container/flat_hash_map.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "util/task/status.h"
 #include "util/task/statusor.h"
 

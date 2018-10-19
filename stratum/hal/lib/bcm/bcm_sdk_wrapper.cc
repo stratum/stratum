@@ -31,7 +31,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "absl/base/macros.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
@@ -44,10 +44,10 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "util/endian/endian.h"
-#include "util/gtl/flat_hash_map.h"
-#include "util/gtl/flat_hash_set.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/glue/gtl/flat_hash_set.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_int64(linkscan_interval_in_usec, 200000, "Linkscan interval in usecs.");
 DEFINE_int32(max_num_linkscan_writers, 10,
@@ -701,7 +701,7 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
                              uint32* mask) {
   T t_value, t_mask;
   int retval = func(unit, flow_id, &t_value, &t_mask);
-  if (BCM_SUCCESS(retval)) {
+  if (SHR_SUCCESS(retval)) {
     *value = static_cast<uint32>(t_value);
     *mask = static_cast<uint32>(t_mask);
   }

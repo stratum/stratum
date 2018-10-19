@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/procmon/procmon.h"
+#include "stratum/procmon/procmon.h"
 
 #include <fcntl.h>
 #include <sys/resource.h>
@@ -11,10 +11,10 @@
 #include <set>
 #include <vector>
 
-#include "base/commandlineflags.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "absl/base/integral_types.h"
+#include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/synchronization/mutex.h"
 
 namespace google {

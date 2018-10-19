@@ -17,9 +17,9 @@
 
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {

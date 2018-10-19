@@ -21,51 +21,51 @@ exports_files(["LICENSE"])
 # This package contains testing libraries for Hercules.
 
 load(
-    "//stratum/portage:build_defs.bzl",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "//bazel:rules.bzl",
+    "stratum_cc_library",
+    "stratum_cc_test",
     "STRATUM_INTERNAL",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "matchers",
     testonly = 1,
     hdrs = ["matchers.h"],
     deps = [
-        "//testing/base/public:gunit_no_google3",
-        "//testing/base/public:status_matchers_no_google3",
-        "//protobuf",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "p4_proto_builders",
     testonly = 1,
     srcs = ["p4_proto_builders.cc"],
     hdrs = ["p4_proto_builders.h"],
     deps = [
-        "//platforms/networking/hercules/hal/lib/p4:p4_control_proto",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto",
-        "//absl/strings",
-        "//sandblaze/p4lang:p4info_v1_proto",
+        "//stratum/hal/lib/p4:p4_control_proto",
+        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_table_defs_proto",
+        "@com_google_absl//absl/strings",
+        "@com_github_p4lang_PI//:p4info_v1_proto",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "p4_proto_builders_test",
     srcs = ["p4_proto_builders_test.cc"],
     deps = [
         ":matchers",
         ":p4_proto_builders",
-        "//platforms/networking/hercules/lib:test_main",
-        "//platforms/networking/hercules/lib:utils",
-        "//testing/base/public:gunit_no_google3",
-        "//absl/strings",
+        "//stratum/lib:test_main",
+        "//stratum/lib:utils",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/strings",
     ],
 )

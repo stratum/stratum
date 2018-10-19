@@ -19,21 +19,21 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_bin",
-    "sc_package",
+    "stratum_cc_binary",
+    "stratum_package",
     "HOST_ARCHES",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
     # TODO(b/76020938); doesn't work with header modules yet.
     features = ["-use_header_modules"],
 )
 
-sc_cc_bin(
+stratum_cc_binary(
     name = "stratum_sim",
     srcs = [
         "main.cc",
@@ -46,9 +46,9 @@ sc_cc_bin(
         "-lutil",
     ],
     deps = [
-        "//base",
-        "//absl/memory",
-        "//absl/synchronization",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/bcm:bcm_acl_manager",
@@ -70,7 +70,7 @@ sc_cc_bin(
     ],
 )
 
-sc_package(
+stratum_package(
     name = "stratum_pkg",
     bins = [
         ":stratum_sim",

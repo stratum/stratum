@@ -31,7 +31,7 @@
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {

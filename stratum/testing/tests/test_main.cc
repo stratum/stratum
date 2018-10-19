@@ -1,10 +1,10 @@
 // This is the main entry for HAL BCM module tests.
 #include <stdlib.h>
 
-#include "base/commandlineflags.h"
-#include "platforms/networking/hercules/glue/init_google.h"
-#include "platforms/networking/hercules/glue/logging.h"
-#include "testing/base/public/gunit.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/logging.h"
+#include "gtest/gtest.h"
 
 DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
 

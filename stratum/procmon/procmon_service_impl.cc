@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/procmon/procmon_service_impl.h"
+#include "stratum/procmon/procmon_service_impl.h"
 
 namespace google {
 namespace hercules {

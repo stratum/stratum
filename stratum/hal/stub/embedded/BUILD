@@ -19,18 +19,18 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_bin",
-    "sc_package",
+    "stratum_cc_binary",
+    "stratum_package",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_bin(
+stratum_cc_binary(
     name = "stratum_stub",
     srcs = ["main.cc"],
     copts = [
@@ -39,17 +39,17 @@ sc_cc_bin(
         "-lrt",
     ],
     deps = [
-        "//base",
-        "//absl/base:core_headers",
-        "//absl/container:flat_hash_map",
-        "//absl/memory",
-        "//absl/numeric:int128",
-        "//absl/synchronization",
-        "//protobuf",
-        "//sandblaze/p4lang:code_proto",
-        "//sandblaze/p4lang:p4runtime_v1_grpc_proto",
-        "//sandblaze/prebuilt/grpc",
-        "//sandblaze/prebuilt/openssl",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_protobuf//:protobuf",
+        "@com_github_p4lang_PI//:code_proto",
+        "@com_github_p4lang_PI//:p4runtime_v1_grpc_proto",
+        "@com_google_grpc//:grpc++",
+        #"//sandblaze/prebuilt/openssl",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/glue/gnmi:gnmi_grpc_proto",
@@ -61,12 +61,12 @@ sc_cc_bin(
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
-sc_package(
+stratum_package(
     name = "stratum_stub_pkg",
     bins = [
         ":stratum_stub",

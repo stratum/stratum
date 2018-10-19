@@ -19,8 +19,8 @@
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_MOCK_H_
 
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "testing/base/public/gmock.h"
-#include "util/gtl/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {

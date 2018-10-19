@@ -28,16 +28,16 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 using ::stratum::test_utils::EqualsProto;
 using ::stratum::test_utils::UnorderedEqualsProto;

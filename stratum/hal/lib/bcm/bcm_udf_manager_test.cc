@@ -1,18 +1,18 @@
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_udf_manager.h"
+#include "stratum/hal/lib/bcm/bcm_udf_manager.h"
 
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_sdk_mock.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_mapper_mock.h"
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "util/endian/endian.h"
-#include "util/gtl/flat_map.h"
-#include "util/gtl/flat_set.h"
+#include "stratum/glue/gtl/flat_map.h"
+#include "stratum/glue/gtl/flat_set.h"
 
 namespace google {
 namespace hercules {

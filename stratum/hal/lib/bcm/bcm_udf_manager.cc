@@ -1,12 +1,12 @@
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_udf_manager.h"
+#include "stratum/hal/lib/bcm/bcm_udf_manager.h"
 
 #include <algorithm>
 #include <utility>
 
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.pb.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/container/flat_hash_map.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace google {
 namespace hercules {

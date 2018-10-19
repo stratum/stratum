@@ -1,4 +1,4 @@
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_global_vars.h"
+#include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "absl/synchronization/mutex.h"
 
 namespace google {

@@ -21,7 +21,7 @@
 #include <string>
 
 #include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
 
 namespace stratum {

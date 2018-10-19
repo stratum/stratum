@@ -23,7 +23,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
-#include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+//#include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "absl/memory/memory.h"
@@ -65,7 +65,7 @@ DatabaseQuery::~DatabaseQuery() {
     // If the result of this query has changed, set the update bit.
     ASSIGN_OR_RETURN(auto polling_result, Get());
     if (last_polling_result_ == nullptr ||
-        !protobuf::util::MessageDifferencer::Equals(*last_polling_result_,
+        !google::protobuf::util::MessageDifferencer::Equals(*last_polling_result_,
                                                     *polling_result)) {
       query_.MarkUpdated();
       last_polling_result_ = std::move(polling_result);

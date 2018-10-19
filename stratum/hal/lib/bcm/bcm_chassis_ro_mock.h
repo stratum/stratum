@@ -1,8 +1,8 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_MOCK_H_
 #define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_MOCK_H_
 
-#include "platforms/networking/hercules/hal/lib/bcm/bcm_chassis_ro_interface.h"
-#include "testing/base/public/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
+#include "gmock/gmock.h"
 
 namespace google {
 namespace hercules {

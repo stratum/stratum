@@ -1,6 +1,6 @@
-#include "platforms/networking/hercules/lib/statemachine/example_state_machine.h"
+#include "stratum/lib/statemachine/example_state_machine.h"
 
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace google {
 namespace hercules {

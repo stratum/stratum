@@ -24,7 +24,7 @@
 #include "stratum/glue/status/status.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "util/gtl/source_location.h"
+#include "stratum/glue/gtl/source_location.h"
 
 namespace stratum {
 namespace hal {

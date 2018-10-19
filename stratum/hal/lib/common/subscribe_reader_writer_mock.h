@@ -1,9 +1,9 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 #define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 
-#include "platforms/networking/hercules/glue/gnmi/gnmi.grpc.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 // A mock class for ServerReaderWriter stream used for gNMI subscriptions. Used
 // to test if the GnmiPublisher correctly transmits data to the controller.

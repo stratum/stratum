@@ -1,21 +1,21 @@
 // This file contains P4ActionMapper unit tests.
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_action_mapper.h"
+#include "stratum/hal/lib/p4/p4_action_mapper.h"
 
 #include <memory>
 #include <string>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager_mock.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.pb.h"
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 using ::testing::AnyNumber;
 using ::testing::HasSubstr;

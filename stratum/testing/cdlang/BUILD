@@ -1,7 +1,7 @@
 load("//golang/antlr4:antlr4.bzl", "go_antlr4_combined")
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = ["//visibility:public"],
 )
 
@@ -10,10 +10,10 @@ go_binary(
     srcs = ["main.go"],
     visibility = ["//visibility:public"],
     deps = [
-        "//base/go:flag",
-        "//base/go:log",
-        "//platforms/networking/hercules/testing/cdlang",
-        "//platforms/networking/hercules/testing/cdlang:cdl",
+        "@com_github_google_glog//:glog/go:flag",
+        "@com_github_google_glog//:glog/go:log",
+        "//stratum/testing/cdlang",
+        "//stratum/testing/cdlang:cdl",
     ],
 )
 
@@ -33,8 +33,8 @@ go_library(
         "visitor.go",
     ],
     deps = [
-        "//base/go:log",
-        "//platforms/networking/hercules/testing/cdlang",
+        "@com_github_google_glog//:glog/go:log",
+        "//stratum/testing/cdlang",
         "//golang/antlr4:antlr",
     ],
 )

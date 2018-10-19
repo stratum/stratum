@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "absl/strings/str_split.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
@@ -170,7 +170,7 @@ class PhalCli {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  ::util::Status status = google::hercules::hal::phal::Main(argc, argv);
+  ::util::Status status = stratum::hal::phal::Main(argc, argv);
   if (status.ok()) {
     return 0;
   } else {

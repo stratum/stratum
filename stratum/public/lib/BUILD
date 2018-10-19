@@ -19,17 +19,17 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
+    "stratum_cc_library",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "error",
     srcs = [
         "error.cc",
@@ -49,7 +49,7 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
     ],
 )
@@ -60,9 +60,9 @@ cc_test(
     deps = [
         ":error",
         ":test_main",
-        "//sandblaze/prebuilt/grpc",
-        "//stratum:code_proto",
-        "//stratum:status_proto",
+        "@com_google_grpc//:grpc++",
+        "@com_github_googleapis//:code_proto",
+        "@com_github_googleapis//:status_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",

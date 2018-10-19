@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "stratum/glue/status/status.h"

@@ -6,18 +6,18 @@
 # proto2 libraries that will compile alongside other google3 proto libraries.
 
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
 genrule(
     name = "proto2_srcs",
-    srcs = ["//platforms/networking/hercules/hal/lib/p4:proto_srcs"],
+    srcs = ["//stratum/hal/lib/p4:proto_srcs"],
     outs = [
         "common_flow_entry.proto",
         "p4_control.proto",
@@ -41,8 +41,8 @@ proto_library(
     srcs = ["p4_control.proto"],
     cc_api_version = 2,
     deps = [
-        "//platforms/networking/hercules/public/proto/proto2:p4_annotation_proto",
-        "//platforms/networking/hercules/public/proto/proto2:p4_table_defs_proto",
+        "//stratum/public/proto/proto2:p4_annotation_proto",
+        "//stratum/public/proto/proto2:p4_table_defs_proto",
     ],
 )
 
@@ -51,8 +51,8 @@ proto_library(
     srcs = ["common_flow_entry.proto"],
     cc_api_version = 2,
     deps = [
-        "//platforms/networking/hercules/public/proto/proto2:p4_annotation_proto",
-        "//platforms/networking/hercules/public/proto/proto2:p4_table_defs_proto",
+        "//stratum/public/proto/proto2:p4_annotation_proto",
+        "//stratum/public/proto/proto2:p4_table_defs_proto",
         "//p4lang_PI/proto/p4/v1:p4runtime_proto",
     ],
 )
@@ -63,8 +63,8 @@ proto_library(
     cc_api_version = 2,
     deps = [
         ":common_flow_entry_proto",
-        "//platforms/networking/hercules/public/proto/proto2:p4_annotation_proto",
-        "//platforms/networking/hercules/public/proto/proto2:p4_table_defs_proto",
+        "//stratum/public/proto/proto2:p4_annotation_proto",
+        "//stratum/public/proto/proto2:p4_table_defs_proto",
         "//p4lang_PI/proto/p4/config/v1:p4info_proto",
     ],
 )
@@ -76,7 +76,7 @@ proto_library(
     deps = [
         ":p4_control_proto",
         ":p4_table_map_proto",
-        "//platforms/networking/hercules/public/proto/proto2:p4_annotation_proto",
+        "//stratum/public/proto/proto2:p4_annotation_proto",
         "//p4lang_PI/proto/p4/v1:p4runtime_proto",
     ],
 )

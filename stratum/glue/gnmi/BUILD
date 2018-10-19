@@ -1,7 +1,7 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
-    "sc_proto_lib",
+    "stratum_cc_proto_library",
 )
 
 package(default_visibility = SANDBLAZE_INTERNAL)
@@ -33,16 +33,16 @@ genrule(
     visibility = ["//visibility:private"],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "gnmi_proto",
     hdrs = ["gnmi.proto"],
-    services = ["grpc"],
+    with_grpc = True,
     deps = [
         ":gnmi_ext_proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "gnmi_ext_proto",
     hdrs = ["gnmi_ext.proto"],
 )

@@ -19,10 +19,10 @@
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/substitute.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

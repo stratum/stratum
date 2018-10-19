@@ -15,7 +15,7 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
@@ -147,5 +147,5 @@ int Main(int argc, char** argv) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  return google::hercules::hal::bcm::Main(argc, argv);
+  return stratum::hal::bcm::Main(argc, argv);
 }

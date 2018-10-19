@@ -19,7 +19,7 @@
 #define STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 
 #include "stratum/hal/lib/common/phal_interface.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {

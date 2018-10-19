@@ -3,7 +3,7 @@ py_binary(
     srcs = [
         "testbed_model_generator.py",
     ],
-    malloc = "//base:system_malloc",  # Can't use TCMalloc: b/77272606.
+    malloc = "@com_github_google_glog//:glog:system_malloc",  # Can't use TCMalloc: b/77272606.
     deps = [
         "//platforms/networking/sandcastle/model:model_lib",
         "//platforms/networking/sandcastle/model/design/jupiter:abstraction_lib",

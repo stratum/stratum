@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/common/error_buffer.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "file/base/path.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"

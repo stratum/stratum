@@ -1,11 +1,11 @@
-#include "platforms/networking/hercules/hal/lib/common/openconfig_converter.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
 
 #include <iostream>
-#include "platforms/networking/hercules/glue/logging.h"
-#include "platforms/networking/hercules/glue/openconfig/proto/old_ywrapper.pb.h"
-#include "platforms/networking/hercules/lib/constants.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/openconfig/proto/old_ywrapper.pb.h"
+#include "stratum/lib/constants.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace google {
 namespace hercules {

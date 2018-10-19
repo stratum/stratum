@@ -17,7 +17,7 @@
 
 #include <set>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/net_util/ipaddress.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -26,9 +26,9 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 // This is the bit width of an assigned constant for any case where the
 // compiler does not report a bit width in the action descriptor.

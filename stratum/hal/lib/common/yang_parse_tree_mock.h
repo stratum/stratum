@@ -18,7 +18,7 @@
 #define THIRD_PARTY_STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_MOCK_H_
 
 #include "stratum/hal/lib/common/yang_parse_tree.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {

@@ -34,7 +34,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
-#include "absl/base/integral_types.h"
+#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gnmi/gnmi.grpc.pb.h"
@@ -42,7 +42,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/proto/hal.pb.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -480,7 +480,7 @@ class CopyOnWriteChassisConfig {
 };
 
 using GnmiSetHandler = std::function<::util::Status(
-    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config)>;
 
 using GnmiDeleteHandler = std::function<::util::Status(

@@ -1,11 +1,11 @@
-#include "platforms/networking/hercules/hal/lib/bcm/pipeline_processor.h"
+#include "stratum/hal/lib/bcm/pipeline_processor.h"
 
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
-#include "platforms/networking/hercules/lib/test_utils/p4_proto_builders.h"
-#include "platforms/networking/hercules/public/lib/error.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/test_utils/p4_proto_builders.h"
+#include "stratum/public/lib/error.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 

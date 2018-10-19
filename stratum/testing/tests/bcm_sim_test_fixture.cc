@@ -1,9 +1,9 @@
-#include "platforms/networking/hercules/testing/tests/bcm_sim_test_fixture.h"
+#include "stratum/testing/tests/bcm_sim_test_fixture.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "devtools/build/runtime/get_runfiles_dir.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/lib/test_utils/matchers.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 

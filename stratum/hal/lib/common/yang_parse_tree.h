@@ -58,7 +58,7 @@ using TreeNodeEventHandler = std::function<::util::Status(
     const GnmiEvent& event, const ::gnmi::Path& path,
     GnmiSubscribeStream* stream)>;
 using TreeNodeSetHandler = std::function<::util::Status(
-    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config)>;
 using TreeNodeDeleteHandler = std::function<::util::Status(
     const ::gnmi::Path& path, CopyOnWriteChassisConfig* config)>;
@@ -232,7 +232,7 @@ class TreeNode {
   // Returns a functor that will execute handlers of this node.
   GnmiSetHandler GetOnUpdateHandler() const {
     return
-        [this](const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+        [this](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
                CopyOnWriteChassisConfig* config) {
           return on_update_handler_(path, val, config);
         };
@@ -241,7 +241,7 @@ class TreeNode {
   // Returns a functor that will execute handlers of this node.
   GnmiSetHandler GetOnReplaceHandler() const {
     return
-        [this](const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+        [this](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
                CopyOnWriteChassisConfig* config) {
           return on_replace_handler_(path, val, config);
         };
@@ -358,14 +358,14 @@ class TreeNode {
         return ::util::OkStatus();
       };
   TreeNodeSetHandler on_update_handler_ = [](const ::gnmi::Path& path,
-                                             const ::google::protobuf::Message&,
+                                             const ::google::google::protobuf::Message&,
                                              CopyOnWriteChassisConfig*) {
     return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
            << "Unsupported mode: UPDATE for: '" << path.ShortDebugString()
            << "'";
   };
   TreeNodeSetHandler on_replace_handler_ =
-      [](const ::gnmi::Path& path, const ::google::protobuf::Message&,
+      [](const ::gnmi::Path& path, const ::google::google::protobuf::Message&,
          CopyOnWriteChassisConfig*) {
         return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
                << "Unsupported mode: REPLACE for: '" << path.ShortDebugString()

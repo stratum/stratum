@@ -1,7 +1,7 @@
 #ifndef PLATFORMS_NETWORKING_HERCULES_LIB_CHANNEL_CHANNEL_INTERNAL_H_
 #define PLATFORMS_NETWORKING_HERCULES_LIB_CHANNEL_CHANNEL_INTERNAL_H_
 
-#include "platforms/networking/hercules/lib/macros.h"
+#include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
 
 namespace google {

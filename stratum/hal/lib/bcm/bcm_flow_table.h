@@ -21,9 +21,9 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/base/integral_types.h"
-#include "absl/container/node_hash_set.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/gtl/node_hash_set.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 

@@ -1,7 +1,7 @@
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
-    "sc_proto_lib",
+    "stratum_cc_proto_library",
 )
 
 package(default_visibility = SANDBLAZE_INTERNAL)
@@ -73,52 +73,52 @@ genrule(
     visibility = ["//visibility:private"],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "cert_proto",
     hdrs = ["cert.proto"],
-    services = ["grpc"],
+    with_grpc = True,
     deps = [
         ":types_proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "diag_proto",
     hdrs = ["diag.proto"],
-    services = ["grpc"],
+    with_grpc = True,
     deps = [
         ":types_proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "file_proto",
     hdrs = ["file.proto"],
-    services = ["grpc"],
+    with_grpc = True,
     deps = [
         ":types_proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "interface_proto",
     hdrs = ["interface.proto"],
-    services = ["grpc"],
+    with_grpc = True,
     deps = [
         ":types_proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "system_proto",
     hdrs = ["system.proto"],
-    services = ["grpc"],
+    with_grpc = True,
     deps = [
         ":types_proto",
     ],
 )
 
-sc_proto_lib(
+stratum_cc_proto_library(
     name = "types_proto",
     hdrs = ["types.proto"],
 )

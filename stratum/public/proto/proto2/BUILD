@@ -5,18 +5,18 @@
 # leads to compile-time name collisions. These build rules generate google3
 # proto2 libraries that will compile alongside other google3 proto libraries.
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "SANDBLAZE_INTERNAL",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
 genrule(
     name = "proto2_srcs",
-    srcs = ["//platforms/networking/hercules/public/proto:proto_srcs"],
+    srcs = ["//stratum/public/proto:proto_srcs"],
     outs = [
         "p4_table_defs.proto",
         "p4_annotation.proto",

@@ -53,17 +53,17 @@ const SystemInterface* SystemReal::GetSingleton()
 }
 
 bool SystemReal::PathExists(const std::string& path) const {
-  return ::google::hercules::PathExists(path);
+  return ::stratum::PathExists(path);
 }
 
 ::util::Status SystemReal::ReadFileToString(const std::string& path,
                                             std::string* buffer) const {
-  return ::google::hercules::ReadFileToString(path, buffer);
+  return ::stratum::ReadFileToString(path, buffer);
 }
 
 ::util::Status SystemReal::WriteStringToFile(const std::string& buffer,
                                              const std::string& path) const {
-  return ::google::hercules::WriteStringToFile(buffer, path);
+  return ::stratum::WriteStringToFile(buffer, path);
 }
 
 ::util::StatusOr<std::unique_ptr<Udev>> SystemReal::MakeUdev() const {

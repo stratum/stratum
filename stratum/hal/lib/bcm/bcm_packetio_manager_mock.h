@@ -19,7 +19,7 @@
 #define STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_MOCK_H_
 
 #include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {
