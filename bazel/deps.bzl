@@ -87,6 +87,29 @@ def stratum_deps():
             branch = "no-bazel",
             build_file = "bazel/external/gnoi.BUILD",
         )
+    if "com_github_AIM" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_AIM",
+            remote =  "https://github.com/floodlight/infra",
+            branch = "master",
+            build_file = "bazel/external/onlp.BUILD",
+        )
+    if "com_github_bigcode" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_bigcode",
+            remote =  "https://github.com/floodlight/bigcode",
+            branch = "master",
+            build_file = "bazel/external/onlp.BUILD",
+        )
+    # for onlv2 headers
+    if "com_github_opennetworklinux" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_opennetworklinux",
+            remote = "https://github.com/opencomputeproject/OpenNetworkLinux",
+            branch = "ONLPv2",
+            build_file = "bazel/external/onlp.BUILD",
+        )
+
 # -----------------------------------------------------------------------------
 #        Third party C++ libraries for common
 # -----------------------------------------------------------------------------

@@ -27,7 +27,6 @@ load(
 )
 
 package(
-    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
@@ -41,6 +40,7 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
+        "@com_github_opennetworklinux//:onlp_headers",
         "//stratum/glue/status",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:macros",
@@ -72,10 +72,6 @@ stratum_cc_library(
     hdrs = [
         "onlp_wrapper.h",
     ],
-    textual_hdrs = [
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlp_hdrs",
-    ],
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -83,8 +79,15 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
+        #"@onlp_libs//:onlp",
+        "@com_github_AIM//:AIM_headers",
+        "@com_github_bigcode//:sff",
+        "@com_github_bigcode//:dom",
+        "@com_github_bigcode//:IOF_headers",
+        "@com_github_bigcode//:BigList_headers",
+        "@com_github_bigcode//:cjson_headers",
+        "@com_github_opennetworklinux//:sfp_onlpv2",
+        "@com_github_opennetworklinux//:onlpv2_headers",
     ],
 )
 
@@ -100,6 +103,7 @@ stratum_cc_library(
         "@com_google_googletest//:gtest",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
+        "@com_github_opennetworklinux//:onlp_headers",
     ],
 )
 
@@ -123,8 +127,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -150,7 +152,5 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )

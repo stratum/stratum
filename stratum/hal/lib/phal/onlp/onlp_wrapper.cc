@@ -12,24 +12,71 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <bitset>
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 extern "C" {
-#include "sandblaze/onlp/include/onlp/oids.h"
-#include "sandblaze/onlp/include/onlp/onlp.h"
-#include "sandblaze/onlp/include/onlp/sfp.h"
+#include "onlp/oids.h"
+#include "onlp/onlp.h"
+#include "onlp/sfp_modified.h"
 }
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/status/status.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+OnlpWrapper::~OnlpWrapper() {
+  LOG(INFO) << "Deinitializing ONLP.";
+//  if (ONLP_FAILURE(onlp_sw_denit())) {
+//    LOG(ERROR) << "Failed to deinitialize ONLP.";
+//  }
+}
+::util::StatusOr<bool> OnlpWrapper:: GetSfpPresent(OnlpOid port) const {
+  return onlp_sfp_is_present(port);
+}
+
+::util::StatusOr<OnlpPresentBitmap> OnlpWrapper:: GetSfpPresenceBitmap() const {
+  OnlpPresentBitmap bitset;
+  SfpBitmap presence;
+  onlp_sfp_bitmap_t_init(&presence);
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
+           << "Failed to get presence bitmap ONLP.";
+  int i=0,k=0,j;
+  while(i<8){
+    for(j=0;j<32;j++) {
+      if( presence.hdr.words[i]&(1<<j))
+        bitset.set(k);
+      else
+        bitset.reset(k);
+
+      k++;
+    }
+    i++;
+  }
+  return bitset; 
+}
+
+::util::StatusOr<OnlpSfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
+      << "Cannot get SFP info: OID " << oid << " is not an SFP.";
+  onlp_sfp_info_t sfp_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
+      << "Failed to get SFP info for OID " << oid << ".";
+  return sfp_info;
+}
+::util::StatusOr<OnlpOidHeader> OnlpWrapper::GetOidInfo(OnlpOid oid) const {
+  onlp_oid_hdr_t oid_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_oid_hdr_get(oid, &oid_info)))
+      << "Failed to get info for OID " << oid << ".";
+  return oid_info;
+}
+#if 0
 ::util::StatusOr<std::unique_ptr<OnlpWrapper>> OnlpWrapper::Make() {
   LOG(INFO) << "Initializing ONLP.";
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sw_init(nullptr)))
@@ -43,23 +90,6 @@ OnlpWrapper::~OnlpWrapper() {
     LOG(ERROR) << "Failed to deinitialize ONLP.";
   }
 }
-
-::util::StatusOr<OidInfo> OnlpWrapper::GetOidInfo(OnlpOid oid) const {
-  onlp_oid_hdr_t oid_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_oid_hdr_get(oid, &oid_info)))
-      << "Failed to get info for OID " << oid << ".";
-  return OidInfo(oid_info);
-}
-
-::util::StatusOr<SfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
-      << "Cannot get SFP info: OID " << oid << " is not an SFP.";
-  onlp_sfp_info_t sfp_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
-      << "Failed to get SFP info for OID " << oid << ".";
-  return SfpInfo(sfp_info);
-}
-
 HwState OidInfo::GetHardwareState() const {
   switch (oid_info_.status) {
     case ONLP_OID_STATUS_FLAG_PRESENT:
@@ -108,7 +138,9 @@ MediaType SfpInfo::GetMediaType() const {
   return &sfp_info_.sff;
 }
 
+#endif
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
+
