@@ -14,10 +14,6 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
-exports_files(["LICENSE"])
-
 load(
     "//stratum/portage:build_defs.bzl",
     "STRATUM_INTERNAL",
@@ -30,6 +26,10 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
+
 sc_cc_lib(
     name = "bits",
     srcs = [
@@ -39,6 +39,7 @@ sc_cc_lib(
         "bits.h",
     ],
     deps = [
+        "//testing/production_stub/public:gunit_prod",
         "//absl/base",
         "//absl/base:core_headers",
         "//absl/numeric:int128",
