@@ -45,6 +45,7 @@ class P4InfoManagerTest : public testing::Test {
   static const int kFirstActionProfileID = 20000;
   static const int kFirstCounterID = 10000000;
   static const int kFirstMeterID = 20000000;
+  static const int kFirstValueSetID = 30000000;
 
   // The default constructor creates p4_test_manager_ with empty p4_test_info_.
   P4InfoManagerTest() : p4_test_manager_(new P4InfoManager(p4_test_info_)) {}
@@ -81,6 +82,7 @@ class P4InfoManagerTest : public testing::Test {
   //      for test use.
   //  SetUpTestP4Counters: populates p4_test_info_ with test counters.
   //  SetUpTestP4Meters: populates p4_test_info_ with test meters.
+  //  SetUpTestP4ValueSets: populates p4_test_info_ with value sets.
   void SetUpAllTestP4Info() {
     FLAGS_skip_p4_min_objects_check = false;  // Minimum object set is present.
     SetUpTestP4Tables();
@@ -88,15 +90,16 @@ class P4InfoManagerTest : public testing::Test {
     SetUpTestP4ActionProfiles();
     SetUpTestP4Counters();
     SetUpTestP4Meters();
+    SetUpTestP4ValueSets();
   }
 
   void SetUpTestP4Tables(bool need_actions = true) {
-    google::protobuf::int32 dummy_action_id = kFirstActionID;
+    ::google::protobuf::int32 dummy_action_id = kFirstActionID;
 
     // Each table entry is assigned an ID and name in the preamble.  Each table
     // optionally gets a set of action IDs.
     for (int t = 1; t <= kNumTestTables; ++t) {
-      p4::config::v1::Table* new_table = p4_test_info_.add_tables();
+      ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
       new_table->mutable_preamble()->set_id(t);
       new_table->mutable_preamble()->set_name(absl::Substitute("Table-$0", t));
       for (int a = 0; need_actions && a < kNumActionsPerTable; ++a) {
@@ -110,10 +113,10 @@ class P4InfoManagerTest : public testing::Test {
   void SetUpTestP4Actions() {
     const int kNumTestActions = kNumTestTables * kNumActionsPerTable;
     const int kNumParamsPerAction = 2;
-    google::protobuf::int32 dummy_param_id = 100000;
+    ::google::protobuf::int32 dummy_param_id = 100000;
 
     for (int a = 0; a < kNumTestActions; ++a) {
-      p4::config::v1::Action* new_action = p4_test_info_.add_actions();
+      ::p4::config::v1::Action* new_action = p4_test_info_.add_actions();
       new_action->mutable_preamble()->set_id(a + kFirstActionID);
       new_action->mutable_preamble()->set_name(
           absl::Substitute("Action-$0", a));
@@ -152,7 +155,16 @@ class P4InfoManagerTest : public testing::Test {
     SetUpNewP4Info();
   }
 
-  //FIXME disabling test due to missing tor_p4_info.pb.txt
+  void SetUpTestP4ValueSets() {
+    // TODO(teverman): Tests get only one basic value set preamble at present.
+    auto new_value_set = p4_test_info_.add_value_sets();
+    new_value_set->mutable_preamble()->set_id(kFirstValueSetID);
+    new_value_set->mutable_preamble()->set_name("Value-Set-1");
+    new_value_set->set_bitwidth(8);
+    SetUpNewP4Info();
+  }
+
+  //FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
   // Populates p4_test_info_ with all resources from the tor.p4 spec.  This
   // data provides assurance that P4InfoManager can handle real P4 compiler
   // output.
@@ -163,7 +175,7 @@ class P4InfoManagerTest : public testing::Test {
 //    SetUpNewP4Info();
 //  }
 
-  p4::config::v1::P4Info p4_test_info_;  // Tests use this to set up their P4Info.
+  ::p4::config::v1::P4Info p4_test_info_;           // Sets up test P4Info.
   std::unique_ptr<P4InfoManager> p4_test_manager_;  // P4InfoManager for tests.
   FlagSaver flag_saver_;  // Reverts FLAGS_skip_p4_min_objects_check to default.
 };
@@ -249,7 +261,7 @@ TEST_F(P4InfoManagerTest, TestInitializeTwice) {
 
 // Tests InitializeAndVerify when the input P4Info has a bad table ID.
 TEST_F(P4InfoManagerTest, TestInitializeBadTableID) {
-  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(0);  // 0 is an invalid ID.
   new_table->mutable_preamble()->set_name("Table-0");
   SetUpNewP4Info();
@@ -263,7 +275,7 @@ TEST_F(P4InfoManagerTest, TestInitializeBadTableID) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined table ID.
 TEST_F(P4InfoManagerTest, TestInitializeNoTableID) {
-  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_name("Table-X");
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -291,7 +303,7 @@ TEST_F(P4InfoManagerTest, TestInitializeDuplicateTableID) {
 
 // Tests InitializeAndVerify when the input P4Info has a bad table name.
 TEST_F(P4InfoManagerTest, TestInitializeBadTableName) {
-  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(1);
   new_table->mutable_preamble()->set_name("");  // Empty string is invalid.
   SetUpNewP4Info();
@@ -305,7 +317,7 @@ TEST_F(P4InfoManagerTest, TestInitializeBadTableName) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined table name.
 TEST_F(P4InfoManagerTest, TestInitializeNoTableName) {
-  p4::config::v1::Table* new_table = p4_test_info_.add_tables();
+  ::p4::config::v1::Table* new_table = p4_test_info_.add_tables();
   new_table->mutable_preamble()->set_id(1);
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -337,7 +349,7 @@ TEST_F(P4InfoManagerTest, TestInitializeDuplicateTableName) {
 
 // Tests InitializeAndVerify when the input P4Info has an undefined action ID.
 TEST_F(P4InfoManagerTest, TestInitializeNoActionID) {
-  p4::config::v1::Action* new_action = p4_test_info_.add_actions();
+  ::p4::config::v1::Action* new_action = p4_test_info_.add_actions();
   new_action->mutable_preamble()->set_name("Action-X");
   SetUpNewP4Info();
   ::util::Status status = p4_test_manager_->InitializeAndVerify();
@@ -600,95 +612,136 @@ TEST_F(P4InfoManagerTest, TestFindMeterUnknownName) {
   EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
 }
 
+// All valid value sets in p4_test_info_ should have successful name/ID
+// lookups, and the returned data should match the value set's original
+// p4_test_info_ entry.
+TEST_F(P4InfoManagerTest, TestFindValueSet) {
+  SetUpTestP4ValueSets();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  for (const auto& value_set : p4_test_info_.value_sets()) {
+    auto id_status = p4_test_manager_->FindValueSetByID(
+        value_set.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(value_set, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindValueSetByName(value_set.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(value_set, name_status.ValueOrDie()));
+  }
+}
+
+// Verifies lookup failure with an unknown value set ID.
+TEST_F(P4InfoManagerTest, TestFindValueSetUnknownID) {
+  SetUpTestP4ValueSets();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindValueSetByID(0xfedcba);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
+// Verifies lookup failure with an unknown unknown meter name.
+TEST_F(P4InfoManagerTest, TestFindValueSetUnknownName) {
+  SetUpTestP4ValueSets();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status = p4_test_manager_->FindValueSetByName("unknown-value-set");
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.status().error_code());
+  EXPECT_FALSE(status.status().error_message().empty());
+  EXPECT_THAT(status.status().error_message(), HasSubstr("not found"));
+}
+
 TEST_F(P4InfoManagerTest, TestDumpNamesToIDs) {
   SetUpAllTestP4Info();
   ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
   p4_test_manager_->DumpNamesToIDs();
 }
 
-//FIXME disabling test due to missing tor_p4_info.pb.txt
+//FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
+/*
 // Tests ability to handle a "real" P4 spec (tor.p4).
-//TEST_F(P4InfoManagerTest, TestTorP4Info) {
-//  SetUpTorP4Info();
-//  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
-//
-//  // This loop verifies that p4_test_manager_ finds all expected P4 tables.
-//  for (const auto& table : p4_test_info_.tables()) {
-//    auto id_status = p4_test_manager_->FindTableByID(table.preamble().id());
-//    EXPECT_TRUE(id_status.ok());
-//    EXPECT_TRUE(ProtoEqual(table, id_status.ValueOrDie()));
-//    auto name_status =
-//        p4_test_manager_->FindTableByName(table.preamble().name());
-//    EXPECT_TRUE(name_status.ok());
-//    EXPECT_TRUE(ProtoEqual(table, name_status.ValueOrDie()));
-//  }
-//
-//  // This loop verifies that p4_test_manager_ finds all expected P4 actions.
-//  for (const auto& action : p4_test_info_.actions()) {
-//    auto id_status = p4_test_manager_->FindActionByID(action.preamble().id());
-//    EXPECT_TRUE(id_status.ok());
-//    EXPECT_TRUE(ProtoEqual(action, id_status.ValueOrDie()));
-//    auto name_status =
-//        p4_test_manager_->FindActionByName(action.preamble().name());
-//    EXPECT_TRUE(name_status.ok());
-//    EXPECT_TRUE(ProtoEqual(action, name_status.ValueOrDie()));
-//  }
-//
-//  // This loop verifies that p4_test_manager_ finds all expected P4 action
-//  // profiles.
-//  for (const auto& profile : p4_test_info_.action_profiles()) {
-//    auto id_status =
-//        p4_test_manager_->FindActionProfileByID(profile.preamble().id());
-//    EXPECT_TRUE(id_status.ok());
-//    EXPECT_TRUE(ProtoEqual(profile, id_status.ValueOrDie()));
-//    auto name_status =
-//        p4_test_manager_->FindActionProfileByName(profile.preamble().name());
-//    EXPECT_TRUE(name_status.ok());
-//    EXPECT_TRUE(ProtoEqual(profile, name_status.ValueOrDie()));
-//  }
-//
-//  // This loop verifies that p4_test_manager_ finds all expected P4 counters.
-//  for (const auto& counter : p4_test_info_.counters()) {
-//    auto id_status = p4_test_manager_->FindCounterByID(counter.preamble().id());
-//    EXPECT_TRUE(id_status.ok());
-//    EXPECT_TRUE(ProtoEqual(counter, id_status.ValueOrDie()));
-//    auto name_status =
-//        p4_test_manager_->FindCounterByName(counter.preamble().name());
-//    EXPECT_TRUE(name_status.ok());
-//    EXPECT_TRUE(ProtoEqual(counter, name_status.ValueOrDie()));
-//  }
-//
-//  // This loop verifies that p4_test_manager_ finds all expected P4 meters.
-//  for (const auto& meter : p4_test_info_.meters()) {
-//    auto id_status = p4_test_manager_->FindMeterByID(meter.preamble().id());
-//    EXPECT_TRUE(id_status.ok());
-//    EXPECT_TRUE(ProtoEqual(meter, id_status.ValueOrDie()));
-//    auto name_status =
-//        p4_test_manager_->FindMeterByName(meter.preamble().name());
-//    EXPECT_TRUE(name_status.ok());
-//    EXPECT_TRUE(ProtoEqual(meter, name_status.ValueOrDie()));
-//  }
-//}
+TEST_F(P4InfoManagerTest, TestTorP4Info) {
+  SetUpTorP4Info();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
 
-//FIXME disabling test due to missing tor_p4_info.pb.txt
+  // This loop verifies that p4_test_manager_ finds all expected P4 tables.
+  for (const auto& table : p4_test_info_.tables()) {
+    auto id_status = p4_test_manager_->FindTableByID(table.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(table, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindTableByName(table.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(table, name_status.ValueOrDie()));
+  }
+
+  // This loop verifies that p4_test_manager_ finds all expected P4 actions.
+  for (const auto& action : p4_test_info_.actions()) {
+    auto id_status = p4_test_manager_->FindActionByID(action.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(action, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindActionByName(action.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(action, name_status.ValueOrDie()));
+  }
+
+  // This loop verifies that p4_test_manager_ finds all expected P4 action
+  // profiles.
+  for (const auto& profile : p4_test_info_.action_profiles()) {
+    auto id_status =
+        p4_test_manager_->FindActionProfileByID(profile.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(profile, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindActionProfileByName(profile.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(profile, name_status.ValueOrDie()));
+  }
+
+  // This loop verifies that p4_test_manager_ finds all expected P4 counters.
+  for (const auto& counter : p4_test_info_.counters()) {
+    auto id_status = p4_test_manager_->FindCounterByID(counter.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(counter, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindCounterByName(counter.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(counter, name_status.ValueOrDie()));
+  }
+
+  // This loop verifies that p4_test_manager_ finds all expected P4 meters.
+  for (const auto& meter : p4_test_info_.meters()) {
+    auto id_status = p4_test_manager_->FindMeterByID(meter.preamble().id());
+    EXPECT_TRUE(id_status.ok());
+    EXPECT_TRUE(ProtoEqual(meter, id_status.ValueOrDie()));
+    auto name_status =
+        p4_test_manager_->FindMeterByName(meter.preamble().name());
+    EXPECT_TRUE(name_status.ok());
+    EXPECT_TRUE(ProtoEqual(meter, name_status.ValueOrDie()));
+  }
+}
+
 // Tests ID duplication across resource types.
-//TEST_F(P4InfoManagerTest, TestDuplicateIDTableAndAction) {
-//  SetUpTorP4Info();
-//  ASSERT_LE(1, p4_test_info_.tables_size());
-//  ASSERT_LE(1, p4_test_info_.actions_size());
-//  auto dup_preamble1 = p4_test_info_.add_actions()->mutable_preamble();
-//  auto dup_preamble2 = p4_test_info_.add_tables()->mutable_preamble();
-//  dup_preamble1->set_id(0xabcdef);
-//  dup_preamble1->set_name("action-with-duplicate-ID");
-//  dup_preamble2->set_id(dup_preamble1->id());
-//  dup_preamble2->set_name("table-with-duplicate-ID");
-//  SetUpNewP4Info();
-//  ::util::Status status = p4_test_manager_->InitializeAndVerify();
-//  EXPECT_FALSE(status.ok());
-//  EXPECT_EQ(ERR_INVALID_P4_INFO, status.error_code());
-//  EXPECT_FALSE(status.error_message().empty());
-//  EXPECT_THAT(status.error_message(), HasSubstr("not unique"));
-//}
+TEST_F(P4InfoManagerTest, TestDuplicateIDTableAndAction) {
+  SetUpTorP4Info();
+  ASSERT_LE(1, p4_test_info_.tables_size());
+  ASSERT_LE(1, p4_test_info_.actions_size());
+  auto dup_preamble1 = p4_test_info_.add_actions()->mutable_preamble();
+  auto dup_preamble2 = p4_test_info_.add_tables()->mutable_preamble();
+  dup_preamble1->set_id(0xabcdef);
+  dup_preamble1->set_name("action-with-duplicate-ID");
+  dup_preamble2->set_id(dup_preamble1->id());
+  dup_preamble2->set_name("table-with-duplicate-ID");
+  SetUpNewP4Info();
+  ::util::Status status = p4_test_manager_->InitializeAndVerify();
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_P4_INFO, status.error_code());
+  EXPECT_FALSE(status.error_message().empty());
+  EXPECT_THAT(status.error_message(), HasSubstr("not unique"));
+}
+ */
 
 #if 0
 // TODO: Rework this test for 2 objects with global IDs.
@@ -729,16 +782,18 @@ TEST_F(P4InfoManagerTest, TestTableMissingActionXref) {
   EXPECT_THAT(status.error_message(), HasSubstr("refers to an invalid"));
 }
 
-//FIXME disabling test due to missing tor_p4_info.pb.txt
+//FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
 // Tests GetSwitchStackAnnotations with a pipeline_stage.
-//TEST_F(P4InfoManagerTest, TestPipelineStageAnnotations) {
-//  SetUpTorP4Info();
-//  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
-//  auto status =
-//      p4_test_manager_->GetSwitchStackAnnotations("class_id_assignment_table");
-//  EXPECT_TRUE(status.ok());
-//  EXPECT_EQ(P4Annotation::VLAN_ACL, status.ValueOrDie().pipeline_stage());
-//}
+/*
+TEST_F(P4InfoManagerTest, TestPipelineStageAnnotations) {
+  SetUpTorP4Info();
+  ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
+  auto status =
+      p4_test_manager_->GetSwitchStackAnnotations("class_id_assignment_table");
+  EXPECT_TRUE(status.ok());
+  EXPECT_EQ(P4Annotation::VLAN_ACL, status.ValueOrDie().pipeline_stage());
+}
+ */
 
 // Tests GetSwitchStackAnnotations with multiple annotations.
 TEST_F(P4InfoManagerTest, TestGetAnnotationsMultiple) {

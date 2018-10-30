@@ -16,9 +16,10 @@
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
 
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -48,37 +49,36 @@ MATCHER_P(DerivedFromStatus, status, "") {
 class BcmL2ManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    bcm_chassis_manager_mock_ = absl::make_unique<BcmChassisManagerMock>();
+    bcm_chassis_ro_mock_ = absl::make_unique<BcmChassisRoMock>();
     bcm_sdk_mock_ = absl::make_unique<BcmSdkMock>();
-    bcm_l2_manager_ = BcmL2Manager::CreateInstance(
-        bcm_chassis_manager_mock_.get(), bcm_sdk_mock_.get(), kUnit);
+    bcm_l2_manager_ = BcmL2Manager::CreateInstance(bcm_chassis_ro_mock_.get(),
+                                                   bcm_sdk_mock_.get(), kUnit);
   }
 
-  void VerifyPromotedMyStationEntry(int vlan, int station_id, bool must_exist) {
-    std::tuple<int, uint64, int> tuple =
-        std::make_tuple(vlan, 0, BcmL2Manager::kPromotedMyStationEntryPriority);
-    auto it = bcm_l2_manager_->vlan_dst_mac_priority_to_station_id_.find(tuple);
+  void VerifyL3PromoteMyStationEntry(int station_id, bool must_exist) {
+    BcmL2Manager::MyStationEntry entry(
+        BcmL2Manager::kL3PromoteMyStationEntryPriority, kDefaultVlan, 0xfff,
+        0ULL, kNonMulticastDstMacMask);
+    auto it = bcm_l2_manager_->my_station_entry_to_station_id_.find(entry);
     if (!must_exist) {
-      EXPECT_EQ(bcm_l2_manager_->vlan_dst_mac_priority_to_station_id_.end(),
-                it);
+      EXPECT_EQ(bcm_l2_manager_->my_station_entry_to_station_id_.end(), it);
     } else {
-      ASSERT_NE(bcm_l2_manager_->vlan_dst_mac_priority_to_station_id_.end(),
-                it);
+      ASSERT_NE(bcm_l2_manager_->my_station_entry_to_station_id_.end(), it);
       EXPECT_EQ(station_id, it->second);
     }
   }
 
-  void VerifyRegularMyStationEntry(int vlan, uint64 dst_mac, int station_id,
+  void VerifyRegularMyStationEntry(int vlan, int vlan_mask, uint64 dst_mac,
+                                   uint64 dst_mac_mask, int station_id,
                                    bool must_exist) {
-    std::tuple<int, uint64, int> tuple = std::make_tuple(
-        vlan, dst_mac, BcmL2Manager::kRegularMyStationEntryPriority);
-    auto it = bcm_l2_manager_->vlan_dst_mac_priority_to_station_id_.find(tuple);
+    BcmL2Manager::MyStationEntry entry(
+        BcmL2Manager::kRegularMyStationEntryPriority, vlan, vlan_mask, dst_mac,
+        dst_mac_mask);
+    auto it = bcm_l2_manager_->my_station_entry_to_station_id_.find(entry);
     if (!must_exist) {
-      EXPECT_EQ(bcm_l2_manager_->vlan_dst_mac_priority_to_station_id_.end(),
-                it);
+      EXPECT_EQ(bcm_l2_manager_->my_station_entry_to_station_id_.end(), it);
     } else {
-      ASSERT_NE(bcm_l2_manager_->vlan_dst_mac_priority_to_station_id_.end(),
-                it);
+      ASSERT_NE(bcm_l2_manager_->my_station_entry_to_station_id_.end(), it);
       EXPECT_EQ(station_id, it->second);
     }
   }
@@ -91,12 +91,39 @@ class BcmL2ManagerTest : public ::testing::Test {
     return bcm_l2_manager_->l2_learning_disabled_for_default_vlan_;
   }
 
+  bool MyStationEntryEqual(int priority1, int vlan1, int vlan_mask1,
+                           uint64 dst_mac1, uint64 dst_mac_mask1, int priority2,
+                           int vlan2, int vlan_mask2, uint64 dst_mac2,
+                           uint64 dst_mac_mask2) {
+    BcmL2Manager::MyStationEntry entry1(priority1, vlan1, vlan_mask1, dst_mac1,
+                                        dst_mac_mask1);
+    BcmL2Manager::MyStationEntry entry2(priority2, vlan2, vlan_mask2, dst_mac2,
+                                        dst_mac_mask2);
+    return entry1 == entry2;
+  }
+
+  bool MyStationEntryLess(int priority1, int vlan1, int vlan_mask1,
+                          uint64 dst_mac1, uint64 dst_mac_mask1, int priority2,
+                          int vlan2, int vlan_mask2, uint64 dst_mac2,
+                          uint64 dst_mac_mask2) {
+    BcmL2Manager::MyStationEntry entry1(priority1, vlan1, vlan_mask1, dst_mac1,
+                                        dst_mac_mask1);
+    BcmL2Manager::MyStationEntry entry2(priority2, vlan2, vlan_mask2, dst_mac2,
+                                        dst_mac_mask2);
+    return entry1 < entry2;
+  }
+
   static constexpr uint64 kNodeId = 123123123;
   static constexpr int kUnit = 0;
   static constexpr int kStationId = 10;
   static constexpr uint64 kDstMac = 0x123456789012;
+  static constexpr uint64 kDstMacMask = 0xfffffffffffa;
+  static constexpr int kRegularMyStationEntryPriority =
+      BcmL2Manager::kRegularMyStationEntryPriority;
+  static constexpr int kL3PromoteMyStationEntryPriority =
+      BcmL2Manager::kL3PromoteMyStationEntryPriority;
 
-  std::unique_ptr<BcmChassisManagerMock> bcm_chassis_manager_mock_;
+  std::unique_ptr<BcmChassisRoMock> bcm_chassis_ro_mock_;
   std::unique_ptr<BcmSdkMock> bcm_sdk_mock_;
   std::unique_ptr<BcmL2Manager> bcm_l2_manager_;
 };
@@ -105,6 +132,22 @@ constexpr uint64 BcmL2ManagerTest::kNodeId;
 constexpr int BcmL2ManagerTest::kUnit;
 constexpr int BcmL2ManagerTest::kStationId;
 constexpr uint64 BcmL2ManagerTest::kDstMac;
+constexpr uint64 BcmL2ManagerTest::kDstMacMask;
+constexpr int BcmL2ManagerTest::kRegularMyStationEntryPriority;
+constexpr int BcmL2ManagerTest::kL3PromoteMyStationEntryPriority;
+
+TEST_F(BcmL2ManagerTest, MyStationEntryEqualLess) {
+  EXPECT_TRUE(MyStationEntryEqual(1, 0, 0, kDstMac, kDstMacMask, 1, 0, 0,
+                                  kDstMac, kDstMacMask));
+  EXPECT_TRUE(MyStationEntryLess(1, 0, 0, kDstMac, kDstMacMask, 10, 0, 0,
+                                 kDstMac, kDstMacMask));
+  EXPECT_FALSE(MyStationEntryEqual(1, 0, 0, kDstMac, kDstMacMask, 10, 0, 0,
+                                   kDstMac, kDstMacMask));
+  EXPECT_TRUE(MyStationEntryLess(1, 0, 0, kDstMac, kDstMacMask, 1, 0, 0,
+                                 kDstMac, kDstMacMask + 1));
+  EXPECT_FALSE(MyStationEntryEqual(1, 0, 0, kDstMac, kDstMacMask, 1, 0, 0,
+                                   kDstMac, kDstMacMask + 1));
+}
 
 TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNoNodeConfigParams) {
   // Setup a test empty config with no node config param.
@@ -112,7 +155,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNoNodeConfigParams) {
   config.add_nodes()->set_id(kNodeId);
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 }
 
@@ -124,7 +167,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForEmptyNodeConfigParams) {
   node->mutable_config_params();
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 }
 
@@ -145,7 +188,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForEmptyVlanConfig) {
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureL2Learning(kUnit, kDefaultVlan, false))
       .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlan(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlanIfFound(kUnit, kArpVlan))
       .Times(2)
       .WillRepeatedly(Return(::util::OkStatus()));
 
@@ -153,7 +196,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForEmptyVlanConfig) {
   // not.
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 }
 
@@ -169,9 +212,11 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
   // 2- We push another config that then disables L2 on node1. This will add
   //    a my station entry
   // 3- We push the config one more time and add l2_age_duration_sec for the
-  //    vlan config.
+  //    vlan config. This should not add my station entry.
   // 4- We push the config one more time and enable L2. This time we remove the
   //    my station entry as well.
+  // 5- We push the same config one more time and this time make sure we do not
+  //    try to remove the my station entry again.
 
   // 1st config push
   EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
@@ -181,11 +226,11 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureL2Learning(kUnit, kDefaultVlan, false))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlan(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlanIfFound(kUnit, kArpVlan))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // 2nd config push
@@ -204,7 +249,10 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddMyStationEntry(kUnit, kDefaultVlan, 0ULL, _))
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
+                        0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
   EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
       .WillOnce(Return(::util::OkStatus()));
@@ -215,7 +263,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_TRUE(l2_learning_disabled_for_default_vlan());
 
   // 3rd config push
@@ -242,7 +290,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_TRUE(l2_learning_disabled_for_default_vlan());
 
   // 4th config push
@@ -259,11 +307,26 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigSuccessForNonEmptyVlanConfig) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteMyStationEntry(kUnit, kStationId))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlan(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlanIfFound(kUnit, kArpVlan))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
+  EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
+
+  // 5th config push
+  EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kDefaultVlan))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, ConfigureVlanBlock(kUnit, kDefaultVlan, false,
+                                                 false, false, false))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, ConfigureL2Learning(kUnit, kDefaultVlan, false))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlanIfFound(kUnit, kArpVlan))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 }
 
@@ -279,7 +342,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is enabled -- scenario 2
@@ -291,7 +354,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is enabled -- scenario 3
@@ -305,7 +368,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is enabled -- scenario 4
@@ -316,12 +379,12 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureL2Learning(kUnit, kDefaultVlan, false))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlan(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlanIfFound(kUnit, kArpVlan))
       .WillOnce(Return(DefaultError()));
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 1
@@ -338,7 +401,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 2
@@ -350,7 +413,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 3
@@ -364,7 +427,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 4
@@ -380,7 +443,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 5
@@ -393,12 +456,15 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddMyStationEntry(kUnit, kDefaultVlan, 0ULL, _))
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
+                        0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(DefaultError()));
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 6
@@ -411,14 +477,17 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddMyStationEntry(kUnit, kDefaultVlan, 0ULL, _))
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
+                        0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
   EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
       .WillOnce(Return(DefaultError()));
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 7
@@ -440,7 +509,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 8
@@ -463,7 +532,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_FALSE(l2_learning_disabled_for_default_vlan());
 
   // Failue when L2 is disabled -- scenario 9
@@ -488,7 +557,7 @@ TEST_F(BcmL2ManagerTest, PushChassisConfigFailure) {
 
   EXPECT_THAT(bcm_l2_manager_->PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_TRUE(l2_learning_disabled_for_default_vlan());
 }
 
@@ -512,7 +581,10 @@ TEST_F(BcmL2ManagerTest, VerifyChassisConfigSuccess) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddMyStationEntry(kUnit, kDefaultVlan, 0ULL, _))
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
+                        0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
   EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
       .WillOnce(Return(::util::OkStatus()));
@@ -546,7 +618,7 @@ TEST_F(BcmL2ManagerTest, VerifyChassisConfigFailure) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, ConfigureL2Learning(kUnit, kDefaultVlan, false))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlan(kUnit, kArpVlan))
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteVlanIfFound(kUnit, kArpVlan))
       .WillOnce(Return(::util::OkStatus()));
 
   // Do a config push to setup environment.
@@ -586,7 +658,7 @@ TEST_F(BcmL2ManagerTest, VerifyChassisConfigFailure) {
 TEST_F(BcmL2ManagerTest, Shutdown) {
   // Shutdown before config push.
   EXPECT_OK(bcm_l2_manager_->Shutdown());
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, false);
+  VerifyL3PromoteMyStationEntry(kStationId, false);
 
   // Shutdown after config push.
   ChassisConfig config;
@@ -608,7 +680,10 @@ TEST_F(BcmL2ManagerTest, Shutdown) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DeleteL2EntriesByVlan(kUnit, kDefaultVlan))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, AddMyStationEntry(kUnit, kDefaultVlan, 0ULL, _))
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      AddMyStationEntry(kUnit, kL3PromoteMyStationEntryPriority, kDefaultVlan,
+                        0xfff, 0ULL, kNonMulticastDstMacMask))
       .WillOnce(Return(kStationId));
   EXPECT_CALL(*bcm_sdk_mock_, AddVlanIfNotFound(kUnit, kArpVlan))
       .WillOnce(Return(::util::OkStatus()));
@@ -619,14 +694,15 @@ TEST_F(BcmL2ManagerTest, Shutdown) {
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(bcm_l2_manager_->PushChassisConfig(config, kNodeId));
-  VerifyPromotedMyStationEntry(kDefaultVlan, kStationId, true);
+  VerifyL3PromoteMyStationEntry(kStationId, true);
   EXPECT_OK(bcm_l2_manager_->Shutdown());
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
 }
 
-TEST_F(BcmL2ManagerTest, InsertThenDeleteMyStationEntrySuccess) {
+TEST_F(BcmL2ManagerTest, InsertAndDeleteMyStationEntrySuccess) {
   BcmFlowEntry bcm_flow_entry;
 
+  // An entry which only has dst_mac (no dst_mac_mask, no vlan, no vlan_mask).
   bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
   bcm_flow_entry.set_unit(kUnit);
   {
@@ -636,39 +712,219 @@ TEST_F(BcmL2ManagerTest, InsertThenDeleteMyStationEntrySuccess) {
   }
 
   // First add the entry.
-  EXPECT_CALL(*bcm_sdk_mock_, AddMyStationEntry(kUnit, 0, kDstMac, _))
+  EXPECT_CALL(*bcm_sdk_mock_,
+              AddMyStationEntry(kUnit, kRegularMyStationEntryPriority, 0, 0,
+                                kDstMac, 0xffffffffffff))
       .WillOnce(Return(kStationId));
 
   EXPECT_OK(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
-  VerifyPromotedMyStationEntry(0, 0, false);
-  VerifyRegularMyStationEntry(0, kDstMac, kStationId, true);
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, kStationId, true);
 
   // Then remove the same entry.
   EXPECT_CALL(*bcm_sdk_mock_, DeleteMyStationEntry(kUnit, kStationId))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(bcm_l2_manager_->DeleteMyStationEntry(bcm_flow_entry));
-  VerifyPromotedMyStationEntry(kDefaultVlan, 0, false);
-  VerifyRegularMyStationEntry(kDefaultVlan, kDstMac, 0, false);
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, -1, false);
 
-  // Now add a new entry for a different VLAN.
+  // Now add a new entry for a specific dst_mac and a specific VLAN.
+  bcm_flow_entry.clear_fields();
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+  }
   {
     auto* field = bcm_flow_entry.add_fields();
     field->set_type(BcmField::VLAN_VID);
     field->mutable_value()->set_u32(kDefaultVlan + 1);  // != kDefaultVlan
+    field->mutable_mask()->set_u32(0xffa);
   }
 
-  EXPECT_CALL(*bcm_sdk_mock_,
-              AddMyStationEntry(kUnit, kDefaultVlan + 1, kDstMac, _))
+  EXPECT_CALL(
+      *bcm_sdk_mock_,
+      AddMyStationEntry(kUnit, kRegularMyStationEntryPriority, kDefaultVlan + 1,
+                        0xffa, kDstMac, 0xffffffffffff))
       .WillOnce(Return(kStationId + 1));
 
   EXPECT_OK(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
-  VerifyPromotedMyStationEntry(kDefaultVlan + 1, 0, false);
-  VerifyRegularMyStationEntry(kDefaultVlan + 1, kDstMac, kStationId + 1, true);
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(kDefaultVlan + 1, 0xffa, kDstMac, 0xffffffffffff,
+                              kStationId + 1, true);
+
+  // Program the entry again. This should not fail not it should try to add the
+  // entry to hadrware.
+  EXPECT_OK(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
+  VerifyRegularMyStationEntry(kDefaultVlan + 1, 0xffa, kDstMac, 0xffffffffffff,
+                              kStationId + 1, true);
+
+  // Now add another entry for a specific dst_mac and dst_mac_mask (no vlan,
+  // no vlan_mask).
+  bcm_flow_entry.clear_fields();
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+    field->mutable_mask()->set_u64(kDstMacMask);
+  }
+
+  EXPECT_CALL(*bcm_sdk_mock_,
+              AddMyStationEntry(kUnit, kRegularMyStationEntryPriority, 0, 0,
+                                kDstMac, kDstMacMask))
+      .WillOnce(Return(kStationId + 2));
+
+  EXPECT_OK(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, kDstMacMask, kStationId + 2, true);
+
+  // Then remove the same entry.
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteMyStationEntry(kUnit, kStationId + 2))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_OK(bcm_l2_manager_->DeleteMyStationEntry(bcm_flow_entry));
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, kDstMacMask, -1, false);
+
+  // Trying to remove the entry again. This should be OK and should not try
+  // to remove the entry again.
+  EXPECT_OK(bcm_l2_manager_->DeleteMyStationEntry(bcm_flow_entry));
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, kDstMacMask, -1, false);
 }
 
-TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailure) {
-  // TODO: Add this.
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureWhenAddFailsOnHw) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+  }
+
+  EXPECT_CALL(*bcm_sdk_mock_,
+              AddMyStationEntry(kUnit, kRegularMyStationEntryPriority, 0, 0,
+                                kDstMac, 0xffffffffffff))
+      .WillOnce(Return(DefaultError()));
+
+  EXPECT_THAT(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry),
+              DerivedFromStatus(DefaultError()));
+
+  VerifyL3PromoteMyStationEntry(-1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, -1, false);
+}
+
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureForInvalidTableId) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
+  ::util::Status status = bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("Invalid table_id"));
+}
+
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureForInvalidUnit) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit + 1);
+  ::util::Status status = bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("BcmFlowEntry for wrong unit"));
+}
+
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureForInvalidAction) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit);
+  bcm_flow_entry.add_actions();
+  ::util::Status status = bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(), HasSubstr("entry with action"));
+}
+
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureForInvalidDstMac) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kBroadcastMac);
+  }
+
+  ::util::Status status = bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("with ETH_DST set to broadcast MAC"));
+}
+
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureForUnknownField) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_SRC);
+    field->mutable_value()->set_u64(kDstMac);
+  }
+
+  ::util::Status status = bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("fields othere than ETH_DST and VLAN_VID"));
+}
+
+TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureForInvalidVlanMask) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+  }
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::VLAN_VID);
+    field->mutable_value()->set_u32(kDefaultVlan);
+  }
+
+  ::util::Status status = bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr("vlan > 0 while vlan_mask is either not given or is 0"));
+}
+
+TEST_F(BcmL2ManagerTest, DeleteMyStationEntryFailureWhenDeleteFailsOnHw) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_MY_STATION);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+  }
+
+  EXPECT_CALL(*bcm_sdk_mock_,
+              AddMyStationEntry(kUnit, kRegularMyStationEntryPriority, 0, 0,
+                                kDstMac, 0xffffffffffff))
+      .WillOnce(Return(kStationId));
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteMyStationEntry(kUnit, kStationId))
+      .WillOnce(Return(DefaultError()));
+
+  EXPECT_OK(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
+  EXPECT_THAT(bcm_l2_manager_->DeleteMyStationEntry(bcm_flow_entry),
+              DerivedFromStatus(DefaultError()));
+
+  VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, kStationId, true);
 }
 
 TEST_F(BcmL2ManagerTest, InsertThenDeleteMulticastGroupSuccess) {

@@ -18,13 +18,13 @@
 #ifndef STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_flow_table.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
-#include "stratum/glue/gtl/flat_hash_set.h"
 
 namespace stratum {
 namespace hal {
@@ -100,7 +100,7 @@ class AclTable : public BcmFlowTable {
   int Priority() const { return priority_; }
   int Size() const { return max_entries_; }
   uint32 PhysicalTableId() const { return physical_table_id_; }
-  const stratum::gtl::flat_hash_set<uint32>& MatchFields() const {
+  const absl::flat_hash_set<uint32>& MatchFields() const {
     return match_fields_;
   }
   bool HasField(uint32 field) const { return match_fields_.count(field); }
@@ -169,7 +169,7 @@ class AclTable : public BcmFlowTable {
   // The ACL stage for this table.
   BcmAclStage stage_;
   // Available qualifers for this table stored as match field IDs.
-  stratum::gtl::flat_hash_set<uint32> match_fields_;
+  absl::flat_hash_set<uint32> match_fields_;
   // The BCM id this table belongs to.
   uint32 physical_table_id_;
   // The maximum number of entries that can be programmed into the logical table
@@ -183,9 +183,9 @@ class AclTable : public BcmFlowTable {
   int udf_set_id_;
   // The set of match field IDs in this table that use UDFs. This is a subset of
   // match_fields_.
-  stratum::gtl::flat_hash_set<uint32> udf_match_fields_;
+  absl::flat_hash_set<uint32> udf_match_fields_;
   // Mapping from entries to their respective Bcm ACL IDs.
-  stratum::gtl::flat_hash_map<::p4::v1::TableEntry, uint32, TableEntryHash, TableEntryEqual>
+  absl::flat_hash_map<::p4::TableEntry, uint32, TableEntryHash, TableEntryEqual>
       bcm_acl_id_map_;
 };
 

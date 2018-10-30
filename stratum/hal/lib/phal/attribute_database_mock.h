@@ -20,6 +20,7 @@
 
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -28,8 +29,7 @@ namespace phal {
 class AttributeDatabaseMock : public AttributeDatabaseInterface {
  public:
   MOCK_METHOD1(
-      Set,
-      ::util::Status(const std::vector<std::tuple<Path, Attribute>>& values));
+      Set, ::util::Status(const AttributeValueMap& values));
   MOCK_METHOD1(MakeQuery, ::util::StatusOr<std::unique_ptr<Query>>(
                               const std::vector<Path>& query_paths));
 };

@@ -18,41 +18,30 @@
 #define STRATUM_LIB_UTILS_H_
 
 #include <grpcpp/grpcpp.h>
+#include <libgen.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <chrono>  // NOLINT
 #include <functional>
-#include <sstream>  // IWYU pragma: keep
+#include <ostream>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
-#include "google/rpc/code.pb.h"
+#include "google/protobuf/io/coded_stream.h"
+#include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/message.h"
-#include "stratum/glue/integral_types.h"
+#include "google/protobuf/util/message_differencer.h"
+#include "google/rpc/code.pb.h"
+#include "google/rpc/status.pb.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/google/rpc/code.pb.h"
 
 namespace stratum {
-
-// Port of boost::hash_combine for internal use (Hercules does not need boost).
-template <typename T>
-inline void HashCombine(size_t* seed, const T& v) {
-  std::hash<T> hasher;
-  *seed ^= hasher(v) + 0x9e3779b9 + (*seed << 6) + (*seed >> 2);
-}
-
-// Custom hash function for enums that can be converted to size_t.
-template <typename T>
-struct EnumHash {
-  size_t operator()(const T& x) const { return static_cast<size_t>(x); }
-};
-
-// Custom hash for a std::pair of two types with predifed hash.
-template <typename T, typename U>
-struct PairHash {
-  size_t operator()(const std::pair<T, U>& p) const {
-    size_t seed = 0;
-    HashCombine<T>(&seed, p.first);
-    HashCombine<U>(&seed, p.second);
-    return seed;
-  }
-};
 
 // This is a simple stopwatch/timer class. The implementation is not threadsafe.
 // TODO: Use internal Google3 timers when moved there.
@@ -118,28 +107,28 @@ inline std::string PrintVector(const std::vector<T>& vec,
 }
 
 // Writes a proto message in binary format to the given file path.
-::util::Status WriteProtoToBinFile(const google::protobuf::Message& message,
+::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
                                    const std::string& filename);
 
 // Reads proto from a file containing the proto message in binary format.
 ::util::Status ReadProtoFromBinFile(const std::string& filename,
-                                    google::protobuf::Message* message);
+                                    ::google::protobuf::Message* message);
 
 // Writes a proto message in text format to the given file path.
-::util::Status WriteProtoToTextFile(const google::protobuf::Message& message,
+::util::Status WriteProtoToTextFile(const ::google::protobuf::Message& message,
                                     const std::string& filename);
 
 // Reads proto from a text file containing the proto message in text format.
 ::util::Status ReadProtoFromTextFile(const std::string& filename,
-                                     google::protobuf::Message* message);
+                                     ::google::protobuf::Message* message);
 
 // Serializes proto to a string. Wrapper around TextFormat::PrintToString().
-::util::Status PrintProtoToString(const google::protobuf::Message& message,
+::util::Status PrintProtoToString(const ::google::protobuf::Message& message,
                                   std::string* text);
 
 // Parses a proto from a string. Wrapper around TextFormat::ParseFromString().
 ::util::Status ParseProtoFromString(const std::string& text,
-                                    google::protobuf::Message* message);
+                                    ::google::protobuf::Message* message);
 
 // Writes a string buffer to a text file. 'append' (default false) specifies
 // whether the string need to appended to the end of the file as opposed to
@@ -164,29 +153,73 @@ std::string StringToHex(const std::string& str);
 ::util::Status RemoveFile(const std::string& path);
 
 // Checks to see if a path exists.
-bool PathExists(const std::string& path);
+inline bool PathExists(const std::string& path) {
+  struct stat stbuf;
+  return (stat(path.c_str(), &stbuf) >= 0);
+}
 
 // Checks to see if a path is a dir.
-bool IsDir(const std::string& path);
+inline bool IsDir(const std::string& path) {
+  struct stat stbuf;
+  if (stat(path.c_str(), &stbuf) < 0) {
+    return false;
+  }
+  return S_ISDIR(stbuf.st_mode);
+}
 
-// Break a path string into directory and filename components and return them.
-std::string DirName(const std::string& path);
-std::string BaseName(const std::string& path);
+// Breaks a path string into directory and filename components and returns the
+// directory.
+inline std::string DirName(const std::string& path) {
+  char* path_str = strdup(path.c_str());
+  std::string dir = dirname(path_str);
+  free(path_str);
+  return dir;
+}
 
-// Compares two protos m1 and m2 and returns true if m1 < m2. This method does
-// a simple comparison on SerializeAsString output of the protos.
-bool ProtoLess(const google::protobuf::Message& m1,
-               const google::protobuf::Message& m2);
+// Breaks a path string into directory and filename components and returns the
+// filename (aka basename).
+inline std::string BaseName(const std::string& path) {
+  char* path_str = strdup(path.c_str());
+  std::string base = basename(path_str);
+  free(path_str);
+  return base;
+}
 
-// Compares two protos m1 and m2 and returns true if m1 == m2. This method does
-// a simple comparison on SerializeAsString output of the protos and cannot
-// handle the case where the order of repeated fields are not important for
-// example.
-bool ProtoEqual(const google::protobuf::Message& m1,
-                const google::protobuf::Message& m2);
+// Serializes the proto into a string in a deterministic way, i.e., ensures
+// that for any two proto messages m1 and m2, if m1 == m2 the corresponding
+// serialized strings are always the same. Note that m1 == m2 means m1 and m2
+// are equal (not equivalent). Note that for equality the order of repeated
+// fields are important.
+inline std::string ProtoSerialize(const google::protobuf::Message& m) {
+  const size_t size = m.ByteSizeLong();
+  std::string out;
+  out.resize(size);
+  char* out_buf = out.empty() ? nullptr : &(*out.begin());
+  ::google::google::protobuf::io::ArrayOutputStream array_out_stream(
+      out_buf, static_cast<int>(size));
+  ::google::google::protobuf::io::CodedOutputStream coded_out_stream(&array_out_stream);
+  coded_out_stream.SetSerializationDeterministic(true);
+  m.SerializeWithCachedSizes(&coded_out_stream);
+  return out;
+}
 
-// Custom hash function for proto messages.
-size_t ProtoHash(const google::protobuf::Message& m);
+// Compares two protos m1 and m2 and returns true if m1 == m2, but ignores the
+// order of repeated fields. In other words checks for equality (not
+// equivalence) of the protos assuming that the order of the repeated fields
+// are not important.
+inline bool ProtoEqual(const google::protobuf::Message& m1,
+                       const google::protobuf::Message& m2) {
+  ::google::google::protobuf::util::MessageDifferencer differencer;
+  differencer.set_repeated_field_comparison(
+      ::google::google::protobuf::util::MessageDifferencer::AS_SET);
+  return differencer.Compare(m1, m2);
+}
+
+// Hash functor used in hash maps or hash sets with enums used as key.
+template <typename T>
+struct EnumHash {
+  size_t operator()(const T& x) const { return static_cast<size_t>(x); }
+};
 
 // Helper for converting an int error code to a GRPC canonical error code.
 constexpr ::grpc::StatusCode kGrpcCodeMin = ::grpc::StatusCode::OK;
@@ -217,7 +250,7 @@ inline ::google::rpc::Code ToGoogleRpcCode(int from) {
 // number of input bytes is too large for the output.  The typename U must
 // be at least 16 bits wide.
 template <typename U>
-U ByteStreamToUint(const std::string& bytes) {
+inline U ByteStreamToUint(const std::string& bytes) {
   U val = 0;
   for (size_t i = 0; i < bytes.size() && i < sizeof(U); ++i) {
     val <<= 8;

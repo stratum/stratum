@@ -45,8 +45,6 @@ stratum_cc_binary(
     ],
     deps = [
         "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/bcm:bcm_acl_manager",
@@ -59,13 +57,16 @@ stratum_cc_binary(
         "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
         "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
         "//stratum/hal/lib/bcm:bcm_switch",
+        "//stratum/hal/lib/bcm:bcm_table_manager",
+        "//stratum/hal/lib/bcm:bcm_tunnel_manager",
         "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/p4:p4_runtime_real",
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/hal/lib/phal:legacy_phal",
         "//stratum/hal/lib/phal:udev",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 

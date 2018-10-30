@@ -1,0 +1,90 @@
+#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
+#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
+
+#include <map>
+#include <string>
+
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/bcm/utils.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/glue/integral_types.h"
+#include "util/task/status.h"
+#include "util/task/statusor.h"
+
+namespace google {
+namespace hercules {
+namespace hal {
+namespace bcm {
+
+// This class exists to provide a read-only interface to chassis state to all
+// classes which rely on that state but do not mutate it.
+class BcmChassisRoInterface {
+ public:
+  virtual ~BcmChassisRoInterface() {}
+
+  // Returns the BcmChip corresponding to the given BCM unit.
+  virtual ::util::StatusOr<BcmChip> GetBcmChip(int unit) const = 0;
+
+  // Returns the BcmPort corresponding to the given slot, port, and channel.
+  virtual ::util::StatusOr<BcmPort> GetBcmPort(int slot, int port,
+                                               int channel) const = 0;
+
+  // Returns the BcmPort corresponding to the given singleton port.
+  virtual ::util::StatusOr<BcmPort> GetBcmPort(uint64 node_id,
+                                               uint32 port_id) const = 0;
+
+  // Returns the map from node ID to BCM unit number.
+  virtual ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap()
+      const = 0;
+
+  // Returns the BCM unit number corresponding to the given node ID.
+  virtual ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const = 0;
+
+  // Returns the map from singleton port ID to its corresponding SdkPort.
+  virtual ::util::StatusOr<std::map<uint32, SdkPort>> GetPortIdToSdkPortMap(
+      uint64 node_id) const = 0;
+
+  // Returns the map from trunk port ID to its corresponding SdkTrunk.
+  virtual ::util::StatusOr<std::map<uint32, SdkTrunk>> GetTrunkIdToSdkTrunkMap(
+      uint64 node_id) const = 0;
+
+  // Returns a state of a singleton port given its ID and the ID of its node.
+  virtual ::util::StatusOr<PortState> GetPortState(uint64 node_id,
+                                                   uint32 port_id) const = 0;
+
+  // Returns the state of a singleton port given the unit and BCM logical port
+  // number.
+  virtual ::util::StatusOr<PortState> GetPortState(
+      const SdkPort& sdk_port) const = 0;
+
+  // Returns a state of a trunk port port given its ID and the ID of its node.
+  virtual ::util::StatusOr<TrunkState> GetTrunkState(uint64 node_id,
+                                                     uint32 trunk_id) const = 0;
+
+  // Returns the most updated members of a trunk given its ID and the ID of its
+  // node.
+  virtual ::util::StatusOr<std::set<uint32>> GetTrunkMembers(
+      uint64 node_id, uint32 trunk_id) const = 0;
+
+  // Returns the ID of the parent trunk, if and only if the given port ID is
+  // part of a trunk. Return error if the port is not known or if it is not
+  // part of a trunk.
+  virtual ::util::StatusOr<uint32> GetParentTrunkId(uint64 node_id,
+                                                    uint32 port_id) const = 0;
+
+  // Returns the admin state of the given singleton port.
+  virtual ::util::StatusOr<AdminState> GetPortAdminState(
+      uint64 node_id, uint32 port_id) const = 0;
+
+ protected:
+  // Default constructor.
+  BcmChassisRoInterface() {}
+};
+
+}  // namespace bcm
+}  // namespace hal
+}  // namespace hercules
+}  // namespace google
+
+#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_

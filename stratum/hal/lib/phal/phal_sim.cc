@@ -73,6 +73,12 @@ PhalSim::~PhalSim() {}
   return ::util::OkStatus();
 }
 
+::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
+                                        LedColor color, LedState state) {
+  // TODO(aghaffar): Implement this.
+  return ::util::OkStatus();
+}
+
 PhalSim* PhalSim::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {

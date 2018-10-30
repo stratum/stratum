@@ -14,10 +14,6 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
-exports_files(["LICENSE"])
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
@@ -37,7 +33,15 @@ stratum_cc_proto_library(
     hdrs = ["bcm.proto"],
     deps = [
         "//stratum/hal/lib/common:common_proto",
-        "//stratum/public/proto:hal_proto",
+    ],
+)
+
+stratum_cc_library(
+    name = "bcm_global_vars",
+    srcs = ["bcm_global_vars.cc"],
+    hdrs = ["bcm_global_vars.h"],
+    deps = [
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -47,15 +51,18 @@ stratum_cc_library(
     hdrs = ["bcm_acl_manager.h"],
     deps = [
         ":acl_table",
-        ":bcm_acl_pipeline",
-        ":bcm_chassis_manager",
+        ":bcm_chassis_ro_interface",
+        ":bcm_proto",
         ":bcm_sdk_interface",
         ":bcm_table_manager",
+        ":pipeline_processor",
+        "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/p4:p4_control_proto",
@@ -63,7 +70,6 @@ stratum_cc_library(
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/lib:utils",
         "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -105,37 +111,29 @@ cc_library(
 )
 
 stratum_cc_library(
-    name = "bcm_acl_pipeline",
-    srcs = ["bcm_acl_pipeline.cc"],
-    hdrs = ["bcm_acl_pipeline.h"],
+    name = "bcm_chassis_ro_interface",
+    hdrs = ["bcm_chassis_ro_interface.h"],
     deps = [
-        "@com_google_absl//absl/memory",
+        ":bcm_proto",
+        ":utils",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
-        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/p4:common_flow_entry_proto",
-        "//stratum/hal/lib/p4:p4_control_proto",
-        "//stratum/hal/lib/p4:p4_table_map_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
-        "//stratum/glue/gtl:flat_hash_map",
-        "//stratum/glue/gtl:map_util",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:utils",
     ],
 )
 
-stratum_cc_test(
-    name = "bcm_acl_pipeline_test",
-    srcs = ["bcm_acl_pipeline_test.cc"],
+stratum_cc_library(
+    name = "bcm_chassis_ro_mock",
+    testonly = 1,
+    hdrs = ["bcm_chassis_ro_mock.h"],
+    arches = HOST_ARCHES,
     deps = [
-        ":bcm_acl_pipeline",
-        ":test_main",
+        ":bcm_chassis_ro_interface",
         "@com_google_googletest//:gtest",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/p4:p4_control_proto",
-        "//stratum/lib:utils",
     ],
 )
 
@@ -144,15 +142,18 @@ stratum_cc_library(
     srcs = ["bcm_chassis_manager.cc"],
     hdrs = ["bcm_chassis_manager.h"],
     deps = [
+        ":bcm_chassis_ro_interface",
+        ":bcm_global_vars",
+        ":bcm_node",
         ":bcm_proto",
         ":bcm_sdk_interface",
         ":bcm_serdes_db_manager",
         ":utils",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@com_google_protobuf//:protobuf",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -168,8 +169,6 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/lib/channel",
         "//stratum/public/lib:error",
-        "//stratum/public/proto:hal_proto",
-        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
     ],
@@ -191,6 +190,7 @@ stratum_cc_test(
     srcs = ["bcm_chassis_manager_test.cc"],
     deps = [
         ":bcm_chassis_manager",
+        ":bcm_node_mock",
         ":bcm_sdk_mock",
         ":bcm_serdes_db_manager_mock",
         ":test_main",
@@ -200,13 +200,13 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue:logging",
-        "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_mock",
         "//stratum/hal/lib/common:writer_mock",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
         "//stratum/lib/channel:channel_mock",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
 )
@@ -233,12 +233,14 @@ stratum_cc_library(
     name = "bcm_flow_table",
     hdrs = ["bcm_flow_table.h"],
     deps = [
-      	"@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:node_hash_set",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:node_hash_set",
@@ -252,6 +254,7 @@ stratum_cc_test(
         ":bcm_flow_table",
         ":test_main",
         "@com_google_googletest//:gtest",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
     ],
@@ -262,19 +265,20 @@ stratum_cc_library(
     srcs = ["bcm_l2_manager.cc"],
     hdrs = ["bcm_l2_manager.h"],
     deps = [
-        ":bcm_chassis_manager",
+        ":bcm_chassis_ro_interface",
         ":bcm_proto",
         ":bcm_sdk_interface",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:utils",
         "//stratum/lib:macros",
-        "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
     ],
 )
@@ -294,7 +298,7 @@ stratum_cc_test(
     name = "bcm_l2_manager_test",
     srcs = ["bcm_l2_manager_test.cc"],
     deps = [
-        ":bcm_chassis_manager_mock",
+        ":bcm_chassis_ro_mock",
         ":bcm_l2_manager",
         ":bcm_sdk_mock",
         ":test_main",
@@ -304,6 +308,7 @@ stratum_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:constants",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -314,15 +319,17 @@ stratum_cc_library(
     deps = [
         ":bcm_proto",
         ":bcm_sdk_interface",
+        ":bcm_table_manager",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//stratum/glue/status",
         "//stratum/glue:integral_types",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
@@ -346,12 +353,14 @@ stratum_cc_test(
     deps = [
         ":bcm_l3_manager",
         ":bcm_sdk_mock",
+        ":bcm_table_manager_mock",
         ":test_main",
         "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
-        "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "//util/gtl:source_location",
     ],
 )
 
@@ -360,12 +369,14 @@ stratum_cc_library(
     srcs = ["bcm_packetio_manager.cc"],
     hdrs = ["bcm_packetio_manager.h"],
     deps = [
-        ":bcm_chassis_manager",
+        ":bcm_chassis_ro_interface",
+        ":bcm_global_vars",
         ":bcm_proto",
         ":bcm_sdk_interface",
         ":constants",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
@@ -375,11 +386,10 @@ stratum_cc_library(
         "//stratum/glue/status",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:writer_interface",
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:hal_proto",
-        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
     ],
@@ -400,7 +410,7 @@ stratum_cc_test(
     name = "bcm_packetio_manager_test",
     srcs = ["bcm_packetio_manager_test.cc"],
     deps = [
-        ":bcm_chassis_manager_mock",
+        ":bcm_chassis_ro_mock",
         ":bcm_packetio_manager",
         ":bcm_sdk_mock",
         ":test_main",
@@ -412,9 +422,60 @@ stratum_cc_test(
         "//stratum/hal/lib/common:writer_mock",
         "//stratum/hal/lib/p4:p4_table_mapper_mock",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
         "//util/libcproxy:libcwrapper",
         "//util/libcproxy:passthrough_proxy",
+    ],
+)
+
+stratum_cc_library(
+    name = "bcm_sdk_proxy",
+    srcs = ["bcm_sdk_proxy.cc"],
+    hdrs = ["bcm_sdk_proxy.h"],
+    deps = [
+        ":bcm_sdk_interface",
+        ":constants",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_grpc//:grpc++",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:client_sync_reader_writer",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/sandcastle:bcm_sdk_service_grpc_proto",
+        "//stratum/lib/sandcastle:hardware_status_service_grpc_proto",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
+    ],
+)
+
+stratum_cc_test(
+    name = "bcm_sdk_proxy_test",
+    srcs = ["bcm_sdk_proxy_test.cc"],
+    data = ["//tools/test:requires_ipv4_loopback"],
+    deps = [
+        ":bcm_sdk_proxy",
+        ":test_main",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_grpc//:grpc++",
+        "//stratum/glue/net_util:ports",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:hardware_status_service_test_helper",
+        "//stratum/lib:utils",
+        "//stratum/lib/sandcastle:hardware_status_service_grpc_proto",
+        "//stratum/public/proto:error_proto",
     ],
 )
 
@@ -424,11 +485,11 @@ stratum_cc_library(
     deps = [
         ":bcm_proto",
         "@com_google_absl//absl/base:core_headers",
-        "//stratum/glue/status",
         "//stratum/glue:integral_types",
+        "//stratum/glue/status",
         "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/lib/channel",
-        "//stratum/public/proto:hal_proto",
     ],
 )
 
@@ -456,7 +517,6 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         #"//sandblaze/prebuilt/broadcom:bcm-sdk",
-        "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/lib:macros",
@@ -478,6 +538,8 @@ stratum_cc_library(
         ":sdk_build_undef",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
@@ -489,10 +551,10 @@ stratum_cc_library(
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/glue/gtl:flat_hash_map",
-        "//stratum/glue/gtl:flat_hash_set",
-        "//stratum/glue/gtl:map_util",
-        "//stratum/glue/gtl:stl_util",
+        # FIXME(boc)
+        # "//util/endian",
+        "//util/gtl:map_util",
+        "//util/gtl:stl_util",
     ],
 )
 
@@ -510,9 +572,9 @@ stratum_cc_library(
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:hal_proto",
     ],
 )
 
@@ -538,6 +600,7 @@ stratum_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -547,10 +610,12 @@ stratum_cc_library(
     hdrs = ["bcm_node.h"],
     deps = [
         ":bcm_acl_manager",
+        ":bcm_global_vars",
         ":bcm_l2_manager",
         ":bcm_l3_manager",
         ":bcm_packetio_manager",
         ":bcm_table_manager",
+        ":bcm_tunnel_manager",
         ":constants",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
@@ -560,6 +625,7 @@ stratum_cc_library(
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/lib:macros",
     ],
@@ -586,6 +652,7 @@ stratum_cc_test(
         ":bcm_node",
         ":bcm_packetio_manager_mock",
         ":bcm_table_manager_mock",
+        ":bcm_tunnel_manager_mock",
         ":test_main",
         "@com_google_googletest//:gtest",
         "@com_google_absl//absl/memory",
@@ -604,6 +671,7 @@ stratum_cc_library(
     hdrs = ["bcm_switch.h"],
     deps = [
         ":bcm_chassis_manager",
+        ":bcm_global_vars",
         ":bcm_node",
         ":constants",
         "@com_google_absl//absl/base:core_headers",
@@ -611,7 +679,7 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
-        "@com_github_googleapis//:status_cc_proto",
+        "@com_github_googleapis//:status_proto",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
@@ -643,6 +711,7 @@ stratum_cc_test(
         "//stratum/hal/lib/p4:p4_table_mapper_mock",
         "//stratum/lib:utils",
         "//stratum/lib/channel:channel_mock",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -652,22 +721,24 @@ stratum_cc_library(
     hdrs = ["bcm_table_manager.h"],
     deps = [
         ":acl_table",
-        ":bcm_acl_pipeline",
-        ":bcm_chassis_manager",
+        ":bcm_chassis_ro_interface",
         ":bcm_flow_table",
         ":bcm_proto",
         ":constants",
+        ":utils",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_PI//:p4info_v1_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/hal/lib/p4:common_flow_entry_proto",
@@ -675,11 +746,7 @@ stratum_cc_library(
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:hal_proto",
         "//stratum/public/proto:p4_table_defs_proto",
-        "//stratum/glue/gtl:enum_set",
-        "//stratum/glue/gtl:flat_hash_map",
-        "//stratum/glue/gtl:flat_hash_set",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
     ],
@@ -693,6 +760,7 @@ stratum_cc_library(
     deps = [
         ":bcm_table_manager",
         "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
 
@@ -700,10 +768,13 @@ stratum_cc_test(
     name = "bcm_table_manager_test",
     srcs = ["bcm_table_manager_test.cc"],
     deps = [
-        ":bcm_chassis_manager_mock",
+        ":bcm_chassis_ro_mock",
         ":bcm_table_manager",
+        ":constants",
         ":test_main",
         "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
@@ -717,7 +788,6 @@ stratum_cc_test(
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
-        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -727,7 +797,7 @@ stratum_cc_library(
     hdrs = ["constants.h"],
     deps = [
         "@com_google_absl//absl/base:core_headers",
-        "//stratum/glue:integral_types",
+        "@com_google_absl//absl/base:core_headers",
     ],
 )
 
@@ -737,7 +807,6 @@ stratum_cc_library(
     defines = ["NDEBUG"],
     deps = [
         #"//sandblaze/prebuilt/broadcom:bcm-sdk",
-        "@com_github_bcm_sdklt//:error",
         "//stratum/glue/status",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
@@ -753,6 +822,7 @@ stratum_cc_test(
         "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -798,49 +868,6 @@ stratum_cc_test(
     ],
 )
 
-cc_library(
-    name = "bcm_sim_test_fixture",
-    testonly = 1,
-    srcs = ["bcm_sim_test_fixture.cc"],
-    hdrs = [
-        "bcm_sim_test_fixture.h",
-    ],
-    data = [
-        "//stratum/hal/bin/bcm/sim:bcm_pcid_sim",
-    ],
-    deps = [
-        ":bcm_acl_manager",
-        ":bcm_chassis_manager",
-        ":bcm_sdk_sim",
-        ":bcm_serdes_db_manager",
-        ":bcm_table_manager",
-        "@com_github_google_glog//:glog",
-        "//devtools/build/runtime:get_runfiles_dir",
-        "@com_google_googletest//:gtest",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/hal/lib/p4:p4_runtime_real",
-        "//stratum/hal/lib/p4:p4_table_mapper",
-        "//stratum/hal/lib/phal:phal_sim",
-        "//stratum/lib:utils",
-    ],
-)
-
-cc_test(
-    name = "bcm_acl_profile_test",
-    timeout = "long",
-    srcs = ["bcm_acl_profile_test.cc"],
-    local = 1,
-    deps = [
-        ":bcm_sim_test_fixture",
-        ":test_main",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "//stratum/glue:logging",
-        "//stratum/glue/status:status_test_util",
-    ],
-)
-
 stratum_cc_library(
     name = "acl_table",
     srcs = ["acl_table.cc"],
@@ -848,6 +875,8 @@ stratum_cc_library(
     deps = [
         ":bcm_flow_table",
         ":bcm_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "//stratum/hal/lib/p4:common_flow_entry_proto",
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
@@ -864,9 +893,98 @@ stratum_cc_test(
         ":acl_table",
         ":test_main",
         "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
+    ],
+)
+
+stratum_cc_library(
+    name = "pipeline_processor",
+    srcs = ["pipeline_processor.cc"],
+    hdrs = ["pipeline_processor.h"],
+    deps = [
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/container:node_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_github_p4lang_PI//:p4info_v1_proto",
+        "//stratum/hal/lib/p4:common_flow_entry_proto",
+        "//stratum/hal/lib/p4:p4_control_proto",
+        "//stratum/hal/lib/p4:p4_table_map_proto",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/public/lib:error",
+        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_set",
+        "//stratum/glue/gtl:map_util",
+        "//util/gtl:node_hash_map",
+        "//util/task:status",
+        "//util/task:statusor",
+    ],
+)
+
+stratum_cc_test(
+    name = "pipeline_processor_test",
+    srcs = ["pipeline_processor_test.cc"],
+    deps = [
+        ":pipeline_processor",
+        ":test_main",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/lib/test_utils:p4_proto_builders",
+        "//stratum/public/lib:error",
+        "//stratum/public/proto:p4_annotation_proto",
+    ],
+)
+
+stratum_cc_library(
+    name = "bcm_udf_manager",
+    srcs = ["bcm_udf_manager.cc"],
+    hdrs = ["bcm_udf_manager.h"],
+    deps = [
+        ":acl_table",
+        ":bcm_proto",
+        ":bcm_sdk_interface",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "//stratum/hal/lib/p4:p4_table_mapper",
+        "//stratum/lib:macros",
+        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_set",
+        "//stratum/glue/gtl:map_util",
+    ],
+)
+
+stratum_cc_test(
+    name = "bcm_udf_manager_test",
+    srcs = ["bcm_udf_manager_test.cc"],
+    deps = [
+        ":bcm_sdk_mock",
+        ":bcm_udf_manager",
+        ":test_main",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "//util/endian",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:flat_hash_set",
+        "//util/gtl:flat_map",
+        "//util/gtl:flat_set",
     ],
 )

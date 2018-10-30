@@ -24,50 +24,44 @@ namespace bcm {
 
 TEST(BcmUtilsTest, PrintBcmPortForEmptyBcmPortProto) {
   BcmPort port;
-  EXPECT_EQ("(slot: 0, port: 0)", PrintBcmPort(port));
+  EXPECT_EQ("(slot: 0, port: 0, unit: 0, logical_port: 0)", PrintBcmPort(port));
 }
 
 TEST(BcmUtilsTest, PrintBcmPortForNonEmptyBcmPortProto) {
   BcmPort port;
   port.set_slot(1);
-  EXPECT_EQ("(slot: 1, port: 0)", PrintBcmPort(port));
+  EXPECT_EQ("(slot: 1, port: 0, unit: 0, logical_port: 0)", PrintBcmPort(port));
 
   port.set_port(10);
-  EXPECT_EQ("(slot: 1, port: 10)", PrintBcmPort(port));
+  EXPECT_EQ("(slot: 1, port: 10, unit: 0, logical_port: 0)",
+            PrintBcmPort(port));
 
   port.set_channel(3);
-  EXPECT_EQ("(slot: 1, port: 10, channel: 3)", PrintBcmPort(port));
+  EXPECT_EQ("(slot: 1, port: 10, channel: 3, unit: 0, logical_port: 0)",
+            PrintBcmPort(port));
 
   port.set_speed_bps(kFiftyGigBps);
-  EXPECT_EQ("(slot: 1, port: 10, channel: 3, speed: 50G)",
-            PrintBcmPort(port));
+  EXPECT_EQ(
+      "(slot: 1, port: 10, channel: 3, unit: 0, logical_port: 0, speed: 50G)",
+      PrintBcmPort(port));
+
+  port.set_unit(2);
+  EXPECT_EQ(
+      "(slot: 1, port: 10, channel: 3, unit: 2, logical_port: 0, speed: 50G)",
+      PrintBcmPort(port));
 
   port.set_logical_port(33);
-  EXPECT_EQ("(slot: 1, port: 10, channel: 3, speed: 50G)",
-            PrintBcmPort(port));
+  EXPECT_EQ(
+      "(slot: 1, port: 10, channel: 3, unit: 2, logical_port: 33, speed: 50G)",
+      PrintBcmPort(port));
 
   port.clear_channel();
-  EXPECT_EQ("(slot: 1, port: 10, speed: 50G)", PrintBcmPort(port));
+  port.set_speed_bps(kFortyGigBps);
+  EXPECT_EQ("(slot: 1, port: 10, unit: 2, logical_port: 33, speed: 40G)",
+            PrintBcmPort(port));
 }
 
-TEST(BcmUtilsTest, PrintBcmPortForNonEmptyBcmPortProtoAndPortId) {
-  BcmPort port;
-  port.set_slot(1);
-  port.set_port(10);
-  port.set_channel(2);
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, channel: 2)",
-            PrintBcmPort(1234567, port));
-
-  port.set_speed_bps(kFiftyGigBps);
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, channel: 2, speed: 50G)",
-            PrintBcmPort(1234567, port));
-
-  EXPECT_EQ("(slot: 1, port: 10, channel: 2, speed: 50G)",
-            PrintBcmPort(0, port));
-}
-
-TEST(BcmUtilsTest, PrintBcmPortWithDirectArgList) {
-}
+TEST(BcmUtilsTest, PrintBcmPortWithDirectArgList) {}
 
 TEST(BcmUtilsTest, PrintBcmPortOptionsForEmptyOption) {
   BcmPortOptions options;

@@ -20,15 +20,19 @@
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/bcm/bcm_acl_pipeline.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/glue/integral_types.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "util/task/status.h"
+#include "util/task/statusor.h"
+
+DECLARE_string(bcm_hardware_specs_file);
 
 namespace stratum {
 namespace hal {
@@ -65,25 +69,28 @@ class BcmAclManager {
   virtual ::util::Status Shutdown();
 
   // Add an entry to an ACL table.
-  virtual ::util::Status InsertTableEntry(const ::p4::v1::TableEntry& entry) const;
+  virtual ::util::Status InsertTableEntry(
+      const ::p4::v1::TableEntry& entry) const;
 
   // Modify an entry in an ACL table. Only actions can be modified.
-  virtual ::util::Status ModifyTableEntry(const ::p4::v1::TableEntry& entry) const;
+  virtual ::util::Status ModifyTableEntry(
+      const ::p4::v1::TableEntry& entry) const;
 
   // Delete an entry from an ACL table.
-  virtual ::util::Status DeleteTableEntry(const ::p4::v1::TableEntry& entry) const;
+  virtual ::util::Status DeleteTableEntry(
+      const ::p4::v1::TableEntry& entry) const;
 
   // Add/Modify direct meter (meter bound to a TableEntry) in hardware.
   virtual ::util::Status UpdateTableEntryMeter(
       const ::p4::v1::DirectMeterEntry& meter) const;
 
   // Get ACL table entry stats from hardware.
-  virtual ::util::Status GetTableEntryStats(const ::p4::v1::TableEntry& entry,
-                                            ::p4::v1::CounterData* counter) const;
+  virtual ::util::Status GetTableEntryStats(
+      const ::p4::v1::TableEntry& entry, ::p4::v1::CounterData* counter) const;
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BcmAclManager> CreateInstance(
-      BcmChassisManager* bcm_chassis_manager,
+      BcmChassisRoInterface* bcm_chassis_ro_interface,
       BcmTableManager* bcm_table_manager, BcmSdkInterface* bcm_sdk_interface,
       P4TableMapper* p4_table_mapper, int unit);
 
@@ -98,7 +105,7 @@ class BcmAclManager {
  private:
   template <typename T>
   using BcmAclStageMap =
-      stratum::gtl::flat_hash_map<BcmAclStage, T, EnumHash<BcmAclStage>>;
+      absl::flat_hash_map<BcmAclStage, T, EnumHash<BcmAclStage>>;
 
   // A physical ACL table represented by its component logical tables and the
   // ACL stage.
@@ -109,7 +116,7 @@ class BcmAclManager {
 
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BcmAclManager(BcmChassisManager* bcm_chassis_manager,
+  BcmAclManager(BcmChassisRoInterface* bcm_chassis_ro_interface,
                 BcmTableManager* bcm_table_manager,
                 BcmSdkInterface* bcm_sdk_interface,
                 P4TableMapper* p4_table_mapper, int unit);
@@ -121,12 +128,6 @@ class BcmAclManager {
   // BcmTableManager instance.
   ::util::Status ClearAllAclTables();
 
-  // Split an ACL control block into per-BcmAclStage control blocks. These
-  // individual blocks represent IFP, VFP, and EFP control flows.
-  ::util::Status SplitAclControlBlocks(
-      const P4ControlBlock& control_block,
-      BcmAclStageMap<P4ControlBlock>* stage_blocks) const;
-
   // Generate the set of physical vectors described in a P4 control pipeline.
   ::util::StatusOr<std::vector<PhysicalAclTable>> PhysicalAclTablesFromPipeline(
       const P4ControlBlock& control_block) const;
@@ -135,14 +136,15 @@ class BcmAclManager {
   // PhysicalAclTable (a collection of AclTables).
   ::util::StatusOr<PhysicalAclTable> GeneratePhysicalAclTables(
       BcmAclStage stage,
-      const BcmAclPipeline::PhysicalTableAsVector& physical_table) const;
+      const PipelineProcessor::PhysicalTableAsVector& physical_table) const;
 
   // Install a group of logical tables as one physical table in Bcm.
   ::util::StatusOr<int> InstallPhysicalTable(
       const PhysicalAclTable& physical_acl_table) const;
 
   // Get the set of BcmField types supported by an AclTable.
-  ::util::StatusOr<stratum::gtl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
+  ::util::StatusOr<
+      absl::flat_hash_set<BcmField::Type, EnumHash<BcmField::Type>>>
   GetTableMatchTypes(const AclTable& table) const;
 
   // The last P4PipelineConfig pushed to the class.
@@ -151,8 +153,9 @@ class BcmAclManager {
   // Initialized to false, set once only on first PushChassisConfig.
   bool initialized_;
 
-  // Pointer to a BcmChassisManager that keeps track of the chassis information.
-  BcmChassisManager* bcm_chassis_manager_;  // not owned by this class.
+  // Pointer to a BcmChassisRoInterface that keeps track of the chassis
+  // information.
+  BcmChassisRoInterface* bcm_chassis_ro_interface_;  // not owned by this class.
 
   // Pointer to a BcmTableManager that keeps track of the ACL tables.
   BcmTableManager* bcm_table_manager_;  // not owned by this class.
@@ -171,6 +174,9 @@ class BcmAclManager {
   // Fixed zero-based BCM unit number corresponding to the node/ASIC managed by
   // this class instance. Assigned in the class constructor.
   const int unit_;
+
+  // Hardware description of the current chip.
+  BcmHardwareSpecs::ChipModelSpec chip_hardware_description_;
 };
 
 }  // namespace bcm

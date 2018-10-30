@@ -23,6 +23,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/stringsource_interface.h"
 
 namespace stratum {
@@ -38,7 +39,7 @@ class FixedStringSource : public StringSourceInterface {
       : fixed_string_(fixed_string) {}
   ::util::StatusOr<std::string> GetString() override { return fixed_string_; }
   ::util::Status SetString(const std::string& buffer) override {
-    RETURN_ERROR() << "Attempted to set a FixedStringSource.";
+    return MAKE_ERROR() << "Attempted to set a FixedStringSource.";
   }
   bool CanSet() override { return false; }
 

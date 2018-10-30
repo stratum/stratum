@@ -15,18 +15,19 @@
 
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
+#include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
+#include "absl/synchronization/mutex.h"
 
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
+using ::testing::Not;
 using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::WithArgs;
@@ -66,7 +67,16 @@ class SubscriptionTestBase {
         name: "xy1switch.domain.net.com"
         slot: 1
         index: 1
-        config_params { qos_configs { queue_id: 0 purpose: BE1 } }
+        config_params {
+          qos_config {
+            traffic_class_mapping { internal_priority: 0 traffic_class: BE1 }
+            traffic_class_mapping { internal_priority: 1 traffic_class: AF1 }
+            traffic_class_mapping { internal_priority: 2 traffic_class: AF2 }
+            cosq_mapping { internal_priority: 2 q_num: 0 }
+            cosq_mapping { internal_priority: 1 q_num: 1 }
+            cosq_mapping { internal_priority: 0 q_num: 2 }
+          }
+        }
       }
       singleton_ports {
         id: 1
@@ -88,6 +98,7 @@ class SubscriptionTestBase {
   }
 
   void PrintNodeWithOnTimer() {
+    absl::WriterMutexLock l(&gnmi_publisher_->access_lock_);
     PrintNodeWithOnTimer(*gnmi_publisher_->parse_tree_.GetRoot(), "");
   }
 
@@ -101,6 +112,7 @@ class SubscriptionTestBase {
   }
 
   void PrintNodeWithOnChange() {
+    absl::WriterMutexLock l(&gnmi_publisher_->access_lock_);
     PrintNodeWithOnChange(*gnmi_publisher_->parse_tree_.GetRoot(), "");
   }
 
@@ -126,7 +138,7 @@ class SubscriptionTestBase {
 class SubscriptionTest : public SubscriptionTestBase, public ::testing::Test {};
 
 TEST_F(SubscriptionTest, SubscribeForSupportedPath) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
 
   SubscriptionHandle h;
   ::gnmi::Path path = GetPath("interfaces")("interface", "*")();
@@ -154,7 +166,7 @@ TEST_F(SubscriptionTest, SubscribeForSupportedPathNullHandle) {
   ASSERT_OK(
       gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
 
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
 
   SubscriptionHandle h;
   ::gnmi::Path path = GetPath("interfaces")();
@@ -170,7 +182,7 @@ TEST_F(SubscriptionTest, SubscribeForUnSupportedPath) {
   ASSERT_OK(
       gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
 
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
 
   SubscriptionHandle h;
   ::gnmi::Path path = GetPath("blah")();
@@ -186,7 +198,7 @@ TEST_F(SubscriptionTest, SubscribeForEmptyPath) {
   ASSERT_OK(
       gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
 
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
 
   SubscriptionHandle h;
   ::gnmi::Path path;
@@ -203,7 +215,7 @@ TEST_F(SubscriptionTest, HandleTimer) {
       gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
   PrintNodeWithOnTimer();
 
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
 
   SubscriptionHandle h;
   ::gnmi::Path path =
@@ -220,7 +232,7 @@ TEST_F(SubscriptionTest, HandleTimer) {
       .WillOnce(DoAll(WithArgs<2>(Invoke([](WriterInterface<DataResponse>* w) {
                         DataResponse resp;
                         // Set the response.
-                        resp.mutable_admin_status()->set_admin_status(
+                        resp.mutable_admin_status()->set_state(
                             ADMIN_STATE_ENABLED);
                         // Send it to the caller.
                         w->Write(resp);
@@ -230,9 +242,48 @@ TEST_F(SubscriptionTest, HandleTimer) {
   EXPECT_OK(gnmi_publisher_->HandleChange(TimerEvent()));
 }
 
+TEST_F(SubscriptionTest, OnUpdateUnSupportedPath) {
+  // Configure the device - the model will reconfigure itself to reflect the
+  // configuration.
+  ASSERT_OK(
+      gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
+
+  ::gnmi::Path path = GetPath("blah")();
+  ::gnmi::TypedValue val;
+
+  EXPECT_THAT(gnmi_publisher_->HandleUpdate(path, val, nullptr).ToString(),
+              HasSubstr("unsupported"));
+}
+
+TEST_F(SubscriptionTest, OnReplaceUnSupportedPath) {
+  // Configure the device - the model will reconfigure itself to reflect the
+  // configuration.
+  ASSERT_OK(
+      gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
+
+  ::gnmi::Path path = GetPath("blah")();
+  ::gnmi::TypedValue val;
+
+  EXPECT_THAT(gnmi_publisher_->HandleReplace(path, val, nullptr).ToString(),
+              HasSubstr("unsupported"));
+}
+
+TEST_F(SubscriptionTest, OnDeleteUnSupportedPath) {
+  // Configure the device - the model will reconfigure itself to reflect the
+  // configuration.
+  ASSERT_OK(
+      gnmi_publisher_->HandleChange(ConfigHasBeenPushedEvent(hal_config_)));
+
+  ::gnmi::Path path = GetPath("blah")();
+  ::gnmi::TypedValue val;
+
+  EXPECT_THAT(gnmi_publisher_->HandleDelete(path, nullptr).ToString(),
+              HasSubstr("unsupported"));
+}
+
 // Checks if the message sent by SendSyncResponse() is well-formed.
 TEST_F(SubscriptionTest, SyncResponseMsgIsCorrect) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::gnmi::SubscribeResponse resp;
   EXPECT_CALL(stream, Write(_, _))
       .WillOnce(DoAll(SaveArg<0>(&resp), Return(true)));
@@ -251,7 +302,7 @@ TEST_F(SubscriptionTest, SyncResponseStreamNullptr) {
 // Checks if SendSyncResponse() responses correctly to Write() to 'stream'
 // reporting error.
 TEST_F(SubscriptionTest, SyncResponseWriteError) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   EXPECT_CALL(stream, Write(_, _)).WillOnce(Return(false));
 
   EXPECT_THAT(gnmi_publisher_->SendSyncResponse(&stream).error_message(),
@@ -281,13 +332,25 @@ TEST_F(SubscriptionTest, CheckConvertTargetDefinedToOnChange) {
 // Some of the paths support only OnChange mode, so, they cannot be tested by
 // the parametrized test below.
 TEST_F(SubscriptionTest, PromisedOnChangeOnlyLeafsAreSupported) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   SubscriptionHandle h;
 
   EXPECT_OK(gnmi_publisher_->SubscribeOnChange(
       GetPath("interfaces")("interface", "*")(), &stream, &h));
   EXPECT_OK(gnmi_publisher_->SubscribeOnChange(
       GetPath("interfaces")("interface")("...")(), &stream, &h));
+}
+
+// Some of the paths support only OnPoll mode, so, they cannot be tested by
+// the parametrized test below.
+TEST_F(SubscriptionTest, PromisedOnPollOnlyLeafsAreSupported) {
+  SubscribeReaderWriterMock stream;
+  SubscriptionHandle h;
+
+  EXPECT_OK(gnmi_publisher_->SubscribePoll(
+      GetPath("debug")("nodes")(
+          "node", "xy1switch.prod.google.com")("packet-io")("debug-string")(),
+      &stream, &h));
 }
 
 // All remaining paths support all modes and can be tested by this parametrized
@@ -297,7 +360,7 @@ class SubscriptionSupportedPathsTest
       public ::testing::TestWithParam<::gnmi::Path> {};
 
 TEST_P(SubscriptionSupportedPathsTest, PromisedLeafsAreSupported) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   SubscriptionHandle h;
 
   ::gnmi::Path path = GetParam();
@@ -308,7 +371,7 @@ TEST_P(SubscriptionSupportedPathsTest, PromisedLeafsAreSupported) {
   EXPECT_OK(gnmi_publisher_->SubscribePoll(path, &stream, &h));
 }
 
-// TODO add all supported paths here!
+// TODO: add all supported paths here!
 INSTANTIATE_TEST_CASE_P(
     SubscriptionSupportedOtherPathsTestWithPath, SubscriptionSupportedPathsTest,
     ::testing::Values(
@@ -318,6 +381,12 @@ INSTANTIATE_TEST_CASE_P(
         GetPath("interfaces")("interface",
                               "device1.domain.net.com:ce-1/1")("state")(
             "admin-status")(),
+        GetPath("interfaces")("interface",
+                              "ju1u1t1.xyz99.net.google.com:ce-1/1")("state")(
+            "health-indicator")(),
+        GetPath("interfaces")("interface",
+                              "ju1u1t1.xyz99.net.google.com:ce-1/1")("config")(
+            "health-indicator")(),
         GetPath("interfaces")("interface",
                               "device1.domain.net.com:ce-1/1")(
             "ethernet")("config")("port-speed")(),
@@ -338,6 +407,12 @@ INSTANTIATE_TEST_CASE_P(
             "ethernet")("state")("mac-address")(),
         GetPath("interfaces")("interface",
                               "device1.domain.net.com:ce-1/1")(
+            "ethernet")("state")("forwarding-viable")(),
+        GetPath("interfaces")("interface",
+                              "ju1u1t1.xyz99.net.google.com:ce-1/1")(
+            "ethernet")("config")("forwarding-viable")(),
+        GetPath("interfaces")("interface",
+                              "ju1u1t1.xyz99.net.google.com:ce-1/1")(
             "ethernet")("state")("negotiated-port-speed")()));
 
 // Due to Google's restriction on the size of a function frame, this automation
@@ -437,5 +512,32 @@ INSTANTIATE_TEST_CASE_P(
         GetPath("qos")("interfaces")("interface",
                                      "device1.domain.net.com:ce-1/1")(
             "output")("queues")("queue", "BE1")("state")("dropped-pkts")()));
+
+// All paths that support OnReplace only be tested by this parametrized
+// test that takes the path as a parameter.
+class ReplaceSupportedPathsTest
+    : public SubscriptionTestBase,
+      public ::testing::TestWithParam<::gnmi::Path> {};
+
+TEST_P(ReplaceSupportedPathsTest, PromisedLeafsAreSupported) {
+  SubscribeReaderWriterMock stream;
+  SubscriptionHandle h;
+
+  ::gnmi::Path path = GetParam();
+  ::gnmi::TypedValue val;
+  CopyOnWriteChassisConfig config(&hal_config_);
+
+  auto status = gnmi_publisher_->HandleReplace(path, val, &config);
+  if (!status.ok()) {
+    EXPECT_THAT(status.ToString(), Not(HasSubstr("unsupported")));
+  }
+}
+
+// Due to Google's restriction on the size of a function frame, this automation
+// had to be split into separate calls.
+INSTANTIATE_TEST_CASE_P(ReplaceSupportedPathsTestWithPath,
+                        ReplaceSupportedPathsTest,
+                        ::testing::Values(GetPath()()));
+
 }  // namespace hal
 }  // namespace stratum

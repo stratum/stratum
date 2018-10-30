@@ -42,7 +42,7 @@ class ClientSyncReaderWriter {
  public:
   explicit ClientSyncReaderWriter(
       std::unique_ptr<::grpc::ClientReaderWriter<W, R>> stream)
-      : stream_(std::move(CHECK_NOTNULL(stream))) {}
+      : stream_(std::move(ABSL_DIE_IF_NULL(stream))) {}
 
   // ClientSyncReaderWriter is not copyable or assignable
   ClientSyncReaderWriter(const ClientSyncReaderWriter&) = delete;

@@ -14,19 +14,36 @@
  * limitations under the License.
  */
 
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 
 #ifndef STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 #define STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 
 #include <unordered_map>
+#include <utility>
 
 #include "stratum/glue/status/status.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
 #include "absl/synchronization/mutex.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -34,11 +51,17 @@ namespace hal {
 class EventHandlerRecord;
 class GnmiEvent;
 class SubscriptionTestBase;
+class YangParseTreePaths;
 class YangParseTreeTest;
 
 using TreeNodeEventHandler = std::function<::util::Status(
     const GnmiEvent& event, const ::gnmi::Path& path,
     GnmiSubscribeStream* stream)>;
+using TreeNodeSetHandler = std::function<::util::Status(
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+    CopyOnWriteChassisConfig* config)>;
+using TreeNodeDeleteHandler = std::function<::util::Status(
+    const ::gnmi::Path& path, CopyOnWriteChassisConfig* config)>;
 
 using EventHandlerRecordPtr = std::weak_ptr<EventHandlerRecord>;
 using TreeNodeEventRegistration =
@@ -67,7 +90,10 @@ class TreeNode {
         is_name_a_key_(false),
         supports_on_timer_(false),
         supports_on_change_(false),
-        supports_on_poll_(false) {}
+        supports_on_poll_(false),
+        supports_on_update_(false),
+        supports_on_replace_(false),
+        supports_on_delete_(false) {}
   TreeNode(const TreeNode& parent, const std::string& name,
            bool is_name_a_key = false)
       : parent_(&parent),
@@ -75,16 +101,41 @@ class TreeNode {
         is_name_a_key_(is_name_a_key),
         supports_on_timer_(false),
         supports_on_change_(false),
-        supports_on_poll_(false) {}
+        supports_on_poll_(false),
+        supports_on_update_(false),
+        supports_on_replace_(false),
+        supports_on_delete_(false) {}
   TreeNode(const TreeNode& src);
 
-  void CopySubtree(const TreeNode& src) LOCKS_EXCLUDED(access_lock_);
+  void CopySubtree(const TreeNode& src);
+
+  // Overrides the default-not-supported handler procedure called when
+  // a set-update request is processed with a user-specified one.
+  TreeNode* SetOnUpdateHandler(const TreeNodeSetHandler& handler) {
+    on_update_handler_ = handler;
+    supports_on_update_ = true;
+    return this;
+  }
+
+  // Overrides the default-not-supported handler procedure called when
+  // a set-replace request is processed with a user-specified one.
+  TreeNode* SetOnReplaceHandler(const TreeNodeSetHandler& handler) {
+    on_replace_handler_ = handler;
+    supports_on_replace_ = true;
+    return this;
+  }
+
+  // Overrides the default-not-supported handler procedure called when
+  // a set-delete request is processed with a user-specified one.
+  TreeNode* SetOnDeleteHandler(const TreeNodeDeleteHandler& handler) {
+    on_delete_handler_ = handler;
+    supports_on_delete_ = true;
+    return this;
+  }
 
   // Overrides the default-process-whole-sub-tree handler procedure called when
   // a timer event is processed with a user-specified one.
-  TreeNode* SetOnTimerHandler(const TreeNodeEventHandler& handler)
-      LOCKS_EXCLUDED(access_lock_) {
-    absl::WriterMutexLock l(&access_lock_);
+  TreeNode* SetOnTimerHandler(const TreeNodeEventHandler& handler) {
     on_timer_handler_ = handler;
     supports_on_timer_ = true;
     return this;
@@ -92,9 +143,7 @@ class TreeNode {
 
   // Overrides the default-process-whole-sub-tree handler procedure called when
   // a poll event is processed with a user-specified one.
-  TreeNode* SetOnPollHandler(const TreeNodeEventHandler& handler)
-      LOCKS_EXCLUDED(access_lock_) {
-    absl::WriterMutexLock l(&access_lock_);
+  TreeNode* SetOnPollHandler(const TreeNodeEventHandler& handler) {
     on_poll_handler_ = handler;
     supports_on_poll_ = true;
     return this;
@@ -102,9 +151,7 @@ class TreeNode {
 
   // Overrides the default-process-whole-sub-tree handler procedure called when
   // a on-change event is processed with a user-specified one.
-  TreeNode* SetOnChangeHandler(const TreeNodeEventHandler& handler)
-      LOCKS_EXCLUDED(access_lock_) {
-    absl::WriterMutexLock l(&access_lock_);
+  TreeNode* SetOnChangeHandler(const TreeNodeEventHandler& handler) {
     on_change_handler_ = handler;
     supports_on_change_ = true;
     return this;
@@ -112,18 +159,14 @@ class TreeNode {
 
   // Overrides the default-do-not-register-for-any-event-type handler procedure
   // called when a on-change event is subscribed to with a user-specified one.
-  TreeNode* SetOnChangeRegistration(const TreeNodeEventRegistration& handler)
-      LOCKS_EXCLUDED(access_lock_) {
-    absl::WriterMutexLock l(&access_lock_);
+  TreeNode* SetOnChangeRegistration(const TreeNodeEventRegistration& handler) {
     on_change_registration_ = handler;
     return this;
   }
 
   // Overrides the default change-target-defined-mode-to-on-change-mode method
   // with a user-specified one.
-  TreeNode* SetTargetDefinedMode(const TargetDefinedModeFunc& mode)
-      LOCKS_EXCLUDED(access_lock_) {
-    absl::WriterMutexLock l(&access_lock_);
+  TreeNode* SetTargetDefinedMode(const TargetDefinedModeFunc& mode) {
     target_defined_mode_ = mode;
     return this;
   }
@@ -150,6 +193,24 @@ class TreeNode {
     return supported;
   }
 
+  // Returns true if the subtree starting from this node supports on-update
+  // requests.
+  bool AllSubtreeLeavesSupportOnUpdate() const {
+    return AllSubtreeLeavesSupportOn(&TreeNode::supports_on_update_);
+  }
+
+  // Returns true if the subtree starting from this node supports on-update
+  // requests.
+  bool AllSubtreeLeavesSupportOnReplace() const {
+    return AllSubtreeLeavesSupportOn(&TreeNode::supports_on_replace_);
+  }
+
+  // Returns true if the subtree starting from this node supports on-delete
+  // requests.
+  bool AllSubtreeLeavesSupportOnDelete() const {
+    return AllSubtreeLeavesSupportOn(&TreeNode::supports_on_delete_);
+  }
+
   // Returns true if the subtree starting from this node supports on-timer
   // events.
   bool AllSubtreeLeavesSupportOnTimer() const {
@@ -166,6 +227,31 @@ class TreeNode {
   // events.
   bool AllSubtreeLeavesSupportOnChange() const {
     return AllSubtreeLeavesSupportOn(&TreeNode::supports_on_change_);
+  }
+
+  // Returns a functor that will execute handlers of this node.
+  GnmiSetHandler GetOnUpdateHandler() const {
+    return
+        [this](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+               CopyOnWriteChassisConfig* config) {
+          return on_update_handler_(path, val, config);
+        };
+  }
+
+  // Returns a functor that will execute handlers of this node.
+  GnmiSetHandler GetOnReplaceHandler() const {
+    return
+        [this](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+               CopyOnWriteChassisConfig* config) {
+          return on_replace_handler_(path, val, config);
+        };
+  }
+
+  // Returns a functor that will execute handlers of this node.
+  GnmiDeleteHandler GetOnDeleteHandler() const {
+    return [this](const ::gnmi::Path& path, CopyOnWriteChassisConfig* config) {
+      return on_delete_handler_(path, config);
+    };
   }
 
   // Returns a functor that will execute handlers of this node and its children.
@@ -205,7 +291,6 @@ class TreeNode {
   // target_defined_mode_ functor to modify the 'subscription` protobuf.
   ::util::Status ApplyTargetDefinedModeToSubscription(
       ::gnmi::Subscription* subscription) const {
-    absl::WriterMutexLock l(&access_lock_);
     return target_defined_mode_(subscription);
   }
 
@@ -226,44 +311,43 @@ class TreeNode {
   // that is not a leaf.
   ::util::Status VisitThisNodeAndItsChildren(
       const TreeNodeEventHandlerPtr& handler, const GnmiEvent& event,
-      const ::gnmi::Path& path, GnmiSubscribeStream* stream) const
-      LOCKS_EXCLUDED(access_lock_);
+      const ::gnmi::Path& path, GnmiSubscribeStream* stream) const;
   // Traverses the whole subtree starting from this node.
   // This method is used to visit all subtree nodes and execute registration
   // functor - this implements the expected behavior when a client subscribes in
   // STREAM:ON_CHANGE mode to a node that is not a leaf.
   ::util::Status RegisterThisNodeAndItsChildren(
-      const EventHandlerRecordPtr& record) const LOCKS_EXCLUDED(access_lock_);
+      const EventHandlerRecordPtr& record) const;
 
   bool IsAKey() { return is_name_a_key_; }
 
   // A Mutex used to guard access to the handlers.
   mutable absl::Mutex access_lock_;
 
-  TreeNodeEventHandler on_timer_handler_ GUARDED_BY(access_lock_) =
+  TreeNodeEventHandler on_timer_handler_ =
       [](const GnmiEvent&, const ::gnmi::Path&, GnmiSubscribeStream*) {
         // Intermediate node. No real processing but needs to
         // return OK so its children are processed.
         return ::util::OkStatus();
       };
-  TreeNodeEventHandler on_poll_handler_ GUARDED_BY(access_lock_) =
+  TreeNodeEventHandler on_poll_handler_ =
       [](const GnmiEvent&, const ::gnmi::Path&, GnmiSubscribeStream*) {
         // Intermediate node. No real processing but needs to
         // return OK so its children are processed.
         return ::util::OkStatus();
       };
-  TreeNodeEventHandler on_change_handler_ GUARDED_BY(access_lock_) =
+  TreeNodeEventHandler on_change_handler_ =
       [](const GnmiEvent&, const ::gnmi::Path&, GnmiSubscribeStream*) {
         // Intermediate node. No real processing but needs to
         // return OK so its children are processed.
         return ::util::OkStatus();
       };
-  TreeNodeEventRegistration on_change_registration_ GUARDED_BY(access_lock_) =
+  TreeNodeEventRegistration on_change_registration_ =
       [](const EventHandlerRecordPtr& record) {
         // Intermediate node. No GnmiEvent types to subscribe for.
         return ::util::OkStatus();
       };
-  TargetDefinedModeFunc target_defined_mode_ GUARDED_BY(access_lock_) =
+  TargetDefinedModeFunc target_defined_mode_ =
       [](::gnmi::Subscription* subscription) {
         // In most cases the TARGET_DEFINED mode is ON_CHANGE mode as this mode
         // is the least resource-hungry.
@@ -273,6 +357,25 @@ class TreeNode {
         subscription->set_suppress_redundant(false);
         return ::util::OkStatus();
       };
+  TreeNodeSetHandler on_update_handler_ = [](const ::gnmi::Path& path,
+                                             const ::google::google::protobuf::Message&,
+                                             CopyOnWriteChassisConfig*) {
+    return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
+           << "Unsupported mode: UPDATE for: '" << path.ShortDebugString()
+           << "'";
+  };
+  TreeNodeSetHandler on_replace_handler_ =
+      [](const ::gnmi::Path& path, const ::google::google::protobuf::Message&,
+         CopyOnWriteChassisConfig*) {
+        return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
+               << "Unsupported mode: REPLACE for: '" << path.ShortDebugString()
+               << "'";
+      };
+  TreeNodeDeleteHandler on_delete_handler_ = [](const ::gnmi::Path& path,
+                                                CopyOnWriteChassisConfig*) {
+    return MAKE_ERROR() << "unsupported mode: DELETE for: '"
+                        << path.ShortDebugString() << "'";
+  };
   const TreeNode* parent_;
   std::string name_;
   // Some nodes are mapped to ::gnmi::PathElem 'name' key value. This variable
@@ -281,6 +384,9 @@ class TreeNode {
   bool supports_on_timer_;
   bool supports_on_change_;
   bool supports_on_poll_;
+  bool supports_on_update_;
+  bool supports_on_replace_;
+  bool supports_on_delete_;
 
   friend class stratum::hal::YangParseTreeTest;
   friend class stratum::hal::SubscriptionTestBase;
@@ -292,23 +398,49 @@ class TreeNode {
 class YangParseTree {
  public:
   explicit YangParseTree(SwitchInterface*) LOCKS_EXCLUDED(root_access_lock_);
+  virtual ~YangParseTree() {}
+
+  // Registers a writer for sending gNMI events.
+  virtual ::util::Status RegisterEventNotifyWriter(
+      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
+    absl::WriterMutexLock r(&root_access_lock_);
+
+    gnmi_event_writer_ = std::move(writer);
+    return ::util::OkStatus();
+  }
+
+  // Unregisters the previously registered event notify writer after calling
+  // RegisterEventNotifyWriter().
+  virtual ::util::Status UnregisterEventNotifyWriter() {
+    absl::WriterMutexLock r(&root_access_lock_);
+
+    gnmi_event_writer_ = nullptr;
+    return ::util::OkStatus();
+  }
 
   // Add supported leaf handles for one particular interface like xe-1/1/1.
   void AddSubtreeInterfaceFromSingleton(const SingletonPort& singleton,
                                         const NodeConfigParams& node_config)
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
   // Add supported leaf handles for one particular interface like xe-1/1/1.
-  TreeNode* AddSubtreeInterface(const std::string& name, uint64 node_id,
-                                uint64 port_id,
-                                const NodeConfigParams& node_config)
+  void AddSubtreeInterfaceFromTrunk(const std::string& name, uint64 node_id,
+                                    uint32 port_id,
+                                    const NodeConfigParams& node_config)
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
   // Add supported leaf handles for the case of interfaces[name=*] (all known
   // interfaces).
   void AddSubtreeAllInterfaces() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
+  // Add supported leaf handles for a node.
+  void AddSubtreeNode(const Node& node)
+      EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+
   // Add supported leaf handles for the chassis.
   void AddSubtreeChassis(const Chassis& chassis)
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+
+  // Configure the root element.
+  void AddRoot() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
   // Returns a node that handles the YANG path.
   const TreeNode* FindNodeOrNull(const ::gnmi::Path& path) const
@@ -318,10 +450,22 @@ class YangParseTree {
   // an action on all nodes is needed.
   const TreeNode* GetRoot() const LOCKS_EXCLUDED(root_access_lock_);
 
-  SwitchInterface* GetSwitchInterface() { return switch_interface_; }
+  SwitchInterface* GetSwitchInterface() LOCKS_EXCLUDED(root_access_lock_) {
+    absl::WriterMutexLock r(&root_access_lock_);
+
+    return switch_interface_;
+  }
+
+  // A getter providing a functor setting TARGET_DEFINED mode of a leaf to be
+  // STREAM:SAMPLE.
   const TreeNode::TargetDefinedModeFunc& GetStreamSampleModeFunc() {
     return stream_sample_mode_;
   }
+
+  // A help method that is used to send notifications that a leaf has changed
+  // using a channel between YangParseTree object and GnmiPublisher objest.
+  virtual void SendNotification(const GnmiEventPtr& event)
+      LOCKS_EXCLUDED(root_access_lock_);
 
   // An action that modifies the tree to reflect new configuration.
   void ProcessPushedConfig(const ConfigHasBeenPushedEvent& change)
@@ -352,7 +496,12 @@ class YangParseTree {
       const std::function<::util::Status(const TreeNode& leaf)>& action) const
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
-  SwitchInterface* switch_interface_;
+  SwitchInterface* switch_interface_ GUARDED_BY(root_access_lock_);
+
+  // A channel between YangParseTree object and GnmiPublisher objest.
+  // It is used to send notifications that a leaf has changed.
+  std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_
+      GUARDED_BY(root_access_lock_);
 
   TreeNode root_ GUARDED_BY(root_access_lock_);
   // A Mutex used to guard access to the root.
@@ -360,18 +509,19 @@ class YangParseTree {
 
   // In most cases the TARGET_DEFINED mode is ON_CHANGE mode as this mode
   // is the least resource-hungry. But to make the gNMI demo more realistic it
-  // is changed to SAMPLE with the period of 10s.
-  // TODO remove/update this functor once the support for reading
+  // is changed to SAMPLE with the period of 1s.
+  // TODO: remove/update this functor once the support for reading
   // counters is implemented.
   TreeNode::TargetDefinedModeFunc stream_sample_mode_ =
       [](::gnmi::Subscription* subscription) {
         subscription->set_mode(::gnmi::SubscriptionMode::SAMPLE);
-        subscription->set_sample_interval(10000);  // 10sec
+        subscription->set_sample_interval(1000);  // 1sec
         subscription->set_heartbeat_interval(0);
         subscription->set_suppress_redundant(false);
         return ::util::OkStatus();
       };
 
+  friend class stratum::hal::YangParseTreePaths;
   friend class stratum::hal::YangParseTreeTest;
 };
 

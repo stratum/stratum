@@ -27,20 +27,20 @@ namespace hal {
 namespace bcm {
 
 constexpr int BcmL2Manager::kRegularMyStationEntryPriority;
-constexpr int BcmL2Manager::kPromotedMyStationEntryPriority;
+constexpr int BcmL2Manager::kL3PromoteMyStationEntryPriority;
 
-BcmL2Manager::BcmL2Manager(BcmChassisManager* bcm_chassis_manager,
+BcmL2Manager::BcmL2Manager(BcmChassisRoInterface* bcm_chassis_ro_interface,
                            BcmSdkInterface* bcm_sdk_interface, int unit)
-    : vlan_dst_mac_priority_to_station_id_(),
-      bcm_chassis_manager_(CHECK_NOTNULL(bcm_chassis_manager)),
-      bcm_sdk_interface_(CHECK_NOTNULL(bcm_sdk_interface)),
+    : my_station_entry_to_station_id_(),
+      bcm_chassis_ro_interface_(ABSL_DIE_IF_NULL(bcm_chassis_ro_interface)),
+      bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
       node_id_(0),
       unit_(unit),
       l2_learning_disabled_for_default_vlan_(false) {}
 
 BcmL2Manager::BcmL2Manager()
-    : vlan_dst_mac_priority_to_station_id_(),
-      bcm_chassis_manager_(nullptr),
+    : my_station_entry_to_station_id_(),
+      bcm_chassis_ro_interface_(nullptr),
       bcm_sdk_interface_(nullptr),
       node_id_(0),
       unit_(-1),
@@ -115,47 +115,40 @@ BcmL2Manager::~BcmL2Manager() {}
 }
 
 ::util::Status BcmL2Manager::Shutdown() {
-  vlan_dst_mac_priority_to_station_id_.clear();
+  my_station_entry_to_station_id_.clear();
   return ::util::OkStatus();
 }
 
 ::util::Status BcmL2Manager::InsertMyStationEntry(
     const BcmFlowEntry& bcm_flow_entry) {
-  ASSIGN_OR_RETURN(auto vlan_dst_mac_priority,
+  ASSIGN_OR_RETURN(const MyStationEntry& entry,
                    ValidateAndParseMyStationEntry(bcm_flow_entry));
-  // If (vlan, dst_mac, priority) tuple is already added for the given unit,
-  // return. If not try to add it and update the internal
-  // vlan_dst_mac_priority_to_station_id_ map.
-  if (vlan_dst_mac_priority_to_station_id_.count(vlan_dst_mac_priority)) {
+  // If entry is already added for this unit, return success. If not try to add
+  // it and update the my_station_entry_to_station_id_ map.
+  if (my_station_entry_to_station_id_.count(entry)) {
     return ::util::OkStatus();
   }
   ASSIGN_OR_RETURN(int station_id,
                    bcm_sdk_interface_->AddMyStationEntry(
-                       unit_, std::get<0>(vlan_dst_mac_priority),
-                       std::get<1>(vlan_dst_mac_priority),
-                       std::get<2>(vlan_dst_mac_priority)));
-  vlan_dst_mac_priority_to_station_id_[vlan_dst_mac_priority] = station_id;
+                       unit_, entry.priority, entry.vlan, entry.vlan_mask,
+                       entry.dst_mac, entry.dst_mac_mask));
+  my_station_entry_to_station_id_[entry] = station_id;
 
   return ::util::OkStatus();
 }
 
 ::util::Status BcmL2Manager::DeleteMyStationEntry(
     const BcmFlowEntry& bcm_flow_entry) {
-  ASSIGN_OR_RETURN(auto vlan_dst_mac_priority,
+  ASSIGN_OR_RETURN(const MyStationEntry& entry,
                    ValidateAndParseMyStationEntry(bcm_flow_entry));
-  // If (vlan, dst_mac, priority) tuple is not known for this unit, return
-  // error. If not, delete it and update the internal
-  // vlan_dst_mac_priority_to_station_id_ map.
-  CHECK_RETURN_IF_FALSE(
-      vlan_dst_mac_priority_to_station_id_.count(vlan_dst_mac_priority))
-      << "Unknown (vlan, dst_mac, priority) in my station TCAM for node "
-      << node_id_ << ": (" << std::get<0>(vlan_dst_mac_priority) << ", "
-      << std::get<1>(vlan_dst_mac_priority) << ", "
-      << std::get<2>(vlan_dst_mac_priority) << "), found in "
-      << bcm_flow_entry.ShortDebugString() << ".";
-  int station_id = vlan_dst_mac_priority_to_station_id_[vlan_dst_mac_priority];
-  RETURN_IF_ERROR(bcm_sdk_interface_->DeleteMyStationEntry(unit_, station_id));
-  vlan_dst_mac_priority_to_station_id_.erase(vlan_dst_mac_priority);
+  // If entry has already been removed from this unit, return success. If not,
+  // delete it and update the my_station_entry_to_station_id_ map.
+  auto it = my_station_entry_to_station_id_.find(entry);
+  if (it == my_station_entry_to_station_id_.end()) {
+    return ::util::OkStatus();
+  }
+  RETURN_IF_ERROR(bcm_sdk_interface_->DeleteMyStationEntry(unit_, it->second));
+  my_station_entry_to_station_id_.erase(entry);
 
   return ::util::OkStatus();
 }
@@ -163,9 +156,12 @@ BcmL2Manager::~BcmL2Manager() {}
 ::util::Status BcmL2Manager::InsertMulticastGroup(
     const BcmFlowEntry& bcm_flow_entry) {
   // We will have two cases here:
-  // 1- If MAC is broadcast MAC, we just enable broadcast for that VLAN. This
-  //    will fail if VLAN does not exist.
-  // 2- If MAC is not broadcast MAC, we do not support the case.
+  // 1- If MAC is broadcast MAC, we just enable broadcast for that VLAN. If
+  //    VLAN does not exist, we add the VLAN containing all the ports. Note
+  //    that enabling broadcast and/or creating VLAN can be done via config push
+  //    as well. This method will override any setting done via config push.
+  // 2- If MAC is not broadcast MAC, we return error as multicast is not
+  //    supported yet.
 
   // TODO: At the moment this will be called for default/ARP VLAN and
   // broadcast MAC, as part of pushing the static entries in the forwarding
@@ -179,20 +175,24 @@ BcmL2Manager::~BcmL2Manager() {}
     const BcmFlowEntry& bcm_flow_entry) {
   // We will have two cases here:
   // 1- If MAC is broadcast MAC, we just disable broadcast for that VLAN. This
-  //    will fail if VLAN does not exist.
-  // 2- If MAC is not broadcast MAC, we do not support the case.
+  //    will fail if VLAN does not exist. This calls will also deletes the VLAN
+  //    iff it is not the default VLAN. Note that disabling broadcast and/or
+  //    deleting the VLAN can be done via config push as well. This method will
+  //    override any setting done via config push.
+  // 2- If MAC is not broadcast MAC, we return error as multicast is not
+  //    supported yet.
 
   // TODO: At the moment this call is not even used as we do not
   // disable broadcast for default/ARP VLAN. If there is any other use case,
-  // we need to implemen this.
+  // we need to implement this.
   return ::util::OkStatus();
 }
 
 std::unique_ptr<BcmL2Manager> BcmL2Manager::CreateInstance(
-    BcmChassisManager* bcm_chassis_manager, BcmSdkInterface* bcm_sdk_interface,
-    int unit) {
+    BcmChassisRoInterface* bcm_chassis_ro_interface,
+    BcmSdkInterface* bcm_sdk_interface, int unit) {
   return absl::WrapUnique(
-      new BcmL2Manager(bcm_chassis_manager, bcm_sdk_interface, unit));
+      new BcmL2Manager(bcm_chassis_ro_interface, bcm_sdk_interface, unit));
 }
 
 ::util::Status BcmL2Manager::ConfigureVlan(
@@ -219,21 +219,22 @@ std::unique_ptr<BcmL2Manager> BcmL2Manager::CreateInstance(
 
   if (vlan == kDefaultVlan) {
     // Default vlan is a special vlan. If for some reason we diable L2 learning,
-    // we need to make sure packets in this vlan are all sent to L3 by default.
-    // We also need to still create special vlans for applications that still
-    // need L2 learning (e.g. ARP). This is fundamental for ensuring switch
-    // works as expected.
-    std::tuple<int, uint64, int> vlan_dst_mac_priority =
-        std::make_tuple(kDefaultVlan, 0ULL, kPromotedMyStationEntryPriority);
+    // we need to make sure packets in this vlan, except multicast packet, are
+    // all sent to L3 by default. We also need to still create special vlans
+    // for applications that still need L2 learning (e.g. ARP). This is
+    // fundamental for ensuring switch works as expected.
+    MyStationEntry entry(kL3PromoteMyStationEntryPriority, kDefaultVlan, 0xfff,
+                         0ULL, kNonMulticastDstMacMask);
     if (vlan_config.disable_l2_learning()) {
       // Add an my station entry for promoting L2 packets to L3 if not added
       // before for default vlan.
-      if (!vlan_dst_mac_priority_to_station_id_.count(vlan_dst_mac_priority)) {
-        ASSIGN_OR_RETURN(int station_id, bcm_sdk_interface_->AddMyStationEntry(
-                                             unit_, kDefaultVlan, 0ULL,
-                                             kPromotedMyStationEntryPriority));
-        vlan_dst_mac_priority_to_station_id_[vlan_dst_mac_priority] =
-            station_id;
+      if (!my_station_entry_to_station_id_.count(entry)) {
+        ASSIGN_OR_RETURN(
+            int station_id,
+            bcm_sdk_interface_->AddMyStationEntry(
+                unit_, kL3PromoteMyStationEntryPriority, kDefaultVlan, 0xfff,
+                0ULL, kNonMulticastDstMacMask));
+        my_station_entry_to_station_id_[entry] = station_id;
       }
       // Create a specific vlan for ARP (if it does not exist) where L2
       // learning and broadcast are enabled.
@@ -246,15 +247,14 @@ std::unique_ptr<BcmL2Manager> BcmL2Manager::CreateInstance(
     } else {
       // Remove the my station entry for promoting L2 packets to L3. We dont
       // need this any more as L2 learning has been enabled for this node.
-      auto it =
-          vlan_dst_mac_priority_to_station_id_.find(vlan_dst_mac_priority);
-      if (it != vlan_dst_mac_priority_to_station_id_.end()) {
+      auto it = my_station_entry_to_station_id_.find(entry);
+      if (it != my_station_entry_to_station_id_.end()) {
         RETURN_IF_ERROR(
             bcm_sdk_interface_->DeleteMyStationEntry(unit_, it->second));
-        vlan_dst_mac_priority_to_station_id_.erase(vlan_dst_mac_priority);
+        my_station_entry_to_station_id_.erase(entry);
       }
       // Delete the specific ARP vlan (if it exists).
-      RETURN_IF_ERROR(bcm_sdk_interface_->DeleteVlan(unit_, kArpVlan));
+      RETURN_IF_ERROR(bcm_sdk_interface_->DeleteVlanIfFound(unit_, kArpVlan));
       l2_learning_disabled_for_default_vlan_ = false;
     }
   }
@@ -262,7 +262,7 @@ std::unique_ptr<BcmL2Manager> BcmL2Manager::CreateInstance(
   return ::util::OkStatus();
 }
 
-::util::StatusOr<std::tuple<int, uint64, int>>
+::util::StatusOr<BcmL2Manager::MyStationEntry>
 BcmL2Manager::ValidateAndParseMyStationEntry(
     const BcmFlowEntry& bcm_flow_entry) const {
   // Initial validation.
@@ -278,34 +278,47 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
   CHECK_RETURN_IF_FALSE(bcm_flow_entry.actions_size() == 0)
       << "Received entry with action for node " << node_id_ << ": "
       << bcm_flow_entry.ShortDebugString() << ".";
-  // We do not expect any field other than vlan or dst_mac.
-  int vlan = 0;
-  uint64 dst_mac = 0;
+  // We do not expect any field other than vlan, dst_mac, and their masks.
+  int vlan = 0, vlan_mask = 0;
+  uint64 dst_mac = 0, dst_mac_mask = 0xffffffffffffULL;
   for (const auto& field : bcm_flow_entry.fields()) {
     if (field.type() == BcmField::ETH_DST) {
       dst_mac = field.value().u64();
+      if (field.has_mask()) {
+        dst_mac_mask = field.mask().u64();
+      }
       // We do not expect broadcast MAC as an entry here.
       CHECK_RETURN_IF_FALSE(dst_mac != kBroadcastMac)
           << "Received entry with ETH_DST set to broadcast MAC for node "
           << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
     } else if (field.type() == BcmField::VLAN_VID) {
+      // Note: we should not never translate vlan = 0 to vlan = kDefaultVlan.
+      // We let the controller decide on the values.
       vlan = static_cast<int>(field.value().u32());
+      if (field.has_mask()) {
+        vlan_mask = static_cast<int>(field.mask().u32());
+      }
     } else {
-      return MAKE_ERROR(ERR_INTERNAL)
+      return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Received fields othere than ETH_DST and VLAN_VID for node "
              << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
     }
   }
-  // NOTE: We intentionally do not translate vlan = 0 to vlan = kDefaultVlan.
-  // Vlan = 0 is translated to "all" vlan when programming my station entries.
-  // However if controller explicitly uses kDefaultVlan and tries to program
-  // all 0 in my station, we try to pick the same priority that we use for
-  // L3 promote entry.
-  int priority = (vlan == kDefaultVlan && dst_mac == 0ULL)
-                     ? kPromotedMyStationEntryPriority
+  if (vlan > 0 && vlan_mask == 0) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Detected vlan > 0 while vlan_mask is either not given or is 0 "
+           << "for node " << node_id_ << ": "
+           << bcm_flow_entry.ShortDebugString() << ".";
+  }
+  // If controller tries to program a flow which is exactly the same as the
+  // L3 promote entry, we use kL3PromoteMyStationEntryPriority as the priority.
+  // For any other case, we use kRegularMyStationEntryPriority as the priority.
+  int priority = (vlan == kDefaultVlan && vlan_mask == 0xfff &&
+                  dst_mac == 0ULL && dst_mac_mask == kNonMulticastDstMacMask)
+                     ? kL3PromoteMyStationEntryPriority
                      : kRegularMyStationEntryPriority;
 
-  return std::make_tuple(vlan, dst_mac, priority);
+  return MyStationEntry(priority, vlan, vlan_mask, dst_mac, dst_mac_mask);
 }
 
 }  // namespace bcm

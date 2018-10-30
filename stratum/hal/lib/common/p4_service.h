@@ -31,6 +31,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_interface.h"
+#include "stratum/hal/lib/p4/forwarding_pipeline_configs.pb.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
@@ -46,7 +47,7 @@ typedef ::grpc::ServerReaderWriter<::p4::v1::StreamMessageResponse,
                                    ::p4::v1::StreamMessageRequest>
     ServerStreamChannelReaderWriter;
 
-// The "P4Service" class implements ::p4::v1::P4Runtime::Service. It handles all
+// The "P4Service" class implements P4Runtime::Service. It handles all
 // the RPCs that are part of the P4-based PI API.
 class P4Service final : public ::p4::v1::P4Runtime::Service {
  public:
@@ -209,8 +210,8 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
 
   // Blocks on the Channel registered with SwitchInterface to read received
   // packets.
-  void* ReceivePackets(uint64 node_id,
-                       std::unique_ptr<ChannelReader<::p4::v1::PacketIn>> reader)
+  void* ReceivePackets(
+      uint64 node_id, std::unique_ptr<ChannelReader<::p4::v1::PacketIn>> reader)
       LOCKS_EXCLUDED(controller_lock_);
 
   // Callback to be called whenever we receive a packet on the specified node
@@ -244,8 +245,8 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
 
   // Map of per-node Channels which are used to forward received packets to
   // P4Service.
-  std::map<uint64, std::shared_ptr<Channel<::p4::v1::PacketIn>>> packet_in_channels_
-      GUARDED_BY(packet_in_thread_lock_);
+  std::map<uint64, std::shared_ptr<Channel<::p4::v1::PacketIn>>>
+      packet_in_channels_ GUARDED_BY(packet_in_thread_lock_);
 
   // Holds the IDs of all streaming connections. Every time there is a new
   // streaming connection, we select min{1,...,max(connection_ids_) + 1} as

@@ -1,0 +1,75 @@
+module openconfig-hercules-platform {
+
+  yang-version "1";
+
+  // namespace
+  namespace "http://openconfig.net/yang/hercules/platform";
+
+  prefix  "herc-platform";
+
+  // import some basic types
+  import openconfig-platform { prefix oc-platform; }
+  import openconfig-platform-types { prefix oc-platform-types; }
+  import openconfig-extensions { prefix oc-ext; }
+
+  //  include component-specific platform extensions
+  include openconfig-hercules-platform-chassis;
+  include openconfig-hercules-platform-linecard;
+  include openconfig-hercules-platform-node;
+  include openconfig-hercules-platform-port;
+
+  // meta
+  organization
+    "OpenConfig Hercules Working Group";
+
+  contact
+    "openconfig-hercules@googlegroups.com";
+
+  description
+    "This module and its submodules define extensions to the
+    OpenConfig platform models for the Hercules switch profile.";
+
+  oc-ext:openconfig-version "0.2.0";
+
+  revision 2017-12-20 {
+    description
+      "Initial version";
+    reference "0.2.0";
+  }
+
+
+  // grouping statements
+
+  grouping hercules-platform-config {
+    description
+      "Additional configuration properties for platform components";
+
+    leaf type {
+      type union {
+        type identityref {
+          base oc-platform-types:OPENCONFIG_HARDWARE_COMPONENT;
+        }
+        type identityref {
+          base oc-platform-types:OPENCONFIG_SOFTWARE_COMPONENT;
+        }
+      }
+      description
+        "Type of component as identified by the system";
+    }
+
+  }
+
+  // data definition statements
+
+  // augment statements
+  augment "/oc-platform:components/oc-platform:component/" +
+    "oc-platform:config" {
+    description
+      "Extends the base component to include type of the component
+      as a configurable value.";
+
+    uses hercules-platform-config;
+
+  }
+
+}

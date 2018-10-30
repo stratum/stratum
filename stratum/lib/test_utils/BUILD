@@ -23,6 +23,7 @@ exports_files(["LICENSE"])
 load(
     "//bazel:rules.bzl",
     "stratum_cc_library",
+    "stratum_cc_test",
     "STRATUM_INTERNAL",
 )
 
@@ -38,5 +39,32 @@ stratum_cc_library(
     deps = [
         "@com_google_googletest//:gtest",
         "@com_google_protobuf//:protobuf",
+    ],
+)
+
+stratum_cc_library(
+    name = "p4_proto_builders",
+    testonly = 1,
+    srcs = ["p4_proto_builders.cc"],
+    hdrs = ["p4_proto_builders.h"],
+    deps = [
+        "//stratum/hal/lib/p4:p4_control_proto",
+        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_table_defs_proto",
+        "@com_google_absl//absl/strings",
+        "@com_github_p4lang_PI//:p4info_v1_proto",
+    ],
+)
+
+stratum_cc_test(
+    name = "p4_proto_builders_test",
+    srcs = ["p4_proto_builders_test.cc"],
+    deps = [
+        ":matchers",
+        ":p4_proto_builders",
+        "//stratum/lib:test_main",
+        "//stratum/lib:utils",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/strings",
     ],
 )

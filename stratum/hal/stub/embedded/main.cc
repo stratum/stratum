@@ -27,24 +27,28 @@
 #include <string>
 
 #include "gflags/gflags.h"
+#include "google/protobuf/any.pb.h"
+#include "google/rpc/code.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "absl/base/macros.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "absl/numeric/int128.h"
+#include "absl/synchronization/mutex.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+#include "p4/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
+#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "stratum/hal/lib/common/oc_to_hal_config.h"
+#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
-#include "stratum/public/proto/openconfig.pb.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/base/macros.h"
-#include "absl/memory/memory.h"
-#include "absl/numeric/int128.h"
-#include "absl/synchronization/mutex.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(url, stratum::kLocalHerculesUrl,
@@ -279,11 +283,9 @@ class HalServiceClient {
     ::gnmi::SetResponse resp;
     ::grpc::ClientContext context;
     auto* replace = req.add_replace();
-    replace->mutable_path()->add_element("/");
-    replace->mutable_value()->set_type(::gnmi::PROTO);
     ::oc::Device oc_device;
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
-    oc_device.SerializeToString(replace->mutable_value()->mutable_value());
+    oc_device.SerializeToString(replace->mutable_val()->mutable_bytes_val());
     CALL_RPC_AND_CHECK_RESULTS(config_monitoring_service_stub_, Set, context,
                                req, resp, ToString);
   }
@@ -303,7 +305,8 @@ class HalServiceClient {
     req.set_device_id(node_id);
     req.mutable_election_id()->set_high(absl::Uint128High64(election_id));
     req.mutable_election_id()->set_low(absl::Uint128Low64(election_id));
-    req.set_action(::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+    req.set_action(
+        ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(
         p4_info_file, req.mutable_config()->mutable_p4info()));
     LOG_RETURN_IF_ERROR(
@@ -359,8 +362,9 @@ class HalServiceClient {
 
   static void* TxPacket(void* arg) {
     TxThreadData* data = static_cast<TxThreadData*>(arg);
-    ClientStreamChannelReaderWriter* stream = CHECK_NOTNULL(data->stream);
-    P4TableMapper* p4_table_mapper = CHECK_NOTNULL(data->p4_table_mapper);
+    //FIXME(boc) might use CHECK_NOTNULL instead of ABSL_DIE_IF_NULL
+    ClientStreamChannelReaderWriter* stream = ABSL_DIE_IF_NULL(data->stream);
+    P4TableMapper* p4_table_mapper = ABSL_DIE_IF_NULL(data->p4_table_mapper);
     ::p4::v1::StreamMessageRequest req;
     switch (test_packet_type) {
       case LLDP:
@@ -438,14 +442,9 @@ class HalServiceClient {
       // and before being able to use it we need to push configs to it. So read
       // the config from the file and push it to P4TableMapper before doing
       // any packet I/O.
-      OpenConfigToHalConfigProtoConverter converter;
       ::oc::Device oc_device;
       LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
-      if (!converter.IsCorrectProtoDevice(oc_device)) {
-        LOG(ERROR) << "::oc::Device proto is invalid.";
-        return;
-      }
-      auto ret = converter.DeviceToChassisConfig(oc_device);
+      auto ret = OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
       if (!ret.ok()) {
         LOG(ERROR) << "Failed to convert ::oc::Device to ChassisConfig: "
                    << ret.status().error_message();
@@ -543,7 +542,10 @@ class HalServiceClient {
           }
           break;
         }
+        case ::p4::v1::StreamMessageResponse::kDigest:
+        case ::p4::v1::StreamMessageResponse::kIdleTimeoutNotification:
         case ::p4::v1::StreamMessageResponse::UPDATE_NOT_SET:
+          // TODO(hercules-dev): Handle kDigest and kIdleTimeoutNotification.
           LOG(ERROR) << "Invalid message received from the switch: "
                      << resp.ShortDebugString();
           break;
@@ -589,7 +591,7 @@ class HalServiceClient {
     req.mutable_subscribe()->set_mode(::gnmi::SubscriptionList::ONCE);
 
     // A map translating port ID into port name.
-    stratum::gtl::flat_hash_map<uint64, string> id_to_name;
+    absl::flat_hash_map<uint64, string> id_to_name;
 
     LOG(INFO) << "Sending ONCE subscription: " << req.ShortDebugString();
     if (!stream->Write(req)) {
@@ -745,6 +747,7 @@ class HalServiceClient {
   static absl::Mutex lock_;
 };
 
+//FIXME(boc) consider Google only annotation
 #ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
 ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
 #else

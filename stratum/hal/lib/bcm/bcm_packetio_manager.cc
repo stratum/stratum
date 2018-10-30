@@ -37,6 +37,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/glue/integral_types.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -83,17 +84,14 @@ namespace {
 
 }  // namespace
 
-BcmPacketioManager::BcmPacketioManager(OperationMode mode,
-                                       BcmChassisManager* bcm_chassis_manager,
-                                       P4TableMapper* p4_table_mapper,
-                                       BcmSdkInterface* bcm_sdk_interface,
-                                       int unit)
+BcmPacketioManager::BcmPacketioManager(
+    OperationMode mode, BcmChassisRoInterface* bcm_chassis_ro_interface,
+    P4TableMapper* p4_table_mapper, BcmSdkInterface* bcm_sdk_interface,
+    int unit)
     : mode_(mode),
       purpose_to_knet_intf_(),
       logical_port_to_port_id_(),
       port_id_to_logical_port_(),
-      trunk_id_to_member_port_ids_(),
-      port_id_to_parent_trunk_id_(),
       bcm_rx_config_(nullptr),
       bcm_tx_config_(nullptr),
       bcm_knet_config_(nullptr),
@@ -102,9 +100,9 @@ BcmPacketioManager::BcmPacketioManager(OperationMode mode,
       knet_intf_rx_thread_data_(),
       purpose_to_tx_stats_(),
       purpose_to_rx_stats_(),
-      bcm_chassis_manager_(CHECK_NOTNULL(bcm_chassis_manager)),
-      p4_table_mapper_(CHECK_NOTNULL(p4_table_mapper)),
-      bcm_sdk_interface_(CHECK_NOTNULL(bcm_sdk_interface)),
+      bcm_chassis_ro_interface_(ABSL_DIE_IF_NULL(bcm_chassis_ro_interface)),
+      p4_table_mapper_(ABSL_DIE_IF_NULL(p4_table_mapper)),
+      bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
       node_id_(0),
       unit_(unit) {}
 
@@ -114,8 +112,6 @@ BcmPacketioManager::BcmPacketioManager()
       purpose_to_knet_intf_(),
       logical_port_to_port_id_(),
       port_id_to_logical_port_(),
-      trunk_id_to_member_port_ids_(),
-      port_id_to_parent_trunk_id_(),
       bcm_rx_config_(nullptr),
       bcm_tx_config_(nullptr),
       bcm_knet_config_(nullptr),
@@ -124,7 +120,7 @@ BcmPacketioManager::BcmPacketioManager()
       knet_intf_rx_thread_data_(),
       purpose_to_tx_stats_(),
       purpose_to_rx_stats_(),
-      bcm_chassis_manager_(nullptr),
+      bcm_chassis_ro_interface_(nullptr),
       p4_table_mapper_(nullptr),
       bcm_sdk_interface_(nullptr),
       node_id_(0),
@@ -134,17 +130,16 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
 ::util::Status BcmPacketioManager::PushChassisConfig(
     const ChassisConfig& config, uint64 node_id) {
-  // No config push in case of simulation. Simulation mode does not support
-  // KNET.
+  node_id_ = node_id;  // Save node_id ASAP to ensure all the methods can refer
+                       // to correct ID in the messages/errors.
+
+  // Simulation mode does not support KNET.
   // TODO: Find a way to do packet I/O in sim mode.
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped pushing config to BcmPacketioManager for node "
-                 << node_id << " in sim mode.";
+                 << node_id_ << " in sim mode.";
     return ::util::OkStatus();
   }
-
-  node_id_ = node_id;  // Save node_id ASAP to ensure all the methods can refer
-                       // to correct ID in the messages/errors.
 
   // Now go over all the nodes in node_id_to_unit and node_id_to_knet_node_.
   // We have the following cases:
@@ -197,22 +192,25 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
   // The last step is to update the port_id_to_logical_port_ and
   // logical_port_to_port_id_ (reverse of port_id_to_logical_port_) maps using
-  // the last updated maps from BcmChassisManager. This is done after each push
-  // and is not disruptive. This way BcmPacketioManager will always have the
-  // most updated port maps.
-  // TODO: There is no trunk support yet. Add it.
-  ASSIGN_OR_RETURN(const auto& port_id_to_unit_logical_port,
-                   bcm_chassis_manager_->GetPortIdToUnitLogicalPortMap());
-  port_id_to_logical_port_.clear();
-  logical_port_to_port_id_.clear();
-  for (const auto& entry : port_id_to_unit_logical_port) {
-    uint64 port_id = entry.first;
-    int unit = entry.second.first;
-    int logical_port = entry.second.second;
-    if (unit != unit_) continue;  // not our unit
-    port_id_to_logical_port_[port_id] = logical_port;
-    logical_port_to_port_id_[logical_port] = port_id;
+  // the last updated maps from BcmChassisRoInterface. This is done after each
+  // push and is not disruptive. This way BcmPacketioManager will always have
+  // the most updated port maps.
+  ASSIGN_OR_RETURN(const auto& port_id_to_sdk_port,
+                   bcm_chassis_ro_interface_->GetPortIdToSdkPortMap(node_id));
+  absl::flat_hash_map<int, uint32> logical_port_to_port_id;
+  absl::flat_hash_map<uint32, int> port_id_to_logical_port;
+  for (const auto& e : port_id_to_sdk_port) {
+    if (e.second.unit != unit_) {
+      // Any error here is an internal error. Must not happen.
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Something is wrong: " << e.second.unit << " != " << unit_
+             << " for a singleton port " << e.first << ".";
+    }
+    logical_port_to_port_id[e.second.logical_port] = e.first;
+    port_id_to_logical_port[e.first] = e.second.logical_port;
   }
+  logical_port_to_port_id_ = logical_port_to_port_id;
+  port_id_to_logical_port_ = port_id_to_logical_port;
 
   return ::util::OkStatus();
 }
@@ -284,6 +282,15 @@ BcmPacketioManager::~BcmPacketioManager() {}
 }
 
 ::util::Status BcmPacketioManager::Shutdown() {
+  // Simulation mode does not support KNET.
+  // TODO(aghaffar): Find a way to do packet I/O in sim mode.
+  if (mode_ == OPERATION_MODE_SIM) {
+    LOG(WARNING) << "Skipped shutting down BcmPacketioManager for node "
+                 << node_id_ << " in sim mode.";
+    node_id_ = 0;
+    return ::util::OkStatus();
+  }
+
   ::util::Status status = ::util::OkStatus();
   // Wait for all the threads to join. All threads exit once shutdown has
   // been set true.
@@ -323,8 +330,6 @@ BcmPacketioManager::~BcmPacketioManager() {}
   purpose_to_knet_intf_.clear();
   logical_port_to_port_id_.clear();
   port_id_to_logical_port_.clear();
-  trunk_id_to_member_port_ids_.clear();
-  port_id_to_parent_trunk_id_.clear();
   bcm_rx_config_.reset(nullptr);
   bcm_tx_config_.reset(nullptr);
   bcm_knet_config_.reset(nullptr);
@@ -356,6 +361,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
                  << node_id_ << " mapped to unit " << unit_ << ".";
     return ::util::OkStatus();
   }
+
   // Used only to check the validity of the given purpose. Note that purpose is
   // already known (after config is pushed), we do not expect any more change
   // in the corresponding BcmKnetIntf. Any change by later config pushes will
@@ -383,6 +389,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
                  << node_id_ << " mapped to unit " << unit_ << ".";
     return ::util::OkStatus();
   }
+
   // Used only to check the validity of the given purpose. Note that purpose is
   // already known (after config is pushed), we do not expect any more change
   // in the corresponding BcmKnetIntf. Any change by later config pushes will
@@ -402,7 +409,8 @@ BcmPacketioManager::~BcmPacketioManager() {}
 }
 
 ::util::Status BcmPacketioManager::TransmitPacket(
-    GoogleConfig::BcmKnetIntfPurpose purpose, const ::p4::v1::PacketOut& packet) {
+    GoogleConfig::BcmKnetIntfPurpose purpose,
+    const ::p4::v1::PacketOut& packet) {
   ASSIGN_OR_RETURN(const BcmKnetIntf* intf, GetBcmKnetIntf(purpose));
   CHECK_RETURN_IF_FALSE(intf->tx_sock > 0)  // MUST NOT HAPPEN!
       << "KNET interface with purpose "
@@ -426,15 +434,17 @@ BcmPacketioManager::~BcmPacketioManager() {}
   //    first member of the trunk which is up.
   // 3- Packet to ingress pipeline.
   if (!meta.use_ingress_pipeline) {
-    uint64 port_id = 0;
+    uint32 port_id = 0;
     if (meta.egress_trunk_id > 0) {
       // TX to trunk. Select the first member of the trunk which is up.
-      std::set<uint64>* members =
-          gtl::FindOrNull(trunk_id_to_member_port_ids_, meta.egress_trunk_id);
-      if (members != nullptr && !members->empty()) {
-        for (uint64 member : *members) {
-          ASSIGN_OR_RETURN(PortState port_state,
-                           bcm_chassis_manager_->GetPortState(member));
+      ASSIGN_OR_RETURN(const std::set<uint32>& members,
+                       bcm_chassis_ro_interface_->GetTrunkMembers(
+                           node_id_, meta.egress_trunk_id));
+      if (!members.empty()) {
+        for (uint32 member : members) {
+          ASSIGN_OR_RETURN(
+              PortState port_state,
+              bcm_chassis_ro_interface_->GetPortState(node_id_, member));
           if (port_state == PORT_STATE_UP) {
             port_id = member;
             break;
@@ -450,7 +460,8 @@ BcmPacketioManager::~BcmPacketioManager() {}
     } else {
       // TX to regular port. If the port is not up we should discard it.
       ASSIGN_OR_RETURN(PortState port_state,
-                       bcm_chassis_manager_->GetPortState(meta.egress_port_id));
+                       bcm_chassis_ro_interface_->GetPortState(
+                           node_id_, meta.egress_port_id));
       if (port_state != PORT_STATE_UP) {
         INCREMENT_TX_COUNTER(purpose, tx_drops_down_port);
         return MAKE_ERROR(ERR_INVALID_PARAM)
@@ -533,11 +544,12 @@ std::string BcmPacketioManager::DumpStats() const {
 }
 
 std::unique_ptr<BcmPacketioManager> BcmPacketioManager::CreateInstance(
-    OperationMode mode, BcmChassisManager* bcm_chassis_manager,
+    OperationMode mode, BcmChassisRoInterface* bcm_chassis_ro_interface,
     P4TableMapper* p4_table_mapper, BcmSdkInterface* bcm_sdk_interface,
     int unit) {
-  return std::unique_ptr<BcmPacketioManager>(new BcmPacketioManager(
-      mode, bcm_chassis_manager, p4_table_mapper, bcm_sdk_interface, unit));
+  return std::unique_ptr<BcmPacketioManager>(
+      new BcmPacketioManager(mode, bcm_chassis_ro_interface, p4_table_mapper,
+                             bcm_sdk_interface, unit));
 }
 
 void BcmPacketioManager::ParseConfig(
@@ -1032,11 +1044,11 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
             continue;  // let it retry
           }
           // Find ingress port ID.
-          if (ingress_logical_port == 0) {
+          if (ingress_logical_port == kCpuLogicalPort) {
             // This means CPU port by default.
             meta.ingress_port_id = kCpuPortId;
           } else {
-            uint64* ingress_port_id =
+            uint32* ingress_port_id =
                 gtl::FindOrNull(logical_port_to_port_id_, ingress_logical_port);
             if (ingress_port_id == nullptr) {
               VLOG(1) << "Ingress logical port " << ingress_logical_port
@@ -1045,19 +1057,19 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
               continue;  // let it retry
             }
             meta.ingress_port_id = *ingress_port_id;
-            // If the ingress port is part of a trunk, specify that as well.
-            uint64* ingress_trunk_id = gtl::FindOrNull(
-                port_id_to_parent_trunk_id_, meta.ingress_port_id);
-            if (ingress_trunk_id != nullptr) {
-              meta.ingress_trunk_id = *ingress_trunk_id;
+            auto ret = bcm_chassis_ro_interface_->GetParentTrunkId(
+                node_id_, *ingress_port_id);
+            if (ret.ok()) {
+              // If status is OK, there is a parent trunk.
+              meta.ingress_trunk_id = ret.ValueOrDie();
             }
           }
           // Find egress port ID.
-          if (egress_logical_port == 0) {
+          if (egress_logical_port == kCpuLogicalPort) {
             // This means CPU port by default.
             meta.egress_port_id = kCpuPortId;
           } else {
-            uint64* egress_port_id =
+            uint32* egress_port_id =
                 gtl::FindOrNull(logical_port_to_port_id_, egress_logical_port);
             if (egress_port_id == nullptr) {
               VLOG(1) << "Egress logical port " << egress_logical_port
@@ -1214,21 +1226,21 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   if (meta.ingress_port_id > 0) {
     MappedPacketMetadata mapped_packet_metadata;
     mapped_packet_metadata.set_type(P4_FIELD_TYPE_INGRESS_PORT);
-    mapped_packet_metadata.set_u32(static_cast<uint32>(meta.ingress_port_id));
+    mapped_packet_metadata.set_u32(meta.ingress_port_id);
     RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketInMetadata(
         mapped_packet_metadata, packet->add_metadata()));
   }
   if (meta.ingress_trunk_id > 0) {
     MappedPacketMetadata mapped_packet_metadata;
     mapped_packet_metadata.set_type(P4_FIELD_TYPE_INGRESS_TRUNK);
-    mapped_packet_metadata.set_u32(static_cast<uint32>(meta.ingress_trunk_id));
+    mapped_packet_metadata.set_u32(meta.ingress_trunk_id);
     RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketInMetadata(
         mapped_packet_metadata, packet->add_metadata()));
   }
   if (meta.egress_port_id > 0) {
     MappedPacketMetadata mapped_packet_metadata;
     mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_PORT);
-    mapped_packet_metadata.set_u32(static_cast<uint32>(meta.egress_port_id));
+    mapped_packet_metadata.set_u32(meta.egress_port_id);
     RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketInMetadata(
         mapped_packet_metadata, packet->add_metadata()));
   }
@@ -1359,12 +1371,10 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
         metadata, &mapped_packet_metadata));
     switch (mapped_packet_metadata.type()) {
       case P4_FIELD_TYPE_EGRESS_PORT:
-        meta->egress_port_id =
-            static_cast<uint64>(mapped_packet_metadata.u32());
+        meta->egress_port_id = mapped_packet_metadata.u32();
         break;
       case P4_FIELD_TYPE_EGRESS_TRUNK:
-        meta->egress_trunk_id =
-            static_cast<uint64>(mapped_packet_metadata.u32());
+        meta->egress_trunk_id = mapped_packet_metadata.u32();
         break;
       case P4_FIELD_TYPE_COS:
         meta->cos = static_cast<int>(mapped_packet_metadata.u32());

@@ -19,52 +19,52 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//stratum/portage:build_defs.bzl",
+    "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "sc_cc_lib",
-    "sc_cc_test",
+    "stratum_cc_library",
+    "stratum_cc_test",
     "HOST_ARCHES",
 )
 
 package(
-    default_hdrs_check = "strict",
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "onlp_event_handler",
     srcs = ["onlp_event_handler.cc"],
     hdrs = ["onlp_event_handler.h"],
     deps = [
         ":onlp_wrapper",
-        "//base",
-        "//absl/container:flat_hash_map",
-        "//absl/synchronization",
-        "//absl/time",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "//stratum/glue/status",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:macros",
-        "//util/gtl:flat_hash_map",
-        "//util/gtl:map_util",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:map_util",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "onlp_event_handler_test",
     srcs = ["onlp_event_handler_test.cc"],
     deps = [
         ":onlp_event_handler",
         ":onlp_wrapper_mock",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/synchronization",
-        "//absl/time",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "//stratum/glue/status",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "onlp_wrapper",
     srcs = [
         "onlp_wrapper.cc",
@@ -81,14 +81,14 @@ sc_cc_lib(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:macros",
-        "//absl/memory",
-        "//absl/synchronization",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
         #       TODO: Fix dependency
         #        "//stratum/onlp:onlpsim",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "onlp_wrapper_mock",
     testonly = 1,
     hdrs = [
@@ -97,13 +97,13 @@ sc_cc_lib(
     arches = HOST_ARCHES,
     deps = [
         ":onlp_wrapper",
-        "//testing/base/public:gunit_no_google3",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
     ],
 )
 
-sc_cc_lib(
+stratum_cc_library(
     name = "sfp_datasource",
     srcs = [
         "sfp_datasource.cc",
@@ -120,15 +120,15 @@ sc_cc_lib(
         "//stratum/hal/lib/phal:phal_proto",
         "//stratum/hal/lib/phal:system_interface",
         "//stratum/lib:macros",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/synchronization",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
         #       TODO: Fix dependency
         #        "//stratum/onlp:onlpsim",
     ],
 )
 
-sc_cc_test(
+stratum_cc_test(
     name = "sfp_datasource_test",
     srcs = [
         "sfp_datasource_test.cc",
@@ -145,11 +145,11 @@ sc_cc_test(
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/base:core_headers",
-        "//absl/memory",
-        "//absl/strings",
-        "//absl/synchronization",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
         #       TODO: Fix dependency
         #        "//stratum/onlp:onlpsim",
     ],

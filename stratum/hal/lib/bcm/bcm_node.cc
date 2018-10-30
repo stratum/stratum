@@ -18,12 +18,13 @@
 #include <utility>
 
 #include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 
 // TODO: This flag is currently false to skip static entry writes
 // until all related hardware tables and related mapping are implemented.
-DEFINE_bool(enable_static_table_writes, false,
+DEFINE_bool(enable_static_table_writes, true,
             "Enables writes of static table "
             "entries from the P4 pipeline config to the hardware tables");
 
@@ -35,14 +36,16 @@ BcmNode::BcmNode(BcmAclManager* bcm_acl_manager, BcmL2Manager* bcm_l2_manager,
                  BcmL3Manager* bcm_l3_manager,
                  BcmPacketioManager* bcm_packetio_manager,
                  BcmTableManager* bcm_table_manager,
+                 BcmTunnelManager* bcm_tunnel_manager,
                  P4TableMapper* p4_table_mapper, int unit)
     : initialized_(false),
-      bcm_acl_manager_(CHECK_NOTNULL(bcm_acl_manager)),
-      bcm_l2_manager_(CHECK_NOTNULL(bcm_l2_manager)),
-      bcm_l3_manager_(CHECK_NOTNULL(bcm_l3_manager)),
-      bcm_packetio_manager_(CHECK_NOTNULL(bcm_packetio_manager)),
-      bcm_table_manager_(CHECK_NOTNULL(bcm_table_manager)),
-      p4_table_mapper_(CHECK_NOTNULL(p4_table_mapper)),
+      bcm_acl_manager_(ABSL_DIE_IF_NULL(bcm_acl_manager)),
+      bcm_l2_manager_(ABSL_DIE_IF_NULL(bcm_l2_manager)),
+      bcm_l3_manager_(ABSL_DIE_IF_NULL(bcm_l3_manager)),
+      bcm_packetio_manager_(ABSL_DIE_IF_NULL(bcm_packetio_manager)),
+      bcm_table_manager_(ABSL_DIE_IF_NULL(bcm_table_manager)),
+      bcm_tunnel_manager_(ABSL_DIE_IF_NULL(bcm_tunnel_manager)),
+      p4_table_mapper_(ABSL_DIE_IF_NULL(p4_table_mapper)),
       node_id_(0),
       unit_(unit) {}
 
@@ -53,6 +56,7 @@ BcmNode::BcmNode()
       bcm_l3_manager_(nullptr),
       bcm_packetio_manager_(nullptr),
       bcm_table_manager_(nullptr),
+      bcm_tunnel_manager_(nullptr),
       p4_table_mapper_(nullptr),
       node_id_(0),
       unit_(-1) {}
@@ -68,6 +72,7 @@ BcmNode::~BcmNode() {}
   RETURN_IF_ERROR(bcm_l2_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bcm_l3_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bcm_acl_manager_->PushChassisConfig(config, node_id));
+  RETURN_IF_ERROR(bcm_tunnel_manager_->PushChassisConfig(config, node_id));
   RETURN_IF_ERROR(bcm_packetio_manager_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
@@ -100,6 +105,8 @@ BcmNode::~BcmNode() {}
   APPEND_STATUS_IF_ERROR(
       status, bcm_acl_manager_->VerifyChassisConfig(config, node_id));
   APPEND_STATUS_IF_ERROR(
+      status, bcm_tunnel_manager_->VerifyChassisConfig(config, node_id));
+  APPEND_STATUS_IF_ERROR(
       status, bcm_packetio_manager_->VerifyChassisConfig(config, node_id));
 
   return status;
@@ -116,6 +123,7 @@ BcmNode::~BcmNode() {}
   RETURN_IF_ERROR(StaticEntryWrite(p4_pipeline_config, /*post_push=*/false));
   RETURN_IF_ERROR(p4_table_mapper_->PushForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bcm_acl_manager_->PushForwardingPipelineConfig(config));
+  RETURN_IF_ERROR(bcm_tunnel_manager_->PushForwardingPipelineConfig(config));
   RETURN_IF_ERROR(StaticEntryWrite(p4_pipeline_config, /*post_push=*/true));
 
   return ::util::OkStatus();
@@ -129,6 +137,8 @@ BcmNode::~BcmNode() {}
       status, p4_table_mapper_->VerifyForwardingPipelineConfig(config));
   APPEND_STATUS_IF_ERROR(
       status, bcm_acl_manager_->VerifyForwardingPipelineConfig(config));
+  APPEND_STATUS_IF_ERROR(
+      status, bcm_tunnel_manager_->VerifyForwardingPipelineConfig(config));
 
   return status;
 }
@@ -137,6 +147,7 @@ BcmNode::~BcmNode() {}
   absl::WriterMutexLock l(&lock_);
   auto status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(status, bcm_packetio_manager_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, bcm_tunnel_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, bcm_acl_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, bcm_l3_manager_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, bcm_l2_manager_->Shutdown());
@@ -171,7 +182,8 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::ReadForwardingEntries(
-    const ::p4::v1::ReadRequest& req, WriterInterface<::p4::v1::ReadResponse>* writer,
+    const ::p4::v1::ReadRequest& req,
+    WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
@@ -316,14 +328,24 @@ BcmNode::~BcmNode() {}
       GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER, packet);
 }
 
+::util::Status BcmNode::UpdatePortState(uint32 port_id) {
+  absl::WriterMutexLock l(&lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  // Reprogram all multipath groups referencing this port.
+  RETURN_IF_ERROR(bcm_l3_manager_->UpdateMultipathGroupsForPort(port_id));
+  return ::util::OkStatus();
+}
+
 std::unique_ptr<BcmNode> BcmNode::CreateInstance(
     BcmAclManager* bcm_acl_manager, BcmL2Manager* bcm_l2_manager,
     BcmL3Manager* bcm_l3_manager, BcmPacketioManager* bcm_packetio_manager,
-    BcmTableManager* bcm_table_manager, P4TableMapper* p4_table_mapper,
-    int unit) {
+    BcmTableManager* bcm_table_manager, BcmTunnelManager* bcm_tunnel_manager,
+    P4TableMapper* p4_table_mapper, int unit) {
   return absl::WrapUnique(new BcmNode(
       bcm_acl_manager, bcm_l2_manager, bcm_l3_manager, bcm_packetio_manager,
-      bcm_table_manager, p4_table_mapper, unit));
+      bcm_table_manager, bcm_tunnel_manager, p4_table_mapper, unit));
 }
 
 ::util::Status BcmNode::StaticEntryWrite(const P4PipelineConfig& config,
@@ -468,11 +490,11 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
         case BcmFlowEntry::BCM_TABLE_IPV6_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV6_HOST:
-          RETURN_IF_ERROR(bcm_l3_manager_->InsertLpmOrHostFlow(bcm_flow_entry));
-          // Update the internal records in BcmTableManager.
-          RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
+          RETURN_IF_ERROR(bcm_l3_manager_->InsertTableEntry(entry));
+          // BcmL3Manager updates the internal records in BcmTableManager.
           consumed = true;
           break;
+        // TODO(richardyu): Move BcmTableManager calls into BcmL2Manager.
         case BcmFlowEntry::BCM_TABLE_L2_MULTICAST:
           RETURN_IF_ERROR(
               bcm_l2_manager_->InsertMulticastGroup(bcm_flow_entry));
@@ -492,6 +514,10 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           // BcmAclManager updates BcmTableManager.
           consumed = true;
           break;
+        case BcmFlowEntry::BCM_TABLE_TUNNEL:
+          RETURN_IF_ERROR(bcm_tunnel_manager_->InsertTableEntry(entry));
+          consumed = true;
+          break;
         default:
           break;
       }
@@ -503,14 +529,16 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
         case BcmFlowEntry::BCM_TABLE_IPV6_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV6_HOST:
-          RETURN_IF_ERROR(bcm_l3_manager_->ModifyLpmOrHostFlow(bcm_flow_entry));
-          // Update the internal records in BcmTableManager.
-          RETURN_IF_ERROR(bcm_table_manager_->UpdateTableEntry(entry));
+          RETURN_IF_ERROR(bcm_l3_manager_->ModifyTableEntry(entry));
           consumed = true;
           break;
         case BcmFlowEntry::BCM_TABLE_ACL:
           RETURN_IF_ERROR(bcm_acl_manager_->ModifyTableEntry(entry));
           // BcmAclManager updates BcmTableManager.
+          consumed = true;
+          break;
+        case BcmFlowEntry::BCM_TABLE_TUNNEL:
+          RETURN_IF_ERROR(bcm_tunnel_manager_->ModifyTableEntry(entry));
           consumed = true;
           break;
         default:
@@ -524,9 +552,8 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
         case BcmFlowEntry::BCM_TABLE_IPV6_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV6_HOST:
-          RETURN_IF_ERROR(bcm_l3_manager_->DeleteLpmOrHostFlow(bcm_flow_entry));
-          // Update the internal records in BcmTableManager.
-          RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
+          RETURN_IF_ERROR(bcm_l3_manager_->DeleteTableEntry(entry));
+          // BcmL3Manager updates the internal records in BcmTableManager.
           consumed = true;
           break;
         case BcmFlowEntry::BCM_TABLE_L2_MULTICAST:
@@ -548,6 +575,10 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           // BcmAclManager updates BcmTableManager.
           consumed = true;
           break;
+        case BcmFlowEntry::BCM_TABLE_TUNNEL:
+          RETURN_IF_ERROR(bcm_tunnel_manager_->DeleteTableEntry(entry));
+          consumed = true;
+          break;
         default:
           break;
       }
@@ -561,7 +592,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       << "Do not know what to do with the following BcmTableType when doing "
       << "table update of type " << ::p4::v1::Update::Type_Name(type) << ": "
       << BcmFlowEntry::BcmTableType_Name(bcm_table_type)
-      << ". p4::v1::TableEntry: " << entry.ShortDebugString() << ".";
+      << ". ::p4::v1::TableEntry: " << entry.ShortDebugString() << ".";
 
   return ::util::OkStatus();
 }
@@ -582,16 +613,22 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // Fill BcmNonMultipathNexthop for this member and add it to the HW.
       BcmNonMultipathNexthop nexthop;
       RETURN_IF_ERROR(
-          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop));
+          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop))
+          .LogError();
       ASSIGN_OR_RETURN(
           int egress_intf_id,
           bcm_l3_manager_->FindOrCreateNonMultipathNexthop(nexthop));
+      int bcm_port_id =
+          nexthop.port_case() == BcmNonMultipathNexthop::kLogicalPort
+              ? nexthop.logical_port()
+              : nexthop.trunk_port();
       // Update the internal records in BcmTableManager. Note that if the
       // egress intf ID is already assigned to an existing member, this
       // method will return error. We keep a one-to-one map between members
       // and non-multipath egress intfs.
       RETURN_IF_ERROR(bcm_table_manager_->AddActionProfileMember(
-          member, nexthop.type(), egress_intf_id));
+                          member, nexthop.type(), egress_intf_id, bcm_port_id))
+          .LogError();
       consumed = true;
       break;
     }
@@ -607,15 +644,22 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // Then check if adding to HW ends up creating a new egress intf.
       BcmNonMultipathNexthop nexthop;
       RETURN_IF_ERROR(
-          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop));
+          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop))
+          .LogError();
       CHECK_RETURN_IF_FALSE(unit_ == nexthop.unit())
           << "Something is wrong. This should never happen (" << unit_
           << " != " << nexthop.unit() << ").";
       RETURN_IF_ERROR(
-          bcm_l3_manager_->ModifyNonMultipathNexthop(egress_intf_id, nexthop));
+          bcm_l3_manager_->ModifyNonMultipathNexthop(egress_intf_id, nexthop))
+          .LogError();
+      int bcm_port_id =
+          nexthop.port_case() == BcmNonMultipathNexthop::kLogicalPort
+              ? nexthop.logical_port()
+              : nexthop.trunk_port();
       // Update the internal records in BcmTableManager.
       RETURN_IF_ERROR(bcm_table_manager_->UpdateActionProfileMember(
-          member, nexthop.type()));
+                          member, nexthop.type(), bcm_port_id))
+          .LogError();
       consumed = true;
       break;
     }
@@ -625,8 +669,9 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // member has not been used by any group or flow yet (i.e. has zero ref
       // count), we can safely remove it.
       BcmNonMultipathNexthopInfo info;
-      RETURN_IF_ERROR(bcm_table_manager_->GetBcmNonMultipathNexthopInfo(
-          member_id, &info));  // will error out if member not found
+      RETURN_IF_ERROR(
+          bcm_table_manager_->GetBcmNonMultipathNexthopInfo(member_id, &info))
+          .LogError();  // will error out if member not found
       CHECK_RETURN_IF_FALSE(info.group_ref_count == 0 &&
                             info.flow_ref_count == 0)
           << "member_id " << member_id << " is already used by "
@@ -635,9 +680,11 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           << ". ActionProfileMember: " << member.ShortDebugString() << ".";
       // Delete the member from HW.
       RETURN_IF_ERROR(
-          bcm_l3_manager_->DeleteNonMultipathNexthop(info.egress_intf_id));
+          bcm_l3_manager_->DeleteNonMultipathNexthop(info.egress_intf_id))
+          .LogError();
       // Update the internal records in BcmTableManager.
-      RETURN_IF_ERROR(bcm_table_manager_->DeleteActionProfileMember(member));
+      RETURN_IF_ERROR(bcm_table_manager_->DeleteActionProfileMember(member))
+          .LogError();
       consumed = true;
       break;
     }
@@ -654,7 +701,8 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 
 namespace {
 
-::util::Status CheckForUniqueMemberIds(const ::p4::v1::ActionProfileGroup& group) {
+::util::Status CheckForUniqueMemberIds(
+    const ::p4::v1::ActionProfileGroup& group) {
   std::set<uint32> member_ids = {};
   for (const auto& member : group.members()) {
     uint32 member_id = member.member_id();

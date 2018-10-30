@@ -19,10 +19,12 @@
 
 #include "stratum/lib/constants.h"
 #include "gtest/gtest.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
 #include "google/protobuf/util/message_differencer.h"
 
-using google::protobuf::util::MessageDifferencer;
+
+using ::google::protobuf::util::MessageDifferencer;
 
 namespace stratum {
 namespace hal {
@@ -45,9 +47,10 @@ TEST(CommonUtilsTest, PrintNodeForNoneEmptyNodeProto) {
   EXPECT_EQ("(id: 1234567, slot: 1, index: 2)", PrintNode(node));
 }
 
-TEST(CommonUtilsTest, PrintNodeWithDirectArgList) {
-  EXPECT_EQ("(slot: 1, index: 2)", PrintNode(0, 1, 2));
-  EXPECT_EQ("(id: 1234567, slot: 1, index: 2)", PrintNode(1234567, 1, 2));
+TEST(CommonUtilsTest, PrintNodeProperties) {
+  EXPECT_EQ("(slot: 1, index: 2)", PrintNodeProperties(0, 1, 2));
+  EXPECT_EQ("(id: 1234567, slot: 1, index: 2)",
+            PrintNodeProperties(1234567, 1, 2));
 }
 
 TEST(CommonUtilsTest, PrintSingletonPortForEmptySingletonPortProto) {
@@ -74,26 +77,65 @@ TEST(CommonUtilsTest, PrintSingletonPortForNonEmptySingletonPortProto) {
   EXPECT_EQ("(slot: 1, port: 10, speed: 50G)", PrintSingletonPort(port));
 
   port.set_id(1234567);
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, speed: 50G)",
+  EXPECT_EQ("(port_id: 1234567, slot: 1, port: 10, speed: 50G)",
             PrintSingletonPort(port));
 
   port.clear_speed_bps();
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10)", PrintSingletonPort(port));
+  EXPECT_EQ("(port_id: 1234567, slot: 1, port: 10)", PrintSingletonPort(port));
 
   port.set_channel(2);
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, channel: 2)",
+  EXPECT_EQ("(port_id: 1234567, slot: 1, port: 10, channel: 2)",
+            PrintSingletonPort(port));
+
+  port.set_node(2);
+  EXPECT_EQ("(node_id: 2, port_id: 1234567, slot: 1, port: 10, channel: 2)",
             PrintSingletonPort(port));
 }
 
-TEST(CommonUtilsTest, PrintSingletonPortWithDirectArgList) {
+TEST(CommonUtilsTest, PrintPortProperties) {
   EXPECT_EQ("(slot: 1, port: 10, channel: 3)",
-            PrintSingletonPort(0, 1, 10, 3, 0));
+            PrintPortProperties(0, 0, 1, 10, 3, -1, -1, 0));
   EXPECT_EQ("(slot: 1, port: 10, channel: 3, speed: 50G)",
-            PrintSingletonPort(0, 1, 10, 3, kFiftyGigBps));
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10, channel: 3, speed: 50G)",
-            PrintSingletonPort(1234567, 1, 10, 3, kFiftyGigBps));
-  EXPECT_EQ("(id: 1234567, slot: 1, port: 10)",
-            PrintSingletonPort(1234567, 1, 10, 0, 0));
+            PrintPortProperties(0, 0, 1, 10, 3, -1, -1, kFiftyGigBps));
+  EXPECT_EQ("(port_id: 1234567, slot: 1, port: 10, channel: 3, speed: 50G)",
+            PrintPortProperties(0, 1234567, 1, 10, 3, -1, -1, kFiftyGigBps));
+  EXPECT_EQ("(port_id: 1234567, slot: 1, port: 10)",
+            PrintPortProperties(0, 1234567, 1, 10, 0, -1, -1, 0));
+  EXPECT_EQ("(node_id: 98765, port_id: 1234567, slot: 1, port: 10)",
+            PrintPortProperties(98765, 1234567, 1, 10, 0, -1, -1, 0));
+  EXPECT_EQ("(node_id: 98765, port_id: 1234567, slot: 1, port: 10, unit: 2)",
+            PrintPortProperties(98765, 1234567, 1, 10, 0, 2, -1, 0));
+  EXPECT_EQ(
+      "(node_id: 98765, port_id: 1234567, slot: 1, port: 10, unit: 2, "
+      "logical_port: 33)",
+      PrintPortProperties(98765, 1234567, 1, 10, 0, 2, 33, 0));
+  EXPECT_EQ(
+      "(node_id: 98765, port_id: 1234567, slot: 1, port: 10, unit: 2, "
+      "logical_port: 33, speed: 40G)",
+      PrintPortProperties(98765, 1234567, 1, 10, 0, 2, 33, kFortyGigBps));
+}
+
+TEST(CommonUtilsTest, PrintTrunkPortForEmptyTrunkPortProto) {
+  TrunkPort port;
+  EXPECT_EQ("()", PrintTrunkPort(port));
+}
+
+TEST(CommonUtilsTest, PrintTrunkPortForNonEmptyTrunkPortProto) {
+  TrunkPort port;
+  port.set_node(98765);
+  EXPECT_EQ("(node_id: 98765)", PrintTrunkPort(port));
+
+  port.set_id(12345);
+  EXPECT_EQ("(node_id: 98765, trunk_id: 12345)", PrintTrunkPort(port));
+}
+
+TEST(CommonUtilsTest, PrintTrunkProperties) {
+  EXPECT_EQ("(node_id: 98765, trunk_id: 1234567, unit: 2, trunk_port: 33)",
+            PrintTrunkProperties(98765, 1234567, 2, 33, 0));
+  EXPECT_EQ(
+      "(node_id: 98765, trunk_id: 1234567, unit: 2, trunk_port: 33, speed: "
+      "40G)",
+      PrintTrunkProperties(98765, 1234567, 2, 33, kFortyGigBps));
 }
 
 TEST(CommonUtilsTest, PrintPortState) {
@@ -101,30 +143,6 @@ TEST(CommonUtilsTest, PrintPortState) {
   EXPECT_EQ("DOWN", PrintPortState(PORT_STATE_DOWN));
   EXPECT_EQ("FAILED", PrintPortState(PORT_STATE_FAILED));
   EXPECT_EQ("UNKNOWN", PrintPortState(PORT_STATE_UNKNOWN));
-}
-
-TEST(CommonUtilsTest, PrintPhysicalPort) {
-  constexpr int kSlot = 1;
-  constexpr int kPortNum = 14;
-  PhysicalPort port;
-
-  std::string expected_string(
-      absl::Substitute("(slot: $0, port: $1)", kSlot, kPortNum));
-  port.set_slot(kSlot);
-  port.set_port(kPortNum);
-  EXPECT_EQ(expected_string, PrintPhysicalPort(port));
-}
-
-TEST(PortUtilsTest, BuildPhysicalPort) {
-  constexpr int kSlot = 1;
-  constexpr int kPortNum = 23;
-
-  PhysicalPort expected_port;
-  expected_port.set_slot(kSlot);
-  expected_port.set_port(kPortNum);
-
-  EXPECT_TRUE(MessageDifferencer::Equals(
-      expected_port, PortUtils::BuildPhysicalPort(kSlot, kPortNum)));
 }
 
 TEST(PortUtilsTest, BuildSingletonPort) {
@@ -140,11 +158,37 @@ TEST(PortUtilsTest, BuildSingletonPort) {
   expected_port.set_speed_bps(kSpeedBps);
 
   EXPECT_TRUE(MessageDifferencer::Equals(
-      expected_port,
-      PortUtils::BuildSingletonPort(kSlot, kPortNum, kChannel, kSpeedBps)));
+      expected_port, BuildSingletonPort(kSlot, kPortNum, kChannel, kSpeedBps)));
 }
 
-// Note: Assumes PortUtils::BuildSingletonPort() returns a correct port,
+TEST(PortUtilsTest, SingletonPortHash) {
+  absl::flat_hash_set<SingletonPort, SingletonPortHash, SingletonPortEqual>
+      test_hash_map;
+  SingletonPortHash port_hash;
+  constexpr int kSlot1 = 1;
+  constexpr int kSlot2 = 2;
+  constexpr int kPortNum1 = 15;
+  constexpr int kPortNum2 = 42;
+  constexpr int kChannel1 = 3;
+  constexpr int kChannel2 = 1;
+  constexpr uint64 kSpeedBps1 = kTwentyGigBps;
+  constexpr uint64 kSpeedBps2 = kTwentyFiveGigBps;
+
+  SingletonPort port_1 =
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps1);
+  SingletonPort port_2 =
+      BuildSingletonPort(kSlot2, kPortNum2, kChannel2, kSpeedBps2);
+  SingletonPort port_3 =
+      BuildSingletonPort(kSlot2, kPortNum2, kChannel2, kSpeedBps1);
+  test_hash_map.insert(port_1);
+  test_hash_map.insert(port_2);
+  test_hash_map.insert(port_3);
+  EXPECT_NE(port_hash(port_1), port_hash(port_2));
+  EXPECT_EQ(port_hash(port_2), port_hash(port_2));
+  EXPECT_EQ(3U, test_hash_map.size());
+}
+
+// Note: Assumes BuildSingletonPort() returns a correct port,
 // avoids defining a similar method to construct a SingletonPort.
 // Constructs a few variations of SingletonPort and checks for equality.
 TEST(PortUtilsTest, SingletonPortEqual) {
@@ -160,71 +204,61 @@ TEST(PortUtilsTest, SingletonPortEqual) {
   constexpr uint64 kSpeedBps3 = kFortyGigBps;
   constexpr uint64 kSpeedBps4 = kHundredGigBps;
 
-  SingletonPort port_1 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
-  SingletonPort port_2 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum2, 0, 0ULL);
-  SingletonPort port_3 =
-      PortUtils::BuildSingletonPort(kSlot2, kPortNum1, 0, 0ULL);
+  SingletonPort port_1 = BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
+  SingletonPort port_2 = BuildSingletonPort(kSlot1, kPortNum2, 0, 0ULL);
+  SingletonPort port_3 = BuildSingletonPort(kSlot2, kPortNum1, 0, 0ULL);
   EXPECT_FALSE(port_equals(port_1, port_2));
   EXPECT_FALSE(port_equals(port_2, port_3));
   EXPECT_FALSE(port_equals(port_1, port_3));
 
-  SingletonPort port_4 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
+  SingletonPort port_4 = BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
   EXPECT_TRUE(port_equals(port_4, port_1));
 
-  SingletonPort port_5 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, 0ULL);
+  SingletonPort port_5 = BuildSingletonPort(kSlot1, kPortNum1, kChannel1, 0ULL);
   EXPECT_FALSE(port_equals(port_5, port_4));
 
-  SingletonPort port_6 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel2, 0ULL);
+  SingletonPort port_6 = BuildSingletonPort(kSlot1, kPortNum1, kChannel2, 0ULL);
   EXPECT_FALSE(port_equals(port_5, port_6));
 
-  SingletonPort port_7 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, 0ULL);
+  SingletonPort port_7 = BuildSingletonPort(kSlot1, kPortNum1, kChannel1, 0ULL);
   EXPECT_TRUE(port_equals(port_7, port_5));
 
-  SingletonPort port_8 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps3);
-  SingletonPort port_9 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps4);
+  SingletonPort port_8 = BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps3);
+  SingletonPort port_9 = BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps4);
   EXPECT_FALSE(port_equals(port_8, port_9));
   EXPECT_FALSE(port_equals(port_8, port_1));
   EXPECT_FALSE(port_equals(port_8, port_5));
 
-  SingletonPort port_10 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps3);
+  SingletonPort port_10 = BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps3);
   EXPECT_TRUE(port_equals(port_8, port_10));
 
   SingletonPort port_11 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps1);
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps1);
   SingletonPort port_12 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps2);
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps2);
   EXPECT_FALSE(port_equals(port_11, port_12));
   EXPECT_FALSE(port_equals(port_11, port_7));
   EXPECT_FALSE(port_equals(port_11, port_4));
 
   SingletonPort port_13 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel2, kSpeedBps2);
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel2, kSpeedBps2);
   EXPECT_FALSE(port_equals(port_13, port_12));
 
   SingletonPort port_14 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum2, kChannel1, kSpeedBps2);
+      BuildSingletonPort(kSlot1, kPortNum2, kChannel1, kSpeedBps2);
   EXPECT_FALSE(port_equals(port_14, port_12));
 
   SingletonPort port_15 =
-      PortUtils::BuildSingletonPort(kSlot2, kPortNum1, kChannel1, kSpeedBps2);
+      BuildSingletonPort(kSlot2, kPortNum1, kChannel1, kSpeedBps2);
   EXPECT_FALSE(port_equals(port_15, port_12));
 }
 
-// Note: Assumes PortUtils::BuildSingletonPort() returns a correct port.
+// Note: Assumes BuildSingletonPort() returns a correct port.
 // Constructs a few representative instances of SingletonPort and checks if
 // the compare function returns the expected order (compares slot, port,
 // channel, speed, in that order).
-TEST(PortUtilsTest, SingletonPortCompare) {
-  SingletonPortCompare port_lesser;
+TEST(PortUtilsTest, SingletonPortLess) {
+  SingletonPortLess port_less;
   constexpr int kSlot1 = 1;
   constexpr int kSlot2 = 2;
   constexpr int kPortNum1 = 15;
@@ -236,114 +270,134 @@ TEST(PortUtilsTest, SingletonPortCompare) {
   constexpr uint64 kSpeedBps3 = kFortyGigBps;
   constexpr uint64 kSpeedBps4 = kHundredGigBps;
 
-  SingletonPort port_1 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
-  SingletonPort port_2 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum2, 0, 0ULL);
-  SingletonPort port_3 =
-      PortUtils::BuildSingletonPort(kSlot2, kPortNum1, 0, 0ULL);
-  EXPECT_TRUE(port_lesser(port_1, port_2));
-  EXPECT_TRUE(port_lesser(port_2, port_3));
-  EXPECT_TRUE(port_lesser(port_1, port_3));
+  SingletonPort port_1 = BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
+  SingletonPort port_2 = BuildSingletonPort(kSlot1, kPortNum2, 0, 0ULL);
+  SingletonPort port_3 = BuildSingletonPort(kSlot2, kPortNum1, 0, 0ULL);
+  EXPECT_TRUE(port_less(port_1, port_2));
+  EXPECT_TRUE(port_less(port_2, port_3));
+  EXPECT_TRUE(port_less(port_1, port_3));
 
-  SingletonPort port_4 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
-  EXPECT_FALSE(port_lesser(port_4, port_1));
-  EXPECT_FALSE(port_lesser(port_1, port_4));
+  SingletonPort port_4 = BuildSingletonPort(kSlot1, kPortNum1, 0, 0ULL);
+  EXPECT_FALSE(port_less(port_4, port_1));
+  EXPECT_FALSE(port_less(port_1, port_4));
 
-  SingletonPort port_5 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, 0ULL);
-  EXPECT_TRUE(port_lesser(port_4, port_5));
-  EXPECT_FALSE(port_lesser(port_5, port_4));
+  SingletonPort port_5 = BuildSingletonPort(kSlot1, kPortNum1, kChannel1, 0ULL);
+  EXPECT_TRUE(port_less(port_4, port_5));
+  EXPECT_FALSE(port_less(port_5, port_4));
 
-  SingletonPort port_6 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel2, 0ULL);
-  EXPECT_TRUE(port_lesser(port_5, port_6));
-  EXPECT_FALSE(port_lesser(port_6, port_5));
+  SingletonPort port_6 = BuildSingletonPort(kSlot1, kPortNum1, kChannel2, 0ULL);
+  EXPECT_TRUE(port_less(port_5, port_6));
+  EXPECT_FALSE(port_less(port_6, port_5));
 
-  SingletonPort port_7 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum2, kChannel1, 0ULL);
-  EXPECT_TRUE(port_lesser(port_6, port_7));
-  EXPECT_FALSE(port_lesser(port_7, port_6));
+  SingletonPort port_7 = BuildSingletonPort(kSlot1, kPortNum2, kChannel1, 0ULL);
+  EXPECT_TRUE(port_less(port_6, port_7));
+  EXPECT_FALSE(port_less(port_7, port_6));
 
-  SingletonPort port_8 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps3);
-  SingletonPort port_9 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps4);
-  EXPECT_TRUE(port_lesser(port_8, port_9));
-  EXPECT_TRUE(port_lesser(port_1, port_8));
-  EXPECT_TRUE(port_lesser(port_8, port_5));
+  SingletonPort port_8 = BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps3);
+  SingletonPort port_9 = BuildSingletonPort(kSlot1, kPortNum1, 0, kSpeedBps4);
+  EXPECT_TRUE(port_less(port_8, port_9));
+  EXPECT_TRUE(port_less(port_1, port_8));
+  EXPECT_TRUE(port_less(port_8, port_5));
 
   // Skip port_10.
 
   SingletonPort port_11 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps1);
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps1);
   SingletonPort port_12 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps2);
-  EXPECT_TRUE(port_lesser(port_11, port_12));
-  EXPECT_TRUE(port_lesser(port_4, port_11));
-  EXPECT_TRUE(port_lesser(port_5, port_11));
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel1, kSpeedBps2);
+  EXPECT_TRUE(port_less(port_11, port_12));
+  EXPECT_TRUE(port_less(port_4, port_11));
+  EXPECT_TRUE(port_less(port_5, port_11));
 
   SingletonPort port_13 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum1, kChannel2, kSpeedBps1);
-  EXPECT_TRUE(port_lesser(port_12, port_13));
-  EXPECT_FALSE(port_lesser(port_13, port_12));
+      BuildSingletonPort(kSlot1, kPortNum1, kChannel2, kSpeedBps1);
+  EXPECT_TRUE(port_less(port_12, port_13));
+  EXPECT_FALSE(port_less(port_13, port_12));
 
   SingletonPort port_14 =
-      PortUtils::BuildSingletonPort(kSlot1, kPortNum2, kChannel1, kSpeedBps1);
-  EXPECT_TRUE(port_lesser(port_12, port_14));
-  EXPECT_FALSE(port_lesser(port_14, port_12));
+      BuildSingletonPort(kSlot1, kPortNum2, kChannel1, kSpeedBps1);
+  EXPECT_TRUE(port_less(port_12, port_14));
+  EXPECT_FALSE(port_less(port_14, port_12));
 
   SingletonPort port_15 =
-      PortUtils::BuildSingletonPort(kSlot2, kPortNum1, kChannel1, kSpeedBps1);
-  EXPECT_TRUE(port_lesser(port_12, port_15));
-  EXPECT_FALSE(port_lesser(port_15, port_12));
+      BuildSingletonPort(kSlot2, kPortNum1, kChannel1, kSpeedBps1);
+  EXPECT_TRUE(port_less(port_12, port_15));
+  EXPECT_FALSE(port_less(port_15, port_12));
 }
 
-// Note: Assumes PortUtils::BuildPhysicalPort() returns a correct port.
-// Constructs a few variations of PhysicalPort and checks for equality.
-TEST(PortUtilsTest, PhysicalPortEqual) {
-  PhysicalPortEqual port_equals;
-  constexpr int kSlot1 = 1;
-  constexpr int kSlot2 = 2;
-  constexpr int kPortNum1 = 15;
-  constexpr int kPortNum2 = 42;
-
-  PhysicalPort port_1 = PortUtils::BuildPhysicalPort(kSlot1, kPortNum1);
-  PhysicalPort port_2 = PortUtils::BuildPhysicalPort(kSlot1, kPortNum2);
-  PhysicalPort port_3 = PortUtils::BuildPhysicalPort(kSlot2, kPortNum1);
-  EXPECT_FALSE(port_equals(port_1, port_2));
-  EXPECT_FALSE(port_equals(port_2, port_3));
-  EXPECT_FALSE(port_equals(port_1, port_3));
-
-  PhysicalPort port_4 = PortUtils::BuildPhysicalPort(kSlot2, kPortNum1);
-  EXPECT_TRUE(port_equals(port_3, port_4));
+TEST(PortUtilsTest, FindPortLedColorAndState) {
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+            FindPortLedColorAndState(ADMIN_STATE_DISABLED, PORT_STATE_UNKNOWN,
+                                     HEALTH_STATE_UNKNOWN,
+                                     TRUNK_MEMBER_BLOCK_STATE_UNKNOWN));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_OFF),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_UNKNOWN,
+                                     HEALTH_STATE_UNKNOWN,
+                                     TRUNK_MEMBER_BLOCK_STATE_UNKNOWN));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_OFF),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_DOWN,
+                                     HEALTH_STATE_UNKNOWN,
+                                     TRUNK_MEMBER_BLOCK_STATE_UNKNOWN));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_BLINKING_SLOW),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_UP,
+                                     HEALTH_STATE_UNKNOWN,
+                                     TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_UP,
+                                     HEALTH_STATE_GOOD,
+                                     TRUNK_MEMBER_BLOCK_STATE_UNKNOWN));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_FAST),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_UP,
+                                     HEALTH_STATE_BAD,
+                                     TRUNK_MEMBER_BLOCK_STATE_UNKNOWN));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_BLINKING_FAST),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_UP,
+                                     HEALTH_STATE_UNKNOWN,
+                                     TRUNK_MEMBER_BLOCK_STATE_UNKNOWN));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_BLINKING_FAST),
+            FindPortLedColorAndState(ADMIN_STATE_ENABLED, PORT_STATE_UP,
+                                     HEALTH_STATE_UNKNOWN,
+                                     TRUNK_MEMBER_BLOCK_STATE_FORWARDING));
 }
 
-// Note: Assumes PortUtils::BuildPhysicalPort() returns a correct port.
-// Constructs a few representative instances of PhysicalPort and checks if
-// the compare function returns the expected order (compares slot, port,
-// in that order).
-TEST(PortUtilsTest, PhysicalPortCompare) {
-  PhysicalPortCompare port_lesser;
-  constexpr int kSlot1 = 1;
-  constexpr int kSlot2 = 2;
-  constexpr int kPortNum1 = 15;
-  constexpr int kPortNum2 = 42;
-
-  PhysicalPort port_1 = PortUtils::BuildPhysicalPort(kSlot1, kPortNum1);
-  PhysicalPort port_2 = PortUtils::BuildPhysicalPort(kSlot1, kPortNum2);
-  PhysicalPort port_3 = PortUtils::BuildPhysicalPort(kSlot2, kPortNum1);
-  EXPECT_TRUE(port_lesser(port_1, port_2));
-  EXPECT_FALSE(port_lesser(port_2, port_1));
-  EXPECT_TRUE(port_lesser(port_2, port_3));
-  EXPECT_FALSE(port_lesser(port_3, port_2));
-  EXPECT_TRUE(port_lesser(port_1, port_3));
-  EXPECT_FALSE(port_lesser(port_3, port_1));
-
-  PhysicalPort port_4 = PortUtils::BuildPhysicalPort(kSlot2, kPortNum1);
-  EXPECT_FALSE(port_lesser(port_3, port_4));
-  EXPECT_FALSE(port_lesser(port_4, port_3));
+TEST(PortUtilsTest, AggregatePortLedColorsStatePairs) {
+  EXPECT_EQ(std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN),
+            AggregatePortLedColorsStatePairs({}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+                 std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_SLOW),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+                 std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_SLOW)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_SLOW),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+                 std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN),
+                 std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_FAST)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN),
+                 std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_SOLID),
+                 std::make_pair(LED_COLOR_UNKNOWN, LED_STATE_UNKNOWN)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_SLOW),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_AMBER, LED_STATE_SOLID),
+                 std::make_pair(LED_COLOR_AMBER, LED_STATE_BLINKING_FAST)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID)}));
+  EXPECT_EQ(std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID),
+            AggregatePortLedColorsStatePairs(
+                {std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID),
+                 std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID)}));
 }
 
 }  // namespace hal

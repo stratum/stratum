@@ -22,37 +22,53 @@
 #include <string>
 
 #include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/public/proto/hal.pb.h"
 #include "stratum/glue/integral_types.h"
+#include "absl/strings/str_cat.h"
 
 namespace stratum {
 namespace hal {
 
-// Prints a Node message in a consistent and readable format. There are two
-// versions for this function.
-std::string PrintNode(const Node& n);
-std::string PrintNode(uint64 id, int slot, int index);
+// PortKey is a generic data structure which is meant to be used as a key that
+// uniquely identifies a "port" in hercules code base. By "port" we mean a
+// singleton port, a transceiver port, a flex/non-flex port group (i.e. a set
+// of ports with the same (slot, port) which are either flex or non-flex), etc.
+// The port whose key is identified by this data strcuture can be channelized (
+// in which case there is a non-zero channel number), or non-channelized (in
+// which case channel number is set to zero). In case the key is used when the
+// channel is not important at all (e.g. when the key identifies a flex or
+// non-flex port group), we use the default value of -1 for the channel.
+struct PortKey {
+  int slot;
+  int port;
+  int channel;
+  PortKey(int _slot, int _port, int _channel)
+      : slot(_slot), port(_port), channel(_channel) {}
+  PortKey(int _slot, int _port) : slot(_slot), port(_port), channel(-1) {}
+  PortKey() : slot(-1), port(-1), channel(-1) {}
+  bool operator<(const PortKey& other) const {
+    return (slot < other.slot ||
+            (slot == other.slot &&
+             (port < other.port ||
+              (port == other.port && channel < other.channel))));
+  }
+  bool operator==(const PortKey& other) const {
+    return (slot == other.slot && port == other.port &&
+            channel == other.channel);
+  }
+  std::string ToString() const {
+    if (channel > 0) {
+      return absl::StrCat("(slot: ", slot, ", port: ", port,
+                          ", channel: ", channel, ")");
+    } else {
+      return absl::StrCat("(slot: ", slot, ", port: ", port, ")");
+    }
+  }
+};
 
-// Prints a SingletonPort message in a consistent and readable format. There
-// are two versions for this function.
-std::string PrintSingletonPort(const SingletonPort& p);
-std::string PrintSingletonPort(uint64 id, int slot, int port, int channel,
-                               uint64 speed_bps);
-
-// Prints PhysicalPort in readable format. e.g. "(slot: 1, port: 3)"
-std::string PrintPhysicalPort(const PhysicalPort& physical_port);
-
-// Prints PortState in a consistent format.
-std::string PrintPortState(PortState state);
-
-// Hash and comparator functions to use with container classes
-// when port structures (PhysicalPort, SingletonPort, etc.) are used as
-// the key or stored object type.
-
-// A custom hash functor for SingletonPort
+// A custom hash functor for SingletonPort proto message in hal.proto.
 class SingletonPortHash {
  public:
-  std::size_t operator()(const SingletonPort& port) const {
+  size_t operator()(const SingletonPort& port) const {
     size_t hash_val = 0;
     std::hash<int> integer_hasher;
     hash_val ^= integer_hasher(port.slot());
@@ -65,7 +81,7 @@ class SingletonPortHash {
   }
 };
 
-// A custom equal functor for SingletonPort
+// A custom equal functor for SingletonPort proto messages in hal.proto.
 class SingletonPortEqual {
  public:
   bool operator()(const SingletonPort& lhs, const SingletonPort& rhs) const {
@@ -76,10 +92,9 @@ class SingletonPortEqual {
 };
 
 // Functor for comparing two SingletonPort instances based on slot, port,
-// channel and speed_bps values in that order.
-// Returns true if the first argument precedes the second in order,
-// false otherwise.
-class SingletonPortCompare {
+// channel and speed_bps values in that order. Returns true if the first
+// argument precedes the second in order, false otherwise.
+class SingletonPortLess {
  public:
   // Returns true if the first argument precedes the second; false otherwise.
   bool operator()(const SingletonPort& x, const SingletonPort& y) const {
@@ -102,60 +117,55 @@ class SingletonPortCompare {
   }
 };
 
-// A custom hash functor for PhysicalPort
-class PhysicalPortHash {
- public:
-  std::size_t operator()(const PhysicalPort& physical_port) const {
-    size_t h = 0;
-    std::hash<int> integer_hasher;
-    h ^= integer_hasher(physical_port.slot());
-    h ^= integer_hasher(physical_port.port());
-    return h;
-  }
-};
+// Prints a Node proto message in a consistent and readable format.
+std::string PrintNode(const Node& n);
 
-// A custom equal functor for PhysicalPort
-class PhysicalPortEqual {
- public:
-  bool operator()(const PhysicalPort& lhs, const PhysicalPort& rhs) const {
-    return (lhs.slot() == rhs.slot()) && (lhs.port() == rhs.port());
-  }
-};
+// Prints a SingletonPort proto message in a consistent and readable format.
+std::string PrintSingletonPort(const SingletonPort& p);
 
-// Compares two PhysicalPort instances. Returns true if the first argument
-// precedes the second in order, false otherwise.
-class PhysicalPortCompare {
- public:
-  // Returns true if the first argument precedes the second, false otherwise.
-  bool operator()(const PhysicalPort& __x, const PhysicalPort& __y) const {
-    return ComparePorts(__x, __y);
-  }
+// Prints a TrunkPort proto message in a consistent and readable format.
+std::string PrintTrunkPort(const TrunkPort& p);
 
- private:
-  // Compares slot, port in order.
-  // Returns true if the first agrument precedes the second, false otherwise.
-  bool ComparePorts(const PhysicalPort& x, const PhysicalPort& y) const {
-    if (x.slot() != y.slot()) {
-      return x.slot() < y.slot();
-    } else {
-      return x.port() < y.port();
-    }
-  }
-};
+// A set of helper functions to print a superset of node/port/trunk properties
+// that are worth logging, in a consistent and readable way. These methods
+// check and ignores the invalid args passed to it when printing. Other
+// printer function make use of these helpers to not duplicate the priting
+// logic.
+std::string PrintNodeProperties(uint64 id, int slot, int index);
 
-class PortUtils {
- public:
-  // Builds a PhysicalPort object with the given field values.
-  // No sanity checking is performed that the parameters are valid
-  // for the switch.
-  static PhysicalPort BuildPhysicalPort(int slot, int port);
+std::string PrintPortProperties(uint64 node_id, uint32 port_id, int slot,
+                                int port, int channel, int unit,
+                                int logical_port, uint64 speed_bps);
 
-  // Builds a SingletonPort object with the given field values.
-  // No sanity checking is performed that the parameters are valid
-  // for the switch.
-  static SingletonPort BuildSingletonPort(int slot, int port, int channel,
-                                          uint64 speed_bps);
-};
+std::string PrintTrunkProperties(uint64 node_id, uint32 trunk_id, int unit,
+                                 int trunk_port, uint64 speed_bps);
+
+// Prints PortState in a consistent format.
+std::string PrintPortState(PortState state);
+
+// Builds a SingletonPort proto message with the given field values. No sanity
+// checking is performed that the parameters are valid for the switch.
+SingletonPort BuildSingletonPort(int slot, int port, int channel,
+                                 uint64 speed_bps);
+
+// An alias for the pair of (LedColor, LedState) for a front panel port LED.
+using PortLedConfig = std::pair<LedColor, LedState>;
+
+// A util function that translates the state(s) of a channelized/non-channelized
+// singleton port to a pair of (LedColor, LedState) to be shown on the front
+// panel port LED.
+PortLedConfig FindPortLedColorAndState(AdminState admin_state,
+                                       PortState oper_state,
+                                       HealthState health_state,
+                                       TrunkMemberBlockState block_state);
+
+// A util function that aggregate the (LedColor, LedState) pairs, corresponding
+// to different channels of a front panel, into one single (LedColor, LedState)
+// pair. This method is used when each front panel port has only one LED and
+// the per-channel (LedColor, LedState) pairs need to be aggregated to be shown
+// on this single LED.
+PortLedConfig AggregatePortLedColorsStatePairs(
+    const std::vector<PortLedConfig>& color_state_pairs);
 
 }  // namespace hal
 }  // namespace stratum

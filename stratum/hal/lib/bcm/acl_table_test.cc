@@ -20,7 +20,8 @@
 #include "stratum/lib/utils.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
+#include "absl/container/flat_hash_map.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -30,22 +31,20 @@ namespace {
 using test_utils::EqualsProto;
 using testing::_;
 using testing::HasSubstr;
+using testing::UnorderedElementsAre;
 using testing::UnorderedElementsAreArray;
 using stratum::test_utils::IsOkAndHolds;
 using stratum::test_utils::StatusIs;
 
 constexpr char kDefaultP4Table[] = R"PROTO(
-    preamble {
-      id: 1
-      name: "table_1"
-    }
-    match_fields { id: 100 }
-    match_fields { id: 200 }
-    match_fields { id: 300 }
-    size: 10
-    )PROTO";
+  preamble { id: 1 name: "table_1" }
+  match_fields { id: 100 }
+  match_fields { id: 200 }
+  match_fields { id: 300 }
+  size: 10
+)PROTO";
 
-p4::config::v1::Table DefaultP4Table() {
+::p4::config::v1::Table DefaultP4Table() {
   ::p4::config::v1::Table p4_table;
   CHECK_OK(ParseProtoFromString(kDefaultP4Table, &p4_table));
   return p4_table;
@@ -68,11 +67,19 @@ void VerifyConstructorTable(const AclTable& table) {
   EXPECT_FALSE(table.IsUdfField(200));
   EXPECT_FALSE(table.IsUdfField(300));
   EXPECT_THAT(table.MatchFields(), UnorderedElementsAreArray({100, 200, 300}));
+  EXPECT_THAT(
+      table.ConstConditions(),
+      UnorderedElementsAre(std::make_pair(P4HeaderType::P4_HEADER_GRE, true),
+                           std::make_pair(P4HeaderType::P4_HEADER_ARP, false)));
 }
 
 TEST(AclTableTest, BcmAclStageConstructor) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
-  AclTable table(p4_table, BCM_ACL_STAGE_IFP, 12);
+  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
+      const_conditions;
+  const_conditions.emplace(P4HeaderType::P4_HEADER_GRE, true);
+  const_conditions.emplace(P4HeaderType::P4_HEADER_ARP, false);
+  AclTable table(p4_table, BCM_ACL_STAGE_IFP, 12, const_conditions);
   table.SetPhysicalTableId(11);
   // Check the values in the ACL table.
   VerifyConstructorTable(table);
@@ -80,7 +87,11 @@ TEST(AclTableTest, BcmAclStageConstructor) {
 
 TEST(AclTableTest, P4PipelineConstructor) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
+      const_conditions;
+  const_conditions.emplace(P4HeaderType::P4_HEADER_GRE, true);
+  const_conditions.emplace(P4HeaderType::P4_HEADER_ARP, false);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, const_conditions);
   table.SetPhysicalTableId(11);
   // Check the values in the ACL table.
   VerifyConstructorTable(table);
@@ -88,7 +99,11 @@ TEST(AclTableTest, P4PipelineConstructor) {
 
 TEST(AclTableTest, CopyConstructor) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
+      const_conditions;
+  const_conditions.emplace(P4HeaderType::P4_HEADER_GRE, true);
+  const_conditions.emplace(P4HeaderType::P4_HEADER_ARP, false);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, const_conditions);
   table.SetPhysicalTableId(11);
   // Copy and verify the table.
   AclTable copy_table = table;
@@ -97,7 +112,11 @@ TEST(AclTableTest, CopyConstructor) {
 
 TEST(AclTableTest, MoveConstructor) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>
+      const_conditions;
+  const_conditions.emplace(P4HeaderType::P4_HEADER_GRE, true);
+  const_conditions.emplace(P4HeaderType::P4_HEADER_ARP, false);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, const_conditions);
   table.SetPhysicalTableId(11);
   // Move and verify the table.
   AclTable move_table = std::move(table);
@@ -112,7 +131,7 @@ TEST(AclTableTest, MoveConstructor) {
 TEST(AclTableTest, InsertEntry) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Set up the expected entry. For each match field supported by the table, the
   // entry will appear as:
@@ -121,7 +140,7 @@ TEST(AclTableTest, InsertEntry) {
   //     field_id: <match_field id>
   //     exact { value: "<match_field id>" }
   //   }
-  std::vector<p4::v1::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   for (const auto& match_field : p4_table.match_fields()) {
     ::p4::v1::TableEntry entry;
     entry.set_table_id(p4_table.preamble().id());
@@ -134,7 +153,7 @@ TEST(AclTableTest, InsertEntry) {
   // Insert the entries and verify the table state.
   // We use the string representation since:
   //   1. The protobufs are simple enough for the strings to be stable.
-  //   2. Strings show up better than google::protobuf::Message in the error
+  //   2. Strings show up better than google::google::protobuf::Message in the error
   //      output of *ElementsAre*.
   std::vector<string> inserted_entries;
   for (const auto& entry : entries) {
@@ -159,7 +178,7 @@ TEST(AclTableTest, InsertEntry) {
 TEST(AclTableTest, ReInsertEntry) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Set up an entry.
   ::p4::v1::TableEntry entry;
@@ -178,7 +197,7 @@ TEST(AclTableTest, ReInsertEntry) {
 TEST(AclTableTest, InsertDuplicateEntry) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Set up an entry.
   ::p4::v1::TableEntry entry;
@@ -201,7 +220,7 @@ TEST(AclTableTest, InsertDuplicateEntry) {
 TEST(AclTableTest, InsertEntryWithBadMatchField) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Set up an entry with a bad match field.
   ::p4::v1::TableEntry entry;
@@ -218,7 +237,7 @@ TEST(AclTableTest, InsertEntryWithBadMatchField) {
 TEST(AclTableTest, InsertEntryToCapacity) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Fill the table.
   ::p4::v1::TableEntry entry;
@@ -246,7 +265,7 @@ TEST(AclTableTest, InsertEntryToCapacity) {
 TEST(AclTableTest, InsertEntryWithBcmAclId) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Generate entries and associated IDs.
   struct EntryAndId {
@@ -290,7 +309,7 @@ TEST(AclTableTest, InsertEntryWithBcmAclId) {
 TEST(AclTableTest, SetBcmAclId) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Set up an entry.
   ::p4::v1::TableEntry entry;
@@ -315,7 +334,7 @@ TEST(AclTableTest, SetBcmAclId) {
 TEST(AclTableTest, ModifyEntry) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   // Set up the expected entry. For each match field supported by the table, the
   // entry will appear as:
@@ -324,7 +343,7 @@ TEST(AclTableTest, ModifyEntry) {
   //     field_id: <match_field id>
   //     exact { value: "<match_field id>" }
   //   }
-  std::vector<p4::v1::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   int unique_id = 0;
   for (const auto& match_field : p4_table.match_fields()) {
     ::p4::v1::TableEntry entry;
@@ -339,7 +358,7 @@ TEST(AclTableTest, ModifyEntry) {
 
   // Modify the action.
   unique_id = 100;
-  std::vector<p4::v1::TableEntry> modified_entries;
+  std::vector<::p4::v1::TableEntry> modified_entries;
   for (const auto& entry : entries) {
     ::p4::v1::TableEntry modified_entry = entry;
     modified_entry.mutable_action()->set_action_profile_member_id(++unique_id);
@@ -370,7 +389,7 @@ TEST(AclTableTest, ModifyEntry) {
 TEST(AclTableTest, SetUdfSetId) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   ASSERT_OK(table.MarkUdfMatchField(p4_table.match_fields(0).id(), 999));
 
@@ -386,7 +405,7 @@ TEST(AclTableTest, SetUdfSetId) {
 TEST(AclTableTest, SetUdfSetId_FieldLookupFailure) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   ASSERT_FALSE(table.MarkUdfMatchField(99, 999).ok());
   EXPECT_FALSE(table.HasUdf());
@@ -398,7 +417,7 @@ TEST(AclTableTest, SetUdfSetId_FieldLookupFailure) {
 TEST(AclTableTest, SetUdfSetId_UdfSetIdOverwriteFailure) {
   ::p4::config::v1::Table p4_table = DefaultP4Table();
   // Create & initialize the ACL table.
-  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12);
+  AclTable table(p4_table, P4Annotation::INGRESS_ACL, 12, {});
 
   ASSERT_OK(table.MarkUdfMatchField(p4_table.match_fields(0).id(), 999));
   ASSERT_FALSE(table.MarkUdfMatchField(p4_table.match_fields(1).id(), 9).ok());

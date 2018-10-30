@@ -177,6 +177,9 @@ message P4FieldDescriptor {
   //  metadata_keys - When type is P4_FIELD_TYPE_METADATA_MATCH, provides
   //      information about a local metadata field's usage in indirect table
   //      lookups.
+  //  value_set - Contains the name of any parser value set that influences
+  //      the field's properties and behavior.  The value set is only present
+  //      when the field type is P4_FIELD_TYPE_UDF_VALUE_SET.
   P4FieldType type = 1;
   repeated P4FieldConversionEntry valid_conversions = 2;
   int32 bit_offset = 3;
@@ -185,6 +188,7 @@ message P4FieldDescriptor {
   bool is_local_metadata = 6;
   P4HeaderType header_type = 7;
   repeated P4MetadataKey metadata_keys = 8;
+  string value_set = 9;
 }
 
 // A P4ActionDescriptor defines how to map a P4 runtime action into a common
@@ -209,26 +213,42 @@ message P4FieldDescriptor {
 //    encoded in a P4ActionInstructions message.
 // 3) Metering operations can be encoded as either item 1 or 2 above with
 //    a set of color-based qualifiers.
+// P4ActionDescriptors represent two sources of actions.  The first source is
+// actions that the Hercules backend compiles directly from the P4 program.
+// These actions correspond 1-to-1 with actions in the program's P4Info.  The
+// second source is actions that the Hercules backend generates internally.
+// The internal actions generally represent a merger of actions from multiple
+// logical tables into a single combined action for a physical table.  Internal
+// actions do not have a corresponding P4Info entry.
 message P4ActionDescriptor {
   // The P4ActionInstructions message defines how to map operations that involve
   // parameters or operands.  In many cases, the target is a header-field that
   // gets modified by a single parameter value.  In other cases, an extern
   // method or primitive function needs one or more parameter values.
   //  assigned_value - encodes the operand or parameter value to be assigned
-  //      to destination_field_names and/or used as an argument to primitives.
-  //  destination_field_names - identify the header-fields when the
-  //      assigned_value is the source value for one or more fields in
-  //      assignment statements.  When the assigned_value source represents a
-  //      complete header, destination_field_names contains a header name
-  //      instead of an individual field name.
+  //      to destination_field_name and/or used as an argument to primitives.
+  //  destination_field_names - soon-to-be deprecated repeated field variation
+  //      of destination_field_name.
+  //      TODO(teverman): This repeated field was intended for assignments
+  //      where the P4 program assigns the same source value to multiple
+  //      destinations.  The backend now outputs multiple assignments in this
+  //      situation instead of trying to combine them.  This repeated field
+  //      will be deprecated and replaced with the single non-repeated
+  //      destination_field_name over several CLs.
   //  primitives - indicate that the assigned_value is used as an argument
   //      to the primitive.
+  //  destination_field_name - identifies the header-field when the
+  //      assigned_value is the source value for a destination field in an
+  //      assignment statement.  When the assigned_value source represents a
+  //      complete header, destination_field_name contains a header name
+  //      instead of an individual field name.
   // Some primitives could require multiple action parameters, but there are
   // currently no known use cases.
   message P4ActionInstructions {
     P4AssignSourceValue assigned_value = 1;
     repeated string destination_field_names = 2;
     repeated P4ActionOp primitives = 3;
+    string destination_field_name = 4;
   }
 
   // The P4MeterColorAction message specifies action operations that are
@@ -259,13 +279,169 @@ message P4ActionDescriptor {
     repeated P4ActionInstructions ops = 2;
   }
 
-  // The P4TunnelAction message identifies any tunneling encap/decap operations
-  // that an action performs.
-  //  tunnel_op - indicates whether the action encaps or decaps a header.
-  //  header_name - name of the header to which tunnel_op applies.
+  // The P4TunnelAction message identifies any potential tunneling encap/decap
+  // operations that an action performs.  The presence of P4TunnelActions means
+  // the action does something to invalidate or validate packet headers, which
+  // is a necessary but not sufficient condition to perform tunneling.
+  //  tunnel_op - DEPRECATED.
+  //  header_name - name of the header to which header_op applies.
+  //  header_op - indicates whether the action validates or invalidates
+  //      header_name.
   message P4TunnelAction {
-    P4TunnelOp tunnel_op = 1;
+    P4TunnelOp tunnel_op = 1 [deprecated = true];
     string header_name = 2;
+    P4HeaderOp header_op = 3;
+  }
+
+  // The P4TunnelProperties message expresses an action's encap/decap behavior
+  // for tunneled packets.
+  //  encap_inner_header - deprecated.
+  //  decap_inner_headers - deprecated.
+  //  is_gre_tunnel - marks a tunnel as GRE-encoded.
+  //  ecn_value/dscp_value/ttl_value - specify the action taken for ECN, DSCP,
+  //      and TTL during encap or decap.  At present, the only supported
+  //      action is to copy the fields between headers as they are
+  //      pushed/popped.
+  //  encap_or_decap - any single P4TunnelProperties message contains either
+  //      encap or decap properties, but not both.
+  //    encap - contains properties specific to encap tunnels.
+  //      encap_inner_headers - identifies the types of all possible inner
+  //          headers in a tunnel initiation.  For example, encap_inner_headers
+  //          contains P4_HEADER_IPV4 for any 4-in-6 tunnel.  P4 program actions
+  //          manipulate a single inner header type, but p4c can choose to
+  //          consolidate multiple actions into a single internal action that
+  //          is common to multiple inner header types.
+  //      encap_outer_header - identifies the outer header type in a tunnel
+  //          initiation.  For example, encap_outer_header is P4_HEADER_IPV4
+  //          for 4-in-4 and 6-in-4 tunnels.
+  //    decap - contains properties specific to decap tunnels.
+  //      decap_inner_headers - indicates the type of allowed headers that an
+  //          action recognizes for tunnel decap or termination.  Hercules P4
+  //          programs generally decap IPv4 and IPv6 inner headers in the same
+  //          action, so the field repeats to cover both possibilities.
+  message P4TunnelProperties {
+    message EncapProperties {
+      repeated P4HeaderType encap_inner_headers = 1;
+      P4HeaderType encap_outer_header = 2;
+    }
+
+    message DecapProperties {
+      repeated P4HeaderType decap_inner_headers = 1;
+    }
+
+    message TunnelFieldValue {
+      oneof value_or_copy {
+        bool copy = 1;
+        // TODO(teverman): P4 programs can potentially assign DSCP/ECN/TTL
+        // values via constant or action parameter; add a P4AssignSourceValue
+        // or similar field to accommodate this behavior if P4 programs move
+        // in this direction.
+      }
+    }
+
+    P4HeaderType encap_inner_header = 1 [deprecated = true];
+    repeated P4HeaderType decap_inner_headers = 2 [deprecated = true];
+    bool is_gre_tunnel = 3;
+    TunnelFieldValue ecn_value = 4;
+    TunnelFieldValue dscp_value = 5;
+    TunnelFieldValue ttl_value = 6;
+
+    oneof encap_or_decap {
+      EncapProperties encap = 10;
+      DecapProperties decap = 11;
+    }
+  }
+
+  // The Hercules p4c backend includes P4InternalActionLink and P4ActionRedirect
+  // messages in action descriptors when it merges actions from multiple logical
+  // tables into one combined action for a physical table.  They add references
+  // from the original P4 action to the replacement internal action.
+  //
+  // The P4ActionRedirect message is part of actions that indirectly apply
+  // another table by setting a local metadata field, which then becomes
+  // the match key to another logical table in the "HIDDEN" pipeline stage.
+  // It is also part of actions where the p4c backend chooses to merge some of
+  // the outer control logic into the action itself.
+  //  key_field_name - indicates the name of the local metadata field that keys
+  //      the hidden table.
+  //  key_value - indicates key_field_name's value that this action uses for
+  //      hidden table lookup.
+  //  internal_links - link the action descriptor for the original P4 program
+  //      action to the compiler-generated internal action.
+  //  input_redirects - record actions that merge to form a single internal
+  //      action; useful for debugging purposes.
+  //
+  // The P4InternalActionLink provides references from an original action
+  // descriptor to any internal actions that replace it:
+  //  internal_action_name - indicates the name of the internal action that
+  //      replaces the original action.
+  //  applied_tables - constrains the internal action replacement to certain
+  //      tables. The compiler generally merges control logic into an action
+  //      only when a specific table is hit, so the indirect action replacement
+  //      may be harmful to other tables that share the same action.
+  //      TODO(teverman): There are some P4Runtime agent issues with this
+  //      scheme and action profiles that need to be worked out.
+  //  hidden_table_name - identifies the hidden table whose action was merged
+  //      to form the action represented by internal_action_name.
+  //
+  // The presence of this example P4ActionRedirect in an action descriptor
+  // means that p4c has consolidated actions from three different hidden tables
+  // to form a single internal action.  The first two input actions cover the
+  // case where the action assigns the constant 2 to "local_metadata.encap_type"
+  // for subsequent use as a match key for the two named hidden encap tables.
+  // The third input action comes from the hidden "l2_rewrite_table".
+  //  action_redirects {
+  //    internal_links {
+  //      internal_action_name: "__ingress.l3_fwd.encap_gre_ipv6_...copy_mac"
+  //    }
+  //    input_redirects {
+  //      key_field_name: "local_metadata.encap_type"
+  //      key_value: 2
+  //      internal_links {
+  //        hidden_table_name: "egress.encap.encap_ipv4_base_table"
+  //      }
+  //      internal_links {
+  //        hidden_table_name: "egress.encap.encap_ipv6_base_table"
+  //      }
+  //    }
+  //    input_redirects {
+  //      key_field_name: "local_metadata.l3_unicast"
+  //      key_value: 1
+  //      internal_links {
+  //        hidden_table_name: "egress.l2_rewrite.l2_rewrite_table"
+  //      }
+  //    }
+  //  }
+
+
+
+  //    action_redirects {
+  //      key_field_name: "local_metadata.encap_type"
+  //      key_value: 2
+  //      internal_links {
+  //        internal_action_name: "__ingress.l3_fwd.encap_gre_ipv6_and..."
+  //        hidden_table_name: "egress.encap.encap_ipv4_base_table"
+  //      }
+  //      internal_links {
+  //        internal_action_name: "__ingress.l3_fwd.encap_gre_ipv6_and..."
+  //        hidden_table_name: "egress.encap.encap_ipv6_base_table"
+  //      }
+  //    }
+  message P4ActionRedirect {
+    string key_field_name = 1;
+    int64 key_value = 2;
+    repeated P4InternalActionLink internal_links = 3;
+    repeated P4ActionRedirect input_redirects = 100;
+  }
+
+  // TODO(teverman): This message probably needs an additional P4 header type
+  // qualifier to differentiate which one of multiple internal action links to
+  // use when the P4 program applies tables conditionally based on valid header
+  // type.
+  message P4InternalActionLink {
+    string internal_action_name = 1;
+    repeated string applied_tables = 2;
+    string hidden_table_name = 3;
   }
 
   // Mapping fields in an action descriptor are:
@@ -278,14 +454,30 @@ message P4ActionDescriptor {
   //      conditions.
   //  device_data - Optional data for the HAL switch to use for defining and
   //      setting up the action.
-  //  tunnel_actions - lists any tunneling encap/decap operations that the
-  //      action performs.
+  //  tunnel_actions - lists any potential tunnel header operations that the
+  //      action performs.  This repeated field provides a scratch area for
+  //      the p4c backend to accumulate tunneling attributes as it processes
+  //      the P4 program.  The backend clears the tunnel_actions and replaces
+  //      them with the simpler tunnel_properties field below before writing
+  //      the final P4PipelineConfig output.
+  //  action_redirects - lists any redirections this action does to incorporate
+  //      actions from HIDDEN tables or other internally generated actions.
+  //      Upon adding a field to action_redirects, the Hercules p4c backend
+  //      removes the field's original assignments entry.  Thus, the same field
+  //      should never appear in both the assignments and the action_redirects
+  //      lists.
+  //  tunnel_properties - specifies any encap or decap operations performed by
+  //      this action to tunnel packets.  It is empty in actions that do not
+  //      tunnel.
   P4ActionType type = 1;
   repeated P4ActionInstructions assignments = 2;
   repeated P4ActionOp primitive_ops = 3;
   repeated P4MeterColorAction color_actions = 4;
   repeated P4DeviceProgramData device_data = 5;
   repeated P4TunnelAction tunnel_actions = 6;
+  repeated P4ActionRedirect action_redirects = 7;
+  P4TunnelProperties tunnel_properties = 8;
+  P4ActionDescriptor conditional_assignments = 9;
 }
 
 // A P4HeaderDescriptor maps a named P4 header to an integer type value.  It
@@ -296,18 +488,32 @@ message P4ActionDescriptor {
 message P4HeaderDescriptor {
   // Mapping fields in a header descriptor are:
   //  type - Identifies the type of header.
+  //  depth - Provides an indication of a header's depth in an encap/decap
+  //      tunnel or a header stack.  For headers in an encap tunnel, the p4c
+  //      backend reports depth relative to other headers of the same type.
+  //      A non-zero depth indicates an inner header, and a depth of zero
+  //      indicates an outer header.  The p4c backend is unable to determine
+  //      a specific depth with multiple layers of encap.  For example, for
+  //      an IPv4 header wrapped inside a GRE header within an outer IPv4
+  //      header, the inner IPv4 header has a depth of 1, the outer IPv4 header
+  //      has a depth of 0, and the GRE header also has a depth of 0.  For
+  //      header stacks, the actual depth of the header within a stack could
+  //      be reported, but the p4c backend does not currently populate header
+  //      stack depth in the P4HeaderDescriptor.
   P4HeaderType type = 1;
+  int32 depth = 2;
 }
 
-// These messages define the map that sets up table mapping.  Each vendor will
-// specify this map via a manually generated text file (or potentially P4
-// compiler generated) that defines the mapping relative to the vendor's SDK.
-// It is also possible that vendor implementations may vary by switch chip.
+// This message defines one table map entry in the P4PipelineConfig.  The
+// Hercules p4c backend generates the table map for the switch stack as the
+// P4 program compiles.  This map can vary from vendor to vendor, and it can
+// conceivably also vary from chip to chip for the same vendor.
 message P4TableMapValue {
   oneof descriptor {
     P4TableDescriptor table_descriptor = 1;
     P4FieldDescriptor field_descriptor = 2;
     P4ActionDescriptor action_descriptor = 3;
     P4HeaderDescriptor header_descriptor = 4;
+    P4ActionDescriptor internal_action = 5;
   }
 }

@@ -36,42 +36,51 @@ static void* Timer(void* arg) {
 }
 }  // namespace
 
-bool TimerDaemon::Execute() {
+bool TimerDaemon::IsStopped() {
+  absl::WriterMutexLock l(&access_lock_);
+  return !started_;
+}
+
+TimerDaemon::DescriptorPtr TimerDaemon::GetAction() {
   // Once woken up check if the timer at the top of the heap is due.
-  TimerDaemon* daemon = GetInstance();
+  absl::WriterMutexLock l(&access_lock_);
 
-  absl::WriterMutexLock l(&daemon->access_lock_);
-
-  if (!daemon->started_) {
-    return false;
+  if (timers_.empty()) {
+    return nullptr;
   }
-  if (daemon->timers_.empty()) {
-    return true;
+  if (timers_.front().expired()) {
+    pop_heap(timers_.begin(), timers_.end(), TimerDescriptorComparator());
+    timers_.pop_back();
+    return nullptr;
   }
-  if (daemon->timers_.front().expired()) {
-    pop_heap(daemon->timers_.begin(), daemon->timers_.end(),
-             TimerDescriptorComparator());
-    daemon->timers_.pop_back();
-    return true;
-  }
-  TimerDaemon::DescriptorPtr front = DescriptorPtr(daemon->timers_.front());
+  TimerDaemon::DescriptorPtr front = DescriptorPtr(timers_.front());
   absl::Time now = absl::Now();
   if (front->due_time_ <= now) {
+    pop_heap(timers_.begin(), timers_.end(), TimerDescriptorComparator());
+    timers_.pop_back();
+    if (front->Repeat()) {
+      // Periodic timer. Insert it in the queue again.
+      front->due_time_ += front->Period();
+      timers_.push_back(front);
+      push_heap(timers_.begin(), timers_.end(), TimerDescriptorComparator());
+    }
+    return front;
+  }
+  return nullptr;
+}
+
+bool TimerDaemon::Execute() {
+  TimerDaemon* daemon = GetInstance();
+
+  if (daemon->IsStopped()) return false;
+
+  auto front = daemon->GetAction();
+  if (front != nullptr) {
     // Execute the timer's action!
     if (front->ExecuteAction() != ::util::OkStatus()) {
       LOG(ERROR) << "somthing went wrong";
     } else {
       LOG(INFO) << "Timer has been triggered!";
-    }
-    pop_heap(daemon->timers_.begin(), daemon->timers_.end(),
-             TimerDescriptorComparator());
-    daemon->timers_.pop_back();
-    if (front->Repeat()) {
-      // Periodic timer. Insert it in the queue again.
-      front->due_time_ += front->Period();
-      daemon->timers_.push_back(front);
-      push_heap(daemon->timers_.begin(), daemon->timers_.end(),
-                TimerDescriptorComparator());
     }
   }
   return true;

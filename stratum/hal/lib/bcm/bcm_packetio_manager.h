@@ -28,20 +28,20 @@
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
+#include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/lib/utils.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/synchronization/mutex.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -61,7 +61,7 @@ struct KnetIntfRxThreadData {
   KnetIntfRxThreadData(uint64 _node_id,
                        GoogleConfig::BcmKnetIntfPurpose _purpose,
                        BcmPacketioManager* _mgr)
-      : node_id(_node_id), purpose(_purpose), mgr(CHECK_NOTNULL(_mgr)) {}
+      : node_id(_node_id), purpose(_purpose), mgr(ABSL_DIE_IF_NULL(_mgr)) {}
 };
 
 // All the TX stats we collect for each KNET interface.
@@ -211,12 +211,12 @@ struct BcmKnetIntf {
 struct PacketOutMetadata {
   // ID of the port to which we want to send the packet. Will be ignored if
   // use_ingress_pipeline = true or if egress_trunk_id > 0.
-  uint64 egress_port_id;
+  uint32 egress_port_id;
   // ID of the trunk to which we want to send the packet. Will be ignored if
   // use_ingress_pipeline = true. If non-zero, we will ignore any given
   // egress_port_id and use one port from the given trunk randomly and send
   // the packet to it.
-  uint64 egress_trunk_id;
+  uint32 egress_trunk_id;
   // CoS to for the egress packet. Not required if send to ingress pipeline.
   // If not given, we will let SDK to use the default CoS.
   int cos;
@@ -235,12 +235,12 @@ struct PacketInMetadata {
   // ID of the singleton port from which the packet was received. If the port is
   // also part of a trunk, the ID of the trunk will be given in ingress_trunk_id
   // below.
-  uint64 ingress_port_id;
+  uint32 ingress_port_id;
   // ID of the trunk to which ingress_port_id is part of. If ingress_port_id is
   // not part of any trunk, we will leave this field as zero.
-  uint64 ingress_trunk_id;
+  uint32 ingress_trunk_id;
   // ID of the port to which the packet copied to CPU was destined.
-  uint64 egress_port_id;
+  uint32 egress_port_id;
   // The CoS for the received packet.
   int cos;
   // TODO: How about reason bit. Should we capture that as well?
@@ -293,7 +293,8 @@ class BcmPacketioManager {
   // Transmits a packet to the KNET interface which is created for a specific
   // application (given by 'purpose') on the node which this class is mapped to.
   virtual ::util::Status TransmitPacket(
-      GoogleConfig::BcmKnetIntfPurpose purpose, const ::p4::v1::PacketOut& packet);
+      GoogleConfig::BcmKnetIntfPurpose purpose,
+      const ::p4::v1::PacketOut& packet);
 
   // Return copies of BcmKnetTxStats/BcmKnetRxStats for a given purpose
   // respectively. Returns error if the given purpose is not found in the
@@ -313,7 +314,7 @@ class BcmPacketioManager {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BcmPacketioManager> CreateInstance(
-      OperationMode mode, BcmChassisManager* bcm_chassis_manager,
+      OperationMode mode, BcmChassisRoInterface* bcm_chassis_ro_interface,
       P4TableMapper* p4_table_mapper, BcmSdkInterface* bcm_sdk_interface,
       int unit);
 
@@ -340,7 +341,8 @@ class BcmPacketioManager {
 
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BcmPacketioManager(OperationMode mode, BcmChassisManager* bcm_chassis_manager,
+  BcmPacketioManager(OperationMode mode,
+                     BcmChassisRoInterface* bcm_chassis_ro_interface,
                      P4TableMapper* p4_table_mapper,
                      BcmSdkInterface* bcm_sdk_interface, int unit);
 
@@ -399,8 +401,9 @@ class BcmPacketioManager {
                                   int sock, int netif_index,
                                   std::string* header, std::string* payload);
 
-  // Deparses the given PacketInMetadata to the a set of ::p4::v1::PacketMetadata
-  // protos in the given ::p4::v1::PacketIn which is then sent to the controller.
+  // Deparses the given PacketInMetadata to the a set of
+  // P4 PacketMetadata protos in the given P4 PacketIn which
+  // is then sent to the controller.
   ::util::Status DeparsePacketInMetadata(const PacketInMetadata& meta,
                                          ::p4::v1::PacketIn* packet);
 
@@ -410,7 +413,7 @@ class BcmPacketioManager {
                           const std::string& header,
                           const std::string& payload);
 
-  // Parses the ::p4::v1::PacketMetadata protos in the given ::p4::v1::PacketOut and
+  // Parses the P4 PacketMetadata protos in the given P4 PacketOut and
   // fills in the given PacketOutMetadata proto, which is then used to transmit
   // the packet (directly to a port or to ingress pipeline).
   ::util::Status ParsePacketOutMetadata(const ::p4::v1::PacketOut& packet,
@@ -449,16 +452,8 @@ class BcmPacketioManager {
   // translate the port where a packet is received from to port_id as well as
   // to translate the port_id received on a TX packet to logical port to
   // transmit the packet.
-  stratum::gtl::flat_hash_map<int, uint64> logical_port_to_port_id_;
-  stratum::gtl::flat_hash_map<uint64, int> port_id_to_logical_port_;
-
-  // Map from trunk ID to the set of member port IDs on the node this class is
-  // mapped to. Used to pick a member randomly when packet is sent to a trunk.
-  stratum::gtl::flat_hash_map<uint64, std::set<uint64>> trunk_id_to_member_port_ids_;
-
-  // Map from port ID to its parent trunk ID on the node this class is mapped
-  // to. A port exists as a key iff it is part of a trunk.
-  stratum::gtl::flat_hash_map<uint64, uint64> port_id_to_parent_trunk_id_;
+  absl::flat_hash_map<int, uint32> logical_port_to_port_id_;
+  absl::flat_hash_map<uint32, int> port_id_to_logical_port_;
 
   // Map from node ID to a copy of BcmRxConfig received from pushed config.
   // Updated only after the config push is successful to make sure at any point
@@ -502,10 +497,9 @@ class BcmPacketioManager {
   std::map<GoogleConfig::BcmKnetIntfPurpose, BcmKnetRxStats>
       purpose_to_rx_stats_ GUARDED_BY(rx_stats_lock_);
 
-  // Pointer to BcmChassisManager class to get the most updated node & port
-  // maps after the config is pushed. THIS CLASS MUST NOT CALL ANY METHOD
-  // WHICH CAN MODIFY THE STATE OF BcmChassisManager OBJECT.
-  BcmChassisManager* bcm_chassis_manager_;  // not owned by this class.
+  // Pointer to BcmChassisRoInterface class to get the most updated node & port
+  // maps after the config is pushed.
+  BcmChassisRoInterface* bcm_chassis_ro_interface_;  // not owned by this class.
 
   // Pointer to P4TableMapper for parsing/deparsing PacketIn/PacketOut metadata.
   P4TableMapper* p4_table_mapper_;  // not owned by this class.

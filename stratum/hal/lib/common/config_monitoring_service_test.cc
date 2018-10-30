@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
@@ -19,14 +33,16 @@
 #include <memory>
 
 #include "gflags/gflags.h"
+#include "google/protobuf/text_format.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
-#include "stratum/hal/lib/common/mock_gnmi_publisher.h"
-#include "stratum/hal/lib/common/mock_subscribe_reader_writer.h"
+#include "stratum/hal/lib/common/gnmi_publisher_mock.h"
+#include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
@@ -69,7 +85,7 @@ class ConfigMonitoringServiceTest
         mode_, switch_mock_.get(), auth_policy_checker_mock_.get(),
         error_buffer_.get());
     gnmi_publisher_ =
-        absl::make_unique<NiceMock<MockGnmiPublisher>>(switch_mock_.get());
+        absl::make_unique<NiceMock<GnmiPublisherMock>>(switch_mock_.get());
   }
 
   void FillTestChassisConfigAndSave(ChassisConfig* config) {
@@ -106,6 +122,13 @@ class ConfigMonitoringServiceTest
                        const ::gnmi::GetRequest* req,
                        ::gnmi::GetResponse* resp) {
     return config_monitoring_service_->DoGet(context, req, resp);
+  }
+
+  // A proxy to private method of ConfigMonitoringService class.
+  ::grpc::Status DoSet(::grpc::ServerContext* context,
+                       const ::gnmi::SetRequest* req,
+                       ::gnmi::SetResponse* resp) {
+    return config_monitoring_service_->DoSet(context, req, resp);
   }
 
   static constexpr char kChassisConfigTemplate[] = R"PROTO(
@@ -145,7 +168,7 @@ class ConfigMonitoringServiceTest
   std::unique_ptr<SwitchMock> switch_mock_;
   std::unique_ptr<AuthPolicyCheckerMock> auth_policy_checker_mock_;
   std::unique_ptr<ErrorBuffer> error_buffer_;
-  std::unique_ptr<NiceMock<MockGnmiPublisher>> gnmi_publisher_;
+  std::unique_ptr<NiceMock<GnmiPublisherMock>> gnmi_publisher_;
 };
 
 constexpr char ConfigMonitoringServiceTest::kChassisConfigTemplate[];
@@ -192,7 +215,7 @@ TEST_P(ConfigMonitoringServiceTest, ColdbootSetupSuccessForSavedConfig) {
   CheckRunningChassisConfig(&config);
 }
 
-TEST_P(ConfigMonitoringServiceTest, ColdbootSuccessForNoSavedConfig) {
+TEST_P(ConfigMonitoringServiceTest, ColdbootSetupSuccessForNoSavedConfig) {
   if (mode_ == OPERATION_MODE_COUPLED) return;
 
   // Delete the saved config. There will be no config push.
@@ -333,7 +356,7 @@ TEST_P(ConfigMonitoringServiceTest, SetupAndThenTeardownSuccess) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a stream subscription request for subtree that is supported.
@@ -370,7 +393,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathSuccess) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a stream subscription request for subtree that is not supported.
@@ -417,7 +440,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathFail) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a stream subscription request for subtree that is not supported.
@@ -473,7 +496,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeExistingPathPassFail) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a poll subscription request for subtree that is supported.
@@ -523,7 +546,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a stream subscription request for subtree that is supported.
@@ -572,7 +595,7 @@ TEST_P(ConfigMonitoringServiceTest, DoubleSubscribeFail) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a stream subscription request for subtree that is supported.
@@ -635,7 +658,7 @@ TEST_P(ConfigMonitoringServiceTest, DuplicateSubscribeFail) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // Build a on_change subscription request for subtree that is supported.
@@ -685,7 +708,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
 }
 
 TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
-  MockServerReaderWriter stream;
+  SubscribeReaderWriterMock stream;
   ::grpc::ServerContext context;
 
   // One of the subscription modes, TARGET_DEFINED, leaves the decision how to
@@ -937,6 +960,230 @@ TEST_P(ConfigMonitoringServiceTest,
       resp.notification(0).update(0).path() ==
       GetPath("interfaces")("interface", "device1.domain.net.com:ce-1/2")(
           "state")("admin-status")());
+}
+
+// Successful DoSet() execution for simple leaf gNMI SET REPLACE message.
+TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
+  if (mode_ == OPERATION_MODE_COUPLED) return;
+
+  // Prepare and push configuration. The method under test requires the
+  // configuration to be pushed.
+  ChassisConfig config;
+  FillTestChassisConfigAndSave(&config);
+  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Setup(false));
+
+  // Prepare a SET request.
+  ::gnmi::SetRequest req;
+  constexpr char kReq[] = R"PROTO(
+    replace { val { bytes_val: "" } }
+  )PROTO";
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+      << "Failed to parse proto from the following string: " << kReq;
+
+  // This is a config-changing set, so, one PushChassisConfig() calls, and
+  // no SetValue().
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Run the method that processes the SET request.
+  ::grpc::ServerContext context;
+  ::gnmi::SetResponse resp;
+  auto grpc_status = DoSet(&context, &req, &resp);
+  EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
+
+  // Clean-up.
+  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Teardown());
+}
+
+// Unsuccessful DoSet() execution for simple leaf gNMI SET UPDATE message.
+TEST_P(ConfigMonitoringServiceTest, GnmiSetRootUpdate) {
+  if (mode_ == OPERATION_MODE_COUPLED) return;
+
+  // Prepare and push configuration. The method under test requires the
+  // configuration to be pushed.
+  ChassisConfig config;
+  FillTestChassisConfigAndSave(&config);
+  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Setup(false));
+
+  // Prepare a SET request.
+  ::gnmi::SetRequest req;
+  constexpr char kReq[] = R"PROTO(
+    update { val { bytes_val: "" } }
+  )PROTO";
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+      << "Failed to parse proto from the following string: " << kReq;
+
+  // Run the method that processes the SET request.
+  ::grpc::ServerContext context;
+  ::gnmi::SetResponse resp;
+  auto grpc_status = DoSet(&context, &req, &resp);
+  EXPECT_FALSE(grpc_status.ok());
+
+  // Clean-up.
+  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Teardown());
+}
+
+// Successful DoSet() execution for simple leaf gNMI SET UPDATE message.
+TEST_P(ConfigMonitoringServiceTest,
+       GnmiSetInterfacesInterfaceConfigHealthIndicatorUpdate) {
+  if (mode_ == OPERATION_MODE_COUPLED) return;
+
+  // Prepare and push configuration. The method under test requires the
+  // configuration to be pushed.
+  ChassisConfig config;
+  FillTestChassisConfigAndSave(&config);
+  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Setup(false));
+
+  // Prepare a GET request.
+  ::gnmi::SetRequest req;
+  constexpr char kReq[] = R"PROTO(
+    update {
+      path {
+        elem { name: "interfaces" }
+        elem {
+          name: "interface"
+          key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
+        }
+        elem { name: "config" }
+        elem { name: "health-indicator" }
+      }
+      val { string_val: "BAD" }
+    }
+  )PROTO";
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+      << "Failed to parse proto from the following string: " << kReq;
+
+  // This is a non-config-changing set, so, no PushChassisConfig() calls, just
+  // one SetValue().
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_)).Times(0);
+  EXPECT_CALL(*switch_mock_, SetValue(_, _, _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Run the method that processes the SET request.
+  ::grpc::ServerContext context;
+  ::gnmi::SetResponse resp;
+  auto grpc_status = DoSet(&context, &req, &resp);
+  EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
+
+  // Clean-up.
+  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Teardown());
+}
+
+// Unsuccessful DoSet() execution for simple leaf gNMI SET REPLACE message.
+TEST_P(ConfigMonitoringServiceTest,
+       GnmiSetInterfacesInterfaceStateHealthIndicatorReplace) {
+  if (mode_ == OPERATION_MODE_COUPLED) return;
+
+  // Prepare and push configuration. The method under test requires the
+  // configuration to be pushed.
+  ChassisConfig config;
+  FillTestChassisConfigAndSave(&config);
+  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Setup(false));
+
+  // Prepare a GET request.
+  ::gnmi::SetRequest req;
+  constexpr char kReq[] = R"PROTO(
+    replace {
+      path {
+        elem { name: "interfaces" }
+        elem {
+          name: "interface"
+          key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
+        }
+        elem { name: "state" }
+        elem { name: "health-indicator" }
+      }
+      val { string_val: "BAD" }
+    }
+  )PROTO";
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+      << "Failed to parse proto from the following string: " << kReq;
+
+  // This is a non-config-changing set, so, no PushChassisConfig() calls, just
+  // one SetValue().
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_)).Times(0);
+  EXPECT_CALL(*switch_mock_, SetValue(_, _, _)).Times(0);
+
+  // Run the method that processes the SET request.
+  ::grpc::ServerContext context;
+  ::gnmi::SetResponse resp;
+  auto grpc_status = DoSet(&context, &req, &resp);
+  EXPECT_FALSE(grpc_status.ok());
+
+  // Clean-up.
+  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Teardown());
+}
+
+// Unsuccessful DoSet() execution for simple leaf gNMI SET DELETE message.
+TEST_P(ConfigMonitoringServiceTest,
+       GnmiSetInterfacesInterfaceStateHealthIndicatorDelete) {
+  if (mode_ == OPERATION_MODE_COUPLED) return;
+
+  // Prepare and push configuration. The method under test requires the
+  // configuration to be pushed.
+  ChassisConfig config;
+  FillTestChassisConfigAndSave(&config);
+  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Setup(false));
+
+  // Prepare a GET request.
+  ::gnmi::SetRequest req;
+  constexpr char kReq[] = R"PROTO(
+    delete {
+      elem { name: "interfaces" }
+      elem {
+        name: "interface"
+        key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
+      }
+      elem { name: "state" }
+      elem { name: "health-indicator" }
+    }
+  )PROTO";
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+      << "Failed to parse proto from the following string: " << kReq;
+
+  // This is a non-config-changing set, so, no PushChassisConfig() calls, just
+  // one SetValue().
+  EXPECT_CALL(*switch_mock_, PushChassisConfig(_)).Times(0);
+  EXPECT_CALL(*switch_mock_, SetValue(_, _, _)).Times(0);
+
+  // Run the method that processes the SET request.
+  ::grpc::ServerContext context;
+  ::gnmi::SetResponse resp;
+  auto grpc_status = DoSet(&context, &req, &resp);
+  EXPECT_FALSE(grpc_status.ok());
+
+  // Clean-up.
+  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+      .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Teardown());
 }
 
 // TODO: Finish the unit testing.

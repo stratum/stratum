@@ -1,0 +1,63 @@
+// ywrappers.proto is a set of wrapper protobuf messages that can be used
+// within a protobuf that is automatically generated from a YANG schema.
+// The messages are used for scalar fields such that unset fields can be
+// distinguished from those that take a generated language's default value.
+syntax = "proto3";
+
+package ywrappers;
+
+// Int8Value is used to store a YANG int8.
+message Int8Value {
+  int32 value = 1;
+}
+
+// Int16Value is used to store a YANG int16.
+message Int16Value {
+  int32 value = 2;
+}
+
+// Int32Value is used to store a YANG int32.
+message Int32Value {
+  int32 value = 3;
+}
+
+// Int64Value is usedto store a YANG int64.
+message Int64Value {
+  int64 value = 4;
+}
+
+// Uint8Value is used to store a YANG uint8.
+message Uint8Value {
+  uint32 value = 1;
+}
+
+// Uint16Value is used to store a YANG uint16.
+message Uint16Value {
+  uint32 value = 2;
+}
+
+// Uint32Value is used to store a YANG uint32.
+message Uint32Value {
+  uint32 value = 3;
+}
+
+// Uint64Value is used to store a YANG uint64.
+message Uint64Value {
+  uint64 value = 4;
+}
+
+// StringValue is used to store a YANG string.
+message StringValue {
+  string value = 5;
+}
+
+// BoolValue is used to store a YANG boolean.
+message BoolValue {
+  bool value = 6;
+}
+
+// Decimal64Value is used to store a YANG decimal64.
+message Decimal64Value {
+  uint64 digits = 1;    // Set of digits.
+  uint32 precision = 2; // Number of digits following the decimal point.
+}

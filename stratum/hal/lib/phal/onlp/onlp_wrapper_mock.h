@@ -18,7 +18,7 @@
 #define THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 #include "util/task/status.h"
 
 namespace stratum {

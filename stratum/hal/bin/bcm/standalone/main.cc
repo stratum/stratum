@@ -53,6 +53,7 @@ struct PerNodeInstances {
   std::unique_ptr<BcmL3Manager> bcm_l3_manager;
   std::unique_ptr<BcmPacketioManager> bcm_packetio_manager;
   std::unique_ptr<BcmTableManager> bcm_table_manager;
+  std::unique_ptr<BcmTunnelManager> bcm_tunnel_manager;
   std::unique_ptr<BcmNode> bcm_node;
   std::unique_ptr<P4TableMapper> p4_table_mapper;
 
@@ -66,14 +67,17 @@ struct PerNodeInstances {
         p4_table_mapper.get(), unit);
     bcm_l2_manager = BcmL2Manager::CreateInstance(bcm_chassis_manager,
                                                   bcm_sdk_interface, unit);
-    bcm_l3_manager = BcmL3Manager::CreateInstance(bcm_sdk_interface, unit);
+    bcm_l3_manager = BcmL3Manager::CreateInstance(
+        bcm_sdk_interface, bcm_table_manager.get(), unit);
+    bcm_tunnel_manager = BcmTunnelManager::CreateInstance(
+        bcm_sdk_interface, bcm_table_manager.get(), unit);
     bcm_packetio_manager = BcmPacketioManager::CreateInstance(
         OPERATION_MODE_STANDALONE, bcm_chassis_manager, p4_table_mapper.get(),
         bcm_sdk_interface, unit);
     bcm_node = BcmNode::CreateInstance(
         bcm_acl_manager.get(), bcm_l2_manager.get(), bcm_l3_manager.get(),
         bcm_packetio_manager.get(), bcm_table_manager.get(),
-        p4_table_mapper.get(), unit);
+        bcm_tunnel_manager.get(), p4_table_mapper.get(), unit);
   }
 };
 
@@ -88,7 +92,6 @@ int Main(int argc, char** argv) {
   auto* bcm_diag_shell = BcmDiagShell::CreateSingleton();
   auto* bcm_sdk_wrapper = BcmSdkWrapper::CreateSingleton(bcm_diag_shell);
   auto udev = Udev::CreateInstance();
-  P4RuntimeReal::GetSingleton();
   auto* legacy_phal = LegacyPhal::CreateSingleton(udev.get());
   auto bcm_serdes_db_manager = BcmSerdesDbManager::CreateInstance();
   auto bcm_chassis_manager = BcmChassisManager::CreateInstance(
@@ -102,6 +105,10 @@ int Main(int argc, char** argv) {
                                     unit);
     unit_to_bcm_node[unit] = per_node_instances[unit].bcm_node.get();
   }
+  // Give BcmChassisManager the node map. This is needed to enable
+  // BcmChassisManager to publish events which impact the per-node managers, as
+  // those managers are passed a pointer to BcmChassisManager on creation.
+  bcm_chassis_manager->SetUnitToBcmNodeMap(unit_to_bcm_node);
   // Create 'BcmSwitch' class instace.
   auto bcm_switch = BcmSwitch::CreateInstance(
       legacy_phal, bcm_chassis_manager.get(), unit_to_bcm_node);
@@ -111,13 +118,15 @@ int Main(int argc, char** argv) {
   auto* hal = Hal::CreateSingleton(OPERATION_MODE_STANDALONE, bcm_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  if (!hal) {
-    LOG(ERROR) << "Failed to create the Hercules Hal instance.";
+  CHECK(hal != nullptr) << "Failed to create the Hercules Hal instance.";
+
+  // Sanity check, setup and start serving RPCs.
+  ::util::Status status = hal->SanityCheck();
+  if (!status.ok()) {
+    LOG(ERROR) << "HAL sanity check failed: " << status.error_message();
     return -1;
   }
-
-  // Setup and start serving RPCs.
-  ::util::Status status = hal->Setup();
+  status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
         << "Error when setting up Hercules HAL (but we will continue running): "

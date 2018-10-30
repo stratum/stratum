@@ -22,6 +22,7 @@
 #include "stratum/hal/lib/bcm/bcm_l3_manager_mock.h"
 #include "stratum/hal/lib/bcm/bcm_packetio_manager_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
+#include "stratum/hal/lib/bcm/bcm_tunnel_manager_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
@@ -29,6 +30,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "util/task/canonical_errors.h"
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -65,11 +67,59 @@ class BcmNodeTest : public ::testing::Test {
     bcm_l3_manager_mock_ = absl::make_unique<BcmL3ManagerMock>();
     bcm_packetio_manager_mock_ = absl::make_unique<BcmPacketioManagerMock>();
     bcm_table_manager_mock_ = absl::make_unique<BcmTableManagerMock>();
+    bcm_tunnel_manager_mock_ = absl::make_unique<BcmTunnelManagerMock>();
     p4_table_mapper_mock_ = absl::make_unique<P4TableMapperMock>();
     bcm_node_ = BcmNode::CreateInstance(
         bcm_acl_manager_mock_.get(), bcm_l2_manager_mock_.get(),
         bcm_l3_manager_mock_.get(), bcm_packetio_manager_mock_.get(),
-        bcm_table_manager_mock_.get(), p4_table_mapper_mock_.get(), kUnit);
+        bcm_table_manager_mock_.get(), bcm_tunnel_manager_mock_.get(),
+        p4_table_mapper_mock_.get(), kUnit);
+  }
+
+  ::util::Status PushChassisConfig(const ChassisConfig& config,
+                                   uint64 node_id) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->PushChassisConfig(config, node_id);
+  }
+
+  ::util::Status VerifyChassisConfig(const ChassisConfig& config,
+                                     uint64 node_id) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->VerifyChassisConfig(config, node_id);
+  }
+
+  ::util::Status PushForwardingPipelineConfig(
+      const ::p4::v1::ForwardingPipelineConfig& config) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->PushForwardingPipelineConfig(config);
+  }
+
+  ::util::Status VerifyForwardingPipelineConfig(
+      const ::p4::v1::ForwardingPipelineConfig& config) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->VerifyForwardingPipelineConfig(config);
+  }
+
+  ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
+                                        std::vector<::util::Status>* results) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->WriteForwardingEntries(req, results);
+  }
+
+  ::util::Status RegisterPacketReceiveWriter(
+      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->RegisterPacketReceiveWriter(writer);
+  }
+
+  ::util::Status UnregisterPacketReceiveWriter() {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->UnregisterPacketReceiveWriter();
+  }
+
+  ::util::Status UpdatePortState(uint32 port_id) {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_node_->UpdatePortState(port_id);
   }
 
   void PushChassisConfigWithCheck() {
@@ -92,11 +142,14 @@ class BcmNodeTest : public ::testing::Test {
       EXPECT_CALL(*bcm_acl_manager_mock_,
                   PushChassisConfig(EqualsProto(config), kNodeId))
           .WillOnce(Return(::util::OkStatus()));
+      EXPECT_CALL(*bcm_tunnel_manager_mock_,
+                  PushChassisConfig(EqualsProto(config), kNodeId))
+          .WillOnce(Return(::util::OkStatus()));
       EXPECT_CALL(*bcm_packetio_manager_mock_,
                   PushChassisConfig(EqualsProto(config), kNodeId))
           .WillOnce(Return(::util::OkStatus()));
     }
-    ASSERT_OK(bcm_node_->PushChassisConfig(config, kNodeId));
+    ASSERT_OK(PushChassisConfig(config, kNodeId));
     ASSERT_TRUE(IsInitialized());
   }
 
@@ -115,12 +168,15 @@ class BcmNodeTest : public ::testing::Test {
   static constexpr uint32 kMemberId = 841;
   static constexpr uint32 kGroupId = 111;
   static constexpr int kEgressIntfId = 10001;
+  static constexpr int kLogicalPortId = 35;
+  static constexpr uint32 kPortId = 941;
 
   std::unique_ptr<BcmAclManagerMock> bcm_acl_manager_mock_;
   std::unique_ptr<BcmL2ManagerMock> bcm_l2_manager_mock_;
   std::unique_ptr<BcmL3ManagerMock> bcm_l3_manager_mock_;
   std::unique_ptr<BcmPacketioManagerMock> bcm_packetio_manager_mock_;
   std::unique_ptr<BcmTableManagerMock> bcm_table_manager_mock_;
+  std::unique_ptr<BcmTunnelManagerMock> bcm_tunnel_manager_mock_;
   std::unique_ptr<P4TableMapperMock> p4_table_mapper_mock_;
   std::unique_ptr<BcmNode> bcm_node_;
 };
@@ -131,6 +187,8 @@ constexpr char BcmNodeTest::kErrorMsg[];
 constexpr uint32 BcmNodeTest::kMemberId;
 constexpr uint32 BcmNodeTest::kGroupId;
 constexpr int BcmNodeTest::kEgressIntfId;
+constexpr int BcmNodeTest::kLogicalPortId;
+constexpr uint32 BcmNodeTest::kPortId;
 
 TEST_F(BcmNodeTest, PushChassisConfigSuccess) { PushChassisConfigWithCheck(); }
 
@@ -141,7 +199,7 @@ TEST_F(BcmNodeTest, PushChassisConfigFailureWhenTableMapperPushFails) {
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->PushChassisConfig(config, kNodeId),
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -156,7 +214,7 @@ TEST_F(BcmNodeTest, PushChassisConfigFailureWhenTableManagerPushFails) {
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->PushChassisConfig(config, kNodeId),
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -174,7 +232,7 @@ TEST_F(BcmNodeTest, PushChassisConfigFailureWhenL2ManagerPushFails) {
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->PushChassisConfig(config, kNodeId),
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -195,7 +253,7 @@ TEST_F(BcmNodeTest, PushChassisConfigFailureWhenL3ManagerPushFails) {
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->PushChassisConfig(config, kNodeId),
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -219,7 +277,34 @@ TEST_F(BcmNodeTest, PushChassisConfigFailureWhenAclManagerPushFails) {
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->PushChassisConfig(config, kNodeId),
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
+              DerivedFromStatus(DefaultError()));
+  EXPECT_FALSE(IsInitialized());
+}
+
+TEST_F(BcmNodeTest, PushChassisConfigFailureWhenTunnelManagerPushFails) {
+  ChassisConfig config;
+  config.add_nodes()->set_id(kNodeId);
+  EXPECT_CALL(*p4_table_mapper_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_l2_manager_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_l3_manager_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_acl_manager_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(DefaultError()));
+
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -242,11 +327,14 @@ TEST_F(BcmNodeTest, PushChassisConfigFailureWhenPacketioManagerPushFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              PushChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               PushChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->PushChassisConfig(config, kNodeId),
+  EXPECT_THAT(PushChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -271,11 +359,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigSuccess) {
     EXPECT_CALL(*bcm_acl_manager_mock_,
                 VerifyChassisConfig(EqualsProto(config), kNodeId))
         .WillOnce(Return(::util::OkStatus()));
+    EXPECT_CALL(*bcm_tunnel_manager_mock_,
+                VerifyChassisConfig(EqualsProto(config), kNodeId))
+        .WillOnce(Return(::util::OkStatus()));
     EXPECT_CALL(*bcm_packetio_manager_mock_,
                 VerifyChassisConfig(EqualsProto(config), kNodeId))
         .WillOnce(Return(::util::OkStatus()));
   }
-  EXPECT_OK(bcm_node_->VerifyChassisConfig(config, kNodeId));
+  EXPECT_OK(VerifyChassisConfig(config, kNodeId));
   EXPECT_FALSE(IsInitialized());  // Should be false even of verify passes
 }
 
@@ -297,11 +388,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenTableMapperVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -324,11 +418,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenTableManagerVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -351,11 +448,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenL2ManagerVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -378,11 +478,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenL3ManagerVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -405,11 +508,44 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenAclManagerrVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
+              DerivedFromStatus(DefaultError()));
+  EXPECT_FALSE(IsInitialized());
+}
+
+TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenTunnelManagerrVerifyFails) {
+  ChassisConfig config;
+  config.add_nodes()->set_id(kNodeId);
+  EXPECT_CALL(*p4_table_mapper_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_l2_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_l3_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_acl_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(DefaultError()));
+  EXPECT_CALL(*bcm_packetio_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -432,11 +568,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenPacketioManagerVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_FALSE(IsInitialized());
 }
@@ -461,12 +600,15 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenMultiManagerVerifyFails) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
       .WillOnce(Return(
           ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
-  EXPECT_THAT(bcm_node_->VerifyChassisConfig(config, kNodeId),
+  EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));
   EXPECT_TRUE(IsInitialized());  // Initialized as we pushed config before
 }
@@ -491,11 +633,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureForInvalidNodeId) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), 0))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), 0))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), 0))
       .WillOnce(Return(::util::OkStatus()));
 
-  ::util::Status status = bcm_node_->VerifyChassisConfig(config, 0);
+  ::util::Status status = VerifyChassisConfig(config, 0);
   ASSERT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(), HasSubstr("Invalid node ID"));
   EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
@@ -522,11 +667,14 @@ TEST_F(BcmNodeTest, VerifyChassisConfigReportsRebootRequired) {
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId + 1))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyChassisConfig(EqualsProto(config), kNodeId + 1))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId + 1))
       .WillOnce(Return(::util::OkStatus()));
 
-  ::util::Status status = bcm_node_->VerifyChassisConfig(config, kNodeId + 1);
+  ::util::Status status = VerifyChassisConfig(config, kNodeId + 1);
   ASSERT_FALSE(status.ok());
   EXPECT_EQ(ERR_REBOOT_REQUIRED, status.error_code());
 }
@@ -537,6 +685,8 @@ TEST_F(BcmNodeTest, ShutdownSuccess) {
   {
     InSequence sequence;  // The order of the calls are important. Enforce it.
     EXPECT_CALL(*bcm_packetio_manager_mock_, Shutdown())
+        .WillOnce(Return(::util::OkStatus()));
+    EXPECT_CALL(*bcm_tunnel_manager_mock_, Shutdown())
         .WillOnce(Return(::util::OkStatus()));
     EXPECT_CALL(*bcm_acl_manager_mock_, Shutdown())
         .WillOnce(Return(::util::OkStatus()));
@@ -558,6 +708,8 @@ TEST_F(BcmNodeTest, ShutdownFailureWhenSomeManagerShutdownFails) {
   ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
 
   EXPECT_CALL(*bcm_packetio_manager_mock_, Shutdown())
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_, Shutdown())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_acl_manager_mock_, Shutdown())
       .WillOnce(Return(::util::OkStatus()));
@@ -590,11 +742,14 @@ TEST_F(BcmNodeTest, PushForwardingPipelineConfigSuccess) {
     EXPECT_CALL(*bcm_acl_manager_mock_,
                 PushForwardingPipelineConfig(EqualsProto(config)))
         .WillOnce(Return(::util::OkStatus()));
+    EXPECT_CALL(*bcm_tunnel_manager_mock_,
+                PushForwardingPipelineConfig(EqualsProto(config)))
+        .WillOnce(Return(::util::OkStatus()));
     // P4TableMapper should check for static entry post-push after other pushes.
     EXPECT_CALL(*p4_table_mapper_mock_, HandlePostPushStaticEntryChanges(_, _))
         .WillOnce(Return(::util::OkStatus()));
   }
-  EXPECT_OK(bcm_node_->PushForwardingPipelineConfig(config));
+  EXPECT_OK(PushForwardingPipelineConfig(config));
 }
 
 // PushForwardingPipelineConfig() should fail immediately on any push failures.
@@ -615,17 +770,23 @@ TEST_F(BcmNodeTest, PushForwardingPipelineConfigFailueOnAnyManagerPushFailure) {
               PushForwardingPipelineConfig(EqualsProto(config)))
       .WillOnce(Return(DefaultError()))
       .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              PushForwardingPipelineConfig(EqualsProto(config)))
+      .WillOnce(Return(DefaultError()))
+      .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*p4_table_mapper_mock_, HandlePostPushStaticEntryChanges(_, _))
       .WillOnce(Return(DefaultError()))
       .WillRepeatedly(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->PushForwardingPipelineConfig(config),
+  EXPECT_THAT(PushForwardingPipelineConfig(config),
               DerivedFromStatus(DefaultError()));
-  EXPECT_THAT(bcm_node_->PushForwardingPipelineConfig(config),
+  EXPECT_THAT(PushForwardingPipelineConfig(config),
               DerivedFromStatus(DefaultError()));
-  EXPECT_THAT(bcm_node_->PushForwardingPipelineConfig(config),
+  EXPECT_THAT(PushForwardingPipelineConfig(config),
               DerivedFromStatus(DefaultError()));
-  EXPECT_THAT(bcm_node_->PushForwardingPipelineConfig(config),
+  EXPECT_THAT(PushForwardingPipelineConfig(config),
+              DerivedFromStatus(DefaultError()));
+  EXPECT_THAT(PushForwardingPipelineConfig(config),
               DerivedFromStatus(DefaultError()));
 }
 
@@ -642,8 +803,11 @@ TEST_F(BcmNodeTest, VerifyForwardingPipelineConfigSuccess) {
     EXPECT_CALL(*bcm_acl_manager_mock_,
                 VerifyForwardingPipelineConfig(EqualsProto(config)))
         .WillOnce(Return(::util::OkStatus()));
+    EXPECT_CALL(*bcm_tunnel_manager_mock_,
+                VerifyForwardingPipelineConfig(EqualsProto(config)))
+        .WillOnce(Return(::util::OkStatus()));
   }
-  EXPECT_OK(bcm_node_->VerifyForwardingPipelineConfig(config));
+  EXPECT_OK(VerifyForwardingPipelineConfig(config));
 }
 
 // VerifyForwardingPipelineConfig() should fail immediately on any verify
@@ -660,17 +824,21 @@ TEST_F(BcmNodeTest,
   EXPECT_CALL(*bcm_acl_manager_mock_,
               VerifyForwardingPipelineConfig(EqualsProto(config)))
       .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_,
+              VerifyForwardingPipelineConfig(EqualsProto(config)))
+      .WillRepeatedly(Return(::util::OkStatus()));
 
-  EXPECT_THAT(bcm_node_->VerifyForwardingPipelineConfig(config),
+  EXPECT_THAT(VerifyForwardingPipelineConfig(config),
               DerivedFromStatus(DefaultError()));
-  EXPECT_OK(bcm_node_->VerifyForwardingPipelineConfig(config));
-  EXPECT_OK(bcm_node_->VerifyForwardingPipelineConfig(config));
+  EXPECT_OK(VerifyForwardingPipelineConfig(config));
+  EXPECT_OK(VerifyForwardingPipelineConfig(config));
+  EXPECT_OK(VerifyForwardingPipelineConfig(config));
 }
 
 namespace {
 
 ::p4::v1::TableEntry* SetupTableEntryToInsert(::p4::v1::WriteRequest* req,
-                                          uint64 node_id) {
+                                              uint64 node_id) {
   req->set_device_id(node_id);
   auto* update = req->add_updates();
   update->set_type(::p4::v1::Update::INSERT);
@@ -679,7 +847,7 @@ namespace {
 }
 
 ::p4::v1::TableEntry* SetupTableEntryToModify(::p4::v1::WriteRequest* req,
-                                          uint64 node_id) {
+                                              uint64 node_id) {
   req->set_device_id(node_id);
   auto* update = req->add_updates();
   update->set_type(::p4::v1::Update::MODIFY);
@@ -688,7 +856,7 @@ namespace {
 }
 
 ::p4::v1::TableEntry* SetupTableEntryToDelete(::p4::v1::WriteRequest* req,
-                                          uint64 node_id) {
+                                              uint64 node_id) {
   req->set_device_id(node_id);
   auto* update = req->add_updates();
   update->set_type(::p4::v1::Update::DELETE);
@@ -704,21 +872,18 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv4Lpm) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, InsertLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              AddTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, InsertTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -728,22 +893,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv4Host) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV4_HOST);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, InsertLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              AddTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, InsertTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -753,21 +915,18 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv6Lpm) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV6_LPM);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, InsertLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              AddTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, InsertTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -777,22 +936,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Ipv6Host) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV6_HOST);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, InsertLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              AddTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, InsertTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -802,9 +958,9 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_L2Multicat) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_L2_MULTICAST);
@@ -817,7 +973,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_L2Multicat) {
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -827,9 +983,9 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_MyStation) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_MY_STATION);
@@ -842,7 +998,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_MyStation) {
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -852,9 +1008,9 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Acl) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::INSERT, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_ACL);
                       })),
@@ -863,7 +1019,28 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Acl) {
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertTableEntry_Tunnel) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  auto* table_entry = SetupTableEntryToInsert(&req, kNodeId);
+
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::INSERT, _))
+      .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
+                        x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_TUNNEL);
+                      })),
+                      Return(::util::OkStatus())));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_, InsertTableEntry(_))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::vector<::util::Status> results = {};
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -873,21 +1050,18 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv4Lpm) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::MODIFY, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              UpdateTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -897,22 +1071,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv4Host) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::MODIFY, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV4_HOST);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              UpdateTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -922,21 +1093,18 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv6Lpm) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::MODIFY, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV6_LPM);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              UpdateTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -946,22 +1114,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Ipv6Host) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::MODIFY, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV6_HOST);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              UpdateTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, ModifyTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -971,9 +1136,9 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Acl) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::MODIFY, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::MODIFY, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_ACL);
                       })),
@@ -982,7 +1147,28 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Acl) {
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyTableEntry_Tunnel) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  auto* table_entry = SetupTableEntryToModify(&req, kNodeId);
+
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::MODIFY, _))
+      .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
+                        x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_TUNNEL);
+                      })),
+                      Return(::util::OkStatus())));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_, ModifyTableEntry(_))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::vector<::util::Status> results = {};
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -992,21 +1178,18 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv4Lpm) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV4_LPM);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              DeleteTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1016,22 +1199,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv4Host) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV4_HOST);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              DeleteTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1041,21 +1221,18 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv6Lpm) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_IPV6_LPM);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              DeleteTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1065,22 +1242,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Ipv6Host) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_IPV6_HOST);
                       })),
                       Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteLpmOrHostFlow(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              DeleteTableEntry(EqualsProto(*table_entry)))
+  EXPECT_CALL(*bcm_l3_manager_mock_, DeleteTableEntry(_))
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1091,9 +1265,9 @@ TEST_F(BcmNodeTest,
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_L2_MULTICAST);
@@ -1106,7 +1280,7 @@ TEST_F(BcmNodeTest,
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1116,9 +1290,9 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_MyStation) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(
                             BcmFlowEntry::BCM_TABLE_MY_STATION);
@@ -1131,7 +1305,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_MyStation) {
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1141,9 +1315,9 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Acl) {
   ::p4::v1::WriteRequest req;
   auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
 
-  EXPECT_CALL(*bcm_table_manager_mock_,
-              FillBcmFlowEntry(EqualsProto(*table_entry),
-                               ::p4::v1::Update::DELETE, _))
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
       .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
                         x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_ACL);
                       })),
@@ -1152,7 +1326,28 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Acl) {
       .WillOnce(Return(::util::OkStatus()));
 
   std::vector<::util::Status> results = {};
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteTableEntry_Tunnel) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  auto* table_entry = SetupTableEntryToDelete(&req, kNodeId);
+
+  EXPECT_CALL(
+      *bcm_table_manager_mock_,
+      FillBcmFlowEntry(EqualsProto(*table_entry), ::p4::v1::Update::DELETE, _))
+      .WillOnce(DoAll(WithArgs<2>(Invoke([](BcmFlowEntry* x) {
+                        x->set_bcm_table_type(BcmFlowEntry::BCM_TABLE_TUNNEL);
+                      })),
+                      Return(::util::OkStatus())));
+  EXPECT_CALL(*bcm_tunnel_manager_mock_, DeleteTableEntry(_))
+      .WillOnce(Return(::util::OkStatus()));
+
+  std::vector<::util::Status> results = {};
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1175,6 +1370,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
       .WillOnce(DoAll(WithArgs<1>(Invoke([](BcmNonMultipathNexthop* x) {
                         x->set_type(BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT);
                         x->set_unit(kUnit);
+                        x->set_logical_port(kLogicalPortId);
                       })),
                       Return(::util::OkStatus())));
   EXPECT_CALL(*bcm_l3_manager_mock_, FindOrCreateNonMultipathNexthop(_))
@@ -1182,10 +1378,10 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileMember) {
   EXPECT_CALL(*bcm_table_manager_mock_,
               AddActionProfileMember(EqualsProto(*member),
                                      BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT,
-                                     kEgressIntfId))
+                                     kEgressIntfId, kLogicalPortId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1205,6 +1401,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
               GetBcmNonMultipathNexthopInfo(kMemberId, _))
       .WillOnce(DoAll(WithArgs<1>(Invoke([](BcmNonMultipathNexthopInfo* x) {
                         x->egress_intf_id = kEgressIntfId;
+                        x->bcm_port = kLogicalPortId;
                       })),
                       Return(::util::OkStatus())));
   EXPECT_CALL(*bcm_table_manager_mock_,
@@ -1212,18 +1409,19 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileMember) {
       .WillOnce(DoAll(WithArgs<1>(Invoke([](BcmNonMultipathNexthop* x) {
                         x->set_type(BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT);
                         x->set_unit(kUnit);
+                        x->set_logical_port(kLogicalPortId);
                       })),
                       Return(::util::OkStatus())));
   EXPECT_CALL(*bcm_l3_manager_mock_,
               ModifyNonMultipathNexthop(kEgressIntfId, _))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(
-      *bcm_table_manager_mock_,
-      UpdateActionProfileMember(EqualsProto(*member),
-                                BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT))
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              UpdateActionProfileMember(
+                  EqualsProto(*member),
+                  BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT, kLogicalPortId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1253,7 +1451,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileMember) {
               DeleteActionProfileMember(EqualsProto(*member)))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1282,7 +1480,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertActionProfileGroup) {
               AddActionProfileGroup(EqualsProto(*group), kEgressIntfId))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1314,7 +1512,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_ModifyActionProfileGroup) {
               UpdateActionProfileGroup(EqualsProto(*group)))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1342,7 +1540,7 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileGroup) {
               DeleteActionProfileGroup(EqualsProto(*group)))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(bcm_node_->WriteForwardingEntries(req, &results));
+  EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
 }
 
@@ -1358,8 +1556,8 @@ TEST_F(BcmNodeTest, RegisterPacketReceiveWriter) {
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_OK(bcm_node_->RegisterPacketReceiveWriter(writer));
-  EXPECT_THAT(bcm_node_->RegisterPacketReceiveWriter(writer),
+  EXPECT_OK(RegisterPacketReceiveWriter(writer));
+  EXPECT_THAT(RegisterPacketReceiveWriter(writer),
               DerivedFromStatus(DefaultError()));
 }
 
@@ -1374,9 +1572,25 @@ TEST_F(BcmNodeTest, UnregisterPacketReceiveWriter) {
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(DefaultError()));
 
-  EXPECT_OK(bcm_node_->UnregisterPacketReceiveWriter());
-  EXPECT_THAT(bcm_node_->UnregisterPacketReceiveWriter(),
+  EXPECT_OK(UnregisterPacketReceiveWriter());
+  EXPECT_THAT(UnregisterPacketReceiveWriter(),
               DerivedFromStatus(DefaultError()));
+}
+
+// Check functions invoked on UpdatePortState() call.
+TEST_F(BcmNodeTest, TestUpdatePortState) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::util::Status expected_error = ::util::UnknownErrorBuilder(GTL_LOC)
+                                  << "error";
+  EXPECT_CALL(*bcm_l3_manager_mock_, UpdateMultipathGroupsForPort(kPortId))
+      .WillOnce(Return(::util::OkStatus()))
+      .WillOnce(Return(expected_error));
+
+  EXPECT_OK(UpdatePortState(kPortId));
+  auto status = UpdatePortState(kPortId);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(expected_error.ToString(), status.ToString());
 }
 
 // TODO: Complete unit test coverage.

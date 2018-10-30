@@ -19,6 +19,7 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -70,6 +71,7 @@ TEST(BcmFlowTableTest, Initialize) {
   EXPECT_FALSE(table.HasEntry(MockTableEntry()));
   EXPECT_EQ(table.Lookup(MockTableEntry()).status().error_code(),
             ERR_ENTRY_NOT_FOUND);
+  EXPECT_FALSE(table.IsConst());
 }
 
 // Verify properties of a table when installing and removing a single entry.
@@ -92,7 +94,7 @@ TEST(BcmFlowTableTest, InstallRemoveSingleEntry) {
 TEST(BcmFlowTableTest, InstallRemoveMultipleEntries) {
   // Set up mock entries.
   constexpr int kNumEntries = 4;
-  std::vector<p4::v1::TableEntry> mock_entries;
+  std::vector<::p4::v1::TableEntry> mock_entries;
   for (int i = 0; i < kNumEntries; ++i) {
     mock_entries.push_back(MockTableEntry());
     mock_entries.back().mutable_match(0)->set_field_id(100 + i);
@@ -308,6 +310,20 @@ TEST(BcmFlowTableTest, DeleteMissingEntryFailure) {
   ::p4::v1::TableEntry mod = MockTableEntry();
   mod.clear_match();
   ASSERT_EQ(table.DeleteEntry(mod).status().error_code(), ERR_ENTRY_NOT_FOUND);
+}
+
+// Verify the properties a BcmFlowTable inherits from a source
+// P4 config Table.
+TEST(BcmFlowTableTest, ConstructFromP4ConfigTable) {
+  ::p4::config::v1::Table p4_table;
+  p4_table.mutable_preamble()->set_id(1);
+  p4_table.mutable_preamble()->set_name("table");
+  p4_table.set_is_const_table(true);
+
+  BcmFlowTable bcm_table(p4_table);
+  EXPECT_EQ(1, bcm_table.Id());
+  EXPECT_EQ("table", bcm_table.Name());
+  EXPECT_EQ(true, bcm_table.IsConst());
 }
 
 }  // namespace

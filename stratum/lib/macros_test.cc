@@ -15,6 +15,7 @@
 
 #include "stratum/lib/macros.h"
 
+#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 

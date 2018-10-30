@@ -31,6 +31,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/lib/macros.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 
@@ -46,7 +47,7 @@ class P4MatchKey {
   // from a P4 runtime request.  CreateInstance determines the appropriate
   // P4MatchKey subclass from the FieldMatch content.
   static std::unique_ptr<P4MatchKey> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
+      const ::p4::v1::FieldMatch& p4_field_match);
 
   virtual ~P4MatchKey() {}
 
@@ -67,8 +68,17 @@ class P4MatchKey {
       const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
       int bit_width, MappedField* mapped_field);
 
+  // Performs a specialized conversion of this P4MatchKey into an unsigned
+  // 64-bit integer, regardless of how the match field appears in the P4Info
+  // spec and the P4Runtime request.  This conversion is only possible for
+  // exact-match keys where the P4Runtime encoding is less than 64 bits wide.
+  // For any other type of match key, the return status contains
+  // ERR_INVALID_PARAM.  This conversion option has limited usage in
+  // processing certain static table entries internally within p4c.
+  virtual ::util::StatusOr<uint64> ConvertExactToUint64();
+
   // Accessor, mainly for unit tests.
-  p4::config::v1::MatchField::MatchType allowed_match_type() const {
+  ::p4::config::v1::MatchField::MatchType allowed_match_type() const {
     return allowed_match_type_;
   }
 
@@ -78,8 +88,8 @@ class P4MatchKey {
 
  protected:
   // The constructor is protected, use CreateInstance instead.
-  P4MatchKey(const p4::v1::FieldMatch& p4_field_match,
-             p4::config::v1::MatchField::MatchType allowed_match_type);
+  P4MatchKey(const ::p4::v1::FieldMatch& p4_field_match,
+             ::p4::config::v1::MatchField::MatchType allowed_match_type);
 
   // Subclasses typically override ConvertValue to do match-type-specific
   // conversion.  The base class default implementation simply copies the
@@ -94,7 +104,7 @@ class P4MatchKey {
   //      according to conversion_entry and bit_width specifications.  The input
   //      bytes are expected to be in network byte order.
   //  ConvertLPMPrefixLengthToMask - converts the prefix length field in a
-  //      P4 runtime LPM match.  The prefix length in a p4::v1::FieldMatch is
+  //      P4 runtime LPM match.  The prefix length in a P4 FieldMatch is
   //      always encoded as an integer that needs to be converted to either
   //      an integer bit mask or a series of bytes containing longer masks.
   virtual ::util::Status ConvertBytes(
@@ -110,7 +120,7 @@ class P4MatchKey {
   void CopyRawMatchValue(MappedField::Value* mapped_value);
 
   // Accessor for subclasses to obtain the P4 runtime FieldMatch data.
-  const p4::v1::FieldMatch& p4_field_match() const { return p4_field_match_; }
+  const ::p4::v1::FieldMatch& p4_field_match() const { return p4_field_match_; }
 
  private:
   // This function takes an unsigned integer encoded as string data and
@@ -128,96 +138,81 @@ class P4MatchKey {
   // specified length.
   std::string CreateStringMask(int field_width, int mask_length);
 
-  // Checks whether the binary-encoded value in the input string exceeds the
-  // bit length specified by max_width.
-  ::util::Status CheckBitWidth(const std::string& bytes_value, int max_width);
+  // Checks whether the binary-encoded value in the input string conforms to
+  // the P4Info-specified bit length given by bit_width.  The implementation
+  // complies with section "8.3 Bytestrings" in the "P4Runtime Specification".
+  ::util::Status CheckBitWidth(const std::string& bytes_value, int bit_width);
 
-  // This member stores the p4::v1::FieldMatch given to CreateInstance.
-  const p4::v1::FieldMatch p4_field_match_;
+  // This member stores the P4 FieldMatch given to CreateInstance.
+  const ::p4::v1::FieldMatch p4_field_match_;
 
   // This member stores the subclass-dependent match type, i.e.
-  // EXACT/LPM/TERNARY/VALID/RANGE.
-  const p4::config::v1::MatchField::MatchType allowed_match_type_;
+  // EXACT/LPM/TERNARY/RANGE.
+  const ::p4::config::v1::MatchField::MatchType allowed_match_type_;
 };
 
-// P4MatchKey subclass for p4::config::v1::MatchField::EXACT.
+// P4MatchKey subclass for P4 config MatchField::EXACT.
 class P4MatchKeyExact : public P4MatchKey {
  public:
   static std::unique_ptr<P4MatchKeyExact> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
+      const ::p4::v1::FieldMatch& p4_field_match);
 
   ~P4MatchKeyExact() override {}
 
  protected:
-  explicit P4MatchKeyExact(const p4::v1::FieldMatch& p4_field_match)
-      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::EXACT) {}
+  explicit P4MatchKeyExact(const ::p4::v1::FieldMatch& p4_field_match)
+      : P4MatchKey(p4_field_match, ::p4::config::v1::MatchField::EXACT) {}
 
   ::util::Status ConvertValue(
       const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
       int bit_width, MappedField* mapped_field) override;
 };
 
-// P4MatchKey subclass for p4::config::v1::MatchField::TERNARY.
+// P4MatchKey subclass for P4 config MatchField::TERNARY.
 class P4MatchKeyTernary : public P4MatchKey {
  public:
   static std::unique_ptr<P4MatchKeyTernary> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
+      const ::p4::v1::FieldMatch& p4_field_match);
 
   ~P4MatchKeyTernary() override {}
 
  protected:
-  explicit P4MatchKeyTernary(const p4::v1::FieldMatch& p4_field_match)
-      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::TERNARY) {}
+  explicit P4MatchKeyTernary(const ::p4::v1::FieldMatch& p4_field_match)
+      : P4MatchKey(p4_field_match, ::p4::config::v1::MatchField::TERNARY) {}
 
   ::util::Status ConvertValue(
       const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
       int bit_width, MappedField* mapped_field) override;
 };
 
-// P4MatchKey subclass for p4::config::v1::MatchField::LPM.
+// P4MatchKey subclass for P4 config MatchField::LPM.
 class P4MatchKeyLPM : public P4MatchKey {
  public:
   static std::unique_ptr<P4MatchKeyLPM> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
+      const ::p4::v1::FieldMatch& p4_field_match);
 
   ~P4MatchKeyLPM() override {}
 
  protected:
-  explicit P4MatchKeyLPM(const p4::v1::FieldMatch& p4_field_match)
-      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::LPM) {}
+  explicit P4MatchKeyLPM(const ::p4::v1::FieldMatch& p4_field_match)
+      : P4MatchKey(p4_field_match, ::p4::config::v1::MatchField::LPM) {}
 
   ::util::Status ConvertValue(
       const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
       int bit_width, MappedField* mapped_field) override;
 };
 
-//FIXME match VALID not present in p4info
-// P4MatchKey subclass for p4::config::v1::MatchField::VALID.
-//class P4MatchKeyValid : public P4MatchKey {
-// public:
-//  static std::unique_ptr<P4MatchKeyValid> CreateInstance(
-//      const p4::v1::FieldMatch& p4_field_match);
-//
-//  ~P4MatchKeyValid() override {}
-//
-// protected:
-//  explicit P4MatchKeyValid(const p4::v1::FieldMatch& p4_field_match)
-//      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::VALID) {}
-//
-//  // TODO: P4MatchKeyValid needs a ConvertValue override.
-//};
-
-// P4MatchKey subclass for p4::config::v1::MatchField::RANGE.
+// P4MatchKey subclass for P4 config MatchField::RANGE.
 class P4MatchKeyRange : public P4MatchKey {
  public:
   static std::unique_ptr<P4MatchKeyRange> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
+      const ::p4::v1::FieldMatch& p4_field_match);
 
   ~P4MatchKeyRange() override {}
 
  protected:
-  explicit P4MatchKeyRange(const p4::v1::FieldMatch& p4_field_match)
-      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::RANGE) {}
+  explicit P4MatchKeyRange(const ::p4::v1::FieldMatch& p4_field_match)
+      : P4MatchKey(p4_field_match, ::p4::config::v1::MatchField::RANGE) {}
 
   // TODO: P4MatchKeyRange needs a ConvertValue override.
 };
@@ -228,7 +223,7 @@ class P4MatchKeyRange : public P4MatchKey {
 class P4MatchKeyUnspecified : public P4MatchKey {
  public:
   static std::unique_ptr<P4MatchKeyUnspecified> CreateInstance(
-      const p4::v1::FieldMatch& p4_field_match);
+      const ::p4::v1::FieldMatch& p4_field_match);
 
   ~P4MatchKeyUnspecified() override {}
 
@@ -239,8 +234,8 @@ class P4MatchKeyUnspecified : public P4MatchKey {
       int bit_width, MappedField* mapped_field) override;
 
  protected:
-  explicit P4MatchKeyUnspecified(const p4::v1::FieldMatch& p4_field_match)
-      : P4MatchKey(p4_field_match, p4::config::v1::MatchField::UNSPECIFIED) {}
+  explicit P4MatchKeyUnspecified(const ::p4::v1::FieldMatch& p4_field_match)
+      : P4MatchKey(p4_field_match, ::p4::config::v1::MatchField::UNSPECIFIED) {}
 };
 
 }  // namespace hal

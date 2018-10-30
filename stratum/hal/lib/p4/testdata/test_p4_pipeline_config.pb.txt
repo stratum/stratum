@@ -1,0 +1,479 @@
+# This file contains some data for P4TableMap testing.
+# It goes with the P4Info in test_p4_info.pb.txt.
+
+# One NOP action.  It tests a basic primitive operation with no parameters.
+table_map {
+  key: "nop"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      primitive_ops: P4_ACTION_OP_NOP
+    }
+  }
+}
+
+# Actions decoding their parameter type into a corresponding header-field.
+table_map {
+  key: "set-32"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          parameter_name: "param-32"
+        }
+        destination_field_names: "test-header-field-32"
+        destination_field_name: "test-header-field-32"
+      }
+    }
+  }
+}
+table_map {
+  key: "set-64"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          parameter_name: "param-64"
+        }
+        destination_field_names: "test-header-field-64"
+        destination_field_name: "test-header-field-64"
+      }
+    }
+  }
+}
+table_map {
+  key: "set-bytes"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          parameter_name: "param-bytes"
+        }
+        destination_field_names: "test-header-field-128"
+        destination_field_name: "test-header-field-128"
+      }
+    }
+  }
+}
+
+# Action decoding multiple parameters into field and primitives.
+table_map {
+  key: "set-multi-params"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          parameter_name: "param-1"
+        }
+        destination_field_names: "test-header-field-32"
+        destination_field_name: "test-header-field-32"
+      }
+      assignments {
+        assigned_value {
+          parameter_name: "param-2"
+        }
+        destination_field_names: "test-header-field-64"
+        destination_field_name: "test-header-field-64"
+      }
+      assignments {
+        assigned_value {
+          parameter_name: "param-3"
+        }
+        primitives: P4_ACTION_OP_CLONE
+      }
+      primitive_ops: P4_ACTION_OP_DROP
+    }
+  }
+}
+
+# Action assigning a constant value to multiple header fields.
+table_map {
+  key: "set-constant-value"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 0x1f002f00
+          bit_width: 32
+        }
+        destination_field_names: "test-header-field-32"
+        destination_field_name: "test-header-field-32"
+      }
+      assignments {
+        assigned_value {
+          constant_param: 0x1f002f00
+          bit_width: 32
+        }
+        destination_field_names: "test-header-field-64"
+        destination_field_name: "test-header-field-64"
+      }
+      assignments {
+        assigned_value {
+          constant_param: 0xba9876543210
+          bit_width: 48
+        }
+        destination_field_names: "test-header-field-128"
+        destination_field_name: "test-header-field-128"
+      }
+    }
+  }
+}
+
+# Action making primitive execution decision based on non-green meter color.
+table_map {
+  key: "meter-not-green"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      color_actions {
+        colors: P4_METER_YELLOW
+        colors: P4_METER_RED
+        ops {
+          primitives: P4_ACTION_OP_DROP
+          primitives: P4_ACTION_OP_CLONE
+        }
+      }
+    }
+  }
+}
+
+# Action making field assignment decision based on green meter color.
+table_map {
+  key: "assign-when-green"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      color_actions {
+        colors: P4_METER_GREEN
+        ops {
+          assigned_value {
+            constant_param: 0x01234567
+            # The bit_width is unspecified to test the default.
+          }
+          destination_field_names: "test-header-field-32"
+          destination_field_name: "test-header-field-32"
+        }
+      }
+    }
+  }
+}
+
+# Action doing a header-to-header assignment.
+table_map {
+  key: "assign-header-copy"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          source_header_name: "header-copy-source"
+        }
+        destination_field_names: "header-copy-dest"
+        destination_field_name: "header-copy-dest"
+      }
+    }
+  }
+}
+
+# Action doing a field-to-field assignment.
+table_map {
+  key: "assign-field-to-field"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          source_field_name: "test-header-field-32"
+        }
+        destination_field_names: "meta-test-32"
+        destination_field_name: "meta-test-32"
+      }
+    }
+  }
+}
+
+# Four tables matching fields in various ways.
+table_map {
+  key: "exact-match-32-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L3_IP
+      pipeline_stage: L3_LPM
+    }
+  }
+}
+table_map {
+  key: "lpm-match-32-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L3_IP
+      pipeline_stage: L3_LPM
+    }
+  }
+}
+table_map {
+  key: "exact-match-bytes-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L2_MY_STATION
+      pipeline_stage: L2
+    }
+  }
+}
+table_map {
+  key: "lpm-match-bytes-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L2_MY_STATION
+      pipeline_stage: L2
+    }
+  }
+}
+table_map {
+  key: "exact-match-64-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L2_MY_STATION
+      pipeline_stage: L2
+    }
+  }
+}
+
+# Table for testing fallback to stage when table type is not given.
+table_map {
+  key: "fallback-to-stage-test-table"
+  value {
+    table_descriptor {
+      pipeline_stage: L2
+    }
+  }
+}
+
+# Table for action mapping tests.
+table_map {
+  key: "action-test-table"
+  value {
+    table_descriptor {
+      pipeline_stage: EGRESS_ACL
+    }
+  }
+}
+
+# Table for action profile mapping tests.
+table_map {
+  key: "action-profile-test-table"
+  value {
+    table_descriptor {
+      pipeline_stage: EGRESS_ACL
+    }
+  }
+}
+
+# Table to test internal match keys
+table_map {
+  key: "test-internal-match-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L3_IP
+      pipeline_stage: L3_LPM
+      internal_match_fields {
+        type: P4_FIELD_TYPE_IPV6_SRC
+        value {
+          b: "byte-value"
+        }
+        mask {
+          b: "byte-mask"
+        }
+      }
+      internal_match_fields {
+        type: P4_FIELD_TYPE_VRF
+        value {
+          u32: 0xfffe
+        }
+      }
+    }
+  }
+}
+
+# Table to test const default actions
+table_map {
+  key: "test-const-action-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L3_IP
+      pipeline_stage: L3_LPM
+    }
+  }
+}
+
+# Table to test multiple match fields
+table_map {
+  key: "test-multi-match-table"
+  value {
+    table_descriptor {
+      type: P4_TABLE_L3_IP
+      pipeline_stage: INGRESS_ACL
+    }
+  }
+}
+
+# Table to test hidden pipeline stage.  Note: A typical hidden table should
+# also have static entries.
+table_map {
+  key: "test-hidden-static-table"
+  value {
+    table_descriptor {
+      pipeline_stage: HIDDEN
+      has_static_entries: true
+    }
+  }
+}
+
+# Table to test static entries in non-hidden pipeline stages.
+table_map {
+  key: "test-static-table"
+  value {
+    table_descriptor {
+      pipeline_stage: INGRESS_ACL
+      has_static_entries: true
+    }
+  }
+}
+
+# Table to test a hidden pipeline stage without static entries.
+table_map {
+  key: "test-hidden-non-static-table"
+  value {
+    table_descriptor {
+      pipeline_stage: HIDDEN
+    }
+  }
+}
+
+# Fields using various sizes and conversions.
+table_map {
+  key: "test-header-field-32"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_IPV4_DST
+      valid_conversions {
+        match_type: EXACT
+        conversion: P4_CONVERT_TO_U32
+      }
+      valid_conversions {
+        match_type: LPM
+        conversion: P4_CONVERT_TO_U32_AND_MASK
+      }
+      bit_offset: 128
+      bit_width: 32
+      header_type: P4_HEADER_IPV4
+    }
+  }
+}
+table_map {
+  key: "test-header-field-64"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_ETH_DST
+      valid_conversions {
+        match_type: EXACT
+        conversion: P4_CONVERT_TO_U64
+      }
+      valid_conversions {
+        match_type: LPM
+        conversion: P4_CONVERT_TO_U64_AND_MASK
+      }
+      bit_width: 64
+      header_type: P4_HEADER_ETHERNET
+    }
+  }
+}
+table_map {
+  key: "test-header-field-128"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_ETH_DST
+      valid_conversions {
+        match_type: EXACT
+        conversion: P4_CONVERT_TO_BYTES
+      }
+      valid_conversions {
+        match_type: LPM
+        conversion: P4_CONVERT_TO_BYTES_AND_MASK
+      }
+      valid_conversions {
+        match_type: TERNARY
+        conversion: P4_CONVERT_TO_BYTES_AND_MASK
+      }
+      bit_width: 128
+      header_type: P4_HEADER_ETHERNET
+    }
+  }
+}
+
+# The controller metadata fields.
+table_map {
+  key: "packet_in.ingress-port"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_INGRESS_PORT
+    }
+  }
+}
+table_map {
+  key: "packet_in.ingress-trunk"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_INGRESS_TRUNK
+    }
+  }
+}
+table_map {
+  key: "packet_in.egress-port"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_EGRESS_PORT
+    }
+  }
+}
+table_map {
+  key: "packet_in.unknown-type-metadata"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_ANNOTATED  # indicates p4c did not resolve type..
+    }
+  }
+}
+table_map {
+  key: "packet_out.egress-port"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_EGRESS_PORT
+    }
+  }
+}
+table_map {
+  key: "packet_out.unknown-type-metadata"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_ANNOTATED  # indicates p4c did not resolve type.
+    }
+  }
+}
+
+# Other local metadata fields for testing.
+table_map {
+  key: "meta-test-32"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_IPV4_DST
+      bit_width: 32
+      is_local_metadata: true
+    }
+  }
+}

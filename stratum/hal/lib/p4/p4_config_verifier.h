@@ -81,9 +81,7 @@ class P4ConfigVerifier {
   // The constructor is private; use public CreateInstance method.
   P4ConfigVerifier(const ::p4::config::v1::P4Info& p4_info,
                    const P4PipelineConfig& p4_pipeline_config)
-      : p4_info_(p4_info),
-        p4_pipeline_config_(p4_pipeline_config) {
-  }
+      : p4_info_(p4_info), p4_pipeline_config_(p4_pipeline_config) {}
 
   // Verifies the input p4_table, which comes from one of the P4Info table
   // entries.
@@ -95,16 +93,33 @@ class P4ConfigVerifier {
 
   // Verifies the input static_entry, which comes from one of the static table
   // entries in the P4PipelineConfig.
-  ::util::Status VerifyStaticTableEntry(const p4::v1::Update& static_entry);
+  ::util::Status VerifyStaticTableEntry(const ::p4::v1::Update& static_entry);
 
   // Verifies the input match_field, which is part of the P4Info for table_name.
-  ::util::Status VerifyMatchField(const ::p4::config::v1::MatchField& match_field,
-                                  const std::string& table_name);
+  ::util::Status VerifyMatchField(
+      const ::p4::config::v1::MatchField& match_field,
+      const std::string& table_name);
+
+  // Verifies the contents of the given action_descriptor.
+  ::util::Status VerifyActionDescriptor(
+      const P4ActionDescriptor& action_descriptor,
+      const std::string& action_name, bool check_action_redirects);
+
+  // Verifies the contents of the given action_descriptor with specific
+  // constraints for internal actions.
+  ::util::Status VerifyInternalAction(
+      const P4ActionDescriptor& action_descriptor,
+      const std::string& action_name);
 
   // Verifies the input action instructions, which are part of the action
   // descriptor for action_name.
   ::util::Status VerifyActionInstructions(
       const P4ActionDescriptor::P4ActionInstructions& instructions,
+      const std::string& action_name);
+
+  // Verifies any links to internal actions within the input action_descriptor.
+  ::util::Status VerifyInternalActionLinks(
+      const P4ActionDescriptor& action_descriptor,
       const std::string& action_name);
 
   // These two methods verify assignments within P4 action bodies.
@@ -121,6 +136,12 @@ class P4ConfigVerifier {
   // object that refers to the field, typically a table or an action name.
   ::util::StatusOr<const P4FieldDescriptor*> GetFieldDescriptor(
       const std::string& field_name, const std::string& log_object);
+
+  // Attempts to find the action descriptor for internal_action_name in the
+  // p4_pipeline_config_ table map.  The log_object is the name of the P4
+  // object that refers to the action, typically an action name.
+  ::util::StatusOr<const P4ActionDescriptor*> GetInternalActionDescriptor(
+      const std::string& internal_action_name, const std::string& log_object);
 
   // Filters errors according to levels specified by command-line flags.
   static ::util::Status FilterError(const std::string& message,

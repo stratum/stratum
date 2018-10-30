@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package google.hercules.procmon;
+
+// All information needed to start or resume a single client process.
+message ClientProcess {
+  // The human-readable label to apply to this process.
+  string label = 1;
+  // The path of the binary to be run.
+  string executable = 2;
+  // The working directory to use when running this binary.
+  string directory = 3;
+  // A list of arguments to pass to the binary.
+  repeated string argv = 4;
+  // How to handle unexpected death of this process.
+  enum OnDeathBehavior {
+    KILL_ALL = 0;  // Kill all other processes (default).
+    LOG = 1;  // Log a message.
+    IGNORE = 2;  // Do nothing.
+  }
+  OnDeathBehavior on_death = 5;
+  // How to handle KILL_ALL (i.e. death of another process).
+  enum OnKillBehavior {
+    TERMINATE = 0;  // Shutdown properly (default).
+    ABORT = 1;  // Dump core and exit immediately.
+    CONTINUE = 2;  // Ignore and continue execution.
+  }
+  OnKillBehavior on_kill = 6;
+  // Whether this process is nsf-capable (accepts '--warmboot')
+  bool nsf_capable = 7;
+  // The scheduling priority for this process.
+  int32 priority = 8;
+}
+
+message ProcmonConfig {
+  repeated ClientProcess client_processes = 1;
+}
+
+message CheckinRequest {
+  // checkin_key: a unique identifier that Procmon uses to identify the client
+  // process that checked in. We use pid for now, but we may want to extend it
+  // to include label and/or startup_phase information.
+  int32 checkin_key = 1;
+}
+
+message CheckinResponse {
+}
+
+// This service is in charge of handling Checkin, etc requests from all the
+// processes managed by procmon.
+service ProcmonService {
+  // Called from a client process to checkin with Procmon after initialization.
+  // This informs Procmon that the process is ready to accept requests from
+  // other client modules that depend on it.
+  rpc Checkin(CheckinRequest) returns (CheckinResponse);
+}

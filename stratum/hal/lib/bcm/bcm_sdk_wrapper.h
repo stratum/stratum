@@ -22,15 +22,16 @@
 
 #include <functional>
 #include <string>
+#include "absl/container/flat_hash_map.h"
 
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/common/constants.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -118,6 +119,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
       int priority) override LOCKS_EXCLUDED(linkscan_writers_lock_);
   ::util::Status UnregisterLinkscanEventWriter(int id) override
       LOCKS_EXCLUDED(linkscan_writers_lock_);
+  ::util::StatusOr<BcmPortOptions::LinkscanMode> GetPortLinkscanMode(
+      int unit, int port) override;
   ::util::Status SetMtu(int unit, int mtu) override LOCKS_EXCLUDED(data_lock_);
   ::util::StatusOr<int> FindOrCreateL3RouterIntf(int unit, uint64 router_mac,
                                                  int vlan) override;
@@ -178,12 +181,13 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status DeleteL3HostIpv4(int unit, int vrf, uint32 ipv4) override;
   ::util::Status DeleteL3HostIpv6(int unit, int vrf,
                                   const std::string& ipv6) override;
-  ::util::StatusOr<int> AddMyStationEntry(int unit, int vlan, uint64 dst_mac,
-                                          int priority) override;
+  ::util::StatusOr<int> AddMyStationEntry(int unit, int priority, int vlan,
+                                          int vlan_mask, uint64 dst_mac,
+                                          uint64 dst_mac_mask) override;
   ::util::Status DeleteMyStationEntry(int unit, int station_id) override;
   ::util::Status DeleteL2EntriesByVlan(int unit, int vlan) override;
   ::util::Status AddVlanIfNotFound(int unit, int vlan) override;
-  ::util::Status DeleteVlan(int unit, int vlan) override;
+  ::util::Status DeleteVlanIfFound(int unit, int vlan) override;
   ::util::Status ConfigureVlanBlock(int unit, int vlan, bool block_broadcast,
                                     bool block_known_multicast,
                                     bool block_unknown_multicast,
@@ -325,15 +329,15 @@ class BcmSdkWrapper : public BcmSdkInterface {
 
   // Map from unit number to the current MTU used for all the interfaces of
   // the unit.
-  stratum::gtl::flat_hash_map<int, int> unit_to_mtu_ GUARDED_BY(data_lock_);
+  absl::flat_hash_map<int, int> unit_to_mtu_ GUARDED_BY(data_lock_);
 
   // Map from unit to chip type specified.
-  stratum::gtl::flat_hash_map<int, BcmChip::BcmChipType> unit_to_chip_type_
+  absl::flat_hash_map<int, BcmChip::BcmChipType> unit_to_chip_type_
       GUARDED_BY(data_lock_);
 
   // Map from each unit to the BcmSocDevice data struct associated with that
   // unit.
-  stratum::gtl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
+  absl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
       GUARDED_BY(data_lock_);
 
   // Pointer to BcmDiagShell singleton instance. Not owned by this class.

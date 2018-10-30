@@ -21,10 +21,13 @@
 #include "google/protobuf/repeated_field.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/constants.h"
+#include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/glue/integral_types.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -36,16 +39,16 @@ namespace bcm {
 
 namespace {
 
-const stratum::gtl::enum_set<P4MeterColor>& AllColors() {
-  static auto* all_colors = new stratum::gtl::enum_set<P4MeterColor>(
+const absl::flat_hash_set<P4MeterColor>& AllColors() {
+  static auto* all_colors = new absl::flat_hash_set<P4MeterColor>(
       {P4_METER_GREEN, P4_METER_YELLOW, P4_METER_RED});
   return *all_colors;
 }
 
 template <class MessageType>
 inline void EraseReferencesFromRepeatedField(
-    const stratum::gtl::flat_hash_set<const google::protobuf::Message*> references,
-    google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
+    const absl::flat_hash_set<const ::google::protobuf::Message*> references,
+    ::google::protobuf::RepeatedPtrField<MessageType>* repeated_field) {
   repeated_field->erase(
       std::remove_if(repeated_field->begin(), repeated_field->end(),
                      [&references](const MessageType& field) {
@@ -130,9 +133,12 @@ void FillBcmField(BcmField::Type type, const MappedField& source,
 // (CommonFlowEntry field type --> BCM field type).
 BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
   static const auto* conversion_map =
-      new stratum::gtl::flat_hash_map<P4FieldType, BcmField::Type,
-                             EnumHash<P4FieldType>>({
+      new absl::flat_hash_map<P4FieldType, BcmField::Type,
+                              EnumHash<P4FieldType>>({
+          // Unknown and Annotated are always unknown types.
           {P4_FIELD_TYPE_UNKNOWN, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_ANNOTATED, BcmField::UNKNOWN},
+          // Begin known/handled types here.
           {P4_FIELD_TYPE_ETH_SRC, BcmField::ETH_SRC},
           {P4_FIELD_TYPE_ETH_DST, BcmField::ETH_DST},
           {P4_FIELD_TYPE_ETH_TYPE, BcmField::ETH_TYPE},
@@ -150,22 +156,47 @@ BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
           {P4_FIELD_TYPE_IPV6_DST, BcmField::IPV6_DST_UPPER_64},
           {P4_FIELD_TYPE_IPV6_NEXT_HDR, BcmField::IP_PROTO_NEXT_HDR},
           {P4_FIELD_TYPE_IPV6_TRAFFIC_CLASS, BcmField::IP_DSCP_TRAF_CLASS},
-          {P4_FIELD_TYPE_ICMP_TYPE, BcmField::ICMP_TYPE_CODE},
           {P4_FIELD_TYPE_ICMP_CODE, BcmField::ICMP_TYPE_CODE},
           {P4_FIELD_TYPE_L4_SRC_PORT, BcmField::L4_SRC},
           {P4_FIELD_TYPE_L4_DST_PORT, BcmField::L4_DST},
           {P4_FIELD_TYPE_VRF, BcmField::VRF},
-          // TODO: IFP can match on multiple class IDs, including
-          // VFP and L3. P4 needs to recognize that these are different metadata
-          // fields.
           {P4_FIELD_TYPE_CLASS_ID, BcmField::VFP_DST_CLASS_ID},
           {P4_FIELD_TYPE_EGRESS_PORT, BcmField::OUT_PORT},
           {P4_FIELD_TYPE_INGRESS_PORT, BcmField::IN_PORT},
+          {P4_FIELD_TYPE_ICMP_TYPE, BcmField::ICMP_TYPE_CODE},
+          {P4_FIELD_TYPE_L3_CLASS_ID, BcmField::L3_DST_CLASS_ID},
           {P4_FIELD_TYPE_CLONE_PORT, BcmField::CLONE_PORT},
           // Currently unsupported field types below.
+          {P4_FIELD_TYPE_IPV4_IHL, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_IPV4_TOTAL_LENGTH, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_IP_VERSION, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_IPV6_PAYLOAD_SIZE, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_ARP_TPA, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_COLOR, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_EGRESS_TRUNK, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_INGRESS_TRUNK, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_IN_METER, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_COS, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_CHECKSUM_BIT, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_ROUTING_BIT, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_KEY_BIT, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_SEQUENCE_BIT, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_STRICT_SOURCE, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_RECURSION, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_FLAGS, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_VERSION, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_PROTOCOL, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_GRE_FLAG_METADATA, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_CPU_QUEUE_ID, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_ENCAP_TYPE, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_METADATA_MATCH, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_SLICED, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_MCAST_GROUP_ID, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_L3_ADMIT, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_DSCP, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_ECN, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_UDF_VALUE_SET, BcmField::UNKNOWN},
+          {P4_FIELD_TYPE_UDP_PAYLOAD_DATA, BcmField::UNKNOWN},
       });
   return gtl::FindWithDefault(*conversion_map, p4_field_type,
                               BcmField::UNKNOWN);
@@ -199,7 +230,7 @@ void AddBcmActionColorParam(P4MeterColor color, BcmAction* bcm_action) {
 // (CommonFlowEntry color --> BCM color).
 bool P4ColorToBcm(P4MeterColor p4_color, BcmAction::Param::Color* bcm_color) {
   static const auto* color_map =
-      new stratum::gtl::flat_hash_map<P4MeterColor, BcmAction::Param::Color>{
+      new absl::flat_hash_map<P4MeterColor, BcmAction::Param::Color>{
           {P4_METER_GREEN, BcmAction::Param::GREEN},
           {P4_METER_YELLOW, BcmAction::Param::YELLOW},
           {P4_METER_RED, BcmAction::Param::RED},
@@ -241,16 +272,17 @@ template <class C>  // Iterable collection of P4 colors.
 
 }  // namespace
 
-BcmTableManager::BcmTableManager(const BcmChassisManager* bcm_chassis_manager,
-                                 P4TableMapper* p4_table_mapper, int unit)
+BcmTableManager::BcmTableManager(
+    const BcmChassisRoInterface* bcm_chassis_ro_interface,
+    P4TableMapper* p4_table_mapper, int unit)
     : port_id_to_logical_port_(),
       trunk_id_to_trunk_port_(),
       member_id_to_nexthop_info_(),
       group_id_to_nexthop_info_(),
       members_(),
       groups_(),
-      bcm_chassis_manager_(CHECK_NOTNULL(bcm_chassis_manager)),
-      p4_table_mapper_(CHECK_NOTNULL(p4_table_mapper)),
+      bcm_chassis_ro_interface_(ABSL_DIE_IF_NULL(bcm_chassis_ro_interface)),
+      p4_table_mapper_(ABSL_DIE_IF_NULL(p4_table_mapper)),
       node_id_(0),
       unit_(unit) {}
 
@@ -261,7 +293,7 @@ BcmTableManager::BcmTableManager()
       group_id_to_nexthop_info_(),
       members_(),
       groups_(),
-      bcm_chassis_manager_(nullptr),
+      bcm_chassis_ro_interface_(nullptr),
       p4_table_mapper_(nullptr),
       node_id_(0),
       unit_(-1) {}
@@ -273,27 +305,35 @@ BcmTableManager::~BcmTableManager() {}
   node_id_ = node_id;  // Save node_id ASAP to ensure all the methods can refer
                        // to correct ID in the messages/errors.
 
-  // Get the most updated maps from BcmChassisManager. Note that config is
-  // pushed to BcmChassisManager before we get to this method (enforced via
-  // testing).
-  ASSIGN_OR_RETURN(const auto& port_id_to_unit_logical_port,
-                   bcm_chassis_manager_->GetPortIdToUnitLogicalPortMap());
-  ASSIGN_OR_RETURN(const auto& trunk_id_to_unit_trunk_port,
-                   bcm_chassis_manager_->GetTrunkIdToUnitTrunkPortMap());
-  for (const auto& entry : port_id_to_unit_logical_port) {
-    uint64 port_id = entry.first;
-    int unit = entry.second.first;
-    int logical_port = entry.second.second;
-    if (unit != unit_) continue;
-    port_id_to_logical_port_[port_id] = logical_port;
+  // Get the most updated port/trunk maps from BcmChassisRoInterface. Note that
+  // config is pushed to BcmChassisRoInterface before we get to this method
+  // (enforced via testing).
+  ASSIGN_OR_RETURN(const auto& port_id_to_sdk_port,
+                   bcm_chassis_ro_interface_->GetPortIdToSdkPortMap(node_id));
+  ASSIGN_OR_RETURN(const auto& trunk_id_to_sdk_trunk,
+                   bcm_chassis_ro_interface_->GetTrunkIdToSdkTrunkMap(node_id));
+  absl::flat_hash_map<uint32, int> port_id_to_logical_port;
+  absl::flat_hash_map<uint32, int> trunk_id_to_trunk_port;
+  for (const auto& e : port_id_to_sdk_port) {
+    if (e.second.unit != unit_) {
+      // Any error here is an internal error. Must not happen.
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Something is wrong: " << e.second.unit << " != " << unit_
+             << " for a singleton port " << e.first << ".";
+    }
+    port_id_to_logical_port[e.first] = e.second.logical_port;
   }
-  for (const auto& entry : trunk_id_to_unit_trunk_port) {
-    uint64 trunk_id = entry.first;
-    int unit = entry.second.first;
-    int trunk_port = entry.second.second;
-    if (unit != unit_) continue;
-    trunk_id_to_trunk_port_[trunk_id] = trunk_port;
+  for (const auto& e : trunk_id_to_sdk_trunk) {
+    if (e.second.unit != unit_) {
+      // Any error here is an internal error. Must not happen.
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Something is wrong: " << e.second.unit << " != " << unit_
+             << " for a trunk " << e.first << ".";
+    }
+    trunk_id_to_trunk_port[e.first] = e.second.trunk_port;
   }
+  port_id_to_logical_port_ = port_id_to_logical_port;
+  trunk_id_to_trunk_port_ = trunk_id_to_trunk_port;
 
   // TODO: You are not done yet. You need to make sure any change in
   // the port maps (e.g. due to change in the flex ports) are reflected in the
@@ -345,7 +385,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 }
 
 ::util::Status BcmTableManager::CommonFlowEntryToBcmFlowEntry(
-    const CommonFlowEntry& common_flow_entry,
+    const CommonFlowEntry& common_flow_entry, ::p4::v1::Update::Type type,
     BcmFlowEntry* bcm_flow_entry) const {
   string common_flow_entry_string = absl::StrCat(
       " CommonFlowEntry is ", common_flow_entry.ShortDebugString(), ".");
@@ -353,7 +393,6 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   //
   // Find the unit where we will program the flow.
   bcm_flow_entry->set_unit(unit_);
-
   // bcm_flow_entry.bcm_table_type
   //
   // Find the BCM-specific table ID.
@@ -372,6 +411,12 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     }
     bcm_flow_entry->set_bcm_acl_table_id(acl_table->PhysicalTableId());
     bcm_flow_entry->set_acl_stage(acl_table->Stage());
+
+    // Add the constant fields.
+    ASSIGN_OR_RETURN(auto const_fields, ConstConditionsToBcmFields(*acl_table));
+    for (const BcmField& field : const_fields) {
+      *bcm_flow_entry->add_fields() = field;
+    }
   }
 
   // bcm_table_entry.fields
@@ -379,6 +424,13 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   for (const auto& field : common_flow_entry.fields()) {
     // Skip fields that have no values.
     if (!field.has_value()) continue;
+    // It is possible that a field is specified with 0 mask e.g. for static
+    // flows where every qualifier in the table is specified. If the mask is 0,
+    // the field has no impact, so skip it.
+    if (field.has_mask() && !field.mask().u32() && !field.mask().u64() &&
+        field.mask().b().empty()) {
+      continue;
+    }
     auto* bcm_field = bcm_flow_entry->add_fields();
     RETURN_IF_ERROR(MappedFieldToBcmField(bcm_table_type, field, bcm_field))
         << common_flow_entry_string;
@@ -421,13 +473,18 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 
   // bcm_table_entry.actions
   //
-  // Common -> BCM action mapping. Actions are typically BCM-specific.
-  // At this point we are implicitly assuming ActionProfile is used for
-  // ECMP/WCMP only and nothing else. Revise if needed.
+  // Common -> BCM action mapping. Actions are typically BCM-specific. At this
+  // point we are implicitly assuming ActionProfile is used for ECMP/WCMP only
+  // and nothing else. Note that there is no need for mapping actions in case of
+  // table entry delete. No logic that consumes BcmFlowEntry should rely on
+  // actions when deleting a table entry. Otherwise we have a bug.
+  // TODO(aghaffar): Per b/77525702, we still need to clarify what the expected
+  // behavior is in case we have actions populated when deleting a table entry.
+  if (type == ::p4::v1::Update::DELETE) return ::util::OkStatus();
   switch (common_flow_entry.action().type()) {
     case P4_ACTION_TYPE_PROFILE_MEMBER_ID: {
       uint32 member_id = common_flow_entry.action().profile_member_id();
-      ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+      ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                        GetBcmNonMultipathNexthopInfo(member_id));
       auto* bcm_action = bcm_flow_entry->add_actions();
       auto* param = bcm_action->add_params();
@@ -454,7 +511,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     }
     case P4_ACTION_TYPE_PROFILE_GROUP_ID: {
       uint32 group_id = common_flow_entry.action().profile_group_id();
-      ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+      ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                        GetBcmMultipathNexthopInfo(group_id));
       auto* bcm_action = bcm_flow_entry->add_actions();
       bcm_action->set_type(BcmAction::OUTPUT_L3);
@@ -501,6 +558,9 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
           *bcm_flow_entry->add_actions() = bcm_action;
         }
       }
+      // TODO(teverman): If encap actions are present, should this
+      // bcm_flow_entry be flagged as a special flavor of L3 that also
+      // initiates a tunnel?
       break;
     }
     default:
@@ -511,6 +571,65 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   }
 
   return ::util::OkStatus();
+}
+
+::util::StatusOr<std::vector<BcmField>>
+BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
+  std::vector<BcmField> bcm_fields;
+  const auto& conditions = table.ConstConditions();
+  for (const auto& condition : conditions) {
+    const P4HeaderType& header = condition.first;
+    if (!condition.second) {
+      // TODO(richardyu): BcmSdkWrapper does not currently support negative
+      // checks. We also need to add logic to prune overlapping
+      // conditions during table creation (e.g. !IPv4 & IPv6 should only report
+      // IPv6).
+      continue;
+    }
+    BcmField bcm_field;
+    switch (header) {
+      case P4_HEADER_ARP:
+        bcm_field.set_type(BcmField::IP_TYPE);
+        bcm_field.mutable_value()->set_u32(kEtherTypeArp);
+        break;
+      case P4_HEADER_IPV4:
+        bcm_field.set_type(BcmField::IP_TYPE);
+        bcm_field.mutable_value()->set_u32(kEtherTypeIPv4);
+        break;
+      case P4_HEADER_IPV6:
+        bcm_field.set_type(BcmField::IP_TYPE);
+        bcm_field.mutable_value()->set_u32(kEtherTypeIPv6);
+        break;
+      case P4_HEADER_TCP:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        bcm_field.mutable_value()->set_u32(kIpProtoTcp);
+        break;
+      case P4_HEADER_UDP:
+      case P4_HEADER_UDP_PAYLOAD:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        bcm_field.mutable_value()->set_u32(kIpProtoUdp);
+        break;
+      case P4_HEADER_GRE:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        bcm_field.mutable_value()->set_u32(kIpProtoGre);
+        break;
+      case P4_HEADER_ICMP:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        if (conditions.count(P4_HEADER_IPV6) && conditions.at(P4_HEADER_IPV6)) {
+          bcm_field.mutable_value()->set_u32(kIpProtoIPv6Icmp);
+        } else {
+          bcm_field.mutable_value()->set_u32(kIpProtoIcmp);
+        }
+        break;
+      default:
+        return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+               << "Validity check for header type: "
+               << P4HeaderType_Name(header) << " in table " << table.Name()
+               << " is not supported.";
+    }
+    bcm_fields.push_back(bcm_field);
+  }
+  return bcm_fields;
 }
 
 ::util::Status BcmTableManager::FillBcmFlowEntry(
@@ -528,7 +647,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       p4_table_mapper_->MapFlowEntry(table_entry, type, &common_flow_entry))
       << error_message;
   RETURN_IF_ERROR(
-      CommonFlowEntryToBcmFlowEntry(common_flow_entry, bcm_flow_entry))
+      CommonFlowEntryToBcmFlowEntry(common_flow_entry, type, bcm_flow_entry))
       << error_message;
 
   // We do not support initializing flow packet counter values.
@@ -536,7 +655,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       << "Unsupported counter initialization given in TableEntry."
       << error_message;
 
-  // Transfer meter configuration.
+  // Transfer meter configuration. For DELETE, this is redundant data and is
+  // not used.
   if (table_entry.has_meter_config()) {
     // Meters are only available for ACL flows.
     if (bcm_flow_entry->bcm_table_type() != BcmFlowEntry::BCM_TABLE_ACL) {
@@ -664,31 +784,37 @@ namespace {
               bcm_non_multipath_nexthop->set_dst_mac(field.u64());
               break;
             case P4_FIELD_TYPE_EGRESS_PORT: {
-              uint64 id = static_cast<uint64>(field.u32());
-              if (id == kCpuPortId) {
+              uint32 port_id = static_cast<uint32>(field.u32() + field.u64());
+              const int* port = nullptr;
+              if (port_id == kCpuPortId) {
                 // CPU port is a special case.
                 bcm_non_multipath_nexthop->set_type(
                     BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT);
-                bcm_non_multipath_nexthop->set_logical_port(0);
-              } else if (port_id_to_logical_port_.count(id)) {
+                bcm_non_multipath_nexthop->set_logical_port(kCpuLogicalPort);
+              } else if ((port = gtl::FindOrNull(port_id_to_logical_port_,
+                                                 port_id))) {
                 // Regular ports.
                 bcm_non_multipath_nexthop->set_type(
                     BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT);
-                bcm_non_multipath_nexthop->set_logical_port(
-                    port_id_to_logical_port_.at(id));
-              } else if (trunk_id_to_trunk_port_.count(id)) {
+                bcm_non_multipath_nexthop->set_logical_port(*port);
+              } else if ((port = gtl::FindOrNull(trunk_id_to_trunk_port_,
+                                                 port_id))) {
                 // Trunk/LAG ports.
                 bcm_non_multipath_nexthop->set_type(
                     BcmNonMultipathNexthop::NEXTHOP_TYPE_TRUNK);
-                bcm_non_multipath_nexthop->set_trunk_port(
-                    trunk_id_to_trunk_port_.at(id));
+                bcm_non_multipath_nexthop->set_trunk_port(*port);
               } else {
                 return MAKE_ERROR(ERR_INVALID_PARAM)
                        << "Could not find logical port or trunk port for port "
-                       << "id " << id << " on unit " << unit_ << ".";
+                       << port_id << " on node " << node_id_
+                       << " corresponding to unit " << unit_ << ".";
               }
               break;
             }
+            case P4_FIELD_TYPE_L3_CLASS_ID:
+              // TODO(aghaffar): Ignore class_id for now till we have a
+              // resolution for b/73264766.
+              break;
             default:
               return MAKE_ERROR(ERR_INVALID_PARAM)
                      << "Invalid or unsupported P4 field type to modify: "
@@ -742,8 +868,20 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
+    // If member points to singleton port, check state before adding member.
+    // TODO(madhaviyengar): Add support for checking trunk state once this
+    // functionality becomes available.
+    if (member_nexthop_info->type ==
+        BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
+      int port = member_nexthop_info->bcm_port;
+      ASSIGN_OR_RETURN(
+          PortState port_state,
+          bcm_chassis_ro_interface_->GetPortState(SdkPort(unit_, port)));
+      // Only add member if port is UP.
+      if (port_state != PORT_STATE_UP) continue;
+    }
     auto* nexthop_member = bcm_multipath_nexthop->add_members();
     nexthop_member->set_egress_intf_id(member_nexthop_info->egress_intf_id);
     nexthop_member->set_weight(weight);
@@ -760,12 +898,15 @@ namespace {
            << "Cannot insert flow with table id 0: "
            << table_entry.ShortDebugString() << ".";
   }
-  util::StatusOr<BcmFlowTable*> result = GetMutableFlowTable(table_id);
+  ::util::StatusOr<BcmFlowTable*> result = GetMutableFlowTable(table_id);
   if (result.ok()) {
     RETURN_IF_ERROR(result.ValueOrDie()->InsertEntry(table_entry));
   } else {
+    ::p4::config::v1::Table p4_table;
+    RETURN_IF_ERROR(p4_table_mapper_->LookupTable(table_id, &p4_table))
+        << "Table entry refers to unknown table id " << table_id << ".";
     auto table_result =
-        generic_flow_tables_.emplace(std::make_pair(table_id, table_id));
+        generic_flow_tables_.emplace(std::make_pair(table_id, p4_table));
     if (!table_result.second) {
       return MAKE_ERROR(ERR_INTERNAL)
              << "Failed to add new table with id " << table_id << ".";
@@ -788,7 +929,7 @@ namespace {
 ::util::Status BcmTableManager::UpdateTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id),
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id),
                    _ << "Could not find table " << table_id << ".");
   ASSIGN_OR_RETURN(
       ::p4::v1::TableEntry old_entry, table->ModifyEntry(table_entry),
@@ -874,7 +1015,7 @@ namespace {
 
 ::util::Status BcmTableManager::AddActionProfileMember(
     const ::p4::v1::ActionProfileMember& action_profile_member,
-    BcmNonMultipathNexthop::Type type, int egress_intf_id) {
+    BcmNonMultipathNexthop::Type type, int egress_intf_id, int bcm_port) {
   // Sanity checking.
   if (!action_profile_member.member_id() ||
       !action_profile_member.action_profile_id()) {
@@ -904,6 +1045,7 @@ namespace {
   auto* member_nexthop_info = new BcmNonMultipathNexthopInfo();
   member_nexthop_info->egress_intf_id = egress_intf_id;
   member_nexthop_info->type = type;
+  member_nexthop_info->bcm_port = bcm_port;
   if (!gtl::InsertIfNotPresent(&member_id_to_nexthop_info_, member_id,
                                member_nexthop_info)) {
     delete member_nexthop_info;
@@ -911,8 +1053,8 @@ namespace {
            << "Cannot add already existing member_id: " << member_id << ".";
   }
 
-  // Save a copy of ::p4::v1::ActionProfileMember.
-  if (!gtl::InsertIfNotPresent(&members_, action_profile_member)) {
+  // Save a copy of P4 ActionProfileMember.
+  if (!gtl::InsertIfNotPresent(&members_, {member_id, action_profile_member})) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Inconsistent state. Member with ID " << member_id << " already "
            << "exists in members_.";
@@ -922,7 +1064,8 @@ namespace {
 }
 
 ::util::Status BcmTableManager::AddActionProfileGroup(
-    const ::p4::v1::ActionProfileGroup& action_profile_group, int egress_intf_id) {
+    const ::p4::v1::ActionProfileGroup& action_profile_group,
+    int egress_intf_id) {
   // Sanity checking.
   if (!action_profile_group.group_id() ||
       !action_profile_group.action_profile_id()) {
@@ -957,10 +1100,17 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     group_nexthop_info->member_id_to_weight[member_id] = weight;
     member_nexthop_info->group_ref_count++;
+    // For singleton port members, add reference from the port to this group.
+    if (member_nexthop_info->type ==
+        BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
+      auto& group_ids = gtl::LookupOrInsert(&port_to_group_ids_,
+                                            member_nexthop_info->bcm_port, {});
+      group_ids.insert(group_id);
+    }
   }
   if (!gtl::InsertIfNotPresent(&group_id_to_nexthop_info_, group_id,
                                group_nexthop_info)) {
@@ -969,8 +1119,8 @@ namespace {
            << "Cannot add already existing group_id: " << group_id << ".";
   }
 
-  // Save a copy of ::p4::v1::ActionProfileGroup.
-  if (!gtl::InsertIfNotPresent(&groups_, action_profile_group)) {
+  // Save a copy of P4 ActionProfileGroup.
+  if (!gtl::InsertIfNotPresent(&groups_, {group_id, action_profile_group})) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Inconsistent state. Group with ID " << group_id << " already "
            << "exists in groups_.";
@@ -981,22 +1131,23 @@ namespace {
 
 ::util::Status BcmTableManager::UpdateActionProfileMember(
     const ::p4::v1::ActionProfileMember& action_profile_member,
-    BcmNonMultipathNexthop::Type type) {
+    BcmNonMultipathNexthop::Type type, int bcm_port) {
   uint32 member_id = action_profile_member.member_id();
 
   // Member must exist when calling this function. Find the corresponding
   // BcmNonMultipathNexthopInfo and update it. At the moment only type can
   // change.
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   member_nexthop_info->type = type;
+  member_nexthop_info->bcm_port = bcm_port;
 
-  // Update the copy of ::p4::v1::ActionProfileMember matching the input (remove the
-  // old match and add the new one instead).
-  CHECK_RETURN_IF_FALSE(members_.erase(action_profile_member) == 1)
+  // Update the copy of P4 ActionProfileMember matching the input
+  // (remove the old match and add the new one instead).
+  CHECK_RETURN_IF_FALSE(members_.erase(member_id) == 1)
       << "Inconsistent state. Old member with ID " << member_id << " did not "
       << "exist in members_.";
-  members_.insert(action_profile_member);
+  members_.insert({member_id, action_profile_member});
 
   return ::util::OkStatus();
 }
@@ -1008,28 +1159,44 @@ namespace {
   // The group and all the members to add and remove to the group must exist
   // when calling this function. Find the corresponding BcmMultipathNexthopInfo
   // for the group and update it.
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
 
   // Save a copy of old member_id_to_weight and then populate it with the new
   // members.
   auto old_member_id_to_weight = group_nexthop_info->member_id_to_weight;
   group_nexthop_info->member_id_to_weight.clear();
+  // New set of SDK ports referenced by the group, used to determine if any
+  // ports have been removed.
+  absl::flat_hash_set<int> ports;
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     group_nexthop_info->member_id_to_weight[member_id] = weight;
+    // Keep track of the modified set of ports the group references.
+    int port = -1;
+    if (member_nexthop_info->type ==
+        BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
+      port = member_nexthop_info->bcm_port;
+      ports.insert(port);
+    }
     if (!old_member_id_to_weight.count(member_id)) {
       // Only increase the ref count for the members which are newly added.
       member_nexthop_info->group_ref_count++;
+      // If this member is a singleton port, add references from it to the
+      // group.
+      if (port >= 0) {
+        auto& group_ids = gtl::LookupOrInsert(&port_to_group_ids_, port, {});
+        group_ids.insert(group_id);
+      }
     }
   }
 
   for (const auto& e : old_member_id_to_weight) {
     uint32 member_id = e.first;
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     CHECK_RETURN_IF_FALSE(member_nexthop_info->group_ref_count > 0)
         << "Non-positive group_ref_count for following member_id: " << member_id
@@ -1037,15 +1204,29 @@ namespace {
     if (!group_nexthop_info->member_id_to_weight.count(member_id)) {
       // Only decrease the ref count for the members which are newly removed.
       member_nexthop_info->group_ref_count--;
+      // For singleton port members, remove references from the port if it is no
+      // longer in the group.
+      if (member_nexthop_info->type ==
+          BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
+        int port = member_nexthop_info->bcm_port;
+        if (!gtl::ContainsKey(ports, port)) {
+          auto* group_ids = gtl::FindOrNull(port_to_group_ids_, port);
+          if (!group_ids) {
+            return MAKE_ERROR(ERR_INTERNAL)
+                   << "No referencing group set for SDK port " << port << ".";
+          }
+          group_ids->erase(group_id);
+        }
+      }
     }
   }
 
-  // Update the copy of ::p4::v1::ActionProfileGroup matching the input (remove the
-  // old match and add the new one instead).
-  CHECK_RETURN_IF_FALSE(groups_.erase(action_profile_group) == 1)
+  // Update the copy of P4 ActionProfileGroup matching the input
+  // (remove the old match and add the new one instead).
+  CHECK_RETURN_IF_FALSE(groups_.erase(group_id) == 1)
       << "Inconsistent state. Old group with ID " << group_id << " did not "
       << "exist in groups_.";
-  groups_.insert(action_profile_group);
+  groups_.insert({group_id, action_profile_group});
 
   return ::util::OkStatus();
 }
@@ -1056,15 +1237,15 @@ namespace {
 
   // Member must exist when calling this function. Find the corresponding
   // BcmNonMultipathNexthopInfo and remove it.
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   CHECK_RETURN_IF_FALSE(member_nexthop_info->flow_ref_count == 0);
   CHECK_RETURN_IF_FALSE(member_nexthop_info->group_ref_count == 0);
   delete member_nexthop_info;
   member_id_to_nexthop_info_.erase(member_id);
 
-  // Delete the copy of ::p4::v1::ActionProfileMember matching the input.
-  CHECK_RETURN_IF_FALSE(members_.erase(action_profile_member) == 1)
+  // Delete the copy of P4 ActionProfileMember matching the input.
+  CHECK_RETURN_IF_FALSE(members_.erase(member_id) == 1)
       << "Inconsistent state. Old member with ID " << member_id << " did not "
       << "exist in members_.";
 
@@ -1077,25 +1258,58 @@ namespace {
 
   // group and all its members must exist when calling this function. Find the
   // corresponding BcmMultipathNexthopInfo and update it.
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   for (const auto& e : group_nexthop_info->member_id_to_weight) {
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(e.first));
     CHECK_RETURN_IF_FALSE(member_nexthop_info->group_ref_count > 0)
         << "Non-positive group_ref_count for following member_id: " << e.first
         << ".";
     member_nexthop_info->group_ref_count--;
+    // For singleton port members, remove the reference from the port to this
+    // group.
+    if (member_nexthop_info->type ==
+        BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
+      auto* group_ids =
+          gtl::FindOrNull(port_to_group_ids_, member_nexthop_info->bcm_port);
+      if (!group_ids) {
+        return MAKE_ERROR(ERR_INTERNAL)
+               << "No set of referencing groups for SDK port "
+               << member_nexthop_info->bcm_port << ".";
+      }
+      group_ids->erase(group_id);
+    }
   }
   delete group_nexthop_info;
   group_id_to_nexthop_info_.erase(group_id);
 
-  // Delete the copy of ::p4::v1::ActionProfileGroup matching the input.
-  CHECK_RETURN_IF_FALSE(groups_.erase(action_profile_group) == 1)
+  // Delete the copy of P4 ActionProfileGroup matching the input.
+  CHECK_RETURN_IF_FALSE(groups_.erase(group_id) == 1)
       << "Inconsistent state. Old group with ID " << group_id << " did not "
       << "exist in groups_.";
 
   return ::util::OkStatus();
+}
+
+::util::StatusOr<absl::flat_hash_map<int, BcmMultipathNexthop>>
+BcmTableManager::FillBcmMultipathNexthopsWithPort(uint32 port_id) const {
+  auto* port = gtl::FindOrNull(port_id_to_logical_port_, port_id);
+  CHECK_RETURN_IF_FALSE(port != nullptr);
+  auto* group_ids = gtl::FindOrNull(port_to_group_ids_, *port);
+  if (!group_ids) return absl::flat_hash_map<int, BcmMultipathNexthop>();
+  absl::flat_hash_map<int, BcmMultipathNexthop> nexthops;
+  for (const auto& group_id : *group_ids) {
+    // Get nexthop info for the BCM egress_intf_id.
+    ASSIGN_OR_RETURN(auto* nexthop_info, GetBcmMultipathNexthopInfo(group_id));
+    auto& nexthop =
+        gtl::LookupOrInsert(&nexthops, nexthop_info->egress_intf_id, {});
+    // Populate the BcmMultipathNexthopInfo.
+    const auto* group = gtl::FindOrNull(groups_, group_id);
+    CHECK_RETURN_IF_FALSE(group != nullptr);
+    RETURN_IF_ERROR(FillBcmMultipathNexthop(*group, &nexthop));
+  }
+  return std::move(nexthops);
 }
 
 ::util::StatusOr<std::set<uint32>> BcmTableManager::GetGroupsForMember(
@@ -1119,10 +1333,11 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
     return MAKE_ERROR(ERR_INTERNAL) << "Null info.";
   }
 
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   info->egress_intf_id = member_nexthop_info->egress_intf_id;
   info->type = member_nexthop_info->type;
+  info->bcm_port = member_nexthop_info->bcm_port;
   info->group_ref_count = member_nexthop_info->group_ref_count;
   info->flow_ref_count = member_nexthop_info->flow_ref_count;
 
@@ -1135,7 +1350,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
     return MAKE_ERROR(ERR_INTERNAL) << "Null info.";
   }
 
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   info->egress_intf_id = group_nexthop_info->egress_intf_id;
   info->flow_ref_count = group_nexthop_info->flow_ref_count;
@@ -1150,7 +1365,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
            << "Cannot insert table with existing id: " << table.Id();
   }
   acl_tables_.emplace(table.Id(), std::move(table));
-  return util::OkStatus();
+  return ::util::OkStatus();
 }
 
 ::util::StatusOr<const AclTable*> BcmTableManager::GetReadOnlyAclTable(
@@ -1181,7 +1396,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
   }
   RETURN_IF_ERROR(AddTableEntry(table_entry));
   RETURN_IF_ERROR(table->SetBcmAclId(table_entry, bcm_flow_id));
-  return util::OkStatus();
+  return ::util::OkStatus();
 }
 
 std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
@@ -1196,7 +1411,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   const BcmFlowTable* table;
   ASSIGN_OR_RETURN(table, GetConstantFlowTable(table_id),
                    _ << "Could not find table " << table_id << " to delete.");
-  std::vector<p4::v1::TableEntry> entries;
+  std::vector<::p4::v1::TableEntry> entries;
   for (const auto& entry : *table) {
     entries.emplace_back(entry);
   }
@@ -1213,7 +1428,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   // Remove the ACL table since it is not automatically deleted when the entries
   // are removed like generic tables.
   acl_tables_.erase(table_id);
-  return util::OkStatus();
+  return ::util::OkStatus();
 }
 
 ::util::Status BcmTableManager::ReadTableEntries(
@@ -1229,6 +1444,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   // Return all tables if no table ids were specified.
   if (table_ids.empty()) {
     for (const auto& pair : generic_flow_tables_) {
+      // We shouldn't return static flows.
+      if (pair.second.IsConst()) continue;
       for (const auto& table_entry : pair.second) {
         *resp->add_entities()->mutable_table_entry() = table_entry;
       }
@@ -1236,6 +1453,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
     // Acl entries should also be recorded in acl_flows. These are pointers to
     // the acl entries in resp.
     for (const auto& pair : acl_tables_) {
+      // We shouldn't return static flows.
+      if (pair.second.IsConst()) continue;
       for (const auto& table_entry : pair.second) {
         auto entry_ptr = resp->add_entities()->mutable_table_entry();
         *entry_ptr = table_entry;
@@ -1248,6 +1467,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
       // Lookup from the ACL tables.
       const AclTable* acl_lookup = gtl::FindOrNull(acl_tables_, table_id);
       if (acl_lookup) {
+        // We shouldn't return static flows.
+        if (acl_lookup->IsConst()) continue;
         // Acl entries should also be recorded in acl_flows. These are pointers
         // to the acl entries in resp.
         for (const auto& table_entry : *acl_lookup) {
@@ -1261,6 +1482,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
       const BcmFlowTable* lookup =
           gtl::FindOrNull(generic_flow_tables_, table_id);
       if (lookup) {
+        // We shouldn't return static flows.
+        if (lookup->IsConst()) continue;
         for (const auto& table_entry : *lookup) {
           *resp->add_entities()->mutable_table_entry() = table_entry;
         }
@@ -1271,7 +1494,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   return ::util::OkStatus();
 }
 
-util::StatusOr<p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
+::util::StatusOr<::p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
     const ::p4::v1::TableEntry& entry) const {
   ASSIGN_OR_RETURN(const BcmFlowTable* table,
                    GetConstantFlowTable(entry.table_id()),
@@ -1294,9 +1517,9 @@ util::StatusOr<p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
   ::p4::v1::ReadResponse resp;
   for (const auto& member : members_) {
     if (action_profile_ids.empty() ||
-        action_profile_ids.count(member.action_profile_id())) {
+        action_profile_ids.count(member.second.action_profile_id())) {
       auto* entity = resp.add_entities();
-      *entity->mutable_action_profile_member() = member;
+      *entity->mutable_action_profile_member() = member.second;
     }
   }
   if (!writer->Write(resp)) {
@@ -1316,9 +1539,9 @@ util::StatusOr<p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
   ::p4::v1::ReadResponse resp;
   for (const auto& group : groups_) {
     if (action_profile_ids.empty() ||
-        action_profile_ids.count(group.action_profile_id())) {
+        action_profile_ids.count(group.second.action_profile_id())) {
       auto* entity = resp.add_entities();
-      *entity->mutable_action_profile_group() = group;
+      *entity->mutable_action_profile_group() = group.second;
     }
   }
   if (!writer->Write(resp)) {
@@ -1335,15 +1558,15 @@ util::StatusOr<p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
 }
 
 std::unique_ptr<BcmTableManager> BcmTableManager::CreateInstance(
-    const BcmChassisManager* bcm_chassis_manager,
+    const BcmChassisRoInterface* bcm_chassis_ro_interface,
     P4TableMapper* p4_table_mapper, int unit) {
   return absl::WrapUnique(
-      new BcmTableManager(bcm_chassis_manager, p4_table_mapper, unit));
+      new BcmTableManager(bcm_chassis_ro_interface, p4_table_mapper, unit));
 }
 
 ::util::Status BcmTableManager::UpdateFlowRefCountForMember(uint32 member_id,
                                                             int delta) {
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   if (delta < 0) {
     CHECK_RETURN_IF_FALSE(member_nexthop_info->flow_ref_count + delta >= 0)
@@ -1359,7 +1582,7 @@ std::unique_ptr<BcmTableManager> BcmTableManager::CreateInstance(
 
 ::util::Status BcmTableManager::UpdateFlowRefCountForGroup(uint32 group_id,
                                                            int delta) {
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   if (delta < 0) {
     CHECK_RETURN_IF_FALSE(group_nexthop_info->flow_ref_count + delta >= 0)
@@ -1397,33 +1620,32 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
 }
 
 ::util::Status BcmTableManager::CreateEgressPortAction(
-    uint64 port_id, BcmAction* bcm_action) const {
-  // Drop dataplane packets if the destination is the CPU.
+    uint32 port_id, BcmAction* bcm_action) const {
+  // Destination cannot be CPU in this function. If it does, we have an internal
+  // error.
   if (port_id == kCpuPortId) {
-    bcm_action->set_type(BcmAction::DROP);
-    return ::util::OkStatus();
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Something is wrong. The port cannot be CPU in "
+           << "CreateEgressPortAction.";
   }
-  const int* port = gtl::FindOrNull(port_id_to_logical_port_, port_id);
-  bool is_trunk = false;
-  if (port == nullptr) {
-    port = gtl::FindOrNull(trunk_id_to_trunk_port_, port_id);
-    is_trunk = (port != nullptr);
-  }
-  if (port == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Unknown port_id " << port_id << " on node " << node_id_ << ".";
-  }
-  BcmAction::Param* param = nullptr;
-  if (is_trunk) {
-    bcm_action->set_type(BcmAction::OUTPUT_TRUNK);
-    param = bcm_action->add_params();
-    param->set_type(BcmAction::Param::TRUNK_PORT);
-  } else {
+
+  const int* port = nullptr;
+  if ((port = gtl::FindOrNull(port_id_to_logical_port_, port_id))) {
     bcm_action->set_type(BcmAction::OUTPUT_PORT);
-    param = bcm_action->add_params();
+    auto* param = bcm_action->add_params();
     param->set_type(BcmAction::Param::LOGICAL_PORT);
+    param->mutable_value()->set_u32(*port);
+  } else if ((port = gtl::FindOrNull(trunk_id_to_trunk_port_, port_id))) {
+    bcm_action->set_type(BcmAction::OUTPUT_TRUNK);
+    auto* param = bcm_action->add_params();
+    param->set_type(BcmAction::Param::TRUNK_PORT);
+    param->mutable_value()->set_u32(*port);
+  } else {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Could not find logical port or trunk port for port " << port_id
+           << " on node " << node_id_ << " corresponding to unit " << unit_
+           << ".";
   }
-  param->mutable_value()->set_u32(*port);
 
   return ::util::OkStatus();
 }
@@ -1458,21 +1680,26 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   // fields that use ports.
   if (bcm_type == BcmField::IN_PORT || bcm_type == BcmField::CLONE_PORT ||
       bcm_type == BcmField::OUT_PORT) {
-    uint64 port_id = common_field.value().u32() + common_field.value().u64();
-    const int* bcm_port = gtl::FindOrNull(port_id_to_logical_port_, port_id);
-    // Egress ports may refer to a trunk instead. Currently, we do not support
-    // ingress trunk matching.
-    if (bcm_port == nullptr && bcm_type == BcmField::OUT_PORT) {
-      bcm_port = gtl::FindOrNull(trunk_id_to_trunk_port_, port_id);
+    uint32 port_id = common_field.value().u32() +
+                     static_cast<uint32>(common_field.value().u64());
+    MappedField mapped_field;
+    const int* port = nullptr;
+    if (port_id == kCpuPortId) {
+      mapped_field.mutable_value()->set_u32(kCpuLogicalPort);
+    } else if ((port = gtl::FindOrNull(port_id_to_logical_port_, port_id))) {
+      mapped_field.mutable_value()->set_u32(*port);
+    } else if (bcm_type == BcmField::OUT_PORT &&
+               (port = gtl::FindOrNull(trunk_id_to_trunk_port_, port_id))) {
+      mapped_field.mutable_value()->set_u32(*port);
+    } else {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Could not find logical port or trunk port for port " << port_id
+             << " on node " << node_id_ << " corresponding to unit " << unit_
+             << ".";
     }
-    if (bcm_port == nullptr) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Unknown port id: " << port_id
-                                           << " on node " << node_id_ << ".";
-    }
-    MappedField port_id_common_field;
-    port_id_common_field.mutable_value()->set_u32(*bcm_port);
-    port_id_common_field.mutable_mask()->set_u32(~0);
-    FillBcmField(bcm_type, port_id_common_field, bcm_field);
+    // Port mask is ignored as it isn't possible to translate.
+    mapped_field.mutable_mask()->set_u32(~0);
+    FillBcmField(bcm_type, mapped_field, bcm_field);
     return ::util::OkStatus();
   }
   // Base scenario is to directly transfer the fields.
@@ -1542,12 +1769,12 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
                                             "both be present as actions.";
   }
   // Grab the set of colors for the copy action.
-  stratum::gtl::enum_set<P4MeterColor> copy_colors;
+  absl::flat_hash_set<P4MeterColor> copy_colors;
   if (clone_action) {
     for (int color : clone_action->meter_colors()) {
       copy_colors.insert(static_cast<P4MeterColor>(color));
     }
-  } else {
+  } else if (egress_to_cpu_action) {
     for (int color : egress_to_cpu_action->meter_colors()) {
       copy_colors.insert(static_cast<P4MeterColor>(color));
     }
@@ -1556,7 +1783,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     copy_colors = AllColors();
   }
   // Grab the set of colors for the drop action.
-  stratum::gtl::enum_set<P4MeterColor> drop_colors;
+  absl::flat_hash_set<P4MeterColor> drop_colors;
   if (drop_action) {
     for (int color : drop_action->meter_colors()) {
       drop_colors.insert(static_cast<P4MeterColor>(color));
@@ -1633,7 +1860,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   }
 
   // Remove the used actions.
-  stratum::gtl::flat_hash_set<const google::protobuf::Message*> messages = {
+  absl::flat_hash_set<const ::google::google::protobuf::Message*> messages = {
       cpu_queue_action, egress_to_cpu_action, clone_action, drop_action,
       clone_port_action};
   messages.erase(nullptr);
@@ -1718,7 +1945,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   bcm_actions->push_back(bcm_egress_port_action);
 
   // Remove the used actions.
-  stratum::gtl::flat_hash_set<const google::protobuf::Message*> messages = {
+  absl::flat_hash_set<const ::google::google::protobuf::Message*> messages = {
       eth_source_action, eth_dest_action, egress_port_action};
   EraseReferencesFromRepeatedField(messages,
                                    action_function->mutable_modify_fields());
@@ -1745,7 +1972,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       return FillSimpleBcmAction(common_action, BcmAction::SET_ETH_DST,
                                  BcmAction::Param::ETH_DST, bcm_action);
     case P4_FIELD_TYPE_VLAN_VID:
-      return FillSimpleBcmAction(common_action, BcmAction::SET_VLAN_VID,
+      return FillSimpleBcmAction(common_action, BcmAction::ADD_OUTER_VLAN,
                                  BcmAction::Param::VLAN_VID, bcm_action);
     case P4_FIELD_TYPE_VLAN_PCP:
       return FillSimpleBcmAction(common_action, BcmAction::SET_VLAN_PCP,
@@ -1827,17 +2054,23 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     const CommonFlowEntry& common_flow_entry) const {
   uint32 table_id = common_flow_entry.table_info().id();
   P4TableType table_type = common_flow_entry.table_info().type();
-  P4Annotation::PipelineStage pipeline_stage =
-      common_flow_entry.table_info().pipeline_stage();
 
-  // We always expect the stage to be available for any table entry.
-  CHECK_RETURN_IF_FALSE(pipeline_stage != P4Annotation::DEFAULT_STAGE)
+  // We always expect the stage to be available for any table entry. Although
+  // we do not use it in this function, we validate it.
+  CHECK_RETURN_IF_FALSE(common_flow_entry.table_info().pipeline_stage() !=
+                        P4Annotation::DEFAULT_STAGE)
       << "Invalid stage for the table entry: "
       << common_flow_entry.ShortDebugString();
 
   // Handle ACL tables.
   if (acl_tables_.count(table_id)) {
     return BcmFlowEntry::BCM_TABLE_ACL;
+  }
+
+  // The decap table has its own dedicated pipeline stage.  In current P4
+  // programs, encap is initiated in L3 LPM tables.
+  if (common_flow_entry.table_info().pipeline_stage() == P4Annotation::DECAP) {
+    return BcmFlowEntry::BCM_TABLE_TUNNEL;
   }
 
   BcmFlowEntry::BcmTableType bcm_table_type = BcmFlowEntry::BCM_TABLE_UNKNOWN;
@@ -1869,42 +2102,14 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       }
       break;
     }
-    case P4_TABLE_L3_CLASSIFIER:
-      // TODO: Seems like this is not used any more in the new
-      // P4 pipeline configs. Remove if not needed.
+    case P4_TABLE_L2_MULTICAST:
+      bcm_table_type = BcmFlowEntry::BCM_TABLE_L2_MULTICAST;
+      break;
+    case P4_TABLE_L2_MY_STATION:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_MY_STATION;
       break;
     default:
       break;
-  }
-
-  // If table_type is not assigned in a common_flow_entry, we fallback to
-  // pipeline stage and based on that possibly the field/action types try to
-  // infer the type of the table.
-  if (bcm_table_type == BcmFlowEntry::BCM_TABLE_UNKNOWN) {
-    switch (pipeline_stage) {
-      case P4Annotation::L2: {
-        // Now we need to rely on the fields and actions to understand the
-        // table type. Only P4_ACTION_TYPE_FUNCTION action type make sense in
-        // this case.
-        if (common_flow_entry.action().type() == P4_ACTION_TYPE_FUNCTION) {
-          P4ActionFunction function = common_flow_entry.action().function();
-          for (const auto& field : function.modify_fields()) {
-            if (field.type() == P4_FIELD_TYPE_MCAST_GROUP_ID) {
-              bcm_table_type = BcmFlowEntry::BCM_TABLE_L2_MULTICAST;
-              break;
-            }
-            if (field.type() == P4_FIELD_TYPE_L3_ADMIT) {
-              bcm_table_type = BcmFlowEntry::BCM_TABLE_MY_STATION;
-              break;
-            }
-          }
-        }
-        break;
-      }
-      default:
-        break;
-    }
   }
 
   CHECK_RETURN_IF_FALSE(bcm_table_type != BcmFlowEntry::BCM_TABLE_UNKNOWN)
@@ -1914,7 +2119,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   return bcm_table_type;
 }
 
-util::StatusOr<BcmFlowTable*> BcmTableManager::GetMutableFlowTable(
+::util::StatusOr<BcmFlowTable*> BcmTableManager::GetMutableFlowTable(
     uint32 table_id) {
   auto generic_lookup = generic_flow_tables_.find(table_id);
   if (generic_lookup != generic_flow_tables_.end()) {
@@ -1928,7 +2133,7 @@ util::StatusOr<BcmFlowTable*> BcmTableManager::GetMutableFlowTable(
          << "Table " << table_id << " not present.";
 }
 
-util::StatusOr<const BcmFlowTable*> BcmTableManager::GetConstantFlowTable(
+::util::StatusOr<const BcmFlowTable*> BcmTableManager::GetConstantFlowTable(
     uint32 table_id) const {
   const auto generic_lookup = generic_flow_tables_.find(table_id);
   if (generic_lookup != generic_flow_tables_.end()) {

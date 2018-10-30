@@ -19,6 +19,9 @@
 #include <sstream>  // IWYU pragma: keep
 
 #include "gflags/gflags.h"
+#include "google/protobuf/any.pb.h"
+#include "google/rpc/code.pb.h"
+#include "google/rpc/status.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"
@@ -64,9 +67,9 @@ P4Service::P4Service(OperationMode mode, SwitchInterface* switch_interface,
       connection_ids_(),
       forwarding_pipeline_configs_(nullptr),
       mode_(mode),
-      switch_interface_(CHECK_NOTNULL(switch_interface)),
-      auth_policy_checker_(CHECK_NOTNULL(auth_policy_checker)),
-      error_buffer_(CHECK_NOTNULL(error_buffer)) {}
+      switch_interface_(ABSL_DIE_IF_NULL(switch_interface)),
+      auth_policy_checker_(ABSL_DIE_IF_NULL(auth_policy_checker)),
+      error_buffer_(ABSL_DIE_IF_NULL(error_buffer)) {}
 
 P4Service::~P4Service() {}
 
@@ -500,6 +503,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
         }
         break;
       }
+      case ::p4::v1::StreamMessageRequest::kDigestAck:
       case ::p4::v1::StreamMessageRequest::UPDATE_NOT_SET:
         return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                               "Need to specify either arbitration or packet.");

@@ -1,0 +1,446 @@
+# This is a limited set of P4Info to support P4TableMapper unit tests.
+# It goes with the table mapping data in test_p4_pipeline_config.pb.txt.
+
+# These tables refer to the same match fields, using different match types.
+tables {
+  preamble {
+    id: 0x00001
+    name: "exact-match-32-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+tables {
+  preamble {
+    id: 0x00002
+    name: "lpm-match-32-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+tables {
+  preamble {
+    id: 0x00003
+    name: "exact-match-bytes-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-128"
+    bitwidth: 128
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+tables {
+  preamble {
+    id: 0x00004
+    name: "lpm-match-bytes-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-128"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+tables {
+  preamble {
+    id: 0x00005
+    name: "exact-match-64-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-64"
+    bitwidth: 64
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# This table is for use in action mapping tests.
+tables {
+  preamble {
+    id: 0x00006
+    name: "action-test-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-128"
+    bitwidth: 128
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+  action_refs {
+    id: 0xa0002  # "set-32"
+  }
+  action_refs {
+    id: 0xa0003  # "set-64"
+  }
+  action_refs {
+    id: 0xa0004  # "set-bytes"
+  }
+  action_refs {
+    id: 0xa0005  # "set-multi-params"
+  }
+  action_refs {
+    id: 0xa0006  # "set-constant-value"
+  }
+  action_refs {
+    id: 0xa0007  # "meter-not-green"
+  }
+  action_refs {
+    id: 0xa0008  # "assign-when-green"
+  }
+  action_refs {
+    id: 0xa0009  # "assign-header-copy"
+  }
+  action_refs {
+    id: 0xa000a  # "assign-field-to-field"
+  }
+}
+
+# This table is for use in action profile mapping tests.  Its action_ids
+# need to be a subset of those in "action-test-table" in order to test
+# action profiles shared by multiple tables.  The actions "set-multi-params"
+# and "set-constant-value" are intentionally excluded.
+tables {
+  preamble {
+    id: 0x00007
+    name: "action-profile-test-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-128"
+    bitwidth: 128
+    match_type: LPM
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+  action_refs {
+    id: 0xa0002  # "set-32"
+  }
+  action_refs {
+    id: 0xa0003  # "set-64"
+  }
+  action_refs {
+    id: 0xa0004  # "set-bytes"
+  }
+}
+
+# This table is for use in internal match field tests.
+tables {
+  preamble {
+    id: 0x00008
+    name: "test-internal-match-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# This table is for testing with a const_default_action_id.
+tables {
+  preamble {
+    id: 0x00009
+    name: "test-const-action-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+  action_refs {
+    id: 0xa0002  # "set-32"
+  }
+  const_default_action_id: 0xa0001
+}
+
+# This table is for use in multiple match field tests.
+tables {
+  preamble {
+    id: 0x0000a
+    name: "test-multi-match-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: LPM
+  }
+  match_fields {
+    id: 2
+    name: "test-header-field-64"
+    bitwidth: 64
+    match_type: EXACT
+  }
+  match_fields {
+    id: 3
+    name: "test-header-field-128"
+    bitwidth: 128
+    match_type: TERNARY
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# This table is for use in hidden pipeline stage tests with static entries.
+tables {
+  preamble {
+    id: 0x0000b
+    name: "test-hidden-static-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# This table is for static entry tests in non-hidden pipeline stages.
+tables {
+  preamble {
+    id: 0x0000c
+    name: "test-static-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# This table is for hidden pipeline stage tests.
+# The table has no static entries.
+tables {
+  preamble {
+    id: 0x0000d
+    name: "test-hidden-non-static-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# This table is for testing fallback to stage when table type is not given
+tables {
+  preamble {
+    id: 0x0000e
+    name: "fallback-to-stage-test-table"
+  }
+  match_fields {
+    id: 1
+    name: "test-header-field-32"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 0xa0001  # "nop"
+  }
+}
+
+# Actions for testing various parameter types.
+actions {
+  preamble {
+    id: 0xa0001
+    name: "nop"
+  }
+}
+actions {
+  preamble {
+    id: 0xa0002
+    name: "set-32"
+  }
+  params {
+    id: 0xd0201
+    name: "param-32"
+    bitwidth: 32
+  }
+}
+actions {
+  preamble {
+    id: 0xa0003
+    name: "set-64"
+  }
+  params {
+    id: 0xd0301
+    name: "param-64"
+    bitwidth: 64
+  }
+}
+actions {
+  preamble {
+    id: 0xa0004
+    name: "set-bytes"
+  }
+  params {
+    id: 0xd0401
+    name: "param-bytes"
+    bitwidth: 65
+  }
+}
+
+# Action for testing multiple parameters.
+actions {
+  preamble {
+    id: 0xa0005
+    name: "set-multi-params"
+  }
+  params {
+    id: 0xd0501
+    name: "param-1"
+    bitwidth: 16
+  }
+  params {
+    id: 0xd0502
+    name: "param-2"
+    bitwidth: 48
+  }
+  params {
+    id: 0xd0503
+    name: "param-3"
+    bitwidth: 96
+  }
+}
+
+# Action for testing constant value assignment.
+actions {
+  preamble {
+    id: 0xa0006
+    name: "set-constant-value"
+  }
+}
+
+# Action for testing primitive operations based on color conditions.
+actions {
+  preamble {
+    id: 0xa0007
+    name: "meter-not-green"
+  }
+}
+
+# Action for testing field assignments based on color conditions.
+actions {
+  preamble {
+    id: 0xa0008
+    name: "assign-when-green"
+  }
+}
+
+# Action for testing header-to-header copy assignments.
+actions {
+  preamble {
+    id: 0xa0009
+    name: "assign-header-copy"
+  }
+}
+
+# Action for testing field-to-field assignments.
+actions {
+  preamble {
+    id: 0xa000a
+    name: "assign-field-to-field"
+  }
+}
+
+# One action profile for testing.
+action_profiles {
+  preamble {
+    id: 0x11000001
+    name: "test-action-profile-1"
+  }
+  table_ids: 0x00006
+  table_ids: 0x00007
+  size: 100
+}
+
+controller_packet_metadata {
+  preamble {
+    id: 123456
+    name: "packet_in"  # name is important.
+  }
+  metadata {
+    id: 1
+    name: "ingress-port"
+    bitwidth: 11
+  }
+  metadata {
+    id: 2
+    name: "ingress-trunk"
+    bitwidth: 32
+  }
+  metadata {
+    id: 3
+    name: "egress-port"
+    bitwidth: 12
+  }
+  metadata {
+    id: 4
+    name: "unknown-type-metadata"
+    bitwidth: 32
+  }
+}
+controller_packet_metadata {
+  preamble {
+    id: 654321
+    name: "packet_out"  # name is important.
+  }
+  metadata {
+    id: 1
+    name: "egress-port"
+    bitwidth: 64
+  }
+  metadata {
+    id: 2
+    name: "unknown-type-metadata"
+    bitwidth: 1
+  }
+}

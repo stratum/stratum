@@ -19,7 +19,7 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "stratum/public/proto/hal.proto";
+import "stratum/hal/lib/common/common.proto";
 
 // This message encapsulates all the data needed to specify a line card.
 message PhalCardConfig {
@@ -73,6 +73,8 @@ message LegacyPhalInitConfig {
   // TODO: Complete this.
 }
 
+// LedConfig encapsulates the data required by PHAL to be able to find, write,
+// and read LEDs that a platform supports.
 message LedConfig {
   int32 led_index = 1;
   LedType led_type = 2;

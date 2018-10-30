@@ -37,8 +37,8 @@ namespace bcm {
 BcmSwitch::BcmSwitch(PhalInterface* phal_interface,
                      BcmChassisManager* bcm_chassis_manager,
                      const std::map<int, BcmNode*>& unit_to_bcm_node)
-    : phal_interface_(CHECK_NOTNULL(phal_interface)),
-      bcm_chassis_manager_(CHECK_NOTNULL(bcm_chassis_manager)),
+    : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      bcm_chassis_manager_(ABSL_DIE_IF_NULL(bcm_chassis_manager)),
       unit_to_bcm_node_(unit_to_bcm_node),
       node_id_to_bcm_node_() {
   for (auto entry : unit_to_bcm_node_) {
@@ -163,7 +163,8 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::ReadForwardingEntries(
-    const ::p4::v1::ReadRequest& req, WriterInterface<::p4::v1::ReadResponse>* writer,
+    const ::p4::v1::ReadRequest& req,
+    WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in ReadRequest.";
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
@@ -180,7 +181,7 @@ BcmSwitch::~BcmSwitch() {}
 
 ::util::Status BcmSwitch::RegisterPacketReceiveWriter(
     uint64 node_id,
-    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
@@ -212,12 +213,13 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::RegisterEventNotifyWriter(
-    const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
+    std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   absl::ReaderMutexLock l(&chassis_lock);
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
-  RETURN_IF_ERROR(bcm_chassis_manager_->RegisterEventNotifyWriter(writer));
+  RETURN_IF_ERROR(
+      bcm_chassis_manager_->RegisterEventNotifyWriter(std::move(writer)));
   return ::util::OkStatus();
 }
 
@@ -234,114 +236,171 @@ BcmSwitch::~BcmSwitch() {}
                                         const DataRequest& request,
                                         WriterInterface<DataResponse>* writer,
                                         std::vector<::util::Status>* details) {
+  absl::ReaderMutexLock l(&chassis_lock);
+  if (shutdown) {
+    return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
+  }
   // TODO(b/69920763): Implement this. The code below is just a placeholder.
-  for (const auto& req : request.request()) {
+  for (const auto& req : request.requests()) {
     DataResponse resp;
     ::util::Status status = ::util::OkStatus();
-    if (req.has_oper_status()) {
-      // Find operational status of port located at:
-      // - node_id: req.oper_status().node_id()
-      // - port_id: req.oper_status().port_id()
-      // and then write it into the response.
-      resp.mutable_oper_status()->set_oper_status(PORT_STATE_UP);
-    } else if (req.has_admin_status()) {
-      // Find administrative status of port located at:
-      // - node_id: req.admin_status().node_id()
-      // - port_id: req.admin_status().port_id()
-      // and then write it into the response.
-      resp.mutable_admin_status()->set_admin_status(ADMIN_STATE_ENABLED);
-    } else if (req.has_lacp_system_id_mac()) {
-      // Find LACP System ID MAC address of port located at:
-      // - node_id: req.lacp_system_id_mac().node_id()
-      // - port_id: req.lacp_system_id_mac().port_id()
-      // and then write it into the response.
-      resp.mutable_lacp_system_id_mac()->set_mac_address(0x112233445566ull);
-    } else if (req.has_port_speed()) {
-      // Find speed in bits per second of port located at:
-      // - node_id: req.port_speed().node_id()
-      // - port_id: req.port_speed().port_id()
-      // and then write it into the response.
-      resp.mutable_port_speed()->set_speed_bps(kFortyGigBps);
-    } else if (req.has_lacp_system_priority()) {
-      // Find LACP System priority of port located at:
-      // - node_id: req.lacp_system_priority().node_id()
-      // - port_id: req.lacp_system_priority().port_id()
-      // and then write it into the response.
-      resp.mutable_lacp_system_priority()->set_priority(1000);
-    } else if (req.has_negotiated_port_speed()) {
-      // Find negotiated speed in bits per second of port located at:
-      // - node_id: req.negotiated_port_speed().node_id()
-      // - port_id: req.negotiated_port_speed().port_id()
-      // and then write it into the response.
-      resp.mutable_negotiated_port_speed()->set_speed_bps(kFortyGigBps);
-    } else if (req.has_mac_address()) {
-      // TODO Find out why the controller needs it.
-      // Find MAC address of port located at:
-      // - node_id: req.mac_address().node_id()
-      // - port_id: req.mac_address().port_id()
-      // and then write it into the response.
-      resp.mutable_mac_address()->set_mac_address(0x112233445566ull);
-    } else if (req.has_port_counters()) {
-      // Find current port counters for port located at:
-      // - node_id: req.port_counters().node_id()
-      // - port_id: req.port_counters().port_id()
-      // and then write it into the response.
-      auto* counters = resp.mutable_port_counters();
-      // To simulate the counters being incremented the current time expressed
-      // in nanoseconds since Jan 1st, 1970 is used.
-      // TODO Remove this hack once the real counters are available.
-      uint64 now = absl::GetCurrentTimeNanos();
-      counters->set_in_octets(now);
-      counters->set_out_octets(now);
-      counters->set_in_unicast_pkts(now);
-      counters->set_out_unicast_pkts(now);
-      counters->set_in_broadcast_pkts(now);
-      counters->set_out_broadcast_pkts(now);
-      counters->set_in_multicast_pkts(now);
-      counters->set_out_multicast_pkts(now);
-      counters->set_in_discards(now);
-      counters->set_out_discards(now);
-      counters->set_in_unknown_protos(now);
-      counters->set_in_errors(now);
-      counters->set_out_errors(now);
-      counters->set_in_fcs_errors(now);
-    } else if (req.has_memory_error_alarm()) {
-      // Find current state of memory-error alarm
-      // and then write it into the response.
-      auto* alarm = resp.mutable_memory_error_alarm();
-      uint64 now = absl::GetCurrentTimeNanos();
-      alarm->set_status(true);
-      alarm->set_time_created(now);
-      alarm->set_severity(DataResponse::Alarm::CRITICAL);
-      alarm->set_description("memory-error alarm");
-    } else if (req.has_flow_programming_exception_alarm()) {
-      // Find current state of flow-programing-exception alarm
-      // and then write it into the response.
-      auto* alarm = resp.mutable_flow_programming_exception_alarm();
-      uint64 now = absl::GetCurrentTimeNanos();
-      alarm->set_status(true);
-      alarm->set_time_created(now);
-      alarm->set_severity(DataResponse::Alarm::CRITICAL);
-      alarm->set_description("flow-programming-exception alarm");
-    } else if (req.has_port_qos_counters()) {
-      // Find current counters for port's qos queue located at:
-      // - node_id: req.port_qos_counters().node_id()
-      // - port_id: req.port_qos_counters().port_id()
-      // - queue_id: req.port_qos_counters().queue_id()
-      // and then write it into the response.
-      auto* counters = resp.mutable_port_qos_counters();
-      // To simulate the counters being incremented the current time expressed
-      // in nanoseconds since Jan 1st, 1970 is used.
-      // TODO Remove this hack once the real counters are available.
-      uint64 now = absl::GetCurrentTimeNanos();
-      counters->set_out_octets(now);
-      counters->set_out_pkts(now);
-      counters->set_out_dropped_pkts(now);
-      counters->set_queue_id(req.port_qos_counters().queue_id());
-    } else {
-      status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+    switch (req.request_case()) {
+      // Get singleton port operational state.
+      case DataRequest::Request::kOperStatus: {
+        auto port_state = bcm_chassis_manager_->GetPortState(
+            req.oper_status().node_id(), req.oper_status().port_id());
+        if (!port_state.ok()) {
+          status.Update(port_state.status());
+        } else {
+          resp.mutable_oper_status()->set_state(port_state.ValueOrDie());
+        }
+        break;
+      }
+      // Get singleton port admin state.
+      case DataRequest::Request::kAdminStatus: {
+        auto admin_state = bcm_chassis_manager_->GetPortAdminState(
+            req.admin_status().node_id(), req.admin_status().port_id());
+        if (!admin_state.ok()) {
+          status.Update(admin_state.status());
+        } else {
+          resp.mutable_admin_status()->set_state(admin_state.ValueOrDie());
+        }
+        break;
+      }
+      // Get configured singleton port speed in bits per second.
+      case DataRequest::Request::kPortSpeed: {
+        auto bcm_port = bcm_chassis_manager_->GetBcmPort(
+            req.port_speed().node_id(), req.port_speed().port_id());
+        if (!bcm_port.ok()) {
+          status.Update(bcm_port.status());
+        } else {
+          resp.mutable_port_speed()->set_speed_bps(
+              bcm_port.ValueOrDie().speed_bps());
+        }
+        break;
+      }
+      case DataRequest::Request::kLacpRouterMac:
+        // Find LACP System ID MAC address of port located at:
+        // - node_id: req.lacp_router_mac().node_id()
+        // - port_id: req.lacp_router_mac().port_id()
+        // and then write it into the response.
+        resp.mutable_lacp_router_mac()->set_mac_address(0x112233445566ull);
+        break;
+      case DataRequest::Request::kLacpSystemPriority:
+        // Find LACP System priority of port located at:
+        // - node_id: req.lacp_system_priority().node_id()
+        // - port_id: req.lacp_system_priority().port_id()
+        // and then write it into the response.
+        resp.mutable_lacp_system_priority()->set_priority(1000);
+        break;
+      case DataRequest::Request::kNegotiatedPortSpeed:
+        // Find negotiated speed in bits per second of port located at:
+        // - node_id: req.negotiated_port_speed().node_id()
+        // - port_id: req.negotiated_port_speed().port_id()
+        // and then write it into the response.
+        resp.mutable_negotiated_port_speed()->set_speed_bps(kFortyGigBps);
+        break;
+      case DataRequest::Request::kMacAddress:
+        // TODO Find out why the controller needs it.
+        // Find MAC address of port located at:
+        // - node_id: req.mac_address().node_id()
+        // - port_id: req.mac_address().port_id()
+        // and then write it into the response.
+        resp.mutable_mac_address()->set_mac_address(0x112233445566ull);
+        break;
+      case DataRequest::Request::kPortCounters: {
+        // Find current port counters for port located at:
+        // - node_id: req.port_counters().node_id()
+        // - port_id: req.port_counters().port_id()
+        // and then write it into the response.
+        auto* counters = resp.mutable_port_counters();
+        // To simulate the counters being incremented the current time expressed
+        // in nanoseconds since Jan 1st, 1970 is used.
+        // TODO Remove this hack once the real counters are
+        // available.
+        uint64 now = absl::GetCurrentTimeNanos();
+        counters->set_in_octets(now);
+        counters->set_out_octets(now);
+        counters->set_in_unicast_pkts(now);
+        counters->set_out_unicast_pkts(now);
+        counters->set_in_broadcast_pkts(now);
+        counters->set_out_broadcast_pkts(now);
+        counters->set_in_multicast_pkts(now);
+        counters->set_out_multicast_pkts(now);
+        counters->set_in_discards(now);
+        counters->set_out_discards(now);
+        counters->set_in_unknown_protos(now);
+        counters->set_in_errors(now);
+        counters->set_out_errors(now);
+        counters->set_in_fcs_errors(now);
+        break;
+      }
+      case DataRequest::Request::kHealthIndicator:
+        // Find current port health indicator (LED) for port located at:
+        // - node_id: req.health_indicator().node_id()
+        // - port_id: req.health_indicator().port_id()
+        // and then write it into the response.
+        resp.mutable_health_indicator()->set_state(HEALTH_STATE_GOOD);
+        break;
+      case DataRequest::Request::kForwardingViability:
+        // Find current port forwarding viable state for port located at:
+        // - node_id: req.forwarding_viable().node_id()
+        // - port_id: req.forwarding_viable().port_id()
+        // and then write it into the response.
+        resp.mutable_forwarding_viability()->set_state(
+            TRUNK_MEMBER_BLOCK_STATE_FORWARDING);
+        break;
+      case DataRequest::Request::kMemoryErrorAlarm: {
+        // Find current state of memory-error alarm
+        // and then write it into the response.
+        auto* alarm = resp.mutable_memory_error_alarm();
+        uint64 now = absl::GetCurrentTimeNanos();
+        alarm->set_status(true);
+        alarm->set_time_created(now);
+        alarm->set_severity(Alarm::CRITICAL);
+        alarm->set_description("memory-error alarm");
+        break;
+      }
+      case DataRequest::Request::kFlowProgrammingExceptionAlarm: {
+        // Find current state of flow-programing-exception alarm
+        // and then write it into the response.
+        auto* alarm = resp.mutable_flow_programming_exception_alarm();
+        uint64 now = absl::GetCurrentTimeNanos();
+        alarm->set_status(true);
+        alarm->set_time_created(now);
+        alarm->set_severity(Alarm::CRITICAL);
+        alarm->set_description("flow-programming-exception alarm");
+        break;
+      }
+      case DataRequest::Request::kPortQosCounters: {
+        // Find current counters for port's qos queue located at:
+        // - node_id: req.port_qos_counters().node_id()
+        // - port_id: req.port_qos_counters().port_id()
+        // - queue_id: req.port_qos_counters().queue_id()
+        // and then write it into the response.
+        auto* counters = resp.mutable_port_qos_counters();
+        // To simulate the counters being incremented the current time expressed
+        // in nanoseconds since Jan 1st, 1970 is used.
+        // TODO Remove this hack once the real counters are
+        // available.
+        uint64 now = absl::GetCurrentTimeNanos();
+        counters->set_out_octets(now);
+        counters->set_out_pkts(now);
+        counters->set_out_dropped_pkts(now);
+        counters->set_queue_id(req.port_qos_counters().queue_id());
+        break;
+      }
+      case DataRequest::Request::kNodePacketioDebugInfo:
+        // Find current debug info for node located at:
+        // - node_id: req.node_packet_io_debug_info().node_id()
+        // and then write it into the response.
+        resp.mutable_node_packetio_debug_info()->set_debug_string(
+            "A (sample) node debug string.");
+        break;
+      default:
+        status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
     }
-    if (status == ::util::OkStatus()) {
+    if (status.ok()) {
       // If everything is OK send it to the caller.
       writer->Write(resp);
     }
@@ -352,7 +411,36 @@ BcmSwitch::~BcmSwitch() {}
 
 ::util::StatusOr<std::vector<std::string>> BcmSwitch::VerifyState() {
   // TODO: Implement this.
+  LOG(INFO) << "State verification is currently a NOP.";
   return std::vector<std::string>();
+}
+
+::util::Status BcmSwitch::SetValue(uint64 node_id, const SetRequest& request,
+                                   std::vector<::util::Status>* details) {
+  // TODO(tmadejski) add handling gNMI Set requests below.
+  for (const auto& req : request.requests()) {
+    ::util::Status status = ::util::OkStatus();
+    switch (req.request_case()) {
+      case SetRequest::Request::RequestCase::kPort:
+        switch (req.port().value_case()) {
+          case SetRequest::Request::Port::ValueCase::kAdminStatus:
+          case SetRequest::Request::Port::ValueCase::kMacAddress:
+          case SetRequest::Request::Port::ValueCase::kPortSpeed:
+          case SetRequest::Request::Port::ValueCase::kLacpRouterMac:
+          case SetRequest::Request::Port::ValueCase::kLacpSystemPriority:
+          case SetRequest::Request::Port::ValueCase::kHealthIndicator:
+            break;
+          default:
+            status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+        }
+        break;
+      default:
+        status = MAKE_ERROR(ERR_INTERNAL)
+                 << req.ShortDebugString() << " Not supported yet!";
+    }
+    if (details) details->push_back(status);
+  }
+  return ::util::OkStatus();
 }
 
 std::unique_ptr<BcmSwitch> BcmSwitch::CreateInstance(

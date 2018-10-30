@@ -21,8 +21,6 @@ exports_files(["LICENSE"])
 load(
     "//bazel:rules.bzl",
     "stratum_cc_library",
-    "stratum_platform_alias",
-    "EMBEDDED_ARCHES",
     "STRATUM_INTERNAL",
 )
 
@@ -31,7 +29,7 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-# NOTE: All dependencies on //base should be via the glue directory so that we
+# NOTE: All dependencies on @com_github_google_glog//:glog should be via the glue directory so that we
 # can maintain flexible dependencies on portable google3.
 
 # There are sections of code under status/ which is guarded by HERCULES. This

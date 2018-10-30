@@ -19,11 +19,15 @@
 #define STRATUM_LIB_CHANNEL_CHANNEL_H_
 
 #include <deque>
+#include <list>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
+#include "stratum/lib/channel/channel_internal.h"
 #include "stratum/lib/macros.h"
 #include "absl/base/thread_annotations.h"
+#include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 
@@ -67,10 +71,9 @@ namespace stratum {
 //   pthread_create(..., &writer_args);
 //
 //   // Relinquish control of the Channel object once all required
-//   ChannelReaders and
-//   // ChannelWriters have been created. The object will only be destroyed once
-//   all
-//   // related ChannelReaders and ChannelWriters have been destroyed.
+//   // ChannelReaders and ChannelWriters have been created. The object will
+//   // only be destroyed once all related ChannelReaders and ChannelWriters
+//   // have been destroyed.
 //   channel.reset();
 //
 //   // ALTERNATIVE: There may be conditions where it is known that the Channel
@@ -78,8 +81,8 @@ namespace stratum {
 //   // the original reference can be retained, and the following may be done:
 //   channel->close();
 //   // This notifies all blocked ChannelReaders or ChannelWriters that the
-//   Channel is closed.
-//   // Subsequent Read() or Write() calls immediately return.
+//   // Channel is closed. Subsequent Read() or Write() calls immediately
+//   // return.
 //
 // Example ChannelReader Function:
 //
@@ -105,28 +108,110 @@ namespace stratum {
 //     return nullptr;
 //   }
 //
+// Example Select Function:
+//   // Read all of the data through a ChannelReader of any message type.
+//   template <typename T>
+//   void ProcessChannel(ChannelReader<T>* reader) {
+//     std::vector<T> Ts;
+//     if (T_reader->ReadAll(&Ts).CanonicalCode() == ::util::error::Cancelled) {
+//       return;
+//     }
+//     // Operate on the read data.
+//   }
+//
+//   bool exit = false;  // can be set by another thread.
+//   void* ThreadFunc(void* args) {
+//     auto T_channel =
+//         std::move(reinterpret_cast<select_args_t*>(args)->T_channel);
+//     auto T_reader = ChannelReader<T>::Create(T_channel);
+//     auto U_channel =
+//         std::move(reinterpret_cast<select_args_t*>(args)->U_channel);
+//     auto U_reader = ChannelReader<U>::Create(U_channel);
+//     std::vector<channel_internal::ChannelBase*> channels =
+//         {T_channel.get(), U_channel.get()};
+//     absl::Duration timeout = absl::Seconds(5);
+//     // Keep reading as long as at least one Channel is still open.
+//     do {
+//       auto status_or_ready = Select(channels, timeout);
+//       // At most every 5 seconds, check whether or not to exit.
+//       if (exit) break;
+//       if (!status_or_ready.ok()) {
+//         auto& status = status_or_ready.status();
+//         // If all Channels are closed, exit.
+//         if (status.CanonicalCode() == ::util::error::CANCELLED) break;
+//         // If both Channels were empty, block on Select again.
+//         if (status.CanonicalCode() == ::util::error::NOT_FOUND) continue;
+//       }
+//       SelectResult ready_flags = std::move(status_or_ready).ValueOrDie();
+//       // Process T_channel if ready for read.
+//       if (ready_flags(T_channel.get())) { ProcessChannel(T_reader.get()); }
+//       // Process U_channel if ready for read.
+//       if (ready_flags(U_channel.get())) { ProcessChannel(U_reader.get()); }
+//     } while (1);
+//     // Both Channels were closed and/or exit was set.
+//     return nullptr;
+//   }
+//
 // Notes on Usage:
 //
-// 1. ChannelReader<T>/ChannelWriter<T> instances are the only way to access the
-//    core functionalities of a Channel<T> instance.
-//
-// 2. The Channel remains open so long as Close() has not been called. As long
+// 1. The Channel remains open so long as Close() has not been called. As long
 //    as a valid shared_ptr managing the original Channel instance remains in
 //    scope, more ChannelReaders or ChannelWriters may be added to the Channel.
 //
-// 3. It is recommended to only read from a given Channel from a single thread.
+// 2. It is recommended to only read from a given Channel from a single thread.
 //    Reading necessarily consumes data which will not be available to other
 //    threads. Additionally, Reading from multiple threads can easily cause
 //    out-of-sender-order processing of messages.
 
 template <typename T>
+class Channel;
+template <typename T>
 class ChannelReader;
 template <typename T>
 class ChannelWriter;
 
+// "select"s on one or more Channels, each of which can be of any valid message
+// type. For each Channel, sets the associated ready flag if there are any
+// messages enqueued, unless it is closed. If no Channels are ready, blocks with
+// the given timeout until at least one Channel is ready and sets the
+// appropriate ready flags. Returns OK if any Channel is marked ready. If all
+// given Channels are closed, returns code ERR_CANCELLED. If the timeout is
+// reached without any ready flags set, returns code ERR_ENTRY_NOT_FOUND.
+//
+// NOTE: This function requires that all Channel pointers given remain valid
+// throughout the execution of Select() (though the Channel state may change
+// during execution).
+//
+// NOTE: This function name or signature may change in the case that it is found
+// useful to enable selecting on Channels for the purpose of writing in addition
+// to reading.
+class SelectResult {
+ public:
+  explicit SelectResult(
+      std::unique_ptr<std::unordered_map<channel_internal::ChannelBase*, bool>>
+          ready_flags)
+      : ready_flags_(std::move(ready_flags)) {}
+  SelectResult(SelectResult&& other)
+      : ready_flags_(std::move(other.ready_flags_)) {}
+  SelectResult(const SelectResult&) = delete;
+
+  bool operator()(channel_internal::ChannelBase* channel) const {
+    return ready_flags_->count(channel) ? ready_flags_->at(channel) : false;
+  }
+
+ private:
+  // Map from Channel "select"ed on to ready flag.
+  std::unique_ptr<std::unordered_map<channel_internal::ChannelBase*, bool>>
+      ready_flags_;
+};
+
+::util::StatusOr<SelectResult> Select(
+    const std::vector<channel_internal::ChannelBase*>& channels,
+    absl::Duration timeout);
+
 // TODO: add support for optional en/dequeue timestamping.
 template <typename T>
-class Channel {
+class Channel : public channel_internal::ChannelBase {
   // Check the type requirements documented at the top of this file.
   static_assert(std::is_move_assignable<T>::value,
                 "Channel<T> requires T to be MoveAssignable.");
@@ -136,7 +221,7 @@ class Channel {
 
   // Creates shared Channel object with given maximum queue depth.
   static std::unique_ptr<Channel<T>> Create(size_t max_depth) {
-    return std::unique_ptr<Channel<T>>(new Channel<T>(max_depth));
+    return absl::WrapUnique(new Channel<T>(max_depth));
   }
 
   // Closes the Channel. Any blocked Read() or Write() operations immediately
@@ -186,6 +271,17 @@ class Channel {
   virtual ::util::Status ReadAll(std::vector<T>* t_s)
       LOCKS_EXCLUDED(queue_lock_);
 
+  // Checks whether there are any elements enqueued in the Channel. If true,
+  // sets both done and ready to true and returns ERR_SUCCESS. If the Channel
+  // is closed, returns ERR_CANCELLED.
+  //
+  // If the queue is empty, adds the select_data object as well as the ready
+  // flag to an internal list. Once a new message is enqueued, all existing list
+  // items are notified and removed from the list.
+  void SelectRegister(
+      const std::shared_ptr<channel_internal::SelectData>& select_data,
+      bool* ready) LOCKS_EXCLUDED(queue_lock_) override;
+
  private:
   // Helper function used by both variants of Write(). Checks if Channel state
   // is closed and blocks if the internal queue is full. Returns OK or the error
@@ -198,10 +294,17 @@ class Channel {
   // above.
   ::util::Status CheckWriteState() EXCLUSIVE_LOCKS_REQUIRED(queue_lock_);
 
+  // Helper function used by the Write()s and Close() on successful operation.
+  // Pops each element on the select list, setting the corresponding done and
+  // ready flags to the given value and signaling their condition variables.
+  void ClearSelectList(bool ready) EXCLUSIVE_LOCKS_REQUIRED(queue_lock_);
+
   // Mutex to protect internal queue of the Channel and state.
   mutable absl::Mutex queue_lock_;
   std::deque<T> queue_ GUARDED_BY(queue_lock_);
   bool closed_ GUARDED_BY(queue_lock_);
+  std::list<std::pair<std::shared_ptr<channel_internal::SelectData>, bool>>
+      select_list_ GUARDED_BY(queue_lock_);
 
   // Maximum queue depth.
   const size_t max_depth_;
@@ -226,8 +329,7 @@ class ChannelReader {
   static std::unique_ptr<ChannelReader<T>> Create(
       std::shared_ptr<Channel<T>> channel) {
     if (!channel || channel->IsClosed()) return nullptr;
-    return std::unique_ptr<ChannelReader<T>>(
-        new ChannelReader(std::move(channel)));
+    return absl::WrapUnique(new ChannelReader<T>(std::move(channel)));
   }
 
   // The following functions are wrappers around the corresponding Channel
@@ -269,8 +371,7 @@ class ChannelWriter {
   static std::unique_ptr<ChannelWriter<T>> Create(
       std::shared_ptr<Channel<T>> channel) {
     if (!channel || channel->IsClosed()) return nullptr;
-    return std::unique_ptr<ChannelWriter<T>>(
-        new ChannelWriter(std::move(channel)));
+    return absl::WrapUnique(new ChannelWriter<T>(std::move(channel)));
   }
 
   // The following functions are wrappers around the corresponding Channel
@@ -313,6 +414,8 @@ bool Channel<T>::Close() {
   cond_not_full_.SignalAll();
   // Signal all blocked ChannelReaders.
   cond_not_empty_.SignalAll();
+  // Signal any Select()-ing threads..
+  ClearSelectList(false);
   return true;
 }
 
@@ -331,6 +434,8 @@ template <typename T>
   queue_.push_back(t);
   // Signal next blocked ChannelReader.
   cond_not_empty_.Signal();
+  // Signal any Select()-ing threads..
+  ClearSelectList(true);
   return ::util::OkStatus();
 }
 
@@ -343,6 +448,8 @@ template <typename T>
   queue_.push_back(std::move(t));
   // Signal next blocked ChannelReader.
   cond_not_empty_.Signal();
+  // Signal any Select()-ing threads..
+  ClearSelectList(true);
   return ::util::OkStatus();
 }
 
@@ -353,8 +460,9 @@ template <typename T>
   // Wait with timeout for non-full internal buffer. While is required as
   // signals may be delivered without an actual call to Signal() or
   // SignallAll().
+  absl::Time deadline = absl::Now() + timeout;
   while (queue_.size() == max_depth_) {
-    bool expired = cond_not_full_.WaitWithTimeout(&queue_lock_, timeout);
+    bool expired = cond_not_full_.WaitWithDeadline(&queue_lock_, deadline);
     // Could have been signalled because Channel is now closed.
     if (closed_) return MAKE_ERROR(ERR_CANCELLED) << "Channel is closed.";
     // Could have been signalled even if timeout has expired.
@@ -382,6 +490,8 @@ template <typename T>
   queue_.push_back(t);
   // Signal next blocked ChannelReader.
   cond_not_empty_.Signal();
+  // Signal any Select()-ing threads..
+  ClearSelectList(true);
   return ::util::OkStatus();
 }
 
@@ -394,6 +504,8 @@ template <typename T>
   queue_.push_back(std::move(t));
   // Signal next blocked ChannelReader.
   cond_not_empty_.Signal();
+  // Signal any Select()-ing threads..
+  ClearSelectList(true);
   return ::util::OkStatus();
 }
 
@@ -416,13 +528,30 @@ template <typename T>
 }
 
 template <typename T>
+void Channel<T>::ClearSelectList(bool ready) {
+  while (!select_list_.empty()) {
+    auto& pair = select_list_.front();
+    {
+      // Set select done flag and Channel ready flag and signal Select()-ing
+      // thread.
+      pair.second = ready;
+      absl::MutexLock sel_lock(&pair.first->lock);
+      pair.first->done = ready;
+      pair.first->cond.Signal();
+    }
+    select_list_.pop_front();
+  }
+}
+
+template <typename T>
 ::util::Status Channel<T>::Read(T* t, absl::Duration timeout) {
   absl::MutexLock l(&queue_lock_);
   // Check Channel closure. If closed, will not be signaled during wait.
   if (closed_) return MAKE_ERROR(ERR_CANCELLED) << "Channel is closed.";
   // Wait with timeout for non-empty internal buffer.
+  absl::Time deadline = absl::Now() + timeout;
   while (queue_.empty()) {
-    bool expired = cond_not_empty_.WaitWithTimeout(&queue_lock_, timeout);
+    bool expired = cond_not_empty_.WaitWithDeadline(&queue_lock_, deadline);
     // Could have been signalled because Channel is now closed.
     if (closed_) return MAKE_ERROR(ERR_CANCELLED) << "Channel is closed.";
     // Could have been signalled even if timeout has expired.
@@ -469,6 +598,26 @@ template <typename T>
   // Signal all blocked ChannelWriters.
   cond_not_full_.SignalAll();
   return ::util::OkStatus();
+}
+
+template <typename T>
+void Channel<T>::SelectRegister(
+    const std::shared_ptr<channel_internal::SelectData>& select_data,
+    bool* ready) {
+  absl::MutexLock l(&queue_lock_);
+  // Check for Channel closure.
+  if (closed_) return;
+  // Check for empty internal buffer.
+  absl::MutexLock sel_lock(&select_data->lock);
+  if (queue_.empty()) {
+    // Only enqueue a copy of select_data if the operation is not done.
+    if (!select_data->done) {
+      select_list_.push_back(std::make_pair(select_data, ready));
+    }
+  } else {
+    *ready = true;
+    select_data->done = true;
+  }
 }
 
 }  // namespace stratum

@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "gmock/gmock.h"
+#include "absl/container/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -46,14 +47,16 @@ class AttributeGroupMock : public AttributeGroup, public MutableAttributeGroup {
 
   MOCK_METHOD3(
       TraverseQuery,
-      ::util::Status(
-          AttributeGroupQuery* query,
-          std::function<
-              ::util::Status(std::unique_ptr<ReadableAttributeGroup> group)>
-              group_function,
-          std::function<::util::Status(ManagedAttribute* attribute,
-                                       const AttributeSetterFunction& setter)>
-              attribute_function));
+      ::util::Status(AttributeGroupQuery* query,
+                     std::function<::util::Status(
+                         std::unique_ptr<ReadableAttributeGroup> group)>
+                         group_function,
+                     std::function<::util::Status(
+                         ManagedAttribute* attribute, const Path& querying_path,
+                         const AttributeSetterFunction& setter)>
+                         attribute_function));
+  MOCK_METHOD2(Set, ::util::Status(const AttributeValueMap& values,
+                                   ThreadpoolInterface* threadpool));
 
   MOCK_METHOD2(AddAttribute, ::util::Status(const std::string& name,
                                             ManagedAttribute* value));

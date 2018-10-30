@@ -29,6 +29,8 @@ load(
 package(
     #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
+    # TODO(b/76020938); doesn't work with header modules yet.
+    features = ["-use_header_modules"],
 )
 
 stratum_cc_binary(

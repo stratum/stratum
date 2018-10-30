@@ -1,0 +1,540 @@
+module hercules-platform-asic-bcm {
+  yang-version "1";
+
+  // namespace
+  namespace "http://google.com/yang/hercules/asic/bcm";
+
+  prefix herc-bcm;
+
+  // import some basic types
+  import hercules-platform { prefix herc-platform; }
+  import openconfig-platform { prefix oc-platform; }
+  import openconfig-platform-types { prefix oc-platform-types; }
+  import openconfig-extensions { prefix oc-ext; }
+
+  // meta
+  organization "Google Inc., PiE Team";
+  contact "tmadejski@google.com";
+  description
+    "BCM Chip configuration YANG model for Vendor Agnostic Stack.";
+
+  oc-ext:openconfig-version "0.1.0";
+
+  revision 2017-06-09 {
+    description "Still a draft. Expect significant changes.";
+    reference "0.1.0";
+  }
+
+  // extension statements
+
+  // feature statements
+
+  // identity statements
+  identity BCM_CHASSIS {
+    base oc-platform-types:CHASSIS;
+    description
+      "BCM-switching-chip-based chassis component.";
+  }
+
+  identity BCM_KNET_IF_PURPOSE {
+    description
+      "Purpose of the KNet Interface.";
+  }
+
+  identity BCM_KNET_UNKNOWN {
+    base BCM_KNET_IF_PURPOSE;
+    description
+      "Purpose of the KNet Interface: default";
+  }
+
+  identity BCM_KNET_CONTROLLER {
+    base BCM_KNET_IF_PURPOSE;
+    description
+      "Purpose of the KNet Interface: packets sent to the controller.";
+  }
+
+  identity BCM_KNET_SFLOW {
+    base BCM_KNET_IF_PURPOSE;
+    description
+      "Purpose of the KNet Interface: packets sent to the sflow agent.";
+  }
+
+  // typedef statements
+
+
+  // grouping statements
+
+  grouping bcm-knet-intfc-config {
+    description
+      "Configuration data related to KNET virtual kernel network
+      interfaces";
+
+    leaf id {
+      type int32;
+      //TODO(tmadejski): consider whether this id should be defined
+      //as the id or name of the KNET interface
+      description
+        "Unique ID of the KNET config record.";
+    }
+    leaf mtu {
+      type int32;
+      description
+        "MTU of the interface";
+    }
+    leaf cpu-queue {
+      type int32;
+      description
+        "CPU queue for the interface";
+    }
+    leaf vlan {
+      type int32;
+      description
+        "VLAN assigned to the interface";
+    }
+    leaf purpose {
+      type identityref {
+        base BCM_KNET_IF_PURPOSE;
+      }
+      description
+        "Purpose / usage of the KNET interface";
+    }
+  }
+
+  grouping bcm-knet-intfc-state {
+    description
+      "Operational state data related to KNET virtual kernel network
+      interfaces";
+  }
+
+  grouping bcm-knet-intfc-list-top {
+    description
+      "Top-level grouping for list of KNET interfaces";
+
+    container knet-interfaces {
+      description
+        "Enclosing container for list of KNET interface data";
+
+      list knet-interface {
+        key "id";
+        description
+          "List of KNET interfaces for a chassis node";
+
+        leaf id {
+          type leafref {
+            path "../config/id";
+          }
+          description
+            "Reference to KNET interface id list key";
+        }
+
+        container config {
+          description
+            "Configuration data for KNET interfaces on a node.
+            The purpose of each interface defines which application
+            uses it, and on which unit and CPU queue.";
+
+          uses bcm-knet-intfc-config;
+        }
+
+        container state {
+
+          config false;
+
+          description
+            "Operational state data for KNET interfaces on a node.";
+
+          uses bcm-knet-intfc-config;
+          uses bcm-knet-intfc-state;
+        }
+      }
+    }
+  }
+
+
+  grouping bcm-dma-channel-config {
+    description
+        "Configuration data for an RX DMA channel.";
+
+    leaf id {
+      type int32;
+      description
+        "Unique ID for the DMA channel. Channel IDs start with
+        zero";
+    }
+    leaf chains {
+      type int32;
+      description
+        "The number of chains (DVs).";
+    }
+    leaf strip-crc {
+      type boolean;
+      description
+        "Strip CRC from packets?";
+    }
+    leaf strip-vlan {
+      type boolean;
+      description
+        "Strip VLAN tag from packets?";
+    }
+    leaf oversized-packets-ok {
+      type boolean;
+      description
+        "Accept packets larger than bufsize?";
+    }
+    leaf no-pkt-parsing {
+      type boolean;
+      description
+        "When set to true, do not parse received packets?";
+    }
+    leaf-list cos-set {
+      type int32;
+      description "";
+    }
+  }
+
+  grouping bcm-dma-channel-state {
+    description
+      "Operational state data for DMA channels";
+  }
+
+  grouping bcm-dma-channel-list-top {
+    description
+      "Top-level grouping for DMA channel data";
+
+    container dma-channels {
+      description
+        "Enclosing container for list of DMA channels";
+
+      list dma-channel {
+        key "id";
+        description
+          "List of DMA channels, keyed by channel id";
+
+        leaf id {
+          type leafref {
+            path "../config/id";
+          }
+          description
+            "Reference to id list key";
+        }
+
+        container config {
+          description
+            "Configuration data for the DMA channel";
+
+          uses bcm-dma-channel-config;
+        }
+
+        container state {
+          config false;
+          description
+            "Operational state data for the DMA channel";
+
+          uses bcm-dma-channel-config;
+          uses bcm-dma-channel-state;
+        }
+      }
+    }
+  }
+
+
+  grouping bcm-rx-config {
+    description
+      "Data required to fully configure RX on a unit.";
+
+    leaf rx-pool-pkt-count {
+      type int32;
+      description
+          "The RX pool size in packets. If non-positive, default will be used.";
+    }
+    leaf rx-pool-bytes-per-pkt {
+      type int32;
+      description
+          "Bytes per packet in RX pool. If non-positive, default will be used.";
+    }
+    leaf max-pkt-size-bytes {
+      type int32;
+      description
+          "Max packet size in bytes. If non-positive, default will be used.";
+    }
+    leaf pkts-per-chain {
+      type int32;
+      description
+          "Packets per chain. If non-positive, default will be used.";
+    }
+    leaf max-rate-pps {
+      type int32;
+      description
+          "Global rate limit in pps. If not given , we set no limit. Note that
+           this limit can be overwritten by the value given in
+           bcm-rate-limit-config.";
+    }
+    leaf max-burst-pkts {
+        type int32;
+        description
+            "Max # of packet received in single burst. If not given, we set no
+           limit. Note that this limit can be overwritten by the value given in
+           bcm-rate-limit-config.";
+    }
+    leaf use-interrupt {
+      type boolean;
+      description "Are we using interrupts to generate RX callback?";
+    }
+  }
+
+  grouping bcm-rx-state {
+    description
+      "Operational state for RX on a unit";
+  }
+
+
+  grouping bcm-rx-top {
+    description
+      "Top-level grouping for receive configuration and oper
+      state data";
+
+    container rx {
+      description
+        "Top-level container for receive configuration and oper
+        state data";
+
+      container config {
+        description
+          "Configuration data for receive configuration and oper
+          state data";
+
+        uses bcm-rx-config;
+      }
+
+      container state {
+
+        config false;
+
+        description
+          "Operational state data for receive configuration and oper
+          state data";
+
+        uses bcm-rx-config;
+        uses bcm-rx-state;
+      }
+
+      uses bcm-dma-channel-list-top;
+    }
+  }
+
+  grouping bcm-tx-config {
+    description
+      "Configuration data for TX on a unit";
+  }
+
+    grouping bcm-tx-state {
+    description
+      "Operational state for TX on a unit";
+  }
+
+
+  grouping bcm-tx-top {
+    description
+      "Top-level grouping for transmit configuration and oper
+      state data";
+
+    container tx {
+      description
+        "Top-level container for transmit configuration and oper
+        state data";
+
+      container config {
+        description
+          "Configuration data for transmit configuration and oper
+          state data";
+
+        uses bcm-tx-config;
+      }
+
+      container state {
+
+        config false;
+
+        description
+          "Operational state data for transmit configuration and oper
+          state data";
+
+        uses bcm-tx-config;
+        uses bcm-tx-state;
+      }
+
+    }
+  }
+
+  grouping bcm-rate-limit-common-config {
+    description
+      "Common data definitions for rate limiting, global per node
+      and per class-of-service.";
+
+    leaf max-rate-pps {
+      type int32;
+      description
+        "Global rate limit in pps. If not given , we set no limit.";
+    }
+    leaf max-burst-pkts {
+      type int32;
+      description
+        "Max # of pakcet received in single burst. If not given, we set no
+        limit.";
+    }
+  }
+
+
+
+  grouping bcm-per-cos-rate-limit-config {
+    description
+      "Specifies rate limit settings for a COS.";
+
+    leaf id {
+      type int32;
+      description
+        "Unique ID of a COS (zero-based).";
+    }
+
+    uses bcm-rate-limit-common-config;
+
+  }
+
+
+  grouping bcm-per-cos-rate-limit-state {
+    description
+      "Operational state data for per class-of-service data";
+  }
+
+  grouping bcm-per-cos-rate-limit-top {
+    description
+      "Top-level grouping for per class-of-service data";
+
+    container classes-of-service {
+      description
+        "Enclosing container for list of classes of service";
+
+      list class-of-service {
+        key "id";
+        description
+          "List of settings and data for per class-of-service
+          rate limiting.";
+
+        leaf id {
+          type leafref {
+            path "../config/id";
+          }
+          description
+            "Reference to id list key";
+        }
+
+        container config {
+          description
+            "Configuration data for per class-of-service data";
+
+          uses bcm-per-cos-rate-limit-config;
+        }
+
+        container state {
+
+          config false;
+
+          description
+            "Operational state data for per class-of-service data";
+
+          uses bcm-per-cos-rate-limit-config;
+          uses bcm-per-cos-rate-limit-state;
+        }
+      }
+    }
+  }
+
+  grouping bcm-rate-limit-config {
+    description
+      "Specifies rate limit settings for a unit. This is just
+      a wrapper around BcmSdkInterface::RateLimitConfig.";
+
+    uses bcm-rate-limit-common-config;
+  }
+
+  grouping bcm-rate-limit-state {
+    description
+      "Operational state data related to node-wide rate limiting";
+  }
+
+  grouping bcm-rate-limit-top {
+    description
+      "Top-level grouping for rate-limiting data";
+
+    container rate-limit {
+      description
+        "Top-level container for global and per-CoS rate limiting";
+
+      container config {
+        description
+          "Configuration data for node rate limiting";
+
+        uses bcm-rate-limit-config;
+      }
+
+      container state {
+
+        config false;
+
+        description
+          "Operational state data for node rate limiting";
+
+        uses bcm-rate-limit-config;
+        uses bcm-rate-limit-state;
+      }
+    }
+
+    uses bcm-per-cos-rate-limit-top;
+  }
+
+  grouping bcm-platform-node {
+    description
+      "Collection of data associated with a Hercules node";
+
+    uses bcm-knet-intfc-list-top;
+    uses bcm-rate-limit-top;
+    uses bcm-rx-top;
+    uses bcm-tx-top;
+
+  }
+
+
+
+  grouping bcm-chip-chassis-config {
+    description "BCM chip-based chassis configuration.";
+    //TODO(tmadejski):consider if this is still needed
+    leaf bcm-chassis-map-id {
+      type string;
+      description
+        "The unique ID of the BcmChassisMap map. Only needed if the
+         chassis supports more than one chassis map.";
+    }
+  }
+
+  grouping bcm-chip-chassis-state {
+    description "";
+  }
+
+  // data definition statements
+
+
+  // augment statements
+  augment "/oc-platform:components/oc-platform:component/" +
+          "oc-platform:integrated-circuit" {
+    description
+      "Adding ASIC-specific data to Hercules node";
+
+    uses bcm-platform-node {
+      when "../../oc-platform:config/oc-platform:type = 'BCM-BASED-CHASSIS'" {
+        description
+          "This data is valid only for BCM-BASED-CHASSIS components";
+      }
+    }
+  }
+
+}

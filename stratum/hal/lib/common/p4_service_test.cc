@@ -19,11 +19,13 @@
 #include <memory>
 
 #include "gflags/gflags.h"
+#include "google/rpc/code.pb.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
@@ -67,13 +69,16 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
     p4_service_ = absl::make_unique<P4Service>(mode_, switch_mock_.get(),
                                                auth_policy_checker_mock_.get(),
                                                error_buffer_.get());
-    std::string url = "localhost:" + std::to_string(PickUnusedIpv4PortOrDie());
+    std::string url =
+        "localhost:" + std::to_string(net_util::PickUnusedPortOrDie());
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(url, ::grpc::InsecureServerCredentials());
     builder.RegisterService(p4_service_.get());
     server_ = builder.BuildAndStart();
+    ASSERT_NE(server_, nullptr);
     stub_ = ::p4::v1::P4Runtime::NewStub(
         ::grpc::CreateChannel(url, ::grpc::InsecureChannelCredentials()));
+    ASSERT_NE(stub_, nullptr);
     FLAGS_max_num_controllers_per_node = 5;
     FLAGS_max_num_controller_connections = 20;
     FLAGS_forwarding_pipeline_configs_file =

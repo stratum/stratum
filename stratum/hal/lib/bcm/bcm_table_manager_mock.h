@@ -20,6 +20,7 @@
 
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 #include "gmock/gmock.h"
+#include "absl/container/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {
@@ -31,24 +32,22 @@ class BcmTableManagerMock : public BcmTableManager {
                ::util::Status(const ChassisConfig& config, uint64 node_id));
   MOCK_METHOD2(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config, uint64 node_id));
-  MOCK_METHOD1(PushForwardingPipelineConfig,
-               ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(VerifyForwardingPipelineConfig,
-               ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      PushForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      VerifyForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
-  MOCK_CONST_METHOD1(IsLpmFlowWithOverrideVrf,
-                     bool(const CommonFlowEntry& common_flow_entry));
-  MOCK_CONST_METHOD1(IsLpmFlowWithFallbackVrf,
-                     bool(const CommonFlowEntry& common_flow_entry));
+  MOCK_CONST_METHOD1(P4FieldTypeToBcmFieldType,
+                     BcmField::Type(P4FieldType p4_field_type));
+  MOCK_CONST_METHOD3(CommonFlowEntryToBcmFlowEntry,
+                     ::util::Status(const CommonFlowEntry& common_flow_entry,
+                                    ::p4::v1::Update::Type type,
+                                    BcmFlowEntry* bcm_flow_entry));
   MOCK_CONST_METHOD3(FillBcmFlowEntry,
                      ::util::Status(const ::p4::v1::TableEntry& table_entry,
                                     ::p4::v1::Update::Type type,
-                                    BcmFlowEntry* bcm_flow_entry));
-  MOCK_CONST_METHOD2(FillBcmMeterConfig,
-                     ::util::Status(const ::p4::v1::MeterConfig& p4_meter,
-                                    BcmMeterConfig* bcm_meter));
-  MOCK_CONST_METHOD2(CommonFlowEntryToBcmFlowEntry,
-                     ::util::Status(const CommonFlowEntry& common_flow_entry,
                                     BcmFlowEntry* bcm_flow_entry));
   MOCK_CONST_METHOD2(
       FillBcmNonMultipathNexthop,
@@ -58,32 +57,43 @@ class BcmTableManagerMock : public BcmTableManager {
       FillBcmMultipathNexthop,
       ::util::Status(const ::p4::v1::ActionProfileGroup& action_profile_group,
                      BcmMultipathNexthop* bcm_multipath_nexthop));
+  MOCK_CONST_METHOD1(
+      FillBcmMultipathNexthopsWithPort,
+      ::util::StatusOr<absl::flat_hash_map<int, BcmMultipathNexthop>>(
+          uint32 port_id));
+  MOCK_CONST_METHOD2(FillBcmMeterConfig,
+                     ::util::Status(const ::p4::v1::MeterConfig& p4_meter,
+                                    BcmMeterConfig* bcm_meter));
   MOCK_METHOD1(AddTableEntry,
                ::util::Status(const ::p4::v1::TableEntry& table_entry));
+  MOCK_METHOD2(AddAclTableEntry,
+               ::util::Status(const ::p4::v1::TableEntry& table_entry,
+                              int bcm_flow_id));
   MOCK_METHOD1(UpdateTableEntry,
                ::util::Status(const ::p4::v1::TableEntry& table_entry));
   MOCK_METHOD1(DeleteTableEntry,
                ::util::Status(const ::p4::v1::TableEntry& table_entry));
   MOCK_METHOD1(UpdateTableEntryMeter,
                ::util::Status(const ::p4::v1::DirectMeterEntry& meter));
-  MOCK_METHOD3(
+  MOCK_METHOD4(
       AddActionProfileMember,
       ::util::Status(const ::p4::v1::ActionProfileMember& action_profile_member,
-                     BcmNonMultipathNexthop::Type type, int egress_intf_id));
+                     BcmNonMultipathNexthop::Type type, int egress_intf_id,
+                     int bcm_port_id));
   MOCK_METHOD2(
       AddActionProfileGroup,
       ::util::Status(const ::p4::v1::ActionProfileGroup& action_profile_group,
                      int egress_intf_id));
-  MOCK_METHOD2(
+  MOCK_METHOD3(
       UpdateActionProfileMember,
       ::util::Status(const ::p4::v1::ActionProfileMember& action_profile_member,
-                     BcmNonMultipathNexthop::Type type));
+                     BcmNonMultipathNexthop::Type type, int bcm_port_id));
   MOCK_METHOD1(
       UpdateActionProfileGroup,
       ::util::Status(const ::p4::v1::ActionProfileGroup& action_profile_group));
-  MOCK_METHOD1(
-      DeleteActionProfileMember,
-      ::util::Status(const ::p4::v1::ActionProfileMember& action_profile_member));
+  MOCK_METHOD1(DeleteActionProfileMember,
+               ::util::Status(
+                   const ::p4::v1::ActionProfileMember& action_profile_member));
   MOCK_METHOD1(
       DeleteActionProfileGroup,
       ::util::Status(const ::p4::v1::ActionProfileGroup& action_profile_group));
@@ -100,17 +110,13 @@ class BcmTableManagerMock : public BcmTableManager {
   MOCK_METHOD1(AddAclTable, ::util::Status(AclTable table));
   MOCK_CONST_METHOD1(GetReadOnlyAclTable,
                      ::util::StatusOr<const AclTable*>(uint32 table_id));
-  MOCK_METHOD2(AddAclTableEntry,
-               ::util::Status(const ::p4::v1::TableEntry& table_entry,
-                              int bcm_flow_id));
   MOCK_CONST_METHOD0(GetAllAclTableIDs, std::set<uint32>());
   MOCK_METHOD1(DeleteTable, ::util::Status(uint32 table_id));
-  MOCK_CONST_METHOD1(P4FieldTypeToBcmFieldType,
-                     BcmField::Type(P4FieldType p4_field_type));
-  MOCK_CONST_METHOD3(ReadTableEntries,
-                     ::util::Status(const std::set<uint32>& table_ids,
-                                    ::p4::v1::ReadResponse* resp,
-                                    std::vector<p4::v1::TableEntry*>* acl_flows));
+  MOCK_CONST_METHOD3(
+      ReadTableEntries,
+      ::util::Status(const std::set<uint32>& table_ids,
+                     ::p4::v1::ReadResponse* resp,
+                     std::vector<::p4::v1::TableEntry*>* acl_flows));
   MOCK_CONST_METHOD2(
       ReadActionProfileMembers,
       ::util::Status(const std::set<uint32>& action_profile_ids,

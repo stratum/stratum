@@ -102,7 +102,7 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
     CHECK_RETURN_IF_FALSE(info != nullptr) << "Unit " << unit << " not found!";
     CHECK_RETURN_IF_FALSE(info->chip_type == chip_type)
         << "Inconsistent state. Unit " << unit << " must be " << chip_type
-        << " but got " << chip_type;
+        << " but got " << info->chip_type;
     info->pci_bus = pci_bus;
     info->pci_slot = pci_slot;
   }

@@ -25,6 +25,7 @@ namespace stratum {
 // Port speed constants.
 constexpr uint64 kBitsPerGigabit = 1000000000ULL;
 constexpr uint64 kBitsPerMegabit = 1000000ULL;
+constexpr uint64 kOneGigBps = 1 * kBitsPerGigabit;
 constexpr uint64 kTenGigBps = 10 * kBitsPerGigabit;
 constexpr uint64 kTwentyGigBps = 20 * kBitsPerGigabit;
 constexpr uint64 kTwentyFiveGigBps = 25 * kBitsPerGigabit;
@@ -38,9 +39,8 @@ constexpr char kDefaultMembershipInfoFilePath[] =
 constexpr char kDefaultAuthPolicyFilePath[] =
     "/mnt/region_config/switchstack/keys/authorization_policy.proto.txt";
 
-// This URL is used by Hercules stub to locally talk to Hercules process running
-// on the switch. This URL is used as default for FLAGS_url as well so that if
-// no "--url" is specified we only listen to this address.
+// This URL is used by a local Hercules stub binary running on the switch to
+// talk to Hercules process over an insecure connection.
 constexpr char kLocalHerculesUrl[] = "localhost:28000";
 
 // Default URLs for the Sandcastle services Hercules service will connect to

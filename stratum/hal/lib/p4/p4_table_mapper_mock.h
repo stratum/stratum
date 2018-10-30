@@ -32,10 +32,12 @@ class P4TableMapperMock : public P4TableMapper {
                ::util::Status(const ChassisConfig& config, uint64 node_id));
   MOCK_METHOD2(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config, uint64 node_id));
-  MOCK_METHOD1(PushForwardingPipelineConfig,
-               ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(VerifyForwardingPipelineConfig,
-               ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      PushForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      VerifyForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
   MOCK_CONST_METHOD3(MapFlowEntry,
                      ::util::Status(const ::p4::v1::TableEntry& table_entry,
@@ -67,15 +69,16 @@ class P4TableMapperMock : public P4TableMapper {
                      ::util::Status(int table_id, uint32 field_id,
                                     MappedField* mapped_field));
   MOCK_CONST_METHOD2(LookupTable,
-                     ::util::Status(int table_id, ::p4::config::v1::Table* table));
+                     ::util::Status(int table_id,
+                                    ::p4::config::v1::Table* table));
   MOCK_METHOD0(EnableStaticTableUpdates, void());
   MOCK_METHOD0(DisableStaticTableUpdates, void());
   MOCK_METHOD2(HandlePrePushStaticEntryChanges,
-               ::util::Status(const p4::v1::WriteRequest& new_static_config,
-                              p4::v1::WriteRequest* out_request));
+               ::util::Status(const ::p4::v1::WriteRequest& new_static_config,
+                              ::p4::v1::WriteRequest* out_request));
   MOCK_METHOD2(HandlePostPushStaticEntryChanges,
-               ::util::Status(const p4::v1::WriteRequest& new_static_config,
-                              p4::v1::WriteRequest* out_request));
+               ::util::Status(const ::p4::v1::WriteRequest& new_static_config,
+                              ::p4::v1::WriteRequest* out_request));
   MOCK_CONST_METHOD1(IsTableStageHidden, TriState(int table_id));
 };
 

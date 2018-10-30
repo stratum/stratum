@@ -150,14 +150,14 @@ TEST(Status, CheckOK) {
 TEST(DeathStatus, CheckOK) {
   ::util::Status status;
   status =
-      ::util::Status(::util::Status::canonical_space(),
-                     ::util::Status::CANCELLED_CODE, "Operation Cancelled");
+      ::util::MakeStatus(::util::Status::canonical_space(),
+                         ::util::Status::CANCELLED_CODE, "Operation Cancelled");
   ASSERT_DEATH(CHECK_OK(status), "Operation Cancelled");
 }
 
 TEST(Status, SetErrorZero) {
   ::util::Status status(&my_error_space, 2, "message");
-  status = ::util::Status(&my_error_space, 0, "msg");
+  status = ::util::MakeStatus(&my_error_space, 0, "msg");
   CheckStatus(status, OkSpace(), 0, "");
 }
 
@@ -178,23 +178,23 @@ TEST(Status, FilledNegative) {
 
 TEST(Status, Set) {
   ::util::Status status;
-  status = ::util::Status(&my_error_space, 2, "message");
+  status = ::util::MakeStatus(&my_error_space, 2, "message");
   CheckStatus(status, &my_error_space, 2, "message");
 }
 
 TEST(Status, SetOverlappingMessage) {
   ::util::Status status;
-  status = ::util::Status(&my_error_space, 2, "message");
+  status = ::util::MakeStatus(&my_error_space, 2, "message");
   CheckStatus(status, &my_error_space, 2, "message");
 
   std::string old_message = status.error_message();
-  status = ::util::Status(&my_error_space, 2, old_message);
+  status = ::util::MakeStatus(&my_error_space, 2, old_message);
   CheckStatus(status, &my_error_space, 2, "message");
 
   std::string full_message = status.error_message();
   std::string part_message = full_message.substr(1, 3);
   EXPECT_EQ(part_message, "ess");
-  status = ::util::Status(&my_error_space, 2, part_message);
+  status = ::util::MakeStatus(&my_error_space, 2, part_message);
   CheckStatus(status, &my_error_space, 2, "ess");
 }
 
@@ -257,70 +257,70 @@ TEST(Status, MatchOK) {
 }
 
 TEST(Status, MatchSame) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space, 1, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space, 1, "message");
   ASSERT_TRUE(a.Matches(b));
 }
 
 TEST(Status, MatchCopy) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
   const ::util::Status b = a;
   ASSERT_TRUE(a.Matches(b));
 }
 
 TEST(Status, MatchDifferentCode) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space, 2, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space, 2, "message");
   ASSERT_TRUE(!a.Matches(b));
 }
 
 TEST(Status, MatchDifferentSpace) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space2, 1, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space2, 1, "message");
   ASSERT_TRUE(!a.Matches(b));
 }
 
 TEST(Status, MatchDifferentMessage) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space, 1, "another");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space, 1, "another");
   ASSERT_TRUE(a.Matches(b));
 }
 
 TEST(Status, EqualsOK) { ASSERT_EQ(::util::Status::OK, ::util::Status()); }
 
 TEST(Status, EqualsSame) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space, 1, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space, 1, "message");
   ASSERT_EQ(a, b);
 }
 
 TEST(Status, EqualsCopy) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
   const ::util::Status b = a;
   ASSERT_EQ(a, b);
 }
 
 TEST(Status, EqualsDifferentCode) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space, 2, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space, 2, "message");
   ASSERT_NE(a, b);
 }
 
 TEST(Status, EqualsDifferentSpace) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space2, 1, "message");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space2, 1, "message");
   ASSERT_NE(a, b);
 }
 
 TEST(Status, EqualsDifferentMessage) {
-  const ::util::Status a = ::util::Status(&my_error_space, 1, "message");
-  const ::util::Status b = ::util::Status(&my_error_space, 1, "another");
+  const ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "message");
+  const ::util::Status b = ::util::MakeStatus(&my_error_space, 1, "another");
   ASSERT_NE(a, b);
 }
 
 TEST(Status, EqualsCanonicalCodeSame) {
-  ::util::Status a = ::util::Status(&my_error_space, 1234, "message");
-  ::util::Status b = ::util::Status(&my_error_space, 1234, "message");
+  ::util::Status a = ::util::MakeStatus(&my_error_space, 1234, "message");
+  ::util::Status b = ::util::MakeStatus(&my_error_space, 1234, "message");
   ASSERT_EQ(a, b);
   a.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
   b.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
@@ -328,8 +328,8 @@ TEST(Status, EqualsCanonicalCodeSame) {
 }
 
 TEST(Status, EqualsCanonicalCodeMismatch) {
-  ::util::Status a = ::util::Status(&my_error_space, 1234, "message");
-  ::util::Status b = ::util::Status(&my_error_space, 1234, "message");
+  ::util::Status a = ::util::MakeStatus(&my_error_space, 1234, "message");
+  ::util::Status b = ::util::MakeStatus(&my_error_space, 1234, "message");
   ASSERT_EQ(a, b);
   a.SetCanonicalCode(::util::error::RESOURCE_EXHAUSTED);
   b.SetCanonicalCode(::util::error::UNAVAILABLE);
@@ -337,8 +337,8 @@ TEST(Status, EqualsCanonicalCodeMismatch) {
 }
 
 TEST(Status, StripMessage) {
-  ::util::Status a = ::util::Status(&my_error_space, 1, "");
-  ::util::Status b = ::util::Status(&my_error_space, 1, "x");
+  ::util::Status a = ::util::MakeStatus(&my_error_space, 1, "");
+  ::util::Status b = ::util::MakeStatus(&my_error_space, 1, "x");
   ASSERT_EQ(a, b.StripMessage());
 }
 
@@ -367,7 +367,7 @@ static void SanityCheck(const ::util::Status& s, const util::ErrorSpace* space,
 
   // SetError
   ::util::Status err;
-  err = ::util::Status(space, code, msg);
+  err = ::util::MakeStatus(space, code, msg);
   EXPECT_EQ(s, err);
 }
 

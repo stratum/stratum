@@ -18,17 +18,15 @@
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/public/proto/hal.grpc.pb.h"
+#include "stratum/hal/common/common.pb.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 DECLARE_string(test_tmpdir);
 
 namespace stratum {
-
-//std::string str(const unsigned char* chars) {
-//  return reinterpret_cast<const char*>(chars);
-//}
 
 TEST(CommonUtilsTest, PrintArrayForEmptyArray) {
   int iarray[] = {};
@@ -63,9 +61,9 @@ TEST(CommonUtilsTest, PrintVectorForNonEmptyVector) {
 }
 
 TEST(CommonUtilsTest, WriteProtoToBinFileThenReadProtoFromBinFile) {
-  ChassisConfig expected, actual;
+  hal::ChassisConfig expected, actual;
   expected.set_description("Test config");
-  expected.mutable_chassis()->set_platform(PLT_GENERIC_TOMAHAWK);
+  expected.mutable_chassis()->set_platform(hal::PLT_GENERIC_TOMAHAWK);
   expected.add_nodes()->set_id(1);
   expected.add_nodes()->set_id(2);
   const std::string filename(FLAGS_test_tmpdir +
@@ -76,9 +74,9 @@ TEST(CommonUtilsTest, WriteProtoToBinFileThenReadProtoFromBinFile) {
 }
 
 TEST(CommonUtilsTest, WriteProtoToTextFileThenReadProtoFromTextFile) {
-  ChassisConfig expected, actual;
+  hal::ChassisConfig expected, actual;
   expected.set_description("Test config");
-  expected.mutable_chassis()->set_platform(PLT_GENERIC_TOMAHAWK);
+  expected.mutable_chassis()->set_platform(hal::PLT_GENERIC_TOMAHAWK);
   expected.add_nodes()->set_id(1);
   expected.add_nodes()->set_id(2);
   expected.add_nodes()->set_id(5);
@@ -90,9 +88,9 @@ TEST(CommonUtilsTest, WriteProtoToTextFileThenReadProtoFromTextFile) {
 }
 
 TEST(CommonUtilsTest, PrintProtoToStringThenParseProtoFromString) {
-  ChassisConfig expected, actual;
+  hal::ChassisConfig expected, actual;
   expected.set_description("Test config");
-  expected.mutable_chassis()->set_platform(PLT_GENERIC_TOMAHAWK);
+  expected.mutable_chassis()->set_platform(hal::PLT_GENERIC_TOMAHAWK);
   expected.add_nodes()->set_id(1);
   expected.add_nodes()->set_id(2);
   std::string text = "";
@@ -131,7 +129,7 @@ TEST(CommonUtilsTest, RecursivelyCreateDirThenCheckThePath) {
   ASSERT_TRUE(IsDir(testdir));
 }
 
-TEST(CommonUtilsTest, ProtoEqualProtoLessProtoHash) {
+TEST(CommonUtilsTest, ProtoSerialize) {
   ::p4::v1::TableEntry e1, e2;
   const std::string kTableEntryText1 = R"(
       table_id: 12
@@ -171,24 +169,69 @@ TEST(CommonUtilsTest, ProtoEqualProtoLessProtoHash) {
         action_profile_member_id: 1
       }
   )";
-  // Before sorting the repeated fields, the protos are equal but their hashes
-  // are not
+  // Before sorting the repeated fields, the serialized version of the protos
+  // will not be the same.
   ASSERT_OK(ParseProtoFromString(kTableEntryText1, &e1));
   ASSERT_OK(ParseProtoFromString(kTableEntryText2, &e2));
-  EXPECT_TRUE(ProtoEqual(e1, e2));
-  EXPECT_NE(ProtoHash(e1), ProtoHash(e2));
-  // After sorting the repeated fields, we expect the protos to be equal and
-  // hash to the same value.
+  EXPECT_NE(ProtoSerialize(e1), ProtoSerialize(e2));
+  // After sorting the repeated fields, we expect the serialized version of the
+  // protos to be the same.
   std::sort(e1.mutable_match()->begin(), e1.mutable_match()->end(),
             [](const ::p4::v1::FieldMatch& l, const ::p4::v1::FieldMatch& r) {
-              return ProtoLess(l, r);
+              return ProtoSerialize(l) < ProtoSerialize(r);
             });
   std::sort(e2.mutable_match()->begin(), e2.mutable_match()->end(),
             [](const ::p4::v1::FieldMatch& l, const ::p4::v1::FieldMatch& r) {
-              return ProtoLess(l, r);
+              return ProtoSerialize(l) < ProtoSerialize(r);
             });
+  EXPECT_EQ(ProtoSerialize(e1), ProtoSerialize(e2));
+}
+
+
+TEST(CommonUtilsTest, ProtoEqual) {
+  ::p4::v1::TableEntry e1, e2;
+  const std::string kTableEntryText1 = R"(
+      table_id: 12
+      match {
+        field_id: 1
+        lpm {
+          prefix_len: 32
+          value: "\x01\x02\x03\x04"
+        }
+      }
+      match {
+        field_id: 2
+        exact {
+          value: "\x0a"
+        }
+      }
+      action {
+        action_profile_member_id: 1
+      }
+  )";
+  const std::string kTableEntryText2 = R"(
+      table_id: 12
+      match {
+        field_id: 2
+        exact {
+          value: "\x0a"
+        }
+      }
+      match {
+        field_id: 1
+        lpm {
+          prefix_len: 32
+          value: "\x01\x02\x03\x04"
+        }
+      }
+      action {
+        action_profile_member_id: 1
+      }
+  )";
+  // The order of the repeated fields will not affect equality.
+  ASSERT_OK(ParseProtoFromString(kTableEntryText1, &e1));
+  ASSERT_OK(ParseProtoFromString(kTableEntryText2, &e2));
   EXPECT_TRUE(ProtoEqual(e1, e2));
-  EXPECT_EQ(ProtoHash(e1), ProtoHash(e2));
 }
 
 TEST(CommonUtilsTest, ByteStreamToUint16) {

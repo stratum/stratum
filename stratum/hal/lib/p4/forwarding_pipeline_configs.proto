@@ -1,0 +1,17 @@
+// This file declares ForwardingPipelineConfigs map used to wrap multiple
+// p4.ForwardingPipelineConfig messages for easier serialization.
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package google.hercules.hal;
+
+import "p4/v1/p4runtime.proto";
+
+// This message encapsulates a list of p4.ForwardingPipelineConfig protos for
+// one or more nodes as received from the controller. This message simplifies
+// serializing/deserializing ForwardingPipelineConfig protos for multiple nodes
+// into one single file.
+message ForwardingPipelineConfigs {
+  map<uint64, p4.v1.ForwardingPipelineConfig> node_id_to_config = 1;
+}

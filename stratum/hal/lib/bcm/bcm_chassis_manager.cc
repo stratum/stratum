@@ -23,6 +23,10 @@
 
 #include "gflags/gflags.h"
 #include "google/protobuf/message.h"
+#include "stratum/glue/integral_types.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -32,15 +36,15 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");
+DEFINE_string(applied_bcm_chassis_map_file,
+              "/tmp/hercules/applied_bcm_chassis_map.pb.txt",
+              "The file to write the applied_bcm_chassis_map proto created as "
+              "part of initial config push, for debugging purposes.");
 DEFINE_string(bcm_sdk_config_file, "/tmp/hercules/config.bcm",
               "The BCM config file loaded by SDK while initializing.");
 DEFINE_string(bcm_sdk_config_flush_file, "/tmp/hercules/config.bcm.tmp",
@@ -58,18 +62,12 @@ namespace bcm {
 using LinkscanEvent = BcmSdkInterface::LinkscanEvent;
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
-constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsInXPipeline;
 constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
-
-#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
-ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
-#else
-absl::Mutex chassis_lock;
-#endif
-
-bool shutdown = false;
 
 BcmChassisManager::BcmChassisManager(OperationMode mode,
                                      PhalInterface* phal_interface,
@@ -78,44 +76,63 @@ BcmChassisManager::BcmChassisManager(OperationMode mode,
     : mode_(mode),
       initialized_(false),
       linkscan_event_writer_id_(kInvalidWriterId),
-      transceiver_event_writer_id_(kInvalidWriterId),
+      xcvr_event_writer_id_(kInvalidWriterId),
       base_bcm_chassis_map_(nullptr),
       applied_bcm_chassis_map_(nullptr),
       unit_to_bcm_chip_(),
-      slot_port_channel_to_bcm_port_(),
-      slot_port_to_flex_bcm_ports_(),
-      slot_port_to_non_flex_bcm_ports_(),
-      slot_port_to_transceiver_state_(),
-      unit_to_logical_ports_(),
+      singleton_port_key_to_bcm_port_(),
+      port_group_key_to_flex_bcm_ports_(),
+      port_group_key_to_non_flex_bcm_ports_(),
       node_id_to_unit_(),
       unit_to_node_id_(),
-      port_id_to_slot_port_channel_(),
-      unit_logical_port_to_port_id_(),
-      slot_port_channel_to_port_state_(),
+      node_id_to_port_ids_(),
+      node_id_to_trunk_ids_(),
+      node_id_to_port_id_to_singleton_port_key_(),
+      node_id_to_port_id_to_sdk_port_(),
+      node_id_to_trunk_id_to_sdk_trunk_(),
+      node_id_to_sdk_port_to_port_id_(),
+      node_id_to_sdk_trunk_to_trunk_id_(),
+      xcvr_port_key_to_xcvr_state_(),
+      node_id_to_port_id_to_port_state_(),
+      node_id_to_trunk_id_to_trunk_state_(),
+      node_id_to_trunk_id_to_members_(),
+      node_id_to_port_id_to_trunk_membership_info_(),
+      node_id_to_port_id_to_admin_state_(),
+      node_id_to_port_id_to_health_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
-      phal_interface_(CHECK_NOTNULL(phal_interface)),
-      bcm_sdk_interface_(CHECK_NOTNULL(bcm_sdk_interface)),
-      bcm_serdes_db_manager_(CHECK_NOTNULL(bcm_serdes_db_manager)) {}
+      phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      bcm_sdk_interface_(ABSL_DIE_IF_NULL(bcm_sdk_interface)),
+      bcm_serdes_db_manager_(ABSL_DIE_IF_NULL(bcm_serdes_db_manager)) {}
 
 // Default constructor is called by the mock class only.
 BcmChassisManager::BcmChassisManager()
     : mode_(OPERATION_MODE_STANDALONE),
       initialized_(false),
       linkscan_event_writer_id_(kInvalidWriterId),
-      transceiver_event_writer_id_(kInvalidWriterId),
+      xcvr_event_writer_id_(kInvalidWriterId),
       base_bcm_chassis_map_(nullptr),
       applied_bcm_chassis_map_(nullptr),
       unit_to_bcm_chip_(),
-      slot_port_channel_to_bcm_port_(),
-      slot_port_to_flex_bcm_ports_(),
-      slot_port_to_non_flex_bcm_ports_(),
-      slot_port_to_transceiver_state_(),
-      unit_to_logical_ports_(),
+      singleton_port_key_to_bcm_port_(),
+      port_group_key_to_flex_bcm_ports_(),
+      port_group_key_to_non_flex_bcm_ports_(),
       node_id_to_unit_(),
-      port_id_to_slot_port_channel_(),
-      unit_logical_port_to_port_id_(),
-      slot_port_channel_to_port_state_(),
+      unit_to_node_id_(),
+      node_id_to_port_ids_(),
+      node_id_to_trunk_ids_(),
+      node_id_to_port_id_to_singleton_port_key_(),
+      node_id_to_port_id_to_sdk_port_(),
+      node_id_to_trunk_id_to_sdk_trunk_(),
+      node_id_to_sdk_port_to_port_id_(),
+      node_id_to_sdk_trunk_to_trunk_id_(),
+      xcvr_port_key_to_xcvr_state_(),
+      node_id_to_port_id_to_port_state_(),
+      node_id_to_trunk_id_to_trunk_state_(),
+      node_id_to_trunk_id_to_members_(),
+      node_id_to_port_id_to_trunk_membership_info_(),
+      node_id_to_port_id_to_admin_state_(),
+      node_id_to_port_id_to_health_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
       phal_interface_(nullptr),
@@ -135,7 +152,6 @@ BcmChassisManager::~BcmChassisManager() {
   CleanupInternalState();
 }
 
-// TODO: Make sure CPU port ID is not used as ID for any port.
 ::util::Status BcmChassisManager::PushChassisConfig(
     const ChassisConfig& config) {
   if (!initialized_) {
@@ -213,29 +229,53 @@ BcmChassisManager::~BcmChassisManager() {
   return status;
 }
 
+void BcmChassisManager::SetUnitToBcmNodeMap(
+    const std::map<int, BcmNode*>& unit_to_bcm_node) {
+  absl::WriterMutexLock l(&chassis_lock);
+  unit_to_bcm_node_ = unit_to_bcm_node;
+}
+
 ::util::StatusOr<BcmChip> BcmChassisManager::GetBcmChip(int unit) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   const BcmChip* bcm_chip = gtl::FindPtrOrNull(unit_to_bcm_chip_, unit);
-  CHECK_RETURN_IF_FALSE(bcm_chip != nullptr)
-      << "Failed to find unit as key " << unit << " in unit_to_bcm_chip_.";
+  CHECK_RETURN_IF_FALSE(bcm_chip != nullptr) << "Unknown unit " << unit << ".";
 
   return BcmChip(*bcm_chip);
 }
 
 ::util::StatusOr<BcmPort> BcmChassisManager::GetBcmPort(int slot, int port,
                                                         int channel) const {
+  const PortKey singleton_port_key(slot, port, channel);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  const BcmPort* bcm_port = gtl::FindPtrOrNull(
-      slot_port_channel_to_bcm_port_, std::make_tuple(slot, port, channel));
+  const BcmPort* bcm_port =
+      gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, singleton_port_key);
   CHECK_RETURN_IF_FALSE(bcm_port != nullptr)
-      << "Failed to find a key (slot: " << slot << ", port: " << port
-      << ", channel: " << channel << ") in slot_port_channel_to_bcm_port_.";
+      << "Unknown singleton port key: " << singleton_port_key.ToString() << ".";
 
   return BcmPort(*bcm_port);
+}
+
+::util::StatusOr<BcmPort> BcmChassisManager::GetBcmPort(uint64 node_id,
+                                                        uint32 port_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const auto* port_id_to_port_key =
+      gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_port_key != nullptr)
+      << "Unknown node " << node_id << ".";
+  const auto* port_key = gtl::FindOrNull(*port_id_to_port_key, port_id);
+  CHECK_RETURN_IF_FALSE(port_key != nullptr)
+      << "Unknown port " << port_id << " on node " << node_id << ".";
+  const auto* bcm_port =
+      gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, *port_key);
+  CHECK_RETURN_IF_FALSE(bcm_port != nullptr)
+      << "Unknown singleton port key: " << port_key->ToString() << ".";
+  return *bcm_port;
 }
 
 ::util::StatusOr<std::map<uint64, int>> BcmChassisManager::GetNodeIdToUnitMap()
@@ -243,6 +283,7 @@ BcmChassisManager::~BcmChassisManager() {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
+
   return node_id_to_unit_;
 }
 
@@ -252,57 +293,164 @@ BcmChassisManager::~BcmChassisManager() {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
   const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  if (!unit) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Node " << node_id << " is not configured.";
-  }
+  CHECK_RETURN_IF_FALSE(unit != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+
   return *unit;
 }
 
-::util::StatusOr<std::map<uint64, std::pair<int, int>>>
-BcmChassisManager::GetPortIdToUnitLogicalPortMap() const {
+::util::StatusOr<std::map<uint32, SdkPort>>
+BcmChassisManager::GetPortIdToSdkPortMap(uint64 node_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  std::map<uint64, std::pair<int, int>> port_id_to_unit_logical_port = {};
-  for (const auto& e : unit_logical_port_to_port_id_) {
-    port_id_to_unit_logical_port[e.second] = e.first;
-  }
+  const std::map<uint32, SdkPort>* port_id_to_sdk_port =
+      gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_sdk_port != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
 
-  return port_id_to_unit_logical_port;
+  return *port_id_to_sdk_port;
 }
 
-::util::StatusOr<std::map<uint64, std::pair<int, int>>>
-BcmChassisManager::GetTrunkIdToUnitTrunkPortMap() const {
+::util::StatusOr<std::map<uint32, SdkTrunk>>
+BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  std::map<uint64, std::pair<int, int>> trunk_id_to_unit_trunk_port = {};
-  // TODO: Implement this.
+  const std::map<uint32, SdkTrunk>* trunk_id_to_sdk_trunk =
+      gtl::FindOrNull(node_id_to_trunk_id_to_sdk_trunk_, node_id);
+  CHECK_RETURN_IF_FALSE(trunk_id_to_sdk_trunk != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
 
-  return trunk_id_to_unit_trunk_port;
+  return *trunk_id_to_sdk_trunk;
 }
 
 ::util::StatusOr<PortState> BcmChassisManager::GetPortState(
-    uint64 port_id) const {
+    uint64 node_id, uint32 port_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const std::map<uint32, PortState>* port_id_to_port_state =
+      gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+  const PortState* port_state =
+      gtl::FindOrNull(*port_id_to_port_state, port_id);
+  CHECK_RETURN_IF_FALSE(port_state != nullptr)
+      << "Port " << port_id << " is not known on node " << node_id << ".";
+
+  return *port_state;
+}
+
+::util::StatusOr<PortState> BcmChassisManager::GetPortState(
+    const SdkPort& sdk_port) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  const std::tuple<int, int, int>* slot_port_channel_tuple =
-      gtl::FindOrNull(port_id_to_slot_port_channel_, port_id);
-  CHECK_RETURN_IF_FALSE(slot_port_channel_tuple != nullptr)
-      << "Unknown port_id: " << port_id << ".";
-  const PortState* port_state = gtl::FindOrNull(
-      slot_port_channel_to_port_state_, *slot_port_channel_tuple);
-  CHECK_RETURN_IF_FALSE(port_state != nullptr)
-      << "Inconsistent state. (slot, port, channel) = ("
-      << std::get<0>(*slot_port_channel_tuple) << ", "
-      << std::get<1>(*slot_port_channel_tuple) << ", "
-      << std::get<2>(*slot_port_channel_tuple)
-      << ") is not found as key in slot_port_channel_to_port_state_!";
+  auto* node_id = gtl::FindOrNull(unit_to_node_id_, sdk_port.unit);
+  CHECK_RETURN_IF_FALSE(node_id != nullptr)
+      << "Attempting to query state of port on unknown unit " << sdk_port.unit
+      << ".";
+  auto* sdk_port_to_port_id =
+      gtl::FindOrNull(node_id_to_sdk_port_to_port_id_, *node_id);
+  CHECK_RETURN_IF_FALSE(sdk_port_to_port_id != nullptr)
+      << "Inconsistent state! No sdk_port_to_port_id map for unit "
+      << sdk_port.unit << ", node " << *node_id << ".";
+  auto* port_id = gtl::FindOrNull(*sdk_port_to_port_id, sdk_port);
+  CHECK_RETURN_IF_FALSE(port_id != nullptr)
+      << "Attempting to retrieve state of unknown SDK port "
+      << sdk_port.ToString() << ".";
+  return GetPortState(*node_id, *port_id);
+}
 
-  return *port_state;
+::util::StatusOr<TrunkState> BcmChassisManager::GetTrunkState(
+    uint64 node_id, uint32 trunk_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const std::map<uint32, TrunkState>* trunk_id_to_trunk_state =
+      gtl::FindOrNull(node_id_to_trunk_id_to_trunk_state_, node_id);
+  CHECK_RETURN_IF_FALSE(trunk_id_to_trunk_state != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+  const TrunkState* trunk_state =
+      gtl::FindOrNull(*trunk_id_to_trunk_state, trunk_id);
+  CHECK_RETURN_IF_FALSE(trunk_state != nullptr)
+      << "Trunk " << trunk_id << " is not known on node " << node_id << ".";
+
+  return *trunk_state;
+}
+
+::util::StatusOr<std::set<uint32>> BcmChassisManager::GetTrunkMembers(
+    uint64 node_id, uint32 trunk_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const std::map<uint32, std::set<uint32>>* trunk_id_to_members =
+      gtl::FindOrNull(node_id_to_trunk_id_to_members_, node_id);
+  CHECK_RETURN_IF_FALSE(trunk_id_to_members != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+  const std::set<uint32>* members =
+      gtl::FindOrNull(*trunk_id_to_members, trunk_id);
+  CHECK_RETURN_IF_FALSE(members != nullptr)
+      << "Trunk " << trunk_id << " is not known on node " << node_id << ".";
+
+  return *members;
+}
+
+::util::StatusOr<uint32> BcmChassisManager::GetParentTrunkId(
+    uint64 node_id, uint32 port_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const std::map<uint32, TrunkMembershipInfo>*
+      port_id_to_trunk_membership_info = gtl::FindOrNull(
+          node_id_to_port_id_to_trunk_membership_info_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_trunk_membership_info != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+  const TrunkMembershipInfo* membership_info =
+      gtl::FindOrNull(*port_id_to_trunk_membership_info, port_id);
+  CHECK_RETURN_IF_FALSE(membership_info != nullptr)
+      << "Port " << port_id
+      << " is not known or does not belong to any trunk on node " << node_id
+      << ".";
+
+  return membership_info->parent_trunk_id;
+}
+
+::util::StatusOr<AdminState> BcmChassisManager::GetPortAdminState(
+    uint64 node_id, uint32 port_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const auto* port_id_to_admin_state =
+      gtl::FindOrNull(node_id_to_port_id_to_admin_state_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_admin_state != nullptr)
+      << "Unknown node " << node_id << ".";
+  const auto* admin_state = gtl::FindOrNull(*port_id_to_admin_state, port_id);
+  CHECK_RETURN_IF_FALSE(admin_state != nullptr)
+      << "Unknown port " << port_id << " on node " << node_id << ".";
+  return *admin_state;
+}
+
+::util::Status BcmChassisManager::SetTrunkMemberBlockState(
+    uint64 node_id, uint32 trunk_id, uint32 port_id,
+    TrunkMemberBlockState state) {
+  // TODO(aghaffar): Implement this method.
+  return ::util::OkStatus();
+}
+
+::util::Status BcmChassisManager::SetPortAdminState(uint64 node_id,
+                                                    uint32 port_id,
+                                                    AdminState state) {
+  // TODO(aghaffar): Implement this method.
+  return ::util::OkStatus();
+}
+::util::Status BcmChassisManager::SetPortHealthState(uint64 node_id,
+                                                     uint32 port_id,
+                                                     HealthState state) {
+  // TODO(aghaffar): Implement this method.
+  return ::util::OkStatus();
 }
 
 std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
@@ -313,6 +461,25 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
       mode, phal_interface, bcm_sdk_interface, bcm_serdes_db_manager));
 }
 
+namespace {
+
+// A helper method that checks whether a given BcmPort belong to a BcmChip of
+// type TRIDENT_PLUS and is a GE port.
+bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
+                           const BcmChassisMap& bcm_chassis_map) {
+  if (bcm_port.type() != BcmPort::GE) return false;
+  for (const auto& bcm_chip : bcm_chassis_map.bcm_chips()) {
+    if (bcm_chip.unit() == bcm_port.unit()) {
+      return bcm_chip.type() == BcmChip::TRIDENT_PLUS;
+    }
+  }
+
+  return false;
+}
+
+}  // namespace
+
+// TODO(aghaffar): Include MGMT ports in the config if needed.
 ::util::Status BcmChassisManager::GenerateBcmChassisMapFromConfig(
     const ChassisConfig& config, BcmChassisMap* base_bcm_chassis_map,
     BcmChassisMap* target_bcm_chassis_map) const {
@@ -388,54 +555,50 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
         << "No positive slot in " << node.ShortDebugString();
     CHECK_RETURN_IF_FALSE(node.id() > 0)
         << "No positive ID in " << node.ShortDebugString();
-    CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
+    CHECK_RETURN_IF_FALSE(
+        gtl::InsertIfNotPresent(&node_id_to_unit, node.id(), -1))
         << "The id for Node " << PrintNode(node) << " was already recorded "
         << "for another Node in the config.";
   }
 
-  // Go over all the ports in the config:
-  // 1- For non-flex ports, find the corresponding BcmPort in the
+  // Go over all the singleton ports in the config:
+  // 1- Validate the basic singleton port properties.
+  // 2- For non-flex ports, find the corresponding BcmPort in the
   //    base_bcm_chassis_map and add them to bcm_chassis_map.
-  // 2- For flex ports, just save the (slot, port) pairs in flex_ports set but
-  //    do not add anything to bcm_chassis_map just yet.
-  // 3- Make sure there is no two ports with the same (slot, port, channel).
-  // 4- Make sure all the ports with the same (slot, port) have the same
+  // 3- For flex ports, just save the (slot, port) pairs of flex port groups,
+  //    but do not add anything to bcm_chassis_map just yet.
+  // 4- Make sure there is no two ports with the same (slot, port, channel).
+  // 5- Make sure all the ports with the same (slot, port) have the same
   //    speed.
-  // 5- Make sure for each (slot, port) pair, the channels of all the ports
+  // 6- Make sure for each (slot, port) pair, the channels of all the ports
   //    are valid. This depends on the port speed.
-  // 6- Make sure no singleton port has the reserved CPU port ID. CPU port is
+  // 7- Make sure no singleton port has the reserved CPU port ID. CPU port is
   //    a special port and is not in the list of singleton ports. It is
   //    configured separately.
-  // 7- Keep the set of unit numbers that ports are using so that we can later
+  // 8- Make sure IDs of the singleton ports are unique per node.
+  // 9- Keep the set of unit numbers that ports are using so that we can later
   //    add the corresponding BcmChips.
-
-  // TODO: Include MGMT ports in the config if needed.
-  std::set<uint64> port_ids;
-  std::set<std::tuple<int, int, int>> slot_port_channel_tuples;
-  std::set<std::pair<int, int>> flex_slot_port_pairs;
-  std::map<std::pair<int, int>, std::set<int>> slot_port_to_channels;
-  std::map<std::pair<int, int>, std::set<uint64>> slot_port_to_speed_bps;
-  std::map<std::pair<int, int>, std::set<bool>> slot_port_to_internal;
+  std::map<uint64, std::set<uint32>> node_id_to_port_ids;
+  std::set<PortKey> singleton_port_keys;
+  std::set<PortKey> flex_port_group_keys;
+  std::map<PortKey, std::set<int>> port_group_key_to_channels;
+  std::map<PortKey, std::set<uint64>> port_group_key_to_speed_bps;
+  std::map<PortKey, std::set<bool>> port_group_key_to_internal;
   for (const auto& singleton_port : config.singleton_ports()) {
     CHECK_RETURN_IF_FALSE(singleton_port.id() > 0)
         << "No positive ID in " << PrintSingletonPort(singleton_port) << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.id() != kCpuPortId)
         << "SingletonPort " << PrintSingletonPort(singleton_port)
         << " has the reserved CPU port ID (" << kCpuPortId << ").";
-    CHECK_RETURN_IF_FALSE(!port_ids.count(singleton_port.id()))
-        << "The id for SingletonPort " << PrintSingletonPort(singleton_port)
-        << " was already recorded for another SingletonPort in the config.";
-    port_ids.insert(singleton_port.id());
     CHECK_RETURN_IF_FALSE(singleton_port.slot() > 0)
         << "No valid slot in " << singleton_port.ShortDebugString() << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.port() > 0)
         << "No valid port in " << singleton_port.ShortDebugString() << ".";
     CHECK_RETURN_IF_FALSE(singleton_port.speed_bps() > 0)
         << "No valid speed_bps in " << singleton_port.ShortDebugString() << ".";
-    const std::tuple<int, int, int>& slot_port_channel_tuple = std::make_tuple(
-        singleton_port.slot(), singleton_port.port(), singleton_port.channel());
-    CHECK_RETURN_IF_FALSE(
-        !slot_port_channel_tuples.count(slot_port_channel_tuple))
+    PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
+                               singleton_port.channel());
+    CHECK_RETURN_IF_FALSE(!singleton_port_keys.count(singleton_port_key))
         << "The (slot, port, channel) tuple for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " was already recorded for another SingletonPort in the config.";
@@ -445,22 +608,28 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
         << "Node ID " << singleton_port.node() << " given for SingletonPort "
         << PrintSingletonPort(singleton_port)
         << " has not been given to any Node in the config.";
-    bool found = false;
-    const std::pair<int, int>& slot_port_pair =
-        std::make_pair(singleton_port.slot(), singleton_port.port());
+    CHECK_RETURN_IF_FALSE(
+        !node_id_to_port_ids[singleton_port.node()].count(singleton_port.id()))
+        << "The id for SingletonPort " << PrintSingletonPort(singleton_port)
+        << " was already recorded for another SingletonPort for node with ID "
+        << singleton_port.node() << ".";
+    node_id_to_port_ids[singleton_port.node()].insert(singleton_port.id());
+    bool found = false;  // set to true when we find BcmPort for this singleton.
+    PortKey port_group_key(singleton_port.slot(), singleton_port.port());
     for (const auto& bcm_port : base_bcm_chassis_map->bcm_ports()) {
       if (IsSingletonPortMatchesBcmPort(singleton_port, bcm_port)) {
         if (bcm_port.flex_port()) {
-          // Flex port detected. Add (slot, port) pairs to flex_ports set.
-          flex_slot_port_pairs.insert(slot_port_pair);
+          // Flex port detected. Add the (slot, port) to flex_port_group_keys
+          // set capturing the (slot, port) of all the port groups.
+          flex_port_group_keys.insert(port_group_key);
         } else {
-          // Make sure the (slot, port) for this port are not in the
-          // flex_ports vector. This is an invalid situation. We either have all
-          // the channels of a frontpanel port flex or all non-flex.
-          CHECK_RETURN_IF_FALSE(!flex_slot_port_pairs.count(slot_port_pair))
+          // Make sure the (slot, port) for this port is not in
+          // flex_port_group_keys. This is an invalid situation. We either have
+          // all the channels of a transceiver port flex or all non-flex.
+          CHECK_RETURN_IF_FALSE(!flex_port_group_keys.count(port_group_key))
               << "The (slot, port) pair for the non-flex SingletonPort "
               << PrintSingletonPort(singleton_port)
-              << " is in flex_slot_port_pairs.";
+              << " is in flex_port_group_keys.";
           *target_bcm_chassis_map->add_bcm_ports() = bcm_port;
         }
         if (node_id_to_unit[singleton_port.node()] == -1) {
@@ -478,17 +647,67 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
               << " for this port.";
         }
         found = true;
-        slot_port_channel_tuples.insert(slot_port_channel_tuple);
-        slot_port_to_internal[slot_port_pair].insert(bcm_port.internal());
+        singleton_port_keys.insert(singleton_port_key);
+        port_group_key_to_internal[port_group_key].insert(bcm_port.internal());
         break;
       }
     }
     CHECK_RETURN_IF_FALSE(found)
-        << "Could not find any BcmPort in base_bcm_chassis_map  whose (slot, "
+        << "Could not find any BcmPort in base_bcm_chassis_map whose (slot, "
         << "port, channel, speed_bps) tuple matches non-flex SingletonPort "
         << PrintSingletonPort(singleton_port) << ".";
-    slot_port_to_channels[slot_port_pair].insert(singleton_port.channel());
-    slot_port_to_speed_bps[slot_port_pair].insert(singleton_port.speed_bps());
+    port_group_key_to_channels[port_group_key].insert(singleton_port.channel());
+    port_group_key_to_speed_bps[port_group_key].insert(
+        singleton_port.speed_bps());
+  }
+
+  // If after adding all the we have an entry where unit for a node is not
+  // found, it means there was no port for that unit in the config. This is
+  // considered an error.
+  for (const auto& e : node_id_to_unit) {
+    CHECK_RETURN_IF_FALSE(e.second >= 0)
+        << "No port found for Node with ID " << e.first << " in the config.";
+  }
+
+  // Go over all the trunk ports in the config:
+  // 1- Validate the basic trunk port properties.
+  // 2- Make sure IDs of the trunk ports are unique per node.
+  // 3- Make sure IDs of the trunk ports do not interfere with the IDs if the
+  //    singleton ports for each node.
+  // 4- Make sure the members of the trunk, if given, are all known singleton
+  //    ports.
+  std::map<uint64, std::set<uint32>> node_id_to_trunk_ids;
+  for (const auto& trunk_port : config.trunk_ports()) {
+    CHECK_RETURN_IF_FALSE(trunk_port.id() > 0)
+        << "No positive ID in " << PrintTrunkPort(trunk_port) << ".";
+    CHECK_RETURN_IF_FALSE(trunk_port.type() != TrunkPort::UNKNOWN_TRUNK)
+        << "No type in " << PrintTrunkPort(trunk_port) << ".";
+    CHECK_RETURN_IF_FALSE(trunk_port.id() != kCpuPortId)
+        << "TrunkPort " << PrintTrunkPort(trunk_port)
+        << " has the reserved CPU port ID (" << kCpuPortId << ").";
+    CHECK_RETURN_IF_FALSE(trunk_port.node() > 0)
+        << "No valid node ID in " << trunk_port.ShortDebugString() << ".";
+    CHECK_RETURN_IF_FALSE(node_id_to_unit.count(trunk_port.node()))
+        << "Node ID " << trunk_port.node() << " given for TrunkPort "
+        << PrintTrunkPort(trunk_port)
+        << " has not been given to any Node in the config.";
+    CHECK_RETURN_IF_FALSE(
+        !node_id_to_trunk_ids[trunk_port.node()].count(trunk_port.id()))
+        << "The id for TrunkPort " << PrintTrunkPort(trunk_port)
+        << " was already recorded for another TrunkPort for node with ID "
+        << trunk_port.node() << ".";
+    CHECK_RETURN_IF_FALSE(
+        !node_id_to_port_ids[trunk_port.node()].count(trunk_port.id()))
+        << "The id for TrunkPort " << PrintTrunkPort(trunk_port)
+        << " was already recorded for another SingletonPort for node with ID "
+        << trunk_port.node() << ".";
+    node_id_to_trunk_ids[trunk_port.node()].insert(trunk_port.id());
+    for (uint32 port_id : trunk_port.members()) {
+      CHECK_RETURN_IF_FALSE(
+          node_id_to_port_ids[trunk_port.node()].count(port_id))
+          << "Unknown member SingletonPort " << port_id << " for TrunkPort "
+          << PrintTrunkPort(trunk_port) << ".";
+    }
   }
 
   // 1- Add all the BcmChips corresponding to the nodes with the detected unit
@@ -496,8 +715,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   // 2- Make sure the chip type is supported.
   for (const auto& e : node_id_to_unit) {
     int unit = e.second;
-    if (unit < 0) continue;  // A node with no port. Discard.
-    bool found = false;
+    bool found = false;  // set to true when we find BcmChip for this node.
     for (const auto& bcm_chip : base_bcm_chassis_map->bcm_chips()) {
       if (unit == bcm_chip.unit()) {
         CHECK_RETURN_IF_FALSE(supported_chip_types.count(bcm_chip.type()))
@@ -514,55 +732,52 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   }
 
   // Validate internal ports if any.
-  for (const auto& e : slot_port_to_internal) {
+  for (const auto& e : port_group_key_to_internal) {
     CHECK_RETURN_IF_FALSE(e.second.size() == 1)
-        << "For SingletonPorts with (slot, port) = (" << e.first.first << ", "
-        << e.first.second << ") found both internal and external BCM ports. "
-        << "This is invalid.";
+        << "For SingletonPorts with " << e.first.ToString()
+        << " found both internal and external BCM ports. This is invalid.";
   }
 
-  // Validate the speed_bps and channels for all (slot, port) pairs.
-  stratum::gtl::flat_hash_map<uint64, std::set<int>> speed_bps_to_expected_channels = {
-      {kHundredGigBps, {0}},
-      {kFortyGigBps, {0}},
-      {kFiftyGigBps, {1, 2}},
-      {kTwentyGigBps, {1, 2}},
-      {kTwentyFiveGigBps, {1, 2, 3, 4}},
+  // Validate the speed_bps and channels for all transceiver ports.
+  absl::flat_hash_map<uint64, std::set<int>> speed_bps_to_expected_channels = {
+      {kOneGigBps, {0}},         {kHundredGigBps, {0}},
+      {kFortyGigBps, {0}},       {kFiftyGigBps, {1, 2}},
+      {kTwentyGigBps, {1, 2}},   {kTwentyFiveGigBps, {1, 2, 3, 4}},
       {kTenGigBps, {1, 2, 3, 4}}};
-  for (const auto& e : slot_port_to_speed_bps) {
-    const std::pair<int, int>& slot_port_pair = e.first;
+  for (const auto& e : port_group_key_to_speed_bps) {
+    const PortKey& port_group_key = e.first;
     CHECK_RETURN_IF_FALSE(e.second.size() == 1)
-        << "For SingletonPorts with (slot, port) = (" << slot_port_pair.first
-        << ", " << slot_port_pair.second << ") found " << e.second.size()
-        << " different "
-        << "speed_bps. This is invalid.";
+        << "For SingletonPorts with " << e.first.ToString() << " found "
+        << e.second.size() << " different speed_bps. This is invalid.";
     uint64 speed_bps = *e.second.begin();
-    const std::set<int>* channels =
+    const std::set<int>* expected_channels =
         gtl::FindOrNull(speed_bps_to_expected_channels, speed_bps);
-    CHECK_RETURN_IF_FALSE(channels != nullptr)
+    CHECK_RETURN_IF_FALSE(expected_channels != nullptr)
         << "Unsupported speed_bps: " << speed_bps << ".";
-    CHECK_RETURN_IF_FALSE(slot_port_to_channels[slot_port_pair] == *channels)
-        << "For SingletonPorts with (slot, port) = (" << slot_port_pair.first
-        << ", " << slot_port_pair.second << ") and speed_bps = " << speed_bps
-        << " found "
-        << "invalid channels.";
+    const std::set<int>& existing_channels =
+        port_group_key_to_channels[port_group_key];
+    CHECK_RETURN_IF_FALSE(
+        std::includes(expected_channels->begin(), expected_channels->end(),
+                      existing_channels.begin(), existing_channels.end()))
+        << "For SingletonPorts with " << e.first.ToString()
+        << " and speed_bps = " << speed_bps << " found invalid channels.";
   }
 
   // Now add the flex ports. For each flex port, we add all the 4 channels
   // with a specific speed which depends on the chip.
-  for (const auto& slot_port_pair : flex_slot_port_pairs) {
+  for (const auto& port_group_key : flex_port_group_keys) {
     // Find the BcmChip that contains this (slot, port) pair. We expect the will
     // be one and only one BcmChip what contains this pair.
     std::set<int> units;
     for (const auto& bcm_port : base_bcm_chassis_map->bcm_ports()) {
-      if (bcm_port.slot() == slot_port_pair.first &&
-          bcm_port.port() == slot_port_pair.second) {
+      if (bcm_port.slot() == port_group_key.slot &&
+          bcm_port.port() == port_group_key.port) {
         units.insert(bcm_port.unit());
       }
     }
     CHECK_RETURN_IF_FALSE(units.size() == 1U)
-        << "Found ports with (slot, port) = (" << slot_port_pair.first << ", "
-        << slot_port_pair.second << ") are on different chips.";
+        << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
+        << port_group_key.port << ") that are on different chips.";
     int unit = *units.begin();
     // We dont use GetBcmChip as unit_to_bcm_chip_ may not be populated when
     // this function is called. This function must be self contained.
@@ -581,6 +796,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
       case BcmChip::TOMAHAWK:
         min_speed_bps = kTwentyFiveGigBps;
         break;
+      case BcmChip::TRIDENT_PLUS:
       case BcmChip::TRIDENT2:
         min_speed_bps = kTenGigBps;
         break;
@@ -590,8 +806,8 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
     }
     for (const int channel : channels) {
       SingletonPort singleton_port;
-      singleton_port.set_slot(slot_port_pair.first);
-      singleton_port.set_port(slot_port_pair.second);
+      singleton_port.set_slot(port_group_key.slot);
+      singleton_port.set_port(port_group_key.port);
       singleton_port.set_channel(channel);
       singleton_port.set_speed_bps(min_speed_bps);
       bool found = false;
@@ -609,32 +825,39 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
     }
   }
 
-  // Now, we need to find the map form unit to (slot, port, channel) tuples
-  // and map from unit to chip types. These maps are used for two things:
+  // Now, we need to find the map form unit to PortKey instances encapsulating
+  // the (slot, port, channel) of all the BcmPort messages in the chassis map,
+  // as well as the map from unit to chip types. These maps are used for two
+  // purposes:
   // 1- Check for max number of ports per chip.
   // 2- For the case logical ports are expected to be auto added by the
   //    software. In this case, we rewrite the logical port numbers based on
   //    the index of the port within the chip, starting from '1'.
-  std::map<int, std::set<std::tuple<int, int, int>>> unit_to_slot_port_channels;
+  std::map<int, std::set<PortKey>> unit_to_bcm_port_keys;
   std::map<int, BcmChip::BcmChipType> unit_to_chip_type;
   for (const auto& bcm_chip : target_bcm_chassis_map->bcm_chips()) {
     unit_to_chip_type[bcm_chip.unit()] = bcm_chip.type();
   }
   for (const auto& bcm_port : target_bcm_chassis_map->bcm_ports()) {
-    unit_to_slot_port_channels[bcm_port.unit()].insert(
-        std::make_tuple(bcm_port.slot(), bcm_port.port(), bcm_port.channel()));
+    // MGMT and GE ports are not considered here. Only regular data plane
+    // ports are subjected to a max number of ports per chip.
+    if (bcm_port.type() != BcmPort::GE && bcm_port.type() != BcmPort::MGMT) {
+      unit_to_bcm_port_keys[bcm_port.unit()].emplace(
+          bcm_port.slot(), bcm_port.port(), bcm_port.channel());
+    }
   }
 
   // Check for max num of ports per chip.
   std::map<BcmChip::BcmChipType, size_t> chip_type_to_max_num_ports = {
-      {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip},
-      {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip}};
+      {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
+      {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip}};
   for (const auto& e : unit_to_chip_type) {
-    CHECK_RETURN_IF_FALSE(unit_to_slot_port_channels[e.first].size() <=
+    CHECK_RETURN_IF_FALSE(unit_to_bcm_port_keys[e.first].size() <=
                           chip_type_to_max_num_ports[e.second])
         << "Max num of BCM ports for a " << BcmChip::BcmChipType_Name(e.second)
         << " chip is " << chip_type_to_max_num_ports[e.second]
-        << ", but we found " << unit_to_slot_port_channels[e.first].size()
+        << ", but we found " << unit_to_bcm_port_keys[e.first].size()
         << " ports.";
   }
 
@@ -643,49 +866,78 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
     // The logical_port will be the 1-based index of the corresponding
     // (slot, port, channel) tuple in the sorted list of tuples found for the
     // unit hosting the port.
-    for (int i = 0; i < target_bcm_chassis_map->bcm_ports_size(); ++i) {
-      auto* bcm_port = target_bcm_chassis_map->mutable_bcm_ports(i);
-      const auto& slot_port_channels =
-          unit_to_slot_port_channels[bcm_port->unit()];
-      auto it = slot_port_channels.find(std::make_tuple(
-          bcm_port->slot(), bcm_port->port(), bcm_port->channel()));
-      CHECK_RETURN_IF_FALSE(it != slot_port_channels.end())
-          << "Invalid state. (slot, port, channel) = (" << bcm_port->slot()
-          << ", " << bcm_port->port() << ", " << bcm_port->channel()
-          << ") is not found on unit " << bcm_port->unit() << ".";
-      int idx = std::distance(slot_port_channels.begin(), it);
+    for (auto& bcm_port : *target_bcm_chassis_map->mutable_bcm_ports()) {
+      const auto& bcm_port_keys = unit_to_bcm_port_keys[bcm_port.unit()];
+      PortKey bcm_port_key(bcm_port.slot(), bcm_port.port(),
+                           bcm_port.channel());
+      auto it = bcm_port_keys.find(bcm_port_key);
+      CHECK_RETURN_IF_FALSE(it != bcm_port_keys.end())
+          << "Invalid state. " << bcm_port_key.ToString()
+          << " is not found on unit " << bcm_port.unit() << ".";
+      int idx = std::distance(bcm_port_keys.begin(), it);
       // Make sure the logical ports start from 1, so we skip the CMIC port (
       // logical port 0).
-      bcm_port->set_logical_port(idx + 1);
+      bcm_port.set_logical_port(idx + 1);
     }
   }
 
-  // Post validation of target_bcm_chassis_map.
-  std::map<int, std::set<int>> unit_to_physical_ports;
-  std::map<int, std::set<int>> unit_to_diag_ports;
-  std::map<int, std::set<int>> unit_to_logical_ports;
+  // Need to add logical_port for GE port on T+. This is a target specific logic
+  // and works as follows:
+  // 1- We find all the ports is the range [1..32] (T+ has 32 logical ports
+  //    max per chip in X pipeline), that are not assigned to any logical_port
+  //    for any XE port.
+  // 2- If there is no such port, we return an error. This means we have a
+  //    case where all the 32 ports in X pipeline on a T+ are used and there is
+  //     no room to add the GE port.
+  // 3- If there are a couple of unused numbers in the range, we pick the
+  //    largest number as the logical_port number for the GE port.
+  // Note that inclusion of a GE port or whether it is at all needed to be
+  // enabled on a T+ is up to the config generator.
+  for (auto& bcm_port : *target_bcm_chassis_map->mutable_bcm_ports()) {
+    if (IsGePortOnTridentPlus(bcm_port, *target_bcm_chassis_map)) {
+      std::set<int> free_logical_ports;
+      for (int i = 1; i <= kTridentPlusMaxBcmPortsInXPipeline; ++i) {
+        free_logical_ports.insert(i);
+      }
+      for (const auto& p : target_bcm_chassis_map->bcm_ports()) {
+        if (p.type() != BcmPort::GE && p.unit() == bcm_port.unit()) {
+          free_logical_ports.erase(p.logical_port());
+        }
+      }
+      CHECK_RETURN_IF_FALSE(!free_logical_ports.empty())
+          << "There is no empty logical_port in X pipeline of the T+ chip to "
+          << "assign to GE port " << PrintBcmPort(bcm_port) << ".";
+      bcm_port.set_logical_port(*free_logical_ports.rbegin());
+    }
+  }
+
+  // Post validation of target_bcm_chassis_map by checking the validity of the
+  // internal BCM ports.
+  std::map<int, std::set<int>> unit_to_bcm_phy_ports;
+  std::map<int, std::set<int>> unit_to_bcm_diag_ports;
+  std::map<int, std::set<int>> unit_to_bcm_logical_ports;
   for (const auto& bcm_chip : target_bcm_chassis_map->bcm_chips()) {
-    // For all the BCM unit, logical_port 0 is the CMIC port which cannot be
-    // used for anything else.
-    unit_to_logical_ports[bcm_chip.unit()].insert(0);
+    // For all the BCM unit, fixed CPU logical_port cannot be used for anything
+    // else.
+    unit_to_bcm_logical_ports[bcm_chip.unit()].insert(kCpuLogicalPort);
   }
 
   for (const auto& bcm_port : target_bcm_chassis_map->bcm_ports()) {
-    CHECK_RETURN_IF_FALSE(!unit_to_physical_ports[bcm_port.unit()].count(
-        bcm_port.physical_port()))
-        << "Duplicate physcial_port for unit " << bcm_port.unit() << ": "
+    CHECK_RETURN_IF_FALSE(
+        !unit_to_bcm_phy_ports[bcm_port.unit()].count(bcm_port.physical_port()))
+        << "Duplicate BCM physcial_port for unit " << bcm_port.unit() << ": "
         << bcm_port.physical_port();
     CHECK_RETURN_IF_FALSE(
-        !unit_to_diag_ports[bcm_port.unit()].count(bcm_port.diag_port()))
-        << "Duplicate diag_port for unit " << bcm_port.unit() << ": "
+        !unit_to_bcm_diag_ports[bcm_port.unit()].count(bcm_port.diag_port()))
+        << "Duplicate BCM diag_port for unit " << bcm_port.unit() << ": "
         << bcm_port.diag_port();
-    CHECK_RETURN_IF_FALSE(
-        !unit_to_logical_ports[bcm_port.unit()].count(bcm_port.logical_port()))
-        << "Duplicate logical_port for unit " << bcm_port.unit() << ": "
-        << bcm_port.logical_port();
-    unit_to_physical_ports[bcm_port.unit()].insert(bcm_port.physical_port());
-    unit_to_diag_ports[bcm_port.unit()].insert(bcm_port.diag_port());
-    unit_to_logical_ports[bcm_port.unit()].insert(bcm_port.logical_port());
+    CHECK_RETURN_IF_FALSE(!unit_to_bcm_logical_ports[bcm_port.unit()].count(
+        bcm_port.logical_port()))
+        << "Duplicate BCM logical_port for unit " << bcm_port.unit() << ": "
+        << bcm_port.ShortDebugString();
+    unit_to_bcm_phy_ports[bcm_port.unit()].insert(bcm_port.physical_port());
+    unit_to_bcm_diag_ports[bcm_port.unit()].insert(bcm_port.diag_port());
+    unit_to_bcm_logical_ports[bcm_port.unit()].insert(bcm_port.logical_port());
   }
 
   return ::util::OkStatus();
@@ -724,7 +976,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
     CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
                                       base_bcm_chassis_map.bcm_chips().end(),
-                                      [&bcm_chip](const google::protobuf::Message& x) {
+                                      [&bcm_chip](const ::google::protobuf::Message& x) {
                                         return ProtoEqual(x, bcm_chip);
                                       }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
@@ -732,14 +984,15 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   }
   for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
     BcmPort p(bcm_port);
-    if (target_bcm_chassis_map.auto_add_logical_ports()) {
+    if (target_bcm_chassis_map.auto_add_logical_ports() ||
+        IsGePortOnTridentPlus(bcm_port, target_bcm_chassis_map)) {
       // The base comes with no logical_port assigned.
       p.clear_logical_port();
     }
     CHECK_RETURN_IF_FALSE(std::any_of(
         base_bcm_chassis_map.bcm_ports().begin(),
         base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const google::protobuf::Message& x) { return ProtoEqual(x, p); }))
+        [&p](const ::google::protobuf::Message& x) { return ProtoEqual(x, p); }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
@@ -800,24 +1053,26 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
 
   // Also, after initialization is done for all the ports, set the initial state
   // of the transceivers.
-  slot_port_to_transceiver_state_.clear();
+  xcvr_port_key_to_xcvr_state_.clear();
   for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-    const std::pair<int, int>& slot_port_pair =
-        std::make_pair(bcm_port.slot(), bcm_port.port());
+    PortKey port_group_key(bcm_port.slot(), bcm_port.port());
     // For external ports, wait for transceiver module event handler to find all
     // the inserted transceiver modules (QSFPs, SFPs, etc). For internal ports,
     // there is no transceiver module event. They are always up, but we set them
     // as HW_STATE_PRESENT (unconfigured) so they get
     // configured later.
     if (bcm_port.internal()) {
-      slot_port_to_transceiver_state_[slot_port_pair] = HW_STATE_PRESENT;
+      xcvr_port_key_to_xcvr_state_[port_group_key] = HW_STATE_PRESENT;
     } else {
-      slot_port_to_transceiver_state_[slot_port_pair] = HW_STATE_UNKNOWN;
+      xcvr_port_key_to_xcvr_state_[port_group_key] = HW_STATE_UNKNOWN;
     }
   }
 
-  // TODO: write base_bcm_chassis_map_ and applied_bcm_chassis_map_
-  // protos into files for debugging purposes?
+  // Write applied_bcm_chassis_map_ into file for debugging purposes.
+  if (!FLAGS_applied_bcm_chassis_map_file.empty()) {
+    RETURN_IF_ERROR(WriteProtoToTextFile(*applied_bcm_chassis_map_,
+                                         FLAGS_applied_bcm_chassis_map_file));
+  }
 
   return ::util::OkStatus();
 }
@@ -827,29 +1082,37 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   // Populate the internal map. We have done verification before we get to
   // this point. So, no need to re-verify the config.
   gtl::STLDeleteValues(&unit_to_bcm_chip_);
-  gtl::STLDeleteValues(&slot_port_channel_to_bcm_port_);
-  // No need to delete the pointer in the following two maps. They are already
-  // deleted by calling STLDeleteValues(&slot_port_channel_to_bcm_port_).
-  slot_port_to_flex_bcm_ports_.clear();
-  slot_port_to_non_flex_bcm_ports_.clear();
-  unit_to_logical_ports_.clear();
+  gtl::STLDeleteValues(&singleton_port_key_to_bcm_port_);
+  port_group_key_to_flex_bcm_ports_.clear();  // no need to delete the pointer
+  port_group_key_to_non_flex_bcm_ports_
+      .clear();  // no need to delete the pointer
   node_id_to_unit_.clear();
   unit_to_node_id_.clear();
   node_id_to_port_ids_.clear();
-  port_id_to_slot_port_channel_.clear();
-  unit_logical_port_to_port_id_.clear();
-  // A tmp map to hold port state data. At the end of this function, we replace
-  // slot_port_channel_to_port_state_ with this map. This is to make sure we
-  // do not lose any state.
-  std::map<std::tuple<int, int, int>, PortState>
-      tmp_slot_port_channel_to_port_state;
+  node_id_to_trunk_ids_.clear();
+  node_id_to_port_id_to_singleton_port_key_.clear();
+  node_id_to_port_id_to_sdk_port_.clear();
+  node_id_to_trunk_id_to_sdk_trunk_.clear();
+  node_id_to_sdk_port_to_port_id_.clear();
+  node_id_to_sdk_trunk_to_trunk_id_.clear();
+  node_id_to_trunk_id_to_trunk_state_.clear();
+  node_id_to_trunk_id_to_members_.clear();
+  node_id_to_port_id_to_trunk_membership_info_.clear();
 
-  // Initialize the maps that have node ID as key, i.e. node_id_to_unit_ and
-  // node_id_to_port_ids_. There might be a case where not all the nodes are
-  // used by the singleton ports.
+  // Initialize the maps that have node ID as key, i.e. node_id_to_unit_,
+  // node_id_to_port_ids_, node_id_to_trunk_ids_, etc.
   for (const auto& node : config.nodes()) {
     node_id_to_unit_[node.id()] = -1;
     node_id_to_port_ids_[node.id()] = {};
+    node_id_to_trunk_ids_[node.id()] = {};
+    node_id_to_port_id_to_singleton_port_key_[node.id()] = {};
+    node_id_to_port_id_to_sdk_port_[node.id()] = {};
+    node_id_to_trunk_id_to_sdk_trunk_[node.id()] = {};
+    node_id_to_sdk_port_to_port_id_[node.id()] = {};
+    node_id_to_sdk_trunk_to_trunk_id_[node.id()] = {};
+    node_id_to_trunk_id_to_trunk_state_[node.id()] = {};
+    node_id_to_trunk_id_to_members_[node.id()] = {};
+    node_id_to_port_id_to_trunk_membership_info_[node.id()] = {};
   }
 
   // Now populate unit_to_bcm_chip_. The nodes are already in
@@ -858,27 +1121,34 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
   // config push.
   for (const auto& bcm_chip : applied_bcm_chassis_map_->bcm_chips()) {
     unit_to_bcm_chip_[bcm_chip.unit()] = new BcmChip(bcm_chip);
-    // CMIC port included by default.
-    unit_to_logical_ports_[bcm_chip.unit()].insert(0);
   }
 
-  // Now populate the rest of the maps. Everything that is port related.
+  // Now populate port-related maps.
+
+  // Temporary maps to hold the port state, admin state, and health state.
+  std::map<uint64, std::map<uint32, PortState>>
+      tmp_node_id_to_port_id_to_port_state;
+  std::map<uint64, std::map<uint32, AdminState>>
+      tmp_node_id_to_port_id_to_admin_state;
+  std::map<uint64, std::map<uint32, HealthState>>
+      tmp_node_id_to_port_id_to_health_state;
+  ::util::Status error = ::util::OkStatus();  // errors to keep track of.
   for (const auto& singleton_port : config.singleton_ports()) {
     for (const auto& bcm_port : base_bcm_chassis_map_->bcm_ports()) {
       if (IsSingletonPortMatchesBcmPort(singleton_port, bcm_port)) {
-        const std::tuple<int, int, int>& slot_port_channel_tuple =
-            std::make_tuple(singleton_port.slot(), singleton_port.port(),
-                            singleton_port.channel());
+        PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
+                                   singleton_port.channel());
         CHECK_RETURN_IF_FALSE(
-            !slot_port_channel_to_bcm_port_.count(slot_port_channel_tuple))
+            !singleton_port_key_to_bcm_port_.count(singleton_port_key))
             << "The (slot, port, channel) tuple for SingletonPort "
             << PrintSingletonPort(singleton_port)
-            << " already exists as a key in slot_port_channel_to_bcm_port_. "
+            << " already exists as a key in singleton_port_key_to_bcm_port_. "
             << "Have you called VerifyChassisConfig()?";
         auto* p = new BcmPort(bcm_port);
-        // If auto_add_logical_ports=true, the logical_port needs to come
-        // from applied_bcm_chassis_map_.
-        if (applied_bcm_chassis_map_->auto_add_logical_ports()) {
+        // If auto_add_logical_ports=true or the port is a GE port on a T+, the
+        // logical_port needs to come from applied_bcm_chassis_map_.
+        if (applied_bcm_chassis_map_->auto_add_logical_ports() ||
+            IsGePortOnTridentPlus(bcm_port, *applied_bcm_chassis_map_)) {
           bool found = false;
           for (const auto& q : applied_bcm_chassis_map_->bcm_ports()) {
             if (p->unit() == q.unit() &&
@@ -890,53 +1160,116 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
             }
           }
           CHECK_RETURN_IF_FALSE(found)
-              << "Found not matching BcmPort in applied_bcm_chassis_map_ which "
+              << "Found no matching BcmPort in applied_bcm_chassis_map_ which "
               << "matches unit, physical_port and diag_port of BcmPort '"
               << p->ShortDebugString() << "'.";
         }
-        slot_port_channel_to_bcm_port_[slot_port_channel_tuple] = p;
-        node_id_to_unit_[singleton_port.node()] = p->unit();
-        unit_to_node_id_[p->unit()] = singleton_port.node();
-        node_id_to_port_ids_[singleton_port.node()].insert(singleton_port.id());
-        unit_to_logical_ports_[p->unit()].insert(p->logical_port());
-        port_id_to_slot_port_channel_[singleton_port.id()] =
-            slot_port_channel_tuple;
-        const std::pair<int, int>& unit_logical_port_pair =
-            std::make_pair(p->unit(), p->logical_port());
-        unit_logical_port_to_port_id_[unit_logical_port_pair] =
-            singleton_port.id();
-        const std::pair<int, int>& slot_port_pair =
-            std::make_pair(singleton_port.slot(), singleton_port.port());
-        CHECK_RETURN_IF_FALSE(
-            slot_port_to_transceiver_state_.count(slot_port_pair))
+        singleton_port_key_to_bcm_port_[singleton_port_key] = p;
+        uint64 node_id = singleton_port.node();  // already verified as known
+        uint32 port_id = singleton_port.id();    // already verified as known
+        node_id_to_unit_[node_id] = p->unit();
+        unit_to_node_id_[p->unit()] = node_id;
+        node_id_to_port_ids_[node_id].insert(port_id);
+        node_id_to_port_id_to_singleton_port_key_[node_id][port_id] =
+            singleton_port_key;
+        SdkPort sdk_port(p->unit(), p->logical_port());
+        node_id_to_port_id_to_sdk_port_[node_id][port_id] = sdk_port;
+        node_id_to_sdk_port_to_port_id_[node_id][sdk_port] = port_id;
+        PortKey xcvr_port_key(singleton_port.slot(), singleton_port.port());
+        CHECK_RETURN_IF_FALSE(xcvr_port_key_to_xcvr_state_.count(xcvr_port_key))
             << "Something is wrong. ChassisConfig contains a (slot, port) "
-            << "which we dont know about: (" << slot_port_pair.first << ", "
-            << slot_port_pair.second << ").";
+            << "which we dont know about: " << xcvr_port_key.ToString() << ".";
+        // The xcvr_port_key can be also used as a key to identify the
+        // (slot, port) of the port group.
         if (bcm_port.flex_port()) {
-          slot_port_to_flex_bcm_ports_[slot_port_pair].push_back(p);
+          port_group_key_to_flex_bcm_ports_[xcvr_port_key].push_back(p);
         } else {
-          slot_port_to_non_flex_bcm_ports_[slot_port_pair].push_back(p);
+          port_group_key_to_non_flex_bcm_ports_[xcvr_port_key].push_back(p);
         }
-        // If (slot, port, channel) tuple already exists as a key in
-        // slot_port_channel_to_port_state_, we keep the same state. Otherwise
-        // we assume this is the first time we are seeing this port and set the
-        // state to PORT_STATE_UNKNOWN.
+        // If (node_id, port_id) already exists as a key in any of
+        // node_id_to_port_id_to_{port,health}_state_, we keep the state as is.
+        // Otherwise, we assume this is the first time we are seeing this port
+        // and set the state to unknown.
         const PortState* port_state = gtl::FindOrNull(
-            slot_port_channel_to_port_state_, slot_port_channel_tuple);
+            node_id_to_port_id_to_port_state_[node_id], port_id);
         if (port_state != nullptr) {
-          tmp_slot_port_channel_to_port_state[slot_port_channel_tuple] =
-              *port_state;
+          tmp_node_id_to_port_id_to_port_state[node_id][port_id] = *port_state;
         } else {
-          tmp_slot_port_channel_to_port_state[slot_port_channel_tuple] =
+          tmp_node_id_to_port_id_to_port_state[node_id][port_id] =
               PORT_STATE_UNKNOWN;
+        }
+        const HealthState* health_state = gtl::FindOrNull(
+            node_id_to_port_id_to_health_state_[node_id], port_id);
+        if (health_state != nullptr) {
+          tmp_node_id_to_port_id_to_health_state[node_id][port_id] =
+              *health_state;
+        } else {
+          tmp_node_id_to_port_id_to_health_state[node_id][port_id] =
+              HEALTH_STATE_UNKNOWN;
+        }
+        // For the admin state, the admin state specified in the config
+        // overrides the previous admin state. But if there is no valid admin
+        // state specified for the port in the confing and there is already an
+        // admin state for the port in node_id_to_port_id_to_admin_state_, we
+        // keep the state as is.
+        AdminState new_admin_state =
+            singleton_port.config_params().admin_state();
+        const AdminState* old_admin_state = gtl::FindOrNull(
+            node_id_to_port_id_to_admin_state_[node_id], port_id);
+        if (old_admin_state != nullptr) {
+          // The port already exists as a key in the map. If the new config
+          // does not have a valid admin state, keep the old state. Otherwise,
+          // save the new state and if there is a change in the state (old vs
+          // new), enable/disable the port accordingly.
+          if (new_admin_state == ADMIN_STATE_UNKNOWN) {
+            tmp_node_id_to_port_id_to_admin_state[node_id][port_id] =
+                *old_admin_state;
+          } else {
+            tmp_node_id_to_port_id_to_admin_state[node_id][port_id] =
+                new_admin_state;
+            if (new_admin_state != *old_admin_state) {
+              APPEND_STATUS_IF_ERROR(
+                  error,
+                  EnablePort(sdk_port, new_admin_state == ADMIN_STATE_ENABLED));
+            }
+          }
+        } else {
+          // First time we are seeing the port. Need to honor the state
+          // specified in the config and enbale/disable the port accordingly.
+          tmp_node_id_to_port_id_to_admin_state[node_id][port_id] =
+              new_admin_state;
+          if (new_admin_state != ADMIN_STATE_UNKNOWN) {
+            APPEND_STATUS_IF_ERROR(
+                error,
+                EnablePort(sdk_port, new_admin_state == ADMIN_STATE_ENABLED));
+          }
         }
         break;
       }
     }
   }
+  node_id_to_port_id_to_port_state_ = tmp_node_id_to_port_id_to_port_state;
+  node_id_to_port_id_to_admin_state_ = tmp_node_id_to_port_id_to_admin_state;
+  node_id_to_port_id_to_health_state_ = tmp_node_id_to_port_id_to_health_state;
 
-  // Update slot_port_channel_to_port_state_ as the end.
-  slot_port_channel_to_port_state_ = tmp_slot_port_channel_to_port_state;
+  // Finally populate trunk-related maps.
+  for (const auto& trunk_port : config.trunk_ports()) {
+    uint64 node_id = trunk_port.node();    // already verified as known
+    uint32 trunk_id = trunk_port.id();     // already verified as known
+    int unit = node_id_to_unit_[node_id];  // already verified as known
+    // TODO(aghaffar): Populate the rest of trunk related maps. Also add support
+    // for restoring trunk state/members. At the moment, we populate the maps
+    // with invalid data.
+    node_id_to_trunk_ids_[node_id].insert(trunk_id);
+    SdkTrunk sdk_trunk(unit, /*invalid*/ -1);
+    node_id_to_trunk_id_to_sdk_trunk_[node_id][trunk_id] = sdk_trunk;
+    node_id_to_sdk_trunk_to_trunk_id_[node_id][sdk_trunk] = trunk_id;
+    node_id_to_trunk_id_to_trunk_state_[node_id][trunk_id] =
+        TRUNK_STATE_UNKNOWN;
+    node_id_to_trunk_id_to_members_[node_id][trunk_id] = {};
+  }
+
+  // TODO(aghaffar): Update the LED of all the ports.
 
   return ::util::OkStatus();
 }
@@ -984,12 +1317,12 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
 
   // If we have not done that yet, create transceiver module insert/removal
   // event Channel, register ChannelWriter, and create ChannelReader thread.
-  if (transceiver_event_writer_id_ == kInvalidWriterId) {
+  if (xcvr_event_writer_id_ == kInvalidWriterId) {
     xcvr_event_channel_ = Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
     // Create and hand-off ChannelWriter to the PhalInterface.
     auto writer = ChannelWriter<TransceiverEvent>::Create(xcvr_event_channel_);
     int priority = PhalInterface::kTransceiverEventWriterPriorityHigh;
-    ASSIGN_OR_RETURN(transceiver_event_writer_id_,
+    ASSIGN_OR_RETURN(xcvr_event_writer_id_,
                      phal_interface_->RegisterTransceiverEventWriter(
                          std::move(writer), priority));
     // Create and hand-off ChannelReader to new reader thread.
@@ -1030,11 +1363,11 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
     }
     linkscan_event_channel_.reset();
   }
-  if (transceiver_event_writer_id_ != kInvalidWriterId) {
+  if (xcvr_event_writer_id_ != kInvalidWriterId) {
     APPEND_STATUS_IF_ERROR(status,
                            phal_interface_->UnregisterTransceiverEventWriter(
-                               transceiver_event_writer_id_));
-    transceiver_event_writer_id_ = kInvalidWriterId;
+                               xcvr_event_writer_id_));
+    xcvr_event_writer_id_ = kInvalidWriterId;
     // Close Channel.
     if (!xcvr_event_channel_ || !xcvr_event_channel_->Close()) {
       APPEND_ERROR(status) << "Transceiver event Channel is already closed.";
@@ -1046,7 +1379,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
 }
 
 ::util::Status BcmChassisManager::RegisterEventNotifyWriter(
-    const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
+    std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   absl::WriterMutexLock l(&gnmi_event_lock_);
   gnmi_event_writer_ = writer;
   return ::util::OkStatus();
@@ -1061,7 +1394,7 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
 ::util::Status BcmChassisManager::ConfigurePortGroups() {
   ::util::Status status = ::util::OkStatus();
   // Set the speed for flex port groups first.
-  for (const auto& e : slot_port_to_flex_bcm_ports_) {
+  for (const auto& e : port_group_key_to_flex_bcm_ports_) {
     ::util::StatusOr<bool> ret = SetSpeedForFlexPortGroup(e.first);
     if (!ret.ok()) {
       APPEND_STATUS_IF_ERROR(status, ret.status());
@@ -1071,12 +1404,12 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
     // If there is a change in port speed and port is HW_STATE_READY, set it
     // to HW_STATE_PRESENT (non-configured state) so it gets configured next.
     if (speed_changed &&
-        slot_port_to_transceiver_state_[e.first] == HW_STATE_READY) {
-      slot_port_to_transceiver_state_[e.first] = HW_STATE_PRESENT;
+        xcvr_port_key_to_xcvr_state_[e.first] == HW_STATE_READY) {
+      xcvr_port_key_to_xcvr_state_[e.first] = HW_STATE_PRESENT;
     }
   }
   // Then continue with port options.
-  for (auto& e : slot_port_to_transceiver_state_) {
+  for (auto& e : xcvr_port_key_to_xcvr_state_) {
     if (e.second != HW_STATE_READY) {
       BcmPortOptions options;
       options.set_enabled(e.second == HW_STATE_PRESENT ? TRI_STATE_TRUE
@@ -1100,19 +1433,25 @@ std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
 
 void BcmChassisManager::CleanupInternalState() {
   gtl::STLDeleteValues(&unit_to_bcm_chip_);
-  gtl::STLDeleteValues(&slot_port_channel_to_bcm_port_);
-  // No need to delete the pointer in these two maps. They are already deleted
-  // by calling STLDeleteValues(&slot_port_channel_to_bcm_port_).
-  slot_port_to_flex_bcm_ports_.clear();
-  slot_port_to_non_flex_bcm_ports_.clear();
-  slot_port_to_transceiver_state_.clear();
-  unit_to_logical_ports_.clear();
+  gtl::STLDeleteValues(&singleton_port_key_to_bcm_port_);
+  port_group_key_to_flex_bcm_ports_.clear();      // no need to delete pointer
+  port_group_key_to_non_flex_bcm_ports_.clear();  // no need to delete pointer
   node_id_to_unit_.clear();
   unit_to_node_id_.clear();
   node_id_to_port_ids_.clear();
-  port_id_to_slot_port_channel_.clear();
-  unit_logical_port_to_port_id_.clear();
-  slot_port_channel_to_port_state_.clear();
+  node_id_to_trunk_ids_.clear();
+  node_id_to_port_id_to_singleton_port_key_.clear();
+  node_id_to_port_id_to_sdk_port_.clear();
+  node_id_to_trunk_id_to_sdk_trunk_.clear();
+  node_id_to_sdk_port_to_port_id_.clear();
+  node_id_to_sdk_trunk_to_trunk_id_.clear();
+  xcvr_port_key_to_xcvr_state_.clear();
+  node_id_to_port_id_to_port_state_.clear();
+  node_id_to_trunk_id_to_trunk_state_.clear();
+  node_id_to_trunk_id_to_members_.clear();
+  node_id_to_port_id_to_trunk_membership_info_.clear();
+  node_id_to_port_id_to_admin_state_.clear();
+  node_id_to_port_id_to_health_state_.clear();
   base_bcm_chassis_map_ = nullptr;
   applied_bcm_chassis_map_ = nullptr;
 }
@@ -1216,14 +1555,15 @@ void BcmChassisManager::CleanupInternalState() {
         << "Invalid tx_polarity_flip in " << bcm_port.ShortDebugString();
     CHECK_RETURN_IF_FALSE(bcm_port.rx_polarity_flip() >= 0)
         << "Invalid rx_polarity_flip in " << bcm_port.ShortDebugString();
-    if (base_bcm_chassis_map->auto_add_logical_ports()) {
+    if (base_bcm_chassis_map->auto_add_logical_ports() ||
+        IsGePortOnTridentPlus(bcm_port, *base_bcm_chassis_map)) {
       CHECK_RETURN_IF_FALSE(bcm_port.logical_port() == 0)
-          << "auto_add_logical_ports is True and logical_port is non-zero "
+          << "auto_add_logical_ports is True and logical_port is non-zero: "
           << bcm_port.ShortDebugString();
     } else {
       CHECK_RETURN_IF_FALSE(bcm_port.logical_port() > 0)
-          << "auto_add_logical_ports is False and logical_port is not positive "
-          << bcm_port.ShortDebugString();
+          << "auto_add_logical_ports is False and port is not a GE port, yet "
+          << "logical_port is not positive: " << bcm_port.ShortDebugString();
     }
   }
 
@@ -1257,7 +1597,8 @@ void BcmChassisManager::CleanupInternalState() {
 
 bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
     const SingletonPort& singleton_port, const BcmPort& bcm_port) const {
-  if (bcm_port.type() != BcmPort::XE && bcm_port.type() != BcmPort::CE) {
+  if (bcm_port.type() != BcmPort::XE && bcm_port.type() != BcmPort::CE &&
+      bcm_port.type() != BcmPort::GE) {
     return false;
   }
 
@@ -1280,7 +1621,7 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 }
 
 void* BcmChassisManager::LinkscanEventHandlerThreadFunc(void* arg) {
-  CHECK_NOTNULL(arg);
+  CHECK(arg != nullptr);
   // Retrieve arguments.
   auto* args = reinterpret_cast<ReaderArgs<LinkscanEvent>*>(arg);
   auto* manager = args->manager;
@@ -1322,41 +1663,82 @@ void BcmChassisManager::LinkscanEventHandler(int unit, int logical_port,
     return;
   }
 
+  // Update the state.
   const uint64* node_id = gtl::FindOrNull(unit_to_node_id_, unit);
-  const uint64* port_id =
-      gtl::FindOrNull(unit_logical_port_to_port_id_, {unit, logical_port});
-  if (port_id == nullptr || node_id == nullptr) {
-    VLOG(1) << "Ignored unknown port with (unit, logical_port) = (" << unit
-            << ", " << logical_port << "). Most probably this is a "
-            << "non-configured channel of a flex port.";
+  if (node_id == nullptr) {
+    LOG(ERROR) << "Inconsistent state. Unit " << unit << " is not known!";
     return;
   }
-  const std::tuple<int, int, int>* slot_port_channel_tuple =
-      gtl::FindOrNull(port_id_to_slot_port_channel_, *port_id);
-  if (slot_port_channel_tuple == nullptr) {
-    LOG(ERROR) << "Inconsistent state. No (slot, port, channel) for port_id "
-               << *port_id << "!";
+  const std::map<SdkPort, uint32>* sdk_port_to_port_id =
+      gtl::FindOrNull(node_id_to_sdk_port_to_port_id_, *node_id);
+  if (sdk_port_to_port_id == nullptr) {
+    LOG(ERROR) << "Inconsistent state. Node " << *node_id
+               << " is not found as key in node_id_to_sdk_port_to_port_id_!";
     return;
   }
-  slot_port_channel_to_port_state_[*slot_port_channel_tuple] = new_state;
-  const BcmPort* bcm_port = gtl::FindPtrOrNull(slot_port_channel_to_bcm_port_,
-                                               *slot_port_channel_tuple);
-  if (bcm_port == nullptr) {
-    LOG(ERROR) << "Inconsistent state. (slot, port, channel) = ("
-               << std::get<0>(*slot_port_channel_tuple) << ", "
-               << std::get<1>(*slot_port_channel_tuple) << ", "
-               << std::get<2>(*slot_port_channel_tuple)
-               << ") is not found as key in slot_port_channel_to_bcm_port_!";
+  SdkPort sdk_port(unit, logical_port);
+  const uint32* port_id = gtl::FindOrNull(*sdk_port_to_port_id, sdk_port);
+  if (port_id == nullptr) {
+    LOG(WARNING)
+        << "Ignored an unknown SdkPort " << sdk_port.ToString() << " on node "
+        << *node_id
+        << ". Most probably this is a non-configured channel of a flex port.";
     return;
+  }
+  node_id_to_port_id_to_port_state_[*node_id][*port_id] = new_state;
+
+  // Notify the managers about the change of port state.
+  BcmNode* bcm_node = gtl::FindPtrOrNull(unit_to_bcm_node_, unit);
+  if (!bcm_node) {
+    LOG(ERROR) << "Inconsistent state. BcmNode* for unit " << unit
+               << " does not exist!";
+    return;
+  }
+  auto status = bcm_node->UpdatePortState(*port_id);
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to update managers on node " << *node_id
+               << " on port " << *port_id << " state change to "
+               << PortState_Name(new_state) << " with error: " << status << ".";
   }
   // Notify gNMI about the change of logical port state.
   SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
-  LOG(INFO) << "State of SingletonPort " << PrintBcmPort(*port_id, *bcm_port)
+
+  // Log details about the port state change for debugging purposes.
+  // TODO(aghaffar): The extra map lookups here are only for debugging and
+  // pretty printing the ports. We may not need them. If not, simplify the
+  // state reporting.
+  const std::map<uint32, PortKey>* port_id_to_singleton_port_key =
+      gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, *node_id);
+  if (port_id_to_singleton_port_key == nullptr) {
+    LOG(ERROR)
+        << "Inconsistent state. Node " << *node_id
+        << " is not found as key in node_id_to_port_id_to_singleton_port_key_!";
+    return;
+  }
+  const PortKey* singleton_port_key =
+      gtl::FindOrNull(*port_id_to_singleton_port_key, *port_id);
+  if (singleton_port_key == nullptr) {
+    LOG(ERROR) << "Inconsistent state. No PortKey for port " << *port_id
+               << " on node " << *node_id << ".";
+    return;
+  }
+  const BcmPort* bcm_port =
+      gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, *singleton_port_key);
+  if (bcm_port == nullptr) {
+    LOG(ERROR) << "Inconsistent state. " << singleton_port_key->ToString()
+               << " is not found as key in singleton_port_key_to_bcm_port_!";
+    return;
+  }
+
+  LOG(INFO) << "State of SingletonPort "
+            << PrintPortProperties(*node_id, *port_id, bcm_port->slot(),
+                                   bcm_port->port(), bcm_port->channel(), unit,
+                                   logical_port, bcm_port->speed_bps())
             << ": " << PrintPortState(new_state);
 }
 
 void BcmChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
-                                                   uint64 port_id,
+                                                   uint32 port_id,
                                                    PortState new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
@@ -1373,7 +1755,7 @@ void BcmChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
 }
 
 void* BcmChassisManager::TransceiverEventHandlerThreadFunc(void* arg) {
-  CHECK_NOTNULL(arg);
+  CHECK(arg != nullptr);
   // Retrieve arguments.
   auto* args = reinterpret_cast<ReaderArgs<TransceiverEvent>*>(arg);
   auto* manager = args->manager;
@@ -1415,14 +1797,14 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     return;
   }
 
-  const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
+  PortKey xcvr_port_key(slot, port);
   // See if we know about this transceiver module. Find a mutable state pointer
   // so we can override it later.
   HwState* mutable_state =
-      gtl::FindOrNull(slot_port_to_transceiver_state_, slot_port_pair);
+      gtl::FindOrNull(xcvr_port_key_to_xcvr_state_, xcvr_port_key);
   if (mutable_state == nullptr) {
-    LOG(ERROR) << "Detected unknown (slot, port) in TransceiverEventHandler: ("
-               << slot << ", " << port << "). This should not happen!";
+    LOG(ERROR) << "Detected unknown " << xcvr_port_key.ToString()
+               << " in TransceiverEventHandler. This should not happen!";
     return;
   }
   HwState old_state = *mutable_state;
@@ -1430,8 +1812,8 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   // This handler is supposed to return present or non present for the state of
   // the transceiver modules. Other values do no make sense.
   if (new_state != HW_STATE_PRESENT && new_state != HW_STATE_NOT_PRESENT) {
-    LOG(ERROR) << "Invalid state for (slot, port) = (" << slot << ", " << port
-               << ") in TransceiverEventHandler: " << HwState_Name(new_state)
+    LOG(ERROR) << "Invalid state for transceiver " << xcvr_port_key.ToString()
+               << " in TransceiverEventHandler: " << HwState_Name(new_state)
                << ".";
     return;
   }
@@ -1439,18 +1821,18 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   // Discard some invalid situations and report the error. Then save the new
   // state
   if (old_state == HW_STATE_READY && new_state == HW_STATE_PRESENT) {
-    if (!IsInternalPort(slot_port_pair)) {
-      LOG(ERROR) << "Got present for a ready (slot, port) = (" << slot << ", "
-                 << port << ") in TransceiverEventHandler.";
+    if (!IsInternalPort(xcvr_port_key)) {
+      LOG(ERROR) << "Got present for a ready transceiver "
+                 << xcvr_port_key.ToString() << " in TransceiverEventHandler.";
     } else {
-      VLOG(1) << "Got present for a internal (e.g. BP) (slot, port) = (" << slot
-              << ", " << port << ") in TransceiverEventHandler.";
+      VLOG(1) << "Got present for a internal (e.g. BP) transceiver "
+              << xcvr_port_key.ToString() << " in TransceiverEventHandler.";
     }
     return;
   }
   if (old_state == HW_STATE_UNKNOWN && new_state == HW_STATE_NOT_PRESENT) {
-    LOG(ERROR) << "Got not-present for an unknown (slot, port) = (" << slot
-               << ", " << port << ") in TransceiverEventHandler.";
+    LOG(ERROR) << "Got not-present for an unknown transceiver "
+               << xcvr_port_key.ToString() << " in TransceiverEventHandler.";
     return;
   }
   *mutable_state = new_state;
@@ -1464,7 +1846,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // state too. Otherwise, we do not touch the blocked state.
     options.set_blocked(TRI_STATE_FALSE);
   }
-  ::util::Status status = SetPortOptionsForPortGroup(slot_port_pair, options);
+  ::util::Status status = SetPortOptionsForPortGroup(xcvr_port_key, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failure in TransceiverEventHandler: " << status;
     return;
@@ -1473,20 +1855,19 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   // Finally, before we exit we make sure if the port was HW_STATE_PRESENT,
   // it is set to HW_STATE_READY to show it has been configured and ready.
   if (*mutable_state == HW_STATE_PRESENT) {
-    LOG(INFO) << "Transceiver at (slot, port) = (" << slot << ", " << port
-              << ") is ready.";
+    LOG(INFO) << "Transceiver " << xcvr_port_key.ToString() << " is ready.";
     *mutable_state = HW_STATE_READY;
   }
 }
 
 ::util::StatusOr<bool> BcmChassisManager::SetSpeedForFlexPortGroup(
-    std::pair<int, int> slot_port_pair) const {
+    const PortKey& port_group_key) const {
   // First check to see if this is a flex port group.
   const std::vector<BcmPort*>* bcm_ports =
-      gtl::FindOrNull(slot_port_to_flex_bcm_ports_, slot_port_pair);
+      gtl::FindOrNull(port_group_key_to_flex_bcm_ports_, port_group_key);
   CHECK_RETURN_IF_FALSE(bcm_ports != nullptr)
-      << "Ports with (slot, port) = (" << slot_port_pair.first << ", "
-      << slot_port_pair.second << ") is not a flex port.";
+      << "Ports with (slot, port) = (" << port_group_key.slot << ", "
+      << port_group_key.port << ") is not a flex port.";
 
   // Find info on this flex port group.
   std::set<int> units_set;
@@ -1495,8 +1876,8 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   std::set<int> config_num_serdes_lanes_set;
   std::set<uint64> config_speed_bps_set;
   for (const auto& bcm_port : applied_bcm_chassis_map_->bcm_ports()) {
-    if (bcm_port.slot() == slot_port_pair.first &&
-        bcm_port.port() == slot_port_pair.second) {
+    if (bcm_port.slot() == port_group_key.slot &&
+        bcm_port.port() == port_group_key.port) {
       CHECK_RETURN_IF_FALSE(bcm_port.flex_port())
           << "Detected unexpected non-flex SingletonPort: "
           << PrintBcmPort(bcm_port);
@@ -1513,14 +1894,14 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
 
   // Check to see everythin makes sense.
   CHECK_RETURN_IF_FALSE(units_set.size() == 1U)
-      << "Found ports with (slot, port) = (" << slot_port_pair.first << ", "
-      << slot_port_pair.second << ") are on different chips.";
+      << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
+      << port_group_key.port << ") are on different chips.";
   CHECK_RETURN_IF_FALSE(config_num_serdes_lanes_set.size() == 1U)
-      << "Found ports with (slot, port) = (" << slot_port_pair.first << ", "
-      << slot_port_pair.second << ") have different num_serdes_lanes.";
+      << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
+      << port_group_key.port << ") have different num_serdes_lanes.";
   CHECK_RETURN_IF_FALSE(config_speed_bps_set.size() == 1U)
-      << "Found ports with (slot, port) = (" << slot_port_pair.first << ", "
-      << slot_port_pair.second << ") have different speed_bps.";
+      << "Found ports with (slot, port) = (" << port_group_key.slot << ", "
+      << port_group_key.port << ") have different speed_bps.";
   int unit = *units_set.begin();
   int control_logical_port = *min_speed_logical_ports_set.begin();
   int config_num_serdes_lanes = *config_num_serdes_lanes_set.begin();
@@ -1566,24 +1947,23 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
         bcm_sdk_interface_->SetPortOptions(unit, logical_port, options));
   }
 
-  LOG(INFO) << "Successfully set speed for flex port group (slot: "
-            << slot_port_pair.first << ", port: " << slot_port_pair.second
-            << ") to " << config_speed_bps / kBitsPerGigabit << "G.";
+  LOG(INFO) << "Successfully set speed for flex port group "
+            << port_group_key.ToString() << " to "
+            << config_speed_bps / kBitsPerGigabit << "G.";
 
   return true;
 }
 
 ::util::Status BcmChassisManager::SetPortOptionsForPortGroup(
-    std::pair<int, int> slot_port_pair, const BcmPortOptions& options) const {
+    const PortKey& port_group_key, const BcmPortOptions& options) const {
   std::vector<BcmPort*> bcm_ports = {};
-  if (slot_port_to_flex_bcm_ports_.count(slot_port_pair)) {
-    bcm_ports = slot_port_to_flex_bcm_ports_.at(slot_port_pair);
-  } else if (slot_port_to_non_flex_bcm_ports_.count(slot_port_pair)) {
-    bcm_ports = slot_port_to_non_flex_bcm_ports_.at(slot_port_pair);
+  if (port_group_key_to_flex_bcm_ports_.count(port_group_key)) {
+    bcm_ports = port_group_key_to_flex_bcm_ports_.at(port_group_key);
+  } else if (port_group_key_to_non_flex_bcm_ports_.count(port_group_key)) {
+    bcm_ports = port_group_key_to_non_flex_bcm_ports_.at(port_group_key);
   } else {
     return MAKE_ERROR(ERR_INTERNAL)
-           << "Unknown port group (slot: " << slot_port_pair.first
-           << ", port: " << slot_port_pair.second << ").";
+           << "Unknown port group " << port_group_key.ToString() << ".";
   }
 
   if (options.enabled() == TRI_STATE_TRUE &&
@@ -1601,7 +1981,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // for all BCM ports.
     FrontPanelPortInfo fp_port_info;
     RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(
-        slot_port_pair.first, slot_port_pair.second, &fp_port_info));
+        port_group_key.slot, port_group_key.port, &fp_port_info));
     for (const auto* bcm_port : bcm_ports) {
       // Get the serdes config from serdes db for the given BCM port.
       BcmSerdesLaneConfig bcm_serdes_lane_config;
@@ -1640,22 +2020,27 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   return ::util::OkStatus();
 }
 
-bool BcmChassisManager::IsInternalPort(
-    std::pair<int, int> slot_port_pair) const {
+bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
   // Note that we have alreay verified that all the port that are part of a
   // flex/non-flex port groups are all internal or non internal. So we need to
   // check one port only.
   const std::vector<BcmPort*>* non_flex_ports =
-      gtl::FindOrNull(slot_port_to_non_flex_bcm_ports_, slot_port_pair);
+      gtl::FindOrNull(port_group_key_to_non_flex_bcm_ports_, port_key);
   if (non_flex_ports != nullptr && !non_flex_ports->empty()) {
     return non_flex_ports->front()->internal();
   }
   const std::vector<BcmPort*>* flex_ports =
-      gtl::FindOrNull(slot_port_to_flex_bcm_ports_, slot_port_pair);
+      gtl::FindOrNull(port_group_key_to_flex_bcm_ports_, port_key);
   if (flex_ports != nullptr && !flex_ports->empty()) {
     return flex_ports->front()->internal();
   }
   return false;
+}
+
+::util::Status BcmChassisManager::EnablePort(const SdkPort& sdk_port,
+                                             bool enable) const {
+  // TODO(aghaffar): Implement this.
+  return ::util::OkStatus();
 }
 
 }  // namespace bcm

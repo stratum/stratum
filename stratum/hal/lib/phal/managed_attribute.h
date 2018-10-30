@@ -81,9 +81,9 @@ class TypedAttribute : public ManagedAttribute {
   bool CanSet() const override { return setter_ != nullptr; }
   ::util::Status Set(Attribute value) override {
     if (setter_ == nullptr)
-      RETURN_ERROR() << "Selected attribute cannot be set.";
+      return MAKE_ERROR() << "Selected attribute cannot be set.";
     if (!absl::holds_alternative<T>(value))
-      RETURN_ERROR() << "Called Set with incorrect attribute type.";
+      return MAKE_ERROR() << "Called Set with incorrect attribute type.";
     return setter_(absl::get<T>(value));
   }
   void AddSetter(std::function<::util::Status(T value)> setter) {
@@ -100,19 +100,20 @@ class TypedAttribute : public ManagedAttribute {
 // A single attribute of a specific protobuf enum type, to be held internally
 // by a data source.
 class EnumAttribute
-    : public TypedAttribute<const google::protobuf::EnumValueDescriptor*> {
+    : public TypedAttribute<const ::google::protobuf::EnumValueDescriptor*> {
  public:
   // Does not transfer ownership of datasource.
-  explicit EnumAttribute(const google::protobuf::EnumDescriptor* descriptor,
+  explicit EnumAttribute(const ::google::protobuf::EnumDescriptor* descriptor,
                          DataSource* datasource)
-      : TypedAttribute<const google::protobuf::EnumValueDescriptor*>(datasource) {
+      : TypedAttribute<const ::google::protobuf::EnumValueDescriptor*>(datasource) {
     value_ = descriptor->value(0);  // Default enum value.
   }
   ::util::Status AssignValue(const google::protobuf::EnumValueDescriptor* value) {
     if (value->type() != value_->type()) {
-      RETURN_ERROR() << "Attempted to assign incorrect enum type "
-                     << value->type()->name() << " to enum attribute of type "
-                     << value_->type()->name();
+      return MAKE_ERROR() << "Attempted to assign incorrect enum type "
+                          << value->type()->name()
+                          << " to enum attribute of type "
+                          << value_->type()->name();
     }
     value_ = value;
     return ::util::OkStatus();
@@ -120,6 +121,10 @@ class EnumAttribute
   EnumAttribute& operator=(int index) {
     value_ = value_->type()->value(index);
     return *this;
+  }
+  template <typename E>
+  E ReadEnumValue() {
+    return static_cast<E>(value_->index());
   }
 };
 

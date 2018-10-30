@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-// The P4WriteRequestDiffer class compares a pair of p4::v1::WriteRequest messages.
-// Its typical use case is to find any differences between p4::v1::WriteRequests
-// that represent static table entries from different versions of the
-// Hercules P4 program.
+// The P4WriteRequestDiffer class compares a pair of P4 WriteRequest
+// messages. Its typical use case is to find any differences between
+// P4 WriteRequests that represent static table entries from different
+// versions of the Hercules P4 program.
 
 #ifndef STRATUM_HAL_LIB_P4_P4_WRITE_REQUEST_DIFFER_H_
 #define STRATUM_HAL_LIB_P4_P4_WRITE_REQUEST_DIFFER_H_
@@ -33,7 +33,7 @@
 namespace stratum {
 namespace hal {
 
-// The P4WriteRequestDiffer constructor accepts two p4::v1::WriteRequest messages
+// The P4WriteRequestDiffer constructor accepts two P4 WriteRequest messages
 // for comparison.  In typical usage, the old_request contains the static
 // table entries from the P4PipelineConfig for the running version of the P4
 // program, and new_request contains potential new static entries from the
@@ -45,11 +45,11 @@ class P4WriteRequestDiffer {
   // The constructor takes the pair of P4 runtime WriteRequests to compare.
   // The caller needs to keep these requests in scope throughout the lifetime
   // of the P4WriteRequestDiffer instance.
-  P4WriteRequestDiffer(const p4::v1::WriteRequest& old_request,
-                       const p4::v1::WriteRequest& new_request);
+  P4WriteRequestDiffer(const ::p4::v1::WriteRequest& old_request,
+                       const ::p4::v1::WriteRequest& new_request);
   virtual ~P4WriteRequestDiffer() {}
 
-  // This method compares the p4::v1::WriteRequest pair, as injected to the
+  // This method compares the P4 WriteRequest pair, as injected to the
   // constructor, and generates output messages with the changes, if any.  It
   // returns an OK status after successfully comparing the two messages,
   // regardless of whether any differences occurred.  If the two injected
@@ -73,10 +73,10 @@ class P4WriteRequestDiffer {
   //      no other field changes.Updates in this output have the same type
   //      as the input request.
   // The caller can selectively choose to disable any output by passing nullptr.
-  ::util::Status Compare(p4::v1::WriteRequest* delete_request,
-                         p4::v1::WriteRequest* add_request,
-                         p4::v1::WriteRequest* modify_request,
-                         p4::v1::WriteRequest* unchanged_request);
+  ::util::Status Compare(::p4::v1::WriteRequest* delete_request,
+                         ::p4::v1::WriteRequest* add_request,
+                         ::p4::v1::WriteRequest* modify_request,
+                         ::p4::v1::WriteRequest* unchanged_request);
 
   // P4WriteRequestDiffer is neither copyable nor movable.
   P4WriteRequestDiffer(const P4WriteRequestDiffer&) = delete;
@@ -84,62 +84,62 @@ class P4WriteRequestDiffer {
 
  private:
   // DoCompare is a private helper function for Compare.
-  ::util::Status DoCompare(p4::v1::WriteRequest* delete_request,
-                           p4::v1::WriteRequest* add_request,
-                           p4::v1::WriteRequest* modify_request,
-                           p4::v1::WriteRequest* unchanged_request);
+  ::util::Status DoCompare(::p4::v1::WriteRequest* delete_request,
+                           ::p4::v1::WriteRequest* add_request,
+                           ::p4::v1::WriteRequest* modify_request,
+                           ::p4::v1::WriteRequest* unchanged_request);
 
   // Populates output_request with data accumulated by a P4WriteRequestReporter
   // during comparison of the old_request_/new_request_ pair.
-  void FillOutputFromReporterIndexes(const p4::v1::WriteRequest& source_request,
-                                     const std::vector<int>& reporter_indexes,
-                                     p4::v1::Update::Type type,
-                                     p4::v1::WriteRequest* output_request);
+  void FillOutputFromReporterIndexes(
+      const ::p4::v1::WriteRequest& source_request,
+      const std::vector<int>& reporter_indexes, ::p4::v1::Update::Type type,
+      ::p4::v1::WriteRequest* output_request);
 
   // These members refer to the two WriteRequests for comparison.
-  const p4::v1::WriteRequest& old_request_;
-  const p4::v1::WriteRequest& new_request_;
+  const ::p4::v1::WriteRequest& old_request_;
+  const ::p4::v1::WriteRequest& new_request_;
 };
 
 // P4WriteRequestDiffer attaches this Reporter subclass to a MessageDifferencer
-// in order to identify p4::v1::WriteRequest entries that have changed.  The
+// in order to identify P4 WriteRequest entries that have changed.  The
 // P4WriteRequestReporter expects its enclosing MessageDifferencer to be
 // using the "AS_SET" mode of repeated field comparison.
 class P4WriteRequestReporter
-    : public google::protobuf::util::MessageDifferencer::Reporter {
+    : public ::google::protobuf::util::MessageDifferencer::Reporter {
  public:
   // This type simplifies the declaration of the member overrides below.
   typedef std::vector<
-      google::protobuf::util::MessageDifferencer::SpecificField>
+      ::google::protobuf::util::MessageDifferencer::SpecificField>
       FieldVector;
 
   P4WriteRequestReporter();
   ~P4WriteRequestReporter() override {}
 
   // Reports that a field has been added into message2.
-  void ReportAdded(const google::protobuf::Message& message1,
-                   const google::protobuf::Message& message2,
+  void ReportAdded(const ::google::protobuf::Message& message1,
+                   const ::google::protobuf::Message& message2,
                    const FieldVector& field_path) override;
 
   // Reports that a field has been deleted from message1.
-  void ReportDeleted(const google::protobuf::Message& message1,
-                     const google::protobuf::Message& message2,
+  void ReportDeleted(const ::google::protobuf::Message& message1,
+                     const ::google::protobuf::Message& message2,
                      const FieldVector& field_path) override;
 
   // Reports that a field in message1 has been modified by message2.
-  void ReportModified(const google::protobuf::Message& message1,
-                      const google::protobuf::Message& message2,
+  void ReportModified(const ::google::protobuf::Message& message1,
+                      const ::google::protobuf::Message& message2,
                       const FieldVector& field_path) override;
 
   // Reports that a field in message1 has been moved in message2, but no
   // other changes exist.
-  void ReportMoved(const google::protobuf::Message& message1,
-                   const google::protobuf::Message& message2,
+  void ReportMoved(const ::google::protobuf::Message& message1,
+                   const ::google::protobuf::Message& message2,
                    const FieldVector& field_path) override;
 
   // Reports that message1 and message2 match.
-  void ReportMatched(const google::protobuf::Message& message1,
-                     const google::protobuf::Message& message2,
+  void ReportMatched(const ::google::protobuf::Message& message1,
+                     const ::google::protobuf::Message& message2,
                      const FieldVector& field_path) override;
 
   // Accessors to containers with indices of added/deleted/modified/unchanged
@@ -174,23 +174,23 @@ class P4WriteRequestReporter
 };
 
 // P4WriteRequestDiffer attaches this MapKeyComparator subclass to a
-// MessageDifferencer to compare two updates within a P4::WriteRequest.  The
+// MessageDifferencer to compare two updates within a P4 WriteRequest.  The
 // IsMatch override treats the update table_id and match fields as the
-// comparison key, i.e. a P4::Update message pair with the same table_id and
-// match field set is considered to be a match.  If a P4::Update message pair
+// comparison key, i.e. a P4 Update message pair with the same table_id and
+// match field set is considered to be a match.  If a P4 Update message pair
 // has the same key value according to IsMatch, but the message pair differs
 // in other fields, then P4WriteRequestDiffer considers the change to be a
 // modification of the same update.
 class P4WriteRequestComparator
-    : public google::protobuf::util::MessageDifferencer::MapKeyComparator {
+    : public ::google::protobuf::util::MessageDifferencer::MapKeyComparator {
  public:
   P4WriteRequestComparator() {}
   ~P4WriteRequestComparator() override{};
 
-  bool IsMatch(const google::protobuf::Message& message1,
-               const google::protobuf::Message& message2,
+  bool IsMatch(const ::google::protobuf::Message& message1,
+               const ::google::protobuf::Message& message2,
                const std::vector<
-                   google::protobuf::util::MessageDifferencer::SpecificField>&
+                   ::google::protobuf::util::MessageDifferencer::SpecificField>&
                    parent_fields) const override;
 
   // P4WriteRequestComparator is neither copyable nor movable.

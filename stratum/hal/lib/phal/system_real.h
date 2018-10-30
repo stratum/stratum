@@ -23,8 +23,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <libudev.h>
 
+#include <libudev.h>
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/system_interface.h"

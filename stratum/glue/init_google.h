@@ -18,7 +18,7 @@
 #ifndef STRATUM_GLUE_INIT_GOOGLE_H_
 #define STRATUM_GLUE_INIT_GOOGLE_H_
 
-//TODO this is not required for open source
+//TODO(boc) google only: this is not required for open source
 //#include "base/init_google.h"  // IWYU pragma: export
 
 // InitGoogle is not defined in portable base, so we instead emulate its

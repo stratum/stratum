@@ -18,17 +18,18 @@
 #include <list>
 #include <string>
 
+#include "stratum/glue/gnmi/gnmi.pb.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
+#include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 #include "absl/synchronization/mutex.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
 
 GnmiPublisher::GnmiPublisher(SwitchInterface* switch_interface)
-    : switch_interface_(CHECK_NOTNULL(switch_interface)),
-      parse_tree_(CHECK_NOTNULL(switch_interface)),
+    : switch_interface_(ABSL_DIE_IF_NULL(switch_interface)),
+      parse_tree_(ABSL_DIE_IF_NULL(switch_interface)),
       event_channel_(nullptr),
       on_config_pushed_(
           new EventHandlerRecord(on_config_pushed_func_, nullptr)) {
@@ -37,6 +38,62 @@ GnmiPublisher::GnmiPublisher(SwitchInterface* switch_interface)
 }
 
 GnmiPublisher::~GnmiPublisher() {}
+
+::util::Status GnmiPublisher::HandleUpdate(
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+    CopyOnWriteChassisConfig* config) {
+  absl::WriterMutexLock l(&access_lock_);
+
+  // Map the input path to the supported one - walk the tree of known elements
+  // element by element starting from the root and if the element is found the
+  // move to the next one. If not found, return an error.
+  const TreeNode* node = parse_tree_.FindNodeOrNull(path);
+  if (node == nullptr) {
+    // Ooops... This path is not supported.
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "The path (" << path.ShortDebugString() << ") is unsupported!";
+  }
+
+  // Call the handler and return the status of this call.
+  return node->GetOnUpdateHandler()(path, val, config);
+}
+
+::util::Status GnmiPublisher::HandleReplace(
+    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+    CopyOnWriteChassisConfig* config) {
+  absl::WriterMutexLock l(&access_lock_);
+
+  // Map the input path to the supported one - walk the tree of known elements
+  // element by element starting from the root and if the element is found the
+  // move to the next one. If not found, return an error.
+  const TreeNode* node = parse_tree_.FindNodeOrNull(path);
+  if (node == nullptr) {
+    // Ooops... This path is not supported.
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "The path (" << path.ShortDebugString() << ") is unsupported!";
+  }
+
+  // Call the handler and return the status of this call.
+  return node->GetOnReplaceHandler()(path, val, config);
+}
+
+::util::Status GnmiPublisher::HandleDelete(const ::gnmi::Path& path,
+                                           CopyOnWriteChassisConfig* config) {
+  absl::WriterMutexLock l(&access_lock_);
+
+  // Map the input path to the supported one - walk the tree of known elements
+  // element by element starting from the root and if the element is found the
+  // move to the next one. If not found, return an error.
+  const TreeNode* node = parse_tree_.FindNodeOrNull(path);
+  if (node == nullptr) {
+    // Ooops... This path is not supported.
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "The path (" << path.ShortDebugString() << ") is unsupported!";
+  }
+
+  // Call the handler and return the status of this call.
+  return node->GetOnDeleteHandler()(path, config);
+}
 
 ::util::Status GnmiPublisher::HandleChange(const GnmiEvent& event) {
   absl::WriterMutexLock l(&access_lock_);
@@ -49,6 +106,8 @@ GnmiPublisher::~GnmiPublisher() {}
 
 ::util::Status GnmiPublisher::HandleEvent(
     const GnmiEvent& event, const std::weak_ptr<EventHandlerRecord>& h) {
+  absl::WriterMutexLock l(&access_lock_);
+
   // In order to reference a weak pointer, first it has to be used to create a
   // shared pointer.
   if (std::shared_ptr<EventHandlerRecord> handler = h.lock()) {
@@ -58,6 +117,8 @@ GnmiPublisher::~GnmiPublisher() {}
 }
 
 ::util::Status GnmiPublisher::HandlePoll(const SubscriptionHandle& handle) {
+  absl::WriterMutexLock l(&access_lock_);
+
   ::util::Status status;
   if ((status = (*handle)(PollEvent())) != ::util::OkStatus()) {
     // Something went wrong.
@@ -105,6 +166,7 @@ GnmiPublisher::~GnmiPublisher() {}
   // A handler has been successfully found and now it has to be registered in
   // all event handler lists that handle events of the type this handler is
   // prepared to handle.
+  absl::WriterMutexLock l(&access_lock_);
   return parse_tree_.FindNodeOrNull(path)->DoOnChangeRegistration(
       EventHandlerRecordPtr(*h));
 }
@@ -147,7 +209,7 @@ GnmiPublisher::~GnmiPublisher() {}
 
 ::util::Status GnmiPublisher::UnSubscribe(EventHandlerRecord* h) {
   absl::WriterMutexLock l(&access_lock_);
-  // TODO Add implementation.
+  // TODO: Add implementation.
   return ::util::OkStatus();
 }
 
@@ -180,15 +242,7 @@ GnmiPublisher::UpdateSubscriptionWithTargetSpecificModeSpecification(
     LOG(ERROR) << "Message cannot be sent as the stream pointer is null!";
     return MAKE_ERROR(ERR_INTERNAL) << "stream pointer is null!";
   }
-  ::gnmi::SubscribeResponse resp;
-  resp.set_sync_response(true);
-  if (stream->Write(resp, ::grpc::WriteOptions()) == false) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Writing sync-response message to stream failed!";
-  } else {
-    VLOG(1) << "Sync-response message has been sent.";
-  }
-  return ::util::OkStatus();
+  return YangParseTreePaths::SendEndOfSeriesMessage(stream);
 }
 
 void GnmiPublisher::ReadGnmiEvents(
@@ -211,7 +265,7 @@ void GnmiPublisher::ReadGnmiEvents(
 }
 
 void* GnmiPublisher::ThreadReadGnmiEvents(void* arg) {
-  CHECK_NOTNULL(arg);
+  CHECK(arg != nullptr);
   // Retrieve arguments.
   auto* args = reinterpret_cast<ReaderArgs<GnmiEventPtr>*>(arg);
   GnmiPublisher* manager = args->manager;
@@ -231,6 +285,7 @@ void* GnmiPublisher::ThreadReadGnmiEvents(void* arg) {
     auto writer = std::make_shared<ChannelWriterWrapper<GnmiEventPtr>>(
         ChannelWriter<GnmiEventPtr>::Create(event_channel_));
     RETURN_IF_ERROR(switch_interface_->RegisterEventNotifyWriter(writer));
+    RETURN_IF_ERROR(parse_tree_.RegisterEventNotifyWriter(writer));
     // Create and hand-off Reader to new reader thread.
     pthread_t event_reader_tid;
     auto reader = ChannelReader<GnmiEventPtr>::Create(event_channel_);
@@ -260,6 +315,7 @@ void* GnmiPublisher::ThreadReadGnmiEvents(void* arg) {
   if (event_channel_ != nullptr && switch_interface_ != nullptr) {
     APPEND_STATUS_IF_ERROR(status,
                            switch_interface_->UnregisterEventNotifyWriter());
+    APPEND_STATUS_IF_ERROR(status, parse_tree_.UnregisterEventNotifyWriter());
     // Close Channel.
     if (!event_channel_ || !event_channel_->Close()) {
       APPEND_ERROR(status) << " Event Notify Channel is already closed.";

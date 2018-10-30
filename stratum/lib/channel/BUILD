@@ -34,11 +34,16 @@ package(
 
 stratum_cc_library(
     name = "channel",
+    srcs = [
+        "channel.cc",
+    ],
     hdrs = [
         "channel.h",
+        "channel_internal.h",
     ],
     deps = [
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "//stratum/glue:logging",

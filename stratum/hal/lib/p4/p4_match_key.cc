@@ -19,40 +19,55 @@
 
 #include <string>
 
+#include "gflags/gflags.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"
+
+// This flag determines whether P4MatchKey will enforce bytestring lengths
+// according to P4Runtime spec section 8.3.  When the flag is disabled,
+// P4MatchKey ignores bytestring lengths and simply requires that the integer
+// value of the bytestring fit within the bitwidth specified by the P4Info.
+// TODO: This flag anticipates getting the P4 API WG to relax the
+// P4Runtime requirement in favor of better upward compatibility.  Once the
+// decision is made, remove this flag and enforce the final requirement.
+DEFINE_bool(enforce_bytestring_length, false,
+            "Enforce P4Runtime bytestring lengths according to P4Runtime "
+            "Spec section 8.3");
 
 namespace stratum {
 namespace hal {
 
 // Creates a sub-class instance according to p4_field_match's type.
 std::unique_ptr<P4MatchKey> P4MatchKey::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
+    const ::p4::v1::FieldMatch& p4_field_match) {
   switch (p4_field_match.field_match_type_case()) {
-    case p4::v1::FieldMatch::kExact:
+    case ::p4::v1::FieldMatch::kExact:
       return P4MatchKeyExact::CreateInstance(p4_field_match);
-    case p4::v1::FieldMatch::kTernary:
+    case ::p4::v1::FieldMatch::kTernary:
       return P4MatchKeyTernary::CreateInstance(p4_field_match);
-    case p4::v1::FieldMatch::kLpm:
+    case ::p4::v1::FieldMatch::kLpm:
       return P4MatchKeyLPM::CreateInstance(p4_field_match);
-    case p4::v1::FieldMatch::kRange:
+    case ::p4::v1::FieldMatch::kRange:
       return P4MatchKeyRange::CreateInstance(p4_field_match);
-    //FIXME match VALID not present in p4info
-//    case p4::v1::FieldMatch::kValid:
-//      return P4MatchKeyValid::CreateInstance(p4_field_match);
-    case p4::v1::FieldMatch::FIELD_MATCH_TYPE_NOT_SET:
+    case ::p4::v1::FieldMatch::FIELD_MATCH_TYPE_NOT_SET:
       // A FieldMatch that does not set a match value of any type is
       // a valid default setting for some fields and invalid for other fields.
       // The P4MatchKeyUnspecified::Convert method figures this out when it
       // runs.
       return P4MatchKeyUnspecified::CreateInstance(p4_field_match);
+    default:
+      // TODO: Delete when P4Runtime removal of valid match support
+      // is integrated from github.  This is only here to avoid compiler
+      // complaints about "'kValid' not handled in switch".
+      break;
   }
   return nullptr;
 }
 
-P4MatchKey::P4MatchKey(const p4::v1::FieldMatch& p4_field_match,
-                       p4::config::v1::MatchField::MatchType allowed_match_type)
+P4MatchKey::P4MatchKey(
+    const ::p4::v1::FieldMatch& p4_field_match,
+    ::p4::config::v1::MatchField::MatchType allowed_match_type)
     : p4_field_match_(p4_field_match),
       allowed_match_type_(allowed_match_type) {}
 
@@ -64,7 +79,7 @@ P4MatchKey::P4MatchKey(const p4::v1::FieldMatch& p4_field_match,
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "P4 TableEntry match field " << p4_field_match_.ShortDebugString()
            << " cannot convert to "
-           << p4::config::v1::MatchField_MatchType_Name(
+           << ::p4::config::v1::MatchField_MatchType_Name(
                   conversion_entry.match_type());
   }
 
@@ -80,6 +95,17 @@ P4MatchKey::P4MatchKey(const p4::v1::FieldMatch& p4_field_match,
   }
 
   return ::util::OkStatus();
+}
+
+::util::StatusOr<uint64> P4MatchKey::ConvertExactToUint64() {
+  P4FieldDescriptor::P4FieldConversionEntry conversion_entry;
+  conversion_entry.set_match_type(::p4::config::v1::MatchField::EXACT);
+  conversion_entry.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U64);
+  MappedField mapped_u64;
+  ::util::Status status = Convert(conversion_entry, 64, &mapped_u64);
+  if (!status.ok())
+    return status;
+  return mapped_u64.value().u64();
 }
 
 ::util::Status P4MatchKey::ConvertValue(
@@ -233,35 +259,60 @@ std::string P4MatchKey::CreateStringMask(int field_width, int mask_length) {
 // this can't be done universally since some conversions never produce an
 // integer output, so for simplicity all width checks are done the same way.
 ::util::Status P4MatchKey::CheckBitWidth(const std::string& bytes_value,
-                                         int max_width) {
-  int actual_width = 0;
+                                         int bit_width) {
+  const int kBitsPerByte = 8;
+  const size_t spec_bytes = (bit_width + (kBitsPerByte - 1)) / kBitsPerByte;
 
-  // Bytes with leading zeroes don't count against the width, nor do the
-  // leading zeroes in the first non-zero byte.
-  for (size_t i = 0; i < bytes_value.size(); ++i) {
-    if (actual_width == 0) {
-      if (bytes_value[i] != 0) {
-        // __builtin_clz returns leading zeroes in a uint32.
-        actual_width = 32 - __builtin_clz(bytes_value[i]);
-      } else {
-        continue;
-      }
-    } else {
-      actual_width += 8;
+  // According to P4Runtime spec section 8.3, the string length must be the
+  // number of bytes required to encode the match key's bit width in all cases,
+  // even when leading zeroes are present.
+  // TODO(teverman): Separate rules apply for fields of P4 type varbit.  These
+  // fields will need additional support if Hercules P4 programs start using
+  // varbit types.
+  if (FLAGS_enforce_bytestring_length && spec_bytes != bytes_value.size()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Match key with " << bytes_value.size()
+           << " bytes does not conform to P4Runtime-defined width of "
+           << bit_width << " bits, which requires a match key field of "
+           << spec_bytes << " bytes: "
+           << p4_field_match_.ShortDebugString();
+  }
+
+  // If the P4Runtime client adds leading padding bytes beyond the P4-specified
+  // width, they must be zeroes.
+  int first_value_byte = 0;
+  bool value_exceeds_bitwidth = false;
+  if (bytes_value.size() > spec_bytes) {
+    first_value_byte = bytes_value.size() - spec_bytes;
+    const std::string zero_value(first_value_byte, 0);
+    if (memcmp(zero_value.data(), bytes_value.data(), first_value_byte) != 0) {
+      value_exceeds_bitwidth = true;
     }
   }
 
-  if (actual_width > max_width) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "Match key value with width " << actual_width
-           << " exceeds allowed bit width " << max_width;
+  // If the match key length is not an even byte multiple, the unused high-order
+  // bits must be zeroes.
+  const int first_byte_bits = bit_width % kBitsPerByte;
+  if (first_byte_bits != 0 && bytes_value.size() >= spec_bytes) {
+    if ((bytes_value[first_value_byte] & ((1 << first_byte_bits) - 1)) !=
+        bytes_value[first_value_byte]) {
+      value_exceeds_bitwidth = true;
+    }
   }
+
+  if (value_exceeds_bitwidth) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Match key value exceeds the P4Runtime-defined width of "
+           << bit_width << " bits: "
+           << p4_field_match_.ShortDebugString();
+  }
+
   return ::util::OkStatus();
 }
 
 // P4MatchKey subclass implementations start here.
 std::unique_ptr<P4MatchKeyExact> P4MatchKeyExact::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
+    const ::p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyExact(p4_field_match));
 }
 
@@ -277,7 +328,7 @@ std::unique_ptr<P4MatchKeyExact> P4MatchKeyExact::CreateInstance(
 }
 
 std::unique_ptr<P4MatchKeyTernary> P4MatchKeyTernary::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
+    const ::p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyTernary(p4_field_match));
 }
 
@@ -315,7 +366,7 @@ std::unique_ptr<P4MatchKeyTernary> P4MatchKeyTernary::CreateInstance(
 }
 
 std::unique_ptr<P4MatchKeyLPM> P4MatchKeyLPM::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
+    const ::p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyLPM(p4_field_match));
 }
 
@@ -337,19 +388,13 @@ std::unique_ptr<P4MatchKeyLPM> P4MatchKeyLPM::CreateInstance(
   return status;
 }
 
-//FIXME match VALID not present in p4info
-//std::unique_ptr<P4MatchKeyValid> P4MatchKeyValid::CreateInstance(
-//    const p4::v1::FieldMatch& p4_field_match) {
-//  return absl::WrapUnique(new P4MatchKeyValid(p4_field_match));
-//}
-
 std::unique_ptr<P4MatchKeyRange> P4MatchKeyRange::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
+    const ::p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyRange(p4_field_match));
 }
 
 std::unique_ptr<P4MatchKeyUnspecified> P4MatchKeyUnspecified::CreateInstance(
-    const p4::v1::FieldMatch& p4_field_match) {
+    const ::p4::v1::FieldMatch& p4_field_match) {
   return absl::WrapUnique(new P4MatchKeyUnspecified(p4_field_match));
 }
 
@@ -357,9 +402,9 @@ std::unique_ptr<P4MatchKeyUnspecified> P4MatchKeyUnspecified::CreateInstance(
     const P4FieldDescriptor::P4FieldConversionEntry& conversion_entry,
     int /*bit_width*/, MappedField* mapped_field) {
   switch (conversion_entry.match_type()) {
-    case p4::config::v1::MatchField::LPM:
-    case p4::config::v1::MatchField::TERNARY:
-    case p4::config::v1::MatchField::RANGE:
+    case ::p4::config::v1::MatchField::LPM:
+    case ::p4::config::v1::MatchField::TERNARY:
+    case ::p4::config::v1::MatchField::RANGE:
       // These types allow the default match to be defined by an empty value.
       // The default is communicated by not setting any value in mapped_field.
       break;
@@ -368,7 +413,7 @@ std::unique_ptr<P4MatchKeyUnspecified> P4MatchKeyUnspecified::CreateInstance(
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "P4 TableEntry match field "
              << p4_field_match().ShortDebugString() << " with P4 MatchType "
-             << p4::config::v1::MatchField_MatchType_Name(
+             << ::p4::config::v1::MatchField_MatchType_Name(
                     conversion_entry.match_type())
              << " has no default value";
   }

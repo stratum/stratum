@@ -1,0 +1,112 @@
+chip_specs {
+  chip_type: TOMAHAWK
+  acl {
+    field_processors {
+      stage: VLAN
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+    field_processors {
+      stage: INGRESS
+      slices {
+        count: 12
+        width: 160
+        size: 256
+      }
+    }
+    field_processors {
+      stage: EGRESS
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+  }
+  udf {
+    chunk_bits: 16
+    chunks_per_set: 8
+    set_count: 2
+  }
+}
+chip_specs {
+  chip_type: TRIDENT2
+  acl {
+    field_processors {
+      stage: VLAN
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+    field_processors {
+      stage: INGRESS
+      slices {
+        count: 8
+        width: 381
+        size: 256
+      }
+      slices {
+        count: 4
+        width: 381
+        size: 512
+      }
+    }
+    field_processors {
+      stage: EGRESS
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+  }
+  udf {
+    chunk_bits: 16
+    chunks_per_set: 8
+    set_count: 2
+  }
+}
+chip_specs {
+  chip_type: TRIDENT_PLUS
+  acl {
+    field_processors {
+      stage: VLAN
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+    field_processors {
+      stage: INGRESS
+      slices {
+        count: 4
+        width: 381
+        size: 128
+      }
+      slices {
+        count: 6
+        width: 381
+        size: 256
+      }
+    }
+    field_processors {
+      stage: EGRESS
+      slices {
+        count: 4
+        width: 214
+        size: 256
+      }
+    }
+  }
+  udf {
+    chunk_bits: 32
+    chunks_per_set: 4
+    set_count: 2
+  }
+}

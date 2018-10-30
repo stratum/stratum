@@ -21,6 +21,7 @@
 #include "stratum/hal/lib/phal/filepath_stringsource.h"
 #include "stratum/hal/lib/phal/system_fake.h"
 #include "stratum/hal/lib/phal/test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
@@ -167,10 +168,10 @@ TEST(ReaderWriterDataSourceTest, CanUseModifierFunctionsForValidation) {
       new NoCache());
   datasource->AddModifierFunctions(
       [](int32 in) -> ::util::StatusOr<int32> {
-        RETURN_ERROR() << "Input failed validation.";
+        return MAKE_ERROR() << "Input failed validation.";
       },
       [](int32 out) -> ::util::StatusOr<int32> {
-        RETURN_ERROR() << "Output failed validation.";
+        return MAKE_ERROR() << "Output failed validation.";
       });
   EXPECT_THAT(datasource->UpdateValues(),
               StatusIs(_, _, HasSubstr("Input failed validation.")));

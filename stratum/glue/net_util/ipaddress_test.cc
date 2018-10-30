@@ -31,13 +31,13 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-//#include "absl/container/node_hash_set.h"
+#include "stratum/glue/integral_types.h"
+#include "absl/container/node_hash_set.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"
-#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 
-//TODO not required for Google
+//FIXME(boc) not required for Google
 using absl::kuint128max;
 
 namespace stratum {
@@ -54,9 +54,7 @@ namespace stratum {
 using testing::ScopedMockLog;
 #endif
 
-using __gnu_cxx::hash_set;
-//FIXME
-//using absl::node_hash_set;
+using absl::node_hash_set;
 
 // Tests for IPAddress.
 TEST(IPAddressTest, BasicTests) {

@@ -31,10 +31,12 @@ class BcmAclManagerMock : public BcmAclManager {
                ::util::Status(const ChassisConfig& config, uint64 node_id));
   MOCK_METHOD2(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config, uint64 node_id));
-  MOCK_METHOD1(PushForwardingPipelineConfig,
-               ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(VerifyForwardingPipelineConfig,
-               ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      PushForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
+  MOCK_METHOD1(
+      VerifyForwardingPipelineConfig,
+      ::util::Status(const ::p4::v1::ForwardingPipelineConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
   MOCK_CONST_METHOD1(InsertTableEntry,
                      ::util::Status(const ::p4::v1::TableEntry& entry));

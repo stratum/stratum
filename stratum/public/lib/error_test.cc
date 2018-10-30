@@ -19,8 +19,12 @@
 
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "google/rpc/code.pb.h"
-#include "google/rpc/status.pb.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/google/rpc/code.pb.h"
+#include "stratum/google/rpc/status.pb.h"
 
 namespace stratum {
 

@@ -39,6 +39,11 @@ DataSource::DataSource(CachePolicy* cache_type)
 
 void DataSource::Unlock() { data_lock_.Unlock(); }
 
+::util::Status DataSource::LockAndFlushWrites() {
+  absl::MutexLock lock(&data_lock_);
+  return FlushWrites();
+}
+
 TimedCache::TimedCache(absl::Duration cache_duration)
     : cache_duration_(cache_duration) {}
 

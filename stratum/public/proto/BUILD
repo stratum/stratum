@@ -37,35 +37,6 @@ stratum_cc_proto_library(
 )
 
 stratum_cc_proto_library(
-    name = "hal_proto",
-    hdrs = [
-        "hal.proto",
-    ],
-    #python_support = True,
-    with_grpc = True,
-)
-
-stratum_cc_proto_library(
-    name = "openconfig_proto",
-    hdrs = [
-        "openconfig.proto",
-        "openconfig-goog-bcm.proto",
-        "yang_wrappers.proto",
-    ],
-    deps = [
-        "//stratum/public/proto/openconfig:openconfig_proto",
-    ],
-)
-
-stratum_cc_proto_library(
-    name = "sc_yang_proto",
-    hdrs = [
-        "yext.proto",
-        "ywrapper.proto",
-    ],
-)
-
-stratum_cc_proto_library(
     name = "p4_annotation_proto",
     hdrs = [
         "p4_annotation.proto",
@@ -80,4 +51,19 @@ stratum_cc_proto_library(
     hdrs = [
         "p4_table_defs.proto",
     ],
+)
+
+proto_library(
+    name = "tv_proto",
+    srcs = ["tv.proto"],
+    cc_api_version = 2,
+    deps = [
+        "//openconfig/gnmi/proto/gnmi:gnmi_proto",
+        "//p4lang_PI/proto/p4/v1:p4runtime_proto",
+    ],
+)
+
+filegroup(
+    name = "proto_srcs",
+    srcs = glob(["*.proto"]),
 )

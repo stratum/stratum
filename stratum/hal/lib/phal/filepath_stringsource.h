@@ -20,11 +20,12 @@
 
 #include <string>
 
+#include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/stringsource_interface.h"
 #include "stratum/hal/lib/phal/system_interface.h"
+#include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
 namespace stratum {
@@ -57,7 +58,8 @@ class FilepathStringSource : public StringSourceInterface {
     if (can_set_) {
       return system_interface_->WriteStringToFile(buffer, filepath_);
     } else {
-      RETURN_ERROR() << "Attempted to set an unsettable FilepathStringSource.";
+      return MAKE_ERROR()
+             << "Attempted to set an unsettable FilepathStringSource.";
     }
   }
   bool CanSet() override {

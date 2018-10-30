@@ -33,7 +33,7 @@
 // This is the bit width of an assigned constant for any case where the
 // compiler does not report a bit width in the action descriptor.
 DEFINE_int32(p4c_constant_bitwidth, 64,
-             "Bitwidth assigned to p4c constant expresssion output");
+             "Bitwidth assigned to p4c constant expression output");
 
 namespace stratum {
 namespace hal {
@@ -75,21 +75,33 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   CHECK_RETURN_IF_FALSE(p4_pipeline_config.ParseFromString(p4_device_config))
       << "Failed to parse p4_device_config byte stream to P4PipelineConfig.";
 
-  // If there is no change in config pushed to the switch, dont do anything.
+  // If there is no change in the forwarding pipeline config pushed to the node,
+  // dont do anything.
   if (p4_info_manager_ != nullptr &&
       ProtoEqual(p4_info_manager->p4_info(), p4_info_manager_->p4_info()) &&
       ProtoEqual(p4_pipeline_config, p4_pipeline_config_)) {
     LOG(INFO) << "Forwarding pipeline config is unchanged. Skipped!";
     return ::util::OkStatus();
   }
+
+  // TODO(aghaffar): If the old pushed forwarding pipeline config needs to be
+  // examined to handle the diff, do this here. At the moment, there is no
+  // need to do this though. We recreate the state from scratch as part of any
+  // new config push.
+
+  // Cleanup the internal maps.
+  ClearMaps();
+
+  // Update p4_pipeline_config_ & p4_info_manager_ based on the newly pushed
+  // forwarding pipeline config.
   p4_pipeline_config_ = p4_pipeline_config;
+  p4_info_manager_ = std::move(p4_info_manager);
 
   // Each P4 object in the P4Info should have mapping data. A link between
   // the mapping data and the P4 object ID gets created here. This function
   // assumes that P4InfoManager has already verified the validity of name and
   // ID fields in each object's preamble.
   // TODO: Only match fields and actions are mapped now; add others.
-  ClearMaps();
   for (const auto& action : p4_info.actions()) {
     ::util::Status status = AddMapEntryFromPreamble(action.preamble());
     if (!status.ok()) {
@@ -104,10 +116,10 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   //     to each match field.
   //  3) Establish a correspondence between the table and its valid actions.
   param_mapper_ = absl::make_unique<P4ActionParamMapper>(
-      *p4_info_manager, global_id_table_map_, p4_pipeline_config_);
+      *p4_info_manager_, global_id_table_map_, p4_pipeline_config_);
 
   for (const auto& table : p4_info.tables()) {
-    util::Status table_status = AddMapEntryFromPreamble(table.preamble());
+    ::util::Status table_status = AddMapEntryFromPreamble(table.preamble());
     if (!table_status.ok()) {
       // Since there are discrepancies caused by hidden p4c internal objects
       // that sometimes appear in the output, this error just causes a warning.
@@ -241,8 +253,6 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
     }
   }
 
-  p4_info_manager_ = std::move(p4_info_manager);
-
   return ::util::OkStatus();
 }
 
@@ -286,7 +296,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
     verify_status = p4_config_verifier->VerifyAndCompare(
         p4_info_manager_->p4_info(), p4_pipeline_config_);
   } else {
-    p4::config::v1::P4Info empty_p4_info;
+    ::p4::config::v1::P4Info empty_p4_info;
     verify_status = p4_config_verifier->VerifyAndCompare(empty_p4_info,
                                                          p4_pipeline_config_);
   }
@@ -300,14 +310,14 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   return ::util::OkStatus();
 }
 
-::util::Status P4TableMapper::MapFlowEntry(const ::p4::v1::TableEntry& table_entry,
-                                           ::p4::v1::Update::Type update_type,
-                                           CommonFlowEntry* flow_entry) const {
+::util::Status P4TableMapper::MapFlowEntry(
+    const ::p4::v1::TableEntry& table_entry, ::p4::v1::Update::Type update_type,
+    CommonFlowEntry* flow_entry) const {
   if (flow_entry == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null flow_entry!";
   }
 
-  if (!p4_info_manager_.get()) {
+  if (p4_info_manager_ == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "Unable to map TableEntry without valid P4 configuration";
   }
@@ -318,12 +328,12 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   // The table should be recognized in the P4Info, and it must contain a
   // valid set of match fields and one action.
   int p4_table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(p4::config::v1::Table table_p4_info,
+  ASSIGN_OR_RETURN(::p4::config::v1::Table table_p4_info,
                    p4_info_manager_->FindTableByID(p4_table_id));
-  std::vector<p4::v1::FieldMatch> all_match_fields;
+  std::vector<::p4::v1::FieldMatch> all_match_fields;
   RETURN_IF_ERROR(
       PrepareMatchFields(table_p4_info, table_entry, &all_match_fields));
-  if (!table_entry.has_action()) {
+  if (update_type == ::p4::v1::Update::INSERT && !table_entry.has_action()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "P4 TableEntry update has no action";
   }
@@ -336,9 +346,11 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
         status, ProcessMatchField(table_p4_info, match_field, flow_entry));
   }
 
-  APPEND_STATUS_IF_ERROR(
-      status,
-      ProcessTableAction(table_p4_info, table_entry.action(), flow_entry));
+  if (table_entry.has_action()) {
+    APPEND_STATUS_IF_ERROR(
+        status,
+        ProcessTableAction(table_p4_info, table_entry.action(), flow_entry));
+  }
 
   flow_entry->set_priority(table_entry.priority());
   flow_entry->set_controller_metadata(table_entry.controller_metadata());
@@ -353,12 +365,12 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   }
 
   mapped_action->Clear();
-  if (!p4_info_manager_.get()) {
+  if (p4_info_manager_ == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Unable to map ActionProfileMember "
                                     << "without valid P4 configuration";
   }
   ASSIGN_OR_RETURN(
-      const p4::config::v1::ActionProfile& profile_p4_info,
+      const ::p4::config::v1::ActionProfile& profile_p4_info,
       p4_info_manager_->FindActionProfileByID(member.action_profile_id()));
 
   return ProcessProfileActionFunction(profile_p4_info, member.action(),
@@ -366,18 +378,19 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
 }
 
 ::util::Status P4TableMapper::MapActionProfileGroup(
-    const ::p4::v1::ActionProfileGroup& group, MappedAction* mapped_action) const {
+    const ::p4::v1::ActionProfileGroup& group,
+    MappedAction* mapped_action) const {
   if (mapped_action == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Null mapped_action!";
   }
 
   mapped_action->Clear();
-  if (!p4_info_manager_.get()) {
+  if (p4_info_manager_ == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "Unable to map ActionProfileGroup without valid P4 configuration";
   }
   ASSIGN_OR_RETURN(
-      const p4::config::v1::ActionProfile& unused_profile_p4_info,
+      const ::p4::config::v1::ActionProfile& unused_profile_p4_info,
       p4_info_manager_->FindActionProfileByID(group.action_profile_id()));
   mapped_action->set_type(P4_ACTION_TYPE_PROFILE_GROUP_ID);
   // TODO: Refactor the code in P4InfoManager so that you do not
@@ -539,8 +552,8 @@ std::string Uint32ToByteStream(uint32 val) {
   return ::util::OkStatus();
 }
 
-::util::Status P4TableMapper::LookupTable(int table_id,
-                                          ::p4::config::v1::Table* table) const {
+::util::Status P4TableMapper::LookupTable(
+    int table_id, ::p4::config::v1::Table* table) const {
   ASSIGN_OR_RETURN(*table, p4_info_manager_->FindTableByID(table_id));
   return ::util::OkStatus();
 }
@@ -554,15 +567,17 @@ void P4TableMapper::DisableStaticTableUpdates() {
 }
 
 ::util::Status P4TableMapper::HandlePrePushStaticEntryChanges(
-    const p4::v1::WriteRequest& new_static_config, p4::v1::WriteRequest* out_request) {
+    const ::p4::v1::WriteRequest& new_static_config,
+    ::p4::v1::WriteRequest* out_request) {
   // This call should work before the first pipeline config is pushed.
   return static_entry_mapper_->HandlePrePushChanges(new_static_config,
                                                     out_request);
 }
 
 ::util::Status P4TableMapper::HandlePostPushStaticEntryChanges(
-    const p4::v1::WriteRequest& new_static_config, p4::v1::WriteRequest* out_request) {
-  if (!p4_info_manager_.get()) {
+    const ::p4::v1::WriteRequest& new_static_config,
+    ::p4::v1::WriteRequest* out_request) {
+  if (p4_info_manager_ == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "Unable to handle static entries without valid P4 configuration";
   }
@@ -588,7 +603,7 @@ std::unique_ptr<P4TableMapper> P4TableMapper::CreateInstance() {
 }
 
 ::util::Status P4TableMapper::AddMapEntryFromPreamble(
-    const p4::config::v1::Preamble& preamble) {
+    const ::p4::config::v1::Preamble& preamble) {
   std::string name_key = GetMapperNameKey(preamble);
   if (!name_key.empty()) {
     auto iter = p4_pipeline_config_.table_map().find(name_key);
@@ -612,13 +627,14 @@ std::unique_ptr<P4TableMapper> P4TableMapper::CreateInstance() {
 }
 
 std::string P4TableMapper::GetMapperNameKey(
-    const p4::config::v1::Preamble& preamble) {
+    const ::p4::config::v1::Preamble& preamble) {
   return preamble.name();
 }
 
-util::Status P4TableMapper::PrepareMatchFields(
-    const p4::config::v1::Table& table_p4_info, const p4::v1::TableEntry& table_entry,
-    std::vector<p4::v1::FieldMatch>* all_match_fields) const {
+::util::Status P4TableMapper::PrepareMatchFields(
+    const ::p4::config::v1::Table& table_p4_info,
+    const ::p4::v1::TableEntry& table_entry,
+    std::vector<::p4::v1::FieldMatch>* all_match_fields) const {
   // An empty set of match fields changes the default action for tables
   // that were not defined with a const default action in the P4 program.
   if (table_entry.match_size() == 0) {
@@ -657,7 +673,7 @@ util::Status P4TableMapper::PrepareMatchFields(
   for (const auto& p4info_match_field : table_p4_info.match_fields()) {
     if (requested_field_ids.find(p4info_match_field.id()) ==
         requested_field_ids.end()) {
-      p4::v1::FieldMatch dont_care_match;
+      ::p4::v1::FieldMatch dont_care_match;
       dont_care_match.set_field_id(p4info_match_field.id());
       all_match_fields->push_back(dont_care_match);
     }
@@ -666,43 +682,39 @@ util::Status P4TableMapper::PrepareMatchFields(
   return ::util::OkStatus();
 }
 
-util::Status P4TableMapper::ProcessTableID(
-    const p4::config::v1::Table& table_p4_info, int table_id,
+::util::Status P4TableMapper::ProcessTableID(
+    const ::p4::config::v1::Table& table_p4_info, int table_id,
     CommonFlowEntry* flow_entry) const {
-  ::util::Status status = ::util::OkStatus();
   flow_entry->mutable_table_info()->set_id(table_id);
   flow_entry->mutable_table_info()->set_name(table_p4_info.preamble().name());
   *flow_entry->mutable_table_info()->mutable_annotations() =
       table_p4_info.preamble().annotations();
 
   auto desc_iter = global_id_table_map_.find(table_id);
-  if (desc_iter != global_id_table_map_.end()) {
-    const auto& table_descriptor = desc_iter->second->table_descriptor();
-    RETURN_IF_ERROR(IsTableUpdateAllowed(table_p4_info, table_descriptor));
-
-    // Information from the table descriptor includes the mapped table type,
-    // pipeline stage, and any internal match fields.
-    flow_entry->mutable_table_info()->set_type(table_descriptor.type());
-    flow_entry->mutable_table_info()->set_pipeline_stage(
-        table_descriptor.pipeline_stage());
-    *flow_entry->mutable_fields() = table_descriptor.internal_match_fields();
-  } else {
+  if (desc_iter == global_id_table_map_.end()) {
     flow_entry->mutable_table_info()->set_type(P4_TABLE_UNKNOWN);
-    ::util::Status table_error = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-                                 << "P4 table ID " << table_id
-                                 << " is missing a table descriptor.";
-    APPEND_STATUS_IF_ERROR(status, table_error);
-    return status;
+    return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+           << "P4 table ID " << table_id << " is missing a table descriptor.";
   }
 
-  return status;
+  const auto& table_descriptor = desc_iter->second->table_descriptor();
+  RETURN_IF_ERROR(IsTableUpdateAllowed(table_p4_info, table_descriptor));
+  // Information from the table descriptor includes the mapped type, mapped
+  // pipeline stage, and any internal match fields.
+  flow_entry->mutable_table_info()->set_type(table_descriptor.type());
+  flow_entry->mutable_table_info()->set_pipeline_stage(
+      table_descriptor.pipeline_stage());
+  *flow_entry->mutable_fields() = table_descriptor.internal_match_fields();
+
+  return ::util::OkStatus();
 }
 
 // If progress advances this far, ProcessMatchField makes every effort to
 // produce some output for the field in flow_entry, even if it is just a raw
 // copy of an unknown field.
-util::Status P4TableMapper::ProcessMatchField(
-    const p4::config::v1::Table& table_p4_info, const p4::v1::FieldMatch& match_field,
+::util::Status P4TableMapper::ProcessMatchField(
+    const ::p4::config::v1::Table& table_p4_info,
+    const ::p4::v1::FieldMatch& match_field,
     CommonFlowEntry* flow_entry) const {
   ::util::Status status = ::util::OkStatus();
 
@@ -745,8 +757,9 @@ util::Status P4TableMapper::ProcessMatchField(
   return status;
 }
 
-util::Status P4TableMapper::ProcessTableAction(
-    const p4::config::v1::Table& table_p4_info, const p4::v1::TableAction& table_action,
+::util::Status P4TableMapper::ProcessTableAction(
+    const ::p4::config::v1::Table& table_p4_info,
+    const ::p4::v1::TableAction& table_action,
     CommonFlowEntry* flow_entry) const {
   ::util::Status status = ::util::OkStatus();
 
@@ -758,22 +771,22 @@ util::Status P4TableMapper::ProcessTableAction(
   // profile updates instead.
   auto mapped_action = flow_entry->mutable_action();
   switch (table_action.type_case()) {
-    case p4::v1::TableAction::kAction:
+    case ::p4::v1::TableAction::kAction:
       APPEND_STATUS_IF_ERROR(
           status, ProcessTableActionFunction(
                       table_p4_info, table_action.action(), mapped_action));
       break;
-    case p4::v1::TableAction::kActionProfileMemberId:
+    case ::p4::v1::TableAction::kActionProfileMemberId:
       mapped_action->set_type(P4_ACTION_TYPE_PROFILE_MEMBER_ID);
       mapped_action->set_profile_member_id(
           table_action.action_profile_member_id());
       break;
-    case p4::v1::TableAction::kActionProfileGroupId:
+    case ::p4::v1::TableAction::kActionProfileGroupId:
       mapped_action->set_type(P4_ACTION_TYPE_PROFILE_GROUP_ID);
       mapped_action->set_profile_group_id(
           table_action.action_profile_group_id());
       break;
-    case p4::v1::TableAction::TYPE_NOT_SET: {
+    case ::p4::v1::TableAction::TYPE_NOT_SET: {
       ::util::Status convert_error =
           MAKE_ERROR(ERR_INVALID_PARAM)
           << "Unrecognized P4 TableEntry action type "
@@ -789,9 +802,9 @@ util::Status P4TableMapper::ProcessTableAction(
 
 // Hands off to the common ProcessActionFunction after doing action validation
 // specific to tables.
-util::Status P4TableMapper::ProcessTableActionFunction(
-    const p4::config::v1::Table& table_p4_info, const p4::v1::Action& action,
-    MappedAction* mapped_action) const {
+::util::Status P4TableMapper::ProcessTableActionFunction(
+    const ::p4::config::v1::Table& table_p4_info,
+    const ::p4::v1::Action& action, MappedAction* mapped_action) const {
   if (action.action_id() == 0) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "P4 TableEntry action has no action_id.";
@@ -806,9 +819,9 @@ util::Status P4TableMapper::ProcessTableActionFunction(
   return status;
 }
 
-util::Status P4TableMapper::ProcessProfileActionFunction(
-    const p4::config::v1::ActionProfile& profile_p4_info, const p4::v1::Action& action,
-    MappedAction* mapped_action) const {
+::util::Status P4TableMapper::ProcessProfileActionFunction(
+    const ::p4::config::v1::ActionProfile& profile_p4_info,
+    const ::p4::v1::Action& action, MappedAction* mapped_action) const {
   if (action.action_id() == 0) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "P4 ActionProfileMember action has no action_id.";
@@ -825,8 +838,8 @@ util::Status P4TableMapper::ProcessProfileActionFunction(
   return status;
 }
 
-util::Status P4TableMapper::ProcessActionFunction(
-    const p4::v1::Action& action, MappedAction* mapped_action) const {
+::util::Status P4TableMapper::ProcessActionFunction(
+    const ::p4::v1::Action& action, MappedAction* mapped_action) const {
   ::util::Status status = ::util::OkStatus();
   auto desc_iter = global_id_table_map_.find(action.action_id());
   if (desc_iter != global_id_table_map_.end()) {
@@ -875,9 +888,11 @@ util::Status P4TableMapper::ProcessActionFunction(
         }
       }
 
-      if (color_op.destination_field_names_size() != 0) {
-        // TODO: All of the existing P4 roles only have color-qualfied
-        // action primitives.  Add support here if this changes.
+      // TODO: Complete deprecation of destination_field_names.
+      if (color_op.destination_field_names_size() != 0 ||
+          !color_op.destination_field_name().empty()) {
+        // TODO: All of the existing P4 roles have color-qualified
+        // action primitives only. Add support here if this changes.
         LOG(WARNING) << "Meter color action has unexpected destination field "
                      << "assignments: " << color_op.ShortDebugString();
       }
@@ -887,8 +902,8 @@ util::Status P4TableMapper::ProcessActionFunction(
   return status;
 }
 
-util::Status P4TableMapper::IsTableUpdateAllowed(
-    const p4::config::v1::Table& table_p4_info,
+::util::Status P4TableMapper::IsTableUpdateAllowed(
+    const ::p4::config::v1::Table& table_p4_info,
     const P4TableDescriptor& descriptor) const {
   // The static_table_updates_enabled_ flag qualifies updates to tables with
   // static entries, regardless of whether they are hidden.
@@ -922,7 +937,7 @@ void P4TableMapper::ClearMaps() {
   packetin_metadata_id_to_type_bitwidth_pair_.clear();
   packetout_metadata_type_to_id_bitwidth_pair_.clear();
   packetout_metadata_id_to_type_bitwidth_pair_.clear();
-  param_mapper_ = nullptr;
+  param_mapper_.reset(nullptr);
 }
 
 // P4ActionParamMapper implementation starts here.
@@ -937,7 +952,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
 ::util::Status P4TableMapper::P4ActionParamMapper::AddAction(int table_id,
                                                              int action_id) {
   // The action_id should have P4Info and a p4_global_table_map_ entry.
-  p4::config::v1::Action action_info;
+  ::p4::config::v1::Action action_info;
   ASSIGN_OR_RETURN(action_info, p4_info_manager_.FindActionByID(action_id));
   auto iter = p4_global_table_map_.find(action_id);
   if (iter == p4_global_table_map_.end()) {
@@ -994,7 +1009,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
 }
 
 ::util::Status P4TableMapper::P4ActionParamMapper::MapActionParam(
-    int action_id, const p4::v1::Action::Param& param,
+    int action_id, const ::p4::v1::Action::Param& param,
     MappedAction* mapped_action) const {
   ::util::Status status = ::util::OkStatus();
 
@@ -1070,13 +1085,24 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
   // and the header field info?  This could become a problem for constant
   // assignments, which are currently treated as 64 bits.
   CHECK_RETURN_IF_FALSE(param_entry->param_descriptor != nullptr);
-  for (const auto& field_name :
-       param_entry->param_descriptor->destination_field_names()) {
+
+  // TODO(teverman): Complete deprecation of destination_field_names.
+  std::string field_name =
+      param_entry->param_descriptor->destination_field_name();
+  if (field_name.empty()) {
+    if (param_entry->param_descriptor->destination_field_names_size() != 0) {
+      field_name = param_entry->param_descriptor->destination_field_names(0);
+    }
+  }
+
+  if (!field_name.empty()) {
     auto field_desc_iter = p4_pipeline_config_.table_map().find(field_name);
-    if (field_desc_iter == p4_pipeline_config_.table_map().end())
-      continue;  // TODO: Append an error.
-    const auto& field_descriptor = field_desc_iter->second.field_descriptor();
-    param_entry->field_types.push_back(field_descriptor.type());
+    if (field_desc_iter != p4_pipeline_config_.table_map().end()) {
+      const auto& field_descriptor = field_desc_iter->second.field_descriptor();
+      param_entry->field_types.push_back(field_descriptor.type());
+    } else {
+      // TODO: Append an error.
+    }
   }
 
   return ::util::OkStatus();
@@ -1119,7 +1145,7 @@ P4TableMapper::P4ActionParamMapper::FindParameterDescriptor(
 }
 
 void P4TableMapper::P4ActionParamMapper::ConvertParamValue(
-    const p4::v1::Action::Param& param, int bit_width,
+    const ::p4::v1::Action::Param& param, int bit_width,
     P4ActionFunction::P4ActionFields* value) {
   if (bit_width <= 32)
     value->set_u32(ByteStreamToUint<uint32>(param.value()));

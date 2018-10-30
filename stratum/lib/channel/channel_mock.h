@@ -36,6 +36,10 @@ class ChannelMock : public Channel<T> {
   MOCK_METHOD2_T(Write, ::util::Status(T&& t, absl::Duration timeout));
   MOCK_METHOD1_T(TryWrite, ::util::Status(const T& t));
   MOCK_METHOD1_T(TryWrite, ::util::Status(T&& t));
+  MOCK_METHOD2_T(
+      SelectRegister,
+      void(const std::shared_ptr<channel_internal::SelectData>& select_data,
+           bool* t_ready));
 };
 
 template <typename T>

@@ -28,11 +28,11 @@
 #include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
+extern absl::Flag<std::vector<string>> FLAGS_external_hercules_urls;
 DECLARE_bool(warmboot);
 DECLARE_string(chassis_config_file);
 DECLARE_string(forwarding_pipeline_configs_file);
 DECLARE_string(test_tmpdir);
-DECLARE_string(url);
 DECLARE_string(local_hercules_url);
 DECLARE_string(procmon_service_addr);
 DECLARE_string(persistent_config_dir);
@@ -75,16 +75,14 @@ class FakeProcmonService final : public procmon::ProcmonService::Service {
 
 class HalTest : public ::testing::Test {
  protected:
+  static const string RandomURL() {
+    // Every call to PickUnusedPortOrDie() will return a new port number.
+    return "localhost:" + std::to_string(net_util::PickUnusedPortOrDie());
+  }
+
   // Per-test-case set-up.
   static void SetUpTestCase() {
     // Setup Hal class instance under test.
-    FLAGS_url = "localhost:" + std::to_string(PickUnusedIpv4PortOrDie());
-    FLAGS_local_hercules_url =
-        "localhost:" + std::to_string(PickUnusedIpv4PortOrDie());
-    FLAGS_chassis_config_file = FLAGS_test_tmpdir + "/chassis_config.pb.txt";
-    FLAGS_forwarding_pipeline_configs_file =
-        FLAGS_test_tmpdir + "/forwarding_pipeline_configs_file.pb.txt";
-    FLAGS_persistent_config_dir = FLAGS_test_tmpdir + "/config_dir";
     switch_mock_ = new ::testing::StrictMock<SwitchMock>();
     auth_policy_checker_mock_ =
         new ::testing::StrictMock<AuthPolicyCheckerMock>();
@@ -92,17 +90,17 @@ class HalTest : public ::testing::Test {
         new ::testing::StrictMock<CredentialsManagerMock>();
     hal_ = Hal::CreateSingleton(kMode, switch_mock_, auth_policy_checker_mock_,
                                 credentials_manager_mock_);
-    ASSERT_TRUE(hal_ != nullptr);
+    ASSERT_NE(hal_, nullptr);
 
     // Create and start a FakeProcmonService instance for testing purpose.
-    FLAGS_procmon_service_addr =
-        "localhost:" + std::to_string(PickUnusedIpv4PortOrDie());
+    FLAGS_procmon_service_addr = RandomURL();
     procmon_service_ = new FakeProcmonService();
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(FLAGS_procmon_service_addr,
                              ::grpc::InsecureServerCredentials());
     builder.RegisterService(procmon_service_);
     procmon_server_ = builder.BuildAndStart().release();
+    ASSERT_NE(procmon_server_, nullptr);
   }
 
   // Per-test-case tear-down.
@@ -120,7 +118,17 @@ class HalTest : public ::testing::Test {
     procmon_server_ = nullptr;
   }
 
-  void SetUp() override { hal_->ClearErrors(); }
+  void SetUp() override {
+    FLAGS_chassis_config_file = FLAGS_test_tmpdir + "/chassis_config.pb.txt";
+    FLAGS_forwarding_pipeline_configs_file =
+        FLAGS_test_tmpdir + "/forwarding_pipeline_configs_file.pb.txt";
+    FLAGS_persistent_config_dir = FLAGS_test_tmpdir + "/config_dir";
+    base::SetFlag(&FLAGS_external_hercules_urls, {RandomURL(), RandomURL()});
+    FLAGS_local_hercules_url = RandomURL();
+    FLAGS_cmal_service_url = RandomURL();
+    ASSERT_OK(hal_->SanityCheck());
+    hal_->ClearErrors();
+  }
 
   void FillTestChassisConfigAndSave(ChassisConfig* chassis_config) {
     const std::string& chassis_config_text = absl::Substitute(
@@ -214,6 +222,32 @@ constexpr OperationMode HalTest::kMode;
 Hal* HalTest::hal_ = nullptr;
 FakeProcmonService* HalTest::procmon_service_ = nullptr;
 ::grpc::Server* HalTest::procmon_server_ = nullptr;
+
+TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
+  base::SetFlag(&FLAGS_external_hercules_urls, {});
+  ::util::Status status = hal_->SanityCheck();
+  ASSERT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(), HasSubstr("No external URL was given"));
+}
+
+TEST_F(HalTest, SanityCheckFailureWhenExtURLsAreInvalid) {
+  const auto& url = RandomURL();
+  base::SetFlag(&FLAGS_external_hercules_urls, {url, "blah"});
+  FLAGS_local_hercules_url = url;
+  ::util::Status status = hal_->SanityCheck();
+  ASSERT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("reserved local URLs as your external URLs"));
+}
+
+TEST_F(HalTest, SanityCheckFailureWhenPersistentConfigDirFlagNotGiven) {
+  FLAGS_persistent_config_dir = "";
+  ::util::Status status = hal_->SanityCheck();
+  ASSERT_FALSE(status.ok());
+  EXPECT_THAT(
+      status.error_message(),
+      HasSubstr("persistent_config_dir flag needs to be explicitly give"));
+}
 
 TEST_F(HalTest, ColdbootSetupSuccessForSavedConfigs) {
   // Setup and save the test config(s).

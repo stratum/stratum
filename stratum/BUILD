@@ -31,32 +31,33 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-# Removing Stratum's local copies of googleapis protos
-#genrule(
-#    name = "status_proto_copy",
-#    srcs = ["//googleapis/google/rpc:status.proto"],
-#    outs = ["google/rpc/status.proto"],
-#    cmd = "cp $(location //googleapis/google/rpc:status.proto) $(location google/rpc/status.proto)",
-#)
-#
-#genrule(
-#    name = "code_proto_copy",
-#    srcs = ["//googleapis/google/rpc:code.proto"],
-#    outs = ["google/rpc/code.proto"],
-#    cmd = "cp $(location //googleapis/google/rpc:code.proto) $(location google/rpc/code.proto)",
-#)
-#
-#stratum_cc_proto_library(
-#    name = "status_proto",
-#    hdrs = ["google/rpc/status.proto"],
-#    proto_include = ".",
-#)
-#
-#stratum_cc_proto_library(
-#    name = "code_proto",
-#    hdrs = ["google/rpc/code.proto"],
-#    proto_include = ".",
-#)
+''' FIXME(boc) google only
+genrule(
+    name = "status_proto_copy",
+    srcs = ["@com_github_googleapis//:status_proto"],
+    outs = ["google/rpc/status.proto"],
+    cmd = "cp $(location @com_github_googleapis//:status_proto) $(location google/rpc/status.proto)",
+)
+
+genrule(
+    name = "code_proto_copy",
+    srcs = ["@com_github_googleapis//:code_proto"],
+    outs = ["google/rpc/code.proto"],
+    cmd = "cp $(location @com_github_googleapis//:code_proto) $(location google/rpc/code.proto)",
+)
+
+stratum_cc_proto_library(
+    name = "status_proto",
+    hdrs = ["google/rpc/status.proto"],
+    #proto_include = ".",
+)
+
+stratum_cc_proto_library(
+    name = "code_proto",
+    hdrs = ["google/rpc/code.proto"],
+    #proto_include = ".",
+)
+''' end google only
 
 config_setting(
     name = "stratum_ppc",
@@ -69,7 +70,7 @@ config_setting(
 config_setting(
     name = "stratum_x86",
     values = {
-        "crosstool_top": "//crosstool:stable",
+        "crosstool_top": "//unsupported_toolchains/crosstoolng_planetx86",
         "copt": "-DSTRATUM_ARCH_X86",
     },
 )

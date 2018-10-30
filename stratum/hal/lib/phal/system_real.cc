@@ -81,7 +81,7 @@ bool SystemReal::PathExists(const std::string& path) const {
                                       "udev_monitor_new_from_netlink failed");
   }
   int fd = udev_monitor_get_fd(udev_monitor);
-  if (fd < 0)
+  if (fd <= 0)
     return ::util::PosixErrorToStatus(errno, "udev_monitor_get_fd failed");
   return {absl::make_unique<UdevMonitorReal>(udev_monitor, fd)};
 }
@@ -121,7 +121,7 @@ UdevReal::EnumerateSubsystem(const std::string& subsystem) {
   CHECK_RETURN_IF_FALSE(!receiving_)
       << "Cannot add a filter to a receiving udev monitor.";
   if (udev_monitor_filter_add_match_subsystem_devtype(
-          monitor_, subsystem.c_str(), "") != 0) {
+          monitor_, subsystem.c_str(), nullptr) != 0) {
     return ::util::PosixErrorToStatus(
         errno, "Failed to add udev subsystem " + subsystem);
   }

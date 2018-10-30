@@ -16,7 +16,9 @@
 #include "stratum/hal/lib/common/error_buffer.h"
 
 #include "gflags/gflags.h"
+//FIXME(boc) google only
 //#include "file/base/path.h"
+// end google only
 #include <string>
 #include <libgen.h>
 #include "stratum/glue/logging.h"
