@@ -19,8 +19,8 @@
 DECLARE_string(match_field_error_level);
 DECLARE_string(action_field_error_level);
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 
 // The test parameter is a tuple of P4Info/P4PipelineConfig files to
@@ -246,5 +246,5 @@ INSTANTIATE_TEST_CASE_P(
                         "hercules_fbr_s3_p4_pipeline.pb.bin")));
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

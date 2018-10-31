@@ -17,8 +17,8 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/synchronization/mutex.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace procmon {
 
 static const int32 kManagedProcessPollingIntervalMs = 100;
@@ -308,5 +308,5 @@ void Procmon::MonitorThreadFunc() {
 }
 
 }  // namespace procmon
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "stratum/lib/macros.h"
 #include "stratum/glue/status/status.h"
 #include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"

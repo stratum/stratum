@@ -44,6 +44,6 @@ stratum_cc_library(
             "//stratum/hal/lib/common:writer_interface",
             "//stratum/lib:constants",
             "//stratum/lib:macros",
-            "//stratum/public/proto:hal_proto",
+            "//stratum/hal/lib/common:common_proto",
     ],
 )

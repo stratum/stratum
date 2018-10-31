@@ -1001,91 +1001,93 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
   ASSERT_OK(config_monitoring_service_->Teardown());
 }
 
+//FIXME(boc) google only
 // Unsuccessful DoSet() execution for simple leaf gNMI SET UPDATE message.
-TEST_P(ConfigMonitoringServiceTest, GnmiSetRootUpdate) {
-  if (mode_ == OPERATION_MODE_COUPLED) return;
+//TEST_P(ConfigMonitoringServiceTest, GnmiSetRootUpdate) {
+//  if (mode_ == OPERATION_MODE_COUPLED) return;
+//
+//  // Prepare and push configuration. The method under test requires the
+//  // configuration to be pushed.
+//  ChassisConfig config;
+//  FillTestChassisConfigAndSave(&config);
+//  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+//      .WillOnce(Return(::util::OkStatus()));
+//  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+//      .WillOnce(Return(::util::OkStatus()));
+//  ASSERT_OK(config_monitoring_service_->Setup(false));
+//
+//  // Prepare a SET request.
+//  ::gnmi::SetRequest req;
+//  constexpr char kReq[] = R"PROTO(
+//    update { val { bytes_val: "" } }
+//  )PROTO";
+//  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+//      << "Failed to parse proto from the following string: " << kReq;
+//
+//  // Run the method that processes the SET request.
+//  ::grpc::ServerContext context;
+//  ::gnmi::SetResponse resp;
+//  auto grpc_status = DoSet(&context, &req, &resp);
+//  EXPECT_FALSE(grpc_status.ok());
+//
+//  // Clean-up.
+//  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+//      .WillOnce(Return(::util::OkStatus()));
+//  ASSERT_OK(config_monitoring_service_->Teardown());
+//}
 
-  // Prepare and push configuration. The method under test requires the
-  // configuration to be pushed.
-  ChassisConfig config;
-  FillTestChassisConfigAndSave(&config);
-  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
-      .WillOnce(Return(::util::OkStatus()));
-  ASSERT_OK(config_monitoring_service_->Setup(false));
-
-  // Prepare a SET request.
-  ::gnmi::SetRequest req;
-  constexpr char kReq[] = R"PROTO(
-    update { val { bytes_val: "" } }
-  )PROTO";
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
-      << "Failed to parse proto from the following string: " << kReq;
-
-  // Run the method that processes the SET request.
-  ::grpc::ServerContext context;
-  ::gnmi::SetResponse resp;
-  auto grpc_status = DoSet(&context, &req, &resp);
-  EXPECT_FALSE(grpc_status.ok());
-
-  // Clean-up.
-  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
-      .WillOnce(Return(::util::OkStatus()));
-  ASSERT_OK(config_monitoring_service_->Teardown());
-}
-
+//FIXME(boc) google only
 // Successful DoSet() execution for simple leaf gNMI SET UPDATE message.
-TEST_P(ConfigMonitoringServiceTest,
-       GnmiSetInterfacesInterfaceConfigHealthIndicatorUpdate) {
-  if (mode_ == OPERATION_MODE_COUPLED) return;
-
-  // Prepare and push configuration. The method under test requires the
-  // configuration to be pushed.
-  ChassisConfig config;
-  FillTestChassisConfigAndSave(&config);
-  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
-      .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
-      .WillOnce(Return(::util::OkStatus()));
-  ASSERT_OK(config_monitoring_service_->Setup(false));
-
-  // Prepare a GET request.
-  ::gnmi::SetRequest req;
-  constexpr char kReq[] = R"PROTO(
-    update {
-      path {
-        elem { name: "interfaces" }
-        elem {
-          name: "interface"
-          key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
-        }
-        elem { name: "config" }
-        elem { name: "health-indicator" }
-      }
-      val { string_val: "BAD" }
-    }
-  )PROTO";
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
-      << "Failed to parse proto from the following string: " << kReq;
-
-  // This is a non-config-changing set, so, no PushChassisConfig() calls, just
-  // one SetValue().
-  EXPECT_CALL(*switch_mock_, PushChassisConfig(_)).Times(0);
-  EXPECT_CALL(*switch_mock_, SetValue(_, _, _))
-      .WillOnce(Return(::util::OkStatus()));
-
-  // Run the method that processes the SET request.
-  ::grpc::ServerContext context;
-  ::gnmi::SetResponse resp;
-  auto grpc_status = DoSet(&context, &req, &resp);
-  EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
-
-  // Clean-up.
-  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
-      .WillOnce(Return(::util::OkStatus()));
-  ASSERT_OK(config_monitoring_service_->Teardown());
-}
+//TEST_P(ConfigMonitoringServiceTest,
+//       GnmiSetInterfacesInterfaceConfigHealthIndicatorUpdate) {
+//  if (mode_ == OPERATION_MODE_COUPLED) return;
+//
+//  // Prepare and push configuration. The method under test requires the
+//  // configuration to be pushed.
+//  ChassisConfig config;
+//  FillTestChassisConfigAndSave(&config);
+//  EXPECT_CALL(*switch_mock_, RegisterEventNotifyWriter(_))
+//      .WillOnce(Return(::util::OkStatus()));
+//  EXPECT_CALL(*switch_mock_, PushChassisConfig(_))
+//      .WillOnce(Return(::util::OkStatus()));
+//  ASSERT_OK(config_monitoring_service_->Setup(false));
+//
+//  // Prepare a GET request.
+//  ::gnmi::SetRequest req;
+//  constexpr char kReq[] = R"PROTO(
+//    update {
+//      path {
+//        elem { name: "interfaces" }
+//        elem {
+//          name: "interface"
+//          key { key: "name" value: "ju1u1t1.xyz99.net.google.com:ce-1/2" }
+//        }
+//        elem { name: "config" }
+//        elem { name: "health-indicator" }
+//      }
+//      val { string_val: "BAD" }
+//    }
+//  )PROTO";
+//  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
+//      << "Failed to parse proto from the following string: " << kReq;
+//
+//  // This is a non-config-changing set, so, no PushChassisConfig() calls, just
+//  // one SetValue().
+//  EXPECT_CALL(*switch_mock_, PushChassisConfig(_)).Times(0);
+//  EXPECT_CALL(*switch_mock_, SetValue(_, _, _))
+//      .WillOnce(Return(::util::OkStatus()));
+//
+//  // Run the method that processes the SET request.
+//  ::grpc::ServerContext context;
+//  ::gnmi::SetResponse resp;
+//  auto grpc_status = DoSet(&context, &req, &resp);
+//  EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
+//
+//  // Clean-up.
+//  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
+//      .WillOnce(Return(::util::OkStatus()));
+//  ASSERT_OK(config_monitoring_service_->Teardown());
+//}
 
 // Unsuccessful DoSet() execution for simple leaf gNMI SET REPLACE message.
 TEST_P(ConfigMonitoringServiceTest,

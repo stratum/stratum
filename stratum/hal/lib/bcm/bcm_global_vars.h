@@ -1,10 +1,10 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_GLOBAL_VARS_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_GLOBAL_VARS_H_
+#ifndef STRATUM_HAL_LIB_BCM_BCM_GLOBAL_VARS_H_
+#define STRATUM_HAL_LIB_BCM_BCM_GLOBAL_VARS_H_
 
 #include "absl/synchronization/mutex.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -16,7 +16,7 @@ extern bool shutdown;
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_GLOBAL_VARS_H_
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BCM_BCM_GLOBAL_VARS_H_

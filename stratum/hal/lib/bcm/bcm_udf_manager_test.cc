@@ -14,8 +14,8 @@
 #include "stratum/glue/gtl/flat_map.h"
 #include "stratum/glue/gtl/flat_set.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 namespace {
@@ -30,7 +30,7 @@ using ::testing::SaveArg;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
-using ::testing::status::StatusIs;
+using ::stratum::test_utils::StatusIs;
 using UdfSpec = BcmHardwareSpecs::ChipModelSpec::UdfSpec;
 
 // This matcher verifies that all chunks in a BcmUdfSet come from the same set
@@ -1317,5 +1317,5 @@ TEST(BcmUdfManagerTest, MappedFieldToBcmFields_CannotConvert) {
 }  // namespace
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

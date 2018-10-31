@@ -1,13 +1,13 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
-#define PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
+#ifndef STRATUM_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
+#define STRATUM_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
 
 #include "stratum/lib/statemachine/state_machine.h"
 #include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
 #include "stratum/glue/status/status.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace state_machine {
 
 // This is a client of the StateMachine class which defines the states, events,
@@ -84,7 +84,7 @@ class ExampleStateMachine {
 };
 
 }  // namespace state_machine
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_
+}  // namespace stratum
+
+#endif  // STRATUM_LIB_STATEMACHINE_EXAMPLE_STATE_MACHINE_H_

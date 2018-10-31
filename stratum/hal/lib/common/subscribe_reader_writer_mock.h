@@ -1,7 +1,7 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
+#ifndef STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
+#define STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 
-#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -27,4 +27,4 @@ class SubscribeReaderWriterMock
   MOCK_METHOD1(Read, bool(::gnmi::SubscribeRequest*));
 };
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
+#endif  // STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_

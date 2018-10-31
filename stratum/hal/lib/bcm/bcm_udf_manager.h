@@ -1,5 +1,5 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
+#ifndef STRATUM_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
+#define STRATUM_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
 
 #include <functional>
 #include <memory>
@@ -13,8 +13,8 @@
 #include "stratum/glue/gtl/flat_map.h"
 #include "stratum/glue/gtl/flat_set.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -325,7 +325,7 @@ class BcmUdfManager {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BCM_BCM_UDF_MANAGER_H_

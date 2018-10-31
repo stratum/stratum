@@ -1,7 +1,7 @@
 #include "stratum/lib/statemachine/example_state_machine.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace state_machine {
 
 using StateMachineType =
@@ -57,5 +57,5 @@ void ExampleStateMachine::FillTransitionTable() {
 }
 
 }  // namespace state_machine
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

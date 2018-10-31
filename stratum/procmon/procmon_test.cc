@@ -11,8 +11,8 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace procmon {
 
 const char kShortProcessConfig[] = R"(
@@ -342,5 +342,5 @@ TEST_F(ProcmonTest, ProcessCanIgnoreKillAll) {
 }
 
 }  // namespace procmon
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

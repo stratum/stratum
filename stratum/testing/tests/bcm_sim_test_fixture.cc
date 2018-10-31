@@ -24,8 +24,8 @@ extern "C" int openpty(int *amaster, int *aslave, char *name,
   return 0;
 }
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -168,5 +168,5 @@ void BcmSimTestFixture::TearDown() { ASSERT_OK(bcm_switch_->Shutdown()); }
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

@@ -15,8 +15,8 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace phal {
 
@@ -365,5 +365,5 @@ TEST_F(RealAttributeDatabaseTest, CanUnsubscribeAndResubscribeToQuery) {
 }  // namespace
 }  // namespace phal
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

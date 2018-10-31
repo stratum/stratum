@@ -27,10 +27,11 @@
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
 
 // TODO(aghaffar): Use FLAG_DEFINE for all flags.
-DEFINE_FLAG(std::vector<string>, external_hercules_urls, {},
+DEFINE_string(external_hercules_urls, "",
             "Comma-separated list of URLs for server to listen to for external"
             " calls from SDN controller, etc.");
 DEFINE_string(local_hercules_url, stratum::kLocalHerculesUrl,
@@ -108,19 +109,19 @@ Hal::~Hal() {
 }
 
 ::util::Status Hal::SanityCheck() {
-  const auto& external_hercules_urls =
-      base::GetFlag(FLAGS_external_hercules_urls);
+  const std::vector<std::string> external_hercules_urls =
+          absl::StrSplit(FLAGS_external_hercules_urls, ',');
   CHECK_RETURN_IF_FALSE(!external_hercules_urls.empty())
       << "No external URL was given. This is invalid.";
   auto it = std::find_if(external_hercules_urls.begin(),
-                         external_hercules_urls.end(), [](const string& url) {
+                         external_hercules_urls.end(), [](const std::string& url) {
                            return (url == FLAGS_local_hercules_url ||
-                                   url == FLAGS_cmal_service_url ||
+                                   //FIXME(boc) google only url == FLAGS_cmal_service_url ||
                                    url == FLAGS_procmon_service_addr);
                          });
   CHECK_RETURN_IF_FALSE(it == external_hercules_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_hercules_url << ", " << FLAGS_cmal_service_url << ", "
+      << FLAGS_local_hercules_url << ", " /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
       << FLAGS_procmon_service_addr << ".";
 
   CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
@@ -193,8 +194,8 @@ Hal::~Hal() {
   // given by local_hercules_url flag. The insecure URLs is used by any local
   // hercules_stub binary running on the switch, since local connections cannot
   // support auth.
-  const auto& external_hercules_urls =
-      base::GetFlag(FLAGS_external_hercules_urls);
+  const std::vector<std::string> external_hercules_urls =
+          absl::StrSplit(FLAGS_external_hercules_urls, ',');
   {
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
@@ -295,7 +296,8 @@ Hal* Hal::GetSingleton() {
   CHECK_IS_NULL(diag_service_);
   CHECK_IS_NULL(file_service_);
   CHECK_IS_NULL(external_server_);
-  CHECK_IS_NULL(internal_server_);
+  //FIXME(boc) google only
+  //CHECK_IS_NULL(internal_server_);
 
   // Reset error_buffer_.
   error_buffer_->ClearErrors();

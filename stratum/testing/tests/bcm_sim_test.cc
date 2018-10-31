@@ -8,8 +8,8 @@
 #include "absl/strings/str_cat.h"
 #include "p4/v1/p4runtime.pb.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -89,5 +89,5 @@ TEST_F(BcmSimTest, TestBasicFunctionality) {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

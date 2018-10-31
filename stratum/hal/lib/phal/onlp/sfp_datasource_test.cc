@@ -35,7 +35,7 @@ namespace onlp {
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-using ::testing::status::StatusIs;
+using ::stratum::test_utils::StatusIs;
 
 TEST(SfpDatasourceTest, InitializeFailedNoSfp) {
   MockOnlpWrapper mock_onlp_interface;

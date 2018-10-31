@@ -17,8 +17,8 @@ DEFINE_string(procmon_config_file, "",
 DEFINE_string(procmon_service_addr, ::google::hercules::kProcmonServiceUrl,
               "Url of the procmon service to listen to.");
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace procmon {
 
 ::util::Status Main(int argc, char**argv) {
@@ -53,8 +53,8 @@ namespace procmon {
 }
 
 }  // namespace procmon
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum
 
 int main(int argc, char** argv) {
   ::util::Status ret = google::hercules::procmon::Main(argc, argv);

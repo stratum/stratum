@@ -10,8 +10,8 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -75,5 +75,5 @@ TEST_F(BcmTunnelManagerTest, TestDeleteTableEntry) {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

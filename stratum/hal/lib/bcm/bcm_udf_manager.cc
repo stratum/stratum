@@ -8,8 +8,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -445,5 +445,5 @@ const std::string* GetDataBuffer(const MappedField::Value& value,
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

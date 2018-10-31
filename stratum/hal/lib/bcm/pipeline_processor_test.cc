@@ -9,8 +9,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 namespace {
@@ -22,7 +22,7 @@ using test_utils::p4_proto_builders::IsValidBuilder;
 using test_utils::p4_proto_builders::Table;
 using ::testing::HasSubstr;
 using ::testing::UnorderedElementsAre;
-using ::testing::status::StatusIs;
+using ::stratum::test_utils::StatusIs;
 
 // This case tests that an empty control pipeline produces an empty pipeline.
 TEST(PipelineProcessorTest, EmptyPipeline) {
@@ -895,5 +895,5 @@ TEST(PipelineProcessorTest, ConflictingStageDependency) {
 }  // namespace
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

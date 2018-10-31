@@ -2,15 +2,15 @@
 
 #include "gmock/gmock.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace state_machine {
 namespace {
 
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::Sequence;
-using ::testing::status::StatusIs;
+using ::stratum::test_utils::StatusIs;
 
 class StateMachineTest : public ::testing::Test {
  protected:
@@ -127,5 +127,5 @@ TEST_F(StateMachineTest, DuplicateEventsFromDifferentThreads) {
 
 }  // namespace
 }  // namespace state_machine
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

@@ -1,7 +1,7 @@
 #include "stratum/procmon/procmon_service_impl.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace procmon {
 
 ProcmonServiceImpl::ProcmonServiceImpl() {}
@@ -16,5 +16,5 @@ ProcmonServiceImpl::~ProcmonServiceImpl() {}
 }
 
 }  // namespace procmon
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

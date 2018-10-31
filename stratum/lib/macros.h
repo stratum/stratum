@@ -105,7 +105,7 @@ inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc,
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc) {
   return MakeStatusBuilder(loc, ::google::hercules::ERR_UNKNOWN);
 }
-}  // namespace hercules_error_impl
+_error_impl
 
 #define MAKE_ERROR(...) \
   hercules_error_impl::MakeStatusBuilder(GTL_LOC, ##__VA_ARGS__)

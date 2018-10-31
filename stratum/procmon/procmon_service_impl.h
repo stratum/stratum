@@ -1,12 +1,12 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_PROCMON_PROCMON_SERVICE_IMPL_H_
-#define PLATFORMS_NETWORKING_HERCULES_PROCMON_PROCMON_SERVICE_IMPL_H_
+#ifndef STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
+#define STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
 
 #include <grpc++/grpc++.h>
 
 #include "stratum/procmon/procmon.grpc.pb.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace procmon {
 
 // Procmon service is in charge of the handling the requests (e.g. process
@@ -28,7 +28,7 @@ class ProcmonServiceImpl final : public ProcmonService::Service {
 };
 
 }  // namespace procmon
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_PROCMON_PROCMON_SERVICE_IMPL_H_
+}  // namespace stratum
+
+#endif  // STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_

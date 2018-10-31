@@ -2,8 +2,8 @@
 
 #include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -82,5 +82,5 @@ std::unique_ptr<BcmTunnelManager> BcmTunnelManager::CreateInstance(
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

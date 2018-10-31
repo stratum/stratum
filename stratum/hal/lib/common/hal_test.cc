@@ -34,7 +34,8 @@ DECLARE_string(chassis_config_file);
 DECLARE_string(forwarding_pipeline_configs_file);
 DECLARE_string(test_tmpdir);
 DECLARE_string(local_hercules_url);
-DECLARE_string(procmon_service_addr);
+//FIXME(boc) google only
+//DECLARE_string(procmon_service_addr);
 DECLARE_string(persistent_config_dir);
 
 namespace stratum {
@@ -46,32 +47,33 @@ using ::testing::Return;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
+//FIXME(boc) google only
 // A fake implementation of ProcmonService for unit testing.
-class FakeProcmonService final : public procmon::ProcmonService::Service {
- public:
-  FakeProcmonService() : pid_(-1) {}
-  ~FakeProcmonService() override {}
-
-  void SetPid(int pid) { pid_ = pid; }
-
-  ::grpc::Status Checkin(::grpc::ServerContext* context,
-                         const procmon::CheckinRequest* req,
-                         procmon::CheckinResponse* resp) override {
-    // Fake a behavior where for checkin_key = kGoodPid we return OK and for
-    // other checkin_keys we return error.
-    if (req->checkin_key() == pid_) {
-      return ::grpc::Status::OK;
-    }
-    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT, "Invalid pid.");
-  }
-
-  // FakeProcmonService is neither copyable nor movable.
-  FakeProcmonService(const FakeProcmonService&) = delete;
-  FakeProcmonService& operator=(const FakeProcmonService&) = delete;
-
- private:
-  int pid_;
-};
+//class FakeProcmonService final : public procmon::ProcmonService::Service {
+// public:
+//  FakeProcmonService() : pid_(-1) {}
+//  ~FakeProcmonService() override {}
+//
+//  void SetPid(int pid) { pid_ = pid; }
+//
+//  ::grpc::Status Checkin(::grpc::ServerContext* context,
+//                         const procmon::CheckinRequest* req,
+//                         procmon::CheckinResponse* resp) override {
+//    // Fake a behavior where for checkin_key = kGoodPid we return OK and for
+//    // other checkin_keys we return error.
+//    if (req->checkin_key() == pid_) {
+//      return ::grpc::Status::OK;
+//    }
+//    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT, "Invalid pid.");
+//  }
+//
+//  // FakeProcmonService is neither copyable nor movable.
+//  FakeProcmonService(const FakeProcmonService&) = delete;
+//  FakeProcmonService& operator=(const FakeProcmonService&) = delete;
+//
+// private:
+//  int pid_;
+//};
 
 class HalTest : public ::testing::Test {
  protected:
@@ -92,30 +94,33 @@ class HalTest : public ::testing::Test {
                                 credentials_manager_mock_);
     ASSERT_NE(hal_, nullptr);
 
+    //FIXME(boc) google only
     // Create and start a FakeProcmonService instance for testing purpose.
-    FLAGS_procmon_service_addr = RandomURL();
-    procmon_service_ = new FakeProcmonService();
-    ::grpc::ServerBuilder builder;
-    builder.AddListeningPort(FLAGS_procmon_service_addr,
-                             ::grpc::InsecureServerCredentials());
-    builder.RegisterService(procmon_service_);
-    procmon_server_ = builder.BuildAndStart().release();
-    ASSERT_NE(procmon_server_, nullptr);
+//    FLAGS_procmon_service_addr = RandomURL();
+//    procmon_service_ = new FakeProcmonService();
+//    ::grpc::ServerBuilder builder;
+//    builder.AddListeningPort(FLAGS_procmon_service_addr,
+//                             ::grpc::InsecureServerCredentials());
+//    builder.RegisterService(procmon_service_);
+//    procmon_server_ = builder.BuildAndStart().release();
+//    ASSERT_NE(procmon_server_, nullptr);
   }
 
   // Per-test-case tear-down.
   static void TearDownTestCase() {
-    procmon_server_->Shutdown(std::chrono::system_clock::now());
+    //FIXME(boc) google only
+//    procmon_server_->Shutdown(std::chrono::system_clock::now());
     delete switch_mock_;
     delete auth_policy_checker_mock_;
     delete credentials_manager_mock_;
-    delete procmon_service_;
-    delete procmon_server_;
+    //FIXME(boc) google only
+//    delete procmon_service_;
+//    delete procmon_server_;
     switch_mock_ = nullptr;
     auth_policy_checker_mock_ = nullptr;
     credentials_manager_mock_ = nullptr;
-    procmon_service_ = nullptr;
-    procmon_server_ = nullptr;
+//    procmon_service_ = nullptr;
+//    procmon_server_ = nullptr;
   }
 
   void SetUp() override {
@@ -202,8 +207,9 @@ class HalTest : public ::testing::Test {
   static ::testing::StrictMock<CredentialsManagerMock>*
       credentials_manager_mock_;
   static Hal* hal_;  // pointer which points to the singleton instance
-  static FakeProcmonService* procmon_service_;
-  static ::grpc::Server* procmon_server_;
+    //FIXME(boc) google only
+//  static FakeProcmonService* procmon_service_;
+//  static ::grpc::Server* procmon_server_;
 };
 
 constexpr char HalTest::kChassisConfigTemplate[];
@@ -220,8 +226,9 @@ constexpr OperationMode HalTest::kMode;
 ::testing::StrictMock<CredentialsManagerMock>*
     HalTest::credentials_manager_mock_ = nullptr;
 Hal* HalTest::hal_ = nullptr;
-FakeProcmonService* HalTest::procmon_service_ = nullptr;
-::grpc::Server* HalTest::procmon_server_ = nullptr;
+//FIXME(boc) google only
+//FakeProcmonService* HalTest::procmon_service_ = nullptr;
+//::grpc::Server* HalTest::procmon_server_ = nullptr;
 
 TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
   base::SetFlag(&FLAGS_external_hercules_urls, {});
@@ -559,7 +566,8 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinSucceeds) {
   EXPECT_CALL(*credentials_manager_mock_,
               GenerateExternalFacingServerCredentials())
       .WillOnce(Return(::grpc::InsecureServerCredentials()));
-  procmon_service_->SetPid(getpid());
+//FIXME(boc) google only
+//  procmon_service_->SetPid(getpid());
 
   pthread_t tid;
   ASSERT_EQ(0, pthread_create(&tid, nullptr, &TestShutdownThread, hal_));
@@ -578,7 +586,8 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinFails) {
   EXPECT_CALL(*credentials_manager_mock_,
               GenerateExternalFacingServerCredentials())
       .WillOnce(Return(::grpc::InsecureServerCredentials()));
-  procmon_service_->SetPid(getpid() + 1);
+//FIXME(boc) google only
+//procmon_service_->SetPid(getpid() + 1);
 
   pthread_t tid;
   ASSERT_EQ(0, pthread_create(&tid, nullptr, &TestShutdownThread, hal_));

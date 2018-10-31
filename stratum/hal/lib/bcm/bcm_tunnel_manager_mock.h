@@ -1,11 +1,11 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_MOCK_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_MOCK_H_
+#ifndef STRATUM_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_MOCK_H_
+#define STRATUM_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_MOCK_H_
 
 #include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 #include "gmock/gmock.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -32,7 +32,7 @@ class BcmTunnelManagerMock : public BcmTunnelManager {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_MOCK_H_
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_MOCK_H_

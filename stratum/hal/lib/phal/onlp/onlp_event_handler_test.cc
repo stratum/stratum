@@ -36,7 +36,7 @@ using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::Return;
-using ::testing::status::StatusIs;
+using ::stratum::test_utils::StatusIs;
 
 class OnlpEventHandlerTest : public ::testing::Test {
  public:

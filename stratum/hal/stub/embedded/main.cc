@@ -38,7 +38,7 @@
 #include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 #include "p4/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
-#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/public/proto/openconfig.pb.h"

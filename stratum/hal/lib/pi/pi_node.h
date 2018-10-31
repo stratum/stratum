@@ -22,7 +22,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/public/proto/hal.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

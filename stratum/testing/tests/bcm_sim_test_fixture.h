@@ -1,5 +1,5 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
-#define PLATFORMS_NETWORKING_HERCULES_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
+#ifndef STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
+#define STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
 
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
@@ -20,8 +20,8 @@
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -58,7 +58,7 @@ class BcmSimTestFixture : public testing::Test {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_
+}  // namespace stratum
+
+#endif  // STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_

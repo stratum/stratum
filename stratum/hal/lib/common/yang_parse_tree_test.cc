@@ -39,7 +39,7 @@ using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::WithArg;
 using ::testing::WithArgs;
-using ::testing::status::StatusIs;
+using ::stratum::test_utils::StatusIs;
 
 class YangParseTreeTest : public ::testing::Test {
  protected:

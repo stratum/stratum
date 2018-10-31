@@ -1,7 +1,7 @@
 // This file declares the BcmTunnelManager class.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_H_
+#ifndef STRATUM_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_H_
+#define STRATUM_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_H_
 
 #include <memory>
 #include <utility>
@@ -13,8 +13,8 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -98,7 +98,7 @@ class BcmTunnelManager {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_H_
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BCM_BCM_TUNNEL_MANAGER_H_

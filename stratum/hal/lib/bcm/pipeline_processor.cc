@@ -8,8 +8,8 @@
 #include "absl/strings/str_join.h"
 #include "stratum/glue/gtl/map_util.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -446,5 +446,5 @@ PipelineTable PipelineProcessor::NodeToTable(const PipelineNode& node) {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

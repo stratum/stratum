@@ -1,7 +1,7 @@
 #include "stratum/hal/lib/phal/datasource_mock.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace phal {
 namespace {
@@ -38,5 +38,5 @@ std::shared_ptr<DataSource> DataSourceMock::GetSharedPointer() {
 }
 }  // namespace phal
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+
+}  // namespace stratum

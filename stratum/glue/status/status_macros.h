@@ -217,7 +217,8 @@ class MakeErrorStream {
     }
 
     // MakeErrorStreamWithOutput is neither copyable nor movable.
-    MakeErrorStreamWithOutput(const MakeErrorStreamWithOutput&) = delete;
+    // FIXME(boc) this is actually requierd for use in lambda
+    //MakeErrorStreamWithOutput(const MakeErrorStreamWithOutput&) = delete;
     MakeErrorStreamWithOutput& operator=(const MakeErrorStreamWithOutput&) =
         delete;
 

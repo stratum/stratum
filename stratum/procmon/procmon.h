@@ -1,5 +1,5 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_PROCMON_PROCMON_H_
-#define PLATFORMS_NETWORKING_HERCULES_PROCMON_PROCMON_H_
+#ifndef STRATUM_PROCMON_PROCMON_H_
+#define STRATUM_PROCMON_PROCMON_H_
 
 #include <pthread.h>
 #include <memory>
@@ -10,8 +10,8 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace procmon {
 
 enum ProcmonEventType {
@@ -171,7 +171,7 @@ class Procmon {
 };
 
 }  // namespace procmon
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_PROCMON_PROCMON_H_
+}  // namespace stratum
+
+#endif  // STRATUM_PROCMON_PROCMON_H_

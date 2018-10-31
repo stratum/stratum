@@ -1,5 +1,5 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
+#ifndef STRATUM_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
+#define STRATUM_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
 
 #include <map>
 #include <string>
@@ -12,8 +12,8 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
+
 namespace hal {
 namespace bcm {
 
@@ -84,7 +84,7 @@ class BcmChassisRoInterface {
 
 }  // namespace bcm
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BCM_BCM_CHASSIS_RO_INTERFACE_H_
