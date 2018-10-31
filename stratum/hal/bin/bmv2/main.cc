@@ -22,7 +22,6 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/p4/p4_runtime_real.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/hal/lib/bmv2/bmv2_switch.h"
 #include "stratum/lib/security/auth_policy_checker.h"
@@ -112,7 +111,6 @@ int Main(int argc, char* argv[]) {
     }
   }
 
-  P4RuntimeReal::GetSingleton();  // initializes the P4Runtime gRPC service
   // TODO(antonin): temporary until Bmv2Switch implements PushChassisConfig
   // properly.
   uint64 node_id(1);

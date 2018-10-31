@@ -17,7 +17,6 @@ stratum_cc_binary(
         "//stratum/glue:logging",
         "//stratum/hal/lib/bmv2:bmv2_switch",
         "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/p4:p4_runtime_real",
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/pi:pi_node",
         "//stratum/lib/security:auth_policy_checker",

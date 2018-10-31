@@ -29,7 +29,6 @@
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 #include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/p4/p4_runtime_real.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"

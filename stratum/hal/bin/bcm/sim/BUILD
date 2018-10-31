@@ -62,7 +62,6 @@ stratum_cc_binary(
         "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
         "//stratum/hal/lib/bcm:bcm_switch",
         "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/p4:p4_runtime_real",
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/lib/security:auth_policy_checker",
