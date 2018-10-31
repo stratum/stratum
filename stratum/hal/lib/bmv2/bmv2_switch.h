@@ -54,16 +54,18 @@ class Bmv2Switch : public SwitchInterface {
       std::vector<::util::Status>* details) override;
   ::util::Status RegisterPacketReceiveWriter(
       uint64 node_id,
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) override;
+      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override;
   ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override;
   ::util::Status TransmitPacket(uint64 node_id,
                                 const ::p4::v1::PacketOut& packet) override;
   ::util::Status RegisterEventNotifyWriter(
-      const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) override;
+      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;
   ::util::Status UnregisterEventNotifyWriter() override;
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details) override;
+  ::util::Status SetValue(uint64 node_id, const SetRequest& request,
+                          std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
 
   // Factory function for creating the instance of the class.

@@ -120,7 +120,7 @@ Bmv2Switch::~Bmv2Switch() {}
 
 ::util::Status Bmv2Switch::RegisterPacketReceiveWriter(
     uint64 node_id,
-    const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
+    std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->RegisterPacketReceiveWriter(writer);
 }
@@ -137,7 +137,7 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 ::util::Status Bmv2Switch::RegisterEventNotifyWriter(
-    const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
+    std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   (void)writer;
   return ::util::OkStatus();
 }
@@ -153,6 +153,12 @@ Bmv2Switch::~Bmv2Switch() {}
   (void)request;
   (void)writer;
   (void)details;
+  return ::util::OkStatus();
+}
+
+::util::Status Bmv2Switch::SetValue(uint64 node_id, const SetRequest& request,
+                        std::vector<::util::Status>* details) {
+  //FIXME not implemented
   return ::util::OkStatus();
 }
 
