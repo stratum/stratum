@@ -20,7 +20,6 @@ bazel test \
 //stratum/hal/lib/phal:filepath_stringsource \
 //stratum/hal/lib/phal:fixed_layout_datasource \
 //stratum/hal/lib/phal:fixed_stringsource \
-//stratum/hal/lib/phal:led_datasource \
 //stratum/hal/lib/phal:managed_attribute \
 //stratum/hal/lib/phal:managed_attribute_mock \
 //stratum/hal/lib/phal:phal_proto \
@@ -38,7 +37,6 @@ bazel test \
 //stratum/hal/lib/phal:test_util \
 //stratum/hal/lib/phal:threadpool_interface \
 //stratum/hal/lib/phal:threadpool_interface_mock \
-//stratum/hal/lib/phal:transceiver_datasources \
 //stratum/hal/lib/phal:udev \
 //stratum/hal/lib/phal:udev_event_handler \
 //stratum/hal/lib/phal:udev_event_handler_mock \
@@ -47,7 +45,6 @@ bazel test \
 //stratum/hal/lib/phal:udev_mock \
 //stratum/hal/lib/phal:attribute_group_test \
 //stratum/hal/lib/phal:fixed_layout_datasource_test \
-//stratum/hal/lib/phal:led_datasource_test \
 //stratum/hal/lib/bcm:acl_table_test \
 //stratum/hal/lib/bcm:bcm_proto \
 //stratum/hal/lib/bcm:constants \
@@ -64,8 +61,6 @@ bazel test \
 //stratum/hal/lib/bcm:acl_table \
 //stratum/hal/lib/bcm:macros \
 //stratum/hal/lib/bcm:macros_test \
-//stratum/hal/lib/bcm:bcm_acl_pipeline \
-//stratum/hal/lib/bcm:bcm_acl_pipeline_test \
 //stratum/hal/lib/bcm:bcm_chassis_manager \
 //stratum/hal/lib/bcm:bcm_chassis_manager_mock \
 //stratum/hal/lib/bcm:bcm_sdk_wrapper \
@@ -114,5 +109,4 @@ exit 0
 //stratum/hal/lib/phal:phal_cli
 //stratum/hal/lib/phal:regex_datasource
 //stratum/hal/lib/phal:regex_datasource_test
-//stratum/hal/lib/phal:transceiver_datasources_test
 

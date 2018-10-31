@@ -36,6 +36,28 @@ stratum_cc_proto_library(
     ],
 )
 
+#FIXME(boc) pull this from upstream repo directly
+stratum_cc_proto_library(
+    name = "openconfig_proto",
+    hdrs = [
+        "openconfig.proto",
+        "openconfig-goog-bcm.proto",
+        "yang_wrappers.proto",
+    ],
+    deps = [
+        "//stratum/public/proto/openconfig:openconfig_proto",
+    ],
+)
+
+#FIXME(boc) pull this from upstream repo directly
+stratum_cc_proto_library(
+    name = "sc_yang_proto",
+    hdrs = [
+        "yext.proto",
+        "ywrapper.proto",
+    ],
+)
+
 stratum_cc_proto_library(
     name = "p4_annotation_proto",
     hdrs = [

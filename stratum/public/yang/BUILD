@@ -1,3 +1,4 @@
+'''FIXME(boc) GOOGLE ONLY
 # Collections of YANG models to use as dependencies
 load("//ops/netops/openconfig/build:yang.bzl", "yang_library")
 load("//ops/netops/openconfig/build:yang.bzl", "yang_lint_test")
@@ -80,3 +81,4 @@ yang_lint_test(
         "//openconfig/public/release/models:openconfig_modules",
     ],
 )
+  end google only'''

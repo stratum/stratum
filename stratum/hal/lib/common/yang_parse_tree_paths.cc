@@ -15,7 +15,7 @@
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 
 #include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
-#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
+#include "stratum/public/proto/openconfig.pb.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/lib/constants.h"

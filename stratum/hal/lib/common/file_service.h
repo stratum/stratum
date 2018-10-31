@@ -21,7 +21,7 @@
 
 #include <memory>
 
-#include "stratum/glue/gnoi/file.grpc.pb.h"
+#include "github.com/openconfig/gnoi/file/file.grpc.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_interface.h"
@@ -29,7 +29,7 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {

@@ -23,7 +23,7 @@
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "stratum/glue/gtl/map_util.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 // Note: We want to keep this polling interval relatively short. Unlike with
 // with udev, it's possible for us to miss state changes entirely if they occur

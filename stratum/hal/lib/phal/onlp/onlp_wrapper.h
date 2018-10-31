@@ -24,7 +24,7 @@ extern "C" {
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 #include "util/task/statusor.h"
 
 namespace stratum {

@@ -19,7 +19,7 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "gmock/gmock.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {

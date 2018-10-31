@@ -17,7 +17,8 @@
 #include <grpc++/grpc++.h>
 #include <memory>
 
-#include "net/util/ports.h"
+#include "stratum/glue/net_util/ports.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
@@ -56,7 +57,7 @@ class CertificateManagementServiceTest
             error_buffer_.get());
     // Create a mock service to test the functionality.
     std::string url =
-        "localhost:" + std::to_string(net_util::PickUnusedPortOrDie());
+        "localhost:" + std::to_string(stratum::PickUnusedPortOrDie());
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(url, ::grpc::InsecureServerCredentials());
     builder.RegisterService(certificate_management_service_.get());

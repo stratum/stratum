@@ -24,7 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/util.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 #include "util/task/statusor.h"
 
 namespace stratum {

@@ -24,7 +24,7 @@
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {

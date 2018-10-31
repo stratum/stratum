@@ -77,7 +77,7 @@ class HalTest : public ::testing::Test {
  protected:
   static const string RandomURL() {
     // Every call to PickUnusedPortOrDie() will return a new port number.
-    return "localhost:" + std::to_string(net_util::PickUnusedPortOrDie());
+    return "localhost:" + std::to_string(stratum::PickUnusedPortOrDie());
   }
 
   // Per-test-case set-up.

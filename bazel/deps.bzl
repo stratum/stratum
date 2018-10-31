@@ -70,13 +70,12 @@ def stratum_deps():
             build_file = "bazel/external/gnmi.BUILD",
         )
     
-    #FIXME add gNOI BUILD files
     if "com_github_openconfig_gnoi" not in native.existing_rules():
         remote_workspace(
             name = "com_github_openconfig_gnoi",
-            remote = "https://github.com/openconfig/gnoi",
-            branch = "master",
-            #build_file = "bazel/external/gnmi.BUILD",
+            remote = "https://github.com/bocon13/gnoi",
+            branch = "no-bazel",
+            build_file = "bazel/external/gnoi.BUILD",
         )
 # -----------------------------------------------------------------------------
 #        Third party C++ libraries for common

@@ -31,7 +31,7 @@
 
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
-#include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
+#include "stratum/public/proto/openconfig.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"

@@ -38,7 +38,7 @@
 #include "absl/container/flat_set.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "util/task/canonical_errors.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 #include "util/task/statusor.h"
 
 DECLARE_string(bcm_hardware_specs_file);
