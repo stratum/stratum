@@ -63,7 +63,7 @@ As of now the `stratum_bmv2` binary *can only be run from the root of your
 Stratum Bazel workspace*:
 
 ```
-./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 --url=0.0.0.0:28000 --forwarding_pipeline_configs_file=/tmp/config.txt --persistent_config_dir=/tmp/
+./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 --external_hercules_urls=0.0.0.0:28000 --forwarding_pipeline_configs_file=/tmp/config.txt --persistent_config_dir=/tmp/
 ```
 
 You can ignore the following error, we are working on fixing it:

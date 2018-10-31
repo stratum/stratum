@@ -71,7 +71,7 @@ from stratum import ONOSStratumBmv2Switch
 from stratum import StratumBmv2Switch
 
 You will probably need to update your Python path, unless you've installed stratum.py
-sudo -E env PYTHONPATH=$PYTHONPATH:$STRATUM_ROOT/tools/dev/mininet ./<your script>.py
+sudo -E env PYTHONPATH=$PYTHONPATH:$STRATUM_ROOT/tools/mininet ./<your script>.py
 
 Notes
 -----
@@ -131,23 +131,13 @@ class StratumBmv2Switch(Switch):
     """Stratum BMv2 switch"""
 
     def __init__(self, name, json=None, loglevel="warn",
-                 grpcport=None, cpuport=255, pipeconf="",
-                 gnmi=False, portcfg=True, onosdevid=None, **kwargs):
+                 grpcport=None, cpuport=255, **kwargs):
         Switch.__init__(self, name, **kwargs)
         self.grpcPort = grpcport
         self.cpuPort = cpuport
         self.json = json
         self.loglevel = loglevel
         self.logfile = '/tmp/stratum-bmv2-%s.log' % self.name
-        self.pipeconfId = pipeconf
-        self.injectPorts = portcfg in (True, '1', 'true', 'True')
-        self.withGnmi = gnmi in (True, '1', 'true', 'True')
-        self.longitude = kwargs['longitude'] if 'longitude' in kwargs else None
-        self.latitude = kwargs['latitude'] if 'latitude' in kwargs else None
-        if onosdevid is not None and len(onosdevid) > 0:
-            self.onosDeviceId = onosdevid
-        else:
-            self.onosDeviceId = "device:stratum-bmv2:%s" % self.name
         self.logfd = None
         self.bmv2popen = None
         self.stopped = False
@@ -163,12 +153,12 @@ class StratumBmv2Switch(Switch):
 
         args = [
           STRATUM_BINARY,
-          '--device_id=%d' % DEFAULT_DEVICE_ID,
-          '--forwarding_pipeline_configs_file=%s/config.txt' % config_dir,
-          '--persistent_config_dir=' + config_dir,
-          '--initial_pipeline=' + INITIAL_PIPELINE,
-          '--cpu_port=%s' % self.cpuPort,
-          '--url=0.0.0.0:%s' % self.grpcPort,
+          '-device_id=%d' % DEFAULT_DEVICE_ID,
+          '-forwarding_pipeline_configs_file=%s/config.txt' % config_dir,
+          '-persistent_config_dir=' + config_dir,
+          '-initial_pipeline=' + INITIAL_PIPELINE,
+          '-cpu_port=%s' % self.cpuPort,
+          '-external_hercules_urls=0.0.0.0:%s' % self.grpcPort,
         ]
         for port, intf in self.intfs.items():
             if not intf.IP():
@@ -230,10 +220,21 @@ class StratumBmv2Switch(Switch):
 class ONOSStratumBmv2Switch(StratumBmv2Switch):
     """Stratum BMv2 switch with ONOS support"""
 
-    def __init__(self, name, netcfg=True, **kwargs):
+    def __init__(self, name, netcfg=True, pipeconf="",
+                 gnmi=False, portcfg=True, onosdevid=None, **kwargs):
         StratumBmv2Switch.__init__(self, name, **kwargs)
         self.netcfg = netcfg in (True, '1', 'true', 'True')
         self.netcfgfile = '/tmp/stratum-bmv2-%s-netcfg.json' % self.name
+        self.pipeconfId = pipeconf
+        self.injectPorts = portcfg in (True, '1', 'true', 'True')
+        self.withGnmi = gnmi in (True, '1', 'true', 'True')
+        self.longitude = kwargs['longitude'] if 'longitude' in kwargs else None
+        self.latitude = kwargs['latitude'] if 'latitude' in kwargs else None
+        if onosdevid is not None and len(onosdevid) > 0:
+            self.onosDeviceId = onosdevid
+        else:
+            self.onosDeviceId = "device:stratum-bmv2:%s" % self.name
+
 
     def getDeviceConfig(self, srcIP):
         basicCfg = {
