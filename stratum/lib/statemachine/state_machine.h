@@ -1,17 +1,16 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_STATE_MACHINE_H_
-#define PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_STATE_MACHINE_H_
+#ifndef STRATUM_LIB_STATEMACHINE_STATE_MACHINE_H_
+#define STRATUM_LIB_STATEMACHINE_STATE_MACHINE_H_
 
 #include <atomic>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
-#include "util/task/status.h"
-#include "util/task/status_macros.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/statusor.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace state_machine {
 
 // The StateMachine class is a general state machine framework which executes
@@ -132,7 +131,6 @@ class StateMachine {
 };
 
 }  // namespace state_machine
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_LIB_STATEMACHINE_STATE_MACHINE_H_
+#endif  // STRATUM_LIB_STATEMACHINE_STATE_MACHINE_H_

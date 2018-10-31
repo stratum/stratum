@@ -1,6 +1,6 @@
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
     "stratum_cc_binary",
     "stratum_cc_library",
     "stratum_cc_test",
@@ -10,7 +10,7 @@ load(
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = SANDBLAZE_INTERNAL,
+    default_visibility = STRATUM_INTERNAL,
 )
 
 stratum_cc_proto_library(
@@ -30,7 +30,7 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 
@@ -79,7 +79,7 @@ stratum_cc_binary(
         "//stratum/lib:utils",
         "@com_google_grpc//:grpc++",
         #"//sandblaze/prebuilt/openssl",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 

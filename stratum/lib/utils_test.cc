@@ -18,7 +18,7 @@
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/hal/common/common.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

@@ -33,21 +33,21 @@ package(
 
 ''' FIXME(boc) google only
 genrule(
-    name = "status_proto_copy",
-    srcs = ["@com_github_googleapis//:status_proto"],
+    name = "status_cc_proto_copy",
+    srcs = ["@com_github_googleapis//:status_cc_proto"],
     outs = ["google/rpc/status.proto"],
-    cmd = "cp $(location @com_github_googleapis//:status_proto) $(location google/rpc/status.proto)",
+    cmd = "cp $(location @com_github_googleapis//:status_cc_proto) $(location google/rpc/status.proto)",
 )
 
 genrule(
     name = "code_proto_copy",
-    srcs = ["@com_github_googleapis//:code_proto"],
+    srcs = ["@com_github_googleapis//:code_cc_proto"],
     outs = ["google/rpc/code.proto"],
-    cmd = "cp $(location @com_github_googleapis//:code_proto) $(location google/rpc/code.proto)",
+    cmd = "cp $(location @com_github_googleapis//:code_cc_proto) $(location google/rpc/code.proto)",
 )
 
 stratum_cc_proto_library(
-    name = "status_proto",
+    name = "status_cc_proto",
     hdrs = ["google/rpc/status.proto"],
     #proto_include = ".",
 )
@@ -57,7 +57,7 @@ stratum_cc_proto_library(
     hdrs = ["google/rpc/code.proto"],
     #proto_include = ".",
 )
-''' end google only
+ end google only '''
 
 config_setting(
     name = "stratum_ppc",

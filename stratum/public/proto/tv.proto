@@ -9,7 +9,7 @@ option cc_generic_services = false;
 
 package google.hercules.testing;
 
-import "p4lang_PI/proto/p4/v1/p4runtime.proto";
+import "p4/v1/p4runtime.proto";
 import "openconfig/gnmi/proto/gnmi/gnmi.proto";
 
 //////////////////////////////////////////////

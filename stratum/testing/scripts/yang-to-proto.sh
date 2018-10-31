@@ -111,7 +111,7 @@ EOT
   sources
   cat <<EOT >>BUILD
     ],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
         "//platforms/networking/hercules/public/proto:yang_proto",
 EOT
@@ -136,7 +136,7 @@ proto_library(
     srcs = [
         "enums.proto",
     ],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
         "//platforms/networking/hercules/public/proto:yang_proto",
     ],
@@ -160,13 +160,13 @@ function create_BUILD {
   cat <<EOT >BUILD
 load(
     "//platforms/networking/sandblaze/portage:build_defs.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
     "sc_proto_lib",
 )
 
 package(
     default_hdrs_check = "strict",
-    default_visibility = SANDBLAZE_INTERNAL,
+    default_visibility = STRATUM_INTERNAL,
 )
 
 EOT

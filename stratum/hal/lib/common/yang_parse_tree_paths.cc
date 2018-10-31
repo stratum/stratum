@@ -14,7 +14,7 @@
 
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 
-#include "stratum/glue/gnmi/gnmi.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/glue/openconfig/proto/old_openconfig.pb.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
@@ -179,7 +179,7 @@ std::string ConvertAdminStateToString(const AdminState& state) {
 }
 
 std::string ConvertSpeedBpsToString(
-    const ::google::google::protobuf::uint64& speed_bps) {
+    const ::google::protobuf::uint64& speed_bps) {
   switch (speed_bps) {
     case kTenGigBps:
       return "SPEED_10GB";
@@ -233,7 +233,7 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
 // by the gNMI interface (MAC addresses are expected to be std::strings in the
 // following format: "XX:XX:XX:XX:XX:XX").
 std::string MacAddressToYangString(
-    const ::google::google::protobuf::uint64& mac_address) {
+    const ::google::protobuf::uint64& mac_address) {
   return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
                          (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
                          (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
@@ -293,7 +293,7 @@ TreeNodeSetHandler GetOnUpdateFunctor(
             set_request_get_mutable_inner_message_func)(),
     void (T::*inner_message_set_field_func)(U),
     V (::gnmi::TypedValue::*get_value)() const) {
-  return [=](const ::gnmi::Path& path, const ::google::google::protobuf::Message& in,
+  return [=](const ::gnmi::Path& path, const ::google::protobuf::Message& in,
              CopyOnWriteChassisConfig* config) {
     const ::gnmi::TypedValue* val = static_cast<const ::gnmi::TypedValue*>(&in);
     return SetValue(node_id, port_id, tree,
@@ -774,7 +774,7 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
   auto poll_functor = UnsupportedFunc();
   auto on_change_functor = UnsupportedFunc();
   auto on_replace_functor =
-      [](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+      [](const ::gnmi::Path& path, const ::google::protobuf::Message& val,
          CopyOnWriteChassisConfig* config) -> ::util::Status {
     auto* typed_value = static_cast<const gnmi::TypedValue*>(&val);
     if (!typed_value) {
@@ -921,7 +921,7 @@ void SetUpInterfacesInterfaceConfigHealthIndicator(const std::string& state,
   };
   auto on_set_functor =
       [node_id, port_id, node, tree](
-          const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
           CopyOnWriteChassisConfig* config) -> ::util::Status {
     const gnmi::TypedValue* typed_val =
         dynamic_cast<const gnmi::TypedValue*>(&val);
@@ -1158,7 +1158,7 @@ void SetUpInterfacesInterfaceEthernetStateForwardingViability(
 // DataResponse::Counters.
 TreeNodeEventHandler GetPollCounterFunctor(
     uint64 node_id, uint32 port_id,
-    ::google::google::protobuf::uint64 (PortCounters::*func_ptr)() const,
+    ::google::protobuf::uint64 (PortCounters::*func_ptr)() const,
     YangParseTree* tree) {
   return [tree, node_id, port_id, func_ptr](const GnmiEvent& event,
                                             const ::gnmi::Path& path,

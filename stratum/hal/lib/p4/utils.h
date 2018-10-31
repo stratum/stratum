@@ -24,6 +24,7 @@
 
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

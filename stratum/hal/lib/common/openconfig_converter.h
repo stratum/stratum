@@ -5,8 +5,8 @@
 #include "stratum/glue/openconfig/proto/old_openconfig_google_bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
-#include "util/task/status.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace google {
 namespace hercules {

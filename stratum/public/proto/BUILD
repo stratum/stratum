@@ -53,15 +53,17 @@ stratum_cc_proto_library(
     ],
 )
 
+''' FIXME(boc) expose gNMI and P4RT protos
 proto_library(
     name = "tv_proto",
     srcs = ["tv.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
-        "//openconfig/gnmi/proto/gnmi:gnmi_proto",
-        "//p4lang_PI/proto/p4/v1:p4runtime_proto",
+        "@com_github_openconfig_gnmi//:proto/gnmi/gnmi.proto",
+        "@com_github_p4lang_p4runtime//:proto/p4/v1/p4runtime.proto",
     ],
 )
+'''
 
 filegroup(
     name = "proto_srcs",

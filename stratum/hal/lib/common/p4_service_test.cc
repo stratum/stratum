@@ -70,7 +70,7 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
                                                auth_policy_checker_mock_.get(),
                                                error_buffer_.get());
     std::string url =
-        "localhost:" + std::to_string(net_util::PickUnusedPortOrDie());
+        "localhost:" + std::to_string(stratum::PickUnusedPortOrDie());
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(url, ::grpc::InsecureServerCredentials());
     builder.RegisterService(p4_service_.get());

@@ -199,6 +199,9 @@ class SelectResult {
     return ready_flags_->count(channel) ? ready_flags_->at(channel) : false;
   }
 
+  // FIXME Constructor for mock StatusOr errors
+  SelectResult() {}
+
  private:
   // Map from Channel "select"ed on to ready flag.
   std::unique_ptr<std::unordered_map<channel_internal::ChannelBase*, bool>>
@@ -358,7 +361,7 @@ class ChannelReader {
       //FIXME ABSL_DIE_IF_NULL not available in absl
       : channel_(/*FIXME ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
 
- std::shared_ptr<Channel<T>> channel_;
+  std::shared_ptr<Channel<T>> channel_;
 };
 
 template <typename T>

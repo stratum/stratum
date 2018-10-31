@@ -1,7 +1,6 @@
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace test_utils {
 namespace p4_proto_builders {
 
@@ -72,7 +71,7 @@ hal::P4ControlBlock ApplyNested(std::vector<hal::P4ControlTableRef> tables) {
   return control_block;
 }
 
-// Same as above, but takes in p4::config::v1::Table objects.
+// Same as above, but takes in ::p4::config::v1::Table objects.
 hal::P4ControlBlock ApplyNested(std::vector<::p4::config::v1::Table> tables,
                                 P4Annotation::PipelineStage stage) {
   std::vector<hal::P4ControlTableRef> table_refs;
@@ -86,5 +85,4 @@ hal::P4ControlBlock ApplyNested(std::vector<::p4::config::v1::Table> tables,
 
 }  // namespace p4_proto_builders
 }  // namespace test_utils
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

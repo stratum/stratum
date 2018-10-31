@@ -6,19 +6,19 @@
 // internal action consolidates P4 action functions from all logical tables
 // into one combined action for the physical table.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_HAL_LIB_P4_P4_ACTION_MAPPER_H_
-#define PLATFORMS_NETWORKING_HERCULES_HAL_LIB_P4_P4_ACTION_MAPPER_H_
+#ifndef STRATUM_HAL_LIB_P4_P4_ACTION_MAPPER_H_
+#define STRATUM_HAL_LIB_P4_P4_ACTION_MAPPER_H_
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "absl/container/flat_hash_map.h"
 #include "p4/config/v1/p4info.pb.h"
-#include "util/task/status.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 // The lifetime of a P4ActionMapper spans the P4PipelineConfig's life.  The
@@ -120,7 +120,6 @@ class P4ActionMapper {
 };
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_HAL_LIB_P4_P4_ACTION_MAPPER_H_
+#endif  // STRATUM_HAL_LIB_P4_P4_ACTION_MAPPER_H_

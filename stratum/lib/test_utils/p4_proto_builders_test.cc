@@ -6,8 +6,7 @@
 #include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace test_utils {
 namespace p4_proto_builders {
 namespace {
@@ -72,13 +71,13 @@ TEST(P4ProtoBuildersTest, ApplyTable_FromPreamble) {
 }
 
 TEST(P4ProtoBuildersTest, ApplyNested_FromRefs) {
-  std::vector<string> table_strings = {
+  std::vector<std::string> table_strings = {
     R"PROTO(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)PROTO",
     R"PROTO(table_id: 2 table_name: "t2" pipeline_stage: VLAN_ACL)PROTO",
     R"PROTO(table_id: 3 table_name: "t3" pipeline_stage: VLAN_ACL)PROTO",
   };
   std::vector<hal::P4ControlTableRef> tables;
-  for (const string& table_string : table_strings) {
+  for (const std::string& table_string : table_strings) {
     hal::P4ControlTableRef table;
     CHECK_OK(ParseProtoFromString(table_string, &table));
     tables.push_back(table);
@@ -110,19 +109,19 @@ TEST(P4ProtoBuildersTest, ApplyNested_FromRefs) {
 }
 
 TEST(P4ProtoBuildersTest, ApplyNested_FromTables) {
-  std::vector<string> table_strings = {
+  std::vector<std::string> table_strings = {
       R"PROTO(preamble { id: 1 name: "t1" })PROTO",
       R"PROTO(preamble { id: 2 name: "t2" })PROTO",
       R"PROTO(preamble { id: 3 name: "t3" })PROTO",
   };
-  std::vector<p4::config::v1::Table> tables;
-  for (const string& table_string : table_strings) {
+  std::vector<::p4::config::v1::Table> tables;
+  for (const std::string& table_string : table_strings) {
     ::p4::config::v1::Table table;
     CHECK_OK(ParseProtoFromString(table_string, &table));
     tables.push_back(table);
   }
 
-  std::vector<string> ref_strings = {
+  std::vector<std::string> ref_strings = {
     R"PROTO(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)PROTO",
     R"PROTO(table_id: 2 table_name: "t2" pipeline_stage: VLAN_ACL)PROTO",
     R"PROTO(table_id: 3 table_name: "t3" pipeline_stage: VLAN_ACL)PROTO",
@@ -160,7 +159,7 @@ TEST(P4ProtoBuildersTest, ApplyNested_Empty) {
 }
 
 TEST(P4ProtoBuildersTest, ApplyNested_SingleTable) {
-  string table_string =
+  std::string table_string =
       R"PROTO(table_id: 1 table_name: "t1" pipeline_stage: VLAN_ACL)PROTO";
   hal::P4ControlTableRef table;
   CHECK_OK(ParseProtoFromString(table_string, &table));
@@ -695,5 +694,4 @@ TEST(P4ProtoBuildersTest, IsValidBuilderComplexBlock) {
 }  // namespace
 }  // namespace p4_proto_builders
 }  // namespace test_utils
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

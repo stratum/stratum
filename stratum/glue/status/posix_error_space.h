@@ -46,7 +46,7 @@ namespace util {
 const ErrorSpace* PosixErrorSpace();
 
 inline Status PosixErrorToStatus(int code, const std::string& message) {
-  return ::util::MakeStatus(PosixErrorSpace(), code, message);
+  return Status(PosixErrorSpace(), code, message);
 }
 
 }  // namespace util

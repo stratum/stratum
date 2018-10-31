@@ -12,9 +12,9 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/node_hash_map.h"
 #include "p4/config/v1/p4info.pb.h"
-#include "stratum/glue/gtl/flat_hash_set.h"
-#include "util/task/status.h"
-#include "util/task/statusor.h"
+#include "absl/container/flat_hash_set.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace google {
 namespace hercules {

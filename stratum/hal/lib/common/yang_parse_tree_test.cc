@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 #include "stratum/hal/lib/common/yang_parse_tree_mock.h"
 
 #include "google/protobuf/text_format.h"
-#include "stratum/glue/gnmi/gnmi.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
@@ -326,7 +324,7 @@ class YangParseTreeTest : public ::testing::Test {
   // - returns status produced by execution of the handler.
   ::util::Status ExecuteOnSet(const ::gnmi::Path& path,
                               const OnSetAction& action,
-                              const ::google::google::protobuf::Message& val,
+                              const ::google::protobuf::Message& val,
                               SetRequest* req, GnmiEventPtr* notification) {
     // After tree creation only two leafs are defined:
     // /interfaces/interface[name=*]/state/ifindex
@@ -384,7 +382,7 @@ class YangParseTreeTest : public ::testing::Test {
   // The caller can then check if the contents of 'req' is the expected one
   // (assuming the returned status is ::util::OkStatus())
   ::util::Status ExecuteOnUpdate(const ::gnmi::Path& path,
-                                 const ::google::google::protobuf::Message& val,
+                                 const ::google::protobuf::Message& val,
                                  SetRequest* req, GnmiEventPtr* notification) {
     return ExecuteOnSet(path, &TreeNode::GetOnUpdateHandler, val, req,
                         notification);
@@ -404,7 +402,7 @@ class YangParseTreeTest : public ::testing::Test {
   // The caller can then check if the contents of 'req' is the expected one
   // (assuming the returned status is ::util::OkStatus())
   ::util::Status ExecuteOnReplace(const ::gnmi::Path& path,
-                                  const ::google::google::protobuf::Message& val,
+                                  const ::google::protobuf::Message& val,
                                   SetRequest* req, GnmiEventPtr* notification) {
     return ExecuteOnSet(path, &TreeNode::GetOnReplaceHandler, val, req,
                         notification);

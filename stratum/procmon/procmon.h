@@ -8,7 +8,7 @@
 
 #include "stratum/procmon/procmon.pb.h"
 #include "absl/synchronization/mutex.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 namespace google {
 namespace hercules {

@@ -7,12 +7,12 @@
 
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
 )
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = SANDBLAZE_INTERNAL,
+    default_visibility = STRATUM_INTERNAL,
 )
 
 genrule(
@@ -39,7 +39,7 @@ genrule(
 proto_library(
     name = "p4_control_proto",
     srcs = ["p4_control.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
         "//stratum/public/proto/proto2:p4_annotation_proto",
         "//stratum/public/proto/proto2:p4_table_defs_proto",
@@ -49,7 +49,7 @@ proto_library(
 proto_library(
     name = "common_flow_entry_proto",
     srcs = ["common_flow_entry.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
         "//stratum/public/proto/proto2:p4_annotation_proto",
         "//stratum/public/proto/proto2:p4_table_defs_proto",
@@ -60,7 +60,7 @@ proto_library(
 proto_library(
     name = "p4_table_map_proto",
     srcs = ["p4_table_map.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
         ":common_flow_entry_proto",
         "//stratum/public/proto/proto2:p4_annotation_proto",
@@ -72,7 +72,7 @@ proto_library(
 proto_library(
     name = "p4_pipeline_config_proto",
     srcs = ["p4_pipeline_config.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [
         ":p4_control_proto",
         ":p4_table_map_proto",

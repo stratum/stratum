@@ -10,8 +10,7 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 P4ActionMapper::P4ActionMapper(const P4PipelineConfig& p4_pipeline_config)
@@ -124,5 +123,4 @@ P4ActionMapper::MapActionIDAndTableID(
 }
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

@@ -1,10 +1,10 @@
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
     "stratum_cc_proto_library",
 )
 
-package(default_visibility = SANDBLAZE_INTERNAL)
+package(default_visibility = STRATUM_INTERNAL)
 
 # This command edits the gnoi micro service protos to be able to be used by Hercules stack.
 proto_edit_cmd = ("cat $(SRCS) " +

@@ -52,7 +52,7 @@ stratum_cc_library(
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "@com_google_absl//absl/strings",
-        "@com_github_p4lang_PI//:p4info_v1_proto",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
     ],
 )
 

@@ -18,7 +18,7 @@
 #include <list>
 #include <string>
 
-#include "stratum/glue/gnmi/gnmi.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 #include "absl/synchronization/mutex.h"
@@ -40,7 +40,7 @@ GnmiPublisher::GnmiPublisher(SwitchInterface* switch_interface)
 GnmiPublisher::~GnmiPublisher() {}
 
 ::util::Status GnmiPublisher::HandleUpdate(
-    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config) {
   absl::WriterMutexLock l(&access_lock_);
 
@@ -59,7 +59,7 @@ GnmiPublisher::~GnmiPublisher() {}
 }
 
 ::util::Status GnmiPublisher::HandleReplace(
-    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config) {
   absl::WriterMutexLock l(&access_lock_);
 

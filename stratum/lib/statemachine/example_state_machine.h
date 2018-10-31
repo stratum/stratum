@@ -4,7 +4,7 @@
 #include "stratum/lib/statemachine/state_machine.h"
 #include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 namespace google {
 namespace hercules {

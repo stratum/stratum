@@ -28,6 +28,7 @@
 #include <set>
 #include <string>
 
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"

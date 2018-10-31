@@ -1860,7 +1860,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   }
 
   // Remove the used actions.
-  absl::flat_hash_set<const ::google::google::protobuf::Message*> messages = {
+  absl::flat_hash_set<const ::google::protobuf::Message*> messages = {
       cpu_queue_action, egress_to_cpu_action, clone_action, drop_action,
       clone_port_action};
   messages.erase(nullptr);
@@ -1945,7 +1945,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   bcm_actions->push_back(bcm_egress_port_action);
 
   // Remove the used actions.
-  absl::flat_hash_set<const ::google::google::protobuf::Message*> messages = {
+  absl::flat_hash_set<const ::google::protobuf::Message*> messages = {
       eth_source_action, eth_dest_action, egress_port_action};
   EraseReferencesFromRepeatedField(messages,
                                    action_function->mutable_modify_fields());

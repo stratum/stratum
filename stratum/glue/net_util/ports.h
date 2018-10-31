@@ -20,6 +20,8 @@
 
 namespace stratum {
 
+#define PickUnusedPortOrDie PickUnusedIpv4PortOrDie
+
 // The same as PickUnusedPortOrDie() in google3/net/util/ports.h. We have to
 // have a copy here due to dependency to an unsupported PPC compiler. We also
 // changed the name to get rid of ipv6-hostile warning. In future we expect to

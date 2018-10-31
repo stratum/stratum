@@ -10,11 +10,11 @@
 #include "stratum/procmon/procmon.h"
 #include "stratum/procmon/procmon.pb.h"
 #include "stratum/procmon/procmon_service_impl.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 DEFINE_string(procmon_config_file, "",
               "Path to Procmon configuration proto file.");
-DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
+DEFINE_string(procmon_service_addr, ::google::hercules::kProcmonServiceUrl,
               "Url of the procmon service to listen to.");
 
 namespace google {
@@ -57,6 +57,6 @@ namespace procmon {
 }  // namespace google
 
 int main(int argc, char** argv) {
-  ::util::Status ret = stratum::procmon::Main(argc, argv);
+  ::util::Status ret = google::hercules::procmon::Main(argc, argv);
   return ret.ok() ? 0 : 1;
 }

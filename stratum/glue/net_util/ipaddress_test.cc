@@ -54,6 +54,7 @@ namespace stratum {
 using testing::ScopedMockLog;
 #endif
 
+using __gnu_cxx::hash_set;
 using absl::node_hash_set;
 
 // Tests for IPAddress.
@@ -1901,7 +1902,7 @@ TEST(IPRangeTest, ToAndFromString4) {
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString5, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString6, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString7, &subnet));
-  //FIXME there seems to be a behavior difference in open source absl
+  //FIXME(boc) there seems to be a behavior difference in open source absl
   //EXPECT_FALSE(StringToIPRange(kBogusSubnetString8, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString9, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString10, &subnet));
@@ -1924,7 +1925,7 @@ TEST(IPRangeTest, ToAndFromString4) {
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString5, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString6, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString7, &subnet));
-  //FIXME there seems to be a behavior difference in open source absl
+  //FIXME(boc) there seems to be a behavior difference in open source absl
   //EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString8, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString9, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString10, &subnet));

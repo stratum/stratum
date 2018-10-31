@@ -153,7 +153,7 @@ TEST(AclTableTest, InsertEntry) {
   // Insert the entries and verify the table state.
   // We use the string representation since:
   //   1. The protobufs are simple enough for the strings to be stable.
-  //   2. Strings show up better than google::google::protobuf::Message in the error
+  //   2. Strings show up better than ::google::protobuf::Message in the error
   //      output of *ElementsAre*.
   std::vector<string> inserted_entries;
   for (const auto& entry : entries) {

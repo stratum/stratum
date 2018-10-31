@@ -1,13 +1,13 @@
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = SANDBLAZE_INTERNAL,
+    default_visibility = STRATUM_INTERNAL,
 )
 
 stratum_cc_library(
@@ -19,8 +19,8 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
-        "//util/task:status",
-        "//util/task:statusor",
+        "//stratum/glue/status:status",
+        "//stratum/glue/status:statusor",
     ],
 )
 
@@ -37,7 +37,7 @@ stratum_cc_library(
         ":state_machine",
         "//testing/base/public:gunit",
         "@com_google_absl//absl/container:flat_hash_map",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 
@@ -51,6 +51,6 @@ stratum_cc_test(
         ":state_machine",
         "//testing/base/public:gunit",
         "//testing/base/public:gunit_main",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )

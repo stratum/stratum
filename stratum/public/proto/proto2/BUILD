@@ -6,12 +6,12 @@
 # proto2 libraries that will compile alongside other google3 proto libraries.
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
 )
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = SANDBLAZE_INTERNAL,
+    default_visibility = STRATUM_INTERNAL,
 )
 
 genrule(
@@ -33,12 +33,12 @@ genrule(
 proto_library(
     name = "p4_table_defs_proto",
     srcs = ["p4_table_defs.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
 )
 
 proto_library(
     name = "p4_annotation_proto",
     srcs = ["p4_annotation.proto"],
-    cc_api_version = 2,
+    #cc_api_version = 2, FIXME(boc) google only
     deps = [":p4_table_defs_proto"],
 )

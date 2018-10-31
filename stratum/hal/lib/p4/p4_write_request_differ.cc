@@ -17,9 +17,7 @@
 
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 
-//FIXME(boc)
-//#include "stratum/glue/logging.h"
-#include "glog/logging.h"
+#include "stratum/glue/logging.h"
 #include "google/protobuf/generated_message_reflection.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
@@ -45,7 +43,7 @@ P4WriteRequestDiffer::P4WriteRequestDiffer(
     ::p4::v1::WriteRequest* delete_request, ::p4::v1::WriteRequest* add_request,
     ::p4::v1::WriteRequest* modify_request,
     ::p4::v1::WriteRequest* unchanged_request) {
-  ::google::google::protobuf::util::MessageDifferencer msg_differencer;
+  ::google::protobuf::util::MessageDifferencer msg_differencer;
   P4WriteRequestReporter reporter;
   msg_differencer.ReportDifferencesTo(&reporter);
   if (unchanged_request) {
@@ -186,8 +184,8 @@ bool P4WriteRequestComparator::IsMatch(
   // can be in any order, so the comparison treats them as a map with field_id
   // as the key.
   ::google::protobuf::util::MessageDifferencer msg_differencer;
-  auto entry_desc = p4::TableEntry::default_instance().GetDescriptor();
-  auto match_desc = p4::FieldMatch::default_instance().GetDescriptor();
+  auto entry_desc = ::p4::v1::TableEntry::default_instance().GetDescriptor();
+  auto match_desc = ::p4::v1::FieldMatch::default_instance().GetDescriptor();
   auto match_field_desc = entry_desc->FindFieldByName("match");
   msg_differencer.TreatAsMap(match_field_desc,
                              match_desc->FindFieldByName("field_id"));

@@ -257,7 +257,7 @@ TEST_F(P4WriteRequestDifferTest, TestDeleteMultipleTableEntries) {
   ASSERT_EQ(3, deletions_.updates_size());
   EXPECT_EQ(0, additions_.updates_size());
   msg_differencer_.set_repeated_field_comparison(
-      ::google:protobuf::util::MessageDifferencer::AS_SET);
+      ::google::protobuf::util::MessageDifferencer::AS_SET);
   ::p4::v1::WriteRequest expected_deletes = old_request_;
   expected_deletes.mutable_updates(0)->set_type(::p4::v1::Update::DELETE);
   expected_deletes.mutable_updates(1)->set_type(::p4::v1::Update::DELETE);

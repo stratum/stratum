@@ -14,23 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * Copyright 2018 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
 #ifndef STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 #define STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_H_
 
@@ -58,7 +41,7 @@ using TreeNodeEventHandler = std::function<::util::Status(
     const GnmiEvent& event, const ::gnmi::Path& path,
     GnmiSubscribeStream* stream)>;
 using TreeNodeSetHandler = std::function<::util::Status(
-    const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+    const ::gnmi::Path& path, const ::google::protobuf::Message& val,
     CopyOnWriteChassisConfig* config)>;
 using TreeNodeDeleteHandler = std::function<::util::Status(
     const ::gnmi::Path& path, CopyOnWriteChassisConfig* config)>;
@@ -232,7 +215,7 @@ class TreeNode {
   // Returns a functor that will execute handlers of this node.
   GnmiSetHandler GetOnUpdateHandler() const {
     return
-        [this](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+        [this](const ::gnmi::Path& path, const ::google::protobuf::Message& val,
                CopyOnWriteChassisConfig* config) {
           return on_update_handler_(path, val, config);
         };
@@ -241,7 +224,7 @@ class TreeNode {
   // Returns a functor that will execute handlers of this node.
   GnmiSetHandler GetOnReplaceHandler() const {
     return
-        [this](const ::gnmi::Path& path, const ::google::google::protobuf::Message& val,
+        [this](const ::gnmi::Path& path, const ::google::protobuf::Message& val,
                CopyOnWriteChassisConfig* config) {
           return on_replace_handler_(path, val, config);
         };
@@ -358,14 +341,14 @@ class TreeNode {
         return ::util::OkStatus();
       };
   TreeNodeSetHandler on_update_handler_ = [](const ::gnmi::Path& path,
-                                             const ::google::google::protobuf::Message&,
+                                             const ::google::protobuf::Message&,
                                              CopyOnWriteChassisConfig*) {
     return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
            << "Unsupported mode: UPDATE for: '" << path.ShortDebugString()
            << "'";
   };
   TreeNodeSetHandler on_replace_handler_ =
-      [](const ::gnmi::Path& path, const ::google::google::protobuf::Message&,
+      [](const ::gnmi::Path& path, const ::google::protobuf::Message&,
          CopyOnWriteChassisConfig*) {
         return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
                << "Unsupported mode: REPLACE for: '" << path.ShortDebugString()

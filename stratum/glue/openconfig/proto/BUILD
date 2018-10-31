@@ -1,10 +1,10 @@
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
     "stratum_cc_proto_library",
 )
 
-package(default_visibility = SANDBLAZE_INTERNAL)
+package(default_visibility = STRATUM_INTERNAL)
 
 # This command edits the old/deprecated openconfig protos to be compiled by
 # stratum_cc_proto_library rule. This command is expected to go away as soon as we move

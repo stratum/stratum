@@ -20,9 +20,10 @@
 
 #include <string>
 
+/* START GOOGLE ONLY
 #include "stratum/glue/status/status_builder.h"
+   END GOOGLE ONLY */
 #include "stratum/glue/status/status_macros.h"
-//#include "stratum/glue/status/status_builder.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -88,6 +89,7 @@ inline const std::string FixMessage(const std::string& msg) {
     }                                                                 \
   } while (0)
 
+/* START GOOGLE ONLY
 // !!! DEPRECATED: DO NOT USE THE FOLLOWING MACROS IN NEW CODE. !!!
 // These macros are here to temporarily support old code until we switch it all
 // to correct google3 status style. Use ::util::StatusBuilder directly in any
@@ -98,10 +100,10 @@ namespace hercules_error_impl {
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc,
                                                int code) {
   return ::util::StatusBuilder(
-      ::util::Status(::stratum::HerculesErrorSpace(), code, ""), loc);
+      ::util::Status(::google::hercules::HerculesErrorSpace(), code, ""), loc);
 }
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc) {
-  return MakeStatusBuilder(loc, ::stratum::ERR_UNKNOWN);
+  return MakeStatusBuilder(loc, ::google::hercules::ERR_UNKNOWN);
 }
 }  // namespace hercules_error_impl
 
@@ -112,6 +114,10 @@ inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc) {
   ::util::StatusBuilder((status), GTL_LOC).SetAppend()
 
 #define RETURN_IF_ERROR_WITH_APPEND(expr) RETURN_IF_ERROR(expr).SetAppend()
+    END GOOGLE ONLY */
+
+// No-op macro until it is added to Abseil
+#define ABSL_DIE_IF_NULL(...) __VA_ARGS__
 
 }  // namespace stratum
 

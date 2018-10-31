@@ -22,8 +22,7 @@ using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::ReturnRef;
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace hal {
 
 // This hidden namespace stores constants related to the test input file.
@@ -381,5 +380,4 @@ INSTANTIATE_TEST_CASE_P(
   ));
 
 }  // namespace hal
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum

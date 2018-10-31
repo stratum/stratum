@@ -370,7 +370,7 @@ stratum_cc_binary(
         "//stratum/glue/status:status_macros",
         "//stratum/lib:macros",
         "@com_googlesource_code_re2//:re2",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 

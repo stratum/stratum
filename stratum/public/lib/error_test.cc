@@ -23,8 +23,8 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stratum/google/rpc/code.pb.h"
-#include "stratum/google/rpc/status.pb.h"
+#include "google/rpc/code.pb.h"
+#include "google/rpc/status.pb.h"
 
 namespace stratum {
 
@@ -164,7 +164,7 @@ TEST(CommonUtilsTest, TestCanonicalCodes) {
                            ::google::rpc::UNIMPLEMENTED);
   TestCanonicalCodesHelper(ERR_DATA_LOSS, ::grpc::StatusCode::DATA_LOSS,
                            ::google::rpc::DATA_LOSS);
-//FIXME   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or googleapi's code.proto
+//FIXME(boc)   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or googleapi's code.proto
 //  TestCanonicalCodesHelper(ERR_UNAUTHENTICATED,
 //                           ::grpc::StatusCode::UNAUTHENTICATED,
 //                           ::google::rpc::UNAUTHENTICATED);

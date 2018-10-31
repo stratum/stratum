@@ -1,7 +1,7 @@
 // This library contains class that help build p4 protobufs for testing.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
-#define PLATFORMS_NETWORKING_HERCULES_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
+#ifndef STRATUM_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
+#define STRATUM_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
 
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
@@ -9,8 +9,7 @@
 #include "absl/strings/str_cat.h"
 #include "p4/config/v1/p4info.pb.h"
 
-namespace google {
-namespace hercules {
+namespace stratum {
 namespace test_utils {
 namespace p4_proto_builders {
 
@@ -52,7 +51,7 @@ class P4ControlTableRefBuilder {
     return *this;
   }
   // Set the name of this table reference.
-  P4ControlTableRefBuilder& Name(const string& table_name) {
+  P4ControlTableRefBuilder& Name(const std::string& table_name) {
     reference_.set_table_name(table_name);
     return *this;
   }
@@ -245,7 +244,6 @@ hal::P4ControlBlock ApplyNested(std::vector<::p4::config::v1::Table> tables,
 
 }  // namespace p4_proto_builders
 }  // namespace test_utils
-}  // namespace hercules
-}  // namespace google
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_
+#endif  // STRATUM_LIB_TEST_UTILS_P4_PROTO_BUILDERS_H_

@@ -39,7 +39,6 @@
 #include "google/rpc/status.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/integral_types.h"
-#include "stratum/google/rpc/code.pb.h"
 
 namespace stratum {
 
@@ -195,9 +194,9 @@ inline std::string ProtoSerialize(const google::protobuf::Message& m) {
   std::string out;
   out.resize(size);
   char* out_buf = out.empty() ? nullptr : &(*out.begin());
-  ::google::google::protobuf::io::ArrayOutputStream array_out_stream(
+  ::google::protobuf::io::ArrayOutputStream array_out_stream(
       out_buf, static_cast<int>(size));
-  ::google::google::protobuf::io::CodedOutputStream coded_out_stream(&array_out_stream);
+  ::google::protobuf::io::CodedOutputStream coded_out_stream(&array_out_stream);
   coded_out_stream.SetSerializationDeterministic(true);
   m.SerializeWithCachedSizes(&coded_out_stream);
   return out;
@@ -209,9 +208,9 @@ inline std::string ProtoSerialize(const google::protobuf::Message& m) {
 // are not important.
 inline bool ProtoEqual(const google::protobuf::Message& m1,
                        const google::protobuf::Message& m2) {
-  ::google::google::protobuf::util::MessageDifferencer differencer;
+  ::google::protobuf::util::MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(
-      ::google::google::protobuf::util::MessageDifferencer::AS_SET);
+      ::google::protobuf::util::MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
 }
 

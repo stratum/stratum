@@ -57,7 +57,7 @@ stratum_cc_library(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 
@@ -113,7 +113,7 @@ stratum_cc_library(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 
@@ -149,7 +149,7 @@ stratum_cc_library(
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc_grpc//:grpc++",
+        "@com_google_grpc//:grpc++",
         "//stratum/glue:logging",
     ],
 )
@@ -191,7 +191,7 @@ stratum_cc_library(
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
         "@com_google_grpc//:grpc++",
-        "//stratum:gnmi_grpc_proto",
+        "@com_github_openconfig_gnmi//:gnmi_proto",
         "//stratum/glue:logging",
         "//stratum/glue/openconfig/proto:openconfig_proto",
         "//stratum/glue/status",
@@ -203,7 +203,8 @@ stratum_cc_library(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
-        "//util/time:clock",
+        #FIXME(boc)
+        #"//util/time:clock",
     ],
 )
 
@@ -277,7 +278,6 @@ cc_library(
         "//stratum/lib:macros",
         "//stratum/lib:timer_daemon",
         "//stratum/public/lib:error",
-        "//stratum/public/proto:hal_grpc_proto",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -405,7 +405,7 @@ stratum_cc_library(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
-        "//util/task:status",
+        "//stratum/glue/status:status",
     ],
 )
 
@@ -508,9 +508,9 @@ stratum_cc_library(
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_grpc//:grpc++",
-        "@com_github_googleapis//:code_proto",
-        "@com_github_googleapis//:status_proto",
-        "//stratum//hal/lib/p4:forwarding_pipeline_configs_proto",
+        "@com_github_googleapis//:code_cc_proto",
+        "@com_github_googleapis//:status_cc_proto",
+        "//stratum/hal/lib/p4:forwarding_pipeline_configs_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
@@ -543,7 +543,7 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_grpc//:grpc++",
-        "@com_github_googleapis//:code_proto",
+        "@com_github_googleapis//:code_cc_proto",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
@@ -620,12 +620,11 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "//stratum:gnmi_grpc_proto",
+        "@com_github_openconfig_gnmi//:gnmi_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:timer_daemon",
         "//stratum/lib/channel",
-        "//stratum/public/proto:hal_grpc_proto",
         "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
@@ -661,7 +660,6 @@ stratum_cc_library(
         ":common_proto",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
-        "//stratum/hal/lib/common:common_proto",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
@@ -694,7 +692,8 @@ stratum_cc_library(
         ":common_proto",
         "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
-        "//stratum/glue/openconfig/proto:old_openconfig_proto",
+        #FIXME(boc) "//stratum/glue/openconfig/proto:old_openconfig_proto",
+        "//stratum/public/proto/openconfig:openconfig_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",

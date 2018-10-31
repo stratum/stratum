@@ -1,13 +1,13 @@
 load(
     "//bazel:rules.bzl",
-    "SANDBLAZE_INTERNAL",
+    "STRATUM_INTERNAL",
     "stratum_cc_library",
     "HOST_ARCHES",
 )
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = SANDBLAZE_INTERNAL,
+    default_visibility = STRATUM_INTERNAL,
     # TODO(b/76020938); doesn't work with header modules yet.
     features = ["-use_header_modules"],
 )

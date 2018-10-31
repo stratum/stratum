@@ -76,6 +76,7 @@ stratum_cc_library(
     srcs = ["timer_daemon.cc"],
     hdrs = ["timer_daemon.h"],
     deps = [
+        ":macros",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "//stratum/glue:integral_types",
@@ -111,8 +112,8 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
         "@com_google_grpc//:grpc++",
-        "@com_github_googleapis//:code_proto",
-        "@com_github_googleapis//:status_proto",
+        "@com_github_googleapis//:code_cc_proto",
+        "@com_github_googleapis//:status_cc_proto",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/public/lib:error",
@@ -122,6 +123,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "utils_test",
     srcs = ["utils_test.cc"],
+    copts = ["-funsigned-char"],
     deps = [
         ":test_main",
         ":utils",

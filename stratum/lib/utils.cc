@@ -172,6 +172,8 @@ std::string StringToHex(const std::string& str) {
   return ::util::OkStatus();
 }
 
+//FIXME these are redefinitions of inline methods in the .h file
+/* START GOOGLE ONLY
 bool PathExists(const std::string& path) {
   struct stat stbuf;
   return (stat(path.c_str(), &stbuf) >= 0);
@@ -198,6 +200,7 @@ std::string BaseName(const std::string& path) {
   free(path_str);
   return base;
 }
+   END GOOGLE ONLY */
 
 // TODO(aghaffar): At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
@@ -205,11 +208,14 @@ bool ProtoLess(const google::protobuf::Message& m1, const google::protobuf::Mess
   return m1.SerializeAsString() < m2.SerializeAsString();
 }
 
+//FIXME this are redefinitions of inline methods in the .h file
+/* START GOOGLE ONLY
 bool ProtoEqual(const google::protobuf::Message& m1, const google::protobuf::Message& m2) {
   MessageDifferencer differencer;
   differencer.set_repeated_field_comparison(MessageDifferencer::AS_SET);
   return differencer.Compare(m1, m2);
 }
+   END GOOGLE ONLY */
 
 // TODO(aghaffar): At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.

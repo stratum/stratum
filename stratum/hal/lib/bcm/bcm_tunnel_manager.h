@@ -11,7 +11,7 @@
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 #include "stratum/glue/integral_types.h"
 #include "p4/v1/p4runtime.pb.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
 
 namespace google {
 namespace hercules {

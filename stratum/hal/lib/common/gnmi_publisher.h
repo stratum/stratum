@@ -21,7 +21,9 @@
 #include <pthread.h>
 #include <time.h>
 
-#include "stratum/glue/gnmi/gnmi.grpc.pb.h"
+#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+//FIXME(boc) is this required?
+#include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
@@ -29,7 +31,7 @@
 #include "stratum/lib/timer_daemon.h"
 #include "stratum/public/lib/error.h"
 #include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
@@ -86,12 +88,12 @@ class GnmiPublisher {
   virtual ~GnmiPublisher();
 
   virtual ::util::Status HandleUpdate(const ::gnmi::Path& path,
-                                      const ::google::google::protobuf::Message& val,
+                                      const ::google::protobuf::Message& val,
                                       CopyOnWriteChassisConfig* config)
       LOCKS_EXCLUDED(access_lock_);
 
   virtual ::util::Status HandleReplace(const ::gnmi::Path& path,
-                                       const ::google::google::protobuf::Message& val,
+                                       const ::google::protobuf::Message& val,
                                        CopyOnWriteChassisConfig* config)
       LOCKS_EXCLUDED(access_lock_);
 
@@ -206,9 +208,9 @@ class GnmiPublisher {
           [this](const GnmiEvent& event_base, GnmiSubscribeStream* stream)
               EXCLUSIVE_LOCKS_REQUIRED(access_lock_) {
                 // Special case - change of configuration.
-                //FIXME VLOG(1) does not appear to work inside of a lambda
+                //FIXME(boc) VLOG(1) does not appear to work inside of a lambda
                 //VLOG(1) << "Configuration has changed.";
-                //FIXME the following statement is a temporary hack
+                //FIXME(boc) the following statement is a temporary hack
                 if(FLAGS_v >= 1) LOG(INFO) << "Configuration has changed.";
                 if (auto* event = dynamic_cast<const ConfigHasBeenPushedEvent*>(
                         &event_base)) {
