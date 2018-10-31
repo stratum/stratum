@@ -288,6 +288,7 @@ stratum_cc_library(
     name = "constants",
     hdrs = ["constants.h"],
     deps = [
+        "//stratum/glue:integral_types",
         "@com_google_absl//absl/base:core_headers",
     ],
 )
