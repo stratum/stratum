@@ -30,7 +30,7 @@
 #include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {

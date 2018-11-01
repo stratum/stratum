@@ -44,8 +44,8 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "util/endian/endian.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
-#include "stratum/glue/gtl/flat_hash_set.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 

@@ -20,7 +20,7 @@
 
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "gmock/gmock.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 
 namespace stratum {
 namespace hal {

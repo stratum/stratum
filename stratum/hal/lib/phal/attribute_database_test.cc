@@ -14,6 +14,7 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
+#include "stratum/glue/status/status_test_util.h"
 
 namespace stratum {
 
@@ -198,6 +199,7 @@ TEST_F(AttributeDatabaseTest, QueryFlushClearsUpdatedQueries) {
   query = nullptr;
 }
 
+/* FIXME(boc) google only
 // Run a few tests using an end-to-end attribute database with a fake system.
 // These tests take a bit longer (~1 sec) because they are exercising all of the
 // real threading in the attribute database.
@@ -361,6 +363,7 @@ TEST_F(RealAttributeDatabaseTest, CanUnsubscribeAndResubscribeToQuery) {
   ASSERT_OK(reader->Read(&query_result, absl::Seconds(30)));
   EXPECT_THAT(query_result, EqualsProto(hardware_not_present_));
 }
+ */
 
 }  // namespace
 }  // namespace phal

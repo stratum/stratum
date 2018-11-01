@@ -26,7 +26,7 @@ RegexDataSource::RegexDataSource(
     std::unique_ptr<StringSourceInterface> stringsource,
     CachePolicy* cache_type)
     : DataSource(cache_type),
-      regex_(string(regex)),
+      regex_(std::string(regex)),
       stringsource_(std::move(stringsource)),
       args_(regex_.NumberOfCapturingGroups(), &dummy_arg_),
       fields_(regex_.NumberOfCapturingGroups()) {}

@@ -21,14 +21,14 @@
 #include <map>
 #include <memory>
 
-#include "base/basictypes.h"
+//FIXME(boc) google only #include "base/basictypes.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/hal/lib/phal/stringsource_interface.h"
 #include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
-#include "util/regexp/re2/re2.h"
+#include "re2/re2.h"
 
 namespace stratum {
 namespace hal {

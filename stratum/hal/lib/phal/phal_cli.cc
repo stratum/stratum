@@ -28,7 +28,7 @@
 #include "stratum/lib/macros.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "util/regexp/re2/re2.h"
+#include "re2/re2.h"
 
 DEFINE_string(legacy_phal_config_path, "",
               "The path to read the LegacyPhalInitConfig proto from.");

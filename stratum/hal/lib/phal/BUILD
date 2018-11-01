@@ -46,8 +46,6 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/phal:db_proto",
         "//stratum/lib/channel",
-        #FIXME(boc)
-        #"//util/hash:mix",
     ],
 )
 
@@ -130,7 +128,7 @@ stratum_cc_test(
     name = "attribute_database_test",
     srcs = ["attribute_database_test.cc"],
     data = [
-        "//stratum/hal/config:legacy_phal_init_config_generic_trident2_hercules.pb.txt",
+        #FIXME(boc) google only"//stratum/hal/config:legacy_phal_init_config_generic_trident2_hercules.pb.txt",
     ],
     deps = [
         "system_fake",
@@ -145,6 +143,7 @@ stratum_cc_test(
         "@com_google_protobuf//:protobuf",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:status_test_util",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
@@ -289,6 +288,7 @@ stratum_cc_library(
 stratum_cc_test(
     name = "fixed_layout_datasource_test",
     srcs = ["fixed_layout_datasource_test.cc"],
+    copts = ["-funsigned-char"],
     deps = [
         ":fixed_layout_datasource",
         ":fixed_stringsource",
@@ -312,6 +312,7 @@ stratum_cc_library(
     ],
 )
 
+''' FIXME(boc) google only
 stratum_cc_library(
     name = "google_phal",
     srcs = ["google_phal.cc"],
@@ -348,6 +349,7 @@ stratum_cc_test(
         "//stratum/lib/test_utils:matchers",
     ],
 )
+'''
 
 stratum_cc_binary(
     name = "phal_cli",
@@ -583,6 +585,7 @@ stratum_cc_test(
     ],
 )
 
+''' FIXME(boc) google only
 stratum_cc_library(
     name = "legacy_phal",
     srcs = ["legacy_phal.cc"],
@@ -601,6 +604,7 @@ stratum_cc_library(
         "//stratum/glue/gtl:stl_util",
     ],
 )
+'''
 
 stratum_cc_proto_library(
     name = "phal_proto",
@@ -611,6 +615,7 @@ stratum_cc_proto_library(
     ],
 )
 
+'''FIXME(boc) google only
 stratum_cc_library(
     name = "phal_proxy",
     srcs = ["phal_proxy.cc"],
@@ -631,6 +636,7 @@ stratum_cc_library(
         "//stratum/public/proto:error_proto",
     ],
 )
+'''
 
 stratum_cc_library(
     name = "phal_sim",
