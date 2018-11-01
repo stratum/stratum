@@ -96,6 +96,12 @@ from subprocess import call, check_output
 from mininet.log import info, warn
 from mininet.node import Switch
 
+support_chassis_config = True
+try:
+    from stratum.hal.lib.common import common_pb2
+except:
+    support_chassis_config = False
+
 def getStratumRoot():
   if 'STRATUM_ROOT' in os.environ:
     return os.environ['STRATUM_ROOT']
@@ -115,6 +121,10 @@ STRATUM_BINARY = STRATUM_ROOT + '/bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2'
 INITIAL_PIPELINE = STRATUM_ROOT + '/stratum/hal/bin/bmv2/dummy.json'
 SWITCH_START_TIMEOUT = 5  # seconds
 DEFAULT_DEVICE_ID = 1
+DEFAULT_STRATUM_SLOT = 1
+DEFAULT_STRATUM_NODE_INDEX = 1
+DEFAULT_STRATUM_PORT_CHANNEL = 1
+DEFAULT_INTERFACE_SPEED = 10000000000 # 10 Gbps
 
 def pickUnusedPort():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -147,6 +157,11 @@ class StratumBmv2Switch(Switch):
 
     def start(self, controllers):
         config_dir = '/tmp/stratum-bmv2-%s' % self.name
+        os.mkdir(config_dir)
+
+        if support_chassis_config:
+            chassis_config_file = '%s/chassis-config' % config_dir
+            writeToFile(chassis_config_file, self.generateChassisConfig())
 
         if self.grpcPort is None:
             self.grpcPort = pickUnusedPort()
@@ -158,8 +173,10 @@ class StratumBmv2Switch(Switch):
           '-persistent_config_dir=' + config_dir,
           '-initial_pipeline=' + INITIAL_PIPELINE,
           '-cpu_port=%s' % self.cpuPort,
-          '-external_hercules_urls=0.0.0.0:%s' % self.grpcPort,
+          '-external_hercules_urls=0.0.0.0:%s' % self.grpcPort
         ]
+        if support_chassis_config:
+            args.append('-chassis_config_file=%s' % chassis_config_file)
         for port, intf in self.intfs.items():
             if not intf.IP():
                 args.append('%d@%s' % (port, intf.name))
@@ -208,6 +225,8 @@ class StratumBmv2Switch(Switch):
             self.logfd.close()
 
     def cleanupTmpFiles(self):
+        config_dir = '/tmp/stratum-bmv2-%s' % self.name
+        self.cmd("rm -rf %s", config_dir)
         self.cmd("rm -f /tmp/stratum-bmv2-%s-*" % self.name)
 
     def stop(self, deleteIntfs=True):
@@ -216,6 +235,30 @@ class StratumBmv2Switch(Switch):
         self.killBmv2(log=True)
         Switch.stop(self, deleteIntfs)
 
+    def generateChassisConfig(self):
+        chassisConfig = common_pb2.ChassisConfig()
+        chassisConfig.description = "StratumBmv2-%s" % (self.name, )
+        chassisConfig.chassis.platform = common_pb2.PLT_P4_SOFT_SWITCH
+        node = chassisConfig.nodes.add()
+        node.id = DEFAULT_DEVICE_ID
+        node.name = "StratumBmv2-%s" % (self.name, )
+        node.slot = DEFAULT_STRATUM_SLOT
+        node.index = DEFAULT_STRATUM_NODE_INDEX
+
+        for portId, intf in self.intfs.items():
+            if intf.IP():
+                continue
+            singletonPort = chassisConfig.singleton_ports.add()
+            singletonPort.id = portId
+            singletonPort.name = intf.name
+            singletonPort.port = portId
+            singletonPort.channel = DEFAULT_STRATUM_PORT_CHANNEL
+            # TODO(Yi Tseng): using speed from interface if it is
+            # a TCIntf interface.
+            singletonPort.speed_bps = DEFAULT_INTERFACE_SPEED
+            singletonPort.node = node.id
+
+        return chassisConfig
 
 class ONOSStratumBmv2Switch(StratumBmv2Switch):
     """Stratum BMv2 switch with ONOS support"""
@@ -301,7 +344,7 @@ class ONOSStratumBmv2Switch(StratumBmv2Switch):
         Starts the switch, then notifies ONOS about the new device via Netcfg.
         """
         StratumBmv2Switch.start(self, controllers)
-        
+
         if not self.netcfg:
             # Do not push config to ONOS.
             return
