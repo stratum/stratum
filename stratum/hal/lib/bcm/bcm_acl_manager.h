@@ -30,7 +30,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "stratum/glue/status/status.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/status/statusor.h"
 
 DECLARE_string(bcm_hardware_specs_file);
 

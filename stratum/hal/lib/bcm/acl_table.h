@@ -185,7 +185,7 @@ class AclTable : public BcmFlowTable {
   // match_fields_.
   absl::flat_hash_set<uint32> udf_match_fields_;
   // Mapping from entries to their respective Bcm ACL IDs.
-  absl::flat_hash_map<::p4::TableEntry, uint32, TableEntryHash, TableEntryEqual>
+  absl::flat_hash_map<::p4::v1::TableEntry, uint32, TableEntryHash, TableEntryEqual>
       bcm_acl_id_map_;
 };
 

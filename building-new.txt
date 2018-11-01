@@ -14,6 +14,7 @@ bazel test \
 //stratum/portage:all \
 //stratum/public/lib:all \
 //stratum/public/proto:all \
+//stratum/public/proto/openconfig/...:all \
 //stratum/hal/lib/p4:all \
 //stratum/hal/lib/common:all \
 //stratum/hal/lib/pi:all \
@@ -58,11 +59,19 @@ bazel test \
 //stratum/hal/lib/phal:attribute_database_interface \
 //stratum/hal/lib/phal:db_proto \
 //stratum/hal/lib/phal:db_proto.pb \
+//stratum/hal/lib/bcm:bcm_proto \
+//stratum/hal/lib/bcm:constants \
+//stratum/hal/lib/bcm:bcm_sdk_interface \
+//stratum/hal/lib/bcm:bcm_serdes_db_manager \
+//stratum/hal/lib/bcm:bcm_serdes_db_manager_mock \
+//stratum/hal/lib/bcm:bcm_serdes_db_manager_test \
+//stratum/hal/lib/bcm:macros \
+//stratum/hal/lib/bcm:utils \
+//stratum/hal/lib/bcm:utils_test \
 
 exit 0
 
-
-
+# Not building
 
 //stratum/hal/lib/phal/onlp:sfp_datasource_test \
 //stratum/hal/lib/phal/onlp:sfp_datasource \
@@ -71,54 +80,61 @@ exit 0
 //stratum/hal/lib/phal/onlp:onlp_event_handler \
 //stratum/hal/lib/phal/onlp:onlp_wrapper \
 
-
-
 //stratum/hal/lib/phal:phal_cli \
 //stratum/hal/lib/phal:google_phal_test \
 //stratum/hal/lib/phal:google_phal \
 //stratum/hal/lib/phal:attribute_database_test \
 
-exit 0
-
-# failing tests
-
-# Not building
-
-//stratum/hal/stub/embedded:stratum_stub
-
 //stratum/public/yang:all
 //stratum/lib/statemachine:all
 
-#--------------- TBD --------------------
-//stratum/lib/channel:channel_test
-//stratum/lib/statemachine:all
-//stratum/public/yang:all
-//stratum/public/proto/openconfig/...:all \
+//stratum/hal/lib/bcm:bcm_global_vars \
+//stratum/hal/lib/bcm:bcm_chassis_manager_mock \
+//stratum/hal/lib/bcm:bcm_chassis_manager \
+//stratum/hal/lib/bcm:bcm_chassis_manager_test \
 
+//stratum/hal/lib/bcm:pipeline_processor \
+//stratum/hal/lib/bcm:bcm_table_manager \
+//stratum/hal/lib/bcm:bcm_table_manager_mock \
+//stratum/hal/lib/bcm:bcm_table_manager_test \
+//stratum/hal/lib/bcm:bcm_acl_manager_mock \
+//stratum/hal/lib/bcm:bcm_acl_manager \
+//stratum/hal/lib/bcm:bcm_acl_manager_test \
 
-//stratum/hal/lib/bcm:bcm_table_manager
-//stratum/hal/lib/bcm:bcm_table_manager_mock
-//stratum/hal/lib/bcm:bcm_table_manager_test
-//stratum/hal/bin/bcm/sim:stratum_sim
-//stratum/hal/bin/bcm/standalone:stratum_hal
-//stratum/hal/lib/bcm:acl_table_test
-//stratum/hal/lib/bcm:bcm_acl_manager
-//stratum/hal/lib/bcm:bcm_acl_manager_mock
-//stratum/hal/lib/bcm:bcm_acl_manager_test
-//stratum/hal/lib/bcm:bcm_acl_profile_test
-//stratum/hal/lib/bcm:bcm_chassis_manager_test
-//stratum/hal/lib/bcm:bcm_flow_table_test
-//stratum/hal/lib/bcm:bcm_node
-//stratum/hal/lib/bcm:bcm_node_mock
-//stratum/hal/lib/bcm:bcm_node_test
-//stratum/hal/lib/bcm:bcm_packetio_manager_test
-//stratum/hal/lib/bcm:bcm_sim_test_fixture
-//stratum/hal/lib/bcm:bcm_switch
-//stratum/hal/lib/bcm:bcm_switch_test
-//stratum/hal/bin/bcm/standalone:stratum_hal
+//stratum/hal/lib/bcm:pipeline_processor_test \
+//stratum/hal/lib/bcm:macros_test \
+//stratum/hal/lib/bcm:bcm_udf_manager_test \
+//stratum/hal/lib/bcm:bcm_udf_manager \
+//stratum/hal/lib/bcm:bcm_switch_test \
+//stratum/hal/lib/bcm:bcm_switch \
+//stratum/hal/lib/bcm:bcm_sdk_sim \
+//stratum/hal/lib/bcm:bcm_sdk_wrapper \
+//stratum/hal/lib/bcm:bcm_node_test \
+//stratum/hal/lib/bcm:bcm_packetio_manager_mock \
+//stratum/hal/lib/bcm:bcm_l3_manager_test \
+//stratum/hal/lib/bcm:bcm_l3_manager_mock \
+//stratum/hal/lib/bcm:bcm_l2_manager_test \
+//stratum/hal/lib/bcm:bcm_l2_manager_mock \
+//stratum/hal/lib/bcm:bcm_flow_table_test \
+//stratum/hal/lib/bcm:bcm_diag_shell \
+//stratum/hal/lib/bcm:sdk_build_undef \
+//stratum/hal/lib/bcm:bcm_chassis_ro_mock \
+//stratum/hal/lib/bcm:bcm_node_mock \
+//stratum/hal/lib/bcm:bcm_sdk_mock \
+//stratum/hal/lib/bcm:bcm_node \
+//stratum/hal/lib/bcm:bcm_packetio_manager \
+//stratum/hal/lib/bcm:bcm_l3_manager \
+//stratum/hal/lib/bcm:bcm_l2_manager \
+//stratum/hal/lib/bcm:bcm_chassis_ro_interface \
+//stratum/hal/lib/bcm:acl_table_test \
+//stratum/hal/lib/bcm:test_main \
+//stratum/hal/lib/bcm:acl_table \
+//stratum/hal/lib/bcm:bcm_flow_table \
+//stratum/hal/lib/bcm:bcm_tunnel_manager \
+//stratum/hal/lib/bcm:bcm_tunnel_manager_mock \
+//stratum/hal/lib/bcm:bcm_tunnel_manager_test \
 
-//stratum/hal/lib/phal:phal_cli
-//stratum/hal/lib/phal:regex_datasource
-//stratum/hal/lib/phal:regex_datasource_test
-//stratum/hal/lib/phal:transceiver_datasources_test
+//stratum/hal/lib/bcm:bcm_packetio_manager_test \
 
+//stratum/hal/lib/bcm:bcm_sdk_proxy_test
+//stratum/hal/lib/bcm:bcm_sdk_proxy

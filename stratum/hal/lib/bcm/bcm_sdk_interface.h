@@ -281,7 +281,7 @@ class BcmSdkInterface {
   // case nexthop_mac and router_intf_id are not used. If vlan == 0, default
   // VLAN will be used.
   virtual ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(
-      int unit, ::uint64 nexthop_mac, int port, int vlan,
+      int unit, stratum::uint64 nexthop_mac, int port, int vlan,
       int router_intf_id) = 0;
 
   // Finds an L3 trunk/lag egress intf defining the nexthop, given its
@@ -292,7 +292,7 @@ class BcmSdkInterface {
   // previously using FindOrCreateL3RouterIntf(). If vlan == 0, default VLAN
   // will be used.
   virtual ::util::StatusOr<int> FindOrCreateL3TrunkEgressIntf(
-      int unit, ::uint64 nexthop_mac, int trunk, int vlan,
+      int unit, stratum::uint64 nexthop_mac, int trunk, int vlan,
       int router_intf_id) = 0;
 
   // Finds an L3 drop egress intf on a given unit. If it does not exist, tries
@@ -308,7 +308,7 @@ class BcmSdkInterface {
   // L3 intf pointing to a regular port given its (nexthop_mac, port, vlan,
   // router_intf_id).
   virtual ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
-                                                ::uint64 nexthop_mac, int port,
+                                                stratum::uint64 nexthop_mac, int port,
                                                 int vlan,
                                                 int router_intf_id) = 0;
 
@@ -316,7 +316,7 @@ class BcmSdkInterface {
   // L3 intf pointing to a trunk/LAG given its (nexthop_mac, trunk, vlan,
   // router_intf_id).
   virtual ::util::Status ModifyL3TrunkEgressIntf(int unit, int egress_intf_id,
-                                                 ::uint64 nexthop_mac,
+                                                 stratum::uint64 nexthop_mac,
                                                  int trunk, int vlan,
                                                  int router_intf_id) = 0;
 

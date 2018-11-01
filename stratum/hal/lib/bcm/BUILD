@@ -94,8 +94,6 @@ stratum_cc_test(
         "//stratum/public/proto:p4_annotation_proto",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
-        "//util/gtl:flat_map",
-        "//util/gtl:flat_set",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -331,7 +329,6 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/public/proto:p4_table_defs_proto",
-        "@com_google_absl//absl/container:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -360,7 +357,46 @@ stratum_cc_test(
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
-        "//util/gtl:source_location",
+        "//stratum/glue/gtl:source_location",
+    ],
+)
+
+stratum_cc_library(
+    name = "bcm_tunnel_manager",
+    srcs = ["bcm_tunnel_manager.cc"],
+    hdrs = ["bcm_tunnel_manager.h"],
+    deps = [
+        ":bcm_proto",
+        ":bcm_sdk_interface",
+        ":bcm_table_manager",
+        "//stratum/glue:integral_types",
+        "//stratum/glue/status",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+    ],
+)
+
+stratum_cc_library(
+    name = "bcm_tunnel_manager_mock",
+    testonly = 1,
+    hdrs = ["bcm_tunnel_manager_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":bcm_tunnel_manager",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_test(
+    name = "bcm_tunnel_manager_test",
+    srcs = ["bcm_tunnel_manager_test.cc"],
+    deps = [
+        ":bcm_tunnel_manager",
+        ":bcm_sdk_mock",
+        ":bcm_table_manager_mock",
+        ":test_main",
+        "@com_google_googletest//:gtest",
+        "@com_google_absl//absl/memory",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -553,8 +589,6 @@ stratum_cc_library(
         "//stratum/lib:utils",
         # FIXME(boc)
         # "//util/endian",
-        "//util/gtl:map_util",
-        "//util/gtl:stl_util",
     ],
 )
 
@@ -972,6 +1006,6 @@ stratum_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
-        "//util/endian",
+        #FIXME(boc) "//util/endian",
     ],
 )

@@ -89,7 +89,7 @@ util::Status CollapseValidConditionMap(ValidConditionMap* conditions) {
 
 std::string PipelineProcessor::PipelineNodeAsString(const PipelineNode& node) {
   // Process Valid conditions.
-  std::vector<string> valid_strings;
+  std::vector<std::string> valid_strings;
   for (const auto& valid_condition : node.valid_conditions) {
     valid_strings.push_back(
         absl::StrCat("    ", P4HeaderType_Name(valid_condition.first), ":",
@@ -98,11 +98,11 @@ std::string PipelineProcessor::PipelineNodeAsString(const PipelineNode& node) {
   std::string valid_conditions = absl::StrJoin(valid_strings, ", ");
 
   // Process subtables.
-  std::vector<string> subtable_strings;
+  std::vector<std::string> subtable_strings;
   for (const auto& subtable : node.subtables) {
     subtable_strings.push_back(subtable->table.table_name());
   }
-  string subtables = absl::StrJoin(subtable_strings, ", ");
+  std::string subtables = absl::StrJoin(subtable_strings, ", ");
 
   return absl::StrCat("Table: (", node.table.table_name(), ") ",
                       "Conditions: (", valid_conditions, ") ",
@@ -165,7 +165,7 @@ std::string PipelineProcessor::PhysicalPipelineAsString() {
         // Add dividers, names, and priorities for present tables.
         table_divs.push_back(stage_div_templates.at(stage));
         // Add the right-justified table name.
-        string formatted_name = stage_str_templates.at(stage);
+        std::string formatted_name = stage_str_templates.at(stage);
         const auto& table_name = stage_tables.at(depth).table.table_name();
         formatted_name.replace(formatted_name.size() - table_name.size(),
                                table_name.size(), table_name);
@@ -226,7 +226,7 @@ PipelineProcessor::CreateInstance(const P4ControlBlock& control_block) {
   VLOG(1) << "Node: \n" << PipelineNodeAsString(base_node);
   VLOG(1) << "ControlBlock: \n" << block.DebugString();
   for (const P4ControlStatement& statement : block.statements()) {
-    string error = absl::StrCat(" Failed to process statement (",
+    std::string error = absl::StrCat(" Failed to process statement (",
                                 statement.ShortDebugString(), ").");
     switch (statement.statement_case()) {
       case P4ControlStatement::kApply:
