@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <bitset>
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 extern "C" {
 #include "onlp/oids.h"
@@ -31,52 +30,9 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-OnlpWrapper::~OnlpWrapper() {
-  LOG(INFO) << "Deinitializing ONLP.";
-//  if (ONLP_FAILURE(onlp_sw_denit())) {
-//    LOG(ERROR) << "Failed to deinitialize ONLP.";
-//  }
-}
-::util::StatusOr<bool> OnlpWrapper:: GetSfpPresent(OnlpOid port) const {
-  return onlp_sfp_is_present(port);
-}
+constexpr int kOnlpBitmapBitsPerWord = 32;
+constexpr int kOnlpBitmapWordCount = 8;
 
-::util::StatusOr<OnlpPresentBitmap> OnlpWrapper:: GetSfpPresenceBitmap() const {
-  OnlpPresentBitmap bitset;
-  SfpBitmap presence;
-  onlp_sfp_bitmap_t_init(&presence);
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
-           << "Failed to get presence bitmap ONLP.";
-  int i=0,k=0,j;
-  while(i<8){
-    for(j=0;j<32;j++) {
-      if( presence.hdr.words[i]&(1<<j))
-        bitset.set(k);
-      else
-        bitset.reset(k);
-
-      k++;
-    }
-    i++;
-  }
-  return bitset; 
-}
-
-::util::StatusOr<OnlpSfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
-  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
-      << "Cannot get SFP info: OID " << oid << " is not an SFP.";
-  onlp_sfp_info_t sfp_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
-      << "Failed to get SFP info for OID " << oid << ".";
-  return sfp_info;
-}
-::util::StatusOr<OnlpOidHeader> OnlpWrapper::GetOidInfo(OnlpOid oid) const {
-  onlp_oid_hdr_t oid_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_oid_hdr_get(oid, &oid_info)))
-      << "Failed to get info for OID " << oid << ".";
-  return oid_info;
-}
-#if 0
 ::util::StatusOr<std::unique_ptr<OnlpWrapper>> OnlpWrapper::Make() {
   LOG(INFO) << "Initializing ONLP.";
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sw_init(nullptr)))
@@ -90,6 +46,93 @@ OnlpWrapper::~OnlpWrapper() {
     LOG(ERROR) << "Failed to deinitialize ONLP.";
   }
 }
+
+::util::StatusOr<OidInfo> OnlpWrapper::GetOidInfo(OnlpOid oid) const {
+  onlp_oid_hdr_t oid_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_oid_hdr_get(oid, &oid_info)))
+      << "Failed to get info for OID " << oid << ".";
+  return OidInfo(oid_info);
+}
+
+::util::StatusOr<SfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
+      << "Cannot get SFP info: OID " << oid << " is not an SFP.";
+  onlp_sfp_info_t sfp_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
+      << "Failed to get SFP info for OID " << oid << ".";
+  return SfpInfo(sfp_info);
+}
+
+::util::StatusOr<bool> OnlpWrapper:: GetSfpPresent(OnlpOid port) const {
+  return onlp_sfp_is_present(port);
+}
+
+::util::StatusOr<OnlpPresentBitmap> OnlpWrapper:: GetSfpPresenceBitmap() const {
+  OnlpPresentBitmap bitset;
+  SfpBitmap presence;
+  onlp_sfp_bitmap_t_init(&presence);
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
+           << "Failed to get presence bitmap ONLP.";
+  int i=0,k=0,j;
+  while(i<kOnlpBitmapWordCount){
+    for(j=0;j<kOnlpBitmapBitsPerWord;j++) {
+      if( presence.hdr.words[i]&(1<<j))
+        bitset.set(k);
+      else
+        bitset.reset(k);
+
+      k++;
+    }
+    i++;
+  }
+  return bitset; 
+}
+
+::util::StatusOr<std::vector<OnlpOid>> OnlpWrapper::GetOidList(
+      onlp_oid_type_flag_t type) const {
+
+  std::vector<OnlpOid> oid_list;
+  biglist_t* oid_hdr_list;
+
+  OnlpOid root_oid = ONLP_SFP_ID_CREATE(1);
+  onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list);
+
+  // Iterate though the returned list and add the OIDs to oid_list
+  biglist_t* curr_node = oid_hdr_list;
+  while (curr_node != nullptr) {
+    onlp_oid_hdr_t* oid_hdr = (onlp_oid_hdr_t*) curr_node->data;
+    oid_list.emplace_back(oid_hdr->id);
+    curr_node = curr_node->next;
+  }
+  onlp_oid_get_all_free(oid_hdr_list);
+
+  return oid_list;
+}
+
+::util::StatusOr<OnlpPortNumber> OnlpWrapper::GetSfpMaxPortNumber() const {
+  SfpBitmap bitmap;
+  onlp_sfp_bitmap_t_init(&bitmap);
+  int result = onlp_sfp_bitmap_get(&bitmap);
+  if(result < 0) {
+    LOG(ERROR) << "Failed to get valid SFP port bitmap from ONLP.";
+  }
+
+  OnlpPortNumber port_num = ONLP_MAX_FRONT_PORT_NUM;
+  int i, j;
+  for (i = 0; i < kOnlpBitmapWordCount; i ++) {
+    for (j = 0; j < kOnlpBitmapBitsPerWord; j ++) {
+      if (bitmap.words[i] & (1<<j)) {
+        port_num = i * kOnlpBitmapBitsPerWord + j + 1;
+        // Note: return here only if the valid port numbers start from
+        //       port 1 and are consecutive.
+        //return port_num;
+      }
+    }
+  }
+
+  return port_num;
+}
+
 HwState OidInfo::GetHardwareState() const {
   switch (oid_info_.status) {
     case ONLP_OID_STATUS_FLAG_PRESENT:
@@ -132,15 +175,48 @@ MediaType SfpInfo::GetMediaType() const {
   }
 }
 
+SfpType SfpInfo::GetSfpType() const {
+  switch(sfp_info_.sff.sfp_type) {
+  case SFF_SFP_TYPE_SFP:
+    return SFP_TYPE_SFP;
+  case SFF_SFP_TYPE_QSFP:
+    return SFP_TYPE_QSFP;
+  default:
+    return SFP_TYPE_UNKNOWN;
+  }
+}
+
+SfpModuleType SfpInfo::GetSfpModuleType()const {
+  switch(sfp_info_.sff.module_type) {
+  case SFF_MODULE_TYPE_100G_BASE_CR4:
+    return SFP_MODULE_TYPE_100G_BASE_CR4;
+  case SFF_MODULE_TYPE_10G_BASE_CR:
+    return SFP_MODULE_TYPE_10G_BASE_CR;
+  case SFF_MODULE_TYPE_1G_BASE_SX:
+    return SFP_MODULE_TYPE_1G_BASE_SX;
+  default:
+    return SFP_MODULE_TYPE_UNKNOWN;
+  }
+}
+
+SfpModuleCaps SfpInfo::GetSfpModuleCaps() const {
+  switch(sfp_info_.sff.caps) {
+  case SFF_MODULE_CAPS_F_100:
+    return SFP_MODULE_CAPS_F_100;
+  case SFF_MODULE_CAPS_F_1G:
+    return SFP_MODULE_CAPS_F_1G;
+  default:
+    return SFP_MODULE_CAPS_UNKNOWN;
+  }
+}
+
 ::util::StatusOr<const SffInfo*> SfpInfo::GetSffInfo() const {
   CHECK_RETURN_IF_FALSE(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
       << "Cannot get SFF info: Invalid SFP type.";
   return &sfp_info_.sff;
 }
 
-#endif
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-

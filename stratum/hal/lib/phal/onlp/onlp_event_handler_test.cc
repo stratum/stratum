@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-
 #include <functional>
 #include <vector>
 
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler_mock.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/macros.h"
-#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
@@ -40,7 +41,10 @@ using ::stratum::test_utils::StatusIs;
 
 class OnlpEventHandlerTest : public ::testing::Test {
  public:
+  void SetUp() override {}
+
   ::util::Status PollOids() { return handler_.PollOids(); }
+  ::util::Status PollSfps() { return handler_.PollSfpPresence(); }
   ::util::Status RunPolling() { return handler_.InitializePollingThread(); }
 
  protected:
@@ -48,32 +52,158 @@ class OnlpEventHandlerTest : public ::testing::Test {
   OnlpEventHandler handler_{&onlp_};
 };
 
-namespace {
-class CallbackMock : public OnlpEventCallback {
- public:
-  explicit CallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
-  MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
-};
-}  // namespace
 
 TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
-  CallbackMock callback(1234);
-  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
-  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+  OnlpSfpEventCallbackMock callback;
+  EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
+  EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
+  EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
+  EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
+
+//  EXPECT_OK(handler_.RegisterEventCallback(&callback));
+//  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+//  EXPECT_OK(handler_.RegisterEventCallback(&callback));
+//  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
 }
 
 TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
-  CallbackMock callback(1234);
-  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-  EXPECT_THAT(handler_.RegisterEventCallback(&callback),
+  OnlpSfpEventCallbackMock callback;
+  EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
+  EXPECT_THAT(handler_.RegisterSfpEventCallback(&callback),
               StatusIs(_, _, HasSubstr("already registered.")));
-  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
-  EXPECT_THAT(handler_.UnregisterEventCallback(&callback),
+  EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
+  EXPECT_THAT(handler_.UnregisterSfpEventCallback(&callback),
               StatusIs(_, _, HasSubstr("not currently registered.")));
+
+//  CallbackMock callback(1234);
+//  EXPECT_OK(handler_.RegisterEventCallback(&callback));
+//  EXPECT_THAT(handler_.RegisterEventCallback(&callback),
+//              StatusIs(_, _, HasSubstr("already registered.")));
+//  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+//  EXPECT_THAT(handler_.UnregisterEventCallback(&callback),
+//              StatusIs(_, _, HasSubstr("not currently registered.")));
 }
 
+TEST_F(OnlpEventHandlerTest, UnusedHandlerCanPollSfps) {
+  // Poll a bunch. There are no registered callbacks, so this should be a no-op.
+  for (int i = 0; i < 10; i++) EXPECT_OK(PollSfps());
+}
+
+TEST_F(OnlpEventHandlerTest, CallbackSendsNoSfpUpdate) {
+  OnlpSfpEventCallbackMock callback;
+  EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
+
+  std::bitset<256> fake_map;
+  EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map));
+  EXPECT_OK(PollSfps());
+}
+
+TEST_F(OnlpEventHandlerTest, CallbackSendsInitialSfpUpdate) {
+  OnlpSfpEventCallbackMock callback;
+  EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
+
+  std::bitset<256> fake_map;
+  fake_map.set(0);
+  fake_map.set(1);
+  EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map));
+  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+      .WillOnce(Return(::util::OkStatus()))
+      .WillOnce(Return(::util::OkStatus()));
+ 
+  EXPECT_OK(PollSfps());
+}
+
+TEST_F(OnlpEventHandlerTest, CallbackOnlySentAfterSfpUpdate) {
+  OnlpSfpEventCallbackMock callback;
+  ASSERT_OK(handler_.RegisterSfpEventCallback(&callback));
+
+  // Initial Updates
+  std::bitset<256> fake_map;
+  fake_map.set(0);
+  fake_map.set(1);
+  EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map));
+  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+      .WillOnce(Return(::util::OkStatus()))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_OK(PollSfps());
+
+  // Status not changed, no callback called
+  EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map));
+  EXPECT_OK(PollSfps());
+
+  // Status changed, callback called
+  std::bitset<256> fake_map2;
+  fake_map2.set(0);
+  fake_map2.set(2);
+  EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map2));
+  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+      .WillOnce(Return(::util::OkStatus()))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_OK(PollSfps());
+}
+
+TEST_F(OnlpEventHandlerTest, BringupAndTeardownPollingThread) {
+  EXPECT_CALL(onlp_, GetSfpMaxPortNumber()).WillOnce(Return(16));
+  EXPECT_OK(RunPolling());
+}
+
+TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleSfpCallbacks) {
+  EXPECT_CALL(onlp_, GetSfpMaxPortNumber()).WillOnce(Return(16));
+  ASSERT_OK(RunPolling());
+  absl::Mutex test_thread_lock;
+  absl::CondVar test_thread_condvar;
+  int callback_counter = 0;
+ 
+  std::bitset<256> fake_map;
+  fake_map.set(0);
+  fake_map.set(1);
+  EXPECT_CALL(onlp_, GetSfpPresenceBitmap())
+      .WillRepeatedly(Invoke([&]() -> ::util::StatusOr<OnlpPresentBitmap> {
+        absl::MutexLock lock(&test_thread_lock);
+        return fake_map;
+      }));
+
+  OnlpSfpEventCallbackMock callback;
+  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+      .WillRepeatedly(Invoke([&](OidInfo info) -> ::util::Status {
+        absl::MutexLock lock(&test_thread_lock);
+        //test_thread_condvar.SignalAll();
+        callback_counter++;
+        if ((callback_counter % 2) == 0) {
+          test_thread_condvar.SignalAll();
+        }
+        return ::util::OkStatus();
+      }));
+  {
+    absl::MutexLock lock(&test_thread_lock);
+  }
+
+  // We must release the lock when registering our callback to avoid deadlock.
+  ASSERT_OK(handler_.RegisterSfpEventCallback(&callback));
+  {
+    // Wait for an initial callback to occur.
+    absl::MutexLock lock(&test_thread_lock);
+    while (callback_counter == 0)
+      ASSERT_FALSE(test_thread_condvar.WaitWithTimeout(&test_thread_lock,
+                                                       absl::Seconds(10)));
+    // We should get more callbacks as the sfp status changes.
+    fake_map.reset(0);
+    fake_map.reset(1);
+    while (callback_counter == 2)
+      ASSERT_FALSE(test_thread_condvar.WaitWithTimeout(&test_thread_lock,
+                                                       absl::Seconds(10)));
+    fake_map.set(0);
+    fake_map.set(1);
+    while (callback_counter == 4)
+      ASSERT_FALSE(test_thread_condvar.WaitWithTimeout(&test_thread_lock,
+                                                       absl::Seconds(10)));
+  }
+  ASSERT_OK(handler_.UnregisterSfpEventCallback(&callback));
+  EXPECT_EQ(callback_counter, 6);
+}
+
+
+#if 0
 TEST_F(OnlpEventHandlerTest, RegisterSeveralCallbacks) {
   CallbackMock callback1(1234);
   CallbackMock callback1_conflict(1234);
@@ -182,10 +312,6 @@ TEST_F(OnlpEventHandlerTest, UpdateCallbackSentAfterAnyUpdate) {
   EXPECT_OK(PollOids());
 }
 
-TEST_F(OnlpEventHandlerTest, BringupAndTeardownPollingThread) {
-  EXPECT_OK(RunPolling());
-}
-
 TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleCallbacks) {
   ASSERT_OK(RunPolling());
   absl::Mutex test_thread_lock;
@@ -231,6 +357,7 @@ TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleCallbacks) {
   ASSERT_OK(handler_.UnregisterEventCallback(&callback));
   EXPECT_EQ(callback_counter, 3);
 }
+#endif
 
 }  // namespace onlp
 }  // namespace phal

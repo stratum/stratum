@@ -28,13 +28,14 @@ extern "C" {
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 
-#define MAX_PORTS 256
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
-typedef std::bitset<MAX_PORTS> onlp_bitmap_t;
+#define ONLP_MAX_FRONT_PORT_NUM 256
+
+typedef std::bitset<ONLP_MAX_FRONT_PORT_NUM> onlp_bitmap_t;
 using OnlpPresentBitmap = onlp_bitmap_t;
 using SfpBitmap = onlp_sfp_bitmap_t;
 using OnlpOid = onlp_oid_t;
@@ -42,15 +43,25 @@ using OnlpOidHeader = onlp_oid_hdr_t;
 using SffDomInfo = sff_dom_info_t;
 using SffInfo = sff_info_t;
 using OnlpSfpInfo = onlp_sfp_info_t;
+using OnlpPortNumber = onlp_oid_t;
 
 // This class encapsulates information that exists for every type of OID. More
 // specialized classes for specific OID types should derive from this.
 class OidInfo {
  public:
   explicit OidInfo(const onlp_oid_hdr_t& oid_info) : oid_info_(oid_info) {}
-//  HwState GetHardwareState() const;
-//  bool Present() const;
-//  const OnlpOidHeader* GetHeader() const { return &oid_info_; }
+  explicit OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
+                   HwState state) {
+    oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
+    oid_info_.status = (state == HW_STATE_PRESENT ?
+        ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
+  }
+  OidInfo() {}
+
+  HwState GetHardwareState() const;
+  bool Present() const;
+  const OnlpOidHeader* GetHeader() const { return &oid_info_; }
+  uint32_t GetId() const { return (oid_info_.id & 0xFFFFFF); }
 
  private:
   onlp_oid_hdr_t oid_info_;
@@ -60,12 +71,17 @@ class SfpInfo : public OidInfo {
  public:
   explicit SfpInfo(const onlp_sfp_info_t& sfp_info)
       : OidInfo(sfp_info.hdr), sfp_info_(sfp_info) {}
-  //MediaType GetMediaType() const;
+  SfpInfo() {}
+
+  MediaType GetMediaType() const;
+  SfpType GetSfpType() const;
+  SfpModuleType GetSfpModuleType() const;
+  SfpModuleCaps GetSfpModuleCaps() const;
 
   // The lifetimes of pointers returned by these functions are managed by this
   // object. The returned pointer will never be nullptr.
- // const SffDomInfo* GetSffDomInfo() const { return &sfp_info_.dom; }
- // ::util::StatusOr<const SffInfo*> GetSffInfo() const;
+  const SffDomInfo* GetSffDomInfo() const { return &sfp_info_.dom; }
+  ::util::StatusOr<const SffInfo*> GetSffInfo() const;
 
  private:
   onlp_sfp_info_t sfp_info_;
@@ -77,15 +93,26 @@ class SfpInfo : public OidInfo {
 class OnlpInterface {
  public:
   virtual ~OnlpInterface() {}
-  virtual ::util::StatusOr<OnlpSfpInfo> GetSfpInfo(OnlpOid oid) const = 0;
-  virtual ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const = 0;
-  virtual ::util::StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap() const = 0;
-  virtual ::util::StatusOr<OnlpOidHeader> GetOidInfo(OnlpOid oid) const = 0;
 
   // Given a OID object id, returns SFP info or failure.
-//  virtual ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const = 0;
+  virtual ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const = 0;
+
   // Given an OID, returns the OidInfo for that object (or an error if it
   // doesn't exist
+  virtual ::util::StatusOr<OidInfo> GetOidInfo(OnlpOid oid) const = 0;
+
+  // Return list of onlp oids in the system based on the type.
+  virtual ::util::StatusOr<std::vector <OnlpOid>> GetOidList(
+      onlp_oid_type_flag_t type) const = 0;
+
+  // Return whether a SFP with the given OID is present.
+  virtual ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const = 0;
+
+  // Return the presence bitmap for all SFP ports.
+  virtual ::util::StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap() const = 0;
+
+  // Get the maximum valid SFP port number.
+  virtual ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const = 0;
 };
 
 // An OnlpInterface implementation that makes real calls into ONLP.
@@ -97,10 +124,15 @@ class OnlpWrapper : public OnlpInterface {
   OnlpWrapper(const OnlpWrapper& other) = delete;
   OnlpWrapper& operator=(const OnlpWrapper& other) = delete;
   ~OnlpWrapper() override;
-  ::util::StatusOr<OnlpSfpInfo> GetSfpInfo(OnlpOid oid) const override;
-  ::util::StatusOr<OnlpOidHeader> GetOidInfo(OnlpOid oid) const override;
-  ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const override; 
+
+  ::util::StatusOr<OidInfo> GetOidInfo(OnlpOid oid) const override;
+  ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
+  ::util::StatusOr<std::vector <OnlpOid>> GetOidList(
+      onlp_oid_type_flag_t type) const override;
+  ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const override;
   ::util::StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap() const override;
+  ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override;
+
  private:
   OnlpWrapper() {}
 };

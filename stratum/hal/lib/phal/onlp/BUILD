@@ -36,16 +36,27 @@ stratum_cc_library(
     hdrs = ["onlp_event_handler.h"],
     deps = [
         ":onlp_wrapper",
+#        ":onlp_wrapper_fake",
         "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
-        "@com_github_opennetworklinux//:onlp_headers",
         "//stratum/glue/status",
-        "//stratum/hal/lib/common:common_proto",
-        "//stratum/lib:macros",
         "//stratum/glue/gtl:flat_hash_map",
-        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:map_util",       
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/lib:macros",
+    ],
+)
+
+stratum_cc_library(
+    name = "onlp_event_handler_mock",
+    testonly = 1,
+    hdrs = ["onlp_event_handler_mock.h"],
+    arches = HOST_ARCHES,
+    deps = [
+        ":onlp_event_handler",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -53,14 +64,14 @@ stratum_cc_test(
     name = "onlp_event_handler_test",
     srcs = ["onlp_event_handler_test.cc"],
     deps = [
-        ":onlp_event_handler",
+        ":onlp_event_handler_mock",
         ":onlp_wrapper_mock",
         "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
-        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -100,10 +111,25 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":onlp_wrapper",
+#        ":onlp_wrapper_fake",
         "@com_google_googletest//:gtest",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
-        "@com_github_opennetworklinux//:onlp_headers",
+    ],
+)
+
+stratum_cc_library(
+    name = "onlp_wrapper_fake",
+    hdrs = [
+        "onlp_wrapper_fake.h",
+    ],
+    deps = [
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/lib:macros",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -117,6 +143,7 @@ stratum_cc_library(
     ],
     deps = [
         ":onlp_wrapper",
+#        ":onlp_wrapper_fake",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -152,5 +179,42 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_library(
+    name = "onlphal",
+    srcs = [
+        "onlphal.cc",
+    ],
+    hdrs = [
+        "onlphal.h",
+    ],
+    deps = [
+        ":onlp_event_handler",
+        ":onlp_wrapper",
+#        ":onlp_wrapper_fake",
+        ":sfp_datasource",
+        "//stratum/lib:macros",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:phal_interface",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_test(
+    name = "onlphal_test",
+    srcs = ["onlphal_test.cc"],
+    deps = [
+        ":onlphal",
+        ":onlp_wrapper_mock",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:macros",
     ],
 )

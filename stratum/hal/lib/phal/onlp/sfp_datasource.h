@@ -19,14 +19,14 @@
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/status/status.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -46,6 +46,11 @@ class OnlpSfpDataSource : public DataSource {
   ManagedAttribute* GetSfpId() { return &sfp_id_; }
   ManagedAttribute* GetSfpHardwareState() { return &sfp_hw_state_; }
   ManagedAttribute* GetSfpMediaType() { return &media_type_; }
+  ManagedAttribute* GetSfpType() { return &sfp_connector_type_; }
+  ManagedAttribute* GetSfpModuleType() { return &sfp_module_type_; }
+  ManagedAttribute* GetSfpModuleCaps() { return &sfp_module_caps_; }
+  ManagedAttribute* GetSfpCableLength() { return &cable_length_; }
+  ManagedAttribute* GetSfpCableLengthDesc() { return &cable_length_desc_; }
   ManagedAttribute* GetSfpVendor() { return &sfp_vendor_; }
   ManagedAttribute* GetSfpModel() { return &sfp_model_name_; }
   ManagedAttribute* GetSfpSerialNumber() { return &sfp_serial_number_; }
@@ -67,8 +72,8 @@ class OnlpSfpDataSource : public DataSource {
 
   static ::util::Status ValidateOnlpSfpInfo(OnlpOid oid,
                                             OnlpInterface* onlp_interface) {
-    ASSIGN_OR_RETURN(SfpInfo sfp_info, onlp_interface->GetSfpInfo(oid));
-    CHECK_RETURN_IF_FALSE(sfp_info.Present())
+    ASSIGN_OR_RETURN(OidInfo oid_info, onlp_interface->GetOidInfo(oid));
+    CHECK_RETURN_IF_FALSE(oid_info.Present())
         << "The SFP with OID " << oid << " is not currently present.";
     return ::util::OkStatus();
   }
@@ -92,8 +97,22 @@ class OnlpSfpDataSource : public DataSource {
   // Media Type.
   EnumAttribute media_type_{MediaType_descriptor(), this};
 
+  // SFP Type.
+  EnumAttribute sfp_connector_type_{SfpType_descriptor(), this};
+
+  // SFP Module Type.
+  EnumAttribute sfp_module_type_{SfpModuleType_descriptor(), this};
+
+  // SFP Capabilities.
+  EnumAttribute sfp_module_caps_{SfpModuleCaps_descriptor(), this};
+
+  // Cable Length.
+  TypedAttribute<int> cable_length_{this};
+  TypedAttribute<std::string> cable_length_desc_{this};
+
   // SFP temperature.
   TypedAttribute<double> temperature_{this};
+  // SFP Voltage.
   TypedAttribute<double> vcc_{this};
 
   // Channels info.

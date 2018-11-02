@@ -18,6 +18,7 @@
 #define THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
 
@@ -32,6 +33,11 @@ class MockOnlpWrapper : public OnlpInterface {
 
   MOCK_CONST_METHOD1(GetOidInfo, ::util::StatusOr<OidInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetSfpInfo, ::util::StatusOr<SfpInfo>(OnlpOid oid));
+  MOCK_CONST_METHOD0(GetSfpPresenceBitmap, ::util::StatusOr<OnlpPresentBitmap>());
+  MOCK_CONST_METHOD1(GetSfpPresent, ::util::StatusOr<bool>(OnlpOid port));
+  MOCK_CONST_METHOD0(GetSfpMaxPortNumber, ::util::StatusOr<OnlpPortNumber>());
+  MOCK_CONST_METHOD1(GetOidList, ::util::StatusOr<std::vector<OnlpOid>>(
+        onlp_oid_type_flag_t type));
 };
 
 }  // namespace onlp

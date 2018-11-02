@@ -845,6 +845,28 @@ enum MediaType {
   MEDIA_TYPE_QSFP_CCR4 = 14;    // 100G copper
 }
 
+// TODO: revise these enum
+enum SfpType {
+  SFP_TYPE_UNKNOWN = 0;
+  SFP_TYPE_SFP = 1;
+  SFP_TYPE_QSFP = 2;
+}
+
+// TODO: revise these enum
+enum SfpModuleType {
+  SFP_MODULE_TYPE_UNKNOWN = 0;
+  SFP_MODULE_TYPE_100G_BASE_CR4 = 1;
+  SFP_MODULE_TYPE_10G_BASE_CR = 2;
+  SFP_MODULE_TYPE_1G_BASE_SX = 3;
+}
+
+// TODO: revise these enum
+enum SfpModuleCaps {
+  SFP_MODULE_CAPS_UNKNOWN = 0;
+  SFP_MODULE_CAPS_F_100 = 1;
+  SFP_MODULE_CAPS_F_1G = 2;
+}
+
 //------------------------------------------------------------------------------
 // Messages related to physical properties of ports on a chassis
 //------------------------------------------------------------------------------
