@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
 
 #include <bitset>
 extern "C" {
@@ -142,4 +142,4 @@ class OnlpWrapper : public OnlpInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_

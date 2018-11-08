@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
@@ -44,4 +44,4 @@ class MockOnlpWrapper : public OnlpInterface {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_

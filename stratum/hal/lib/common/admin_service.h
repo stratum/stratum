@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_H_
+#ifndef STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_H_
+#define STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_H_
 
 #include <grpc++/grpc++.h>
 
@@ -105,4 +105,4 @@ class AdminService final : public ::gnoi::system::System::Service {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_H_
+#endif  // STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_H_

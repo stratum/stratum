@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_
 
 #include <memory>
 #include <vector>
@@ -23,7 +23,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 
@@ -67,9 +67,13 @@ class OnlpOidEventCallback : public OnlpEventCallback {
   virtual OnlpOid GetOid() const { return oid_; }
 
  private:
+  friend class OnlpEventHandler;
   OnlpOid oid_;
+  // The OnlpEventHandler that is currently sending updates to this callback.
+  OnlpEventHandler* handler_;
 };
 
+/*FIXME replaced by classes in mock file
 // Represents a callback for status changes on any of the ONLP SFPs.
 // Mainly, a callback when a SFP plugged in or unplugged event was detected.
 // Note: this callback does not have to associated with any specific SFP.
@@ -85,7 +89,7 @@ class OnlpSfpEventCallback : public OnlpEventCallback {
   // Callback for handling SFP status changes - SFP plug/unplug events.
   virtual ::util::Status HandleSfpStatusChange(const OidInfo& oid_info) = 0;
 };
-
+*/
 
 class OnlpEventHandler {
  public:
@@ -152,11 +156,11 @@ class OnlpEventHandler {
   const OnlpInterface* onlp_ = nullptr;
   absl::Mutex monitor_lock_;
   absl::CondVar monitor_cond_var_;
-  stratum::gtl::flat_hash_map<OnlpOid, OidStatusMonitor> status_monitors_
-      GUARDED_BY(monitor_lock_);
-  SfpStatusMonitor sfp_status_monitor_
+  absl::flat_hash_map<OnlpOid, OidStatusMonitor> status_monitors_
       GUARDED_BY(monitor_lock_);
   std::function<void(::util::Status)> update_callback_
+      GUARDED_BY(monitor_lock_);
+  SfpStatusMonitor sfp_status_monitor_
       GUARDED_BY(monitor_lock_);
   OnlpPortNumber max_front_port_num_
       GUARDED_BY(monitor_lock_);
@@ -174,4 +178,4 @@ class OnlpEventHandler {
 }  // namespace stratum
 
 
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_

@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
 
 #include <memory>
 #include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+//FIXME #include "absl/strings/util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"
@@ -165,7 +167,6 @@ TEST(SfpDatasourceTest, GetSfpData) {
   EXPECT_THAT(sfp_datasource->GetSfpCableLengthDesc(),
               ContainsValue<std::string>("test_cable_len"));
 }
-
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

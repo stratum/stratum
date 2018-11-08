@@ -27,6 +27,7 @@ load(
 )
 
 package(
+    #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
 )
 
@@ -38,14 +39,16 @@ stratum_cc_library(
         ":onlp_wrapper",
 #        ":onlp_wrapper_fake",
         "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "//stratum/glue/status",
-        "//stratum/glue/gtl:flat_hash_map",
-        "//stratum/glue/gtl:map_util",       
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
+        "//stratum/glue/gtl:flat_hash_map",
+        "//stratum/glue/gtl:map_util",
+
     ],
 )
 
@@ -64,14 +67,16 @@ stratum_cc_test(
     name = "onlp_event_handler_test",
     srcs = ["onlp_event_handler_test.cc"],
     deps = [
+        ":onlp_event_handler",
         ":onlp_event_handler_mock",
         ":onlp_wrapper_mock",
         "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/time",
         "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
         "//stratum/glue/status",
-        "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/glue/status:status_test_util",
     ],
 )
 
@@ -83,6 +88,10 @@ stratum_cc_library(
     hdrs = [
         "onlp_wrapper.h",
     ],
+    textual_hdrs = [
+        #       TODO: Fix dependency
+        #        "//stratum/onlp:onlp_hdrs",
+    ],
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -90,6 +99,8 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
+        #       TODO: Fix dependency
+        #        "//stratum/onlp:onlpsim",
         #"@onlp_libs//:onlp",
         "@com_github_AIM//:AIM_headers",
         "@com_github_bigcode//:sff",
@@ -154,6 +165,8 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
+        #       TODO: Fix dependency
+        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -179,6 +192,8 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
+        #       TODO: Fix dependency
+        #        "//stratum/onlp:onlpsim",
     ],
 )
 

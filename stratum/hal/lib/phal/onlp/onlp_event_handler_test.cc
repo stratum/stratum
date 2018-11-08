@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
+
 #include <functional>
 #include <vector>
 
@@ -21,6 +23,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/synchronization/mutex.h"
@@ -52,6 +55,13 @@ class OnlpEventHandlerTest : public ::testing::Test {
   OnlpEventHandler handler_{&onlp_};
 };
 
+namespace {
+class CallbackMock : public OnlpEventCallback {
+ public:
+  explicit CallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
+  MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
+};
+}  // namespace
 
 TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
   OnlpSfpEventCallbackMock callback;
@@ -59,12 +69,16 @@ TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
   EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
   EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
   EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
-
-//  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-//  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
-//  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-//  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
 }
+/* FIXME
+TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
+  CallbackMock callback(1234);
+  EXPECT_OK(handler_.RegisterEventCallback(&callback));
+  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+  EXPECT_OK(handler_.RegisterEventCallback(&callback));
+  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+}
+*/
 
 TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
   OnlpSfpEventCallbackMock callback;
@@ -74,15 +88,18 @@ TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
   EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
   EXPECT_THAT(handler_.UnregisterSfpEventCallback(&callback),
               StatusIs(_, _, HasSubstr("not currently registered.")));
-
-//  CallbackMock callback(1234);
-//  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-//  EXPECT_THAT(handler_.RegisterEventCallback(&callback),
-//              StatusIs(_, _, HasSubstr("already registered.")));
-//  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
-//  EXPECT_THAT(handler_.UnregisterEventCallback(&callback),
-//              StatusIs(_, _, HasSubstr("not currently registered.")));
 }
+/* FIXME
+TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
+  CallbackMock callback(1234);
+  EXPECT_OK(handler_.RegisterEventCallback(&callback));
+  EXPECT_THAT(handler_.RegisterEventCallback(&callback),
+              StatusIs(_, _, HasSubstr("already registered.")));
+  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+  EXPECT_THAT(handler_.UnregisterEventCallback(&callback),
+              StatusIs(_, _, HasSubstr("not currently registered.")));
+}
+*/
 
 TEST_F(OnlpEventHandlerTest, UnusedHandlerCanPollSfps) {
   // Poll a bunch. There are no registered callbacks, so this should be a no-op.
@@ -310,6 +327,10 @@ TEST_F(OnlpEventHandlerTest, UpdateCallbackSentAfterAnyUpdate) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(mock_update_callback, Call(::util::OkStatus()));
   EXPECT_OK(PollOids());
+}
+
+TEST_F(OnlpEventHandlerTest, BringupAndTeardownPollingThread) {
+  EXPECT_OK(RunPolling());
 }
 
 TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleCallbacks) {

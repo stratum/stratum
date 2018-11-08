@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
+#ifndef STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
+#define STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
 
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 
@@ -72,4 +72,4 @@ class YangParseTreePaths {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
+#endif  // STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_

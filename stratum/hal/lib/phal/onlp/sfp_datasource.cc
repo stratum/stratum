@@ -12,10 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
+
+#include <cmath>
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
-#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
-#include <cmath>
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/system_interface.h"
+#include "stratum/lib/macros.h"
+#include "stratum/glue/integral_types.h"
+#include "absl/memory/memory.h"
+#include "stratum/glue/status/status.h"
+#include "util/task/statusor.h"
 
 namespace stratum {
 namespace hal {

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_MOCK_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_MOCK_H_
+#ifndef STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_MOCK_H_
+#define STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_MOCK_H_
 
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/switch_mock.h"
@@ -56,4 +56,4 @@ class GnmiPublisherMock : public GnmiPublisher {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_MOCK_H_
+#endif  // STRATUM_HAL_LIB_COMMON_GNMI_PUBLISHER_MOCK_H_

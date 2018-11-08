@@ -20,14 +20,13 @@
 
 #include "gflags/gflags.h"
 #include "stratum/lib/macros.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
-#include "stratum/glue/gtl/map_util.h"
-
 
 // Note: We want to keep this polling interval relatively short. Unlike with
 // with udev, it's possible for us to miss state changes entirely if they occur
@@ -39,7 +38,6 @@
 // instance, if we notice that fixed fields for a transceiver have changed, we
 // should report this as a removal event and an insertion event.
 DEFINE_int32(onlp_polling_interval_ms, 200,
-//DEFINE_int32(onlp_polling_interval_ms, 2000,
              "Polling interval for checking ONLP for hardware state changes.");
 
 namespace stratum {
@@ -234,7 +232,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
 
 ::util::Status OnlpEventHandler::PollOids() {
   // First we find all of the oids that have been updated.
-  stratum::gtl::flat_hash_map<OnlpOid, OidInfo> updated_oids;
+  absl::flat_hash_map<OnlpOid, OidInfo> updated_oids;
   {
     absl::MutexLock lock(&monitor_lock_);
     for (auto& oid_and_monitor : status_monitors_) {
@@ -314,7 +312,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
   }
 
   // Find all of the port that have been updated.
-  stratum::gtl::flat_hash_map<OnlpPortNumber, OidInfo> updated_ports;
+  absl::flat_hash_map<OnlpPortNumber, OidInfo> updated_ports;
   {
     absl::MutexLock lock(&monitor_lock_);
     OnlpPresentBitmap previous_map = sfp_status_monitor_.previous_map;

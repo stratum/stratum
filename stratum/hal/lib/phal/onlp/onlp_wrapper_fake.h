@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_FAKE_H_
-#define THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_FAKE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_FAKE_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_FAKE_H_
 
 // Fake definitions of the OnlpInterface and the OnlpWrapper class.
 // It hides the dependency on ONLP library for unit testing of the
@@ -577,5 +577,5 @@ class OnlpSfpPresentMap {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_FAKE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_FAKE_H_
 
