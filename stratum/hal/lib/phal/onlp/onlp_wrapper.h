@@ -19,8 +19,8 @@
 
 #include <bitset>
 extern "C" {
-  #include "onlp/oids.h"
-  #include "onlp/sfp_modified.h"
+#include <onlp/oids.h>
+#include <onlp/sfp.h>
 }
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"

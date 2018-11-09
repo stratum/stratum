@@ -101,15 +101,8 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         #       TODO: Fix dependency
         #        "//stratum/onlp:onlpsim",
-        #"@onlp_libs//:onlp",
-        "@com_github_AIM//:AIM_headers",
-        "@com_github_bigcode//:sff",
-        "@com_github_bigcode//:dom",
-        "@com_github_bigcode//:IOF_headers",
-        "@com_github_bigcode//:BigList_headers",
-        "@com_github_bigcode//:cjson_headers",
-        "@com_github_opennetworklinux//:sfp_onlpv2",
-        "@com_github_opennetworklinux//:onlpv2_headers",
+        #        "@com_github_opennetworklinux//:onlpv2",
+        "@com_github_opennetworklinux//:onlp_headers",
     ],
 )
 

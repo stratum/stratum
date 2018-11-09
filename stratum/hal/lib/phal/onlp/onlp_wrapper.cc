@@ -14,9 +14,7 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 extern "C" {
-#include "onlp/oids.h"
 #include "onlp/onlp.h"
-#include "onlp/sfp_modified.h"
 }
 
 #include "stratum/hal/lib/common/common.pb.h"
