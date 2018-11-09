@@ -37,6 +37,7 @@ stratum_cc_library(
     hdrs = ["onlp_event_handler.h"],
     deps = [
         ":onlp_wrapper",
+#FIXME remove when onlp_wrapper.h is stable
 #        ":onlp_wrapper_fake",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -115,6 +116,7 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":onlp_wrapper",
+#FIXME remove when onlp_wrapper.h is stable
 #        ":onlp_wrapper_fake",
         "@com_google_googletest//:gtest",
         "//stratum/glue/status",
@@ -122,6 +124,7 @@ stratum_cc_library(
     ],
 )
 
+#FIXME remove when onlp_wrapper.h is stable
 stratum_cc_library(
     name = "onlp_wrapper_fake",
     hdrs = [
@@ -147,6 +150,7 @@ stratum_cc_library(
     ],
     deps = [
         ":onlp_wrapper",
+#FIXME remove when onlp_wrapper.h is stable
 #        ":onlp_wrapper_fake",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -201,6 +205,7 @@ stratum_cc_library(
     deps = [
         ":onlp_event_handler",
         ":onlp_wrapper",
+#FIXME remove when onlp_wrapper.h is stable
 #        ":onlp_wrapper_fake",
         ":sfp_datasource",
         "//stratum/lib:macros",

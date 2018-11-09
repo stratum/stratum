@@ -73,7 +73,6 @@ class OnlpOidEventCallback : public OnlpEventCallback {
   OnlpEventHandler* handler_;
 };
 
-/*FIXME replaced by classes in mock file
 // Represents a callback for status changes on any of the ONLP SFPs.
 // Mainly, a callback when a SFP plugged in or unplugged event was detected.
 // Note: this callback does not have to associated with any specific SFP.
@@ -89,7 +88,7 @@ class OnlpSfpEventCallback : public OnlpEventCallback {
   // Callback for handling SFP status changes - SFP plug/unplug events.
   virtual ::util::Status HandleSfpStatusChange(const OidInfo& oid_info) = 0;
 };
-*/
+
 
 class OnlpEventHandler {
  public:

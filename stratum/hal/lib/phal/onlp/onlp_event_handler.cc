@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//FIXME remove when onlp_wrapper.h is stable
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 

@@ -18,6 +18,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//FIXME remove when onlp_wrapper.h is stable
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface.h"
@@ -25,7 +26,7 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/status/status.h"
-#include "util/task/statusor.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
