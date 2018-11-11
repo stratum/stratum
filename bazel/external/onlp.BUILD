@@ -1,5 +1,5 @@
 package(
-    #FIXME make the default private
+    #FIXME(boc) make the default private
     default_visibility = ["//visibility:public"],
 )
 
@@ -23,11 +23,10 @@ cc_library(
         "sm/bigcode/modules/sff/module/inc/sff/*.x",
     ]),
     strip_include_prefix = "sm/bigcode/modules/sff/module/inc",
-    #FIXME srcs not yet building
-    #srcs = glob([
-    #    "sm/bigcode/modules/sff/module/src/*.c",
-    #    "sm/bigcode/modules/sff/module/src/*.h",
-    #]),
+    srcs = glob([
+        "sm/bigcode/modules/sff/module/src/*.c",
+        "sm/bigcode/modules/sff/module/src/*.h",
+    ]),
     deps = [
         ":AIM",
         ":cjson",
@@ -100,6 +99,34 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "wheel_timer",
+    hdrs = glob([
+        "sm/bigcode/modules/timer_wheel/module/inc/timer_wheel/*.h",
+        "sm/bigcode/modules/timer_wheel/module/inc/timer_wheel/timer_wheel.x",
+    ]),
+    strip_include_prefix = "sm/bigcode/modules/timer_wheel/module/inc",
+    srcs = glob([
+        "sm/bigcode/modules/timer_wheel/module/src/*.c",
+        "sm/bigcode/modules/timer_wheel/module/src/*.h",
+    ]),
+    deps = [":AIM"],
+)
+
+cc_library(
+    name = "OS",
+    hdrs = glob([
+        "sm/bigcode/modules/OS/module/inc/OS/*.h",
+        "sm/bigcode/modules/OS/module/inc/OS/os.x",
+    ]),
+    strip_include_prefix = "sm/bigcode/modules/OS/module/inc",
+    srcs = glob([
+        "sm/bigcode/modules/OS/module/src/*.c",
+        "sm/bigcode/modules/OS/module/src/*.h",
+    ]),
+    deps = [":AIM"],
+)
+
 # ONLP targets
 # Need to break onlplib and onlp into two parts due to circular dependency between them
 cc_library(
@@ -144,6 +171,7 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+#FIXME(boc) this target has some warnings in src/i2c.c
 cc_library(
     name = "onlplib",
     hdrs = [
@@ -176,9 +204,9 @@ cc_library(
     ],
 )
 
-#FIXME this target is not yet building
+#FIXME(boc) this target has some warnings in src/onlp_ucli.c and src/sfp.c
 cc_library(
-    name = "onlpv2",
+    name = "onlp",
     hdrs = [
         "packages/base/any/onlp/src/onlp/module/inc/onlp/attribute.h",
         "packages/base/any/onlp/src/onlp/module/inc/onlp/chassis.h",
@@ -206,7 +234,19 @@ cc_library(
         ":onlplib_headers",
         ":sff",
         ":uCli",
-        #FIXME could still be missing: timer_wheel OS
+        ":wheel_timer",
+        ":OS",
     ],
+    copts = [
+        "-DAIM_CONFIG_INCLUDE_CTOR_DTOR=1",
+        "-DAIM_CONFIG_INCLUDE_MODULES_INIT=1",
+        "-DONLP_CONFIG_API_LOCK_GLOBAL_SHARED=1",
+        "-DONLP_CONFIG_INCLUDE_SHLOCK_GLOBAL_INIT=1",
+        "-DAIM_CONFIG_INCLUDE_PVS_SYSLOG=1",
+        "-DAIM_CONFIG_INCLUDE_DAEMONIZE=1",
+        "-DONLP_CONFIG_INCLUDE_UCLI=1",
+        "-DUCLI_CONFIG_INCLUDE_ELS_LOOP=1",
+    ],
+    alwayslink = 1,
     visibility = ["//visibility:public"],
 )
