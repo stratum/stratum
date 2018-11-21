@@ -845,14 +845,18 @@ enum MediaType {
   MEDIA_TYPE_QSFP_CCR4 = 14;    // 100G copper
 }
 
-// TODO: revise these enum
+// TODO: revise these enum as needed per ASIC integration
+//       currently maps to sff_sfp_type_t defined in sff.h
 enum SfpType {
-  SFP_TYPE_UNKNOWN = 0;
-  SFP_TYPE_SFP = 1;
-  SFP_TYPE_QSFP = 2;
+  SFP_TYPE_UNKNOWN   = 0;
+  SFP_TYPE_SFP       = 1;
+  SFP_TYPE_QSFP      = 2;
+  SFP_TYPE_QSFP_PLUS = 3;
+  SFP_TYPE_QSFP28    = 4;
 }
 
-// TODO: revise these enum
+// TODO: revise these enum as needed per ASIC integration
+//       currently maps to sff_module_type_t defined in sff.h
 enum SfpModuleType {
   SFP_MODULE_TYPE_UNKNOWN = 0;
   SFP_MODULE_TYPE_100G_BASE_CR4 = 1;
@@ -860,11 +864,16 @@ enum SfpModuleType {
   SFP_MODULE_TYPE_1G_BASE_SX = 3;
 }
 
-// TODO: revise these enum
+// The module speed capability for a frontpanel port.
+// TODO: revise these enum as needed per ASIC integration
+//       currently maps to sff_module_caps_t defined in sff.h
 enum SfpModuleCaps {
   SFP_MODULE_CAPS_UNKNOWN = 0;
-  SFP_MODULE_CAPS_F_100 = 1;
-  SFP_MODULE_CAPS_F_1G = 2;
+  SFP_MODULE_CAPS_F_100   = 1;
+  SFP_MODULE_CAPS_F_1G    = 2;
+  SFP_MODULE_CAPS_F_10G   = 4;
+  SFP_MODULE_CAPS_F_40G   = 8;
+  SFP_MODULE_CAPS_F_100G  = 16;
 }
 
 //------------------------------------------------------------------------------
