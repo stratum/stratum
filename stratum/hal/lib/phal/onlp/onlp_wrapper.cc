@@ -179,6 +179,10 @@ SfpType SfpInfo::GetSfpType() const {
     return SFP_TYPE_SFP;
   case SFF_SFP_TYPE_QSFP:
     return SFP_TYPE_QSFP;
+  case SFF_SFP_TYPE_QSFP_PLUS:
+    return SFP_TYPE_QSFP_PLUS;
+  case SFF_SFP_TYPE_QSFP28:
+    return SFP_TYPE_QSFP28;
   default:
     return SFP_TYPE_UNKNOWN;
   }
@@ -203,6 +207,12 @@ SfpModuleCaps SfpInfo::GetSfpModuleCaps() const {
     return SFP_MODULE_CAPS_F_100;
   case SFF_MODULE_CAPS_F_1G:
     return SFP_MODULE_CAPS_F_1G;
+  case SFF_MODULE_CAPS_F_10G:
+    return SFP_MODULE_CAPS_F_10G;
+  case SFF_MODULE_CAPS_F_40G:
+    return SFP_MODULE_CAPS_F_40G;
+  case SFF_MODULE_CAPS_F_100G:
+    return SFP_MODULE_CAPS_F_100G;
   default:
     return SFP_MODULE_CAPS_UNKNOWN;
   }
