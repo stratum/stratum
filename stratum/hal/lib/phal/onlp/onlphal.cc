@@ -335,7 +335,7 @@ Onlphal* Onlphal::CreateSingleton() {
 	std::vector <OnlpOid> OnlpOids = 
 		result.ConsumeValueOrDie();
 
-	TODO: Need to support multiple slots. 
+	//TODO: Need to support multiple slots. 
 	for(unsigned int i = 0; i < OnlpOids.size(); i++) {
 
 		//Adding 1, because port numbering starts from 1.
