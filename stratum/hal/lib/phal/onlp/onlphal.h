@@ -22,7 +22,6 @@
 
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/synchronization/mutex.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 #include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
 

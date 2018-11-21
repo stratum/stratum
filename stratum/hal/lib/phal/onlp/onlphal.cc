@@ -184,7 +184,6 @@ Onlphal::~Onlphal() {}
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  //absl::WriterMutexLock l(&config_lock_);
 
   //Get slot port pair to lookup sfpdatasource.
   const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
@@ -269,12 +268,7 @@ Onlphal* Onlphal::CreateSingleton() {
   for (it = transceiver_event_writers_.begin(); 
        it != transceiver_event_writers_.end();
        ++ it) {
-    /*
-    LOG(INFO) << "In Onlphal::WriteTransceiverEvent, Writer, id=" << it->id
-              << ", priority=" << it->priority;
-    LOG(INFO) << "Onlphal::WriteTransceiverEvent, Event, slot=" << event.slot
-              << ", port=" << event.port << ", state=" << event.state;
-    */
+    
     it->writer->Write(event, absl::InfiniteDuration());
   }
 
@@ -341,7 +335,7 @@ Onlphal* Onlphal::CreateSingleton() {
 	std::vector <OnlpOid> OnlpOids = 
 		result.ConsumeValueOrDie();
 
-	//Assuming slot is always zero.. 
+	TODO: Need to support multiple slots. 
 	for(unsigned int i = 0; i < OnlpOids.size(); i++) {
 
 		//Adding 1, because port numbering starts from 1.
