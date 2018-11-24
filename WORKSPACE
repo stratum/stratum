@@ -17,3 +17,9 @@ bmv2_configure(name = "local_bmv2_bin")
 
 load("@com_github_p4lang_PI//bazel:deps.bzl", "PI_deps")
 PI_deps()
+
+load("//stratum/hal/lib/barefoot:barefoot.bzl", "barefoot_configure")
+barefoot_configure(name = "local_barefoot_bin")
+
+load("//stratum/hal/lib/barefoot:thrift.bzl", "thrift_configure")
+thrift_configure(name = "local_thrift_bin")

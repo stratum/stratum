@@ -1,0 +1,60 @@
+load(
+    "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
+    "stratum_cc_library",
+    "stratum_cc_test",
+    "HOST_ARCHES",
+)
+
+package(
+    default_visibility = STRATUM_INTERNAL,
+)
+
+stratum_cc_library(
+    name = "bf_switch",
+    srcs = ["bf_switch.cc"],
+    hdrs = ["bf_switch.h"],
+    deps = [":bf_chassis_manager",
+            "@com_github_googleapis//:status_cc_proto",
+            "//stratum/glue:integral_types",
+            "//stratum/glue:logging",
+            "//stratum/glue/status:status_macros",
+            "//stratum/hal/lib/common:phal_interface",
+            "//stratum/hal/lib/common:switch_interface",
+            "//stratum/hal/lib/pi:pi_node",
+            "//stratum/lib:constants",
+            "//stratum/lib:macros",
+            "//stratum/glue/gtl:flat_hash_map",
+            "//stratum/glue/gtl:map_util",
+            "@local_barefoot_bin//:bf_headers",
+    ],
+)
+
+stratum_cc_library(
+    name = "bf_chassis_manager",
+    srcs = ["bf_chassis_manager.cc"],
+    hdrs = ["bf_chassis_manager.h"],
+    deps = ["@com_github_google_glog//:glog",
+            "@com_google_absl//absl/base:core_headers",
+            "@com_google_absl//absl/memory",
+            "@com_google_absl//absl/synchronization",
+            "@com_google_protobuf//:protobuf",
+            "//stratum/glue:integral_types",
+            "//stratum/glue:logging",
+            "//stratum/glue/status",
+            "//stratum/glue/status:statusor",
+            "//stratum/hal/lib/common:common_proto",
+            "//stratum/hal/lib/common:constants",
+            "//stratum/hal/lib/common:phal_interface",
+            "//stratum/hal/lib/common:switch_interface",
+            "//stratum/hal/lib/common:utils",
+            "//stratum/hal/lib/common:writer_interface",
+            "//stratum/lib:constants",
+            "//stratum/lib:macros",
+            "//stratum/lib:utils",
+            "//stratum/public/lib:error",
+            "//stratum/glue/gtl:map_util",
+            "@local_barefoot_bin//:bf_headers",
+            "@local_barefoot_bin//:bf_drivers",
+    ],
+)
