@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+licenses(["notice"])  # Apache v2
+
 load(
     "//platforms/networking/sandblaze/portage:build_defs.bzl",
     "sc_package",

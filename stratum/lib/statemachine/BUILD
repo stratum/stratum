@@ -10,6 +10,8 @@ package(
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 sc_cc_lib(
     name = "state_machine",
     hdrs = [

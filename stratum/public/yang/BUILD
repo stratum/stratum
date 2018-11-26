@@ -2,6 +2,8 @@
 load("//ops/netops/openconfig/build:yang.bzl", "yang_library")
 load("//ops/netops/openconfig/build:yang.bzl", "yang_lint_test")
 
+licenses(["notice"])  # Apache v2
+
 yang_library(
     name = "hercules_interfaces",
     srcs = [

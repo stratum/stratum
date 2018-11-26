@@ -15,6 +15,8 @@ package(
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 genrule(
     name = "proto2_srcs",
     srcs = ["//platforms/networking/hercules/hal/lib/p4:proto_srcs"],

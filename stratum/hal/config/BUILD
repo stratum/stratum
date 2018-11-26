@@ -9,6 +9,8 @@ package(
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 genrule(
     name = "phal_config_generic_trident2",
     outs = ["legacy_phal_init_config_generic_trident2_hercules.pb.txt"],

@@ -12,6 +12,8 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 sc_proto_lib(
     name = "bcm_proto",
     hdrs = ["bcm.proto"],

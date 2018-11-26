@@ -11,6 +11,8 @@ package(
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 sc_cc_bin(
     name = "hercules",
     srcs = [
