@@ -54,6 +54,27 @@ bazel build //stratum/hal/bin/barefoot:stratum_bf
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
      ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf --local_hercules_url=0.0.0.0:28000 \
-     --forwarding_pipeline_configs_file=/tmp/i.x --persistent_config_dir=/tmp
-     --bf_sde_install=$BF_SDE_INSTALL --grpc_max_recv_msg_size=256
+     --forwarding_pipeline_configs_file=<conf dir>/dir.x --persistent_config_dir=<config dir> \
+     --bf_sde_install=$BF_SDE_INSTALL --grpc_max_recv_msg_size=256 \
+     --chassis_config_file=<config.proto.txt>
+```
+
+For a sample `<config.proto.txt>` file, see sample_config.proto.txt in this
+directory. Note that at the moment, you still need to add & enable the ports
+using the ucli or through the Thrift PAL RPC service. ONOS can add & enable the
+ports for you if you provide the appropriate netcfg file when using the
+barefoot-pro ONOS driver.
+
+## Testing gNMI
+
+You can use the gnmi_sub_once.py script for gNMI ONCE subscriptions:
+```
+python gnmi_sub_once.py --grpc-addr 0.0.0.0:28000 --interface <name> state counters in-octets
+python gnmi_sub_once.py --grpc-addr 0.0.0.0:28000 --interface <name> state oper-status
+```
+
+You can use the gnmi_get.py script to test gNMI Get requests:
+```
+python gnmi_get.py --grpc-addr 0.0.0.0:28000 --interface <name> state counters in-octets
+python gnmi_get.py --grpc-addr 0.0.0.0:28000 --interface <name> state oper-status
 ```

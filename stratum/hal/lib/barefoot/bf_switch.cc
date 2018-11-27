@@ -168,6 +168,16 @@ BFSwitch::~BFSwitch() {}
         }
         break;
       }
+      case DataRequest::Request::kPortCounters: {
+        status = bf_chassis_manager_->GetPortCounters(
+            req.port_counters().node_id(),
+            req.port_counters().port_id(),
+            resp.mutable_port_counters());
+        break;
+      }
+      default:
+        // TODO(antonin)
+        break;
     }
     if (status.ok()) {
       // If everything is OK send it to the caller.

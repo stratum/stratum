@@ -90,7 +90,7 @@ BFChassisManager::~BFChassisManager() = default;
 
   // If state is unknown, query the state
   LOG(INFO) << "Querying state of port " << port_id << " in node " << node_id
-            << "with BF_PAL";
+            << " with BF_PAL";
   int state;
   auto bf_status = bf_pal_port_oper_state_get(
       static_cast<bf_dev_id_t>(*unit), static_cast<bf_dev_port_t>(port_id), &state);
@@ -102,6 +102,36 @@ BFChassisManager::~BFChassisManager() = default;
             << PrintPortState(port_state);
   (*port_id_to_port_state)[port_id] = port_state;
   return state ? PORT_STATE_UP : PORT_STATE_DOWN;
+}
+
+::util::Status BFChassisManager::GetPortCounters(
+    uint64 node_id, uint32 port_id, PortCounters* counters) {
+  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
+  if (unit == nullptr) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Unkonwn node id " << node_id;
+  }
+  uint64_t stats[BF_NUM_RMON_COUNTERS];
+  auto bf_status = bf_pal_port_all_stats_get(
+      static_cast<bf_dev_id_t>(*unit), static_cast<bf_dev_port_t>(port_id), stats);
+  if (bf_status != BF_SUCCESS) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Error when querying counters for port "
+                                    << port_id << " in node " << node_id;
+  }
+  counters->set_in_octets(stats[bf_mac_stat_OctetsReceived]);
+  counters->set_out_octets(stats[bf_mac_stat_OctetsTransmittedTotal]);
+  counters->set_in_unicast_pkts(stats[bf_mac_stat_FramesReceivedwithUnicastAddresses]);
+  counters->set_out_unicast_pkts(stats[bf_mac_stat_FramesTransmittedUnicast]);
+  counters->set_in_broadcast_pkts(stats[bf_mac_stat_FramesReceivedwithBroadcastAddresses]);
+  counters->set_out_broadcast_pkts(stats[bf_mac_stat_FramesTransmittedBroadcast]);
+  counters->set_in_multicast_pkts(stats[bf_mac_stat_FramesReceivedwithMulticastAddresses]);
+  counters->set_out_multicast_pkts(stats[bf_mac_stat_FramesTransmittedMulticast]);
+  counters->set_in_discards(stats[bf_mac_stat_FramesDroppedBufferFull]);
+  counters->set_out_discards(0);  // stat not available
+  counters->set_in_unknown_protos(0);  // stat not meaningful
+  counters->set_in_errors(stats[bf_mac_stat_FrameswithanyError]);
+  counters->set_out_errors(stats[bf_mac_stat_FramesTransmittedwithError]);
+  counters->set_in_fcs_errors(stats[bf_mac_stat_FramesReceivedwithFCSError]);
+  return ::util::OkStatus();
 }
 
 std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(

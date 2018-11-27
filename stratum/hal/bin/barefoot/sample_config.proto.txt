@@ -1,0 +1,46 @@
+description: "Sample config"
+chassis {
+  platform: PLT_P4_SOFT_SWITCH
+  name: "tofino"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 144
+  port: 144
+  speed_bps: 100000000000
+  node: 1
+  channel: 1
+  name: "144"
+  slot: 1
+}
+singleton_ports {
+  id: 128
+  port: 128
+  speed_bps: 100000000000
+  node: 1
+  channel: 1
+  name: "128"
+  slot: 1
+}
+singleton_ports {
+  id: 132
+  port: 132
+  speed_bps: 100000000000
+  node: 1
+  channel: 1
+  name: "132"
+  slot: 1
+}
+singleton_ports {
+  id: 148
+  port: 148
+  speed_bps: 100000000000
+  node: 1
+  channel: 1
+  name: "148"
+  slot: 1
+}

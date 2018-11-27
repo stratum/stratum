@@ -37,34 +37,28 @@ def main():
     channel = grpc.insecure_channel(args.grpc_addr)
     stub = gnmi_pb2.gNMIStub(channel)
 
-    def req_iterator():
-        while True:
-            req = gnmi_pb2.SubscribeRequest()
-            subList = req.subscribe
-            subList.mode = gnmi_pb2.SubscriptionList.ONCE
-            sub = subList.subscription.add()
-            path = sub.path
-            e = path.elem.add()
-            e.name = "interfaces"
-            e = path.elem.add()
-            e.name = "interface"
-            if args.interface:
-                e.key["name"] = args.interface
-            for pe in args.path:
-                e = path.elem.add()
-                e.name = pe
-            print "***************************"
-            print "REQUEST"
-            print req
-            print "***************************"
-            yield req
-            return
+    req = gnmi_pb2.GetRequest()
+    req.encoding = gnmi_pb2.PROTO
+    path = req.path.add()
+    e = path.elem.add()
+    e.name = "interfaces"
+    e = path.elem.add()
+    e.name = "interface"
+    if args.interface:
+        e.key["name"] = args.interface
+    for pe in args.path:
+        e = path.elem.add()
+        e.name = pe
+    print "***************************"
+    print "REQUEST"
+    print req
+    print "***************************"
 
-    for response in stub.Subscribe(req_iterator()):
-        print "***************************"
-        print "RESPONSE"
-        print response
-        print "***************************"
+    response = stub.Get(req)
+    print "***************************"
+    print "RESPONSE"
+    print response
+    print "***************************"
 
 if __name__ == '__main__':
     main()

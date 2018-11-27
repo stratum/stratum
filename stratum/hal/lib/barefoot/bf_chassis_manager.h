@@ -46,6 +46,9 @@ class BFChassisManager {
       uint64 node_id, uint32 port_id)
       LOCKS_EXCLUDED(chassis_config_lock_);
 
+  virtual ::util::Status GetPortCounters(
+      uint64 node_id, uint32 port_id, PortCounters* counters);
+
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
       PhalInterface* phal_interface,
