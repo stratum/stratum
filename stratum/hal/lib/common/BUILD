@@ -26,6 +26,8 @@ load(
     "stratum_cc_proto_library",
 )
 
+load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+
 package(
     #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
@@ -160,6 +162,12 @@ stratum_cc_proto_library(
     name = "common_proto",
     hdrs = ["common.proto"],
     #python_support = True,
+)
+
+py_proto_library(
+    name = "common_py_proto",
+    protos = ["common.proto"],
+    # with_grpc = True,
 )
 
 stratum_cc_library(

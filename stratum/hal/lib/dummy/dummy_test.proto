@@ -1,0 +1,81 @@
+// Copyright 2018-present Open Networking Foundation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// This file include RPC definitions for simulate hardware state events from
+// hardware to the switch agent.
+
+// +----------------+
+// |Switch Interface|
+// +--------+-------+
+//          ^
+//          | HW event
+// +--------+-------+
+// |Test gRPC server|
+// +--------+-------+
+//          ^
+//          | gRPC call
+// +--------+-------+
+// |       CLI      |
+// +----------------+
+
+syntax = "proto3";
+
+package stratum.hal.dummy_switch;
+
+import "stratum/hal/lib/common/common.proto";
+
+service Test {
+  // Updates device state such as port operation state, port counters, and so on.
+  rpc DeviceStatusUpdate(DeviceStatusUpdateRequest) returns (DeviceStatusUpdateResponse) { }
+
+  // Sends transceiver event to dummy switch.
+  rpc TransceiverEventUpdate(TransceiverEventRequest) returns (TransceiverEventResponse) { }
+}
+
+message DeviceStatusUpdateRequest {
+  message Source {
+    message Port {
+      uint64 node_id = 1;
+      uint32 port_id = 2;
+    }
+    message Node {
+      uint64 node_id = 1;
+    }
+    message Chassis {
+    }
+    message PortQueue {
+      uint64 node_id = 1;
+      uint32 port_id = 2;
+      uint32 queue_id = 3;
+    }
+    oneof source {
+      Port port = 1;
+      Node node = 2;
+      PortQueue port_queue = 3;
+      Chassis chassis = 4;
+    }
+  }
+  Source source = 1;
+  DataResponse state_update = 2;
+}
+
+message DeviceStatusUpdateResponse { }
+
+message TransceiverEventRequest {
+  uint32 slot = 1;
+  uint32 port = 2;
+  HwState state = 3;
+}
+
+message TransceiverEventResponse { }
