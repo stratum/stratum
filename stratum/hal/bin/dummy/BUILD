@@ -11,6 +11,14 @@ py_binary(
             "//stratum/hal/lib/common:common_py_proto"]
 )
 
+py_binary(
+    name = "port_counter_sim",
+    srcs = ["port_counter_sim.py"],
+    deps = ["//stratum/hal/bin/dummy:cli",
+            "//stratum/hal/lib/dummy:dummy_test_py_proto",
+            "//stratum/hal/lib/common:common_py_proto"]
+)
+
 stratum_cc_binary(
     name = "stratum_dummy",
     srcs = [

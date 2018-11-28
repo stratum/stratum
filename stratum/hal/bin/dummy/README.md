@@ -68,3 +68,26 @@ For example:
 ```
 bazel-bin/stratum/hal/bin/dummy/cli oper_status 1 1 PORT_STATE_DOWN
 ```
+
+## Simulate port counter update events
+
+To simulate port counter events, need to build python script first:
+```
+bazel build //stratum/hal/bin/dummy:port_counter_sim
+
+# For common_pb2 amd dummy_test_pb2
+export PYTHONPATH=$PYTHONPATH:bazel-genfiles/stratum/hal/lib/dummy/:bazel-genfiles/stratum/hal/lib/common/
+```
+
+Usage:
+```
+usage: port_counter_sim [-h] [--dry-run]
+                        [--test-service-url TEST_SERVICE_URL]
+                        [--delay DELAY]
+                        node-id port-id
+```
+
+For example, we want to generate port counter update event for node 1 port 1 every second:
+```
+bazel-bin/stratum/hal/bin/dummy/port_counter_sim 1 1
+```
