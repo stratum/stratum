@@ -46,7 +46,7 @@ tcp6       0      0 localhost:28000         [::]:*                  LISTEN      
 tcp6       0      0 localhost:28000         [::]:*                  LISTEN      17101/stratum_dummy
 ```
 
-## Using CLI to simulate device status change event
+## Using CLI to simulate device status change events
 
 The CLI uses python modules compiled from following proto files:
 - stratum/hal/lib/dummy/dummy_test.proto
@@ -55,11 +55,14 @@ The CLI uses python modules compiled from following proto files:
 To build CLI binary:
 ```
 bazel build //stratum/hal/bin/dummy:cli
+
+# For common_pb2 amd dummy_test_pb2
+export PYTHONPATH=$PYTHONPATH:bazel-genfiles/stratum/hal/lib/dummy/:bazel-genfiles/stratum/hal/lib/common/
 ```
 
 Usage:
 ```
-usage: cli.py [-h] [--dry-run] [--test-service-url TEST_SERVICE_URL] state-to-update values-to-update
+usage: cli [-h] [--dry-run] [--test-service-url TEST_SERVICE_URL] state-to-update values-to-update
 ```
 
 The test-cmd is based on the DataResponse from common.proto which allows user to update device state.
