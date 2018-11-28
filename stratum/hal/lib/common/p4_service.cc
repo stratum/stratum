@@ -426,7 +426,33 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                                        "node ",
                                        node_id, " yet."));
   }
-  *resp->mutable_config() = it->second;
+
+  switch (req->response_type()) {
+    case p4::v1::GetForwardingPipelineConfigRequest::ALL: {
+      *resp->mutable_config() = it->second;
+      break;
+    }
+    case p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY: {
+      *resp->mutable_config()->mutable_cookie() = it->second.cookie();
+      break;
+    }
+    case p4::v1::GetForwardingPipelineConfigRequest::P4INFO_AND_COOKIE: {
+      *resp->mutable_config()->mutable_p4info() = it->second.p4info();
+      *resp->mutable_config()->mutable_cookie() = it->second.cookie();
+      break;
+    }
+    case p4::v1::GetForwardingPipelineConfigRequest::DEVICE_CONFIG_AND_COOKIE: {
+      *resp->mutable_config()->mutable_p4_device_config() =
+          it->second.p4_device_config();
+      *resp->mutable_config()->mutable_cookie() = it->second.cookie();
+      break;
+    }
+    default:
+      return ::grpc::Status(
+          ::grpc::StatusCode::INVALID_ARGUMENT,
+          absl::StrCat("Invalid action passed for node ", node_id, "."));
+  }
+
 
   return ::grpc::Status::OK;
 }

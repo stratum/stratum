@@ -177,6 +177,8 @@ class P4ServiceTest : public ::testing::TestWithParam<OperationMode> {
   static constexpr absl::uint128 kElectionId2 = 2222;
   static constexpr absl::uint128 kElectionId3 = 1212;
   static constexpr uint32 kTableId1 = 12;
+  static constexpr uint64 kCookie1 = 123;
+  static constexpr uint64 kCookie2 = 321;
   OperationMode mode_;
   std::unique_ptr<SwitchMock> switch_mock_;
   std::unique_ptr<AuthPolicyCheckerMock> auth_policy_checker_mock_;
@@ -194,6 +196,8 @@ constexpr char P4ServiceTest::kOperErrorMsg[];
 constexpr char P4ServiceTest::kAggrErrorMsg[];
 constexpr uint64 P4ServiceTest::kNodeId1;
 constexpr uint64 P4ServiceTest::kNodeId2;
+constexpr uint64 P4ServiceTest::kCookie1;
+constexpr uint64 P4ServiceTest::kCookie2;
 constexpr absl::uint128 P4ServiceTest::kElectionId1;
 constexpr absl::uint128 P4ServiceTest::kElectionId2;
 constexpr absl::uint128 P4ServiceTest::kElectionId3;
@@ -1212,6 +1216,62 @@ TEST_P(P4ServiceTest, StreamChannelFailureForTooManyControllersPerNode) {
   // Disconnect the 1st controller at the end.
   stream1->WritesDone();
   ASSERT_TRUE(stream1->Finish().ok());
+}
+
+// Pushing a different forwarding pipeline config again should work.
+TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
+  ForwardingPipelineConfigs configs;
+  FillTestForwardingPipelineConfigsAndSave(&configs);
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "SetForwardingPipelineConfig", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "GetForwardingPipelineConfig", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_CALL(*switch_mock_, PushForwardingPipelineConfig(_, _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+
+  ::grpc::ServerContext context;
+  ::p4::v1::SetForwardingPipelineConfigRequest setRequest;
+  ::p4::v1::SetForwardingPipelineConfigResponse setResponse;
+  setRequest.set_device_id(kNodeId1);
+  setRequest.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  setRequest.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  setRequest.set_action(
+      ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT);
+  *setRequest.mutable_config() = configs.node_id_to_config().at(kNodeId1);
+  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
+
+  setRequest.mutable_config()->mutable_cookie()->set_cookie(kCookie1);
+
+  // Setting pipeline config
+  ::grpc::Status status =
+      p4_service_->SetForwardingPipelineConfig(&context,
+                                               &setRequest,
+                                               &setResponse);
+  EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
+
+  // Retrieving the pipeline config
+  ::p4::v1::GetForwardingPipelineConfigRequest getRequest;
+  ::p4::v1::GetForwardingPipelineConfigResponse getResponse;
+  getRequest.set_device_id(kNodeId1);
+  getRequest.set_response_type(::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY);
+  status = p4_service_->GetForwardingPipelineConfig(&context,
+                                                    &getRequest,
+                                                    &getResponse);
+
+  EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
+
+  // Validating cookie value
+  EXPECT_TRUE(getResponse.config().cookie().cookie() == kCookie1)
+            << "Error: Cookie 1 " << getResponse.config().cookie().cookie()
+            << " not equal " << kCookie1;
+
+  ASSERT_OK(p4_service_->Teardown());
+  CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
 }
 
 INSTANTIATE_TEST_CASE_P(P4ServiceTestWithMode, P4ServiceTest,
