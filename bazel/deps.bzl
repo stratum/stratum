@@ -45,6 +45,15 @@ def stratum_deps():
             build_file = "bazel/external/googleapis.BUILD",
         )
 
+    if "com_github_p4lang_p4c" not in native.existing_rules():
+        # ----- p4c -----
+        remote_workspace(
+            name = "com_github_p4lang_p4c",
+            remote = "https://github.com/p4lang/p4c",
+            commit = "4646f1603499ebd2d42c6bf51274c18aa48943d3",
+            build_file = "bazel/external/p4c.BUILD",
+        )
+
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
         # ----- P4 Runtime -----
         remote_workspace(
@@ -130,6 +139,13 @@ def stratum_deps():
             remote = "https://github.com/systemd/systemd",
             branch = "master",
             build_file = "bazel/external/systemd.BUILD",
+        )
+
+    if "com_github_nelhage_rules_boost" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_nelhage_rules_boost",
+            remote = "https://github.com/nelhage/rules_boost",
+            commit = "8a8853fd755496288995a603ce9aa2685709cd39",
         )
 # -----------------------------------------------------------------------------
 #        Chipset and Platform specific C++ libraries
