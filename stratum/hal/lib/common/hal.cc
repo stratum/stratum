@@ -30,9 +30,9 @@
 #include "absl/synchronization/mutex.h"
 
 // TODO(aghaffar): Use FLAG_DEFINE for all flags.
-DEFINE_FLAG(std::vector<string>, external_hercules_urls, {},
-            "Comma-separated list of URLs for server to listen to for external"
-            " calls from SDN controller, etc.");
+ABSL_FLAG(std::vector<string>, external_hercules_urls, {},
+          "Comma-separated list of URLs for server to listen to for external"
+          " calls from SDN controller, etc.");
 DEFINE_string(local_hercules_url, google::hercules::kLocalHerculesUrl,
               "URL for listening to local calls from hercules stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");

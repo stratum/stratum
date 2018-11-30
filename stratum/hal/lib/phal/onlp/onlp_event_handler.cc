@@ -34,8 +34,8 @@
 // TODO: Deal more precisely with removable hardware components. For
 // instance, if we notice that fixed fields for a transceiver have changed, we
 // should report this as a removal event and an insertion event.
-DEFINE_FLAG(int32, onlp_polling_interval_ms, 200,
-             "Polling interval for checking ONLP for hardware state changes.");
+ABSL_FLAG(int32, onlp_polling_interval_ms, 200,
+          "Polling interval for checking ONLP for hardware state changes.");
 
 namespace stratum {
 namespace hal {
