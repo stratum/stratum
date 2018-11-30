@@ -13,4 +13,6 @@ py_binary(
     ],
 )
 
+licenses(["notice"])  # Apache v2
+
 exports_files(["do_nothing.sh"])

@@ -12,6 +12,8 @@ package(
     features = ["-use_header_modules"],
 )
 
+licenses(["notice"])  # Apache v2
+
 cc_library(
     name = "bcm_sim_test_fixture",
     testonly = 1,

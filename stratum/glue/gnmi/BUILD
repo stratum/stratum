@@ -6,6 +6,8 @@ load(
 
 package(default_visibility = SANDBLAZE_INTERNAL)
 
+licenses(["notice"])  # Apache v2
+
 # This command edits the gnoi micro service protos to be able to be used by Hercules stack.
 proto_edit_cmd = ("cat $(SRCS) " +
                   "| sed '/^syntax.*/a option cc_generic_services = false;' " +

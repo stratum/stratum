@@ -13,6 +13,8 @@ package(
     default_visibility = SANDBLAZE_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 sc_proto_lib(
     name = "procmon_proto",
     srcs = ["procmon.proto"],
