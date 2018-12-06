@@ -138,7 +138,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
     // We keep the polling time as consistent as possible.
     absl::SleepFor(
         last_polling_time +
-        absl::Milliseconds(base::GetFlag(FLAGS_onlp_polling_interval_ms)) -
+        absl::Milliseconds(absl::GetFlag(FLAGS_onlp_polling_interval_ms)) -
         absl::Now());
     last_polling_time = absl::Now();
     {

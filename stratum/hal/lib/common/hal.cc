@@ -103,7 +103,7 @@ Hal::~Hal() {
 
 ::util::Status Hal::SanityCheck() {
   const auto& external_hercules_urls =
-      base::GetFlag(FLAGS_external_hercules_urls);
+      absl::GetFlag(FLAGS_external_hercules_urls);
   CHECK_RETURN_IF_FALSE(!external_hercules_urls.empty())
       << "No external URL was given. This is invalid.";
   auto it = std::find_if(external_hercules_urls.begin(),
@@ -188,7 +188,7 @@ Hal::~Hal() {
   // hercules_stub binary running on the switch, since local connections cannot
   // support auth.
   const auto& external_hercules_urls =
-      base::GetFlag(FLAGS_external_hercules_urls);
+      absl::GetFlag(FLAGS_external_hercules_urls);
   {
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
