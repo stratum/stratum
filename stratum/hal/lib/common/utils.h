@@ -20,10 +20,13 @@
 
 #include <functional>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 
 namespace stratum {
 namespace hal {
@@ -166,6 +169,47 @@ PortLedConfig FindPortLedColorAndState(AdminState admin_state,
 // on this single LED.
 PortLedConfig AggregatePortLedColorsStatePairs(
     const std::vector<PortLedConfig>& color_state_pairs);
+
+// A set of helper methods used to convert enums to a format used by gNMI
+// collectors.
+
+// A helper function that convert Stratum hardware state enum to string.
+std::string ConvertHwStateToString(const HwState& state);
+
+// A helper function that convert Stratum port state enum to string.
+std::string ConvertPortStateToString(const PortState& state);
+
+// A helper function that convert Stratum admin state enum to string.
+std::string ConvertAdminStateToString(const AdminState& state);
+
+// A helper function that convert speed number to string format.
+std::string ConvertSpeedBpsToString(
+    const ::google::protobuf::uint64& speed_bps);
+
+// A helper function that convert OpenConfig speed string to speed number.
+::google::protobuf::uint64 ConvertStringToSpeedBps(
+    const std::string& speed_string);
+
+// A helper function that convert gRPC alarm severity enum to string.
+std::string ConvertAlarmSeverityToString(const Alarm::Severity& severity);
+
+// A helper function that convert Stratum health state to string.
+std::string ConvertHealthStateToString(const HealthState& state);
+
+// A helper function that convert Stratum trunk member block state to boolean.
+bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
+
+// A helper function that convert data received from the HAL into a format
+// expected by the gNMI interface (MAC addresses are expected to be
+// std::strings in the following format: "XX:XX:XX:XX:XX:XX").
+std::string MacAddressToYangString(
+    const ::google::protobuf::uint64& mac_address);
+
+// A helper function that check if autoneg state is enabled.
+bool IsPortAutonegEnabled(const TriState& state);
+
+// A helper function that check if port admin state is enabled.
+bool IsAdminStateEnabled(const AdminState& admin_state);
 
 }  // namespace hal
 }  // namespace stratum

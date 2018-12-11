@@ -346,6 +346,21 @@ class PortHealthIndicatorChangedEvent
   const HealthState new_state_;
 };
 
+// A Port's Auto Negotiation status has changed event.
+class PortAutonegChangedEvent
+    : public PerPortGnmiEvent<PortAutonegChangedEvent> {
+ public:
+  PortAutonegChangedEvent(uint64 node_id, uint32 port_id,
+                                const TriState& new_state)
+      : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
+  ~PortAutonegChangedEvent() override {}
+
+  const TriState& GetState() const { return new_state_; }
+
+ private:
+  const TriState new_state_;
+};
+
 // Configuration Has Been Pushed event.
 class ConfigHasBeenPushedEvent
     : public GnmiEventProcess<ConfigHasBeenPushedEvent> {

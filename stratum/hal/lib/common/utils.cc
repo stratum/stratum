@@ -206,5 +206,139 @@ PortLedConfig AggregatePortLedColorsStatePairs(
   return {aggregate_color, aggregate_state};
 }
 
+std::string ConvertHwStateToString(const HwState& state) {
+  switch (state) {
+    case HW_STATE_READY:
+      return "UP";
+    case HW_STATE_NOT_PRESENT:
+      return "NOT_PRESENT";
+    case HW_STATE_OFF:
+      return "DORMANT";
+    case HW_STATE_PRESENT:
+    case HW_STATE_CONFIGURED_OFF:
+      return "DOWN";
+    case HW_STATE_FAILED:
+      return "LOWER_LAYER_DOWN";
+    case HW_STATE_DIAGNOSTIC:
+      return "TESTING";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string ConvertPortStateToString(const PortState& state) {
+  switch (state) {
+    case PORT_STATE_UP:
+      return "UP";
+    case PORT_STATE_DOWN:
+      return "DOWN";
+    case PORT_STATE_FAILED:
+      return "LOWER_LAYER_DOWN";
+    case PORT_STATE_UNKNOWN:
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string ConvertAdminStateToString(const AdminState& state) {
+  switch (state) {
+    case ADMIN_STATE_ENABLED:
+      return "UP";
+    case ADMIN_STATE_DISABLED:
+      return "DOWN";
+    case ADMIN_STATE_DIAG:
+      return "TESTING";
+    case ADMIN_STATE_UNKNOWN:
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string ConvertSpeedBpsToString(
+    const ::google::protobuf::uint64& speed_bps) {
+  switch (speed_bps) {
+    case kTenGigBps:
+      return "SPEED_10GB";
+    case kTwentyGigBps:
+      return "SPEED_20GB";
+    case kTwentyFiveGigBps:
+      return "SPEED_25GB";
+    case kFortyGigBps:
+      return "SPEED_40GB";
+    case kFiftyGigBps:
+      return "SPEED_50GB";
+    case kHundredGigBps:
+      return "SPEED_100GB";
+    default:
+      return "SPEED_UNKNOWN";
+  }
+}
+
+::google::protobuf::uint64 ConvertStringToSpeedBps(
+    const std::string& speed_string) {
+  if (speed_string.compare("SPEED_10GB") == 0) {
+    return kTenGigBps;
+  } else if (speed_string.compare("SPEED_20GB") == 0) {
+    return kTwentyGigBps;
+  } else if (speed_string.compare("SPEED_25GB") == 0) {
+    return kTwentyFiveGigBps;
+  } else if (speed_string.compare("SPEED_40GB") == 0) {
+    return kFortyGigBps;
+  } else if (speed_string.compare("SPEED_50GB") == 0) {
+    return kFiftyGigBps;
+  } else if (speed_string.compare("SPEED_100GB") == 0) {
+    return kHundredGigBps;
+  } else {
+    return 0LL;
+  }
+}
+
+std::string ConvertAlarmSeverityToString(const Alarm::Severity& severity) {
+  switch (severity) {
+    case Alarm::MINOR:
+      return "MINOR";
+    case Alarm::WARNING:
+      return "WARNING";
+    case Alarm::MAJOR:
+      return "MAJOR";
+    case Alarm::CRITICAL:
+      return "CRITICAL";
+    case Alarm::UNKNOWN:
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string ConvertHealthStateToString(const HealthState& state) {
+  switch (state) {
+    case HEALTH_STATE_GOOD:
+      return "GOOD";
+    case HEALTH_STATE_BAD:
+      return "BAD";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
+  return state == TRUNK_MEMBER_BLOCK_STATE_FORWARDING;
+}
+
+std::string MacAddressToYangString(
+    const ::google::protobuf::uint64& mac_address) {
+  return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
+                         (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
+                         (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
+                         mac_address & 0xFF);
+}
+
+bool IsPortAutonegEnabled(const TriState& state) {
+    return state == TriState::TRI_STATE_TRUE;
+}
+
+bool IsAdminStateEnabled(const AdminState& admin_state) {
+    return admin_state == AdminState::ADMIN_STATE_ENABLED;
+}
+
 }  // namespace hal
 }  // namespace stratum

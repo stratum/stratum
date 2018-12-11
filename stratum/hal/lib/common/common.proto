@@ -978,6 +978,11 @@ message HealthIndicator {
   HealthState state = 1;
 }
 
+// Wrapper around the autoneg status of a port.
+message AutonegotiationStatus {
+  TriState state = 1;
+}
+
 // DataRequest is a message used internally to request data about a component
 // or a set of components through SwitchInterface. It is specifically used in
 // ConfigMonitoringService, as part of gNMI Get/Subscribe RPC implementation.
@@ -1016,6 +1021,7 @@ message DataRequest {
       Node node_packetio_debug_info = 12;
       Port forwarding_viability = 13;
       Port health_indicator = 14;
+      Port autoneg_status = 15;
     }
   }
   repeated Request requests = 1;
@@ -1041,6 +1047,7 @@ message DataResponse {
     NodeDebugInfo node_packetio_debug_info = 12;
     ForwardingViability forwarding_viability = 13;
     HealthIndicator health_indicator = 14;
+    AutonegotiationStatus autoneg_status = 15;
   }
 }
 
@@ -1064,6 +1071,8 @@ message SetRequest {
         SystemPriority lacp_system_priority = 7;
         // The new health state of the port.
         HealthIndicator health_indicator = 8;
+        // The new autoneg status of the port.
+        AutonegotiationStatus autoneg_status = 9;
       }
     }
     // Data required to set info for a specific node.

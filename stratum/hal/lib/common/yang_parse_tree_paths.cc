@@ -17,6 +17,7 @@
 #include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
 #include "stratum/public/proto/openconfig.pb.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
+#include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/lib/constants.h"
 #include "absl/container/flat_hash_map.h"
@@ -125,119 +126,6 @@ bool HasConfigBeenPushed(const GnmiEvent& event) {
   const ConfigHasBeenPushedEvent* change =
       dynamic_cast<const ConfigHasBeenPushedEvent*>(&event);
   return change != nullptr;
-}
-
-// A set of helper methods used to convert enums to a format used by gNMI
-// collectors.
-
-std::string ConvertHwStateToString(const HwState& state) {
-  switch (state) {
-    case HW_STATE_READY:
-      return "UP";
-    case HW_STATE_NOT_PRESENT:
-      return "NOT_PRESENT";
-    case HW_STATE_OFF:
-      return "DORMANT";
-    case HW_STATE_PRESENT:
-    case HW_STATE_CONFIGURED_OFF:
-      return "DOWN";
-    case HW_STATE_FAILED:
-      return "LOWER_LAYER_DOWN";
-    case HW_STATE_DIAGNOSTIC:
-      return "TESTING";
-    default:
-      return "UNKNOWN";
-  }
-}
-
-std::string ConvertPortStateToString(const PortState& state) {
-  switch (state) {
-    case PORT_STATE_UP:
-      return "UP";
-    case PORT_STATE_DOWN:
-      return "DOWN";
-    case PORT_STATE_FAILED:
-      return "LOWER_LAYER_DOWN";
-    case PORT_STATE_UNKNOWN:
-    default:
-      return "UNKNOWN";
-  }
-}
-
-std::string ConvertAdminStateToString(const AdminState& state) {
-  switch (state) {
-    case ADMIN_STATE_ENABLED:
-      return "UP";
-    case ADMIN_STATE_DISABLED:
-      return "DOWN";
-    case ADMIN_STATE_DIAG:
-      return "TESTING";
-    case ADMIN_STATE_UNKNOWN:
-    default:
-      return "UNKNOWN";
-  }
-}
-
-std::string ConvertSpeedBpsToString(
-    const ::google::protobuf::uint64& speed_bps) {
-  switch (speed_bps) {
-    case kTenGigBps:
-      return "SPEED_10GB";
-    case kTwentyGigBps:
-      return "SPEED_20GB";
-    case kTwentyFiveGigBps:
-      return "SPEED_25GB";
-    case kFortyGigBps:
-      return "SPEED_40GB";
-    case kFiftyGigBps:
-      return "SPEED_50GB";
-    case kHundredGigBps:
-      return "SPEED_100GB";
-    default:
-      return "SPEED_UNKNOWN";
-  }
-}
-
-std::string ConvertAlarmSeverityToString(const Alarm::Severity& severity) {
-  switch (severity) {
-    case Alarm::MINOR:
-      return "MINOR";
-    case Alarm::WARNING:
-      return "WARNING";
-    case Alarm::MAJOR:
-      return "MAJOR";
-    case Alarm::CRITICAL:
-      return "CRITICAL";
-    case Alarm::UNKNOWN:
-    default:
-      return "UNKNOWN";
-  }
-}
-
-std::string ConvertHealthStateToString(const HealthState& state) {
-  switch (state) {
-    case HEALTH_STATE_GOOD:
-      return "GOOD";
-    case HEALTH_STATE_BAD:
-      return "BAD";
-    default:
-      return "UNKNOWN";
-  }
-}
-
-bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state) {
-  return state == TRUNK_MEMBER_BLOCK_STATE_FORWARDING;
-}
-
-// A helper method converting data received from the HAL into a format expected
-// by the gNMI interface (MAC addresses are expected to be std::strings in the
-// following format: "XX:XX:XX:XX:XX:XX").
-std::string MacAddressToYangString(
-    const ::google::protobuf::uint64& mac_address) {
-  return absl::StrFormat("%x:%x:%x:%x:%x:%x", (mac_address >> 40) & 0xFF,
-                         (mac_address >> 32) & 0xFF, (mac_address >> 24) & 0xFF,
-                         (mac_address >> 16) & 0xFF, (mac_address >> 8) & 0xFF,
-                         mac_address & 0xFF);
 }
 
 // A family of helper methods that request to change a value of type U on the
@@ -977,6 +865,75 @@ void SetUpInterfacesInterfaceConfigHealthIndicator(const std::string& state,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/config/enabled
+//
+void SetUpInterfacesInterfaceConfigEnabled(const bool state,
+                                           uint64 node_id, uint32 port_id,
+                                           TreeNode* node,
+                                           YangParseTree* tree) {
+  auto poll_functor = [state](const GnmiEvent& event, const ::gnmi::Path& path,
+                              GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when it
+    // was configured!
+    return SendResponse(GetResponse(path, state), stream);
+  };
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    bool state_bool = typed_val->bool_val();
+    AdminState typed_state = state_bool ? AdminState::ADMIN_STATE_ENABLED:
+                                          AdminState::ADMIN_STATE_DISABLED;
+
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_admin_status,
+                           &AdminStatus::set_state, typed_state);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
+        auto* singleton_port = new_config->mutable_singleton_ports(i);
+        if (singleton_port->node() == node_id && singleton_port->port() == port_id) {
+            singleton_port->mutable_config_params()->set_admin_state(typed_state);
+            break;
+        }
+    }
+
+    // Update the YANG parse tree.
+    auto poll_functor = [state_bool](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when
+      // it was configured!
+      return SendResponse(GetResponse(path, state_bool), stream);
+    };
+    node->SetOnTimerHandler(poll_functor)
+        ->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortAdminStateChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortAdminStateChangedEvent::GetNewState,
+      IsAdminStateEnabled);
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /lacp/interfaces/interface[name=<name>]/state/system-id-mac
 void SetUpLacpInterfacesInterfaceStateSystemIdMac(uint64 node_id,
                                                   uint32 port_id,
@@ -1037,8 +994,11 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 mac_address,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/port-speed
-void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 speed_bps,
-                                                     TreeNode* node) {
+void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
+                                                     uint32 port_id,
+                                                     uint64 speed_bps,
+                                                     TreeNode* node,
+                                                     YangParseTree* tree) {
   auto poll_functor = [speed_bps](const GnmiEvent& event,
                                   const ::gnmi::Path& path,
                                   GnmiSubscribeStream* stream) {
@@ -1047,10 +1007,131 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 speed_bps,
     return SendResponse(GetResponse(path, ConvertSpeedBpsToString(speed_bps)),
                         stream);
   };
-  auto on_change_functor = UnsupportedFunc();
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    std::string speed_string = typed_val->string_val();
+    ::google::protobuf::uint64 speed_bps = ConvertStringToSpeedBps(speed_string);
+    if (speed_bps == 0) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
+    }
+
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_port_speed,
+                           &PortSpeed::set_speed_bps, speed_bps);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
+        auto* singleton_port = new_config->mutable_singleton_ports(i);
+        if (singleton_port->node() == node_id && singleton_port->port() == port_id) {
+            singleton_port->set_speed_bps(speed_bps);
+            break;
+        }
+    }
+
+    // Update the YANG parse tree.
+    auto poll_functor = [speed_string](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when
+      // it was configured!
+      return SendResponse(GetResponse(path, speed_string), stream);
+    };
+    node->SetOnTimerHandler(poll_functor)
+        ->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortSpeedBpsChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortSpeedBpsChangedEvent::GetSpeedBps,
+      ConvertSpeedBpsToString);
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor)
+      ->SetOnChangeRegistration(register_functor)
       ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/ethernet/config/auto-negotiate
+void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
+                                                         uint32 port_id,
+                                                         bool autoneg_status,
+                                                         TreeNode* node,
+                                                         YangParseTree* tree) {
+  auto poll_functor = [autoneg_status](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when it
+    // was configured!
+    return SendResponse(GetResponse(path, autoneg_status), stream);
+  };
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    bool autoneg_bool = typed_val->bool_val();
+    TriState autoneg_status = autoneg_bool ?
+                                TriState::TRI_STATE_TRUE :
+                                TriState::TRI_STATE_FALSE;
+
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_autoneg_status,
+                           &AutonegotiationStatus::set_state, autoneg_status);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
+        auto* singleton_port = new_config->mutable_singleton_ports(i);
+        if (singleton_port->node() == node_id && singleton_port->port() == port_id) {
+            singleton_port->mutable_config_params()->set_autoneg(autoneg_status);
+            break;
+        }
+    }
+
+    // Update the YANG parse tree.
+    auto poll_functor = [autoneg_bool](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when
+      // it was configured!
+      return SendResponse(GetResponse(path, autoneg_bool), stream);
+    };
+    node->SetOnTimerHandler(poll_functor)
+        ->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortAutonegChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortAutonegChangedEvent::GetState,
+      IsPortAutonegEnabled);
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1144,6 +1225,25 @@ void SetUpInterfacesInterfaceEthernetStateForwardingViability(
       node_id, port_id, &PortForwardingViabilityChangedEvent::GetState,
       ConvertTrunkMemberBlockStateToBool);
   auto register_functor = RegisterFunc<PortForwardingViabilityChangedEvent>();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/ethernet/state/auto-negotiate
+void SetUpInterfacesInterfaceEthernetStateAutoNegotiate(
+    uint64 node_id, uint32 port_id, TreeNode* node, YangParseTree* tree) {
+  auto poll_functor = GetOnPollFunctor(
+      node_id, port_id, tree, &DataResponse::autoneg_status,
+      &DataResponse::has_autoneg_status,
+      &DataRequest::Request::mutable_autoneg_status,
+      &AutonegotiationStatus::state, IsPortAutonegEnabled);
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortAutonegChangedEvent::GetState,
+      IsPortAutonegEnabled);
+  auto register_functor = RegisterFunc<PortAutonegChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
       ->SetOnChangeRegistration(register_functor)
@@ -1978,6 +2078,10 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   SetUpInterfacesInterfaceEthernetStateForwardingViability(node_id, port_id,
                                                            node, tree);
 
+  node = tree->AddNode(GetPath("interfaces")(
+      "interface", name)("ethernet")("state")("auto-negotiate")());
+  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(node_id, port_id, node, tree);
+
   absl::flat_hash_map<uint32, uint32> internal_priority_to_q_num;
   absl::flat_hash_map<uint32, TrafficClass> q_num_to_trafic_class;
   for (const auto& e : node_config.qos_config().cosq_mapping()) {
@@ -2059,7 +2163,16 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("port-speed")());
-  SetUpInterfacesInterfaceEthernetConfigPortSpeed(singleton.speed_bps(), node);
+  SetUpInterfacesInterfaceEthernetConfigPortSpeed(node_id, port_id,
+                                                  singleton.speed_bps(), node, tree);
+  node = tree->AddNode(GetPath("interfaces")(
+      "interface", name)("ethernet")("config")("auto-negotiate")());
+  SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(node_id, port_id,
+                                                      true, node, tree);
+
+  node = tree->AddNode(GetPath("interfaces")(
+      "interface", name)("config")("enabled")());
+  SetUpInterfacesInterfaceConfigEnabled(false, node_id, port_id, node, tree);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
