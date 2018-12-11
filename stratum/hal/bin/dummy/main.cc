@@ -19,7 +19,7 @@
 #include "stratum/hal/lib/dummy/dummy_switch.h"
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_phal.h"
-#include "stratum/hal/lib/dummy/dummy_sdk.h"
+#include "stratum/hal/lib/dummy/dummy_box.h"
 
 namespace stratum {
 namespace hal {
@@ -29,8 +29,8 @@ namespace dummy_switch {
 int DummySwitchMain(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
 
-  auto dummy_sdk = DummySDK::GetSingleton();
-  dummy_sdk->Start();
+  auto dummy_box = DummyBox::GetSingleton();
+  dummy_box->Start();
 
   PhalInterface* dummy_phal = DummyPhal::CreateSingleton();
   DummyChassisManager* chassis_mgr = DummyChassisManager::GetSingleton();
@@ -62,7 +62,7 @@ int DummySwitchMain(int argc, char* argv[]) {
     return -1;
   }
 
-  dummy_sdk->Shutdown();
+  dummy_box->Shutdown();
 
   LOG(INFO) << "See you later!";
   return 0;

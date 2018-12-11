@@ -19,9 +19,9 @@ import sys
 import time
 import random
 
-import dummy_test_pb2
-import dummy_test_pb2_grpc
-import common_pb2
+import stratum.hal.lib.dummy.dummy_test_pb2 as dummy_test_pb2
+import stratum.hal.lib.dummy.dummy_test_pb2_grpc as dummy_test_pb2_grpc
+import stratum.hal.lib.common.common_pb2 as common_pb2
 
 from cli import create_port_counters_msg
 

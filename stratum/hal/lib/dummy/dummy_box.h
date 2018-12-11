@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_SDK_H_
-#define STRATUM_HAL_LIB_DUMMY_DUMMY_SDK_H_
+#ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_
+#define STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_
 
 #include <grpcpp/grpcpp.h>
 
@@ -71,70 +71,79 @@ struct DummyNodeEvent {
 
 using DummyNodeEventPtr = std::shared_ptr<DummyNodeEvent>;
 
-class DummySDK : public Test::Service {
+class DummyBox : public Test::Service {
  public:
-  ~DummySDK();
+  ~DummyBox();
   // Override from Test::Service
   // Exposes to external status event generator (e.g. CLI)
   ::grpc::Status
   DeviceStatusUpdate(::grpc::ServerContext* context,
                      const DeviceStatusUpdateRequest* request,
-                     DeviceStatusUpdateResponse* response)
-  EXCLUSIVE_LOCKS_REQUIRED(device_event_lock_) override;
+                     DeviceStatusUpdateResponse* response) override;
   ::grpc::Status
   TransceiverEventUpdate(::grpc::ServerContext* context,
                    const TransceiverEventRequest* request,
                    TransceiverEventResponse* response)
-  EXCLUSIVE_LOCKS_REQUIRED(xcvr_event_lock_) override;
+    LOCKS_EXCLUDED(sdk_lock_) override;
 
   // Transceiver event writer.
   ::util::StatusOr<int> RegisterTransceiverEventWriter(
       std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
-      int priority)
-  EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_, xcvr_event_lock_);
+      int priority) LOCKS_EXCLUDED(sdk_lock_);
   ::util::Status UnregisterTransceiverEventWriter(int id)
-  EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_, xcvr_event_lock_);
+    LOCKS_EXCLUDED(sdk_lock_);
 
   // Event notify writer for a specific node.
   ::util::Status RegisterNodeEventNotifyWriter(
       uint64 node_id,
       std::shared_ptr<WriterInterface<DummyNodeEventPtr>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_, device_event_lock_);
+    LOCKS_EXCLUDED(sdk_lock_);
   ::util::Status UnregisterNodeEventNotifyWriter(uint64 node_id)
-  EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_, device_event_lock_);
+    LOCKS_EXCLUDED(sdk_lock_);
 
   // Event notify writer for chassis
   ::util::Status RegisterChassisEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_, device_event_lock_);
+    LOCKS_EXCLUDED(sdk_lock_);
   ::util::Status UnregisterChassisEventNotifyWriter()
-  EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_, device_event_lock_);
+    LOCKS_EXCLUDED(sdk_lock_);
 
   // Start SDK with test gRPC service
-  ::util::Status Start() EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_);
+  ::util::Status Start() LOCKS_EXCLUDED(sdk_lock_);
 
   // Shuts down the SDK, including the gRPC server we use
-  ::util::Status Shutdown() EXCLUSIVE_LOCKS_REQUIRED(sdk_lock_);
+  ::util::Status Shutdown() LOCKS_EXCLUDED(sdk_lock_);
 
-  static DummySDK* GetSingleton() SHARED_LOCKS_REQUIRED(sdk_lock_);
+  static DummyBox* GetSingleton();
 
  private:
-  DummySDK();
+  // Hide default constructor
+  DummyBox();
+
+  // Method to send port status update to switch interface.
   ::grpc::Status
   HandlePortStatusUpdate(uint64 node_id,
                          uint64 port_id,
-                         ::stratum::hal::DataResponse state_update);
-  bool initialized_;
-  int xcvr_writer_id_;
-  std::vector<PhalInterface::TransceiverEventWriter> xcvr_event_writers_;
+                         ::stratum::hal::DataResponse state_update)
+    LOCKS_EXCLUDED(sdk_lock_);
+
+  ::absl::Mutex sdk_lock_;  // protects initialized_ xcvr_writer_id_
+                            // xcvr_event_writers_ node_event_notify_writers_
+                            // chassis_event_notify_writer_
+  bool initialized_ GUARDED_BY(sdk_lock_);
+  int xcvr_writer_id_ GUARDED_BY(sdk_lock_);
+  std::vector<PhalInterface::TransceiverEventWriter> xcvr_event_writers_
+  GUARDED_BY(sdk_lock_);
   stratum::gtl::flat_hash_map<uint32,
   std::shared_ptr<WriterInterface<DummyNodeEventPtr>>>
-    node_event_notify_writers_;
-  std::shared_ptr<WriterInterface<GnmiEventPtr>> chassis_event_notify_writer_;
+    node_event_notify_writers_
+  GUARDED_BY(sdk_lock_);
+  std::shared_ptr<WriterInterface<GnmiEventPtr>> chassis_event_notify_writer_
+  GUARDED_BY(sdk_lock_);
 };
 
 }  // namespace dummy_switch
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_DUMMY_DUMMY_SDK_H_
+#endif  // STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_

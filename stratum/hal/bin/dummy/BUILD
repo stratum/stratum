@@ -35,6 +35,6 @@ stratum_cc_binary(
         "//stratum/lib/security:credentials_manager",
         "//stratum/hal/lib/dummy:dummy_switch",
         "//stratum/hal/lib/dummy:dummy_phal",
-        "//stratum/hal/lib/dummy:dummy_sdk",
+        "//stratum/hal/lib/dummy:dummy_box",
     ],
 )

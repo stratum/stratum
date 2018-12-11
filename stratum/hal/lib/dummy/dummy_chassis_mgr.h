@@ -25,60 +25,47 @@
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/glue/gtl/flat_hash_map.h"
-#include "stratum/hal/lib/dummy/dummy_node.h"
-#include "stratum/hal/lib/dummy/dummy_sdk.h"
+#include "stratum/hal/lib/dummy/dummy_box.h"
+#include "stratum/hal/lib/dummy/dummy_global_vars.h"
 
 namespace stratum {
 namespace hal {
 namespace dummy_switch {
 
+using Request = stratum::hal::DataRequest::Request;
+
 class DummyChassisManager {
  public:
   ~DummyChassisManager();
   // Update chassis configuration.
-  // The chassis manager should also update the nodes based on
-  // the config.
   ::util::Status PushChassisConfig(const ChassisConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock_);
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
-  // Verify chassis configuration but not update the node.
+  // Verify chassis configuration.
   ::util::Status VerifyChassisConfig(const ChassisConfig& config)
-  SHARED_LOCKS_REQUIRED(chassis_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Shutdown the chassis.
   ::util::Status Shutdown()
-  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock_);
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Freeze and Unfreeze the chassis.
-  // Every public method call to the freezed node should be hanged
-  // or returns an error state with proper message.
-  ::util::Status Freeze() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock_);
-  ::util::Status Unfreeze() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock_);
+  ::util::Status Freeze() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status Unfreeze() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // There should be only one chassis manager in a physical device.
-  static DummyChassisManager* GetSingleton()
-  SHARED_LOCKS_REQUIRED(chassis_lock_);
-
-  // Get a DummyNode based on the Id.
-  ::util::StatusOr<DummyNode*> GetDummyNode(uint64 node_id)
-  SHARED_LOCKS_REQUIRED(chassis_lock_);
-
-  // Get all DummyNodes.
-  std::vector<DummyNode*> GetDummyNodes()
-  SHARED_LOCKS_REQUIRED(chassis_lock_);
+  static DummyChassisManager* GetSingleton();
 
   // Register/Unregister event notifier
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(gnmi_event_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock);
   ::util::Status UnregisterEventNotifyWriter()
-  EXCLUSIVE_LOCKS_REQUIRED(gnmi_event_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  // Retrieve value from a specific node.
-  ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
-                               WriterInterface<DataResponse>* writer,
-                               std::vector<::util::Status>* details)
-  SHARED_LOCKS_REQUIRED(chassis_lock_);
+  // Retrieves chassis data
+  ::util::StatusOr<DataResponse>
+  RetrieveChassisData(const Request request);
 
   // DummyChassisManager is neither copyable nor movable.
   DummyChassisManager(const DummyChassisManager&) = delete;
@@ -89,16 +76,8 @@ class DummyChassisManager {
  private:
   // Hide default constructor
   DummyChassisManager();
-
-  // Retrieves chassis data
-  ::util::StatusOr<DataResponse>
-  RetrieveChassisData(const Request request);
-
   std::shared_ptr<WriterInterface<GnmiEventPtr>> chassis_event_writer_;
-
-  // Maps to hold nodes.
-  ::stratum::gtl::flat_hash_map<int, DummyNode*> dummy_nodes_;
-  DummySDK* dummy_sdk_;
+  DummyBox* dummy_box_;
 };
 
 }  // namespace dummy_switch

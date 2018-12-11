@@ -27,7 +27,8 @@
 #include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/dummy/dummy_sdk.h"
+#include "stratum/hal/lib/dummy/dummy_box.h"
+#include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 
 namespace stratum {
@@ -59,34 +60,41 @@ class DummyNode {
  public:
   // Update node configuration.
   ::util::Status PushChassisConfig(const ChassisConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(node_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Verify node configuration but not update the node.
-  ::util::Status VerifyChassisConfig(const ChassisConfig& config);
-  SHARED_LOCKS_REQUIRED(node_lock_);
+  ::util::Status VerifyChassisConfig(const ChassisConfig& config)
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Push P4 forwarding pipeline config to the node.
   ::util::Status PushForwardingPipelineConfig(
        const ::p4::v1::ForwardingPipelineConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Verify P4 forwarding pipeline config on the node but
   // not push it to the node.
   ::util::Status VerifyForwardingPipelineConfig(
-      const ::p4::v1::ForwardingPipelineConfig& config);
-  SHARED_LOCKS_REQUIRED(p4_lock_);
+      const ::p4::v1::ForwardingPipelineConfig& config)
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Shutdown the node.
   ::util::Status Shutdown()
-  EXCLUSIVE_LOCKS_REQUIRED(node_lock_);
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Freeze and Unfreeze the node.
   // Every public method call to the freezed node should be hanged
   // or returns an error state with proper message.
   ::util::Status Freeze()
-  EXCLUSIVE_LOCKS_REQUIRED(node_lock_);
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
   ::util::Status Unfreeze()
-  EXCLUSIVE_LOCKS_REQUIRED(node_lock_);
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Read and Write forwarding entries to the node.
   // The node should be able to handle tranlation between forwarding entry
@@ -94,12 +102,14 @@ class DummyNode {
   ::util::Status WriteForwardingEntries(
        const ::p4::v1::WriteRequest& req,
        std::vector<::util::Status>* results)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details)
-  SHARED_LOCKS_REQUIRED(p4_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Register/Unregister a packet receive writer.
   // The node should sends P4Runtime PacketIn message to the writer
@@ -107,26 +117,31 @@ class DummyNode {
   // The node may add/remove metadata to/from the packet in message.
   ::util::Status RegisterPacketReceiveWriter(
       std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
   ::util::Status UnregisterPacketReceiveWriter()
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Transmit a packet to the dataplane.
   // The packet out message should contains necessary metadata for the dataplane
   // to handle the packet payload.
   // The node may add/remove metadata to/from the message.
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Retrieve port data from this node
   ::util::StatusOr<DataResponse>
   RetrievePortData(const Request& request)
-  SHARED_LOCKS_REQUIRED(node_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Retrieve port qus data from this node
   ::util::StatusOr<DataResponse>
   RetrievePortQosData(const Request& request)
-  SHARED_LOCKS_REQUIRED(node_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Factory function for creating the instance of the class.
   // The DummyNode instance created by ChassisManager when the
@@ -138,11 +153,13 @@ class DummyNode {
   // Register event notify writer for gNMI events which comes from the node.
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(gnmi_event_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Unregister gNMI event notifu writer from the node.
   ::util::Status UnregisterEventNotifyWriter()
-  EXCLUSIVE_LOCKS_REQUIRED(gnmi_event_lock_);
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(node_lock_);
 
   // Accessors
   uint64 Id() const;
@@ -162,7 +179,7 @@ class DummyNode {
   std::string name_;
   int32 slot_;
   int32 index_;
-  DummySDK* dummy_sdk_;
+  DummyBox* dummy_box_;
 
   // Should use CreateInstance to create new DummyNode instance
   DummyNode(const uint64 id, const std::string& name,
@@ -170,8 +187,6 @@ class DummyNode {
 
  protected:
   ::absl::Mutex node_lock_;
-  ::absl::Mutex p4_lock_;
-  ::absl::Mutex gnmi_event_lock_;
   ::stratum::gtl::flat_hash_map<uint64, SingletonPortStatus> ports_state_;
 
 // An event writer which updates node status (e.g. port status)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/dummy/dummy_sdk.h"
+#include "stratum/hal/lib/dummy/dummy_box.h"
 
 #include <pthread.h>
 
@@ -24,11 +24,11 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/public/proto/error.pb.h"
 
-constexpr char kDefaultDummySDKUrl[] = "localhost:28010";
+constexpr char kDefaultDummyBoxUrl[] = "localhost:28010";
 const ::absl::Duration kDefaultEventWriteTimeout = absl::Seconds(10);
 
-DEFINE_string(dummy_test_url, kDefaultDummySDKUrl,
-             "External URL for dummmy SDK server to listen to external calls.");
+DEFINE_string(dummy_box_url, kDefaultDummyBoxUrl,
+             "External URL for dummmy box server to listen to external calls.");
 DEFINE_int32(dummy_test_grpc_keepalive_time_ms, 600000, "grpc keep alive time");
 DEFINE_int32(dummy_test_grpc_keepalive_timeout_ms, 20000,
              "grpc keep alive timeout period");
@@ -40,11 +40,7 @@ namespace stratum {
 namespace hal {
 namespace dummy_switch {
 
-::absl::Mutex sdk_lock_;
-::absl::Mutex xcvr_event_lock_;
-::absl::Mutex device_event_lock_;
 
-static DummySDK* dummy_sdk_singleton_ = nullptr;
 std::unique_ptr<::grpc::Server> external_server_;
 
 void* ExternalServerWaitingFunc(void* arg) {
@@ -52,13 +48,13 @@ void* ExternalServerWaitingFunc(void* arg) {
     LOG(ERROR) << "gRPC server does not initialized";
     return nullptr;
   }
-  LOG(INFO) << "Listen test service on " << FLAGS_dummy_test_url << ".";
+  LOG(INFO) << "Listen test service on " << FLAGS_dummy_box_url << ".";
   external_server_->Wait();  // block
   return nullptr;
 }
 
 ::grpc::Status
-DummySDK::DeviceStatusUpdate(::grpc::ServerContext* context,
+DummyBox::DeviceStatusUpdate(::grpc::ServerContext* context,
                              const DeviceStatusUpdateRequest* request,
                              DeviceStatusUpdateResponse* response) {
   // The response is always an empty message
@@ -78,9 +74,10 @@ DummySDK::DeviceStatusUpdate(::grpc::ServerContext* context,
 }
 
 ::grpc::Status
-DummySDK::TransceiverEventUpdate(::grpc::ServerContext* context,
+DummyBox::TransceiverEventUpdate(::grpc::ServerContext* context,
                  const TransceiverEventRequest* request,
                  TransceiverEventResponse* response) {
+  absl::ReaderMutexLock l(&sdk_lock_);
   response = new TransceiverEventResponse();
   for (auto& writer_elem : xcvr_event_writers_) {
     PhalInterface::TransceiverEvent event;
@@ -93,9 +90,10 @@ DummySDK::TransceiverEventUpdate(::grpc::ServerContext* context,
 }
 
 ::grpc::Status
-DummySDK::HandlePortStatusUpdate(uint64 node_id,
+DummyBox::HandlePortStatusUpdate(uint64 node_id,
                                  uint64 port_id,
                                  ::stratum::hal::DataResponse state_update) {
+  absl::ReaderMutexLock l(&sdk_lock_);
   auto event_writer_elem = node_event_notify_writers_.find(node_id);
   if (event_writer_elem == node_event_notify_writers_.end()) {
     // No event writer for this device can handle the event.
@@ -116,9 +114,10 @@ DummySDK::HandlePortStatusUpdate(uint64 node_id,
 }
 
 ::util::StatusOr<int>
-DummySDK::RegisterTransceiverEventWriter(
+DummyBox::RegisterTransceiverEventWriter(
   std::unique_ptr<ChannelWriter<PhalInterface::TransceiverEvent>> writer,
   int priority) {
+  absl::WriterMutexLock l(&sdk_lock_);
   // Generate new transceiver writer ID
   ++xcvr_writer_id_;
   PhalInterface::TransceiverEventWriter xcvr_event_writer;
@@ -133,7 +132,8 @@ DummySDK::RegisterTransceiverEventWriter(
   return ::util::StatusOr<int>(xcvr_writer_id_);
 }
 
-::util::Status DummySDK::UnregisterTransceiverEventWriter(int id) {
+::util::Status DummyBox::UnregisterTransceiverEventWriter(int id) {
+  absl::WriterMutexLock l(&sdk_lock_);
   std::remove_if(xcvr_event_writers_.begin(),
                  xcvr_event_writers_.end(),
                  FindXcvrById(id));
@@ -141,9 +141,10 @@ DummySDK::RegisterTransceiverEventWriter(
 }
 
 ::util::Status
-DummySDK::RegisterNodeEventNotifyWriter(
+DummyBox::RegisterNodeEventNotifyWriter(
   uint64 node_id,
   std::shared_ptr<WriterInterface<DummyNodeEventPtr>> writer) {
+  absl::WriterMutexLock l(&sdk_lock_);
   if (node_event_notify_writers_.find(node_id) !=
         node_event_notify_writers_.end()) {
     return ::util::Status(::util::error::ALREADY_EXISTS,
@@ -154,7 +155,8 @@ DummySDK::RegisterNodeEventNotifyWriter(
   return ::util::OkStatus();
 }
 
-::util::Status DummySDK::UnregisterNodeEventNotifyWriter(uint64 node_id) {
+::util::Status DummyBox::UnregisterNodeEventNotifyWriter(uint64 node_id) {
+  absl::WriterMutexLock l(&sdk_lock_);
   if (node_event_notify_writers_.find(node_id) ==
         node_event_notify_writers_.end()) {
     return ::util::Status(::util::error::NOT_FOUND,
@@ -164,28 +166,29 @@ DummySDK::RegisterNodeEventNotifyWriter(
   return ::util::OkStatus();
 }
 
-::util::Status DummySDK::RegisterChassisEventNotifyWriter(
+::util::Status DummyBox::RegisterChassisEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
-  if (writer) {
+  absl::WriterMutexLock l(&sdk_lock_);
+  if (chassis_event_notify_writer_) {
     return MAKE_ERROR(ERR_INTERNAL) << "Chassis event writer already exists";
   }
   chassis_event_notify_writer_ = writer;
   return ::util::OkStatus();
 }
 
-::util::Status DummySDK::UnregisterChassisEventNotifyWriter() {
+::util::Status DummyBox::UnregisterChassisEventNotifyWriter() {
+  absl::WriterMutexLock l(&sdk_lock_);
   chassis_event_notify_writer_.reset();
   return ::util::OkStatus();
 }
 
-DummySDK* DummySDK::GetSingleton() {
-  if (dummy_sdk_singleton_ == nullptr) {
-    dummy_sdk_singleton_ = new DummySDK();
-  }
-  return dummy_sdk_singleton_;
+DummyBox* DummyBox::GetSingleton() {
+  static DummyBox* dummy_box_singleton_ = new DummyBox();
+  return dummy_box_singleton_;
 }
 
-::util::Status DummySDK::Start() {
+::util::Status DummyBox::Start() {
+  absl::WriterMutexLock l(&sdk_lock_);
   if (initialized_) {
     return MAKE_ERROR(ERR_ABORTED) << "SDK already initialized";
   }
@@ -201,15 +204,15 @@ DummySDK* DummySDK::GetSingleton() {
       FLAGS_dummy_test_grpc_keepalive_min_ping_interval);
   builder.AddChannelArgument(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS,
                              FLAGS_dummy_test_grpc_keepalive_permit);
-  builder.AddListeningPort(FLAGS_dummy_test_url,
+  builder.AddListeningPort(FLAGS_dummy_box_url,
                            ::grpc::InsecureServerCredentials());
   builder.RegisterService(this);
 
   external_server_ = builder.BuildAndStart();
   if (external_server_ == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL)
-            << "Failed to start DummySDK test service to listen "
-            << "to " << FLAGS_dummy_test_url << ".";
+            << "Failed to start DummyBox test service to listen "
+            << "to " << FLAGS_dummy_box_url << ".";
   }
 
   // Create another thread to run "external_server_->Wait()" since we can not
@@ -227,14 +230,16 @@ DummySDK* DummySDK::GetSingleton() {
   return ::util::OkStatus();
 }
 
-::util::Status DummySDK::Shutdown() {
-  LOG(INFO) << "Shutting down the DummySDK.";
+::util::Status DummyBox::Shutdown() {
+  absl::WriterMutexLock l(&sdk_lock_);
+  LOG(INFO) << "Shutting down the DummyBox.";
   external_server_->Shutdown(std::chrono::system_clock::now());
+  initialized_ = false;
   return ::util::OkStatus();
 }
 
-DummySDK::~DummySDK() {}
-DummySDK::DummySDK()
+DummyBox::~DummyBox() {}
+DummyBox::DummyBox()
 : initialized_(false),
   xcvr_writer_id_(0) {}
 

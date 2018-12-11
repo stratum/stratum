@@ -24,7 +24,8 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/hal/lib/dummy/dummy_sdk.h"
+#include "stratum/hal/lib/dummy/dummy_box.h"
+#include "stratum/hal/lib/dummy/dummy_global_vars.h"
 
 namespace stratum {
 namespace hal {
@@ -35,30 +36,38 @@ class DummyPhal : public PhalInterface {
   // Methods from PhalInterface
   ~DummyPhal() override;
   ::util::Status PushChassisConfig(const ChassisConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(phal_lock_) override;
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status VerifyChassisConfig(const ChassisConfig& config)
-  SHARED_LOCKS_REQUIRED(phal_lock_) override;
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status Shutdown()
-  EXCLUSIVE_LOCKS_REQUIRED(phal_lock_) override;
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::StatusOr<int> RegisterTransceiverEventWriter(
       std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
-      int priority) EXCLUSIVE_LOCKS_REQUIRED(phal_lock_) override;
+      int priority)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+      LOCKS_EXCLUDED(phal_lock_) override;
   ::util::Status UnregisterTransceiverEventWriter(int id)
-  EXCLUSIVE_LOCKS_REQUIRED(phal_lock_) override;
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info)
-  SHARED_LOCKS_REQUIRED(phal_lock_) override;
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state)
-  EXCLUSIVE_LOCKS_REQUIRED(phal_lock_) override;
+  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
 
   // Factory function for creating the instance of the DummyPhal.
-  static DummyPhal* CreateSingleton() EXCLUSIVE_LOCKS_REQUIRED(phal_lock_);
+  static DummyPhal* CreateSingleton() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // DummyPhal is neither copyable nor movable.
   DummyPhal(const DummyPhal&) = delete;
@@ -67,7 +76,8 @@ class DummyPhal : public PhalInterface {
  private:
   DummyPhal();
   int xcvr_event_writer_id_;
-  DummySDK* dummy_sdk_;
+  DummyBox* dummy_box_;
+  ::absl::Mutex phal_lock_;
 };
 
 }  // namespace dummy_switch

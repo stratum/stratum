@@ -15,11 +15,10 @@
 
 import grpc
 import argparse
-import sys
 
-import dummy_test_pb2
-import dummy_test_pb2_grpc
-import common_pb2
+import stratum.hal.lib.dummy.dummy_test_pb2 as dummy_test_pb2
+import stratum.hal.lib.dummy.dummy_test_pb2_grpc as dummy_test_pb2_grpc
+import stratum.hal.lib.common.common_pb2 as common_pb2
 
 node_port_states = ['oper_status', 'admin_status', 'mac_address', 'port_speed',
                   'negotiated_port_speed', 'lacp_router_mac',

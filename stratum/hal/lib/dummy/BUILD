@@ -34,6 +34,15 @@ package(
 )
 
 stratum_cc_library(
+    name = "dummy_global_vars",
+    srcs = ["dummy_global_vars.cc"],
+    hdrs = ["dummy_global_vars.h"],
+    deps = [
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_library(
     name = "dummy_node",
     srcs = ["dummy_node.cc"],
     hdrs = ["dummy_node.h"],
@@ -46,7 +55,8 @@ stratum_cc_library(
             "//stratum/hal/lib/common:writer_interface",
             "//stratum/hal/lib/common:common_proto",
             "//stratum/public/lib:error",
-            ":dummy_sdk"
+            ":dummy_box",
+            ":dummy_global_vars",
     ]
 )
 
@@ -60,7 +70,8 @@ stratum_cc_library(
             "//stratum/hal/lib/common:writer_interface",
             "//stratum/hal/lib/common:phal_interface",
             "//stratum/hal/lib/common:constants",
-            ":dummy_sdk",
+            ":dummy_box",
+            ":dummy_global_vars",
     ]
 )
 
@@ -72,7 +83,8 @@ stratum_cc_library(
             "@com_google_absl//absl/strings:str_format",
             "//stratum/hal/lib/common:switch_interface",
             ":dummy_node",
-            ":dummy_sdk",
+            ":dummy_box",
+            ":dummy_global_vars",
     ]
 )
 
@@ -83,7 +95,8 @@ stratum_cc_library(
     deps = ["@com_google_absl//absl/synchronization",
             "//stratum/hal/lib/common:switch_interface",
             "//stratum/hal/lib/common:phal_interface",
-            ":dummy_chassis_mgr"
+            ":dummy_chassis_mgr",
+            ":dummy_global_vars",
     ],
 )
 
@@ -104,9 +117,9 @@ py_proto_library(
 )
 
 stratum_cc_library(
-    name = "dummy_sdk",
-    srcs = ["dummy_sdk.cc"],
-    hdrs = ["dummy_sdk.h"],
+    name = "dummy_box",
+    srcs = ["dummy_box.cc"],
+    hdrs = ["dummy_box.h"],
     deps = ["@com_google_absl//absl/time:time",
             "@com_google_absl//absl/synchronization",
             "//stratum/glue/status:status",

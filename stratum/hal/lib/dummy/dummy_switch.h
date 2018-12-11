@@ -20,10 +20,12 @@
 #include <vector>
 
 #include "absl/synchronization/mutex.h"
+#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "stratum/hal/lib/dummy/dummy_global_vars.h"
+#include "stratum/hal/lib/dummy/dummy_node.h"
 
 namespace stratum {
 namespace hal {
@@ -35,56 +37,57 @@ class DummySwitch : public SwitchInterface {
 
   // Switch Interface methods
   ::util::Status PushChassisConfig(const ChassisConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(switch_config_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status VerifyChassisConfig(const ChassisConfig& config)
-  SHARED_LOCKS_REQUIRED(switch_config_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status Shutdown()
+  LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status Freeze()
+  LOCKS_EXCLUDED(chassis_lock) override;
+  ::util::Status Unfreeze()
+  LOCKS_EXCLUDED(chassis_lock) override;
+
   ::util::Status PushForwardingPipelineConfig(
       uint64 node_id,
       const ::p4::v1::ForwardingPipelineConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(switch_config_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status VerifyForwardingPipelineConfig(
       uint64 node_id,
       const ::p4::v1::ForwardingPipelineConfig& config)
-  SHARED_LOCKS_REQUIRED(switch_config_lock_) override;
-  ::util::Status Shutdown()
-  EXCLUSIVE_LOCKS_REQUIRED(switch_config_lock_) override;
-  ::util::Status Freeze()
-  EXCLUSIVE_LOCKS_REQUIRED(switch_config_lock_) override;
-  ::util::Status Unfreeze()
-  EXCLUSIVE_LOCKS_REQUIRED(switch_config_lock_) override;
-
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status WriteForwardingEntries(
       const ::p4::v1::WriteRequest& req,
       std::vector<::util::Status>* results)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details)
-  SHARED_LOCKS_REQUIRED(p4_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status RegisterPacketReceiveWriter(
       uint64 node_id,
       std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status UnregisterPacketReceiveWriter(uint64 node_id)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status TransmitPacket(uint64 node_id,
                                 const ::p4::v1::PacketOut& packet)
-  EXCLUSIVE_LOCKS_REQUIRED(p4_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
+
   ::util::Status RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer)
-  EXCLUSIVE_LOCKS_REQUIRED(gnmi_event_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status UnregisterEventNotifyWriter()
-  EXCLUSIVE_LOCKS_REQUIRED(gnmi_event_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details)
-  SHARED_LOCKS_REQUIRED(p4_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
                                   std::vector<::util::Status>* details)
-  EXCLUSIVE_LOCKS_REQUIRED(switch_config_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState()
-  SHARED_LOCKS_REQUIRED(switch_config_lock_) override;
+  LOCKS_EXCLUDED(chassis_lock) override;
 
   // Factory function for creating the instance of the DummySwitch.
   static std::unique_ptr<DummySwitch>
@@ -101,13 +104,17 @@ class DummySwitch : public SwitchInterface {
   // Hide the constructor, using CreateInstance instead.
   DummySwitch(PhalInterface* phal_interface, DummyChassisManager* chassis_mgr);
 
+  // Get a DummyNode based on the Id.
+  ::util::StatusOr<DummyNode*> GetDummyNode(uint64 node_id)
+  SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  std::vector<DummyNode*> GetDummyNodes()
+  SHARED_LOCKS_REQUIRED(chassis_lock);
+
   PhalInterface* phal_interface_;
   DummyChassisManager* chassis_mgr_;
-
-  // Locks
-  ::absl::Mutex p4_lock_;
-  ::absl::Mutex gnmi_event_lock_;
-  ::absl::Mutex switch_config_lock_;
+  ::stratum::gtl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
+  std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_;
 };
 
 }  // namespace dummy_switch

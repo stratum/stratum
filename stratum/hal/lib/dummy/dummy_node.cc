@@ -26,6 +26,7 @@ namespace hal {
 namespace dummy_switch {
 
 ::util::Status DummyNode::PushChassisConfig(const ChassisConfig& config) {
+  absl::WriterMutexLock l(&node_lock_);
   for (auto singleton_port : config.singleton_ports()) {
     uint64 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
@@ -41,32 +42,38 @@ namespace dummy_switch {
 
 ::util::Status DummyNode::VerifyChassisConfig(const ChassisConfig& config) {
   // TODO(Yi Tseng): Implement this method.
+  absl::ReaderMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::PushForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   // TODO(Yi Tseng): Implement this method.
+  absl::ReaderMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::Shutdown() {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::Freeze() {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 ::util::Status DummyNode::Unfreeze() {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
@@ -74,6 +81,7 @@ namespace dummy_switch {
       const ::p4::v1::WriteRequest& req,
       std::vector<::util::Status>* results) {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
@@ -82,21 +90,25 @@ namespace dummy_switch {
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   // TODO(Yi Tseng): Implement this method.
+  absl::ReaderMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::RegisterPacketReceiveWriter(
     std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 ::util::Status DummyNode::UnregisterPacketReceiveWriter() {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
   // TODO(Yi Tseng): Implement this method.
+  absl::WriterMutexLock l(&node_lock_);
   return ::util::OkStatus();
 }
 
@@ -209,16 +221,18 @@ bool DummyNode::DummyNodeEventWriter::Write(const DummyNodeEventPtr& msg) {
 
 ::util::Status DummyNode::RegisterEventNotifyWriter(
       std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
+  absl::ReaderMutexLock l(&node_lock_);
   auto writer_wrapper =
     std::make_shared<DummyNodeEventWriter>(DummyNodeEventWriter(this, writer));
 
   RETURN_IF_ERROR(
-      dummy_sdk_->RegisterNodeEventNotifyWriter(id_, writer_wrapper));
+      dummy_box_->RegisterNodeEventNotifyWriter(id_, writer_wrapper));
   return ::util::OkStatus();
 }
 
 ::util::Status DummyNode::UnregisterEventNotifyWriter() {
-  RETURN_IF_ERROR(dummy_sdk_->UnregisterNodeEventNotifyWriter(id_));
+  absl::ReaderMutexLock l(&node_lock_);
+  RETURN_IF_ERROR(dummy_box_->UnregisterNodeEventNotifyWriter(id_));
   return ::util::OkStatus();
 }
 
@@ -354,7 +368,7 @@ DummyNode::DummyNode(const uint64 id, const std::string& name,
     name_(name),
     slot_(slot),
     index_(index),
-    dummy_sdk_(DummySDK::GetSingleton()) {}
+    dummy_box_(DummyBox::GetSingleton()) {}
 
 }  // namespace dummy_switch
 }  // namespace hal
