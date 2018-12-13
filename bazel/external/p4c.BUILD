@@ -25,6 +25,7 @@ package(
 # Instead of using cmake to generate the config.h, this genrule produces
 # a config.h from p4c's template in cmake/config.h.cmake.
 # TODO: Import libgc garbage collector to enable HAVE_LIBGC.
+# This is OK compiling our P4 programs, but you wouldn't want to base a "P4 compile service" off of this.
 genrule(
     name = "sed_config_h",
     srcs = ["cmake/config.h.cmake"],
@@ -262,7 +263,6 @@ cc_library(
     copts = P4C_BUILD_DEFAULT_COPTS,
     data = glob([
         "p4include/*.p4",
-        "backends/ebpf/p4include/*.p4",
     ]),
     visibility = STRATUM_INTERNAL,
     deps = [
