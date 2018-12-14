@@ -17,9 +17,6 @@
 #include <cmath>
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-//FIXME remove when onlp_wrapper.h is stable
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
@@ -44,11 +41,8 @@ double ConvertMicrowattsTodBm(double microwatts) {
 
 ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> OnlpSfpDataSource::Make(
     OnlpOid sfp_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
-  ::util::Status result = ValidateOnlpSfpInfo(sfp_id, onlp_interface);
-  if (!result.ok()) {
-    LOG(ERROR) << "Failed to create SFP datasource for OID: " << sfp_id;
-    return result;
-  }
+  RETURN_IF_ERROR_WITH_APPEND(ValidateOnlpSfpInfo(sfp_id, onlp_interface))
+      << "Failed to create SFP datasource for OID: " << sfp_id;
   ASSIGN_OR_RETURN(SfpInfo sfp_info, onlp_interface->GetSfpInfo(sfp_id));
   std::shared_ptr<OnlpSfpDataSource> sfp_data_source(
       new OnlpSfpDataSource(sfp_id, onlp_interface, cache_policy, sfp_info));

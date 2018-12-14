@@ -46,7 +46,7 @@ class OnlphalSfpEventCallback : public OnlpSfpEventCallback {
   ~OnlphalSfpEventCallback() override {};
 
   // Callback for handling SFP status changes - SFP plug/unplug events.
-  ::util::Status HandleSfpStatusChange(const OidInfo& oid_info) override;
+  ::util::Status HandleStatusChange(const OidInfo& oid_info) override;
 
  private:
   friend class Onlphal;

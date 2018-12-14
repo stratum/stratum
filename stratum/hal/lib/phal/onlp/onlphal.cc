@@ -17,9 +17,6 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/macros.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-//FIXME remove when onlp_wrapper.h is stable
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/onlp/onlphal.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
@@ -41,7 +38,7 @@ absl::Mutex Onlphal::init_lock_;
 #endif
 
 
-::util::Status OnlphalSfpEventCallback::HandleSfpStatusChange(
+::util::Status OnlphalSfpEventCallback::HandleStatusChange(
     const OidInfo& oid_info) {
 
   // Format TransceiverEvent

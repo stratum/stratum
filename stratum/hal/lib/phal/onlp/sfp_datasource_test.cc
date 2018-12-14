@@ -16,9 +16,6 @@
 
 #include <memory>
 #include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-//FIXME remove when onlp_wrapper.h is stable
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"

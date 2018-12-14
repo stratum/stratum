@@ -21,7 +21,9 @@
 #include <vector>
 
 #include "stratum/hal/lib/common/common.pb.h"
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//FIXME remove when onlp_wrapper.h is stable
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -42,7 +44,7 @@ class OnlpEventCallback {
 
   // Implementations should override this function to perform the desired
   // callback when the onlp status changes.
-  //virtual ::util::Status HandleStatusChange() = 0;
+  virtual ::util::Status HandleStatusChange(const OidInfo& oid_info) = 0;
 
  protected:
   friend class OnlpEventHandler;
@@ -60,10 +62,6 @@ class OnlpOidEventCallback : public OnlpEventCallback {
   OnlpOidEventCallback& operator=(const OnlpOidEventCallback& other) = delete;
   virtual ~OnlpOidEventCallback();
 
-  // Implementations should override this function to perform the desired
-  // callback when the oid status changes.
-  virtual ::util::Status HandleOidStatusChange(const OidInfo& oid_info) = 0;
-
   virtual OnlpOid GetOid() const { return oid_; }
 
  private:
@@ -75,7 +73,7 @@ class OnlpOidEventCallback : public OnlpEventCallback {
 
 // Represents a callback for status changes on any of the ONLP SFPs.
 // Mainly, a callback when a SFP plugged in or unplugged event was detected.
-// Note: this callback does not have to associated with any specific SFP.
+// Note: this callback does not have to be associated with any specific SFP.
 class OnlpSfpEventCallback : public OnlpEventCallback {
  public:
   // Creates a new OnlpSfpEventCallback that receives callbacks for status
@@ -84,9 +82,6 @@ class OnlpSfpEventCallback : public OnlpEventCallback {
   OnlpSfpEventCallback(const OnlpSfpEventCallback& other) = delete;
   OnlpSfpEventCallback& operator=(const OnlpSfpEventCallback& other) = delete;
   virtual ~OnlpSfpEventCallback();
-
-  // Callback for handling SFP status changes - SFP plug/unplug events.
-  virtual ::util::Status HandleSfpStatusChange(const OidInfo& oid_info) = 0;
 };
 
 

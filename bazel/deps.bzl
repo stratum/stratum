@@ -106,7 +106,7 @@ def stratum_deps():
                 "rm sm/bigcode/modules/uCli/module/src/ucli_handlers.c.bak",
                 # Replace i2c-devices with i2c-dev header file in includes
                 "sed -i.bak 's#<linux/i2c-devices.h>#<linux/i2c-dev.h>#'" +
-                    "packages/base/any/onlp/src/onlplib/module/src/i2c.c",
+                    " packages/base/any/onlp/src/onlplib/module/src/i2c.c",
                 "rm packages/base/any/onlp/src/onlplib/module/src/i2c.c.bak"
             ],
         )

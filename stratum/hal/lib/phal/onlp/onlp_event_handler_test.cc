@@ -58,29 +58,30 @@ class OnlpEventHandlerTest : public ::testing::Test {
 namespace {
 class CallbackMock : public OnlpEventCallback {
  public:
-  explicit CallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
-  MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
+  explicit CallbackMock(OnlpOid oid) : OnlpEventCallback() {}
+  MOCK_METHOD1(HandleStatusChange, ::util::Status(const OidInfo&));
 };
 }  // namespace
 
-TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
+TEST_F(OnlpEventHandlerTest, OnlpSfpEventCallbackRegistersAndUnregisters) {
   OnlpSfpEventCallbackMock callback;
   EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
   EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
   EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
   EXPECT_OK(handler_.UnregisterSfpEventCallback(&callback));
 }
+
 /* FIXME
-TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
+TEST_F(OnlpEventHandlerTest, OnlpOidEventCallbackRegistersAndUnregisters) {
   CallbackMock callback(1234);
-  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
-  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
+  EXPECT_OK(handler_.RegisterOidEventCallback(&callback));
+  EXPECT_OK(handler_.UnregisterOidEventCallback(&callback));
+  EXPECT_OK(handler_.RegisterOidEventCallback(&callback));
+  EXPECT_OK(handler_.UnregisterOidEventCallback(&callback));
 }
 */
 
-TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
+TEST_F(OnlpEventHandlerTest, SfpCannotDoubleRegisterOrUnregister) {
   OnlpSfpEventCallbackMock callback;
   EXPECT_OK(handler_.RegisterSfpEventCallback(&callback));
   EXPECT_THAT(handler_.RegisterSfpEventCallback(&callback),
@@ -89,14 +90,15 @@ TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
   EXPECT_THAT(handler_.UnregisterSfpEventCallback(&callback),
               StatusIs(_, _, HasSubstr("not currently registered.")));
 }
+
 /* FIXME
-TEST_F(OnlpEventHandlerTest, CannotDoubleRegisterOrUnregister) {
+TEST_F(OnlpEventHandlerTest, OidCannotDoubleRegisterOrUnregister) {
   CallbackMock callback(1234);
-  EXPECT_OK(handler_.RegisterEventCallback(&callback));
-  EXPECT_THAT(handler_.RegisterEventCallback(&callback),
+  EXPECT_OK(handler_.RegisterOidEventCallback(&callback));
+  EXPECT_THAT(handler_.RegisterOidEventCallback(&callback),
               StatusIs(_, _, HasSubstr("already registered.")));
-  EXPECT_OK(handler_.UnregisterEventCallback(&callback));
-  EXPECT_THAT(handler_.UnregisterEventCallback(&callback),
+  EXPECT_OK(handler_.UnregisterOidEventCallback(&callback));
+  EXPECT_THAT(handler_.UnregisterOidEventCallback(&callback),
               StatusIs(_, _, HasSubstr("not currently registered.")));
 }
 */
@@ -123,10 +125,9 @@ TEST_F(OnlpEventHandlerTest, CallbackSendsInitialSfpUpdate) {
   fake_map.set(0);
   fake_map.set(1);
   EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map));
-  EXPECT_CALL(callback, HandleSfpStatusChange(_))
-      .WillOnce(Return(::util::OkStatus()))
-      .WillOnce(Return(::util::OkStatus()));
- 
+  EXPECT_CALL(callback, HandleStatusChange(_))
+      .Times(2)
+      .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_OK(PollSfps());
 }
 
@@ -139,7 +140,7 @@ TEST_F(OnlpEventHandlerTest, CallbackOnlySentAfterSfpUpdate) {
   fake_map.set(0);
   fake_map.set(1);
   EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map));
-  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+  EXPECT_CALL(callback, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(PollSfps());
@@ -153,7 +154,7 @@ TEST_F(OnlpEventHandlerTest, CallbackOnlySentAfterSfpUpdate) {
   fake_map2.set(0);
   fake_map2.set(2);
   EXPECT_CALL(onlp_, GetSfpPresenceBitmap()).WillOnce(Return(fake_map2));
-  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+  EXPECT_CALL(callback, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(PollSfps());
@@ -181,19 +182,15 @@ TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleSfpCallbacks) {
       }));
 
   OnlpSfpEventCallbackMock callback;
-  EXPECT_CALL(callback, HandleSfpStatusChange(_))
+  EXPECT_CALL(callback, HandleStatusChange(_))
       .WillRepeatedly(Invoke([&](OidInfo info) -> ::util::Status {
         absl::MutexLock lock(&test_thread_lock);
-        //test_thread_condvar.SignalAll();
         callback_counter++;
         if ((callback_counter % 2) == 0) {
           test_thread_condvar.SignalAll();
         }
         return ::util::OkStatus();
       }));
-  {
-    absl::MutexLock lock(&test_thread_lock);
-  }
 
   // We must release the lock when registering our callback to avoid deadlock.
   ASSERT_OK(handler_.RegisterSfpEventCallback(&callback));
@@ -246,9 +243,9 @@ TEST_F(OnlpEventHandlerTest, CallbackSendsInitialUpdate) {
   fake_oid.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
-  EXPECT_CALL(callback1, HandleOidStatusChange(_))
+  EXPECT_CALL(callback1, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(callback2, HandleOidStatusChange(_))
+  EXPECT_CALL(callback2, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(PollOids());
 }
@@ -263,9 +260,9 @@ TEST_F(OnlpEventHandlerTest, ExecutesAllCallbacksDespiteFailures) {
   fake_oid.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
-  EXPECT_CALL(callback1, HandleOidStatusChange(_))
+  EXPECT_CALL(callback1, HandleStatusChange(_))
       .WillOnce(Return(MAKE_ERROR() << "callback1 failure"));
-  EXPECT_CALL(callback2, HandleOidStatusChange(_))
+  EXPECT_CALL(callback2, HandleStatusChange(_))
       .WillOnce(Return(MAKE_ERROR() << "callback2 failure"));
   EXPECT_THAT(PollOids(), StatusIs(_, _,
                                    AllOf(HasSubstr("callback1 failure"),
@@ -279,17 +276,17 @@ TEST_F(OnlpEventHandlerTest, CallbackOnlySentAfterUpdate) {
   onlp_oid_hdr_t fake_oid;
   fake_oid.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
-  EXPECT_CALL(callback, HandleOidStatusChange(_))
+  EXPECT_CALL(callback, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(PollOids());
 
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
-  // No call to HandleOidStatusChange, since the oid status hasn't changed.
+  // No call to HandleStatusChange, since the oid status hasn't changed.
   EXPECT_OK(PollOids());
 
   fake_oid.status = ONLP_OID_STATUS_FLAG_PRESENT;
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
-  EXPECT_CALL(callback, HandleOidStatusChange(_))
+  EXPECT_CALL(callback, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(PollOids());
 }
@@ -307,23 +304,23 @@ TEST_F(OnlpEventHandlerTest, UpdateCallbackSentAfterAnyUpdate) {
 
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
-  EXPECT_CALL(callback1, HandleOidStatusChange(_))
+  EXPECT_CALL(callback1, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(callback2, HandleOidStatusChange(_))
+  EXPECT_CALL(callback2, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(mock_update_callback, Call(::util::OkStatus()));
   EXPECT_OK(PollOids());
 
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
-  // No call to HandleOidStatusChange, since the oid status hasn't changed.
+  // No call to HandleStatusChange, since the oid status hasn't changed.
   EXPECT_OK(PollOids());
 
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   fake_oid.status = ONLP_OID_STATUS_FLAG_PRESENT;
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
   // Only one oid status has changed, but we still get an update callback.
-  EXPECT_CALL(callback2, HandleOidStatusChange(_))
+  EXPECT_CALL(callback2, HandleStatusChange(_))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(mock_update_callback, Call(::util::OkStatus()));
   EXPECT_OK(PollOids());
@@ -346,7 +343,7 @@ TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleCallbacks) {
       }));
 
   CallbackMock callback(1234);
-  EXPECT_CALL(callback, HandleOidStatusChange(_))
+  EXPECT_CALL(callback, HandleStatusChange(_))
       .WillRepeatedly(Invoke([&](OidInfo info) -> ::util::Status {
         absl::MutexLock lock(&test_thread_lock);
         test_thread_condvar.SignalAll();
