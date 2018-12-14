@@ -71,9 +71,9 @@ OnlpWrapper::~OnlpWrapper() {
   onlp_sfp_bitmap_t_init(&presence);
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
            << "Failed to get presence bitmap ONLP.";
-  int i=0,k=0,j;
-  while(i<kOnlpBitmapWordCount){
-    for(j=0;j<kOnlpBitmapBitsPerWord;j++) {
+  int k=0;
+  for(int i=0; i<kOnlpBitmapWordCount; i++){
+    for(int j=0; j<kOnlpBitmapBitsPerWord; j++) {
       if( presence.hdr.words[i]&(1<<j))
         bitset.set(k);
       else
@@ -81,7 +81,6 @@ OnlpWrapper::~OnlpWrapper() {
 
       k++;
     }
-    i++;
   }
   return bitset; 
 }
