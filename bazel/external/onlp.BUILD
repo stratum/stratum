@@ -27,6 +27,7 @@ cc_library(
         "sm/bigcode/modules/sff/module/src/*.c",
         "sm/bigcode/modules/sff/module/src/*.h",
     ]),
+    copts = ["-DDEPENDMODULE_INCLUDE_CJSON_UTIL=1"],
     deps = [
         ":AIM",
         ":cjson",
