@@ -210,17 +210,13 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
     }
 
     // Poll Oid status
-    // TODO:
-    //   no need to poll oids for now. Add this call back later when needed.
-    /*
     ::util::Status result = handler->PollOids();
     if (!result.ok()) {
       LOG(ERROR) << "Error while polling oids: " << result;
     }
-    */
 
     // Poll SFP Presence status
-    ::util::Status result = handler->PollSfpPresence();
+    result = handler->PollSfpPresence();
     if (!result.ok()) {
       LOG(ERROR) << "Error while polling sfp presence: " << result;
     }

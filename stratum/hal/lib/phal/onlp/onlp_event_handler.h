@@ -67,8 +67,6 @@ class OnlpOidEventCallback : public OnlpEventCallback {
  private:
   friend class OnlpEventHandler;
   OnlpOid oid_;
-  // The OnlpEventHandler that is currently sending updates to this callback.
-  OnlpEventHandler* handler_;
 };
 
 // Represents a callback for status changes on any of the ONLP SFPs.
