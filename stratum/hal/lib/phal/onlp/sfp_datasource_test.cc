@@ -89,6 +89,17 @@ TEST(SfpDatasourceTest, GetSfpData) {
   mock_sfp_info.sff.caps = SFF_MODULE_CAPS_F_1G;
   mock_sfp_info.sff.length = 100;
 
+  // FIXME
+  /*
+  safestrncpy(mock_sfp_info.sff.length_desc, "test_cable_len",
+              sizeof(mock_sfp_info.sff.length_desc));
+  safestrncpy(mock_sfp_info.sff.vendor, "test_sfp_vendor",
+              sizeof(mock_sfp_info.sff.vendor));
+  safestrncpy(mock_sfp_info.sff.model, "test_sfp_model",
+              sizeof(mock_sfp_info.sff.model));
+  safestrncpy(mock_sfp_info.sff.serial, "test_sfp_serial",
+              sizeof(mock_sfp_info.sff.serial));
+  */
   strncpy(mock_sfp_info.sff.length_desc, "test_cable_len",
               sizeof(mock_sfp_info.sff.length_desc));
   strncpy(mock_sfp_info.sff.vendor, "test_sfp_vendor",

@@ -52,8 +52,6 @@ double ConvertMicrowattsTodBm(double microwatts) {
   //sfp_data_source->updateValues();
   sfp_data_source->UpdateValuesUnsafelyWithoutCacheOrLock();
   return sfp_data_source;
-//  return std::shared_ptr<OnlpSfpDataSource>(
-//      new OnlpSfpDataSource(sfp_id, onlp_interface, cache_policy, sfp_info));
 }
 
 OnlpSfpDataSource::OnlpSfpDataSource(OnlpOid sfp_id,
