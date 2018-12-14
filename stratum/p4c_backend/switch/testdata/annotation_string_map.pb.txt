@@ -1,0 +1,25 @@
+# Test file for annotations mapping based on object annotation pragma strings.
+field_addenda_map {
+  key: "match-field-annotation-1"
+  value {
+    addenda_names: "match-field-addenda-A1"
+  }
+}
+table_addenda_map {
+  key: "table-annotation-1"
+  value {
+    addenda_names: "table-addenda-A1"
+  }
+}
+field_addenda {
+  name: "match-field-addenda-A1"
+  device_data {
+    name: "fake-field-device-data"
+  }
+}
+table_addenda {
+  name: "table-addenda-A1"
+  device_data {
+    name: "fake-table-device-data"
+  }
+}

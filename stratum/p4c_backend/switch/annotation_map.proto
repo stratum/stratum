@@ -1,0 +1,172 @@
+// The annotation map provides a source for additional P4 object mapping data
+// that the p4c switch backend is unable to deduce by processing the p4c
+// Internal Representation (IR) of the P4 program.  The backend inserts data
+// from this source as the final step of P4PipelineConfig generation.
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package google.hercules.p4c_backend;
+
+import "platforms/networking/hercules/hal/lib/p4/common_flow_entry.proto";
+import "platforms/networking/hercules/hal/lib/p4/p4_table_map.proto";
+import "platforms/networking/hercules/public/proto/p4_table_defs.proto";
+
+// The annotation map defines messages that can supplement the P4 object
+// descriptor data in the P4PipelineConfig::table_map.  During the final step
+// of P4PipelineConfig output, p4c searches the annotation map for any entries
+// matching all field, action, and table entries in the table map.  The
+// annotation map key can be:
+// - An annotation string assigned to an object in the P4 program.
+// - The P4 object's name.
+//
+// Upon matching an entry in the annotation map, p4c updates the object
+// descriptor in the table map according to the matched content, which can
+// include:
+// - A new field/action/table type value, for P4 objects where p4c is unable to
+//   determine the correct type value.
+// - Object descriptor data, for P4 objects that p4c is unable to provide
+//   complete descriptor data.
+// - Device-specific data, for P4 objects that require additional information
+//   to implement in the vendor hardware and/or SDK.
+//
+// A P4 object can match multiple annotation map entries in some situations.
+// For example, an object with multiple annotations can produce multiple
+// matches, or an object's annotations and its name could both produce matches.
+// When multiple annotation map matches occur, the following rules apply:
+// - A table/action/field type in the match, if present, replaces any existing
+//   type in the object's table map descriptor data.
+// - Object descriptor data in the match, if present, either replaces or
+//   extends the existing table map descriptor data for the object, depending
+//   on a qualifier in the match.
+// - Device-specific data from a match extends any device-specific data that
+//   already exists in the table map descriptor.  Each repeated device data
+//   field in a match causes p4c to add another field to the device data in
+//   the table map descriptor.
+//
+// No guarantees exist on the order of annotation map processing.  Consumers
+// of annotation map data should not expect a particular order of device
+// data fields in the table map output.  In addition, it is not good practice
+// for multiple annotation matches to override the object type or descriptor.
+
+// The P4FieldAnnotationValue defines the annotation map entry for a match
+// field annotation.
+//  type - if present, replaces the current type in the P4FieldDescriptor.
+//      This is the simplest form of P4FieldAnnotationValue, where the
+//      annotation just needs to set the type of an otherwise unknown field.
+//  addenda_names - optionally refers to more complex P4FieldDescriptor
+//      replacement data, where each string matches the name field in a
+//      P4FieldAddenda entry.
+message P4FieldAnnotationValue {
+  P4FieldType type = 1;
+  repeated string addenda_names = 2;
+}
+
+// The P4FieldAddenda provides data for p4c to supplement data in a table map's
+// hal.P4FieldDescriptor in the P4PipelineConfig:
+//  name - provides a unique name to identify this field addenda.
+//  conversion_addenda - if present, replaces or extends the field conversions
+//      in the table map P4FieldDescriptor.
+//  conversion_replace - if this field is true, then conversion_addenda replaces
+//      the existing P4FieldDescriptor valid_conversions fields.  If false or
+//      absent, then conversion_addenda is added to the existing conversions
+//      in the P4FieldDescriptor.  If conversion_replace is true and
+//      conversion_addenda is empty, p4c clears the valid_conversions in the
+//      P4FieldDescriptor.
+//  device_data - adds to any device data already present in the
+//      P4FieldDescriptor.
+message P4FieldAddenda {
+  string name = 1;
+  hal.P4FieldDescriptor.P4FieldConversionEntry conversion_addenda = 2;
+  bool conversion_replace = 3;
+  repeated hal.P4DeviceProgramData device_data = 4;
+}
+
+// The P4TableAnnotationValue defines the annotation map entry for a P4 table
+// annotation.
+//  type - if present, replaces the current type in the P4TableDescriptor.
+//      This is the simplest form of P4TableAnnotationValue, where the
+//      annotation just needs to set the type of an otherwise unknown table.
+//  addenda_names - optionally refers to more complex P4TableDescriptor
+//      replacement data, where each string matches the name field in a
+//      P4TableAddenda entry.
+message P4TableAnnotationValue {
+  P4TableType type = 1;
+  repeated string addenda_names = 2;
+}
+
+// The P4TableAddenda provides data for p4c to supplement data in a table map's
+// hal.P4TableDescriptor in the P4PipelineConfig:
+//  name - provides a unique name to identify this table addenda.  In cases
+//      where several P4 logical tables map to the same physical table, the
+//      annotation map can refer all of the logical tables to the same set
+//      of P4TableAddenda by referencing the name.
+//  internal_match_fields - lists match fields that the mapped hardware expects,
+//      but which the P4 program does not specify.  The match data is appended
+//      to the table map P4TableDescriptor.
+//  device_data - adds to any device data already present in the
+//      P4TableDescriptor.
+message P4TableAddenda {
+  string name = 1;
+  repeated hal.MappedField internal_match_fields = 2;
+  repeated hal.P4DeviceProgramData device_data = 4;
+}
+
+// The P4ActionAnnotationValue defines the annotation map entry for a P4 action
+// annotation.
+//  type - if present, replaces the current type in the P4ActionDescriptor.
+//      This is the simplest form of P4ActionAnnotationValue, where the
+//      annotation just needs to set the type of an otherwise unknown action.
+//  addenda_names - optionally refers to more complex P4ActionDescriptor
+//      replacement data, where each string matches the name field in a
+//      P4ActionAddenda entry.
+message P4ActionAnnotationValue {
+  P4ActionType type = 1;
+  repeated string addenda_names = 2;
+}
+
+// The P4ActionAddenda provides data for p4c to supplement data in a
+// table map's hal.P4ActionDescriptor:
+//  name - provides a unique name to identify this action addenda.  In cases
+//      where several P4 control functions have the same fundamental action, the
+//      annotation map can refer all of the related control actions to the same
+//      set of P4ActionAddenda by referencing the name.
+//  assignments_addenda - if present, replaces or extends the assignments field
+//      in the P4ActionDescriptor.
+//  primitive_ops_addenda - if present, extends or replaces the primitive_ops
+//      field in the P4ActionDescriptor.
+//  assignment_primitive_replace - if this field is true, then
+//      assignments_addenda and primitive_ops_addenda replace the
+//      P4ActionDescriptor data.  If false or absent, then assignments_addenda
+//      and primitive_ops_addenda are added to the existing descriptor fields.
+//      If the replace flag is true and an addenda field is empty, p4c clears
+//      the corresponding action descriptor field(s).
+//  device_data - adds to any device data already present in the
+//      P4ActionDescriptor.
+message P4ActionAddenda {
+  string name = 1;
+  hal.P4ActionDescriptor.P4ActionInstructions assignments_addenda = 2;
+  P4ActionOp primitive_ops_addenda = 3;
+  bool assignment_primitive_replace = 4;
+  repeated hal.P4DeviceProgramData device_data = 5;
+}
+
+// The P4AnnotationMap provides p4c with the data to update the P4PipelineConfig
+// table map output based on annotation and name strings in each P4 object.
+message P4AnnotationMap {
+  // The P4AnnotationMap has three internal maps for looking up the addenda
+  // data that goes with each P4 object type.  The key to each map is a
+  // P4 annotation string or object name.  The map value is the
+  // P4FieldAnnotationValue, P4TableAnnotationValue, or P4ActionAnnotationValue
+  // corresponding to the key.
+  map<string, P4FieldAnnotationValue> field_addenda_map = 1;
+  map<string, P4TableAnnotationValue> table_addenda_map = 2;
+  map<string, P4ActionAnnotationValue> action_addenda_map = 3;
+
+  // These fields define any field, table, and action addenda that are
+  // referenced by the maps above.
+  repeated P4FieldAddenda field_addenda = 4;
+  repeated P4TableAddenda table_addenda = 5;
+  repeated P4ActionAddenda action_addenda = 6;
+}

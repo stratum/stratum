@@ -1,0 +1,88 @@
+# This is a test input file with a P4PipelineConfig for TableTypeMapperTest.
+# It contains snippets of the p4c P4PipelineConfig output for tor.p4, plus an
+# additional empty action for test purposes.
+table_map {  # Added for tests to manipulate.
+  key: "TestAction"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+    }
+  }
+}
+table_map {
+  key: "NoAction"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      primitive_ops: P4_ACTION_OP_NOP
+    }
+  }
+}
+table_map {
+  key: "ingress.l2_multicast.vlan_broadcast"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          parameter_name: "multicast_group_id"
+        }
+        destination_field_name: "standard_metadata.mcast_grp"
+      }
+    }
+  }
+}
+table_map {
+  key: "ingress.l2_multicast.vlan_broadcast_table"
+  value {
+    table_descriptor {
+      pipeline_stage: L2
+      has_static_entries: true
+      valid_headers: P4_HEADER_VLAN
+    }
+  }
+}
+table_map {
+  key: "ingress.l3_admit_tor.l3_admit_tor_table"
+  value {
+    table_descriptor {
+      pipeline_stage: L2
+      has_static_entries: true
+      valid_headers: P4_HEADER_VLAN
+    }
+  }
+}
+table_map {
+  key: "ingress.l3_admit_tor.set_l3_admit_tor"
+  value {
+    action_descriptor {
+      type: P4_ACTION_TYPE_FUNCTION
+      assignments {
+        assigned_value {
+          constant_param: 1
+          bit_width: 1
+        }
+        destination_field_name: "local_metadata.l3_admit"
+      }
+    }
+  }
+}
+table_map {
+  key: "local_metadata.l3_admit"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_L3_ADMIT
+      bit_width: 1
+      is_local_metadata: true
+    }
+  }
+}
+table_map {
+  key: "standard_metadata.mcast_grp"
+  value {
+    field_descriptor {
+      type: P4_FIELD_TYPE_MCAST_GROUP_ID
+      bit_width: 16
+    }
+  }
+}

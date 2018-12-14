@@ -1,0 +1,118 @@
+# This file contains annotation map data for P4 tables that the p4c backend
+# expects to find when compiling Hercules P4 programs.
+# TODO(teverman): Change the file name to reflect its common usage across
+# all Hercules P4 roles,
+
+# The L3 table annotations reference addenda that sets up a fallback or override
+# VRF when the switch ultimately maps a P4 runtime table update to a flow entry.
+# The first set of entries applies to the tables in the P4_16 version of
+# tor.p4.
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv4_fallback_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "l3-vrf-fallback"
+    addenda_names: "ipv4-l3-table"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv4_override_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "l3-vrf-override"
+    addenda_names: "ipv4-l3-table"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv4_vrf_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "ipv4-l3-table"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv6_fallback_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "l3-vrf-fallback"
+    addenda_names: "ipv6-l3-table"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv6_override_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "l3-vrf-override"
+    addenda_names: "ipv6-l3-table"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv6_vrf_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "ipv6-l3-table"
+  }
+}
+
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv6_128bit_fallback_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "l3-vrf-fallback"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv6_128bit_override_table"
+  value {
+    type: P4_TABLE_L3_IP
+    addenda_names: "l3-vrf-override"
+  }
+}
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_ipv6_128bit_vrf_table"
+  value {
+    type: P4_TABLE_L3_IP
+  }
+}
+
+
+# TODO(teverman): Are these useful to distinguish V4/V6?  To find out, they
+# aren't included in the table_addenda_map entries above for the 128-bit
+# IPv6 tables.  If proven to work for them, it should be safe to remove them
+# from the other L3 tables.
+table_addenda {
+  name: "ipv4-l3-table"
+  device_data {
+    name: "ip-version"
+    data: "ipv4"
+  }
+}
+table_addenda {
+  name: "ipv6-l3-table"
+  device_data {
+    name: "ip-version"
+    data: "ipv6"
+  }
+}
+
+# Defines an internal match on the fallback VRF ID.
+table_addenda {
+  name: "l3-vrf-fallback"
+  internal_match_fields {
+    type: P4_FIELD_TYPE_VRF
+    value {
+      u32: 0xffff  # kVrfFallback
+    }
+  }
+}
+
+# Defines an internal match on the override VRF ID.
+table_addenda {
+  name: "l3-vrf-override"
+  internal_match_fields {
+    type: P4_FIELD_TYPE_VRF
+    value {
+      u32: 0xfffe  # kVrfOverride
+    }
+  }
+}

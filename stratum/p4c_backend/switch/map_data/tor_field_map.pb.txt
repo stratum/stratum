@@ -1,0 +1,71 @@
+# This file contains annotation map data for match fields and packet IO metadata
+# fields that the p4c backend expects to find when compiling tor.p4.
+# TODO(teverman): Will all or part of this be common with other P4 specs?
+field_addenda_map {
+  key: "standard_metadata.egress_port"
+  value {
+    type: P4_FIELD_TYPE_EGRESS_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.egress_spec"
+  value {
+    type: P4_FIELD_TYPE_EGRESS_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.clone_spec"
+  value {
+    type: P4_FIELD_TYPE_CLONE_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.ingress_port"
+  value {
+    type: P4_FIELD_TYPE_INGRESS_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.mcast_grp"
+  value {
+    type: P4_FIELD_TYPE_MCAST_GROUP_ID
+  }
+}
+
+# TODO(teverman): Convert these to @switchstack annotations in P4 programs.
+field_addenda_map {
+  key: "local_metadata.class_id"
+  value {
+    type: P4_FIELD_TYPE_CLASS_ID
+  }
+}
+field_addenda_map {
+  key: "local_metadata.l3_class_id"
+  value {
+    type: P4_FIELD_TYPE_L3_CLASS_ID
+  }
+}
+field_addenda_map {
+  key: "local_metadata.ingress_meter_index"
+  value {
+    type: P4_FIELD_TYPE_IN_METER
+  }
+}
+field_addenda_map {
+  key: "local_metadata.cpu_cos_queue_id"
+  value {
+    type: P4_FIELD_TYPE_CPU_QUEUE_ID
+  }
+}
+field_addenda_map {
+  key: "local_metadata.l3_admit"
+  value {
+    type: P4_FIELD_TYPE_L3_ADMIT
+  }
+}
+field_addenda_map {
+  key: "local_metadata.encap_id"
+  value {
+    type: P4_FIELD_TYPE_ENCAP_TUNNEL_ID
+  }
+}

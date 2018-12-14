@@ -1,0 +1,30 @@
+# The p4c backend uses data in this file to define field types for slices
+# of header field types.
+sliced_field_map {
+  key: "P4_FIELD_TYPE_IPV6_DST"
+  value {
+    # Assigns P4_FIELD_TYPE_IPV6_DST_UPPER to a slice of the upper 64 bits.
+    slice_properties {
+      slice_bit_offset: 0
+      slice_bit_width: 64
+      sliced_field_type: P4_FIELD_TYPE_IPV6_DST_UPPER
+    }
+    # Assigns P4_FIELD_TYPE_IPV6_DST_LOWER to a slice of the low-order 64 bits.
+    slice_properties {
+      slice_bit_offset: 64
+      slice_bit_width: 64
+      sliced_field_type: P4_FIELD_TYPE_IPV6_DST_LOWER
+    }
+    # The properties below are for proposed 65/63 P4_FIELD_TYPE_IPV6_DST slices.
+    slice_properties {
+      slice_bit_offset: 0
+      slice_bit_width: 65
+      sliced_field_type: P4_FIELD_TYPE_IPV6_DST_UPPER
+    }
+    slice_properties {
+      slice_bit_offset: 65
+      slice_bit_width: 63
+      sliced_field_type: P4_FIELD_TYPE_IPV6_DST_LOWER
+    }
+  }
+}

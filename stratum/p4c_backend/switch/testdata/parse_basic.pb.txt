@@ -1,0 +1,136 @@
+# This file contains a ParserMap that is equivalent to what the ParserDecoder
+# produces for the parse_basic.p4 program.
+
+parser_states {
+  key: "accept"
+  value {
+    name: "accept"
+    reserved_state: P4_PARSER_STATE_ACCEPT
+  }
+}
+parser_states {
+  key: "parse_ethernet"
+  value {
+    name: "parse_ethernet"
+    extracted_header {
+      name: "ethernet_t"
+      header_paths: "ethernet"
+    }
+    transition {
+      select {
+        selector_fields: "etherType"
+        cases {
+          keyset_values {
+            constant {
+              value: 32923
+              mask: 1
+            }
+          }
+          next_state: "parse_l3_protocol_1"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 33011
+              mask: 1
+            }
+          }
+          next_state: "parse_l3_protocol_2"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 33024
+              mask: 1
+            }
+          }
+          next_state: "parse_vlan"
+        }
+        cases {
+          is_default: true
+          next_state: "accept"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "parse_l3_protocol_1"
+  value {
+    name: "parse_l3_protocol_1"
+    extracted_header {
+      name: "l3_protocol_1_t"
+      header_paths: "l3_protocol_1"
+    }
+    transition {
+      next_state: "accept"
+    }
+  }
+}
+parser_states {
+  key: "parse_l3_protocol_2"
+  value {
+    name: "parse_l3_protocol_2"
+    extracted_header {
+      name: "l3_protocol_2_t"
+      header_paths: "l3_protocol_2"
+    }
+    transition {
+      next_state: "accept"
+    }
+  }
+}
+parser_states {
+  key: "parse_vlan"
+  value {
+    name: "parse_vlan"
+    extracted_header {
+      name: "vlan_tag_t"
+      header_paths: "vlan_tag"
+    }
+    transition {
+      select {
+        selector_fields: "etherType"
+        cases {
+          keyset_values {
+            constant {
+              value: 32923
+              mask: 1
+            }
+          }
+          next_state: "parse_l3_protocol_1"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 33011
+              mask: 1
+            }
+          }
+          next_state: "parse_l3_protocol_2"
+        }
+        cases {
+          is_default: true
+          next_state: "accept"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "reject"
+  value {
+    name: "reject"
+    reserved_state: P4_PARSER_STATE_REJECT
+  }
+}
+parser_states {
+  key: "start"
+  value {
+    name: "start"
+    reserved_state: P4_PARSER_STATE_START
+    transition {
+      next_state: "parse_ethernet"
+    }
+  }
+}

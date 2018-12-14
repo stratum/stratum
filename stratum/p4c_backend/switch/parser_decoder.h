@@ -1,0 +1,89 @@
+// The ParserDecoder traverses the states and expressions within a P4Parser
+// instance in the IR, generating a ParserMap message to represent the
+// parser behavior.
+
+#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PARSER_DECODER_H_
+#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PARSER_DECODER_H_
+
+#include <map>
+#include <string>
+#include "platforms/networking/hercules/p4c_backend/switch/parser_map.host.pb.h"
+#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "p4lang_p4c/ir/ir.h"
+
+namespace google {
+namespace hercules {
+namespace p4c_backend {
+
+class ParserDecoder {
+ public:
+  ParserDecoder();
+  virtual ~ParserDecoder() {}
+
+  // DecodeParser takes the P4Parser node from the IR as input.  It visits
+  // all of the underlying parser states and extracts information into a
+  // ParserMap message, which is available through the parser_states accessor.
+  // The caller provides ref_map and type_map from p4c frontend and midend
+  // passes.  The return value is true if ParserMap creation succeeds.
+  virtual bool DecodeParser(const IR::P4Parser& p4_parser,
+                            P4::ReferenceMap* ref_map, P4::TypeMap* type_map);
+
+  // This accessor is valid only after DecodeParser runs successfully.
+  const ParserMap& parser_states() const { return parser_states_; }
+
+  // ParserDecoder is neither copyable nor movable.
+  ParserDecoder(const ParserDecoder&) = delete;
+  ParserDecoder& operator=(const ParserDecoder&) = delete;
+
+ private:
+  // These methods decode the statements and expressions within the P4Parser
+  // IR node, returning true if successful.
+  bool DecodeStatements(const IR::Vector<IR::StatOrDecl>& components,
+                        ParserState* decoded_state);
+  bool DecodeSelectExpression(const IR::SelectExpression& expression,
+                              ParserState* decoded_state);
+  bool DecodePathExpression(const IR::PathExpression& expression,
+                            ParserState* decoded_state);
+
+  // These methods handle select key decoding.  "Simple" keys have a single
+  // header field per select expression.  "Complex" keys have a list of
+  // multiple fields per select expression.  Parser value sets are another
+  // form of select key.
+  void DecodeSimpleSelectKeySet(const IR::Expression& key_set,
+                                ParserSelectCase* decoded_case);
+  void DecodeComplexSelectKeySet(const IR::ListExpression& key_set,
+                                 const IR::ListExpression& select,
+                                 ParserSelectCase* decoded_case);
+  bool DecodeValueSetSelectKeySet(const IR::Expression& key_set,
+                                  ParserSelectCase* decoded_case);
+
+  // Decodes the situation where a select expression joins two fields via
+  // the P4 "concat" operator.
+  void DecodeConcatOperator(const IR::Concat& concat,
+                            ParserSelectExpression* decoded_select);
+
+  // Determines whether the input statement extracts a P4 header type.  If so,
+  // the returned string contains the extracted type's name.  Otherwise, the
+  // returned string is empty.
+  std::string ExtractHeaderType(const IR::MethodCallStatement& statement);
+
+  // DecodeParser uses this member to store the generated ParserMap.
+  ParserMap parser_states_;
+
+  // This map stores the parser value sets.  The key is the value set name,
+  // and the value is the bit width.
+  std::map<std::string, int> value_sets_;
+
+  // The ref_map_ and type_map_ are provided by the DecodeParser method caller.
+  // They are cached here for member use while DecodeParser runs,
+  // and the caller retains ownership.
+  P4::ReferenceMap* ref_map_;
+  P4::TypeMap* type_map_;
+};
+
+}  // namespace p4c_backend
+}  // namespace hercules
+}  // namespace google
+
+#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PARSER_DECODER_H_

@@ -1,0 +1,1158 @@
+[78140] P4Program
+  [13] Type_Error name=error declid=0
+    [6] Declaration_ID name=NoError declid=0
+    [7] Declaration_ID name=PacketTooShort declid=1
+    [8] Declaration_ID name=NoMatch declid=2
+    [9] Declaration_ID name=StackOutOfBounds declid=3
+    [10] Declaration_ID name=HeaderTooShort declid=4
+    [11] Declaration_ID name=ParserTimeout declid=5
+  [85] Type_Extern name=packet_in declid=4
+    typeParameters: [15] TypeParameters
+    [32] Method name=extract declid=7 isAbstract=0
+      type: [31] Type_Method
+        typeParameters: [22] TypeParameters
+          [20] Type_Var name=T declid=1
+        returnType: [18] Type_Void
+        parameters: [29] ParameterList
+          [26] Parameter name=hdr declid=6 direction=out
+            annotations: [1] Annotations
+            type: [25] Type_Name
+              path: [24] Path name=T absolute=0
+      annotations: [1] Annotations
+    [49] Method name=extract declid=10 isAbstract=0
+      type: [48] Type_Method
+        typeParameters: [36] TypeParameters
+          [34] Type_Var name=T declid=2
+        returnType: [18] Type_Void
+        parameters: [46] ParameterList
+          [40] Parameter name=variableSizeHeader declid=8 direction=out
+            annotations: [1] Annotations
+            type: [39] Type_Name
+              path: [38] Path name=T absolute=0
+          [44] Parameter name=variableFieldSizeInBits declid=9 direction=in
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    [62] Method name=lookahead declid=11 isAbstract=0
+      type: [61] Type_Method
+        typeParameters: [55] TypeParameters
+          [53] Type_Var name=T declid=3
+        returnType: [51] Type_Name
+          path: [50] Path name=T absolute=0
+        parameters: [59] ParameterList
+      annotations: [1] Annotations
+    [73] Method name=advance declid=13 isAbstract=0
+      type: [72] Type_Method
+        typeParameters: [63] TypeParameters
+        returnType: [18] Type_Void
+        parameters: [70] ParameterList
+          [67] Parameter name=sizeInBits declid=12 direction=in
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    [83] Method name=length declid=14 isAbstract=0
+      type: [82] Type_Method
+        typeParameters: [76] TypeParameters
+        returnType: [3] Type_Bits size=32 isSigned=0
+        parameters: [80] ParameterList
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [106] Type_Extern name=packet_out declid=6
+    typeParameters: [88] TypeParameters
+    [104] Method name=emit declid=16 isAbstract=0
+      type: [103] Type_Method
+        typeParameters: [94] TypeParameters
+          [92] Type_Var name=T declid=5
+        returnType: [18] Type_Void
+        parameters: [101] ParameterList
+          [98] Parameter name=hdr declid=15 direction=in
+            annotations: [1] Annotations
+            type: [97] Type_Name
+              path: [96] Path name=T absolute=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [121] Method name=verify declid=19 isAbstract=0
+    type: [120] Type_Method
+      typeParameters: [109] TypeParameters
+      returnType: [18] Type_Void
+      parameters: [118] ParameterList
+        [112] Parameter name=check declid=17 direction=in
+          annotations: [1] Annotations
+          type: [111] Type_Boolean
+        [116] Parameter name=toSignal declid=18 direction=in
+          annotations: [1] Annotations
+          type: [115] Type_Name
+            path: [114] Path name=error absolute=0
+    annotations: [1] Annotations
+  [146] Declaration_MatchKind
+    [142] Declaration_ID name=exact declid=21
+    [143] Declaration_ID name=ternary declid=22
+    [144] Declaration_ID name=lpm declid=23
+  [152] Declaration_MatchKind
+    [149] Declaration_ID name=range declid=24
+    [150] Declaration_ID name=selector declid=25
+  [75539] Type_Struct name=standard_metadata_t declid=7
+    annotations: [75541] Annotations
+      [154] Annotation name=metadata
+      [75545] Annotation name=name
+        [75547] StringLiteral value=standard_metadata
+          type: [4885] Type_String
+    [168] StructField name=ingress_port declid=26
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [171] StructField name=egress_spec declid=27
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [174] StructField name=egress_port declid=28
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [177] StructField name=clone_spec declid=29
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [180] StructField name=instance_type declid=30
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [184] StructField name=drop declid=31
+      annotations: [1] Annotations
+      type: [183] Type_Bits size=1 isSigned=0
+    [188] StructField name=recirculate_port declid=32
+      annotations: [1] Annotations
+      type: [187] Type_Bits size=16 isSigned=0
+    [191] StructField name=packet_length declid=33
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [75558] StructField name=enq_timestamp declid=34
+      annotations: [75559] Annotations
+        [75561] Annotation name=alias
+          [75563] StringLiteral value=queueing_metadata.enq_timestamp
+            type: [4885] Type_String
+      type: [3] Type_Bits size=32 isSigned=0
+    [75564] StructField name=enq_qdepth declid=35
+      annotations: [75565] Annotations
+        [75567] Annotation name=alias
+          [75569] StringLiteral value=queueing_metadata.enq_qdepth
+            type: [4885] Type_String
+      type: [215] Type_Bits size=19 isSigned=0
+    [75571] StructField name=deq_timedelta declid=36
+      annotations: [75572] Annotations
+        [75574] Annotation name=alias
+          [75576] StringLiteral value=queueing_metadata.deq_timedelta
+            type: [4885] Type_String
+      type: [3] Type_Bits size=32 isSigned=0
+    [75577] StructField name=deq_qdepth declid=37
+      annotations: [75578] Annotations
+        [75580] Annotation name=alias
+          [75582] StringLiteral value=queueing_metadata.deq_qdepth
+            type: [4885] Type_String
+      type: [215] Type_Bits size=19 isSigned=0
+    [75583] StructField name=ingress_global_timestamp declid=38
+      annotations: [75584] Annotations
+        [75586] Annotation name=alias
+          [75588] StringLiteral value=intrinsic_metadata.ingress_global_timestamp
+            type: [4885] Type_String
+      type: [252] Type_Bits size=48 isSigned=0
+    [75590] StructField name=lf_field_list declid=39
+      annotations: [75591] Annotations
+        [75593] Annotation name=alias
+          [75595] StringLiteral value=intrinsic_metadata.lf_field_list
+            type: [4885] Type_String
+      type: [3] Type_Bits size=32 isSigned=0
+    [75596] StructField name=mcast_grp declid=40
+      annotations: [75597] Annotations
+        [75599] Annotation name=alias
+          [75601] StringLiteral value=intrinsic_metadata.mcast_grp
+            type: [4885] Type_String
+      type: [187] Type_Bits size=16 isSigned=0
+    [75602] StructField name=resubmit_flag declid=41
+      annotations: [75603] Annotations
+        [75605] Annotation name=alias
+          [75607] StringLiteral value=intrinsic_metadata.resubmit_flag
+            type: [4885] Type_String
+      type: [183] Type_Bits size=1 isSigned=0
+    [75608] StructField name=egress_rid declid=42
+      annotations: [75609] Annotations
+        [75611] Annotation name=alias
+          [75613] StringLiteral value=intrinsic_metadata.egress_rid
+            type: [4885] Type_String
+      type: [187] Type_Bits size=16 isSigned=0
+    [304] StructField name=checksum_error declid=43
+      annotations: [1] Annotations
+      type: [183] Type_Bits size=1 isSigned=0
+  [314] Type_Enum name=CounterType declid=8
+    [310] Declaration_ID name=packets declid=44
+    [311] Declaration_ID name=bytes declid=45
+    [312] Declaration_ID name=packets_and_bytes declid=46
+  [320] Type_Enum name=MeterType declid=9
+    [317] Declaration_ID name=packets declid=47
+    [318] Declaration_ID name=bytes declid=48
+  [351] Type_Extern name=counter declid=10
+    typeParameters: [322] TypeParameters
+    [338] Method name=counter declid=51 isAbstract=0
+      type: [335] Type_Method
+        typeParameters: [336] TypeParameters
+        parameters: [333] ParameterList
+          [327] Parameter name=size declid=49 direction=
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+          [331] Parameter name=type declid=50 direction=
+            annotations: [1] Annotations
+            type: [330] Type_Name
+              path: [329] Path name=CounterType absolute=0
+      annotations: [1] Annotations
+    [349] Method name=count declid=53 isAbstract=0
+      type: [348] Type_Method
+        typeParameters: [339] TypeParameters
+        returnType: [18] Type_Void
+        parameters: [346] ParameterList
+          [343] Parameter name=index declid=52 direction=in
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [377] Type_Extern name=direct_counter declid=11
+    typeParameters: [354] TypeParameters
+    [367] Method name=direct_counter declid=55 isAbstract=0
+      type: [364] Type_Method
+        typeParameters: [365] TypeParameters
+        parameters: [362] ParameterList
+          [359] Parameter name=type declid=54 direction=
+            annotations: [1] Annotations
+            type: [358] Type_Name
+              path: [357] Path name=CounterType absolute=0
+      annotations: [1] Annotations
+    [375] Method name=count declid=56 isAbstract=0
+      type: [374] Type_Method
+        typeParameters: [368] TypeParameters
+        returnType: [18] Type_Void
+        parameters: [372] ParameterList
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [415] Type_Extern name=meter declid=13
+    typeParameters: [380] TypeParameters
+    [396] Method name=meter declid=59 isAbstract=0
+      type: [393] Type_Method
+        typeParameters: [394] TypeParameters
+        parameters: [391] ParameterList
+          [385] Parameter name=size declid=57 direction=
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+          [389] Parameter name=type declid=58 direction=
+            annotations: [1] Annotations
+            type: [388] Type_Name
+              path: [387] Path name=MeterType absolute=0
+      annotations: [1] Annotations
+    [413] Method name=execute_meter declid=62 isAbstract=0
+      type: [412] Type_Method
+        typeParameters: [400] TypeParameters
+          [398] Type_Var name=T declid=12
+        returnType: [18] Type_Void
+        parameters: [410] ParameterList
+          [404] Parameter name=index declid=60 direction=in
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+          [408] Parameter name=result declid=61 direction=out
+            annotations: [1] Annotations
+            type: [407] Type_Name
+              path: [406] Path name=T absolute=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [447] Type_Extern name=direct_meter declid=15
+    typeParameters: [421] TypeParameters
+      [419] Type_Var name=T declid=14
+    [434] Method name=direct_meter declid=64 isAbstract=0
+      type: [431] Type_Method
+        typeParameters: [432] TypeParameters
+        parameters: [429] ParameterList
+          [426] Parameter name=type declid=63 direction=
+            annotations: [1] Annotations
+            type: [425] Type_Name
+              path: [424] Path name=MeterType absolute=0
+      annotations: [1] Annotations
+    [445] Method name=read declid=66 isAbstract=0
+      type: [444] Type_Method
+        typeParameters: [435] TypeParameters
+        returnType: [18] Type_Void
+        parameters: [442] ParameterList
+          [439] Parameter name=result declid=65 direction=out
+            annotations: [1] Annotations
+            type: [438] Type_Name
+              path: [437] Path name=T absolute=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [496] Type_Extern name=register declid=17
+    typeParameters: [453] TypeParameters
+      [451] Type_Var name=T declid=16
+    [466] Method name=register declid=68 isAbstract=0
+      type: [463] Type_Method
+        typeParameters: [464] TypeParameters
+        parameters: [461] ParameterList
+          [458] Parameter name=size declid=67 direction=
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    [480] Method name=read declid=71 isAbstract=0
+      type: [479] Type_Method
+        typeParameters: [467] TypeParameters
+        returnType: [18] Type_Void
+        parameters: [477] ParameterList
+          [471] Parameter name=result declid=69 direction=out
+            annotations: [1] Annotations
+            type: [470] Type_Name
+              path: [469] Path name=T absolute=0
+          [475] Parameter name=index declid=70 direction=in
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    [494] Method name=write declid=74 isAbstract=0
+      type: [493] Type_Method
+        typeParameters: [481] TypeParameters
+        returnType: [18] Type_Void
+        parameters: [491] ParameterList
+          [485] Parameter name=index declid=72 direction=in
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+          [489] Parameter name=value declid=73 direction=in
+            annotations: [1] Annotations
+            type: [488] Type_Name
+              path: [487] Path name=T absolute=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [514] Type_Extern name=action_profile declid=18
+    typeParameters: [499] TypeParameters
+    [512] Method name=action_profile declid=76 isAbstract=0
+      type: [509] Type_Method
+        typeParameters: [510] TypeParameters
+        parameters: [507] ParameterList
+          [504] Parameter name=size declid=75 direction=
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [564] Type_Enum name=HashAlgorithm declid=21
+    [555] Declaration_ID name=crc32 declid=84
+    [556] Declaration_ID name=crc32_custom declid=85
+    [557] Declaration_ID name=crc16 declid=86
+    [558] Declaration_ID name=crc16_custom declid=87
+    [559] Declaration_ID name=random declid=88
+    [560] Declaration_ID name=identity declid=89
+    [561] Declaration_ID name=csum16 declid=90
+    [562] Declaration_ID name=xor16 declid=91
+  [573] Method name=mark_to_drop declid=92 isAbstract=0
+    type: [572] Type_Method
+      typeParameters: [566] TypeParameters
+      returnType: [18] Type_Void
+      parameters: [570] ParameterList
+    annotations: [1] Annotations
+  [624] Type_Extern name=action_selector declid=26
+    typeParameters: [603] TypeParameters
+    [622] Method name=action_selector declid=102 isAbstract=0
+      type: [619] Type_Method
+        typeParameters: [620] TypeParameters
+        parameters: [617] ParameterList
+          [608] Parameter name=algorithm declid=99 direction=
+            annotations: [1] Annotations
+            type: [607] Type_Name
+              path: [606] Path name=HashAlgorithm absolute=0
+          [612] Parameter name=size declid=100 direction=
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+          [615] Parameter name=outputWidth declid=101 direction=
+            annotations: [1] Annotations
+            type: [3] Type_Bits size=32 isSigned=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [75793] Type_Extern name=Checksum16 declid=29
+    typeParameters: [642] TypeParameters
+    [652] Method name=Checksum16 declid=105 isAbstract=0
+      type: [649] Type_Method
+        typeParameters: [650] TypeParameters
+        parameters: [647] ParameterList
+      annotations: [1] Annotations
+    [668] Method name=get declid=107 isAbstract=0
+      type: [667] Type_Method
+        typeParameters: [658] TypeParameters
+          [656] Type_Var name=D declid=28
+        returnType: [187] Type_Bits size=16 isSigned=0
+        parameters: [665] ParameterList
+          [662] Parameter name=data declid=106 direction=in
+            annotations: [1] Annotations
+            type: [661] Type_Name
+              path: [660] Path name=D absolute=0
+      annotations: [1] Annotations
+    annotations: [75814] Annotations
+      [75816] Annotation name=deprecated
+        [75818] StringLiteral value=Please use verify_checksum/update_checksum instead.
+          type: [4885] Type_String
+  [864] Type_Extern name=value_set declid=42
+    typeParameters: [837] TypeParameters
+      [835] Type_Var name=D declid=41
+    [851] Method name=value_set declid=142 isAbstract=0
+      type: [848] Type_Method
+        typeParameters: [849] TypeParameters
+        parameters: [846] ParameterList
+          [843] Parameter name=size declid=141 direction=
+            annotations: [1] Annotations
+            type: [842] Type_Bits size=8 isSigned=0
+      annotations: [1] Annotations
+    [862] Method name=is_member declid=144 isAbstract=0
+      type: [861] Type_Method
+        typeParameters: [852] TypeParameters
+        returnType: [111] Type_Boolean
+        parameters: [859] ParameterList
+          [856] Parameter name=data declid=143 direction=in
+            annotations: [1] Annotations
+            type: [855] Type_Name
+              path: [854] Path name=D absolute=0
+      annotations: [1] Annotations
+    annotations: [1] Annotations
+  [889] Type_Parser name=Parser declid=45
+    annotations: [1] Annotations
+    typeParameters: [871] TypeParameters
+      [868] Type_Var name=H declid=43
+      [869] Type_Var name=M declid=44
+    applyParams: [887] ParameterList
+      [875] Parameter name=b declid=145 direction=
+        annotations: [1] Annotations
+        type: [874] Type_Name
+          path: [873] Path name=packet_in absolute=0
+      [879] Parameter name=parsedHdr declid=146 direction=out
+        annotations: [1] Annotations
+        type: [878] Type_Name
+          path: [877] Path name=H absolute=0
+      [882] Parameter name=meta declid=147 direction=inout
+        annotations: [1] Annotations
+        type: [881] Type_Name
+          path: [880] Path name=M absolute=0
+      [885] Parameter name=standard_metadata declid=148 direction=inout
+        annotations: [1] Annotations
+        type: [884] Type_Name
+          path: [883] Path name=standard_metadata_t absolute=0
+  [906] Type_Control name=VerifyChecksum declid=48
+    annotations: [1] Annotations
+    typeParameters: [894] TypeParameters
+      [891] Type_Var name=H declid=46
+      [892] Type_Var name=M declid=47
+    applyParams: [904] ParameterList
+      [898] Parameter name=hdr declid=149 direction=inout
+        annotations: [1] Annotations
+        type: [897] Type_Name
+          path: [896] Path name=H absolute=0
+      [902] Parameter name=meta declid=150 direction=inout
+        annotations: [1] Annotations
+        type: [901] Type_Name
+          path: [900] Path name=M absolute=0
+  [932] Type_Control name=Ingress declid=51
+    annotations: [911] Annotations
+      [907] Annotation name=pipeline
+    typeParameters: [917] TypeParameters
+      [914] Type_Var name=H declid=49
+      [915] Type_Var name=M declid=50
+    applyParams: [930] ParameterList
+      [921] Parameter name=hdr declid=151 direction=inout
+        annotations: [1] Annotations
+        type: [920] Type_Name
+          path: [919] Path name=H absolute=0
+      [925] Parameter name=meta declid=152 direction=inout
+        annotations: [1] Annotations
+        type: [924] Type_Name
+          path: [923] Path name=M absolute=0
+      [928] Parameter name=standard_metadata declid=153 direction=inout
+        annotations: [1] Annotations
+        type: [927] Type_Name
+          path: [926] Path name=standard_metadata_t absolute=0
+  [958] Type_Control name=Egress declid=54
+    annotations: [937] Annotations
+      [933] Annotation name=pipeline
+    typeParameters: [943] TypeParameters
+      [940] Type_Var name=H declid=52
+      [941] Type_Var name=M declid=53
+    applyParams: [956] ParameterList
+      [947] Parameter name=hdr declid=154 direction=inout
+        annotations: [1] Annotations
+        type: [946] Type_Name
+          path: [945] Path name=H absolute=0
+      [951] Parameter name=meta declid=155 direction=inout
+        annotations: [1] Annotations
+        type: [950] Type_Name
+          path: [949] Path name=M absolute=0
+      [954] Parameter name=standard_metadata declid=156 direction=inout
+        annotations: [1] Annotations
+        type: [953] Type_Name
+          path: [952] Path name=standard_metadata_t absolute=0
+  [975] Type_Control name=ComputeChecksum declid=57
+    annotations: [1] Annotations
+    typeParameters: [963] TypeParameters
+      [960] Type_Var name=H declid=55
+      [961] Type_Var name=M declid=56
+    applyParams: [973] ParameterList
+      [967] Parameter name=hdr declid=157 direction=inout
+        annotations: [1] Annotations
+        type: [966] Type_Name
+          path: [965] Path name=H absolute=0
+      [971] Parameter name=meta declid=158 direction=inout
+        annotations: [1] Annotations
+        type: [970] Type_Name
+          path: [969] Path name=M absolute=0
+  [997] Type_Control name=Deparser declid=59
+    annotations: [980] Annotations
+      [976] Annotation name=deparser
+    typeParameters: [985] TypeParameters
+      [983] Type_Var name=H declid=58
+    applyParams: [995] ParameterList
+      [989] Parameter name=b declid=159 direction=
+        annotations: [1] Annotations
+        type: [988] Type_Name
+          path: [987] Path name=packet_out absolute=0
+      [993] Parameter name=hdr declid=160 direction=in
+        annotations: [1] Annotations
+        type: [992] Type_Name
+          path: [991] Path name=H absolute=0
+  [1060] Type_Package name=V1Switch declid=62
+    annotations: [1] Annotations
+    typeParameters: [1002] TypeParameters
+      [999] Type_Var name=H declid=60
+      [1000] Type_Var name=M declid=61
+    constructorParams: [1058] ParameterList
+      [1012] Parameter name=p declid=161 direction=
+        annotations: [1] Annotations
+        type: [1011] Type_Specialized
+          baseType: [1005] Type_Name
+            path: [1004] Path name=Parser absolute=0
+          arguments: [1008] Vector<Type>
+            [1007] Type_Name
+              path: [1006] Path name=H absolute=0
+            [1010] Type_Name
+              path: [1009] Path name=M absolute=0
+      [1022] Parameter name=vr declid=162 direction=
+        annotations: [1] Annotations
+        type: [1021] Type_Specialized
+          baseType: [1015] Type_Name
+            path: [1014] Path name=VerifyChecksum absolute=0
+          arguments: [1018] Vector<Type>
+            [1017] Type_Name
+              path: [1016] Path name=H absolute=0
+            [1020] Type_Name
+              path: [1019] Path name=M absolute=0
+      [1031] Parameter name=ig declid=163 direction=
+        annotations: [1] Annotations
+        type: [1030] Type_Specialized
+          baseType: [1024] Type_Name
+            path: [1023] Path name=Ingress absolute=0
+          arguments: [1027] Vector<Type>
+            [1026] Type_Name
+              path: [1025] Path name=H absolute=0
+            [1029] Type_Name
+              path: [1028] Path name=M absolute=0
+      [1040] Parameter name=eg declid=164 direction=
+        annotations: [1] Annotations
+        type: [1039] Type_Specialized
+          baseType: [1033] Type_Name
+            path: [1032] Path name=Egress absolute=0
+          arguments: [1036] Vector<Type>
+            [1035] Type_Name
+              path: [1034] Path name=H absolute=0
+            [1038] Type_Name
+              path: [1037] Path name=M absolute=0
+      [1049] Parameter name=ck declid=165 direction=
+        annotations: [1] Annotations
+        type: [1048] Type_Specialized
+          baseType: [1042] Type_Name
+            path: [1041] Path name=ComputeChecksum absolute=0
+          arguments: [1045] Vector<Type>
+            [1044] Type_Name
+              path: [1043] Path name=H absolute=0
+            [1047] Type_Name
+              path: [1046] Path name=M absolute=0
+      [1056] Parameter name=dep declid=166 direction=
+        annotations: [1] Annotations
+        type: [1055] Type_Specialized
+          baseType: [1051] Type_Name
+            path: [1050] Path name=Deparser absolute=0
+          arguments: [1054] Vector<Type>
+            [1053] Type_Name
+              path: [1052] Path name=H absolute=0
+  [1066] Type_Enum name=meter_color_t declid=63
+    [1062] Declaration_ID name=COLOR_GREEN declid=167
+    [1063] Declaration_ID name=COLOR_RED declid=168
+    [1064] Declaration_ID name=COLOR_YELLOW declid=169
+  [1083] Type_Struct name=test_metadata_t declid=64
+    annotations: [1] Annotations
+    [1071] StructField name=color declid=170
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [1074] StructField name=enum_color declid=171
+      annotations: [1] Annotations
+      type: [1073] Type_Name
+        path: [1072] Path name=meter_color_t absolute=0
+    [1077] StructField name=other_metadata declid=172
+      annotations: [1] Annotations
+      type: [3] Type_Bits size=32 isSigned=0
+    [1080] StructField name=smaller_metadata declid=173
+      annotations: [1] Annotations
+      type: [187] Type_Bits size=16 isSigned=0
+  [1097] Type_Header name=ethernet_t declid=65
+    annotations: [1] Annotations
+    [1088] StructField name=dstAddr declid=174
+      annotations: [1] Annotations
+      type: [252] Type_Bits size=48 isSigned=0
+    [1091] StructField name=srcAddr declid=175
+      annotations: [1] Annotations
+      type: [252] Type_Bits size=48 isSigned=0
+    [1094] StructField name=etherType declid=176
+      annotations: [1] Annotations
+      type: [187] Type_Bits size=16 isSigned=0
+  [1114] Type_Struct name=headers declid=66
+    annotations: [1] Annotations
+    [1102] StructField name=ethernet declid=177
+      annotations: [1] Annotations
+      type: [1101] Type_Name
+        path: [1100] Path name=ethernet_t absolute=0
+    [1105] StructField name=ethernet2 declid=178
+      annotations: [1] Annotations
+      type: [1104] Type_Name
+        path: [1103] Path name=ethernet_t absolute=0
+    [1111] StructField name=ethernet_stack declid=179
+      annotations: [1] Annotations
+      type: [1110] Type_Stack
+        elementType: [1107] Type_Name
+          path: [1106] Path name=ethernet_t absolute=0
+        size: [1109] Constant value=2 base=10
+          type: [1108] Type_InfInt declid=43
+  [1178] P4Control name=egress_stub declid=70
+    type: [1167] Type_Control name=egress_stub declid=69
+      annotations: [1] Annotations
+      typeParameters: [1152] TypeParameters
+      applyParams: [1165] ParameterList
+        [1156] Parameter name=hdr declid=185 direction=inout
+          annotations: [1] Annotations
+          type: [1155] Type_Name
+            path: [1154] Path name=headers absolute=0
+        [1160] Parameter name=meta declid=186 direction=inout
+          annotations: [1] Annotations
+          type: [1159] Type_Name
+            path: [1158] Path name=test_metadata_t absolute=0
+        [1163] Parameter name=standard_metadata declid=187 direction=inout
+          annotations: [1] Annotations
+          type: [1162] Type_Name
+            path: [1161] Path name=standard_metadata_t absolute=0
+    constructorParams: [1175] ParameterList
+    body: [1172] BlockStatement
+      annotations: [1] Annotations
+  [1231] P4Control name=deparser_stub declid=74
+    type: [1220] Type_Control name=deparser_stub declid=73
+      annotations: [1] Annotations
+      typeParameters: [1208] TypeParameters
+      applyParams: [1218] ParameterList
+        [1212] Parameter name=packet declid=191 direction=
+          annotations: [1] Annotations
+          type: [1211] Type_Name
+            path: [1210] Path name=packet_out absolute=0
+        [1216] Parameter name=hdr declid=192 direction=in
+          annotations: [1] Annotations
+          type: [1215] Type_Name
+            path: [1214] Path name=headers absolute=0
+    constructorParams: [1228] ParameterList
+    body: [1225] BlockStatement
+      annotations: [1] Annotations
+  [1256] P4Control name=verify_checksum_stub declid=76
+    type: [1245] Type_Control name=verify_checksum_stub declid=75
+      annotations: [1] Annotations
+      typeParameters: [1233] TypeParameters
+      applyParams: [1243] ParameterList
+        [1237] Parameter name=hdr declid=193 direction=inout
+          annotations: [1] Annotations
+          type: [1236] Type_Name
+            path: [1235] Path name=headers absolute=0
+        [1241] Parameter name=meta declid=194 direction=inout
+          annotations: [1] Annotations
+          type: [1240] Type_Name
+            path: [1239] Path name=test_metadata_t absolute=0
+    constructorParams: [1253] ParameterList
+    body: [1250] BlockStatement
+      annotations: [1] Annotations
+  [1281] P4Control name=compute_checksum_stub declid=78
+    type: [1270] Type_Control name=compute_checksum_stub declid=77
+      annotations: [1] Annotations
+      typeParameters: [1258] TypeParameters
+      applyParams: [1268] ParameterList
+        [1262] Parameter name=hdr declid=195 direction=inout
+          annotations: [1] Annotations
+          type: [1261] Type_Name
+            path: [1260] Path name=headers absolute=0
+        [1266] Parameter name=meta declid=196 direction=inout
+          annotations: [1] Annotations
+          type: [1265] Type_Name
+            path: [1264] Path name=test_metadata_t absolute=0
+    constructorParams: [1278] ParameterList
+    body: [1275] BlockStatement
+      annotations: [1] Annotations
+  [76105] P4Parser name=ParserImpl declid=80
+    type: [1301] Type_Parser name=ParserImpl declid=79
+      annotations: [1] Annotations
+      typeParameters: [1283] TypeParameters
+      applyParams: [1299] ParameterList
+        [1287] Parameter name=packet declid=197 direction=
+          annotations: [1] Annotations
+          type: [1286] Type_Name
+            path: [1285] Path name=packet_in absolute=0
+        [1291] Parameter name=hdr declid=198 direction=out
+          annotations: [1] Annotations
+          type: [1290] Type_Name
+            path: [1289] Path name=headers absolute=0
+        [1294] Parameter name=meta declid=199 direction=inout
+          annotations: [1] Annotations
+          type: [1293] Type_Name
+            path: [1292] Path name=test_metadata_t absolute=0
+        [1297] Parameter name=standard_metadata declid=200 direction=inout
+          annotations: [1] Annotations
+          type: [1296] Type_Name
+            path: [1295] Path name=standard_metadata_t absolute=0
+    constructorParams: [1312] ParameterList
+    [76127] ParserState name=start declid=201
+      annotations: [1] Annotations
+      selectExpression: [76129] PathExpression
+        type: [7867] Type_State
+        path: [1306] Path name=accept absolute=0
+    [2378] ParserState name=accept declid=213
+      annotations: [1] Annotations
+    [2380] ParserState name=reject declid=214
+      annotations: [1] Annotations
+  [78843] P4Control name=ingress declid=82
+    type: [1334] Type_Control name=ingress declid=81
+      annotations: [1] Annotations
+      typeParameters: [1319] TypeParameters
+      applyParams: [1332] ParameterList
+        [1323] Parameter name=hdr declid=202 direction=inout
+          annotations: [1] Annotations
+          type: [1322] Type_Name
+            path: [1321] Path name=headers absolute=0
+        [1327] Parameter name=meta declid=203 direction=inout
+          annotations: [1] Annotations
+          type: [1326] Type_Name
+            path: [1325] Path name=test_metadata_t absolute=0
+        [1330] Parameter name=standard_metadata declid=204 direction=inout
+          annotations: [1] Annotations
+          type: [1329] Type_Name
+            path: [1328] Path name=standard_metadata_t absolute=0
+    constructorParams: [1409] ParameterList
+    [78862] Declaration_Variable name=tmp_0 declid=561
+      annotations: [1] Annotations
+      type: [111] Type_Boolean
+    [76154] P4Action name=nop_0 declid=691
+      annotations: [76155] Annotations
+        [76157] Annotation name=name
+          [76159] StringLiteral value=nop
+            type: [4885] Type_String
+      parameters: [1343] ParameterList
+      body: [1340] BlockStatement
+        annotations: [1] Annotations
+    [76164] P4Table name=test_table declid=209
+      annotations: [76165] Annotations
+        [76167] Annotation name=name
+          [76169] StringLiteral value=test_table
+            type: [4885] Type_String
+      properties: [76170] TableProperties
+        [76172] Property name=actions declid=206 isConstant=0
+          annotations: [1] Annotations
+          value: [76173] ActionList
+            [76175] ActionListElement
+              annotations: [1] Annotations
+              expression: [76176] MethodCallExpression
+                type: [60364] Type_Action
+                  typeParameters: [60338] TypeParameters
+                  parameters: [60362] ParameterList
+                method: [76177] PathExpression
+                  type: [60340] Type_Action
+                    typeParameters: [60338] TypeParameters
+                    parameters: [1343] ParameterList
+                  path: [53436] Path name=nop_0 absolute=0
+                typeArguments: [2414] Vector<Type>
+                arguments: [57379] Vector<Expression>
+        [76181] Property name=key declid=207 isConstant=0
+          annotations: [1] Annotations
+          value: [76182] Key
+            [76184] KeyElement
+              annotations: [76185] Annotations
+                [76187] Annotation name=name
+                  [76189] StringLiteral value=hdr.ethernet.dstAddr
+                    type: [4885] Type_String
+              expression: [76190] Member member=dstAddr
+                type: [252] Type_Bits size=48 isSigned=0
+                expr: [76191] Member member=ethernet
+                  type: [1097] Type_Header name=ethernet_t declid=65...
+                  expr: [76192] PathExpression
+                    type: [59903] Type_Struct name=headers declid=284
+                      annotations: [1] Annotations
+                      [59898] StructField name=ethernet declid=791
+                        annotations: [1] Annotations
+                        type: [1097] Type_Header name=ethernet_t declid=65...
+                      [59899] StructField name=ethernet2 declid=792
+                        annotations: [1] Annotations
+                        type: [1097] Type_Header name=ethernet_t declid=65...
+                      [59900] StructField name=ethernet_stack declid=793
+                        annotations: [1] Annotations
+                        type: [45241] Type_Stack
+                          elementType: [1097] Type_Header name=ethernet_t declid=65...
+                          size: [1109] Constant value=2 base=10...
+                    path: [1357] Path name=hdr absolute=0
+              matchType: [76194] PathExpression
+                type: [4901] Type_MatchKind
+                path: [1361] Path name=exact absolute=0
+            [76196] KeyElement
+              annotations: [76197] Annotations
+                [76199] Annotation name=name
+                  [76201] StringLiteral value=hdr.ethernet.etherType
+                    type: [4885] Type_String
+              expression: [76202] Member member=etherType
+                type: [187] Type_Bits size=16 isSigned=0
+                expr: [76203] Member member=ethernet
+                  type: [1097] Type_Header name=ethernet_t declid=65...
+                  expr: [76204] PathExpression
+                    type: [59903] Type_Struct name=headers declid=284...
+                    path: [1364] Path name=hdr absolute=0
+              matchType: [76206] PathExpression
+                type: [4901] Type_MatchKind
+                path: [1368] Path name=exact absolute=0
+        [76208] Property name=default_action declid=208 isConstant=0
+          annotations: [1] Annotations
+          value: [76209] ExpressionValue
+            expression: [76210] MethodCallExpression
+              type: [60412] Type_Action
+                typeParameters: [60338] TypeParameters
+                parameters: [60410] ParameterList
+              method: [76211] PathExpression
+                type: [60340] Type_Action...
+                path: [53472] Path name=nop_0 absolute=0
+              typeArguments: [1378] Vector<Type>
+              arguments: [1376] Vector<Expression>
+    body: [76215] BlockStatement
+      annotations: [1] Annotations
+      [76217] AssignmentStatement
+        left: [76218] PathExpression
+          type: [111] Type_Boolean
+          path: [53482] Path name=tmp_0 absolute=0
+        right: [76220] Member member=hit
+          type: [111] Type_Boolean
+          expr: [76221] MethodCallExpression
+            type: [60436] Type_Struct name=test_table declid=296
+              annotations: [1] Annotations
+              [60431] StructField name=hit declid=813
+                annotations: [1] Annotations
+                type: [111] Type_Boolean
+              [60433] StructField name=action_run declid=814
+                annotations: [1] Annotations
+                type: [60432] Type_ActionEnum
+                  actionList: [57360] ActionList
+                    [57362] ActionListElement
+                      annotations: [1] Annotations
+                      expression: [57374] MethodCallExpression
+                        type: [123] Type_Unknown
+                        method: [53435] PathExpression
+                          type: [123] Type_Unknown
+                          path: [53436] Path name=nop_0 absolute=0
+                        typeArguments: [2414] Vector<Type>
+                        arguments: [57379] Vector<Expression>
+            method: [76222] Member member=apply
+              type: [60440] Type_Method
+                typeParameters: [60441] TypeParameters
+                returnType: [60436] Type_Struct name=test_table declid=296...
+                parameters: [60438] ParameterList
+              expr: [76223] PathExpression
+                type: [60418] Type_Table
+                  table: [60341] P4Table name=test_table declid=209
+                    annotations: [28380] Annotations
+                      [28378] Annotation name=name
+                        [28376] StringLiteral value=test_table
+                          type: [123] Type_Unknown
+                    properties: [57357] TableProperties
+                      [57359] Property name=actions declid=206 isConstant=0
+                        annotations: [1] Annotations
+                        value: [57360] ActionList...
+                      [19095] Property name=key declid=207 isConstant=0
+                        annotations: [1] Annotations
+                        value: [19096] Key
+                          [19098] KeyElement
+                            annotations: [19109] Annotations
+                              [19107] Annotation name=name
+                                [19105] StringLiteral value=hdr.ethernet.dstAddr
+                                  type: [123] Type_Unknown
+                            expression: [1359] Member member=dstAddr
+                              type: [123] Type_Unknown
+                              expr: [1358] Member member=ethernet
+                                type: [123] Type_Unknown
+                                expr: [1356] PathExpression
+                                  type: [123] Type_Unknown
+                                  path: [1357] Path name=hdr absolute=0
+                            matchType: [1360] PathExpression
+                              type: [123] Type_Unknown
+                              path: [1361] Path name=exact absolute=0
+                          [19111] KeyElement
+                            annotations: [19122] Annotations
+                              [19120] Annotation name=name
+                                [19118] StringLiteral value=hdr.ethernet.etherType
+                                  type: [123] Type_Unknown
+                            expression: [1366] Member member=etherType
+                              type: [123] Type_Unknown
+                              expr: [1365] Member member=ethernet
+                                type: [123] Type_Unknown
+                                expr: [1363] PathExpression
+                                  type: [123] Type_Unknown
+                                  path: [1364] Path name=hdr absolute=0
+                            matchType: [1367] PathExpression
+                              type: [123] Type_Unknown
+                              path: [1368] Path name=exact absolute=0
+                      [53466] Property name=default_action declid=208 isConstant=0
+                        annotations: [1] Annotations
+                        value: [53467] ExpressionValue
+                          expression: [53468] MethodCallExpression
+                            type: [123] Type_Unknown
+                            method: [53471] PathExpression
+                              type: [123] Type_Unknown
+                              path: [53472] Path name=nop_0 absolute=0
+                            typeArguments: [1378] Vector<Type>
+                            arguments: [1376] Vector<Expression>
+                path: [53489] Path name=test_table absolute=0
+            typeArguments: [1391] Vector<Type>
+            arguments: [31290] Vector<Expression>
+      [76227] IfStatement
+        condition: [76228] LNot
+          type: [111] Type_Boolean
+          expr: [76229] PathExpression
+            type: [111] Type_Boolean
+            path: [53496] Path name=tmp_0 absolute=0
+        ifTrue: [76231] MethodCallStatement
+          methodCall: [76232] MethodCallExpression
+            type: [18] Type_Void
+            method: [76233] PathExpression
+              type: [572] Type_Method...
+              path: [1395] Path name=mark_to_drop absolute=0
+            typeArguments: [1398] Vector<Type>
+            arguments: [31228] Vector<Expression>
+  [76237] Declaration_Instance name=main declid=210
+    annotations: [1] Annotations
+    type: [11754] Type_Specialized
+      baseType: [1415] Type_Name
+        path: [1414] Path name=V1Switch absolute=0
+      arguments: [11749] Vector<Type>
+        [11750] Type_Name
+          path: [11751] Path name=headers absolute=0
+        [11752] Type_Name
+          path: [11753] Path name=test_metadata_t absolute=0
+    arguments: [76247] Vector<Expression>
+      [76248] ConstructorCallExpression
+        type: [60207] Type_Parser name=ParserImpl declid=293
+          annotations: [1] Annotations
+          typeParameters: [1283] TypeParameters
+          applyParams: [60205] ParameterList
+            [60200] Parameter name=packet declid=806 direction=
+              annotations: [1] Annotations
+              type: [57626] Type_Extern name=packet_in declid=266
+                typeParameters: [15] TypeParameters
+                [57622] Method name=extract declid=712 isAbstract=0
+                  type: [57507] Type_Method
+                    typeParameters: [22] TypeParameters...
+                    returnType: [18] Type_Void
+                    parameters: [57505] ParameterList
+                      [57503] Parameter name=hdr declid=710 direction=out
+                        annotations: [1] Annotations
+                        type: [20] Type_Var name=T declid=1
+                  annotations: [1] Annotations
+                [57623] Method name=extract declid=713 isAbstract=0
+                  type: [57548] Type_Method
+                    typeParameters: [36] TypeParameters...
+                    returnType: [18] Type_Void
+                    parameters: [57546] ParameterList
+                      [57544] Parameter name=variableSizeHeader declid=711 direction=out
+                        annotations: [1] Annotations
+                        type: [34] Type_Var name=T declid=2
+                      [44] Parameter name=variableFieldSizeInBits declid=9 direction=in...
+                  annotations: [1] Annotations
+                [57624] Method name=lookahead declid=714 isAbstract=0
+                  type: [57580] Type_Method
+                    typeParameters: [55] TypeParameters...
+                    returnType: [53] Type_Var name=T declid=3
+                    parameters: [59] ParameterList
+                  annotations: [1] Annotations
+                [73] Method name=advance declid=13 isAbstract=0...
+                [83] Method name=length declid=14 isAbstract=0...
+                annotations: [1] Annotations
+            [60201] Parameter name=hdr declid=807 direction=out
+              annotations: [1] Annotations
+              type: [59903] Type_Struct name=headers declid=284...
+            [60202] Parameter name=meta declid=808 direction=inout
+              annotations: [1] Annotations
+              type: [59816] Type_Struct name=test_metadata_t declid=283
+                annotations: [1] Annotations
+                [59810] StructField name=color declid=780
+                  annotations: [1] Annotations
+                  type: [3] Type_Bits size=32 isSigned=0
+                [59811] StructField name=enum_color declid=781
+                  annotations: [1] Annotations
+                  type: [1066] Type_Enum name=meter_color_t declid=63...
+                [59812] StructField name=other_metadata declid=782
+                  annotations: [1] Annotations
+                  type: [3] Type_Bits size=32 isSigned=0
+                [59813] StructField name=smaller_metadata declid=783
+                  annotations: [1] Annotations
+                  type: [187] Type_Bits size=16 isSigned=0
+            [60203] Parameter name=standard_metadata declid=809 direction=inout
+              annotations: [1] Annotations
+              type: [307] Type_Struct name=standard_metadata_t declid=7
+                annotations: [163] Annotations
+                  [154] Annotation name=metadata
+                  [160] Annotation name=name
+                    [157] StringLiteral value=standard_metadata
+                      type: [123] Type_Unknown
+                [168] StructField name=ingress_port declid=26...
+                [171] StructField name=egress_spec declid=27...
+                [174] StructField name=egress_port declid=28...
+                [177] StructField name=clone_spec declid=29...
+                [180] StructField name=instance_type declid=30...
+                [184] StructField name=drop declid=31...
+                [188] StructField name=recirculate_port declid=32...
+                [191] StructField name=packet_length declid=33...
+                [203] StructField name=enq_timestamp declid=34
+                  annotations: [199] Annotations
+                    [195] Annotation name=alias
+                      [192] StringLiteral value=queueing_metadata.enq_timestamp
+                        type: [123] Type_Unknown
+                  type: [3] Type_Bits size=32 isSigned=0
+                [216] StructField name=enq_qdepth declid=35
+                  annotations: [211] Annotations
+                    [207] Annotation name=alias
+                      [204] StringLiteral value=queueing_metadata.enq_qdepth
+                        type: [123] Type_Unknown
+                  type: [215] Type_Bits size=19 isSigned=0
+                [228] StructField name=deq_timedelta declid=36
+                  annotations: [224] Annotations
+                    [220] Annotation name=alias
+                      [217] StringLiteral value=queueing_metadata.deq_timedelta
+                        type: [123] Type_Unknown
+                  type: [3] Type_Bits size=32 isSigned=0
+                [240] StructField name=deq_qdepth declid=37
+                  annotations: [236] Annotations
+                    [232] Annotation name=alias
+                      [229] StringLiteral value=queueing_metadata.deq_qdepth
+                        type: [123] Type_Unknown
+                  type: [215] Type_Bits size=19 isSigned=0
+                [253] StructField name=ingress_global_timestamp declid=38
+                  annotations: [248] Annotations
+                    [244] Annotation name=alias
+                      [241] StringLiteral value=intrinsic_metadata.ingress_global_timestamp
+                        type: [123] Type_Unknown
+                  type: [252] Type_Bits size=48 isSigned=0
+                [265] StructField name=lf_field_list declid=39
+                  annotations: [261] Annotations
+                    [257] Annotation name=alias
+                      [254] StringLiteral value=intrinsic_metadata.lf_field_list
+                        type: [123] Type_Unknown
+                  type: [3] Type_Bits size=32 isSigned=0
+                [277] StructField name=mcast_grp declid=40
+                  annotations: [273] Annotations
+                    [269] Annotation name=alias
+                      [266] StringLiteral value=intrinsic_metadata.mcast_grp
+                        type: [123] Type_Unknown
+                  type: [187] Type_Bits size=16 isSigned=0
+                [289] StructField name=resubmit_flag declid=41
+                  annotations: [285] Annotations
+                    [281] Annotation name=alias
+                      [278] StringLiteral value=intrinsic_metadata.resubmit_flag
+                        type: [123] Type_Unknown
+                  type: [183] Type_Bits size=1 isSigned=0
+                [301] StructField name=egress_rid declid=42
+                  annotations: [297] Annotations
+                    [293] Annotation name=alias
+                      [290] StringLiteral value=intrinsic_metadata.egress_rid
+                        type: [123] Type_Unknown
+                  type: [187] Type_Bits size=16 isSigned=0
+                [304] StructField name=checksum_error declid=43...
+        constructedType: [1417] Type_Name
+          path: [1416] Path name=ParserImpl absolute=0
+        arguments: [1418] Vector<Expression>
+      [76252] ConstructorCallExpression
+        type: [60080] Type_Control name=verify_checksum_stub declid=289
+          annotations: [1] Annotations
+          typeParameters: [1233] TypeParameters
+          applyParams: [60078] ParameterList
+            [60075] Parameter name=hdr declid=802 direction=inout
+              annotations: [1] Annotations
+              type: [59903] Type_Struct name=headers declid=284...
+            [60076] Parameter name=meta declid=803 direction=inout
+              annotations: [1] Annotations
+              type: [59816] Type_Struct name=test_metadata_t declid=283...
+        constructedType: [1422] Type_Name
+          path: [1421] Path name=verify_checksum_stub absolute=0
+        arguments: [1423] Vector<Expression>
+      [76256] ConstructorCallExpression
+        type: [60293] Type_Control name=ingress declid=295
+          annotations: [1] Annotations
+          typeParameters: [1319] TypeParameters
+          applyParams: [60291] ParameterList
+            [60287] Parameter name=hdr declid=810 direction=inout
+              annotations: [1] Annotations
+              type: [59903] Type_Struct name=headers declid=284...
+            [60288] Parameter name=meta declid=811 direction=inout
+              annotations: [1] Annotations
+              type: [59816] Type_Struct name=test_metadata_t declid=283...
+            [60289] Parameter name=standard_metadata declid=812 direction=inout
+              annotations: [1] Annotations
+              type: [307] Type_Struct name=standard_metadata_t declid=7...
+        constructedType: [1426] Type_Name
+          path: [1425] Path name=ingress absolute=0
+        arguments: [1427] Vector<Expression>
+      [76260] ConstructorCallExpression
+        type: [59960] Type_Control name=egress_stub declid=285
+          annotations: [1] Annotations
+          typeParameters: [1152] TypeParameters
+          applyParams: [59958] ParameterList
+            [59954] Parameter name=hdr declid=797 direction=inout
+              annotations: [1] Annotations
+              type: [59903] Type_Struct name=headers declid=284...
+            [59955] Parameter name=meta declid=798 direction=inout
+              annotations: [1] Annotations
+              type: [59816] Type_Struct name=test_metadata_t declid=283...
+            [59956] Parameter name=standard_metadata declid=799 direction=inout
+              annotations: [1] Annotations
+              type: [307] Type_Struct name=standard_metadata_t declid=7...
+        constructedType: [1430] Type_Name
+          path: [1429] Path name=egress_stub absolute=0
+        arguments: [1431] Vector<Expression>
+      [76264] ConstructorCallExpression
+        type: [60137] Type_Control name=compute_checksum_stub declid=291
+          annotations: [1] Annotations
+          typeParameters: [1258] TypeParameters
+          applyParams: [60135] ParameterList
+            [60132] Parameter name=hdr declid=804 direction=inout
+              annotations: [1] Annotations
+              type: [59903] Type_Struct name=headers declid=284...
+            [60133] Parameter name=meta declid=805 direction=inout
+              annotations: [1] Annotations
+              type: [59816] Type_Struct name=test_metadata_t declid=283...
+        constructedType: [1434] Type_Name
+          path: [1433] Path name=compute_checksum_stub absolute=0
+        arguments: [1435] Vector<Expression>
+      [76268] ConstructorCallExpression
+        type: [60022] Type_Control name=deparser_stub declid=287
+          annotations: [1] Annotations
+          typeParameters: [1208] TypeParameters
+          applyParams: [60020] ParameterList
+            [60017] Parameter name=packet declid=800 direction=
+              annotations: [1] Annotations
+              type: [57705] Type_Extern name=packet_out declid=267
+                typeParameters: [88] TypeParameters
+                [57703] Method name=emit declid=716 isAbstract=0
+                  type: [57683] Type_Method
+                    typeParameters: [94] TypeParameters...
+                    returnType: [18] Type_Void
+                    parameters: [57681] ParameterList
+                      [57679] Parameter name=hdr declid=715 direction=in
+                        annotations: [1] Annotations
+                        type: [92] Type_Var name=T declid=5
+                  annotations: [1] Annotations
+                annotations: [1] Annotations
+            [60018] Parameter name=hdr declid=801 direction=in
+              annotations: [1] Annotations
+              type: [59903] Type_Struct name=headers declid=284...
+        constructedType: [1438] Type_Name
+          path: [1437] Path name=deparser_stub absolute=0
+        arguments: [1439] Vector<Expression>

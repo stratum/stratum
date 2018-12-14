@@ -1,0 +1,326 @@
+// This file defines a proto message representation of P4 parser states.
+// This representation has two use cases:
+//  1) It provides an output format for the p4c backend to decode the Internal
+//     Representation (IR) of the P4 program parser.
+//  2) It provides a way to specify the parser behavior of a fixed function
+//     switch.  This case typically uses a text file to define the switch's
+//     behavior.
+// Given messages for case 1 and case 2, the p4c backend can correlate the
+// messages to map most P4 header fields without dependencies on annotation
+// strings.
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package google.hercules.p4c_backend;
+
+import "platforms/networking/hercules/public/proto/p4_table_defs.proto";
+
+// A P4 ParserState has two ways to transition to the next state.  The first
+// way is with a select expression, where each key in the expression chooses
+// the next state.  The other way is with a direct, unconditional reference
+// to the next state.  The ParserSelectExpression message below defines the
+// first method.  Each P4 select expression can consist of a concatenation of
+// fields, although a typical expression consists of only one field.  Given
+// a P4 parser state like this, which selects on two 8-bit header fields:
+//
+//  TODO(teverman): Convert this example to P4_16.
+//  parser parse1 {
+//    extract(my_header);
+//    return select(latest.f1, latest.f2) {
+//      0x0111: parse_nop1;
+//      0x0212: parse_nop2;
+//      default: ingress
+//    }
+//  }
+//
+// The decoded ParserSelectExpression looks like this:
+//
+//  select {
+//    selector_fields: "f1"
+//    selector_fields" "f2"
+//    cases {
+//      keyset_values {
+//        constant {
+//          value: 0x01
+//          mask: 0xff
+//        }
+//      }
+//      keyset_values {
+//        constant {
+//          value: 0x11
+//          mask: 0xff
+//        }
+//      }
+//      next_state: "parse_nop1"
+//    }
+//    cases {
+//      keyset_values {
+//        constant {
+//          value: 0x02
+//          mask: 0xff
+//        }
+//      }
+//      keyset_values {
+//        constant {
+//          value: 0x12
+//          mask: 0xff
+//        }
+//      }
+//      next_state: "parse_nop2"
+//    }
+//    cases {
+//      is_default: true
+//      next_state: "accept"
+//    }
+//  }
+//
+// At the top level, a ParserSelectExpression message consists of:
+//  selector_fields - identifies the names of the fields in the select
+//      arguments.  This field applies to decoded P4 program parsers.
+//  selector_types - identifies the types of the fields in the select
+//      arguments.  This field applies to parser definitions for fixed function
+//      switches, and the p4c backend may also add it to the decoded P4
+//      parser output in later processing steps.
+//  cases - enumerate the individual cases within the select expression.
+// The repeated fields in ParserSelectExpression can be perceived as
+// two-dimensional, with the horizontal axis representing the field arguments
+// and the vertical axis representing the cases.  Most expressions use only
+// one field parameter.
+message ParserSelectExpression {
+  repeated string selector_fields = 1;
+  repeated P4FieldType selector_types = 2;
+  repeated ParserSelectCase cases = 3;
+}
+
+// A ParserKeySetValue specifies a value that selects a state transition case
+// within a ParserSelectExpression.  Hercules expects transition case selection
+// in the P4 parser to be done by either a constant value or a ValueSet.  A
+// constant typically represents a known protocol type, such as the ether
+// type value in an L2 header.  ValueSets represent more complex case selection
+// that can be updated dynamically at runtime, such as reconfiguring UDF
+// offsets in a packet payload.
+message ParserKeySetValue {
+  // A ConstantSelectCase represents typical parser transition cases, such as
+  // this example:
+  //
+  //  transition select(hdr.ethernet.etherType) {
+  //    0x809b : parse_l3_protocol_1;
+  //    0x80f3 : parse_l3_protocol_2;
+  //    0x8100 : parse_vlan;
+  //    default: accept;
+  //  }
+  //
+  // A ConstantSelectCase contains these fields:
+  //  value - a constant value that is the select key for this case, such as
+  //      0x809b, 0x80f3, and 0x8100 in the example.
+  //  mask - masks value during select expression computation (currently unused
+  //      by the Hercules P4 programs).
+  message ConstantSelectCase {
+    uint64 value = 1;
+    uint64 mask = 2;
+  }
+
+  // A ValueSetSelectCase represents parser state transitions that are
+  // selected based on value sets, such as this example:
+  //
+  //  transition select (udf_payload_index) {
+  //    udf_vs_1: parse_udf_1;
+  //    udf_vs_2: parse_udf_2;
+  //    10: accept;
+  //    default: parse_udf_payload;
+  //  }
+  //
+  // A ValueSetSelectCase represents each transition case based on value-set:
+  //  value_set_name - identifies the value set by name, such as "udf_vs_1"
+  //      and "udf_vs_2" in the example.
+  message ValueSetSelectCase {
+    string value_set_name = 1;
+  }
+
+  // A ParserKeySetValue is either a constant or a value set, but not both.
+  oneof case_type {
+    ConstantSelectCase constant = 1;
+    ValueSetSelectCase value_set = 2;
+  }
+}
+
+// A ParserSelectCase message represents each case in a ParserSelectExpression.
+//  keyset_values - specify the values that need to match for the case to be
+//      selected.  Each select argument has a separate keyset_values entry,
+//      so if the select expression has N selector_fields arguments, then
+//      keyset_values(0) contains the matching value for the first argument,
+//      and keyset_values(N - 1) contains the matching value for the last
+//      argument.
+//  is_default - indicates that this is the default select case, in which case
+//      no keyset_values are needed.
+//  next_state - names the next ParserState transition upon matching this case.
+//  is_tunnel_entry - true when the transition leads to a state that expects
+//      an encapsulated header.
+// TODO(teverman): Consider folding is_default into ParserKeySetValue.
+message ParserSelectCase {
+  repeated ParserKeySetValue keyset_values = 1;
+  bool is_default = 2;
+  string next_state = 3;
+  bool is_tunnel_entry = 4;
+}
+
+// A ParserTransition identifies one of the two possible ways to advance to
+// the next parser state.
+//  select - specifies transitions where the next state depends on the value
+//      of one or more fields in a select expression.
+//  next_state - specifies an unconditional transition to the designated state.
+message ParserTransition {
+  oneof transition {
+    ParserSelectExpression select = 1;
+    string next_state = 2;
+  }
+}
+
+// This message specifies a single field or subfield within an extracted
+// header.
+//  type - identifies the type of field on a fixed function switch, such as
+//      P4_FIELD_TYPE_ETH_SRC or P4_FIELD_TYPE_IPV4_DST.
+//  name - identifies the field name in the P4 program relative to the
+//      enclosing header type, such as "srcAddr" or "dstAddr".
+//  bit_offset - indicates the offset of the field from the start of the header.
+//  bit_width - indicates the width of the field.
+//  full_field_names - lists the fully-qualified names of this field relative
+//      to every header that uses the header type to which this field was
+//      extracted.  Example: The field with name "dstAddr" in extracted header
+//      "ethernet_t" appears in full_field_names as "ethernet.dstAddr".  A
+//      field in a header stack has multiple appearances in full_field_names,
+//      i.e. "vlan_tag[0].vid" and "vlan_tag[1].vid".
+//  subfield_set_name - contains the name string from a ParserSubFieldSet
+//      message when this field has other supported encodings.  This name only
+//      applies to fixed function switches.  When the ParserExtractField itself
+//      defines a subfield, the subfield_set_name does not apply, i.e.
+//      subfields cannot be defined within other subfields.
+// For fixed function switches, the developer need not specify every field in
+// a header.  Only the fields of interest to the forwarding pipeline need to
+// be defined.
+message ParserExtractField {
+  oneof field_id {
+    P4FieldType type = 1;
+    string name = 2;
+  }
+  uint32 bit_offset = 3;
+  uint32 bit_width = 4;
+  repeated string full_field_names = 5;
+  string subfield_set_name = 6;
+}
+
+// This message supports alternate encodings of fields in extracted headers.
+// Its usage is primarily oriented toward diffserv vs. DSCP/ECN, where one
+// parser implementation chooses to extract a single 8-bit diffserv field,
+// while another implementation chooses to extract separate DSCP/ECN fields.
+//  name - identifies this message and provides the subfield_set_name string
+//      reference from the main field.
+//  fields - defines the extracted subfields.  Each subfield's bit width
+//      and offset are specified relative to the start of the header, not
+//      relative to the base field.
+message ParserSubFieldSet {
+  string name = 1;
+  repeated ParserExtractField fields = 2;
+}
+
+// This message defines a header populated by an extract method in a parser
+// state.
+//  name - identifies the extracted header.  For parser states decoded from
+//      the P4 program IR, the name identifies a P4 header type, such as
+//      "ethernet_t" or "icmp_t".  For fixed function switch parsers, the
+//      developer assigns a meaningful name.
+//  header_type - assigns a numeric type identifier to the extracted header.
+//  fields - these are the individual fields within the header type.  When
+//      defining a fixed function parser, the fields must appear in order from
+//      lowest bit_offset to highest bit_offset.
+//  header_paths - contain the full path to the headers identified by the name
+//      field for parser states decoded from the P4 program IR, such as
+//      "hdr.ethernet" or "hdr.icmp".  This field is unused when defining
+//      fixed function switch parser transitions.
+//  subfield_sets - define any subfields that may be extracted as alternatives
+//      to the field attributes in the repeated fields list.  Subfields only
+//      apply to fixed function parser definitions.  If any field in this
+//      ParserExtractHeader has subfields, the base field must identify a
+//      subfield_sets counterpart in this message by name.
+// The example below illustrates subfield usage:
+//
+//    extracted_header {
+//      name: "IPv4 Header"
+//      header_type: P4_HEADER_IPV4
+//      fields {
+//        type: P4_FIELD_TYPE_IP_VERSION  # "version"
+//        bit_width: 4
+//      }
+//      ...
+//      fields {
+//        type: P4_FIELD_TYPE_IPV4_DIFFSERV  # "diffserv"
+//        bit_offset: 8
+//        bit_width: 8
+//        subfield_set_name: "dscp_ecn_subfields"
+//      }
+//      fields {
+//        type: P4_FIELD_TYPE_IPV4_TOTAL_LENGTH  # "totalLen"
+//        bit_offset: 16
+//        bit_width: 16
+//      }
+//      ...
+//      subfield_sets {
+//        name: "dscp_ecn_subfields"
+//        fields {
+//          type: P4_FIELD_TYPE_DSCP  # "dscp"
+//          bit_offset: 8
+//          bit_width: 6
+//        }
+//        fields {
+//          type: P4_FIELD_TYPE_ECN  # "ecn"
+//          bit_offset: 14
+//          bit_width: 2
+//        }
+//      }
+//    }
+//
+// A current limitation of subfields in Hercules is that they cannot be used
+// in transition select expressions.  In the example above, the expression:
+//    transition select (hdr.ipv4.dscp)
+// is illegal.
+message ParserExtractHeader {
+  string name = 1;
+  P4HeaderType header_type = 2;
+  repeated ParserExtractField fields = 3;
+  repeated string header_paths = 4;
+  repeated ParserSubFieldSet subfield_sets = 5;
+}
+
+// This message defines one state within the parser state machine.
+//  name - assigns a name to this state.  This name can be referenced from
+//      other states to define transitions.  When p4c decodes the ParserState
+//      from the IR, the name matches the name of the P4 program parser state.
+//      When the ParserState describes fixed function switch behavior, the
+//      developer assigns a meaningful name to the state.
+//  reserved_state - indicates that this state is one of the P4Parser's well
+//      known states.
+//  extracted_header - defines the protocol header extracted by this state.
+//      If the state has no extract statement, this field is not present.
+//  transition - specifies one of the possible transition methods for getting
+//      to the next state.
+message ParserState {
+  enum ReservedState {
+    P4_PARSER_STATE_NOT_RESERVED = 0;
+    P4_PARSER_STATE_START = 1;
+    P4_PARSER_STATE_ACCEPT = 2;
+    P4_PARSER_STATE_REJECT = 3;
+  }
+
+  string name = 1;
+  ReservedState reserved_state = 2;
+  ParserExtractHeader extracted_header = 3;
+  ParserTransition transition = 4;
+}
+
+// The ParserMap is the top-level definition of parser behavior.  It contains
+// a map from each state name to the corresponding ParserState details.
+message ParserMap {
+  map<string, ParserState> parser_states = 1;
+}
