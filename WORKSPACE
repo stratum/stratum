@@ -1,11 +1,32 @@
 workspace(name = "com_github_stratum_stratum")
 
+# ---------------------------------------------------------------------------
+#       Dependency overrides
+#
+#       If you would like to override a dependency, you can do so in
+#       this section. Be sure to use the same name as the dependency
+#       that you are overriding. You can use a local version of the
+#       dependency or a remote one.
+#
+#       Example:
+#
+#       local_repository(
+#           name = "com_github_opennetworklinux",
+#           path = "~/OpenNetworkLinux",
+#       )
+#
+#       Please do not push changes to this section upstream.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+#       Load Stratum dependencies
+# ---------------------------------------------------------------------------
 load("//bazel:deps.bzl", "stratum_deps")
 stratum_deps()
 
-# -----------------------------------------------------------------------------
-#        Load transitive deps
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+#        Load transitive dependencies
+# ---------------------------------------------------------------------------
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
 

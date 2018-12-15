@@ -103,7 +103,8 @@ stratum_cc_library(
         #       TODO: Fix dependency
         #        "//stratum/onlp:onlpsim",
         "@com_github_opennetworklinux//:onlp",
-        "@com_github_opennetworklinux//:onlp_headers",
+        #"@com_github_opennetworklinux//:onlp_headers",
+        "@com_github_opennetworklinux//:onlp_platform_as7712",
     ],
 )
 
