@@ -321,6 +321,26 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                           "Invalid device ID.");
   }
 
+  // We need valid election ID for SetForwardingPipelineConfig RPC
+  absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
+                                                req->election_id().low());
+  if (election_id == 0) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::INVALID_ARGUMENT,
+        absl::StrCat("Invalid election ID for node ", node_id, "."));
+  }
+  // Make sure this node already has a master controller and the given
+  // election_id and the uri of the client matches those of the
+  // master. According to the P4Runtime specification, only master can perform
+  // SetForwardingPipelineConfig RPC.
+  if (!IsWritePermitted(node_id, election_id, context->peer())) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::PERMISSION_DENIED,
+        absl::StrCat("SetForwardingPipelineConfig from non-master is not "
+                     "permitted for node ",
+                     node_id, "."));
+  }
+
   ::util::Status status = ::util::OkStatus();
   switch (req->action()) {
     case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY:
@@ -330,24 +350,6 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       break;
     case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT:
     case ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_SAVE: {
-      // We need valid election ID for save and commit.
-      absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
-                                                    req->election_id().low());
-      if (election_id == 0) {
-        return ::grpc::Status(
-            ::grpc::StatusCode::INVALID_ARGUMENT,
-            absl::StrCat("Invalid election ID for node ", node_id, "."));
-      }
-      // Make sure this node already has a master controller and the given
-      // election_id and the uri of the client matches those of the master.
-      if (!IsWritePermitted(node_id, election_id, context->peer())) {
-        return ::grpc::Status(
-            ::grpc::StatusCode::PERMISSION_DENIED,
-            absl::StrCat("SetForwardingPipelineConfig from non-master is not "
-                         "permitted for node ",
-                         node_id, "."));
-      }
-
       absl::WriterMutexLock l(&config_lock_);
       // configs_to_save_in_file will have a copy of the configs that will be
       // saved in file at the end. Note that this copy may NOT be the same as
@@ -389,24 +391,6 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       break;
     }
     case ::p4::v1::SetForwardingPipelineConfigRequest::COMMIT: {
-      // We need valid election ID for commit.
-      absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
-                                                    req->election_id().low());
-      if (election_id == 0) {
-        return ::grpc::Status(
-            ::grpc::StatusCode::INVALID_ARGUMENT,
-            absl::StrCat("Invalid election ID for node ", node_id, "."));
-      }
-      // Make sure this node already has a master controller and the given
-      // election_id and the uri of the client matches those of the master.
-      if (!IsWritePermitted(node_id, election_id, context->peer())) {
-        return ::grpc::Status(
-            ::grpc::StatusCode::PERMISSION_DENIED,
-            absl::StrCat("SetForwardingPipelineConfig from non-master is not "
-                         "permitted for node ",
-                         node_id, "."));
-      }
-
       ::util::Status error = switch_interface_->CommitForwardingPipelineConfig(
            node_id);
       APPEND_STATUS_IF_ERROR(status, error);
