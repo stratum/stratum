@@ -1,0 +1,1 @@
+systemctl enable stratum_bmv2.service

@@ -27,3 +27,67 @@ stratum_cc_binary(
     ],
     data = ["dummy.json"],
 )
+
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
+
+pkg_tar(
+    name = "stratum_bmv2_bin",
+    srcs = [":stratum_bmv2"],
+    mode = "0755",
+    package_dir = "/usr/bin",
+    strip_prefix = "/stratum/hal/bin/bmv2",
+)
+
+pkg_tar(
+    name = "stratum_bmv2_service",
+    srcs = ["stratum_bmv2.service"],
+    mode = "0644",
+    package_dir = "/etc/systemd/system",
+    strip_prefix = "/stratum/hal/bin/bmv2",
+)
+
+pkg_tar(
+    name = "stratum_bmv2_config",
+    srcs = ["stratum_bmv2.environment"],
+    mode = "0644",
+    package_dir = "/etc/stratum",
+    strip_prefix = "/stratum/hal/bin/bmv2",
+)
+
+pkg_tar(
+    name = "stratum_bmv2_pipeline",
+    srcs = ["dummy.json"],
+    mode = "0644",
+    package_dir = "/etc/stratum",
+    strip_prefix = "/stratum/hal/bin/bmv2",
+)
+
+pkg_tar(
+    name = "stratum_bmv2_data",
+    extension = "tar.gz",
+    deps = [
+        ":stratum_bmv2_bin",
+        ":stratum_bmv2_config",
+        ":stratum_bmv2_pipeline",
+        ":stratum_bmv2_service",
+    ],
+)
+
+pkg_deb(
+    name = "stratum_bmv2_debian",
+    architecture = "amd64",
+    built_using = "bazel (0.14.1)",
+    data = ":stratum_bmv2_data",
+    depends = [
+        "libjudy-dev",
+        "libgmp-dev",
+        "libpcap-dev",
+        "libboost1.55-all-dev",
+    ],
+    description_file = "debian/description",
+    homepage = "https://stratumproject.org/",
+    maintainer = "https://stratumproject.org/",
+    package = "stratum_bmv2",
+    postinst = "debian/postinst",
+    version = "0.1.1",
+)

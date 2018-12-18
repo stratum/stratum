@@ -1,0 +1,23 @@
+[Unit]
+Description=Stratum node
+ConditionPathExists=/usr/bin/stratum_bmv2
+ConditionPathExists=/etc/stratum/stratum_bmv2.environment
+
+[Service]
+Type=simple
+
+WorkingDirectory=/tmp
+EnvironmentFile=/etc/stratum/stratum_bmv2.environment
+
+ExecStartPre=/bin/mkdir -p /tmp/stratum/hal/bin/bmv2
+ExecStartPre=/bin/cp /etc/stratum/dummy.json /tmp/stratum/hal/bin/bmv2/dummy.json
+
+ExecStart=/usr/bin/stratum_bmv2 \
+    --external_hercules_urls=${EXTERNAL_HERCULES_URL} \
+    --forwarding_pipeline_configs_file=${FORWARDING_PIPELINE_CONFIGS_FILE} \
+    --persistent_config_dir=${PERSISTENT_CONFIG_DIR} ${EXTRA_BMV2_CONFIG}
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
