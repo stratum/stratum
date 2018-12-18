@@ -195,12 +195,12 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
-    name = "onlphal",
+    name = "onlpphal",
     srcs = [
-        "onlphal.cc",
+        "onlpphal.cc",
     ],
     hdrs = [
-        "onlphal.h",
+        "onlpphal.h",
     ],
     deps = [
         ":onlp_event_handler",
@@ -220,10 +220,10 @@ stratum_cc_library(
 )
 
 stratum_cc_test(
-    name = "onlphal_test",
-    srcs = ["onlphal_test.cc"],
+    name = "onlpphal_test",
+    srcs = ["onlpphal_test.cc"],
     deps = [
-        ":onlphal",
+        ":onlpphal",
         ":onlp_wrapper_mock",
         "@com_google_googletest//:gtest_main",
         "//stratum/glue/status",

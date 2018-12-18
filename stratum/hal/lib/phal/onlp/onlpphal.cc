@@ -17,7 +17,11 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/macros.h"
-#include "stratum/hal/lib/phal/onlp/onlphal.h"
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+//FIXME remove when onlp_wrapper.h is stable
+//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
              "Maximum number of channel writers for transceiver events.");
@@ -30,15 +34,15 @@ namespace onlp {
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 using TransceiverEventWriter = PhalInterface::TransceiverEventWriter;
 
-Onlphal* Onlphal::singleton_ = nullptr;
+OnlpPhal* OnlpPhal::singleton_ = nullptr;
 #ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
-ABSL_CONST_INIT absl::Mutex Onlphal::init_lock_(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex OnlpPhal::init_lock_(absl::kConstInit);
 #else
-absl::Mutex Onlphal::init_lock_;
+absl::Mutex OnlpPhal::init_lock_;
 #endif
 
 
-::util::Status OnlphalSfpEventCallback::HandleStatusChange(
+::util::Status OnlpPhalSfpEventCallback::HandleStatusChange(
     const OidInfo& oid_info) {
 
   // Format TransceiverEvent
@@ -48,28 +52,26 @@ absl::Mutex Onlphal::init_lock_;
   event.state = oid_info.GetHardwareState();
 
   // Write the event to each writer
-  ::util::Status result = onlphal_->WriteTransceiverEvent(event);
+  ::util::Status result = onlpphal_->WriteTransceiverEvent(event);
   return result;
 }
 
-Onlphal::Onlphal() : 
+OnlpPhal::OnlpPhal() : 
     onlp_interface_(nullptr),
     onlp_event_handler_(nullptr),
     sfp_event_callback_(nullptr) {
 }
 
-Onlphal::~Onlphal() {}
+OnlpPhal::~OnlpPhal() {}
 
-::util::Status Onlphal::PushChassisConfig(const ChassisConfig& config) {
+::util::Status OnlpPhal::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
-    // TODO: Implement this function.
 
     // Create the OnlpWrapper object
     RETURN_IF_ERROR(InitializeOnlpInterface());
 
     //Creates Data Source objects.
-    // TODO: move the logic to OnlpConfigurator later.
     RETURN_IF_ERROR(InitializeOnlpOids());
 
     // Create the OnlpEventHandler object with given OnlpWrapper
@@ -81,12 +83,12 @@ Onlphal::~Onlphal() {}
   return ::util::OkStatus();
 }
 
-::util::Status Onlphal::VerifyChassisConfig(const ChassisConfig& config) {
+::util::Status OnlpPhal::VerifyChassisConfig(const ChassisConfig& config) {
   // TODO: Implement this function.
   return ::util::OkStatus();
 }
 
-::util::Status Onlphal::Shutdown() {
+::util::Status OnlpPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
   // TODO: add clean up code
@@ -96,7 +98,7 @@ Onlphal::~Onlphal() {}
   return ::util::OkStatus();
 }
 
-::util::StatusOr<int> Onlphal::RegisterTransceiverEventWriter(
+::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
     std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority) {
 
   if (!initialized_) {
@@ -131,10 +133,10 @@ Onlphal::~Onlphal() {}
   //       callback once.
   if (sfp_event_callback_ == nullptr) {
     // Create OnlpSfpEventCallback
-    std::unique_ptr<OnlphalSfpEventCallback> 
-        callback(new OnlphalSfpEventCallback());
+    std::unique_ptr<OnlpPhalSfpEventCallback> 
+        callback(new OnlpPhalSfpEventCallback());
     sfp_event_callback_ = std::move(callback);
-    sfp_event_callback_->onlphal_ = this;
+    sfp_event_callback_->onlpphal_ = this;
  
     // Register OnlpSfpEventCallback
     ::util::Status result = 
@@ -146,7 +148,7 @@ Onlphal::~Onlphal() {}
   return next_id;
 }
 
-::util::Status Onlphal::UnregisterTransceiverEventWriter(int id) {
+::util::Status OnlpPhal::UnregisterTransceiverEventWriter(int id) {
 
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -174,13 +176,15 @@ Onlphal::~Onlphal() {}
   return ::util::OkStatus();
 }
 
-::util::Status Onlphal::GetFrontPanelPortInfo(
+::util::Status OnlpPhal::GetFrontPanelPortInfo(
     int slot, int port, FrontPanelPortInfo* fp_port_info) {
 
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
+  if(slot < 0 || port < 0)
+	  RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
 
   //Get slot port pair to lookup sfpdatasource.
   const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
@@ -243,17 +247,17 @@ Onlphal::~Onlphal() {}
   return ::util::OkStatus();
 }
 
-Onlphal* Onlphal::CreateSingleton() {
+OnlpPhal* OnlpPhal::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
  
   if (!singleton_) {
-    singleton_ = new Onlphal();
+    singleton_ = new OnlpPhal();
   }
 
   return singleton_;
 }
 
-::util::Status Onlphal::WriteTransceiverEvent(const TransceiverEvent& event) {
+::util::Status OnlpPhal::WriteTransceiverEvent(const TransceiverEvent& event) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -272,66 +276,49 @@ Onlphal* Onlphal::CreateSingleton() {
   return ::util::OkStatus();
 }
 
-::util::Status Onlphal::SetPortLedState(int slot, int port, int channel,
+::util::Status OnlpPhal::SetPortLedState(int slot, int port, int channel,
                                         LedColor color, LedState state) {
   // TODO: Implement this.
   return ::util::OkStatus();
 }
 
-::util::Status Onlphal::InitializeOnlpInterface() {
+::util::Status OnlpPhal::InitializeOnlpInterface() {
   if (initialized_) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "InitializeOnlpInterface() can be called only before the class is "
            << "initialized";
   }
 
-  //absl::WriterMutexLock l(&config_lock_);
 
   // Create the OnlpInterface object
-  ::util::StatusOr<std::unique_ptr<OnlpInterface>> resInterface =
-      OnlpWrapper::Make();
-  if (resInterface.ok()) {
-    onlp_interface_ = resInterface.ConsumeValueOrDie();
+  ASSIGN_OR_RETURN(
+        onlp_interface_,
+        OnlpWrapper::Make());
     return ::util::OkStatus();
-  } else {
-    LOG(ERROR) << resInterface.status();
-    return resInterface.status();
-  }
+
 }
 
-::util::Status Onlphal::InitializeOnlpEventHandler() {
+::util::Status OnlpPhal::InitializeOnlpEventHandler() {
   if (initialized_) {
     return MAKE_ERROR(ERR_INTERNAL)
            << "InitializeOnlpEventHandler() can be called only before the "
            << "class is initialized";
   }
 
-  //absl::WriterMutexLock l(&config_lock_);
 
   // Create the OnlpEventHandler object 
-  ::util::StatusOr<std::unique_ptr<OnlpEventHandler>> resultEvHandler =
-      OnlpEventHandler::Make(onlp_interface_.get());
-  if (resultEvHandler.ok()) {
-    onlp_event_handler_ = resultEvHandler.ConsumeValueOrDie();
+  ASSIGN_OR_RETURN(
+        onlp_event_handler_,
+        OnlpEventHandler::Make(onlp_interface_.get()));
     return ::util::OkStatus();
-  } else {
-    LOG(ERROR) << resultEvHandler.status();
-    return resultEvHandler.status();
-  }
 }
 
-::util::Status Onlphal::InitializeOnlpOids() {
+::util::Status OnlpPhal::InitializeOnlpOids() {
 	//Get list of sfps.
-	::util::StatusOr<std::vector <OnlpOid>> result = 
-		onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP);
-	if (!result.ok()) {
-		LOG(ERROR) << result.status();
-		return result.status();
-	}
 	
-	std::vector <OnlpOid> OnlpOids = 
-		result.ConsumeValueOrDie();
-
+	 ASSIGN_OR_RETURN(
+        	std::vector <OnlpOid> OnlpOids,
+        	onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP));
 	//TODO: Need to support multiple slots. 
 	for(unsigned int i = 0; i < OnlpOids.size(); i++) {
 

@@ -15,8 +15,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLPHAL_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_ONLPHAL_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
 
 #include <functional>
 
@@ -32,32 +32,32 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-class Onlphal;
+class OnlpPhal;
 
 // Implements a callback for status changes on ONLP SFPs.
-class OnlphalSfpEventCallback : public OnlpSfpEventCallback {
+class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
  public:
-  // Creates a new OnlphalSfpEventCallback that receives callbacks for status
+  // Creates a new OnlpPhalSfpEventCallback that receives callbacks for status
   // changes that occur for any SFPs.
-  OnlphalSfpEventCallback() : onlphal_(nullptr) {};
-  OnlphalSfpEventCallback(const OnlphalSfpEventCallback& other) = delete;
-  OnlphalSfpEventCallback& operator=(const OnlphalSfpEventCallback& other) = 
+  OnlpPhalSfpEventCallback() : onlpphal_(nullptr) {};
+  OnlpPhalSfpEventCallback(const OnlpPhalSfpEventCallback& other) = delete;
+  OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) = 
       delete;
-  ~OnlphalSfpEventCallback() override {};
+  ~OnlpPhalSfpEventCallback() override {};
 
   // Callback for handling SFP status changes - SFP plug/unplug events.
   ::util::Status HandleStatusChange(const OidInfo& oid_info) override;
 
  private:
-  friend class Onlphal;
-  Onlphal* onlphal_;
+  friend class OnlpPhal;
+  OnlpPhal* onlpphal_;
 };
 
-// Class "Onlphal" is an implementation of PhalInterface which is used to
-// send the Onlphal events to Stratum.
-class Onlphal : public PhalInterface {
+// Class "OnlpPhal" is an implementation of PhalInterface which is used to
+// send the OnlpPhal events to Stratum.
+class OnlpPhal : public PhalInterface {
  public:
-  ~Onlphal() override;
+  ~OnlpPhal() override;
 
   // PhalInterface public methods.
   ::util::Status PushChassisConfig(const ChassisConfig& config) override
@@ -79,20 +79,20 @@ class Onlphal : public PhalInterface {
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static Onlphal* CreateSingleton() LOCKS_EXCLUDED(config_lock_);
+  static OnlpPhal* CreateSingleton() LOCKS_EXCLUDED(config_lock_);
 
-  // Onlphal is neither copyable nor movable.
-  Onlphal(const Onlphal&) = delete;
-  Onlphal& operator=(const Onlphal&) = delete;
+  // OnlpPhal is neither copyable nor movable.
+  OnlpPhal(const OnlpPhal&) = delete;
+  OnlpPhal& operator=(const OnlpPhal&) = delete;
 
   // Write Transceiver Events
   ::util::Status WriteTransceiverEvent(const TransceiverEvent& event);
 
  private:
-  friend class OnlphalTest;
+  friend class OnlpPhalTest;
 
   // Private constructor.
-  Onlphal();
+  OnlpPhal();
 
   // One time initialization of the OnlpWrapper
   ::util::Status InitializeOnlpInterface();
@@ -111,7 +111,7 @@ class Onlphal : public PhalInterface {
   static absl::Mutex init_lock_;
 
   // The singleton instance.
-  static Onlphal* singleton_ GUARDED_BY(init_lock_);
+  static OnlpPhal* singleton_ GUARDED_BY(init_lock_);
 
   // Mutex lock for protecting the internal state when config is pushed or the
   // class is initialized so that other threads do not access the state while
@@ -132,7 +132,7 @@ class Onlphal : public PhalInterface {
   std::unique_ptr<OnlpEventHandler> onlp_event_handler_;
 
   // SFP Event Callback
-  std::unique_ptr<OnlphalSfpEventCallback> sfp_event_callback_;
+  std::unique_ptr<OnlpPhalSfpEventCallback> sfp_event_callback_;
 
   // Map from std::pair<int, int> representing (slot, port) of singleton port
   // to the vector of OnlpOid
@@ -144,4 +144,4 @@ class Onlphal : public PhalInterface {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLPHAL_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
