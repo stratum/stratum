@@ -17,6 +17,10 @@ load(
     "P4C_BUILD_DEFAULT_COPTS",
     "P4C_COMMON_DEPS",
 )
+load(
+    "@com_github_stratum_stratum//bazel/rules:p4c_ir_defs.bzl",
+    "P4C_BACKEND_IR_FILES",
+)
 
 package(
     default_visibility = [ "//visibility:public" ],
@@ -176,14 +180,20 @@ cc_binary(
     ],
 )
 
-# The next rule runs the ir-generator tool binary
-# to create the outputs from p4c's IR .def files.
+# The next rules run the irgenerator tool binary to create the outputs
+# from IR .def files.  The filegroup below collects all IR definitions that
+# extend the IR in some backend-specific way.
+filegroup(
+    name = "p4c_backend_ir_files",
+    srcs = P4C_BACKEND_IR_FILES,
+    visibility = ["//visibility:private"],
+)
+
 genrule(
     name = "ir_generated_files",
     srcs = [
         "frontends/p4-14/ir-v1.def",
-        "backends/bmv2/bmv2.def",
-        # TODO: add "backends/stratum/stratum_ir.def",
+        ":p4c_backend_ir_files",
     ] + glob([
         "ir/*.def",
     ]),
@@ -192,6 +202,11 @@ genrule(
         "ir/ir-generated.cpp",
         "ir/ir-generated.h",
     ],
+    # The order of irgenerator input files is significant, so replacing the
+    # $location references to individual files below with a filegroup and
+    # using "$(locations <filegroup>)" does not work.  The irgenerator succeeds,
+    # but the p4c_ir cc_library rule below fails to compile the irgenerator
+    # output.
     cmd = ("$(location " +
            ":irgenerator) " +
            "-t $(@D)/ir/gen-tree-macro.h -i $(@D)/ir/ir-generated.cpp " +
@@ -202,10 +217,7 @@ genrule(
            "$(location ir/ir.def) " +
            "$(location ir/v1.def) " +
            "$(location frontends/p4-14/ir-v1.def) " +
-           "$(location backends/bmv2/bmv2.def) " +
-           ""),
-           # TODO: replace above with this line when ready
-           #"backends/stratum/stratum_ir.def"),
+           "$(locations :p4c_backend_ir_files)"),
     tools = [":irgenerator"],
 )
 

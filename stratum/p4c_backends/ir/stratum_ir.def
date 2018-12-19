@@ -1,0 +1,36 @@
+// This file contains custom IR definitions for a Stratum p4c backend that maps
+// P4 programs to fixed-function switches.  It exists here with Stratum p4c
+// backend sources, but it must be built with the rest of the p4c IR files
+// from the p4lang/p4c github repository.  See bazel/external/p4c.BUILD
+// under the Stratum workspace directory for more details.
+
+// The Stratum backend uses this IR class when mapping logical tables to
+// physical tables in a fixed-function pipeline stage.  When possible, it
+// transforms or "optimizes" all the P4Control statements related to a stage
+// into one PipelineStageStatement.
+class PipelineStageStatement : BlockStatement {
+  unsigned stage;
+#nodbprint
+}
+
+// The Stratum backend uses this IR class as the transformed output node
+// when processing metering conditions in IR::IfStatements.  The transform
+// generates metering conditions and operations in a hal::P4ActionDescriptor
+// message.  Since IR::Nodes can't contain embedded protobufs, the cstring
+// member contains a text-encoded copy of the message.
+class MeterColorStatement : IfStatement {
+  inline cstring meter_color_actions;
+#nodbprint
+}
+
+// The Stratum backend uses this IR class as the transformed output node
+// when processing assignments of table hit status to temporary variables.
+// The hit_var_name identifies the temporary variable name with the table
+// hit status, the table_name identifies the applied table, and the p4_table
+// points to the IR::P4Table instance from the pre-transform assignment.
+class TableHitStatement : Statement {
+  inline cstring hit_var_name;
+  inline cstring table_name;
+  P4Table p4_table;
+#nodbprint
+}
