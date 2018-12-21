@@ -120,7 +120,7 @@ const TreeNode* TreeNode::FindNodeOrNull(const ::gnmi::Path& path) const {
          element < path.elem_size();) {
     node = gtl::FindOrNull(node->children_, path.elem(element).name());
     auto* search = gtl::FindOrNull(path.elem(element).key(), "name");
-    if (search != nullptr) {
+    if (search != nullptr && node != nullptr) {
       node = gtl::FindOrNull(node->children_, *search);
     }
     ++element;
