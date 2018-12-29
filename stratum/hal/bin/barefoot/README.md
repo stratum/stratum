@@ -53,13 +53,17 @@ bazel build //stratum/hal/bin/barefoot:stratum_bf
 ## Running the binary
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
-     ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf --local_hercules_url=0.0.0.0:28000 \
-     --forwarding_pipeline_configs_file=<conf dir>/dir.x --persistent_config_dir=<config dir> \
-     --bf_sde_install=$BF_SDE_INSTALL --grpc_max_recv_msg_size=256 \
-     --chassis_config_file=<config.proto.txt>
+     ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf \
+       --external_hercules_urls=0.0.0.0:28000 \
+       --grpc_max_recv_msg_size=256 \
+       --bf_sde_install=$BF_SDE_INSTALL \
+       --persistent_config_dir=<config dir> \
+       --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
+       --chassis_config_file=<config dir>/chassis_config.pb.txt \
+       --write_req_log_file=<config dir>/p4_writes.pb.txt
 ```
 
-For a sample `<config.proto.txt>` file, see sample_config.proto.txt in this
+For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
 directory. Note that at the moment, you still need to add & enable the ports
 using the ucli or through the Thrift PAL RPC service. ONOS can add & enable the
 ports for you if you provide the appropriate netcfg file when using the
