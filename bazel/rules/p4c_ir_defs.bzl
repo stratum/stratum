@@ -5,5 +5,5 @@
 
 P4C_BACKEND_IR_FILES = [
     "@com_github_p4lang_p4c//:backends/bmv2/bmv2.def",
-    "@com_github_stratum_stratum//stratum/p4c_backends/ir:stratum_ir.def",
+    "@com_github_stratum_stratum//stratum/p4c_backends/ir:stratum_fpm_ir.def",
 ]

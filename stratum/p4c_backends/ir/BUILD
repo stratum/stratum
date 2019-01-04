@@ -2,7 +2,7 @@
 # to compile with the p4lang/p4c repo's IR definitions as one monolithic IR.
 exports_files(
     [
-        "stratum_ir.def",
+        "stratum_fpm_ir.def",
     ],
     visibility = ["//visibility:public"],
 )
