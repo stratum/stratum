@@ -146,7 +146,7 @@ class AttributeGroupInternal : public AttributeGroup,
                                public MutableAttributeGroup {
  public:
   explicit AttributeGroupInternal(const google::protobuf::Descriptor* descriptor,
-                                  int depth)
+                                  unsigned int depth)
       : descriptor_(descriptor), depth_(depth) {}
 
   std::unique_ptr<ReadableAttributeGroup> AcquireReadable() override {
@@ -269,7 +269,7 @@ class AttributeGroupInternal : public AttributeGroup,
   const google::protobuf::Descriptor* descriptor_;
   // The number of parents above this attribute group. The root attribute group
   // has depth_ == 0.
-  int depth_;
+  unsigned int depth_;
   absl::flat_hash_map<std::string, ManagedAttribute*> attributes_;
   absl::flat_hash_map<std::string, std::unique_ptr<AttributeGroupInternal>>
       sub_groups_;
@@ -886,7 +886,7 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
     const std::string& group_name = repeated_child_group.first;
     const std::vector<std::unique_ptr<AttributeGroupInternal>>& group_fields =
         repeated_child_group.second;
-    for (int i = 0; i < group_fields.size(); i++) {
+    for (unsigned int i = 0; i < group_fields.size(); i++) {
       RETURN_IF_ERROR(RegisterQueryRepeatedChild(
           query, query_info, group_fields[i].get(), i, group_name));
     }
@@ -898,7 +898,7 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
     const std::vector<Path>& paths) {
   for (const auto& path : paths) {
     const google::protobuf::Descriptor* descriptor = descriptor_;
-    for (int i = 0; i < path.size(); i++) {
+    for (unsigned int i = 0; i < path.size(); i++) {
       const PathEntry& entry = path[i];
       const FieldDescriptor* field = descriptor->FindFieldByName(entry.name);
       CHECK_RETURN_IF_FALSE(field)

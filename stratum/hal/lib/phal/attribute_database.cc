@@ -108,7 +108,7 @@ void DatabaseQuery::RecalculatePollingInterval() {
 ::util::Status DatabaseQuery::UpdateSubscribers() {
   ASSIGN_OR_RETURN(auto polling_result, Get());
   bool subscribers_removed = false;
-  for (int i = 0; i < subscribers_.size(); i++) {
+  for (unsigned int i = 0; i < subscribers_.size(); i++) {
     ChannelWriter<PhalDB>* channel = subscribers_[i].first.get();
     ::util::Status write_result = channel->TryWrite(*polling_result);
     if (!write_result.ok()) {
