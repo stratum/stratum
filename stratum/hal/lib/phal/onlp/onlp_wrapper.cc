@@ -61,11 +61,11 @@ OnlpWrapper::~OnlpWrapper() {
   return SfpInfo(sfp_info);
 }
 
-::util::StatusOr<bool> OnlpWrapper:: GetSfpPresent(OnlpOid port) const {
+::util::StatusOr<bool> OnlpWrapper::GetSfpPresent(OnlpOid port) const {
   return onlp_sfp_is_present(port);
 }
 
-::util::StatusOr<OnlpPresentBitmap> OnlpWrapper:: GetSfpPresenceBitmap() const {
+::util::StatusOr<OnlpPresentBitmap> OnlpWrapper::GetSfpPresenceBitmap() const {
   OnlpPresentBitmap bitset;
   SfpBitmap presence;
   onlp_sfp_bitmap_t_init(&presence);
