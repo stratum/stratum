@@ -1,5 +1,7 @@
 _strict = False
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 def _build_http_archive(
     name,
     remote,
@@ -30,14 +32,14 @@ def _build_http_archive(
 
   # Generate http_archive rule
   if build_file:
-    native.new_http_archive(
+    http_archive(
       name = name,
       urls = urls,
       strip_prefix = prefix,
       build_file = build_file,
     )
   else:
-    native.http_archive(
+    http_archive(
       name = name,
       urls = urls,
       strip_prefix = prefix,
