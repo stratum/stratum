@@ -13,21 +13,21 @@ def stratum_deps():
         remote_workspace(
             name = "com_google_protobuf",
             remote = "https://github.com/google/protobuf",
-            tag = "3.5.1",
+            tag = "3.6.1.3",
         )
 
     if "com_github_grpc_grpc" not in native.existing_rules():
         remote_workspace(
             name = "com_github_grpc_grpc",
             remote = "https://github.com/grpc/grpc",
-            tag = "1.12.1",
+            tag = "1.17.2",
         )
         # TODO this is a hack for the pubref rules
-        remote_workspace(
-            name = "com_google_grpc",
-            remote = "https://github.com/grpc/grpc",
-            tag = "1.12.1",
-        )
+        #remote_workspace(
+        #    name = "com_google_grpc",
+        #    remote = "https://github.com/grpc/grpc",
+        #    tag = "1.12.1",
+        #)
 
     if "org_pubref_rules_protobuf" not in native.existing_rules():
         # ----- protoc w/ gRPC compiler -----
