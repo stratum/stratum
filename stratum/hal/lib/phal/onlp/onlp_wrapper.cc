@@ -98,6 +98,19 @@ OnlpWrapper::~OnlpWrapper() {
   return bitset; 
 }
 
+::util::StatusOr<PsuInfo> OnlpWrapper::GetPsuInfo(OnlpOid oid) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_PSU(oid))
+      << "Cannot get PSU info: OID " << oid << " is not an PSU.";
+  onlp_psu_info_t psu_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_psu_info_get(oid, &psu_info)))
+      << "Failed to get PSU info for OID " << oid << ".";
+  return PsuInfo(psu_info);
+}
+
+::util::StatusOr<const onlp_psu_info_t*> PsuInfo::GetOnlpPsu() const {
+  return &psu_info_;
+}
+
 ::util::StatusOr<std::vector<OnlpOid>> OnlpWrapper::GetOidList(
       onlp_oid_type_flag_t type) const {
 
@@ -263,6 +276,40 @@ FanCaps FanInfo::GetFanCaps() const {
     return FAN_CAPS_GET_PERCENTAGE;
   default:
     return FAN_CAPS_UNKNOWN;
+  }
+}
+
+PsuType PsuInfo::GetPsuType() const {
+  switch(psu_info_.type) {
+  case ONLP_PSU_TYPE_AC:
+    return PSU_TYPE_AC;
+  case ONLP_PSU_TYPE_DC12:
+    return PSU_TYPE_DC12;
+  case ONLP_PSU_TYPE_DC48:
+    return PSU_TYPE_DC48;
+  default:
+    return PSU_TYPE_UNKNOWN;
+  }
+}
+
+PsuCaps PsuInfo::GetPsuCaps() const {
+  switch(psu_info_.caps) {
+  case ONLP_PSU_CAPS_GET_TYPE:
+    return PSU_CAPS_GET_TYPE;
+  case ONLP_PSU_CAPS_GET_VIN:
+    return PSU_CAPS_GET_VIN;
+  case ONLP_PSU_CAPS_GET_VOUT:
+    return PSU_CAPS_GET_VOUT;
+  case  ONLP_PSU_CAPS_GET_IIN:
+    return PSU_CAPS_GET_IIN;
+  case ONLP_PSU_CAPS_GET_IOUT:
+    return PSU_CAPS_GET_IOUT;
+  case ONLP_PSU_CAPS_GET_PIN:
+    return PSU_CAPS_GET_PIN;
+  case ONLP_PSU_CAPS_GET_POUT:
+    return PSU_CAPS_GET_POUT;
+  default:
+    return PSU_CAPS_UNKNOWN;
   }
 }
 

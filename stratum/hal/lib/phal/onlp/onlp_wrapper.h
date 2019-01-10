@@ -22,6 +22,7 @@ extern "C" {
 #include <onlp/oids.h>
 #include <onlp/sfp.h>
 #include <onlp/fan.h>
+#include <onlp/psu.h>
 }
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
@@ -88,7 +89,6 @@ class SfpInfo : public OidInfo {
   onlp_sfp_info_t sfp_info_;
 };
 
-
 class FanInfo : public OidInfo {
  public:
   explicit FanInfo(const onlp_fan_info_t& fan_info)
@@ -104,6 +104,21 @@ class FanInfo : public OidInfo {
   onlp_fan_info_t fan_info_;
 };
 
+class PsuInfo : public OidInfo {
+ public:
+  explicit PsuInfo(const onlp_psu_info_t& psu_info)
+      : OidInfo(psu_info.hdr), psu_info_(psu_info) {}
+  PsuInfo() {}
+
+  PsuType GetPsuType() const;
+  PsuCaps GetPsuCaps() const;
+
+  ::util::StatusOr<const onlp_psu_info_t*> GetOnlpPsu() const;
+
+ private:
+  onlp_psu_info_t psu_info_;
+};
+
 // A interface for ONLP calls.
 // This class wraps c-style direct ONLP calls with Google-style c++ calls that
 // return ::util::Status.
@@ -116,6 +131,9 @@ class OnlpInterface {
   
   // Given a OID object id, returns FAN info or failure.
   virtual ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const = 0;
+
+  // Given a OID object id, returns PSU info or failure.
+  virtual ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const = 0;
 
   // Given an OID, returns the OidInfo for that object (or an error if it
   // doesn't exist
@@ -146,6 +164,7 @@ class OnlpWrapper : public OnlpInterface {
   ~OnlpWrapper() override;
 
   ::util::StatusOr<OidInfo> GetOidInfo(OnlpOid oid) const override;
+  ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const override;
   ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
   ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const override;
   ::util::StatusOr<std::vector <OnlpOid>> GetOidList(

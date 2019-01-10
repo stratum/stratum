@@ -896,6 +896,28 @@ enum FanCaps {
   FAN_CAPS_GET_PERCENTAGE = 32;
 }
 
+// Possible types for a PSU.
+// currently maps to onlp_psu_type_t defined in psu.h
+enum PsuType {
+  PSU_TYPE_UNKNOWN   = 0;
+  PSU_TYPE_AC        = 1;
+  PSU_TYPE_DC12      = 2;
+  PSU_TYPE_DC48      = 3;
+}
+
+// Possible Capabilities for a PSU.
+// currently maps to onlp_psu_caps_t defined in psu.h
+enum PsuCaps {
+  PSU_CAPS_UNKNOWN   = 0;
+  PSU_CAPS_GET_TYPE  = 1;
+  PSU_CAPS_GET_VIN   = 2;
+  PSU_CAPS_GET_VOUT  = 4;
+  PSU_CAPS_GET_IIN   = 8;
+  PSU_CAPS_GET_IOUT  = 16;
+  PSU_CAPS_GET_PIN   = 32;
+  PSU_CAPS_GET_POUT  = 64;
+}
+
 //------------------------------------------------------------------------------
 // Messages related to physical properties of ports on a chassis
 //------------------------------------------------------------------------------
