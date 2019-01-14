@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The HiddenStaticMapper combines the HiddenTableMapper's ActionRedirectMap
 // output with the static table entries in the P4PipelineConfig.  Each redirect
 // map entry specifies a key value for a local metadata field that acts as
@@ -8,20 +24,19 @@
 // The InternalAction becomes a single action for a Hercules switch physical
 // table that combines the functionality of multiple P4 logical tables.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_HIDDEN_STATIC_MAPPER_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_HIDDEN_STATIC_MAPPER_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
 
 #include <map>
 #include <string>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_table_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/tunnel_optimizer_interface.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
+#include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // The p4c backend invokes the HiddenStaticMapper after the HiddenTableMapper
 // produces its ActionRedirectMap and the P4PipelineConfig is fully populated
@@ -79,8 +94,7 @@ class HiddenStaticMapper {
   std::map<HiddenActionKey, uint32> hidden_action_id_map_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_HIDDEN_STATIC_MAPPER_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_

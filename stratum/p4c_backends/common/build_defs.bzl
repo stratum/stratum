@@ -1,11 +1,27 @@
+#
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 """P4c configuration generation rules."""
 
 load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
-# Runs the p4c binary with the Hercules backend on the P4_16 sources. The P4_16
+# Runs the p4c binary with the Stratum FPM backend on the P4_16 sources. The P4_16
 # code should be targeted to the v1model in p4lang_p4c/p4include.
-def _generate_p4c_hercules_config(ctx):
-    """Preprocesses P4 sources and runs Hercules p4c on pre-processed P4 file."""
+def _generate_p4c_stratum_config(ctx):
+    """Preprocesses P4 sources and runs Stratum p4c on pre-processed P4 file."""
 
     # Preprocess all files and create 'p4_preprocessed_file'
     p4_preprocessed_file = ctx.new_file(
@@ -39,8 +55,8 @@ def _generate_p4c_hercules_config(ctx):
         executable = cpp_toolchain.compiler_executable,
     )
 
-    # Run Hercules p4c on pre-processed P4_16 sources to obtain the P4 info and
-    # P4 pipeline config files for Hercules switches.
+    # Run Stratum p4c on pre-processed P4_16 sources to obtain the P4 info and
+    # P4 pipeline config files for Stratum FPM switches.
     gen_files = [
         ctx.outputs.out_p4_pipeline_binary,
         ctx.outputs.out_p4_pipeline_text,
@@ -48,7 +64,7 @@ def _generate_p4c_hercules_config(ctx):
     ]
 
     # This string specifies the open source p4c frontend and midend options,
-    # which go into the Hercules p4c --p4c_fe_options flag.
+    # which go into the Stratum p4c --p4c_fe_options flag.
     p4c_native_options = "--nocpp " + p4_preprocessed_file.path
 
     annotation_map_files = ""
@@ -72,8 +88,8 @@ def _generate_p4c_hercules_config(ctx):
         # Disable ASAN check, because P4C is known to leak memory b/63128624.
         env = {"ASAN_OPTIONS": "halt_on_error=0:detect_leaks=0"},
         outputs = gen_files,
-        progress_message = "Compiling P4 sources to generate Hercules P4 config",
-        executable = ctx.executable._p4c_hercules_binary,
+        progress_message = "Compiling P4 sources to generate Stratum P4 config",
+        executable = ctx.executable._p4c_stratum_fpm_binary,
     )
 
     return struct(files = depset(gen_files))
@@ -81,8 +97,8 @@ def _generate_p4c_hercules_config(ctx):
 # Compiles P4_16 source into P4 info and P4 pipeline config files.  The
 # output file names are <name>_p4_info.pb.txt and <name>_p4_pipeline.pb.txt
 # in the appropriate path under the genfiles directory.
-p4_hercules_config = rule(
-    implementation = _generate_p4c_hercules_config,
+p4_stratum_config = rule(
+    implementation = _generate_p4c_stratum_config,
     fragments = ["cpp"],
     attrs = {
         "src": attr.label(mandatory = True, allow_single_file = True),
@@ -97,18 +113,18 @@ p4_hercules_config = rule(
             allow_files = True,
             mandatory = False,
             default = [
-                Label("//platforms/networking/hercules/p4c_backend/switch:annotation_map_files"),
+                Label("//stratum/p4c_backends/fpm:annotation_map_files"),
             ],
         ),
         "parser_map": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("//platforms/networking/hercules/p4c_backend/switch:parser_map_files"),
+            default = Label("//stratum/p4c_backends/fpm:parser_map_files"),
         ),
         "slice_map": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("//platforms/networking/hercules/p4c_backend/switch:slice_map_files"),
+            default = Label("//stratum/p4c_backends/fpm:slice_map_files"),
         ),
         "copts": attr.string_list(),
         "_model": attr.label(
@@ -121,10 +137,10 @@ p4_hercules_config = rule(
             mandatory = False,
             default = Label("//p4lang_p4c:p4include/core.p4"),
         ),
-        "_p4c_hercules_binary": attr.label(
+        "_p4c_stratum_fpm_binary": attr.label(
             cfg = "host",
             executable = True,
-            default = Label("//platforms/networking/hercules/p4c_backend/switch:p4c_herc_switch"),
+            default = Label("//stratum/p4c_backends/fpm:p4c_stratum_fpm"),
         ),
         "cpp": attr.label_list(default = [Label("//tools/cpp:crosstool")]),
         "_cc_toolchain": attr.label(

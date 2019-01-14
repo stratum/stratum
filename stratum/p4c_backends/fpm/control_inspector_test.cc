@@ -1,6 +1,20 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for ControlInspector.
 
-#include "platforms/networking/hercules/p4c_backend/switch/control_inspector.h"
+#include "stratum/p4c_backends/fpm/control_inspector.h"
 
 #include <map>
 #include <memory>
@@ -9,16 +23,16 @@
 #include <vector>
 
 #include "base/stringprintf.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/p4_model_names.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_optimizer.h"
-#include "platforms/networking/hercules/p4c_backend/switch/switch_case_decoder_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
-#include "platforms/networking/hercules/p4c_backend/test/test_target_info.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.host.pb.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
+#include "stratum/p4c_backends/fpm/switch_case_decoder_mock.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/test/test_target_info.h"
+#include "stratum/public/proto/p4_annotation.host.pb.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
@@ -31,9 +45,8 @@ using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::SaveArg;
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
 // data for test use.  The test parameter is used by some tests as a hit/miss
@@ -54,7 +67,7 @@ class ControlInspectorTest : public testing::TestWithParam<bool> {
   void SetUpTestIR(const std::string& ir_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestP4File =
-        "platforms/networking/hercules/p4c_backend/switch/testdata/" + ir_file;
+        "stratum/p4c_backends/fpm/testdata/" + ir_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
 
 
@@ -749,6 +762,5 @@ INSTANTIATE_TEST_CASE_P(
   ::testing::Bool()
 );
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

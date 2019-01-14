@@ -1,17 +1,31 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains AnnotationMapper unit tests.
 
-#include "platforms/networking/hercules/p4c_backend/switch/annotation_mapper.h"
+#include "stratum/p4c_backends/fpm/annotation_mapper.h"
 
 #include <set>
 #include <vector>
 
 #include "base/commandlineflags.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "platforms/networking/hercules/hal/lib/p4/common_flow_entry.host.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager_mock.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/lib/macros.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/hal/lib/p4/common_flow_entry.host.pb.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/proto/p4_table_defs.host.pb.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "util/task/status.h"
@@ -22,9 +36,8 @@ using ::google::protobuf::util::MessageDifferencer;
 using ::testing::Return;
 using ::testing::_;
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class AnnotationMapperTest : public testing::Test {
  protected:
@@ -36,8 +49,8 @@ class AnnotationMapperTest : public testing::Test {
   }
 
   void SetUpAnnotationFileList() {
-    const std::string kFilePath = "platforms/networking/hercules/p4c_backend/"
-        "switch/testdata/";
+    const std::string kFilePath = "stratum/p4c_backends/"
+        "fpm/testdata/";
     FLAGS_p4c_annotation_map_files =
         kFilePath + "annotation_string_map.pb.txt";
     FLAGS_p4c_annotation_map_files += ",";
@@ -506,6 +519,5 @@ TEST_F(AnnotationMapperTest, TestNoIdleDefaultPipelineStage) {
   EXPECT_EQ(0, test_pipeline_cfg_.idle_pipeline_stages_size());
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

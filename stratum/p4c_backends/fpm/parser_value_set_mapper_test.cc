@@ -1,22 +1,35 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains ParserValueSetMapper unit tests.
 
-#include "platforms/networking/hercules/p4c_backend/switch/parser_value_set_mapper.h"
+#include "stratum/p4c_backends/fpm/parser_value_set_mapper.h"
 
 #include <string>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator_mock.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/p4c_backends/fpm/parser_decoder.h"
+#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "testing/base/public/gunit.h"
 #include "util/gtl/map_util.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 using ::testing::AnyNumber;
 using ::testing::_;
@@ -66,7 +79,7 @@ class ParserValueSetMapperTest : public ::testing::Test {
 
 void ParserValueSetMapperTest::SetUpIRParser(const std::string& ir_input_file) {
   ir_helper_ = absl::make_unique<IRTestHelperJson>();
-  const std::string ir_path = "platforms/networking/hercules/p4c_backend/" +
+  const std::string ir_path = "stratum/p4c_backends/" +
       ir_input_file;
   CHECK(ir_helper_->GenerateTestIRAndInspectProgram(ir_path));
   CHECK_EQ(1, ir_helper_->program_inspector().parsers().size());
@@ -123,7 +136,7 @@ void ParserValueSetMapperTest::SetUpHeaderFields(
 // Tests to see that normal Hercules value sets in the parser generate
 // the expected field descriptor changes.
 TEST_F(ParserValueSetMapperTest, TestNormalValueSet) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
 
   // This test needs field descriptors for the payload field and the
   // local metadata UDF fields.
@@ -142,7 +155,7 @@ TEST_F(ParserValueSetMapperTest, TestNormalValueSet) {
 
 // Verifies no output when the test_parser_map_ has no value set transitions.
 TEST_F(ParserValueSetMapperTest, TestNoValueSetTransitions) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   SetUpHeaderFields(
       {"hdr.udf_payload.last.udf_data", "meta.udf_1", "meta.udf_2"});
 
@@ -163,7 +176,7 @@ TEST_F(ParserValueSetMapperTest, TestNoValueSetTransitions) {
 
 // Verifies that the test_parser_map_ works with no extracted header paths.
 TEST_F(ParserValueSetMapperTest, TestNoHeaderPaths) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   SetUpHeaderFields(
       {"hdr.udf_payload.last.udf_data", "meta.udf_1", "meta.udf_2"});
   test_state_->mutable_extracted_header()->clear_header_paths();
@@ -180,7 +193,7 @@ TEST_F(ParserValueSetMapperTest, TestNoHeaderPaths) {
 
 // Verifies no output when the source payload field has no descriptor.
 TEST_F(ParserValueSetMapperTest, TestNoPayloadFieldDescriptor) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   SetUpHeaderFields({"", "meta.udf_1", "meta.udf_2"});  // First entry is empty.
 
   test_value_set_mapper_ = absl::make_unique<ParserValueSetMapper>(
@@ -192,7 +205,7 @@ TEST_F(ParserValueSetMapperTest, TestNoPayloadFieldDescriptor) {
 
 // Verifies no output for a target UDF metadata field that has no descriptor.
 TEST_F(ParserValueSetMapperTest, TestNoUDFMetadataFieldDescriptor) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   SetUpHeaderFields({"hdr.udf_payload.last.udf_data", "meta.udf_2"});
 
   test_value_set_mapper_ = absl::make_unique<ParserValueSetMapper>(
@@ -208,7 +221,7 @@ TEST_F(ParserValueSetMapperTest, TestNoUDFMetadataFieldDescriptor) {
 // Verifies no output when the source payload field's table map entry
 // is not a field descriptor.
 TEST_F(ParserValueSetMapperTest, TestWrongPayloadDescriptorType) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   SetUpHeaderFields({"", "meta.udf_1", "meta.udf_2"});  // First entry is empty.
 
   // "hdr.udf_payload.last.udf_data" gets an action descriptor.
@@ -224,7 +237,7 @@ TEST_F(ParserValueSetMapperTest, TestWrongPayloadDescriptorType) {
 // Verifies no output for a target UDF metadata field that has a
 // non-field descriptor.
 TEST_F(ParserValueSetMapperTest, TestWrongUDFMetadataDescriptorType) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   SetUpHeaderFields({"hdr.udf_payload.last.udf_data", "meta.udf_1"});
 
   // "meta.udf_2" gets a table descriptor.
@@ -243,7 +256,7 @@ TEST_F(ParserValueSetMapperTest, TestWrongUDFMetadataDescriptorType) {
 // Verifies no output when the source payload field's table map entry
 // has an unknown field type.
 TEST_F(ParserValueSetMapperTest, TestUnknownPayloadFieldType) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
 
   // "hdr.udf_payload.last.udf_data" has P4_FIELD_TYPE_UNKNOWN.
   SetUpHeaderFields({"", "meta.udf_1", "meta.udf_2"});  // First entry is empty.
@@ -262,7 +275,7 @@ TEST_F(ParserValueSetMapperTest, TestUnknownPayloadFieldType) {
 // Verifies no output for a target UDF metadata field that has
 // a previously specified field type.
 TEST_F(ParserValueSetMapperTest, TestUDFMetadataFieldPriorType) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
 
   // "meta.udf_1" is pre-assigned P4_FIELD_TYPE_ETH_SRC.
   SetUpHeaderFields({"hdr.udf_payload.last.udf_data", "meta.udf_2"});
@@ -283,7 +296,7 @@ TEST_F(ParserValueSetMapperTest, TestUDFMetadataFieldPriorType) {
 // Verifies no output when the source payload field's table map entry's
 // header type is unknown.
 TEST_F(ParserValueSetMapperTest, TestUnknownPayloadHeaderType) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
 
   // "hdr.udf_payload.last.udf_data" has P4_HEADER_TCP instead of
   // P4_HEADER_UDP_PAYLOAD.
@@ -302,7 +315,7 @@ TEST_F(ParserValueSetMapperTest, TestUnknownPayloadHeaderType) {
 
 // Verifies no output for a target field that is not local metadata.
 TEST_F(ParserValueSetMapperTest, TestUDFFieldNotMetadata) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
 
   // "meta.udf_1" is not set as local metadata.
   SetUpHeaderFields({"hdr.udf_payload.last.udf_data", "meta.udf_2"});
@@ -318,6 +331,5 @@ TEST_F(ParserValueSetMapperTest, TestUDFFieldNotMetadata) {
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

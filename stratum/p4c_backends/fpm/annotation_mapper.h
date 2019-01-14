@@ -1,24 +1,39 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The AnnotationMapper is a Hercules switch p4c backend class that runs as
 // the final step of P4PipelineConfig output.  It supplements the config's
 // table map with any data that can only be determined from annotations and
 // name strings within the P4Info objects.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_ANNOTATION_MAPPER_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_ANNOTATION_MAPPER_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_ANNOTATION_MAPPER_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_ANNOTATION_MAPPER_H_
 
 #include <map>
 #include <string>
 #include <unordered_map>
 #include "base/logging.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/annotation_map.host.pb.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.host.pb.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/p4c_backends/fpm/annotation_map.host.pb.h"
+#include "stratum/public/proto/p4_annotation.host.pb.h"
 #include "absl/container/node_hash_map.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class AnnotationMapper {
  public:
@@ -154,8 +169,7 @@ class AnnotationMapper {
   std::map<P4Annotation::PipelineStage, bool> pipeline_stage_usage_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_ANNOTATION_MAPPER_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_ANNOTATION_MAPPER_H_

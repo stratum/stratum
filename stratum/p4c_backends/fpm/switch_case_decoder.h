@@ -1,24 +1,39 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The SwitchCaseDecoder is a p4c Inspector subclass that visits the node
 // hierarchy under an IR::SwitchStatement in a P4 control function.  It looks
 // for supported actions within the statement cases and translates then into
 // additional table map output for affected action descriptors.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_SWITCH_CASE_DECODER_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_SWITCH_CASE_DECODER_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_H_
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // A single SwitchCaseDecoder handles all IR::SwitchStatements within a P4
 // program.  In normal usage, the backend constructs an instance, then invokes
@@ -97,8 +112,7 @@ class SwitchCaseDecoder : public Inspector {
   std::string action_;     // Name of the action affected by the case.
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_SWITCH_CASE_DECODER_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_H_

@@ -1,6 +1,20 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains HiddenTableMapper unit tests.
 
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_table_mapper.h"
+#include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
 
 #include <map>
 #include <memory>
@@ -8,12 +22,12 @@
 #include <string>
 
 #include "google/protobuf/util/message_differencer.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager_mock.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
@@ -24,9 +38,8 @@ using ::google::protobuf::util::MessageDifferencer;
 using ::testing::AnyNumber;
 using ::testing::Invoke;
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This unnamed namespace defines constants for use by parameterized tests.
 namespace {
@@ -88,7 +101,7 @@ class HiddenTableMapperTest
   void SetUpTestIR(const std::string& ir_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestP4File =
-        "platforms/networking/hercules/p4c_backend/switch/testdata/" + ir_file;
+        "stratum/p4c_backends/fpm/testdata/" + ir_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestP4File));
   }
 
@@ -796,6 +809,5 @@ INSTANTIATE_TEST_CASE_P(
       std::make_tuple(
           "ingress.hidden_encap_table_v6", kTableSetupNoStaticEntries)));
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

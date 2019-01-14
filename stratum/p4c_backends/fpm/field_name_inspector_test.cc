@@ -1,20 +1,33 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for FieldNameInspector.
 
-#include "platforms/networking/hercules/p4c_backend/switch/field_name_inspector.h"
+#include "stratum/p4c_backends/fpm/field_name_inspector.h"
 
 #include <memory>
 #include <string>
 
-#include "platforms/networking/hercules/p4c_backend/switch/p4_model_names.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
 // data for test use.
@@ -25,7 +38,7 @@ class FieldNameInspectorTest : public testing::Test {
   void SetUp() override {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestP4File =
-        "platforms/networking/hercules/p4c_backend/switch/"
+        "stratum/p4c_backends/fpm/"
         "testdata/field_inspect_test.ir.json";
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
   }
@@ -136,6 +149,5 @@ TEST_F(FieldNameInspectorTest, TestExtractTwice) {
 // TODO(teverman): Additional test coverage for header stacks and for fields
 //                 extracted from action assignments.
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

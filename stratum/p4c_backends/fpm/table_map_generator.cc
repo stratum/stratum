@@ -1,17 +1,30 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains the TableMapGenerator implementation.
 
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 
 #include "base/logging.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/switch/p4_model_names.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 TableMapGenerator::TableMapGenerator()
     : generated_map_(new hal::P4PipelineConfig) {
@@ -458,6 +471,5 @@ int TableMapGenerator::FindColorAction(
   return -1;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

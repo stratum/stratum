@@ -1,17 +1,30 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for ParserDecoder.
 
-#include "platforms/networking/hercules/p4c_backend/switch/parser_decoder.h"
+#include "stratum/p4c_backends/fpm/parser_decoder.h"
 
 #include <memory>
 #include <string>
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // The test Param string is a file name with JSON IR input.
 class ParserDecoderTest : public testing::TestWithParam<std::string> {
@@ -20,7 +33,7 @@ class ParserDecoderTest : public testing::TestWithParam<std::string> {
   // for test use.
   void SetUpIRParser(const std::string& ir_input_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string ir_path = "platforms/networking/hercules/p4c_backend/" +
+    const std::string ir_path = "stratum/p4c_backends/" +
         ir_input_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(ir_path));
   }
@@ -87,7 +100,7 @@ TEST_P(ParserDecoderTest, TestReservedStates) {
 // produce the same output for the select fields and case key values in
 // both states.
 TEST_F(ParserDecoderTest, ParseComplex) {
-  SetUpIRParser("switch/testdata/parse_complex.ir.json");
+  SetUpIRParser("fpm/testdata/parse_complex.ir.json");
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
@@ -156,7 +169,7 @@ TEST_F(ParserDecoderTest, ParseExtractStackedHeader) {
 
 // Verifies that the decoded parser states properly recognize value sets.
 TEST_F(ParserDecoderTest, ParseValueSet) {
-  SetUpIRParser("switch/testdata/parse_value_set.ir.json");
+  SetUpIRParser("fpm/testdata/parse_value_set.ir.json");
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
@@ -202,7 +215,7 @@ TEST_F(ParserDecoderTest, ParseValueSet) {
 
 // Verifies error when calling DecodeParser multiple times.
 TEST_F(ParserDecoderTest, TestDecodeTwice) {
-  SetUpIRParser("switch/testdata/parse_basic.ir.json");
+  SetUpIRParser("fpm/testdata/parse_basic.ir.json");
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
@@ -218,7 +231,7 @@ TEST_F(ParserDecoderTest, TestDecodeTwice) {
 
 // Tests error detection when the P4Parser has no start state.
 TEST_F(ParserDecoderTest, TestNoStartState) {
-  SetUpIRParser("switch/testdata/parse_basic.ir.json");
+  SetUpIRParser("fpm/testdata/parse_basic.ir.json");
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
@@ -243,7 +256,7 @@ TEST_F(ParserDecoderTest, TestNoStartState) {
 // TODO(teverman): This test apparently messes with the IR in such a way that
 //   IRTestHelperJson can't load the IR any more after it runs.
 TEST_F(ParserDecoderTest, TestMultipleStartStates) {
-  SetUpIRParser("switch/testdata/parse_basic.ir.json");
+  SetUpIRParser("fpm/testdata/parse_basic.ir.json");
   ASSERT_EQ(1, ir_helper_->program_inspector().parsers().size());
   const IR::P4Parser& ir_parser =
       *(ir_helper_->program_inspector().parsers()[0]);
@@ -277,12 +290,11 @@ TEST_F(ParserDecoderTest, TestMultipleStartStates) {
 INSTANTIATE_TEST_CASE_P(
   ValidParserIRInputFiles,
   ParserDecoderTest,
-  ::testing::Values("switch/testdata/parse_basic.ir.json",
-                    "switch/testdata/parse_complex.ir.json",
-                    "switch/testdata/parse_value_set.ir.json",
+  ::testing::Values("fpm/testdata/parse_basic.ir.json",
+                    "fpm/testdata/parse_complex.ir.json",
+                    "fpm/testdata/parse_value_set.ir.json",
                     "test/testdata/simple_vlan_stack_16.ir.json")
 );
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

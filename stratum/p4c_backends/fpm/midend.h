@@ -1,22 +1,37 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // This midend is a custom p4c midend for Hercules switches.  Its main
 // difference relative to available p4c open-source midends is the elimination
 // of some IR passes that synthesize temporary tables and actions that tune
 // the IR for the bmv2 pipeline.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_MIDEND_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_MIDEND_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
 
 #include <memory>
 
-#include "platforms/networking/hercules/p4c_backend/common/midend_interface.h"
+#include "stratum/p4c_backends/common/midend_interface.h"
 #include "p4lang_p4c/frontends/common/options.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/typeMap.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This MidEnd class inherits from the third-party p4c PassManager and conforms
 // to the Hercules MidEndInterface class.
@@ -50,8 +65,7 @@ class MidEnd : public PassManager, MidEndInterface {
   bool mid_end_done_ = false;  // Becomes true in RunMidEndPass.
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_MIDEND_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_MIDEND_H_

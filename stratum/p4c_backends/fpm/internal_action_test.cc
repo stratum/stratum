@@ -1,21 +1,34 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file tests the InternalAction class.
 
-#include "platforms/networking/hercules/p4c_backend/switch/internal_action.h"
+#include "stratum/p4c_backends/fpm/internal_action.h"
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/tunnel_optimizer_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
+#include "stratum/p4c_backends/fpm/tunnel_optimizer_mock.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -861,6 +874,5 @@ TEST_F(InternalActionTest, TestWriteToTableMapGenerator) {
   test_internal_action_->WriteToTableMapGenerator(&table_map_generator_mock);
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

@@ -1,17 +1,31 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains HiddenStaticMapper unit tests.
 
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_static_mapper.h"
+#include "stratum/p4c_backends/fpm/hidden_static_mapper.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager_mock.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_table_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/tunnel_optimizer_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
+#include "stratum/p4c_backends/fpm/tunnel_optimizer_mock.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "testing/base/public/gunit.h"
 #include "absl/strings/substitute.h"
 #include "p4lang_p4c/frontends/common/options.h"
@@ -23,9 +37,8 @@
 using ::testing::AnyNumber;
 using ::testing::Return;
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This class is the HiddenTableMapper test fixture.
 class HiddenStaticMapperTest : public testing::Test {
@@ -588,6 +601,5 @@ TEST_F(HiddenStaticMapperTest, TestAppliedTablesError) {
   EXPECT_TRUE(ProtoEqual(original_pipeline_config, test_pipeline_config_));
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

@@ -1,3 +1,23 @@
+#
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
+
 load(
     "//platforms/networking/sandblaze/portage:build_defs.bzl",
     "SANDBLAZE_INTERNAL",
@@ -88,7 +108,6 @@ cc_library(
         ":backend_extension_interface",
         ":p4c_front_mid_interface",
         "//base",
-        "//platforms/networking/hercules/lib:utils",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
         "//p4lang_p4c/backends/p4test:p4c_common_midend_pass",
@@ -96,6 +115,7 @@ cc_library(
         "//protobuf",
         "//sandblaze/p4lang:p4info_v1_proto_host",
         "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/lib:utils",
     ],
 )
 
@@ -141,17 +161,17 @@ cc_test(
         "-fexceptions",
     ],
     data = [
-        "//platforms/networking/hercules/p4c_backend/test:testdata/simple_vlan_stack_16.ir.json",
+        "//stratum/p4c_backends/test:testdata/simple_vlan_stack_16.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":midend_p4c_open",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -177,16 +197,16 @@ cc_test(
         "-fexceptions",
     ],
     data = [
-        "//platforms/networking/hercules/p4c_backend/switch:testdata/tor_p4.ir.json",
+        "//stratum/p4c_backends/fpm:testdata/tor_p4.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":program_inspector",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )

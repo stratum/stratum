@@ -1,17 +1,30 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains the PipelineOptimizer implementation.
 
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_optimizer.h"
+#include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
 
 #include "base/commandlineflags.h"
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_block_passes.h"
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_intra_block_passes.h"
+#include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
+#include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
 DEFINE_bool(enable_pipeline_optimization, true,
             "Enables optimization of P4Control logic into pipeline stages");
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 PipelineOptimizer::PipelineOptimizer(P4::ReferenceMap* ref_map,
                                      P4::TypeMap* type_map)
@@ -47,6 +60,5 @@ const IR::P4Control* PipelineOptimizer::Optimize(const IR::P4Control& control) {
   return pass4_control;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

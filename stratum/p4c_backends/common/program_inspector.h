@@ -1,9 +1,25 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // A ProgramInspector is a p4c Inspector subclass that visits all nodes in the
 // P4 program's IR on behalf of a backend extension.  It records nodes of
 // possible interest to the backend for subsequent processing.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_PROGRAM_INSPECTOR_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_PROGRAM_INSPECTOR_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
 
 #include <map>
 #include <set>
@@ -12,9 +28,8 @@
 
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // The normal ProgramInspector usage is to pass an instance to the apply
 // method of the ToplevelBlock in the IR. See the sample usage below:
@@ -112,8 +127,7 @@ class ProgramInspector : public Inspector {
   std::set<std::string> struct_path_filter_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_PROGRAM_INSPECTOR_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_

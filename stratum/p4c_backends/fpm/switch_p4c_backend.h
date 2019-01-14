@@ -1,40 +1,55 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The SwitchP4cBackend is a BackendExtensionInterface for Hercules switches.
 // It manages the translation from the p4c Internal Representation (IR) to a
 // HAL P4PipelineConfig.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_SWITCH_P4C_BACKEND_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_SWITCH_P4C_BACKEND_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_extension_interface.h"
-#include "platforms/networking/hercules/p4c_backend/common/p4c_front_mid_interface.h"
-#include "platforms/networking/hercules/p4c_backend/switch/annotation_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/field_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/header_path_inspector.h"
-#include "platforms/networking/hercules/p4c_backend/switch/p4_model_names.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_field_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_value_set_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/sliced_field_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/switch_case_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/tunnel_optimizer_interface.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/p4c_backends/common/backend_extension_interface.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_interface.h"
+#include "stratum/p4c_backends/fpm/annotation_mapper.h"
+#include "stratum/p4c_backends/fpm/field_decoder.h"
+#include "stratum/p4c_backends/fpm/header_path_inspector.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_decoder.h"
+#include "stratum/p4c_backends/fpm/parser_field_mapper.h"
+#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_value_set_mapper.h"
+#include "stratum/p4c_backends/fpm/sliced_field_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/switch_case_decoder.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 #include "p4lang_p4c/frontends/common/options.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/fromv1.0/v1model.h"
 #include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // SwitchP4cBackend currently requires a v1/p4_16 model to be used.
 class SwitchP4cBackend : public BackendExtensionInterface {
@@ -174,8 +189,7 @@ class SwitchP4cBackend : public BackendExtensionInterface {
   std::map<std::string, std::string> action_name_map_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_SWITCH_P4C_BACKEND_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_

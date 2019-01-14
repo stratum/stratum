@@ -1,24 +1,39 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The MeterColorMapper inspects IR::IfStatements in P4Control logic for
 // conditions that act based on the meter color.  Upon finding such statements,
 // it transforms them into an IR::MeterColorStatement node for subsequent
 // backend processing.  The transformed node is an IR::IfStatement subclass
 // with additional information linking it to a P4MeterColorAction message.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_METER_COLOR_MAPPER_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_METER_COLOR_MAPPER_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
 
 #include <string>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class MeterColorMapper : public Transform {
  public:
@@ -156,8 +171,7 @@ class IfStatementColorInspector : public Inspector {
   std::string color_field_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_METER_COLOR_MAPPER_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_

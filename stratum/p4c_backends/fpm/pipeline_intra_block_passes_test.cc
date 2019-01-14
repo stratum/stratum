@@ -1,20 +1,33 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains unit tests of the pipeline intra-block optimizing classes.
 
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_intra_block_passes.h"
+#include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_block_passes.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
-#include "platforms/networking/hercules/p4c_backend/test/test_inspectors.h"
-#include "platforms/networking/hercules/p4c_backend/test/test_target_info.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.host.pb.h"
+#include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/test/test_inspectors.h"
+#include "stratum/p4c_backends/test/test_target_info.h"
+#include "stratum/public/proto/p4_annotation.host.pb.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/ir/visitor.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
 // data for test use.  The test parameter allows testing with and without
@@ -38,7 +51,7 @@ class PipelineIntraBlockPassesTest : public testing::TestWithParam<bool> {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     ir_helper_->set_color_field_name("meta.enum_color");
     const std::string kTestP4File =
-        "platforms/networking/hercules/p4c_backend/switch/testdata/" + ir_file;
+        "stratum/p4c_backends/fpm/testdata/" + ir_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
   }
 
@@ -324,6 +337,5 @@ INSTANTIATE_TEST_CASE_P(
   ::testing::Bool()
 );
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

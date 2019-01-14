@@ -1,17 +1,30 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for HitAssignMapper.
 
-#include "platforms/networking/hercules/p4c_backend/switch/hit_assign_mapper.h"
+#include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
 
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
-#include "platforms/networking/hercules/p4c_backend/test/test_inspectors.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/test/test_inspectors.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 
 using ::testing::Values;
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
 // data for test use.  See INSTANTIATE_TEST_CASE_P near the end if this file
@@ -26,7 +39,7 @@ class HitAssignMapperTest
   void SetUpTestIR(const std::string& ir_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestP4File =
-        "platforms/networking/hercules/p4c_backend/switch/testdata/" + ir_file;
+        "stratum/p4c_backends/fpm/testdata/" + ir_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
     test_inspector_ = absl::make_unique<HitAssignMapper>(
         ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
@@ -174,6 +187,5 @@ INSTANTIATE_TEST_CASE_P(
         std::make_tuple("switch_case.ir.json", "normal_clone_drop", 0)
     ));
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

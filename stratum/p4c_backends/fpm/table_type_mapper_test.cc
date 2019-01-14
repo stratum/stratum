@@ -1,20 +1,33 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains TableTypeMapper unit tests.
 
-#include "platforms/networking/hercules/p4c_backend/switch/table_type_mapper.h"
+#include "stratum/p4c_backends/fpm/table_type_mapper.h"
 
 #include <memory>
 #include <string>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class ParserFieldMapperTest : public testing::Test {
  protected:
@@ -34,7 +47,7 @@ class ParserFieldMapperTest : public testing::Test {
   void SetUpTestInputs(const std::string& p4_info_file,
                        const std::string& p4_pipeline_config_file) {
     const std::string kBasePath =
-        "platforms/networking/hercules/p4c_backend/switch/testdata/";
+        "stratum/p4c_backends/fpm/testdata/";
     std::string full_path = kBasePath + p4_info_file;
     CHECK_OK(ReadProtoFromTextFile(full_path, &test_p4_info_));
     full_path = kBasePath + p4_pipeline_config_file;
@@ -200,6 +213,5 @@ TEST_F(ParserFieldMapperTest, TestTableTypeConflictInDifferentActions) {
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

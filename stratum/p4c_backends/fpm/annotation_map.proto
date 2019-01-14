@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // The annotation map provides a source for additional P4 object mapping data
 // that the p4c switch backend is unable to deduce by processing the p4c
 // Internal Representation (IR) of the P4 program.  The backend inserts data
@@ -7,11 +21,11 @@ syntax = "proto3";
 
 option cc_generic_services = false;
 
-package google.hercules.p4c_backend;
+package stratum.p4c_backends;
 
-import "platforms/networking/hercules/hal/lib/p4/common_flow_entry.proto";
-import "platforms/networking/hercules/hal/lib/p4/p4_table_map.proto";
-import "platforms/networking/hercules/public/proto/p4_table_defs.proto";
+import "stratum/hal/lib/p4/common_flow_entry.proto";
+import "stratum/hal/lib/p4/p4_table_map.proto";
+import "stratum/public/proto/p4_table_defs.proto";
 
 // The annotation map defines messages that can supplement the P4 object
 // descriptor data in the P4PipelineConfig::table_map.  During the final step

@@ -1,17 +1,32 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // TargetInfo is an interface class that provides details about specific
 // p4c backend target platforms.  Targets can correspond to vendors, e.g.
 // "BCM", they can be a "mock" or "test" target for unit tests, or they can
 // potentially be specific to certain chips or chip versions for the same
 // vendor.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_TARGET_INFO_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_TARGET_INFO_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_H_
 
-#include "platforms/networking/hercules/public/proto/p4_annotation.host.pb.h"
+#include "stratum/public/proto/p4_annotation.host.pb.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class TargetInfo {
  public:
@@ -38,8 +53,7 @@ class TargetInfo {
   static TargetInfo* singleton_;  // Singleton instance of this class.
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_TARGET_INFO_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_H_

@@ -1,17 +1,32 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The MidEndInterface defines a common set of methods to access a p4c midend.
 // It allows custom midends and open source midends to be used interchangeably
 // as long as a wrapper implementation exists.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_MIDEND_INTERFACE_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_MIDEND_INTERFACE_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
 
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/typeMap.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // The MidEndInterface conforms to the Interface class requirements.
 class MidEndInterface {
@@ -29,8 +44,7 @@ class MidEndInterface {
   virtual P4::TypeMap* type_map() = 0;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_MIDEND_INTERFACE_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_

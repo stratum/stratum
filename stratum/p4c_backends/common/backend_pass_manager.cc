@@ -1,12 +1,26 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file implements the p4c BackendPassManager.
-#include "platforms/networking/hercules/p4c_backend/common/backend_pass_manager.h"
+#include "stratum/p4c_backends/common/backend_pass_manager.h"
 
 #include <wordexp.h>
 #include <sstream>
 
 #include "base/commandlineflags.h"
 #include "base/logging.h"
-#include "platforms/networking/hercules/lib/utils.h"
+#include "stratum/lib/utils.h"
 
 #include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
 #include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
@@ -17,9 +31,8 @@ DEFINE_string(p4c_fe_options, "",
               "the P4 2014 spec, use --p4c_fe_options=\"--p4-14 tor.p4\".");
 DEFINE_string(p4_info_file, "", "Output file where P4Info will be stored");
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 BackendPassManager::BackendPassManager(
     P4cFrontMidInterface* fe_me_interface,
@@ -140,6 +153,5 @@ int BackendPassManager::Compile() {
   return fe_me_interface_->GetErrorCount() > 0;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

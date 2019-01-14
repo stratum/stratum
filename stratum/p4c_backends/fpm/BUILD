@@ -1,11 +1,31 @@
-# This file builds the switch-specific p4c_backend components.
+#
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
+
+# This file builds the switch-specific p4c_backends components.
 load(
     "//platforms/networking/sandblaze/portage:build_defs.bzl",
     "SANDBLAZE_INTERNAL",
     "sc_proto_lib",
 )
 load(
-    "//platforms/networking/hercules/p4c_backend/test:build_defs.bzl",
+    "//stratum/p4c_backends/test:build_defs.bzl",
     "p4c_save_ir",
 )
 
@@ -41,9 +61,9 @@ sc_proto_lib(
     name = "p4_annotation_map_proto",
     hdrs = ["annotation_map.proto"],
     deps = [
-        "//platforms/networking/hercules/hal/lib/p4:common_flow_entry_proto",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto",
+        "//stratum/hal/lib/p4:common_flow_entry_proto",
+        "//stratum/hal/lib/p4:p4_table_map_proto",
+        "//stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -56,7 +76,7 @@ sc_proto_lib(
     name = "p4_parser_map_proto",
     hdrs = ["parser_map.proto"],
     deps = [
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -64,7 +84,7 @@ sc_proto_lib(
     name = "sliced_field_map_proto",
     hdrs = ["sliced_field_map.proto"],
     deps = [
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
@@ -84,10 +104,10 @@ cc_library(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/lib:utils",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
         "//p4lang_p4c/lib:p4c_toolkit",
+        "//stratum/lib:utils",
     ],
 )
 
@@ -106,11 +126,11 @@ cc_test(
         ":action_decoder",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -125,15 +145,15 @@ cc_library(
     deps = [
         ":p4_annotation_map_proto_host",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:common_flow_entry_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/container:node_hash_map",
         "//absl/strings",
+        "//stratum/hal/lib/p4:common_flow_entry_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_annotation_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -153,13 +173,13 @@ cc_test(
         ":annotation_mapper",
         ":annotation_testdata",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:common_flow_entry_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager_mock",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:macros",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//protobuf",
+        "//stratum/hal/lib/p4:common_flow_entry_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager_mock",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:macros",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/task:status",
     ],
 )
@@ -212,11 +232,11 @@ cc_library(
         ":switch_case_decoder",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_control_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//sandblaze/p4lang:p4info_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_control_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
         "//util/gtl:map_util",
     ],
 )
@@ -247,13 +267,13 @@ cc_test(
         ":table_map_generator",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager_mock",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/test:test_target_info",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_info_manager_mock",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/p4c_backends/test:test_target_info",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -269,11 +289,11 @@ cc_library(
         ":field_name_inspector",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -291,11 +311,11 @@ cc_test(
         ":expression_inspector",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -310,10 +330,10 @@ cc_library(
     deps = [
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -328,13 +348,13 @@ cc_test(
     deps = [
         ":field_cross_reference",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//absl/strings",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -369,7 +389,7 @@ cc_test(
         "testdata/header_decode_advanced.ir.json",
         "testdata/header_decode_basic.ir.json",
         "testdata/header_decode_controller.ir.json",
-        "//platforms/networking/hercules/p4c_backend/test:testdata/simple_vlan_stack_16.ir.json",
+        "//stratum/p4c_backends/test:testdata/simple_vlan_stack_16.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
@@ -378,11 +398,11 @@ cc_test(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -419,10 +439,10 @@ cc_test(
         ":p4_model_names_proto_host",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -461,11 +481,11 @@ cc_test(
         ":p4_model_names_proto_host",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//absl/strings",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -504,9 +524,9 @@ cc_test(
         ":p4c_switch_utils",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -524,13 +544,13 @@ cc_library(
         ":p4c_switch_utils",
         ":tunnel_optimizer_interface",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_match_key",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/memory",
         "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_match_key",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
         "//util/gtl:stl_util",
     ],
@@ -550,10 +570,6 @@ cc_test(
         ":table_map_generator",
         ":tunnel_optimizer_mock",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager_mock",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/strings",
         "//p4lang_p4c:p4c_frontend_midend",
@@ -561,6 +577,10 @@ cc_test(
         "//protobuf",
         "//sandblaze/p4lang:p4info_v1_proto_host",
         "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager_mock",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -576,13 +596,13 @@ cc_library(
     deps = [
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/memory",
         "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
         "//util/gtl:stl_util",
     ],
@@ -603,16 +623,16 @@ cc_test(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager_mock",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//protobuf",
         "//sandblaze/p4lang:p4info_v1_proto_host",
         "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_info_manager_mock",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -653,10 +673,10 @@ cc_test(
     deps = [
         ":hit_assign_mapper",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/test:test_inspectors",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/p4c_backends/test:test_inspectors",
     ],
 )
 
@@ -673,11 +693,11 @@ cc_library(
         ":table_map_generator",
         ":tunnel_optimizer_interface",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/strings",
         "//protobuf",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -696,12 +716,12 @@ cc_test(
         ":table_map_generator_mock",
         ":tunnel_optimizer_mock",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -717,11 +737,11 @@ cc_library(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//sandblaze/p4lang:p4info_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -757,11 +777,11 @@ cc_library(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
     ],
 )
 
@@ -793,11 +813,11 @@ cc_test(
         ":table_map_generator",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//protobuf",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -814,11 +834,11 @@ cc_library(
         ":p4_model_names_proto_host",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/debugging:leak_check",
         "//absl/strings",
         "//p4lang_p4c:p4c_frontend_midend",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -836,10 +856,10 @@ cc_test(
         ":method_call_decoder",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -853,10 +873,10 @@ cc_library(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//base",
-        "//platforms/networking/hercules/p4c_backend/common:midend_interface",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/common:midend_interface",
     ],
 )
 
@@ -873,12 +893,12 @@ cc_test(
     deps = [
         ":midend",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/common:program_inspector",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/common:program_inspector",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -912,16 +932,16 @@ cc_test(
         "testdata/parse_basic.ir.json",
         "testdata/parse_complex.ir.json",
         "testdata/parse_value_set.ir.json",
-        "//platforms/networking/hercules/p4c_backend/test:testdata/simple_vlan_stack_16.ir.json",
+        "//stratum/p4c_backends/test:testdata/simple_vlan_stack_16.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":parser_decoder",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -965,10 +985,10 @@ cc_test(
         ":table_map_generator",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/strings",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -985,12 +1005,12 @@ cc_library(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -1012,11 +1032,11 @@ cc_test(
         ":table_map_generator",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager_mock",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_info_manager_mock",
+        "//stratum/p4c_backends/test:ir_test_helpers",
         "//util/gtl:map_util",
     ],
 )
@@ -1051,10 +1071,10 @@ cc_test(
     deps = [
         ":pipeline_optimizer",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/test:test_target_info",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/p4c_backends/test:test_target_info",
     ],
 )
 
@@ -1069,10 +1089,10 @@ cc_library(
     deps = [
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -1090,12 +1110,12 @@ cc_test(
     deps = [
         ":p4c_switch_utils",
         ":pipeline_block_passes",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/test:test_inspectors",
-        "//platforms/networking/hercules/p4c_backend/test:test_target_info",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/p4c_backends/test:test_inspectors",
+        "//stratum/p4c_backends/test:test_target_info",
     ],
 )
 
@@ -1110,10 +1130,10 @@ cc_library(
     deps = [
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//absl/debugging:leak_check",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -1136,13 +1156,13 @@ cc_test(
         ":p4c_switch_utils",
         ":pipeline_block_passes",
         ":pipeline_intra_block_passes",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/test:test_inspectors",
-        "//platforms/networking/hercules/p4c_backend/test:test_target_info",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/p4c_backends/test:test_inspectors",
+        "//stratum/p4c_backends/test:test_target_info",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -1180,9 +1200,9 @@ cc_test(
     deps = [
         ":simple_hit_inspector",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -1199,11 +1219,11 @@ cc_library(
         ":p4c_switch_utils",
         ":sliced_field_map_proto_host",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
         "//absl/memory",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -1223,12 +1243,12 @@ cc_test(
         ":slice_cross_reference",
         ":sliced_field_map_proto_host",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1246,8 +1266,8 @@ cc_library(
         ":p4_model_names_proto_host",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
         "//p4lang_p4c:p4c_frontend_midend",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
     ],
 )
 
@@ -1269,11 +1289,11 @@ cc_test(
         ":switch_case_decoder",
         ":table_map_generator_mock",
         "//base",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//protobuf",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -1336,16 +1356,16 @@ cc_library(
         ":tunnel_optimizer_interface",
         ":tunnel_type_mapper",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/common:backend_extension_interface",
-        "//platforms/networking/hercules/p4c_backend/common:p4c_front_mid_interface",
-        "//platforms/networking/hercules/p4c_backend/common:program_inspector",
         "//absl/debugging:leak_check",
         "//absl/memory",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/common:backend_extension_interface",
+        "//stratum/p4c_backends/common:p4c_front_mid_interface",
+        "//stratum/p4c_backends/common:program_inspector",
     ],
 )
 
@@ -1364,19 +1384,13 @@ cc_test(
         "testdata/spine_p4.ir.json",
         "testdata/tor_p4.ir.json",
         ":parser_map_files",
-        "//platforms/networking/hercules/p4c_backend/test:testdata/simple_vlan_stack_16.ir.json",
+        "//stratum/p4c_backends/test:testdata/simple_vlan_stack_16.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":switch_p4c_backend",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/bcm:bcm_tunnel_optimizer",
-        "//platforms/networking/hercules/p4c_backend/common:p4c_common_mocks",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/test:test_target_info",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_frontend_midend",
@@ -1384,6 +1398,12 @@ cc_test(
         "//protobuf",
         "//sandblaze/p4lang:p4info_v1_proto_host",
         "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/common:p4c_common_mocks",
+        "//stratum/p4c_backends/fpm/bcm:bcm_tunnel_optimizer",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/p4c_backends/test:test_target_info",
     ],
 )
 
@@ -1429,9 +1449,9 @@ cc_test(
         ":p4c_switch_utils",
         ":table_hit_inspector",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
+        "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
 
@@ -1451,13 +1471,13 @@ cc_library(
         ":p4_model_names_proto_host",
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/base:core_headers",
         "//protobuf",
         "//sandblaze/p4lang:p4info_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1473,13 +1493,13 @@ cc_test(
         ":p4c_switch_utils",
         ":table_map_generator",
         "//base",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c/lib:p4c_toolkit",
         "//protobuf",
         "//sandblaze/p4lang:p4info_v1_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1504,11 +1524,11 @@ cc_library(
     deps = [
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_annotation_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1527,14 +1547,14 @@ cc_test(
         ":p4c_switch_utils",
         ":table_type_mapper",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//sandblaze/p4lang:p4info_v1_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1552,7 +1572,7 @@ cc_library(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//base",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -1563,8 +1583,8 @@ cc_test(
         ":target_info",
         ":target_info_mock",
         "//base",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//testing/base/public:gunit_main_no_google3",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -1584,7 +1604,7 @@ cc_library(
         "tunnel_optimizer_interface.h",
     ],
     deps = [
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
     ],
 )
 
@@ -1609,10 +1629,10 @@ cc_library(
     deps = [
         ":p4c_switch_utils",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/strings",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1628,13 +1648,13 @@ cc_test(
         ":table_map_generator",
         ":tunnel_type_mapper",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c/lib:p4c_toolkit",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1655,16 +1675,16 @@ cc_library(
         ":p4_parser_map_proto_host",
         ":target_info",
         "//base",
-        "//platforms/networking/hercules/hal/lib/p4:p4_control_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager",
-        "//platforms/networking/hercules/hal/lib/p4:p4_pipeline_config_proto_host",
-        "//platforms/networking/hercules/hal/lib/p4:p4_table_map_proto_host",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//absl/strings",
         "//p4lang_p4c:p4c_frontend_midend",
         "//p4lang_p4c/lib:p4c_toolkit",
+        "//stratum/hal/lib/p4:p4_control_proto_host",
+        "//stratum/hal/lib/p4:p4_info_manager",
+        "//stratum/hal/lib/p4:p4_pipeline_config_proto_host",
+        "//stratum/hal/lib/p4:p4_table_map_proto_host",
+        "//stratum/lib:utils",
+        "//stratum/public/proto:p4_annotation_proto_host",
+        "//stratum/public/proto:p4_table_defs_proto_host",
         "//util/gtl:map_util",
     ],
 )
@@ -1686,15 +1706,15 @@ cc_test(
         ":p4c_switch_utils",
         ":table_map_generator",
         ":target_info_mock",
-        "//platforms/networking/hercules/hal/lib/p4:p4_info_manager_mock",
-        "//platforms/networking/hercules/lib:utils",
-        "//platforms/networking/hercules/p4c_backend/test:ir_test_helpers",
-        "//platforms/networking/hercules/public/proto:p4_table_defs_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
         "//p4lang_p4c/lib:p4c_toolkit",
         "//protobuf",
+        "//stratum/hal/lib/p4:p4_info_manager_mock",
+        "//stratum/lib:utils",
+        "//stratum/p4c_backends/test:ir_test_helpers",
+        "//stratum/public/proto:p4_table_defs_proto_host",
     ],
 )
 
@@ -1724,11 +1744,11 @@ cc_binary(
         ":table_map_generator",
         ":target_info",
         "//base",
-        "//platforms/networking/hercules/p4c_backend/bcm:bcm_target_info",
-        "//platforms/networking/hercules/p4c_backend/bcm:bcm_tunnel_optimizer",
-        "//platforms/networking/hercules/p4c_backend/common:backend_extension_interface",
-        "//platforms/networking/hercules/p4c_backend/common:backend_pass_manager",
-        "//platforms/networking/hercules/p4c_backend/common:p4c_front_mid_real",
+        "//stratum/p4c_backends/common:backend_extension_interface",
+        "//stratum/p4c_backends/common:backend_pass_manager",
+        "//stratum/p4c_backends/common:p4c_front_mid_real",
+        "//stratum/p4c_backends/fpm/bcm:bcm_target_info",
+        "//stratum/p4c_backends/fpm/bcm:bcm_tunnel_optimizer",
     ],
 )
 

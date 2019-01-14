@@ -1,15 +1,28 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file implements the Hercules p4c backend's TableHitInspector.
 
-#include "platforms/networking/hercules/p4c_backend/switch/table_hit_inspector.h"
+#include "stratum/p4c_backends/fpm/table_hit_inspector.h"
 
 #include "base/logging.h"
-#include "platforms/networking/hercules/p4c_backend/switch/simple_hit_inspector.h"
+#include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
 #include "absl/debugging/leak_check.h"
 #include "p4lang_p4c/frontends/p4/tableApply.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 TableHitInspector::TableHitInspector(bool table_hit, bool table_miss,
                                      P4::ReferenceMap* ref_map,
@@ -185,6 +198,5 @@ bool TableHitInspector::IsTableApplyValid() {
   return !table_hit_;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

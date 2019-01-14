@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // This file declares a set of classes that help optimize P4Control logic
 // into forwarding pipeline stages. Each class is an IR visitor subclass
 // that performs a pass through the IR to optimize a specific construct.
@@ -17,18 +33,17 @@
 // IR node ownership and the implications for IR transforms are described
 // by the file header comments in pipeline_block_passes.h.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PIPELINE_INTRA_BLOCK_PASSES_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PIPELINE_INTRA_BLOCK_PASSES_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
 
-#include "platforms/networking/hercules/public/proto/p4_annotation.host.pb.h"
+#include "stratum/public/proto/p4_annotation.host.pb.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "p4lang_p4c/ir/visitor.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // A PipelineIntraBlockPass determines whether any statement sequences within
 // a P4Control can be combined into a PipelineStageStatement.  It catches
@@ -198,8 +213,7 @@ class IntraBlockOptimizer : public Transform {
   bool components_transformed_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PIPELINE_INTRA_BLOCK_PASSES_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_

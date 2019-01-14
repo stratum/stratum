@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The HeaderValidInspector is an IR::Inspector subclass that looks for tables
 // that are applied conditionally based on the validity of one or more header
 // types.  It updates table descriptors in the P4TableMap to indicate any
@@ -27,22 +43,21 @@
 //      else if (header2.isValid())
 //        table2.apply();
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_HEADER_VALID_INSPECTOR_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_HEADER_VALID_INSPECTOR_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
 
 #include <map>
 #include <set>
 #include <string>
 
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // A HeaderValidInspector inspects one IR::Statement.  It usually begins
 // an inspection with the "body" statement at the top level of a P4Control.
@@ -143,8 +158,7 @@ class HeaderValidInspector : public Inspector {
   TableHeaderMap* table_header_map_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_HEADER_VALID_INSPECTOR_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_

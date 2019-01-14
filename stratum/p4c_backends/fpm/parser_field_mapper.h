@@ -1,3 +1,19 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // The ParserFieldMapper combines three sets of inputs to generate detailed
 // P4 field type mapping data:
 //  1) The ParserMap from the ParserDecoder's IR processing.
@@ -8,22 +24,21 @@
 // It does not validate the overall P4 parser behavior relative to the target
 // hardware.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PARSER_FIELD_MAPPER_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PARSER_FIELD_MAPPER_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
 
 #include <deque>
 #include <set>
 #include <string>
 #include <unordered_map>
 
-#include "platforms/networking/hercules/p4c_backend/switch/field_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/field_decoder.h"
+#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "absl/container/node_hash_map.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // ParserFieldMapper is intended to be invoked once via its MapFields method
 // to produce field type data in the Hercules p4c table map output.  It
@@ -201,8 +216,7 @@ class ParserFieldMapper {
   friend class ParserFieldMapperTest;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_PARSER_FIELD_MAPPER_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_

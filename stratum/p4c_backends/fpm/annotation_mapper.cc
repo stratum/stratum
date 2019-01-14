@@ -1,23 +1,36 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file provides the AnnotationMapper implementation.
 
-#include "platforms/networking/hercules/p4c_backend/switch/annotation_mapper.h"
+#include "stratum/p4c_backends/fpm/annotation_mapper.h"
 
 #include <string>
 #include <vector>
 #include "base/commandlineflags.h"
-#include "platforms/networking/hercules/hal/lib/p4/common_flow_entry.host.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/hal/lib/p4/common_flow_entry.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_table_defs.host.pb.h"
 #include "absl/strings/str_split.h"
 
 DEFINE_string(p4c_annotation_map_files, "",
               "Specifies a comma-separated list of files for annotation "
               "lookup and post-processing of the P4PipelineConfig output.");
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 AnnotationMapper::AnnotationMapper() : initialized_(false) {
   for (int stage = P4Annotation::PipelineStage_MIN;  // NOLINT
@@ -203,6 +216,5 @@ bool AnnotationMapper::MapTableAnnotation(
   return true;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

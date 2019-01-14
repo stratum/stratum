@@ -1,4 +1,18 @@
-#include "platforms/networking/hercules/p4c_backend/switch/switch_p4c_backend.h"
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "stratum/p4c_backends/fpm/switch_p4c_backend.h"
 
 #include <map>
 #include <memory>
@@ -6,25 +20,25 @@
 
 #include "base/commandlineflags.h"
 #include "base/logging.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/common/program_inspector.h"
-#include "platforms/networking/hercules/p4c_backend/switch/action_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/control_inspector.h"
-#include "platforms/networking/hercules/p4c_backend/switch/field_cross_reference.h"
-#include "platforms/networking/hercules/p4c_backend/switch/field_name_inspector.h"
-#include "platforms/networking/hercules/p4c_backend/switch/header_valid_inspector.h"
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_static_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_table_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/hit_assign_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/meta_key_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/meter_color_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/pipeline_optimizer.h"
-#include "platforms/networking/hercules/p4c_backend/switch/slice_cross_reference.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_hit_inspector.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_type_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/tunnel_type_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/common/program_inspector.h"
+#include "stratum/p4c_backends/fpm/action_decoder.h"
+#include "stratum/p4c_backends/fpm/control_inspector.h"
+#include "stratum/p4c_backends/fpm/field_cross_reference.h"
+#include "stratum/p4c_backends/fpm/field_name_inspector.h"
+#include "stratum/p4c_backends/fpm/header_valid_inspector.h"
+#include "stratum/p4c_backends/fpm/hidden_static_mapper.h"
+#include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
+#include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
+#include "stratum/p4c_backends/fpm/meta_key_mapper.h"
+#include "stratum/p4c_backends/fpm/meter_color_mapper.h"
+#include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
+#include "stratum/p4c_backends/fpm/slice_cross_reference.h"
+#include "stratum/p4c_backends/fpm/table_hit_inspector.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_type_mapper.h"
+#include "stratum/p4c_backends/fpm/tunnel_type_mapper.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
@@ -35,15 +49,14 @@ DEFINE_string(p4_pipeline_config_text_file, "",
 DEFINE_string(p4_pipeline_config_binary_file, "",
               "Path to file for serialized P4PipelineConfig output");
 DEFINE_string(slice_map_file,
-              "platforms/networking/hercules/p4c_backend/switch/"
+              "stratum/p4c_backends/fpm/"
               "map_data/sliced_field_map.pb.txt",
               "Path to text file that defines sliced field mappings");
 DEFINE_string(target_parser_map_file, "",
               "Path to text file that defines target parser extractions");
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 namespace {
 
@@ -413,6 +426,5 @@ std::string SwitchP4cBackend::StripNamePrefix(const cstring& external_name) {
   return stripped_name;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

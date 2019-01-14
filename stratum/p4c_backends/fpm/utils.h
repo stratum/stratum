@@ -1,24 +1,39 @@
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_UTILS_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_UTILS_H_
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_UTILS_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_UTILS_H_
 
 #include <string>
 #include <vector>
 
 #include "base/logging.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_control.host.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_info_manager.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/p4_model_names.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_map.host.pb.h"
-#include "platforms/networking/hercules/public/proto/p4_annotation.host.pb.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/hal/lib/p4/p4_control.host.pb.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/public/proto/p4_annotation.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.host.pb.h"
 #include "p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "p4lang_p4c/frontends/p4/methodInstance.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // Parses @switchstack annotations from their p4c IR form into a
 // P4Annotation message.  Returns true if successful, false if the input
@@ -184,8 +199,7 @@ void DeleteRepeatedNonPtrFields(
   }
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_SWITCH_UTILS_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_UTILS_H_

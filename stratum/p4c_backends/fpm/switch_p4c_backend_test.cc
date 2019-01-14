@@ -1,6 +1,20 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for SwitchP4cBackend.
 
-#include "platforms/networking/hercules/p4c_backend/switch/switch_p4c_backend.h"
+#include "stratum/p4c_backends/fpm/switch_p4c_backend.h"
 
 #include <stdlib.h>
 #include <memory>
@@ -8,13 +22,6 @@
 
 #include "base/commandlineflags.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/bcm/bcm_tunnel_optimizer.h"
-#include "platforms/networking/hercules/p4c_backend/common/p4c_front_mid_mock.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
-#include "platforms/networking/hercules/p4c_backend/test/test_target_info.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
@@ -22,14 +29,20 @@
 #include "p4lang_p4c/lib/error.h"
 #include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
 #include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_mock.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/test/test_target_info.h"
 
 DECLARE_string(p4_pipeline_config_text_file);
 DECLARE_string(p4_pipeline_config_binary_file);
 DECLARE_string(target_parser_map_file);
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 using testing::Invoke;
 using testing::Return;
@@ -56,8 +69,8 @@ class SwitchP4cBackendTest : public testing::TestWithParam<std::string> {
 
  protected:
   void SetUp() override {
-    const std::string kParserMapFile = "platforms/networking/hercules/"
-        "p4c_backend/switch/map_data/standard_parser_map.pb.txt";
+    const std::string kParserMapFile = "stratum/"
+        "p4c_backends/fpm/map_data/standard_parser_map.pb.txt";
     FLAGS_target_parser_map_file = kParserMapFile;
     tunnel_optimizer_ = absl::make_unique<BcmTunnelOptimizer>();
     // TODO(teverman): Make NULL AnnotationMapper a mock instead.
@@ -67,11 +80,11 @@ class SwitchP4cBackendTest : public testing::TestWithParam<std::string> {
   }
 
   // Sets up test IR data from the input file, which is relative to the
-  // p4c_backend base directory.
+  // p4c_backends base directory.
   void SetUpTestIR(const std::string& test_ir_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestIRBaseDir =
-        "platforms/networking/hercules/p4c_backend/";
+        "stratum/p4c_backends/";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestIRBaseDir + test_ir_file));
   }
 
@@ -206,15 +219,14 @@ TEST_P(SwitchP4cBackendTest, TestValidIR) {
 INSTANTIATE_TEST_CASE_P(
   ValidIRInputFiles,
   SwitchP4cBackendTest,
-  ::testing::Values("switch/testdata/design_doc_sample1.ir.json",
-                    "switch/testdata/middleblock_p4.ir.json",
-                    "switch/testdata/spine_p4.ir.json",
-                    "switch/testdata/tor_p4.ir.json",
-                    "switch/testdata/b4_p4.ir.json",
-                    "switch/testdata/fbr_s2_p4.ir.json",
-                    "switch/testdata/fbr_s3_p4.ir.json")
+  ::testing::Values("fpm/testdata/design_doc_sample1.ir.json",
+                    "fpm/testdata/middleblock_p4.ir.json",
+                    "fpm/testdata/spine_p4.ir.json",
+                    "fpm/testdata/tor_p4.ir.json",
+                    "fpm/testdata/b4_p4.ir.json",
+                    "fpm/testdata/fbr_s2_p4.ir.json",
+                    "fpm/testdata/fbr_s3_p4.ir.json")
 );
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

@@ -1,8 +1,24 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // This file declares an interface that runs a platform-specific backend pass
 // as an extension of the third-party p4c compiler.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_BACKEND_EXTENSION_INTERFACE_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_BACKEND_EXTENSION_INTERFACE_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
 
 #include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
 #include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
@@ -20,9 +36,8 @@ class ReferenceMap;
 class TypeMap;
 }  // namespace P4
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class BackendExtensionInterface {
  public:
@@ -45,8 +60,7 @@ class BackendExtensionInterface {
                        P4::ReferenceMap* ref_map, P4::TypeMap* type_map) = 0;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_COMMON_BACKEND_EXTENSION_INTERFACE_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_

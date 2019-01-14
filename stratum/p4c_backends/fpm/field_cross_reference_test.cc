@@ -1,23 +1,36 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for FieldCrossReference.
 
-#include "platforms/networking/hercules/p4c_backend/switch/field_cross_reference.h"
+#include "stratum/p4c_backends/fpm/field_cross_reference.h"
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/hal/lib/p4/p4_table_map.host.pb.h"
-#include "platforms/networking/hercules/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.host.pb.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // The test parameter is a pair with the P4FieldType to be assigned to one
 // of the test fields created by SetUpFieldAssignments.
@@ -220,6 +233,5 @@ INSTANTIATE_TEST_CASE_P(
         std::make_pair("field_2", P4_FIELD_TYPE_COLOR),
         std::make_pair("field_3", P4_FIELD_TYPE_ETH_DST)));
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

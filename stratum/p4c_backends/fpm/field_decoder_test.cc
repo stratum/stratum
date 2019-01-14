@@ -1,22 +1,35 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains unit tests for FieldDecoder.
 
-#include "platforms/networking/hercules/p4c_backend/switch/field_decoder.h"
+#include "stratum/p4c_backends/fpm/field_decoder.h"
 
 #include <memory>
 #include <string>
 #include <vector>
-#include "platforms/networking/hercules/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/p4_model_names.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "testing/base/public/gunit.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/ir/ir.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // This class is the FieldDecoder test fixture.
 class FieldDecoderTest : public testing::Test {
@@ -40,7 +53,7 @@ class FieldDecoderTest : public testing::Test {
   // keys for test use.
   void SetUpIR(const std::string& ir_input_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string ir_path = "platforms/networking/hercules/p4c_backend/" +
+    const std::string ir_path = "stratum/p4c_backends/" +
         ir_input_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(ir_path));
   }
@@ -58,7 +71,7 @@ class FieldDecoderTest : public testing::Test {
 TEST_F(FieldDecoderTest, TestSimpleHeaderConversion) {
   p4_model_names_.set_local_metadata_type_name("metadata");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_basic.ir.json");
+  SetUpIR("fpm/testdata/header_decode_basic.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   field_decoder_->ConvertHeaderFields(
@@ -105,7 +118,7 @@ TEST_F(FieldDecoderTest, TestSimpleHeaderConversion) {
 TEST_F(FieldDecoderTest, TestExtractedFields) {
   p4_model_names_.set_local_metadata_type_name("metadata");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_basic.ir.json");
+  SetUpIR("fpm/testdata/header_decode_basic.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   field_decoder_->ConvertHeaderFields(
@@ -163,7 +176,7 @@ TEST_F(FieldDecoderTest, TestExtractedFields) {
 TEST_F(FieldDecoderTest, TestSimpleMatchKeyConversion) {
   p4_model_names_.set_local_metadata_type_name("metadata");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_basic.ir.json");
+  SetUpIR("fpm/testdata/header_decode_basic.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   ASSERT_LT(0, ir_helper_->program_inspector().match_keys().size());
@@ -293,7 +306,7 @@ TEST_F(FieldDecoderTest, TestConvertTypedefField) {
 TEST_F(FieldDecoderTest, TestConvertControllerHeaders) {
   p4_model_names_.set_local_metadata_type_name("test_metadata_t");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_controller.ir.json");
+  SetUpIR("fpm/testdata/header_decode_controller.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   field_decoder_->ConvertHeaderFields(
@@ -332,7 +345,7 @@ TEST_F(FieldDecoderTest, TestConvertControllerHeaders) {
 TEST_F(FieldDecoderTest, TestConvertEnums) {
   p4_model_names_.set_local_metadata_type_name("test_metadata_t");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_advanced.ir.json");
+  SetUpIR("fpm/testdata/header_decode_advanced.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   ASSERT_LT(0, ir_helper_->program_inspector().p4_enums().size());
@@ -352,7 +365,7 @@ TEST_F(FieldDecoderTest, TestConvertEnums) {
 TEST_F(FieldDecoderTest, TestLocalMetadataConversion) {
   p4_model_names_.set_local_metadata_type_name("test_metadata_t");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_advanced.ir.json");
+  SetUpIR("fpm/testdata/header_decode_advanced.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   ASSERT_LT(0, ir_helper_->program_inspector().p4_enums().size());
@@ -405,7 +418,7 @@ TEST_F(FieldDecoderTest, TestConvertHeadersTwice) {
   // without producing output.
   p4_model_names_.set_local_metadata_type_name("metadata");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_basic.ir.json");
+  SetUpIR("fpm/testdata/header_decode_basic.ir.json");
   ASSERT_LT(0, ir_helper_->program_inspector().struct_likes().size());
   ASSERT_LT(0, ir_helper_->program_inspector().header_types().size());
   field_decoder_->ConvertHeaderFields(
@@ -428,7 +441,7 @@ TEST_F(FieldDecoderTest, TestConvertMatchKeysBeforeHeaders) {
 TEST_F(FieldDecoderTest, TestConvertMatchKeysTwice) {
   p4_model_names_.set_local_metadata_type_name("metadata");
   SetP4ModelNames(p4_model_names_);
-  SetUpIR("switch/testdata/header_decode_basic.ir.json");
+  SetUpIR("fpm/testdata/header_decode_basic.ir.json");
   field_decoder_->ConvertHeaderFields(
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
@@ -454,6 +467,5 @@ TEST_F(FieldDecoderTest, TestConvertMatchKeysTwice) {
   EXPECT_EQ(0, iter->second.field_descriptor().valid_conversions().size());
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

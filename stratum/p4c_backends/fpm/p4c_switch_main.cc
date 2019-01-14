@@ -1,34 +1,48 @@
-// This file contains the main entry for the Hercules switch p4c backend.
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// This file contains the main entry for the Stratum FPM switch p4c backend.
 // The most common switch use case is generating P4Info and a P4PipelineConfig
 // from a P4 program. More information can be found here:
-// platforms/networking/hercules/g3doc/p4c_backend_overview.md
+// stratum/g3doc/p4c_backends_overview.md
 
 #include <functional>
 #include <memory>
 #include <vector>
 
 #include "base/init_google.h"
-#include "platforms/networking/hercules/p4c_backend/bcm/bcm_target_info.h"
-#include "platforms/networking/hercules/p4c_backend/bcm/bcm_tunnel_optimizer.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_extension_interface.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_pass_manager.h"
-#include "platforms/networking/hercules/p4c_backend/common/p4c_front_mid_real.h"
-#include "platforms/networking/hercules/p4c_backend/switch/midend.h"
-#include "platforms/networking/hercules/p4c_backend/switch/switch_p4c_backend.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/target_info.h"
+#include "stratum/p4c_backends/common/backend_extension_interface.h"
+#include "stratum/p4c_backends/common/backend_pass_manager.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_real.h"
+#include "stratum/p4c_backends/fpm/bcm/bcm_target_info.h"
+#include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
+#include "stratum/p4c_backends/fpm/midend.h"
+#include "stratum/p4c_backends/fpm/switch_p4c_backend.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/target_info.h"
 
-using google::hercules::p4c_backend::AnnotationMapper;
-using google::hercules::p4c_backend::BackendExtensionInterface;
-using google::hercules::p4c_backend::BackendPassManager;
-using google::hercules::p4c_backend::BcmTargetInfo;
-using google::hercules::p4c_backend::BcmTunnelOptimizer;
-using google::hercules::p4c_backend::MidEnd;
-using google::hercules::p4c_backend::MidEndInterface;
-using google::hercules::p4c_backend::P4cFrontMidReal;
-using google::hercules::p4c_backend::SwitchP4cBackend;
-using google::hercules::p4c_backend::TableMapGenerator;
-using google::hercules::p4c_backend::TargetInfo;
+using stratum::p4c_backends::AnnotationMapper;
+using stratum::p4c_backends::BackendExtensionInterface;
+using stratum::p4c_backends::BackendPassManager;
+using stratum::p4c_backends::BcmTargetInfo;
+using stratum::p4c_backends::BcmTunnelOptimizer;
+using stratum::p4c_backends::MidEnd;
+using stratum::p4c_backends::MidEndInterface;
+using stratum::p4c_backends::P4cFrontMidReal;
+using stratum::p4c_backends::SwitchP4cBackend;
+using stratum::p4c_backends::TableMapGenerator;
+using stratum::p4c_backends::TargetInfo;
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);

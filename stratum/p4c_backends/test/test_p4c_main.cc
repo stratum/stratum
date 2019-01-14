@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This main program runs a p4c binary for testing.  The test p4c binary
 // currently runs without any backend extensions.
 
@@ -5,13 +19,13 @@
 #include <vector>
 
 #include "base/init_google.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_extension_interface.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_pass_manager.h"
-#include "platforms/networking/hercules/p4c_backend/common/p4c_front_mid_real.h"
+#include "stratum/p4c_backends/common/backend_extension_interface.h"
+#include "stratum/p4c_backends/common/backend_pass_manager.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_real.h"
 
-using google::hercules::p4c_backend::BackendExtensionInterface;
-using google::hercules::p4c_backend::BackendPassManager;
-using google::hercules::p4c_backend::P4cFrontMidReal;
+using stratum::p4c_backends::BackendExtensionInterface;
+using stratum::p4c_backends::BackendPassManager;
+using stratum::p4c_backends::P4cFrontMidReal;
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);

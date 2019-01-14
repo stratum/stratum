@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Does a comprehensive p4c test with p4lang_p4c test files.  It
 // verifies two things:
 // 1) The open source frontend and midend code functions properly in the
@@ -26,12 +40,11 @@ DEFINE_bool(test_p4_16_samples, false,
             "Enables test of P4_16 open source sample files");
 
 DEFINE_string(p4c_binary_path,
-              "platforms/networking/hercules/p4c_backend/test/test_p4c",
+              "stratum/p4c_backends/test/test_p4c",
               "Path to binary of compiler that will be tested.");
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 // These helper functions for setting up test file vectors hide in an unnamed
 // namespace.  The //p4lang_p4c build produces the objects in the
@@ -144,6 +157,5 @@ INSTANTIATE_TEST_CASE_P(
     ::testing::ValuesIn(CreateP4v16FileList())
 );
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

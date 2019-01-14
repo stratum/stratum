@@ -1,12 +1,25 @@
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 #include <string>
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "testing/base/public/gunit.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 class IRTestHelperJsonTest : public testing::Test {
  public:
@@ -20,7 +33,7 @@ class IRTestHelperJsonTest : public testing::Test {
 };
 
 char const* IRTestHelperJsonTest::kTestJsonFile =
-    "platforms/networking/hercules/p4c_backend/test/testdata/"
+    "stratum/p4c_backends/test/testdata/"
     "simple_vlan_stack_16.ir.json";
 
 // Tests expected normal behavior from successful JSON IR loads.
@@ -126,8 +139,8 @@ TEST_F(IRTestHelperJsonTest, TestTransformNop) {
 
 // Tests TransformP4Control with MeterColorMapper doing a transform.
 TEST_F(IRTestHelperJsonTest, TestTransformMeterColor) {
-  const std::string kTestFile = "platforms/networking/hercules/p4c_backend/"
-      "switch/testdata/meter_colors.ir.json";
+  const std::string kTestFile = "stratum/p4c_backends/"
+      "fpm/testdata/meter_colors.ir.json";
   ASSERT_TRUE(helper_.GenerateTestIRAndInspectProgram(kTestFile));
   helper_.set_color_field_name("meta.enum_color");
   const IR::P4Control* transformed_control = helper_.TransformP4Control(
@@ -138,8 +151,8 @@ TEST_F(IRTestHelperJsonTest, TestTransformMeterColor) {
 
 // Tests TransformP4Control with MeterColorMapper finding a transform error.
 TEST_F(IRTestHelperJsonTest, TestTransformMeterColorError) {
-  const std::string kTestFile = "platforms/networking/hercules/p4c_backend/"
-      "switch/testdata/meter_color_errors1.ir.json";
+  const std::string kTestFile = "stratum/p4c_backends/"
+      "fpm/testdata/meter_color_errors1.ir.json";
   ASSERT_TRUE(helper_.GenerateTestIRAndInspectProgram(kTestFile));
   helper_.set_color_field_name("meta.enum_color");
   const IR::P4Control* transformed_control = helper_.TransformP4Control(
@@ -149,8 +162,8 @@ TEST_F(IRTestHelperJsonTest, TestTransformMeterColorError) {
 
 // Tests TransformP4Control with HitAssignMapper doing a transform.
 TEST_F(IRTestHelperJsonTest, TestTransformHitAssign) {
-  const std::string kTestFile = "platforms/networking/hercules/p4c_backend/"
-      "switch/testdata/hit_assign.ir.json";
+  const std::string kTestFile = "stratum/p4c_backends/"
+      "fpm/testdata/hit_assign.ir.json";
   ASSERT_TRUE(helper_.GenerateTestIRAndInspectProgram(kTestFile));
   const IR::P4Control* transformed_control = helper_.TransformP4Control(
       "basic_hit", {IRTestHelperJson::kHitAssignMapper});
@@ -166,6 +179,5 @@ TEST_F(IRTestHelperJsonTest, TestTransformUnknownControl) {
   EXPECT_EQ(nullptr, transformed_control);
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

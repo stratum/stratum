@@ -1,3 +1,23 @@
+#
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
+
 # This BUILD file provides common test support for the Hercules p4c backend.
 # It also creates a simple p4c test binary with limited backend
 # functionality, then uses it to test p4c with the comprehensive set of
@@ -8,7 +28,7 @@ load(
     "SANDBLAZE_INTERNAL",
 )
 load(
-    "//platforms/networking/hercules/p4c_backend/test:build_defs.bzl",
+    "//stratum/p4c_backends/test:build_defs.bzl",
     "p4c_save_ir",
 )
 
@@ -34,12 +54,6 @@ cc_library(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//base",
-        "//platforms/networking/hercules/p4c_backend/common:backend_extension_interface",
-        "//platforms/networking/hercules/p4c_backend/common:backend_pass_manager",
-        "//platforms/networking/hercules/p4c_backend/common:p4c_front_mid_real",
-        "//platforms/networking/hercules/p4c_backend/common:program_inspector",
-        "//platforms/networking/hercules/p4c_backend/switch:hit_assign_mapper",
-        "//platforms/networking/hercules/p4c_backend/switch:meter_color_mapper",
         "//absl/memory",
         "//p4lang_p4c:control_plane_h",
         "//p4lang_p4c:p4c_frontend_midend",
@@ -47,6 +61,12 @@ cc_library(
         "//p4lang_p4c/backends/p4test:p4c_common_midend_pass",
         "//p4lang_p4c/lib:p4c_toolkit",
         "//sandblaze/p4lang:p4info_v1_proto_host",
+        "//stratum/p4c_backends/common:backend_extension_interface",
+        "//stratum/p4c_backends/common:backend_pass_manager",
+        "//stratum/p4c_backends/common:p4c_front_mid_real",
+        "//stratum/p4c_backends/common:program_inspector",
+        "//stratum/p4c_backends/fpm:hit_assign_mapper",
+        "//stratum/p4c_backends/fpm:meter_color_mapper",
     ],
 )
 
@@ -60,16 +80,16 @@ cc_test(
     ],
     data = [
         "testdata/simple_vlan_stack_16.ir.json",
-        "//platforms/networking/hercules/p4c_backend/switch:testdata/hit_assign.ir.json",
-        "//platforms/networking/hercules/p4c_backend/switch:testdata/meter_color_errors1.ir.json",
-        "//platforms/networking/hercules/p4c_backend/switch:testdata/meter_colors.ir.json",
+        "//stratum/p4c_backends/fpm:testdata/hit_assign.ir.json",
+        "//stratum/p4c_backends/fpm:testdata/meter_color_errors1.ir.json",
+        "//stratum/p4c_backends/fpm:testdata/meter_colors.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":ir_test_helpers",
-        "//platforms/networking/hercules/p4c_backend/switch:p4c_switch_utils",
         "//testing/base/public:gunit_main_no_google3",
         "//p4lang_p4c:p4c_testdata_files",
+        "//stratum/p4c_backends/fpm:p4c_switch_utils",
     ],
 )
 
@@ -99,17 +119,17 @@ cc_test(
         "-fexceptions",
     ],
     data = [
-        "//platforms/networking/hercules/p4c_backend/switch:testdata/pipeline_opt_block.ir.json",
+        "//stratum/p4c_backends/fpm:testdata/pipeline_opt_block.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":ir_test_helpers",
         ":test_inspectors",
-        "//platforms/networking/hercules/p4c_backend/switch:p4c_switch_utils",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//testing/base/public:gunit_main_no_google3",
         "//absl/memory",
         "//p4lang_p4c:p4c_ir",
+        "//stratum/p4c_backends/fpm:p4c_switch_utils",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -126,7 +146,7 @@ cc_library(
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
-        "//platforms/networking/hercules/p4c_backend/switch:target_info",
+        "//stratum/p4c_backends/fpm:target_info",
     ],
 )
 
@@ -139,13 +159,13 @@ cc_test(
         "-fexceptions",
     ],
     data = [
-        "//platforms/networking/hercules/p4c_backend/switch:testdata/pipeline_opt_block.ir.json",
+        "//stratum/p4c_backends/fpm:testdata/pipeline_opt_block.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":test_target_info",
-        "//platforms/networking/hercules/public/proto:p4_annotation_proto_host",
         "//testing/base/public:gunit_main_no_google3",
+        "//stratum/public/proto:p4_annotation_proto_host",
     ],
 )
 
@@ -161,10 +181,10 @@ cc_binary(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//base",
-        "//platforms/networking/hercules/p4c_backend/common:backend_extension_interface",
-        "//platforms/networking/hercules/p4c_backend/common:backend_pass_manager",
-        "//platforms/networking/hercules/p4c_backend/common:p4c_front_mid_real",
-        "//platforms/networking/hercules/p4c_backend/switch:midend",
+        "//stratum/p4c_backends/common:backend_extension_interface",
+        "//stratum/p4c_backends/common:backend_pass_manager",
+        "//stratum/p4c_backends/common:p4c_front_mid_real",
+        "//stratum/p4c_backends/fpm:midend",
     ],
 )
 
@@ -180,9 +200,9 @@ cc_binary(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//base",
-        "//platforms/networking/hercules/p4c_backend/common:backend_extension_interface",
-        "//platforms/networking/hercules/p4c_backend/common:backend_pass_manager",
-        "//platforms/networking/hercules/p4c_backend/common:p4c_front_mid_real",
+        "//stratum/p4c_backends/common:backend_extension_interface",
+        "//stratum/p4c_backends/common:backend_pass_manager",
+        "//stratum/p4c_backends/common:p4c_front_mid_real",
     ],
 )
 

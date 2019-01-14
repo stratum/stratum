@@ -1,21 +1,34 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // This file contains the HiddenTableMapper implementation.
 
-#include "platforms/networking/hercules/p4c_backend/switch/hidden_table_mapper.h"
+#include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
 
 #include <memory>
 #include <set>
 
 #include "base/logging.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/switch/utils.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/memory/memory.h"
 #include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
 #include "util/gtl/map_util.h"
 #include "util/gtl/stl_util.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 HiddenTableMapper::~HiddenTableMapper() {
   gtl::STLDeleteValues(&meta_key_map_);
@@ -283,6 +296,5 @@ void HiddenTableMapper::IndirectActionKey::RemoveAssignmentsToKey() {
   }
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

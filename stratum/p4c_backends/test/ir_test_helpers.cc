@@ -1,16 +1,30 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // IRTestHelperP4 class implementation.
 
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 #include <fstream>
 #include <memory>
 #include <sstream>
 #include "base/commandlineflags.h"
 #include "base/logging.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_extension_interface.h"
-#include "platforms/networking/hercules/p4c_backend/common/backend_pass_manager.h"
-#include "platforms/networking/hercules/p4c_backend/switch/hit_assign_mapper.h"
-#include "platforms/networking/hercules/p4c_backend/switch/meter_color_mapper.h"
+#include "stratum/p4c_backends/common/backend_extension_interface.h"
+#include "stratum/p4c_backends/common/backend_pass_manager.h"
+#include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
+#include "stratum/p4c_backends/fpm/meter_color_mapper.h"
 #include "absl/memory/memory.h"
 #include "p4lang_p4c/backends/p4test/midend.h"
 #include "p4lang_p4c/control-plane/p4RuntimeSerializer.h"
@@ -19,9 +33,8 @@
 
 DECLARE_string(p4c_fe_options);  // Specifies the p4 spec file.
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 IRTestHelperJson::IRTestHelperJson()
     : p4c_context_(new P4CContextWithOptions<CompilerOptions>),
@@ -131,6 +144,5 @@ bool IRTestHelperJson::RunMapPass() {
   return true;
 }
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

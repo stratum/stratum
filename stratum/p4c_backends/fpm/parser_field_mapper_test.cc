@@ -1,23 +1,36 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Contains ParserFieldMapper unit tests.
 
-#include "platforms/networking/hercules/p4c_backend/switch/parser_field_mapper.h"
+#include "stratum/p4c_backends/fpm/parser_field_mapper.h"
 
 #include <string>
 #include <vector>
 
 #include "base/logging.h"
-#include "platforms/networking/hercules/lib/utils.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_decoder.h"
-#include "platforms/networking/hercules/p4c_backend/switch/parser_map.host.pb.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator.h"
-#include "platforms/networking/hercules/p4c_backend/switch/table_map_generator_mock.h"
-#include "platforms/networking/hercules/p4c_backend/test/ir_test_helpers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/parser_decoder.h"
+#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "testing/base/public/gunit.h"
 #include "absl/strings/substitute.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
 using ::testing::_;
 using ::testing::AnyNumber;
@@ -139,8 +152,8 @@ void ParserFieldMapperTest::SetUpTestInputs(
   target_parser_field_map_.Clear();
 
   // The p4_parser_field_map_ comes from a test data file.
-  const std::string kFilePath = "platforms/networking/hercules/p4c_backend/"
-      "switch/testdata/parse_basic.pb.txt";
+  const std::string kFilePath = "stratum/p4c_backends/"
+      "fpm/testdata/parse_basic.pb.txt";
   CHECK(ReadProtoFromTextFile(kFilePath, &p4_parser_field_map_).ok())
       << "Unable to read and parse test data in " << kFilePath;
 
@@ -382,8 +395,8 @@ void ParserFieldMapperTest::SetUpNonExtractedFieldTestInputs() {
 void ParserFieldMapperTest::SetUpTestFromIRFile(const std::string& ir_file) {
   auto ir_helper = absl::make_unique<IRTestHelperJson>();
   const std::string ir_path =
-      "platforms/networking/hercules/p4c_backend/"
-      "switch/testdata/" +
+      "stratum/p4c_backends/"
+      "fpm/testdata/" +
       ir_file;
   ASSERT_TRUE(ir_helper->GenerateTestIRAndInspectProgram(ir_path));
   p4_parser_field_map_.Clear();
@@ -394,8 +407,8 @@ void ParserFieldMapperTest::SetUpTestFromIRFile(const std::string& ir_file) {
   p4_parser_field_map_ = decoder->parser_states();
 
   // This target parser map text file is suitable for all IR-based tests.
-  const std::string kFilePath = "platforms/networking/hercules/p4c_backend/"
-      "switch/testdata/value_set_parser_map.pb.txt";
+  const std::string kFilePath = "stratum/p4c_backends/"
+      "fpm/testdata/value_set_parser_map.pb.txt";
   CHECK(ReadProtoFromTextFile(kFilePath, &target_parser_field_map_).ok())
       << "Unable to read and parse test data in " << kFilePath;
 }
@@ -928,6 +941,5 @@ INSTANTIATE_TEST_CASE_P(
         SubFieldTestParam{"parse_l3_protocol_2", 9, std::vector<int>{5, 3}}
     ));
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum

@@ -1,23 +1,38 @@
-// The ir_test_helpers classes provide some common support for p4c_backend
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// The ir_test_helpers classes provide some common support for p4c_backends
 // unit tests that need the compiler's P4 Internal Representation (IR) as input.
 
-#ifndef PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_TEST_IR_TEST_HELPERS_H_
-#define PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_TEST_IR_TEST_HELPERS_H_
+#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
+#define THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
 
 #include <memory>
 #include <string>
 #include <vector>
-#include "platforms/networking/hercules/p4c_backend/common/p4c_front_mid_real.h"
-#include "platforms/networking/hercules/p4c_backend/common/program_inspector.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_real.h"
+#include "stratum/p4c_backends/common/program_inspector.h"
 #include "p4lang_p4c/ir/ir.h"
 #include "p4lang_p4c/lib/compile_context.h"
 #include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
 
-namespace google {
-namespace hercules {
-namespace p4c_backend {
+namespace stratum {
+namespace p4c_backends {
 
-// Many p4c_backend tests need some IR data to use as input to the tested code.
+// Many p4c_backends tests need some IR data to use as input to the tested code.
 // The IR structure is complex, so the data is not easy to generate in test
 // fixtures.  The main purpose of this helper class is to run a .p4 file through
 // the compiler front and mid end to produce an IR that can be used for further
@@ -139,8 +154,7 @@ class IRTestHelperJson {
   std::string color_field_name_;
 };
 
-}  // namespace p4c_backend
-}  // namespace hercules
-}  // namespace google
+}  // namespace p4c_backends
+}  // namespace stratum
 
-#endif  // PLATFORMS_NETWORKING_HERCULES_P4C_BACKEND_TEST_IR_TEST_HELPERS_H_
+#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
