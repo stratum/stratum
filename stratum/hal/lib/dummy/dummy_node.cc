@@ -153,7 +153,7 @@ bool DummyNode::DummyNodeEventWriter::Write(const DummyNodeEventPtr& msg) {
       break;
     case ::stratum::hal::DataResponse::kLacpRouterMac:
       event =
-      new PortLacpSystemIdMacChangedEvent(node_id,
+      new PortLacpRouterMacChangedEvent(node_id,
                                           port_id,
                                           state_update.lacp_router_mac()
                                                       .mac_address());

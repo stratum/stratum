@@ -988,9 +988,9 @@ void SetUpLacpInterfacesInterfaceStateSystemIdMac(uint64 node_id,
                        &DataRequest::Request::mutable_lacp_router_mac,
                        &MacAddress::mac_address, MacAddressToYangString);
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortLacpSystemIdMacChangedEvent::GetSystemIdMac,
+      node_id, port_id, &PortLacpRouterMacChangedEvent::GetSystemIdMac,
       MacAddressToYangString);
-  auto register_functor = RegisterFunc<PortLacpSystemIdMacChangedEvent>();
+  auto register_functor = RegisterFunc<PortLacpRouterMacChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
       ->SetOnChangeRegistration(register_functor)

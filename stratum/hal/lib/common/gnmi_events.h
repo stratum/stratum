@@ -242,14 +242,14 @@ class PortMacAddressChangedEvent
 };
 
 // A Port's LACP System ID MAC Address Has Changed event.
-class PortLacpSystemIdMacChangedEvent
-    : public PerPortGnmiEvent<PortLacpSystemIdMacChangedEvent> {
+class PortLacpRouterMacChangedEvent
+    : public PerPortGnmiEvent<PortLacpRouterMacChangedEvent> {
  public:
-  PortLacpSystemIdMacChangedEvent(uint64 node_id, uint32 port_id,
+  PortLacpRouterMacChangedEvent(uint64 node_id, uint32 port_id,
                                   uint64 new_system_id_mac)
       : PerPortGnmiEvent(node_id, port_id),
         new_system_id_mac_(new_system_id_mac) {}
-  ~PortLacpSystemIdMacChangedEvent() override {}
+  ~PortLacpRouterMacChangedEvent() override {}
 
   uint64 GetSystemIdMac() const {
     // The MAC address is stores on lower 6 bytes.

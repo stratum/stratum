@@ -1936,7 +1936,7 @@ TEST_F(YangParseTreeTest,
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(
       ExecuteOnChange(path,
-                      PortLacpSystemIdMacChangedEvent(
+                      PortLacpRouterMacChangedEvent(
                           kInterface1NodeId, kInterface1PortId, kSystemIdMac),
                       &resp));
 
@@ -2805,7 +2805,7 @@ TEST_F(YangParseTreeTest,
   EXPECT_EQ(EventHandlerList<PortMacAddressChangedEvent>::GetInstance()
                 ->GetNumberOfRegisteredHandlers(),
             1);
-  EXPECT_EQ(EventHandlerList<PortLacpSystemIdMacChangedEvent>::GetInstance()
+  EXPECT_EQ(EventHandlerList<PortLacpRouterMacChangedEvent>::GetInstance()
                 ->GetNumberOfRegisteredHandlers(),
             0);
   EXPECT_EQ(EventHandlerList<PortCountersChangedEvent>::GetInstance()
@@ -2868,7 +2868,7 @@ TEST_F(YangParseTreeTest,
   EXPECT_EQ(EventHandlerList<PortMacAddressChangedEvent>::GetInstance()
                 ->GetNumberOfRegisteredHandlers(),
             0);
-  EXPECT_EQ(EventHandlerList<PortLacpSystemIdMacChangedEvent>::GetInstance()
+  EXPECT_EQ(EventHandlerList<PortLacpRouterMacChangedEvent>::GetInstance()
                 ->GetNumberOfRegisteredHandlers(),
             0);
   EXPECT_EQ(EventHandlerList<PortCountersChangedEvent>::GetInstance()
