@@ -45,7 +45,7 @@ namespace bmv2 {
 void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   for (int i = 1; i < argc; i++) {
     char* intf;
-    if((intf = strchr(argv[i], '@')) != nullptr) {
+    if ((intf = strchr(argv[i], '@')) != nullptr) {
       // Found an interface
       int intf_num = strtol(argv[i], &intf, 10);
       intf += 1; // Point to the start of the interface name

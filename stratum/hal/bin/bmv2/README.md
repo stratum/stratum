@@ -13,11 +13,12 @@ mkdir bmv2_install
 export BMV2_INSTALL=`pwd`/bmv2_install
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BMV2_INSTALL/lib
 ```
-*If you plan on adding interfaces to bmv2 (which can only be done right now by
-editing main.cpp manually), you may want to install bmv2 in a standard system
-directory instead. For example you can set `BMV2_INSTALL` to /usr/local. In this
-case you do not need to modify `LD_LIBRARY_PATH` but you will need to run `sudo
-ldconfig` after the installation.*
+*If you plan on adding interfaces to bmv2 (which can be done from the
+command-line when starting `stratum_bmv2`), you will need to run the binary as
+root and therefore you may want to install bmv2 in a standard system directory
+instead. For example you can set `BMV2_INSTALL` to /usr/local. In this case you
+do not need to modify `LD_LIBRARY_PATH` but you will need to run `sudo ldconfig`
+after the installation.*
 
 ### Install PI
 ```
@@ -72,6 +73,16 @@ E0808 17:57:36.513559 29298 utils.cc:120] StratumErrorSpace::ERR_FILE_NOT_FOUND:
 E0808 17:57:36.513905 29298 utils.cc:76] Return Error: ReadFileToString(filename, &text) failed with StratumErrorSpace::ERR_FILE_NOT_FOUND:  not found.
 W0808 17:57:36.513913 29298 config_monitoring_service.cc:106] No saved chassis config found in . This is normal when the switch is just installed.
 ```
+
+To assign interfaces to bmv2, use positional arguments as follows:
+```
+[sudo] ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 <keyword arguments> <port number>@<interface name> <port number>@<interface name>...
+```
+Assigning interfaces to bmv2 requires the `stratum_bmv2` binary to have the
+`CAP_NET_RAW` capability. Based on your Linux distribution and the location of
+the binary, you may be able to add the capability to the binary with `setcap`
+and run it as an unprivileged user. You can also simply run the `stratum_bmv2`
+as root.
 
 As a basic test, you can run the following commands. It will start a P4Runtime
 client in a Docker image and perform a `SetForwardingPipelineConfig` RPC (which
