@@ -62,17 +62,15 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4runtime",
             remote = "https://github.com/p4lang/p4runtime",
-            tag = "1.0.0-rc3",
+            tag = "1.0.0-rc4",
         )
 
     if "com_github_p4lang_PI" not in native.existing_rules():
         # ----- PI -----
         remote_workspace(
             name = "com_github_p4lang_PI",
-            remote = "https://github.com/MaxPolovyi/PI.git",
-            # PI update to p4runtime 1.0.0-rc3
-            # commit = "08fa170106e1728b10491bb78c7543a950dc95ec",
-            branch = "fix-bazel-build",
+            remote = "https://github.com/p4lang/PI.git",
+            commit = "0b9d3bb2e0f92bce8dd0aa976a88cc582b163d7e",
         )
 
     if "com_github_openconfig_gnmi" not in native.existing_rules():

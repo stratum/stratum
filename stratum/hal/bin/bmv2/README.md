@@ -31,11 +31,11 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 235cb3d117f3b8a3335200ab89f2f6389f6fdb9c.
+we used for testing: 0b9d3bb2e0f92bce8dd0aa976a88cc582b163d7e.
 
 ### Install bmv2
 ```
-git clone git@github.com:p4lang/behavioral-model.git bmv2
+git clone https://github.com/p4lang/behavioral-model.git bmv2
 cd bmv2
 ./autogen.sh
 ./configure CPPFLAGS="-isystem$BMV2_INSTALL/include" --without-nanomsg --without-thrift --with-pi --prefix=$BMV2_INSTALL
@@ -44,7 +44,7 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 13370aaf9329fcb369a3ea3989722eb5f61c07f3.
+we used for testing: 4f42df27cfc3371af994ff0f13321ec99233e4ab.
 
 ## Building the `stratum_bmv2` binary
 
