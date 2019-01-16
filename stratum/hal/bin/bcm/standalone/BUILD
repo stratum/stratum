@@ -32,7 +32,7 @@ package(
 )
 
 stratum_cc_binary(
-    name = "stratum_hal",
+    name = "stratum_bcm",
     srcs = [
         "main.cc",
     ],
@@ -61,8 +61,10 @@ stratum_cc_binary(
         "//stratum/hal/lib/bcm:bcm_tunnel_manager",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/p4:p4_table_mapper",
-        "//stratum/hal/lib/phal:legacy_phal",
-        "//stratum/hal/lib/phal:udev",
+        # TODO(craigs): need to add real phal deps here
+        # "//stratum/hal/lib/phal:legacy_phal",
+        # "//stratum/hal/lib/phal:udev",
+        "//stratum/hal/lib/phal:phal_sim",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
         "@com_google_absl//absl/memory",

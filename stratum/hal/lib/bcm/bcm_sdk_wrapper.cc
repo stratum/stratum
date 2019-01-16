@@ -43,7 +43,7 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "util/endian/endian.h"
+// #include "util/endian/endian.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -299,15 +299,17 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
 ::util::StatusOr<BcmPortOptions::LinkscanMode>
 BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
-  int linkscan_mode = BCM_LINKSCAN_MODE_NONE;
-  RETURN_IF_BCM_ERROR(bcm_port_linkscan_get(unit, port, &linkscan_mode));
+  // TODO(craigs): needs porting to SDKLT
+  // int linkscan_mode = BCM_LINKSCAN_MODE_NONE;
+  // RETURN_IF_BCM_ERROR(bcm_port_linkscan_get(unit, port, &linkscan_mode));
+  int linkscan_mode = 0;
   // Convert the BCM returned int value to the enum value defined in bcm.proto
   // Note that BCM_LINKSCAN_MODE_COUNT = 3 will never be returned by
   // bcm_port_linkscan_get
-  if (static_cast<bcm_linkscan_mode_e>(linkscan_mode) ==
-      BCM_LINKSCAN_MODE_NONE) {
-    return BcmPortOptions::LINKSCAN_MODE_NONE;
-  }
+  // if (static_cast<bcm_linkscan_mode_e>(linkscan_mode) ==
+  //     BCM_LINKSCAN_MODE_NONE) {
+  //   return BcmPortOptions::LINKSCAN_MODE_NONE;
+  // }
   return static_cast<BcmPortOptions::LinkscanMode>(linkscan_mode);
 }
 
@@ -507,7 +509,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 ::util::StatusOr<int> BcmSdkWrapper::AddMyStationEntry(int unit, int priority,
                                                        int vlan, int vlan_mask,
                                                        uint64 dst_mac,
-                                                       int priority) {
+                                                       uint64 dst_mac_mask) {
   // TODO: Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED) << "AddMyStationEntry is not implemented.";
 }
@@ -527,7 +529,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::DeleteVlan(int unit, int vlan) {
+::util::Status BcmSdkWrapper::DeleteVlanIfFound(int unit, int vlan) {
   // TODO: Implement this function.
   return ::util::OkStatus();
 }

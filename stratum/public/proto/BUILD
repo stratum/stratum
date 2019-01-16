@@ -75,6 +75,13 @@ stratum_cc_proto_library(
     ],
 )
 
+stratum_cc_proto_library(
+    name = "hal_proto",
+    hdrs = [
+        "hal.proto",
+    ],
+)
+
 ''' FIXME(boc) expose gNMI and P4RT protos
 proto_library(
     name = "tv_proto",

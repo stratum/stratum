@@ -230,19 +230,21 @@ PipelineProcessor::CreateInstance(const P4ControlBlock& control_block) {
                                 statement.ShortDebugString(), ").");
     switch (statement.statement_case()) {
       case P4ControlStatement::kApply:
-        RETURN_IF_ERROR(ApplyTable(statement.apply(), base_node)) << error;
+        RETURN_IF_ERROR_WITH_APPEND(ApplyTable(statement.apply(), base_node)) 
+            << error;
         break;
       case P4ControlStatement::kBranch:
         switch (statement.branch().condition().condition_case()) {
           case P4BranchCondition::kHit:
-            RETURN_IF_ERROR(ProcessHitBranch(statement.branch(), base_node))
+            RETURN_IF_ERROR_WITH_APPEND(
+                ProcessHitBranch(statement.branch(), base_node))
                 << error;
             break;
           case P4BranchCondition::kIsValid:
-            RETURN_IF_ERROR(
+            RETURN_IF_ERROR_WITH_APPEND(
                 ProcessIsValidBranch(statement.branch(), true, base_node))
                 << error;
-            RETURN_IF_ERROR(
+            RETURN_IF_ERROR_WITH_APPEND(
                 ProcessIsValidBranch(statement.branch(), false, base_node))
                 << error;
             break;

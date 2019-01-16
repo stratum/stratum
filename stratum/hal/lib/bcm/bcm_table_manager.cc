@@ -412,7 +412,6 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     bcm_flow_entry->set_bcm_acl_table_id(acl_table->PhysicalTableId());
     bcm_flow_entry->set_acl_stage(acl_table->Stage());
 
-    // Add the constant fields.
     ASSIGN_OR_RETURN(auto const_fields, ConstConditionsToBcmFields(*acl_table));
     for (const BcmField& field : const_fields) {
       *bcm_flow_entry->add_fields() = field;
@@ -432,7 +431,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       continue;
     }
     auto* bcm_field = bcm_flow_entry->add_fields();
-    RETURN_IF_ERROR(MappedFieldToBcmField(bcm_table_type, field, bcm_field))
+    RETURN_IF_ERROR_WITH_APPEND(MappedFieldToBcmField(bcm_table_type, field, bcm_field))
         << common_flow_entry_string;
     if (field.type() == P4_FIELD_TYPE_VRF) {
       has_vrf_field = true;
@@ -525,7 +524,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       // Handle complex actions.
       {
         std::vector<BcmAction> bcm_actions;
-        RETURN_IF_ERROR(ConvertComplexP4Actions(&function, &bcm_actions))
+        RETURN_IF_ERROR_WITH_APPEND(
+            ConvertComplexP4Actions(&function, &bcm_actions))
             << " Failed to convert CommonFlowEntry to BcmFlowEntry for unit "
             << unit_ << "." << common_flow_entry_string;
         for (const BcmAction& bcm_action : bcm_actions) {
@@ -538,7 +538,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
           BcmAction drop_action;
           drop_action.set_type(BcmAction::DROP);
           std::vector<BcmAction> bcm_actions;
-          RETURN_IF_ERROR(FillBcmActionColorParams(primitive.meter_colors(),
+          RETURN_IF_ERROR_WITH_APPEND(
+             FillBcmActionColorParams(primitive.meter_colors(),
                                                    drop_action, &bcm_actions))
               << " Failed to convert CommonFlowEntry to BCM flow entry on"
               << " unit " << unit_ << "." << common_flow_entry_string;
@@ -551,7 +552,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       // Convert the remaining action fields to bcm fields.
       for (const auto& field : function.modify_fields()) {
         BcmAction bcm_action;
-        RETURN_IF_ERROR(P4ActionFieldToBcmAction(field, &bcm_action))
+        RETURN_IF_ERROR_WITH_APPEND
+            (P4ActionFieldToBcmAction(field, &bcm_action))
             << "Failed to convert CommonFlowEntry to BCM flow entry in unit "
             << unit_ << "." << common_flow_entry_string;
         if (!ProtoEqual(bcm_action, BcmAction())) {
@@ -576,59 +578,61 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 ::util::StatusOr<std::vector<BcmField>>
 BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
   std::vector<BcmField> bcm_fields;
-  const auto& conditions = table.ConstConditions();
-  for (const auto& condition : conditions) {
-    const P4HeaderType& header = condition.first;
-    if (!condition.second) {
-      // TODO(richardyu): BcmSdkWrapper does not currently support negative
-      // checks. We also need to add logic to prune overlapping
-      // conditions during table creation (e.g. !IPv4 & IPv6 should only report
-      // IPv6).
-      continue;
-    }
-    BcmField bcm_field;
-    switch (header) {
-      case P4_HEADER_ARP:
-        bcm_field.set_type(BcmField::IP_TYPE);
-        bcm_field.mutable_value()->set_u32(kEtherTypeArp);
-        break;
-      case P4_HEADER_IPV4:
-        bcm_field.set_type(BcmField::IP_TYPE);
-        bcm_field.mutable_value()->set_u32(kEtherTypeIPv4);
-        break;
-      case P4_HEADER_IPV6:
-        bcm_field.set_type(BcmField::IP_TYPE);
-        bcm_field.mutable_value()->set_u32(kEtherTypeIPv6);
-        break;
-      case P4_HEADER_TCP:
-        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-        bcm_field.mutable_value()->set_u32(kIpProtoTcp);
-        break;
-      case P4_HEADER_UDP:
-      case P4_HEADER_UDP_PAYLOAD:
-        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-        bcm_field.mutable_value()->set_u32(kIpProtoUdp);
-        break;
-      case P4_HEADER_GRE:
-        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-        bcm_field.mutable_value()->set_u32(kIpProtoGre);
-        break;
-      case P4_HEADER_ICMP:
-        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-        if (conditions.count(P4_HEADER_IPV6) && conditions.at(P4_HEADER_IPV6)) {
-          bcm_field.mutable_value()->set_u32(kIpProtoIPv6Icmp);
-        } else {
-          bcm_field.mutable_value()->set_u32(kIpProtoIcmp);
-        }
-        break;
-      default:
-        return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-               << "Validity check for header type: "
-               << P4HeaderType_Name(header) << " in table " << table.Name()
-               << " is not supported.";
-    }
-    bcm_fields.push_back(bcm_field);
-  }
+
+// FIXME(craigs) - need ConstConditions in AclTable Class
+//   const auto& conditions = table.ConstConditions();
+//   for (const auto& condition : conditions) {
+//     const P4HeaderType& header = condition.first;
+//     if (!condition.second) {
+//       // TODO(richardyu): BcmSdkWrapper does not currently support negative
+//       // checks. We also need to add logic to prune overlapping
+//       // conditions during table creation (e.g. !IPv4 & IPv6 should only report
+//       // IPv6).
+//       continue;
+//     }
+//     BcmField bcm_field;
+//     switch (header) {
+//       case P4_HEADER_ARP:
+//         bcm_field.set_type(BcmField::IP_TYPE);
+//         bcm_field.mutable_value()->set_u32(kEtherTypeArp);
+//         break;
+//       case P4_HEADER_IPV4:
+//         bcm_field.set_type(BcmField::IP_TYPE);
+//         bcm_field.mutable_value()->set_u32(kEtherTypeIPv4);
+//         break;
+//       case P4_HEADER_IPV6:
+//         bcm_field.set_type(BcmField::IP_TYPE);
+//         bcm_field.mutable_value()->set_u32(kEtherTypeIPv6);
+//         break;
+//       case P4_HEADER_TCP:
+//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+//         bcm_field.mutable_value()->set_u32(kIpProtoTcp);
+//         break;
+//       case P4_HEADER_UDP:
+//       case P4_HEADER_UDP_PAYLOAD:
+//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+//         bcm_field.mutable_value()->set_u32(kIpProtoUdp);
+//         break;
+//       case P4_HEADER_GRE:
+//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+//         bcm_field.mutable_value()->set_u32(kIpProtoGre);
+//         break;
+//       case P4_HEADER_ICMP:
+//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+//         if (conditions.count(P4_HEADER_IPV6) && conditions.at(P4_HEADER_IPV6)) {
+//           bcm_field.mutable_value()->set_u32(kIpProtoIPv6Icmp);
+//         } else {
+//           bcm_field.mutable_value()->set_u32(kIpProtoIcmp);
+//         }
+//         break;
+//       default:
+//         return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+//                << "Validity check for header type: "
+//                << P4HeaderType_Name(header) << " in table " << table.Name()
+//                << " is not supported.";
+//     }
+//     bcm_fields.push_back(bcm_field);
+//   }
   return bcm_fields;
 }
 
@@ -643,10 +647,10 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
   // Fill the CommonFlowEntry by calling P4TableMapper::MapFlowEntry(). This
   // will include all the mappings that are common to all the platforms.
   CommonFlowEntry common_flow_entry;
-  RETURN_IF_ERROR(
+  RETURN_IF_ERROR_WITH_APPEND(
       p4_table_mapper_->MapFlowEntry(table_entry, type, &common_flow_entry))
       << error_message;
-  RETURN_IF_ERROR(
+  RETURN_IF_ERROR_WITH_APPEND(
       CommonFlowEntryToBcmFlowEntry(common_flow_entry, type, bcm_flow_entry))
       << error_message;
 
@@ -663,7 +667,7 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Metering is only supported for ACL flows." << error_message;
     }
-    RETURN_IF_ERROR(FillBcmMeterConfig(table_entry.meter_config(),
+    RETURN_IF_ERROR_WITH_APPEND(FillBcmMeterConfig(table_entry.meter_config(),
                                        bcm_flow_entry->mutable_meter()))
         << error_message;
   }
@@ -903,7 +907,8 @@ namespace {
     RETURN_IF_ERROR(result.ValueOrDie()->InsertEntry(table_entry));
   } else {
     ::p4::config::v1::Table p4_table;
-    RETURN_IF_ERROR(p4_table_mapper_->LookupTable(table_id, &p4_table))
+    RETURN_IF_ERROR_WITH_APPEND(
+        p4_table_mapper_->LookupTable(table_id, &p4_table))
         << "Table entry refers to unknown table id " << table_id << ".";
     auto table_result =
         generic_flow_tables_.emplace(std::make_pair(table_id, p4_table));
@@ -929,11 +934,20 @@ namespace {
 ::util::Status BcmTableManager::UpdateTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id),
-                   _ << "Could not find table " << table_id << ".");
-  ASSIGN_OR_RETURN(
-      ::p4::v1::TableEntry old_entry, table->ModifyEntry(table_entry),
-      _ << "Failed to update flow " << table_entry.ShortDebugString() << ".");
+
+  auto statusor = GetMutableFlowTable(table_id);
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+    LOG(ERROR) << "Could not find table " << table_id << ".";
+    return statusor.status();
+  } 
+  BcmFlowTable* table = statusor.ConsumeValueOrDie();
+  auto statusor2 = table->ModifyEntry(table_entry);
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
+    LOG(ERROR) << "Failed to update flow " 
+               << table_entry.ShortDebugString() << ".";
+    return statusor2.status();
+  } 
+  ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
 
   // Update the flow_ref_count for the old/new member or group.
   uint32 old_member_id = old_entry.action().action_profile_member_id();
@@ -965,11 +979,19 @@ namespace {
 ::util::Status BcmTableManager::DeleteTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id),
-                   _ << "Could not find table " << table_id << ".");
-  ASSIGN_OR_RETURN(
-      ::p4::v1::TableEntry old_entry, table->DeleteEntry(table_entry),
-      _ << "Failed to delete flow " << table_entry.ShortDebugString() << ".");
+
+  auto statusor = GetMutableFlowTable(table_id);
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+    LOG(ERROR) << "Could not find table " << table_id << ".";
+    return statusor.status();
+  } 
+  BcmFlowTable* table = statusor.ConsumeValueOrDie();
+  auto statusor2 = table->DeleteEntry(table_entry);
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
+    LOG(ERROR) << "Failed to delete flow " << table_entry.ShortDebugString() << ".";
+    return statusor2.status();
+  } 
+  ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
 
   // Update the flow_ref_count for the member or group.
   uint32 member_id = old_entry.action().action_profile_member_id();
@@ -1001,13 +1023,21 @@ namespace {
            << table_entry.ShortDebugString() << ".";
   }
 
-  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id),
-                   _ << "Could not find table " << table_id << ".");
-  ASSIGN_OR_RETURN(
-      ::p4::v1::TableEntry modified_entry, table->Lookup(table_entry),
-      _ << "Failed to find flow " << table_entry.ShortDebugString() << ".");
+  auto statusor = GetMutableFlowTable(table_id);
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+    LOG(ERROR) << "Could not find table " << table_id << ".";
+    return statusor.status();
+  } 
+  BcmFlowTable* table = statusor.ConsumeValueOrDie();
+  auto statusor2 = table->Lookup(table_entry);
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
+    LOG(ERROR) << "Failed to find flow " << table_entry.ShortDebugString() << ".";
+    return statusor2.status();
+  } 
+  ::p4::v1::TableEntry modified_entry = statusor2.ConsumeValueOrDie();
+
   *modified_entry.mutable_meter_config() = meter.config();
-  RETURN_IF_ERROR(table->ModifyEntry(modified_entry).status())
+  RETURN_IF_ERROR_WITH_APPEND(table->ModifyEntry(modified_entry).status())
       << "Failed to insert entry with modified meter. Entry: "
       << table_entry.ShortDebugString();
   return ::util::OkStatus();
@@ -1209,7 +1239,9 @@ namespace {
       if (member_nexthop_info->type ==
           BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
         int port = member_nexthop_info->bcm_port;
-        if (!gtl::ContainsKey(ports, port)) {
+        // std::unorderd_set doesn't have a ContainsKey
+        //if (!gtl::ContainsKey(ports, port)) {
+        if (!ports.contains(port)) {
           auto* group_ids = gtl::FindOrNull(port_to_group_ids_, port);
           if (!group_ids) {
             return MAKE_ERROR(ERR_INTERNAL)
@@ -1409,8 +1441,13 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 
 ::util::Status BcmTableManager::DeleteTable(uint32 table_id) {
   const BcmFlowTable* table;
-  ASSIGN_OR_RETURN(table, GetConstantFlowTable(table_id),
-                   _ << "Could not find table " << table_id << " to delete.");
+
+  auto statusor = GetConstantFlowTable(table_id);
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+    LOG(ERROR) << "Could not find table " << table_id << " to delete.";
+    return statusor.status();
+  } 
+  table = statusor.ConsumeValueOrDie();
   std::vector<::p4::v1::TableEntry> entries;
   for (const auto& entry : *table) {
     entries.emplace_back(entry);
@@ -1496,13 +1533,21 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 
 ::util::StatusOr<::p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
     const ::p4::v1::TableEntry& entry) const {
-  ASSIGN_OR_RETURN(const BcmFlowTable* table,
-                   GetConstantFlowTable(entry.table_id()),
-                   _ << "Could not find table " << entry.table_id() << ".");
-  ASSIGN_OR_RETURN(::p4::v1::TableEntry lookup, table->Lookup(entry),
-                   _ << "Table " << entry.table_id()
-                     << " does not contain a matching flow for "
-                     << entry.ShortDebugString() << ".");
+
+  auto statusor = GetConstantFlowTable(entry.table_id());
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+    LOG(ERROR) << "Could not find table " << entry.table_id() << ".";
+    return statusor.status();
+  } 
+  const BcmFlowTable* table = statusor.ConsumeValueOrDie();
+  auto statusor2 = table->Lookup(entry);
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
+    LOG(ERROR) << "Table " << entry.table_id()
+               << " does not contain a matching flow for "
+               << entry.ShortDebugString() << ".";
+    return statusor2.status();
+  } 
+  ::p4::v1::TableEntry lookup = statusor2.ConsumeValueOrDie();
 
   return lookup;
 }

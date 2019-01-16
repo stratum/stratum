@@ -32,6 +32,7 @@
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/constants.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"

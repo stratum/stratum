@@ -25,7 +25,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/hal/lib/bcm/bcm_chassis_ro.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"

@@ -48,5 +48,8 @@ barefoot_configure(name = "local_barefoot_bin")
 load("//stratum/hal/lib/barefoot:thrift.bzl", "thrift_configure")
 thrift_configure(name = "local_thrift_bin")
 
+load("//stratum/hal/lib/bcm:bcm.bzl", "bcm_configure")
+bcm_configure(name = "local_bcm_bin")
+
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()

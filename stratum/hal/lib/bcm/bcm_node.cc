@@ -613,8 +613,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // Fill BcmNonMultipathNexthop for this member and add it to the HW.
       BcmNonMultipathNexthop nexthop;
       RETURN_IF_ERROR(
-          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop))
-          .LogError();
+          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop));
       ASSIGN_OR_RETURN(
           int egress_intf_id,
           bcm_l3_manager_->FindOrCreateNonMultipathNexthop(nexthop));
@@ -627,8 +626,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // method will return error. We keep a one-to-one map between members
       // and non-multipath egress intfs.
       RETURN_IF_ERROR(bcm_table_manager_->AddActionProfileMember(
-                          member, nexthop.type(), egress_intf_id, bcm_port_id))
-          .LogError();
+                          member, nexthop.type(), egress_intf_id, bcm_port_id));
       consumed = true;
       break;
     }
@@ -644,22 +642,19 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // Then check if adding to HW ends up creating a new egress intf.
       BcmNonMultipathNexthop nexthop;
       RETURN_IF_ERROR(
-          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop))
-          .LogError();
+          bcm_table_manager_->FillBcmNonMultipathNexthop(member, &nexthop));
       CHECK_RETURN_IF_FALSE(unit_ == nexthop.unit())
           << "Something is wrong. This should never happen (" << unit_
           << " != " << nexthop.unit() << ").";
       RETURN_IF_ERROR(
-          bcm_l3_manager_->ModifyNonMultipathNexthop(egress_intf_id, nexthop))
-          .LogError();
+          bcm_l3_manager_->ModifyNonMultipathNexthop(egress_intf_id, nexthop));
       int bcm_port_id =
           nexthop.port_case() == BcmNonMultipathNexthop::kLogicalPort
               ? nexthop.logical_port()
               : nexthop.trunk_port();
       // Update the internal records in BcmTableManager.
       RETURN_IF_ERROR(bcm_table_manager_->UpdateActionProfileMember(
-                          member, nexthop.type(), bcm_port_id))
-          .LogError();
+                          member, nexthop.type(), bcm_port_id));
       consumed = true;
       break;
     }
@@ -670,8 +665,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       // count), we can safely remove it.
       BcmNonMultipathNexthopInfo info;
       RETURN_IF_ERROR(
-          bcm_table_manager_->GetBcmNonMultipathNexthopInfo(member_id, &info))
-          .LogError();  // will error out if member not found
+          bcm_table_manager_->GetBcmNonMultipathNexthopInfo(member_id, &info));
       CHECK_RETURN_IF_FALSE(info.group_ref_count == 0 &&
                             info.flow_ref_count == 0)
           << "member_id " << member_id << " is already used by "
@@ -680,11 +674,9 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           << ". ActionProfileMember: " << member.ShortDebugString() << ".";
       // Delete the member from HW.
       RETURN_IF_ERROR(
-          bcm_l3_manager_->DeleteNonMultipathNexthop(info.egress_intf_id))
-          .LogError();
+          bcm_l3_manager_->DeleteNonMultipathNexthop(info.egress_intf_id));
       // Update the internal records in BcmTableManager.
-      RETURN_IF_ERROR(bcm_table_manager_->DeleteActionProfileMember(member))
-          .LogError();
+      RETURN_IF_ERROR(bcm_table_manager_->DeleteActionProfileMember(member));
       consumed = true;
       break;
     }

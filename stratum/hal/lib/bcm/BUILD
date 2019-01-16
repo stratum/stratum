@@ -169,6 +169,7 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
+        "//stratum/public/proto:hal_proto",
     ],
 )
 
@@ -579,6 +580,7 @@ stratum_cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
+        "@local_bcm_bin//:bcm_headers",
         #"//sandblaze/prebuilt/broadcom:bcm-sdk",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -589,6 +591,8 @@ stratum_cc_library(
         "//stratum/lib:utils",
         # FIXME(boc)
         # "//util/endian",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
     ],
 )
 

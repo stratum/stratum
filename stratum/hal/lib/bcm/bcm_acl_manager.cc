@@ -120,7 +120,7 @@ BcmAclManager::~BcmAclManager() {}
                        // to correct ID in the messages/errors.
   // Grab the chip hardware description.
   BcmHardwareSpecs hardware_specs;
-  RETURN_IF_ERROR(
+  RETURN_IF_ERROR_WITH_APPEND(
       ReadProtoFromTextFile(FLAGS_bcm_hardware_specs_file, &hardware_specs))
       << "Failed to read hardware map.";
   Platform platform = config.chassis().platform();
@@ -140,7 +140,7 @@ BcmAclManager::~BcmAclManager() {}
            << Platform_Name(platform);
   }
 
-  RETURN_IF_ERROR(OneTimeSetup())
+  RETURN_IF_ERROR_WITH_APPEND(OneTimeSetup())
       << "Failed to configure ACL hardware for node " << node_id
       << " (unit: " << unit_ << "): " << config.ShortDebugString() << ".";
   return ::util::OkStatus();
@@ -191,9 +191,10 @@ BcmAclManager::~BcmAclManager() {}
     RETURN_IF_ERROR_WITH_APPEND(result.status())
         << " Failed to set up acl pipelines for control: " << control.name()
         << ", type: " << control.type() << ".";
+    auto pat = result.ValueOrDie(); 
     physical_acl_tables.insert(physical_acl_tables.end(),
-                               make_move_iterator(result.ValueOrDie().begin()),
-                               make_move_iterator(result.ValueOrDie().end()));
+                               make_move_iterator(pat.begin()),
+                               make_move_iterator(pat.end()));
   }
 
   // Install and update the ACL tables.
@@ -290,7 +291,7 @@ BcmAclManager::~BcmAclManager() {}
       << " as bcm entry: " << bcm_flow_entry.ShortDebugString() << ".";
 
   // Record the flow modification.
-  RETURN_IF_ERROR_WITH_APPEND(bcm_table_manager_->UpdateTableEntry(entry));
+  RETURN_IF_ERROR(bcm_table_manager_->UpdateTableEntry(entry));
   VLOG(3) << "Successfully modified ACL table entry: "
           << entry.ShortDebugString() << ".";
   return ::util::OkStatus();
@@ -439,9 +440,14 @@ BcmAclManager::GeneratePhysicalAclTables(
     uint32 table_id = pipeline_table.table.table_id();
     ::p4::config::v1::Table p4_table;
     RETURN_IF_ERROR(p4_table_mapper_->LookupTable(table_id, &p4_table));
+    // FIXME(craigs) - no AclTable creator function with valid_conditions
+    //                 params, maybe related to missing ConstConditions()
+    //                 in AclTable.
+    // physical_acl_table.logical_tables.emplace_back(
+    //     p4_table, stage, pipeline_table.priority,
+    //     pipeline_table.valid_conditions);
     physical_acl_table.logical_tables.emplace_back(
-        p4_table, stage, pipeline_table.priority,
-        pipeline_table.valid_conditions);
+        p4_table, stage, pipeline_table.priority);
   }
   return physical_acl_table;
 }
@@ -475,7 +481,7 @@ BcmAclManager::GeneratePhysicalAclTables(
   bcm_acl_table.set_stage(physical_acl_table.stage);
   auto install_result =
       bcm_sdk_interface_->CreateAclTable(unit_, bcm_acl_table);
-  RETURN_IF_ERROR(install_result.status())
+  RETURN_IF_ERROR_WITH_APPEND(install_result.status())
       << " Failed to install physical table in unit " << unit_
       << ". Table: " << bcm_acl_table.ShortDebugString() << ".";
   LOG(INFO) << "Successfully installed physical table on unit " << unit_

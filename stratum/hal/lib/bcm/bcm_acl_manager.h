@@ -23,6 +23,7 @@
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
+#include "stratum/hal/lib/bcm/pipeline_processor.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
