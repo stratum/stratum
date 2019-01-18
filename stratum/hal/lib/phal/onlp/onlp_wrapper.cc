@@ -61,6 +61,19 @@ OnlpWrapper::~OnlpWrapper() {
   return SfpInfo(sfp_info);
 }
 
+::util::StatusOr<FanInfo> OnlpWrapper::GetFanInfo(OnlpOid oid) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+      << "Cannot get FAN info: OID " << oid << " is not an FAN.";
+  onlp_fan_info_t fan_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_info_get(oid, &fan_info)))
+      << "Failed to get FAN info for OID " << oid << ".";
+  return FanInfo(fan_info);
+}
+
+::util::StatusOr<const onlp_fan_info_t*> FanInfo::GetOnlpFan() const {
+  return &fan_info_;
+}
+
 ::util::StatusOr<bool> OnlpWrapper::GetSfpPresent(OnlpOid port) const {
   return onlp_sfp_is_present(port);
 }
@@ -221,6 +234,36 @@ SfpModuleCaps SfpInfo::GetSfpModuleCaps() const {
   CHECK_RETURN_IF_FALSE(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
       << "Cannot get SFF info: Invalid SFP type.";
   return &sfp_info_.sff;
+}
+
+FanDir FanInfo::GetFanDir() const {
+  switch(fan_info_.dir) {
+  case ONLP_FAN_DIR_B2F:
+    return FAN_DIR_B2F;
+  case ONLP_FAN_DIR_F2B:
+    return FAN_DIR_F2B;
+  default:
+    return FAN_DIR_UNKNOWN;
+  }
+}
+
+FanCaps FanInfo::GetFanCaps() const {
+  switch(fan_info_.caps) {
+  case ONLP_FAN_CAPS_SET_DIR:
+    return FAN_CAPS_SET_DIR;
+  case ONLP_FAN_CAPS_GET_DIR:
+    return FAN_CAPS_GET_DIR;
+  case ONLP_FAN_CAPS_SET_RPM:
+    return FAN_CAPS_SET_RPM;
+  case  ONLP_FAN_CAPS_SET_PERCENTAGE:
+    return FAN_CAPS_SET_PERCENTAGE;
+  case ONLP_FAN_CAPS_GET_RPM:
+    return FAN_CAPS_GET_RPM;
+  case ONLP_FAN_CAPS_GET_PERCENTAGE:
+    return FAN_CAPS_GET_PERCENTAGE;
+  default:
+    return FAN_CAPS_UNKNOWN;
+  }
 }
 
 }  // namespace onlp

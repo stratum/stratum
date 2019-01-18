@@ -876,6 +876,26 @@ enum SfpModuleCaps {
   SFP_MODULE_CAPS_F_100G  = 16;
 }
 
+// Possible directions for a fan module.
+// currently maps to onlp_fan_info_t defined in fan.h
+enum FanDir {
+  FAN_DIR_UNKNOWN   = 0;
+  FAN_DIR_B2F       = 1;
+  FAN_DIR_F2B       = 2;
+}
+
+// Possible capabilities for a fan module.
+// currently maps to onlp_fan_info_t defined in fan.h
+enum FanCaps {
+  FAN_CAPS_UNKNOWN        = 0;
+  FAN_CAPS_SET_DIR        = 1;
+  FAN_CAPS_GET_DIR        = 2;
+  FAN_CAPS_SET_RPM        = 4;
+  FAN_CAPS_SET_PERCENTAGE = 8;
+  FAN_CAPS_GET_RPM        = 16;
+  FAN_CAPS_GET_PERCENTAGE = 32;
+}
+
 //------------------------------------------------------------------------------
 // Messages related to physical properties of ports on a chassis
 //------------------------------------------------------------------------------
