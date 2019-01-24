@@ -28,6 +28,7 @@ Usage: $0
     [--git-name <name>]             use the provided name for git commits
     [--git-email <email>]           use the provided email for git commits
     [--git-editor <editor command>] use the provided editor for git
+    [-- [Docker options]]           additional Docker options for running the container
 EOF
 }
 
@@ -67,6 +68,10 @@ do
         shift
         shift
         ;;
+    "--")
+        shift
+        break
+        ;;
     *)  # unknown option
         print_help
         exit 1
@@ -103,4 +108,5 @@ if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $BAZEL_CACHE:/home/$USER/.cache"
+DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS $@"
 docker run $DOCKER_RUN_OPTIONS -w /stratum --user $USER -ti $IMAGE_NAME bash
