@@ -100,7 +100,7 @@ class MethodCallDecoder {
   bool decode_done_;
 
   // The Decode method stores its output in these members.
-  // TODO(teverman): Consolidate both types of output into a single
+  // TODO: Consolidate both types of output into a single
   // hal::P4ActionDescriptor.
   hal::P4ActionDescriptor::P4ActionInstructions method_op_;
   hal::P4ActionDescriptor::P4TunnelAction tunnel_op_;

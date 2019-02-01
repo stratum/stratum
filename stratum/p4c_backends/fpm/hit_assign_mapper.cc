@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's HitAssignMapper.
+// This file implements the Stratum p4c backend's HitAssignMapper.
 
 #include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
 
@@ -43,7 +43,7 @@ const IR::P4Control* HitAssignMapper::Apply(const IR::P4Control& control) {
                            new_body->to<IR::BlockStatement>());
 }
 
-// The Hercules backend expects the frontend and midend to transform
+// The Stratum backend expects the frontend and midend to transform
 // IR IfStatements with table hit conditions of the form:
 //  if (table.apply().hit) {
 //    ...
@@ -80,7 +80,7 @@ const IR::Node* HitAssignMapper::preorder(IR::AssignmentStatement* statement) {
 // This preorder catches any table apply+hit that appears in an unexpected
 // expression.  For example, if an apply+hit appears directly in an IfStatement
 // condition (despite the expected frontend transform), then previous passes
-// may have run an unexpected transform series.  The Hercules backend doesn't
+// may have run an unexpected transform series.  The Stratum backend doesn't
 // want these transformations because they can introduce other temporary
 // tables and actions that obscure and complicate the control flow.
 const IR::Node* HitAssignMapper::preorder(IR::Expression* expression) {

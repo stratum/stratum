@@ -55,7 +55,7 @@ class SwitchCaseDecoder : public Inspector {
 
   // The Decode method should be called once for each SwitchStatement in a
   // P4Control.  It verifies that the SwitchStatement operations are valid and
-  // supported by Hercules.  It calls table_mapper to update the action
+  // supported by Stratum.  It calls table_mapper to update the action
   // descriptors with operations for the switch to perform.  It reports P4
   // program errors through p4c's ErrorReporter.  Decode expects that a
   // MeterColorMapper has previously transformed metering conditions into

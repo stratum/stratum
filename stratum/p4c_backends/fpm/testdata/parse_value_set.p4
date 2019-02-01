@@ -14,7 +14,7 @@
 
 // This file is a P4 parser setup for generating a P4Parser IR file to
 // test the ParserDecoder and ParserFieldMapper.  It includes a small-scale
-// parser value set similar in usage to the Hercules P4 programs.
+// parser value set similar in usage to the Stratum P4 programs.
 
 #include <core.p4>
 #include <v1model.p4>

@@ -48,7 +48,7 @@ class P4cFrontMidInterface {
   // catching.
   virtual void Initialize() = 0;
 
-  // Method for managing p4c's internal options.  A Hercules backend reserves
+  // Method for managing p4c's internal options.  A Stratum backend reserves
   // one gflag string for all of the p4c open source code's options.  Before
   // running the front end pass, the backend must parse this string into argc
   // and argv, then pass the result into ProcessCommandLineOptions.  Refer to

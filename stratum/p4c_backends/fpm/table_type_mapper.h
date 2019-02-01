@@ -45,7 +45,7 @@ class TableTypeMapper {
   // Iterates over all the tables known to p4_info_manager, evaluates the
   // p4_pipeline_config descriptors pertaining to each table and its associated
   // actions and fields, and appends any additional table descriptor data that
-  // may be useful to the Hercules switch stack.  The ProcessTables focus is
+  // may be useful to the Stratum switch stack.  The ProcessTables focus is
   // on table types for fixed pipeline stages on the target.  By the time
   // ProcessTables runs, the P4PipelineConfig and P4Info have enough data
   // for the switch stack to manage ACL-based tables.

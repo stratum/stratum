@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's MeterColorMapper.
+// This file implements the Stratum p4c backend's MeterColorMapper.
 
 #include "stratum/p4c_backends/fpm/meter_color_mapper.h"
 
@@ -60,7 +60,7 @@ const IR::Node* MeterColorMapper::preorder(IR::BlockStatement* statement) {
 
 const IR::Node* MeterColorMapper::preorder(IR::IfStatement* statement) {
   if (transforming_if_) {
-    ::error("Backend: Hercules does not support nested %s "
+    ::error("Backend: Stratum FPM does not support nested %s "
             "within a meter color condition", statement);
     transforming_if_ = false;
     prune();
@@ -107,7 +107,7 @@ const IR::Node* MeterColorMapper::preorder(IR::MethodCallStatement* statement) {
     return statement;
   }
 
-  // The MethodCallDecoder allows more statement types than Hercules allows
+  // The MethodCallDecoder allows more statement types than Stratum allows
   // in switch statements, so MeterColorMapper imposes additional restrictions
   // on the output operations.
   const hal::P4ActionDescriptor::P4ActionInstructions& method_op =
@@ -116,7 +116,7 @@ const IR::Node* MeterColorMapper::preorder(IR::MethodCallStatement* statement) {
       (method_op.primitives(0) != P4_ACTION_OP_CLONE &&
        method_op.primitives(0) != P4_ACTION_OP_DROP)) {
     transforming_if_ = false;
-    ::error("Backend: Hercules only allows clone and drop externs "
+    ::error("Backend: Stratum FPM only allows clone and drop externs "
             "in meter actions %s", statement);
     prune();
     return statement;

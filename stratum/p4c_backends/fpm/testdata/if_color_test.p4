@@ -61,7 +61,7 @@ control ifs_with_transforms(inout headers hdr, inout test_metadata_t meta,
   }
 }
 
-// This control contains IfStatements with assorted conditions that Hercules
+// This control contains IfStatements with assorted conditions that Stratum
 // should accept without doing any meter color transforms.
 control ifs_with_no_transforms(inout headers hdr, inout test_metadata_t meta,
                                inout standard_metadata_t standard_metadata) {

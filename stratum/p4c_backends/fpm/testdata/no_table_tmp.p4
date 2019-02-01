@@ -16,7 +16,7 @@
 // temporary tables and actions that clutter the p4c output.  The open source
 // midends generate these temporaries to help the bmv2 pipeline.  In this
 // file, the open source midends added a table and action for the if statement
-// after the test_table.apply() below.  The Hercules custom midend should not
+// after the test_table.apply() below.  The Stratum custom midend should not
 // have these temporaries.
 #include <core.p4>
 #include <v1model.p4>

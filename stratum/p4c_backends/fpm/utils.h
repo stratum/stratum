@@ -101,7 +101,7 @@ void FindLocalMetadataType(const std::vector<const IR::P4Control*>& controls,
 bool IsFieldTypeUnspecified(const hal::P4FieldDescriptor& descriptor);
 
 // These functions manage a global instance of P4ModelNames for use throughout
-// the Hercules p4c backend.  SetP4ModelNames is called to set up the global
+// the Stratum p4c backend.  SetP4ModelNames is called to set up the global
 // instance.  Calling GetP4ModelNames returns a reference to the global
 // instance.  If a call to GetP4ModelNames occurs before SetP4ModelNames,
 // GetP4ModelNames returns an empty instance of P4ModelNames.

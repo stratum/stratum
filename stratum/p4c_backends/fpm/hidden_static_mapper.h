@@ -21,7 +21,7 @@
 // table with the same match key value indicates the action ID for the
 // related hidden action.  The HiddenStaticMapper's role is form a new
 // InternalAction that merges the redirecting action with the hidden action.
-// The InternalAction becomes a single action for a Hercules switch physical
+// The InternalAction becomes a single action for a Stratum switch physical
 // table that combines the functionality of multiple P4 logical tables.
 
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_

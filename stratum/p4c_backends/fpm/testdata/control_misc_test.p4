@@ -63,7 +63,7 @@ control DeparserImpl(packet_out packet, in headers hdr) {
   }
 }
 
-// TODO(teverman): Given recent instability in the P4 checksum API and
+// TODO: Given recent instability in the P4 checksum API and
 // likely additional turbulence through PSA, consider moving these tests
 // to some other control.
 // The checksum verify control tests assignment of a constant to a header field.

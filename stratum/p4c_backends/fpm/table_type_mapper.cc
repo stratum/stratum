@@ -28,7 +28,7 @@ TableTypeMapper::TableTypeMapper()
       found_table_type_(P4_TABLE_UNKNOWN) {
 }
 
-// TODO(teverman): ProcessTables is currently hard-coded to decide table type
+// TODO: ProcessTables is currently hard-coded to decide table type
 // based on certain table attributes.  A potentially more general and longer
 // term solution could match the P4Info and pipeline config table data to a
 // target-specific text file description of fixed pipeline table attributes.

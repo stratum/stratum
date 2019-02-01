@@ -133,7 +133,7 @@ void ParserValueSetMapperTest::SetUpHeaderFields(
   }
 }
 
-// Tests to see that normal Hercules value sets in the parser generate
+// Tests to see that normal Stratum value sets in the parser generate
 // the expected field descriptor changes.
 TEST_F(ParserValueSetMapperTest, TestNormalValueSet) {
   SetUpIRParser("fpm/testdata/parse_value_set.ir.json");

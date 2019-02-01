@@ -16,7 +16,7 @@
 
 // The TableHitInspector is a p4c Inspector subclass that visits the IR node
 // hierarchy surrounding a table hit or miss.  It looks for statement sequences
-// that the Hercules switch stack is unable to support.  These include:
+// that the Stratum switch stack is unable to support.  These include:
 //  - A table apply can be conditional on the outcome of a previous table
 //    apply if and only if the previous apply was a miss.  TableHitInspector
 //    allows this sequence:

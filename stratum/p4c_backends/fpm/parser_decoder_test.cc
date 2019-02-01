@@ -138,7 +138,7 @@ TEST_F(ParserDecoderTest, ParseComplex) {
               concat_case.keyset_values(0).constant().value());
     EXPECT_EQ(params_case.keyset_values(1).constant().value(),
               concat_case.keyset_values(1).constant().value());
-    // TODO(teverman): Check keyset masks when properly encoded.
+    // TODO: Check keyset masks when properly encoded.
   }
 }
 
@@ -253,7 +253,7 @@ TEST_F(ParserDecoderTest, TestNoStartState) {
 
 #if 0
 // Tests error detection when the P4Parser has multiple start states.
-// TODO(teverman): This test apparently messes with the IR in such a way that
+// TODO: This test apparently messes with the IR in such a way that
 //   IRTestHelperJson can't load the IR any more after it runs.
 TEST_F(ParserDecoderTest, TestMultipleStartStates) {
   SetUpIRParser("fpm/testdata/parse_basic.ir.json");

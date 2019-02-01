@@ -11,12 +11,12 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-# Hercules: P4C backend
+# Stratum: P4C backend
 
 The p4c_backends directory contains [P4 compiler](https://github.com/p4lang/p4c)
-extensions for the Hercules vendor-agnostic networking project.  These
+extensions for the Stratum vendor-agnostic networking project.  These
 extensions take a [P4 specification](http://p4.org/spec/) as input.  They
-produce output that Hercules platforms use to encode/decode P4 runtime RPCs
+produce output that Stratum platforms use to encode/decode P4 runtime RPCs
 and implement the network behavior defined by the P4 spec.  Refer to the
 [overview]
 (http://need_a_link)

@@ -12,9 +12,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 # This file contains annotation map data for P4 tables that the p4c backend
-# expects to find when compiling Hercules P4 programs.
-# TODO(teverman): Change the file name to reflect its common usage across
-# all Hercules P4 roles,
+# expects to find when compiling Stratum P4 programs.
+# TODO: Change the file name to reflect its common usage across
+# all Stratum P4 roles,
 
 # The L3 table annotations reference addenda that sets up a fallback or override
 # VRF when the switch ultimately maps a P4 runtime table update to a flow entry.
@@ -89,7 +89,7 @@ table_addenda_map {
 }
 
 
-# TODO(teverman): Are these useful to distinguish V4/V6?  To find out, they
+# TODO: Are these useful to distinguish V4/V6?  To find out, they
 # aren't included in the table_addenda_map entries above for the 128-bit
 # IPv6 tables.  If proven to work for them, it should be safe to remove them
 # from the other L3 tables.

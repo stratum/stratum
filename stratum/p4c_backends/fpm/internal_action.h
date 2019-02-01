@@ -16,11 +16,11 @@
 
 // The p4c backend creates an InternalAction in the following situations:
 //  1) Action statements from multiple P4 logical tables need to merge into
-//     a single action that applies to one physical table.  The Hercules
+//     a single action that applies to one physical table.  The Stratum
 //     encap/decap flows with hidden tables represent this situation.
 //  2) An action needs to be extended to include metering conditions that the
 //     P4 program defines in the control logic outside the action.  The
-//     Hercules punt control with meter-based cloning represents this situation.
+//     Stratum punt control with meter-based cloning represents this situation.
 // In both of these situations, the InternalAction avoids changing the logic
 // in the original action.  This is important where multiple tables use the
 // same action, and new internal actions contain logic that varies from
@@ -67,7 +67,7 @@ class InternalAction {
   virtual ~InternalAction() {}
 
   // This method merges the behavior of action_name into this InternalAction
-  // instance.  It generally applies to Hercules encap/decap tables, where
+  // instance.  It generally applies to Stratum encap/decap tables, where
   // the actions from hidden tables need to merge into actions that are
   // dynamically updated via the P4 runtime API.  MergeAction can be called
   // multiple times per instance, with the limitation that a single instance

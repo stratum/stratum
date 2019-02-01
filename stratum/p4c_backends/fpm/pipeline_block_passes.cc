@@ -213,7 +213,7 @@ P4Annotation::PipelineStage PipelineBlockPass::PopControlBlock() {
 
   // Condition 2: If the popped stage set refers to more than one stage, it
   // invalidates optimization all the way up the block stack hierarchy.
-  // TODO(teverman): This approach works well for tor.p4, but it may be too
+  // TODO: This approach works well for tor.p4, but it may be too
   // constraining.  For example, if a block applies an L2 table and an L3_LPM
   // table, but nothing else, should it be a candidate for optimization if
   // the hardware does L2 and L3 lookups in adjacent stages?
@@ -245,7 +245,7 @@ P4Annotation::PipelineStage PipelineBlockPass::PopControlBlock() {
   // a) The popped block's stage is the same as the next block up the
   //    stack.  The popped block can be absorbed into the next block
   //    when it is popped, so nothing is done here.
-  //    TODO(teverman): This could be a problem when the popped block
+  //    TODO: This could be a problem when the popped block
   //    is a TrueBlock in an IfStatement, and the FalseBlock
   //    subsequently needs a different pipeline stage.  A provisional
   //    optimization of the popped block may be in order here.

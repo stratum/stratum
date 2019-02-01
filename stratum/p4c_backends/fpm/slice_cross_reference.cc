@@ -82,7 +82,7 @@ void SliceCrossReference::ProcessAssignments(
 }
 
 // Unknown source field slices aren't particularly interesting to the
-// Hercules switch stack, so they get the generic P4_FIELD_TYPE_SLICED
+// Stratum switch stack, so they get the generic P4_FIELD_TYPE_SLICED
 // to distinguish them from completely unknown fields.
 void SliceCrossReference::HandleUnknownSourceType(
     hal::P4FieldDescriptor* source_field) {

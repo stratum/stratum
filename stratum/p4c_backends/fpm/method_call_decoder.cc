@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's MethodCallDecoder.
+// This file implements the Stratum p4c backend's MethodCallDecoder.
 
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
 
@@ -63,7 +63,7 @@ bool MethodCallDecoder::DecodeExpression(
   } else if (method_i->is<P4::BuiltInMethod>()) {
     decode_ok = DecodeBuiltIn(*method_i->to<P4::BuiltInMethod>());
   } else if (method_i->is<P4::ExternMethod>()) {
-    // TODO(teverman): More extern method call implementation is needed below.
+    // TODO: More extern method call implementation is needed below.
     auto extern_method = method_i->to<P4::ExternMethod>();
     const std::string extern_name =
         extern_method->originalExternType->name.name.c_str();
@@ -91,7 +91,7 @@ bool MethodCallDecoder::DecodeExpression(
     } else if (function_name == p4_model_names.clone3_extern_name()) {
       decode_ok = DecodeClone3(*extern_function);
     } else {
-      // TODO(teverman): Other extern function implementations needed may
+      // TODO: Other extern function implementations needed may
       // include hash, resubmit, recirculate, random, and truncate.
       error_message_ = absl::Substitute(
           "Ignoring extern function: $0", function_name.c_str());
@@ -101,21 +101,21 @@ bool MethodCallDecoder::DecodeExpression(
   return decode_ok;
 }
 
-// TODO(teverman): Is clone3's third argument relevant, or can it be ignored
+// TODO: Is clone3's third argument relevant, or can it be ignored
 // so that clone3/clone can be processed similarly?
 bool MethodCallDecoder::DecodeClone3(const P4::ExternFunction& clone_extern) {
   method_op_.add_primitives(P4_ACTION_OP_CLONE);
-  // TODO(teverman): Decode clone3 parameters.
+  // TODO: Decode clone3 parameters.
   return true;
 }
 
 bool MethodCallDecoder::DecodeClone(const P4::ExternFunction& clone_extern) {
   method_op_.add_primitives(P4_ACTION_OP_CLONE);
-  // TODO(teverman): Decode clone parameters.
+  // TODO: Decode clone parameters.
   return true;
 }
 
-// The Hercules switch stack gets enough information from P4Info to support
+// The Stratum switch stack gets enough information from P4Info to support
 // direct counters and meters, so no additional P4 pipeline config output is
 // needed, and p4c can treat them as a NOP.
 bool MethodCallDecoder::DecodeDirectCounter(
@@ -127,7 +127,7 @@ bool MethodCallDecoder::DecodeDirectCounter(
   return true;
 }
 
-// TODO(teverman): Non-direct meters and counters still need work.
+// TODO: Non-direct meters and counters still need work.
 bool MethodCallDecoder::DecodeCounter(const P4::ExternMethod& counter_extern) {
   return false;
 }
@@ -151,7 +151,7 @@ bool MethodCallDecoder::DecodeBuiltIn(const P4::BuiltInMethod& built_in) {
   } else if (built_in.name == IR::Type_Header::setInvalid) {
     tunnel_op_.set_header_op(P4_HEADER_SET_INVALID);
   } else {
-    // TODO(teverman): More built-in method call implementation is needed below.
+    // TODO: More built-in method call implementation is needed below.
     error_message_ = absl::Substitute("Ignoring built-in method $0",
                                       built_in.name.name.c_str());
     return false;

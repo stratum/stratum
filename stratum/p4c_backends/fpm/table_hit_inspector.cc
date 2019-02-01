@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's TableHitInspector.
+// This file implements the Stratum p4c backend's TableHitInspector.
 
 #include "stratum/p4c_backends/fpm/table_hit_inspector.h"
 
@@ -55,7 +55,7 @@ bool TableHitInspector::preorder(const IR::TableHitStatement* statement) {
   if (IsTableApplyValid()) {
     table_applied_ = true;
   } else {
-    ::error("Backend: Hercules does not allow %s to be applied in the "
+    ::error("Backend: Stratum FPM does not allow %s to be applied in the "
             "scope of another table hit", statement->p4_table);
   }
   return false;  // TableHitStatement child nodes are not interesting.
@@ -149,7 +149,7 @@ bool TableHitInspector::preorder(const IR::MethodCallExpression* expression) {
     if (IsTableApplyValid()) {
       table_applied_ = true;
     } else {
-      ::error("Backend: Hercules does not allow %s to be conditional "
+      ::error("Backend: Stratum FPM does not allow %s to be conditional "
               "on some other table hit", expression);
     }
   }
@@ -164,7 +164,7 @@ bool TableHitInspector::preorder(const IR::SwitchStatement* statement) {
   if (IsTableApplyValid()) {
     table_applied_ = true;
   } else {
-    ::error("Backend: Hercules does not allow %s to be applied in the "
+    ::error("Backend: Stratum FPM does not allow %s to be applied in the "
             "scope of another table hit", statement->expression);
   }
   return false;

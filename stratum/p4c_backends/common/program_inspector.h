@@ -107,7 +107,7 @@ class ProgramInspector : public Inspector {
  private:
   // These containers record the visited nodes for use after this inspector
   // is applied.
-  // TODO(teverman): Does the P4Action need the P4Control?
+  // TODO: Does the P4Action need the P4Control?
   std::map<const IR::P4Action*, const IR::P4Control*> actions_;
   std::vector<const IR::Type_StructLike*> struct_likes_;
   std::vector<const IR::Type_Header*> header_types_;

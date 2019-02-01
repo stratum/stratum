@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's SimpleHitInspector.
+// This file implements the Stratum p4c backend's SimpleHitInspector.
 
 #include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
 
@@ -38,7 +38,7 @@ bool SimpleHitInspector::preorder(const IR::AssignmentStatement* assignment) {
   HitVarEnforcer enforcer(temp_hit_vars_);
   if (!enforcer.Inspect(*assignment->right, true)) {
     simple_hits_ = false;
-    ::error("Backend: Hercules does not allow temporary hit variables "
+    ::error("Backend: Stratum FPM does not allow temporary hit variables "
             "in expressions on the right side of an assignment %s",
             assignment);
     return false;

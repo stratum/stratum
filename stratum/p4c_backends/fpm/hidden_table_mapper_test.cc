@@ -306,7 +306,7 @@ class HiddenTableMapperTest
 
   // Verifies metadata key consistency between the input redirect_map and
   // corresponding metadata_keys entries in pipeline config field descriptors.
-  // TODO(teverman): This code might be useful in p4_config_verifier.
+  // TODO: This code might be useful in p4_config_verifier.
   void ExpectMetaDataKeyConsistency(
       const HiddenTableMapper::ActionRedirectMap& redirect_map) {
     // These sets accumulate field and table references from action descriptors

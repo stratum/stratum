@@ -24,7 +24,7 @@
 // The ingress control contains 2 table sets.  The first table in each set
 // has actions that assign a metadata value that subsequently becomes the key
 // to the remaining hidden tables in the set.  This table structure simulates
-// the relationships of the encap and decap tables in Hercules P4 programs.
+// the relationships of the encap and decap tables in Stratum P4 programs.
 // The hidden tables need const entries, which must be inserted by the unit
 // test setup code according to test conditions.
 control ingress(inout headers hdr, inout test_metadata_t test_meta,

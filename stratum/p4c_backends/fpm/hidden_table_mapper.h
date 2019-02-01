@@ -15,17 +15,17 @@
  */
 
 // The HiddenTableMapper class handles tables in the P4 program that are
-// marked by the @switchstack "HIDDEN" pipeline stage annotation.  Hercules
+// marked by the @switchstack "HIDDEN" pipeline stage annotation.  Stratum
 // treats some of these tables as logical extensions of some other P4 table in
 // a physical pipeline stage.  The tables for packet encap/decap are one
 // example.  The P4 programs split encap (and also decap) across two tables.
 // The first table makes the encap (or decap) decision and records it in a
 // local metadata field.  The second table, applied somewhere later in the
 // pipeline, performs the actual encap (or decap) operations on the applicable
-// packet headers.  On Hercules targets, this table pair maps to a single
+// packet headers.  On Stratum targets, this table pair maps to a single
 // physical table, and the p4c backend populates the P4PipelineConfig with
 // data that allows the switch stack to merge actions from both tables into
-// the relevant physical table.  Hercules characterizes these tables as follows:
+// the relevant physical table.  Stratum characterizes these tables as follows:
 //
 //  1) The P4 table must be hidden.
 //  2) The P4 table must have a single local metadata field as a match key.

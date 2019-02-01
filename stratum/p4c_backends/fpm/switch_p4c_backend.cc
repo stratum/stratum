@@ -61,7 +61,7 @@ namespace p4c_backends {
 namespace {
 
 // Returns true if the input node has an @hidden annotation.
-// TODO(teverman): Is this useful outside a private namespace in this file?
+// TODO: Is this useful outside a private namespace in this file?
 bool IsHidden(const IR::Node& node) {
   return node.getAnnotation("hidden") != nullptr;
 }
@@ -86,7 +86,7 @@ void SwitchP4cBackend::Compile(
     const ::p4::v1::WriteRequest& static_table_entries,
     const ::p4::config::v1::P4Info& p4_info, P4::ReferenceMap* ref_map,
     P4::TypeMap* type_map) {
-  // TODO(teverman): Should NULL inputs be treated as compiler bugs?
+  // TODO: Should NULL inputs be treated as compiler bugs?
   ref_map_ = ref_map;
   if (ref_map_ == nullptr) {
     ::error("No reference map for input P4 program");
@@ -114,7 +114,7 @@ void SwitchP4cBackend::Compile(
   }
 
   // The p4_info_manager_ verifies that the p4_info provided by earlier
-  // compiler passes is valid for eventual use on the Hercules switch.
+  // compiler passes is valid for eventual use on the Stratum switch.
   // It also provides P4 object data for some of the conversion methods
   // that execute below.
   p4_info_manager_ = absl::make_unique<hal::P4InfoManager>(p4_info);
@@ -174,7 +174,7 @@ void SwitchP4cBackend::Compile(
 
   // Preliminary stuff is done, the real work to convert the IR to a
   // P4PipelineConfig is below.
-  // TODO(teverman): Add error checking and exit if any of the phases below
+  // TODO: Add error checking and exit if any of the phases below
   // detect a bug or unsupported feature in the P4 program.
   ConvertHeaderPaths(program_inspector.struct_paths());
   field_decoder_->ConvertHeaderFields(
@@ -261,7 +261,7 @@ void SwitchP4cBackend::ConvertActions(
     auto action = map_iter.first;
     if (IsHidden(*action))
       continue;
-    // TODO(teverman): The control node pointer in map_iter.second doesn't seem
+    // TODO: The control node pointer in map_iter.second doesn't seem
     //                 to add much value.  Remove it from the program_inspector.
     std::string action_name = StripNamePrefix(action->externalName());
     VLOG(1) << "Processing action " << action_name;
@@ -355,7 +355,7 @@ bool SwitchP4cBackend::ProcessAnnotations(
                                                 output_pipeline_cfg);
 }
 
-// TODO(teverman): Generalize to non-V1 models.
+// TODO: Generalize to non-V1 models.
 void SwitchP4cBackend::GetP4ModelNames(const IR::ToplevelBlock& top_level) {
   const IR::PackageBlock* package = nullptr;
   {
@@ -394,7 +394,7 @@ void SwitchP4cBackend::GetP4ModelNames(const IR::ToplevelBlock& top_level) {
   p4_model_names_.set_direct_meter_read_method_name(
       v1model_.directMeter.read.name);
 
-  // TODO(teverman): PSA is expected to include a standard enum type for
+  // TODO: PSA is expected to include a standard enum type for
   // color, which could then be the source of P4ModelNames data below.  Data
   // must currently be hard-coded for the V1 model.
   p4_model_names_.set_color_enum_type("MeterColor_t");

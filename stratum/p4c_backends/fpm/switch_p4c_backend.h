@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// The SwitchP4cBackend is a BackendExtensionInterface for Hercules switches.
+// The SwitchP4cBackend is a BackendExtensionInterface for Stratum switches.
 // It manages the translation from the p4c Internal Representation (IR) to a
 // HAL P4PipelineConfig.
 
@@ -64,9 +64,9 @@ class SwitchP4cBackend : public BackendExtensionInterface {
   ~SwitchP4cBackend() override {};
 
   // The Compile method does all the work to translate the top_level IR program
-  // into a P4PipelineConfig for runtime use on a Hercules fixed-function
+  // into a P4PipelineConfig for runtime use on a Stratum fixed-function
   // switch.
-  // TODO(teverman): Are there variations among platforms, e.g. Tomahawk vs.
+  // TODO: Are there variations among platforms, e.g. Tomahawk vs.
   //                 Tomahawk 2/3 that will need to be differentiated by
   //                 command-line flag or even separate subclasses?
   void Compile(const IR::ToplevelBlock& top_level,
@@ -136,14 +136,14 @@ class SwitchP4cBackend : public BackendExtensionInterface {
   std::unique_ptr<hal::P4InfoManager> p4_info_manager_;
 
   // Uses parser state and expressions to interpret header field types.
-  // TODO(teverman): Evaluate injecting a mock ParserDecoder, although
+  // TODO: Evaluate injecting a mock ParserDecoder, although
   // intuitively it seems like ParserDecoder output will be complex enough that
   // it's not a good candidate for mocking.
   std::unique_ptr<ParserDecoder> parser_decoder_;
 
   // Uses IR StructLike, Header, and KeyElement types to derive field
   // descriptor entries in the P4PipelineConfig table map.
-  // TODO(teverman): As above, is FieldDecoder mocking practical?
+  // TODO: As above, is FieldDecoder mocking practical?
   std::unique_ptr<FieldDecoder> field_decoder_;
 
   // Provides a container to accumulate HeaderPathInspector output from

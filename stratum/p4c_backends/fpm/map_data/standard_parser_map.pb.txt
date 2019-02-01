@@ -14,7 +14,7 @@ limitations under the License.
 # The parser states in this file define the field extraction of a common
 # switch header parser.  They apply to Broadcom and most likely other fixed
 # function parsers that extract from layer 2 up to transport layer headers.
-# TODO(teverman): Update P4FieldType enum so this map can be fully defined.
+# TODO: Update P4FieldType enum so this map can be fully defined.
 # Until then, many field types provisionally map to P4_FIELD_TYPE_UNKNOWN.
 parser_states {
   key: "target_parse_arp"

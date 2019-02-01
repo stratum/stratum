@@ -49,7 +49,7 @@ control meter_if_in_if(inout headers hdr, inout test_metadata_t meta,
 }
 
 // Tests a second IfStatement nested inside an IfStatement that acts on
-// a meter condition, which is unsupported by the Hercules backend.
+// a meter condition, which is unsupported by the Stratum backend.
 control if_in_meter_if(inout headers hdr, inout test_metadata_t meta,
                        inout standard_metadata_t standard_metadata) {
   apply {

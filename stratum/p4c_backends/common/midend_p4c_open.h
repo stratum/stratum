@@ -16,7 +16,7 @@
 
 // This file declares a MidEndInterface wrapper around the open-source p4c
 // P4Test midend.  This midend acts as the default midend pass for the
-// Hercules p4c backend when it is not overridden by a custom midend.
+// Stratum p4c backend when it is not overridden by a custom midend.
 
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_

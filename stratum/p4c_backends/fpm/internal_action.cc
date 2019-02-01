@@ -144,8 +144,8 @@ void InternalAction::Optimize() {
   // The intent is to remove parameter assignments to local metadata fields
   // that do nothing but pass parameters between actions with different P4
   // control scope.  There is some slight risk that the "redundant" metadata
-  // field has other purposes.  Hercules P4 programs don't have any local
-  // metadata at risk for this issue, and even if they did, Hercules targets
+  // field has other purposes.  Stratum P4 programs don't have any local
+  // metadata at risk for this issue, and even if they did, Stratum targets
   // have no way to transfer application-specific metadata; all metadata is
   // built in to the hardware.
   std::vector<int> redundant_assignments;

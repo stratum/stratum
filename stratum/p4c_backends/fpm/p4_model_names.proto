@@ -14,11 +14,11 @@
 
 // The proto message in this file is a collection of common names applicable
 // to the compiled P4 architecture model.  It hides the specific architecture
-// from the Hercules backend (i.e. V1 vs. PSA).
-// TODO(teverman): P4ModelNames is a placeholder that may change significantly
+// from the Stratum backend (i.e. V1 vs. PSA).
+// TODO: P4ModelNames is a placeholder that may change significantly
 // when p4c delivers the PSA model.  It is likely that the message gets replaced
 // by or incorporated into a class that knows how to setup the interesting data
-// for Hercules in a model-specific way.  For example, the new class's Init
+// for Stratum in a model-specific way.  For example, the new class's Init
 // method could contain refactored code from SwitchP4cBackend::GetP4ModelNames
 // to handle V1, plus new code to handle PSA.
 

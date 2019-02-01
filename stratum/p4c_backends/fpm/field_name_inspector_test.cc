@@ -146,7 +146,7 @@ TEST_F(FieldNameInspectorTest, TestExtractTwice) {
   EXPECT_TRUE(inspector_->field_name().empty());
 }
 
-// TODO(teverman): Additional test coverage for header stacks and for fields
+// TODO: Additional test coverage for header stacks and for fields
 //                 extracted from action assignments.
 
 }  // namespace p4c_backends

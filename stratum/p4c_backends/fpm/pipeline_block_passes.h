@@ -99,7 +99,7 @@ class PipelineIfBlockInsertPass : public Transform {
   // statement nodes.  They return the input pointer when no transformation
   // occurs, or a new statement pointer if they transform either the if clause
   // or else clause into a BlockStatement.  See file header comments for
-  // ownership details.  The MeterColorStatement is a Hercules-specific
+  // ownership details.  The MeterColorStatement is a Stratum-specific
   // IfStatement subclass.
   const IR::IfStatement* postorder(IR::IfStatement* statement) override;
   const IR::IfStatement* postorder(IR::MeterColorStatement* statement) override;

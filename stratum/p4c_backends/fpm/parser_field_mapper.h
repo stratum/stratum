@@ -41,7 +41,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // ParserFieldMapper is intended to be invoked once via its MapFields method
-// to produce field type data in the Hercules p4c table map output.  It
+// to produce field type data in the Stratum p4c table map output.  It
 // combines the outputs from the ParserDecoder and FieldDecoder with a
 // protobuf specifying the parser behavior of the target.
 class ParserFieldMapper {

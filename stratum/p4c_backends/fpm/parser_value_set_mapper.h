@@ -16,7 +16,7 @@
 
 // The ParserValueSetMapper is an IR Inspector subclass that processes value
 // sets in the P4 program's parser.  It identifies fields that should be
-// classified as P4_FIELD_TYPE_UDF_VALUE_SET, meaning that the Hercules switch
+// classified as P4_FIELD_TYPE_UDF_VALUE_SET, meaning that the Stratum switch
 // stack should treat them as UDFs whose packet payload offset is configured
 // dynamically by the P4Runtime configuration of a parser value set.
 

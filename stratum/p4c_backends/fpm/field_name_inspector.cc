@@ -38,7 +38,7 @@ void FieldNameInspector::ExtractName(const IR::Expression& expression) {
 
   // When the expression is applied to this FieldNameInspector, it causes
   // the postorder methods to run and extract the field path strings.
-  // TODO(teverman): Figure out how to report a syntax error if arithmetic
+  // TODO: Figure out how to report a syntax error if arithmetic
   //                 appears in the expression.
   VLOG(4) << "ExtractName from " << expression.toString();
   absl::LeakCheckDisabler disable_ir_expression_leak_checks;
@@ -62,7 +62,7 @@ void FieldNameInspector::postorder(const IR::Member* member) {
 
 void FieldNameInspector::postorder(const IR::Type_Stack* stack) {
   VLOG(4) << "FieldNameInspector found a header stack " << stack->toString();
-  // TODO(teverman): Does this need to set a flag for header stack processing?
+  // TODO: Does this need to set a flag for header stack processing?
   //                 Could an IR::ArrayIndex appear in some other context?
 }
 
@@ -70,7 +70,7 @@ void FieldNameInspector::postorder(const IR::Type_Stack* stack) {
 void FieldNameInspector::postorder(const IR::PathExpression* path) {
   VLOG(4) << "FieldNameInspector Path " << path->toString();
   if (!path->type->is<IR::Type_Struct>()) {
-    // TODO(teverman): What is the proper way to handle this error?
+    // TODO: What is the proper way to handle this error?
     LOG(ERROR) << "Expected header path expression " << path
                << " to be Type_struct";
     return;
@@ -95,7 +95,7 @@ void FieldNameInspector::postorder(const IR::ArrayIndex* array_index) {
   if (!array_index->right->is<IR::Constant>()) {
     LOG(ERROR) << "Expected array index right field to be Constant "
                << array_index->right;
-    // TODO(teverman): What is the proper way to handle this error?
+    // TODO: What is the proper way to handle this error?
     return;
   }
   auto header_stack_index = array_index->right->to<IR::Constant>();

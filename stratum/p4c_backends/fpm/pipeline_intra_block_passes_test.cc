@@ -84,7 +84,7 @@ class PipelineIntraBlockPassesTest : public testing::TestWithParam<bool> {
 };
 
 // Tests the common ACL table followed by multiple L2 table apply sequence
-// found in Hercules P4 programs:
+// found in Stratum P4 programs:
 //    acl_table.apply();
 //    if (!mac_table_1.apply().hit) {
 //      mac_table_2.apply();

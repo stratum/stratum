@@ -39,7 +39,7 @@ import "stratum/public/proto/p4_table_defs.proto";
 // fields, although a typical expression consists of only one field.  Given
 // a P4 parser state like this, which selects on two 8-bit header fields:
 //
-//  TODO(teverman): Convert this example to P4_16.
+//  TODO: Convert this example to P4_16.
 //  parser parse1 {
 //    extract(my_header);
 //    return select(latest.f1, latest.f2) {
@@ -109,7 +109,7 @@ message ParserSelectExpression {
 }
 
 // A ParserKeySetValue specifies a value that selects a state transition case
-// within a ParserSelectExpression.  Hercules expects transition case selection
+// within a ParserSelectExpression.  Stratum expects transition case selection
 // in the P4 parser to be done by either a constant value or a ValueSet.  A
 // constant typically represents a known protocol type, such as the ether
 // type value in an L2 header.  ValueSets represent more complex case selection
@@ -130,7 +130,7 @@ message ParserKeySetValue {
   //  value - a constant value that is the select key for this case, such as
   //      0x809b, 0x80f3, and 0x8100 in the example.
   //  mask - masks value during select expression computation (currently unused
-  //      by the Hercules P4 programs).
+  //      by the Stratum P4 programs).
   message ConstantSelectCase {
     uint64 value = 1;
     uint64 mask = 2;
@@ -172,7 +172,7 @@ message ParserKeySetValue {
 //  next_state - names the next ParserState transition upon matching this case.
 //  is_tunnel_entry - true when the transition leads to a state that expects
 //      an encapsulated header.
-// TODO(teverman): Consider folding is_default into ParserKeySetValue.
+// TODO: Consider folding is_default into ParserKeySetValue.
 message ParserSelectCase {
   repeated ParserKeySetValue keyset_values = 1;
   bool is_default = 2;
@@ -295,7 +295,7 @@ message ParserSubFieldSet {
 //      }
 //    }
 //
-// A current limitation of subfields in Hercules is that they cannot be used
+// A current limitation of subfields in Stratum is that they cannot be used
 // in transition select expressions.  In the example above, the expression:
 //    transition select (hdr.ipv4.dscp)
 // is illegal.

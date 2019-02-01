@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's ConditionInspector.
+// This file implements the Stratum p4c backend's ConditionInspector.
 
 #include "stratum/p4c_backends/fpm/condition_inspector.h"
 
@@ -48,7 +48,7 @@ bool ConditionInspector::preorder(const IR::Neq* expression) {
 // expressions allowed above.
 bool ConditionInspector::preorder(const IR::Operation_Binary* expression) {
   description_ = "Unrecognized condition";
-  ::error("Condition expression %s is too complex for Hercules", expression);
+  ::error("Condition expression %s is too complex for Stratum", expression);
   return false;  // No interest in visiting more IR nodes.
 }
 

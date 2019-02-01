@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the Hercules p4c backend's SwitchCaseDecoder.
+// This file implements the Stratum p4c backend's SwitchCaseDecoder.
 
 #include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 
@@ -63,7 +63,7 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
   for (auto switch_case : switch_statement.cases) {
     ClearCaseState();
     if (switch_case->label->is<IR::DefaultExpression>()) {
-      ::error("Backend: Hercules does not allow default cases in "
+      ::error("Backend: Stratum FPM does not allow default cases in "
               "P4 switch statement %s", switch_case);
       continue;
     }
@@ -79,7 +79,7 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
     action_ = std::string(case_label->path->name.name);
     auto iter = action_name_map_.find(action_);
     if (iter == action_name_map_.end()) {
-      // TODO(teverman): This might be a compiler bug.
+      // TODO: This might be a compiler bug.
       ::error("Backend: Internal action name %s is not an externally "
               "visible action", action_);
       return;
@@ -91,14 +91,14 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
       switch_case->statement->apply(*this);
     } else {
       // Lack of a statement after the case indicates fall-through,
-      // which is unsupported by Hercules.
+      // which is unsupported by Stratum.
       ::error("Backend: Switch case %s has no statements", switch_case);
     }
   }
 
   // When all switch cases decode without errors, the color-based actions are
   // written to the P4PipelineConfig via table_mapper_.
-  // TODO(teverman): This should be converted to use IndirectActions.
+  // TODO: This should be converted to use IndirectActions.
   if (::errorCount() == 0) {
     for (const auto& mapper_pair : color_actions_) {
       table_mapper_->AddMeterColorActionsFromString(

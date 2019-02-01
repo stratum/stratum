@@ -82,7 +82,7 @@ int BackendPassManager::Compile() {
     return 1;
   }
 
-  // The Hercules backend always produces the P4 runtime data. The data is
+  // The Stratum backend always produces the P4 runtime data. The data is
   // normally needed for subsequent backend use, after which it may or may not
   // be written to files based on flag input.  The stream output from p4c is
   // in serialized binary wire format.

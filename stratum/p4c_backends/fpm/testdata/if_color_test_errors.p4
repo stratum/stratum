@@ -15,7 +15,7 @@
 // This is a .p4 file that MeterColorMapperTest uses to verify transforms
 // of IR::IfStatements with meter color conditions.  This file contains
 // IfStatements that refer to meter colors, but the conditional expressions
-// are unsupported by a Hercules switch.
+// are unsupported by a Stratum switch.
 
 #include <core.p4>
 #include <v1model.p4>
@@ -44,7 +44,7 @@ control ifs_with_errors(inout headers hdr, inout test_metadata_t meta,
     }
 
     // This one is unsupported, but in theory it should be possible for it to
-    // work.  No use cases currently exist in Hercules P4 programs.  For the
+    // work.  No use cases currently exist in Stratum P4 programs.  For the
     // local_color variable in the IR, the "left" of the condition goes
     // directly to a PathExpression, whereas meta.enum_color goes indirectly
     // to a PathExpression via an IR::Member.
@@ -52,7 +52,7 @@ control ifs_with_errors(inout headers hdr, inout test_metadata_t meta,
       mark_to_drop();
     }
 
-    // Condition does not allow Hercules to determine the color in effect.
+    // Condition does not allow Stratum to determine the color in effect.
     if (local_color == meta.enum_color) {
       mark_to_drop();
     }

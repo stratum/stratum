@@ -15,7 +15,7 @@
 // This file is a P4 parser setup for generating a P4Parser IR file to
 // test the ParserDecoder and ParserFieldMapper.  The overall P4 headers
 // declaration includes a second ethernet_t header that is not extracted
-// by any parser state.  It mimics the ERSPAN headers in Hercules P4 programs.
+// by any parser state.  It mimics the ERSPAN headers in Stratum P4 programs.
 
 #include <core.p4>
 #include <v1model.p4>

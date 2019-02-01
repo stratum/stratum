@@ -17,7 +17,7 @@
 // The ConditionsInspector is a p4c Inspector subclass that visits the node
 // hierarchy under an IR::Expression that defines an IfStatement condition in
 // a P4 program.  The current output is a descriptive string for the condition.
-// TODO(teverman): Add more detailed output as needed; the current role
+// TODO: Add more detailed output as needed; the current role
 // of this class is limited to describing unsupported conditions in the
 // ControlInspector's P4Control output.
 

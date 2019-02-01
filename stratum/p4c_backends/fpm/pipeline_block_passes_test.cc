@@ -240,7 +240,7 @@ TEST_P(PipelinePassesTest, TestIfElseNoOptimization) {
   EXPECT_EQ(pass2_control, final_control);
 }
 
-// TODO(teverman): Add more PipelineIfElsePass tests to:
+// TODO: Add more PipelineIfElsePass tests to:
 // - Test true-block applies LPM stage but false-block is empty.
 // - Test true-block applies LPM stage but false-block is non-apply statement.
 // - Test true-block applies LPM stage but false-block applies ACL stage.

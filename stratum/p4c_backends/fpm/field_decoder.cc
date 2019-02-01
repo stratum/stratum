@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// This file implements the FieldDecoder class in the Hercules p4c backend.
+// This file implements the FieldDecoder class in the Stratum p4c backend.
 
 #include "stratum/p4c_backends/fpm/field_decoder.h"
 
@@ -184,7 +184,7 @@ void FieldDecoder::ConvertMatchKeys(
     header_inspector.ExtractName(*match_key->expression);
     const std::string match_field_key = header_inspector.field_name();
     if (match_field_key.empty()) {
-      // TODO(teverman): Work out how to deal with unsupported match expressions
+      // TODO: Work out how to deal with unsupported match expressions
       //                 between this code and the FieldNameInspector.
       LOG(WARNING) << "Unable to map match key field name " << match_field_key;
       continue;

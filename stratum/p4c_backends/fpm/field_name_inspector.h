@@ -53,14 +53,14 @@ class FieldNameInspector : public Inspector {
   // instance.  Upon successful return, the field name is available via the
   // field_name() accessor.  In some cases, additional names may be available
   // via the stacked_header_names() accessor.
-  // TODO(teverman): Should this return the name directly?  This requires
+  // TODO: Should this return the name directly?  This requires
   //                 figuring out how to deal with expressions that the switch
   //                 can't support, such as arithmetic expressions in an
   //                 action assignment.
   void ExtractName(const IR::Expression& expression);
 
   // The postorder overrides below extract various pieces of the field name.
-  // TODO(teverman): Do postorder matches for unsupported types need to be
+  // TODO: Do postorder matches for unsupported types need to be
   //                 added in order to handle syntax errors?
   void postorder(const IR::Member* member) override;
   void postorder(const IR::Type_Stack* stack) override;

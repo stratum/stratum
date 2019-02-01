@@ -88,7 +88,7 @@ class TunnelTypeMapper {
   bool FindInnerDecapHeader(
       const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action);
 
-  // Checks whether the header type is something that Hercules knows
+  // Checks whether the header type is something that Stratum knows
   // how to tunnel.
   bool CheckInnerHeaderType(P4HeaderType header_type);
 

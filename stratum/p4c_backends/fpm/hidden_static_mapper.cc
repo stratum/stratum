@@ -117,7 +117,7 @@ void HiddenStaticMapper::BuildHiddenActionMap(
     const int match_bytes = table_entry.match(0).exact().value().size();
     if (match_bytes > sizeof(uint64)) continue;
 
-    // Actions with parameters are not eligible.  Hercules P4 programs do not
+    // Actions with parameters are not eligible.  Stratum P4 programs do not
     // currently use parameters for hidden table actions.  If parameters
     // become necessary, one possible implementation would be to take the
     // parameter value from the table_entry and convert it into a constant

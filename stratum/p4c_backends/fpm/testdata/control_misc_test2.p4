@@ -47,7 +47,7 @@ control control_nop_if(inout headers hdr, inout test_metadata_t meta,
 
 // This control is equivalent to "meter_hit" in control_hit_meter.p4, except
 // that the applied table here is in a hidden pipeline stage.
-// TODO(teverman): Is it feasible for tests to add annotations to test IR
+// TODO: Is it feasible for tests to add annotations to test IR
 // nodes, eliminating the need for a separate test control?  This seems like
 // a feature that would need to be implemented via a custom IR::Transform.
 control meter_hit_hidden(inout headers hdr, inout test_metadata_t meta,

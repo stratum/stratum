@@ -281,7 +281,7 @@ TEST_F(TableMapGeneratorTest, TestSetFieldValueSetUndefined) {
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
 }
 
-// TODO(teverman): Parameterize the next two tests to cover many combinations
+// TODO: Parameterize the next two tests to cover many combinations
 // of match type and field width.
 TEST_F(TableMapGeneratorTest, TestAddFieldMatchExact) {
   SetUpTestP4ModelNames();
@@ -333,7 +333,7 @@ TEST_F(TableMapGeneratorTest, TestAddFieldMatchRange) {
   map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().range_match(),
                                kMatchWidth);
 
-  // This should produce a program error since the Hercules switch stack does
+  // This should produce a program error since the Stratum switch stack does
   // not currently support range matches.
   EXPECT_NE(0, ::errorCount());
 }

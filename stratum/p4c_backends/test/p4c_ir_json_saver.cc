@@ -92,7 +92,7 @@ void ConvertP4ToJson() {
   FLAGS_p4c_fe_options += FLAGS_p4_to_json_in;
 
   // The JSON IR for test input needs to be generated with the same midend
-  // that the Hercules backend uses for normal compiles.
+  // that the Stratum backend uses for normal compiles.
   auto midend_callback = std::function<std::unique_ptr<MidEndInterface>(
       CompilerOptions* p4c_options)>(&MidEnd::CreateInstance);
   std::unique_ptr<P4cFrontMidJson> p4c_json_fe_me(

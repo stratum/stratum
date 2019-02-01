@@ -38,7 +38,7 @@ namespace p4c_backends {
 // Typical usage is to construct a HeaderPathInspector, call the Inspect
 // method with the PathExpression of interest, and then use the output provided
 // by the path_to_header_type_map accessor.
-// TODO(teverman): Given current usage where SwitchP4cBackend accumulates output
+// TODO: Given current usage where SwitchP4cBackend accumulates output
 // from multiple HeaderPathInspector instances, it may be more optimum to allow
 // the Inspect method to run repeatedly in one HeaderPathInspector instance.
 class HeaderPathInspector : public Inspector {

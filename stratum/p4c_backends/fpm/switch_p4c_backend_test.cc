@@ -73,7 +73,7 @@ class SwitchP4cBackendTest : public testing::TestWithParam<std::string> {
         "p4c_backends/fpm/map_data/standard_parser_map.pb.txt";
     FLAGS_target_parser_map_file = kParserMapFile;
     tunnel_optimizer_ = absl::make_unique<BcmTunnelOptimizer>();
-    // TODO(teverman): Make NULL AnnotationMapper a mock instead.
+    // TODO: Make NULL AnnotationMapper a mock instead.
     backend_ = absl::make_unique<SwitchP4cBackend>(
         &table_mapper_, &front_mid_mock_, nullptr, tunnel_optimizer_.get());
     no_error_cycles_ = 0;

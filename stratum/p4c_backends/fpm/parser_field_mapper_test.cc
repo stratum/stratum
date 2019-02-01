@@ -347,7 +347,7 @@ void ParserFieldMapperTest::SetUpValueSetTestInputs() {
   SetUpEthernetDecodeMap(false);
 
   // The P4 test program parses these payload headers and fields with
-  // value sets.  As the Hercules P4 programs are written, every payload
+  // value sets.  As the Stratum P4 programs are written, every payload
   // octet is a member of a large payload header stack.
   ParserExtractField field;
   std::vector<ParserExtractField> field_list;
@@ -908,7 +908,7 @@ TEST_F(ParserFieldMapperTest, TestNonExtractedHeaderOuterInner) {
       p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
-// TODO(teverman): Coverage is needed for normalization of P4 parser states
+// TODO: Coverage is needed for normalization of P4 parser states
 // using multiple fields, either comma-separated or via P4 "concat" operator.
 
 // This set of parameters tests some normal subfield combinations.

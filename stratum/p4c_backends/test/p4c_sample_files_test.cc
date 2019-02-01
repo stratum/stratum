@@ -15,10 +15,10 @@
 // Does a comprehensive p4c test with p4lang_p4c test files.  It
 // verifies two things:
 // 1) The open source frontend and midend code functions properly in the
-//    Hercules google3 build environment.
-// 2) The Hercules common backend code runs the frontend and midend libraries
+//    Stratum build environment.
+// 2) The Stratum common backend code runs the frontend and midend libraries
 //    in a valid sequence.
-// Thorough testing of the Hercules backend functions is done by other tests.
+// Thorough testing of the Stratum backend functions is done by other tests.
 
 #include <string>
 
@@ -74,8 +74,8 @@ class P4cSampleFilesTest : public testing::TestWithParam<std::string> {
     // "P4_XFAIL_TESTS" in backends/p4test/CMakeLists.txt.
     expected_failures_->insert("testdata/p4_16_samples/cast-call.p4");
 
-    // These tests fail due to a bug in the p4RuntimeSerializer, which Hercules
-    // tests detect.  They don't fail in open source tests because the test
+    // These tests fail due to a bug in the p4RuntimeSerializer, which Stratum
+    // tests detect.  They don't fail in p4lang_p4c tests because the test
     // backend doesn't use p4RuntimeSerializer.
     expected_failures_->insert("testdata/p4_16_samples/issue396.p4");
     expected_failures_->insert("testdata/p4_16_samples/issue561.p4");
@@ -97,7 +97,7 @@ class P4cSampleFilesTest : public testing::TestWithParam<std::string> {
     // The compiler needs to tell the C preprocessor where it can find the
     // included .p4 files for various supported models.
     const std::string kP4RuntimeBase = FLAGS_test_srcdir +
-        "/google3/p4lang_p4c";
+        "/p4lang_p4c";
     p4c_options += "-I";
     p4c_options += kP4RuntimeBase + "/p4include ";
     p4c_options += "-I";
@@ -138,8 +138,8 @@ std::set<std::string>* P4cSampleFilesTest::expected_failures_ = nullptr;
 
 // Tests all the p4_16 sample files.
 // P4_16 file tests are disabled due to warning vs. error discrepancies in
-// the Hercules vs open source variation of these tests.  Example: Hercules
-// treats the lack of a P4 "main" as an error, whereas the open souce tests
+// the Stratum vs p4lang_p4c variation of these tests.  Example: Stratum
+// treats the lack of a P4 "main" as an error, whereas the p4lang_p4c tests
 // call it a warning.
 TEST_P(P4cSampleFilesTest, RunP4cTest) {
   if (!FLAGS_test_p4_16_samples) return;

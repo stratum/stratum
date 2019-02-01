@@ -15,7 +15,7 @@
  */
 
 // This file declares a BackendPassManager class to oversee the execution
-// of a Hercules-specific p4c backend.
+// of a Stratum-specific p4c backend.
 
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_

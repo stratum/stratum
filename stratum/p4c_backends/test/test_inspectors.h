@@ -55,7 +55,7 @@ class StatementCounter : public Inspector {
   bool preorder(const IR::PipelineStageStatement* statement) override {
     ++pipeline_statement_count_;
     // Any statements under the PipelineStageStatement have been optimized
-    // away from the Hercules perspective, so the return value avoids visits
+    // away from the Stratum perspective, so the return value avoids visits
     // to deeper nodes.
     return false;
   }

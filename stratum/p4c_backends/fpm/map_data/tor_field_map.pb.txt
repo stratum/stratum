@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 # This file contains annotation map data for match fields and packet IO metadata
 # fields that the p4c backend expects to find when compiling tor.p4.
-# TODO(teverman): Will all or part of this be common with other P4 specs?
+# TODO: Will all or part of this be common with other P4 specs?
 field_addenda_map {
   key: "standard_metadata.egress_port"
   value {
@@ -45,7 +45,7 @@ field_addenda_map {
   }
 }
 
-# TODO(teverman): Convert these to @switchstack annotations in P4 programs.
+# TODO: Convert these to @switchstack annotations in P4 programs.
 field_addenda_map {
   key: "local_metadata.class_id"
   value {

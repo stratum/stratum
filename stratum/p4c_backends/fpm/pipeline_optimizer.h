@@ -18,7 +18,7 @@
 // the available forwarding pipeline stages. It runs various optimization
 // passes to place as many tables and related logic as possibe into fixed-
 // function pipeline stages.
-// TODO(teverman): Consider an interface wrapper around this class to handle
+// TODO: Consider an interface wrapper around this class to handle
 // different types of targets in the future.
 
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_
@@ -44,7 +44,7 @@ class PipelineOptimizer {
   // If no optimization is possible, it returns the original control.
   // There is no clear ownership of the returned P4Control pointer.  Instead
   // of establishing object ownership rules, p4c depends on a garbage collector
-  // to free memory that is no longer used.  The Hercules p4c binary does
+  // to free memory that is no longer used.  The Stratum p4c binary does
   // not enable this garbage collector.
   virtual const IR::P4Control* Optimize(const IR::P4Control& control);
 

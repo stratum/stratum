@@ -113,7 +113,7 @@ TEST_F(MethodCallDecoderTest, TestClone3) {
   EXPECT_EQ(P4_ACTION_OP_CLONE, method_op.primitives(0));
   EXPECT_EQ(P4_HEADER_NOP, method_call_decoder_->tunnel_op().header_op());
   EXPECT_TRUE(method_call_decoder_->tunnel_op().header_name().empty());
-  // TODO(teverman): Verify clone3 parameters when implemented.
+  // TODO: Verify clone3 parameters when implemented.
 }
 
 TEST_F(MethodCallDecoderTest, TestClone) {
@@ -134,7 +134,7 @@ TEST_F(MethodCallDecoderTest, TestClone) {
   EXPECT_EQ(P4_ACTION_OP_CLONE, method_op.primitives(0));
   EXPECT_EQ(P4_HEADER_NOP, method_call_decoder_->tunnel_op().header_op());
   EXPECT_TRUE(method_call_decoder_->tunnel_op().header_name().empty());
-  // TODO(teverman): Verify clone parameters when implemented.
+  // TODO: Verify clone parameters when implemented.
 }
 
 TEST_F(MethodCallDecoderTest, TestDirectCounter) {
@@ -185,7 +185,7 @@ TEST_F(MethodCallDecoderTest, TestCounter) {
       FindMethodStatement("ingress.count_counter");
   ASSERT_NE(nullptr, test_statement);
 
-  // TODO(teverman): Enhance this test after non-direct counter implementation.
+  // TODO: Enhance this test after non-direct counter implementation.
   EXPECT_FALSE(method_call_decoder_->DecodeStatement(*test_statement));
   EXPECT_FALSE(method_call_decoder_->error_message().empty());
 }
@@ -196,7 +196,7 @@ TEST_F(MethodCallDecoderTest, TestExecuteMeter) {
       FindMethodStatement("ingress.execute_meter_meter");
   ASSERT_NE(nullptr, test_statement);
 
-  // TODO(teverman): Enhance this test after non-direct meter implementation.
+  // TODO: Enhance this test after non-direct meter implementation.
   EXPECT_FALSE(method_call_decoder_->DecodeStatement(*test_statement));
   EXPECT_FALSE(method_call_decoder_->error_message().empty());
 }

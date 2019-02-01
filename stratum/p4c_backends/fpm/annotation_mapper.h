@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// The AnnotationMapper is a Hercules switch p4c backend class that runs as
+// The AnnotationMapper is a Stratum switch p4c backend class that runs as
 // the final step of P4PipelineConfig output.  It supplements the config's
 // table map with any data that can only be determined from annotations and
 // name strings within the P4Info objects.

@@ -57,7 +57,7 @@ bool ExpressionInspector::preorder(const IR::Member* member) {
     value_.set_source_header_name(field_inspector.field_name());
     value_valid_ = true;
   } else if (member->type->is<IR::Type_Enum>()) {
-    // TODO(teverman): Add support here to handle enum values.
+    // TODO: Add support here to handle enum values.
     LOG(WARNING) << "Ignoring assignment from IR::Member Type_Enum - "
                  << inspect_expression_->srcInfo.toBriefSourceFragment();
   } else {
@@ -74,7 +74,7 @@ bool ExpressionInspector::preorder(const IR::Member* member) {
 // violated.
 bool ExpressionInspector::preorder(const IR::PathExpression* path) {
   VLOG(1) << "preorder PathExpression " << path->toString();
-  // TODO(teverman): The bmv2 backend's ExpressionConverter now does a ref_map_
+  // TODO: The bmv2 backend's ExpressionConverter now does a ref_map_
   // declaration lookup on the path and verifies that it really is an
   // IR::Parameter.
   value_.set_parameter_name(path->toString());
@@ -151,19 +151,19 @@ bool ExpressionInspector::preorder(const IR::Add* add) {
 }
 
 bool ExpressionInspector::preorder(const IR::ArrayIndex* array_index) {
-  // The "right" expression is the array index value.  The Hercules backend
+  // The "right" expression is the array index value.  The Stratum backend
   // requires a constant index (as does the bmv2 backend).
   if (!array_index->right->is<IR::Constant>()) {
-    ::error("%1%: all array indices must be constant for Hercules switches",
+    ::error("%1%: all array indices must be constant for Stratum FPM switches",
             array_index->right);
     return false;  // Don't visit deeper nodes.
   }
 
-  // Hercules restricts the "left" expression to a header represented by
+  // Stratum restricts the "left" expression to a header represented by
   // an IR:Member.  Temporary arrays (represented as IR::PathExpression) are
   // not allowed.
   if (!array_index->left->is<IR::Member>()) {
-    ::error("%1%: only stacked headers can be arrays on Hercules switches",
+    ::error("%1%: only stacked headers can be arrays on Stratum FPM switches",
             array_index->left);
     return false;  // Don't visit deeper nodes.
   }

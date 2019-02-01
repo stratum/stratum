@@ -76,7 +76,7 @@ control egress_assign(inout headers hdr, inout test_metadata_t meta,
   }
 }
 
-// TODO(teverman): Given recent instability in the P4 checksum API and
+// TODO: Given recent instability in the P4 checksum API and
 // likely additional turbulence through PSA, consider moving these tests
 // to some other control.
 // The checksum verify control is overloaded to test an unsupported condition
@@ -105,7 +105,7 @@ control bad_condition(inout headers hdr, inout test_metadata_t meta) {
   }
 }
 
-// TODO(teverman): Given recent instability in the P4 checksum API and
+// TODO: Given recent instability in the P4 checksum API and
 // likely additional turbulence through PSA, consider moving these tests
 // to some other control.
 // The compute checksum control is overloaded to test case labels that

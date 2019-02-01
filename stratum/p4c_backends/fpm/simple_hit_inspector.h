@@ -15,7 +15,7 @@
  */
 
 // SimpleHitInspector is generally meant for use as a TableHitInspector helper.
-// It looks for table hit combinations that are too complex for the Hercules
+// It looks for table hit combinations that are too complex for the Stratum
 // switch stack. One example is this statement:
 //
 //  if (!table1.apply().hit && !table2.apply().hit)
@@ -24,7 +24,7 @@
 // The p4c frontend (see sideEffects.h in the third_party code) transforms
 // the IfStatement condition above in a way that produces several temporary
 // variable assignments, some of which employ the NOT operator in a
-// double-negative form.  Hercules rejects these and expects the P4
+// double-negative form.  Stratum rejects these and expects the P4
 // programmer to write the above sequence as:
 //
 //  if (!table1.apply().hit) {
@@ -68,7 +68,7 @@ class SimpleHitInspector : public Inspector {
   ~SimpleHitInspector() override {}
 
   // The Inspect method inspects all IR nodes under the input statement to
-  // enforce Hercules limitations on table-hit expressions.  If Inspect
+  // enforce Stratum limitations on table-hit expressions.  If Inspect
   // detects an unsupported expression sequence, it reports a P4 program
   // error using p4c's ErrorReporter, and it returns false.  It returns true
   // when no unsupported table-hit expressions exist within the input
@@ -95,7 +95,7 @@ class SimpleHitInspector : public Inspector {
 
  private:
   // The HitVarEnforcer is a private helper for SimpleHitInspector.  It
-  // inspects expressions for temporary hit variables and enforces Hercules
+  // inspects expressions for temporary hit variables and enforces Stratum
   // switch stack restrictions.  It rejects expressions with any one of
   // these attributes:
   // - multiple hit variables.
@@ -108,7 +108,7 @@ class SimpleHitInspector : public Inspector {
     ~HitVarEnforcer() override {}
 
     // Inspect evaluates the input expression and returns true if it is
-    // acceptable to Hercules with respect to any hit variables.  The
+    // acceptable to Stratum with respect to any hit variables.  The
     // assignment_right flag distinguishes an expression from the right side
     // of an assignment versus a conditional expression in an IfStatement.
     bool Inspect(const IR::Expression& expression, bool assignment_right);

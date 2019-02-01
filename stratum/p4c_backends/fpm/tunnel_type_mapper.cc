@@ -169,7 +169,7 @@ bool TunnelTypeMapper::FindGreHeader(
       p4_tunnel_properties_.set_is_gre_tunnel(true);
       gre_header_op_ = tunnel_action.header_op();
     } else {
-      // TODO(teverman): Are there any valid use cases for GRE header copies?
+      // TODO: Are there any valid use cases for GRE header copies?
       tunnel_error_message_ +=
           "GRE header-to-header copy is an invalid tunnel operation. ";
       return true;
@@ -182,7 +182,7 @@ bool TunnelTypeMapper::FindGreHeader(
 // The input tunnel_action represents a tunnel decap when:
 //  - The header valid bit is invalidated.
 //  - The header descriptor indicates an inner header.
-// The Hercules P4 programs aggressively invalidate headers during decap,
+// The Stratum P4 programs aggressively invalidate headers during decap,
 // so the same tunnel can decap multiple header types, with the actual type
 // being resolved by the P4Runtime service.
 bool TunnelTypeMapper::FindInnerDecapHeader(

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Contains unit tests for the Hercules-specific p4c MidEnd.
+// Contains unit tests for the Stratum-specific p4c MidEnd.
 
 #include "stratum/p4c_backends/fpm/midend.h"
 

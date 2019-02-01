@@ -29,7 +29,7 @@ ParserDecoder::ParserDecoder()
       type_map_(nullptr) {
 }
 
-// TODO(teverman): The Hercules p4c backend needs a consistent approach for
+// TODO: The Stratum p4c backend needs a consistent approach for
 // handling errors.  Errors can occur in several ways:
 // - Bad input from prior p4c passes due to undetected compiler bugs.
 // - Unrecognized input from prior passes due to new p4c features or changes.
@@ -68,7 +68,7 @@ bool ParserDecoder::DecodeParser(const IR::P4Parser& p4_parser,
     ParserState* decoded_state =
         &(*parser_states_.mutable_parser_states())[state_name];
     if (!decoded_state->name().empty()) {
-      // TODO(teverman): Should this be handled as a compiler bug?
+      // TODO: Should this be handled as a compiler bug?
       LOG(ERROR) << "Multiple P4Parser states have name " << state_name;
       return false;
     }
@@ -112,7 +112,7 @@ bool ParserDecoder::DecodeParser(const IR::P4Parser& p4_parser,
   }
 
   if (start_state == nullptr) {
-    // TODO(teverman): Is this a compiler bug?  Promote to FATAL?
+    // TODO: Is this a compiler bug?  Promote to FATAL?
     LOG(ERROR) << "P4Parser has no start state";
     return false;
   }
@@ -136,7 +136,7 @@ bool ParserDecoder::DecodeStatements(
       const std::string header = ExtractHeaderType(*method_call);
       if (!header.empty()) {
         // The fields within this type are extracted by other parts of the
-        // Hercules backend, which will append them to the decoded state later.
+        // Stratum backend, which will append them to the decoded state later.
         decoded_state->mutable_extracted_header()->set_name(header);
         FieldNameInspector path_inspector;
         path_inspector.ExtractName(
@@ -156,7 +156,7 @@ bool ParserDecoder::DecodeStatements(
     } else if (component->is<IR::AssignmentStatement>()) {
       auto assignment = component->to<IR::AssignmentStatement>();
       VLOG(1) << "AssignmentStatement: " << assignment->toString();
-      // TODO(teverman): Add implementation.
+      // TODO: Add implementation.
     } else {
       LOG(WARNING) << "Ignoring unknown component " << component->toString();
     }
@@ -286,7 +286,7 @@ void ParserDecoder::DecodeComplexSelectKeySet(
     const IR::ListExpression& key_set, const IR::ListExpression& select,
     ParserSelectCase* decoded_case) {
   if (key_set.components.size() != select.components.size()) {
-    // TODO(teverman): Should the compiler catch this?
+    // TODO: Should the compiler catch this?
     LOG(ERROR) << "Number of values in select case key set does not match "
                << "the number of select arguments";
     return;
@@ -405,7 +405,7 @@ std::string ParserDecoder::ExtractHeaderType(
         auto arg = method_call->arguments->at(0);
         auto arg_type = type_map_->getType(arg, true);
         if (!arg_type->is<IR::Type_Header>()) {
-          // TODO(teverman): Should the compiler catch this earlier?
+          // TODO: Should the compiler catch this earlier?
           LOG(ERROR) << "extract expects arg type to be Type_Header";
           return header_type_name;
         }

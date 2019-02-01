@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// This midend is a custom p4c midend for Hercules switches.  Its main
+// This midend is a custom p4c midend for Stratum switches.  Its main
 // difference relative to available p4c open-source midends is the elimination
 // of some IR passes that synthesize temporary tables and actions that tune
 // the IR for the bmv2 pipeline.
@@ -34,7 +34,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // This MidEnd class inherits from the third-party p4c PassManager and conforms
-// to the Hercules MidEndInterface class.
+// to the Stratum MidEndInterface class.
 class MidEnd : public PassManager, MidEndInterface {
  public:
   ~MidEnd() override {}

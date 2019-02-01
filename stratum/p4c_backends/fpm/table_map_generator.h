@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// The TableMapGenerator in the Hercules switch p4c backend accumulates
+// The TableMapGenerator in the Stratum switch p4c backend accumulates
 // P4PipelineConfig table map entries as the backend identifies fields,
 // matches, tables, etc.
 
@@ -34,7 +34,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // A single instance of TableMapGenerator produces the table map output for
-// a Hercules switch p4c backend.
+// a Stratum switch p4c backend.
 class TableMapGenerator {
  public:
   TableMapGenerator();
@@ -57,7 +57,7 @@ class TableMapGenerator {
   //      type takes precedence.  If the backend calls SetFieldAttributes
   //      multiple times with different widths or offsets for the same field,
   //      TableMapGenerator logs an error but uses the most recent values.
-  //      TODO(teverman): Changing field type should probably be treated as
+  //      TODO: Changing field type should probably be treated as
   //      some kind of compiler or P4 program bug, but the current behavior
   //      precedent has been in place for some time.
   //  SetFieldLocalMetadataFlag - Sets the is_local_metadata field in the

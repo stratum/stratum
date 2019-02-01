@@ -18,7 +18,7 @@ licenses(["notice"])  # Apache v2
 
 exports_files(["LICENSE"])
 
-# This BUILD file provides common test support for the Hercules p4c backend.
+# This BUILD file provides common test support for the Stratum p4c backend.
 # It also creates a simple p4c test binary with limited backend
 # functionality, then uses it to test p4c with the comprehensive set of
 # sample files in //p4lang_p4c.

@@ -49,7 +49,7 @@ class MeterColorMapper : public Transform {
   // can be called multiple times to process separate IR::P4Control blocks.
   // There is no clear ownership of the returned P4Control pointer.  Instead
   // of establishing object ownership rules, p4c depends on a garbage collector
-  // to free memory that is no longer used.  The Hercules p4c binary does
+  // to free memory that is no longer used.  The Stratum p4c binary does
   // not enable this garbage collector.
   virtual const IR::P4Control* Apply(const IR::P4Control& control);
 
@@ -81,7 +81,7 @@ class MeterColorMapper : public Transform {
   void ClearControlState();
 
   // Decodes the conditional expression within an IR::IfStatement, returning
-  // true if the condition can be realized on Hercules switches.
+  // true if the condition can be realized on Stratum switches.
   bool DecodeCondition(const IR::IfStatement& statement);
 
   // Sets the color condition flags based on the input enum member value.
@@ -123,7 +123,7 @@ class IfStatementColorInspector : public Inspector {
   // is possible, Transform returns false.  When a transform is possible,
   // Transform returns true.  The transform decision does not consider
   // whether an IR::MeterColorStatement is valid in its current context.
-  // TODO(teverman): Consider how much validation is useful to do here.
+  // TODO: Consider how much validation is useful to do here.
   bool CanTransform(const IR::IfStatement& statement);
 
   // These methods override the IR::Inspector base class to visit the nodes

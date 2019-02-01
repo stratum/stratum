@@ -20,7 +20,7 @@
 // headers that must be valid when the table is applied.
 //
 // The HeaderValidInspector also enforces these rules regarding valid header
-// checks in Hercules P4 programs:
+// checks in Stratum P4 programs:
 //  - All header.isValid() expressions must be in IfStatement conditions.
 //    They cannot appear in other statement types, such as assignments to
 //    temporary variables.
