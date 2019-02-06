@@ -37,9 +37,11 @@ class PINode final {
  public:
   ~PINode();
 
-  ::util::Status PushChassisConfig(const ChassisConfig& config, uint64 node_id);
+  ::util::Status PushChassisConfig(const ChassisConfig& config, uint64 node_id)
+        LOCKS_EXCLUDED(lock_);
   ::util::Status VerifyChassisConfig(const ChassisConfig& config,
-                                     uint64 node_id);
+                                     uint64 node_id)
+        LOCKS_EXCLUDED(lock_);
   ::util::Status PushForwardingPipelineConfig(
        const ::p4::v1::ForwardingPipelineConfig& config);
   ::util::Status SaveForwardingPipelineConfig(
@@ -64,20 +66,9 @@ class PINode final {
       LOCKS_EXCLUDED(rx_writer_lock_);
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
 
-  // TODO(antonin): Currently the node_id is provided by the constructor / the
-  // factory method. Implementations of SwitchInterface that use this node class
-  // can use GetNodeId to retrieve the node_id. This is temporary: when we
-  // support ChassisConfig we will remove the node_id parameter from the factory
-  // method along with the GetNodeId method. The node will "learn" its node_id
-  // through PushChassisConfig.
-
-  int64 GetNodeId() const;
-
   // Factory function for creating the instance of the class.
   static std::unique_ptr<PINode> CreateInstance(
-      ::pi::fe::proto::DeviceMgr* device_mgr,
-      int unit,
-      uint64 node_id);
+      ::pi::fe::proto::DeviceMgr* device_mgr, int unit);
 
   // PINode is neither copyable nor movable.
   PINode(const PINode&) = delete;
@@ -88,9 +79,7 @@ class PINode final {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  PINode(::pi::fe::proto::DeviceMgr* device_mgr,
-         int unit,
-         uint64 node_id);
+  PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit);
 
   // Callback registered with DeviceMgr to receive packet-ins.
   friend void PacketInCb(uint64_t node_id,
@@ -101,8 +90,11 @@ class PINode final {
   void SendPacketIn(::p4::v1::PacketIn* packet);
       LOCKS_EXCLUDED(rx_writer_lock_);
 
+  // Reader-writer lock used to protect access to node-specific state.
+  mutable absl::Mutex lock_;
+
   // Flow calls made to this class are forwarded to the DeviceMgr.
-  ::pi::fe::proto::DeviceMgr* device_mgr_;  // not owned by the class.
+  ::pi::fe::proto::DeviceMgr* device_mgr_;  // not owned by the class
 
   // Mutex used for exclusive access to rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
@@ -111,11 +103,12 @@ class PINode final {
   std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_{nullptr};
       GUARDED_BY(rx_writer_lock_);
 
-  // Fixed zero-based unit number corresponding to the node/ASIC managed by this
-  // class instance. Assigned in the class constructor.
   const int unit_;
 
-  const uint64 node_id_;
+  // Logical node ID corresponding to the node/ASIC managed by this class
+  // instance. Assigned on PushChassisConfig() and might change during the
+  // lifetime of the class.
+  uint64 node_id_ GUARDED_BY(lock_);
 };
 
 }  // namespace pi

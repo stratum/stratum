@@ -75,19 +75,16 @@ void PacketInCb(uint64_t node_id, p4::v1::PacketIn* packet, void* cookie) {
   pi_node->SendPacketIn(packet);
 }
 
-PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr,
-               int unit,
-               uint64 node_id)
-    : device_mgr_(device_mgr),
-      unit_(unit),
-      node_id_(node_id) { }
+PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
+    : device_mgr_(device_mgr), unit_(unit), node_id_(0) {}
 
 PINode::~PINode() = default;
 
 ::util::Status PINode::PushChassisConfig(const ChassisConfig& config,
                                          uint64 node_id) {
   (void)config;
-  (void)node_id;
+  absl::WriterMutexLock l(&lock_);
+  node_id_ = node_id;
   return ::util::OkStatus();
 }
 
@@ -190,15 +187,9 @@ PINode::~PINode() = default;
   return toUtilStatus(device_mgr_->packet_out_send(packet));
 }
 
-int64 PINode::GetNodeId() const {
-  return node_id_;
-}
-
 std::unique_ptr<PINode> PINode::CreateInstance(
-    ::pi::fe::proto::DeviceMgr* device_mgr,
-    int unit,
-    uint64 node_id) {
-  return absl::WrapUnique(new PINode(device_mgr, unit, node_id));
+    ::pi::fe::proto::DeviceMgr* device_mgr, int unit) {
+  return absl::WrapUnique(new PINode(device_mgr, unit));
 }
 
 void PINode::SendPacketIn(::p4::v1::PacketIn* packet) {

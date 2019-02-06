@@ -90,25 +90,18 @@ Main(int argc, char* argv[]) {
     }
   }
 
-  // TODO(antonin): temporary until BFSwitch implements PushChassisConfig
-  // properly.
-  uint64 node_id(1);
   int unit(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
   // does not do any device id checks.
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(unit));
 
-  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit, node_id);
+  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
   auto* phal_sim = PhalSim::CreateSingleton();
   std::map<int, pi::PINode*> unit_to_pi_node = {
     {unit, pi_node.get()},
   };
-  std::map<int, uint64> unit_to_node_id = {
-    {unit, node_id},
-  };
-  auto bf_chassis_manager = BFChassisManager::CreateInstance(
-      phal_sim, unit_to_node_id);
+  auto bf_chassis_manager = BFChassisManager::CreateInstance(phal_sim);
   auto bf_switch = BFSwitch::CreateInstance(
       phal_sim, bf_chassis_manager.get(), unit_to_pi_node);
 

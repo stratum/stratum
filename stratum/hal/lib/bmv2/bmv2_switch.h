@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "stratum/hal/lib/bmv2/bmv2_chassis_manager.h"
 #include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
@@ -67,15 +68,26 @@ class Bmv2Switch : public SwitchInterface {
   ::util::Status UnregisterEventNotifyWriter() override;
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
-                               std::vector<::util::Status>* details) override;
+                               std::vector<::util::Status>* details) override
+        LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
                           std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
 
   // Factory function for creating the instance of the class.
+  // When using Bmv2Switch, the node id for each PINode instance is known at
+  // instantiation time and cannot be changed by pushing a new chassis
+  // config. The node id must match the bmv2 "device id" which must be provided
+  // when initializing the bmv2 instance. When pushing a chassis config, we
+  // verify that the "new" node ids match the current ones. We may change this
+  // in the future: a new chassis config could trigger a new bmv2 switch
+  // instance to be created with the new node id as the bmv2 device id. At the
+  // moment, note that each Stratum process is limited to a single bmv2 instance
+  // anyway.
   static std::unique_ptr<Bmv2Switch> CreateInstance(
       PhalInterface* phal_interface,
-      const std::map<int, pi::PINode*>& unit_to_pi_node);
+      Bmv2ChassisManager* bmv2_chassis_manager,
+      const std::map<uint64, pi::PINode*>& node_id_to_pi_node);
 
   // Bmv2Switch is neither copyable nor movable.
   Bmv2Switch(const Bmv2Switch&) = delete;
@@ -87,11 +99,8 @@ class Bmv2Switch : public SwitchInterface {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   Bmv2Switch(PhalInterface* phal_interface,
-             const std::map<int, pi::PINode*>& unit_to_pi_node);
-
-  // Helper to get PINode pointer from unit number or return error indicating
-  // invalid unit.
-  ::util::StatusOr<pi::PINode*> GetPINodeFromUnit(int unit) const;
+             Bmv2ChassisManager* bmv2_chassis_manager,
+             const std::map<uint64, pi::PINode*>& node_id_to_pi_node);
 
   // Helper to get PINode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
@@ -102,11 +111,9 @@ class Bmv2Switch : public SwitchInterface {
   // instance of this class per chassis.
   PhalInterface* phal_interface_;  // not owned by this class.
 
-  // Map from zero-based unit number corresponding to a node/ASIC to a pointer
-  // to PINode which contain all the per-node managers for that node/ASIC. This
-  // map is initialized in the constructor and will not change during the
-  // lifetime of the class.
-  const std::map<int, pi::PINode*> unit_to_pi_node_;  // pointers not owned.
+  // Per chassis Managers. Note that there is only one instance of this class
+  // per chassis.
+  Bmv2ChassisManager* bmv2_chassis_manager_;  // not owned by the class.
 
   // Map from the node ids to to a pointer to PINode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.

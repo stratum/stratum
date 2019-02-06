@@ -30,7 +30,7 @@
 DEFINE_string(initial_pipeline, "stratum/hal/bin/bmv2/dummy.json",
               "Path to initial pipeline for BMv2 (required for starting BMv2)");
 DEFINE_uint32(device_id, 1,
-              "BMv2 device id");
+              "BMv2 device/node id");
 DEFINE_uint32(cpu_port, 64,
               "BMv2 port number for CPU port (used for packet I/O)");
 DEFINE_bool(console_logging, true,
@@ -111,19 +111,24 @@ int Main(int argc, char* argv[]) {
     }
   }
 
-  // TODO(antonin): temporary until Bmv2Switch implements PushChassisConfig
-  // properly.
-  uint64 node_id(1);
   int unit(0);
+  // bmv2 needs to know the actual device_id at instantiation time, so we cannot
+  // wait until PushChassisConfig.
+  uint64 node_id(FLAGS_device_id);
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(node_id));
 
-  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit, node_id);
+  auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
   auto* phal_sim = PhalSim::CreateSingleton();
-  std::map<int, pi::PINode*> unit_to_pi_node = {
-    {unit, pi_node.get()},
+  std::map<uint64, SimpleSwitchRunner*> node_id_to_bmv2_runner = {
+    {node_id, runner},
+  };
+  auto bmv2_chassis_manager = Bmv2ChassisManager::CreateInstance(
+      phal_sim, node_id_to_bmv2_runner);
+  std::map<uint64, pi::PINode*> node_id_to_pi_node = {
+    {node_id, pi_node.get()},
   };
   auto pi_switch = Bmv2Switch::CreateInstance(
-      phal_sim, unit_to_pi_node);
+      phal_sim, bmv2_chassis_manager.get(), node_id_to_pi_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();

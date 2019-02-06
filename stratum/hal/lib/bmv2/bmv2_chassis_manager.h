@@ -1,4 +1,4 @@
-/* Copyright 2018-present Barefoot Networks, Inc.
+/* Copyright 2019-present Barefoot Networks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BF_CHASSIS_MANAGER_H_
-#define STRATUM_HAL_LIB_BAREFOOT_BF_CHASSIS_MANAGER_H_
+#ifndef STRATUM_HAL_LIB_BMV2_BMV2_CHASSIS_MANAGER_H_
+#define STRATUM_HAL_LIB_BMV2_BMV2_CHASSIS_MANAGER_H_
+
+#include "bm/bm_sim/dev_mgr.h"
 
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
@@ -27,16 +30,22 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 
+namespace bm {
+namespace sswitch {
+class SimpleSwitchRunner;
+}  // namespace sswitch
+}  // namespace bm
+
 namespace stratum {
 namespace hal {
-namespace barefoot {
+namespace bmv2 {
 
 // Lock which protects chassis state across the entire switch.
 extern absl::Mutex chassis_lock;
 
-class BFChassisManager {
+class Bmv2ChassisManager {
  public:
-  virtual ~BFChassisManager();
+  virtual ~Bmv2ChassisManager();
 
   virtual ::util::Status PushChassisConfig(const ChassisConfig& config)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
@@ -59,27 +68,28 @@ class BFChassisManager {
       uint64 node_id, uint32 port_id, PortCounters* counters)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BFChassisManager> CreateInstance(
-      PhalInterface* phal_interface);
+  static std::unique_ptr<Bmv2ChassisManager> CreateInstance(
+      PhalInterface* phal_interface,
+      std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
+        node_id_to_bmv2_runner);
 
-  // BFChassisManager is neither copyable nor movable.
-  BFChassisManager(const BFChassisManager&) = delete;
-  BFChassisManager& operator=(const BFChassisManager&) = delete;
-  BFChassisManager(BFChassisManager&&) = delete;
-  BFChassisManager& operator=(BFChassisManager&&) = delete;
+  // Bmv2ChassisManager is neither copyable nor movable.
+  Bmv2ChassisManager(const Bmv2ChassisManager&) = delete;
+  Bmv2ChassisManager& operator=(const Bmv2ChassisManager&) = delete;
+  Bmv2ChassisManager(Bmv2ChassisManager&&) = delete;
+  Bmv2ChassisManager& operator=(Bmv2ChassisManager&&) = delete;
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFChassisManager(PhalInterface* phal_interface);
+  Bmv2ChassisManager(
+      PhalInterface* phal_interface,
+      std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
+        node_id_to_bmv2_runner);
 
-  ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
-  ::util::Status UnregisterEventWriters()
-        EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status RegisterEventWriters();
+  ::util::Status UnregisterEventWriters();
 
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
@@ -87,11 +97,11 @@ class BFChassisManager {
                                   PortState new_state)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
-  friend ::util::Status PortStatusChangeCb(int unit, uint64 port_id,
-                                           bool up, void *cookie)
+  friend ::util::Status PortStatusChangeCb(Bmv2ChassisManager* chassis_mgr,
+                                           uint64 node_id,
+                                           uint64 port_id,
+                                           PortState new_state)
       LOCKS_EXCLUDED(chassis_lock);
-
-  bool initialized_ GUARDED_BY(chassis_lock);
 
   // WriterInterface<GnmiEventPtr> object for sending event notifications.
   mutable absl::Mutex gnmi_event_lock_;
@@ -101,11 +111,10 @@ class BFChassisManager {
   // Pointer to a PhalInterface implementation.
   PhalInterface* phal_interface_;  // not owned by this class.
 
-  // Map from unit number to the node ID as specified by the config.
-  std::map<int, uint64> unit_to_node_id_;
+  std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*> node_id_to_bmv2_runner_;
 
-  // Map from node ID to unit number.
-  std::map<uint64, int> node_id_to_unit_;
+  std::map<uint64, ::bm::PortMonitorIface::PortStatusCb>
+      node_id_to_bmv2_port_status_cb_;
 
   // Map from node ID to another map from port ID to PortState representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
@@ -113,8 +122,8 @@ class BFChassisManager {
       node_id_to_port_id_to_port_state_;
 };
 
-}  // namespace barefoot
+}  // namespace bmv2
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BF_CHASSIS_MANAGER_H_
+#endif  // STRATUM_HAL_LIB_BMV2_BMV2_CHASSIS_MANAGER_H_

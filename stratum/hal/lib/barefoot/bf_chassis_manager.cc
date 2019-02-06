@@ -40,20 +40,35 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
-                                   const std::map<int, uint64>& unit_to_node_id)
+absl::Mutex chassis_lock;
+
+BFChassisManager::BFChassisManager(PhalInterface* phal_interface)
     : phal_interface_(phal_interface),
-      unit_to_node_id_(unit_to_node_id) {
-  for (const auto& p : unit_to_node_id)
-    node_id_to_unit_[p.second] = p.first;
-  for (const auto& p : node_id_to_unit_)
-    node_id_to_port_id_to_port_state_[p.first] = {};
-  // TODO(antonin): this needs to be moved to PushChassisConfig when we
-  // implement it.
-  RegisterEventWriters();
-}
+      unit_to_node_id_(),
+      node_id_to_unit_(),
+      node_id_to_port_id_to_port_state_() {}
 
 BFChassisManager::~BFChassisManager() = default;
+
+::util::Status BFChassisManager::PushChassisConfig(
+     const ChassisConfig& config) {
+  int unit(0);
+  for (auto& node : config.nodes()) {
+    unit_to_node_id_[unit] = node.id();
+    node_id_to_unit_[node.id()] = unit;
+    node_id_to_port_id_to_port_state_[node.id()] = {};
+    unit++;
+  }
+  // TODO(antonin): handle singleton ports
+  RETURN_IF_ERROR(RegisterEventWriters());
+  initialized_ = true;
+  return ::util::OkStatus();
+}
+
+::util::Status BFChassisManager::VerifyChassisConfig(
+     const ChassisConfig& config) {
+  return ::util::OkStatus();
+}
 
 ::util::Status BFChassisManager::RegisterEventNotifyWriter(
     const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer) {
@@ -70,12 +85,14 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::StatusOr<PortState> BFChassisManager::GetPortState(
     uint64 node_id, uint32 port_id) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
   if (unit == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Unkonwn node id " << node_id;
   }
 
-  absl::WriterMutexLock l(&chassis_config_lock_);
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
@@ -100,12 +117,14 @@ BFChassisManager::~BFChassisManager() = default;
   PortState port_state = state ? PORT_STATE_UP : PORT_STATE_DOWN;
   LOG(INFO) << "State of port " << port_id << " in node " << node_id << ": "
             << PrintPortState(port_state);
-  (*port_id_to_port_state)[port_id] = port_state;
-  return state ? PORT_STATE_UP : PORT_STATE_DOWN;
+  return port_state;
 }
 
 ::util::Status BFChassisManager::GetPortCounters(
     uint64 node_id, uint32 port_id, PortCounters* counters) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
   if (unit == nullptr) {
     return MAKE_ERROR(ERR_INTERNAL) << "Unkonwn node id " << node_id;
@@ -134,11 +153,17 @@ BFChassisManager::~BFChassisManager() = default;
   return ::util::OkStatus();
 }
 
+::util::StatusOr<std::map<uint64, int>> BFChassisManager::GetNodeIdToUnitMap()
+    const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  return node_id_to_unit_;
+}
+
 std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(
-    PhalInterface* phal_interface,
-    const std::map<int, uint64>& unit_to_node_id) {
-  return absl::WrapUnique(new BFChassisManager(
-      phal_interface, unit_to_node_id));
+    PhalInterface* phal_interface) {
+  return absl::WrapUnique(new BFChassisManager(phal_interface));
 }
 
 void BFChassisManager::SendPortOperStateGnmiEvent(
@@ -170,7 +195,7 @@ void BFChassisManager::SendPortOperStateGnmiEvent(
   PortState new_state = up ? PORT_STATE_UP : PORT_STATE_DOWN;
   LOG(INFO) << "State of port " << port_id << " in node " << *node_id << ": "
             << PrintPortState(new_state);
-  absl::WriterMutexLock l(&chassis_manager->chassis_config_lock_);
+  absl::WriterMutexLock l(&chassis_lock);
   chassis_manager->node_id_to_port_id_to_port_state_[*node_id][port_id] = new_state;
   chassis_manager->SendPortOperStateGnmiEvent(
       *node_id, port_id, new_state);

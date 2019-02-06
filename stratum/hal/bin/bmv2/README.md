@@ -31,7 +31,7 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 0b9d3bb2e0f92bce8dd0aa976a88cc582b163d7e.
+we used for testing: a95222eca9b039f6398c048d7e1a1bf7f49b7235.
 
 ### Install bmv2
 ```
@@ -44,7 +44,7 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 4f42df27cfc3371af994ff0f13321ec99233e4ab.
+we used for testing: 9c8ab62d5680044b94aa2e37b6989f386cc7ae7c.
 
 ## Building the `stratum_bmv2` binary
 
@@ -95,7 +95,7 @@ Protobuf text file, which you can obtain by compiling your P4 program with the
 p4c -b bmv2 -a v1model -o /tmp/ --p4runtime-format text --p4runtime-file /tmp/<prog>.proto.txt <prog>.p4
 # run P4Runtime client
 cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
-[sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi update_config.py \
+[sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
     --grpc-addr <YOUR_HOST_IP_ADDRESS>:28000 --json <prog>.json --p4info <prog>.proto.txt
 
 You can use the loopback program under `testdata/` if you do not have your own

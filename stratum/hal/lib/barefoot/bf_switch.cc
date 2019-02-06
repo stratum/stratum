@@ -49,18 +49,26 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
     // CHECK_NE(entry.second, nullptr)
     //     << "Detected null PINode for unit " << entry.first << ".";
   }
-  // TODO(antonin): this is temporary until we implement the PushChassisConfig
-  // method.
-  for (const auto& entry : unit_to_pi_node_) {
-    auto node_id = entry.second->GetNodeId();
-    node_id_to_pi_node_[node_id] = entry.second;
-  }
 }
 
 BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::PushChassisConfig(const ChassisConfig& config) {
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
+  RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
+  ASSIGN_OR_RETURN(const auto& node_id_to_unit,
+                   bf_chassis_manager_->GetNodeIdToUnitMap());
+  node_id_to_pi_node_.clear();
+  for (const auto& entry : node_id_to_unit) {
+    uint64 node_id = entry.first;
+    int unit = entry.second;
+    ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromUnit(unit));
+    RETURN_IF_ERROR(pi_node->PushChassisConfig(config, node_id));
+    node_id_to_pi_node_[node_id] = pi_node;
+  }
+
+  LOG(INFO) << "Chassis config pushed successfully.";
+
   return ::util::OkStatus();
 }
 
@@ -162,18 +170,18 @@ BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::RegisterEventNotifyWriter(
     std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
-  RETURN_IF_ERROR(bf_chassis_manager_->RegisterEventNotifyWriter(writer));
-  return ::util::OkStatus();
+  return bf_chassis_manager_->RegisterEventNotifyWriter(writer);
 }
 
 ::util::Status BFSwitch::UnregisterEventNotifyWriter() {
-  return ::util::OkStatus();
+  return bf_chassis_manager_->UnregisterEventNotifyWriter();
 }
 
 ::util::Status BFSwitch::RetrieveValue(uint64 node_id,
                                        const DataRequest& request,
                                        WriterInterface<DataResponse>* writer,
                                        std::vector<::util::Status>* details) {
+  absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
     DataResponse resp;
     ::util::Status status = ::util::OkStatus();

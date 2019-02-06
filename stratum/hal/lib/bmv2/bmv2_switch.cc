@@ -36,34 +36,45 @@ namespace hal {
 namespace bmv2 {
 
 Bmv2Switch::Bmv2Switch(PhalInterface* phal_interface,
-                       const std::map<int, PINode*>& unit_to_pi_node)
+                       Bmv2ChassisManager* bmv2_chassis_manager,
+                       const std::map<uint64, PINode*>& node_id_to_pi_node)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
-      unit_to_pi_node_(unit_to_pi_node),
-      node_id_to_pi_node_() {
-  for (const auto& entry : unit_to_pi_node_) {
-    CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
-    // TODO(antonin): investigate why this doesn't compile
-    // CHECK_NE(entry.second, nullptr)
-    //     << "Detected null PINode for unit " << entry.first << ".";
-  }
-  // TODO(antonin): this is temporary until we implement the PushChassisConfig
-  // method.
-  for (const auto& entry : unit_to_pi_node_) {
-    auto node_id = entry.second->GetNodeId();
-    node_id_to_pi_node_[node_id] = entry.second;
-  }
-}
+      bmv2_chassis_manager_(CHECK_NOTNULL(bmv2_chassis_manager)),
+      node_id_to_pi_node_(node_id_to_pi_node) {}
 
 Bmv2Switch::~Bmv2Switch() {}
 
 ::util::Status Bmv2Switch::PushChassisConfig(const ChassisConfig& config) {
+  absl::WriterMutexLock l(&chassis_lock);
+  std::set<uint64> known_node_ids;
+  std::set<uint64> new_node_ids;
+  for (auto& node : node_id_to_pi_node_) known_node_ids.insert(node.first);
+  for (auto& node : config.nodes()) new_node_ids.insert(node.id());
+  if (known_node_ids != new_node_ids) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "The Bmv2Switch expects constant node ids";
+  }
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
+  RETURN_IF_ERROR(bmv2_chassis_manager_->PushChassisConfig(config));
+  for (auto& node : node_id_to_pi_node_) {
+    // Sets the node_id for the PINode the first time, does not do anything in
+    // subsequent calls (the node_id is constant).
+    RETURN_IF_ERROR(node.second->PushChassisConfig(config, node.first));
+  }
   return ::util::OkStatus();
 }
 
 ::util::Status Bmv2Switch::VerifyChassisConfig(const ChassisConfig& config) {
-  (void)config;
-  return ::util::OkStatus();
+  absl::ReaderMutexLock l(&chassis_lock);
+  ::util::Status status = ::util::OkStatus();
+  APPEND_STATUS_IF_ERROR(status, phal_interface_->VerifyChassisConfig(config));
+  APPEND_STATUS_IF_ERROR(status,
+                         bmv2_chassis_manager_->VerifyChassisConfig(config));
+  for (auto& node : node_id_to_pi_node_) {
+    APPEND_STATUS_IF_ERROR(status,
+                           node.second->PushChassisConfig(config, node.first));
+  }
+  return status;
 }
 
 ::util::Status Bmv2Switch::PushForwardingPipelineConfig(
@@ -159,21 +170,50 @@ Bmv2Switch::~Bmv2Switch() {}
 
 ::util::Status Bmv2Switch::RegisterEventNotifyWriter(
     std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
-  (void)writer;
-  return ::util::OkStatus();
+  return bmv2_chassis_manager_->RegisterEventNotifyWriter(writer);
 }
 
 ::util::Status Bmv2Switch::UnregisterEventNotifyWriter() {
-  return ::util::OkStatus();
+  return bmv2_chassis_manager_->UnregisterEventNotifyWriter();
 }
 
 ::util::Status Bmv2Switch::RetrieveValue(uint64 /*node_id*/,
                                          const DataRequest& request,
                                          WriterInterface<DataResponse>* writer,
                                          std::vector<::util::Status>* details) {
-  (void)request;
-  (void)writer;
-  (void)details;
+  absl::ReaderMutexLock l(&chassis_lock);
+  for (const auto& req : request.requests()) {
+    DataResponse resp;
+    ::util::Status status = ::util::OkStatus();
+    switch (req.request_case()) {
+      // Get singleton port operational state.
+      case DataRequest::Request::kOperStatus: {
+        auto port_state = bmv2_chassis_manager_->GetPortState(
+            req.oper_status().node_id(), req.oper_status().port_id());
+        if (!port_state.ok()) {
+          status.Update(port_state.status());
+        } else {
+          resp.mutable_oper_status()->set_state(port_state.ValueOrDie());
+        }
+        break;
+      }
+      case DataRequest::Request::kPortCounters: {
+        status = bmv2_chassis_manager_->GetPortCounters(
+            req.port_counters().node_id(),
+            req.port_counters().port_id(),
+            resp.mutable_port_counters());
+        break;
+      }
+      default:
+        // TODO(antonin)
+        break;
+    }
+    if (status.ok()) {
+      // If everything is OK send it to the caller.
+      writer->Write(resp);
+    }
+    if (details) details->push_back(status);
+  }
   return ::util::OkStatus();
 }
 
@@ -189,16 +229,10 @@ Bmv2Switch::~Bmv2Switch() {}
 
 std::unique_ptr<Bmv2Switch> Bmv2Switch::CreateInstance(
     PhalInterface* phal_interface,
-    const std::map<int, PINode*>& unit_to_pi_node) {
-  return absl::WrapUnique(new Bmv2Switch(phal_interface, unit_to_pi_node));
-}
-
-::util::StatusOr<PINode*> Bmv2Switch::GetPINodeFromUnit(int unit) const {
-  PINode* pi_node = gtl::FindPtrOrNull(unit_to_pi_node_, unit);
-  if (pi_node == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
-  }
-  return pi_node;
+    Bmv2ChassisManager* bmv2_chassis_manager,
+    const std::map<uint64, PINode*>& node_id_to_pi_node) {
+  return absl::WrapUnique(new Bmv2Switch(
+      phal_interface, bmv2_chassis_manager, node_id_to_pi_node));
 }
 
 ::util::StatusOr<PINode*> Bmv2Switch::GetPINodeFromNodeId(
