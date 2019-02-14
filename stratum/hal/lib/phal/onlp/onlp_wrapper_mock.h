@@ -35,6 +35,9 @@ class MockOnlpWrapper : public OnlpInterface {
   MOCK_CONST_METHOD1(GetOidInfo, ::util::StatusOr<OidInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetSfpInfo, ::util::StatusOr<SfpInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetFanInfo, ::util::StatusOr<FanInfo>(OnlpOid oid));
+  MOCK_CONST_METHOD2(SetLedMode, ::util::Status(OnlpOid oid, LedMode mode));
+  MOCK_CONST_METHOD2(SetLedCharacter, ::util::Status(OnlpOid oid, char val));
+  MOCK_CONST_METHOD1(GetLedInfo, ::util::StatusOr<LedInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetPsuInfo, ::util::StatusOr<PsuInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetThermalInfo, ::util::StatusOr<ThermalInfo>(OnlpOid oid));
   MOCK_CONST_METHOD0(GetSfpPresenceBitmap, ::util::StatusOr<OnlpPresentBitmap>());

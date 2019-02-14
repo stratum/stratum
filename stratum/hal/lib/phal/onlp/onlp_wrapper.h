@@ -24,6 +24,7 @@ extern "C" {
 #include <onlp/fan.h>
 #include <onlp/psu.h>
 #include <onlp/thermal.h>
+#include <onlp/led.h>
 }
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
@@ -95,10 +96,8 @@ class FanInfo : public OidInfo {
   explicit FanInfo(const onlp_fan_info_t& fan_info)
       : OidInfo(fan_info.hdr), fan_info_(fan_info) {}
   FanInfo() {}
-
   FanDir GetFanDir() const;
   bool Capable(FanCaps fan_capability) const;
-
   ::util::StatusOr<const onlp_fan_info_t*> GetOnlpFan() const;
 
  private:
@@ -122,18 +121,30 @@ class PsuInfo : public OidInfo {
 
 class ThermalInfo : public OidInfo {
  public:
-  explicit ThermalInfo(const onlp_thermal_info_t& thermal_info)
+  explicit ThermalInfo(const onlp_thermal_info_t &thermal_info)
       : OidInfo(thermal_info.hdr), thermal_info_(thermal_info) {}
   ThermalInfo() {}
-
   int GetThermalCurTemp() const;
   int GetThermalWarnTemp() const;
   int GetThermalErrorTemp() const;
   int GetThermalShutDownTemp() const;
   bool Capable(ThermalCaps thermal_capability) const;
-  
+
  private:
   onlp_thermal_info_t thermal_info_;
+};
+
+class LedInfo : public OidInfo {
+ public:
+  explicit LedInfo(const onlp_led_info_t& led_info)
+      : OidInfo(led_info.hdr), led_info_(led_info) {}
+  LedInfo() {}
+  LedMode GetLedMode() const;
+  char GetLedChar() const;
+  bool Capable(LedCaps led_capability) const;
+
+ private:
+  onlp_led_info_t led_info_;
 };
 
 // A interface for ONLP calls.
@@ -145,15 +156,27 @@ class OnlpInterface {
 
   // Given a OID object id, returns SFP info or failure.
   virtual ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const = 0;
-  
+
   // Given a OID object id, returns FAN info or failure.
   virtual ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const = 0;
 
   // Given a OID object id, returns PSU info or failure.
   virtual ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const = 0;
 
+  // Given a OID object id, returns LED info or failure.
+  virtual ::util::StatusOr<LedInfo> GetLedInfo(OnlpOid oid) const = 0;
+
   // Given a OID object id, returns THERMAL info or failure.
   virtual ::util::StatusOr<ThermalInfo> GetThermalInfo(OnlpOid oid) const = 0;
+  // Given a OID object id, sets LED mode,
+  // if LED supports color capability.
+  virtual ::util::Status
+  SetLedMode(OnlpOid oid, LedMode mode) const = 0;
+
+  // Given a OID object id, sets LED character,
+  // if LED supports character capability.
+  virtual ::util::Status
+  SetLedCharacter(OnlpOid oid, char val) const = 0;
 
   // Given an OID, returns the OidInfo for that object (or an error if it
   // doesn't exist
@@ -188,6 +211,9 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
   ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const override;
   ::util::StatusOr<ThermalInfo> GetThermalInfo(OnlpOid oid) const override;
+  ::util::StatusOr<LedInfo> GetLedInfo(OnlpOid oid) const override;
+  ::util::Status SetLedMode(OnlpOid oid, LedMode mode) const override;
+  ::util::Status SetLedCharacter(OnlpOid oid, char val) const override;
   ::util::StatusOr<std::vector <OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const override;
   ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const override;

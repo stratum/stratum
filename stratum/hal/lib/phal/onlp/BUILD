@@ -325,6 +325,33 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_library(
+    name = "led_datasource",
+    srcs = [
+        "led_datasource.cc",
+    ],
+    hdrs = [
+        "led_datasource.h",
+    ],
+    deps = [
+        ":onlp_wrapper",
+#FIXME remove when onlp_wrapper.h is stable
+#        ":onlp_wrapper_fake",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/phal:datasource",
+        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:system_interface",
+        "//stratum/lib:macros",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        #       TODO: Fix dependency
+        #        "//stratum/onlp:onlpsim",
+    ],
+)
+
 stratum_cc_test(
     name = "thermal_datasource_test",
     srcs = [
@@ -333,6 +360,33 @@ stratum_cc_test(
     deps = [
         ":onlp_wrapper_mock",
         ":thermal_datasource",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/phal:datasource",
+        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:system_interface",
+        "//stratum/hal/lib/phal:test_util",
+        "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        #       TODO: Fix dependency
+        #        "//stratum/onlp:onlpsim",
+    ],
+)
+
+stratum_cc_test(
+    name = "led_datasource_test",
+    srcs = [
+        "led_datasource_test.cc",
+    ],
+    deps = [
+        ":onlp_wrapper_mock",
+        ":led_datasource",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",

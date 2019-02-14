@@ -79,11 +79,39 @@ OnlpWrapper::~OnlpWrapper() {
 
 ::util::StatusOr<ThermalInfo> OnlpWrapper::GetThermalInfo(OnlpOid oid) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_THERMAL(oid))
-      << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
+        << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
   onlp_thermal_info_t thermal_info = {};
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_thermal_info_get(oid, &thermal_info)))
-      << "Failed to get THERMAL info for OID " << oid << ".";
+        << "Failed to get THERMAL info for OID " << oid << ".";
   return ThermalInfo(thermal_info);
+}
+
+::util::StatusOr<LedInfo> OnlpWrapper::GetLedInfo(OnlpOid oid) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
+      << "Cannot get LED info: OID " << oid << " is not an LED.";
+  onlp_led_info_t led_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_led_info_get(oid, &led_info)))
+      << "Failed to get LED info for OID " << oid << ".";
+  return LedInfo(led_info);
+}
+
+::util::Status OnlpWrapper::
+  SetLedMode(OnlpOid oid, LedMode mode) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
+      << "Cannot set LED info: OID " << oid << " is not an LED.";
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_led_mode_set(oid, static_cast<onlp_led_mode_t>(mode))))
+      << "Failed to set LED mode for OID " << oid << ".";
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpWrapper::
+  SetLedCharacter(OnlpOid oid, char val) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
+      << "Cannot get LED info: OID " << oid << " is not an LED.";
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_led_char_set(oid, val)))
+      << "Failed to set LED character for OID " << oid << ".";
+  return ::util::OkStatus();
 }
 
 ::util::StatusOr<bool> OnlpWrapper::GetSfpPresent(OnlpOid port) const {
@@ -214,7 +242,7 @@ MediaType SfpInfo::GetMediaType() const {
 }
 
 SfpType SfpInfo::GetSfpType() const {
-  switch(sfp_info_.sff.sfp_type) {
+  switch (sfp_info_.sff.sfp_type) {
   case SFF_SFP_TYPE_SFP:
     return SFP_TYPE_SFP;
   case SFF_SFP_TYPE_QSFP:
@@ -229,7 +257,7 @@ SfpType SfpInfo::GetSfpType() const {
 }
 
 SfpModuleType SfpInfo::GetSfpModuleType()const {
-  switch(sfp_info_.sff.module_type) {
+  switch (sfp_info_.sff.module_type) {
   case SFF_MODULE_TYPE_100G_BASE_CR4:
     return SFP_MODULE_TYPE_100G_BASE_CR4;
   case SFF_MODULE_TYPE_10G_BASE_CR:
@@ -242,7 +270,7 @@ SfpModuleType SfpInfo::GetSfpModuleType()const {
 }
 
 SfpModuleCaps SfpInfo::GetSfpModuleCaps() const {
-  switch(sfp_info_.sff.caps) {
+  switch (sfp_info_.sff.caps) {
   case SFF_MODULE_CAPS_F_100:
     return SFP_MODULE_CAPS_F_100;
   case SFF_MODULE_CAPS_F_1G:
@@ -265,7 +293,7 @@ SfpModuleCaps SfpInfo::GetSfpModuleCaps() const {
 }
 
 FanDir FanInfo::GetFanDir() const {
-  switch(fan_info_.dir) {
+  switch (fan_info_.dir) {
   case ONLP_FAN_DIR_B2F:
     return FAN_DIR_B2F;
   case ONLP_FAN_DIR_F2B:
@@ -278,14 +306,11 @@ FanDir FanInfo::GetFanDir() const {
 bool FanInfo::Capable(FanCaps fan_capability) const {
   int compare_caps;
   compare_caps = (fan_info_.caps & fan_capability);
-  if (compare_caps == fan_capability)
-      return true;
-  else
-      return false;
+  return compare_caps == fan_capability;
 }
 
 PsuType PsuInfo::GetPsuType() const {
-  switch(psu_info_.type) {
+  switch (psu_info_.type) {
   case ONLP_PSU_TYPE_AC:
     return PSU_TYPE_AC;
   case ONLP_PSU_TYPE_DC12:
@@ -300,10 +325,7 @@ PsuType PsuInfo::GetPsuType() const {
 bool PsuInfo::Capable(PsuCaps psu_capability) const {
   int compare_caps;
   compare_caps = (psu_info_.caps & psu_capability);
-  if (compare_caps == psu_capability)
-      return true;
-  else
-      return false;
+  return compare_caps == psu_capability;
 }
 
 int ThermalInfo::GetThermalCurTemp() const {
@@ -325,10 +347,64 @@ int ThermalInfo::GetThermalShutDownTemp() const {
 bool ThermalInfo::Capable(ThermalCaps thermal_capability) const {
   int compare_caps;
   compare_caps = (thermal_info_.caps & thermal_capability);
-  if(compare_caps == thermal_capability)
+  return compare_caps == thermal_capability;
+}
+
+char LedInfo::GetLedChar() const {
+  return led_info_.character;
+}
+
+LedMode LedInfo::GetLedMode() const {
+  switch (led_info_.mode) {
+  case ONLP_LED_MODE_OFF:
+    return LED_MODE_OFF;
+  case ONLP_LED_MODE_AUTO:
+    return LED_MODE_AUTO;
+  case ONLP_LED_MODE_AUTO_BLINKING:
+    return LED_MODE_AUTO_BLINKING;
+  case ONLP_LED_MODE_CHAR:
+    return LED_MODE_CHAR;
+  case ONLP_LED_MODE_RED:
+    return LED_MODE_RED;
+  case ONLP_LED_MODE_RED_BLINKING:
+    return LED_MODE_RED_BLINKING;
+  case ONLP_LED_MODE_ORANGE:
+    return LED_MODE_ORANGE;
+  case ONLP_LED_MODE_ORANGE_BLINKING:
+    return LED_MODE_ORANGE_BLINKING;
+  case ONLP_LED_MODE_YELLOW:
+    return LED_MODE_YELLOW;
+  case ONLP_LED_MODE_YELLOW_BLINKING:
+    return LED_MODE_YELLOW_BLINKING;
+  case ONLP_LED_MODE_GREEN:
+    return LED_MODE_GREEN;
+  case ONLP_LED_MODE_GREEN_BLINKING:
+    return LED_MODE_GREEN_BLINKING;
+  case ONLP_LED_MODE_BLUE:
+    return LED_MODE_BLUE;
+  case ONLP_LED_MODE_BLUE_BLINKING:
+    return LED_MODE_BLUE_BLINKING;
+  case ONLP_LED_MODE_PURPLE:
+    return LED_MODE_PURPLE;
+  case ONLP_LED_MODE_PURPLE_BLINKING:
+    return LED_MODE_PURPLE_BLINKING;
+  default:
+    return LED_MODE_UNKNOWN;
+  }
+}
+
+bool LedInfo::Capable(LedCaps led_capability) const {
+  int compare_caps;
+<<<<<<< HEAD
+  compare_caps = (led_info_.caps & Led_capability);
+  return compare_caps == Led_capability;
+=======
+  compare_caps = (led_info_.caps & led_capability);
+  if (compare_caps == led_capability)
       return true;
   else
-      return false; 
+      return false;
+>>>>>>> Added SetLedMode and SetLedChar
 }
 
 }  // namespace onlp

@@ -928,6 +928,50 @@ enum ThermalCaps {
   THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD = 8;
 }
 
+// Possible capabilities for a LED module.
+// currently maps to onlp_led_info_t defined in led.h
+enum LedCaps {
+  LED_CAPS_UNKNOWN          = 0;
+  LED_CAPS_OFF              = 1;
+  LED_CAPS_AUTO             = 2;
+  LED_CAPS_AUTO_BLINKING    = 4;
+  LED_CAPS_CHAR             = 8;
+  LED_CAPS_RED              = 16;
+  LED_CAPS_RED_BLINKING     = 32;
+  LED_CAPS_ORANGE           = 64;
+  LED_CAPS_ORANGE_BLINKING  = 128;
+  LED_CAPS_YELLOW           = 256;
+  LED_CAPS_YELLOW_BLINKING  = 512;
+  LED_CAPS_GREEN            = 1024;
+  LED_CAPS_GREEN_BLINKING   = 2048;
+  LED_CAPS_BLUE             = 4096;
+  LED_CAPS_BLUE_BLINKING    = 8192;
+  LED_CAPS_PURPLE           = 16384;
+  LED_CAPS_PURPLE_BLINKING  = 32768;   
+}
+
+// Possible modes for a LED module.
+// currently maps to onlp_led_info_t defined in led.h
+enum LedMode {
+  LED_MODE_UNKNOWN          = 0;
+  LED_MODE_OFF              = 1;
+  LED_MODE_AUTO             = 2;
+  LED_MODE_AUTO_BLINKING    = 3;
+  LED_MODE_CHAR             = 4;
+  LED_MODE_RED              = 5;
+  LED_MODE_RED_BLINKING     = 6;
+  LED_MODE_ORANGE           = 7;
+  LED_MODE_ORANGE_BLINKING  = 8;
+  LED_MODE_YELLOW           = 9;
+  LED_MODE_YELLOW_BLINKING  = 10;
+  LED_MODE_GREEN            = 11;
+  LED_MODE_GREEN_BLINKING   = 12;
+  LED_MODE_BLUE             = 13;
+  LED_MODE_BLUE_BLINKING    = 14;
+  LED_MODE_PURPLE           = 15;
+  LED_MODE_PURPLE_BLINKING  = 16;   
+}
+
 //------------------------------------------------------------------------------
 // Messages related to physical properties of ports on a chassis
 //------------------------------------------------------------------------------

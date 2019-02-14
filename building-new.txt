@@ -74,6 +74,8 @@ bazel test \
 //stratum/hal/lib/phal/onlp:psu_datasource_test \
 //stratum/hal/lib/phal/onlp:thermal_datasource \
 //stratum/hal/lib/phal/onlp:thermal_datasource_test \
+//stratum/hal/lib/phal/onlp:led_datasource \
+//stratum/hal/lib/phal/onlp:led_datasource_test \
 //stratum/hal/lib/bcm:bcm_proto \
 //stratum/hal/lib/bcm:constants \
 //stratum/hal/lib/bcm:bcm_sdk_interface \
