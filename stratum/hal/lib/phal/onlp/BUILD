@@ -89,10 +89,6 @@ stratum_cc_library(
     hdrs = [
         "onlp_wrapper.h",
     ],
-    textual_hdrs = [
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlp_hdrs",
-    ],
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -100,11 +96,10 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
-        "@com_github_opennetworklinux//:onlp",
-        #"@com_github_opennetworklinux//:onlp_headers",
-        "@com_github_opennetworklinux//:onlp_platform_as7712",
+        "@local_onlp_bin//:onlp",
+        "@local_onlp_bin//:onlp_headers",
+        "@local_onlp_bin//:onlp_platform",
+        "@local_onlp_bin//:onlp_platform_defaults",
     ],
 )
 

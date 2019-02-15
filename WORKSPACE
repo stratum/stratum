@@ -53,3 +53,7 @@ bcm_configure(name = "local_bcm_bin")
 
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
+
+
+load("//stratum/hal/lib/phal/onlp:onlp.bzl", "onlp_configure")
+onlp_configure(name = "local_onlp_bin")
