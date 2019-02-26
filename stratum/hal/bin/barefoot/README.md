@@ -6,41 +6,56 @@ variable MUST be set for the Stratum build.
 export BF_SDE_INSTALL=...
 ```
 
-## Installing p4lang/PI
-
-```
-git clone https://github.com/p4lang/PI.git
-cd PI
-./autogen.sh
-./configure --without-bmv2 --without-proto --without-fe-cpp --without-cli --without-internal-rpc --prefix=$BF_SDE_INSTALL
-make [-j4]
-[sudo] make install
-[sudo ldconfig]
-```
-The *master* branch **may** work for this repo, but you can also used the commit
-we used for testing: 3769806afc02de3f06a151634640bac985a172d0
-
-**Make sure that you do not have an existing PI installation in a system
-  directory or you may get issues when building the SDE.**
-
 ## Installing the SDE
 
-These steps were tested with SDE 8.4.0. We assume you have the `sde_build.sh`
-and `set_sde.bash` convenience scripts, and that you copied them inside the
-extracted SDE directory (`bf-sde-8.4.0`).
+These instructions are for SDE version 8.7.0 and later. Starting with SDE
+release 8.7.0, Barefoot's P4Studio Build tool comes with a default Stratum
+profile, which takes care of installing all the necessary dependencies and
+builds the SDE with the appropriate flags.
+
+Please follow these steps:
+
+ 1. Extract the SDE: `tar -xzvf bf-sde-<SDE_VERSION>.tgz`
+
+ 2. Set the required environment variables
+```
+export SDE=`pwd`/bf-sde-<SDE_VERSION>
+export SDE_INSTALL=$BF_SDE_INSTALL
+```
+
+ 3. Build and install the SDE. Use the provided profile
+    (`stratum_profile.yaml`). Feel free to customize the profile if
+    needed; please refer to the P4Studio Build documentation. **If you are using
+    the reference BSP provided by Barefoot, you may also use P4Studio Build to
+    install the BSP (see below).**
+```
+cd $SDE/p4studio_build
+./p4studio_build.py -up profiles/stratum_profile.yaml
+```
+
+### Installing the reference BSP for the Wedge
+
+If you are using the reference BSP provided by Barefoot (for the Wedge switch),
+you may use P4Studio Build to install the BSP. All you need to do is extract the
+BSP tarball and **use an extra command-line option when running P4Studio
+Build**:
 
 ```
-source set_sde.bash
-export SDE_INSTALL=$BF_SDE_INSTALL
-# This steps will depend on the version of the SDE / sde_build.sh script
-# To be on the safe side you can choose to execute all the steps
-./sde_build.sh --no-bmv2 -r --bf-drivers-extra-flags="--disable-grpc --enable-pi" -t yes -s 1 -e 6
-./sde_build.sh --no-bmv2 -r --bf-drivers-extra-flags="--disable-grpc --enable-pi" -t yes -s 8 -e 14
-./sde_build.sh --no-bmv2 -r --bf-drivers-extra-flags="--disable-grpc --enable-pi" -t yes -s 17 -e 18
-./sde_build.sh --no-bmv2 -r --bf-drivers-extra-flags="--disable-grpc --enable-pi" -t yes -s 21
+tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
+export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
 ```
+Replace step 3 in the sequence above with:
+```
+cd $SDE/p4studio_build
+./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH
+```
+
+You may also still install the BSP manually. If you are not using the reference
+BSP, you will need to install the BSP yourself (under `$BF_SDE_INSTALL`) based
+on your vendor's instructions.
 
 ## Building the binary
+
 **`stratum_bf` currently needs to link to the thrift library, until support for
   gNMI is complete. As a result you need to set the `THRIFT_INSTALL` environment
   variable to point to the directory where `libthrift.so` is installed. For most
@@ -51,6 +66,7 @@ bazel build //stratum/hal/bin/barefoot:stratum_bf
 ```
 
 ## Running the binary
+
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
      ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf \
