@@ -117,7 +117,7 @@ OnlpWrapper::~OnlpWrapper() {
   std::vector<OnlpOid> oid_list;
   biglist_t* oid_hdr_list;
 
-  OnlpOid root_oid = ONLP_SFP_ID_CREATE(1);
+  OnlpOid root_oid = ONLP_CHASSIS_ID_CREATE(1);
   onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list);
 
   // Iterate though the returned list and add the OIDs to oid_list
