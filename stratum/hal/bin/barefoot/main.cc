@@ -39,6 +39,8 @@ DEFINE_string(bf_sde_install, "",
               "absolute path to the directory where the BF SDE is installed");
 DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
+DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
+              "path to the BF switchd json config file");
 
 namespace stratum {
 namespace hal {
@@ -60,7 +62,7 @@ Main(int argc, char* argv[]) {
     return -1;
   }
   switchd_main_ctx->install_dir = strdup(FLAGS_bf_sde_install.c_str());
-  switchd_main_ctx->conf_file = strdup("stratum/hal/bin/barefoot/tofino_skip_p4.conf");
+  switchd_main_ctx->conf_file = strdup(FLAGS_bf_switchd_cfg.c_str());
   switchd_main_ctx->skip_p4 = true;
   if (FLAGS_bf_switchd_background)
     switchd_main_ctx->running_in_background = true;
