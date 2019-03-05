@@ -16,6 +16,7 @@ stratum_cc_binary(
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
+        "//stratum/hal/lib/barefoot:bf_pal_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/phal:phal_sim",

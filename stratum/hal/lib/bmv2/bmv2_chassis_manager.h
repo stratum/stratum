@@ -99,19 +99,19 @@ class Bmv2ChassisManager {
 
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
-  void SendPortOperStateGnmiEvent(uint64 node_id, uint64 port_id,
+  void SendPortOperStateGnmiEvent(uint64 node_id, uint32 port_id,
                                   PortState new_state)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   friend ::util::Status PortStatusChangeCb(Bmv2ChassisManager* chassis_mgr,
                                            uint64 node_id,
-                                           uint64 port_id,
+                                           uint32 port_id,
                                            PortState new_state)
       LOCKS_EXCLUDED(chassis_lock);
 
   ::util::StatusOr<const SingletonPort*> GetSingletonPort(
-       uint64 node_id, uint64 port_id) const
-        SHARED_LOCKS_REQUIRED(chassis_lock);
+      uint64 node_id, uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   bool initialized_ GUARDED_BY(chassis_lock);
 

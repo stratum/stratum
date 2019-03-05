@@ -64,7 +64,7 @@ namespace {
 
 // helper to add a bmv2 port
 ::util::Status AddPort(::bm::DevMgr* dev_mgr, uint64 node_id,
-                       const std::string& port_name, uint64 port_id) {
+                       const std::string& port_name, uint32 port_id) {
   LOG(INFO) << "Adding port " << port_id << " to node " << node_id;
   // port_name can be "<interface_name>"
   // or "<arbitrary_string>@<interface_name>"
@@ -83,7 +83,7 @@ namespace {
 
 // helper to remove a bmv2 port
 ::util::Status RemovePort(::bm::DevMgr* dev_mgr, uint64 node_id,
-                          uint64 port_id) {
+                          uint32 port_id) {
   LOG(INFO) << "Removing port " << port_id << " from node " << node_id;
   auto bm_status = dev_mgr->port_remove(
       static_cast<bm::PortMonitorIface::port_t>(port_id));
@@ -102,7 +102,7 @@ namespace {
   VLOG(1) << "Bmv2ChassisManager::PushChassisConfig";
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
 
-  if (!initialized_) RegisterEventWriters();
+  if (!initialized_) RETURN_IF_ERROR(RegisterEventWriters());
 
   // build new maps
   std::map<uint64, std::map<uint32, PortState>>
@@ -110,7 +110,7 @@ namespace {
   std::map<uint64, std::map<uint32, SingletonPort>>
       node_id_to_port_id_to_port_config;
   for (auto singleton_port : config.singleton_ports()) {
-    uint64 port_id = singleton_port.id();
+    uint32 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
     CHECK_RETURN_IF_FALSE(node_id_to_bmv2_runner_.count(node_id) > 0)
         << "Node " << node_id << " is not known.";
@@ -216,7 +216,7 @@ namespace {
 }
 
 ::util::StatusOr<const SingletonPort*> Bmv2ChassisManager::GetSingletonPort(
-     uint64 node_id, uint64 port_id) const {
+     uint64 node_id, uint32 port_id) const {
   auto* port_id_to_singleton =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_singleton != nullptr)
@@ -367,7 +367,7 @@ std::unique_ptr<Bmv2ChassisManager> Bmv2ChassisManager::CreateInstance(
 }
 
 void Bmv2ChassisManager::SendPortOperStateGnmiEvent(
-    uint64 node_id, uint64 port_id, PortState new_state) {
+    uint64 node_id, uint32 port_id, PortState new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
   // Allocate and initialize a PortOperStateChangedEvent event and pass it to
@@ -384,7 +384,7 @@ void Bmv2ChassisManager::SendPortOperStateGnmiEvent(
 
 ::util::Status PortStatusChangeCb(Bmv2ChassisManager* chassis_manager,
                                   uint64 node_id,
-                                  uint64 port_id,
+                                  uint32 port_id,
                                   PortState new_state) {
   LOG(INFO) << "State of port " << port_id << " in node " << node_id << ": "
             << PrintPortState(new_state);

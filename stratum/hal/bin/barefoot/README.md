@@ -133,10 +133,8 @@ sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
 ```
 
 For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
-directory. Note that at the moment, you still need to add & enable the ports
-using the ucli or through the Thrift PAL RPC service. ONOS can add & enable the
-ports for you if you provide the appropriate netcfg file when using the
-barefoot-pro ONOS driver.
+directory. *Do not use the ucli or the Thrift PAL RPC service for port
+configuration.* You may use the ucli to check port status (`pm show`).
 
 ## Testing gNMI
 

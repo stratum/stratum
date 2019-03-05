@@ -210,7 +210,7 @@ Bmv2Switch::~Bmv2Switch() {}
 ::util::Status Bmv2Switch::SetValue(uint64 node_id, const SetRequest& request,
                         std::vector<::util::Status>* details) {
   VLOG(1) << "Bmv2Switch::SetValue\n";
-  LOG(INFO) << "Bmv2Switch::SetValue is not implememted yet, but changes will "
+  LOG(INFO) << "Bmv2Switch::SetValue is not implemented yet, but changes will "
             << "be peformed when ChassisConfig is pushed again.";
   // TODO(antonin)
   return ::util::OkStatus();

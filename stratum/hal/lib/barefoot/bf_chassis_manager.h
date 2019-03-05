@@ -18,13 +18,17 @@
 
 #include <map>
 #include <memory>
+#include <thread>
 
+#include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/lib/channel/channel.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
+#include "absl/types/optional.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
@@ -44,12 +48,18 @@ class BFChassisManager {
   virtual ::util::Status VerifyChassisConfig(const ChassisConfig& config)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
+  virtual ::util::Status Shutdown() LOCKS_EXCLUDED(chassis_lock);
+
   virtual ::util::Status RegisterEventNotifyWriter(
       const std::shared_ptr<WriterInterface<GnmiEventPtr>>& writer)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
   virtual ::util::Status UnregisterEventNotifyWriter()
       LOCKS_EXCLUDED(gnmi_event_lock_);
+
+  virtual ::util::StatusOr<DataResponse> GetPortData(
+      const DataRequest::Request& request)
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   virtual ::util::StatusOr<PortState> GetPortState(
       uint64 node_id, uint32 port_id)
@@ -59,12 +69,19 @@ class BFChassisManager {
       uint64 node_id, uint32 port_id, PortCounters* counters)
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
+  virtual ::util::Status ReplayPortsConfig(uint64 node_id)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+
+  virtual ::util::Status ResetPortsConfig(uint64 node_id)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+
   ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
-      PhalInterface* phal_interface);
+      PhalInterface* phal_interface,
+      BFPalInterface* bf_pal_interface);
 
   // BFChassisManager is neither copyable nor movable.
   BFChassisManager(const BFChassisManager&) = delete;
@@ -75,23 +92,61 @@ class BFChassisManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFChassisManager(PhalInterface* phal_interface);
+  BFChassisManager(PhalInterface* phal_interface,
+                   BFPalInterface* bf_pal_interface);
+
+  // Maximum depth of port status change event channel.
+  static constexpr int kMaxPortStatusChangeEventDepth = 1024;
+
+  struct PortConfig {
+    // ADMIN_STATE_UNKNOWN indicate that something went wrong during the port
+    // configuration, and the port add wasn't event attempted or failed.
+    AdminState admin_state;
+    absl::optional<uint64> speed_bps;  // empty if port add failed
+    absl::optional<int32> mtu;  // empty if MTU configuration failed
+    absl::optional<TriState> autoneg;  // empty if Autoneg configuration failed
+
+    PortConfig()
+        : admin_state(ADMIN_STATE_UNKNOWN) { }
+  };
+
+  ::util::StatusOr<const PortConfig*> GetPortConfig(
+      uint64 node_id, uint32 port_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
   ::util::Status UnregisterEventWriters()
-        EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+      LOCKS_EXCLUDED(chassis_lock);
 
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
-  void SendPortOperStateGnmiEvent(uint64 node_id, uint64 port_id,
+  void SendPortOperStateGnmiEvent(uint64 node_id, uint32 port_id,
                                   PortState new_state)
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
-  friend ::util::Status PortStatusChangeCb(int unit, uint64 port_id,
-                                           bool up, void *cookie)
-      LOCKS_EXCLUDED(chassis_lock);
+  // Thread function for reading and processing port state events.
+  void ReadPortStatusChangeEvents() LOCKS_EXCLUDED(chassis_lock);
+
+  // helper to add / configure / enable a port with BFPalInterface
+  ::util::Status AddPortHelper(uint64 node_id, int unit, uint32 port_id,
+                               const SingletonPort& singleton_port,
+                               PortConfig* config);
+
+  // helper to update port configuration with BFPalInterface
+  ::util::Status UpdatePortHelper(uint64 node_id, int unit, uint32 port_id,
+                                  const SingletonPort& singleton_port,
+                                  const PortConfig& config_old,
+                                  PortConfig* config);
 
   bool initialized_ GUARDED_BY(chassis_lock);
+
+  std::shared_ptr<Channel<BFPalInterface::PortStatusChangeEvent> >
+      port_status_change_event_channel_ GUARDED_BY(chassis_lock);
+
+  std::unique_ptr<ChannelReader<BFPalInterface::PortStatusChangeEvent> >
+      port_status_change_event_reader_;
+
+  std::thread port_status_change_event_thread_;
 
   // WriterInterface<GnmiEventPtr> object for sending event notifications.
   mutable absl::Mutex gnmi_event_lock_;
@@ -100,6 +155,9 @@ class BFChassisManager {
 
   // Pointer to a PhalInterface implementation.
   PhalInterface* phal_interface_;  // not owned by this class.
+
+  // Pointer to a BFPalInterface implementation that wraps all the SDE calls.
+  BFPalInterface* bf_pal_interface_;  // not owned by this class.
 
   // Map from unit number to the node ID as specified by the config.
   std::map<int, uint64> unit_to_node_id_;
@@ -110,7 +168,14 @@ class BFChassisManager {
   // Map from node ID to another map from port ID to PortState representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
   std::map<uint64, std::map<uint32, PortState>>
-      node_id_to_port_id_to_port_state_;
+      node_id_to_port_id_to_port_state_ GUARDED_BY(chassis_lock);
+
+  // Map from node ID to another map from port ID to port configuration.
+  // We may change this once missing "get" methods get added to BFPalInterface,
+  // as we would be able to rely on BFPalInterface to query config parameters,
+  // instead of maintaining a "consistent" view in this map.
+  std::map<uint64, std::map<uint32, PortConfig>>
+      node_id_to_port_id_to_port_config_ GUARDED_BY(chassis_lock);
 };
 
 }  // namespace barefoot

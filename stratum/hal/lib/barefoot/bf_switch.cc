@@ -54,6 +54,7 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
 BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::PushChassisConfig(const ChassisConfig& config) {
+  absl::WriterMutexLock l(&chassis_lock);
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
   ASSIGN_OR_RETURN(const auto& node_id_to_unit,
@@ -79,8 +80,10 @@ BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  absl::WriterMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->PushForwardingPipelineConfig(config));
+  RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
 
   LOG(INFO) << "P4-based forwarding pipeline config pushed successfully to "
             << "node with ID " << node_id << ".";
@@ -90,8 +93,10 @@ BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::SaveForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  absl::WriterMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->SaveForwardingPipelineConfig(config));
+  RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
 
   LOG(INFO) << "P4-based forwarding pipeline config saved successfully to "
             << "node with ID " << node_id << ".";
@@ -116,7 +121,9 @@ BFSwitch::~BFSwitch() {}
 }
 
 ::util::Status BFSwitch::Shutdown() {
-  return ::util::OkStatus();
+  ::util::Status status = ::util::OkStatus();
+  APPEND_STATUS_IF_ERROR(status, bf_chassis_manager_->Shutdown());
+  return status;
 }
 
 ::util::Status BFSwitch::Freeze() {
@@ -183,36 +190,26 @@ BFSwitch::~BFSwitch() {}
                                        std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
-    DataResponse resp;
-    ::util::Status status = ::util::OkStatus();
+    ::util::StatusOr<DataResponse> resp;
     switch (req.request_case()) {
-      // Get singleton port operational state.
-      case DataRequest::Request::kOperStatus: {
-        auto port_state = bf_chassis_manager_->GetPortState(
-            req.oper_status().node_id(), req.oper_status().port_id());
-        if (!port_state.ok()) {
-          status.Update(port_state.status());
-        } else {
-          resp.mutable_oper_status()->set_state(port_state.ValueOrDie());
-        }
+      case DataRequest::Request::kOperStatus:
+      case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kPortSpeed:
+      case DataRequest::Request::kNegotiatedPortSpeed:
+      case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kAutonegStatus:
+        resp = bf_chassis_manager_->GetPortData(req);
         break;
-      }
-      case DataRequest::Request::kPortCounters: {
-        status = bf_chassis_manager_->GetPortCounters(
-            req.port_counters().node_id(),
-            req.port_counters().port_id(),
-            resp.mutable_port_counters());
-        break;
-      }
       default:
         // TODO(antonin)
+        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;
     }
-    if (status.ok()) {
+    if (resp.ok()) {
       // If everything is OK send it to the caller.
-      writer->Write(resp);
+      writer->Write(resp.ValueOrDie());
     }
-    if (details) details->push_back(status);
+    if (details) details->push_back(resp.status());
   }
   return ::util::OkStatus();
 }
@@ -222,6 +219,9 @@ BFSwitch::~BFSwitch() {}
   (void)node_id;
   (void)request;
   (void)details;
+  LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
+            << "be peformed when ChassisConfig is pushed again.";
+  // TODO(antonin)
   return ::util::OkStatus();
 }
 

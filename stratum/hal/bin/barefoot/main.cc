@@ -29,6 +29,7 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_switch.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
@@ -106,7 +107,8 @@ Main(int argc, char* argv[]) {
   std::map<int, pi::PINode*> unit_to_pi_node = {
     {unit, pi_node.get()},
   };
-  auto bf_chassis_manager = BFChassisManager::CreateInstance(phal_sim);
+  auto bf_chassis_manager = BFChassisManager::CreateInstance(
+      phal_sim, BFPalWrapper::GetSingleton());
   auto bf_switch = BFSwitch::CreateInstance(
       phal_sim, bf_chassis_manager.get(), unit_to_pi_node);
 
