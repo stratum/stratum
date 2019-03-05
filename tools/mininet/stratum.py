@@ -177,9 +177,10 @@ class StratumBmv2Switch(Switch):
         ]
         if support_chassis_config:
             args.append('-chassis_config_file=%s' % chassis_config_file)
-        for port, intf in self.intfs.items():
-            if not intf.IP():
-                args.append('%d@%s' % (port, intf.name))
+        else:
+            for port, intf in self.intfs.items():
+                if not intf.IP():
+                    args.append('%d@%s' % (port, intf.name))
 
         cmdString = " ".join(args)
 
@@ -257,6 +258,9 @@ class StratumBmv2Switch(Switch):
             # a TCIntf interface.
             singletonPort.speed_bps = DEFAULT_INTERFACE_SPEED
             singletonPort.node = node.id
+
+            configParams = singletonPort.config_params
+            configParams.admin_state = common_pb2.ADMIN_STATE_ENABLED
 
         return chassisConfig
 

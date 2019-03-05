@@ -183,43 +183,36 @@ Bmv2Switch::~Bmv2Switch() {}
                                          std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
-    DataResponse resp;
-    ::util::Status status = ::util::OkStatus();
+    ::util::StatusOr<DataResponse> resp;
     switch (req.request_case()) {
-      // Get singleton port operational state.
-      case DataRequest::Request::kOperStatus: {
-        auto port_state = bmv2_chassis_manager_->GetPortState(
-            req.oper_status().node_id(), req.oper_status().port_id());
-        if (!port_state.ok()) {
-          status.Update(port_state.status());
-        } else {
-          resp.mutable_oper_status()->set_state(port_state.ValueOrDie());
-        }
+      case DataRequest::Request::kOperStatus:
+      case DataRequest::Request::kAdminStatus:
+      case DataRequest::Request::kPortSpeed:
+      case DataRequest::Request::kNegotiatedPortSpeed:
+      case DataRequest::Request::kPortCounters:
+      case DataRequest::Request::kAutonegStatus:
+        resp = bmv2_chassis_manager_->GetPortData(req);
         break;
-      }
-      case DataRequest::Request::kPortCounters: {
-        status = bmv2_chassis_manager_->GetPortCounters(
-            req.port_counters().node_id(),
-            req.port_counters().port_id(),
-            resp.mutable_port_counters());
-        break;
-      }
       default:
         // TODO(antonin)
+        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;
     }
-    if (status.ok()) {
+    if (resp.ok()) {
       // If everything is OK send it to the caller.
-      writer->Write(resp);
+      writer->Write(resp.ValueOrDie());
     }
-    if (details) details->push_back(status);
+    if (details) details->push_back(resp.status());
   }
   return ::util::OkStatus();
 }
 
 ::util::Status Bmv2Switch::SetValue(uint64 node_id, const SetRequest& request,
                         std::vector<::util::Status>* details) {
-  //FIXME not implemented
+  VLOG(1) << "Bmv2Switch::SetValue\n";
+  LOG(INFO) << "Bmv2Switch::SetValue is not implememted yet, but changes will "
+            << "be peformed when ChassisConfig is pushed again.";
+  // TODO(antonin)
   return ::util::OkStatus();
 }
 

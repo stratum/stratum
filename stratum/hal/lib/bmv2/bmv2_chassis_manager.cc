@@ -44,24 +44,157 @@ absl::Mutex chassis_lock;
 Bmv2ChassisManager::Bmv2ChassisManager(
     PhalInterface* phal_interface,
     std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*> node_id_to_bmv2_runner)
-    : phal_interface_(phal_interface),
+    : initialized_(false),
+      phal_interface_(phal_interface),
       node_id_to_bmv2_runner_(node_id_to_bmv2_runner),
       node_id_to_bmv2_port_status_cb_(),
-      node_id_to_port_id_to_port_state_() {
+      node_id_to_port_id_to_port_state_(),
+      node_id_to_port_id_to_port_config_() {
   for (auto& node : node_id_to_bmv2_runner) {
     CHECK_EQ(node.first, node.second->get_device_id())
         << "Device / node id mismatch with bmv2 runner";
+    node_id_to_port_id_to_port_state_[node.first] = {};
+    node_id_to_port_id_to_port_config_[node.first] = {};
   }
-  RegisterEventWriters();
 }
 
 Bmv2ChassisManager::~Bmv2ChassisManager() = default;
 
+namespace {
+
+// helper to add a bmv2 port
+::util::Status AddPort(::bm::DevMgr* dev_mgr, uint64 node_id,
+                       const std::string& port_name, uint64 port_id) {
+  LOG(INFO) << "Adding port " << port_id << " to node " << node_id;
+  // port_name can be "<interface_name>"
+  // or "<arbitrary_string>@<interface_name>"
+  auto start_iface_name = port_name.find_last_of("@");
+  auto iface_name = (start_iface_name == std::string::npos) ?
+      port_name : port_name.substr(start_iface_name + 1);
+  auto bm_status = dev_mgr->port_add(
+      iface_name, static_cast<bm::PortMonitorIface::port_t>(port_id), {});
+  if (bm_status != bm::DevMgrIface::ReturnCode::SUCCESS) {
+    RETURN_ERROR(ERR_INTERNAL)
+        << "Error when binding port " << port_id
+        << " to interface " << iface_name << " in node " << node_id << ".";
+  }
+  return ::util::OkStatus();
+}
+
+// helper to remove a bmv2 port
+::util::Status RemovePort(::bm::DevMgr* dev_mgr, uint64 node_id,
+                          uint64 port_id) {
+  LOG(INFO) << "Removing port " << port_id << " from node " << node_id;
+  auto bm_status = dev_mgr->port_remove(
+      static_cast<bm::PortMonitorIface::port_t>(port_id));
+  if (bm_status != bm::DevMgrIface::ReturnCode::SUCCESS) {
+    RETURN_ERROR(ERR_INTERNAL)
+        << "Error when removing port " << port_id
+        << " from node " << node_id << ".";
+  }
+  return ::util::OkStatus();
+}
+
+}  // namespace
+
 ::util::Status Bmv2ChassisManager::PushChassisConfig(
      const ChassisConfig& config) {
-  // TODO(antonin): handle singleton ports and do the appropriate port adds /
-  // deletes with the appropriate bmv2 runner.
-  return ::util::OkStatus();
+  VLOG(1) << "Bmv2ChassisManager::PushChassisConfig";
+  ::util::Status status = ::util::OkStatus();  // errors to keep track of.
+
+  if (!initialized_) RegisterEventWriters();
+
+  // build new maps
+  std::map<uint64, std::map<uint32, PortState>>
+      node_id_to_port_id_to_port_state;
+  std::map<uint64, std::map<uint32, SingletonPort>>
+      node_id_to_port_id_to_port_config;
+  for (auto singleton_port : config.singleton_ports()) {
+    uint64 port_id = singleton_port.id();
+    uint64 node_id = singleton_port.node();
+    CHECK_RETURN_IF_FALSE(node_id_to_bmv2_runner_.count(node_id) > 0)
+        << "Node " << node_id << " is not known.";
+    node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
+    node_id_to_port_id_to_port_config[node_id][port_id] = singleton_port;
+  }
+
+  CHECK_RETURN_IF_FALSE(static_cast<size_t>(config.nodes_size()) ==
+                        node_id_to_bmv2_runner_.size())
+      << "Missing nodes in ChassisConfig";
+
+  // Compare ports in old config and new config and perform the necessary
+  // operations.
+  for (auto& node : config.nodes()) {
+    VLOG(1) << "Updating config for node " << node.id() << ".";
+
+    auto* runner = gtl::FindOrNull(node_id_to_bmv2_runner_, node.id());
+    CHECK_RETURN_IF_FALSE(runner != nullptr)
+        << "Cannot find runner for node " << node.id() << ".";
+    auto dev_mgr = (*runner)->get_dev_mgr();
+
+    for (const auto& port_old : node_id_to_port_id_to_port_config_[node.id()]) {
+      auto port_id = port_old.first;
+      auto* singleton_port = gtl::FindOrNull(
+          node_id_to_port_id_to_port_config[node.id()], port_id);
+
+      if (singleton_port == nullptr) {  // remove port if not present any more
+        auto& config_old = port_old.second.config_params();
+        if (config_old.admin_state() == ADMIN_STATE_ENABLED) {
+          APPEND_STATUS_IF_ERROR(
+              status, RemovePort(dev_mgr, node.id(), port_id));
+        }
+      } else {  // change port config if needed
+        auto& config_old = port_old.second.config_params();
+        auto& config = singleton_port->config_params();
+        if (config.admin_state() != config_old.admin_state()) {
+          if (config.admin_state() == ADMIN_STATE_ENABLED) {
+            APPEND_STATUS_IF_ERROR(
+                status,
+                AddPort(dev_mgr, node.id(), singleton_port->name(), port_id));
+          } else {
+            APPEND_STATUS_IF_ERROR(
+                status, RemovePort(dev_mgr, node.id(), port_id));
+            if (node_id_to_port_id_to_port_state_[node.id()][port_id] ==
+                PORT_STATE_UP) {
+              // This is because the bmv2 PortMonitor will not generate an
+              // asynchronous PORT_DOWN event by itself, but only a synchronous
+              // PORT_REMOVED event, which we ignore to avoid creating a
+              // deadlock.
+              VLOG(1) << "Sending DOWN notification for port " << port_id
+                      << " in node " << node.id() << ".";
+              SendPortOperStateGnmiEvent(node.id(), port_id, PORT_STATE_DOWN);
+            }
+          }
+        }
+      }
+    }
+
+    for (const auto& port : node_id_to_port_id_to_port_config[node.id()]) {
+      auto port_id = port.first;
+      auto* singleton_port_old = gtl::FindOrNull(
+          node_id_to_port_id_to_port_config_[node.id()], port_id);
+
+      if (singleton_port_old == nullptr) {  // add new port
+        auto& singleton_port = port.second;
+        auto& config = singleton_port.config_params();
+        if (config.admin_state() == ADMIN_STATE_ENABLED) {
+          APPEND_STATUS_IF_ERROR(
+              status,
+              AddPort(dev_mgr, node.id(), singleton_port.name(), port_id));
+        } else {
+          LOG(INFO) << "Port " << port_id
+                    << " is listed in ChassisConfig for node " << node.id()
+                    << " but its admin state is not set to enabled.";
+        }
+      }
+    }
+  }
+
+  node_id_to_port_id_to_port_state_ = node_id_to_port_id_to_port_state;
+  node_id_to_port_id_to_port_config_ = node_id_to_port_id_to_port_config;
+  initialized_ = true;
+
+  return status;
 }
 
 ::util::Status Bmv2ChassisManager::VerifyChassisConfig(
@@ -82,19 +215,91 @@ Bmv2ChassisManager::~Bmv2ChassisManager() = default;
   return ::util::OkStatus();
 }
 
+::util::StatusOr<const SingletonPort*> Bmv2ChassisManager::GetSingletonPort(
+     uint64 node_id, uint64 port_id) const {
+  auto* port_id_to_singleton =
+      gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_singleton != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+  const SingletonPort* singleton =
+      gtl::FindOrNull(*port_id_to_singleton, port_id);
+  CHECK_RETURN_IF_FALSE(singleton != nullptr)
+      << "Port " << port_id << " is not configured or not known for node "
+      << node_id << ".";
+  return singleton;
+}
+
+::util::StatusOr<DataResponse> Bmv2ChassisManager::GetPortData(
+     const DataRequest::Request& request) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  DataResponse resp;
+  using Request = DataRequest::Request;
+  switch (request.request_case()) {
+    case Request::kOperStatus: {
+      ASSIGN_OR_RETURN(auto port_state, GetPortState(
+          request.oper_status().node_id(), request.oper_status().port_id()));
+      resp.mutable_oper_status()->set_state(port_state);
+      break;
+    }
+    case Request::kAdminStatus: {
+      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
+          request.admin_status().node_id(), request.admin_status().port_id()));
+      resp.mutable_admin_status()->set_state(
+          singleton->config_params().admin_state());
+      break;
+    }
+    case Request::kPortSpeed: {
+      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
+          request.port_speed().node_id(), request.port_speed().port_id()));
+      resp.mutable_port_speed()->set_speed_bps(singleton->speed_bps());
+      break;
+    }
+    case Request::kNegotiatedPortSpeed: {
+      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
+          request.negotiated_port_speed().node_id(),
+          request.negotiated_port_speed().port_id()));
+      resp.mutable_negotiated_port_speed()->set_speed_bps(
+          singleton->speed_bps());
+      break;
+    }
+    case Request::kPortCounters: {
+      RETURN_IF_ERROR(GetPortCounters(
+          request.port_counters().node_id(),
+          request.port_counters().port_id(),
+          resp.mutable_port_counters()));
+      break;
+    }
+    case Request::kAutonegStatus: {
+      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
+          request.autoneg_status().node_id(),
+          request.autoneg_status().port_id()));
+      resp.mutable_autoneg_status()->set_state(
+          singleton->config_params().autoneg());
+      break;
+    }
+    default:
+      RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
+  }
+  return resp;
+}
+
 ::util::StatusOr<PortState> Bmv2ChassisManager::GetPortState(
     uint64 node_id, uint32 port_id) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_state != nullptr)
       << "Node " << node_id << " is not configured or not known.";
   const PortState* port_state_ptr =
       gtl::FindOrNull(*port_id_to_port_state, port_id);
-  // TODO(antonin): Once we implement PushChassisConfig, port_state_ptr should
-  // never be NULL
-  if (port_state_ptr != nullptr && *port_state_ptr != PORT_STATE_UNKNOWN) {
-    return *port_state_ptr;
-  }
+  CHECK_RETURN_IF_FALSE(port_state_ptr != nullptr)
+      << "Port " << port_id << " is not configured or not known for node "
+      << node_id << ".";
+  if (*port_state_ptr != PORT_STATE_UNKNOWN) return *port_state_ptr;
 
   // If state is unknown, query the state
   LOG(INFO) << "Querying state of port " << port_id << " in node " << node_id
@@ -117,6 +322,17 @@ Bmv2ChassisManager::~Bmv2ChassisManager() = default;
 
 ::util::Status Bmv2ChassisManager::GetPortCounters(
     uint64 node_id, uint32 port_id, PortCounters* counters) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(node_id, port_id));
+  if (singleton->config_params().admin_state() != ADMIN_STATE_ENABLED) {
+    VLOG(1) << "Bmv2ChassisManager::GetPortCounters : port " << port_id
+            << " in node " << node_id << " is not enabled,"
+            << " so stats will be set to 0.";
+    counters->Clear();
+    return ::util::OkStatus();
+  }
   auto* runner = gtl::FindOrNull(node_id_to_bmv2_runner_, node_id);
   CHECK_RETURN_IF_FALSE(runner != nullptr)
       << "Node " << node_id << " is not configured or not known.";
@@ -214,12 +430,17 @@ void PortStatusChangeCbInternal(Bmv2ChassisManager* chassis_manager,
     auto& cb_ref = p.first->second;
     dev_mgr->register_status_cb(PortStatus::PORT_UP, cb_ref);
     dev_mgr->register_status_cb(PortStatus::PORT_DOWN, cb_ref);
+    // Cannot register a callback for PORT_REMOVED events as it would create a
+    // deadlock given that both PushChassisConfig and the callback acquire the
+    // chassis lock.
+    // dev_mgr->register_status_cb(PortStatus::PORT_REMOVED, cb_ref);
   }
   LOG(INFO) << "Port status notification callback registered successfully.";
   return ::util::OkStatus();
 }
 
 ::util::Status Bmv2ChassisManager::UnregisterEventWriters() {
+  // TODO(antonin)
   return ::util::OkStatus();
 }
 

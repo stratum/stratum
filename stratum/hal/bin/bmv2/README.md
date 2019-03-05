@@ -13,12 +13,12 @@ mkdir bmv2_install
 export BMV2_INSTALL=`pwd`/bmv2_install
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BMV2_INSTALL/lib
 ```
-*If you plan on adding interfaces to bmv2 (which can be done from the
-command-line when starting `stratum_bmv2`), you will need to run the binary as
-root and therefore you may want to install bmv2 in a standard system directory
-instead. For example you can set `BMV2_INSTALL` to /usr/local. In this case you
-do not need to modify `LD_LIBRARY_PATH` but you will need to run `sudo ldconfig`
-after the installation.*
+*If you plan on adding interfaces to bmv2 (which can be done by providing the
+appropriate Chassis Config file when starting bmv2), you will need to run the
+binary as root and therefore you may want to install bmv2 in a standard system
+directory instead. For example you can set `BMV2_INSTALL` to /usr/local. In this
+case you do not need to modify `LD_LIBRARY_PATH` but you will need to run `sudo
+ldconfig` after the installation.*
 
 ### Install PI
 ```
@@ -44,7 +44,7 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 9c8ab62d5680044b94aa2e37b6989f386cc7ae7c.
+we used for testing: 5d25d0d94681492d155d3e5b72b16a56121f8dfe.
 
 ## Building the `stratum_bmv2` binary
 
@@ -64,7 +64,11 @@ As of now the `stratum_bmv2` binary *can only be run from the root of your
 Stratum Bazel workspace*:
 
 ```
-./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 --external_hercules_urls=0.0.0.0:28000 --forwarding_pipeline_configs_file=/tmp/config.txt --persistent_config_dir=/tmp/
+./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 \
+    --external_hercules_urls=0.0.0.0:28000 \
+    --persistent_config_dir=<config dir> \
+    --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
+    --chassis_config_file=<config dir>/chassis_config.pb.txt
 ```
 
 You can ignore the following error, we are working on fixing it:
@@ -74,10 +78,10 @@ E0808 17:57:36.513905 29298 utils.cc:76] Return Error: ReadFileToString(filename
 W0808 17:57:36.513913 29298 config_monitoring_service.cc:106] No saved chassis config found in . This is normal when the switch is just installed.
 ```
 
-To assign interfaces to bmv2, use positional arguments as follows:
-```
-[sudo] ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 <keyword arguments> <port number>@<interface name> <port number>@<interface name>...
-```
+For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
+directory. For each singleton port, use the Linux interface name as the `name`
+and set the `admin_state` to `ADMIN_STATE_ENABLED`.
+
 Assigning interfaces to bmv2 requires the `stratum_bmv2` binary to have the
 `CAP_NET_RAW` capability. Based on your Linux distribution and the location of
 the binary, you may be able to add the capability to the binary with `setcap`

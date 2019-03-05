@@ -49,8 +49,13 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
       // Found an interface
       int intf_num = strtol(argv[i], &intf, 10);
       intf += 1; // Point to the start of the interface name
-      LOG(INFO) << "Parsed intf from command line: port " << intf_num << " -> " << intf;
+      LOG(INFO) << "Parsed intf from command line: port " << intf_num
+                << " -> " << intf;
       parser.ifaces.add(intf_num, intf);
+      LOG(WARNING) << "Providing interfaces on the command-line is deprecated, "
+                   << "and you will not be able to perform gNMI RPCs to "
+                   << "modify port config or access port state; "
+                   << "please use --chassis_config_file instead";
     }
     else {
       LOG(ERROR) << "Ignoring extraneous non-option argument: " << argv[i];

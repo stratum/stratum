@@ -43,7 +43,8 @@ namespace barefoot {
 absl::Mutex chassis_lock;
 
 BFChassisManager::BFChassisManager(PhalInterface* phal_interface)
-    : phal_interface_(phal_interface),
+    : initialized_(false),
+      phal_interface_(phal_interface),
       unit_to_node_id_(),
       node_id_to_unit_(),
       node_id_to_port_id_to_port_state_() {}

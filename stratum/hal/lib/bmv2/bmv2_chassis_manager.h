@@ -60,6 +60,10 @@ class Bmv2ChassisManager {
   virtual ::util::Status UnregisterEventNotifyWriter()
       LOCKS_EXCLUDED(gnmi_event_lock_);
 
+  virtual ::util::StatusOr<DataResponse> GetPortData(
+      const DataRequest::Request& request)
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
   virtual ::util::StatusOr<PortState> GetPortState(
       uint64 node_id, uint32 port_id)
       SHARED_LOCKS_REQUIRED(chassis_lock);
@@ -88,8 +92,10 @@ class Bmv2ChassisManager {
       std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*>
         node_id_to_bmv2_runner);
 
-  ::util::Status RegisterEventWriters();
-  ::util::Status UnregisterEventWriters();
+  ::util::Status RegisterEventWriters()
+        EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status UnregisterEventWriters()
+        EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
@@ -103,6 +109,12 @@ class Bmv2ChassisManager {
                                            PortState new_state)
       LOCKS_EXCLUDED(chassis_lock);
 
+  ::util::StatusOr<const SingletonPort*> GetSingletonPort(
+       uint64 node_id, uint64 port_id) const
+        SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  bool initialized_ GUARDED_BY(chassis_lock);
+
   // WriterInterface<GnmiEventPtr> object for sending event notifications.
   mutable absl::Mutex gnmi_event_lock_;
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_
@@ -114,12 +126,17 @@ class Bmv2ChassisManager {
   std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*> node_id_to_bmv2_runner_;
 
   std::map<uint64, ::bm::PortMonitorIface::PortStatusCb>
-      node_id_to_bmv2_port_status_cb_;
+      node_id_to_bmv2_port_status_cb_ GUARDED_BY(chassis_lock);
 
   // Map from node ID to another map from port ID to PortState representing
   // the state of the singleton port uniquely identified by (node ID, port ID).
   std::map<uint64, std::map<uint32, PortState>>
-      node_id_to_port_id_to_port_state_;
+      node_id_to_port_id_to_port_state_ GUARDED_BY(chassis_lock);
+
+  // Map from node ID to another map from port ID to SignletonPort representing
+  // the config of the singleton port uniquely identified by (node ID, port ID).
+  std::map<uint64, std::map<uint32, SingletonPort>>
+      node_id_to_port_id_to_port_config_ GUARDED_BY(chassis_lock);
 };
 
 }  // namespace bmv2
