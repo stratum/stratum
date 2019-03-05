@@ -343,20 +343,23 @@ class TreeNode {
       };
   TreeNodeSetHandler on_update_handler_ = [](const ::gnmi::Path& path,
                                              const ::google::protobuf::Message&,
-                                             CopyOnWriteChassisConfig*) {
+                                             CopyOnWriteChassisConfig*)
+      -> ::util::Status {
     return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
            << "Unsupported mode: UPDATE for: '" << path.ShortDebugString()
            << "'";
   };
   TreeNodeSetHandler on_replace_handler_ =
       [](const ::gnmi::Path& path, const ::google::protobuf::Message&,
-         CopyOnWriteChassisConfig*) {
+         CopyOnWriteChassisConfig*)
+      -> ::util::Status {
         return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE)
                << "Unsupported mode: REPLACE for: '" << path.ShortDebugString()
                << "'";
       };
   TreeNodeDeleteHandler on_delete_handler_ = [](const ::gnmi::Path& path,
-                                                CopyOnWriteChassisConfig*) {
+                                                CopyOnWriteChassisConfig*)
+      -> ::util::Status {
     return MAKE_ERROR() << "unsupported mode: DELETE for: '"
                         << path.ShortDebugString() << "'";
   };
