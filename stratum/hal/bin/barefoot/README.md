@@ -140,14 +140,10 @@ barefoot-pro ONOS driver.
 
 ## Testing gNMI
 
-You can use the gnmi_sub_once.py script for gNMI ONCE subscriptions:
+You can use the tools/gnmi/gnmi-cli.py script for gNMI get, set, and subscriptions:
 ```
-python gnmi_sub_once.py --grpc-addr 0.0.0.0:28000 --interface <name> state counters in-octets
-python gnmi_sub_once.py --grpc-addr 0.0.0.0:28000 --interface <name> state oper-status
+python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 get /interfaces/interface[name=128]/state/ifindex
+python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 set /interfaces/interface[name=1/1/1]/config/health-indicator --string-val GOOD
+python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 sub /interfaces/interface[name=128]/state/oper-status
 ```
 
-You can use the gnmi_get.py script to test gNMI Get requests:
-```
-python gnmi_get.py --grpc-addr 0.0.0.0:28000 --interface <name> state counters in-octets
-python gnmi_get.py --grpc-addr 0.0.0.0:28000 --interface <name> state oper-status
-```
