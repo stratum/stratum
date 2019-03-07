@@ -92,6 +92,9 @@ Main(int argc, char* argv[]) {
     }
   }
 
+  // no longer done the Barefoot SDE starting with 8.7.0
+  DeviceMgr::init(256 /* max devices */);
+
   int unit(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
