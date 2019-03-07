@@ -125,7 +125,7 @@ running Stratum with the Tofino software model.
 bazel build //stratum/hal/bin/barefoot:stratum_bf --define phal_with_onlp=false [--define sde_ver=8.9.2]
 ```
 
-## Setting up the huge page 
+## Setting up the huge page
 
 Before start the Stratum, make sure you have set up the huge page for DMA purposes.
 
@@ -229,3 +229,13 @@ To start a shell session, you can use (requires Docker):
 
 Refer to the [p4runtime-shell](https://github.com/p4lang/p4runtime-shell)
 documentation for more information.
+
+## Building the Debian package (.deb)
+
+To build Debian package, use command below:
+
+```
+ bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
+```
+
+Note that this package does not include libraries like SDE and PI, you need to install them manually.

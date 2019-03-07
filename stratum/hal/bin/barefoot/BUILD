@@ -56,3 +56,69 @@ stratum_cc_binary(
         "platforms/x86-64-inventec-d5254-r0.json"
     ],
 )
+
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
+STRIP_PREFIX="/stratum/hal/bin/barefoot"
+
+pkg_tar(
+    name = "stratum_bf_bin",
+    srcs = [":stratum_bf"],
+    mode = "0755",
+    package_dir = "/usr/local/bin",
+    strip_prefix = STRIP_PREFIX,
+)
+
+pkg_tar(
+    name = "stratum_bf_systemd_service",
+    srcs = [
+        "deb/stratum_bf.service",
+    ],
+    mode = "0644",
+    package_dir = "/etc/systemd/system",
+    strip_prefix = STRIP_PREFIX + "/deb",
+)
+
+pkg_tar(
+    name = "stratum_bf_service_env",
+    srcs = [
+        "deb/stratum_bf.environment",
+    ],
+    mode = "0644",
+    package_dir = "/etc/stratum",
+    strip_prefix = STRIP_PREFIX + "/deb",
+)
+
+pkg_tar(
+    name = "stratum_bf_config",
+    srcs = [
+    ],
+    mode = "0644",
+    package_dir = "/etc/stratum",
+    strip_prefix = STRIP_PREFIX,
+)
+
+pkg_tar(
+    name = "stratum_bf_data",
+    extension = "tar.gz",
+    deps = [
+        ":stratum_bf_bin",
+        ":stratum_bf_systemd_service",
+        ":stratum_bf_service_env"
+        ":stratum_bf_config",
+    ],
+)
+
+pkg_deb(
+    name = "stratum_bf_deb",
+    architecture = "amd64",
+    data = ":stratum_bf_data",
+    depends = [
+        "systemd"
+    ],
+    description_file = "deb/description",
+    homepage = "https://stratumproject.org/",
+    maintainer = "https://stratumproject.org/",
+    package = "stratum_bf",
+    postinst = "deb/postinst",
+    version = "0.0.1",
+)

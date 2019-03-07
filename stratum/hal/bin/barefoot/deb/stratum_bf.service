@@ -1,0 +1,32 @@
+[Unit]
+Description=Stratum
+ConditionPathExists=/usr/bin/stratum_bf
+ConditionPathExists=/etc/stratum/stratum_bf.environment
+
+[Service]
+Type=simple
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=stratum_bf
+
+WorkingDirectory=/tmp
+EnvironmentFile=/etc/stratum/stratum_bf.environment
+
+ExecStartPre=/bin/mkdir -p /var/tmp/stratum
+
+ExecStart=/usr/bin/stratum_bf \
+    --external_hercules_urls=${EXTERNAL_HERCULES_URL} \
+    --grpc_max_recv_msg_size=${GRPC_MAX_RECV_MSG_SIZE} \
+    --bf_sde_install=${BF_SDE_INSTALL} \
+    --persistent_config_dir=${PERSISTENT_CONFIG_DIR} \
+    --forwarding_pipeline_configs_file=${FORWARDING_PIPELINE_CONFIGS_FILE} \
+    --chassis_config_file=${CHASSIS_CONFIG_FILE} \
+    --write_req_log_file=${WRITE_REQ_LOG_FILE} \
+    --bf_switchd_cfg=${BF_SWITCHD_CFG}
+
+ExecStop=/usr/bin/pkill stratum_bf
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
