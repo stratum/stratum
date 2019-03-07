@@ -74,6 +74,15 @@ OnlpWrapper::~OnlpWrapper() {
   return &fan_info_;
 }
 
+::util::StatusOr<ThermalInfo> OnlpWrapper::GetThermalInfo(OnlpOid oid) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_THERMAL(oid))
+      << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
+  onlp_thermal_info_t thermal_info = {};
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_thermal_info_get(oid, &thermal_info)))
+      << "Failed to get THERMAL info for OID " << oid << ".";
+  return ThermalInfo(thermal_info);
+}
+
 ::util::StatusOr<bool> OnlpWrapper::GetSfpPresent(OnlpOid port) const {
   return onlp_sfp_is_present(port);
 }
@@ -311,6 +320,31 @@ PsuCaps PsuInfo::GetPsuCaps() const {
   default:
     return PSU_CAPS_UNKNOWN;
   }
+}
+
+int ThermalInfo::GetThermalCurTemp() const {
+  return thermal_info_.mcelsius;
+}
+
+int ThermalInfo::GetThermalWarnTemp() const {
+  return thermal_info_.thresholds.warning;
+}
+
+int ThermalInfo::GetThermalErrorTemp() const {
+  return thermal_info_.thresholds.error;
+}
+
+int ThermalInfo::GetThermalShutDownTemp() const {
+  return thermal_info_.thresholds.shutdown;
+}
+
+bool ThermalInfo::Capable(ThermalCaps thermal_capability) const {
+  int compare_caps;
+  compare_caps = (thermal_info_.caps & thermal_capability);
+  if(compare_caps == thermal_capability)
+      return true;
+  else
+      return false; 
 }
 
 }  // namespace onlp

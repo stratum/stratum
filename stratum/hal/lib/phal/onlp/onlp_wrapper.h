@@ -23,6 +23,7 @@ extern "C" {
 #include <onlp/sfp.h>
 #include <onlp/fan.h>
 #include <onlp/psu.h>
+#include <onlp/thermal.h>
 }
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
@@ -119,6 +120,22 @@ class PsuInfo : public OidInfo {
   onlp_psu_info_t psu_info_;
 };
 
+class ThermalInfo : public OidInfo {
+ public:
+  explicit ThermalInfo(const onlp_thermal_info_t& thermal_info)
+      : OidInfo(thermal_info.hdr), thermal_info_(thermal_info) {}
+  ThermalInfo() {}
+
+  int GetThermalCurTemp() const;
+  int GetThermalWarnTemp() const;
+  int GetThermalErrorTemp() const;
+  int GetThermalShutDownTemp() const;
+  bool Capable(ThermalCaps thermal_capability) const;
+  
+ private:
+  onlp_thermal_info_t thermal_info_;
+};
+
 // A interface for ONLP calls.
 // This class wraps c-style direct ONLP calls with Google-style c++ calls that
 // return ::util::Status.
@@ -134,6 +151,9 @@ class OnlpInterface {
 
   // Given a OID object id, returns PSU info or failure.
   virtual ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const = 0;
+
+  // Given a OID object id, returns THERMAL info or failure.
+  virtual ::util::StatusOr<ThermalInfo> GetThermalInfo(OnlpOid oid) const = 0;
 
   // Given an OID, returns the OidInfo for that object (or an error if it
   // doesn't exist
@@ -167,6 +187,7 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const override;
   ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
   ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const override;
+  ::util::StatusOr<ThermalInfo> GetThermalInfo(OnlpOid oid) const override;
   ::util::StatusOr<std::vector <OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const override;
   ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const override;

@@ -918,6 +918,16 @@ enum PsuCaps {
   PSU_CAPS_GET_POUT  = 64;
 }
 
+// Possible capabilities for a thermal sensor module.
+// currently maps to onlp_thermal_info_t defined in thermal.h
+enum ThermalCaps {
+  THERMAL_CAPS_UNKNOWN                = 0;
+  THERMAL_CAPS_GET_TEMPERATURE        = 1;
+  THERMAL_CAPS_GET_WARNING_THRESHOLD  = 2;
+  THERMAL_CAPS_GET_ERROR_THRESHOLD    = 4;
+  THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD = 8;
+}
+
 //------------------------------------------------------------------------------
 // Messages related to physical properties of ports on a chassis
 //------------------------------------------------------------------------------
