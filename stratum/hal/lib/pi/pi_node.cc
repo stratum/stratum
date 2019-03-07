@@ -69,10 +69,15 @@ namespace {
 
 }  // namespace
 
-void PacketInCb(uint64_t node_id, p4::v1::PacketIn* packet, void* cookie) {
-  (void)node_id;
+void StreamMessageCb(
+    uint64_t node_id, ::p4::v1::StreamMessageResponse *msg, void* cookie) {
   auto* pi_node = static_cast<PINode*>(cookie);
-  pi_node->SendPacketIn(packet);
+  if (!msg->has_packet()) {
+    VLOG(1) << "Dropping P4Runtime stream message in node " << node_id
+            << " as it is not a PacketIn message.";
+    return;
+  }
+  pi_node->SendPacketIn(msg->packet());
 }
 
 PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
@@ -101,7 +106,8 @@ PINode::~PINode() = default;
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT,
       config);
   // This is required by DeviceMgr in case the device is re-assigned internally
-  device_mgr_->packet_in_register_cb(PacketInCb, static_cast<void*>(this));
+  device_mgr_->stream_message_response_register_cb(
+      StreamMessageCb, static_cast<void*>(this));
   return toUtilStatus(status);
 }
 
@@ -111,7 +117,8 @@ PINode::~PINode() = default;
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE,
       config);
   // This is required by DeviceMgr in case the device is re-assigned internally
-  device_mgr_->packet_in_register_cb(PacketInCb, static_cast<void*>(this));
+  device_mgr_->stream_message_response_register_cb(
+      StreamMessageCb, static_cast<void*>(this));
   return toUtilStatus(status);
 }
 
@@ -171,9 +178,8 @@ PINode::~PINode() = default;
     const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
   absl::MutexLock l(&rx_writer_lock_);
   rx_writer_ = writer;
-  // TODO(antonin): this may not be required here as we do it in
-  // PushForwardingPipelineConfig
-  device_mgr_->packet_in_register_cb(PacketInCb, static_cast<void*>(this));
+  // The StreamMessageCb callback is registered with the DeviceMgr instance when
+  // the P4 forwarding pipeline is assigned.
   return ::util::OkStatus();
 }
 
@@ -184,7 +190,13 @@ PINode::~PINode() = default;
 }
 
 ::util::Status PINode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
-  return toUtilStatus(device_mgr_->packet_out_send(packet));
+  ::p4::v1::StreamMessageRequest msg;
+  // a const_cast for the sake of avoiding a copy; should be ok because
+  // stream_message_request_handle does not modify the message.
+  msg.set_allocated_packet(const_cast<::p4::v1::PacketOut*>(&packet));
+  auto status = toUtilStatus(device_mgr_->stream_message_request_handle(msg));
+  msg.release_packet();
+  return status;
 }
 
 std::unique_ptr<PINode> PINode::CreateInstance(
@@ -192,12 +204,12 @@ std::unique_ptr<PINode> PINode::CreateInstance(
   return absl::WrapUnique(new PINode(device_mgr, unit));
 }
 
-void PINode::SendPacketIn(::p4::v1::PacketIn* packet) {
+void PINode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   // acquire the lock during the Write: SendPacketIn may be called from
   // different threads and Write is not thread-safe.
   absl::MutexLock l(&rx_writer_lock_);
   if (rx_writer_ == nullptr) return;
-  rx_writer_->Write(*packet);
+  rx_writer_->Write(packet);
 }
 
 }  // namespace pi

@@ -81,13 +81,13 @@ class PINode final {
   // class.
   PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit);
 
-  // Callback registered with DeviceMgr to receive packet-ins.
-  friend void PacketInCb(uint64_t node_id,
-                         p4::v1::PacketIn* packet,
-                         void* cookie);
+  // Callback registered with DeviceMgr to receive stream messages.
+  friend void StreamMessageCb(uint64_t node_id,
+                              p4::v1::StreamMessageResponse* msg,
+                              void* cookie);
 
   // Write packet on the registered RX writer.
-  void SendPacketIn(::p4::v1::PacketIn* packet);
+  void SendPacketIn(const ::p4::v1::PacketIn& packet);
       LOCKS_EXCLUDED(rx_writer_lock_);
 
   // Reader-writer lock used to protect access to node-specific state.

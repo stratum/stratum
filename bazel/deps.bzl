@@ -70,7 +70,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "0b9d3bb2e0f92bce8dd0aa976a88cc582b163d7e",
+            commit = "93c52619eb9546768d560cf92c5d69728921482b",
         )
 
     if "com_github_openconfig_gnmi" not in native.existing_rules():
