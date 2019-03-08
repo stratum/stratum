@@ -902,7 +902,7 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id && singleton_port->port() == port_id) {
+        if (singleton_port->node() == node_id && singleton_port->id() == port_id) {
             singleton_port->mutable_config_params()->set_admin_state(typed_state);
             break;
         }
@@ -1034,7 +1034,7 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id && singleton_port->port() == port_id) {
+        if (singleton_port->node() == node_id && singleton_port->id() == port_id) {
             singleton_port->set_speed_bps(speed_bps);
             break;
         }
@@ -1105,7 +1105,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id && singleton_port->port() == port_id) {
+        if (singleton_port->node() == node_id && singleton_port->id() == port_id) {
             singleton_port->mutable_config_params()->set_autoneg(autoneg_status);
             break;
         }
