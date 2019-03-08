@@ -118,6 +118,13 @@ class BFChassisManager {
   ::util::Status UnregisterEventWriters()
       LOCKS_EXCLUDED(chassis_lock);
 
+  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  // Cleans up the internal state. Resets all the internal port maps and
+  // deletes the pointers.
+  void CleanupInternalState() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+
   // Forward PortStatus changed events through the appropriate node's registered
   // ChannelWriter<GnmiEventPtr> object.
   void SendPortOperStateGnmiEvent(uint64 node_id, uint32 port_id,
@@ -176,6 +183,8 @@ class BFChassisManager {
   // instead of maintaining a "consistent" view in this map.
   std::map<uint64, std::map<uint32, PortConfig>>
       node_id_to_port_id_to_port_config_ GUARDED_BY(chassis_lock);
+
+  friend class BFChassisManagerTest;
 };
 
 }  // namespace barefoot

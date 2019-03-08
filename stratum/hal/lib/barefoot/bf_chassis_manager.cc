@@ -284,10 +284,11 @@ BFChassisManager::~BFChassisManager() = default;
           node_id_to_port_id_to_port_config[node_id].count(port_id) > 0) {
         continue;
       }
+      auto unit = node_id_to_unit_[node_id];
       // remove ports which are no longer present in the ChassisConfig
       LOG(INFO) << "Deleting port " << port_id << " in node " << node_id << ".";
       APPEND_STATUS_IF_ERROR(
-          status, bf_pal_interface_->PortDelete(node_id, port_id));
+          status, bf_pal_interface_->PortDelete(unit, port_id));
     }
   }
 
@@ -393,10 +394,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  if (unit == nullptr) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Unkonwn node id " << node_id;
-  }
+  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
 
   auto* port_id_to_port_state =
       gtl::FindOrNull(node_id_to_port_id_to_port_state_, node_id);
@@ -414,7 +412,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   LOG(INFO) << "Querying state of port " << port_id << " in node " << node_id
             << ".";
   ASSIGN_OR_RETURN(auto port_state,
-                   bf_pal_interface_->PortOperStateGet(*unit, port_id));
+                   bf_pal_interface_->PortOperStateGet(unit, port_id));
   LOG(INFO) << "State of port " << port_id << " in node " << node_id << ": "
             << PrintPortState(port_state);
   return port_state;
@@ -425,11 +423,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
-  if (unit == nullptr) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Unkonwn node id " << node_id;
-  }
-  return bf_pal_interface_->PortAllStatsGet(*unit, port_id, counters);
+  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
+  return bf_pal_interface_->PortAllStatsGet(unit, port_id, counters);
   return ::util::OkStatus();
 }
 
@@ -442,11 +437,10 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 }
 
 ::util::Status BFChassisManager::ReplayPortsConfig(uint64 node_id) {
-  auto* unit_ptr = gtl::FindOrNull(node_id_to_unit_, node_id);
-  if (unit_ptr == nullptr) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown node id " << node_id << ".";
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  int unit = *unit_ptr;
+  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
 
   for (auto& p : node_id_to_port_id_to_port_state_[node_id])
     p.second = PORT_STATE_UNKNOWN;
@@ -508,6 +502,9 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
 }
 
 ::util::Status BFChassisManager::ResetPortsConfig(uint64 node_id) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
   auto* port_id_to_config =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_config != nullptr)
@@ -625,6 +622,25 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
   return status;
 }
 
+::util::StatusOr<int> BFChassisManager::GetUnitFromNodeId(
+    uint64 node_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  const int* unit = gtl::FindOrNull(node_id_to_unit_, node_id);
+  CHECK_RETURN_IF_FALSE(unit != nullptr)
+      << "Node " << node_id << " is not configured or not known.";
+
+  return *unit;
+}
+
+void BFChassisManager::CleanupInternalState() {
+  unit_to_node_id_.clear();
+  node_id_to_unit_.clear();
+  node_id_to_port_id_to_port_state_.clear();
+  node_id_to_port_id_to_port_config_.clear();
+}
+
 ::util::Status BFChassisManager::Shutdown() {
   ::util::Status status = ::util::OkStatus();
   {
@@ -638,6 +654,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
   {
     absl::WriterMutexLock l(&chassis_lock);
     initialized_ = false;
+    CleanupInternalState();
   }
   return status;
 }

@@ -59,6 +59,28 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "bf_chassis_manager_test",
+    srcs = ["bf_chassis_manager_test.cc"],
+    deps = [":bf_pal_mock",
+            ":bf_chassis_manager",
+            ":test_main",
+            "@com_google_googletest//:gtest",
+            "//stratum/glue:integral_types",
+            "//stratum/glue/status",
+            "//stratum/glue/status:statusor",
+            "//stratum/glue/status:status_test_util",
+            "//stratum/hal/lib/common:common_proto",
+            "//stratum/hal/lib/common:constants",
+            "//stratum/hal/lib/common:phal_mock",
+            "//stratum/hal/lib/common:utils",
+            "//stratum/hal/lib/common:writer_interface",
+            "//stratum/lib/test_utils:matchers",
+            "//stratum/lib:utils",
+            "//stratum/glue/gtl:map_util",
+    ],
+)
+
 stratum_cc_library(
     name = "bf_pal_interface",
     hdrs = ["bf_pal_interface.h"],
@@ -68,6 +90,15 @@ stratum_cc_library(
             "//stratum/glue/status:statusor",
             "//stratum/hal/lib/common:common_proto",
             "//stratum/lib/channel",
+    ],
+)
+
+stratum_cc_library(
+    name = "bf_pal_mock",
+    testonly = 1,
+    hdrs = ["bf_pal_mock.h"],
+    deps = [":bf_pal_interface",
+            "@com_google_googletest//:gtest",
     ],
 )
 
@@ -86,5 +117,17 @@ stratum_cc_library(
             "//stratum/lib:constants",
             "@local_barefoot_bin//:bf_headers",
             "@local_barefoot_bin//:bf_drivers",
+    ],
+)
+
+stratum_cc_library(
+    name = "test_main",
+    testonly = 1,
+    srcs = ["test_main.cc"],
+    deps = [
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
     ],
 )
