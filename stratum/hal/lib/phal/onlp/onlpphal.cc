@@ -184,18 +184,22 @@ OnlpPhal::~OnlpPhal() {}
   }
 
   if(slot < 0 || port < 0)
-	  RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
 
   //Get slot port pair to lookup sfpdatasource.
   const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
 
   std::shared_ptr<OnlpSfpDataSource> sfp_src = slot_port_to_sfp_data_[slot_port_pair];
+
+  if (!sfp_src) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "No SFP DataSource for slot "
+                                       << slot << ", port " << port << ".";
+  }
+
   //Update sfp datasource values.
   sfp_src->UpdateValuesUnsafelyWithoutCacheOrLock();
   
   ManagedAttribute *sfptype_attrib = sfp_src->GetSfpType();
-
-
 
   ASSIGN_OR_RETURN(
         auto sfptype_value,
@@ -205,16 +209,15 @@ OnlpPhal::~OnlpPhal() {}
   //Need to map SfpType to PhysicalPortType
   PhysicalPortType actual_val;
   switch(sfval) {
-
-	case SFP_TYPE_SFP:
-		actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
-		break;
-	case SFP_TYPE_QSFP:
-		actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
-		break;
-	default:
-		RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
-
+    case SFP_TYPE_SFP:
+      actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
+      break;
+    case SFP_TYPE_QSFP:
+    case SFP_TYPE_QSFP28:
+      actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
+      break;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
   }
   fp_port_info->set_physical_port_type(actual_val);
 
@@ -314,31 +317,29 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 }
 
 ::util::Status OnlpPhal::InitializeOnlpOids() {
-	//Get list of sfps.
-	
-	 ASSIGN_OR_RETURN(
-        	std::vector <OnlpOid> OnlpOids,
-        	onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP));
-	//TODO: Need to support multiple slots. 
-	for(unsigned int i = 0; i < OnlpOids.size(); i++) {
+  //Get list of sfps.
+  ::util::Status status = ::util::OkStatus();
+   ASSIGN_OR_RETURN(
+          std::vector <OnlpOid> OnlpOids,
+          onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP));
+  //TODO: Need to support multiple slots. 
+  for(unsigned int i = 0; i < OnlpOids.size(); i++) {
+    //Adding 1, because port numbering starts from 1.
+    const std::pair<int, int>& slot_port_pair = std::make_pair(0, i+1);
+    ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result = 
+      OnlpSfpDataSource::Make(OnlpOids[i], onlp_interface_.get(), NULL);
 
-		//Adding 1, because port numbering starts from 1.
+    if (!result.ok()) {
+      LOG(ERROR) << result.status();
+      APPEND_STATUS_IF_ERROR(status, result.status());
+      // Skip invalid data source
+      continue;
+    }
 
- 		const std::pair<int, int>& slot_port_pair = std::make_pair(0, i+1);
-		::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result = 
-			OnlpSfpDataSource::Make(OnlpOids[i], onlp_interface_.get(), NULL);
-
-		if (!result.ok()) {
-			LOG(ERROR) << result.status();
-			return result.status();
-		}
-
-		std::shared_ptr<OnlpSfpDataSource> sfp_data_src = result.ConsumeValueOrDie();
-
-		
-		slot_port_to_sfp_data_[slot_port_pair] = sfp_data_src;
-	}
-	return ::util::OkStatus();
+    std::shared_ptr<OnlpSfpDataSource> sfp_data_src = result.ConsumeValueOrDie();
+    slot_port_to_sfp_data_[slot_port_pair] = sfp_data_src;
+  }
+  return status;
 }
 
 }  // namespace onlp
