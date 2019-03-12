@@ -118,13 +118,13 @@ class EnumAttribute
     value_ = value;
     return ::util::OkStatus();
   }
-  EnumAttribute& operator=(int index) {
-    value_ = value_->type()->value(index);
+  EnumAttribute& operator=(int number) {
+    value_ = value_->type()->FindValueByNumber(number);
     return *this;
   }
   template <typename E>
   E ReadEnumValue() {
-    return static_cast<E>(value_->index());
+    return static_cast<E>(value_->number());
   }
 };
 
