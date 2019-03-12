@@ -68,7 +68,7 @@ OnlpThermalDataSource::OnlpThermalDataSource(OnlpOid thermal_id,
   return ::util::OkStatus();
 }
 
-::util::Status OnlpThermalDataSource::Iscapable(ThermalCaps thermal_caps) {
+::util::Status OnlpThermalDataSource::IsCapable(ThermalCaps thermal_caps) {
   bool is_capable;
   
   ASSIGN_OR_RETURN(ThermalInfo thermal_info, onlp_stub_->GetThermalInfo(thermal_oid_));

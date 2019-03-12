@@ -38,8 +38,8 @@ class OnlpThermalDataSource : public DataSource {
   // onlp_interface remains valid during OnlpThermalDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpThermalDataSource>> Make(
       OnlpOid thermal_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
-      
-  ::util::Status Iscapable(ThermalCaps thermal_caps);
+
+  ::util::Status IsCapable(ThermalCaps thermal_caps);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetThermalId() { return &thermal_id_; }
