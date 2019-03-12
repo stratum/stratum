@@ -295,7 +295,6 @@ std::vector<DummyNode*> DummySwitch::GetDummyNodes() {
 }
 
 ::util::StatusOr<DummyNode*> DummySwitch::GetDummyNode(uint64 node_id) {
-  absl::ReaderMutexLock l(&chassis_lock);
   auto node_element = dummy_nodes_.find(node_id);
   if (node_element == dummy_nodes_.end()) {
     return MAKE_ERROR(::util::error::NOT_FOUND)
