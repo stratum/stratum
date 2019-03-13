@@ -564,7 +564,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
       absl::WriterMutexLock l(&chassis_lock);
       const uint64* node_id = gtl::FindOrNull(unit_to_node_id_, event.unit);
       if (node_id == nullptr) {
-        LOG(ERROR) << "Unkonwn unit / device id " << event.unit << ".";
+        LOG(ERROR) << "Unknown unit / device id " << event.unit << ".";
         continue;
       }
       auto* state = gtl::FindOrNull(node_id_to_port_id_to_port_state_[*node_id],
@@ -575,7 +575,7 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
         continue;
       }
       LOG(INFO) << "State of port " << event.port_id << " in node " << *node_id
-                << ": " << PrintPortState(event.state);
+                << ": " << PrintPortState(event.state) << ".";
       *state = event.state;
       SendPortOperStateGnmiEvent(*node_id, event.port_id, event.state);
     }

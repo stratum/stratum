@@ -34,10 +34,14 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {
 namespace bmv2 {
+
+/* static */
+constexpr int Bmv2ChassisManager::kMaxPortStatusChangeEventDepth;
 
 absl::Mutex chassis_lock;
 
@@ -46,6 +50,9 @@ Bmv2ChassisManager::Bmv2ChassisManager(
     std::map<uint64, ::bm::sswitch::SimpleSwitchRunner*> node_id_to_bmv2_runner)
     : initialized_(false),
       phal_interface_(phal_interface),
+      port_status_change_event_channel_(nullptr),
+      port_status_change_event_reader_(nullptr),
+      port_status_change_event_writer_(nullptr),
       node_id_to_bmv2_runner_(node_id_to_bmv2_runner),
       node_id_to_bmv2_port_status_cb_(),
       node_id_to_port_id_to_port_state_(),
@@ -156,10 +163,8 @@ namespace {
                 status, RemovePort(dev_mgr, node.id(), port_id));
             if (node_id_to_port_id_to_port_state_[node.id()][port_id] ==
                 PORT_STATE_UP) {
-              // This is because the bmv2 PortMonitor will not generate an
-              // asynchronous PORT_DOWN event by itself, but only a synchronous
-              // PORT_REMOVED event, which we ignore to avoid creating a
-              // deadlock.
+              // TODO(antonin): would it be better to just register a bmv2
+              // callback for PORT_REMOVED event?
               VLOG(1) << "Sending DOWN notification for port " << port_id
                       << " in node " << node.id() << ".";
               SendPortOperStateGnmiEvent(node.id(), port_id, PORT_STATE_DOWN);
@@ -382,66 +387,150 @@ void Bmv2ChassisManager::SendPortOperStateGnmiEvent(
   }
 }
 
-::util::Status PortStatusChangeCb(Bmv2ChassisManager* chassis_manager,
-                                  uint64 node_id,
-                                  uint32 port_id,
-                                  PortState new_state) {
-  LOG(INFO) << "State of port " << port_id << " in node " << node_id << ": "
-            << PrintPortState(new_state);
-  absl::WriterMutexLock l(&chassis_lock);
-  chassis_manager->node_id_to_port_id_to_port_state_[node_id][port_id] =
-      new_state;
-  chassis_manager->SendPortOperStateGnmiEvent(
-      node_id, port_id, new_state);
-  return ::util::OkStatus();
-}
-
-namespace {
-
-void PortStatusChangeCbInternal(Bmv2ChassisManager* chassis_manager,
-                                uint64 node_id,
-                                bm::PortMonitorIface::port_t port,
-                                bm::PortMonitorIface::PortStatus status) {
-  PortState state;
-  if (status == bm::PortMonitorIface::PortStatus::PORT_UP) {
-    state = PORT_STATE_UP;
-  } else if (status == bm::PortMonitorIface::PortStatus::PORT_DOWN) {
-    state = PORT_STATE_DOWN;
-  } else {
-    LOG(ERROR) << "Invalid port state CB from bmv2 for node " << node_id << ".";
+void Bmv2ChassisManager::ReadPortStatusChangeEvents() {
+  PortStatusChangeEvent event;
+  while (true) {
+    // port_status_change_event_reader_ does not need to be protected by a mutex
+    // because this thread is the only one accessing it. It is assigned in
+    // RegisterEventWriters and then left untouched until UnregisterEventWriters
+    // is called. UnregisterEventWriters joins this thread before resetting the
+    // reader.
+    int code = port_status_change_event_reader_->Read(
+        &event, absl::InfiniteDuration()).error_code();
+    // Exit if the Channel is closed.
+    if (code == ERR_CANCELLED) break;
+    // Read should never timeout.
+    if (code == ERR_ENTRY_NOT_FOUND) {
+      LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
+      continue;
+    }
+    // Handle received message.
+    {
+      absl::WriterMutexLock l(&chassis_lock);
+      auto* port_id_to_port_state =
+          gtl::FindOrNull(node_id_to_port_id_to_port_state_, event.node_id);
+      if (port_id_to_port_state == nullptr) {
+        LOG(ERROR) << "Node " << event.node_id
+                   << " is not configured or not known.";
+      }
+      auto* port_state_ptr =
+          gtl::FindOrNull(*port_id_to_port_state, event.port_id);
+      if (port_state_ptr == nullptr) {
+        LOG(ERROR) << "Port " << event.port_id
+                   << " is not configured or not known for node "
+                   << event.node_id << ".";
+      }
+      LOG(INFO) << "State of port " << event.port_id << " in node "
+                << event.node_id << ": " << PrintPortState(event.state) << ".";
+      *port_state_ptr = event.state;
+      SendPortOperStateGnmiEvent(event.node_id, event.port_id, event.state);
+    }
   }
-  PortStatusChangeCb(
-      chassis_manager, node_id, static_cast<uint64>(port), state);
 }
-
-}  // namespace
 
 ::util::Status Bmv2ChassisManager::RegisterEventWriters() {
+  if (initialized_) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "RegisterEventWriters() can be called only before the class is "
+           << "initialized.";
+  }
+
+  port_status_change_event_channel_ = Channel<PortStatusChangeEvent>::Create(
+      kMaxPortStatusChangeEventDepth);
+
+  port_status_change_event_writer_ =
+      ChannelWriter<PortStatusChangeEvent>::Create(
+          port_status_change_event_channel_);
+  port_status_change_event_reader_ =
+      ChannelReader<PortStatusChangeEvent>::Create(
+          port_status_change_event_channel_);
+
+  port_status_change_event_thread_ = std::thread(
+      [this]() { this->ReadPortStatusChangeEvents(); });
+
+  // Register port status change callbacks with bmv2 runners. In practice, this
+  // code is only executed once during the lifetime of the instance, when
+  // RegisterEventWriters is called for the first time.
   using PortStatus = bm::DevMgr::PortStatus;
   for (auto& node : node_id_to_bmv2_runner_) {
     auto runner = node.second;
     auto dev_mgr = runner->get_dev_mgr();
-    auto cb = std::bind(PortStatusChangeCbInternal, this, node.first,
-                        std::placeholders::_1, std::placeholders::_2);
+    uint64 node_id = node.first;
+
+    if (node_id_to_bmv2_port_status_cb_.count(node_id) > 0)
+      continue;
+
+    auto cb = [this, node_id](bm::PortMonitorIface::port_t port,
+                              bm::PortMonitorIface::PortStatus status) {
+      absl::ReaderMutexLock l(&this->port_status_change_event_writer_lock_);
+      auto* writer = this->port_status_change_event_writer_.get();
+      if (writer == nullptr) return;
+      auto port_id = static_cast<uint32>(port);
+      PortState state;
+      if (status == bm::PortMonitorIface::PortStatus::PORT_UP) {
+        state = PORT_STATE_UP;
+      } else if (status == bm::PortMonitorIface::PortStatus::PORT_DOWN) {
+        state = PORT_STATE_DOWN;
+      } else {
+        LOG(ERROR) << "Invalid port state CB from bmv2 for node "
+                   << node_id << ".";
+        return;
+      }
+      writer->Write(PortStatusChangeEvent{node_id, port_id, state},
+                    absl::InfiniteDuration());
+    };
+
     auto p = node_id_to_bmv2_port_status_cb_.emplace(node.first, cb);
     auto success = p.second;
     CHECK(success) << "Port status CB already registered for node "
-                   << node.first;
+                   << node_id << ".";
     auto& cb_ref = p.first->second;
     dev_mgr->register_status_cb(PortStatus::PORT_UP, cb_ref);
     dev_mgr->register_status_cb(PortStatus::PORT_DOWN, cb_ref);
-    // Cannot register a callback for PORT_REMOVED events as it would create a
-    // deadlock given that both PushChassisConfig and the callback acquire the
-    // chassis lock.
-    // dev_mgr->register_status_cb(PortStatus::PORT_REMOVED, cb_ref);
+    LOG(INFO) << "Registered port status callbacks successfully for node "
+              << node_id << ".";
   }
-  LOG(INFO) << "Port status notification callback registered successfully.";
   return ::util::OkStatus();
 }
 
 ::util::Status Bmv2ChassisManager::UnregisterEventWriters() {
-  // TODO(antonin)
-  return ::util::OkStatus();
+  ::util::Status status = ::util::OkStatus();
+  if (!port_status_change_event_channel_->Close()) {
+    APPEND_ERROR(status)
+        << "Error when closing port status change event channel.";
+  }
+  port_status_change_event_thread_.join();
+  // Once the thread is joined, it is safe to reset these pointers.
+  port_status_change_event_reader_ = nullptr;
+  {
+    absl::WriterMutexLock l(&port_status_change_event_writer_lock_);
+    port_status_change_event_writer_ = nullptr;
+  }
+  port_status_change_event_channel_ = nullptr;
+  return status;
+}
+
+void Bmv2ChassisManager::CleanupInternalState() {
+  node_id_to_port_id_to_port_state_.clear();
+  node_id_to_port_id_to_port_config_.clear();
+}
+
+::util::Status Bmv2ChassisManager::Shutdown() {
+  ::util::Status status = ::util::OkStatus();
+  {
+    absl::ReaderMutexLock l(&chassis_lock);
+    if (!initialized_) return status;
+  }
+  // It is fine to release the chassis lock here (it is actually needed to call
+  // UnregisterEventWriters or there would be a deadlock). Because initialized_
+  // is set to true, RegisterEventWriters cannot be called.
+  APPEND_STATUS_IF_ERROR(status, UnregisterEventWriters());
+  {
+    absl::WriterMutexLock l(&chassis_lock);
+    initialized_ = false;
+    CleanupInternalState();
+  }
+  return status;
 }
 
 }  // namespace bmv2

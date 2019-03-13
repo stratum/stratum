@@ -116,7 +116,9 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 ::util::Status Bmv2Switch::Shutdown() {
-  return ::util::OkStatus();
+  ::util::Status status = ::util::OkStatus();
+  APPEND_STATUS_IF_ERROR(status, bmv2_chassis_manager_->Shutdown());
+  return status;
 }
 
 ::util::Status Bmv2Switch::Freeze() {
