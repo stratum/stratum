@@ -62,7 +62,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4runtime",
             remote = "https://github.com/p4lang/p4runtime",
-            tag = "1.0.0-rc4",
+            tag = "1.0.0",
         )
 
     if "com_github_p4lang_PI" not in native.existing_rules():
