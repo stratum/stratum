@@ -291,25 +291,13 @@ PsuType PsuInfo::GetPsuType() const {
   }
 }
 
-PsuCaps PsuInfo::GetPsuCaps() const {
-  switch(psu_info_.caps) {
-  case ONLP_PSU_CAPS_GET_TYPE:
-    return PSU_CAPS_GET_TYPE;
-  case ONLP_PSU_CAPS_GET_VIN:
-    return PSU_CAPS_GET_VIN;
-  case ONLP_PSU_CAPS_GET_VOUT:
-    return PSU_CAPS_GET_VOUT;
-  case  ONLP_PSU_CAPS_GET_IIN:
-    return PSU_CAPS_GET_IIN;
-  case ONLP_PSU_CAPS_GET_IOUT:
-    return PSU_CAPS_GET_IOUT;
-  case ONLP_PSU_CAPS_GET_PIN:
-    return PSU_CAPS_GET_PIN;
-  case ONLP_PSU_CAPS_GET_POUT:
-    return PSU_CAPS_GET_POUT;
-  default:
-    return PSU_CAPS_UNKNOWN;
-  }
+bool PsuInfo::Capable(PsuCaps psu_capability) const {
+  int compare_caps;
+  compare_caps = (psu_info_.caps & psu_capability);
+  if (compare_caps == psu_capability)
+      return true;
+  else
+      return false;
 }
 
 int ThermalInfo::GetThermalCurTemp() const {

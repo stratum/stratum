@@ -44,6 +44,8 @@ class OnlpPsuDataSource : public DataSource {
   static ::util::StatusOr<std::shared_ptr<OnlpPsuDataSource>> Make(
       OnlpOid psu_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
+  ::util::Status IsCapable(PsuCaps psu_caps);
+
   // Accessors for managed attributes.
   ManagedAttribute* GetPsuId() { return &psu_id_; }
   ManagedAttribute* GetPsuHardwareState() { return &psu_hw_state_; }
@@ -56,7 +58,6 @@ class OnlpPsuDataSource : public DataSource {
   ManagedAttribute* GetPsuInputPower() { return &psu_pin_; }
   ManagedAttribute* GetPsuOutputPower() { return &psu_pout_; }
   ManagedAttribute* GetPsuType() { return &psu_type_; }
-  ManagedAttribute* GetPsuCaps() { return &psu_caps_; }
 
  private:
   OnlpPsuDataSource(OnlpOid psu_id, OnlpInterface* onlp_interface,
@@ -92,8 +93,6 @@ class OnlpPsuDataSource : public DataSource {
   TypedAttribute<double> psu_pout_{this};
   // Psu Type.
   EnumAttribute psu_type_{PsuType_descriptor(), this};
-  // Psu Capabilities.
-  EnumAttribute psu_caps_{PsuCaps_descriptor(), this};
 };
 
 }  // namespace onlp

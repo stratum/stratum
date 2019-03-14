@@ -112,7 +112,7 @@ class PsuInfo : public OidInfo {
   PsuInfo() {}
 
   PsuType GetPsuType() const;
-  PsuCaps GetPsuCaps() const;
+  bool Capable(PsuCaps psu_capability) const;
 
   ::util::StatusOr<const onlp_psu_info_t*> GetOnlpPsu() const;
 

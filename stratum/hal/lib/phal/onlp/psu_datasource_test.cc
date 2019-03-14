@@ -94,7 +94,7 @@ TEST(PsuDatasourceTest, GetPsuData) {
   mock_psu_info.mpin = 5555;
   mock_psu_info.mpout = 6666;
   mock_psu_info.type = ONLP_PSU_TYPE_AC;
-  mock_psu_info.caps = ONLP_PSU_CAPS_GET_VIN;
+  mock_psu_info.caps = (ONLP_PSU_CAPS_GET_VIN | ONLP_PSU_CAPS_GET_IIN);
 
   EXPECT_CALL(mock_onlp_interface, GetPsuInfo(12345))
       .WillRepeatedly(Return(PsuInfo(mock_psu_info)));
@@ -108,6 +108,8 @@ TEST(PsuDatasourceTest, GetPsuData) {
 
   // Update value and check attribute fields.
   EXPECT_OK(psu_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
+  EXPECT_OK(psu_datasource->IsCapable((PsuCaps)(ONLP_PSU_CAPS_GET_VIN
+            |ONLP_PSU_CAPS_GET_IIN)));
   EXPECT_THAT(psu_datasource->GetPsuModel(),
               ContainsValue<std::string>("test_psu_model"));
   EXPECT_THAT(psu_datasource->GetPsuSerialNumber(),
@@ -129,9 +131,6 @@ TEST(PsuDatasourceTest, GetPsuData) {
   EXPECT_THAT(
       psu_datasource->GetPsuType(),
       ContainsValue(PsuType_descriptor()->FindValueByName("PSU_TYPE_AC")));
-  EXPECT_THAT(
-      psu_datasource->GetPsuCaps(),
-      ContainsValue(PsuCaps_descriptor()->FindValueByName("PSU_CAPS_GET_VIN")));
 
   EXPECT_THAT(
       psu_datasource->GetPsuHardwareState(),

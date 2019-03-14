@@ -78,11 +78,20 @@ OnlpPsuDataSource::OnlpPsuDataSource(OnlpOid psu_id,
   psu_pin_.AssignValue(static_cast<double>(psu_onlp_info->mpin)/1000.0);
   psu_pout_.AssignValue(static_cast<double>(psu_onlp_info->mpout)/1000.0);
   psu_type_ = psu_info.GetPsuType();
-  psu_caps_ = psu_info.GetPsuCaps();
 
   return ::util::OkStatus();
 }
 
+::util::Status OnlpPsuDataSource::IsCapable(PsuCaps psu_caps) {
+  bool is_capable;
+
+  ASSIGN_OR_RETURN(PsuInfo psu_info, onlp_stub_->GetPsuInfo(psu_oid_));
+  is_capable = psu_info.Capable(psu_caps);
+  CHECK_RETURN_IF_FALSE(is_capable)
+      << "Expected PSU capability is not present.";
+
+  return ::util::OkStatus();
+}
 
 }  // namespace onlp
 }  // namespace phal
