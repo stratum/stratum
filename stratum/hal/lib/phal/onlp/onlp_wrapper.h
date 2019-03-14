@@ -97,8 +97,8 @@ class FanInfo : public OidInfo {
   FanInfo() {}
 
   FanDir GetFanDir() const;
-  FanCaps GetFanCaps() const;
-  
+  bool Capable(FanCaps fan_capability) const;
+
   ::util::StatusOr<const onlp_fan_info_t*> GetOnlpFan() const;
 
  private:

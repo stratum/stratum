@@ -269,23 +269,13 @@ FanDir FanInfo::GetFanDir() const {
   }
 }
 
-FanCaps FanInfo::GetFanCaps() const {
-  switch(fan_info_.caps) {
-  case ONLP_FAN_CAPS_SET_DIR:
-    return FAN_CAPS_SET_DIR;
-  case ONLP_FAN_CAPS_GET_DIR:
-    return FAN_CAPS_GET_DIR;
-  case ONLP_FAN_CAPS_SET_RPM:
-    return FAN_CAPS_SET_RPM;
-  case  ONLP_FAN_CAPS_SET_PERCENTAGE:
-    return FAN_CAPS_SET_PERCENTAGE;
-  case ONLP_FAN_CAPS_GET_RPM:
-    return FAN_CAPS_GET_RPM;
-  case ONLP_FAN_CAPS_GET_PERCENTAGE:
-    return FAN_CAPS_GET_PERCENTAGE;
-  default:
-    return FAN_CAPS_UNKNOWN;
-  }
+bool FanInfo::Capable(FanCaps fan_capability) const {
+  int compare_caps;
+  compare_caps = (fan_info_.caps & fan_capability);
+  if (compare_caps == fan_capability)
+      return true;
+  else
+      return false;
 }
 
 PsuType PsuInfo::GetPsuType() const {

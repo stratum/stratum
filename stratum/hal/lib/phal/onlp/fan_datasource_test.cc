@@ -89,7 +89,7 @@ TEST(FanDatasourceTest, GetFanData) {
   mock_fan_info.percentage = 1111;
   mock_fan_info.rpm = 2222;
   mock_fan_info.dir = ONLP_FAN_DIR_F2B;
-  mock_fan_info.caps = ONLP_FAN_CAPS_SET_DIR;
+  mock_fan_info.caps = (ONLP_FAN_CAPS_SET_DIR | ONLP_FAN_CAPS_GET_RPM);
 
   EXPECT_CALL(mock_onlp_interface, GetFanInfo(12345))
       .WillRepeatedly(Return(FanInfo(mock_fan_info)));
@@ -106,6 +106,8 @@ TEST(FanDatasourceTest, GetFanData) {
 
   // Update value and check attribute fields.
   EXPECT_OK(fan_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
+  EXPECT_OK(fan_datasource->IsCapable((FanCaps)(ONLP_FAN_CAPS_SET_DIR
+            |ONLP_FAN_CAPS_GET_RPM)));
   EXPECT_THAT(fan_datasource->GetFanModel(),
               ContainsValue<std::string>("test_fan_model"));
   EXPECT_THAT(fan_datasource->GetFanSerialNumber(),
@@ -117,14 +119,11 @@ TEST(FanDatasourceTest, GetFanData) {
               ContainsValue<int>(1111));
   EXPECT_THAT(fan_datasource->GetFanRPM(),
               ContainsValue<int>(2222));
-              
+
   EXPECT_THAT(
       fan_datasource->GetFanDirection(),
       ContainsValue(FanDir_descriptor()->FindValueByName("FAN_DIR_F2B")));
-  EXPECT_THAT(
-      fan_datasource->GetFanCapabilities(),
-      ContainsValue(FanCaps_descriptor()->FindValueByName("FAN_CAPS_SET_DIR")));
-      
+
   EXPECT_THAT(
       fan_datasource->GetFanHardwareState(),
       ContainsValue(HwState_descriptor()->FindValueByName("HW_STATE_PRESENT")));

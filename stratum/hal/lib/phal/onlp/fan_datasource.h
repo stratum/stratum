@@ -44,6 +44,8 @@ class OnlpFanDataSource : public DataSource {
   static ::util::StatusOr<std::shared_ptr<OnlpFanDataSource>> Make(
       OnlpOid fan_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
+  ::util::Status IsCapable(FanCaps fan_caps);
+
   // Accessors for managed attributes.
   ManagedAttribute* GetFanId() { return &fan_id_; }
   ManagedAttribute* GetFanHardwareState() { return &fan_hw_state_; }
@@ -52,7 +54,6 @@ class OnlpFanDataSource : public DataSource {
   ManagedAttribute* GetFanPercentage() { return &fan_percentage_; }
   ManagedAttribute* GetFanRPM() { return &fan_speed_rpm_; }
   ManagedAttribute* GetFanDirection() { return &fan_dir_; }
-  ManagedAttribute* GetFanCapabilities() { return &fan_caps_; }
 
  private:
   OnlpFanDataSource(OnlpOid fan_id, OnlpInterface* onlp_interface,
@@ -84,8 +85,6 @@ class OnlpFanDataSource : public DataSource {
   TypedAttribute<int> fan_speed_rpm_{this};
   // Fan Direction.
   EnumAttribute fan_dir_{FanDir_descriptor(), this};
-  // Fan Capabilities.
-  EnumAttribute fan_caps_{FanCaps_descriptor(), this};
 };
 
 }  // namespace onlp

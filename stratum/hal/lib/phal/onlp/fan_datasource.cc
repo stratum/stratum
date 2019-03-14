@@ -72,7 +72,17 @@ OnlpFanDataSource::OnlpFanDataSource(OnlpOid fan_id,
   fan_percentage_.AssignValue(static_cast<int>(fan_onlp_info->percentage));
   fan_speed_rpm_.AssignValue(static_cast<int>(fan_onlp_info->rpm));
   fan_dir_ = fan_info.GetFanDir();
-  fan_caps_ = fan_info.GetFanCaps();
+
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpFanDataSource::IsCapable(FanCaps fan_caps) {
+  bool is_capable;
+
+  ASSIGN_OR_RETURN(FanInfo fan_info, onlp_stub_->GetFanInfo(fan_oid_));
+  is_capable = fan_info.Capable(fan_caps);
+  CHECK_RETURN_IF_FALSE(is_capable)
+      << "Expected FAN capability is not present.";
 
   return ::util::OkStatus();
 }
