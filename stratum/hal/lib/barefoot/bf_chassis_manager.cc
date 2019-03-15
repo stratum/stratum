@@ -22,6 +22,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/hal/lib/barefoot/bf_pal_interface.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
@@ -39,6 +40,7 @@ namespace hal {
 namespace barefoot {
 
 using PortStatusChangeEvent = BFPalInterface::PortStatusChangeEvent;
+using TransceiverEvent = PhalInterface::TransceiverEvent;
 
 absl::Mutex chassis_lock;
 
@@ -49,6 +51,7 @@ BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
                                    BFPalInterface* bf_pal_interface)
     : initialized_(false),
       port_status_change_event_channel_(nullptr),
+      xcvr_event_writer_id_(kInvalidWriterId),
       phal_interface_(phal_interface),
       bf_pal_interface_(bf_pal_interface),
       unit_to_node_id_(),
@@ -195,6 +198,9 @@ BFChassisManager::~BFChassisManager() = default;
       node_id_to_port_id_to_port_state;
   std::map<uint64, std::map<uint32, PortConfig>>
       node_id_to_port_id_to_port_config;
+  std::map<uint64, std::map<uint32, PortKey>>
+      node_id_to_port_id_to_singleton_port_key;
+  std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state;
 
   int unit(0);
   for (auto& node : config.nodes()) {
@@ -215,6 +221,12 @@ BFChassisManager::~BFChassisManager() = default;
     }
     node_id_to_port_id_to_port_state[node_id][port_id] = PORT_STATE_UNKNOWN;
     node_id_to_port_id_to_port_config[node_id][port_id] = PortConfig();
+    PortKey singleton_port_key(singleton_port.slot(), singleton_port.port(),
+                               singleton_port.channel());
+    node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
+        singleton_port_key;
+    PortKey port_group_key(singleton_port.slot(), singleton_port.port());
+    xcvr_port_key_to_xcvr_state[port_group_key] = HW_STATE_UNKNOWN;
   }
 
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
@@ -296,6 +308,9 @@ BFChassisManager::~BFChassisManager() = default;
   node_id_to_unit_ = node_id_to_unit;
   node_id_to_port_id_to_port_state_ = node_id_to_port_id_to_port_state;
   node_id_to_port_id_to_port_config_ = node_id_to_port_id_to_port_config;
+  node_id_to_port_id_to_singleton_port_key_ =
+      node_id_to_port_id_to_singleton_port_key;
+  xcvr_port_key_to_xcvr_state_ = xcvr_port_key_to_xcvr_state;
   initialized_ = true;
 
   return status;
@@ -570,8 +585,13 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
       auto* state = gtl::FindOrNull(node_id_to_port_id_to_port_state_[*node_id],
                                     event.port_id);
       if (state == nullptr) {
-        LOG(ERROR) << "Unknown port " << event.port_id << " in node "
-                   << *node_id << ".";
+        // We get a notification for all ports, even ports that were not added,
+        // when doing a Fast Refresh, which can be confusing, so we use VLOG
+        // instead.
+        // LOG(ERROR) << "Unknown port " << event.port_id << " in node "
+        //            << *node_id << ".";
+        VLOG(1) << "Unknown port " << event.port_id << " in node "
+                << *node_id << ".";
         continue;
       }
       LOG(INFO) << "State of port " << event.port_id << " in node " << *node_id
@@ -582,6 +602,87 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
   }
 }
 
+void BFChassisManager::ReadTransceiverEvents() {
+  TransceiverEvent event;
+  while (true) {
+    // xcvr_event_reader_ does not need to be protected by a mutex because this
+    // thread is the only one accessing it. It is assigned in
+    // RegisterEventWriters and then left untouched until UnregisterEventWriters
+    // is called. UnregisterEventWriters joins this thread before resetting the
+    // reader.
+    int code = xcvr_event_reader_->Read(
+        &event, absl::InfiniteDuration()).error_code();
+    // Exit if the Channel is closed.
+    if (code == ERR_CANCELLED) break;
+    // Read should never timeout.
+    if (code == ERR_ENTRY_NOT_FOUND) {
+      LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
+      continue;
+    }
+    // Handle received message.
+    TransceiverEventHandler(event.slot, event.port, event.state);
+  }
+}
+
+void BFChassisManager::TransceiverEventHandler(int slot, int port,
+                                               HwState new_state) {
+  absl::WriterMutexLock l(&chassis_lock);
+
+  PortKey xcvr_port_key(slot, port);
+  LOG(INFO) << "Transceiver event for port " << xcvr_port_key.ToString() << ": "
+            << HwState_Name(new_state) << ".";
+
+  // See if we know about this transceiver module. Find a mutable state pointer
+  // so we can override it later.
+  HwState* mutable_state =
+      gtl::FindOrNull(xcvr_port_key_to_xcvr_state_, xcvr_port_key);
+  if (mutable_state == nullptr) {
+    LOG(ERROR) << "Detected unknown " << xcvr_port_key.ToString()
+               << " in TransceiverEventHandler. This should not happen!";
+    return;
+  }
+  HwState old_state = *mutable_state;
+
+  // This handler is supposed to return present or non present for the state of
+  // the transceiver modules. Other values do no make sense.
+  if (new_state != HW_STATE_PRESENT && new_state != HW_STATE_NOT_PRESENT) {
+    LOG(ERROR) << "Invalid state for transceiver " << xcvr_port_key.ToString()
+               << " in TransceiverEventHandler: " << HwState_Name(new_state)
+               << ".";
+    return;
+  }
+
+  // Discard some invalid situations and report the error. Then save the new
+  // state
+  if (old_state == HW_STATE_READY && new_state == HW_STATE_PRESENT) {
+    LOG(ERROR) << "Got present for a ready transceiver "
+               << xcvr_port_key.ToString() << " in TransceiverEventHandler.";
+    return;
+  }
+  if (old_state == HW_STATE_UNKNOWN && new_state == HW_STATE_NOT_PRESENT) {
+    LOG(ERROR) << "Got not-present for an unknown transceiver "
+               << xcvr_port_key.ToString() << " in TransceiverEventHandler.";
+    return;
+  }
+  *mutable_state = new_state;
+
+  // TODO(antonin): set autoneg based on media type...
+  FrontPanelPortInfo fp_port_info;
+  auto status = phal_interface_->GetFrontPanelPortInfo(
+      slot, port, &fp_port_info);
+  if (!status.ok()) {
+    LOG(ERROR) << "Failure in TransceiverEventHandler: " << status;
+    return;
+  }
+
+  // Finally, before we exit we make sure if the port was HW_STATE_PRESENT,
+  // it is set to HW_STATE_READY to show it has been configured and ready.
+  if (*mutable_state == HW_STATE_PRESENT) {
+    LOG(INFO) << "Transceiver " << xcvr_port_key.ToString() << " is ready.";
+    *mutable_state = HW_STATE_READY;
+  }
+}
+
 ::util::Status BFChassisManager::RegisterEventWriters() {
   if (initialized_) {
     return MAKE_ERROR(ERR_INTERNAL)
@@ -589,20 +690,40 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
            << "initialized.";
   }
 
-  port_status_change_event_channel_ = Channel<PortStatusChangeEvent>::Create(
-      kMaxPortStatusChangeEventDepth);
-  // Create and hand-off Writer to the BFPalInterface.
-  auto writer = ChannelWriter<PortStatusChangeEvent>::Create(
-      port_status_change_event_channel_);
-  RETURN_IF_ERROR(bf_pal_interface_->PortStatusChangeRegisterEventWriter(
-      std::move(writer)));
-  LOG(INFO) << "Port status notification callback registered successfully";
+  {
+    port_status_change_event_channel_ = Channel<PortStatusChangeEvent>::Create(
+        kMaxPortStatusChangeEventDepth);
+    // Create and hand-off Writer to the BFPalInterface.
+    auto writer = ChannelWriter<PortStatusChangeEvent>::Create(
+        port_status_change_event_channel_);
+    RETURN_IF_ERROR(bf_pal_interface_->PortStatusChangeRegisterEventWriter(
+        std::move(writer)));
+    LOG(INFO) << "Port status notification callback registered successfully";
 
-  port_status_change_event_reader_ =
-      ChannelReader<PortStatusChangeEvent>::Create(
-          port_status_change_event_channel_);
-  port_status_change_event_thread_ = std::thread(
-      [this]() { this->ReadPortStatusChangeEvents(); });
+    port_status_change_event_reader_ =
+        ChannelReader<PortStatusChangeEvent>::Create(
+            port_status_change_event_channel_);
+    port_status_change_event_thread_ = std::thread(
+        [this]() { this->ReadPortStatusChangeEvents(); });
+  }
+
+  if (xcvr_event_writer_id_ == kInvalidWriterId) {
+    xcvr_event_channel_ = Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
+    auto writer = ChannelWriter<TransceiverEvent>::Create(xcvr_event_channel_);
+    int priority = PhalInterface::kTransceiverEventWriterPriorityHigh;
+    ASSIGN_OR_RETURN(
+        xcvr_event_writer_id_,
+        phal_interface_->RegisterTransceiverEventWriter(
+            std::move(writer), priority));
+
+    xcvr_event_reader_ = ChannelReader<TransceiverEvent>::Create(
+        xcvr_event_channel_);
+    xcvr_event_thread_ = std::thread(
+        [this]() { this->ReadTransceiverEvents(); });
+  } else {
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "Transceiver event handler already registered.";
+  }
 
   return ::util::OkStatus();
 }
@@ -615,10 +736,28 @@ void BFChassisManager::ReadPortStatusChangeEvents() {
     APPEND_ERROR(status)
         << "Error when closing port status change event channel.";
   }
+  if (xcvr_event_writer_id_ != kInvalidWriterId) {
+    APPEND_STATUS_IF_ERROR(status,
+                           phal_interface_->UnregisterTransceiverEventWriter(
+                               xcvr_event_writer_id_));
+    xcvr_event_writer_id_ = kInvalidWriterId;
+    if (!xcvr_event_channel_->Close()) {
+      APPEND_ERROR(status)
+          << "Error when closing transceiver event channel.";
+    }
+  } else {
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "Transceiver event handler not registered.";
+  }
+
   port_status_change_event_thread_.join();
   // Once the thread is joined, it is safe to reset these pointers.
   port_status_change_event_reader_ = nullptr;
   port_status_change_event_channel_ = nullptr;
+
+  xcvr_event_thread_.join();
+  xcvr_event_reader_ = nullptr;
+  xcvr_event_channel_ = nullptr;
   return status;
 }
 
@@ -639,6 +778,8 @@ void BFChassisManager::CleanupInternalState() {
   node_id_to_unit_.clear();
   node_id_to_port_id_to_port_state_.clear();
   node_id_to_port_id_to_port_config_.clear();
+  node_id_to_port_id_to_singleton_port_key_.clear();
+  xcvr_port_key_to_xcvr_state_.clear();
 }
 
 ::util::Status BFChassisManager::Shutdown() {

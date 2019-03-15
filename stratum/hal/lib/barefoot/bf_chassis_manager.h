@@ -23,6 +23,7 @@
 #include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/lib/channel/channel.h"
@@ -97,6 +98,7 @@ class BFChassisManager {
 
   // Maximum depth of port status change event channel.
   static constexpr int kMaxPortStatusChangeEventDepth = 1024;
+  static constexpr int kMaxXcvrEventDepth = 1024;
 
   struct PortConfig {
     // ADMIN_STATE_UNKNOWN indicate that something went wrong during the port
@@ -134,6 +136,16 @@ class BFChassisManager {
   // Thread function for reading and processing port state events.
   void ReadPortStatusChangeEvents() LOCKS_EXCLUDED(chassis_lock);
 
+  // Thread function for reading and processing transceiver events.
+  void ReadTransceiverEvents() LOCKS_EXCLUDED(chassis_lock);
+
+  // Transceiver module insert/removal event handler. This method is executed by
+  // ReadTransceiverEvents in the xcvr_event_thread_ thread which processes
+  // transceiver module insert/removal events. Port is the 1-based frontpanel
+  // port number.
+  void TransceiverEventHandler(int slot, int port, HwState new_state)
+      LOCKS_EXCLUDED(chassis_lock);
+
   // helper to add / configure / enable a port with BFPalInterface
   ::util::Status AddPortHelper(uint64 node_id, int unit, uint32 port_id,
                                const SingletonPort& singleton_port,
@@ -154,6 +166,19 @@ class BFChassisManager {
       port_status_change_event_reader_;
 
   std::thread port_status_change_event_thread_;
+
+  // The id of the transceiver module insert/removal event ChannelWriter, as
+  // returned by PhalInterface::RegisterTransceiverEventChannelWriter(). Used to
+  // remove the handler later if needed.
+  int xcvr_event_writer_id_;
+
+  std::shared_ptr<Channel<PhalInterface::TransceiverEvent> >
+      xcvr_event_channel_ GUARDED_BY(chassis_lock);
+
+  std::unique_ptr<ChannelReader<PhalInterface::TransceiverEvent> >
+      xcvr_event_reader_;
+
+  std::thread xcvr_event_thread_;
 
   // WriterInterface<GnmiEventPtr> object for sending event notifications.
   mutable absl::Mutex gnmi_event_lock_;
@@ -183,6 +208,17 @@ class BFChassisManager {
   // instead of maintaining a "consistent" view in this map.
   std::map<uint64, std::map<uint32, PortConfig>>
       node_id_to_port_id_to_port_config_ GUARDED_BY(chassis_lock);
+
+  // Map from node ID to another map from port ID to PortKey corresponding
+  // to the singleton port uniquely identified by (node ID, port ID). This map
+  // is updated as part of each config push.
+  std::map<uint64, std::map<uint32, PortKey>>
+      node_id_to_port_id_to_singleton_port_key_ GUARDED_BY(chassis_lock);
+
+  // Map from PortKey representing (slot, port) of a transceiver port to the
+  // state of the transceiver module plugged into that (slot, port).
+  std::map<PortKey, HwState> xcvr_port_key_to_xcvr_state_
+      GUARDED_BY(chassis_lock);
 
   friend class BFChassisManagerTest;
 };

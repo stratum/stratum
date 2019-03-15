@@ -24,6 +24,7 @@
 #include "stratum/hal/lib/barefoot/bf_pal_mock.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
+#include "absl/time/time.h"
 
 using ::testing::_;
 using ::testing::AtMost;
@@ -37,9 +38,13 @@ namespace barefoot {
 
 namespace {
 
+using TransceiverEvent = PhalInterface::TransceiverEvent;
+
 constexpr uint64 kNodeId = 7654321ULL;
 // For Tofino, unit is the 0-based index of the node in the ChassisConfig.
 constexpr int kUnit = 0;
+constexpr int kSlot = 1;
+constexpr int kPort = 1;
 constexpr uint32 kPortId = 12345;
 constexpr uint64 kDefaultSpeedBps = 100000000000;  // 100Gbps
 
@@ -55,7 +60,7 @@ class ChassisConfigBuilder {
 
     auto* node = config_.add_nodes();
     node->set_id(node_id);
-    node->set_slot(1);
+    node->set_slot(kSlot);
   }
 
   SingletonPort* AddPort(uint32 port_id, int32 port,
@@ -65,7 +70,7 @@ class ChassisConfigBuilder {
     sport->set_id(port_id);
     sport->set_node(node_id);
     sport->set_port(port);
-    sport->set_slot(1);
+    sport->set_slot(kSlot);
     sport->set_channel(0);
     sport->set_speed_bps(speed_bps);
     sport->mutable_config_params()->set_admin_state(admin_state);
@@ -111,7 +116,13 @@ class BFChassisManagerTest : public ::testing::Test {
     CHECK_RETURN_IF_FALSE(
         bf_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
     CHECK_RETURN_IF_FALSE(
+        bf_chassis_manager_->node_id_to_port_id_to_singleton_port_key_.empty());
+    CHECK_RETURN_IF_FALSE(
+        bf_chassis_manager_->xcvr_port_key_to_xcvr_state_.empty());
+    CHECK_RETURN_IF_FALSE(
         bf_chassis_manager_->port_status_change_event_channel_ == nullptr);
+    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->xcvr_event_channel_ == nullptr);
+    CHECK_RETURN_IF_FALSE(bf_chassis_manager_->xcvr_event_reader_ == nullptr);
     return ::util::OkStatus();
   }
 
@@ -130,12 +141,22 @@ class BFChassisManagerTest : public ::testing::Test {
   ::util::Status PushBaseChassisConfig(ChassisConfigBuilder* builder) {
     CHECK_RETURN_IF_FALSE(!Initialized())
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
-    builder->AddPort(kPortId, 1, ADMIN_STATE_ENABLED);
+    builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED);
+
     // PortStatusChangeRegisterEventWriter called because this is the first call
     // to PushChassisConfig
     EXPECT_CALL(*bf_pal_mock_, PortStatusChangeRegisterEventWriter(_));
     EXPECT_CALL(*bf_pal_mock_, PortAdd(kUnit, kPortId, kDefaultSpeedBps));
     EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
+
+    EXPECT_CALL(*phal_mock_,
+                RegisterTransceiverEventWriter(
+                    _, PhalInterface::kTransceiverEventWriterPriorityHigh))
+        .WillOnce(Return(kTestTransceiverWriterId));
+    EXPECT_CALL(*phal_mock_,
+                UnregisterTransceiverEventWriter(kTestTransceiverWriterId))
+        .WillOnce(Return(::util::OkStatus()));
+
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
     auto unit = GetUnitFromNodeId(kNodeId);
     CHECK_RETURN_IF_FALSE(unit.ok());
@@ -174,9 +195,19 @@ class BFChassisManagerTest : public ::testing::Test {
     return ::util::OkStatus();
   }
 
+  std::unique_ptr<ChannelWriter<TransceiverEvent>> GetTransceiverEventWriter() {
+    absl::WriterMutexLock l(&chassis_lock);
+    CHECK(bf_chassis_manager_->xcvr_event_channel_ != nullptr)
+        << "xcvr channel is null!";
+    return ChannelWriter<PhalInterface::TransceiverEvent>::Create(
+        bf_chassis_manager_->xcvr_event_channel_);
+  }
+
   std::unique_ptr<PhalMock> phal_mock_;
   std::unique_ptr<BFPalMock> bf_pal_mock_;
   std::unique_ptr<BFChassisManager> bf_chassis_manager_;
+
+  static constexpr int kTestTransceiverWriterId = 20;
 };
 
 TEST_F(BFChassisManagerTest, PreFirstConfigPushState) {
@@ -217,6 +248,19 @@ TEST_F(BFChassisManagerTest, ReplayPorts) {
       .Times(AtMost(1));
 
   EXPECT_OK(ReplayPortsConfig(kNodeId));
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, TransceiverEvent) {
+  ASSERT_OK(PushBaseChassisConfig());
+  auto xcvr_event_writer = GetTransceiverEventWriter();
+
+  EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
+
+  EXPECT_OK(xcvr_event_writer->Write(
+      TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
+      absl::InfiniteDuration()));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

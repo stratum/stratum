@@ -136,6 +136,10 @@ For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
 directory. *Do not use the ucli or the Thrift PAL RPC service for port
 configuration.* You may use the ucli to check port status (`pm show`).
 
+By default, the Phal ONLP implementation will be used. If for some reason this
+is not what you want to use, you can start `stratum_bf` with `--bf_sim`, which
+will use `PhalSim`, a "fake" Phal implementation, instead.
+
 ## Testing gNMI
 
 You can use the tools/gnmi/gnmi-cli.py script for gNMI get, set, and subscriptions:

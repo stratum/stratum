@@ -27,6 +27,7 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/hal.h"
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
@@ -37,11 +38,12 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 using ::pi::fe::proto::DeviceMgr;
 
 DEFINE_string(bf_sde_install, "",
-              "absolute path to the directory where the BF SDE is installed");
+              "Absolute path to the directory where the BF SDE is installed");
 DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
 DEFINE_string(bf_switchd_cfg, "stratum/hal/bin/barefoot/tofino_skip_p4.conf",
-              "path to the BF switchd json config file");
+              "Path to the BF switchd json config file");
+DEFINE_bool(bf_sim, false, "Run with the Tofino simulator");
 
 namespace stratum {
 namespace hal {
@@ -103,14 +105,19 @@ Main(int argc, char* argv[]) {
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(unit));
 
   auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
-  auto* phal_sim = PhalSim::CreateSingleton();
+  PhalInterface* phal_impl;
+  if (FLAGS_bf_sim) {
+    phal_impl = PhalSim::CreateSingleton();
+  } else {
+    phal_impl = phal::onlp::OnlpPhal::CreateSingleton();
+  }
   std::map<int, pi::PINode*> unit_to_pi_node = {
     {unit, pi_node.get()},
   };
   auto bf_chassis_manager = BFChassisManager::CreateInstance(
-      phal_sim, BFPalWrapper::GetSingleton());
+      phal_impl, BFPalWrapper::GetSingleton());
   auto bf_switch = BFSwitch::CreateInstance(
-      phal_sim, bf_chassis_manager.get(), unit_to_pi_node);
+      phal_impl, bf_chassis_manager.get(), unit_to_pi_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
