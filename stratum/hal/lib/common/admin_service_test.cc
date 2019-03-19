@@ -31,6 +31,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/admin_utils_mock.h"
 
 namespace stratum {
 namespace hal {
@@ -47,6 +48,13 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
     admin_service_ = absl::make_unique<AdminService>(
         mode_, switch_mock_.get(), auth_policy_checker_mock_.get(),
         error_buffer_.get());
+
+    admin_service_->helper_ =
+        absl::make_unique<AdminServiceUtilsInterfaceMock>();
+
+    admin_utils_ = dynamic_cast<AdminServiceUtilsInterfaceMock*>
+    (admin_service_->helper_.get());
+
     // Create a mock service to test the functionality.
     std::string url =
         "localhost:" + std::to_string(stratum::PickUnusedPortOrDie());
@@ -63,6 +71,9 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
   void TearDown() override { server_->Shutdown(); }
 
   OperationMode mode_;
+
+  // Not-owning pointer, owned by the AdminService
+  AdminServiceUtilsInterfaceMock* admin_utils_;
   std::unique_ptr<AdminService> admin_service_;
   std::unique_ptr<SwitchMock> switch_mock_;
   std::unique_ptr<AuthPolicyCheckerMock> auth_policy_checker_mock_;
@@ -102,10 +113,22 @@ TEST_P(AdminServiceTest, TimeSuccess) {
   ASSERT_OK(admin_service_->Teardown());
 }
 
-TEST_P(AdminServiceTest, RebootSuccess) {
+TEST_P(AdminServiceTest, RebootColdSuccess) {
   ::grpc::ClientContext context;
   ::gnoi::system::RebootRequest req;
   ::gnoi::system::RebootResponse resp;
+
+  // Create the Shell object for mocking
+  auto shell_helper = std::make_shared<AdminServiceShellHelperMock>("");
+
+  // Mock Utils Interface call to receive the above-created Shell object
+  EXPECT_CALL(*admin_utils_, GetShellHelperProxy("/sbin/shutdown -r"))
+      .WillOnce(::testing::Return(shell_helper));
+
+  EXPECT_CALL(*(shell_helper.get()), Execute())
+      .WillOnce(::testing::Return(true));
+
+  req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
   ::grpc::Status status = stub_->Reboot(&context, req, &resp);
@@ -115,14 +138,29 @@ TEST_P(AdminServiceTest, RebootSuccess) {
   ASSERT_OK(admin_service_->Teardown());
 }
 
-TEST_P(AdminServiceTest, RebootStatusSuccess) {
+TEST_P(AdminServiceTest, RebootUnknownFail){
+  ::grpc::ClientContext context;
+  ::gnoi::system::RebootRequest req;
+  ::gnoi::system::RebootResponse resp;
+
+  // Set unimplemented mode
+  req.set_method(gnoi::system::RebootMethod::UNKNOWN);
+
+  // Invoke the RPC and validate the results.
+  ::grpc::Status status = stub_->Reboot(&context, req, &resp);
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::INVALID_ARGUMENT);
+}
+
+TEST_P(AdminServiceTest, RebootStatusInactiveSuccess){
   ::grpc::ClientContext context;
   ::gnoi::system::RebootStatusRequest req;
   ::gnoi::system::RebootStatusResponse resp;
 
-  // Invoke the RPC and validate the results.
-  ::grpc::Status status = stub_->RebootStatus(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  stub_->RebootStatus(&context, req, &resp);
+  EXPECT_TRUE(!resp.active());
+  EXPECT_TRUE(resp.wait() == 0);
+  EXPECT_TRUE(resp.when() == 0);
+  EXPECT_TRUE(resp.reason().empty());
 
   // cleanup
   ASSERT_OK(admin_service_->Teardown());

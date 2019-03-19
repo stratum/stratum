@@ -42,6 +42,9 @@ stratum_cc_library(
         "admin_service.h",
     ],
     deps = [
+        ":admin_utils",
+        ":admin_utils_interface",
+        "@com_google_googletest//:gtest",
         ":common_proto",
         ":error_buffer",
         ":switch_interface",
@@ -70,6 +73,7 @@ stratum_cc_test(
     ],
     deps = [
         ":admin_service",
+        ":admin_utils_mock",
         ":error_buffer",
         ":switch_mock",
         ":test_main",
@@ -87,6 +91,38 @@ stratum_cc_test(
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+    ],
+)
+
+stratum_cc_library(
+    name = "admin_utils_interface",
+    hdrs = ["admin_utils_interface.h"],
+)
+
+cc_library(
+    name = "admin_utils_mock",
+    testonly = 1,
+    hdrs = ["admin_utils_mock.h"],
+    deps = [
+        ":admin_utils_interface",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+stratum_cc_library(
+    name = "admin_utils",
+    srcs = ["admin_utils.cc"],
+    deps = [
+        ":admin_utils_interface",
+        "//stratum/glue:logging",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/public/lib:error",
+        "@com_github_google_glog//:glog",
+        "@com_github_openconfig_gnoi//:gnoi_cc_proto",
+        "@com_github_openconfig_gnoi//:system_cc_grpc",
+        "@com_google_absl//absl/memory",
+        "@com_google_grpc//:grpc++",
     ],
 )
 

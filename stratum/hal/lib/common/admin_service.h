@@ -20,6 +20,7 @@
 #include <grpc++/grpc++.h>
 
 #include <memory>
+#include <utility>
 
 #include "github.com/openconfig/gnoi/system/system.grpc.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -30,6 +31,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/admin_utils_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -100,6 +102,13 @@ class AdminService final : public ::gnoi::system::System::Service {
   // Pointer to ErrorBuffer to save any critical errors we encounter. Not owned
   // by this class.
   ErrorBuffer* error_buffer_;
+
+  // Pointer to Utils object to encapsulate helper functions for the
+  // implementation.
+  std::unique_ptr<AdminServiceUtilsInterface> helper_;
+
+  // Service test. Updates the helper with a mock object.
+  friend class AdminServiceTest;
 };
 
 }  // namespace hal
