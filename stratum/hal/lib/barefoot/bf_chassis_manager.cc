@@ -46,6 +46,8 @@ absl::Mutex chassis_lock;
 
 /* static */
 constexpr int BFChassisManager::kMaxPortStatusChangeEventDepth;
+/* static */
+constexpr int BFChassisManager::kMaxXcvrEventDepth;
 
 BFChassisManager::BFChassisManager(PhalInterface* phal_interface,
                                    BFPalInterface* bf_pal_interface)

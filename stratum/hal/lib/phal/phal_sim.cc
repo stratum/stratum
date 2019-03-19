@@ -30,6 +30,9 @@ ABSL_CONST_INIT absl::Mutex PhalSim::init_lock_(absl::kConstInit);
 absl::Mutex PhalSim::init_lock_;
 #endif
 
+/* static */
+constexpr int PhalSim::kMaxNumTransceiverEventWriters;
+
 PhalSim::PhalSim() {}
 
 PhalSim::~PhalSim() {}
@@ -58,12 +61,54 @@ PhalSim::~PhalSim() {}
 
 ::util::StatusOr<int> PhalSim::RegisterTransceiverEventWriter(
     std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority) {
-  // TODO: Implement this function.
-  return kInvalidWriterId;
+  absl::WriterMutexLock l(&config_lock_);
+
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  CHECK_RETURN_IF_FALSE(transceiver_event_writers_.size() <
+                        static_cast<size_t>(kMaxNumTransceiverEventWriters))
+      << "Can only support " << kMaxNumTransceiverEventWriters
+      << " transceiver event Writers.";
+
+  // Find the next available ID for the Writer.
+  int next_id = kInvalidWriterId;
+  for (int id = 1;
+       id <= static_cast<int>(transceiver_event_writers_.size()) + 1;
+       ++id) {
+    auto it = std::find_if(
+        transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
+        [id](const TransceiverEventWriter& w) { return w.id == id; });
+    if (it == transceiver_event_writers_.end()) {
+      // This id is free. Pick it up.
+      next_id = id;
+      break;
+    }
+  }
+  CHECK_RETURN_IF_FALSE(next_id != kInvalidWriterId)
+      << "Could not find a new ID for the Writer. next_id=" << next_id << ".";
+
+  transceiver_event_writers_.insert({std::move(writer), priority, next_id});
+
+  return next_id;
 }
 
 ::util::Status PhalSim::UnregisterTransceiverEventWriter(int id) {
-  // TODO: Implement this function.
+  absl::WriterMutexLock l(&config_lock_);
+
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  auto it = std::find_if(
+      transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
+      [id](const TransceiverEventWriter& h) { return h.id == id; });
+  CHECK_RETURN_IF_FALSE(it != transceiver_event_writers_.end())
+      << "Could not find a transceiver event Writer with ID " << id << ".";
+
+  transceiver_event_writers_.erase(it);
+
   return ::util::OkStatus();
 }
 
@@ -90,4 +135,3 @@ PhalSim* PhalSim::CreateSingleton() {
 
 }  // namespace hal
 }  // namespace stratum
-

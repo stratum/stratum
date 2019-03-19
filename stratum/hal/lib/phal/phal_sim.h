@@ -19,6 +19,7 @@
 #define STRATUM_HAL_LIB_PHAL_PHAL_SIM_H_
 
 #include <functional>
+#include <set>
 
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
@@ -63,6 +64,8 @@ class PhalSim : public PhalInterface {
   // Private constructor.
   PhalSim();
 
+  static constexpr int kMaxNumTransceiverEventWriters = 8;
+
   // Internal mutex lock for protecting the internal maps and initializing the
   // singleton instance.
   static absl::Mutex init_lock_;
@@ -74,6 +77,13 @@ class PhalSim : public PhalInterface {
   // class is initialized so that other threads do not access the state while
   // the are being changed.
   mutable absl::Mutex config_lock_;
+
+  // Writers to forward the Transceiver events to. They are registered by
+  // external manager classes to receive the SFP Transceiver events. The
+  // managers can be running in different threads. The is sorted based on the
+  // the priority of the TransceiverEventWriter intances.
+  std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>
+      transceiver_event_writers_ GUARDED_BY(config_lock_);
 
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_);
