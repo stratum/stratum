@@ -53,6 +53,16 @@ OnlpFanDataSource::OnlpFanDataSource(OnlpOid fan_id,
     : DataSource(cache_policy), fan_oid_(fan_id), onlp_stub_(onlp_interface) {
   // Once the fan present, the oid won't change. Do not add setter for id.
   fan_id_.AssignValue(fan_id);
+  fan_dir_.AddSetter(
+          [&](const google::protobuf::EnumValueDescriptor* dir)
+      -> ::util::Status {
+      return this->SetFanDirection(static_cast<FanDir>(dir->index())); });
+  fan_percentage_.AddSetter(
+          [this](int value)
+      -> ::util::Status { return this->SetFanPercentage(value); });
+  fan_speed_rpm_.AddSetter(
+          [this](int val)
+      -> ::util::Status { return this->SetFanRpm(val); });
 }
 
 ::util::Status OnlpFanDataSource::UpdateValues() {
@@ -77,14 +87,23 @@ OnlpFanDataSource::OnlpFanDataSource(OnlpOid fan_id,
 }
 
 ::util::Status OnlpFanDataSource::IsCapable(FanCaps fan_caps) {
-  bool is_capable;
-
+  // TODO(Yi): should not get FanInfo here.
   ASSIGN_OR_RETURN(FanInfo fan_info, onlp_stub_->GetFanInfo(fan_oid_));
-  is_capable = fan_info.Capable(fan_caps);
-  CHECK_RETURN_IF_FALSE(is_capable)
+  CHECK_RETURN_IF_FALSE(fan_info.Capable(fan_caps))
       << "Expected FAN capability is not present.";
-
   return ::util::OkStatus();
+}
+
+::util::Status OnlpFanDataSource::SetFanPercentage(int value) {
+  return onlp_stub_->SetFanPercent(fan_oid_, value);
+}
+
+::util::Status OnlpFanDataSource::SetFanRpm(int val) {
+  return onlp_stub_->SetFanRpm(fan_oid_, val);
+}
+
+::util::Status OnlpFanDataSource::SetFanDirection(FanDir dir) {
+  return onlp_stub_->SetFanDir(fan_oid_, dir);
 }
 
 }  // namespace onlp

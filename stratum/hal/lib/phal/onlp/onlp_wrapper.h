@@ -160,6 +160,21 @@ class OnlpInterface {
   // Given a OID object id, returns FAN info or failure.
   virtual ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const = 0;
 
+  // Given a OID object id, sets FAN percentage,
+  // if FAN supports percentage capability.
+  virtual ::util::Status
+  SetFanPercent(OnlpOid oid, int value) const = 0;
+
+  // Given a OID object id, sets FAN RPM,
+  // if FAN supports RPM capability.
+  virtual ::util::Status
+  SetFanRpm(OnlpOid oid, int val) const = 0;
+
+  // Given a OID object id, sets FAN Direction,
+  // if FAN supports Direction capability.
+  virtual ::util::Status
+  SetFanDir(OnlpOid oid, FanDir dir) const = 0;
+
   // Given a OID object id, returns PSU info or failure.
   virtual ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const = 0;
 
@@ -210,6 +225,9 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const override;
   ::util::StatusOr<SfpInfo> GetSfpInfo(OnlpOid oid) const override;
   ::util::StatusOr<FanInfo> GetFanInfo(OnlpOid oid) const override;
+  ::util::Status SetFanPercent(OnlpOid oid, int value) const override;
+  ::util::Status SetFanRpm(OnlpOid oid, int val) const override;
+  ::util::Status SetFanDir(OnlpOid oid, FanDir dir) const override;
   ::util::StatusOr<ThermalInfo> GetThermalInfo(OnlpOid oid) const override;
   ::util::StatusOr<LedInfo> GetLedInfo(OnlpOid oid) const override;
   ::util::Status SetLedMode(OnlpOid oid, LedMode mode) const override;

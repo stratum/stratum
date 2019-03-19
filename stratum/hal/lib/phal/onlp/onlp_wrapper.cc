@@ -77,6 +77,34 @@ OnlpWrapper::~OnlpWrapper() {
   return &fan_info_;
 }
 
+::util::Status OnlpWrapper::
+  SetFanPercent(OnlpOid oid, int value) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+      << "Cannot get FAN info: OID " << oid << " is not an FAN.";
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_percentage_set(oid, value)))
+      << "Failed to set FAN percentage for OID " << oid << ".";
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpWrapper::
+  SetFanRpm(OnlpOid oid, int val) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+      << "Cannot get FAN info: OID " << oid << " is not an FAN.";
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_rpm_set(oid, val)))
+      << "Failed to set FAN rpm for OID " << oid << ".";
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpWrapper::
+  SetFanDir(OnlpOid oid, FanDir dir) const {
+  CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
+      << "Cannot set FAN info: OID " << oid << " is not an FAN.";
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_fan_dir_set(oid, static_cast<onlp_fan_dir_t>(dir))))
+      << "Failed to set FAN direction for OID " << oid << ".";
+  return ::util::OkStatus();
+}
+
 ::util::StatusOr<ThermalInfo> OnlpWrapper::GetThermalInfo(OnlpOid oid) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_THERMAL(oid))
         << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";

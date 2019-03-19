@@ -46,6 +46,15 @@ class OnlpFanDataSource : public DataSource {
 
   ::util::Status IsCapable(FanCaps fan_caps);
 
+  // Function to set FAN percentage.
+  ::util::Status SetFanPercentage(int value);
+
+  // Function to set FAN rpm.
+  ::util::Status SetFanRpm(int val);
+
+  // Function to set FAN direction.
+  ::util::Status SetFanDirection(FanDir dir);
+
   // Accessors for managed attributes.
   ManagedAttribute* GetFanId() { return &fan_id_; }
   ManagedAttribute* GetFanHardwareState() { return &fan_hw_state_; }
