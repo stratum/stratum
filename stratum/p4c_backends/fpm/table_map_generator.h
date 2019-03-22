@@ -25,10 +25,10 @@
 #include <set>
 #include <string>
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "absl/base/integral_types.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace p4c_backends {

@@ -16,15 +16,15 @@
 
 #include "stratum/p4c_backends/fpm/internal_action.h"
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {

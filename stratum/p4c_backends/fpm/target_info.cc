@@ -17,7 +17,7 @@
 
 #include "stratum/p4c_backends/fpm/target_info.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 namespace p4c_backends {

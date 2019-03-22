@@ -16,10 +16,11 @@
 
 #include "stratum/p4c_backends/fpm/table_hit_inspector.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
 #include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
 #include "absl/debugging/leak_check.h"
-#include "p4lang_p4c/frontends/p4/tableApply.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {

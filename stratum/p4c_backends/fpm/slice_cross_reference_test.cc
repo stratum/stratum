@@ -19,12 +19,12 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
-#include "stratum/p4c_backends/fpm/sliced_field_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/sliced_field_map.pb.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {

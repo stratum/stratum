@@ -17,10 +17,10 @@
 #include "stratum/p4c_backends/common/midend_p4c_open.h"
 
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {

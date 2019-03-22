@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <string>
 
-#include "glog/logging.h"
 #include "stratum/glue/logging.h"
 
 using google::StrError;

@@ -17,7 +17,7 @@
 #include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
 
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 using ::testing::Values;

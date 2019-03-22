@@ -116,14 +116,13 @@ cc_library(
 cc_library(
     name = "p4c_frontend_h",
     hdrs = [
-        "frontends/p4/externInstance.h",
-        "frontends/p4/methodInstance.h",
-        "frontends/p4/typeMap.h",
-        "frontends/common/resolveReferences/referenceMap.h",
-        "frontends/common/programMap.h",
         "frontends/p4/typeChecking/typeSubstitution.h",
-    ],
-    visibility = ["//visibility:private"],
+    ] + glob([
+        "frontends/p4/*.h",
+    ]) + glob([
+        "frontends/common/*.h",
+    ]),
+    #visibility = ["//visibility:private"],
 )
 
 # The ir-generator tool uses a parser built by these genlex and
@@ -235,7 +234,7 @@ cc_library(
     ] + glob([
         "ir/*.h",
     ]),
-    visibility = STRATUM_INTERNAL,
+    #visibility = STRATUM_INTERNAL,
     deps = [
         ":p4c_includes",
         ":p4c_frontend_h",
@@ -263,6 +262,8 @@ cc_library(
         "frontends/parsers/p4/p4lexer.hpp",
         "frontends/parsers/p4/p4parser.hpp",
         "frontends/parsers/p4/stack.hh",
+        "frontends/parsers/p4/abstractP4Lexer.hpp",
+        "frontends/parsers/p4/p4AnnotationLexer.hpp",
         "frontends/parsers/v1/stack.hh",
         "frontends/parsers/v1/v1lexer.hpp",
         "frontends/parsers/v1/v1parser.hpp",
@@ -276,7 +277,7 @@ cc_library(
     data = glob([
         "p4include/*.p4",
     ]),
-    visibility = STRATUM_INTERNAL,
+    #visibility = STRATUM_INTERNAL,
     deps = [
         ":control_plane_h",
         ":p4c_ir",
@@ -293,13 +294,12 @@ cc_library(
         "control-plane/*.cpp",
     ]),
     copts = P4C_BUILD_DEFAULT_COPTS,
-    visibility = STRATUM_INTERNAL,
+    # visibility = STRATUM_INTERNAL,
     deps = [
         ":control_plane_h",
         ":p4c_frontend_midend",
         ":p4c_ir",
         ":p4c_toolkit",
-        ":v1_model_cc_proto",
     ] + P4C_COMMON_DEPS,
 )
 
@@ -319,16 +319,6 @@ cc_library(
     ],
 )
 
-proto_library(
-    name = "v1_model_protoc",
-    srcs = ["control-plane/proto/p4/config/v1model.proto"],
-)
-
-cc_proto_library(
-    name = "v1_model_cc_proto",
-    deps = [":v1_model_protoc"],
-)
-
 # The control-plane headers are in a separate cc_library to break the
 # circular dependencies between control-plane and frontends/midend.
 cc_library(
@@ -336,13 +326,13 @@ cc_library(
     hdrs = glob(
         ["control-plane/*.h"],
     ),
-    visibility = STRATUM_INTERNAL,
+    # visibility = STRATUM_INTERNAL,
     deps = [
         ":p4c_frontend_h",
         ":p4c_ir",
         ":p4c_toolkit",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_github_p4lang_p4runtime//:p4types_cc_proto",
     ],
 )
@@ -420,3 +410,60 @@ cc_binary(
     ],
 )
 
+# This builds the p4test backend
+
+# TODO: This genrule hack turns the version.h.cmake file into version.h
+# with the string "0.0.0.0".  Improve version numbering.
+genrule(
+    name = "p4c_p4test_version",
+    srcs = ["backends/p4test/version.h.cmake"],
+    outs = ["backends/p4test/version.h"],
+    cmd = ("sed 's|@P4C_VERSION@|0.0.0.0|g' $< > $@"),
+    #visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "p4c_backend_p4test_lib",
+    srcs = [
+        "backends/p4test/midend.cpp",
+    ],
+    hdrs = [
+        "backends/p4test/midend.h",
+        "backends/p4test/version.h",
+    ],
+    copts = P4C_BUILD_DEFAULT_COPTS,
+    deps = [
+        ":p4c_frontend_midend",
+        ":p4c_ir",
+        ":p4c_toolkit",
+    ],
+    data = [
+        ":p4c_p4test_version",
+    ]
+)
+
+cc_binary(
+    name = "p4c_backend_p4test",
+    srcs = [
+        "backends/p4test/p4test.cpp",
+    ],
+    copts = P4C_BUILD_DEFAULT_COPTS,
+    linkopts = [
+        "-lgmp",
+        "-lgmpxx",
+    ],
+    deps = [
+        ":control_plane",
+        ":control_plane_h",
+        ":p4c_frontend_midend",
+        ":p4c_ir",
+        ":p4c_toolkit",
+        ":p4c_backend_p4test_lib",
+    ],
+)
+
+# Includes all valid P4_16 test files
+filegroup(
+    name = "testdata_p4_16_samples",
+    data = glob(["testdata/p4_16_samples/*.p4"])
+)

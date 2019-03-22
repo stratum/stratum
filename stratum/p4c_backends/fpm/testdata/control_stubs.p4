@@ -20,7 +20,7 @@
 #include <core.p4>
 #include <v1model.p4>
 
-#include "stratum/p4c_backends/fpm/testdata/simple_headers.p4"
+#include "simple_headers.p4"
 
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_

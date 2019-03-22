@@ -19,17 +19,17 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
-#include "base/commandlineflags.h"
-#include "base/logging.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 #include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
 #include "stratum/p4c_backends/fpm/meter_color_mapper.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/backends/p4test/midend.h"
-#include "p4lang_p4c/control-plane/p4RuntimeSerializer.h"
-#include "p4lang_p4c/ir/json_loader.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
+#include "external/com_github_p4lang_p4c/backends/p4test/midend.h"
+#include "external/com_github_p4lang_p4c/control-plane/p4RuntimeSerializer.h"
+#include "external/com_github_p4lang_p4c/ir/json_loader.h"
+#include "p4/config/v1/p4info.pb.h"
 
 DECLARE_string(p4c_fe_options);  // Specifies the p4 spec file.
 

@@ -14,9 +14,11 @@
 # limitations under the License.
 #
 
+As far as I can see, no BUILD file actually loads this build definition, as proven by this comment.
+
 """P4c configuration generation rules."""
 
-load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 # Runs the p4c binary with the Stratum FPM backend on the P4_16 sources. The P4_16
 # code should be targeted to the v1model in p4lang_p4c/p4include.
@@ -130,21 +132,21 @@ p4_stratum_config = rule(
         "_model": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("//p4lang_p4c:p4include/v1model.p4"),
+            default = Label("@com_github_p4lang_p4c//:p4include/v1model.p4"),
         ),
         "_core": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("//p4lang_p4c:p4include/core.p4"),
+            default = Label("@com_github_p4lang_p4c//:p4include/core.p4"),
         ),
         "_p4c_stratum_fpm_binary": attr.label(
             cfg = "host",
             executable = True,
             default = Label("//stratum/p4c_backends/fpm:p4c_stratum_fpm"),
         ),
-        "cpp": attr.label_list(default = [Label("//tools/cpp:crosstool")]),
+        "cpp": attr.label_list(default = [Label("@bazel_tools//tools/cpp:crosstool")]), # FIXME
         "_cc_toolchain": attr.label(
-            default = Label("//tools/cpp:current_cc_toolchain"),
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"), # FIXME
         ),
     },
 )

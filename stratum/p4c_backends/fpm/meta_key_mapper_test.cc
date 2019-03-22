@@ -19,10 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/strings/match.h"
 
 using ::testing::_;

@@ -16,7 +16,7 @@
 
 #include "stratum/p4c_backends/fpm/expression_inspector.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"

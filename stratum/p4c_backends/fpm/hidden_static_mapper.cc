@@ -18,12 +18,12 @@
 
 #include <memory>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/hal/lib/p4/p4_match_key.h"
 #include "stratum/p4c_backends/fpm/internal_action.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {

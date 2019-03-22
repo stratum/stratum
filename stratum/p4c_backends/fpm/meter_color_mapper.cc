@@ -16,14 +16,14 @@
 
 #include "stratum/p4c_backends/fpm/meter_color_mapper.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
-#include "p4lang_p4c/frontends/p4/tableApply.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {

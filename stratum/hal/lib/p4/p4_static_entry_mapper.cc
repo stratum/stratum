@@ -18,9 +18,7 @@
 #include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
 
 #include "gflags/gflags.h"
-//FIXME(boc) are both logs needed?
 #include "stratum/glue/logging.h"
-#include "glog/logging.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 

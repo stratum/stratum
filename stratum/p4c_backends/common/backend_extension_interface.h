@@ -20,8 +20,8 @@
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
 
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 // These forward references are necessary because third-party p4c likes
 // to give some of their types the same names as objects in the std namespace.

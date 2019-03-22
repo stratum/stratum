@@ -23,7 +23,7 @@
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_H_
 
-#include "stratum/public/proto/p4_annotation.host.pb.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

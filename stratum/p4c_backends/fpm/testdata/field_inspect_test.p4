@@ -33,7 +33,7 @@ header vlan_tag_t {
     bit<16> ethertype;
 }
 
-struct metadata {
+struct local_metadata_t {
 }
 
 struct headers {
@@ -43,7 +43,7 @@ struct headers {
     vlan_tag_t[5] vlan_tag;
 }
 
-parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
+parser ParserImpl(packet_in packet, out headers hdr, inout local_metadata_t meta, inout standard_metadata_t standard_metadata) {
     @name("parse_ethernet") state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.ethertype) {
@@ -63,7 +63,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata meta, inout 
     }
 }
 
-control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
+control egress(inout headers hdr, inout local_metadata_t meta, inout standard_metadata_t standard_metadata) {
     action set_field(EthernetAddress mac) {
         hdr.ethernet.dstAddr = mac;
     }
@@ -82,7 +82,7 @@ control egress(inout headers hdr, inout metadata meta, inout standard_metadata_t
     }
 }
 
-control ingress(inout headers hdr, inout metadata meta, inout standard_metadata_t standard_metadata) {
+control ingress(inout headers hdr, inout local_metadata_t meta, inout standard_metadata_t standard_metadata) {
     action set_outer_vlan(bit<12> vlan) {
         hdr.vlan_tag[0].vlan_id = vlan;
     }
@@ -109,12 +109,12 @@ control DeparserImpl(packet_out packet, in headers hdr) {
     }
 }
 
-control verifyChecksum(inout headers hdr, inout metadata meta) {
+control verifyChecksum(inout headers hdr, inout local_metadata_t meta) {
     apply {
     }
 }
 
-control computeChecksum(inout headers hdr, inout metadata meta) {
+control computeChecksum(inout headers hdr, inout local_metadata_t meta) {
     apply {
     }
 }

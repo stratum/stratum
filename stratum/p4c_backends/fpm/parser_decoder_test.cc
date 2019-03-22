@@ -19,9 +19,9 @@
 #include <memory>
 #include <string>
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -61,7 +61,7 @@ TEST_P(ParserDecoderTest, TestAllStatesParsed) {
   EXPECT_EQ(ir_parser.states.size(), decoded_states_map.size());
   for (const auto ir_parser_state : ir_parser.states) {
     auto iter = decoded_states_map.find(std::string(
-        ir_parser_state->externalName()));
+        ir_parser_state->getName().toString()));
     EXPECT_TRUE(iter != decoded_states_map.end());
   }
 }
@@ -110,10 +110,10 @@ TEST_F(ParserDecoderTest, ParseComplex) {
   ASSERT_TRUE(result);
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
-  const auto& params_state_iter = decoded_states_map.find("ParserImpl.start");
+  const auto& params_state_iter = decoded_states_map.find("start");
   ASSERT_TRUE(params_state_iter != decoded_states_map.end());
   const auto& concat_state_iter =
-      decoded_states_map.find("ParserImpl.parse_concat");
+      decoded_states_map.find("parse_concat");
   ASSERT_TRUE(concat_state_iter != decoded_states_map.end());
   const auto& params_state = params_state_iter->second;
   const auto& concat_state = concat_state_iter->second;
@@ -155,7 +155,7 @@ TEST_F(ParserDecoderTest, ParseExtractStackedHeader) {
   const auto& decoded_states_map =
       parser_decoder_.parser_states().parser_states();
   const auto& vlan_state_iter =
-      decoded_states_map.find("ParserImpl.parse_vlan_tag");
+      decoded_states_map.find("parse_vlan_tag");
   ASSERT_TRUE(vlan_state_iter != decoded_states_map.end());
   const auto& vlan_state = vlan_state_iter->second;
   ASSERT_EQ(6, vlan_state.extracted_header().header_paths_size());
@@ -292,6 +292,7 @@ INSTANTIATE_TEST_CASE_P(
   ParserDecoderTest,
   ::testing::Values("fpm/testdata/parse_basic.ir.json",
                     "fpm/testdata/parse_complex.ir.json",
+                    "fpm/testdata/parse_annotated_state.ir.json",
                     "fpm/testdata/parse_value_set.ir.json",
                     "test/testdata/simple_vlan_stack_16.ir.json")
 );

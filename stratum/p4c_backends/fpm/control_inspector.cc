@@ -16,17 +16,17 @@
 
 #include "stratum/p4c_backends/fpm/control_inspector.h"
 
-#include "base/logging.h"
-#include "base/stringprintf.h"
+#include "stratum/glue/logging.h"
+#include "absl/strings/str_format.h"
 #include "stratum/p4c_backends/fpm/condition_inspector.h"
 #include "stratum/p4c_backends/fpm/internal_action.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
-#include "p4lang_p4c/frontends/p4/methodInstance.h"
-#include "p4lang_p4c/frontends/p4/tableApply.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
-#include "util/gtl/map_util.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -125,7 +125,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
   } else if (instance->is<P4::ExternMethod>()) {
     AddStatement();
     // TODO: Evaluate for additional support in Stratum use cases.
-    const std::string pseudo_code = StringPrintf(
+    const std::string pseudo_code = absl::StrFormat(
         "extern method %s", instance->to<P4::ExternMethod>()->
             originalExternType->name.toString().c_str());
     working_statement_->set_other(pseudo_code);
@@ -136,7 +136,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
     } else {
       AddStatement();
       // TODO: Evaluate for additional support in Stratum use cases.
-      const std::string pseudo_code = StringPrintf(
+      const std::string pseudo_code = absl::StrFormat(
           "built-in method %s",
           instance->to<P4::BuiltInMethod>()->name.toString().c_str());
       working_statement_->set_other(pseudo_code);
@@ -152,7 +152,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
         GetP4ModelNames().drop_extern_name()) {
       working_statement_->set_drop(true);
     } else {
-      const std::string pseudo_code = StringPrintf(
+      const std::string pseudo_code = absl::StrFormat(
           "MethodCallExpression extern function %s",
           extern_func->method->name.toString().c_str());
       working_statement_->set_other(pseudo_code);
@@ -382,7 +382,7 @@ void ControlInspector::AppendMeterActions() {
     for (const auto& action_ref : p4_table.action_refs()) {
       bool skip_default_action = false;
       for (const auto& annotation : action_ref.annotations()) {
-        if (annotation.find("@defaultonly") != string::npos) {
+        if (annotation.find("@defaultonly") != std::string::npos) {
           skip_default_action = true;
           break;
         }

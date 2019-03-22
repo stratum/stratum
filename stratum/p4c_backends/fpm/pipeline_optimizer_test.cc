@@ -18,10 +18,10 @@
 
 #include <memory>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/p4c_backends/test/test_target_info.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 DECLARE_bool(enable_pipeline_optimization);

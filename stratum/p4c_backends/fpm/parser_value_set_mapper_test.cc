@@ -21,12 +21,12 @@
 
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/p4c_backends/fpm/parser_decoder.h"
-#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
-#include "util/gtl/map_util.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {

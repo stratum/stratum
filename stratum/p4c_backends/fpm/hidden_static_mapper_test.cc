@@ -21,18 +21,18 @@
 #include <vector>
 
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/lib/compile_context.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
-#include "util/gtl/map_util.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 
 using ::testing::AnyNumber;
 using ::testing::Return;

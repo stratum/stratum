@@ -18,17 +18,17 @@
 
 #include <utility>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/midend_p4c_open.h"
 #include "absl/debugging/leak_check.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/control-plane/p4RuntimeSerializer.h"
-#include "p4lang_p4c/frontends/common/parseInput.h"
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/typeMap.h"
-#include "p4lang_p4c/lib/crash.h"
-#include "p4lang_p4c/lib/error.h"
-#include "p4lang_p4c/lib/gc.h"
+#include "external/com_github_p4lang_p4c/control-plane/p4RuntimeSerializer.h"
+#include "external/com_github_p4lang_p4c/frontends/common/parseInput.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
+#include "external/com_github_p4lang_p4c/lib/crash.h"
+#include "external/com_github_p4lang_p4c/lib/error.h"
+#include "external/com_github_p4lang_p4c/lib/gc.h"
 
 using HerculesP4cContext = P4CContextWithOptions<CompilerOptions>;
 

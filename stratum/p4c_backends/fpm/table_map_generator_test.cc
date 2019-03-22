@@ -21,13 +21,13 @@
 
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/lib/utils.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gunit.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/lib/compile_context.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gtest/gtest.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -466,7 +466,7 @@ TEST_F(TableMapGeneratorTest, TestReplaceFieldDescriptor) {
   const hal::P4FieldDescriptor* replaced_descriptor =
       FindFieldDescriptorOrNull(kTestFieldName, map_generator_.generated_map());
   ASSERT_TRUE(replaced_descriptor != nullptr);
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(new_descriptor,
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(new_descriptor,
                                                          *replaced_descriptor));
 }
 
@@ -657,7 +657,7 @@ TEST_F(TableMapGeneratorTest, TestActionMeterColor) {
   EXPECT_EQ(0, action_descriptor.assignments_size());
   EXPECT_EQ(0, action_descriptor.primitive_ops_size());
   ASSERT_EQ(1, action_descriptor.color_actions_size());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       test_color_action, action_descriptor.color_actions(0)));
 }
 
@@ -683,9 +683,9 @@ TEST_F(TableMapGeneratorTest, TestActionMeterDisjointColors) {
   EXPECT_EQ(0, action_descriptor.assignments_size());
   EXPECT_EQ(0, action_descriptor.primitive_ops_size());
   ASSERT_EQ(2, action_descriptor.color_actions_size());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       test_green, action_descriptor.color_actions(0)));
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       test_red_yellow, action_descriptor.color_actions(1)));
 }
 
@@ -712,9 +712,9 @@ TEST_F(TableMapGeneratorTest, TestActionMeterPartialColorsOverlap) {
   EXPECT_EQ(0, action_descriptor.assignments_size());
   EXPECT_EQ(0, action_descriptor.primitive_ops_size());
   ASSERT_EQ(2, action_descriptor.color_actions_size());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       test_green_yellow, action_descriptor.color_actions(0)));
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       test_red_yellow, action_descriptor.color_actions(1)));
 }
 
@@ -750,9 +750,9 @@ TEST_F(TableMapGeneratorTest, TestActionMeterFullColorsOverlap) {
   EXPECT_EQ(P4_METER_GREEN, map_color_action.colors(0));
   EXPECT_EQ(P4_METER_YELLOW, map_color_action.colors(1));
   ASSERT_EQ(2, map_color_action.ops_size());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       green_clone1.ops(0), map_color_action.ops(0)));
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       green_clone2.ops(0), map_color_action.ops(1)));
 }
 
@@ -784,7 +784,7 @@ TEST_F(TableMapGeneratorTest, TestAddMeterColorActionsFromString) {
   const hal::P4ActionDescriptor& action_descriptor =
       iter->second.action_descriptor();
   color_actions_message.set_type(P4_ACTION_TYPE_FUNCTION);
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       color_actions_message, action_descriptor));
 }
 
@@ -882,7 +882,7 @@ TEST_F(TableMapGeneratorTest, TestReplaceActionDescriptor) {
 
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       new_descriptor, iter->second.action_descriptor()));
 }
 
@@ -1388,7 +1388,7 @@ TEST_F(TableMapGeneratorTest, TestAddInternalAction) {
   map_generator_.AddInternalAction(kTestActionName, internal_descriptor);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       internal_descriptor, iter->second.internal_action()));
 }
 
@@ -1403,7 +1403,7 @@ TEST_F(TableMapGeneratorTest, TestAddInternalActionAgain) {
   map_generator_.AddInternalAction(kTestActionName, internal_descriptor);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
-  EXPECT_TRUE(protobuf::util::MessageDifferencer::Equals(
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       internal_descriptor, iter->second.internal_action()));
 }
 

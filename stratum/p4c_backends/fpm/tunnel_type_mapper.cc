@@ -16,7 +16,7 @@
 
 #include "stratum/p4c_backends/fpm/tunnel_type_mapper.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/strings/substitute.h"
 

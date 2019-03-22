@@ -21,7 +21,7 @@
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_
 
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -88,7 +88,7 @@ class BcmTunnelOptimizer : public TunnelOptimizerInterface {
   //      or decap.
   //  internal_descriptor_ - provides intermediate action descriptor for
   //      processing inputs.
-  P4TunnelProperties::EncapOrDecapCase encap_or_decap_;
+  hal::P4ActionDescriptor::P4TunnelProperties::EncapOrDecapCase encap_or_decap_;
   hal::P4ActionDescriptor internal_descriptor_;
 };
 

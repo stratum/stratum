@@ -21,7 +21,7 @@
 
 #include "stratum/p4c_backends/fpm/target_info.h"
 
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace p4c_backends {

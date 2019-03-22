@@ -49,7 +49,6 @@
 
 #include <byteswap.h>
 
-#include "testing/production_stub/public/gunit_prod.h"
 #include "stratum/glue/logging.h"
 #include "absl/base/casts.h"
 #include "stratum/glue/integral_types.h"
@@ -321,8 +320,8 @@ class Bits {
 
   static const char num_bits[];
 
-  FRIEND_TEST(Bits, Port32);
-  FRIEND_TEST(Bits, Port64);
+  friend class Bits_Port32_Test;
+  friend class Bits_Port64_Test;
 };
 
 // A utility class for some handy bit patterns.  The names l and h

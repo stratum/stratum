@@ -71,9 +71,9 @@
 #include <set>
 #include <string>
 
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 
 namespace stratum {
 namespace p4c_backends {

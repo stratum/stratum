@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 
-#include "base/init_google.h"
+#include "stratum/glue/init_google.h"
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_real.h"

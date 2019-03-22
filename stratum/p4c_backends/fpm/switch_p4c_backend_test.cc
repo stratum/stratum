@@ -20,16 +20,16 @@
 #include <memory>
 #include <string>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/typeMap.h"
-#include "p4lang_p4c/lib/error.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
+#include "external/com_github_p4lang_p4c/lib/error.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_mock.h"
@@ -206,9 +206,9 @@ TEST_P(SwitchP4cBackendTest, TestValidIR) {
   ASSERT_TRUE(ReadProtoFromBinFile(FLAGS_p4_pipeline_config_binary_file,
                                    &pipeline_config_from_bin)
                   .ok());
-  protobuf::util::MessageDifferencer msg_differencer;
+  google::protobuf::util::MessageDifferencer msg_differencer;
   msg_differencer.set_repeated_field_comparison(
-      protobuf::util::MessageDifferencer::AS_SET);
+      google::protobuf::util::MessageDifferencer::AS_SET);
   EXPECT_TRUE(msg_differencer.Compare(
       pipeline_config_from_text, pipeline_config_from_bin));
 
@@ -219,13 +219,18 @@ TEST_P(SwitchP4cBackendTest, TestValidIR) {
 INSTANTIATE_TEST_CASE_P(
   ValidIRInputFiles,
   SwitchP4cBackendTest,
-  ::testing::Values("fpm/testdata/design_doc_sample1.ir.json",
-                    "fpm/testdata/middleblock_p4.ir.json",
-                    "fpm/testdata/spine_p4.ir.json",
-                    "fpm/testdata/tor_p4.ir.json",
-                    "fpm/testdata/b4_p4.ir.json",
-                    "fpm/testdata/fbr_s2_p4.ir.json",
-                    "fpm/testdata/fbr_s3_p4.ir.json")
+  ::testing::Values(
+    "fpm/testdata/design_doc_sample1.ir.json",
+    "fpm/testdata/parse_annotated_state.ir.json"
+    // FIXME: add real-world full P4 program here
+    // Google only
+    // "fpm/testdata/middleblock_p4.ir.json",
+    // "fpm/testdata/spine_p4.ir.json",
+    // "fpm/testdata/tor_p4.ir.json",
+    // "fpm/testdata/b4_p4.ir.json",
+    // "fpm/testdata/fbr_s2_p4.ir.json",
+    // "fpm/testdata/fbr_s3_p4.ir.json"
+    )
 );
 
 }  // namespace p4c_backends

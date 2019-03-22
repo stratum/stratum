@@ -16,12 +16,12 @@
 
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/lib/utils.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -456,10 +456,10 @@ hal::P4ActionDescriptor* TableMapGenerator::FindActionDescriptor(
 int TableMapGenerator::FindColorAction(
     const hal::P4ActionDescriptor& action_descriptor,
     const hal::P4ActionDescriptor::P4MeterColorAction& color_action) const {
-  protobuf::util::MessageDifferencer msg_differencer;
+  ::google::protobuf::util::MessageDifferencer msg_differencer;
   msg_differencer.set_repeated_field_comparison(
-      protobuf::util::MessageDifferencer::AS_SET);
-  const protobuf::Descriptor* proto_descriptor = hal::P4ActionDescriptor::
+      ::google::protobuf::util::MessageDifferencer::AS_SET);
+  const ::google::protobuf::Descriptor* proto_descriptor = hal::P4ActionDescriptor::
       P4MeterColorAction::default_instance().GetDescriptor();
   msg_differencer.IgnoreField(proto_descriptor->FindFieldByName("ops"));
 

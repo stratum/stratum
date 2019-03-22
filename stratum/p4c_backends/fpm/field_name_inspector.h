@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "google/protobuf/map.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -101,7 +101,7 @@ class FieldNameInspector : public Inspector {
   // FieldNameInspector creates a list of corresponding stacked header path
   // names in the stacked_header_names_ container, such as "hdr.vlan_tag[0]",
   // "hdr.vlan_tag[1]", etc.
-  uint32 stack_size_;
+  uint32_t stack_size_;
   std::vector<std::string> stacked_header_names_;
 };
 

@@ -16,7 +16,7 @@
 
 #include <string>
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace p4c_backends {

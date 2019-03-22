@@ -17,30 +17,31 @@
 
 #include "stratum/p4c_backends/fpm/midend.h"
 
+#include "stratum/glue/logging.h"
 #include "absl/debugging/leak_check.h"
-#include "p4lang_p4c/frontends/common/constantFolding.h"
-#include "p4lang_p4c/frontends/common/resolveReferences/resolveReferences.h"
-#include "p4lang_p4c/frontends/p4/evaluator/evaluator.h"
-#include "p4lang_p4c/frontends/p4/fromv1.0/v1model.h"
-#include "p4lang_p4c/frontends/p4/moveDeclarations.h"
-#include "p4lang_p4c/frontends/p4/simplify.h"
-#include "p4lang_p4c/frontends/p4/simplifyParsers.h"
-#include "p4lang_p4c/frontends/p4/strengthReduction.h"
-#include "p4lang_p4c/frontends/p4/toP4/toP4.h"
-#include "p4lang_p4c/frontends/p4/typeMap.h"
-#include "p4lang_p4c/frontends/p4/unusedDeclarations.h"
-#include "p4lang_p4c/midend/compileTimeOps.h"
-#include "p4lang_p4c/midend/copyStructures.h"
-#include "p4lang_p4c/midend/eliminateTuples.h"
-#include "p4lang_p4c/midend/expandLookahead.h"
-#include "p4lang_p4c/midend/local_copyprop.h"
-#include "p4lang_p4c/midend/midEndLast.h"
-#include "p4lang_p4c/midend/nestedStructs.h"
-#include "p4lang_p4c/midend/removeParameters.h"
-#include "p4lang_p4c/midend/removeSelectBooleans.h"
-#include "p4lang_p4c/midend/simplifyKey.h"
-#include "p4lang_p4c/midend/simplifySelectCases.h"
-#include "p4lang_p4c/midend/simplifySelectList.h"
+#include "external/com_github_p4lang_p4c/frontends/common/constantFolding.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/resolveReferences.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/evaluator/evaluator.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/fromv1.0/v1model.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/moveDeclarations.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/simplify.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/simplifyParsers.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/strengthReduction.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/toP4/toP4.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/unusedDeclarations.h"
+#include "external/com_github_p4lang_p4c/midend/compileTimeOps.h"
+#include "external/com_github_p4lang_p4c/midend/copyStructures.h"
+#include "external/com_github_p4lang_p4c/midend/eliminateTuples.h"
+#include "external/com_github_p4lang_p4c/midend/expandLookahead.h"
+#include "external/com_github_p4lang_p4c/midend/local_copyprop.h"
+#include "external/com_github_p4lang_p4c/midend/midEndLast.h"
+#include "external/com_github_p4lang_p4c/midend/nestedStructs.h"
+#include "external/com_github_p4lang_p4c/midend/removeParameters.h"
+#include "external/com_github_p4lang_p4c/midend/removeSelectBooleans.h"
+#include "external/com_github_p4lang_p4c/midend/simplifyKey.h"
+#include "external/com_github_p4lang_p4c/midend/simplifySelectCases.h"
+#include "external/com_github_p4lang_p4c/midend/simplifySelectList.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -67,7 +68,7 @@ MidEnd::MidEnd(const CompilerOptions& options) {
     new P4::SimplifySelectCases(&reference_map_, &type_map_, false),
     new P4::ExpandLookahead(&reference_map_, &type_map_),
     new P4::SimplifyParsers(&reference_map_),
-    new P4::StrengthReduction(),
+    new P4::StrengthReduction(&reference_map_, &type_map_),
     new P4::EliminateTuples(&reference_map_, &type_map_),
     new P4::CopyStructures(&reference_map_, &type_map_),
     new P4::NestedStructs(&reference_map_, &type_map_),

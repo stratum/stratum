@@ -21,18 +21,18 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/lib/utils.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
-#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/target_info_mock.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/ir/ir.h"
-#include "p4lang_p4c/lib/compile_context.h"
-#include "p4lang_p4c/lib/cstring.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "external/com_github_p4lang_p4c/lib/cstring.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::_;
@@ -418,7 +418,8 @@ TEST_F(P4cUtilsTest, TestIsTableApplyInstance) {
 }
 
 TEST_F(P4cUtilsTest, TestFindLocalMetadataType) {
-  SetUpTestIR("tor_p4.ir.json");
+  // SetUpTestIR("tor_p4.ir.json"); // Google only
+  SetUpTestIR("field_inspect_test.ir.json");
   P4ModelNames model_names;
   model_names.set_ingress_control_name("ingress");
   model_names.set_egress_control_name("egress");

@@ -20,8 +20,8 @@
 
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {
@@ -34,12 +34,12 @@ class MethodCallDecoderTest : public testing::Test {
   // The SetUpTestIR method uses an IRTestHelperJson to load an IR file in JSON
   // format.  It also creates a MethodCallDecoder test instance.
   void SetUpTestIR(const std::string& ir_file) {
-    ir_helper_ = absl::MakeUnique<IRTestHelperJson>();
+    ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestP4File =
         "stratum/p4c_backends/fpm/testdata/" + ir_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
     SetUpTestP4ModelNames();
-    method_call_decoder_ = absl::MakeUnique<MethodCallDecoder>(
+    method_call_decoder_ = absl::make_unique<MethodCallDecoder>(
         ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   }
 

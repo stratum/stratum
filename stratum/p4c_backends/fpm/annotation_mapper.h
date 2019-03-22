@@ -25,11 +25,11 @@
 #include <map>
 #include <string>
 #include <unordered_map>
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/p4c_backends/fpm/annotation_map.host.pb.h"
-#include "stratum/public/proto/p4_annotation.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/p4c_backends/fpm/annotation_map.pb.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 #include "absl/container/node_hash_map.h"
 
 namespace stratum {
@@ -98,7 +98,7 @@ class AnnotationMapper {
     virtual ~AddendaLookupMap() {}
 
     // Populates the addenda_lookup_ map for this instance.
-    bool BuildMap(const protobuf::RepeatedPtrField<T>& addenda_fields) {
+    bool BuildMap(const ::google::protobuf::RepeatedPtrField<T>& addenda_fields) {
       bool map_ok = true;
       for (const auto& addendum : addenda_fields) {
         if (!addendum.name().empty()) {

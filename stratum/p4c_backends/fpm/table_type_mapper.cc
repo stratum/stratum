@@ -16,9 +16,9 @@
 
 #include "stratum/p4c_backends/fpm/table_type_mapper.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/public/proto/p4_annotation.host.pb.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

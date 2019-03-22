@@ -26,9 +26,9 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -133,7 +133,7 @@ class TunnelTypeMapper {
   //      when the action does invalid tunneling; empty when the action
   //      has no tunnel errors.
   std::string action_name_;
-  P4TunnelProperties p4_tunnel_properties_;
+  hal::P4ActionDescriptor::P4TunnelProperties p4_tunnel_properties_;
   P4HeaderOp gre_header_op_;
   bool is_encap_;
   bool is_decap_;

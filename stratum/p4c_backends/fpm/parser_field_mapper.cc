@@ -18,10 +18,10 @@
 
 #include <tuple>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/strings/match.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -265,7 +265,7 @@ void ParserFieldMapper::RunPass3() {
 // this state is not reached by a parser select expression with a protocol
 // dependent case value, the header type needs to be deduced by comparing
 // field offsets and widths to each state in the P4 parser.  Due to
-// implementation differences, it is unlikey that the P4 parser map and the
+// implementation differences, it is unlikely that the P4 parser map and the
 // target parser map will have equivalent start states. ProcessStartState
 // assumes that VerifyInputs has previously verified the validity of
 // target_parser_field_map.

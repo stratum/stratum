@@ -18,9 +18,9 @@
 
 #include <string>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {

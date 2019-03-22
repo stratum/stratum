@@ -19,13 +19,13 @@
 #include <memory>
 #include <set>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/memory/memory.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
-#include "util/gtl/map_util.h"
-#include "util/gtl/stl_util.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 
 namespace stratum {
 namespace p4c_backends {

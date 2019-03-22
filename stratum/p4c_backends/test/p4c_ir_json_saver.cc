@@ -31,9 +31,9 @@
 #include <vector>
 #include <utility>
 
-#include "base/commandlineflags.h"
-#include "base/init_google.h"
-#include "base/logging.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_real.h"
@@ -87,7 +87,7 @@ void ConvertP4ToJson() {
   CHECK(!FLAGS_p4_to_json_out.empty()) << "Unspecified JSON IR output file";;
 
   // These options tell the p4c frontend to process the input file as P4_16.
-  FLAGS_p4c_fe_options = "";
+  FLAGS_p4c_fe_options += " ";
   if (FLAGS_skip_p4c_cpp) FLAGS_p4c_fe_options += "--nocpp ";
   FLAGS_p4c_fe_options += FLAGS_p4_to_json_in;
 

@@ -30,13 +30,13 @@ DECLARE_bool(util_status_save_stack_trace);
 namespace util {
 namespace status_macros {
 
-using google::LogMessage;
-using google::LogSeverity;
-using google::NUM_SEVERITIES;
-using google::ERROR;
-using google::FATAL;
-using google::INFO;
-using google::WARNING;
+using ::google::LogMessage;
+using ::google::LogSeverity;
+using ::google::NUM_SEVERITIES;
+using ::google::ERROR;
+using ::google::FATAL;
+using ::google::INFO;
+using ::google::WARNING;
 
 static ::util::Status MakeStatus(const util::ErrorSpace* error_space, int code,
                                  const std::string& message) {

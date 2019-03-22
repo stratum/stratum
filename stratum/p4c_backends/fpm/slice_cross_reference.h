@@ -34,11 +34,11 @@
 #include <memory>
 #include <vector>
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/p4c_backends/fpm/expression_inspector.h"
-#include "stratum/p4c_backends/fpm/sliced_field_map.host.pb.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "stratum/p4c_backends/fpm/sliced_field_map.pb.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 
 namespace stratum {
 namespace p4c_backends {

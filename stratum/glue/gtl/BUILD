@@ -45,6 +45,7 @@ cc_test(
         ":map_util",
         "@com_google_googletest//:gtest_main",
         "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:node_hash_set",

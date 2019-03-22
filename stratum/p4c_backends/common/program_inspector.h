@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h" // FIXME: figure out better include path
 
 namespace stratum {
 namespace p4c_backends {

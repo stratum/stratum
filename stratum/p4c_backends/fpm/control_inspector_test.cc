@@ -22,9 +22,9 @@
 #include <string>
 #include <vector>
 
-#include "base/stringprintf.h"
+#include "absl/strings/str_format.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
 #include "stratum/p4c_backends/fpm/switch_case_decoder_mock.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
@@ -32,11 +32,11 @@
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/p4c_backends/test/test_target_info.h"
-#include "stratum/public/proto/p4_annotation.host.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 using ::testing::_;
 using ::testing::AnyNumber;
@@ -108,7 +108,7 @@ class ControlInspectorTest : public testing::TestWithParam<bool> {
     for (const auto& action_ref : test_table->action_refs()) {
       bool default_action = false;
       for (const auto& annotation : action_ref.annotations()) {
-        if (annotation.find("@defaultonly") != string::npos) {
+        if (annotation.find("@defaultonly") != std::string::npos) {
           default_action = true;
           break;
         }
@@ -662,7 +662,7 @@ TEST_F(ControlInspectorTest, TestOptimizedControl) {
   for (int t = 0; t < fixed_tables.tables_size(); ++t) {
     const ::p4::config::v1::Preamble& table_info =
         test_tables[t + 1].preamble();
-    SCOPED_TRACE(StringPrintf("Expected table %s does not appear in expected "
+    SCOPED_TRACE(absl::StrFormat("Expected table %s does not appear in expected "
                               "order in pipeline stage, found table %s",
                               table_info.name().c_str(),
                               fixed_tables.tables(t).table_name().c_str()));

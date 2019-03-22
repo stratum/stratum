@@ -20,7 +20,7 @@
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
 
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace p4c_backends {

@@ -25,10 +25,10 @@
 #include <memory>
 
 #include "stratum/p4c_backends/common/midend_interface.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/typeMap.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {

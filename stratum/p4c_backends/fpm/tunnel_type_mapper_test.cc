@@ -18,13 +18,13 @@
 
 #include <string>
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "testing/base/public/gunit.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/lib/compile_context.h"
+#include "gtest/gtest.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -115,7 +115,7 @@ class TunnelTypeMapperTest : public testing::TestWithParam<
   TableMapGenerator table_map_generator_;
 
   // Provides a convenient place for tests to setup tunnel type expectations.
-  P4TunnelProperties expected_tunnel_properties_;
+  hal::P4ActionDescriptor::P4TunnelProperties expected_tunnel_properties_;
 
   // This test uses its own p4c context since it doesn't have the context
   // that IRTestHelperJson commonly provides to many backend unit tests.

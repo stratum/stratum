@@ -17,11 +17,11 @@
 
 #include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
-#include "p4lang_p4c/frontends/p4/methodInstance.h"
-#include "p4lang_p4c/frontends/p4/tableApply.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {

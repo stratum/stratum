@@ -14,8 +14,8 @@
 
 #include "stratum/p4c_backends/fpm/meta_key_mapper.h"
 
-#include "base/logging.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/glue/logging.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {

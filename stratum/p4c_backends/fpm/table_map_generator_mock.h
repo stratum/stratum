@@ -20,7 +20,7 @@
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_
 
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace p4c_backends {

@@ -81,9 +81,14 @@ enum P4FieldType {
   P4_FIELD_TYPE_IPV6_NEXT_HDR = 17;       // IPv6 next header.
   P4_FIELD_TYPE_IPV6_TRAFFIC_CLASS = 18;  // IPv6 traffic class.
   P4_FIELD_TYPE_IPV6_PAYLOAD_SIZE = 19;   // IPv6 payload size in octets.
+  P4_FIELD_TYPE_IPV6_DST_UPPER = 1001;    // Upper 64 bits of IPv6 destination address.
+  P4_FIELD_TYPE_IPV6_DST_LOWER = 1002;    // Lower 64 bits of IPv6 destination address.
+  P4_FIELD_TYPE_IPV6_SRC_UPPER = 1003;    // Upper 64 bits of IPv6 source address.
+  P4_FIELD_TYPE_IPV6_SRC_LOWER = 1004;    // Lower 64 bits of IPv6 source address.
   P4_FIELD_TYPE_ICMP_CODE = 20;           // ICMP code.
   P4_FIELD_TYPE_L4_SRC_PORT = 21;         // TCP/UDP source port.
   P4_FIELD_TYPE_L4_DST_PORT = 22;         // TCP/UDP destination port.
+  P4_FIELD_TYPE_L4_OPTIONS_OR_DATA = 1005;// TCP options and/or UDP data
   P4_FIELD_TYPE_ARP_TPA = 23;             // ARP target protocol address.
   P4_FIELD_TYPE_VRF = 24;                 // VRF ID in metadata.
   P4_FIELD_TYPE_CLASS_ID = 25;            // Class ID in metadata.
@@ -137,6 +142,13 @@ enum P4FieldType {
   P4_FIELD_TYPE_ERSPAN_SESSSION_ID = 65;  // ERSPAN session.
   P4_FIELD_TYPE_ERSPAN_INDEX = 66;        // ERSPAN index/port number.
 
+  P4_FIELD_TYPE_DNS_QUERY_ID = 80;        // DNS query ID
+  P4_FIELD_TYPE_DNS_FLAGS_CODES = 81;     // DNS flags and codes
+  P4_FIELD_TYPE_DNS_NUM_QUESTIONS = 82;   // Number of DNS questions
+  P4_FIELD_TYPE_DNS_NUM_ANSWERS = 83;     // Number of answer RRs
+  P4_FIELD_TYPE_DNS_AUTHORITY_RRS = 84;   // Number of NS RRs pointing towards authorities
+  P4_FIELD_TYPE_DNS_ADDITIONAL_RRS = 85;  // Number of additional RRs
+
   // Field IDs over 1000 are reserved for adding more fields to existing
   // headers without renumbering.  Example: P4_FIELD_TYPE_GRE_SEQUENCE.
 }
@@ -158,6 +170,8 @@ enum P4HeaderType {
   P4_HEADER_VLAN = 11;
   P4_HEADER_UDP_PAYLOAD = 12;
   P4_HEADER_ERSPAN = 13;
+  P4_HEADER_DNS = 14;
+  P4_HEADER_L4_PAYLOAD = 15;
 }
 
 // This enum defines values to identify the mapping output for P4 actions.

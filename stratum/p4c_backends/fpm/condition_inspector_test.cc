@@ -19,11 +19,11 @@
 #include <memory>
 #include <string>
 
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/ir/ir.h"
-#include "p4lang_p4c/lib/compile_context.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
 
 namespace stratum {
 namespace p4c_backends {

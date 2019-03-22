@@ -21,7 +21,7 @@
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
 
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

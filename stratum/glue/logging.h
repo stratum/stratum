@@ -19,6 +19,11 @@
 #define STRATUM_GLUE_LOGGING_H_
 
 #include "gflags/gflags.h"
+
+// If for some reason ERROR gets defined somewhere, glog will not compile
+#ifdef ERROR
+#undef ERROR
+#endif
 #include "glog/logging.h"  // IWYU pragma: export
 
 #ifdef STRATUM_ARCH_PPC
@@ -32,10 +37,10 @@ DECLARE_bool(logtosyslog);
 
 
 // These are exported in open source glog but not base/logging.h
-using google::ERROR;
-using google::FATAL;
-using google::INFO;
-using google::WARNING;
+using ::google::ERROR;
+using ::google::FATAL;
+using ::google::INFO;
+using ::google::WARNING;
 #define LOG_EXT(facility, level) LOG(level)
 
 namespace stratum {

@@ -461,9 +461,9 @@ _SC_GRPC_DEPS = [
     "//sandblaze/prebuilt/grpc:grpc++_codegen_proto_lib",
 ]
 
-_PROTOC = "//protobuf:protoc"
+_PROTOC = "@com_google_protobuf//:protobuf:protoc"
 
-_PROTOBUF = "//protobuf"
+_PROTOBUF = "@com_google_protobuf//:protobuf"
 
 _SC_GRPC_PLUGIN = "//sandblaze/prebuilt/protobuf:grpc_cpp_plugin"
 _GRPC_PLUGIN = "//grpc:grpc_cpp_plugin"

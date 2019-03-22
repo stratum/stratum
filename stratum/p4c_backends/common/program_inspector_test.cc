@@ -19,9 +19,9 @@
 #include <memory>
 
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -32,8 +32,7 @@ class ProgramInspectorTest : public testing::Test {
  public:
   void SetUp() override {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string kTestP4IRFile = "stratum/"
-        "p4c_backends/fpm/testdata/tor_p4.ir.json";
+    const std::string kTestP4IRFile = "stratum/p4c_backends/fpm/testdata/field_inspect_test.ir.json";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestP4IRFile));
   }
 

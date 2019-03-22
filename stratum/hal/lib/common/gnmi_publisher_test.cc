@@ -31,6 +31,7 @@ using ::testing::Not;
 using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::WithArgs;
+using ::testing::DoAll;
 
 namespace stratum {
 namespace hal {

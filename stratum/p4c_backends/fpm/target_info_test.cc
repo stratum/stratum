@@ -17,8 +17,8 @@
 #include "stratum/p4c_backends/fpm/target_info.h"
 
 #include "stratum/p4c_backends/fpm/target_info_mock.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace p4c_backends {

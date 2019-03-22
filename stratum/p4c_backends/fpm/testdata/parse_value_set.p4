@@ -50,7 +50,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout test_metadata_t meta,
 
   state start {
     transition select(standard_metadata.ingress_port) {
-      1234 : parse_cpu_header;
+      123 : parse_cpu_header;
       _    : parse_ethernet;
     }
   }

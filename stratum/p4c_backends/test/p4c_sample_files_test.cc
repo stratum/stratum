@@ -22,10 +22,9 @@
 
 #include <string>
 
-#include "base/commandlineflags.h"
-#include "base/logging.h"
-#include "testing/base/public/gunit.h"
-#include "p4lang_p4c/p4_16_test_file_list.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/logging.h"
+#include "gtest/gtest.h"
 
 // This flag enables tests of P4_16 sample files in the open source code.
 // It is normally disabled because:
@@ -36,12 +35,16 @@
 //    updates from github.
 // To enable the sample file tests, add "--test_arg=--test_p4_16_samples" to
 // the blaze test command line.
-DEFINE_bool(test_p4_16_samples, false,
+DEFINE_bool(test_p4_16_samples, true,
             "Enables test of P4_16 open source sample files");
 
 DEFINE_string(p4c_binary_path,
               "stratum/p4c_backends/test/test_p4c",
               "Path to binary of compiler that will be tested.");
+
+DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
+
+DEFINE_string(test_srcdir, "external/com_github_p4lang_p4c", "Source directory of the P4 test files to feed to the p4c compiler.");
 
 namespace stratum {
 namespace p4c_backends {
@@ -51,13 +54,18 @@ namespace p4c_backends {
 // p4c_test_files namespace.
 namespace {
 
+// Build a list of file paths to P4 test files. Bazel includes them as data deps in filegroup "testdata_p4_16_samples".
+// We could (should?) build this list dynamically at runtime by reading the filesystem, but doing so is 
+// not portable until C++17 std::filesystem or would involve boost.
+// TODO: include more test files
 std::vector<std::string> CreateP4v16FileList() {
-  std::vector<std::string> file_list;
-  for (const FileToc* toc = p4c_test_files::p4_16_test_file_list_create();
-       toc->name != nullptr; ++toc) {
-    file_list.push_back(toc->name);
-  }
-  return file_list;
+  return {
+    "testdata/p4_16_samples/alias.p4",
+    "testdata/p4_16_samples/arch1.p4",
+    "testdata/p4_16_samples/arch2.p4",
+    "testdata/p4_16_samples/extern.p4",
+    "testdata/p4_16_samples/issue803-2.p4",
+    };
 }
 
 }  // namespace
@@ -96,8 +104,8 @@ class P4cSampleFilesTest : public testing::TestWithParam<std::string> {
 
     // The compiler needs to tell the C preprocessor where it can find the
     // included .p4 files for various supported models.
-    const std::string kP4RuntimeBase = FLAGS_test_srcdir +
-        "/p4lang_p4c";
+    // Common headers like "core.p4" are automatically included.
+    const std::string kP4RuntimeBase = FLAGS_test_srcdir;
     p4c_options += "-I";
     p4c_options += kP4RuntimeBase + "/p4include ";
     p4c_options += "-I";

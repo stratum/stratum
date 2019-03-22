@@ -25,9 +25,9 @@
 #include <vector>
 #include "stratum/p4c_backends/common/p4c_front_mid_real.h"
 #include "stratum/p4c_backends/common/program_inspector.h"
-#include "p4lang_p4c/ir/ir.h"
-#include "p4lang_p4c/lib/compile_context.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

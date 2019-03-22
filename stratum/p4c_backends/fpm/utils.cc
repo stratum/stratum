@@ -17,13 +17,13 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/target_info.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/strings/substitute.h"
-#include "p4lang_p4c/lib/error.h"
-#include "util/gtl/map_util.h"
+#include "external/com_github_p4lang_p4c/lib/error.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -54,14 +54,32 @@ std::vector<std::string> GetValidAnnotations(
        node.to<IR::IAnnotated>()->getAnnotations()->annotations) {
     if (p4c_annotation->name != id_name)
       continue;
-    if (p4c_annotation->expr.size() != 1 ||
-        !p4c_annotation->expr[0]->is<IR::StringLiteral>()) {
-      LOG(ERROR) << "Expected " << id_name << " annotation to be "
-                 << "a StringLiteral IR type in " << node.node_type_name();
-      continue;
-    }
-    values.push_back(
+    if (p4c_annotation->needsParsing) {
+      if (p4c_annotation->expr.size() != 0) {
+        LOG(ERROR) << "Expected to find zero expressions";
+        continue;
+      }
+      if (p4c_annotation->body.size() != 1) {
+        LOG(ERROR) << "Expected to find exactly one body element";
+        continue;
+      }
+      if (!p4c_annotation->body[0]->is<IR::AnnotationToken>()) {
+        LOG(ERROR) << "Expected to find an IR::AnnotationToken";
+        continue;
+      }
+      values.push_back(std::string(p4c_annotation->body[0]->text));
+    } else {
+      if (p4c_annotation->expr.size() != 1) {
+        LOG(ERROR) << "Expected to find exactly one expression";
+        continue;
+      }
+      if (!p4c_annotation->expr[0]->is<IR::StringLiteral>()) {
+        LOG(ERROR) << "Expected to find an IR::StringLiteral";
+        continue;
+      }
+      values.push_back(
         std::string(p4c_annotation->expr[0]->to<IR::StringLiteral>()->value));
+    }
   }
 
   return values;

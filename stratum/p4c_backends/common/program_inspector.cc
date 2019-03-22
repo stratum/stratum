@@ -14,9 +14,8 @@
 
 // This file implements ProgramInspector.
 
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/program_inspector.h"
-
-#include "base/logging.h"
 
 namespace stratum {
 namespace p4c_backends {

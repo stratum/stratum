@@ -16,12 +16,12 @@
 
 #include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
 
-#include "testing/base/public/gunit.h"
-#include "p4lang_p4c/frontends/common/options.h"
-#include "p4lang_p4c/lib/compile_context.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "gtest/gtest.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

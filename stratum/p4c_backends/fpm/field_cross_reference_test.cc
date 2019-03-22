@@ -21,13 +21,13 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {

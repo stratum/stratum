@@ -26,10 +26,10 @@
 
 #include <string>
 
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {

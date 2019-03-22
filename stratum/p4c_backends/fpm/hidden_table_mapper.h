@@ -49,9 +49,9 @@
 #include <vector>
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

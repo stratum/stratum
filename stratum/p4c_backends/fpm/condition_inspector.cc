@@ -16,8 +16,20 @@
 
 #include "stratum/p4c_backends/fpm/condition_inspector.h"
 
-#include "base/logging.h"
-#include "base/stringprintf.h"
+#include "stratum/glue/logging.h"
+#include "absl/strings/str_format.h"
+
+// ostream overload for std::nulptr_t for C++11
+// see: https://stackoverflow.com/a/46256849
+#if __cplusplus == 201103L
+#include <cstddef>
+#include <iostream>
+namespace std {
+::std::ostream& operator<<(::std::ostream& s, ::std::nullptr_t) {
+    return s << static_cast<void *>(nullptr);
+}
+}
+#endif
 
 namespace stratum {
 namespace p4c_backends {
@@ -55,7 +67,7 @@ bool ConditionInspector::preorder(const IR::Operation_Binary* expression) {
 bool ConditionInspector::Compare(const IR::Operation_Relation& compare_op) {
   DCHECK_NE(nullptr, compare_op.left) << "Compare operation is missing LHS";
   DCHECK_NE(nullptr, compare_op.right) << "Compare operation is missing RHS";
-  description_ = StringPrintf("%s %s %s", compare_op.left->toString().c_str(),
+  description_ = absl::StrFormat("%s %s %s", compare_op.left->toString().c_str(),
                               compare_op.getStringOp().c_str(),
                               compare_op.right->toString().c_str());
 

@@ -19,8 +19,8 @@
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
 
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/ir/visitor.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/ir/visitor.h"
 
 namespace stratum {
 namespace p4c_backends {

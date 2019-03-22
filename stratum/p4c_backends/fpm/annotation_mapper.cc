@@ -18,11 +18,11 @@
 
 #include <string>
 #include <vector>
-#include "base/commandlineflags.h"
-#include "stratum/hal/lib/p4/common_flow_entry.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "gflags/gflags.h"
+#include "stratum/hal/lib/p4/common_flow_entry.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/strings/str_split.h"
 
 DEFINE_string(p4c_annotation_map_files, "",

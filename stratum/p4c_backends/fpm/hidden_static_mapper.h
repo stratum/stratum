@@ -31,7 +31,7 @@
 #include <string>
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 

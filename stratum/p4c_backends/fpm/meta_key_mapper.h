@@ -22,10 +22,10 @@
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

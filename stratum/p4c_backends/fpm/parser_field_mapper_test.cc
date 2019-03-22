@@ -19,14 +19,14 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/parser_decoder.h"
-#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
 namespace stratum {

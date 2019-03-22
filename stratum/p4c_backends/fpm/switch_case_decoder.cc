@@ -16,10 +16,11 @@
 
 #include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
-#include "p4lang_p4c/frontends/p4/tableApply.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {

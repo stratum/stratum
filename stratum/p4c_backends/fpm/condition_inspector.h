@@ -26,7 +26,7 @@
 
 #include <string>
 
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 
 namespace stratum {
 namespace p4c_backends {

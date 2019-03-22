@@ -21,10 +21,10 @@
 
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "stratum/public/proto/p4_annotation.host.pb.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/ir/visitor.h"
+#include "external/com_github_p4lang_p4c/ir/visitor.h"
 
 namespace stratum {
 namespace p4c_backends {

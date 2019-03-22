@@ -20,17 +20,17 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.h"
-#include "stratum/hal/lib/p4/p4_control.host.pb.h"
+#include "stratum/glue/logging.h"
+#include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
-#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
-#include "stratum/public/proto/p4_annotation.host.pb.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/frontends/p4/methodInstance.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 namespace stratum {
 namespace p4c_backends {

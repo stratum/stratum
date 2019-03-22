@@ -14,12 +14,12 @@
 
 #include "stratum/p4c_backends/fpm/parser_decoder.h"
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/frontends/p4/methodInstance.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -63,13 +63,14 @@ bool ParserDecoder::DecodeParser(const IR::P4Parser& p4_parser,
   // This loop iterates the states in the P4Parser.  It creates a parser_states_
   // map entry with the decoded output for each encountered state.
   for (const auto ir_parser_state : p4_parser.states) {
-    const std::string state_name = std::string(ir_parser_state->externalName());
+    // We can't use externalName() here. See pull request #182
+    const std::string state_name = std::string(ir_parser_state->getName().toString());
     VLOG(2) << "ParserState: " << state_name;
     ParserState* decoded_state =
         &(*parser_states_.mutable_parser_states())[state_name];
     if (!decoded_state->name().empty()) {
       // TODO: Should this be handled as a compiler bug?
-      LOG(ERROR) << "Multiple P4Parser states have name " << state_name;
+      LOG(FATAL) << "Multiple P4Parser states have name " << state_name;
       return false;
     }
     decoded_state->set_name(state_name);

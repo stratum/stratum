@@ -19,18 +19,17 @@ licenses(["notice"])  # Apache v2
 exports_files(["LICENSE"])
 
 load(
-    "//platforms/networking/sandblaze/portage:build_defs.bzl",
-    "SANDBLAZE_INTERNAL",
+    "//bazel:rules.bzl",
+    "stratum_cc_library",
+    "STRATUM_INTERNAL",
 )
 
 package(
-    default_copts = [
-        "-DDISABLE_GOOGLE_GLOBAL_USING_DECLARATIONS",
-    ],
-    default_hdrs_check = "warn",
-    default_visibility = SANDBLAZE_INTERNAL + [
-        "//platforms/networking/orion/p4:__subpackages__",
-    ],
+#    default_copts = [
+#        "-DDISABLE_GOOGLE_GLOBAL_USING_DECLARATIONS",
+#    ],
+#    default_hdrs_check = "warn",
+    default_visibility = STRATUM_INTERNAL,
 )
 
 cc_library(
@@ -46,8 +45,8 @@ cc_library(
         "backend_extension_interface.h",
     ],
     deps = [
-        "//sandblaze/p4lang:p4info_v1_proto_host",
-        "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
     ],
 )
 
@@ -82,13 +81,13 @@ cc_library(
         ":midend_interface",
         ":midend_p4c_open",
         ":p4c_front_mid_interface",
-        "//base",
-        "//absl/debugging:leak_check",
-        "//absl/memory",
-        "//p4lang_p4c:control_plane",
-        "//p4lang_p4c:control_plane_h",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c/lib:p4c_toolkit",
+        "//stratum/glue:logging",
+        "@com_google_absl//absl/debugging:leak_check",
+        "@com_google_absl//absl/memory",
+        "@com_github_p4lang_p4c//:control_plane",
+        "@com_github_p4lang_p4c//:control_plane_h",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_toolkit",
     ],
 )
 
@@ -107,15 +106,16 @@ cc_library(
     deps = [
         ":backend_extension_interface",
         ":p4c_front_mid_interface",
-        "//base",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c:p4c_ir",
-        "//p4lang_p4c/backends/p4test:p4c_common_midend_pass",
-        "//p4lang_p4c/lib:p4c_toolkit",
-        "//protobuf",
-        "//sandblaze/p4lang:p4info_v1_proto_host",
-        "//sandblaze/p4lang:p4runtime_v1_proto_host",
+        "//stratum/glue:logging",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_ir",
+        "@com_github_p4lang_p4c//:p4c_backend_p4test_lib",
+        "@com_github_p4lang_p4c//:p4c_toolkit",
+        "@com_google_protobuf//:protobuf",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "//stratum/lib:utils",
+        "//stratum/lib:macros",
     ],
 )
 
@@ -126,14 +126,18 @@ cc_test(
         "-fexceptions",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
+    linkopts = [
+        "-lgmp",
+        "-lgmpxx",
+    ],
     deps = [
         ":backend_pass_manager",
         ":p4c_common_mocks",
-        "//base",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c:p4c_ir",
+        "//stratum/glue:logging",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/memory",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_ir",
     ],
 )
 
@@ -147,13 +151,16 @@ cc_library(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         ":midend_interface",
-        "//base",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c:p4c_ir",
-        "//p4lang_p4c/backends/p4test:p4c_common_midend_pass",
+        "//stratum/glue:logging",
+        "//stratum/lib:macros",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_ir",
+        #"@com_github_p4lang_p4c//backends/p4test:p4c_common_midend_pass",
+        "@com_github_p4lang_p4c//:p4c_backend_p4test_lib",
     ],
 )
 
+# TODO
 cc_test(
     name = "midend_p4c_open_test",
     srcs = ["midend_p4c_open_test.cc"],
@@ -164,13 +171,17 @@ cc_test(
         "//stratum/p4c_backends/test:testdata/simple_vlan_stack_16.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
+    linkopts = [
+        "-lgmp",
+        "-lgmpxx",
+    ],
     deps = [
         ":midend_p4c_open",
-        "//base",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c:p4c_ir",
+        "//stratum/glue:logging",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/memory",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_ir",
         "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )
@@ -184,9 +195,9 @@ cc_library(
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
-        "//base",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c:p4c_ir",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_ir",
+        "//stratum/glue:logging",
     ],
 )
 
@@ -197,16 +208,21 @@ cc_test(
         "-fexceptions",
     ],
     data = [
-        "//stratum/p4c_backends/fpm:testdata/tor_p4.ir.json",
+        # "//stratum/p4c_backends/fpm:testdata/tor_p4.ir.json", # google only, replaced by below file
+        "//stratum/p4c_backends/fpm:testdata/field_inspect_test.ir.json",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
+    linkopts = [
+        "-lgmp",
+        "-lgmpxx",
+    ],
     deps = [
         ":program_inspector",
-        "//base",
-        "//testing/base/public:gunit_main_no_google3",
-        "//absl/memory",
-        "//p4lang_p4c:p4c_frontend_midend",
-        "//p4lang_p4c:p4c_ir",
+        "//stratum/glue:logging",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/memory",
+        "@com_github_p4lang_p4c//:p4c_frontend_midend",
+        "@com_github_p4lang_p4c//:p4c_ir",
         "//stratum/p4c_backends/test:ir_test_helpers",
     ],
 )

@@ -19,7 +19,7 @@
 #include <set>
 #include <vector>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 
@@ -27,7 +27,7 @@ namespace stratum {
 namespace p4c_backends {
 
 BcmTunnelOptimizer::BcmTunnelOptimizer()
-    : encap_or_decap_(P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
+    : encap_or_decap_(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
 }
 
 bool BcmTunnelOptimizer::Optimize(
@@ -59,7 +59,7 @@ bool BcmTunnelOptimizer::MergeAndOptimize(
 
 void BcmTunnelOptimizer::InitInternalState() {
   internal_descriptor_.Clear();
-  encap_or_decap_ = P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
+  encap_or_decap_ = hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
 }
 
 // If there is ever a non-BCM target, this might belong in a common base class.
@@ -68,9 +68,9 @@ bool BcmTunnelOptimizer::IsValidTunnelAction(
   bool valid = action.has_tunnel_properties();
   if (valid) {
     auto encap_or_decap = action.tunnel_properties().encap_or_decap_case();
-    if (encap_or_decap != P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET &&
+    if (encap_or_decap != hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET &&
         (encap_or_decap == encap_or_decap_ ||
-         encap_or_decap_ == P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET)) {
+         encap_or_decap_ == hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET)) {
       encap_or_decap_ = encap_or_decap;
     } else {
       valid = false;
@@ -88,7 +88,7 @@ bool BcmTunnelOptimizer::IsValidTunnelAction(
 bool BcmTunnelOptimizer::MergeTunnelActions(
     const hal::P4ActionDescriptor& input_action1,
     const hal::P4ActionDescriptor& input_action2) {
-  DCHECK_NE(P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET, encap_or_decap_);
+  DCHECK_NE(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET, encap_or_decap_);
 
   // The inner headers can be different in the merged actions.  Differences
   // will be handled during P4Runtime action processing. GRE, ECN, DSCP, and
@@ -96,9 +96,9 @@ bool BcmTunnelOptimizer::MergeTunnelActions(
   // descriptor copies in tunnel1 and tunnel2, clearing the relevant inner
   // headers, and then using a MessageDifferencer to compare the remaining
   // fields.
-  P4TunnelProperties tunnel1 = input_action1.tunnel_properties();
-  P4TunnelProperties tunnel2 = input_action2.tunnel_properties();
-  if (encap_or_decap_ == P4TunnelProperties::kEncap) {
+  hal::P4ActionDescriptor::P4TunnelProperties tunnel1 = input_action1.tunnel_properties();
+  hal::P4ActionDescriptor::P4TunnelProperties tunnel2 = input_action2.tunnel_properties();
+  if (encap_or_decap_ == hal::P4ActionDescriptor::P4TunnelProperties::kEncap) {
     tunnel1.mutable_encap()->clear_encap_inner_headers();
     tunnel2.mutable_encap()->clear_encap_inner_headers();
   } else {
@@ -106,9 +106,9 @@ bool BcmTunnelOptimizer::MergeTunnelActions(
     tunnel2.mutable_decap()->clear_decap_inner_headers();
   }
 
-  protobuf::util::MessageDifferencer msg_differencer;
+  ::google::protobuf::util::MessageDifferencer msg_differencer;
   msg_differencer.set_repeated_field_comparison(
-      protobuf::util::MessageDifferencer::AS_SET);
+      ::google::protobuf::util::MessageDifferencer::AS_SET);
   if (!msg_differencer.Compare(tunnel1, tunnel2)) {
     ::error("Backend: Unable to merge tunnel properties %s and %s",
             tunnel1.ShortDebugString().c_str(),
@@ -121,7 +121,7 @@ bool BcmTunnelOptimizer::MergeTunnelActions(
   internal_descriptor_ = input_action1;
   internal_descriptor_.MergeFrom(input_action2);
   auto tunnel_properties = internal_descriptor_.mutable_tunnel_properties();
-  if (encap_or_decap_ == P4TunnelProperties::kEncap) {
+  if (encap_or_decap_ == hal::P4ActionDescriptor::P4TunnelProperties::kEncap) {
     RemoveDuplicateHeaderTypes(
         tunnel_properties->mutable_encap()->mutable_encap_inner_headers());
   } else {
@@ -135,13 +135,13 @@ bool BcmTunnelOptimizer::MergeTunnelActions(
 void BcmTunnelOptimizer::OptimizeInternal(
     hal::P4ActionDescriptor* optimized_descriptor) {
   switch (encap_or_decap_) {
-    case P4TunnelProperties::kEncap:
+    case hal::P4ActionDescriptor::P4TunnelProperties::kEncap:
       OptimizeEncap();
       break;
-    case P4TunnelProperties::kDecap:
+    case hal::P4ActionDescriptor::P4TunnelProperties::kDecap:
       OptimizeDecap();
       break;
-    case P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET:
+    case hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET:
       DLOG(FATAL) << "Expected encap or decap case to be set";
       break;
   }

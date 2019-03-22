@@ -16,7 +16,7 @@
 
 #include "stratum/p4c_backends/fpm/bcm/bcm_target_info.h"
 
-#include "stratum/public/proto/p4_annotation.host.pb.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

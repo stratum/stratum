@@ -24,8 +24,8 @@
 #include <memory>
 
 #include "stratum/p4c_backends/common/midend_interface.h"
-#include "p4lang_p4c/backends/p4test/midend.h"
-#include "p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/backends/p4test/midend.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
 
 namespace stratum {
 namespace p4c_backends {

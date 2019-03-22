@@ -20,7 +20,7 @@
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_MOCK_H_
 
 #include "stratum/p4c_backends/common/p4c_front_mid_interface.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace p4c_backends {

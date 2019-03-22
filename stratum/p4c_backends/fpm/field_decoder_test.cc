@@ -19,14 +19,14 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -153,7 +153,7 @@ TEST_F(FieldDecoderTest, TestExtractedFields) {
       EXPECT_FALSE(field_iter.name().empty());
       EXPECT_NE(0, field_iter.bit_width());
       ASSERT_LT(0, field_iter.full_field_names_size());
-      EXPECT_NE(string::npos,
+      EXPECT_NE(std::string::npos,
                 field_iter.full_field_names(0).rfind(field_iter.name()));
     }
   }

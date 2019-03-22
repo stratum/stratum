@@ -16,11 +16,11 @@
 
 #include "stratum/p4c_backends/fpm/parser_value_set_mapper.h"
 
-#include "base/logging.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/glue/logging.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {

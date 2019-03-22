@@ -27,9 +27,9 @@
 #include <vector>
 
 #include "stratum/p4c_backends/fpm/header_path_inspector.h"
-#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {

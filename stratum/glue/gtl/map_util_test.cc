@@ -24,6 +24,7 @@ limitations under the License.
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/node_hash_set.h"
 #include "absl/container/node_hash_map.h"
+#include "stratum/glue/logging.h"
 #include "gtest/gtest.h"
 
 using std::string;
@@ -65,6 +66,16 @@ TEST(MapUtil, InsertIfNotPresent) {
   EXPECT_EQ(s.count(0), 1);
 }
 
+TEST(MapUtil, FindOrDie) {
+  std::map<string, int> map;
+  EXPECT_DEATH(gtl::FindOrDie(map, "foo"), "");
+  gtl::InsertOrDie(&map, "foo", 5);
+  auto val = gtl::FindOrDie(map, "foo");
+  EXPECT_EQ(val, 5);
+  auto const cval = gtl::FindOrDie(map, "foo");
+  EXPECT_EQ(cval, 5);
+}
+
 template <typename T>
 class MapUtilSet : public ::testing::Test {
  public:
@@ -81,6 +92,12 @@ TYPED_TEST(MapUtilSet, ContainsKey) {
   EXPECT_TRUE(gtl::ContainsKey(this->collection_, 0));
 }
 
+TYPED_TEST(MapUtilSet, InsertOrDie) {
+  gtl::InsertOrDie(&this->collection_, 0);
+  gtl::ContainsKey(this->collection_, 0);
+  EXPECT_DEATH(gtl::InsertOrDie(&this->collection_, 0), "");
+}
+
 template <typename T>
 class MapUtilMap : public ::testing::Test {
  public:
@@ -95,6 +112,12 @@ TYPED_TEST(MapUtilMap, ContainsKey) {
   EXPECT_FALSE(gtl::ContainsKey(this->collection_, 0));
   ASSERT_TRUE(this->collection_.insert({0, "foo"}).second);
   EXPECT_TRUE(gtl::ContainsKey(this->collection_, 0));
+}
+
+TYPED_TEST(MapUtilMap, InsertOrDie) {
+  gtl::InsertOrDie(&this->collection_, 0, "foo");
+  gtl::ContainsKey(this->collection_, 0);
+  EXPECT_DEATH(gtl::InsertOrDie(&this->collection_, 0, "foo"), "");
 }
 
 }  // namespace stratum

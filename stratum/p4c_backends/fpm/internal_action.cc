@@ -20,12 +20,12 @@
 #include <set>
 #include <vector>
 
-#include "base/logging.h"
+#include "stratum/glue/logging.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 #include "absl/strings/substitute.h"
-#include "util/gtl/map_util.h"
+#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -283,9 +283,9 @@ void InternalAction::RemoveDuplicateAssignments() {
   std::map<std::string, const hal::P4ActionDescriptor::P4ActionInstructions*>
       assignment_targets;
   std::vector<int> duplicates;
-  protobuf::util::MessageDifferencer assignment_differencer;
+  ::google::protobuf::util::MessageDifferencer assignment_differencer;
   assignment_differencer.set_repeated_field_comparison(
-      protobuf::util::MessageDifferencer::AS_SET);
+      ::google::protobuf::util::MessageDifferencer::AS_SET);
 
   for (int a = 0; a < internal_descriptor_.assignments_size(); ++a) {
     const auto& assignment = internal_descriptor_.assignments(a);

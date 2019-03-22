@@ -17,15 +17,15 @@
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 
 #include <memory>
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/p4c_backends/common/backend_extension_mock.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_mock.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/typeMap.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 DECLARE_string(p4c_fe_options);
 

@@ -16,7 +16,7 @@
 
 """P4c test IR and configuration generation rules."""
 
-load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 #  Compiles P4_16 source into a JSON-encoded p4c Internal Representation.
 
@@ -31,26 +31,26 @@ def _generate_p4c_ir(ctx):
         ctx.configuration.genfiles_dir,
         ctx.label.name + ".pp.p4",
     )
-    hdr_include_str = ""
-    for hdr in ctx.files.hdrs:
-        hdr_include_str += "-I " + hdr.dirname
     cpp_toolchain = find_cpp_toolchain(ctx)
 
+    # Construct GCC CLI arguments
+    gcc_args = ctx.actions.args()
+    gcc_args.add("-E")
+    gcc_args.add("-x")
+    gcc_args.add("c")
+    gcc_args.add(ctx.file.src.path)
+    gcc_args.add("-I.")
+    gcc_args.add("-I")
+    gcc_args.add(ctx.file._model.dirname)
+    gcc_args.add("-I")
+    gcc_args.add(ctx.file._core.dirname)
+    for hdr in ctx.files.hdrs:
+        gcc_args.add("-I " + hdr.dirname)
+    gcc_args.add("-o")
+    gcc_args.add(p4_preprocessed_file.path)
+
     ctx.action(
-        arguments = [
-            "-E",
-            "-x",
-            "c",
-            ctx.file.src.path,
-            "-I.",
-            "-I",
-            ctx.file._model.dirname,
-            "-I",
-            ctx.file._core.dirname,
-            hdr_include_str,
-            "-o",
-            p4_preprocessed_file.path,
-        ],
+        arguments = [gcc_args],
         inputs = ([ctx.file.src] + ctx.files.hdrs + [ctx.file._model] +
                   [ctx.file._core] + ctx.files.cpp),
         outputs = [p4_preprocessed_file],
@@ -66,8 +66,9 @@ def _generate_p4c_ir(ctx):
             "--skip_p4c_cpp",
             "--p4_to_json_in",
             p4_preprocessed_file.path,
-            "-p4_to_json_out",
+            "--p4_to_json_out",
             gen_files[0].path,
+            "--p4c_fe_options=--Wdisable=legacy --Wwarn",
         ],
         inputs = [p4_preprocessed_file],
         outputs = gen_files,
@@ -90,21 +91,21 @@ p4c_save_ir = rule(
         "_model": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("//p4lang_p4c:p4include/v1model.p4"),
+            default = Label("@com_github_p4lang_p4c//:p4include/v1model.p4"), # FIXME
         ),
         "_core": attr.label(
             allow_single_file = True,
             mandatory = False,
-            default = Label("//p4lang_p4c:p4include/core.p4"),
+            default = Label("@com_github_p4lang_p4c//:p4include/core.p4"), # FIXME
         ),
         "_p4c_ir_json_saver": attr.label(
             cfg = "host",
             executable = True,
             default = Label("//stratum/p4c_backends/test:p4c_ir_json_saver"),
         ),
-        "cpp": attr.label_list(default = [Label("//tools/cpp:crosstool")]),
+        "cpp": attr.label_list(default = [Label("@bazel_tools//tools/cpp:current_cc_toolchain")]), # FIXME
         "_cc_toolchain": attr.label(
-            default = Label("//tools/cpp:current_cc_toolchain"),
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
         ),
     },
 )

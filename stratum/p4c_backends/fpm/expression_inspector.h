@@ -23,12 +23,12 @@
 #ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
 
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
-#include "p4lang_p4c/ir/ir.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {

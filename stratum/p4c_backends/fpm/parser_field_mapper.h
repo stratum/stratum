@@ -33,7 +33,7 @@
 #include <unordered_map>
 
 #include "stratum/p4c_backends/fpm/field_decoder.h"
-#include "stratum/p4c_backends/fpm/parser_map.host.pb.h"
+#include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "absl/container/node_hash_map.h"
 

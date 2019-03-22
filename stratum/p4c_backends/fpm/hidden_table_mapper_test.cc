@@ -24,15 +24,16 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.host.pb.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
-#include "util/gtl/map_util.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/lib/macros.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::AnyNumber;
@@ -78,7 +79,7 @@ class FakeP4InfoManager : public hal::P4InfoManager {
         return p4_table;
       }
     }
-    return MAKE_ERROR(ERR_INVALID_P4_INFO);
+    return MAKE_ERROR(ERR_INVALID_P4_INFO) << "Table not found";
   }
 
  private:
@@ -233,7 +234,7 @@ class HiddenTableMapperTest
       const hal::P4PipelineConfig& original_pipeline_config) {
     MessageDifferencer msg_differencer;
     msg_differencer.set_repeated_field_comparison(
-        protobuf::util::MessageDifferencer::AS_SET);
+        google::protobuf::util::MessageDifferencer::AS_SET);
     if (!msg_differencer.Compare(
         original_pipeline_config, test_pipeline_config_)) {
       FAIL() << "Unexpected change in P4PipelineConfig";

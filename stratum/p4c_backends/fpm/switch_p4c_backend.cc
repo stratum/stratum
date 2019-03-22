@@ -18,8 +18,8 @@
 #include <memory>
 #include <vector>
 
-#include "base/commandlineflags.h"
-#include "base/logging.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/common/program_inspector.h"
 #include "stratum/p4c_backends/fpm/action_decoder.h"
@@ -41,8 +41,8 @@
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
 #include "absl/memory/memory.h"
-#include "p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "p4lang_p4c/frontends/p4/methodInstance.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 DEFINE_string(p4_pipeline_config_text_file, "",
               "Path to text file for P4PipelineConfig output");

@@ -20,7 +20,7 @@
 #define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
 
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
-#include "testing/base/public/gmock.h"
+#include "gmock/gmock.h"
 
 namespace stratum {
 namespace p4c_backends {

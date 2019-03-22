@@ -19,16 +19,16 @@
 #include <set>
 #include <vector>
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "stratum/hal/lib/p4/common_flow_entry.host.pb.h"
+#include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
-#include "stratum/hal/lib/p4/p4_table_map.host.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
-#include "util/task/status.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 DECLARE_string(p4c_annotation_map_files);
 

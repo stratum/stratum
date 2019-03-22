@@ -18,8 +18,8 @@
 
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "stratum/public/proto/p4_table_defs.host.pb.h"
-#include "testing/base/public/gunit.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
+#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {

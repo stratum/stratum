@@ -18,12 +18,13 @@
 #include <wordexp.h>
 #include <sstream>
 
-#include "base/commandlineflags.h"
-#include "base/logging.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/macros.h"
 
-#include "sandblaze/p4lang/p4/config/v1/p4info.host.pb.h"
-#include "sandblaze/p4lang/p4/v1/p4runtime.host.pb.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
 
 DEFINE_string(p4c_fe_options, "",
               "Options passed to p4c frontend with p4c-specified syntax. "
@@ -49,7 +50,7 @@ int BackendPassManager::Compile() {
   // The options for the third-party front and midend code are all embedded
   // within a single gflag.  The code below uses wordexp to parse
   // FLAGS_p4c_fe_options into an argc/argv pair for the p4c CompilerOptions.
-  const std::string p4c_command = std::string(base::ProgramInvocationName()) +
+  const std::string p4c_command = std::string(google::ProgramInvocationShortName()) +
                                   std::string(" ") + FLAGS_p4c_fe_options;
   LOG(INFO) << "p4c compiler options: " << p4c_command;
   wordexp_t parsed_options = {0};

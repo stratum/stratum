@@ -53,8 +53,8 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4c",
             remote = "https://github.com/p4lang/p4c",
-            commit = "4646f1603499ebd2d42c6bf51274c18aa48943d3",
-            build_file = "bazel/external/p4c.BUILD",
+            commit = "b7664d8247d00ad68d49567c1195e0fbc5885389",
+            build_file = "@//bazel:external/p4c.BUILD",
         )
 
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
@@ -63,6 +63,7 @@ def stratum_deps():
             name = "com_github_p4lang_p4runtime",
             remote = "https://github.com/p4lang/p4runtime",
             tag = "1.0.0",
+            build_file = "@//bazel:external/p4runtime.BUILD",
         )
 
     if "com_github_p4lang_PI" not in native.existing_rules():

@@ -16,7 +16,9 @@
 
 #include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
 #include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
