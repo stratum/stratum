@@ -47,7 +47,7 @@ absl::Mutex OnlpPhal::init_lock_;
 
   // Format TransceiverEvent
   TransceiverEvent event;
-  event.slot = 0;
+  event.slot = kDefaultSlot;
   event.port = oid_info.GetId();
   event.state = oid_info.GetHardwareState();
 
@@ -212,6 +212,7 @@ OnlpPhal::~OnlpPhal() {}
     case SFP_TYPE_SFP:
       actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
       break;
+    case SFP_TYPE_QSFP_PLUS:
     case SFP_TYPE_QSFP:
     case SFP_TYPE_QSFP28:
       actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
@@ -325,7 +326,7 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
   //TODO: Need to support multiple slots. 
   for(unsigned int i = 0; i < OnlpOids.size(); i++) {
     //Adding 1, because port numbering starts from 1.
-    const std::pair<int, int>& slot_port_pair = std::make_pair(0, i+1);
+    const std::pair<int, int> slot_port_pair = std::make_pair(kDefaultSlot, i+1);
     ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result = 
       OnlpSfpDataSource::Make(OnlpOids[i], onlp_interface_.get(), NULL);
 

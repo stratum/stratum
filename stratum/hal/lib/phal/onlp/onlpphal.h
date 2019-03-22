@@ -34,6 +34,9 @@ namespace onlp {
 
 class OnlpPhal;
 
+// TODO: We don't support multiple slot for now, use slot 1 as default slot.
+constexpr int kDefaultSlot = 1;
+
 // Implements a callback for status changes on ONLP SFPs.
 class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
  public:

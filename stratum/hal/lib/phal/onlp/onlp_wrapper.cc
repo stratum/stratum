@@ -55,9 +55,12 @@ OnlpWrapper::~OnlpWrapper() {
 ::util::StatusOr<SfpInfo> OnlpWrapper::GetSfpInfo(OnlpOid oid) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_SFP(oid))
       << "Cannot get SFP info: OID " << oid << " is not an SFP.";
-  onlp_sfp_info_t sfp_info = {};
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
-      << "Failed to get SFP info for OID " << oid << ".";
+  // Default value of the SFP info
+  onlp_sfp_info_t sfp_info = {{oid}};
+  if (onlp_sfp_is_present(oid)) {
+    CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
+          << "Failed to get SFP info for OID " << oid << ".";
+  }
   return SfpInfo(sfp_info);
 }
 

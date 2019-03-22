@@ -41,8 +41,6 @@ double ConvertMicrowattsTodBm(double microwatts) {
 
 ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> OnlpSfpDataSource::Make(
     OnlpOid sfp_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
-  RETURN_IF_ERROR_WITH_APPEND(ValidateOnlpSfpInfo(sfp_id, onlp_interface))
-      << "Failed to create SFP datasource for OID: " << sfp_id;
   ASSIGN_OR_RETURN(SfpInfo sfp_info, onlp_interface->GetSfpInfo(sfp_id));
   std::shared_ptr<OnlpSfpDataSource> sfp_data_source(
       new OnlpSfpDataSource(sfp_id, onlp_interface, cache_policy, sfp_info));
