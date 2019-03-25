@@ -32,5 +32,9 @@ stratum_cc_binary(
         "@local_barefoot_bin//:bf_pdfixed_thrift",
         "@local_thrift_bin//:thrift",
     ],
-    data = ["tofino_skip_p4.conf"],
+    data = [
+        "tofino_skip_p4.conf",
+        "tofino_skip_p4_no_bsp.conf",
+        "platforms/accton_wedge_32x_port_map.json",
+    ],
 )

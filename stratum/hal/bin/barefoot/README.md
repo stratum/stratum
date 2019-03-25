@@ -37,6 +37,10 @@ cd $SDE/p4studio_build
 ./p4studio_build.py -up profiles/stratum_profile.yaml
 ```
 
+If your platform supports BSP-less mode (recommended), you do not need to
+install the BSP. Refer to the section
+[below](#running-the-binary-in-bsp-less-mode).
+
 ### Installing the reference BSP for the Wedge
 
 If you are using the reference BSP provided by Barefoot (for the Wedge switch),
@@ -139,6 +143,21 @@ configuration.* You may use the ucli to check port status (`pm show`).
 By default, the Phal ONLP implementation will be used. If for some reason this
 is not what you want to use, you can start `stratum_bf` with `--bf_sim`, which
 will use `PhalSim`, a "fake" Phal implementation, instead.
+
+## Running the binary in BSP-less mode
+
+If ONLP support is available for your platform, you do not need to use a
+BSP. Instead the platform vendor can provide a JSON "port mapping" file (see
+this [example](platforms/accton_wedge_32x_port_map.json) for the Wedge
+100bf-32x) and Stratum takes care of making the information exposed by ONLP
+available to the SDE as needed.
+
+To start Stratum in BSP-less mode, copy the JSON port mapping file for your
+platform to `$BF_SDE_INSTALL/share` and run `stratum_bf` with
+`--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`.
+
+Platforms with repeaters (such as the Wedge 100bf-65x) are not currently
+supported in BSP-less mode.
 
 ## Testing gNMI
 
