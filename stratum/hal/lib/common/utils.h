@@ -211,6 +211,12 @@ bool IsPortAutonegEnabled(const TriState& state);
 // A helper function that check if port admin state is enabled.
 bool IsAdminStateEnabled(const AdminState& admin_state);
 
+// A helper function that convert Stratum MediaType to string.
+std::string ConvertMediaTypeToString(const MediaType& type);
+
+// A helper function taht convert Stratum HwState to OpenConfig present
+// state string (PRESENT, NOT_PRESENT)
+std::string ConvertHwStateToPresentString(const HwState& hw_state);
 }  // namespace hal
 }  // namespace stratum
 

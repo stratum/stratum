@@ -198,6 +198,7 @@ BFSwitch::~BFSwitch() {}
       case DataRequest::Request::kNegotiatedPortSpeed:
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
+      case DataRequest::Request::kFrontPanelPortInfo:
         resp = bf_chassis_manager_->GetPortData(req);
         break;
       default:

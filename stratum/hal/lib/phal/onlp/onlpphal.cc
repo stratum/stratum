@@ -198,8 +198,17 @@ OnlpPhal::~OnlpPhal() {}
 
   //Update sfp datasource values.
   sfp_src->UpdateValuesUnsafelyWithoutCacheOrLock();
-  
+
   ManagedAttribute *sfptype_attrib = sfp_src->GetSfpType();
+
+  ManagedAttribute* hw_state_attrib = sfp_src->GetSfpHardwareState();
+  ASSIGN_OR_RETURN(auto hw_state_val,
+                   hw_state_attrib->ReadValue<const google::protobuf::EnumValueDescriptor*>());
+  fp_port_info->set_hw_state(static_cast<HwState>(hw_state_val->index()));
+
+  if (fp_port_info->hw_state() == HW_STATE_NOT_PRESENT) {
+    return ::util::OkStatus();
+  }
 
   ASSIGN_OR_RETURN(
         auto sfptype_value,

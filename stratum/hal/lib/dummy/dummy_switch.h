@@ -121,6 +121,12 @@ class DummySwitch : public SwitchInterface {
   DummyChassisManager* chassis_mgr_;
   ::stratum::gtl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_;
+
+  // gets slot number for a node_id + port_id pair
+  std::map<std::pair<uint64, uint32>, int> node_port_id_to_slot;
+
+  // gets port number for a node_id + port_id pair
+  std::map<std::pair<uint64, uint32>, int> node_port_id_to_port;
 };
 
 }  // namespace dummy_switch

@@ -78,6 +78,14 @@ DummyPhal::~DummyPhal() {}
   absl::ReaderMutexLock l(&phal_lock_);
   // TODO(Yi Tseng): Implement this function and data store.
   LOG(INFO) << __FUNCTION__;
+  fp_port_info->set_hw_state(HwState::HW_STATE_PRESENT);
+  fp_port_info->set_vendor_name("Dummy vendor");
+  std::ostringstream serial;
+  serial << "dummy-" << slot << "-" << port;
+  fp_port_info->set_serial_number(serial.str());
+  fp_port_info->set_media_type(MEDIA_TYPE_QSFP_COPPER);
+  fp_port_info->set_physical_port_type(PHYSICAL_PORT_TYPE_QSFP_CAGE);
+  fp_port_info->set_part_number("dummy_part_no");
   return ::util::OkStatus();
 }
 

@@ -76,6 +76,10 @@ class BFChassisManager {
   virtual ::util::Status ResetPortsConfig(uint64 node_id)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
+  virtual ::util::Status GetFrontPanelPortInfo(uint64 node_id, uint32 port_id,
+                                               FrontPanelPortInfo* fp_port_info)
+  SHARED_LOCKS_REQUIRED(chassis_lock);
+
   ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 

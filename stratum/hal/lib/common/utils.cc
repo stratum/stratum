@@ -340,5 +340,45 @@ bool IsAdminStateEnabled(const AdminState& admin_state) {
     return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
+std::string ConvertMediaTypeToString(const MediaType& type) {
+  switch(type) {
+    case MEDIA_TYPE_SFP:
+      return "SFP";
+    case MEDIA_TYPE_CFP_COPPER:
+    case MEDIA_TYPE_CFP_LR4:
+      return "CFP";
+    case MEDIA_TYPE_QSFP_PSM4:
+    case MEDIA_TYPE_QSFP_SR4:
+    case MEDIA_TYPE_QSFP_LR4:
+    case MEDIA_TYPE_QSFP_CLR4:
+      return "QSFP28";
+    case MEDIA_TYPE_QSFP_CSR4:
+      return "QSFP_PLUS";
+    case MEDIA_TYPE_QSFP_COPPER:
+    case MEDIA_TYPE_QSFP_CCR4:
+      return "QSFP";
+
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string ConvertHwStateToPresentString(const HwState& hw_state) {
+  switch (hw_state) {
+    case HW_STATE_READY:
+    case HW_STATE_OFF:
+    case HW_STATE_PRESENT:
+    case HW_STATE_CONFIGURED_OFF:
+    case HW_STATE_FAILED:
+    case HW_STATE_DIAGNOSTIC:
+    case HW_STATE_UNKNOWN:
+      return "PRESENT";
+    case HW_STATE_NOT_PRESENT:
+      return "NOT_PRESENT";
+    default:
+      return "UNKNOWN";
+  }
+}
+
 }  // namespace hal
 }  // namespace stratum

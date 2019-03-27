@@ -1809,6 +1809,146 @@ void SetUpComponentsComponentChassisAlarmsFlowProgrammingExceptionSeverity(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/transceiver/state/present
+void SetUpComponentsComponentTransceiverStatePresent(
+        TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollFunctor(
+          node_id, port_id, tree, &DataResponse::front_panel_port_info,
+          &DataResponse::has_front_panel_port_info,
+          &DataRequest::Request::mutable_front_panel_port_info,
+          &FrontPanelPortInfo::hw_state, ConvertHwStateToPresentString);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/transceiver/state/serial-no
+void SetUpComponentsComponentTransceiverStateSerialNo(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+
+  auto poll_functor =
+      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
+                               GnmiSubscribeStream* stream) {
+        // Create a data retrieval request.
+        DataRequest req;
+        auto* request = req.add_requests()->mutable_front_panel_port_info();
+        request->set_node_id(node_id);
+        request->set_port_id(port_id);
+
+        // In-place definition of method retrieving data from generic response
+        // and saving into 'resp' local variable.
+        std::string resp{};
+        DataResponseWriter writer([&resp](const DataResponse& in) {
+          if (!in.has_front_panel_port_info()) return false;
+          resp = in.front_panel_port_info().serial_number();
+          return true;
+        });
+        // Query the switch. The returned status is ignored as there is no way to
+        // notify the controller that something went wrong. The error is logged when
+        // it is created.
+        tree->GetSwitchInterface()
+            ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+            .IgnoreError();
+        return SendResponse(GetResponse(path, resp), stream);
+      };
+
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/transceiver/state/vendor
+void SetUpComponentsComponentTransceiverStateVendor(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+
+  auto poll_functor =
+      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
+                               GnmiSubscribeStream* stream) {
+
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_front_panel_port_info();
+    request->set_node_id(node_id);
+    request->set_port_id(port_id);
+
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_front_panel_port_info()) return false;
+      resp = in.front_panel_port_info().vendor_name();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
+
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/transceiver/state/vendor-part
+void SetUpComponentsComponentTransceiverStateVendorPart(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor =
+      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
+                               GnmiSubscribeStream* stream) {
+        // Create a data retrieval request.
+        DataRequest req;
+        auto* request = req.add_requests()->mutable_front_panel_port_info();
+        request->set_node_id(node_id);
+        request->set_port_id(port_id);
+
+        // In-place definition of method retrieving data from generic response
+        // and saving into 'resp' local variable.
+        std::string resp{};
+        DataResponseWriter writer([&resp](const DataResponse& in) {
+          if (!in.has_front_panel_port_info()) return false;
+          resp = in.front_panel_port_info().part_number();
+          return true;
+        });
+        // Query the switch. The returned status is ignored as there is no way to
+        // notify the controller that something went wrong. The error is logged when
+        // it is created.
+        tree->GetSwitchInterface()
+            ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+            .IgnoreError();
+        return SendResponse(GetResponse(path, resp), stream);
+      };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/transceiver/state/form-factor
+void SetUpComponentsComponentTransceiverStateFormFactor(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollFunctor(
+      node_id, port_id, tree, &DataResponse::front_panel_port_info,
+      &DataResponse::has_front_panel_port_info,
+      &DataRequest::Request::mutable_front_panel_port_info,
+      &FrontPanelPortInfo::media_type, ConvertMediaTypeToString);
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /qos/interfaces/interface[name=<name>]
 //                    /output/queues/queue[name=<name>]/state/name
 void SetUpQosInterfacesInterfaceOutputQueuesQueueStateName(
@@ -2173,6 +2313,26 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(false, node_id, port_id, node, tree);
+
+  // Paths for transceiver
+  node = tree->AddNode(GetPath("components")(
+      "component", name)("transceiver")("state")("present")());
+  SetUpComponentsComponentTransceiverStatePresent(node, tree, node_id, port_id);
+  node = tree->AddNode(GetPath("components")(
+      "component", name)("transceiver")("state")("serial-no")());
+  SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")(
+      "component", name)("transceiver")("state")("vendor")());
+  SetUpComponentsComponentTransceiverStateVendor(node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")(
+      "component", name)("transceiver")("state")("vendor-part")());
+  SetUpComponentsComponentTransceiverStateVendorPart(node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")(
+      "component", name)("transceiver")("state")("form-factor")());
+  SetUpComponentsComponentTransceiverStateFormFactor(node, tree, node_id, port_id);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {

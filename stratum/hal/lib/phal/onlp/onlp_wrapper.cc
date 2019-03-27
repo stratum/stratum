@@ -169,17 +169,20 @@ OnlpWrapper::~OnlpWrapper() {
 }
 
 HwState OidInfo::GetHardwareState() const {
-  switch (oid_info_.status) {
-    case ONLP_OID_STATUS_FLAG_PRESENT:
-      return HW_STATE_PRESENT;
-    case ONLP_OID_STATUS_FLAG_FAILED:
+  if (Present()) {
+    if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, UNPLUGGED)) {
+      return HW_STATE_OFF; // FIXME(Yi): is this right?
+    }
+    if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, FAILED)) {
       return HW_STATE_FAILED;
-    case ONLP_OID_STATUS_FLAG_OPERATIONAL:
+    }
+    if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, OPERATIONAL)) {
       return HW_STATE_READY;
-    case ONLP_OID_STATUS_FLAG_UNPLUGGED:
-      return HW_STATE_NOT_PRESENT;
+    }
+    return HW_STATE_PRESENT;
   }
-  return HW_STATE_UNKNOWN;
+
+  return HW_STATE_NOT_PRESENT;
 }
 
 bool OidInfo::Present() const {

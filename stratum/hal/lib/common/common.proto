@@ -940,6 +940,7 @@ message FrontPanelPortInfo {
   string vendor_name = 3;
   string part_number = 4;
   string serial_number = 5;
+  HwState hw_state = 6;
 }
 
 //------------------------------------------------------------------------------
@@ -1074,6 +1075,7 @@ message DataRequest {
       Port forwarding_viability = 13;
       Port health_indicator = 14;
       Port autoneg_status = 15;
+      Port front_panel_port_info = 16;
     }
   }
   repeated Request requests = 1;
@@ -1100,6 +1102,7 @@ message DataResponse {
     ForwardingViability forwarding_viability = 13;
     HealthIndicator health_indicator = 14;
     AutonegotiationStatus autoneg_status = 15;
+    FrontPanelPortInfo front_panel_port_info = 16;
   }
 }
 

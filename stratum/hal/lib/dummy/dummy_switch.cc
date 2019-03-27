@@ -52,6 +52,17 @@ namespace dummy_switch {
     new_node->PushChassisConfig(config);
     dummy_nodes_.emplace(node.id(), new_node);
   }
+
+  for (const auto& singleton_port : config.singleton_ports()) {
+    uint64 node_id = singleton_port.node();
+    uint32 port_id = singleton_port.id();
+    int32 slot = singleton_port.slot();
+    int32 port = singleton_port.port();
+    std::pair<uint64, uint32> node_port_pair = std::make_pair(node_id, port_id);
+    node_port_id_to_slot.emplace(node_port_pair, slot);
+    node_port_id_to_port.emplace(node_port_pair, port);
+  }
+
   return ::util::OkStatus();
 }
 
@@ -257,14 +268,27 @@ namespace dummy_switch {
       case Request::kPortQosCounters:
         resp = dummy_node->RetrievePortQosData(request);
         break;
+      case Request::kFrontPanelPortInfo: {
+        FrontPanelPortInfo front_panel_port_info;
+        std::pair<uint64, uint32> node_port_pair =
+            std::make_pair(request.front_panel_port_info().node_id(),
+                           request.front_panel_port_info().port_id());
+        int slot = node_port_id_to_slot[node_port_pair];
+        int port = node_port_id_to_port[node_port_pair];
+        ::util::Status status =
+            phal_interface_->GetFrontPanelPortInfo(slot, port, resp_val.mutable_front_panel_port_info());
+        if (status.ok()) {
+          resp = resp_val;
+        }
+        break;
+      }
       default:
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;
     }
     if (resp.ok()) {
       writer->Write(resp.ValueOrDie());
-    }
-    if (details) {
+    } else if (details) {
       details->push_back(resp.status());
     }
   }
