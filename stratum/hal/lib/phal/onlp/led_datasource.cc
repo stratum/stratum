@@ -74,31 +74,26 @@ OnlpLedDataSource::OnlpLedDataSource(OnlpOid led_id,
 
   led_mode_ = led_info.GetLedMode();
   led_char_.AssignValue(led_info.GetLedChar());
+  // TODO(Yi): store the caps in attribute
 
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpLedDataSource::IsCapable(LedCaps led_caps) {
-  bool is_capable;
-
+  // TODO(Yi): we should not get LedInfo here
   ASSIGN_OR_RETURN(LedInfo led_info, onlp_stub_->GetLedInfo(led_oid_));
-  is_capable = led_info.Capable(led_caps);
-  CHECK_RETURN_IF_FALSE(is_capable)
+  CHECK_RETURN_IF_FALSE(led_info.Capable(led_caps))
       << "Expected LED capability is not present.";
 
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpLedDataSource::SetLedMode(LedMode value) {
-  onlp_stub_->SetLedMode(led_oid_, value);
-
-  return ::util::OkStatus();
+  return onlp_stub_->SetLedMode(led_oid_, value);
 }
 
 ::util::Status OnlpLedDataSource::SetLedCharacter(char val) {
-  onlp_stub_->SetLedCharacter(led_oid_, val);
-
-  return ::util::OkStatus();
+  return onlp_stub_->SetLedCharacter(led_oid_, val);
 }
 
 }  // namespace onlp

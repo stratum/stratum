@@ -304,9 +304,7 @@ FanDir FanInfo::GetFanDir() const {
 }
 
 bool FanInfo::Capable(FanCaps fan_capability) const {
-  int compare_caps;
-  compare_caps = (fan_info_.caps & fan_capability);
-  return compare_caps == fan_capability;
+  return fan_info_.caps & fan_capability;
 }
 
 PsuType PsuInfo::GetPsuType() const {
@@ -323,9 +321,7 @@ PsuType PsuInfo::GetPsuType() const {
 }
 
 bool PsuInfo::Capable(PsuCaps psu_capability) const {
-  int compare_caps;
-  compare_caps = (psu_info_.caps & psu_capability);
-  return compare_caps == psu_capability;
+  return psu_info_.caps & psu_capability;
 }
 
 int ThermalInfo::GetThermalCurTemp() const {
@@ -345,9 +341,7 @@ int ThermalInfo::GetThermalShutDownTemp() const {
 }
 
 bool ThermalInfo::Capable(ThermalCaps thermal_capability) const {
-  int compare_caps;
-  compare_caps = (thermal_info_.caps & thermal_capability);
-  return compare_caps == thermal_capability;
+  return thermal_info_.caps & thermal_capability;
 }
 
 char LedInfo::GetLedChar() const {
@@ -394,17 +388,7 @@ LedMode LedInfo::GetLedMode() const {
 }
 
 bool LedInfo::Capable(LedCaps led_capability) const {
-  int compare_caps;
-<<<<<<< HEAD
-  compare_caps = (led_info_.caps & Led_capability);
-  return compare_caps == Led_capability;
-=======
-  compare_caps = (led_info_.caps & led_capability);
-  if (compare_caps == led_capability)
-      return true;
-  else
-      return false;
->>>>>>> Added SetLedMode and SetLedChar
+  return led_info_.caps & led_capability;
 }
 
 }  // namespace onlp

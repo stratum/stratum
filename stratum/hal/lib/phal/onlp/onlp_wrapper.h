@@ -121,7 +121,7 @@ class PsuInfo : public OidInfo {
 
 class ThermalInfo : public OidInfo {
  public:
-  explicit ThermalInfo(const onlp_thermal_info_t &thermal_info)
+  explicit ThermalInfo(const onlp_thermal_info_t& thermal_info)
       : OidInfo(thermal_info.hdr), thermal_info_(thermal_info) {}
   ThermalInfo() {}
   int GetThermalCurTemp() const;
