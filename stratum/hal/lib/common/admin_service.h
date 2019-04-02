@@ -77,11 +77,20 @@ class AdminService final : public ::gnoi::system::System::Service {
       const ::gnoi::system::CancelRebootRequest* req,
       ::gnoi::system::CancelRebootResponse* resp) override;
 
+  ::grpc::Status SetPackage(
+      ::grpc::ServerContext* context,
+      ::grpc::ServerReader<::gnoi::system::SetPackageRequest>* reader,
+      ::gnoi::system::SetPackageResponse* resp) override;
+
   // AdminService is neither copyable nor movable.
   AdminService(const AdminService&) = delete;
   AdminService& operator=(const AdminService&) = delete;
 
  private:
+  // Checks if we received valid initial SetPackage message and provided 
+  // Package can be accepted and processed
+  ::grpc::Status ValidatePackageMessage(const gnoi::system::Package& package);
+
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Hercules stack runs independently and
   // therefore needs to do all the SDK initialization itself.

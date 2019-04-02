@@ -112,5 +112,120 @@ AdminService::AdminService(OperationMode mode,
   return ::grpc::Status::OK;
 }
 
+::grpc::Status AdminService::ValidatePackageMessage(
+    const gnoi::system::Package& package) {
+
+  if (package.activate()) {
+    //TODO remove when ActivatePackage will be implemented
+    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                          "Package activation not supported");
+  }
+
+  if (!package.version().empty()) {
+    //TODO remove when SetPackageVersion will be implemented
+    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                          "Package version not supported");
+  }
+
+  if (package.has_remote_download()) {
+    //TODO remove when remote download will be implemented
+    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                          "Remote download not supported");
+  }
+
+  if (package.filename().empty()) {
+    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                          "File name not specified.");
+  }
+
+  if (package.filename()[0] != '/') {
+    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                          "Received relative file path.");
+  }
+
+  auto dir_name = dirname(strdup(package.filename().c_str()));
+  if (!helper_->GetFileSystemHelper()->PathExists(dir_name)) {
+    return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
+                          ("Directory " + package.filename() + " doesn't exist"));
+  }
+
+  return ::grpc::Status::OK;
+}
+
+::grpc::Status AdminService::SetPackage(
+    ::grpc::ServerContext* context,
+    ::grpc::ServerReader<::gnoi::system::SetPackageRequest>* reader,
+    ::gnoi::system::SetPackageResponse* resp) {
+
+  ::gnoi::system::SetPackageRequest msg;
+  auto fs_helper = helper_->GetFileSystemHelper();
+
+  if (!reader->Read(&msg)) {
+    return ::grpc::Status(::grpc::StatusCode::ABORTED,
+                          "Failed to read gRPC stream");
+  }
+
+  if (msg.request_case() != ::gnoi::system::SetPackageRequest::kPackage) {
+    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                          "Initial message must specify package.");
+  }
+
+  auto package = msg.package();
+  auto status = ValidatePackageMessage(package);
+  if (!status.ok()) {
+    return status;
+  }
+
+  std::string tmp_dir_name = fs_helper->CreateTempDir();
+  std::string tmp_file_name = fs_helper->TempFileName(tmp_dir_name);
+
+  if (!package.has_remote_download()) {
+    // receive file trough stream
+    while (reader->Read(&msg)) {
+      if (msg.request_case() == ::gnoi::system::SetPackageRequest::kContents) {
+        fs_helper->StringToFile(msg.contents(), tmp_file_name, true);
+      } else {
+        break;
+      }
+    }
+
+  } else {
+    //TODO uncomment when remote download will be implemented
+    // // read next msg from stream (hash msg)
+    // if (!reader->Read(&msg)) {
+    //   return ::grpc::Status(::grpc::StatusCode::ABORTED, "Broken Stream");
+    // }
+  }
+
+  if (msg.request_case() != ::gnoi::system::SetPackageRequest::kHash) {
+    fs_helper->RemoveFile(tmp_file_name);
+    fs_helper->RemoveDir(tmp_dir_name);
+    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                          "The last message must have hash");
+  }
+
+  if (msg.hash().method() == ::gnoi::HashType_HashMethod_UNSPECIFIED) {
+    fs_helper->RemoveFile(tmp_file_name);
+    fs_helper->RemoveDir(tmp_dir_name);
+    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+                          "The hash method must be specified");
+  }
+
+  if (!fs_helper->CheckHashSumFile(tmp_file_name,
+                                   msg.hash().hash(),
+                                   msg.hash().method())) {
+    fs_helper->RemoveFile(tmp_file_name);
+    fs_helper->RemoveDir(tmp_dir_name);
+    return ::grpc::Status(::grpc::StatusCode::DATA_LOSS,
+                          "Invalid Hash Sum of received file");
+  }
+
+  fs_helper->CopyFile(tmp_file_name, package.filename());
+  fs_helper->RemoveFile(tmp_file_name);
+  fs_helper->RemoveDir(tmp_dir_name);
+
+  return ::grpc::Status::OK;
+}
+
 }  // namespace hal
 }  // namespace stratum

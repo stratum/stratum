@@ -97,11 +97,49 @@ class AdminServiceShellHelper {
   std::vector<std::string> FlushPipe(int pipe_fd);
 };
 
+// Provides interface to filesystem
+class FileSystemHelper {
+ public:
+  FileSystemHelper() = default;
+  virtual ~FileSystemHelper() = default;
+
+  virtual bool CheckHashSumFile(const std::string& path,
+                                const std::string& old_hash,
+                                ::gnoi::HashType_HashMethod method) const;
+
+  virtual std::string GetHashSum(std::istream& istream,
+                                 ::gnoi::HashType_HashMethod method) const;
+
+  // Create temporary directory and return it name
+  // @return Temporary directory name in std:string
+  virtual std::string CreateTempDir() const;
+
+  // Create temporary file and return it name
+  // @return Temporary file name in std:string
+  virtual std::string TempFileName(std::string path = std::string()) const;
+
+  // Removes a dir from the given path.
+  // Returns error if the path does not exist
+  // or the path is a file.
+  virtual ::util::Status RemoveDir(const std::string& path) const;
+
+  virtual ::util::Status RemoveFile(const std::string& path) const;
+
+  virtual bool PathExists(const std::string& path) const;
+
+  virtual ::util::Status CopyFile(const std::string& src,
+                                  const std::string& dst) const;
+
+  virtual ::util::Status StringToFile(const std::string& data,
+                                      const std::string& file_name,
+                                      bool append = false) const;
+};
+
 // Wrapper/fabric class for the Admin Service utils;
 // To use, retrieve the desired object via Get___Helper
 class AdminServiceUtilsInterface {
  public:
-  AdminServiceUtilsInterface() {};
+  AdminServiceUtilsInterface() : file_system_helper_(new FileSystemHelper) {};
   virtual ~AdminServiceUtilsInterface() = default;
 
   virtual std::shared_ptr<AdminServiceShellHelper>
@@ -109,6 +147,13 @@ class AdminServiceUtilsInterface {
 
   // Retrieves time since epoch in ns
   virtual uint64_t GetTime();
+
+  virtual std::shared_ptr<FileSystemHelper>
+  GetFileSystemHelper();
+
+ private:
+  std::shared_ptr<FileSystemHelper> file_system_helper_;
+
 };
 
 } // namespace hal

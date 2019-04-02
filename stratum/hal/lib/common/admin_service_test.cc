@@ -53,7 +53,18 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
         absl::make_unique<AdminServiceUtilsInterfaceMock>();
 
     admin_utils_ = dynamic_cast<AdminServiceUtilsInterfaceMock*>
-    (admin_service_->helper_.get());
+                                (admin_service_->helper_.get());
+
+    // Create FileSystemHelperMock object
+    fs_helper_ = std::make_shared<FileSystemHelperMock>();
+
+    // Get AdminServiceUtilsInterface from admin_service_
+    auto helper_ = admin_service_->helper_.get();
+    // Set FileSystemHelperMock object as default return value
+    // for admin_service_->helper_->GetFileSystemHelper() call
+    ON_CALL(*(dynamic_cast<AdminServiceUtilsInterfaceMock*>(helper_)),
+            GetFileSystemHelper())
+        .WillByDefault(::testing::Return(fs_helper_));
 
     // Create a mock service to test the functionality.
     std::string url =
@@ -80,6 +91,7 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
   std::unique_ptr<ErrorBuffer> error_buffer_;
   std::unique_ptr<::grpc::Server> server_;
   std::unique_ptr<::gnoi::system::System::Stub> stub_;
+  std::shared_ptr<FileSystemHelperMock> fs_helper_;
 };
 
 TEST_P(AdminServiceTest, ColdbootSetupSuccess) {
@@ -176,6 +188,347 @@ TEST_P(AdminServiceTest, CancelRebootSuccess) {
   EXPECT_TRUE(status.ok());
 
   // cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageFirstMeesageNotPackage) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+      writer = stub_->SetPackage(&context, &resp);
+
+  req.set_contents("some fake contents");
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::INVALID_ARGUMENT);
+  // cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageRemoteOptionSFTP) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  auto package = new ::gnoi::system::Package();
+  auto remoteDownload = new ::gnoi::RemoteDownload();
+  auto hash_type = new ::gnoi::HashType();
+
+  // Configure expected calls
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+      writer = stub_->SetPackage(&context, &resp);
+
+  remoteDownload->set_protocol(::gnoi::RemoteDownload_Protocol_SFTP);
+  package->set_filename(std::string("/home/user/filename"));
+  package->set_allocated_remote_download(remoteDownload);
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  hash_type->set_method(::gnoi::HashType_HashMethod_SHA256);
+  hash_type->set_hash("Incorrect Hash");
+  req.set_allocated_hash(hash_type);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::UNIMPLEMENTED);
+  // cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageLastNotHash) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+
+  auto package = new ::gnoi::system::Package();
+
+  // Configure expected calls
+  EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
+      .WillOnce(::testing::Return(true));
+
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
+      .WillOnce(::testing::Return("tmpdir"));
+
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
+      .WillOnce(::testing::Return("tmpfile"));
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              StringToFile("Some data", "tmpfile", true))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
+      .Times(1);
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+      writer = stub_->SetPackage(&context, &resp);
+
+  package->set_filename("/home/user/filename");
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  req.set_contents(std::string("Some data"));
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::INVALID_ARGUMENT);
+  // cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageUNCPECIFIEDHash) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  auto package = new ::gnoi::system::Package();
+  auto hash_type = new ::gnoi::HashType();
+
+  // Configure expected calls
+  EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
+      .WillOnce(::testing::Return(true));
+
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
+      .WillOnce(::testing::Return("tmpdir"));
+
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
+      .WillOnce(::testing::Return("tmpfile"));
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              StringToFile("Some data", "tmpfile", true))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
+      .Times(1);
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+      writer = stub_->SetPackage(&context, &resp);
+
+  package->set_filename("/home/user/filename");
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  req.set_contents(std::string("Some data"));
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  hash_type->set_method(::gnoi::HashType_HashMethod_UNSPECIFIED);
+  req.set_allocated_hash(hash_type);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::INVALID_ARGUMENT);
+
+  //  cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageIncorrectHash) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  auto package = new ::gnoi::system::Package();
+  auto hash_type = new ::gnoi::HashType();
+
+  // Configure expected calls
+  EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
+      .WillOnce(::testing::Return(true));
+
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
+      .WillOnce(::testing::Return("tmpdir"));
+
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
+      .WillOnce(::testing::Return("tmpfile"));
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              StringToFile("Some data", "tmpfile", true))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              CheckHashSumFile("tmpfile",
+                               "Incorrect Hash",
+                               ::gnoi::HashType_HashMethod_SHA256))
+      .WillOnce(::testing::Return(false));
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+      writer = stub_->SetPackage(&context, &resp);
+
+  package->set_filename("/home/user/filename");
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  req.set_contents(std::string("Some data"));
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  hash_type->set_method(::gnoi::HashType_HashMethod_SHA256);
+  hash_type->set_hash("Incorrect Hash");
+  req.set_allocated_hash(hash_type);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::DATA_LOSS);
+
+  //  cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageSHA256Success) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  auto package = new ::gnoi::system::Package();
+  auto hash_type = new ::gnoi::HashType();
+
+  // Configure expected calls
+  EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
+      .WillOnce(::testing::Return(true));
+
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
+      .WillOnce(::testing::Return("tmpdir"));
+
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
+      .WillOnce(::testing::Return("tmpfile"));
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              StringToFile("Some data", "tmpfile", true))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
+      .Times(1);
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              CheckHashSumFile("tmpfile",
+                               "correct hash",
+                               ::gnoi::HashType_HashMethod_SHA256))
+      .WillOnce(::testing::Return(true));
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+      writer = stub_->SetPackage(&context, &resp);
+
+  package->set_filename("/home/user/somefile");
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  req.set_contents(std::string("Some data"));
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  std::istringstream isstream("Some data");
+  hash_type->set_method(::gnoi::HashType_HashMethod_SHA256);
+  hash_type->set_hash("correct hash");
+  req.set_allocated_hash(hash_type);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.ok());
+
+  //  cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageEmptyFilename) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  auto package = new ::gnoi::system::Package();
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  writer = stub_->SetPackage(&context, &resp);
+
+  package->set_filename("");
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::INVALID_ARGUMENT);
+
+  // cleanup
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
+  ::grpc::ClientContext context;
+  ::gnoi::system::SetPackageResponse resp;
+  ::gnoi::system::SetPackageRequest req;
+  auto package = new ::gnoi::system::Package();
+
+  // Configure unexpected calls
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
+  .Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_))
+  .Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), StringToFile(::testing::_, ::testing::_, ::testing::_))
+  .Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir(::testing::_))
+  .Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile(::testing::_))
+  .Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()),
+  CheckHashSumFile(::testing::_, ::testing::_, ::testing::_)).Times(0);
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  writer = stub_->SetPackage(&context, &resp);
+
+  package->set_filename("tmpfile");
+  package->set_activate(true);
+  package->set_version("10.2.1");
+  req.set_allocated_package(package);
+  if (!writer->Write(req)) {
+    LOG(ERROR) << "Broken stream";
+  }
+
+  writer->WritesDone();
+  ::grpc::Status status = writer->Finish();
+  EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::UNIMPLEMENTED);
+
+  //  cleanup
   ASSERT_OK(admin_service_->Teardown());
 }
 

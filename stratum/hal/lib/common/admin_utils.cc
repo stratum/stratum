@@ -26,6 +26,9 @@
 #include <sstream>
 #include <thread>
 
+#include <openssl/sha.h>
+#include <openssl/md5.h>
+
 #include "stratum/glue/logging.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/lib/macros.h"
@@ -208,6 +211,162 @@ uint64_t AdminServiceUtilsInterface::GetTime() {
   auto now = std::chrono::system_clock::now();
   auto duration = now.time_since_epoch();
   return static_cast<uint64_t>(duration.count());
+}
+
+std::shared_ptr<FileSystemHelper>
+AdminServiceUtilsInterface::GetFileSystemHelper() {
+  return file_system_helper_;
+}
+
+bool FileSystemHelper::PathExists(const std::string& path) const {
+  return ::stratum::PathExists(path);
+}
+
+std::string FileSystemHelper::CreateTempDir() const {
+  char dir_name_template[] = "/tmp/stratumXXXXXX";
+  auto tmp_dir_name = mkdtemp(dir_name_template);
+  if (tmp_dir_name == nullptr) {
+    LOG(ERROR) << "Can't create temporary directory. Error: "
+               << std::string(std::strerror(errno));
+    // TODO throw some exception
+    return std::string("/tmp");
+  }
+  return tmp_dir_name;
+}
+
+std::string FileSystemHelper::TempFileName(std::string path) const {
+  if (path.empty()) {
+    path = CreateTempDir();
+  }
+  return path + std::string("/temp_file");
+}
+
+bool FileSystemHelper::CheckHashSumFile(
+    const std::string& path,
+    const std::string& old_hash,
+    ::gnoi::HashType_HashMethod method) const {
+
+  std::ifstream istream(path, std::ios::binary);
+  return old_hash == GetHashSum(istream, method);
+}
+
+std::string FileSystemHelper::GetHashSum(
+    std::istream& istream,
+    ::gnoi::HashType_HashMethod method) const {
+
+  const int BUFFER_SIZE = 1024;
+  std::vector<char> buffer(BUFFER_SIZE, 0);
+  unsigned char* hash = nullptr;
+  size_t digest_len = 0;
+  switch (method) {
+    case ::gnoi::HashType_HashMethod_SHA256: {
+      digest_len = SHA256_DIGEST_LENGTH;
+      unsigned char hash_SHA256[SHA256_DIGEST_LENGTH];
+      SHA256_CTX sha256;
+      SHA256_Init(&sha256);
+      while (istream.good()) {
+        istream.read(buffer.data(), BUFFER_SIZE);
+        SHA256_Update(&sha256, buffer.data(), istream.gcount());
+      }
+
+      SHA256_Final(hash_SHA256, &sha256);
+      hash = hash_SHA256;
+      break;
+    }
+    case ::gnoi::HashType_HashMethod_SHA512: {
+      digest_len = SHA512_DIGEST_LENGTH;
+      unsigned char hash_SHA512[SHA512_DIGEST_LENGTH];
+      SHA512_CTX sha512;
+      SHA512_Init(&sha512);
+      while (istream.good()) {
+        istream.read(buffer.data(), BUFFER_SIZE);
+        SHA512_Update(&sha512, buffer.data(), istream.gcount());
+      }
+
+      SHA512_Final(hash_SHA512, &sha512);
+      hash = hash_SHA512;
+      break;
+    }
+    case ::gnoi::HashType_HashMethod_MD5: {
+      digest_len = MD5_DIGEST_LENGTH;
+      unsigned char hash_MD5[MD5_DIGEST_LENGTH];
+      MD5_CTX md5;
+      MD5_Init(&md5);
+      while (istream.good()) {
+        istream.read(buffer.data(), BUFFER_SIZE);
+        MD5_Update(&md5, buffer.data(), istream.gcount());
+      }
+
+      MD5_Final(hash_MD5, &md5);
+      hash = hash_MD5;
+      break;
+    }
+    case ::gnoi::HashType_HashMethod_UNSPECIFIED: {
+      LOG(WARNING) << "HashType_HashMethod_UNSPECIFIED";
+      return std::string();
+    }
+    default:break;
+  }
+
+  // conver char array to hexstring
+  std::stringstream ss;
+  for (uint i = 0; i < digest_len; i++) {
+    ss << std::hex << std::setw(2) << std::setfill('0') << (int) hash[i];
+  }
+  return ss.str();
+
+}
+
+::util::Status FileSystemHelper::StringToFile(
+    const std::string& data,
+    const std::string& file_name,
+    bool append) const {
+
+  return ::stratum::WriteStringToFile(data, file_name, append);
+}
+
+::util::Status FileSystemHelper::CopyFile(
+    const std::string& src,
+    const std::string& dst) const {
+
+  std::ofstream outfile;
+  std::ifstream infile;
+
+  outfile.open(dst.c_str(), std::fstream::trunc | std::fstream::binary);
+  infile.open(src.c_str(), std::fstream::binary);
+
+  if (!outfile.is_open()) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Error when opening " << dst << ".";
+  }
+
+  if (!infile.is_open()) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Error when opening " << src << ".";
+  }
+
+  outfile << infile.rdbuf();
+
+  outfile.close();
+  infile.close();
+
+  return ::util::OkStatus();
+}
+
+::util::Status FileSystemHelper::RemoveDir(const std::string& path) const {
+  CHECK_RETURN_IF_FALSE(!path.empty());
+  CHECK_RETURN_IF_FALSE(PathExists(path)) << path << " does not exist.";
+  CHECK_RETURN_IF_FALSE(IsDir(path)) << path << " is not a dir.";
+  //TODO Is Dir Empty ?
+  int ret = remove(path.c_str());
+  if (ret != 0) {
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "Failed to remove '" << path << "'. Return value: " << ret << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status FileSystemHelper::RemoveFile(const std::string& path) const {
+  return ::stratum::RemoveFile(path);
 }
 
 } // namespace hal
