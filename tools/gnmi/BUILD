@@ -21,9 +21,13 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-py_binary(
+cc_binary(
     name = "gnmi-cli",
-    srcs = ["gnmi-cli.py"],
-    deps = ["@com_github_openconfig_gnmi_proto//:gnmi_py_grpc"],
-    python_version = "PY2"
+    srcs = ["gnmi_cli.cc"],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_grpc//:grpc++",
+        "@com_github_openconfig_gnmi//:gnmi_proto",
+    ]
 )
