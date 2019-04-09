@@ -6,15 +6,24 @@ variable MUST be set for the Stratum build.
 export BF_SDE_INSTALL=...
 ```
 
+## BSP or BSP-less mode (with ONLP)?
+
+Stratum can be run on Tofino-based platforms in 2 different modes:
+ * if your platform comes with ONLPv2 and a JSON "port mapping" file is provided
+   by the platform vendor (see this
+   [example](platforms/accton_wedge_32x_port_map.json) for the Wedge 100bf-32x),
+   you can use Stratum in "BSP-less mode". Refer to this
+   [section](#running-the-binary-in-bsp-less-mode) for more information. This is
+   the recommended mode.
+ * otherwise, you need to build & install the BSP. You will not be able to use
+   the Stratum ONLP support.
+
 ## Installing the SDE
 
-These instructions are for SDE version 8.7.0 and later. Starting with SDE
-release 8.7.0, Barefoot's P4Studio Build tool comes with a default Stratum
-profile, which takes care of installing all the necessary dependencies and
-builds the SDE with the appropriate flags.
-
-**There is an issue with the Stratum profile on ONL for SDE 8.7.0, please refer
-  to [this section](#installing-the-sde-on-onl).**
+These instructions are for SDE version 8.8.0. Starting with SDE release 8.7.0,
+Barefoot's P4Studio Build tool comes with a default Stratum profile, which takes
+care of installing all the necessary dependencies and builds the SDE with the
+appropriate flags.
 
 Please follow these steps:
 
@@ -28,20 +37,21 @@ export SDE_INSTALL=$BF_SDE_INSTALL
 
  3. Build and install the SDE. Use the provided profile
     (`stratum_profile.yaml`). Feel free to customize the profile if needed;
-    please refer to the P4Studio Build documentation. **If you are using the
+    please refer to the P4Studio Build documentation. If you are using the
     reference BSP provided by Barefoot, you may also use P4Studio Build to
-    install the BSP (see
-    [below](#installing-the-reference-bsp-for-the-wedge)).**
+    install the BSP (see [below](#installing-the-reference-bsp-for-the-wedge)).
 ```
 cd $SDE/p4studio_build
 ./p4studio_build.py -up profiles/stratum_profile.yaml
 ```
 
-If your platform supports BSP-less mode (recommended), you do not need to
+If your platform supports BSP-less mode (**recommended**), you do not need to
 install the BSP. Refer to the section
 [below](#running-the-binary-in-bsp-less-mode).
 
 ### Installing the reference BSP for the Wedge
+
+**Ignore this section if your platform supports ONLPv2 and BSP-less mode.**
 
 If you are using the reference BSP provided by Barefoot (for the Wedge switch),
 you may use P4Studio Build to install the BSP. All you need to do is extract the
@@ -62,56 +72,16 @@ You may also still install the BSP manually. If you are not using the reference
 BSP, you will need to install the BSP yourself (under `$BF_SDE_INSTALL`) based
 on your vendor's instructions.
 
-### Installing the SDE on ONL
-
-SDE 8.7.0 has an issue when installing the Stratum profile with P4Studio
-Build. The PI library is not installed by P4Studio Build and needs to be
-installed manually.
-
-To install the SDE on ONL, follow the instructions included in the Barefoot
-customer documentation ("Deploying Barefoot P4 Studio SDE on Open Network
-Linux"), including the installation of the `dependencies.tar.gz tarball` (this
-will install Thrift and other dependencies, but not PI unfortunately). Before
-running `p4studio_build.py`, you will need to manually install PI.
-
- 1. Get the appropriate PI SHA from
- `$SDE/p4studio_build/dependencies.yaml`. Look for the following:
-```
-pi:
-    mode: 'git clone'
-    url: 'https://github.com/p4lang/PI.git'
-    default_sha: <SHA>
-```
-
-For SDE 8.7.0, the SHA is a95222eca9b039f6398c048d7e1a1bf7f49b7235.
-
- 2. Install PI
-```
-cd /tmp
-git clone https://github.com/p4lang/PI.git
-cd PI
-git checkout a95222eca9b039f6398c048d7e1a1bf7f49b7235
-./autogen.sh
-./configure --without-bmv2 --without-proto --without-internal-rpc --without-cli
-make
-[sudo] make install
-```
-
-You are welcome to install PI in the same install directory as the SDE by
-configuring PI with `--prefix=$SDE_INSTALL`. However, note that by default
-`p4studio_build.py` will delete the contents of `$SDE_INSTALL` when you run
-it. To avoid this, you can call `p4studio_build.py` with `--skip-cleanup`.
-
- 3. Run `p4studio_build.py`
-```
-cd $SDE/p4studio_build
-./p4studio_build.py -up profiles/stratum_profile.yaml [--bsp-path $BSP_PATH] [--skip-cleanup]
-```
-
-We are hoping to fix this in future SDE versions and installing PI manually for
-ONL will no longer be required.
-
 ## Building the binary
+
+If your platform comes with ONLPv2 and you want to use Stratum in BSP-less mode,
+you may want to set the `ONLP_INSTALL` environment variable to point to your
+ONLP installation before building `stratum_bf`. You can also build `stratum_bf`
+without setting `ONLP_INSTALL`, in which case the default ONLP library will be
+downloaded and we will build against it. This is useful if you are building
+`stratum_bf` for simulation, or if you are not building it directly on the
+switch (in this case just make sure the correct ONLP library for your platform
+is loaded at runtime).
 
 **`stratum_bf` currently needs to link to the thrift library, until support for
   gNMI is complete. As a result you need to set the `THRIFT_INSTALL` environment
@@ -122,7 +92,7 @@ export THRIFT_INSTALL=/usr/local/lib
 bazel build //stratum/hal/bin/barefoot:stratum_bf
 ```
 
-## Running the binary
+## Running the binary (with BSP or Tofino software model)
 
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
@@ -133,16 +103,17 @@ sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
        --persistent_config_dir=<config dir> \
        --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
        --chassis_config_file=<config dir>/chassis_config.pb.txt \
-       --write_req_log_file=<config dir>/p4_writes.pb.txt
+       --write_req_log_file=<config dir>/p4_writes.pb.txt \
+       --bf_sim
 ```
 
 For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
 directory. *Do not use the ucli or the Thrift PAL RPC service for port
 configuration.* You may use the ucli to check port status (`pm show`).
 
-By default, the Phal ONLP implementation will be used. If for some reason this
-is not what you want to use, you can start `stratum_bf` with `--bf_sim`, which
-will use `PhalSim`, a "fake" Phal implementation, instead.
+The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
+`PhalSim`, a "fake" Phal implementation, instead. Use this flag when you are
+using a vendor-provided BSP or running Stratum with the Tofino software model.
 
 ## Running the binary in BSP-less mode
 
