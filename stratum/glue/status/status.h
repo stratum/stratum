@@ -22,7 +22,9 @@
 #include <string>
 
 #include "stratum/glue/logging.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "absl/base/attributes.h"
+#include "absl/strings/str_cat.h"
 
 // TODO: Move to Abseil-status when it is available.
 //
@@ -56,6 +58,8 @@ inline bool Code_IsValid(int c) { return (c >= Code_MIN) && (c <= Code_MAX); }
 }  // end namespace util
 
 namespace util {
+
+using google::LogSeverity;
 
 // An ErrorSpace is a collection of related numeric error codes.  For
 // example, all Posix errno values may be placed in the same
@@ -364,6 +368,142 @@ Status OkStatus();
 #ifndef SWIG
 inline Status OkStatus() { return Status(); }
 #endif  // SWIG
+
+class ABSL_MUST_USE_RESULT StatusBuilder {
+ public:
+  StatusBuilder(::util::error::Code code, ::stratum::gtl::source_location location)
+      : code_(code),
+        line_(location.line()),
+        file_(location.file_name().c_str()),
+        log_severity_(INFO),
+        log_verbose_level_(0),
+        log_type_(LogType::kDisabled) {}
+
+  StatusBuilder& Log(LogSeverity severity) {
+    if (code_ == ::util::error::Code::OK) return *this;
+    log_type_ = LogType::kLog;
+    log_severity_ = severity;
+    return *this;
+  }
+
+  StatusBuilder& VLog(int level) {
+    if (code_ == ::util::error::Code::OK) return *this;
+    log_type_ = LogType::kVLog;
+    log_verbose_level_ = level;
+    return *this;
+  }
+
+  StatusBuilder& LogError() { return Log(ERROR); }
+  StatusBuilder& LogWarning() { return Log(WARNING); }
+  StatusBuilder& LogInfo() { return Log(INFO); }
+
+  StatusBuilder& operator<<(absl::string_view value) {
+    stream_.append(value.data(), value.size());
+    return *this;
+  }
+
+  template <typename T>
+  StatusBuilder& operator<<(const T& value) {
+    absl::StrAppend(&stream_, value);
+    return *this;
+  }
+
+  operator Status() const& {
+    Status status(code_, stream_);
+    if (log_type_ == LogType::kDisabled) return status;
+    google::LogMessage log_message(file_, line_, log_severity_);
+    log_message.stream() << status;
+    return status;
+  }
+
+  int line() const { return line_; }
+  const char* file() const { return file_; }
+
+ private:
+  enum class LogType {
+    kDisabled,
+    kLog,
+    kVLog,
+  };
+
+  const ::util::error::Code code_;
+  const int line_;
+  const char* const file_;
+  LogSeverity log_severity_;
+  int log_verbose_level_;
+  LogType log_type_;
+  std::string stream_;
+};
+
+inline StatusBuilder AbortedErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::ABORTED, location);
+}
+
+inline StatusBuilder AlreadyExistsErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::ALREADY_EXISTS, location);
+}
+
+inline StatusBuilder CancelledErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::CANCELLED, location);
+}
+
+inline StatusBuilder DataLossErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::DATA_LOSS, location);
+}
+
+inline StatusBuilder DeadlineExceededErrorBuilder(
+    ::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::DEADLINE_EXCEEDED, location);
+}
+
+inline StatusBuilder FailedPreconditionErrorBuilder(
+    ::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::FAILED_PRECONDITION, location);
+}
+
+inline StatusBuilder InternalErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::INTERNAL, location);
+}
+
+inline StatusBuilder InvalidArgumentErrorBuilder(
+    ::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::INVALID_ARGUMENT, location);
+}
+
+inline StatusBuilder NotFoundErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::NOT_FOUND, location);
+}
+
+inline StatusBuilder OutOfRangeErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::OUT_OF_RANGE, location);
+}
+
+inline StatusBuilder PermissionDeniedErrorBuilder(
+    ::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::PERMISSION_DENIED, location);
+}
+
+inline StatusBuilder UnauthenticatedErrorBuilder(
+    ::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::UNAUTHENTICATED, location);
+}
+
+inline StatusBuilder ResourceExhaustedErrorBuilder(
+    ::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::RESOURCE_EXHAUSTED, location);
+}
+
+inline StatusBuilder UnavailableErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::UNAVAILABLE, location);
+}
+
+inline StatusBuilder UnimplementedErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::UNIMPLEMENTED, location);
+}
+
+inline StatusBuilder UnknownErrorBuilder(::stratum::gtl::source_location location) {
+  return StatusBuilder(::util::error::Code::UNKNOWN, location);
+}
 
 }  // namespace util
 

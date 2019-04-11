@@ -20,6 +20,7 @@
 
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -4515,7 +4516,7 @@ TEST_F(BcmTableManagerTest,
   BcmFlowEntry actual;
   EXPECT_THAT(bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
                   source, ::p4::v1::Update::INSERT, &actual),
-              StatusIs(HerculesErrorSpace(), ERR_OPER_NOT_SUPPORTED, _));
+              StatusIs(StratumErrorSpace(), ERR_OPER_NOT_SUPPORTED, _));
 }
 
 class ConstConditionTest : public BcmTableManagerTest,

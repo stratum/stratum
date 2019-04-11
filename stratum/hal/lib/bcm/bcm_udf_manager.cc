@@ -234,9 +234,8 @@ bool BcmUdfManager::DefaultIsUdfEligible(const MappedField& mapped_field,
   std::vector<int> static_sets = UdfSetsByUsage(kStatic);
   const std::vector<uint32> empty_vector;
   for (const auto& pair : udf_sets_per_table) {
-    ASSIGN_OR_RETURN(int udf_set_id, AllocateUdfSet(pair.second, static_sets),
-                     _ << " Failed to allocate UDF set for table "
-                       << pair.first->Id() << ".");
+    ASSIGN_OR_RETURN(int udf_set_id, AllocateUdfSet(pair.second, static_sets));
+    //FIXME error message: _ << " Failed to allocate UDF set for table " << pair.first->Id() << "."
     for (uint32 match_field : gtl::FindWithDefault(udf_match_fields_per_table,
                                                    pair.first, empty_vector)) {
       RETURN_IF_ERROR(pair.first->MarkUdfMatchField(match_field, udf_set_id));

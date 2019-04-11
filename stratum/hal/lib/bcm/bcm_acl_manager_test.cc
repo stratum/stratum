@@ -16,6 +16,7 @@
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 
 #include <vector>
+#include <functional>
 
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "gmock/gmock.h"
@@ -27,6 +28,8 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
@@ -34,12 +37,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "absl/container/flat_map.h"
-#include "absl/container/flat_set.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "util/task/canonical_errors.h"
-#include "stratum/glue/status/status.h"
-#include "util/task/statusor.h"
 
 DECLARE_string(bcm_hardware_specs_file);
 DECLARE_string(test_tmpdir);
@@ -310,9 +307,9 @@ constexpr uint64 kNodeId = 123456;
 constexpr int kTableSize = 10;
 
 // Map of default P4 tables indexed by table id.
-const gtl::flat_map<int, ::p4::config::v1::Table>& DefaultP4Tables() {
+const absl::flat_hash_map<int, ::p4::config::v1::Table>& DefaultP4Tables() {
   static const auto* tables = []() {
-    auto* tables = new gtl::flat_map<int, ::p4::config::v1::Table>();
+    auto* tables = new absl::flat_hash_map<int, ::p4::config::v1::Table>();
     ::p4::config::v1::Table table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
       preamble { id: 1 name: "table_1" }
@@ -399,9 +396,9 @@ const std::vector<::p4::config::v1::Table> DefaultP4TablesVector() {
 // Map of BcmAClTables corresponding to the default P4 tables, indexed by table
 // id. These tables do not have a stage since that is not specified by the P4
 // tables.
-const gtl::flat_map<int, BcmAclTable>& DefaultBcmAclTables() {
+const absl::flat_hash_map<int, BcmAclTable>& DefaultBcmAclTables() {
   static const auto* tables = []() {
-    auto tables = new gtl::flat_map<int, BcmAclTable>();
+    auto tables = new absl::flat_hash_map<int, BcmAclTable>();
     BcmAclTable table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
       fields { type: ETH_SRC })PROTO", &table));
@@ -473,8 +470,8 @@ const P4ControlBlock& DefaultControlBlock() {
 }
 
 // Sets the BcmAclStage for all tables within a map.
-const gtl::flat_map<int, BcmAclTable> SetStage(
-    const gtl::flat_map<int, BcmAclTable>& original_tables, BcmAclStage stage) {
+const absl::flat_hash_map<int, BcmAclTable> SetStage(
+    const absl::flat_hash_map<int, BcmAclTable>& original_tables, BcmAclStage stage) {
   auto tables = original_tables;
   for (auto& pair : tables) {
     pair.second.set_stage(stage);
@@ -557,7 +554,7 @@ class BcmAclManagerTest : public ::testing::Test {
                                MappedField* mapped_field);
 
   // Mock config state. Map of table ID to table.
-  gtl::flat_map<int, ::p4::config::v1::Table> mock_tables_;
+  absl::flat_hash_map<int, ::p4::config::v1::Table> mock_tables_;
 
   // Class instances used for testing (real and mocked). Note that in addition
   // to a mocked version of BcmTableManager passed to BcmAclManager, we use a
@@ -662,7 +659,7 @@ void BcmAclManagerTest::SetUpBcmSdkMock() {
       return ::util::OkStatus();
     }
   }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND).SetNoLogging()
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)//.SetNoLogging() // FIXME
          << "No field_type found for table " << table_id << ", match "
          << match_id << ".";
 }
@@ -727,7 +724,7 @@ TEST_F(BcmAclManagerTest, PushChassisConfig_UnknownChip) {
 
   // Push config and evaluate the error return.
   EXPECT_THAT(bcm_acl_manager_->PushChassisConfig(config, kNodeId),
-              StatusIs(HerculesErrorSpace(), ERR_INTERNAL,
+              StatusIs(StratumErrorSpace(), ERR_INTERNAL,
                        HasSubstr("Unable to find ChipModelSpec")));
 }
 
@@ -901,7 +898,19 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
       return lhs.priority() < rhs.priority();
     }
   };
-  gtl::flat_set<BcmAclTable, PriorityCompare> bcm_tables;
+
+  // FIXME: protobuf message classes should not be used as hashmap keys.
+  // see: https://github.com/protocolbuffers/protobuf/issues/2066#issuecomment-245035441
+  // and: https://github.com/protocolbuffers/protobuf/pull/2304
+  struct BcmAclTableHasher {
+    size_t operator()(const BcmAclTable& x) const {
+      std::string serialized;
+      x.SerializeToString(&serialized);
+      return std::hash<std::string>{}(serialized);
+    }
+  };
+  
+  absl::flat_hash_set<BcmAclTable, BcmAclTableHasher, PriorityCompare> bcm_tables; // FIXME: See comment above
   EXPECT_CALL(*bcm_sdk_mock_, CreateAclTable(kUnit, _))
       .Times(4)
       .WillRepeatedly(

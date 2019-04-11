@@ -13,7 +13,7 @@ ARG BAZEL_VERSION=0.14.1
 # bazel dependencies
 # + wget to download bazel binary
 # + ca-certificates for wget HTPPS connection
-ENV PKG_DEPS pkg-config zip g++ zlib1g-dev unzip python wget ca-certificates
+ENV PKG_DEPS pkg-config zip g++ zlib1g-dev unzip python wget ca-certificates python-yaml libyaml-dev
 
 COPY . /stratum/
 WORKDIR /stratum/

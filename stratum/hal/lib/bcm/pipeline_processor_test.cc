@@ -1,6 +1,7 @@
 #include "stratum/hal/lib/bcm/pipeline_processor.h"
 
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
@@ -800,7 +801,7 @@ TEST(PipelineProcessorTest, ReApplyTable) {
   SCOPED_TRACE(absl::StrCat("P4ControlBlock:\n", block.DebugString()));
   // Create the pipeline.
   EXPECT_THAT(PipelineProcessor::CreateInstance(block).status(),
-              StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+              StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                        HasSubstr("Cannot apply a table more than once.")));
 }
 
@@ -826,7 +827,7 @@ TEST(PipelineProcessorTest, MixedDependencies) {
   SCOPED_TRACE(absl::StrCat("P4ControlBlock:\n", block.DebugString()));
   // Create the pipeline.
   EXPECT_THAT(PipelineProcessor::CreateInstance(block).status(),
-              StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+              StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                        HasSubstr("Inconsistent dependency")));
 }
 
@@ -841,7 +842,7 @@ TEST(PipelineProcessorTest, BranchBeforeApply) {
   // Create the pipeline.
   EXPECT_THAT(
       PipelineProcessor::CreateInstance(block).status(),
-      StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+      StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                HasSubstr("Cannot branch on a table before it is applied.")));
 }
 
@@ -856,7 +857,7 @@ TEST(PipelineProcessorTest, OnHitDependency) {
   SCOPED_TRACE(absl::StrCat("P4ControlBlock:\n", block.DebugString()));
   // Create the pipeline.
   EXPECT_THAT(PipelineProcessor::CreateInstance(block).status(),
-              StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+              StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                        HasSubstr("On-hit actions")));
 }
 
@@ -871,7 +872,7 @@ TEST(PipelineProcessorTest, OnNotMissDependency) {
   SCOPED_TRACE(absl::StrCat("P4ControlBlock:\n", block.DebugString()));
   // Create the pipeline.
   EXPECT_THAT(PipelineProcessor::CreateInstance(block).status(),
-              StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+              StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                        HasSubstr("On-hit actions")));
 }
 
@@ -888,7 +889,7 @@ TEST(PipelineProcessorTest, ConflictingStageDependency) {
 
   // Create the pipeline.
   EXPECT_THAT(PipelineProcessor::CreateInstance(block).status(),
-              StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+              StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                        HasSubstr("Pipeline stage mismatch")));
 }
 

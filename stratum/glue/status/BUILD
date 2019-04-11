@@ -49,6 +49,7 @@ stratum_cc_library(
         "@com_google_protobuf//:protobuf",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "//stratum/glue/gtl:source_location",
     ],
 )
 

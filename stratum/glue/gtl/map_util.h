@@ -29,6 +29,16 @@ limitations under the License.
 namespace stratum {
 namespace gtl {
 
+// Test to see if a set, map, hash_set or hash_map contains a particular key.
+// Returns true if the key is in the collection.
+template <class Collection>
+bool ContainsKey(
+    const Collection& collection, 
+    const typename Collection::key_type& key) {
+  typename Collection::const_iterator it = collection.find(key);
+  return it != collection.end();
+}
+
 // Returns a pointer to the const value associated with the given key if it
 // exists, or NULL otherwise.
 template <class Collection>

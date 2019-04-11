@@ -3,6 +3,8 @@
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -10,9 +12,7 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
-#include "util/endian/endian.h"
-#include "stratum/glue/gtl/flat_map.h"
-#include "stratum/glue/gtl/flat_set.h"
+#include <endian.h>
 
 namespace stratum {
 
@@ -107,7 +107,7 @@ MATCHER_P2(UsesUdfSets, udf_spec, expected_sets, "") {
   } udf_chunk_less;
 
   // Use the debug string as a hash for arg physical UDF sets.
-  gtl::flat_set<string> arg_set_strings;
+  absl::flat_hash_set<string> arg_set_strings;
   for (BcmUdfSet& udf_set : divided_sets) {
     std::sort(udf_set.mutable_chunks()->begin(),
               udf_set.mutable_chunks()->end(), udf_chunk_less);
@@ -115,7 +115,7 @@ MATCHER_P2(UsesUdfSets, udf_spec, expected_sets, "") {
   }
 
   // Use the debug string as a hash for expected physical UDF sets.
-  gtl::flat_set<string> expected_set_strings;
+  absl::flat_hash_set<string> expected_set_strings;
   for (BcmUdfSet udf_set : expected_sets) {
     auto& chunks = *udf_set.mutable_chunks();
     for (auto& chunk : chunks) {
@@ -197,7 +197,7 @@ class AclTableBuilder {
   P4TableMapperMock* p4_table_mapper_;  // Pointer to the mapper object for
                                         // match field lookup mocking.
   int id_;                              // Table ID.
-  gtl::flat_map<int, MappedField>
+  absl::flat_hash_map<int, MappedField>
       mapped_fields_;  // Map of this table's P4 MatchField IDs to MappedFields.
   BcmAclStage stage_;  // This table's stage.
 };
@@ -352,7 +352,7 @@ TEST(BcmUdfManagerTest, CreateMoreControllerSetsThanTotalSets) {
                                             /*num_controller_sets=*/3,
                                             /*unit=*/1, &p4_table_mapper)
                   .status(),
-              StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM, _));
+              StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM, _));
 }
 
 // This case expects no UDFs to be created when no ACL tables are used in setup.
@@ -613,7 +613,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_OffBoundaryChunks) {
                                     /*num_controller_sets=*/0, /*unit=*/1,
                                     &p4_table_mapper, UdfAllFields));
   EXPECT_THAT(bcm_udf_manager->SetUpStaticUdfs(&acl_tables),
-              StatusIs(HerculesErrorSpace(), ERR_NO_RESOURCE, _));
+              StatusIs(StratumErrorSpace(), ERR_NO_RESOURCE, _));
 }
 
 // Class for running MappedFieldToBcmFieldsTests. The parameterized value
@@ -663,8 +663,8 @@ MATCHER_P(EqualsBuffer, expected, "") {
   return arg.u64() == expected.u64();
 }
 
-// MapedFieldToBcmFields shoulds fill UDF chunks as if the u32 value/mask is a
-// right-justified nework-order bit-field in the original mapped field.
+// MappedFieldToBcmFields should fill UDF chunks as if the u32 value/mask is a
+// right-justified network-order bit-field in the original mapped field.
 TEST_P(MappedFieldToBcmFieldsTest, U32) {
   const uint32 kShift = GetParam();
   constexpr uint32 kValue = 0xf1234567;
@@ -730,15 +730,15 @@ TEST_P(MappedFieldToBcmFieldsTest, U32) {
   }
 
   // Calculate expected values.
-  Buffer expected_value(htonll(static_cast<uint64>(kValue) << kShift));
-  Buffer expected_mask(htonll(static_cast<uint64>(kMask) << kShift));
+  Buffer expected_value(htobe64(static_cast<uint64>(kValue) << kShift));
+  Buffer expected_mask(htobe64(static_cast<uint64>(kMask) << kShift));
 
   EXPECT_THAT(actual_value, EqualsBuffer(expected_value));
   EXPECT_THAT(actual_mask, EqualsBuffer(expected_mask));
 }
 
-// MapedFieldToBcmFields shoulds fill UDF chunks as if the u64 value/mask is a
-// right-justified nework-order bit-field in the original mapped field.
+// MappedFieldToBcmFields should fill UDF chunks as if the u64 value/mask is a
+// right-justified network-order bit-field in the original mapped field.
 TEST_P(MappedFieldToBcmFieldsTest, U64) {
   const uint64 kShift = GetParam();
   // 52-bit value.
@@ -817,17 +817,17 @@ TEST_P(MappedFieldToBcmFieldsTest, U64) {
   }
 
   // Calculate expected value.
-  Buffer expected_value_lower(htonll(kValue << kShift));
+  Buffer expected_value_lower(htobe64(kValue << kShift));
   Buffer expected_value_upper(0);
   if (kShift > 0) {
-    expected_value_upper.set_u64(htonll(kValue >> (64 - kShift)));
+    expected_value_upper.set_u64(htobe64(kValue >> (64 - kShift)));
   }
 
   // Calculate expected mask.
-  Buffer expected_mask_lower(htonll(kMask << kShift));
+  Buffer expected_mask_lower(htobe64(kMask << kShift));
   Buffer expected_mask_upper(0);
   if (kShift > 0) {
-    expected_mask_upper.set_u64(htonll(kMask >> (64 - kShift)));
+    expected_mask_upper.set_u64(htobe64(kMask >> (64 - kShift)));
   }
 
   EXPECT_THAT(actual_value_lower, EqualsBuffer(expected_value_lower));
@@ -836,8 +836,8 @@ TEST_P(MappedFieldToBcmFieldsTest, U64) {
   EXPECT_THAT(actual_mask_upper, EqualsBuffer(expected_mask_upper));
 }
 
-// MapedFieldToBcmFields shoulds fill UDF chunks as if the u64 value/mask is a
-// right-justified nework-order bit-field in the original mapped field. This
+// MappedFieldToBcmFields should fill UDF chunks as if the u64 value/mask is a
+// right-justified network-order bit-field in the original mapped field. This
 // should work even if the bit-field is smaller than 64-bits.
 TEST_P(MappedFieldToBcmFieldsTest, U64Partial) {
   const uint64 kShift = GetParam();
@@ -918,12 +918,12 @@ TEST_P(MappedFieldToBcmFieldsTest, U64Partial) {
 
   // Calculate expected value.
   const uint64 kExpectedShift = kShift + /*64-52=*/12;
-  Buffer expected_value_lower(htonll(kValue << kExpectedShift));
-  Buffer expected_value_upper(htonll(kValue >> (64 - kExpectedShift)));
+  Buffer expected_value_lower(htobe64(kValue << kExpectedShift));
+  Buffer expected_value_upper(htobe64(kValue >> (64 - kExpectedShift)));
 
   // Calculate expected mask.
-  Buffer expected_mask_lower(htonll(kMask << kExpectedShift));
-  Buffer expected_mask_upper(htonll(kMask >> (64 - kExpectedShift)));
+  Buffer expected_mask_lower(htobe64(kMask << kExpectedShift));
+  Buffer expected_mask_upper(htobe64(kMask >> (64 - kExpectedShift)));
 
   EXPECT_THAT(actual_value_lower, EqualsBuffer(expected_value_lower));
   EXPECT_THAT(actual_mask_lower, EqualsBuffer(expected_mask_lower));
@@ -931,7 +931,7 @@ TEST_P(MappedFieldToBcmFieldsTest, U64Partial) {
   EXPECT_THAT(actual_mask_upper, EqualsBuffer(expected_mask_upper));
 }
 
-// MapedFieldToBcmFields shoulds fill UDF chunks based on the b value/mask
+// MappedFieldToBcmFields should fill UDF chunks based on the b value/mask
 // position and value.
 TEST_P(MappedFieldToBcmFieldsTest, B) {
   const uint32 kShift = GetParam();
@@ -1000,8 +1000,8 @@ TEST_P(MappedFieldToBcmFieldsTest, B) {
   }
 
   // Calculate expected values.
-  Buffer expected_value(htonll(static_cast<uint64>(kValue) << kShift));
-  Buffer expected_mask(htonll(static_cast<uint64>(kMask) << kShift));
+  Buffer expected_value(htobe64(static_cast<uint64>(kValue) << kShift));
+  Buffer expected_mask(htobe64(static_cast<uint64>(kMask) << kShift));
 
   EXPECT_THAT(actual_value, EqualsBuffer(expected_value));
   EXPECT_THAT(actual_mask, EqualsBuffer(expected_mask));
@@ -1044,7 +1044,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_NoStaticSets) {
                            /*num_controller_sets=*/udf_spec.set_count(),
                            /*unit=*/1, &p4_table_mapper, UdfAllFields));
   EXPECT_THAT(bcm_udf_manager->SetUpStaticUdfs(&acl_tables),
-              StatusIs(HerculesErrorSpace(), ERR_NO_RESOURCE, _));
+              StatusIs(StratumErrorSpace(), ERR_NO_RESOURCE, _));
 
   // Create the UDF manager with no sets and set up the tables.
   udf_spec.set_set_count(0);
@@ -1054,7 +1054,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_NoStaticSets) {
                            /*num_controller_sets=*/udf_spec.set_count(),
                            /*unit=*/1, &p4_table_mapper, UdfAllFields));
   EXPECT_THAT(bcm_udf_manager->SetUpStaticUdfs(&acl_tables),
-              StatusIs(HerculesErrorSpace(), ERR_NO_RESOURCE, _));
+              StatusIs(StratumErrorSpace(), ERR_NO_RESOURCE, _));
 }
 
 // This case expects a failure to program static UDFs if a UDF conversion is
@@ -1081,7 +1081,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_NonConvertibleMatchField) {
                                     /*num_controller_sets=*/2, /*unit=*/1,
                                     &p4_table_mapper, UdfAllFields));
   auto result = bcm_udf_manager->SetUpStaticUdfs(&acl_tables);
-  EXPECT_THAT(result, StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+  EXPECT_THAT(result, StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                                HasSubstr("cannot be converted to UDF")))
       << "Status: " << result;
 }
@@ -1116,7 +1116,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_MatchFieldIsTooBig) {
                                     /*num_controller_sets=*/0, /*unit=*/1,
                                     &p4_table_mapper, UdfAllFields));
   EXPECT_THAT(bcm_udf_manager->SetUpStaticUdfs(&acl_tables),
-              StatusIs(HerculesErrorSpace(), ERR_NO_RESOURCE, _));
+              StatusIs(StratumErrorSpace(), ERR_NO_RESOURCE, _));
 }
 
 // This case expects a failure to program static UDFs if an ACL table
@@ -1159,7 +1159,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_AclTableWithTooManyChunks) {
                                     /*num_controller_sets=*/0, /*unit=*/1,
                                     &p4_table_mapper, UdfAllFields));
   EXPECT_THAT(bcm_udf_manager->SetUpStaticUdfs(&acl_tables),
-              StatusIs(HerculesErrorSpace(), ERR_NO_RESOURCE, _));
+              StatusIs(StratumErrorSpace(), ERR_NO_RESOURCE, _));
 }
 
 // This case expects a failure to program static UDFs if there aren't enough
@@ -1206,7 +1206,7 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_MultipleAclTablesWithTooManyChunks) {
                                     /*num_controller_sets=*/0, /*unit=*/1,
                                     &p4_table_mapper, UdfAllFields));
   EXPECT_THAT(bcm_udf_manager->SetUpStaticUdfs(&acl_tables),
-              StatusIs(HerculesErrorSpace(), ERR_NO_RESOURCE, _));
+              StatusIs(StratumErrorSpace(), ERR_NO_RESOURCE, _));
 }
 
 // This case tests MappedField to BcmFlowEntry conversion when no UDF fields
@@ -1241,17 +1241,17 @@ TEST(BcmUdfManagerTest, MappedFieldToBcmFields_NoStaticUdfs) {
                            /*unit=*/1, &p4_table_mapper, UdfAllFields));
 
   auto result = bcm_udf_manager->MappedFieldToBcmFields(1, mapped_field_1);
-  EXPECT_THAT(result, StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+  EXPECT_THAT(result, StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                                HasSubstr("is not in UDF set 1")))
       << "Status is: " << result.status();
 
   result = bcm_udf_manager->MappedFieldToBcmFields(2, mapped_field_2);
-  EXPECT_THAT(result, StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+  EXPECT_THAT(result, StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                                HasSubstr("is not in UDF set 2")))
       << "Status is: " << result.status();
 
   result = bcm_udf_manager->MappedFieldToBcmFields(2, mapped_field_3);
-  EXPECT_THAT(result, StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+  EXPECT_THAT(result, StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                                HasSubstr("is not in UDF set 2")))
       << "Status is: " << result.status();
 }
@@ -1279,7 +1279,7 @@ TEST(BcmUdfManagerTest, MappedFieldToBcmFields_UnknownUdfSetId) {
                            /*unit=*/1, &p4_table_mapper, UdfAllFields));
 
   auto result = bcm_udf_manager->MappedFieldToBcmFields(13, mapped_field_1);
-  EXPECT_THAT(result, StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+  EXPECT_THAT(result, StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                                HasSubstr("Unknown UDF set")))
       << "Status: " << result.status();
 }
@@ -1309,7 +1309,7 @@ TEST(BcmUdfManagerTest, MappedFieldToBcmFields_CannotConvert) {
 
   auto result = bcm_udf_manager->MappedFieldToBcmFields(
       1, MappedFieldByType(P4_FIELD_TYPE_COLOR));
-  EXPECT_THAT(result, StatusIs(HerculesErrorSpace(), ERR_INVALID_PARAM,
+  EXPECT_THAT(result, StatusIs(StratumErrorSpace(), ERR_INVALID_PARAM,
                                HasSubstr("UDF is not supported")))
       << "Status: " << result.status();
 }

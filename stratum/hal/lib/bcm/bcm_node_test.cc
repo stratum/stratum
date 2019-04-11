@@ -30,7 +30,6 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "util/task/canonical_errors.h"
 
 using ::testing::_;
 using ::testing::DoAll;

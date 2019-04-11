@@ -31,9 +31,11 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
-#include "util/libcproxy/libcproxy.h"
-#include "util/libcproxy/libcwrapper.h"
-#include "util/libcproxy/passthrough_proxy.h"
+
+// #include "util/libcproxy/libcproxy.h"
+// #include "util/libcproxy/libcwrapper.h"
+// #include "util/libcproxy/passthrough_proxy.h"
+#include <sys/epoll.h>
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -56,6 +58,29 @@ MATCHER_P(EqualsStatus, status, "") {
 }
 
 namespace {
+
+// FIXME: Implement actual LibcProxy
+class PassthroughLibcProxy {
+  public:
+    PassthroughLibcProxy() {}
+    virtual ~PassthroughLibcProxy() {}
+    virtual int close(int fd) { return ::close(fd); }
+    virtual int socket(int domain, int type, int protocol) { return socket(domain, type, protocol); }
+    virtual int setsockopt(int sockfd, int level, int optname, const void* optval, socklen_t optlen) { return setsockopt(sockfd, level, optname, optval, optlen); }
+    virtual int ioctl(int fd, unsigned long int request, void* arg) { return ioctl(fd, request, arg); };
+    virtual int bind(int sockfd, const struct sockaddr* my_addr, socklen_t addrlen) { return bind(sockfd, my_addr, addrlen); }
+    virtual ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags) { return sendmsg(sockfd, msg, flags); }
+    virtual ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags) { return recvmsg(sockfd, msg, flags); }
+    virtual int epoll_create1(int flags) { return epoll_create1(flags); }
+    virtual int epoll_ctl(int efd, int op, int fd, struct epoll_event* event) { return epoll_ctl(efd, op, fd, event); }
+    virtual int epoll_wait(int efd, struct epoll_event* events, int maxevents, int timeout) { return epoll_wait(efd, events, maxevents, timeout); }
+    virtual bool ShouldProxyEpollCreate() { return false; }
+};
+
+class LibcWrapper {
+  public:
+    static void SetLibcProxy(PassthroughLibcProxy* proxy) {}
+};
 
 class LibcProxyMock : public PassthroughLibcProxy {
  public:
@@ -1466,7 +1491,7 @@ TEST_P(BcmPacketioManagerTest,
   // being part of any trunk.
   EXPECT_CALL(*bcm_chassis_ro_mock_, GetParentTrunkId(kNodeId1, kPortId1))
       .WillRepeatedly(Return(
-          ::util::Status(HerculesErrorSpace(), ERR_INVALID_PARAM, "Blah")));
+          ::util::Status(StratumErrorSpace(), ERR_INVALID_PARAM, "Blah")));
 
   // P4TableMapper calls triggered by RX thread.
   // We expect the 4+ calls from ParseKnetHeaderForRx:

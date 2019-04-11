@@ -781,7 +781,7 @@ TEST_P(BcmChassisManagerTest,
     // (slot: 1, port: 1) needs to be in the internal map.
     auto ret = GetBcmPort(1, 1, 0);
     ASSERT_TRUE(ret.ok());
-    auto& bcm_port = ret.ValueOrDie();
+    auto bcm_port = ret.ValueOrDie();
     EXPECT_EQ(kHundredGigBps, bcm_port.speed_bps());
     EXPECT_EQ(34, bcm_port.logical_port());
 

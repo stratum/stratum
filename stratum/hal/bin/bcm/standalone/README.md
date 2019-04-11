@@ -15,7 +15,7 @@ The detailed instructions for building the SDKLT Demo App are contained in the S
 An example is given below:
 
 ```
-sudo apt-get install libyaml-dev
+sudo apt-get install libyaml-dev python-yaml
 git clone https://github.com/Broadcom-Network-Switching-Software/SDKLT.git
 cd SDKLT
 export SDKLT=$PWD

@@ -19,6 +19,7 @@
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -1536,7 +1537,7 @@ TEST_F(BcmL3ManagerTest,
 TEST_F(BcmL3ManagerTest, InsertLpmOrHostFlowP4ConversionFailure) {
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(
-          Return(::util::Status(HerculesErrorSpace(), ERR_INTERNAL, "Blah")));
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, "Blah")));
   ::p4::v1::TableEntry p4_table_entry;
   ASSERT_FALSE(bcm_l3_manager_->InsertTableEntry(p4_table_entry).ok());
 }
@@ -1751,7 +1752,7 @@ TEST_F(BcmL3ManagerTest, ModifyLpmOrHostFlowSuccessForIpv6HostFlow) {
 TEST_F(BcmL3ManagerTest, ModifyLpmOrHostFlowP4ConversionFailure) {
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(
-          Return(::util::Status(HerculesErrorSpace(), ERR_INTERNAL, "Blah")));
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, "Blah")));
   ::p4::v1::TableEntry p4_table_entry;
   ASSERT_FALSE(bcm_l3_manager_->ModifyTableEntry(p4_table_entry).ok());
 }
@@ -1899,7 +1900,7 @@ TEST_F(BcmL3ManagerTest, DeleteLpmOrHostFlowSuccessForIpv6HostFlow) {
 TEST_F(BcmL3ManagerTest, DeleteLpmOrHostFlowP4ConversionFailure) {
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))
       .WillOnce(
-          Return(::util::Status(HerculesErrorSpace(), ERR_INTERNAL, "Blah")));
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, "Blah")));
   ::p4::v1::TableEntry p4_table_entry;
   ASSERT_FALSE(bcm_l3_manager_->DeleteTableEntry(p4_table_entry).ok());
 }

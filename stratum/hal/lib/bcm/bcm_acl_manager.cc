@@ -440,14 +440,9 @@ BcmAclManager::GeneratePhysicalAclTables(
     uint32 table_id = pipeline_table.table.table_id();
     ::p4::config::v1::Table p4_table;
     RETURN_IF_ERROR(p4_table_mapper_->LookupTable(table_id, &p4_table));
-    // FIXME(craigs) - no AclTable creator function with valid_conditions
-    //                 params, maybe related to missing ConstConditions()
-    //                 in AclTable.
-    // physical_acl_table.logical_tables.emplace_back(
-    //     p4_table, stage, pipeline_table.priority,
-    //     pipeline_table.valid_conditions);
     physical_acl_table.logical_tables.emplace_back(
-        p4_table, stage, pipeline_table.priority);
+        p4_table, stage, pipeline_table.priority,
+        pipeline_table.valid_conditions);
   }
   return physical_acl_table;
 }

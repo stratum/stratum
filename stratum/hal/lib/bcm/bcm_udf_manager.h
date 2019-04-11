@@ -10,8 +10,6 @@
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "absl/container/flat_hash_set.h"
-#include "stratum/glue/gtl/flat_map.h"
-#include "stratum/glue/gtl/flat_set.h"
 
 namespace stratum {
 
@@ -231,6 +229,9 @@ class BcmUdfManager {
     // Lazy constructor. Used for temporary (non-hardware) UDF sets.
     explicit UdfSet(int max_chunks) : UdfSet(kStatic, 0, max_chunks) {}
 
+    // Empty constructor for ::util::StatusOr<BcmUdfManager::UdfSet> uses
+    explicit UdfSet() : UdfSet(kStatic, 0, 0) {}
+
     // Returns read-only view of the chunks in this set.
     const absl::flat_hash_set<UdfChunk, UdfChunkHash, UdfChunkEq>& chunks()
         const {
@@ -243,12 +244,12 @@ class BcmUdfManager {
     // Adds a collection of UdfChunk objects into this table.
     // <T> must be an iterable collection of UdfChunk objects.
     template <typename T>
-    MUST_USE_RESULT bool AddChunks(const T& chunks);
+    ABSL_MUST_USE_RESULT bool AddChunks(const T& chunks);
 
     // Merges another UDF set into this one. Returns false if the resulting set
     // is too large. Replaces all the chunk IDs from the merged set based on the
     // available range for this UdfSet.
-    MUST_USE_RESULT bool MergeFrom(UdfSet other) {
+    ABSL_MUST_USE_RESULT bool MergeFrom(UdfSet other) {
       return AddChunks(other.chunks_);
     }
 
@@ -309,7 +310,7 @@ class BcmUdfManager {
   // ***************************************************************************
   BcmSdkInterface* bcm_sdk_interface_;   // Interface to the Bcm SDK. Not owned
                                          // by this class.
-  gtl::flat_map<int, UdfSet> udf_sets_;  // UDF sets managed by this object.
+  absl::flat_hash_map<int, UdfSet> udf_sets_;  // UDF sets managed by this object.
   int chunk_size_;                       // The size of each chunk in bits.
   int chunks_per_set_;                   // Number of chunks available per set.
 

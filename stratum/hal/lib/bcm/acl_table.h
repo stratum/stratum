@@ -37,7 +37,8 @@ class AclTable : public BcmFlowTable {
   //***************************************************************************
   //  Constructors
   //***************************************************************************
-  AclTable(const ::p4::config::v1::Table& table, BcmAclStage stage, int priority)
+  AclTable(const ::p4::config::v1::Table& table, BcmAclStage stage, int priority,
+           const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>& const_conditions)
       : BcmFlowTable(table),
         stage_(stage),
         match_fields_(),
@@ -45,15 +46,16 @@ class AclTable : public BcmFlowTable {
         max_entries_(table.size()),
         priority_(priority),
         udf_set_id_(-1),
-        udf_match_fields_() {
+        udf_match_fields_(),
+        const_conditions_(const_conditions) {
     for (const auto& match_field : table.match_fields()) {
       match_fields_.insert(match_field.id());
     }
   }
 
   AclTable(const ::p4::config::v1::Table& table, P4Annotation::PipelineStage stage,
-           int priority)
-      : AclTable(table, P4PipelineToBcmAclStage(stage), priority) {}
+           int priority, const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>& const_conditions)
+      : AclTable(table, P4PipelineToBcmAclStage(stage), priority, const_conditions) {}
 
   AclTable(const AclTable& other)
       : BcmFlowTable(other),
@@ -63,7 +65,8 @@ class AclTable : public BcmFlowTable {
         max_entries_(other.max_entries_),
         priority_(other.priority_),
         udf_set_id_(other.udf_set_id_),
-        udf_match_fields_(other.udf_match_fields_) {}
+        udf_match_fields_(other.udf_match_fields_),
+        const_conditions_(other.const_conditions_) {}
 
   AclTable(AclTable&& other)
       : BcmFlowTable(std::move(other)),
@@ -73,7 +76,8 @@ class AclTable : public BcmFlowTable {
         max_entries_(other.max_entries_),
         priority_(other.priority_),
         udf_set_id_(other.udf_set_id_),
-        udf_match_fields_(std::move(other.udf_match_fields_)) {}
+        udf_match_fields_(std::move(other.udf_match_fields_)),
+        const_conditions_(std::move(other.const_conditions_)) {}
 
   //***************************************************************************
   //  Static translators
@@ -107,6 +111,8 @@ class AclTable : public BcmFlowTable {
   bool IsUdfField(uint32 field) const { return udf_match_fields_.count(field); }
   bool HasUdf() const { return !udf_match_fields_.empty(); }
   int UdfSetId() const { return udf_set_id_; }
+  const absl::flat_hash_set<uint32>& UdfMatchFields() const { return udf_match_fields_; }
+  const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>& ConstConditions() const { return const_conditions_; }
 
   // Returns the BCM ACL ID for an entry in this table.
   // Returns ERR_ENTRY_NOT_FOUND if the entry does not exist in this table.
@@ -187,6 +193,8 @@ class AclTable : public BcmFlowTable {
   // Mapping from entries to their respective Bcm ACL IDs.
   absl::flat_hash_map<::p4::v1::TableEntry, uint32, TableEntryHash, TableEntryEqual>
       bcm_acl_id_map_;
+  // Stores const conditions
+  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>> const_conditions_;
 };
 
 }  // namespace bcm

@@ -20,6 +20,10 @@ limitations under the License.
 #include <set>
 #include <string>
 #include "stratum/glue/integral_types.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/node_hash_set.h"
+#include "absl/container/node_hash_map.h"
 #include "gtest/gtest.h"
 
 using std::string;
@@ -59,6 +63,38 @@ TEST(MapUtil, InsertIfNotPresent) {
   EXPECT_EQ(s.count(0), 1);
   EXPECT_FALSE(gtl::InsertIfNotPresent(&s, 0));
   EXPECT_EQ(s.count(0), 1);
+}
+
+template <typename T>
+class MapUtilSet : public ::testing::Test {
+ public:
+  T collection_;
+};
+using SetTypes = ::testing::Types<
+  std::set<int>, std::unordered_set<int>, ::absl::flat_hash_set<int>, ::absl::node_hash_set<int>
+>;
+TYPED_TEST_SUITE(MapUtilSet, SetTypes);
+
+TYPED_TEST(MapUtilSet, ContainsKey) {
+  EXPECT_FALSE(gtl::ContainsKey(this->collection_, 0));
+  ASSERT_TRUE(this->collection_.insert(0).second);
+  EXPECT_TRUE(gtl::ContainsKey(this->collection_, 0));
+}
+
+template <typename T>
+class MapUtilMap : public ::testing::Test {
+ public:
+  T collection_;
+};
+using MapTypes = ::testing::Types<
+  std::map<int, string>, std::unordered_map<int, string>, ::absl::flat_hash_map<int, string>, ::absl::node_hash_map<int, string>
+>;
+TYPED_TEST_SUITE(MapUtilMap, MapTypes);
+
+TYPED_TEST(MapUtilMap, ContainsKey) {
+  EXPECT_FALSE(gtl::ContainsKey(this->collection_, 0));
+  ASSERT_TRUE(this->collection_.insert({0, "foo"}).second);
+  EXPECT_TRUE(gtl::ContainsKey(this->collection_, 0));
 }
 
 }  // namespace stratum

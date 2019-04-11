@@ -132,6 +132,10 @@ class CLANG_WARN_UNUSED_RESULT StatusOr {
   template <typename U>
   StatusOr& operator=(const StatusOr<U>& other);
 
+  StatusOr(const StatusBuilder& status_builder) : status_(status_builder) {
+    EnsureNotOk();
+  }
+
 #ifndef SWIG
   // Move constructor and move-assignment operator.
   StatusOr(StatusOr&& other) = default;
@@ -175,6 +179,10 @@ class CLANG_WARN_UNUSED_RESULT StatusOr {
   // more efficient than ValueOrDie, but may leave the stored value
   // in an arbitrary valid state.
   T ConsumeValueOrDie();
+
+  void EnsureOk() const;
+
+  void EnsureNotOk();
 
  private:
   ::util::Status status_;
@@ -293,6 +301,22 @@ inline T StatusOr<T>::ConsumeValueOrDie() {
     internal::StatusOrHelper::Crash(status_);
   }
   return std::move(value_);
+}
+
+template <typename T>
+inline void StatusOr<T>::EnsureOk() const {
+  if (!ok()) internal::StatusOrHelper::Crash(status_);
+}
+
+template <typename T>
+inline void StatusOr<T>::EnsureNotOk() {
+  if (ok()) internal::StatusOrHelper::HandleInvalidStatusCtorArg();
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const ::util::StatusOr<T>& x) {
+  os << x.status().ToString();
+  return os;
 }
 
 }  // namespace util

@@ -1,6 +1,6 @@
 # This Skylark rule imports the Broadcom SDK-LT shared libraries and headers. 
 # The SDKLT_INSTALL environment variable needs to be set, otherwise the Stratum
-# rules for barefoot platforms cannot be built.
+# rules for Broadcom platforms cannot be built.
 
 def _impl(repository_ctx):
     if "SDKLT_INSTALL" not in repository_ctx.os.environ:
