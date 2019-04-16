@@ -1,0 +1,3513 @@
+{
+  "_comment": "Example Configuration file for bspless support",  "enable_debug_log": 1,  "board_lane_map_entry": [    {
+      "connector": 1,
+      "device_id": 0,
+      "mac_block": 23,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1075318529,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943617288,
+        "rx_lane": 0,
+        "rx_pn_swap": 138983736,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 129499325,
+            "tx_eq_attn": 2797119250
+          }
+      },
+      "lane2": {
+        "mac_ch": 13,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943617320,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138983736,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 139008424,
+        "tx_lane": 1,
+        "tx_pn_swap": 3943617472,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138529098,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 1485895344,
+            "tx_eq_attn": 32767
+          }
+      }
+    },
+    {
+      "connector": 2,
+      "device_id": 0,
+      "mac_block": 23,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 78780928,
+        "tx_pn_swap": 1,
+        "rx_lane": 78780928,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943617232
+          }
+      },
+      "lane2": {
+        "mac_ch": 32766,
+        "tx_lane": 1487454395,
+        "tx_pn_swap": 32767,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943617232
+          }
+      },
+      "lane3": {
+        "mac_ch": 32766,
+        "tx_lane": 1487461204,
+        "tx_pn_swap": 32767,
+        "rx_lane": 78780928,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 240107648,
+            "tx_eq_post": 32755,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 3,
+      "device_id": 0,
+      "mac_block": 23,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 78770304,
+        "tx_lane": 1,
+        "tx_pn_swap": 78780928,
+        "rx_lane": 1,
+        "rx_pn_swap": 78780928,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 3943617376,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1487453553,
+        "rx_lane": 32767,
+        "rx_pn_swap": 78770304,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 1879052288,
+            "tx_eq_attn": 4244635648
+          }
+      },
+      "lane3": {
+        "mac_ch": 3943628799,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1487459889,
+        "rx_lane": 32767,
+        "rx_pn_swap": 78766080,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 239075328,
+            "tx_eq_attn": 32755
+          }
+      }
+    },
+    {
+      "connector": 4,
+      "device_id": 0,
+      "mac_block": 23,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32755,
+        "tx_lane": 3943617696,
+        "tx_pn_swap": 32766,
+        "rx_lane": 1467996027,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 32
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 528,
+        "tx_pn_swap": 0,
+        "rx_lane": 239076320,
+        "rx_pn_swap": 32755,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 78766080
+          }
+      },
+      "lane3": {
+        "mac_ch": 1,
+        "tx_lane": 3943617424,
+        "tx_pn_swap": 32766,
+        "rx_lane": 1487453100,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 32,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943617584
+          }
+      }
+    },
+    {
+      "connector": 5,
+      "device_id": 0,
+      "mac_block": 22,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1487455396,
+        "tx_lane": 32767,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 239076320,
+        "serdes_params": {
+            "tx_eq_pre": 32755,
+            "tx_eq_post": 78770304,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 78780928,
+        "tx_lane": 1,
+        "tx_pn_swap": 78780928,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 3943617680,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane3": {
+        "mac_ch": 1487454395,
+        "tx_lane": 32767,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1879052288,
+        "serdes_params": {
+            "tx_eq_pre": 4244635648,
+            "tx_eq_post": 3943617920,
+            "tx_eq_attn": 32766
+          }
+      }
+    },
+    {
+      "connector": 6,
+      "device_id": 0,
+      "mac_block": 22,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 78780928,
+        "tx_pn_swap": 1,
+        "rx_lane": 78780928,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943617792
+          }
+      },
+      "lane2": {
+        "mac_ch": 32766,
+        "tx_lane": 1487454395,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1879052288,
+            "tx_eq_post": 4244635648,
+            "tx_eq_attn": 3943618032
+          }
+      },
+      "lane3": {
+        "mac_ch": 32766,
+        "tx_lane": 1467996027,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3943617696,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 1487455396,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 7,
+      "device_id": 0,
+      "mac_block": 22,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3943617904,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1487952542,
+        "rx_lane": 32767,
+        "rx_pn_swap": 129499325,
+        "serdes_params": {
+            "tx_eq_pre": 2797119250,
+            "tx_eq_post": 6571,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 3943618848,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1487952331,
+        "rx_lane": 32767,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1487455396,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 239076320,
+        "rx_lane": 32755,
+        "rx_pn_swap": 78770304,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 78780928,
+            "tx_eq_attn": 1
+          }
+      }
+    },
+    {
+      "connector": 8,
+      "device_id": 0,
+      "mac_block": 22,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32767,
+        "tx_lane": 64,
+        "tx_pn_swap": 0,
+        "rx_lane": 2335351064,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 78766080
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 3943617952,
+        "tx_pn_swap": 32766,
+        "rx_lane": 1487453100,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 2335347216,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 2339151872
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 129499325,
+        "tx_pn_swap": 2797119250,
+        "rx_lane": 4294967288,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 4294967288,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 2335351064
+          }
+      }
+    },
+    {
+      "connector": 9,
+      "device_id": 0,
+      "mac_block": 20,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 2335351064,
+        "tx_lane": 32767,
+        "tx_pn_swap": 239083616,
+        "rx_lane": 32755,
+        "rx_pn_swap": 2335351024,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 3943618144,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane2": {
+        "mac_ch": 1467992650,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3943618224,
+        "rx_lane": 32766,
+        "rx_pn_swap": 1468090322,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 4294967288,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane3": {
+        "mac_ch": 2335351144,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3943618192,
+        "rx_lane": 32766,
+        "rx_pn_swap": 1485859712,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 129499325,
+            "tx_eq_attn": 2797119250
+          }
+      }
+    },
+    {
+      "connector": 10,
+      "device_id": 0,
+      "mac_block": 20,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 16,
+        "tx_lane": 1467969536,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1468117423,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 2335351104,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3943618416
+          }
+      },
+      "lane2": {
+        "mac_ch": 32766,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 3943618256,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 1467998362,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 2335351024
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 4,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 4
+          }
+      }
+    },
+    {
+      "connector": 11,
+      "device_id": 0,
+      "mac_block": 20,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1467988570,
+        "tx_lane": 32767,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 3943618464,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 1485596433,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane2": {
+        "mac_ch": 2339053680,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 2335346272,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane3": {
+        "mac_ch": 1467990424,
+        "tx_lane": 32767,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 730907205,
+        "serdes_params": {
+            "tx_eq_pre": 4810,
+            "tx_eq_post": 3943618304,
+            "tx_eq_attn": 32766
+          }
+      }
+    },
+    {
+      "connector": 12,
+      "device_id": 0,
+      "mac_block": 20,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 1468167424,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3943618480,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 3943618560,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 4
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 3943618624,
+        "tx_pn_swap": 32766,
+        "rx_lane": 1467978867,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1468167792,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1468167824
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 1468167808,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1468167424,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 520552484
+          }
+      }
+    },
+    {
+      "connector": 13,
+      "device_id": 0,
+      "mac_block": 18,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3943619544,
+        "tx_lane": 4,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 4,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 730872453,
+            "tx_eq_attn": 4810
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 730872453,
+        "rx_lane": 4810,
+        "rx_pn_swap": 4,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 3943618688,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane3": {
+        "mac_ch": 3943618992,
+        "tx_lane": 32766,
+        "tx_pn_swap": 3943618672,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138520447,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 14,
+      "device_id": 0,
+      "mac_block": 18,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32767,
+        "tx_lane": 1485348864,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3943618864,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 138710850,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 6
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 138495711,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 3943619432,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 3943619424
+          }
+      },
+      "lane3": {
+        "mac_ch": 32766,
+        "tx_lane": 3943619440,
+        "tx_pn_swap": 32766,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1487788036,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3943618848
+          }
+      }
+    },
+    {
+      "connector": 15,
+      "device_id": 0,
+      "mac_block": 18,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3943621056,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1487782928,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3943619072,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 138710639,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1485887072,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3943619432,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 11,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 1485887072,
+        "tx_lane": 32767,
+        "tx_pn_swap": 1485887072,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3943619072,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 138710850,
+            "tx_eq_attn": 1
+          }
+      }
+    },
+    {
+      "connector": 16,
+      "device_id": 0,
+      "mac_block": 18,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32766,
+        "tx_lane": 3484948696,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3487596296,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3943619088,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 1486248543
+          }
+      },
+      "lane2": {
+        "mac_ch": 32767,
+        "tx_lane": 3943619360,
+        "tx_pn_swap": 32766,
+        "rx_lane": 48,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 120,
+        "tx_pn_swap": 0,
+        "rx_lane": 1488105081,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 1488105081
+          }
+      }
+    },
+    {
+      "connector": 17,
+      "device_id": 0,
+      "mac_block": 16,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 2,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 5,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 1485788424,
+        "tx_lane": 32767,
+        "tx_pn_swap": 4294967288,
+        "rx_lane": 4294967295,
+        "rx_pn_swap": 3,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 32766,
+        "rx_pn_swap": 3943620280,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 1486541161,
+            "tx_eq_attn": 32767
+          }
+      }
+    },
+    {
+      "connector": 18,
+      "device_id": 0,
+      "mac_block": 16,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32766,
+        "tx_lane": 3943619616,
+        "tx_pn_swap": 32766,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 138470831,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 139013112
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 32
+          }
+      },
+      "lane3": {
+        "mac_ch": 1,
+        "tx_lane": 139006552,
+        "tx_pn_swap": 1,
+        "rx_lane": 139009376,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 3943620280,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 3943619376
+          }
+      }
+    },
+    {
+      "connector": 19,
+      "device_id": 0,
+      "mac_block": 16,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 139008424,
+        "tx_lane": 1,
+        "tx_pn_swap": 139012376,
+        "rx_lane": 1,
+        "rx_pn_swap": 139007664,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139009616,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 139010952,
+        "tx_lane": 1,
+        "tx_pn_swap": 139012144,
+        "rx_lane": 1,
+        "rx_pn_swap": 139012856,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139005912,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane3": {
+        "mac_ch": 139006784,
+        "tx_lane": 1,
+        "tx_pn_swap": 139011176,
+        "rx_lane": 1,
+        "rx_pn_swap": 139007008,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139012664,
+            "tx_eq_attn": 1
+          }
+      }
+    },
+    {
+      "connector": 20,
+      "device_id": 0,
+      "mac_block": 16,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 3943620912,
+        "tx_pn_swap": 32766,
+        "rx_lane": 3943620920,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 139007240,
+        "tx_pn_swap": 2,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4294967295,
+            "tx_eq_post": 4294967295,
+            "tx_eq_attn": 2339071672
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 1467969536,
+        "tx_pn_swap": 32767,
+        "rx_lane": 5773528,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 40,
+            "tx_eq_post": 48,
+            "tx_eq_attn": 3943620960
+          }
+      }
+    },
+    {
+      "connector": 21,
+      "device_id": 0,
+      "mac_block": 14,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 78708736,
+        "tx_lane": 1,
+        "tx_pn_swap": 138988592,
+        "rx_lane": 1,
+        "rx_pn_swap": 1487952542,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 129499325,
+            "tx_eq_attn": 2797119250
+          }
+      },
+      "lane2": {
+        "mac_ch": 6571,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943620816,
+        "rx_lane": 32766,
+        "rx_pn_swap": 1487952331,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 1549344446,
+        "tx_lane": 0,
+        "tx_pn_swap": 1486573568,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3487319392,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344443,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 22,
+      "device_id": 0,
+      "mac_block": 14,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 1487593472,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3487492832,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344441,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 1484136448
+          }
+      },
+      "lane2": {
+        "mac_ch": 32767,
+        "tx_lane": 3486705612,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1549344446,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1485873152,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3486860600
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344449,
+        "tx_pn_swap": 0,
+        "rx_lane": 2330633696,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 2330632280,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1442490671
+          }
+      }
+    },
+    {
+      "connector": 23,
+      "device_id": 0,
+      "mac_block": 14,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 2330633696,
+        "tx_lane": 32767,
+        "tx_pn_swap": 2330633632,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 2330632584,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane2": {
+        "mac_ch": 2330632584,
+        "tx_lane": 32767,
+        "tx_pn_swap": 139013432,
+        "rx_lane": 1,
+        "rx_pn_swap": 1442490671,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 3943620120,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane3": {
+        "mac_ch": 3943620096,
+        "tx_lane": 32766,
+        "tx_pn_swap": 1442490562,
+        "rx_lane": 32767,
+        "rx_pn_swap": 2330656504,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1442486608,
+            "tx_eq_attn": 32767
+          }
+      }
+    },
+    {
+      "connector": 24,
+      "device_id": 0,
+      "mac_block": 14,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 3943620256,
+        "tx_pn_swap": 32766,
+        "rx_lane": 138710850,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 78780928,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 138495711
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 3943621136,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 3943621128,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 3943621144
+          }
+      },
+      "lane3": {
+        "mac_ch": 32766,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 8,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 2330637848,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943621112
+          }
+      }
+    },
+    {
+      "connector": 25,
+      "device_id": 0,
+      "mac_block": 12,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943620464,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138710639,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane2": {
+        "mac_ch": 1487461204,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3943621120,
+        "rx_lane": 32766,
+        "rx_pn_swap": 240107648,
+        "serdes_params": {
+            "tx_eq_pre": 32755,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 78766080,
+        "tx_lane": 1,
+        "tx_pn_swap": 3943620464,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138710850,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 6,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 26,
+      "device_id": 0,
+      "mac_block": 12,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 8,
+        "tx_pn_swap": 0,
+        "rx_lane": 3943621112,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 3943621024,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 3943620512
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 16,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 3943621024,
+            "tx_eq_post": 32766,
+            "tx_eq_attn": 5
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 3943620672,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 138710639,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 1
+          }
+      }
+    },
+    {
+      "connector": 27,
+      "device_id": 0,
+      "mac_block": 12,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3943620672,
+        "tx_lane": 32766,
+        "tx_pn_swap": 138710850,
+        "rx_lane": 1,
+        "rx_pn_swap": 5,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 138495711,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943621008,
+        "rx_lane": 32766,
+        "rx_pn_swap": 3943621000,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 3943621016,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 8,
+        "rx_lane": 0,
+        "rx_pn_swap": 3943621024,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 3943620968,
+            "tx_eq_attn": 32766
+          }
+      }
+    },
+    {
+      "connector": 28,
+      "device_id": 0,
+      "mac_block": 12,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 3943620880,
+        "tx_pn_swap": 32766,
+        "rx_lane": 138710639,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3484948696
+          }
+      },
+      "lane2": {
+        "mac_ch": 32767,
+        "tx_lane": 3943620976,
+        "tx_pn_swap": 32766,
+        "rx_lane": 9,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 5,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 138983736
+          }
+      }
+    },
+    {
+      "connector": 29,
+      "device_id": 0,
+      "mac_block": 10,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 8,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943620968,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138495711,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 731405240,
+            "tx_eq_attn": 16847562
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 38,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 3943622160,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane3": {
+        "mac_ch": 3943621216,
+        "tx_lane": 32766,
+        "tx_pn_swap": 3943622416,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138470831,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139013112,
+            "tx_eq_attn": 1
+          }
+      }
+    },
+    {
+      "connector": 30,
+      "device_id": 0,
+      "mac_block": 10,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 139011384,
+        "tx_pn_swap": 1,
+        "rx_lane": 139010080,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 139010688,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 139006128
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 139007992,
+        "tx_pn_swap": 1,
+        "rx_lane": 139009128,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 139009848,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 139008424
+          }
+      },
+      "lane3": {
+        "mac_ch": 1,
+        "tx_lane": 139012376,
+        "tx_pn_swap": 1,
+        "rx_lane": 139007664,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 139009616,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 139010952
+          }
+      }
+    },
+    {
+      "connector": 31,
+      "device_id": 0,
+      "mac_block": 10,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 139007008,
+        "tx_lane": 1,
+        "tx_pn_swap": 139012664,
+        "rx_lane": 1,
+        "rx_pn_swap": 139007472,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139007808,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 139008232,
+        "tx_lane": 1,
+        "tx_pn_swap": 139008680,
+        "rx_lane": 1,
+        "rx_pn_swap": 139008856,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139010504,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane3": {
+        "mac_ch": 139011968,
+        "tx_lane": 1,
+        "tx_pn_swap": 139010344,
+        "rx_lane": 1,
+        "rx_pn_swap": 139011800,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139006360,
+            "tx_eq_attn": 1
+          }
+      }
+    },
+    {
+      "connector": 32,
+      "device_id": 0,
+      "mac_block": 10,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344460,
+        "tx_pn_swap": 0,
+        "rx_lane": 1442844672,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3484275356,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1549344481
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 1442484224,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3484140432,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344465,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 78708736
+          }
+      },
+      "lane3": {
+        "mac_ch": 1,
+        "tx_lane": 138988592,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1440018432,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3484109948
+          }
+      }
+    },
+    {
+      "connector": 33,
+      "device_id": 0,
+      "mac_block": 8,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3487319392,
+        "tx_lane": 32767,
+        "tx_pn_swap": 1549344443,
+        "rx_lane": 0,
+        "rx_pn_swap": 1487777792,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 3487595192,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane2": {
+        "mac_ch": 1549344443,
+        "tx_lane": 0,
+        "tx_pn_swap": 1486647296,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3487324084,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344449,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 1487593472,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3487492832,
+        "rx_lane": 32767,
+        "rx_pn_swap": 1549344441,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1484136448,
+            "tx_eq_attn": 32767
+          }
+      }
+    },
+    {
+      "connector": 34,
+      "device_id": 0,
+      "mac_block": 8,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32767,
+        "tx_lane": 3487317528,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1549344448,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1486618624,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3487321436
+          }
+      },
+      "lane2": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344442,
+        "tx_pn_swap": 0,
+        "rx_lane": 1485893632,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3486864288,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1549344445
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 1487822848,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3487596296,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344446,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 1485844480
+          }
+      }
+    },
+    {
+      "connector": 35,
+      "device_id": 0,
+      "mac_block": 8,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1487642624,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3487496056,
+        "rx_lane": 32767,
+        "rx_pn_swap": 1549344449,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1487790080,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane2": {
+        "mac_ch": 3487595640,
+        "tx_lane": 32767,
+        "tx_pn_swap": 1549344440,
+        "rx_lane": 0,
+        "rx_pn_swap": 1487941632,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 3487630016,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane3": {
+        "mac_ch": 1549344446,
+        "tx_lane": 0,
+        "tx_pn_swap": 1484115968,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3486703960,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344449,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 36,
+      "device_id": 0,
+      "mac_block": 8,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 1485348864,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3486741404,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344441,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 1487917056
+          }
+      },
+      "lane2": {
+        "mac_ch": 32767,
+        "tx_lane": 3487622980,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1549344441,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1485787136,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3486858100
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344447,
+        "tx_pn_swap": 0,
+        "rx_lane": 1485848576,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3486858968,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1549344440
+          }
+      }
+    },
+    {
+      "connector": 37,
+      "device_id": 0,
+      "mac_block": 7,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1549344445,
+        "tx_lane": 0,
+        "tx_pn_swap": 1485996032,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3487155880,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344442,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 1487441920,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3487467840,
+        "rx_lane": 32767,
+        "rx_pn_swap": 1549344448,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1487716352,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane3": {
+        "mac_ch": 3487553004,
+        "tx_lane": 32767,
+        "tx_pn_swap": 1549344444,
+        "rx_lane": 0,
+        "rx_pn_swap": 1487130624,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 3487440804,
+            "tx_eq_attn": 32767
+          }
+      }
+    },
+    {
+      "connector": 38,
+      "device_id": 0,
+      "mac_block": 7,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344447,
+        "tx_pn_swap": 0,
+        "rx_lane": 1485590528,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3486834968,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1549344447
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 1486962688,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3487333528,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344446,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 139006784
+          }
+      },
+      "lane3": {
+        "mac_ch": 1,
+        "tx_lane": 139011176,
+        "tx_pn_swap": 1,
+        "rx_lane": 3943622416,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 138469413,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 139007472
+          }
+      }
+    },
+    {
+      "connector": 39,
+      "device_id": 0,
+      "mac_block": 7,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 139011968,
+        "tx_lane": 1,
+        "tx_pn_swap": 139010344,
+        "rx_lane": 1,
+        "rx_pn_swap": 139011800,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 139006360,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 139007240,
+        "tx_lane": 1,
+        "tx_pn_swap": 139011656,
+        "rx_lane": 1,
+        "rx_pn_swap": 3943623472,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 138469446,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane3": {
+        "mac_ch": 1467969536,
+        "tx_lane": 32767,
+        "tx_pn_swap": 38,
+        "rx_lane": 0,
+        "rx_pn_swap": 138984744,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 40,
+      "device_id": 0,
+      "mac_block": 7,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32766,
+        "tx_lane": 138989280,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 50,
+        "serdes_params": {
+            "tx_eq_pre": 129499325,
+            "tx_eq_post": 2797119250,
+            "tx_eq_attn": 138989280
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 138983736,
+        "tx_pn_swap": 1,
+        "rx_lane": 138740000,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 138989280,
+            "tx_eq_post": 1,
+            "tx_eq_attn": 1486376193
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 8,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943622512
+          }
+      }
+    },
+    {
+      "connector": 41,
+      "device_id": 0,
+      "mac_block": 6,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 3943623472,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138459022,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 3,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 3484109957,
+        "tx_lane": 32767,
+        "tx_pn_swap": 622810,
+        "rx_lane": 0,
+        "rx_pn_swap": 3484140441,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 65501,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3484948705,
+        "tx_lane": 32767,
+        "tx_pn_swap": 2817,
+        "rx_lane": 0,
+        "rx_pn_swap": 3487317528,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344448,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 42,
+      "device_id": 0,
+      "mac_block": 6,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 1487822848,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3487596296,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344446,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 1485844480
+          }
+      },
+      "lane2": {
+        "mac_ch": 32767,
+        "tx_lane": 3486858816,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1549344448,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1486589952,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3487320224
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344437,
+        "tx_pn_swap": 0,
+        "rx_lane": 1487642624,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3487496056,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1549344449
+          }
+      }
+    },
+    {
+      "connector": 43,
+      "device_id": 0,
+      "mac_block": 6,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1549344446,
+        "tx_lane": 0,
+        "tx_pn_swap": 1484115968,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3486703960,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344449,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 1484255232,
+        "tx_lane": 32767,
+        "tx_pn_swap": 3486722260,
+        "rx_lane": 32767,
+        "rx_pn_swap": 1549344440,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1487761408,
+            "tx_eq_attn": 32767
+          }
+      },
+      "lane3": {
+        "mac_ch": 3487589792,
+        "tx_lane": 32767,
+        "tx_pn_swap": 1549344437,
+        "rx_lane": 0,
+        "rx_pn_swap": 1485348864,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 3486741404,
+            "tx_eq_attn": 32767
+          }
+      }
+    },
+    {
+      "connector": 44,
+      "device_id": 0,
+      "mac_block": 6,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32767,
+        "tx_lane": 1549344447,
+        "tx_pn_swap": 0,
+        "rx_lane": 1485848576,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 3486858968,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 1549344440
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 1485885440,
+        "tx_pn_swap": 32767,
+        "rx_lane": 3486863708,
+        "rx_pn_swap": 32767,
+        "serdes_params": {
+            "tx_eq_pre": 1549344441,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 1485991936
+          }
+      },
+      "lane3": {
+        "mac_ch": 32767,
+        "tx_lane": 3486870040,
+        "tx_pn_swap": 32767,
+        "rx_lane": 1549344445,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 1485996032,
+            "tx_eq_post": 32767,
+            "tx_eq_attn": 3487155880
+          }
+      }
+    },
+    {
+      "connector": 45,
+      "device_id": 0,
+      "mac_block": 4,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3487553004,
+        "tx_lane": 32767,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 520552496,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 3943623168,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane2": {
+        "mac_ch": 138519726,
+        "tx_lane": 1,
+        "tx_pn_swap": 1487675392,
+        "rx_lane": 32767,
+        "rx_pn_swap": 3487501588,
+        "serdes_params": {
+            "tx_eq_pre": 32767,
+            "tx_eq_post": 1549344449,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 1484181504,
+        "tx_lane": 32767,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 3943623232,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 3943623488,
+            "tx_eq_attn": 32766
+          }
+      }
+    },
+    {
+      "connector": 46,
+      "device_id": 0,
+      "mac_block": 4,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 32766,
+        "tx_lane": 138520447,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 3943623472
+          }
+      },
+      "lane2": {
+        "mac_ch": 32766,
+        "tx_lane": 138488370,
+        "tx_pn_swap": 1,
+        "rx_lane": 520552496,
+        "rx_pn_swap": 4810,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 47,
+      "device_id": 0,
+      "mac_block": 4,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 3943623376,
+        "tx_lane": 32766,
+        "tx_pn_swap": 138542191,
+        "rx_lane": 1,
+        "rx_pn_swap": 3943623376,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 138541990,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane2": {
+        "mac_ch": 1,
+        "tx_lane": 0,
+        "tx_pn_swap": 78711232,
+        "rx_lane": 1,
+        "rx_pn_swap": 3943623440,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 138523014,
+            "tx_eq_attn": 1
+          }
+      },
+      "lane3": {
+        "mac_ch": 138974080,
+        "tx_lane": 1,
+        "tx_pn_swap": 78711232,
+        "rx_lane": 1,
+        "rx_pn_swap": 3943623488,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 48,
+      "device_id": 0,
+      "mac_block": 4,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 4810,
+        "tx_lane": 3943625824,
+        "tx_pn_swap": 32766,
+        "rx_lane": 138479615,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 78708736,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 4294967295
+          }
+      }
+    },
+    {
+      "connector": 49,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 50,
+      "device_id": 0,
+      "mac_block": 2,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 51,
+      "device_id": 0,
+      "mac_block": 30,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 52,
+      "device_id": 0,
+      "mac_block": 28,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 53,
+      "device_id": 0,
+      "mac_block": 26,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 54,
+      "device_id": 0,
+      "mac_block": 24,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 55,
+      "device_id": 0,
+      "mac_block": 32,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 4,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1920169263,
+            "tx_eq_attn": 1651076143
+          }
+      },
+      "lane1": {
+        "mac_ch": 1819894831,
+        "tx_lane": 1798701156,
+        "tx_pn_swap": 3280798387,
+        "rx_lane": 809376434,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1553817384,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 481027208,
+        "tx_lane": 0,
+        "tx_pn_swap": 1553817364,
+        "rx_lane": 0,
+        "rx_pn_swap": 272162716,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 1553817364,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 272162716,
+        "tx_lane": 0,
+        "tx_pn_swap": 1553817364,
+        "rx_lane": 0,
+        "rx_pn_swap": 271790601,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 45780,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 96,
+      "device_id": 0,
+      "mac_block": 4096,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 0,
+      "device_id": 0,
+      "mac_block": 0,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 129499325,
+        "tx_pn_swap": 2797119250,
+        "rx_lane": 3943626392,
+        "rx_pn_swap": 32766,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 78708736
+          }
+      }
+    },
+    {
+      "connector": 1,
+      "device_id": 3943626008,
+      "mac_block": 32766,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 3943625992,
+        "tx_lane": 32766,
+        "tx_pn_swap": 3943625936,
+        "rx_lane": 32766,
+        "rx_pn_swap": 138454262,
+        "serdes_params": {
+            "tx_eq_pre": 1,
+            "tx_eq_post": 3943625968,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane1": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 3943625992,
+        "serdes_params": {
+            "tx_eq_pre": 32766,
+            "tx_eq_post": 3943625968,
+            "tx_eq_attn": 32766
+          }
+      },
+      "lane2": {
+        "mac_ch": 78708736,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 14,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 0,
+            "tx_eq_post": 3943625976,
+            "tx_eq_attn": 32766
+          }
+      }
+    }
+  ]
+}

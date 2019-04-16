@@ -11,7 +11,7 @@ export BF_SDE_INSTALL=...
 Stratum can be run on Tofino-based platforms in 2 different modes:
  * if your platform comes with ONLPv2 and a JSON "port mapping" file is provided
    by the platform vendor (see this
-   [example](platforms/accton_wedge_32x_port_map.json) for the Wedge 100bf-32x),
+   [example](platforms/x86-64-accton-wedge100bf-32x-r0.json) for the Wedge 100bf-32x),
    you can use Stratum in "BSP-less mode". Refer to this
    [section](#running-the-binary-in-bsp-less-mode) for more information. This is
    the recommended mode.
@@ -119,7 +119,7 @@ using a vendor-provided BSP or running Stratum with the Tofino software model.
 
 If ONLP support is available for your platform, you do not need to use a
 BSP. Instead the platform vendor can provide a JSON "port mapping" file (see
-this [example](platforms/accton_wedge_32x_port_map.json) for the Wedge
+this [example](platforms/x86-64-accton-wedge100bf-32x-r0.json) for the Wedge
 100bf-32x) and Stratum takes care of making the information exposed by ONLP
 available to the SDE as needed.
 
