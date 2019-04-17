@@ -54,7 +54,7 @@ namespace {
     ::p4::v1::Error error;
     detail.UnpackTo(&error);
     results->emplace_back(::util::Status::canonical_space(),
-                          error.code(),
+                          error.canonical_code(),
                           error.message());
   }
   return status;

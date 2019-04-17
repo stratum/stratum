@@ -196,9 +196,10 @@ namespace {
     for (const auto& detail : details) {
       // Each individual detail is converted to another ::google::rpc::Status,
       // which is then serialized as one proto any in 'from' message above.
-      ::google::rpc::Status error;
+      ::p4::v1::Error error;
       if (!detail.ok()) {
-        error.set_code(ToGoogleRpcCode(detail.CanonicalCode()));
+        error.set_canonical_code(ToGoogleRpcCode(detail.CanonicalCode()));
+        error.set_code(detail.error_code());
         error.set_message(detail.error_message());
       } else {
         error.set_code(::google::rpc::OK);
