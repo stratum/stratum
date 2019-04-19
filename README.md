@@ -2,6 +2,8 @@
 
 Copyright 2018 Google LLC
 
+Build status (master): ![CircleCI Status](https://circleci.com/gh/opennetworkinglab/stratum/tree/master.svg?style=svg&circle-token=4daca5c647bfe024b4420c9fa21e9f6272bcd50d)
+
 # Documentation
 
 # Overview
