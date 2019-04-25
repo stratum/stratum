@@ -14,7 +14,12 @@
 
 #include "stratum/lib/utils.h"
 
-#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <cerrno>
+#include <cstring>
+#include <cstdio>
+
 #include <fstream>  // IWYU pragma: keep
 #include <string>
 
@@ -22,6 +27,7 @@
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "absl/strings/substitute.h"
+#include "absl/strings/str_split.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 
@@ -145,15 +151,28 @@ std::string StringToHex(const std::string& str) {
 
 ::util::Status RecursivelyCreateDir(const std::string& dir) {
   CHECK_RETURN_IF_FALSE(!dir.empty());
+  std::vector<std::string> dirs = absl::StrSplit(dir, '/');
+  std::string path_to_make = "/";
+  for (auto& dir_name : dirs) {
+    if (dir_name.empty()) {
+      continue;
+    }
+    absl::StrAppend(&path_to_make, dir_name);
 
-  // Use system() to execute a 'mkdir -p'. This seems to be the simplest, but
-  // not necessarily the best solution.
-  // TODO: Investigate if there is a better way.
-  const std::string& cmd = absl::Substitute("mkdir -p $0", dir.c_str());
-  int ret = system(cmd.c_str());
-  if (ret != 0) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Failed to execute '" << cmd << "'. Return value: " << ret << ".";
+    if (PathExists(path_to_make)) {
+      if (!IsDir(path_to_make)) {
+        return MAKE_ERROR(ERR_INVALID_PARAM)
+            << path_to_make << " is not a dir.";
+      }
+    } else {
+      int ret = mkdir(path_to_make.c_str(), 0755);
+      if (ret != 0) {
+        return MAKE_ERROR(ERR_INTERNAL)
+            << "Can not make dir " << path_to_make << ": " << strerror(errno);
+      }
+    }
+
+    absl::StrAppend(&path_to_make, "/");
   }
 
   return ::util::OkStatus();

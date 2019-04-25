@@ -28,6 +28,10 @@ DECLARE_string(test_tmpdir);
 
 namespace stratum {
 
+using ::testing::_;
+using ::testing::HasSubstr;
+using stratum::test_utils::StatusIs;
+
 TEST(CommonUtilsTest, PrintArrayForEmptyArray) {
   int iarray[] = {};
   std::string sarray[] = {};
@@ -127,6 +131,31 @@ TEST(CommonUtilsTest, RecursivelyCreateDirThenCheckThePath) {
   ASSERT_OK(RecursivelyCreateDir(testdir));
   ASSERT_TRUE(PathExists(testdir));
   ASSERT_TRUE(IsDir(testdir));
+}
+
+TEST(CommonUtilsTest, CreateDirWhichAlreadyExists) {
+  const std::string testdir(FLAGS_test_tmpdir + "/path/to/another/dir2");
+
+  ASSERT_TRUE(PathExists(FLAGS_test_tmpdir));
+  ASSERT_TRUE(IsDir(FLAGS_test_tmpdir));
+  ASSERT_FALSE(PathExists(testdir));
+  ASSERT_FALSE(IsDir(testdir));
+  // Create a dir and check if it exists
+  ASSERT_OK(RecursivelyCreateDir(testdir));
+  ASSERT_TRUE(PathExists(testdir));
+  ASSERT_TRUE(IsDir(testdir));
+
+  // Create a dir which already exists, should return ok
+  ASSERT_OK(RecursivelyCreateDir(testdir));
+}
+
+TEST(CommonUtilsTest, CreateDirWhichAlreadyExistsAndNotADir) {
+  const std::string some_string("hello");
+  const std::string filename(FLAGS_test_tmpdir + "/AFileWhichIsNotDir");
+  ASSERT_OK(WriteStringToFile(some_string, filename));
+
+  EXPECT_THAT(RecursivelyCreateDir(filename),
+    StatusIs(_, ERR_INVALID_PARAM, HasSubstr("is not a dir")));
 }
 
 TEST(CommonUtilsTest, ProtoSerialize) {
