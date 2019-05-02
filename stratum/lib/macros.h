@@ -24,6 +24,7 @@
 #include "stratum/glue/status/status_builder.h"
    END GOOGLE ONLY */
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/logging.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -116,8 +117,8 @@ _error_impl
 #define RETURN_IF_ERROR_WITH_APPEND(expr) RETURN_IF_ERROR(expr).SetAppend()
     END GOOGLE ONLY */
 
-// No-op macro until it is added to Abseil
-#define ABSL_DIE_IF_NULL(...) __VA_ARGS__
+// Replaced by glog CHECK_NOTNULL until it is added to Abseil
+#define ABSL_DIE_IF_NULL CHECK_NOTNULL
 
 }  // namespace stratum
 

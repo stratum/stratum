@@ -44,6 +44,7 @@ stratum_cc_library(
     hdrs = ["macros.h"],
     deps = [
         "//stratum/glue/status:status_macros",
+        "//stratum/glue:logging",
         "//stratum/public/lib:error",
     ],
 )
