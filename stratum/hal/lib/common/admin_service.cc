@@ -30,21 +30,32 @@ namespace hal {
 AdminService::AdminService(OperationMode mode,
                            SwitchInterface* switch_interface,
                            AuthPolicyChecker* auth_policy_checker,
-                           ErrorBuffer* error_buffer)
+                           ErrorBuffer* error_buffer,
+                           HalSignalHandle hal_signal_handle)
     : mode_(mode),
       switch_interface_(ABSL_DIE_IF_NULL(switch_interface)),
       auth_policy_checker_(ABSL_DIE_IF_NULL(auth_policy_checker)),
-      error_buffer_(ABSL_DIE_IF_NULL(error_buffer)) {
+      error_buffer_(ABSL_DIE_IF_NULL(error_buffer)),
+      reboot_count_(0),
+      hal_signal_handle_(hal_signal_handle) {
   helper_ = absl::make_unique<AdminServiceUtilsInterface>();
 }
 
 ::util::Status AdminService::Setup(bool warmboot) {
-  // TODO: Implement this.
+  if (TimerDaemon::Start() != ::util::OkStatus()) {
+    MAKE_ERROR(ERR_INTERNAL) << "Could not start the timer subsystem.";
+  }
   return ::util::OkStatus();
 }
 
 ::util::Status AdminService::Teardown() {
-  // TODO: Implement this.
+  absl::ReaderMutexLock l(&reboot_lock_);
+  if (TimerDaemon::Stop() != ::util::OkStatus()) {
+    LOG(ERROR) << "Could not stop the timer subsystem.";
+  }
+  if (reboot_timer_) {
+    this->helper_->Reboot();
+  }
   return ::util::OkStatus();
 }
 
@@ -58,20 +69,32 @@ AdminService::AdminService(OperationMode mode,
 ::grpc::Status AdminService::Reboot(::grpc::ServerContext* context,
                                     const ::gnoi::system::RebootRequest* req,
                                     ::gnoi::system::RebootResponse* resp) {
-  if (req->delay() != 0) {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                            "Reboot delay is not supported");
+  absl::WriterMutexLock l(&reboot_lock_);
+
+  if (reboot_timer_) {
+    // reject reboot request if there is a pending reboot request.
+    return ::grpc::Status(::grpc::StatusCode::ALREADY_EXISTS,
+                          "Pending reboot exists.");
   }
 
+  // Delay from gNOI is nanosecond based, convert it to ms for TimerDaemon
+  uint64 delay = req->delay() / 1000000;
+  if (delay == 0) {
+    delay = kDefaultRebootDelay;
+  }
   if (!req->message().empty()) {
+    // TODO(Yi): use reboot(int, int, int, void*) for reboot message
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                             "Reboot message is not supported");
   }
-
-  bool reboot_status = true;
   switch (req->method()) {
     case gnoi::system::RebootMethod::COLD : {
-      reboot_status = helper_->GetShellHelper("/sbin/shutdown -r")->Execute();
+      ++reboot_count_;
+      TimerDaemon::RequestOneShotTimer(delay, [this]() {
+        hal_signal_handle_(SIGINT);
+        return ::util::OkStatus();
+      }, &reboot_timer_);
+      LOG(INFO) << "Rebooting in " << delay << " ms.";
       break;
     }
     case gnoi::system::RebootMethod::UNKNOWN : {
@@ -84,13 +107,6 @@ AdminService::AdminService(OperationMode mode,
                             ::gnoi::system::RebootMethod_Name(req->method()));
     }
   }
-
-  // Return failure if reboot was not successful
-  if(!reboot_status) {
-      return ::grpc::Status(::grpc::StatusCode::INTERNAL,
-                            "Failed to reboot the system.");
-  }
-  
   return ::grpc::Status::OK;
 }
 
@@ -99,8 +115,19 @@ AdminService::AdminService(OperationMode mode,
     const ::gnoi::system::RebootStatusRequest* req,
     ::gnoi::system::RebootStatusResponse* resp) {
 
-  resp->set_active(false);
-  // TODO: Update other response fields when delayed reboot is implemented
+  if (!reboot_timer_) {
+    resp->set_active(false);
+    return ::grpc::Status::OK;
+  }
+
+  absl::ReaderMutexLock l(&reboot_lock_);
+  uint64 now = absl::ToUnixNanos(absl::Now());
+  uint64 when = absl::ToUnixNanos(reboot_timer_->due_time_);
+  uint64 wait = when - now;
+  resp->set_active(true);
+  resp->set_wait(wait);
+  resp->set_when(when);
+  resp->set_count(reboot_count_);
   return ::grpc::Status::OK;
 }
 
@@ -108,7 +135,9 @@ AdminService::AdminService(OperationMode mode,
     ::grpc::ServerContext* context,
     const ::gnoi::system::CancelRebootRequest* req,
     ::gnoi::system::CancelRebootResponse* resp) {
-  // TODO: Implement this.
+  absl::WriterMutexLock l(&reboot_lock_);
+  reboot_timer_.reset();
+  LOG(INFO) << "Reboot canceled";
   return ::grpc::Status::OK;
 }
 

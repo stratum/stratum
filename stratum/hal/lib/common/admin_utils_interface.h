@@ -151,9 +151,11 @@ class AdminServiceUtilsInterface {
   virtual std::shared_ptr<FileSystemHelper>
   GetFileSystemHelper();
 
+  // Reboot the system
+  virtual ::util::Status Reboot();
+
  private:
   std::shared_ptr<FileSystemHelper> file_system_helper_;
-
 };
 
 } // namespace hal

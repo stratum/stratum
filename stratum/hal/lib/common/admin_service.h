@@ -28,13 +28,17 @@
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/glue/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/admin_utils_interface.h"
+#include "stratum/lib/timer_daemon.h"
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
+
+constexpr int kDefaultRebootDelay = 1000;  // ms
+using HalSignalHandle = std::function<void(int)>;
 
 // AdminService is an implementation of gnoi::system::System gRPC service and
 // is in charge of providing system-level administaration functionalities.
@@ -48,7 +52,8 @@ class AdminService final : public ::gnoi::system::System::Service {
   // error_buffer: pointer to an ErrorBuffer for logging all critical errors.
   AdminService(OperationMode mode, SwitchInterface* switch_interface,
                AuthPolicyChecker* auth_policy_checker,
-               ErrorBuffer* error_buffer);
+               ErrorBuffer* error_buffer,
+               HalSignalHandle hal_signal_handle);
   ~AdminService() override {}
 
   // Sets up the service in coldboot or warmboot mode.
@@ -116,8 +121,21 @@ class AdminService final : public ::gnoi::system::System::Service {
   // implementation.
   std::unique_ptr<AdminServiceUtilsInterface> helper_;
 
+  // lock for reboot operations
+  mutable absl::Mutex reboot_lock_;
+
+  // Timer for reboot
+  TimerDaemon::DescriptorPtr reboot_timer_;
+
+  // Number of reboots since active.
+  uint32 reboot_count_;
+
   // Service test. Updates the helper with a mock object.
   friend class AdminServiceTest;
+
+  // Function which sends signal to the HAL
+  HalSignalHandle hal_signal_handle_;
+
 };
 
 }  // namespace hal

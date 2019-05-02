@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <sys/sysinfo.h>
 #include <sys/wait.h>
+#include <linux/reboot.h>
+#include <sys/reboot.h>
 #include <cerrno>
 #include <cstring>
 #include <fstream>
@@ -367,6 +369,18 @@ std::string FileSystemHelper::GetHashSum(
 
 ::util::Status FileSystemHelper::RemoveFile(const std::string& path) const {
   return ::stratum::RemoveFile(path);
+}
+
+// Reboot the system
+::util::Status AdminServiceUtilsInterface::Reboot() {
+  int reboot_return_val = reboot(RB_AUTOBOOT);
+  // Return failure if reboot was not successful
+  if (reboot_return_val != 0) {
+    LOG(ERROR) << "Failed to reboot the system: " << strerror(errno);
+    MAKE_ERROR(ERR_INTERNAL)
+        << "Failed to reboot the system: " << strerror(errno);
+  }
+  return ::util::OkStatus();
 }
 
 } // namespace hal

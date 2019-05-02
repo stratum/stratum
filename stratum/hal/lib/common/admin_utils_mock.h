@@ -94,6 +94,7 @@ class AdminServiceUtilsInterfaceMock : public AdminServiceUtilsInterface {
                std::shared_ptr<AdminServiceShellHelper>(const std::string &));
   MOCK_METHOD0(GetFileSystemHelper, std::shared_ptr<FileSystemHelper>());
   MOCK_METHOD0(GetTime, uint64_t());
+  MOCK_METHOD0(Reboot, ::util::Status());
 };
 
 } // namespace hal

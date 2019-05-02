@@ -78,7 +78,7 @@ bool TimerDaemon::Execute() {
   if (front != nullptr) {
     // Execute the timer's action!
     if (front->ExecuteAction() != ::util::OkStatus()) {
-      LOG(ERROR) << "somthing went wrong";
+      LOG(ERROR) << "something went wrong";
     } else {
       LOG(INFO) << "Timer has been triggered!";
     }

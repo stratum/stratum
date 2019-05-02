@@ -17,21 +17,23 @@
 #include <grpc++/grpc++.h>
 #include <memory>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/hal/lib/common/admin_utils_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/timer_daemon.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/hal/lib/common/admin_utils_mock.h"
 
 namespace stratum {
 namespace hal {
@@ -47,7 +49,10 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
     error_buffer_ = absl::make_unique<ErrorBuffer>();
     admin_service_ = absl::make_unique<AdminService>(
         mode_, switch_mock_.get(), auth_policy_checker_mock_.get(),
-        error_buffer_.get());
+        error_buffer_.get(),
+        [this](int sigval) {
+          this->hal_reset_triggered_ = true;
+        });
 
     admin_service_->helper_ =
         absl::make_unique<AdminServiceUtilsInterfaceMock>();
@@ -77,6 +82,7 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
     stub_ = ::gnoi::system::System::NewStub(
         ::grpc::CreateChannel(url, ::grpc::InsecureChannelCredentials()));
     ASSERT_NE(stub_, nullptr);
+    hal_reset_triggered_ = false;
   }
 
   void TearDown() override { server_->Shutdown(); }
@@ -92,6 +98,7 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
   std::unique_ptr<::grpc::Server> server_;
   std::unique_ptr<::gnoi::system::System::Stub> stub_;
   std::shared_ptr<FileSystemHelperMock> fs_helper_;
+  bool hal_reset_triggered_;
 };
 
 TEST_P(AdminServiceTest, ColdbootSetupSuccess) {
@@ -116,8 +123,11 @@ TEST_P(AdminServiceTest, TimeSuccess) {
   ::grpc::ClientContext context;
   ::gnoi::system::TimeRequest req;
   ::gnoi::system::TimeResponse resp;
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Invoke the RPC and validate the results.
+  EXPECT_CALL(*admin_utils_, GetTime())
+    .WillOnce(::testing::Return(0));
   ::grpc::Status status = stub_->Time(&context, req, &resp);
   EXPECT_TRUE(status.ok());
 
@@ -129,24 +139,49 @@ TEST_P(AdminServiceTest, RebootColdSuccess) {
   ::grpc::ClientContext context;
   ::gnoi::system::RebootRequest req;
   ::gnoi::system::RebootResponse resp;
+  ASSERT_OK(admin_service_->Setup(false));
 
-  // Create the Shell object for mocking
-  auto shell_helper = std::make_shared<AdminServiceShellHelperMock>("");
-
-  // Mock Utils Interface call to receive the above-created Shell object
-  EXPECT_CALL(*admin_utils_, GetShellHelperProxy("/sbin/shutdown -r"))
-      .WillOnce(::testing::Return(shell_helper));
-
-  EXPECT_CALL(*(shell_helper.get()), Execute())
-      .WillOnce(::testing::Return(true));
-
+  req.set_delay(1000000); // 1ms for immediately reboot
   req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
   ::grpc::Status status = stub_->Reboot(&context, req, &resp);
   EXPECT_TRUE(status.ok());
 
-  // cleanup
+  absl::SleepFor(absl::Milliseconds(2));
+  EXPECT_TRUE(hal_reset_triggered_);
+
+  // we expected that reboot method invoked when admin service teardown
+  EXPECT_CALL(*admin_utils_, Reboot())
+    .WillOnce(::testing::Return(::util::OkStatus()));
+  ASSERT_OK(admin_service_->Teardown());
+}
+
+TEST_P(AdminServiceTest, CancelReboot) {
+  ::grpc::ClientContext* context = new ::grpc::ClientContext();
+  ::gnoi::system::RebootRequest req;
+  ::gnoi::system::RebootResponse resp;
+  ASSERT_OK(admin_service_->Setup(false));
+
+  req.set_delay(1000000); // 1ms for immediately reboot
+  req.set_method(gnoi::system::RebootMethod::COLD);
+
+  // Invoke the RPC and validate the results.
+  ::grpc::Status status = stub_->Reboot(context, req, &resp);
+  EXPECT_TRUE(status.ok());
+
+  // Cancel the reboot
+  context = new ::grpc::ClientContext();
+  ::gnoi::system::CancelRebootRequest cancel_req;
+  ::gnoi::system::CancelRebootResponse cancel_resp;
+  status = stub_->CancelReboot(context, cancel_req, &cancel_resp);
+  EXPECT_TRUE(status.ok());
+
+  absl::SleepFor(absl::Milliseconds(2));
+  EXPECT_FALSE(hal_reset_triggered_);
+
+  // we expected that reboot method not invoked when admin service teardown
+  EXPECT_CALL(*admin_utils_, Reboot()).Times(0);
   ASSERT_OK(admin_service_->Teardown());
 }
 
@@ -154,6 +189,7 @@ TEST_P(AdminServiceTest, RebootUnknownFail){
   ::grpc::ClientContext context;
   ::gnoi::system::RebootRequest req;
   ::gnoi::system::RebootResponse resp;
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Set unimplemented mode
   req.set_method(gnoi::system::RebootMethod::UNKNOWN);
@@ -167,6 +203,7 @@ TEST_P(AdminServiceTest, RebootStatusInactiveSuccess){
   ::grpc::ClientContext context;
   ::gnoi::system::RebootStatusRequest req;
   ::gnoi::system::RebootStatusResponse resp;
+  ASSERT_OK(admin_service_->Setup(false));
 
   stub_->RebootStatus(&context, req, &resp);
   EXPECT_TRUE(!resp.active());
@@ -182,6 +219,7 @@ TEST_P(AdminServiceTest, CancelRebootSuccess) {
   ::grpc::ClientContext context;
   ::gnoi::system::CancelRebootRequest req;
   ::gnoi::system::CancelRebootResponse resp;
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Invoke the RPC and validate the results.
   ::grpc::Status status = stub_->CancelReboot(&context, req, &resp);
@@ -195,7 +233,9 @@ TEST_P(AdminServiceTest, SetPackageFirstMeesageNotPackage) {
   ::grpc::ClientContext context;
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  ASSERT_OK(admin_service_->Setup(false));
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
       writer = stub_->SetPackage(&context, &resp);
 
   req.set_contents("some fake contents");
@@ -213,6 +253,8 @@ TEST_P(AdminServiceTest, SetPackageRemoteOptionSFTP) {
   ::grpc::ClientContext context;
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
+  ASSERT_OK(admin_service_->Setup(false));
+
   auto package = new ::gnoi::system::Package();
   auto remoteDownload = new ::gnoi::RemoteDownload();
   auto hash_type = new ::gnoi::HashType();
@@ -245,6 +287,7 @@ TEST_P(AdminServiceTest, SetPackageLastNotHash) {
   ::grpc::ClientContext context;
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
+  ASSERT_OK(admin_service_->Setup(false));
 
   auto package = new ::gnoi::system::Package();
 
@@ -294,6 +337,7 @@ TEST_P(AdminServiceTest, SetPackageUNCPECIFIEDHash) {
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
   auto hash_type = new ::gnoi::HashType();
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Configure expected calls
   EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
@@ -348,6 +392,7 @@ TEST_P(AdminServiceTest, SetPackageIncorrectHash) {
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
   auto hash_type = new ::gnoi::HashType();
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Configure expected calls
   EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
@@ -409,6 +454,7 @@ TEST_P(AdminServiceTest, SetPackageSHA256Success) {
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
   auto hash_type = new ::gnoi::HashType();
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Configure expected calls
   EXPECT_CALL(*(fs_helper_.get()), PathExists("/home/user"))
@@ -470,6 +516,7 @@ TEST_P(AdminServiceTest, SetPackageEmptyFilename) {
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
+  ASSERT_OK(admin_service_->Setup(false));
 
   std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
   writer = stub_->SetPackage(&context, &resp);
@@ -493,6 +540,7 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
+  ASSERT_OK(admin_service_->Setup(false));
 
   // Configure unexpected calls
   EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())

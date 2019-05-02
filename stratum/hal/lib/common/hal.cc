@@ -174,12 +174,12 @@ Hal::~Hal() {
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(status, config_monitoring_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, p4_service_->Teardown());
-  APPEND_STATUS_IF_ERROR(status, admin_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, certificate_management_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, diag_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, file_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, switch_interface_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, auth_policy_checker_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, admin_service_->Teardown());
   if (!status.ok()) {
     error_buffer_->AddError(status, "Failed to shutdown HAL: ", GTL_LOC);
     return status;
@@ -308,7 +308,8 @@ Hal* Hal::GetSingleton() {
   p4_service_ = absl::make_unique<P4Service>(
       mode_, switch_interface_, auth_policy_checker_, error_buffer_.get());
   admin_service_ = absl::make_unique<AdminService>(
-      mode_, switch_interface_, auth_policy_checker_, error_buffer_.get());
+      mode_, switch_interface_, auth_policy_checker_, error_buffer_.get(),
+      SignalRcvCallback);
   certificate_management_service_ =
       absl::make_unique<CertificateManagementService>(
           mode_, switch_interface_, auth_policy_checker_, error_buffer_.get());
