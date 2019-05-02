@@ -372,12 +372,12 @@ def sc_cc_lib(
     data = depset(data or [])
     textual_hdrs = depset(textual_hdrs or [])
     if srcs:
-        if [s for s in srcs if not s.endswith(".h")]:
+        if [s for s in srcs.to_list() if not s.endswith(".h")]:
             alwayslink = 1
     if not arches:
         arches = ALL_ARCHES
     defs_plus = (defines or []) + _ARCH_DEFINES
-    textual_plus = textual_hdrs | depset(deps)
+    textual_plus = textual_hdrs | depset(deps.to_list())
     native.cc_library(
         name = name,
         deps = sc_platform_filter(deps, [], arches),
@@ -962,7 +962,7 @@ def sc_package(
         arches = EMBEDDED_ARCHES
     fileset_name = decorate(name, "fs")
     for extension, inputs in [
-        ("bin", ["%s.stripped" % b for b in bins]),
+        ("bin", ["%s.stripped" % b for b in bins.to_list()]),
         ("data", data),
     ]:
         native.Fileset(
@@ -974,7 +974,7 @@ def sc_package(
                 ),
             ] + [
                 native.FilesetEntry(srcdir = decorate(dep, extension))
-                for dep in deps
+                for dep in deps.to_list()
             ],
             visibility = visibility,
         )

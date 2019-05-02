@@ -6,6 +6,8 @@ load(
 
 package(default_visibility = STRATUM_INTERNAL)
 
+licenses(["notice"])  # Apache v2
+
 # This command edits the old/deprecated openconfig protos to be compiled by
 # stratum_cc_proto_library rule. This command is expected to go away as soon as we move
 # to the new protos.

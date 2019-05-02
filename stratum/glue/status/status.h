@@ -98,7 +98,7 @@ class Status final {
 
   // For backwards compatibility, provide aliases of some the
   // canonical error codes defined in codes.proto.
-  enum GenericCode {
+  enum Code {
     OK_CODE = 0,         // No error
     CANCELLED_CODE = 1,  // For cancelled operations
     UNKNOWN_CODE = 2,    // For unknown spaces/codes

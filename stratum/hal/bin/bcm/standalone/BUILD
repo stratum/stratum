@@ -31,6 +31,8 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
 stratum_cc_binary(
     name = "stratum_bcm",
     srcs = [

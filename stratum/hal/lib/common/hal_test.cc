@@ -128,7 +128,7 @@ class HalTest : public ::testing::Test {
     FLAGS_forwarding_pipeline_configs_file =
         FLAGS_test_tmpdir + "/forwarding_pipeline_configs_file.pb.txt";
     FLAGS_persistent_config_dir = FLAGS_test_tmpdir + "/config_dir";
-    base::SetFlag(&FLAGS_external_hercules_urls, {RandomURL(), RandomURL()});
+    absl::SetFlag(&FLAGS_external_hercules_urls, {RandomURL(), RandomURL()});
     FLAGS_local_hercules_url = RandomURL();
     FLAGS_cmal_service_url = RandomURL();
     ASSERT_OK(hal_->SanityCheck());
@@ -231,7 +231,7 @@ Hal* HalTest::hal_ = nullptr;
 //::grpc::Server* HalTest::procmon_server_ = nullptr;
 
 TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
-  base::SetFlag(&FLAGS_external_hercules_urls, {});
+  absl::SetFlag(&FLAGS_external_hercules_urls, {});
   ::util::Status status = hal_->SanityCheck();
   ASSERT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(), HasSubstr("No external URL was given"));
@@ -239,7 +239,7 @@ TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
 
 TEST_F(HalTest, SanityCheckFailureWhenExtURLsAreInvalid) {
   const auto& url = RandomURL();
-  base::SetFlag(&FLAGS_external_hercules_urls, {url, "blah"});
+  absl::SetFlag(&FLAGS_external_hercules_urls, {url, "blah"});
   FLAGS_local_hercules_url = url;
   ::util::Status status = hal_->SanityCheck();
   ASSERT_FALSE(status.ok());

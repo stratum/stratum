@@ -1,0 +1,82 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// The proto message in this file is a collection of common names applicable
+// to the compiled P4 architecture model.  It hides the specific architecture
+// from the Stratum backend (i.e. V1 vs. PSA).
+// TODO: P4ModelNames is a placeholder that may change significantly
+// when p4c delivers the PSA model.  It is likely that the message gets replaced
+// by or incorporated into a class that knows how to setup the interesting data
+// for Stratum in a model-specific way.  For example, the new class's Init
+// method could contain refactored code from SwitchP4cBackend::GetP4ModelNames
+// to handle V1, plus new code to handle PSA.
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.p4c_backends;
+
+message P4ModelNames {
+  // Names for standard control functions.
+  string ingress_control_name = 1;
+  string egress_control_name = 2;
+
+  // Names for well-known extern functions and objects.
+  string drop_extern_name = 100;
+  string clone_extern_name = 101;
+  string clone3_extern_name = 102;
+  string counter_extern_name = 103;
+  string meter_extern_name = 104;
+  string direct_counter_extern_name = 105;
+  string direct_meter_extern_name = 106;
+
+  // Names for useful extern object methods.
+  string counter_count_method_name = 130;
+  string direct_counter_count_method_name = 131;
+  string meter_execute_method_name = 132;
+  string direct_meter_read_method_name = 133;
+
+  // This field is a map of header field prefixes to ignore when forming
+  // header field path names.  In P4_14 V1 programs, a field with the internal
+  // path name "hdr.<header-name>.<field-name>" shows up in P4Info references
+  // as "<header-name>.<field-name>".  In this case, strip_path_prefixes
+  // contains an entry with key "hdr" so that the backend knows to strip the
+  // prefix in any P4PipelineConfig references beginning with that path name.
+  // The map value is meaningless (strip_path_prefixes is used as a set,
+  // but proto3 doesn't provide sets), and is always encoded as zero.  Simple
+  // presence of a hdr prefix in the map indicates the prefix needs to be
+  // stripped, regardless of the map value.
+  map<string, int32> strip_path_prefixes = 200;
+
+  // Names for well-known types.
+  string local_metadata_type_name = 300;
+
+  // Definitions for well-known enums.
+  string color_enum_type = 400;
+  string color_enum_green = 401;
+  string color_enum_yellow = 402;
+  string color_enum_red = 403;
+  string clone_type_ingress_to_egress = 404;
+  string clone_type_egress_to_egress = 405;
+
+  // Names from the P4 core library (except range and selector, which p4c
+  // currently takes from its V1Model instance).
+  string no_action = 500;
+  string exact_match = 501;
+  string lpm_match = 502;
+  string ternary_match = 503;
+  string range_match = 504;
+  string selector_match = 505;
+}

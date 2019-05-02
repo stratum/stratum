@@ -3,6 +3,8 @@ load(
     "STRATUM_INTERNAL",
 )
 
+licenses(["notice"])  # Apache v2
+
 filegroup(
     name = "yext_proto_srcs",
     srcs = ["yext.proto"],

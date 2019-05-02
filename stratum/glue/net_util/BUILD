@@ -14,10 +14,6 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
-exports_files(["LICENSE"])
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
@@ -30,6 +26,10 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
+
 stratum_cc_library(
     name = "bits",
     srcs = [
@@ -39,6 +39,7 @@ stratum_cc_library(
         "bits.h",
     ],
     deps = [
+        #"//testing/production_stub/public:gunit_prod",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/numeric:int128",

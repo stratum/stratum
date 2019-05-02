@@ -1,0 +1,868 @@
+Copyright 2019 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+# The parser states in this file define the field extraction of a common
+# switch header parser.  They apply to Broadcom and most likely other fixed
+# function parsers that extract from layer 2 up to transport layer headers.
+# TODO: Update P4FieldType enum so this map can be fully defined.
+# Until then, many field types provisionally map to P4_FIELD_TYPE_UNKNOWN.
+parser_states {
+  key: "target_parse_arp"
+  value {
+    name: "target_parse_arp"
+    extracted_header {
+      name: "arp_t"
+      header_type: P4_HEADER_ARP
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "hwType"
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "protoType"
+        bit_offset: 16
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "hwAddrLen"
+        bit_offset: 32
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "protoAddrLen"
+        bit_offset: 40
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "opcode"
+        bit_offset: 48
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "hwSrcAddr"
+        bit_offset: 64
+        bit_width: 48
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "protoSrcAddr"
+        bit_offset: 112
+        bit_width: 32
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "hwDstAddr"
+        bit_offset: 144
+        bit_width: 48
+      }
+      fields {
+        type: P4_FIELD_TYPE_ARP_TPA  # "protoDstAddr"
+        bit_offset: 192
+        bit_width: 32
+      }
+    }
+    transition {
+      next_state: "accept"
+    }
+  }
+}
+parser_states {
+  key: "target_parse_dns"
+  value {
+    extracted_header {
+      name: "DNS Header"
+      header_type: P4_HEADER_DNS
+      fields {
+        type: P4_FIELD_TYPE_DNS_QUERY_ID  # "query_id"
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_DNS_FLAGS_CODES  # "flags_and_codes"
+        bit_offset: 16
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_DNS_NUM_QUESTIONS  # "num_questions"
+        bit_offset: 32
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_DNS_NUM_ANSWERS  # "num_answers"
+        bit_offset: 48
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_DNS_AUTHORITY_RRS  # "authority_rrs"
+        bit_offset: 64
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_DNS_ADDITIONAL_RRS  # "additional_rrs"
+        bit_offset: 80
+        bit_width: 16
+      }
+    }
+    transition {
+      next_state: "target_parse_l4_options_or_data"
+    }
+  }
+}
+parser_states {
+  key: "target_parse_erspan"
+  value {
+    extracted_header {
+      name: "ERSPAN Header"
+      header_type: P4_HEADER_ERSPAN
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_VERSION  # "version"
+        bit_width: 4
+      }
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_VLAN  # "vlan"
+        bit_offset: 4
+        bit_width: 12
+      }
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_COS  # "cos"
+        bit_offset: 16
+        bit_width: 3
+      }
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_TRUNK_ENCAP  # "trunk_encap"
+        bit_offset: 19
+        bit_width: 2
+      }
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_TRUNCATE  # "truncate"
+        bit_offset: 21
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_SESSSION_ID  # "session_id"
+        bit_offset: 22
+        bit_width: 10
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "reserved"
+        bit_offset: 32
+        bit_width: 12
+      }
+      fields {
+        type: P4_FIELD_TYPE_ERSPAN_INDEX  # "index"
+        bit_offset: 44
+        bit_width: 20
+      }
+    }
+    transition {
+      next_state: "accept"
+    }
+  }
+}
+parser_states {
+  key: "target_parse_ethernet"
+  value {
+    name: "target_parse_ethernet"
+    reserved_state: P4_PARSER_STATE_START
+    extracted_header {
+      name: "Ethernet Header"
+      header_type: P4_HEADER_ETHERNET
+      fields {
+        type: P4_FIELD_TYPE_ETH_DST  # "dstAddr"
+        bit_width: 48
+      }
+      fields {
+        type: P4_FIELD_TYPE_ETH_SRC  # "srcAddr"
+        bit_offset: 48
+        bit_width: 48
+      }
+      fields {
+        type: P4_FIELD_TYPE_ETH_TYPE  # "etherType"
+        bit_offset: 96
+        bit_width: 16
+      }
+    }
+    transition {
+      select {
+        selector_fields: "etherType"
+        selector_types: P4_FIELD_TYPE_ETH_TYPE
+        cases {
+          keyset_values {
+            constant {
+              value: 0x8100
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x9100
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x9200
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x9300
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x800
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv4"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x86dd
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv6"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x806
+              mask: 1
+            }
+          }
+          next_state: "target_parse_arp"
+        }
+        cases {
+          is_default: true
+          next_state: "accept"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "target_parse_gre"
+  value {
+    name: "target_parse_gre"
+    extracted_header {
+      name: "GRE header"
+      header_type: P4_HEADER_GRE
+      fields {
+        type: P4_FIELD_TYPE_GRE_CHECKSUM_BIT  # "checksum_present"
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_ROUTING_BIT  # "routing_present"
+        bit_offset: 1
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_KEY_BIT  # "key_present"
+        bit_offset: 2
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_SEQUENCE_BIT  # "sequence_present"
+        bit_offset: 3
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_STRICT_SOURCE  # "strict_source_route"
+        bit_offset: 4
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_RECURSION  # "recursion_control"
+        bit_offset: 5
+        bit_width: 3
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_FLAGS  # "flags"
+        bit_offset: 8
+        bit_width: 5
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_VERSION  # "version"
+        bit_offset: 13
+        bit_width: 3
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_PROTOCOL  # "protocol"
+        bit_offset: 16
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_GRE_SEQUENCE  # "seq_no"
+        bit_offset: 32
+        bit_width: 32
+      }
+    }
+    transition {
+      select {
+        selector_fields: "protocol"
+        selector_types: P4_FIELD_TYPE_GRE_PROTOCOL
+        cases {
+          keyset_values {
+            constant {
+              value: 0x800
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv4"
+          is_tunnel_entry: true
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x86dd
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv6"
+          is_tunnel_entry: true
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x88BE
+              mask: 1
+            }
+          }
+          next_state: "target_parse_erspan"
+        }
+        cases {
+          is_default: true
+          next_state: "reject"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "target_parse_icmp"
+  value {
+    name: "target_parse_icmp"
+    extracted_header {
+      name: "ICMP header"
+      header_type: P4_HEADER_ICMP
+      fields {
+        type: P4_FIELD_TYPE_ICMP_TYPE  # "type"
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_ICMP_CODE  # "code"
+        bit_offset: 8
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "checksum"
+        bit_offset: 16
+        bit_width: 16
+      }
+    }
+    transition {
+      next_state: "accept"
+    }
+  }
+}
+parser_states {
+  key: "target_parse_ipv4"
+  value {
+    name: "target_parse_ipv4"
+    extracted_header {
+      name: "IPv4 Header"
+      header_type: P4_HEADER_IPV4
+      fields {
+        type: P4_FIELD_TYPE_IP_VERSION  # "version"
+        bit_width: 4
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV4_IHL  # "ihl"
+        bit_offset: 4
+        bit_width: 4
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV4_DIFFSERV  # "diffserv"
+        bit_offset: 8
+        bit_width: 8
+        subfield_set_name: "dscp_ecn_subfields"
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV4_TOTAL_LENGTH  # "totalLen"
+        bit_offset: 16
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "identification"
+        bit_offset: 32
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "flags"
+        bit_offset: 48
+        bit_width: 3
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "fragOffset"
+        bit_offset: 51
+        bit_width: 13
+      }
+      fields {
+        type: P4_FIELD_TYPE_NW_TTL   # "ttl"
+        bit_offset: 64
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV4_PROTO  # "protocol"
+        bit_offset: 72
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "hdrChecksum"
+        bit_offset: 80
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV4_SRC  # "srcAddr"
+        bit_offset: 96
+        bit_width: 32
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV4_DST  # "dstAddr"
+        bit_offset: 128
+        bit_width: 32
+      }
+      subfield_sets {
+        name: "dscp_ecn_subfields"
+        fields {
+          type: P4_FIELD_TYPE_DSCP  # "dscp"
+          bit_offset: 8
+          bit_width: 6
+        }
+        fields {
+          type: P4_FIELD_TYPE_ECN  # "ecn"
+          bit_offset: 14
+          bit_width: 2
+        }
+      }
+    }
+    transition {
+      select {
+        selector_fields: "protocol"
+        selector_types: P4_FIELD_TYPE_IPV4_PROTO
+        cases {
+          keyset_values {
+            constant {
+              value: 1
+              mask: 1
+            }
+          }
+          next_state: "target_parse_icmp"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 4
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv4"
+          is_tunnel_entry: true
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 6
+              mask: 1
+            }
+          }
+          next_state: "target_parse_tcp"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 17
+              mask: 1
+            }
+          }
+          next_state: "target_parse_udp"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 41
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv6"
+          is_tunnel_entry: true
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 47
+              mask: 1
+            }
+          }
+          next_state: "target_parse_gre"
+        }
+        cases {
+          is_default: true
+          next_state: "accept"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "target_parse_ipv6"
+  value {
+    name: "target_parse_ipv6"
+    extracted_header {
+      name: "IPv6 Header"
+      header_type: P4_HEADER_IPV6
+      fields {
+        type: P4_FIELD_TYPE_IP_VERSION  # "version"
+        bit_width: 4
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV6_TRAFFIC_CLASS  # "traffic_class"
+        bit_offset: 4
+        bit_width: 8
+        subfield_set_name: "dscp_ecn_subfields"
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "flowLabel"
+        bit_offset: 12
+        bit_width: 20
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV6_PAYLOAD_SIZE  # "payloadLength"
+        bit_offset: 32
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV6_NEXT_HDR  # "nextHeader"
+        bit_offset: 48
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_NW_TTL    # "hopLimit"
+        bit_offset: 56
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV6_SRC  # "srcAddr"
+        bit_offset: 64
+        bit_width: 128
+      }
+      fields {
+        type: P4_FIELD_TYPE_IPV6_DST  # "dstAddr"
+        bit_offset: 192
+        bit_width: 128
+      }
+      subfield_sets {
+        name: "dscp_ecn_subfields"
+        fields {
+          type: P4_FIELD_TYPE_DSCP  # "dscp"
+          bit_offset: 4
+          bit_width: 6
+        }
+        fields {
+          type: P4_FIELD_TYPE_ECN  # "ecn"
+          bit_offset: 10
+          bit_width: 2
+        }
+      }
+    }
+    transition {
+      select {
+        selector_fields: "nextHeader"
+        selector_types: P4_FIELD_TYPE_IPV6_NEXT_HDR
+        cases {
+          keyset_values {
+            constant {
+              value: 58
+              mask: 1
+            }
+          }
+          next_state: "target_parse_icmp"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 6
+              mask: 1
+            }
+          }
+          next_state: "target_parse_tcp"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 17
+              mask: 1
+            }
+          }
+          next_state: "target_parse_udp"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 47
+              mask: 1
+            }
+          }
+          next_state: "target_parse_gre"
+        }
+        cases {
+          is_default: true
+          next_state: "accept"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "target_parse_tcp"
+  value {
+    name: "target_parse_tcp"
+    extracted_header {
+      name: "TCP Header"
+      header_type: P4_HEADER_TCP
+      fields {
+        type: P4_FIELD_TYPE_L4_SRC_PORT  # "srcPort"
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_L4_DST_PORT  # "dstPort"
+        bit_offset: 16
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "seqNo"
+        bit_offset: 32
+        bit_width: 32
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "ackNo"
+        bit_offset: 64
+        bit_width: 32
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "dataOffset"
+        bit_offset: 96
+        bit_width: 4
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "res"
+        bit_offset: 100
+        bit_width: 4
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "flags"
+        bit_offset: 104
+        bit_width: 8
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "window"
+        bit_offset: 112
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "checksum"
+        bit_offset: 128
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "urgentPtr"
+        bit_offset: 144
+        bit_width: 16
+      }
+    }
+    transition {
+      next_state: "target_parse_l4_options_or_data"
+    }
+  }
+}
+parser_states {
+  key: "target_parse_udp"
+  value {
+    name: "target_parse_udp"
+    extracted_header {
+      name: "UDP Header"
+      header_type: P4_HEADER_UDP
+      fields {
+        type: P4_FIELD_TYPE_L4_SRC_PORT  # "srcPort"
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_L4_DST_PORT  # "dstPort"
+        bit_offset: 16
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "hdr_length"
+        bit_offset: 32
+        bit_width: 16
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "checksum"
+        bit_offset: 48
+        bit_width: 16
+      }
+    }
+    transition {
+      select {
+        selector_fields: "dst_port"
+        selector_types: P4_FIELD_TYPE_L4_DST_PORT
+        cases {
+          keyset_values {
+            constant {
+              value: 53
+              mask: 1
+            }
+          }
+          next_state: "target_parse_dns"
+        }
+        cases {
+          is_default: true
+          next_state: "target_parse_l4_options_or_data"
+        }
+      }
+    }
+  }
+}
+parser_states {
+  key: "target_parse_l4_options_or_data"
+  value {
+    name: "target_parse_l4_options_or_data"
+    extracted_header {
+      name: "L4 options or data"
+      header_type: P4_HEADER_L4_PAYLOAD
+      fields {
+        type: P4_FIELD_TYPE_L4_OPTIONS_OR_DATA  # "value"
+        bit_width: 64
+      }
+    }
+    transition {
+      next_state: "accept"
+    }
+  }
+}
+parser_states {
+  key: "target_parse_vlan"
+  value {
+    name: "target_parse_vlan"
+    extracted_header {
+      name: "VLAN Header"
+      header_type: P4_HEADER_VLAN
+      fields {
+        type: P4_FIELD_TYPE_VLAN_PCP  # "pcp"
+        bit_width: 3
+      }
+      fields {
+        type: P4_FIELD_TYPE_UNKNOWN  # "cfi"
+        bit_offset: 3
+        bit_width: 1
+      }
+      fields {
+        type: P4_FIELD_TYPE_VLAN_VID  # "vid"
+        bit_offset: 4
+        bit_width: 12
+      }
+      fields {
+        type: P4_FIELD_TYPE_ETH_TYPE  # "etherType"
+        bit_offset: 16
+        bit_width: 16
+      }
+    }
+    transition {
+      select {
+        selector_fields: "etherType"
+        selector_types: P4_FIELD_TYPE_ETH_TYPE
+        cases {
+          keyset_values {
+            constant {
+              value: 0x8100
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x9100
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x9200
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x9300
+              mask: 1
+            }
+          }
+          next_state: "target_parse_vlan"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x800
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv4"
+        }
+        cases {
+          keyset_values {
+            constant {
+              value: 0x86dd
+              mask: 1
+            }
+          }
+          next_state: "target_parse_ipv6"
+        }
+        cases {
+          is_default: true
+          next_state: "accept"
+        }
+      }
+    }
+  }
+}
