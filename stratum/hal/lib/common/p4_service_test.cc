@@ -411,11 +411,38 @@ TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigSuccess) {
   request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
   request.set_action(::p4::v1::SetForwardingPipelineConfigRequest::VERIFY);
   *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
+  AddFakeMasterController(kNodeId1, 1, kElectionId1, "some uri");
 
   ::grpc::Status status =
       p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
   EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
+}
+
+TEST_P(P4ServiceTest, VerifyForwardingPipelineConfigFailureForNonMaster) {
+  ForwardingPipelineConfigs configs;
+  FillTestForwardingPipelineConfigsAndSave(&configs);
+
+  EXPECT_CALL(*auth_policy_checker_mock_,
+              Authorize("P4Service", "SetForwardingPipelineConfig", _))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*switch_mock_, VerifyForwardingPipelineConfig(_, _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+
+  ::grpc::ServerContext context;
+  ::p4::v1::SetForwardingPipelineConfigRequest request;
+  ::p4::v1::SetForwardingPipelineConfigResponse response;
+  request.set_device_id(kNodeId1);
+  request.mutable_election_id()->set_high(absl::Uint128High64(kElectionId1));
+  request.mutable_election_id()->set_low(absl::Uint128Low64(kElectionId1));
+  request.set_action(::p4::v1::SetForwardingPipelineConfigRequest::VERIFY);
+  *request.mutable_config() = configs.node_id_to_config().at(kNodeId1);
+
+  ::grpc::Status status =
+      p4_service_->SetForwardingPipelineConfig(&context, &request, &response);
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("from non-master is not permitted for node"));
 }
 
 TEST_P(P4ServiceTest, SetForwardingPipelineConfigFailureForAuthError) {
@@ -670,11 +697,11 @@ TEST_P(P4ServiceTest, WriteFailureWhenWriteForwardingEntriesFails) {
   ::google::rpc::Status details;
   ASSERT_TRUE(details.ParseFromString(status.error_details()));
   ASSERT_EQ(2, details.details_size());
-  ::google::rpc::Status detail;
+  ::p4::v1::Error detail;
   ASSERT_TRUE(details.details(0).UnpackTo(&detail));
-  EXPECT_EQ(::google::rpc::OK, detail.code());
+  EXPECT_EQ(::google::rpc::OK, detail.canonical_code());
   ASSERT_TRUE(details.details(1).UnpackTo(&detail));
-  EXPECT_EQ(::google::rpc::OUT_OF_RANGE, detail.code());
+  EXPECT_EQ(::google::rpc::OUT_OF_RANGE, detail.canonical_code());
   EXPECT_EQ(kOperErrorMsg, detail.message());
   const auto& errors = error_buffer_->GetErrors();
   EXPECT_TRUE(errors.empty());
@@ -782,9 +809,9 @@ TEST_P(P4ServiceTest, ReadFailureWhenReadForwardingEntriesFails) {
   ::google::rpc::Status details;
   ASSERT_TRUE(details.ParseFromString(status.error_details()));
   ASSERT_EQ(1, details.details_size());
-  ::google::rpc::Status detail;
+  ::p4::v1::Error detail;
   ASSERT_TRUE(details.details(0).UnpackTo(&detail));
-  EXPECT_EQ(::google::rpc::OUT_OF_RANGE, detail.code());
+  EXPECT_EQ(::google::rpc::OUT_OF_RANGE, detail.canonical_code());
   EXPECT_EQ(kOperErrorMsg, detail.message());
   const auto& errors = error_buffer_->GetErrors();
   EXPECT_TRUE(errors.empty());

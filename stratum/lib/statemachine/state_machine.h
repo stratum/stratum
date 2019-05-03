@@ -75,20 +75,21 @@ class StateMachine {
   ::util::Status ProcessEventUnlocked(Event event, absl::string_view reason,
     Event* recovery_event) EXCLUSIVE_LOCKS_REQUIRED(state_machine_mutex_) {
     // Do not change states if the transition is invalid.
-    ASSIGN_OR_RETURN(State next_state, NextState(current_state_, event),
-      _.LogWarning() << "Event " << event << " [" << reason <<
-      "] was discarded in State " << current_state_);
+    ASSIGN_OR_RETURN(State next_state, NextState(current_state_, event));
+    // FIXME: Wait for ASSIGN_OR_RETURN impl with error message
+      // _.LogWarning() << "Event " << event << " [" << reason <<
+      //"] was discarded in State " << current_state_);
 
     // Perform exit actions for the current state.
     for (const auto& exit_action : exit_actions_[current_state_]) {
-      RETURN_IF_ERROR(exit_action(event, next_state, recovery_event)) <<
+      RETURN_IF_ERROR_WITH_APPEND(exit_action(event, next_state, recovery_event)) <<
         "Failed to perform exit action of state " << current_state_ <<
         " in transition to " << next_state << ".";
     }
 
     // Perform entry actions for the next state.
     for (const auto& entry_action : entry_actions_[next_state]) {
-      RETURN_IF_ERROR(entry_action(event, next_state, recovery_event)) <<
+      RETURN_IF_ERROR_WITH_APPEND(entry_action(event, next_state, recovery_event)) <<
         "Failed to perform entry action of state " << next_state <<
         " in transition from " << current_state_ << ".";
     }

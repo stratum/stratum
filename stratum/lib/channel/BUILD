@@ -89,5 +89,6 @@ stratum_cc_test(
         "@com_google_googletest//:gtest",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib/test_utils:matchers",
     ],
 )

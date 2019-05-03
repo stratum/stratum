@@ -160,7 +160,7 @@ class P4InfoManagerTest : public testing::Test {
     auto new_value_set = p4_test_info_.add_value_sets();
     new_value_set->mutable_preamble()->set_id(kFirstValueSetID);
     new_value_set->mutable_preamble()->set_name("Value-Set-1");
-    new_value_set->set_bitwidth(8);
+    new_value_set->add_match()->set_bitwidth(8);
     SetUpNewP4Info();
   }
 

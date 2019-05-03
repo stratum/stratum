@@ -355,10 +355,11 @@ stratum_cc_binary(
     name = "phal_cli",
     srcs = ["phal_cli.cc"],
     arches = EMBEDDED_ARCHES,
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
         "-lrt",
+        "-ludev",
     ],
     deps = [
         ":attribute_database",

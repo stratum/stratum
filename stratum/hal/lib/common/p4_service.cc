@@ -365,7 +365,7 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       ::util::Status error;
       if (req->action() ==
           ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT) {
-        switch_interface_->PushForwardingPipelineConfig(
+        error = switch_interface_->PushForwardingPipelineConfig(
              node_id, req->config());
       } else {  // VERIFY_AND_SAVE
         error = switch_interface_->SaveForwardingPipelineConfig(

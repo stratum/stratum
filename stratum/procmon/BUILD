@@ -41,7 +41,7 @@ stratum_cc_library(
     srcs = ["procmon_service_impl.cc"],
     hdrs = ["procmon_service_impl.h"],
     deps = [
-        ":procmon_grpc_proto",
+        ":procmon_proto",
         "@com_google_grpc//:grpc++",
     ],
 )
@@ -55,6 +55,7 @@ stratum_cc_test(
         "@com_github_google_glog//:glog",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
+        "//stratum/glue/status:status_test_util",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",

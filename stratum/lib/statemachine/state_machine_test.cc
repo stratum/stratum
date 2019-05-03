@@ -1,4 +1,6 @@
 #include "stratum/lib/statemachine/example_state_machine.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/status_macros.h"
 
 #include "gmock/gmock.h"
 

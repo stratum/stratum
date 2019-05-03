@@ -37,9 +37,11 @@ stratum_cc_library(
     ],
     deps = [
         ":state_machine",
-        "//testing/base/public:gunit",
+        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/container:flat_hash_map",
         "//stratum/glue/status:status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/glue/status:status_macros",
     ],
 )
 
@@ -51,8 +53,9 @@ stratum_cc_test(
     deps = [
         ":example_state_machine",
         ":state_machine",
-        "//testing/base/public:gunit",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
         "//stratum/glue/status:status",
+        "//stratum/glue/status:status_macros",
     ],
 )

@@ -25,6 +25,7 @@
 #include "absl/synchronization/mutex.h"
 
 using ::testing::_;
+using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::Not;

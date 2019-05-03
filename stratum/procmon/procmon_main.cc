@@ -14,7 +14,7 @@
 
 DEFINE_string(procmon_config_file, "",
               "Path to Procmon configuration proto file.");
-DEFINE_string(procmon_service_addr, ::google::hercules::kProcmonServiceUrl,
+DEFINE_string(procmon_service_addr, stratum::kProcmonServiceUrl,
               "Url of the procmon service to listen to.");
 
 namespace stratum {
@@ -57,6 +57,6 @@ namespace procmon {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  ::util::Status ret = google::hercules::procmon::Main(argc, argv);
+  ::util::Status ret = stratum::procmon::Main(argc, argv);
   return ret.ok() ? 0 : 1;
 }

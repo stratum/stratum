@@ -86,7 +86,7 @@ TEST(ChannelTest, TestReadWriteClose) {
   EXPECT_EQ(2, msgs.size());
   if (msgs.size() == 2) {
     std::vector<int> expected = {3, 4};
-    for (int i = 0; i < msgs.size(); ++i) {
+    for (size_t i = 0; i < msgs.size(); ++i) {
       EXPECT_EQ(msgs[i], expected[i]);
     }
   }
@@ -229,15 +229,12 @@ TEST(ChannelTest, TestBlockingWrite) {
 
 namespace {
 
-#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
 ABSL_CONST_INIT absl::Mutex arr_dst_lock(absl::kConstInit);
-absl::CondVar arr_dst_done(base::LINKER_INITIALIZED);
-#else
-absl::CondVar arr_dst_done;
-#endif
+ // Opensource version of absl::CondVar has takes no arguments: https://github.com/abseil/abseil-cpp/blob/master/absl/synchronization/mutex.h#L777
+absl::CondVar arr_dst_done/*(base::LINKER_INITIALIZED)*/;
 constexpr size_t kArrTestSize = 5;
 int test_arr_src[kArrTestSize];
-int read_cnt = 0;
+size_t read_cnt = 0;
 int test_arr_dst[kArrTestSize];
 struct TestStruct {
   size_t idx;
@@ -285,9 +282,9 @@ TEST(ChannelTest, TestMultipleBlockingReadWrite) {
   std::shared_ptr<Channel<TestStruct>> channel =
       Channel<TestStruct>::Create(kArrTestSize);
   // Initialize test array.
-  for (int i = 0; i < kArrTestSize; ++i) test_arr_src[i] = i + 1;
+  for (size_t i = 0; i < kArrTestSize; ++i) test_arr_src[i] = i + 1;
   // Create ChannelReader/ChannelWriter threads.
-  for (int i = 0; i < kArrTestSize; ++i) {
+  for (size_t i = 0; i < kArrTestSize; ++i) {
     readers[i] = ChannelReader<TestStruct>::Create(channel);
     pthread_create(&reader_tids[i], nullptr, TestArrChannelReader, &readers[i]);
     writers[i].writer = ChannelWriter<TestStruct>::Create(channel);
@@ -303,11 +300,11 @@ TEST(ChannelTest, TestMultipleBlockingReadWrite) {
     read_cnt = 0;
   }
   // Check final array.
-  for (int i = 0; i < kArrTestSize; ++i) {
+  for (size_t i = 0; i < kArrTestSize; ++i) {
     EXPECT_EQ(test_arr_src[i], test_arr_dst[i]);
   }
   // Join ChannelReader/ChannelWriter threads.
-  for (int i = 0; i < kArrTestSize; ++i) {
+  for (size_t i = 0; i < kArrTestSize; ++i) {
     pthread_join(reader_tids[i], nullptr);
     pthread_join(writer_tids[i], nullptr);
   }
@@ -354,6 +351,9 @@ void* StressTestChannelWriterFunc(void* arg) {
       ::util::Status status;
       do {
         status = args->writer->TryWrite(data);
+        // Prevent starvation of reader threads. FIXME: this should already be guaranteed by absl::Mutex
+        if (status.error_code() == ERR_NO_RESOURCE)
+          absl::SleepFor(absl::Milliseconds(1));
       } while (status.error_code() == ERR_NO_RESOURCE);
       if (status.error_code() == ERR_CANCELLED) break;
     }

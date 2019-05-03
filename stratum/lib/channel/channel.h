@@ -202,6 +202,9 @@ class SelectResult {
   // FIXME Constructor for mock StatusOr errors
   SelectResult() {}
 
+  SelectResult& operator=(SelectResult&& other) = default;
+  SelectResult& operator=(const SelectResult& other) = delete;
+
  private:
   // Map from Channel "select"ed on to ready flag.
   std::unique_ptr<std::unordered_map<channel_internal::ChannelBase*, bool>>

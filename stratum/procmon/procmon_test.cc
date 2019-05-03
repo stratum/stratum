@@ -5,6 +5,7 @@
 
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
+#include "stratum/glue/status/status_test_util.h"
 #include "stratum/procmon/procmon.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

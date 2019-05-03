@@ -15,59 +15,36 @@
 #
 
 version: 2.1
-var_1: &bazel_cache_key bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}
-var_2: &bazel_cache_path ~/.cache/bazel
+# Dependecy caching from most to least specific matching cache. See: https://circleci.com/docs/2.0/caching/
+var_0: &bazel_cache_key_0 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/build-targets.txt" }}-{{ checksum ".circleci/test-targets.txt" }}
+var_1: &bazel_cache_key_1 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}
+var_2: &bazel_cache_key_2 bazel-cache
+var_3: &bazel_cache_path ~/.cache/bazel
 
-orbs:
-  stratum_bazel_orb:
-    jobs:
-      build:
-        parameters:
-          path:
-            description: bazel path to build
-            type: string
-            default: //...:all
-        docker:
-          - image: stratumproject/build:latest
-        steps:
-          - checkout
-          - restore_cache:
-              key: *bazel_cache_key
-          - run: bazel build -j 1 <<parameters.path>>
-          - save_cache:
-              key: *bazel_cache_key
-              paths:
-                - *bazel_cache_path
-      test:
-        parameters:
-          path:
-            description: bazel path to test
-            type: string
-            default: //...:all
-        docker:
-          - image: stratumproject/build:latest
-        steps:
-          - checkout
-          - restore_cache:
-              key: *bazel_cache_key
-          - run: bazel test -j 1 <<parameters.path>>
-          - save_cache:
-              key: *bazel_cache_key
-              paths:
-                - *bazel_cache_path
+jobs:
+  unit_tests:
+    docker:
+      - image: stratumproject/build:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - *bazel_cache_key_0
+            - *bazel_cache_key_1
+            - *bazel_cache_key_2
+      - run:
+          name: Build Stratum targets
+          command: xargs -a .circleci/build-targets.txt bazel build -j 1
+      - run:
+          name: Test Stratum targets
+          command: xargs -a .circleci/test-targets.txt bazel test -j 1
+      - save_cache:
+          key: *bazel_cache_key_0
+          paths:
+            - *bazel_cache_path
 
 workflows:
   version: 2.1
-  library:
+  build_and_test:
     jobs:
-      - stratum_bazel_orb/build:
-          path: //stratum/lib:all
-  binary:
-    jobs:
-      - stratum_bazel_orb/build:
-          name: stratum_dummy
-          path: //stratum/hal/bin/dummy:all
-  test:
-    jobs:
-      - stratum_bazel_orb/test:
-          path: //stratum/lib:all    
+      - unit_tests

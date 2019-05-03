@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option cc_generic_services = false;
 
-package google.hercules.procmon;
+package stratum.procmon;
 
 // All information needed to start or resume a single client process.
 message ClientProcess {
