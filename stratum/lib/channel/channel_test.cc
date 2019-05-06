@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include <set>
+#include <thread>
 
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
@@ -353,7 +354,7 @@ void* StressTestChannelWriterFunc(void* arg) {
         status = args->writer->TryWrite(data);
         // Prevent starvation of reader threads. FIXME: this should already be guaranteed by absl::Mutex
         if (status.error_code() == ERR_NO_RESOURCE)
-          absl::SleepFor(absl::Milliseconds(1));
+          std::this_thread::yield();
       } while (status.error_code() == ERR_NO_RESOURCE);
       if (status.error_code() == ERR_CANCELLED) break;
     }
@@ -375,6 +376,7 @@ void* StressTestChannelReaderFunc(void* arg) {
       ::util::Status status;
       do {
         status = args->reader->TryRead(&data);
+        std::this_thread::yield();
       } while (status.error_code() == ERR_ENTRY_NOT_FOUND);
       if (status.error_code() == ERR_CANCELLED) break;
     }
