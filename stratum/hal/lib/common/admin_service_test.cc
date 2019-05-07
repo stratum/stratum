@@ -141,7 +141,7 @@ TEST_P(AdminServiceTest, RebootColdSuccess) {
   ::gnoi::system::RebootResponse resp;
   ASSERT_OK(admin_service_->Setup(false));
 
-  req.set_delay(1000000); // 1ms for immediately reboot
+  req.set_delay(1000000); // 1ms
   req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
@@ -149,6 +149,7 @@ TEST_P(AdminServiceTest, RebootColdSuccess) {
   EXPECT_TRUE(status.ok());
 
   absl::SleepFor(absl::Milliseconds(2));
+  TimerDaemon::Execute();
   EXPECT_TRUE(hal_reset_triggered_);
 
   // we expected that reboot method invoked when admin service teardown
@@ -163,7 +164,7 @@ TEST_P(AdminServiceTest, CancelReboot) {
   ::gnoi::system::RebootResponse resp;
   ASSERT_OK(admin_service_->Setup(false));
 
-  req.set_delay(1000000); // 1ms for immediately reboot
+  req.set_delay(5000000); // 5ms
   req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
@@ -177,7 +178,8 @@ TEST_P(AdminServiceTest, CancelReboot) {
   status = stub_->CancelReboot(context, cancel_req, &cancel_resp);
   EXPECT_TRUE(status.ok());
 
-  absl::SleepFor(absl::Milliseconds(2));
+  absl::SleepFor(absl::Milliseconds(6));
+  TimerDaemon::Execute();
   EXPECT_FALSE(hal_reset_triggered_);
 
   // we expected that reboot method not invoked when admin service teardown
