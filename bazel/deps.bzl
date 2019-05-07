@@ -71,7 +71,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "93c52619eb9546768d560cf92c5d69728921482b",
+            commit = "f9a5c6c74f7dcde382e27c63af2fe5dffc755364",
         )
 
     if "com_github_openconfig_gnmi" not in native.existing_rules():
@@ -81,7 +81,7 @@ def stratum_deps():
             branch = "master",
             build_file = "@//bazel:external/gnmi.BUILD",
         )
-    
+
     if "com_github_openconfig_gnoi" not in native.existing_rules():
         remote_workspace(
             name = "com_github_openconfig_gnoi",
@@ -156,7 +156,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_nelhage_rules_boost",
             remote = "https://github.com/nelhage/rules_boost",
-            commit = "8a8853fd755496288995a603ce9aa2685709cd39",
+            commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
         )
 # -----------------------------------------------------------------------------
 #        Chipset and Platform specific C++ libraries

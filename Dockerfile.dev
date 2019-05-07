@@ -1,4 +1,4 @@
-FROM stratumproject/build:latest
+FROM stratumproject/build:bazel-0.23.2
 
 ARG USER_NAME=default
 ARG USER_ID=1000

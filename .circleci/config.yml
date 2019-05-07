@@ -24,7 +24,7 @@ var_3: &bazel_cache_path ~/.cache/bazel
 jobs:
   unit_tests:
     docker:
-      - image: stratumproject/build:latest
+      - image: stratumproject/build:bazel-0.23.2
     steps:
       - checkout
       - restore_cache:
