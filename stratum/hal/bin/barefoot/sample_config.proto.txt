@@ -14,6 +14,7 @@ singleton_ports {
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
+    autoneg: TRI_STATE_TRUE
   }
   node: 1
   name: "144"
@@ -25,6 +26,7 @@ singleton_ports {
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
+    autoneg: TRI_STATE_TRUE
   }
   node: 1
   name: "128"
@@ -36,6 +38,7 @@ singleton_ports {
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
+    autoneg: TRI_STATE_TRUE
   }
   node: 1
   name: "132"
@@ -47,6 +50,7 @@ singleton_ports {
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
+    autoneg: TRI_STATE_TRUE
   }
   node: 1
   name: "148"

@@ -130,6 +130,11 @@ platform to `$BF_SDE_INSTALL/share` and run `stratum_bf` with
 Platforms with repeaters (such as the Wedge 100bf-65x) are not currently
 supported in BSP-less mode.
 
+We only support DAC cables at the moment, and autoneg must be forced "on" for
+every port. See [sample_config.proto.txt](sample_config.proto.txt) for an
+example (look for `autoneg: TRI_STATE_TRUE`). We are working on adding support
+for optical cables.
+
 ## Testing gNMI
 
 You can use the tools/gnmi/gnmi-cli.py script for gNMI get, set, and subscriptions:
