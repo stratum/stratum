@@ -38,10 +38,10 @@ jobs:
             - *bazel_cache_key_2
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build -j 1
+          command: xargs -a .circleci/build-targets.txt bazel build -j 4
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test -j 1
+          command: xargs -a .circleci/test-targets.txt bazel test -j 4
       - save_cache:
           key: *bazel_cache_key_0
           paths:
