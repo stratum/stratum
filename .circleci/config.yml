@@ -19,6 +19,10 @@ version: 2.1
 var_0: &bazel_cache_key_0 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/build-targets.txt" }}-{{ checksum ".circleci/test-targets.txt" }}
 var_1: &bazel_cache_key_1 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}
 var_2: &bazel_cache_key_2 bazel-cache
+
+var_4: &bazel_covarage_cache_0 bazel-coverage-{{ .BuildNum }}
+var_5: &bazel_covarage_cache_1 bazel-coverage
+
 var_3: &bazel_cache_path ~/.cache/bazel
 
 jobs:
@@ -42,9 +46,30 @@ jobs:
           key: *bazel_cache_key_0
           paths:
             - *bazel_cache_path
+  coverage:
+    docker:
+      - image: stratumproject/build:bazel-0.23.2-ci
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - *bazel_covarage_cache_0
+            - *bazel_covarage_cache_1
+      - run:
+          name: Run test and collect coverage data
+          command: xargs -a .circleci/test-targets.txt bazel coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main -j 1
+      - run:
+          name: Upload coverage report
+          command: bash <(curl -s https://codecov.io/bash) -f bazel-out/_coverage/_coverage_report.dat -X s3
+      - save_cache:
+          key: *bazel_covarage_cache_0
+          paths:
+            - *bazel_cache_path
+
 
 workflows:
   version: 2.1
   build_and_test:
     jobs:
       - unit_tests
+      - coverage
