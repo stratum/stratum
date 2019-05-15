@@ -38,10 +38,10 @@ jobs:
             - *bazel_cache_key_2
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build -j 4
+          command: xargs -a .circleci/build-targets.txt bazel build -j 2
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test -j 4
+          command: xargs -a .circleci/test-targets.txt bazel test -j 2
       - save_cache:
           key: *bazel_cache_key_0
           paths:
@@ -57,7 +57,7 @@ jobs:
             - *bazel_covarage_cache_1
       - run:
           name: Run test and collect coverage data
-          command: xargs -a .circleci/test-targets.txt bazel coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main -j 1
+          command: xargs -a .circleci/test-targets.txt bazel coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main -j 2
       - run:
           name: Upload coverage report
           command: bash <(curl -s https://codecov.io/bash) -f bazel-out/_coverage/_coverage_report.dat -X s3
