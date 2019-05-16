@@ -68,7 +68,8 @@ Stratum Bazel workspace*:
     --external_hercules_urls=0.0.0.0:28000 \
     --persistent_config_dir=<config dir> \
     --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
-    --chassis_config_file=<config dir>/chassis_config.pb.txt
+    --chassis_config_file=<config dir>/chassis_config.pb.txt \
+    --bmv2_log_level=debug
 ```
 
 You can ignore the following error, we are working on fixing it:
@@ -101,6 +102,7 @@ p4c -b bmv2 -a v1model -o /tmp/ --p4runtime-format text --p4runtime-file /tmp/<p
 cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
 [sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
     --grpc-addr <YOUR_HOST_IP_ADDRESS>:28000 --json <prog>.json --p4info <prog>.proto.txt
+```
 
 You can use the loopback program under `testdata/` if you do not have your own
 P4 program.

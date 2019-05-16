@@ -15,6 +15,7 @@
 
 #include "bm/bm_sim/options_parse.h"
 #include "bm/simple_switch/runner.h"
+#include "bm/bm_sim/logger.h"
 
 #include "gflags/gflags.h"
 #include "PI/frontends/proto/device_mgr.h"
@@ -34,13 +35,23 @@ DEFINE_uint32(device_id, 1,
 DEFINE_uint32(cpu_port, 64,
               "BMv2 port number for CPU port (used for packet I/O)");
 DEFINE_bool(console_logging, true,
-            "Log BMv2 message to console.");
+              "Log BMv2 message to console.");
+DEFINE_string(bmv2_log_level, "info",
+              "Log level of Bmv2(trace, debug, info, warn, error, off)");
 
 using ::pi::fe::proto::DeviceMgr;
 
 namespace stratum {
 namespace hal {
 namespace bmv2 {
+
+std::unordered_map<std::string, bm::Logger::LogLevel> log_level_map = {
+    {"trace", bm::Logger::LogLevel::TRACE},
+    {"debug", bm::Logger::LogLevel::DEBUG},
+    {"info", bm::Logger::LogLevel::INFO},
+    {"warn", bm::Logger::LogLevel::WARN},
+    {"error", bm::Logger::LogLevel::ERROR},
+    {"off", bm::Logger::LogLevel::OFF}};
 
 void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   for (int i = 1; i < argc; i++) {
@@ -77,6 +88,17 @@ int Main(int argc, char* argv[]) {
   // TODO(antonin): figure out how to package the file with the binary
   parser.config_file_path = FLAGS_initial_pipeline;
   parser.device_id = FLAGS_device_id;
+
+  // Sets up bmv2 log level
+  auto log_level_it = log_level_map.find(FLAGS_bmv2_log_level);
+  if (log_level_it == log_level_map.end()) {
+    LOG(WARNING) << "Invalid value " << FLAGS_bmv2_log_level << " for -bmv2_log_level\n"
+              << "Run with -help to see possible values\n";
+    parser.log_level = bm::Logger::LogLevel::INFO;
+  } else {
+    parser.log_level = log_level_it->second;
+  }
+
   // TODO(antonin): There may be a better way to parse the interface list
   // (e.g. it can be done with OptionsParser::parse)
   ParseInterfaces(argc, argv, parser);
