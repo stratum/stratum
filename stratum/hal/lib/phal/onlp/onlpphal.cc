@@ -100,12 +100,11 @@ OnlpPhal::~OnlpPhal() {}
 
 ::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
     std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority) {
-
+  absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  absl::WriterMutexLock l(&config_lock_);
   CHECK_RETURN_IF_FALSE(transceiver_event_writers_.size() <
                         static_cast<size_t>(FLAGS_max_num_transceiver_writers))
       << "Can only support " << FLAGS_max_num_transceiver_writers
@@ -149,12 +148,11 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::Status OnlpPhal::UnregisterTransceiverEventWriter(int id) {
-
+  absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  absl::WriterMutexLock l(&config_lock_);
   auto it = std::find_if(
       transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
       [id](const TransceiverEventWriter& h) { return h.id == id; });
@@ -178,7 +176,7 @@ OnlpPhal::~OnlpPhal() {}
 
 ::util::Status OnlpPhal::GetFrontPanelPortInfo(
     int slot, int port, FrontPanelPortInfo* fp_port_info) {
-
+  absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -271,11 +269,10 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 }
 
 ::util::Status OnlpPhal::WriteTransceiverEvent(const TransceiverEvent& event) {
+  absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-
-  absl::WriterMutexLock l(&config_lock_);
 
   std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>::iterator
     it;  
@@ -296,13 +293,6 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 }
 
 ::util::Status OnlpPhal::InitializeOnlpInterface() {
-  if (initialized_) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "InitializeOnlpInterface() can be called only before the class is "
-           << "initialized";
-  }
-
-
   // Create the OnlpInterface object
   ASSIGN_OR_RETURN(
         onlp_interface_,
@@ -312,14 +302,7 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 }
 
 ::util::Status OnlpPhal::InitializeOnlpEventHandler() {
-  if (initialized_) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "InitializeOnlpEventHandler() can be called only before the "
-           << "class is initialized";
-  }
-
-
-  // Create the OnlpEventHandler object 
+  // Create the OnlpEventHandler object
   ASSIGN_OR_RETURN(
         onlp_event_handler_,
         OnlpEventHandler::Make(onlp_interface_.get()));

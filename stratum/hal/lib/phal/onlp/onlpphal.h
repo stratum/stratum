@@ -98,16 +98,16 @@ class OnlpPhal : public PhalInterface {
   OnlpPhal();
 
   // One time initialization of the OnlpWrapper
-  ::util::Status InitializeOnlpInterface();
+  ::util::Status InitializeOnlpInterface() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the OnlpEventHandler. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
-  ::util::Status InitializeOnlpEventHandler();
+  ::util::Status InitializeOnlpEventHandler() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the data sources. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
   // TODO: move it to OnlpConfigurator
-  ::util::Status InitializeOnlpOids();
+  ::util::Status InitializeOnlpOids() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // Internal mutex lock for protecting the internal maps and initializing the
   // singleton instance.
