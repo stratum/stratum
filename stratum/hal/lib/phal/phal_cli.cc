@@ -154,6 +154,7 @@ class PhalCli {
 ::util::Status Main(int argc, char** argv) {
   InitGoogle("phal_cli --legacy_phal_config_path <config_path>", &argc, &argv,
              true);
+  stratum::InitHerculesLogging();
   if (FLAGS_legacy_phal_config_path.empty())
     return MAKE_ERROR() << "Must provide a legacy_phal_config_path argument.";
   ASSIGN_OR_RETURN(auto attribute_database,

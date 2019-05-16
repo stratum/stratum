@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "stratum/glue/init_google.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_real.h"
@@ -46,6 +47,7 @@ using stratum::p4c_backends::TargetInfo;
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
+  stratum::InitHerculesLogging();
   std::unique_ptr<BcmTargetInfo> bcm_target_info(new BcmTargetInfo);
   TargetInfo::InjectSingleton(bcm_target_info.get());
   std::unique_ptr<BcmTunnelOptimizer> bcm_tunnel_optimizer(

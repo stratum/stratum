@@ -76,6 +76,7 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
 
 int Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
+  InitHerculesLogging();
 
   DeviceMgr::init(256 /* max devices */);
 

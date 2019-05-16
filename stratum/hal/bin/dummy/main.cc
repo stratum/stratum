@@ -28,6 +28,7 @@ namespace dummy_switch {
 // Entry point of Dummy Switch
 int DummySwitchMain(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
+  InitHerculesLogging();
 
   auto dummy_box = DummyBox::GetSingleton();
   dummy_box->Start();

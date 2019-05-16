@@ -85,6 +85,7 @@ struct PerNodeInstances {
 
 int Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
+  InitHerculesLogging();
 
   LOG(INFO) << "Starting Hercules in SIM mode for a Broadcom-based switch...";
 

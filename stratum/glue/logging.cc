@@ -54,6 +54,8 @@ class SyslogSink : public LogSink {
 }  // namespace
 
 void InitHerculesLogging() {
+  google::InitGoogleLogging(ProgramInvocationShortName());
+  google::InstallFailureSignalHandler();
   // Make sure we only setup log_sink once.
   static SyslogSink* log_sink = nullptr;
   if (FLAGS_logtosyslog && log_sink == nullptr) {

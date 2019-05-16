@@ -236,7 +236,7 @@ cc_test(
     ],
     data = [
         ":test_p4c",
-        "@com_github_p4lang_p4c//:testdata_p4_16_samples",        
+        "@com_github_p4lang_p4c//:testdata_p4_16_samples",
     ],
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     local = 1,

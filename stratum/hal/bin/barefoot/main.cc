@@ -52,6 +52,7 @@ namespace barefoot {
 int
 Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
+  InitHerculesLogging();
 
   char bf_sysfs_fname[128];
   FILE *fd;
