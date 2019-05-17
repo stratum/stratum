@@ -35,11 +35,7 @@ using TransceiverEvent = PhalInterface::TransceiverEvent;
 using TransceiverEventWriter = PhalInterface::TransceiverEventWriter;
 
 OnlpPhal* OnlpPhal::singleton_ = nullptr;
-#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
 ABSL_CONST_INIT absl::Mutex OnlpPhal::init_lock_(absl::kConstInit);
-#else
-absl::Mutex OnlpPhal::init_lock_;
-#endif
 
 
 ::util::Status OnlpPhalSfpEventCallback::HandleStatusChange(
@@ -56,7 +52,7 @@ absl::Mutex OnlpPhal::init_lock_;
   return result;
 }
 
-OnlpPhal::OnlpPhal() : 
+OnlpPhal::OnlpPhal() :
     onlp_interface_(nullptr),
     onlp_event_handler_(nullptr),
     sfp_event_callback_(nullptr) {
@@ -132,13 +128,13 @@ OnlpPhal::~OnlpPhal() {}
   //       callback once.
   if (sfp_event_callback_ == nullptr) {
     // Create OnlpSfpEventCallback
-    std::unique_ptr<OnlpPhalSfpEventCallback> 
+    std::unique_ptr<OnlpPhalSfpEventCallback>
         callback(new OnlpPhalSfpEventCallback());
     sfp_event_callback_ = std::move(callback);
     sfp_event_callback_->onlpphal_ = this;
- 
+
     // Register OnlpSfpEventCallback
-    ::util::Status result = 
+    ::util::Status result =
       onlp_event_handler_->RegisterSfpEventCallback(sfp_event_callback_.get());
     CHECK_RETURN_IF_FALSE(result.ok())
         << "Failed to register SFP event callback.";
@@ -162,7 +158,7 @@ OnlpPhal::~OnlpPhal() {}
   transceiver_event_writers_.erase(it);
 
   // Unregister OnlpSfpEventCallback if no more writer registered
-  if (transceiver_event_writers_.size() == 0 && 
+  if (transceiver_event_writers_.size() == 0 &&
       sfp_event_callback_ != nullptr) {
     ::util::Status result = onlp_event_handler_->UnregisterSfpEventCallback(
         sfp_event_callback_.get());
@@ -242,7 +238,7 @@ OnlpPhal::~OnlpPhal() {}
         auto vendor_value,
         vendor_attrib->ReadValue<std::string>());
   fp_port_info->set_vendor_name(vendor_value);
-  
+
    ManagedAttribute *model_attrib = sfp_src->GetSfpModel();
   ASSIGN_OR_RETURN(
         auto model_value,
@@ -260,7 +256,7 @@ OnlpPhal::~OnlpPhal() {}
 
 OnlpPhal* OnlpPhal::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
- 
+
   if (!singleton_) {
     singleton_ = new OnlpPhal();
   }
@@ -275,11 +271,11 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
   }
 
   std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>::iterator
-    it;  
-  for (it = transceiver_event_writers_.begin(); 
+    it;
+  for (it = transceiver_event_writers_.begin();
        it != transceiver_event_writers_.end();
        ++ it) {
-    
+
     it->writer->Write(event, absl::InfiniteDuration());
   }
 
@@ -315,11 +311,11 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
    ASSIGN_OR_RETURN(
           std::vector <OnlpOid> OnlpOids,
           onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP));
-  //TODO: Need to support multiple slots. 
+  //TODO: Need to support multiple slots.
   for(unsigned int i = 0; i < OnlpOids.size(); i++) {
     //Adding 1, because port numbering starts from 1.
     const std::pair<int, int> slot_port_pair = std::make_pair(kDefaultSlot, i+1);
-    ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result = 
+    ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result =
       OnlpSfpDataSource::Make(OnlpOids[i], onlp_interface_.get(), NULL);
 
     if (!result.ok()) {

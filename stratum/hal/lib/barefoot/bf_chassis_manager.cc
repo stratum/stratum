@@ -42,7 +42,7 @@ namespace barefoot {
 using PortStatusChangeEvent = BFPalInterface::PortStatusChangeEvent;
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
-absl::Mutex chassis_lock;
+ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kconstInit);
 
 /* static */
 constexpr int BFChassisManager::kMaxPortStatusChangeEventDepth;

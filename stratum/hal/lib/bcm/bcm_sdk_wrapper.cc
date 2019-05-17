@@ -154,11 +154,7 @@ struct RcpuHeader {
 }  // namespace
 
 BcmSdkWrapper* BcmSdkWrapper::singleton_ = nullptr;
-#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
 ABSL_CONST_INIT absl::Mutex BcmSdkWrapper::init_lock_(absl::kConstInit);
-#else
-absl::Mutex BcmSdkWrapper::init_lock_;
-#endif
 
 BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
     : unit_to_chip_type_(),

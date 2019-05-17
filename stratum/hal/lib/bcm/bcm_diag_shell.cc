@@ -50,11 +50,7 @@ constexpr unsigned char BcmDiagShell::kTelnetWillSGA[];
 constexpr unsigned char BcmDiagShell::kTelnetWillEcho[];
 constexpr unsigned char BcmDiagShell::kTelnetDontEcho[];
 BcmDiagShell* BcmDiagShell::singleton_ = nullptr;
-#ifdef ABSL_KCONSTINIT //FIXME remove when kConstInit is upstreamed
 ABSL_CONST_INIT absl::Mutex BcmDiagShell::init_lock_(absl::kConstInit);
-#else
-absl::Mutex BcmDiagShell::init_lock_;
-#endif
 
 ::util::Status BcmDiagShell::StartServer() {
   // TODO: Implement this function.
