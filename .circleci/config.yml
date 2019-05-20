@@ -20,8 +20,9 @@ var_0: &bazel_cache_key_0 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ check
 var_1: &bazel_cache_key_1 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}
 var_2: &bazel_cache_key_2 bazel-cache
 
-var_4: &bazel_covarage_cache_0 bazel-coverage-{{ .BuildNum }}
-var_5: &bazel_covarage_cache_1 bazel-coverage
+var_4: &bazel_covarage_cache_0 bazel-coverage-{{ .Branch }}-{{ .BuildNum }}
+var_5: &bazel_covarage_cache_1 bazel-coverage-{{ .Branch }}
+var_6: &bazel_covarage_cache_2 bazel-coverage
 
 var_3: &bazel_cache_path ~/.cache/bazel
 
@@ -55,6 +56,7 @@ jobs:
           keys:
             - *bazel_covarage_cache_0
             - *bazel_covarage_cache_1
+            - *bazel_covarage_cache_2
       - run:
           name: Run test and collect coverage data
           command: xargs -a .circleci/test-targets.txt bazel coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main -j 2
