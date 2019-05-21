@@ -130,7 +130,7 @@ TEST_P(DiagServiceTest, GetBERTResultSuccess) {
   ASSERT_OK(diag_service_->Teardown());
 }
 
-INSTANTIATE_TEST_CASE_P(DiagServiceTestWithMode, DiagServiceTest,
+INSTANTIATE_TEST_SUITE_P(DiagServiceTestWithMode, DiagServiceTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,
                                           OPERATION_MODE_SIM));

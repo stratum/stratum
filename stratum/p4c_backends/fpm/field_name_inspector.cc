@@ -113,7 +113,7 @@ void FieldNameInspector::AppendName(const std::string& name) {
 }
 
 void FieldNameInspector::AppendStackedHeaderPathNames() {
-  for (int i = 0; i < stack_size_; ++i) {
+  for (uint32_t i = 0; i < stack_size_; ++i) {
     stacked_header_names_.push_back(AddHeaderArrayIndex(field_name_, i));
   }
   stacked_header_names_.push_back(AddHeaderArrayLast(field_name_));

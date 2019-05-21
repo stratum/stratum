@@ -26,7 +26,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
-// data for test use.  See INSTANTIATE_TEST_CASE_P near the end if this file
+// data for test use.  See INSTANTIATE_TEST_SUITE_P near the end if this file
 // for the parameter format.
 class SimpleHitInspectorTest
     : public testing::Test,
@@ -100,7 +100,7 @@ TEST_P(SimpleHitInspectorTest, TestInspect) {
 //  3) Statement index within control body.
 //  4) Flag indicating whether to expect control to have all simple table hits.
 //  5) Flag indicating whether to expect errors after Inspect.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     VerifyFilesForOtherTestsWithSimpleHits,
     SimpleHitInspectorTest,
     Values(
@@ -129,7 +129,7 @@ INSTANTIATE_TEST_CASE_P(
                         "hit_var_scope_ok", -1, true, false)
     ));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ComplexHitTests,
     SimpleHitInspectorTest,
     Values(

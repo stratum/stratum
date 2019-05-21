@@ -151,7 +151,7 @@ TEST_P(FileServiceTest, RemoveSuccess) {
   ASSERT_OK(file_service_->Teardown());
 }
 
-INSTANTIATE_TEST_CASE_P(FileServiceTestWithMode, FileServiceTest,
+INSTANTIATE_TEST_SUITE_P(FileServiceTestWithMode, FileServiceTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,
                                           OPERATION_MODE_SIM));

@@ -126,7 +126,7 @@ class MeterColorMapperTest : public testing::Test {
 // MeterColorMapperTest.  It tests P4 control blocks that MeterColorMapper
 // should not transform.  It covers tests where a control has no metering
 // logic as well as tests where the metering logic has an error.  See
-// INSTANTIATE_TEST_CASE_P near the end if this file for the parameter formats.
+// INSTANTIATE_TEST_SUITE_P near the end if this file for the parameter formats.
 class MeterColorMapperNoTransformTest
   : public MeterColorMapperTest,
     public testing::WithParamInterface<
@@ -147,7 +147,7 @@ class MeterColorMapperNoTransformTest
 typedef MeterColorMapperNoTransformTest MeterColorMapperTransformErrorTest;
 
 // InspectIfColorTest is a parameterized subclass of MeterColorMapperTest.
-// See INSTANTIATE_TEST_CASE_P at the end if this file for the parameter
+// See INSTANTIATE_TEST_SUITE_P at the end if this file for the parameter
 // formats.
 class InspectIfColorTest
   : public MeterColorMapperTest,
@@ -502,7 +502,7 @@ TEST_P(NoColorInspectTest, TestNoColorMeterConditions) {
 // report unexpected errors for normal control logic.  The first member of
 // the parameter tuple is the name of the JSON IR file to load for the test,
 // and the second member is the name of the control for test input.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TransformErrorTests,
     MeterColorMapperNoTransformTest,
     Values(
@@ -521,7 +521,7 @@ INSTANTIATE_TEST_CASE_P(
 // This set of test parameters is for transform attempts that produce errors.
 // The first member of the tuple is the name of the JSON IR file to load for
 // the test, and the second member is the name of the control for test input.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TransformErrorTests,
     MeterColorMapperTransformErrorTest,
     Values(
@@ -545,7 +545,7 @@ INSTANTIATE_TEST_CASE_P(
 //  2) String naming the control that contains a series of IR::IfStatements
 //     for testing.
 //  3) Index within the control body of the IR::IfStatement to be tested.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ValidColorParams,
     InspectValidColorsTest,
     // Tests the first 7 IfStatements from control "ifs_with_transforms"
@@ -557,7 +557,7 @@ INSTANTIATE_TEST_CASE_P(
 
 // This set of test parameters tests IR::IfStatements with unsupported metering
 // conditions.  The tuple format is the same as ValidColorParams above.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     UnsupportedColorParams,
     InspectUnsupportedColorsTest,
     // Tests the IfStatements from control "ifs_with_errors"
@@ -569,7 +569,7 @@ INSTANTIATE_TEST_CASE_P(
 
 // This set of test parameters tests IR::IfStatements with non-metering
 // conditions.  The tuple format is the same as ValidColorParams above.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     NoInspectParams,
     NoColorInspectTest,
     // Tests the first 10 IfStatements from control "ifs_with_no_transforms"
@@ -581,7 +581,7 @@ INSTANTIATE_TEST_CASE_P(
 
 // As above, accounting for discontinuities in the IfStatement index range
 // due to p4c's insertion of temporary variables.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     NoInspectParamsWithTemporaries,
     NoColorInspectTest,
     // These values account for skips due to p4c's insertion of temporary

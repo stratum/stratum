@@ -287,7 +287,7 @@ TEST_F(ParserDecoderTest, TestMultipleStartStates) {
 }
 #endif
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   ValidParserIRInputFiles,
   ParserDecoderTest,
   ::testing::Values("fpm/testdata/parse_basic.ir.json",

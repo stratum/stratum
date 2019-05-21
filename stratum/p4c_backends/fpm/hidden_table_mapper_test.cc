@@ -87,7 +87,7 @@ class FakeP4InfoManager : public hal::P4InfoManager {
 };
 
 // This class is the base HiddenTableMapper test fixture.  See
-// INSTANTIATE_TEST_CASE_P near the end of this file for parameter usage.
+// INSTANTIATE_TEST_SUITE_P near the end of this file for parameter usage.
 class HiddenTableMapperTest
     : public testing::TestWithParam<std::tuple<std::string, int>> {
  protected:
@@ -781,7 +781,7 @@ TEST_F(HiddenTableMapperTest, TestOneActionMultipleKeys) {
 // For the HiddenTableMapperTest fixture type, the string parameter
 // identifies the table to test, and the integer constant describes how to
 // setup the table for the test.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   TestedHiddenTables,
   HiddenTableMapperTest,
   ::testing::Values(

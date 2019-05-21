@@ -43,16 +43,15 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <hash_map>
 #include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/base/port.h"
 #include "absl/numeric/int128.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 
@@ -170,7 +169,27 @@ class IPAddress {
   // IPAddress(const IPAddress&) = default;
   // IPAddress& operator=(const IPAddress&) = default;
 
-  friend class IPAddressOrdering;
+  template <typename H>
+  friend H AbslHashValue(H h, const IPAddress& a) {
+    auto state = H::combine(std::move(h), a.address_family_);
+    switch (a.address_family_) {
+    case AF_INET:
+      return H::combine(std::move(state), a.addr_.addr4.s_addr);
+    case AF_INET6:
+      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[0]);
+      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[1]);
+      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[2]);
+      state = H::combine(std::move(state), a.addr_.addr6.s6_addr32[3]);
+      return state;
+    case AF_UNSPEC:
+      // Additional hash input to differentiate AF_UNSPEC from IPAddress::Any4
+      return H::combine(std::move(state), "AF_UNSPEC");
+    default:
+      LOG(FATAL) << "Unknown address family " << a.address_family_;
+    }
+  }
+
+  friend struct IPAddressOrdering;
 
  private:
   int address_family_;
@@ -324,6 +343,11 @@ class SocketAddress {
   // POD type, so no DISALLOW_COPY_AND_ASSIGN:
   // SocketAddress(const SocketAddress&) = default;
   // SocketAddress& operator=(const SocketAddress&) = default;
+
+  template <typename H>
+  friend H AbslHashValue(H h, const SocketAddress& s) {
+    return H::combine(std::move(h), s.host_, s.port_);
+  }
 
  private:
   IPAddress host_;
@@ -497,6 +521,11 @@ class IPRange {
   }
   static IPRange Any6() {
     return IPRange::UnsafeConstruct(IPAddress::Any6(), 0);  // ::/0
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const IPRange& r) {
+    return H::combine(std::move(h), r.host_, r.length_);
   }
 
   // POD type, so no DISALLOW_COPY_AND_ASSIGN:
@@ -1173,35 +1202,5 @@ bool SubtractIPRange(const IPRange& range,
 std::string AddressFamilyToString(int family);
 
 }  //  namespace stratum
-
-// TODO: hash_set -> unordered_set
-#ifndef SWIG
-
-// Hash functions, for use in hash_set<> etc.
-#ifndef HASH_NAMESPACE_DECLARATION_START
-#define HASH_NAMESPACE_DECLARATION_START namespace __gnu_cxx {
-#endif
-#ifndef HASH_NAMESPACE_DECLARATION_END
-#define HASH_NAMESPACE_DECLARATION_END }
-#endif
-
-HASH_NAMESPACE_DECLARATION_START
-template <>
-struct hash<stratum::IPAddress> {
-  size_t operator()(const stratum::IPAddress& address) const;
-};
-
-template <>
-struct hash<stratum::SocketAddress> {
-  size_t operator()(const stratum::SocketAddress& address) const;
-};
-
-template <>
-struct hash<stratum::IPRange> {
-  size_t operator()(const stratum::IPRange& range) const;
-};
-HASH_NAMESPACE_DECLARATION_END
-
-#endif  // SWIG
 
 #endif  // STRATUM_GLUE_NET_UTIL_IPADDRESS_H_

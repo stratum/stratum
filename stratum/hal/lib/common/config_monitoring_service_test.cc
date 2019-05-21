@@ -1190,7 +1190,7 @@ TEST_P(ConfigMonitoringServiceTest,
 
 // TODO: Finish the unit testing.
 
-INSTANTIATE_TEST_CASE_P(ConfigMonitoringServiceTestWithMode,
+INSTANTIATE_TEST_SUITE_P(ConfigMonitoringServiceTestWithMode,
                         ConfigMonitoringServiceTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,

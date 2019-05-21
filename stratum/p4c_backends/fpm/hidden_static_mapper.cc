@@ -114,7 +114,7 @@ void HiddenStaticMapper::BuildHiddenActionMap(
         static_entry.entity().table_entry();
     if (table_entry.match_size() != 1) continue;
     if (!table_entry.match(0).has_exact()) continue;
-    const int match_bytes = table_entry.match(0).exact().value().size();
+    const auto match_bytes = table_entry.match(0).exact().value().size();
     if (match_bytes > sizeof(uint64)) continue;
 
     // Actions with parameters are not eligible.  Stratum P4 programs do not

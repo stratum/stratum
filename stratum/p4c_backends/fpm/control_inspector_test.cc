@@ -756,7 +756,7 @@ TEST_F(ControlInspectorTest, TestHiddenTableMeterAction) {
   VerifyInternalAction();
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   HitMissFlag,
   ControlInspectorTest,
   ::testing::Bool()

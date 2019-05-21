@@ -247,7 +247,7 @@ TEST_P(PipelinePassesTest, TestIfElseNoOptimization) {
 // - Test if { apply LPM1 } else if { apply LPM2 } else { apply LPM3 }
 // - Test as above, replacing LPM3 with ACL table.
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   WithAndWithoutTransforms,
   PipelinePassesTest,
   ::testing::Bool()

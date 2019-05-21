@@ -1008,7 +1008,7 @@ TEST_P(MappedFieldToBcmFieldsTest, B) {
 }
 
 // Run the MappedFieldToBcmFieldsTests with bit-shifts of [0-33) (i.e. [0-32]).
-INSTANTIATE_TEST_CASE_P(BcmUdfManagerTest, MappedFieldToBcmFieldsTest,
+INSTANTIATE_TEST_SUITE_P(BcmUdfManagerTest, MappedFieldToBcmFieldsTest,
                         ::testing::Range(0, 33));
 
 // ****************************************************************************

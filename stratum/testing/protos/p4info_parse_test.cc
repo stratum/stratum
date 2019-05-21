@@ -204,7 +204,7 @@ TEST_P(P4InfoFilesTest, TestPipelineConfigTextEqualsBinary) {
 
 // P4InfoFilesTest expects the test files to be in this path:
 // "platforms/networking/hercules/hal/config/"
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     P4InfoFiles, P4InfoFilesTest,
     ::testing::Values(
         std::make_tuple("test_p4_info_hercules_b4.pb.txt",

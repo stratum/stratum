@@ -55,7 +55,7 @@ namespace p4c_backends {
 namespace {
 
 // Build a list of file paths to P4 test files. Bazel includes them as data deps in filegroup "testdata_p4_16_samples".
-// We could (should?) build this list dynamically at runtime by reading the filesystem, but doing so is 
+// We could (should?) build this list dynamically at runtime by reading the filesystem, but doing so is
 // not portable until C++17 std::filesystem or would involve boost.
 // TODO: include more test files
 std::vector<std::string> CreateP4v16FileList() {
@@ -159,7 +159,7 @@ TEST_P(P4cSampleFilesTest, RunP4cTest) {
   EXPECT_TRUE(result == 0 || ExpectedFailure(p4_test_file));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     P4c16TestSamples,
     P4cSampleFilesTest,
     ::testing::ValuesIn(CreateP4v16FileList())

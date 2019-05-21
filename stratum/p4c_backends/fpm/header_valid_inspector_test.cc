@@ -180,27 +180,27 @@ TEST_P(HeaderValidInspectorTestErrors, TestErrorStatements) {
   EXPECT_NE(0, ::errorCount());
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     NoTableUpdates,
     HeaderValidInspectorTest,
     Range(0, 5));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Table1Updates,
     HeaderValidInspectorTestTable1,
     Range(5, 11));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Table1And2Updates,
     HeaderValidInspectorTestTable1And2,
     Range(11, 15));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     MultiHeader,
     HeaderValidInspectorTestMultiHeader,
     Range(15, 19));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Errors,
     HeaderValidInspectorTestErrors,
     Range(0, 9));

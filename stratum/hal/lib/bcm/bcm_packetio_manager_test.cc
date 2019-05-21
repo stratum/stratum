@@ -1959,7 +1959,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(BcmPacketioManagerTestWithMode, BcmPacketioManagerTest,
+INSTANTIATE_TEST_SUITE_P(BcmPacketioManagerTestWithMode, BcmPacketioManagerTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,
                                           OPERATION_MODE_SIM));

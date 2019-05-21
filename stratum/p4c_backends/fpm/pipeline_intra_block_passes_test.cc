@@ -331,7 +331,7 @@ TEST_P(PipelineIntraBlockPassesTest, TestIfStatementStageInspect) {
   EXPECT_NE(0, ::errorCount());
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   WithAndWithoutTransforms,
   PipelineIntraBlockPassesTest,
   ::testing::Bool()

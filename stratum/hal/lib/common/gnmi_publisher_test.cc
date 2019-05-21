@@ -376,7 +376,7 @@ class SubscriptionSupportedPathsTest
 //}
 
 // TODO: add all supported paths here!
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedOtherPathsTestWithPath, SubscriptionSupportedPathsTest,
     ::testing::Values(
         GetPath("interfaces")("interface",
@@ -421,7 +421,7 @@ INSTANTIATE_TEST_CASE_P(
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedAlarmPathsTestWithPath, SubscriptionSupportedPathsTest,
     ::testing::Values(
         GetPath("components")("component", "device1.domain.net.com")(
@@ -448,7 +448,7 @@ INSTANTIATE_TEST_CASE_P(
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedCounterPathsTestWithPath,
     SubscriptionSupportedPathsTest,
     ::testing::Values(
@@ -497,7 +497,7 @@ INSTANTIATE_TEST_CASE_P(
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedQosCounterPathsTestWithPath,
     SubscriptionSupportedPathsTest,
     ::testing::Values(
@@ -540,7 +540,7 @@ class ReplaceSupportedPathsTest
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.
-INSTANTIATE_TEST_CASE_P(ReplaceSupportedPathsTestWithPath,
+INSTANTIATE_TEST_SUITE_P(ReplaceSupportedPathsTestWithPath,
                         ReplaceSupportedPathsTest,
                         ::testing::Values(GetPath()()));
 

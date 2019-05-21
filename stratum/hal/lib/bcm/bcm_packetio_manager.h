@@ -49,7 +49,7 @@ namespace hal {
 namespace bcm {
 
 class BcmPacketioManager;
-class BcmKnetIntf;
+struct BcmKnetIntf;
 
 // Encapsulates the data passed to the RX thread for each KNET interface.
 struct KnetIntfRxThreadData {

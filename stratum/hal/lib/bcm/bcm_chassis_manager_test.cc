@@ -5242,7 +5242,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
-INSTANTIATE_TEST_CASE_P(BcmChassisManagerTestWithMode, BcmChassisManagerTest,
+INSTANTIATE_TEST_SUITE_P(BcmChassisManagerTestWithMode, BcmChassisManagerTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE));
 
 }  // namespace bcm

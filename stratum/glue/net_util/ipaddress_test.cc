@@ -22,7 +22,6 @@
 #include <sys/socket.h>
 
 #include <algorithm>
-#include <hash_set>
 #include <iosfwd>
 #include <iostream>
 #include <random>
@@ -30,11 +29,12 @@
 #include <string>
 #include <vector>
 
-#include "gtest/gtest.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/node_hash_set.h"
+#include "absl/hash/hash_testing.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 
 //FIXME(boc) not required for Google
@@ -54,7 +54,6 @@ namespace stratum {
 using testing::ScopedMockLog;
 #endif
 
-using __gnu_cxx::hash_set;
 using absl::node_hash_set;
 
 // Tests for IPAddress.
@@ -600,6 +599,33 @@ TEST(IPAddressTest, IPAddressOrdering) {
 
 TEST(IPAddressTest, Hash) {
   const std::string kIPv4String1 = "1.2.3.4";
+  const std::string kIPv4String2 = "2.3.4.5";
+  const std::string kIPv6String1 = "2001:700:300:1800::f";
+  const std::string kIPv6String2 = "2001:700:300:1800:0:0:0:f";
+
+  IPAddress ip1;
+  IPAddress ip2;
+  IPAddress ip3;
+  IPAddress empty;
+
+  ASSERT_TRUE(StringToIPAddress("1.2.3.4", &ip1));
+  ASSERT_TRUE(StringToIPAddress("2.3.4.5", &ip2));
+  ASSERT_TRUE(StringToIPAddress("2001:700:300:1800::f", &ip3));
+
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
+      IPAddress::Any4(),
+      IPAddress::Loopback4(),
+      IPAddress::Any6(),
+      IPAddress::Loopback6(),
+      ip1,
+      ip2,
+      ip3,
+      empty,
+  }));
+}
+
+TEST(IPAddressTest, HashSet) {
+  const std::string kIPv4String1 = "1.2.3.4";
   const std::string kIPv4String2 = "4.3.2.1";
   const std::string kIPv6String1 = "2001:700:300:1800::f";
   const std::string kIPv6String2 = "2001:700:300:1800:0:0:0:f";
@@ -617,7 +643,7 @@ TEST(IPAddressTest, Hash) {
   ASSERT_TRUE(StringToIPAddress(kIPv6String3, &addr6_3));
   ASSERT_TRUE(StringToIPAddress(kIPv6String4, &addr6_4));
 
-  hash_set<IPAddress> addrs;
+  node_hash_set<IPAddress> addrs;
   addrs.insert(addr0);
   addrs.insert(IPAddress());
   addrs.insert(addr6_2);
@@ -683,7 +709,7 @@ TEST(IPAddressTest, v6Mapped) {
   EXPECT_FALSE(order(compatible_addr, addr4));
 
   // Test hashing.
-  hash_set<IPAddress> addrs;
+  node_hash_set<IPAddress> addrs;
   addrs.insert(addr4);
   addrs.insert(mapped_addr);
   addrs.insert(compatible_addr);
@@ -1724,6 +1750,33 @@ TEST(SocketAddressTest, SocketAddressOrdering) {
 }
 
 TEST(SocketAddressTest, Hash) {
+  IPAddress ip1;
+  IPAddress ip2;
+  IPAddress ip3;
+  IPAddress empty;
+
+  ASSERT_TRUE(StringToIPAddress("1.2.3.4", &ip1));
+  ASSERT_TRUE(StringToIPAddress("2.3.4.5", &ip2));
+  ASSERT_TRUE(StringToIPAddress("2001:700:300:1800::f", &ip3));
+
+  SocketAddress sock_addr0;
+  SocketAddress sock_addr1(ip1, 5);
+  SocketAddress sock_addr2(ip1, 8);
+  SocketAddress sock_addr3(ip2, 3);
+  SocketAddress sock_addr4(ip3, 4);
+  SocketAddress sock_addr5(empty, 0);
+
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
+      sock_addr0,
+      sock_addr1,
+      sock_addr2,
+      sock_addr3,
+      sock_addr4,
+      sock_addr5,
+  }));
+}
+
+TEST(SocketAddressTest, HashSet) {
   const std::string kIPString1 = "1.2.3.4";
   const std::string kIPString2 = "4.3.2.1";
 
@@ -1739,7 +1792,7 @@ TEST(SocketAddressTest, Hash) {
   SocketAddress sock_addr4(addr2, 8);
   SocketAddress sock_addr5(addr1, 40000);  // port >= 2^15 to check signness.
 
-  hash_set<SocketAddress> sock_addrs;
+  node_hash_set<SocketAddress> sock_addrs;
   sock_addrs.insert(sock_addr0);
   sock_addrs.insert(SocketAddress());
   sock_addrs.insert(sock_addr1);
@@ -2823,6 +2876,63 @@ TEST(IPRangeTest, Ordering) {
 }
 
 TEST(IPRangeTest, Hash) {
+  IPAddress ip1;
+  IPAddress ip2;
+  IPAddress ip3;
+  IPAddress empty;
+
+  ASSERT_TRUE(StringToIPAddress("1.2.3.4", &ip1));
+  ASSERT_TRUE(StringToIPAddress("2.3.4.5", &ip2));
+  ASSERT_TRUE(StringToIPAddress("2001:700:300:1800::f", &ip3));
+
+  IPRange range0;
+  IPRange range1(ip1, 0);
+  IPRange range2(ip1, 16);
+  IPRange range3(ip1, 32);
+  IPRange range4(ip2, 16);
+
+  IPRange range5(ip3, 0);
+  IPRange range6(ip3, 64);
+  IPRange range7(ip3, 128);
+
+  IPRange range10(empty, 0);
+  IPRange range11(empty, 64);
+
+  IPRange range20(IPAddress::Any4(), 0);
+  IPRange range21(IPAddress::Any4(), 8);
+  IPRange range22(IPAddress::Any4(), 31);
+  IPRange range23(IPAddress::Any4(), 32);
+
+  IPRange range30(IPAddress::Any6(), 0);
+  IPRange range31(IPAddress::Any6(), 52);
+  IPRange range32(IPAddress::Any6(), 64);
+  IPRange range33(IPAddress::Any6(), 127);
+  IPRange range34(IPAddress::Any6(), 128);
+
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
+      range0,
+      range1,
+      range2,
+      range3,
+      range4,
+      range5,
+      range6,
+      range7,
+      range10,
+      range11,
+      range20,
+      range21,
+      range22,
+      range23,
+      range30,
+      range31,
+      range32,
+      range33,
+      range34,
+  }));
+}
+
+TEST(IPRangeTest, HashSet) {
   const std::string kIPString1 = "1.2.3.4";
   const std::string kIPString2 = "4.3.2.1";
   const std::string kIPString3 = "2001:db8::";
@@ -2845,7 +2955,7 @@ TEST(IPRangeTest, Hash) {
   IPRange range3(addr3, 32);
   IPRange range4(addr4, 16);
 
-  hash_set<IPRange> range_map;
+  node_hash_set<IPRange> range_map;
   range_map.insert(range4);
   range_map.insert(range3);
   range_map.insert(range3);

@@ -174,7 +174,7 @@ TEST_P(CertificateManagementServiceTest, CanGenerateCSRSuccess) {
   ASSERT_OK(certificate_management_service_->Teardown());
 }
 
-INSTANTIATE_TEST_CASE_P(CertificateManagementServiceTestWithMode,
+INSTANTIATE_TEST_SUITE_P(CertificateManagementServiceTestWithMode,
                         CertificateManagementServiceTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,

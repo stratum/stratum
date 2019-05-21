@@ -224,7 +224,7 @@ TEST_P(FieldCrossReferenceTest, TestOtherDescriptors) {
 
 // The test parameter values assure that each test runs for every field
 // in the three-assignment test statement sequence.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     FieldWithType,
     FieldCrossReferenceTest,
     ::testing::Values(

@@ -582,7 +582,7 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
   ASSERT_OK(admin_service_->Teardown());
 }
 
-INSTANTIATE_TEST_CASE_P(AdminServiceTestWithMode, AdminServiceTest,
+INSTANTIATE_TEST_SUITE_P(AdminServiceTestWithMode, AdminServiceTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,
                                           OPERATION_MODE_SIM));

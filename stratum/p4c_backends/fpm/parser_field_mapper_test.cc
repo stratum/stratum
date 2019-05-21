@@ -912,7 +912,7 @@ TEST_F(ParserFieldMapperTest, TestNonExtractedHeaderOuterInner) {
 // using multiple fields, either comma-separated or via P4 "concat" operator.
 
 // This set of parameters tests some normal subfield combinations.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubFields,
     ParserFieldMapperTest,
     ::testing::Values(
@@ -927,7 +927,7 @@ INSTANTIATE_TEST_CASE_P(
     ));
 
 // This set of parameters tests various failures to match on subfields.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubFieldErrors,
     ParserFieldMapperSubfieldErrorTest,
     ::testing::Values(

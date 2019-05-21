@@ -788,6 +788,8 @@ TEST(Bits, Port32) {
                   Bits::Log2FloorNonZero(v)) << v;
         EXPECT_EQ(Bits::FindLSBSetNonZero_Portable(v),
                   Bits::FindLSBSetNonZero(v)) << v;
+        EXPECT_EQ(Bits::CountLeadingZeros32_Portable(v),
+                  Bits::CountLeadingZeros32(v)) << v;
       }
     }
   }
@@ -797,6 +799,8 @@ TEST(Bits, Port32) {
             Bits::Log2FloorNonZero(M32)) << M32;
   EXPECT_EQ(Bits::FindLSBSetNonZero_Portable(M32),
             Bits::FindLSBSetNonZero(M32)) << M32;
+  EXPECT_EQ(32, Bits::CountLeadingZeros32_Portable(static_cast<uint32>(0)));
+  EXPECT_EQ(0, Bits::CountLeadingZeros32_Portable(~static_cast<uint32>(0)));
 }
 
 TEST(Bits, Port64) {
@@ -809,6 +813,8 @@ TEST(Bits, Port64) {
                   Bits::Log2FloorNonZero64(v)) << v;
         EXPECT_EQ(Bits::FindLSBSetNonZero64_Portable(v),
                   Bits::FindLSBSetNonZero64(v)) << v;
+        EXPECT_EQ(Bits::CountLeadingZeros64_Portable(v),
+                  Bits::CountLeadingZeros64(v)) << v;
       }
     }
   }
@@ -818,6 +824,8 @@ TEST(Bits, Port64) {
             Bits::Log2FloorNonZero64(M64)) << M64;
   EXPECT_EQ(Bits::FindLSBSetNonZero64_Portable(M64),
             Bits::FindLSBSetNonZero64(M64)) << M64;
+  EXPECT_EQ(64, Bits::CountLeadingZeros64_Portable(static_cast<uint64>(0)));
+  EXPECT_EQ(0, Bits::CountLeadingZeros64_Portable(~static_cast<uint64>(0)));
 }
 
 TEST(CountOnes, InByte) {

@@ -4562,7 +4562,7 @@ TEST_P(ConstConditionTest,
   EXPECT_THAT(actual, UnorderedEqualsProto(expected));
 }
 
-INSTANTIATE_TEST_CASE_P(BcmTableManagerTest, ConstConditionTest,
+INSTANTIATE_TEST_SUITE_P(BcmTableManagerTest, ConstConditionTest,
                         ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
                                           P4_HEADER_IPV6, P4_HEADER_TCP,
                                           P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,

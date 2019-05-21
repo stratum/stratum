@@ -61,32 +61,6 @@ const int kMaxNetmaskIPv6 = 128;
 // ToCharBuf() (below) depends on this.
 static_assert(INET_ADDRSTRLEN <= INET6_ADDRSTRLEN, "ipv6 larger than ipv4");
 
-namespace {
-
-// We have brought a portion of the sandcastle/common/util/hash/ which we need
-// here. This will be later deprecated as we move to Google3, and there is no
-// need to bring the entire hash lib here.
-
-static inline void mix(uint32& a, uint32& b, uint32& c) {
-  a -= b; a -= c; a ^= (c >> 13);
-  b -= c; b -= a; b ^= (a << 8);
-  c -= a; c -= b; c ^= (b >> 13);
-  a -= b; a -= c; a ^= (c >> 12);
-  b -= c; b -= a; b ^= (a << 16);
-  c -= a; c -= b; c ^= (b >> 5);
-  a -= b; a -= c; a ^= (c >> 3);
-  b -= c; b -= a; b ^= (a << 10);
-  c -= a; c -= b; c ^= (b >> 15);
-}
-
-uint32 Hash32NumWithSeed(uint32 num, uint32 c) {
-  uint32 b = 0x9e3779b9UL;  // the golden ratio; an arbitrary value
-  mix(num, b, c);
-  return c;
-}
-
-}  // anonymous namespace
-
 IPAddress IPAddress::Any4() {
   return HostUInt32ToIPAddress(INADDR_ANY);
 }
@@ -1369,48 +1343,3 @@ std::string AddressFamilyToString(int family) {
 }
 
 }  //  namespace stratum
-
-// TODO: hash_set -> unordered_set
-HASH_NAMESPACE_DECLARATION_START
-size_t hash<stratum::IPAddress>::operator()(
-    const stratum::IPAddress& address) const {
-  switch (address.address_family()) {
-    case AF_INET: {
-      in_addr addr4 = address.ipv4_address();
-      return stratum::Hash32NumWithSeed(addr4.s_addr, AF_INET);
-    }
-    case AF_INET6: {
-      in6_addr addr6 = address.ipv6_address();
-      return stratum::Hash32NumWithSeed(addr6.s6_addr32[0],
-                                                 addr6.s6_addr32[1]) ^
-             stratum::Hash32NumWithSeed(addr6.s6_addr32[2],
-                                                 addr6.s6_addr32[3]);
-    }
-    case AF_UNSPEC: {
-      return hash<int>()(address.address_family());
-    }
-    default: {
-      LOG(FATAL) << "Unknown address family " << address.address_family();
-    }
-  }
-}
-
-size_t hash<stratum::SocketAddress>::operator()(
-    const stratum::SocketAddress& address) const {
-  if (!IsInitializedSocketAddress(address)) {
-    return hash<stratum::IPAddress>()(address.host());
-  }
-  return stratum::Hash32NumWithSeed(
-      hash<stratum::IPAddress>()(address.host()), address.port());
-}
-
-size_t hash<stratum::IPRange>::operator()(
-    const stratum::IPRange& range) const {
-  if (!IsInitializedRange(range)) {
-    return hash<stratum::IPAddress>()(range.host());
-  }
-  return stratum::Hash32NumWithSeed(
-      hash<stratum::IPAddress>()(range.network_address()),
-      range.length());
-}
-HASH_NAMESPACE_DECLARATION_END

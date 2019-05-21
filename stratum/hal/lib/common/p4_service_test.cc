@@ -1301,7 +1301,7 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
 }
 
-INSTANTIATE_TEST_CASE_P(P4ServiceTestWithMode, P4ServiceTest,
+INSTANTIATE_TEST_SUITE_P(P4ServiceTestWithMode, P4ServiceTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
                                           OPERATION_MODE_COUPLED,
                                           OPERATION_MODE_SIM));

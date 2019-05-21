@@ -70,10 +70,6 @@ stratum_cc_library(
     hdrs = [
         "ipaddress.h",
     ],
-    copts = [
-        # TODO: hash_set -> unordered_set, then remove this.
-        "-Wno-deprecated",
-    ],
     deps = [
         ":bits",
         "@com_google_absl//absl/base:core_headers",
@@ -93,6 +89,7 @@ stratum_cc_test(
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:node_hash_set",
+        "@com_google_absl//absl/hash:hash_testing",
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
         "//stratum/glue:logging",

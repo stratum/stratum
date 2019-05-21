@@ -28,7 +28,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
-// data for test use.  See INSTANTIATE_TEST_CASE_P near the end if this file
+// data for test use.  See INSTANTIATE_TEST_SUITE_P near the end if this file
 // for the parameter format.
 class TableHitInspectorTest
     : public testing::Test,
@@ -113,7 +113,7 @@ TEST_P(TableHitInspectorTest, TestInspect) {
 //  3) Statement index within control body (-1 for entire body).
 //  4) Flag indicating whether to expect control to apply tables.
 //  5) Flag indicating whether to expect errors after Inspect.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     NoApplyNoErrorTests,
     TableHitInspectorTest,
     Values(
@@ -126,7 +126,7 @@ INSTANTIATE_TEST_CASE_P(
                         "computeChecksum", -1, false, false)
     ));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ApplyNoErrorTests,
     TableHitInspectorTest,
     Values(
@@ -177,7 +177,7 @@ INSTANTIATE_TEST_CASE_P(
                         "hit_var_scope_ok", -1, true, false)
     ));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ApplyWithErrorTests,
     TableHitInspectorTest,
     Values(
@@ -211,7 +211,7 @@ INSTANTIATE_TEST_CASE_P(
                         "hit_var_invalid", -1, true, true)
     ));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     NoApplyWithErrorTests,
     TableHitInspectorTest,
     Values(

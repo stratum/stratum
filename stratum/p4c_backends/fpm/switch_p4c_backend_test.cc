@@ -216,7 +216,7 @@ TEST_P(SwitchP4cBackendTest, TestValidIR) {
   system(cleanup.c_str());
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   ValidIRInputFiles,
   SwitchP4cBackendTest,
   ::testing::Values(

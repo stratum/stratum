@@ -31,7 +31,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // This class is the SliceCrossReference test fixture.  See the comments
-// for INSTANTIATE_TEST_CASE_P at the end of the file for a description of
+// for INSTANTIATE_TEST_SUITE_P at the end of the file for a description of
 // the test parameters.
 class SliceCrossReferenceTest
     : public testing::TestWithParam<std::tuple<std::string, std::string, int,
@@ -341,7 +341,7 @@ TEST_P(SliceCrossReferenceTest, TestSlicedSourceToUnknownDest) {
 //  - Bit width of the assigned source field.
 //  - Expected destination field type following sliced field mapping.
 //  - Expected bit offset in destination field, as adjusted for source slice.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestFieldSlices, SliceCrossReferenceTest,
     ::testing::Values(
         // Upper slice of source field with no offset in header.

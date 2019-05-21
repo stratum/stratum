@@ -27,7 +27,7 @@ namespace stratum {
 namespace p4c_backends {
 
 // This test fixture depends on an IRTestHelperJson to generate a set of p4c IR
-// data for test use.  See INSTANTIATE_TEST_CASE_P near the end if this file
+// data for test use.  See INSTANTIATE_TEST_SUITE_P near the end if this file
 // for the parameter format.
 class HitAssignMapperTest
     : public testing::Test,
@@ -166,7 +166,7 @@ TEST_F(HitAssignMapperTest, TestRunPreTestTransform) {
 // HitAssignMapperTest borrows most .p4 source files from other unit tests.
 // It gets full coverage of non-error cases without the need for several
 // additional test files specific to these tests.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ApplyNoErrorTests,
     HitAssignMapperTest,
     Values(

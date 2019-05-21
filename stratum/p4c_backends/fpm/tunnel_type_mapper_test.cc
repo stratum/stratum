@@ -764,7 +764,7 @@ TEST_F(TunnelTypeMapperTest, TestIPv4ProcessTunnelsTwice) {
   EXPECT_TRUE(ProtoEqual(saved_pipeline_config, test_p4_pipeline_config_));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   TestedEncaps,
   TunnelTypeMapperTest,
   ::testing::Values(
