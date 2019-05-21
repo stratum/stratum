@@ -23,7 +23,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-// FIXME #include "absl/strings/util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"

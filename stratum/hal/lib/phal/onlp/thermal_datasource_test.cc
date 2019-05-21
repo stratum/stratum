@@ -98,7 +98,7 @@ TEST(ThermalDatasourceTest, GetThermalData) {
 
   // Update value and check attribute fields.
   EXPECT_OK(thermal_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
-  
+
   EXPECT_OK(thermal_datasource->IsCapable((ThermalCaps)(ONLP_THERMAL_CAPS_GET_TEMPERATURE
             |ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD)));
 

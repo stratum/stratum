@@ -36,9 +36,7 @@ stratum_cc_library(
     srcs = ["onlp_event_handler.cc"],
     hdrs = ["onlp_event_handler.h"],
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
+        ":onlp_wrapper_header",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
@@ -82,14 +80,22 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
-    name = "onlp_wrapper",
-    srcs = [
-        "onlp_wrapper.cc",
-    ],
+    name = "onlp_wrapper_header",
     hdrs = [
         "onlp_wrapper.h",
     ],
     deps = [
+        "@local_onlp_bin//:onlp_headers",
+    ],
+)
+
+stratum_cc_library(
+    name = "onlp_wrapper",
+    srcs = [
+        "onlp_wrapper.cc",
+    ],
+    deps = [
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -111,12 +117,10 @@ stratum_cc_library(
     ],
     arches = HOST_ARCHES,
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
-        "@com_google_googletest//:gtest",
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -145,9 +149,7 @@ stratum_cc_library(
         "sfp_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -158,8 +160,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -185,8 +185,6 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -199,9 +197,7 @@ stratum_cc_library(
         "fan_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -212,8 +208,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -239,8 +233,6 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -253,9 +245,7 @@ stratum_cc_library(
         "psu_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -266,8 +256,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -293,8 +281,6 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -307,9 +293,7 @@ stratum_cc_library(
         "thermal_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -320,8 +304,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -334,9 +316,7 @@ stratum_cc_library(
         "led_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
+        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -347,8 +327,6 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -374,8 +352,6 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -401,8 +377,6 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        #       TODO: Fix dependency
-        #        "//stratum/onlp:onlpsim",
     ],
 )
 
@@ -417,8 +391,6 @@ stratum_cc_library(
     deps = [
         ":onlp_event_handler",
         ":onlp_wrapper",
-#FIXME remove when onlp_wrapper.h is stable
-#        ":onlp_wrapper_fake",
         ":sfp_datasource",
         "//stratum/lib:macros",
         "//stratum/glue/status",
@@ -431,15 +403,16 @@ stratum_cc_library(
     ],
 )
 
-stratum_cc_test(
-    name = "onlpphal_test",
-    srcs = ["onlpphal_test.cc"],
-    deps = [
-        ":onlpphal",
-        ":onlp_wrapper_mock",
-        "@com_google_googletest//:gtest_main",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:macros",
-    ],
-)
+# TODO(Yi) remove onlp library dependency from this test
+#stratum_cc_test(
+#    name = "onlpphal_test",
+#    srcs = ["onlpphal_test.cc"],
+#    deps = [
+#        ":onlpphal",
+#        ":onlp_wrapper_mock",
+#        "@com_google_googletest//:gtest_main",
+#        "//stratum/glue/status",
+#        "//stratum/glue/status:status_test_util",
+#        "//stratum/lib:macros",
+#    ],
+#)

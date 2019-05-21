@@ -200,9 +200,9 @@ TEST_F(OnlpEventHandlerTest, ExecutesAllOidCallbacksDespiteFailures) {
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(callback1, HandleStatusChange(_))
-      .WillOnce(Return(MAKE_ERROR() << "callback1 failure"));
+      .WillOnce(Return(::util::Status { MAKE_ERROR() << "callback1 failure" }));
   EXPECT_CALL(callback2, HandleStatusChange(_))
-      .WillOnce(Return(MAKE_ERROR() << "callback2 failure"));
+      .WillOnce(Return(::util::Status { MAKE_ERROR() << "callback2 failure" }));
   EXPECT_THAT(PollOids(), StatusIs(_, _,
                                    AllOf(HasSubstr("callback1 failure"),
                                          HasSubstr("callback2 failure"))));
