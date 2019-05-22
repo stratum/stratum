@@ -28,7 +28,7 @@ def _genrules(name, srcs, template, deps, testonly, visibility, ext):
     srcs += [template]
     out_files = [name + ext]
     cmd = ("mkdir $$$$.tmp ; " + "cp $(SRCS) $$$$.tmp/ ; " + "cd $$$$.tmp ; " +
-           ("../$(location //platforms/networking/hercules/testing/cdlang:cdl_tool) " +
+           ("../$(location //stratum/testing/cdlang:cdl_tool) " +
             " -t " + template +
             " -o " + name + ext + " " +
             (" ".join(srcs[:-1])) +
@@ -49,7 +49,7 @@ def _genrules(name, srcs, template, deps, testonly, visibility, ext):
         cmd = cmd,
         heuristic_label_expansion = 0,
         tools = [
-            "//platforms/networking/hercules/testing/cdlang:cdl_tool",
+            "//stratum/testing/cdlang:cdl_tool",
         ],
         visibility = visibility,
     )

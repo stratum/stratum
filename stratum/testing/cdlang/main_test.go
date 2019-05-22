@@ -1,9 +1,8 @@
 package cdl
 
 import (
+	"strings"
 	"testing"
-
-	"google3/golang/godebug/pretty/pretty"
 )
 
 func TestParseCdlangCode(t *testing.T) {
@@ -582,7 +581,7 @@ func TestParseCdlangCode(t *testing.T) {
 			t.Errorf("%s: gotDOM(%v): got unexpected error: %v", tt.name, gotDOM, err)
 			continue
 		}
-		if diff := pretty.Compare(got, want); diff != "" {
+		if diff := strings.Compare(got, want); diff != 0 {
 			t.Errorf("%s: inCdlangCode(%v): got invalid DOM, diff(-got,+want):\n%s", tt.name, tt.inCdlangCode, diff)
 			continue
 		}

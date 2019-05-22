@@ -6,8 +6,9 @@ package cdl
 import (
 	"fmt"
 
-	"google3/platforms/networking/hercules/testing/cdlang/cdlang"
-	"google3/golang/antlr4/antlr"
+	"cdlang"
+	//"google3/golang/antlr4/antlr"
+	"github.com/antlr/antlr4/runtime/Go/antlr"
 )
 
 // errorListener is an ANTLR error listener that saves a reference to the first

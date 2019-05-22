@@ -1,7 +1,7 @@
-load("//golang/antlr4:antlr4.bzl", "go_antlr4_combined")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+load("//stratum/testing/cdlang:antlr.bzl", "go_antlr4_combined")
 
 package(
-    #default_hdrs_check = "strict",
     default_visibility = ["//visibility:public"],
 )
 
@@ -12,9 +12,7 @@ go_binary(
     srcs = ["main.go"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_google_glog//:glog/go:flag",
-        "@com_github_google_glog//:glog/go:log",
-        "//stratum/testing/cdlang",
+        "//stratum/testing/cdlang:cdlang",
         "//stratum/testing/cdlang:cdl",
     ],
 )
@@ -22,8 +20,6 @@ go_binary(
 go_antlr4_combined(
     name = "cdlang",
     src = "CDLang.g4",
-    listener = True,
-    visitor = True,
 )
 
 go_library(
@@ -35,16 +31,15 @@ go_library(
         "visitor.go",
     ],
     deps = [
-        "@com_github_google_glog//:glog/go:log",
-        "//stratum/testing/cdlang",
-        "//golang/antlr4:antlr",
+        "//stratum/testing/cdlang:cdlang",
+        "@com_github_antlr//runtime/Go/antlr:go_default_library",
     ],
+    importpath = "cdl",
 )
 
 go_test(
     name = "cdl_test",
     size = "small",
     srcs = ["main_test.go"],
-    library = ":cdl",
-    deps = ["//golang/godebug/pretty"],
+    embed = ["//stratum/testing/cdlang:cdl"],
 )

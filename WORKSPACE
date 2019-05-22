@@ -57,3 +57,19 @@ boost_deps()
 
 load("//stratum/hal/lib/phal/onlp:onlp.bzl", "onlp_configure")
 onlp_configure(name = "local_onlp_bin")
+
+# ---------------------------------------------------------------------------
+#       Load Golang dependencies.
+# ---------------------------------------------------------------------------
+load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+go_rules_dependencies()
+go_register_toolchains()
+
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+gazelle_dependencies()
+
+# ---------------------------------------------------------------------------
+#       Load CDLang dependencies.
+# ---------------------------------------------------------------------------
+load("//stratum/testing/cdlang:deps.bzl", "cdlang_rules_dependencies")
+cdlang_rules_dependencies()

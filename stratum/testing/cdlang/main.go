@@ -17,10 +17,10 @@ import (
 	"strconv"
 	"text/template"
 
-	"google3/base/go/flag"
-	"google3/base/go/log"
-	"google3/platforms/networking/hercules/testing/cdlang/cdl"
-	"google3/platforms/networking/hercules/testing/cdlang/cdlang"
+	"flag"
+	"log"
+	"cdl"
+	"cdlang"
 )
 
 var (
@@ -89,11 +89,11 @@ func buildAbstractSyntaxTreeFromFile(fileName string) cdlang.IContractContext {
 	// Read the file contents.
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		log.Exitf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v\n", err)
 	}
 	tree, err := cdl.BuildAbstractSyntaxTree(string(data))
 	if err != nil {
-		log.Exitf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v\n", err)
 	}
 	return tree
 }
@@ -103,7 +103,7 @@ func processTemplate(dom *cdl.DOM) {
 	// Prepare the template.
 	t, err := template.New(filepath.Base(*templateFileName)).Funcs(template.FuncMap{"last": last, "vars": vars, "arr": arr, "concat": concat}).ParseFiles(*templateFileName)
 	if err != nil {
-		log.Exitf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v\n", err)
 	}
 	// Produce output file using the template and the DOM.
 	// First create a buffer where the output of the template will be stored
@@ -111,11 +111,11 @@ func processTemplate(dom *cdl.DOM) {
 	var b bytes.Buffer
 	// Then, execute the template.
 	if err := t.Execute(&b, dom); err != nil {
-		log.Exitf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v\n", err)
 	}
 	// If everything is OK, then write the output to the output file.
 	if err = ioutil.WriteFile(*outputFileName, b.Bytes(), os.ModePerm); err != nil {
-		log.Exitf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v\n", err)
 	}
 }
 
@@ -128,7 +128,7 @@ func main() {
 		// Now DOM can be updated by the visitor.
 		status := tree.Accept(cdl.NewVisitor(dom))
 		if status != nil && status.(error) != nil {
-			log.Exitf("cdl: %s: %v\n", fileName, status)
+			log.Fatalf("cdl: %s: %v\n", fileName, status)
 		}
 	}
 	// All input files have been processed. Now the DOM has to be post-processed.

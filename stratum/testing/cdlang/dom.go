@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"google3/base/go/log"
+	"log"
 )
 
 type withParams interface {

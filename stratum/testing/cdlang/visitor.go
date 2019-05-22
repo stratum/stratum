@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"google3/platforms/networking/hercules/testing/cdlang/cdlang"
-	"google3/golang/antlr4/antlr"
+	"cdlang"
+	"github.com/antlr/antlr4/runtime/Go/antlr"
 )
 
 // Visitor implements the visitor pattern (https://en.wikipedia.org/wiki/Visitor_pattern)
