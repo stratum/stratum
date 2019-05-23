@@ -13,7 +13,6 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
@@ -27,10 +26,11 @@ namespace onlp {
 
 
 ::util::StatusOr<std::shared_ptr<OnlpThermalDataSource>> OnlpThermalDataSource::Make(
-    OnlpOid thermal_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
-  RETURN_IF_ERROR_WITH_APPEND(ValidateOnlpThermalInfo(thermal_id, onlp_interface))
-      << "Failed to create THERMAL datasource for OID: " << thermal_id;
-  ASSIGN_OR_RETURN(ThermalInfo thermal_info, onlp_interface->GetThermalInfo(thermal_id));
+    int thermal_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
+  OnlpOid thermal_oid = ONLP_THERMAL_ID_CREATE(thermal_id);
+  RETURN_IF_ERROR_WITH_APPEND(ValidateOnlpThermalInfo(thermal_oid, onlp_interface))
+      << "Failed to create THERMAL datasource for ID: " << thermal_id;
+  ASSIGN_OR_RETURN(ThermalInfo thermal_info, onlp_interface->GetThermalInfo(thermal_oid));
   std::shared_ptr<OnlpThermalDataSource> thermal_data_source(
       new OnlpThermalDataSource(thermal_id, onlp_interface, cache_policy, thermal_info));
 
@@ -41,13 +41,32 @@ namespace onlp {
   return thermal_data_source;
 }
 
-OnlpThermalDataSource::OnlpThermalDataSource(OnlpOid thermal_id,
+OnlpThermalDataSource::OnlpThermalDataSource(int thermal_id,
                                      OnlpInterface* onlp_interface,
                                      CachePolicy* cache_policy,
                                      const ThermalInfo& thermal_info)
-    : DataSource(cache_policy), thermal_oid_(thermal_id), onlp_stub_(onlp_interface) {
+    : DataSource(cache_policy), onlp_stub_(onlp_interface) {
+
+  thermal_oid_ = ONLP_THERMAL_ID_CREATE(thermal_id);
+
+  // NOTE: Following attributes aren't going to change through the lifetime
+  // of this datasource, therefore no reason to put them in the UpdateValues
+  // function call.
+
   // Once the thermal present, the oid won't change. Do not add setter for id.
   thermal_id_.AssignValue(thermal_id);
+
+  // Grab the OID header for the description
+  auto oid_info = thermal_info.GetHeader();
+  thermal_desc_.AssignValue(std::string(oid_info->description));
+
+  // Grab Thermal Capabilities
+  ThermalCaps caps;
+  thermal_info.GetCaps(&caps);
+  thermal_cap_temp_.AssignValue(caps.get_temperature());
+  thermal_cap_warn_thresh_.AssignValue(caps.get_warning_threshold());
+  thermal_cap_err_thresh_.AssignValue(caps.get_error_threshold());
+  thermal_cap_shutdown_thresh_.AssignValue(caps.get_shutdown_threshold());
 }
 
 ::util::Status OnlpThermalDataSource::UpdateValues() {
@@ -58,23 +77,13 @@ OnlpThermalDataSource::OnlpThermalDataSource(OnlpOid thermal_id,
 
   // Other attributes are only valid if THERMAL is present. Return if thermal not
   // present.
-  CHECK_RETURN_IF_FALSE(thermal_info.Present()) << "THERMAL is not present.";
+  if (!thermal_info.Present()) return ::util::OkStatus();
 
   thermal_cur_temp_.AssignValue(static_cast<double>(thermal_info.GetThermalCurTemp())/1000.0);
   thermal_warn_temp_.AssignValue (static_cast<double>(thermal_info.GetThermalWarnTemp())/1000.0);
   thermal_error_temp_.AssignValue(static_cast<double>(thermal_info.GetThermalErrorTemp())/1000.0);
   thermal_shut_down_temp_.AssignValue(static_cast<double>(thermal_info.GetThermalShutDownTemp())/1000.0);
 
-  return ::util::OkStatus();
-}
-
-::util::Status OnlpThermalDataSource::IsCapable(ThermalCaps thermal_caps) {
-  bool is_capable;
-  
-  ASSIGN_OR_RETURN(ThermalInfo thermal_info, onlp_stub_->GetThermalInfo(thermal_oid_));
-  is_capable = thermal_info.Capable(thermal_caps);
-  CHECK_RETURN_IF_FALSE(is_capable) << "Expected Thermal capability is not present.";
-  
   return ::util::OkStatus();
 }
 

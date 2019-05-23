@@ -106,7 +106,7 @@ class EnumAttribute
   explicit EnumAttribute(const ::google::protobuf::EnumDescriptor* descriptor,
                          DataSource* datasource)
       : TypedAttribute<const ::google::protobuf::EnumValueDescriptor*>(datasource) {
-    value_ = descriptor->value(0);  // Default enum value.
+    value_ = descriptor->FindValueByNumber(0);  // Default enum value.
   }
   ::util::Status AssignValue(const google::protobuf::EnumValueDescriptor* value) {
     if (value->type() != value_->type()) {

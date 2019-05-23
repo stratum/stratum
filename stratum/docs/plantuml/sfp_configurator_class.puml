@@ -1,0 +1,90 @@
+@startuml
+PhalInterface <|-- OnlpPhal
+OnlpPhal --> AttributeDatabase: database
+OnlpPhal --> OnlpInterface: onlp_interface
+OnlpPhal --> OnlpSfpConfigurator: slot_port_to_configurator_
+OnlpInterface <|-- OnlpWrapper
+SwitchConfigurator <|-- OnlpSwitchConfigurator
+OnlpSwitchConfigurator --> OnlpInterface: onlp_interface_
+AttributeDatabase --> SwitchConfigurator: configurator_
+SfpConfigurator <|-- OnlpSfpConfigurator
+OnlpSfpConfigurator --> AttributeGroup: sfp_group_
+OnlpSfpConfigurator --> OnlpInterface: onlp_interface_
+OnlpSfpConfigurator --> OnlpSfpDataSource: datasource_
+
+class PhalInterface {
+  +Status RegisterSfpConfigurator(slot, port, configurator)
+}
+
+class OnlpPhal {
+  -database : AttributeDatabase
+  -onlp_interface: OnlpInterface
+  -slot_port_to_configurator_: std::map<std::pair<int, int>, OnlpSfpConfigurator*>
+  -OnlpPhal()
+  +OnlpPhal CreateSingleton()
+  +Status RegisterSfpConfigurator(slot, port, configurator)
+}
+
+class OnlpInterface {
+  +StatusOr<SfpInfo> GetSfpInfo(OnlpOid)
+  +StatusOr<FanInfo> GetFanInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetPsuInfo(OnlpOid)
+  +StatusOr<OidInfo> GetOidInfo(OnlpOid)
+  +StatusOr<<vector <OnlpOid>>> GetOidList(pnlp_oid_type_flag_t)
+  +StatusOr<bool> GetSfpPresent(OnlpOid)
+  +StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap()
+  +StatusOr<OnlpPortNumber> GetSfpMaxPortNumber()
+}
+
+class OnlpWrapper {
+  -OnlpWrapper()
+  +StatusOr<unique_ptr<OnlpWrapper>> Make()
+  +StatusOr<SfpInfo> GetSfpInfo(OnlpOid)
+  +StatusOr<FanInfo> GetFanInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetPsuInfo(OnlpOid)
+  +StatusOr<OidInfo> GetOidInfo(OnlpOid)
+  +StatusOr<<vector <OnlpOid>>> GetOidList(pnlp_oid_type_flag_t)
+  +StatusOr<bool> GetSfpPresent(OnlpOid)
+  +StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap()
+  +StatusOr<OnlpPortNumber> GetSfpMaxPortNumber()
+}
+
+class AttributeDatabase {
+  -configurator_: SwitchConfigurator
+  -AttributeDatabase()
+  +AttributeDatabase MakePhalDB()
+  +Status Set(AttributeValueMap values)
+  +Status MakeQuery(query_paths)
+}
+
+class AttributeGroup {
+  +Status AddAttribute(name, value)
+  +StatusOr<AttributeGroup> AddChildGroup(name)
+  +StatusOr<AttributeGroup> AddRepeatedChildGroup(name)
+  +Status RemoveChildGroup(name)
+  +Status RemoveRepeatableChildGroup(name)
+  +Status AddRuntimeConfigurator(configurator)
+}
+
+class SfpConfigurator {
+  +Status HandleEvent(HwState state)
+}
+
+class OnlpSfpConfigurator {
+  -id_: int
+  -config_: PhalCardConfig::Port&
+  -sfp_group_: AttributeGroup*
+  -onlp_interface_: OnlpInterface*
+  -sfp_channel_count_: int
+  -datasource_: std::shared_ptr<OnlpSfpDataSource>
+  -initialized_: bool
+  -OnlpSfpConfigurator(id, config, sfp_group, onlp_interface)
+  +StatusOr<std::unique_ptr<OnlpSfpConfigurator> Make(id, config, sfp_group, onlp_interface)
+  +Status HandleEvent(HwState state)
+  +Status AddSfp()
+  +Status RemoveSfp()
+  +Status AddChannel(id, channel)
+  +Status RemoveChannel(id, channel)
+  -std::shared_ptr<OnlpSfpDataSource>GetSfpDataSource()
+}
+@enduml

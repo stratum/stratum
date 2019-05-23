@@ -1,0 +1,28 @@
+@startuml
+Main -> BcmDiagShell: CreateSingleton
+Main <- BcmDiagShell: bcm_diag_shell
+Main -> BcmSdkWrapper: CreateSingleton(bcm_diag_shell)
+Main <- BcmSdkWrapper: bcm_sdk_wrapper
+Main -> OnlpPhal: CreateSingleton()
+Main <- OnlpPhal: onlpphal
+Main -> BcmSerdesDbManager: CreateInstance()
+Main <- BcmSerdesDbManager: bcm_serdes_db_manager
+Main -> BcmChassisManager: CreateInstance(STANDALONE, onlpphal, bcm_sdk_wrapper, bcm_serdes_db_manager.get())
+Main <- BcmChassisManager: bcm_chassis_manager
+Main -> BcmChassisManager: SetUnitToBcmNodeMap
+Main <- BcmChassisManager: success
+Main -> BcmSwitch: CreateInstance(onlpphal, bcm_chassis_manager.get(), unit_to_bcm_node)
+Main <- BcmSwitch: bcm_switch
+Main -> AuthPolicyCheck: CreateSingleton()
+Main <- AuthPolicyCheck: auth_policy_checker
+Main -> CredentialsManager: CreateSingleton()
+Main <- CredentialsManager: credentials_manager
+Main -> Hal: CreateSingleton(STANDALONE, bcm_switch.get(), auth_policy_checker.get(), credentials_manager.get())
+Main <- Hal: hal
+Main -> Hal: SanityCheck
+Main <- Hal: success
+Main -> Hal: Setup
+Main <- Hal: success
+Main -> Hal: Run
+Main <- Hal: success
+@enduml

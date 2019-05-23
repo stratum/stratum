@@ -610,6 +610,7 @@ stratum_cc_library(
     hdrs = ["phal_interface.h"],
     deps = [
         ":common_proto",
+        "//stratum/hal/lib/phal:sfp_configurator",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib/channel",

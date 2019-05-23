@@ -22,8 +22,10 @@
 
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 #include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
+#include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
 
 
 
@@ -79,6 +81,8 @@ class OnlpPhal : public PhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
+  ::util::Status RegisterSfpConfigurator(int slot, int port, 
+      SfpConfigurator* configurator) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -91,14 +95,27 @@ class OnlpPhal : public PhalInterface {
   // Write Transceiver Events
   ::util::Status WriteTransceiverEvent(const TransceiverEvent& event);
 
+  // Handle a sfp status change event
+  ::util::Status HandleTransceiverEvent(TransceiverEvent& event);
+
  private:
+  friend class OnlpPhalCli;
   friend class OnlpPhalTest;
+  friend class OnlpPhalMock;
+  friend class OnlpSwitchConfiguratorTest;
 
   // Private constructor.
   OnlpPhal();
 
+  // Calls all the one time start initialisations
+  virtual ::util::Status Initialize();
+
   // One time initialization of the OnlpWrapper
-  ::util::Status InitializeOnlpInterface() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
+  virtual ::util::Status InitializeOnlpInterface() 
+    EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
+
+  // Inialize the PhalDB on start up
+  ::util::Status InitializePhalDB();
 
   // One time initialization of the OnlpEventHandler. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
@@ -133,14 +150,15 @@ class OnlpPhal : public PhalInterface {
 
   std::unique_ptr<OnlpInterface> onlp_interface_;
   std::unique_ptr<OnlpEventHandler> onlp_event_handler_;
+  std::unique_ptr<AttributeDatabase> database_;
 
   // SFP Event Callback
   std::unique_ptr<OnlpPhalSfpEventCallback> sfp_event_callback_;
 
   // Map from std::pair<int, int> representing (slot, port) of singleton port
-  // to the vector of OnlpOid
-  std::map<std::pair<int, int>, std::shared_ptr<OnlpSfpDataSource>> 
-      slot_port_to_sfp_data_;
+  // to the vector of sfp datasource id
+  std::map<std::pair<int, int>, OnlpSfpConfigurator*> 
+      slot_port_to_configurator_;
 };
 
 }  //namespace onlp

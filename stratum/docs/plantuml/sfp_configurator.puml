@@ -1,0 +1,30 @@
+@startuml
+loop OnlpEventHandlerPollOids
+  loop poll oids
+    OnlpEventHandler -> OnlpEventHandler: check for status change
+  end
+  OnlpEventHandler -> OnlpPhalSfpEventCallback: HandleStatusChange(info)
+  OnlpPhalSfpEventCallback -> OnlpPhal: HandleTransceiverEvent(event)
+  OnlpPhal -> SfpConfigurator: HandleEvent(state)
+  alt add sfp
+    SfpConfigurator -> OnlpSfpDataSource: Make(id, onlp_interface, cache)
+    SfpConfigurator <- OnlpSfpDataSource: datasource
+    SfpConfigurator -> AttributeGroup: AcquireMutable()
+    SfpConfigurator <- AttributeGroup: mutable_sfp
+    loop add all attributes
+      SfpConfigurator -> AttributeGroup: AddAttribute("attr1", datasource->GetSfpAttr1())
+    end
+  else remove sfp
+    SfpConfigurator -> AttributeGroup: AcquireMutable()
+    SfpConfigurator <- AttributeGroup: mutable_sfp
+    loop remove all attributes
+      SfpConfigurator -> AttributeGroup: RemoveAttribute("attr1")
+    end
+    SfpConfigurator -> OnlpSfpDataSource: delete
+  end
+  OnlpPhal <- SfpConfigurator: status
+  OnlpPhal -> OnlpPhal: WriteTransceiverEvent(event)
+  OnlpPhalSfpEventCallback <- OnlpPhal: status
+  OnlpEventHandler <- OnlpPhalSfpEventCallback: status
+end
+@enduml

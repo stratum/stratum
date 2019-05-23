@@ -64,6 +64,30 @@ bool FetchOnce::CacheHasExpired() { return should_update_; }
 
 void FetchOnce::CacheUpdated() { should_update_ = false; }
 
+// Create a new CachePolicy instance
+// note: is passed to DataSource who then manages the deletion
+::util::StatusOr<CachePolicy*> CachePolicyFactory::CreateInstance(
+    CachePolicyType cache_type, 
+    int32 timed_cache_value) {
+
+    switch (cache_type) {
+    case ::stratum::hal::NEVER_UPDATE:
+        return(new NeverUpdate());
+
+    case ::stratum::hal::FETCH_ONCE:
+        return(new FetchOnce());
+
+    case ::stratum::hal::TIMED_CACHE:
+        return(new TimedCache(absl::Seconds(timed_cache_value)));
+
+    case ::stratum::hal::NO_CACHE:
+        return(new NoCache());
+
+    default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "invalid cache type";
+    }
+}
+
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum

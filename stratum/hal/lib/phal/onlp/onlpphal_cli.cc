@@ -14,6 +14,7 @@
 
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -22,27 +23,29 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/phal/system_real.h"
+#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
 #include "stratum/lib/macros.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "re2/re2.h"
 
-DEFINE_string(legacy_phal_config_path, "",
-              "The path to read the LegacyPhalInitConfig proto from.");
+using namespace std;
 
 namespace stratum {
 namespace hal {
 namespace phal {
+namespace onlp {
 
 // Handles various CLI interactions with an attribute database.
-class PhalCli {
+class OnlpPhalCli {
  public:
   // All CLI queries are run on the given attribute database.
-  PhalCli(std::unique_ptr<AttributeDatabaseInterface> attribute_database)
-      : database_interface_(std::move(attribute_database)) {}
+  OnlpPhalCli(OnlpPhal* onlpphal)
+      : onlpphal_(onlpphal) {}
 
   // Reads the given string into a PHAL query. Returns a failure if the given
   // string uses invalid syntax. This does not guarantee that it is a valid path
@@ -103,7 +106,7 @@ class PhalCli {
   // database schema.
   ::util::Status HandleQuery(const Path& path) {
     absl::Time start_time = absl::Now();
-    ASSIGN_OR_RETURN(auto db_query, database_interface_->MakeQuery({path}));
+    ASSIGN_OR_RETURN(auto db_query, onlpphal_->database_->MakeQuery({path}));
     absl::Time generate_time = absl::Now();
     ASSIGN_OR_RETURN(auto result, db_query->Get());
     absl::Time execute_time = absl::Now();
@@ -112,7 +115,12 @@ class PhalCli {
         (generate_time - start_time) / absl::Microseconds(1);
     int execute_duration =
         (execute_time - generate_time) / absl::Microseconds(1);
-    std::cout << result->DebugString() << std::endl;
+    auto result_str = result->DebugString();
+    if (result_str.size() <= 0) {
+      std::cout << "No Results" << std::endl;
+    } else {
+      std::cout << result_str << std::endl;
+    }
     std::cout << "Generated query in " << generate_duration << " us."
               << std::endl;
     std::cout << "Executed query in " << execute_duration << " us."
@@ -121,10 +129,10 @@ class PhalCli {
   }
 
   // Runs the main CLI loop.
-  void RunCli() {
-    while (true) {  // Grap input from std::cin and pass it to a PhalCli.
-      std::cout << "Enter a PHAL path: ";
+  ::util::Status  RunCli() {
+    while (true) {  // Grap input from std::cin and pass it to a OnlpPhalCli.
       std::string query;
+      std::cout << "Enter a PHAL path: ";
       std::getline(std::cin, query);
       if (std::cin.eof()) break;
       if (query == "") {
@@ -145,33 +153,38 @@ class PhalCli {
     }
 
     std::cout << "Exiting." << std::endl;
+
+    return ::util::OkStatus();
   }
 
  private:
-  std::unique_ptr<AttributeDatabaseInterface> database_interface_;
+  const OnlpPhal* onlpphal_;
 };
 
 ::util::Status Main(int argc, char** argv) {
-  InitGoogle("phal_cli --legacy_phal_config_path <config_path>", &argc, &argv,
+  InitGoogle("onlpphal_cli --phal_config_path <config_path>", &argc, &argv,
              true);
   stratum::InitHerculesLogging();
-  if (FLAGS_legacy_phal_config_path.empty())
-    return MAKE_ERROR() << "Must provide a legacy_phal_config_path argument.";
-  ASSIGN_OR_RETURN(auto attribute_database,
-                   AttributeDatabase::MakeGoogle(FLAGS_legacy_phal_config_path,
-                                                 SystemReal::GetSingleton()));
-  PhalCli cli(std::move(attribute_database));
+
+  // Need to init Onlp Interface
+  auto onlpphal = OnlpPhal::CreateSingleton();
+
+  OnlpPhalCli cli(onlpphal);
   cli.RunCli();
+
+  // Shutdown the ONLP Phal
+  onlpphal->Shutdown();
 
   return ::util::OkStatus();
 }
 
+}  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  ::util::Status status = stratum::hal::phal::Main(argc, argv);
+  ::util::Status status = stratum::hal::phal::onlp::Main(argc, argv);
   if (status.ok()) {
     return 0;
   } else {

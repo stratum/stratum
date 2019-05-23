@@ -18,7 +18,6 @@
 // FIXME remove when onlp_wrapper.h is stable
 // #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
@@ -37,28 +36,32 @@ class OnlpThermalDataSource : public DataSource {
   // OnlpThermalDataSource does not take ownership of onlp_interface. We expect
   // onlp_interface remains valid during OnlpThermalDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpThermalDataSource>> Make(
-      OnlpOid thermal_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
-
-  ::util::Status IsCapable(ThermalCaps thermal_caps);
+      int thermal_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetThermalId() { return &thermal_id_; }
+  ManagedAttribute* GetThermalDesc() { return &thermal_desc_; }
   ManagedAttribute* GetThermalHardwareState() { return &thermal_hw_state_; }
+  // Thermal capabilities
   ManagedAttribute* GetThermalCurTemp() { return &thermal_cur_temp_; }
   ManagedAttribute* GetThermalWarnTemp() { return &thermal_warn_temp_; }
   ManagedAttribute* GetThermalErrorTemp() { return &thermal_error_temp_; }
   ManagedAttribute* GetThermalShutDownTemp() { return &thermal_shut_down_temp_; }
 
+  // Thermal capabilities
+  ManagedAttribute* GetCapTemp() { return &thermal_cap_temp_; }
+  ManagedAttribute* GetCapWarnThresh() { return &thermal_cap_warn_thresh_; }
+  ManagedAttribute* GetCapErrThresh() { return &thermal_cap_err_thresh_; }
+  ManagedAttribute* GetCapShutdownThresh() 
+    { return &thermal_cap_shutdown_thresh_; }
+
  private:
-  OnlpThermalDataSource(OnlpOid thermal_id, OnlpInterface* onlp_interface,
+  OnlpThermalDataSource(int thermal_id, OnlpInterface* onlp_interface,
                     CachePolicy* cache_policy, const ThermalInfo& thermal_info);
 
-  static ::util::Status ValidateOnlpThermalInfo(OnlpOid oid,
+  static ::util::Status ValidateOnlpThermalInfo(OnlpOid thermal_oid,
                                             OnlpInterface* onlp_interface) {
-    ASSIGN_OR_RETURN(OidInfo oid_info, onlp_interface->GetOidInfo(oid));
-    CHECK_RETURN_IF_FALSE(oid_info.Present())
-        << "The THERMAL with OID " << oid << " is not currently present.";
-    return ::util::OkStatus();
+    return onlp_interface->GetOidInfo(thermal_oid).status();
   }
 
   ::util::Status UpdateValues() override;
@@ -70,12 +73,17 @@ class OnlpThermalDataSource : public DataSource {
 
   // A list of managed attributes.
   // Hardware Info.
-  TypedAttribute<OnlpOid> thermal_id_{this};
+  TypedAttribute<int> thermal_id_{this};
+  TypedAttribute<std::string> thermal_desc_{this};
   EnumAttribute thermal_hw_state_{HwState_descriptor(), this};
   TypedAttribute<double> thermal_cur_temp_{this};
   TypedAttribute<double> thermal_warn_temp_{this};
   TypedAttribute<double> thermal_error_temp_{this};
   TypedAttribute<double> thermal_shut_down_temp_{this};
+  TypedAttribute<bool> thermal_cap_temp_{this};
+  TypedAttribute<bool> thermal_cap_warn_thresh_{this};
+  TypedAttribute<bool> thermal_cap_err_thresh_{this};
+  TypedAttribute<bool> thermal_cap_shutdown_thresh_{this};
 };
 
 }  // namespace onlp

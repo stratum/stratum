@@ -21,66 +21,128 @@ package stratum.hal;
 
 import "stratum/hal/lib/common/common.proto";
 
+enum CachePolicyType {
+    // There is no cache, values retrieved every time they are read
+    NO_CACHE = 0;
+    // Never updated, all attrributes are set in the constructor
+    NEVER_UPDATE = 1;
+    // Values updated the first time they are called only
+    FETCH_ONCE = 2;
+    // Values remain cacehd for the given duration
+    TIMED_CACHE = 3;
+}
+
+message CachePolicyConfig {
+  // Cache Policy Type
+  CachePolicyType type = 1;
+  // Timed Cache value (if type TIMED_CACHE)
+  int32 timed_value = 2;
+}
+
 // This message encapsulates all the data needed to specify a line card.
 message PhalCardConfig {
-  // The 1-base index of the slot (aka linecard).
-  int32 slot = 1;
-  repeated PhalPortConfig port_configs = 2;
+  // This message encapsulates all the data needed to specify a physical 
+  //port on a switch chassis.
+  message Port {
+    // (optional) identifier
+    int32 id = 1;
+    // Physical Port type
+    PhysicalPortType physical_port_type = 2;
+    // Attribute DB Cache Policy 
+    CachePolicyConfig cache_policy = 3;
+    // Transceiver module presence path.
+    string transceiver_presence_path = 5;
+    // Transceiver module EEPROM path (to read vendor name, part #, etc.).
+    string transceiver_info_path = 6;
+    // Transceiver module TX disable path for all the 4 channels.
+    repeated string tx_disable_paths = 7;
+  }
+  repeated Port ports = 1;
+  // Attribute DB Cache Policy
+  CachePolicyConfig cache_policy = 2;
 }
 
 // This message encapsulates all of the data needed to specify a fan tray.
 message PhalFanTrayConfig {
   message Fan {
-    // The 1-base index of the fan within its tray.
-    int32 slot = 1;
+    // (optional) identifier
+    int32 id = 1;
+    // Attribute DB Cache Policy 
+    CachePolicyConfig cache_policy = 2;
     // Path to read the current fan speed.
-    string fan_tachometer_path = 2;
+    string fan_tachometer_path = 3;
     // Path to set the fan speed.
-    string fan_control_path = 3;
+    string fan_control_path = 4;
   }
   string tray_presence_path = 1;
   // Fan tray info EEPROM path.
   string tray_info_path = 2;
   repeated Fan fans = 3;
+  // Attribute DB Cache Policy
+  CachePolicyConfig cache_policy = 4;
 }
 
-// This message encapsulates all the data needed to specify a physical port on
-// a switch chassis.
-message PhalPortConfig {
-  // The 1-base index of the singleton port corresponding the transceiver
-  // module.
-  int32 port = 1;
-  // The physical port type (QSFP, BACKPLANE, etc).
-  PhysicalPortType physical_port_type = 2;
-  // Transceiver module presence path.
-  string transceiver_presence_path = 3;
-  // Transceiver module EEPROM path (to read vendor name, part #, etc.).
-  string transceiver_info_path = 4;
-  // Transceiver module TX disable path for all the 4 channels.
-  repeated string tx_disable_paths = 5;
+// This message encapsulates all of the data needed to specify a psu tray.
+message PhalPsuTrayConfig {
+  message Psu {
+    // (optional) identifier
+    int32 id = 1;
+    // Attribute DB Cache Policy 
+    CachePolicyConfig cache_policy = 2;
+  }
+  repeated Psu psus = 1;
+  // Attribute DB Cache Policy
+  CachePolicyConfig cache_policy = 2;
 }
 
-// Message used to initialize legacy PHAL on real hardware.
-message LegacyPhalInitConfig {
-  repeated PhalCardConfig card_configs = 1;
+// This message encapsulates the data required by PHAL to be able to find, 
+// write and read LEDs that a platform supports.
+message PhalLedGroupConfig {
+  message Led {
+    // (optional) identifier
+    int32 id = 1;
+    // Attribute DB Cache Policy 
+    CachePolicyConfig cache_policy = 2;
+    LedType led_type = 3;
+    // Different type of LED has different size of control path. Some of them
+    // are GPIO bus while some of them are FPGA bit path. Lets abstract all of
+    // them to led_control_path. The order of the led_control_path in config is
+    // critical.
+    repeated string led_control_path = 4;
+  }
+  repeated Led leds = 1;
+  // Attribute DB Cache Policy
+  CachePolicyConfig cache_policy = 2;
+}
+
+// ThermalConfig encapsulates the data required by PHAL to be able to find
+// and read Thermal information that a platform supports.
+message PhalThermalGroupConfig {
+  message Thermal {
+    // (optional) identifier
+    int32 id = 1;
+    // Attribute DB Cache Policy 
+    CachePolicyConfig cache_policy = 2;
+  }
+  repeated Thermal thermals = 1;
+  // Attribute DB Cache Policy
+  CachePolicyConfig cache_policy = 2;
+}
+
+// Message used to initialize the PHAL on real hardware.
+message PhalInitConfig {
+  repeated PhalCardConfig cards = 1;
   // Boolean which determines whether the slot filed is supposed to be
   // automatically added by the stack. This is used for the case where slot is
   // not known beforehand (e.g. in multi-linecard systems) and needs to be
   // determined after pushing the chassis config. If set to true, slot must be
   // set to zero.
   bool auto_add_slot = 2;
-  repeated PhalFanTrayConfig fan_tray_configs = 3;
-  // TODO: Complete this.
+  repeated PhalFanTrayConfig fan_trays = 3;
+  repeated PhalPsuTrayConfig psu_trays = 4;
+  repeated PhalLedGroupConfig led_groups = 5;
+  repeated PhalThermalGroupConfig thermal_groups = 6;
+  // Default Attribute DB Cache Policy
+  CachePolicyConfig cache_policy = 7;
 }
 
-// LedConfig encapsulates the data required by PHAL to be able to find, write,
-// and read LEDs that a platform supports.
-message LedConfig {
-  int32 led_index = 1;
-  LedType led_type = 2;
-  // Different type of LED has different size of control path. Some of them
-  // are GPIO bus while some of them are FPGA bit path. Lets abstract all of
-  // them to led_control_path. The order of the led_control_path in config is
-  // critical.
-  repeated string led_control_path = 3;
-}

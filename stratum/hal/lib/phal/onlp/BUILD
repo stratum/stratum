@@ -21,8 +21,10 @@ exports_files(["LICENSE"])
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
+    "stratum_cc_binary",
     "stratum_cc_library",
     "stratum_cc_test",
+    "EMBEDDED_ARCHES",
     "HOST_ARCHES",
 )
 
@@ -111,7 +113,6 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "onlp_wrapper_mock",
-    testonly = 1,
     hdrs = [
         "onlp_wrapper_mock.h",
     ],
@@ -155,7 +156,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/lib:macros",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
@@ -176,7 +176,6 @@ stratum_cc_test(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
@@ -203,7 +202,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/lib:macros",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
@@ -224,7 +222,6 @@ stratum_cc_test(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
@@ -251,7 +248,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/lib:macros",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
@@ -272,7 +268,6 @@ stratum_cc_test(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
@@ -299,7 +294,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/lib:macros",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
@@ -322,7 +316,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/lib:macros",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
@@ -343,7 +336,6 @@ stratum_cc_test(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
@@ -368,7 +360,6 @@ stratum_cc_test(
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:phal_proto",
-        "//stratum/hal/lib/phal:system_interface",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
@@ -381,16 +372,34 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
-    name = "onlpphal",
-    srcs = [
-        "onlpphal.cc",
-    ],
+    name = "onlpphal_header",
     hdrs = [
         "onlpphal.h",
     ],
     deps = [
         ":onlp_event_handler",
+        ":sfp_configurator",
+        ":sfp_datasource",
+        "//stratum/lib:macros",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/phal:attribute_database",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_library(
+    name = "onlpphal",
+    srcs = [
+        "onlpphal.cc",
+    ],
+    deps = [
+        ":onlpphal_header",
+        ":onlp_event_handler",
         ":onlp_wrapper",
+        ":switch_configurator",
+        ":sfp_configurator",
         ":sfp_datasource",
         "//stratum/lib:macros",
         "//stratum/glue/status",
@@ -398,6 +407,28 @@ stratum_cc_library(
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/phal:attribute_database",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_library(
+    name = "onlpphal_mock",
+    srcs = ["onlpphal_mock.cc"],
+    hdrs = ["onlpphal_mock.h"],
+    deps = [
+        ":onlpphal_header",
+        ":onlp_event_handler",
+        ":onlp_wrapper_mock",
+        ":sfp_datasource",
+        "//stratum/lib:macros",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/phal:attribute_database",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
     ],
@@ -410,9 +441,152 @@ stratum_cc_library(
 #    deps = [
 #        ":onlpphal",
 #        ":onlp_wrapper_mock",
+#        ":switch_configurator",
 #        "@com_google_googletest//:gtest_main",
 #        "//stratum/glue/status",
 #        "//stratum/glue/status:status_test_util",
 #        "//stratum/lib:macros",
 #    ],
 #)
+
+stratum_cc_library(
+    name = "switch_configurator",
+    srcs = ["switch_configurator.cc"],
+    hdrs = ["switch_configurator.h"],
+    deps = [
+        ":sfp_datasource",
+        ":psu_datasource",
+        ":fan_datasource",
+        ":led_datasource",
+        ":thermal_datasource",
+        ":onlp_event_handler",
+        ":sfp_configurator",
+        ":onlp_wrapper_header",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:attribute_group",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/common:phal_interface",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+stratum_cc_library(
+    name = "sfp_configurator",
+    srcs = ["sfp_configurator.cc"],
+    hdrs = ["sfp_configurator.h"],
+    deps = [
+        ":sfp_datasource",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/phal:sfp_configurator",
+        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:attribute_group",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/common:phal_interface",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+stratum_cc_binary(
+    name = "onlpphal_cli",
+    srcs = ["onlpphal_cli.cc"],
+    arches = EMBEDDED_ARCHES,
+    copts = [
+        "-lpthread",
+        "-ldl",
+        "-lrt",
+    ],
+    deps = [
+        ":onlpphal",
+        ":switch_configurator",
+        ":sfp_configurator",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:attribute_database_interface",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+        "//stratum/glue:init_google",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
+        "@com_googlesource_code_re2//:re2",
+    ],
+)
+
+stratum_cc_binary(
+    name = "onlp_cli",
+    srcs = ["onlp_cli.cc"],
+    arches = EMBEDDED_ARCHES,
+    copts = [
+        "-lpthread",
+        "-ldl",
+        "-lrt",
+    ],
+    deps = [
+        ":onlpphal",
+        ":switch_configurator",
+        ":sfp_configurator",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+        "//stratum/glue:init_google",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
+    ],
+)
+
+stratum_cc_test(
+    name = "switch_configurator_test",
+    srcs = ["switch_configurator_test.cc"],
+    deps = [
+        ":onlpphal_mock",
+        ":switch_configurator",
+        ":sfp_configurator",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:attribute_group_mock",
+        "//stratum/hal/lib/phal:datasource",
+        "//stratum/hal/lib/phal:sfp_configurator",
+        "//stratum/hal/lib/phal:db_proto",
+        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:test_util",
+        "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+stratum_cc_test(
+    name = "sfp_configurator_test",
+    srcs = ["sfp_configurator_test.cc"],
+    deps = [
+        ":onlpphal_mock",
+        ":switch_configurator",
+        ":sfp_configurator",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:datasource",
+        "//stratum/hal/lib/phal:dummy_threadpool",
+        "//stratum/hal/lib/phal:db_proto",
+        "//stratum/hal/lib/phal:test_util",
+        "//stratum/lib:macros",
+        "//stratum/lib/test_utils:matchers",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+

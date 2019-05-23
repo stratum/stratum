@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 //#include "absl/synchronization/mutex.h"
 //#include "absl/time/time.h"
+#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
@@ -45,22 +46,12 @@ static constexpr int kMaxXcvrEventDepth = 256;
 class OnlpPhalTest : public ::testing::Test {
  public:
   void SetUp() override {
+    // CreateSingleton calls Initialize()
     onlpphal_ = OnlpPhal::CreateSingleton();
-
-    //const ChassisConfig config;
-    //onlpphal_->PushChassisConfig(config);
-
-    onlpphal_->InitializeOnlpInterface();
-    onlpphal_->InitializeOnlpEventHandler();
-    onlpphal_->initialized_ = true;
   }
 
   void TearDown() override {
     onlpphal_->Shutdown();
-  }
-
-  ::util::Status InitializeDataSources() { 
-    return onlpphal_->InitializeOnlpOids(); 
   }
 
  protected:

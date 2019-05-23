@@ -23,6 +23,7 @@
 
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/sfp_configurator.h"
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
@@ -51,6 +52,8 @@ class PhalSim : public PhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
+  ::util::Status RegisterSfpConfigurator(int slot, int port,
+      ::stratum::hal::phal::SfpConfigurator* configurator) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -84,6 +87,11 @@ class PhalSim : public PhalInterface {
   // the priority of the TransceiverEventWriter intances.
   std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>
       transceiver_event_writers_ GUARDED_BY(config_lock_);
+
+  // Map from std::pair<int, int> representing (slot, port) of singleton port
+  // to the vector of sfp datasource id
+  std::map<std::pair<int, int>, 
+    ::stratum::hal::phal::SfpConfigurator*> slot_port_to_configurator_;
 
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_);

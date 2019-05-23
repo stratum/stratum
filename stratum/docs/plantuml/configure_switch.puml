@@ -1,0 +1,45 @@
+@startuml
+AttributeDatabase -> SwitchConfigurator: ConfigurePhalDB(root_group, config)
+loop thru PhalDB config
+  loop for each card
+    SwitchConfigurator -> AttributeGroup: AddRepeatedChildGroup("cards")
+    SwitchConfigurator <- AttributeGroup: card
+    SwitchConfigurator -> AttributeGroup: AcquireMutable()
+    SwitchConfigurator -> AttributeGroup: mutable_card
+    loop for each port
+      SwitchConfigurator -> SwitchConfigurator: AddPort(id, mutable_card.get(), port_config)
+    end
+  end
+  loop for each fan tray
+    SwitchConfigurator -> AttributeGroup: AddRepeatedChildGroup("fan_trays")
+    SwitchConfigurator <- AttributeGroup: fan_tray
+    SwitchConfigurator -> AttributeGroup: AcquireMutable()
+    SwitchConfigurator -> AttributeGroup: mutable_fan_try
+    loop for each fan
+      SwitchConfigurator -> SwitchConfigurator: AddFan(id, mutable_fan_tray.get(), fan_config)
+    end
+  end
+  loop for each PSU Tray
+    SwitchConfigurator -> AttributeGroup: AddRepeatedChildGroup("psu_trays")
+    SwitchConfigurator <- AttributeGroup: psutray_group
+    loop for each PSU
+      SwitchConfigurator -> SwitchConfigurator: AddPsu(id, mutable_psu_tray.get(), psu_config)
+    end
+  end
+  loop for each Led Group
+    SwitchConfigurator -> AttributeGroup: AddRepeatedChildGroup("led_groups")
+    SwitchConfigurator <- AttributeGroup: led_group
+    loop for each Led
+      SwitchConfigurator -> SwitchConfigurator: AddLed(id, mutable_led_group.get(), led_config)
+    end
+  end
+  loop for each Thermal Group
+    SwitchConfigurator -> AttributeGroup: AddRepeatedChildGroup("thermal_groups")
+    SwitchConfigurator <- AttributeGroup: thermal_group
+    loop for each Thermal
+      SwitchConfigurator -> SwitchConfigurator: AddThermal(id, mutable_thermal_group.get(), thermal_config)
+    end
+  end
+end
+AttributeDatabase <- SwitchConfigurator: success
+@enduml

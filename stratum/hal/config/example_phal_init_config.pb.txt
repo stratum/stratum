@@ -1,0 +1,171 @@
+cards {
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+  ports {
+    physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
+  }
+}
+fan_trays {
+  cache_policy {
+    type: NO_CACHE
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+  fans {
+  }
+}
+psu_trays {
+  cache_policy {
+      type: TIMED_CACHE
+      timed_value: 10
+  }
+  psus {
+    id: 1
+  }
+  psus {
+    id: 2
+  }
+}
+led_groups {
+  leds {
+    id: 1
+  }
+  leds {
+    id: 2
+  }
+  leds {
+    id: 3
+  }
+  leds {
+    id: 4
+  }
+}
+thermal_groups {
+  cache_policy {
+    type: TIMED_CACHE
+    timed_value: 2
+  }
+  thermals {
+  }
+  thermals {
+  }
+  thermals {
+  }
+  thermals {
+  }
+  thermals {
+  }
+  thermals {
+  }
+  thermals {
+  }
+  thermals {
+  }
+}

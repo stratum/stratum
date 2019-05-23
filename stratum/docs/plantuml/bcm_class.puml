@@ -1,0 +1,122 @@
+@startuml
+SwitchInterface <|-- BcmSwitch
+BcmSwitch --> OnlpPhal: phal_interface
+BcmSwitch --> BcmChassisManager: bcm_chassis_manager
+BcmChassisManager --> OnlpPhal: phal_interface
+PhalInterface <|-- OnlpPhal
+OnlpPhal --> AttributeDatabase: database
+OnlpPhal --> OnlpInterface: onlp_interface
+OnlpInterface <|-- OnlpWrapper
+
+class SwitchInterface {
+  Status PushChasisConfig(ChassisConfig&)
+  Status VerifyChassisConfig(ChassisConfig&)
+  Status PushForwardingPipelineConfig(node_id, ForwardingPipelineConfig&)
+  Status SaveForwardingPipelineConfig(node_id, ForwardingPipelineConfig&)
+  Status CommitForaardingPipelineConfig(node_id)
+  Status Shutdown()
+  Status Freeze()
+  Status Unfreeze()
+  Status WriteForwardingEntries(WriteRequest&, Status)
+  Status ReadForwardingEntries(ReadRequest &, Status)
+  Status RegisterPacketReceiverWriter(node_id, WriterInterface<PacketIn>)
+  Status UnregisterPacketReceiverWriter(node_id)
+  Status TransmitPacket(node_id, PacketOut&)
+  Status RegisterEventNotifyWriter(WriterInterface<GnmiEventPtr>)
+  Status UnregisterEventNotifyWriter()
+  Status RetrieveValue(node_id, DataRequest&, WriterInterface<DataResponse>, vector<Status>)
+  Status SetValue(node_id, SetRequest&, vector<Status>*)
+  StatusOr<vector<string>> VerifyState()
+}
+
+class BcmSwitch {
+  phal_interface: PhalInterface *
+  bcm_chassis_manager: BcmChassisManager
+  Status PushChasisConfig(ChassisConfig&)
+  Status VerifyChassisConfig(ChassisConfig&)
+  Status PushForwardingPipelineConfig(node_id, ForwardingPipelineConfig&)
+  Status SaveForwardingPipelineConfig(node_id, ForwardingPipelineConfig&)
+  Status CommitForaardingPipelineConfig(node_id)
+  Status Shutdown()
+  Status Freeze()
+  Status Unfreeze()
+  Status WriteForwardingEntries(WriteRequest&, Status)
+  Status ReadForwardingEntries(ReadRequest &, Status)
+  Status RegisterPacketReceiverWriter(node_id, WriterInterface<PacketIn>)
+  Status UnregisterPacketReceiverWriter(node_id)
+  Status TransmitPacket(node_id, PacketOut&)
+  Status RegisterEventNotifyWriter(WriterInterface<GnmiEventPtr>)
+  Status UnregisterEventNotifyWriter()
+  Status RetrieveValue(node_id, DataRequest&, WriterInterface<DataResponse>, vector<Status>)
+  Status SetValue(node_id, SetRequest&, vector<Status>*)
+  StatusOr<vector<string>> VerifyState()
+  BcmSwitch CreatInstance(PhalInterface *, BcmChassisManager*, map<int, BcmNode*>&)
+}
+
+class BcmChassisManager {
+  phal_interface: PhalInterface *
+}
+
+class PhalInterface {
+  Phal()
+  Status PushChassisConfig(ChassisConfig& config)
+  Status VerifyChassisConfig(ChassisConfig& config)
+  Status Shutdown()
+  StatusOr<int> RegisterTransceiverEventWriter(writer, priority)
+  Status UnregisterTranscieverEventWriter(id)
+  Status GetFrontPanelPortInfo(slot, port, fp_port_info)
+  Status SetPortLedState(slot, port, channel, color, stats)
+}
+
+class OnlpPhal {
+  database : AttributeDatabase
+  onlp_interface: OnlpInterface
+  Phal()
+  Phal CreateSingleton()
+  Status PushChassisConfig(ChassisConfig& config)
+  Status VerifyChassisConfig(ChassisConfig& config)
+  Status Shutdown()
+  StatusOr<int> RegisterTransceiverEventWriter(writer, priority)
+  Status UnregisterTranscieverEventWriter(id)
+  Status GetFrontPanelPortInfo(slot, port, fp_port_info)
+  Status SetPortLedState(slot, port, channel, color, stats)
+}
+
+class OnlpInterface {
+  StatusOr<SfpInfo> GetSfpInfo(OnlpOid)
+  StatusOr<FanInfo> GetFanInfo(OnlpOid)
+  StatusOr<PsuInfo> GetPsuInfo(OnlpOid)
+  StatusOr<OidInfo> GetOidInfo(OnlpOid)
+  StatusOr<<vector <OnlpOid>>> GetOidList(pnlp_oid_type_flag_t)
+  StatusOr<bool> GetSfpPresent(OnlpOid)
+  StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap()
+  StatusOr<OnlpPortNumber> GetSfpMaxPortNumber()
+}
+
+class OnlpWrapper {
+  OnlpWrapper()
+  StatusOr<unique_ptr<OnlpWrapper>> Make()
+  StatusOr<SfpInfo> GetSfpInfo(OnlpOid)
+  StatusOr<FanInfo> GetFanInfo(OnlpOid)
+  StatusOr<PsuInfo> GetPsuInfo(OnlpOid)
+  StatusOr<OidInfo> GetOidInfo(OnlpOid)
+  StatusOr<<vector <OnlpOid>>> GetOidList(pnlp_oid_type_flag_t)
+  StatusOr<bool> GetSfpPresent(OnlpOid)
+  StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap()
+  StatusOr<OnlpPortNumber> GetSfpMaxPortNumber()
+}
+
+class AttributeDatabase {
+  configurator_: SwitchConfigurator
+  AttributeDatabase()
+  AttributeDatabase MakePhalDB()
+  Status Set(AttributeValueMap values)
+  Status MakeQuery(query_paths)
+  Status SetupPolling()
+  void TearDownPolling()
+  void RunPollingThread(attribute_database_ptr)
+  Time GetNextPollingTime()
+  Status PollQueries()
+  Status FlushQueries()
+}
+@enduml

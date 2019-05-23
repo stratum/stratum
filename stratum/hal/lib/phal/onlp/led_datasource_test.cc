@@ -38,46 +38,42 @@ using ::testing::HasSubstr;
 using ::testing::Return;
 using ::stratum::test_utils::StatusIs;
 
-TEST(LedDatasourceTest, InitializeFailedNoLed) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+class LedDatasourceTest : public ::testing::Test {
+ public:
+   void SetUp() override {
+     id_ = 12345;
+     oid_ = ONLP_LED_ID_CREATE(id_);
+   }
 
-  std::string error_message =
-      "The LED with OID 12345 is not currently present.";
-  EXPECT_THAT(OnlpLedDataSource::Make(12345, &mock_onlp_interface, nullptr),
-              StatusIs(_, _, HasSubstr(error_message)));
-}
+   int id_;             // Id for this LED
+   OnlpOid oid_;        // OID for this LED (i.e. Type + Id)
+   onlp_oid_hdr_t mock_oid_info_;
+   MockOnlpWrapper mock_onlp_interface_;
+};
 
-TEST(LedDatasourceTest, InitializeLEDWithEmptyInfo) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+TEST_F(LedDatasourceTest, InitializeLEDWithEmptyInfo) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillOnce(Return(OidInfo(mock_oid_info_)));
 
   onlp_led_info_t mock_led_info = {};
   mock_led_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetLedInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetLedInfo(oid_))
       .Times(2)
       .WillRepeatedly(Return(LedInfo(mock_led_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpLedDataSource>> result =
-      OnlpLedDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpLedDataSource::Make(id_, &mock_onlp_interface_, nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpLedDataSource> led_datasource =
       result.ConsumeValueOrDie();
   EXPECT_NE(led_datasource.get(), nullptr);
 }
 
-TEST(LedDatasourceTest, GetLedData) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillRepeatedly(Return(OidInfo(mock_oid_info)));
+TEST_F(LedDatasourceTest, GetLedData) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillRepeatedly(Return(OidInfo(mock_oid_info_)));
 
   onlp_led_info_t mock_led_info = {};
   mock_led_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
@@ -86,11 +82,11 @@ TEST(LedDatasourceTest, GetLedData) {
   mock_led_info.caps = (ONLP_LED_CAPS_RED | ONLP_LED_CAPS_GREEN);
   mock_led_info.mode = ONLP_LED_MODE_RED;
 
-  EXPECT_CALL(mock_onlp_interface, GetLedInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetLedInfo(oid_))
       .WillRepeatedly(Return(LedInfo(mock_led_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpLedDataSource>> result =
-      OnlpLedDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpLedDataSource::Make(id_, &mock_onlp_interface_, nullptr);
 
   ASSERT_OK(result);
 
@@ -102,14 +98,29 @@ TEST(LedDatasourceTest, GetLedData) {
   // Update value and check attribute fields.
   EXPECT_OK(led_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
 
-  EXPECT_OK(led_datasource->IsCapable((LedCaps)(ONLP_LED_CAPS_RED
-            |ONLP_LED_CAPS_GREEN)));
+  // Check capabilities
+  EXPECT_THAT(led_datasource->GetCapOff(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapAuto(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapAutoBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapChar(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapRed(), ContainsValue(true));
+  EXPECT_THAT(led_datasource->GetCapRedBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapOrange(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapOrangeBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapYellow(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapYellowBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapGreen(), ContainsValue(true));
+  EXPECT_THAT(led_datasource->GetCapGreenBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapBlue(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapBlueBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapPurple(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapPurpleBlinking(), ContainsValue(false));
 
   EXPECT_THAT(led_datasource->GetLedId(),
-              ContainsValue<OnlpOid>(12345));
+              ContainsValue<int>(id_));
 
   EXPECT_THAT(led_datasource->GetLedChar(),
-              ContainsValue<char>(11));
+              ContainsValue<int>(11));
 
   EXPECT_THAT(
       led_datasource->GetLedMode(),
@@ -120,12 +131,10 @@ TEST(LedDatasourceTest, GetLedData) {
       ContainsValue(HwState_descriptor()->FindValueByName("HW_STATE_PRESENT")));
 }
 
-TEST(LedDatasourceTest, SetLedData) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillRepeatedly(Return(OidInfo(mock_oid_info)));
+TEST_F(LedDatasourceTest, SetLedData) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillRepeatedly(Return(OidInfo(mock_oid_info_)));
 
   onlp_led_info_t mock_led_info = {};
   mock_led_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
@@ -134,11 +143,11 @@ TEST(LedDatasourceTest, SetLedData) {
   mock_led_info.caps = (ONLP_LED_CAPS_RED | ONLP_LED_CAPS_GREEN);
   mock_led_info.mode = ONLP_LED_MODE_RED;
 
-  EXPECT_CALL(mock_onlp_interface, GetLedInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetLedInfo(oid_))
       .WillRepeatedly(Return(LedInfo(mock_led_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpLedDataSource>> result =
-      OnlpLedDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpLedDataSource::Make(id_, &mock_onlp_interface_, nullptr);
 
   ASSERT_OK(result);
 
@@ -150,14 +159,30 @@ TEST(LedDatasourceTest, SetLedData) {
   // Update value and check attribute fields.
   EXPECT_OK(led_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
 
-  EXPECT_OK(led_datasource->IsCapable((LedCaps)(ONLP_LED_CAPS_RED
-            |ONLP_LED_CAPS_GREEN)));
+  // Check capabilities
+  EXPECT_THAT(led_datasource->GetCapOff(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapAuto(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapAutoBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapChar(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapRed(), ContainsValue(true));
+  EXPECT_THAT(led_datasource->GetCapRedBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapOrange(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapOrangeBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapYellow(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapYellowBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapGreen(), ContainsValue(true));
+  EXPECT_THAT(led_datasource->GetCapGreenBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapBlue(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapBlueBlinking(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapPurple(), ContainsValue(false));
+  EXPECT_THAT(led_datasource->GetCapPurpleBlinking(), ContainsValue(false));
+
 
   EXPECT_THAT(led_datasource->GetLedId(),
-              ContainsValue<OnlpOid>(12345));
+              ContainsValue<int>(id_));
 
   EXPECT_THAT(led_datasource->GetLedChar(),
-              ContainsValue<char>(11));
+              ContainsValue<int>(11));
 
   EXPECT_THAT(
       led_datasource->GetLedMode(),
@@ -166,7 +191,7 @@ TEST(LedDatasourceTest, SetLedData) {
   // Write to the system.
   EXPECT_TRUE(led_datasource->GetLedMode()->CanSet());
 
-  EXPECT_CALL(mock_onlp_interface, SetLedMode(12345, LedMode::LED_MODE_GREEN))
+  EXPECT_CALL(mock_onlp_interface_, SetLedMode(oid_, LedMode::LED_MODE_GREEN))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(
@@ -175,11 +200,11 @@ TEST(LedDatasourceTest, SetLedData) {
 
   EXPECT_TRUE(led_datasource->GetLedChar()->CanSet());
 
-  EXPECT_CALL(mock_onlp_interface, SetLedCharacter(12345, '2'))
+  EXPECT_CALL(mock_onlp_interface_, SetLedCharacter(oid_, (int)'2'))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(
-      led_datasource->GetLedChar()->Set('2'));
+      led_datasource->GetLedChar()->Set((int)'2'));
 }
 
 }  // namespace onlp

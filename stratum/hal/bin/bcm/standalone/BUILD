@@ -66,7 +66,10 @@ stratum_cc_binary(
         # TODO(craigs): need to add real phal deps here
         # "//stratum/hal/lib/phal:legacy_phal",
         # "//stratum/hal/lib/phal:udev",
-        "//stratum/hal/lib/phal:phal_sim",
+        # "//stratum/hal/lib/phal:phal_sim",
+        "//stratum/hal/lib/phal/onlp:onlpphal",
+        "//stratum/hal/lib/phal/onlp:switch_configurator",
+        "//stratum/hal/lib/phal/onlp:sfp_configurator",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
         "@com_google_absl//absl/memory",

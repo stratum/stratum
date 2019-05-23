@@ -20,10 +20,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-// FIXME remove when onlp_wrapper.h is stable
-// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
@@ -42,38 +39,41 @@ class OnlpFanDataSource : public DataSource {
   // OnlpFanDataSource does not take ownership of onlp_interface. We expect
   // onlp_interface remains valid during OnlpFanDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpFanDataSource>> Make(
-      OnlpOid fan_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
-
-  ::util::Status IsCapable(FanCaps fan_caps);
+      int fan_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
   // Function to set FAN percentage.
   ::util::Status SetFanPercentage(int value);
 
   // Function to set FAN rpm.
-  ::util::Status SetFanRpm(int val);
+  ::util::Status SetFanRpm(double val);
 
   // Function to set FAN direction.
   ::util::Status SetFanDirection(FanDir dir);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetFanId() { return &fan_id_; }
+  ManagedAttribute* GetFanDesc() { return &fan_desc_; }
   ManagedAttribute* GetFanHardwareState() { return &fan_hw_state_; }
   ManagedAttribute* GetFanModel() { return &fan_model_name_; }
   ManagedAttribute* GetFanSerialNumber() { return &fan_serial_number_; }
   ManagedAttribute* GetFanPercentage() { return &fan_percentage_; }
   ManagedAttribute* GetFanRPM() { return &fan_speed_rpm_; }
   ManagedAttribute* GetFanDirection() { return &fan_dir_; }
+  // Fan Capabilities
+  ManagedAttribute* GetCapSetDir() { return &fan_cap_set_dir_; }
+  ManagedAttribute* GetCapGetDir() { return &fan_cap_get_dir_; }
+  ManagedAttribute* GetCapSetRpm() { return &fan_cap_set_rpm_; }
+  ManagedAttribute* GetCapSetPercentage() { return &fan_cap_set_percentage_; }
+  ManagedAttribute* GetCapGetRpm() { return &fan_cap_get_rpm_; }
+  ManagedAttribute* GetCapGetPercentage() { return &fan_cap_get_percentage_; }
 
  private:
-  OnlpFanDataSource(OnlpOid fan_id, OnlpInterface* onlp_interface,
+  OnlpFanDataSource(int fan_id, OnlpInterface* onlp_interface,
                     CachePolicy* cache_policy, const FanInfo& fan_info);
 
-  static ::util::Status ValidateOnlpFanInfo(OnlpOid oid,
+  static ::util::Status ValidateOnlpFanInfo(OnlpOid fan_oid,
                                             OnlpInterface* onlp_interface) {
-    ASSIGN_OR_RETURN(OidInfo oid_info, onlp_interface->GetOidInfo(oid));
-    CHECK_RETURN_IF_FALSE(oid_info.Present())
-        << "The FAN with OID " << oid << " is not currently present.";
-    return ::util::OkStatus();
+    return onlp_interface->GetOidInfo(fan_oid).status();
   }
 
   ::util::Status UpdateValues() override;
@@ -86,14 +86,23 @@ class OnlpFanDataSource : public DataSource {
 
   // A list of managed attributes.
   // Hardware Info.
-  TypedAttribute<OnlpOid> fan_id_{this};
+  TypedAttribute<int> fan_id_{this};
+  TypedAttribute<std::string> fan_desc_{this};
   EnumAttribute fan_hw_state_{HwState_descriptor(), this};
+
+  // Below attributes only set when present
   TypedAttribute<std::string> fan_model_name_{this};
   TypedAttribute<std::string> fan_serial_number_{this};
   TypedAttribute<int> fan_percentage_{this};
-  TypedAttribute<int> fan_speed_rpm_{this};
+  TypedAttribute<double> fan_speed_rpm_{this};
   // Fan Direction.
   EnumAttribute fan_dir_{FanDir_descriptor(), this};
+  TypedAttribute<bool> fan_cap_set_dir_{this};
+  TypedAttribute<bool> fan_cap_get_dir_{this};
+  TypedAttribute<bool> fan_cap_set_rpm_{this};
+  TypedAttribute<bool> fan_cap_set_percentage_{this};
+  TypedAttribute<bool> fan_cap_get_rpm_{this};
+  TypedAttribute<bool> fan_cap_get_percentage_{this};
 };
 
 }  // namespace onlp

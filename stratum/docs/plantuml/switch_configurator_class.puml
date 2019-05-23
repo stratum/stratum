@@ -1,0 +1,109 @@
+@startuml
+SwitchInterface <|-- BcmSwitch
+BcmSwitch --> OnlpPhal: phal_interface
+BcmSwitch --> BcmChassisManager: bcm_chassis_manager
+BcmChassisManager --> OnlpPhal: phal_interface
+PhalInterface <|-- OnlpPhal
+OnlpPhal --> AttributeDatabase: database
+OnlpPhal --> OnlpInterface: onlp_interface
+OnlpInterface <|-- OnlpWrapper
+SwitchConfigurator <|-- OnlpSwitchConfigurator
+OnlpSwitchConfigurator --> OnlpInterface: onlp_interface_
+AttributeDatabase --> SwitchConfigurator: configurator_
+
+class SwitchInterface {
+  +Status PushChasisConfig(ChassisConfig&)
+  +Status VerifyChassisConfig(ChassisConfig&)
+}
+
+class BcmSwitch {
+  -phal_interface: PhalInterface *
+  -bcm_chassis_manager: BcmChassisManager
+  +Status PushChasisConfig(ChassisConfig&)
+  +Status VerifyChassisConfig(ChassisConfig&)
+  +BcmSwitch CreatInstance(PhalInterface *, BcmChassisManager*, map<int, BcmNode*>&)
+}
+
+class BcmChassisManager {
+  -phal_interface: PhalInterface *
+}
+
+class PhalInterface {
+  PhalInterface()
+  +Status PushChassisConfig(ChassisConfig& config)
+  +Status VerifyChassisConfig(ChassisConfig& config)
+  +StatusOr<int> RegisterTransceiverEventWriter(writer, priority)
+  +Status UnregisterTranscieverEventWriter(id)
+  +Status GetFrontPanelPortInfo(slot, port, fp_port_info)
+  +Status SetPortLedState(slot, port, channel, color, stats)
+}
+
+class OnlpPhal {
+  -database : AttributeDatabase
+  -onlp_interface: OnlpInterface
+  -OnlpPhal()
+  +OnlpPhal CreateSingleton()
+  +Status PushChassisConfig(ChassisConfig& config)
+  +Status VerifyChassisConfig(ChassisConfig& config)
+  +StatusOr<int> RegisterTransceiverEventWriter(writer, priority)
+  +Status UnregisterTranscieverEventWriter(id)
+  +Status GetFrontPanelPortInfo(slot, port, fp_port_info)
+  +Status SetPortLedState(slot, port, channel, color, stats)
+}
+
+class OnlpInterface {
+  +StatusOr<OidInfo> GetOidInfo(OnlpOid)
+  +StatusOr<SfpInfo> GetSfpInfo(OnlpOid)
+  +StatusOr<FanInfo> GetFanInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetPsuInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetLedInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetThermalInfo(OnlpOid)
+  +StatusOr<<vector <OnlpOid>>> GetOidList(pnlp_oid_type_flag_t)
+  =StatusOr<bool> GetSfpPresent(OnlpOid)
+  +StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap()
+  +StatusOr<OnlpPortNumber> GetSfpMaxPortNumber()
+}
+
+class OnlpWrapper {
+  -OnlpWrapper()
+  +StatusOr<unique_ptr<OnlpWrapper>> Make()
+  +StatusOr<OidInfo> GetOidInfo(OnlpOid)
+  +StatusOr<SfpInfo> GetSfpInfo(OnlpOid)
+  +StatusOr<FanInfo> GetFanInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetPsuInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetLedInfo(OnlpOid)
+  +StatusOr<PsuInfo> GetThermalInfo(OnlpOid)
+  +StatusOr<<vector <OnlpOid>>> GetOidList(pnlp_oid_type_flag_t)
+  +StatusOr<bool> GetSfpPresent(OnlpOid)
+  +StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap()
+  +StatusOr<OnlpPortNumber> GetSfpMaxPortNumber()
+}
+
+class AttributeDatabase {
+  -configurator_: SwitchConfigurator
+  -AttributeDatabase()
+  +AttributeDatabase MakePhalDB()
+  +Status Set(AttributeValueMap values)
+  +Status MakeQuery(query_paths)
+}
+
+class SwitchConfigurator {
+  +Status CreateDefaultConfig(config)
+  +Status ConfigurePhalDB(config, root_group)
+}
+
+class OnlpSwitchConfigurator {
+  -phal_interface_: PhalInterface
+  -onlp_interface_: OnlpInterface
+  -cache_policy_config_: CachePolicyConfig
+  +Status CreateDefaultConfig(config)
+  +Status ConfigurePhalDB(config, root_group)
+  -OnlpSwitchConfigurator()
+  -Status AddPort(id, mutable_card, config)
+  -Status AddFan(id, mutable_card, config)
+  -Status AddPsu(id, mutable_card, config)
+  -Status AddLed(id, mutable_card, config)
+  -Status AddThermal(id, mutable_card, config)
+  -StatusOr<CachePolicy*> CreateCachePolicy(has_config, config)
+}
+@enduml

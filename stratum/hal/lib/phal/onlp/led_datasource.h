@@ -23,7 +23,6 @@
 // FIXME remove when onlp_wrapper.h is stable
 // #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
@@ -42,32 +41,46 @@ class OnlpLedDataSource : public DataSource {
   // OnlpLedDataSource does not take ownership of onlp_interface. We expect
   // onlp_interface remains valid during OnlpLedDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpLedDataSource>> Make(
-      OnlpOid led_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
-
-  ::util::Status IsCapable(LedCaps led_caps);
+      int led_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
   // Function to set LED mode.
   ::util::Status SetLedMode(LedMode value);
 
   // Function to set LED character.
-  ::util::Status SetLedCharacter(char val);
+  ::util::Status SetLedCharacter(int32 val);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetLedId() { return &led_id_; }
+  ManagedAttribute* GetLedDesc() { return &led_desc_; }
   ManagedAttribute* GetLedHardwareState() { return &led_hw_state_; }
   ManagedAttribute* GetLedMode() { return &led_mode_; }
   ManagedAttribute* GetLedChar() { return &led_char_; }
 
+  // Led Capabilities
+  ManagedAttribute* GetCapOff() { return &led_cap_off_; }
+  ManagedAttribute* GetCapAuto() { return &led_cap_auto_; }
+  ManagedAttribute* GetCapAutoBlinking() { return &led_cap_auto_blinking_; }
+  ManagedAttribute* GetCapChar() { return &led_cap_char_; }
+  ManagedAttribute* GetCapRed() { return &led_cap_red_; }
+  ManagedAttribute* GetCapRedBlinking() { return &led_cap_red_blinking_; }
+  ManagedAttribute* GetCapOrange() { return &led_cap_orange_; }
+  ManagedAttribute* GetCapOrangeBlinking() { return &led_cap_orange_blinking_; }
+  ManagedAttribute* GetCapYellow() { return &led_cap_yellow_; }
+  ManagedAttribute* GetCapYellowBlinking() { return &led_cap_yellow_blinking_; }
+  ManagedAttribute* GetCapGreen() { return &led_cap_green_; }
+  ManagedAttribute* GetCapGreenBlinking() { return &led_cap_green_blinking_; }
+  ManagedAttribute* GetCapBlue() { return &led_cap_blue_; }
+  ManagedAttribute* GetCapBlueBlinking() { return &led_cap_blue_blinking_; }
+  ManagedAttribute* GetCapPurple() { return &led_cap_purple_; }
+  ManagedAttribute* GetCapPurpleBlinking() { return &led_cap_purple_blinking_; }
+
  private:
-  OnlpLedDataSource(OnlpOid led_id, OnlpInterface* onlp_interface,
+  OnlpLedDataSource(int led_id, OnlpInterface* onlp_interface,
                     CachePolicy* cache_policy, const LedInfo& led_info);
 
-  static ::util::Status ValidateOnlpLedInfo(OnlpOid oid,
+  static ::util::Status ValidateOnlpLedInfo(OnlpOid led_oid,
                                             OnlpInterface* onlp_interface) {
-    ASSIGN_OR_RETURN(OidInfo oid_info, onlp_interface->GetOidInfo(oid));
-    CHECK_RETURN_IF_FALSE(oid_info.Present())
-        << "The LED with OID " << oid << " is not currently present.";
-    return ::util::OkStatus();
+    return onlp_interface->GetOidInfo(led_oid).status();
   }
 
   ::util::Status UpdateValues() override;
@@ -78,14 +91,34 @@ class OnlpLedDataSource : public DataSource {
   // destroyed when PHAL deconstruct. Do not delete onlp_stub_.
   OnlpInterface* onlp_stub_;
 
+
   // A list of managed attributes.
   // Hardware Info.
-  TypedAttribute<OnlpOid> led_id_{this};
+  TypedAttribute<int> led_id_{this};
+  TypedAttribute<std::string> led_desc_{this};
   EnumAttribute led_hw_state_{HwState_descriptor(), this};
-  TypedAttribute<char> led_char_{this};
+  TypedAttribute<int32> led_char_{this};
 
   // Led Mode
   EnumAttribute led_mode_{LedMode_descriptor(), this};
+
+  // Led Capabilities
+  TypedAttribute<bool> led_cap_off_{this};
+  TypedAttribute<bool> led_cap_auto_{this};
+  TypedAttribute<bool> led_cap_auto_blinking_{this};
+  TypedAttribute<bool> led_cap_char_{this};
+  TypedAttribute<bool> led_cap_red_{this};
+  TypedAttribute<bool> led_cap_red_blinking_{this};
+  TypedAttribute<bool> led_cap_orange_{this};
+  TypedAttribute<bool> led_cap_orange_blinking_{this};
+  TypedAttribute<bool> led_cap_yellow_{this};
+  TypedAttribute<bool> led_cap_yellow_blinking_{this};
+  TypedAttribute<bool> led_cap_green_{this};
+  TypedAttribute<bool> led_cap_green_blinking_{this};
+  TypedAttribute<bool> led_cap_blue_{this};
+  TypedAttribute<bool> led_cap_blue_blinking_{this};
+  TypedAttribute<bool> led_cap_purple_{this};
+  TypedAttribute<bool> led_cap_purple_blinking_{this};
 };
 
 }  // namespace onlp

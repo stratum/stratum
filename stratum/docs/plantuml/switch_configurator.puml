@@ -1,0 +1,23 @@
+@startuml
+Main -> OnlpPhal: CreateSingleton()
+group OnlpPhal::Initialize
+  OnlpPhal -> OnlpPhal: InitializeOnlpInterface()
+  OnlpPhal -> OnlpPhal: InitializePhalDB()
+  group InitializePhalDB
+    OnlpPhal -> OnlpSwitchConfigurator: Make(onlp_interface)
+    OnlpPhal <- OnlpSwitchConfigurator: configurator
+    OnlpPhal -> AttributeDatabase: MakePhalDB(phal_config_path, configurator)
+    group MakePhalDB
+      AttributeDatabase -> AttributeDatabase: ReadProtoFromTextFile(phal_config_path, &config)
+      AttributeDatabase -> AttributeGroup: From(PhalDB::descriptor())
+      AttributeDatabase <- AttributeGroup: root_group
+      AttributeDatabase -> OnlpSwitchConfigurator: configurator.ConfigurePhalDB(config, root_group.get())
+      AttributeDatabase <- OnlpSwitchConfigurator: success
+      AttributeDatabase -> AttributeDatabase: Make(root_group, dummyThreadpool)
+    end
+    OnlpPhal <- AttributeDatabase: database
+  end
+  OnlpPhal -> OnlpPhal: InitializeOnlpEventHandler()
+end
+Main <- OnlpPhal: onlpphal
+@enduml

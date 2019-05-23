@@ -865,15 +865,13 @@ enum SfpModuleType {
 }
 
 // The module speed capability for a frontpanel port.
-// TODO: revise these enum as needed per ASIC integration
-//       currently maps to sff_module_caps_t defined in sff.h
-enum SfpModuleCaps {
-  SFP_MODULE_CAPS_UNKNOWN = 0;
-  SFP_MODULE_CAPS_F_100   = 1;
-  SFP_MODULE_CAPS_F_1G    = 2;
-  SFP_MODULE_CAPS_F_10G   = 4;
-  SFP_MODULE_CAPS_F_40G   = 8;
-  SFP_MODULE_CAPS_F_100G  = 16;
+// note: currently maps to sff_module_caps_t defined in sff.h
+message SfpModuleCaps {
+  bool f_100  = 1;
+  bool f_1g   = 2;
+  bool f_10g  = 3;
+  bool f_40g  = 4;
+  bool f_100g = 5;
 }
 
 // Possible directions for a fan module.
@@ -886,14 +884,13 @@ enum FanDir {
 
 // Possible capabilities for a fan module.
 // currently maps to onlp_fan_info_t defined in fan.h
-enum FanCaps {
-  FAN_CAPS_UNKNOWN        = 0;
-  FAN_CAPS_SET_DIR        = 1;
-  FAN_CAPS_GET_DIR        = 2;
-  FAN_CAPS_SET_RPM        = 4;
-  FAN_CAPS_SET_PERCENTAGE = 8;
-  FAN_CAPS_GET_RPM        = 16;
-  FAN_CAPS_GET_PERCENTAGE = 32;
+message FanCaps {
+  bool set_dir        = 1;
+  bool get_dir        = 2;
+  bool set_rpm        = 3;
+  bool set_percentage = 4;
+  bool get_rpm        = 5;
+  bool get_percentage = 6;
 }
 
 // Possible types for a PSU.
@@ -907,47 +904,44 @@ enum PsuType {
 
 // Possible Capabilities for a PSU.
 // currently maps to onlp_psu_caps_t defined in psu.h
-enum PsuCaps {
-  PSU_CAPS_UNKNOWN   = 0;
-  PSU_CAPS_GET_TYPE  = 1;
-  PSU_CAPS_GET_VIN   = 2;
-  PSU_CAPS_GET_VOUT  = 4;
-  PSU_CAPS_GET_IIN   = 8;
-  PSU_CAPS_GET_IOUT  = 16;
-  PSU_CAPS_GET_PIN   = 32;
-  PSU_CAPS_GET_POUT  = 64;
+message PsuCaps {
+  bool get_type = 1;
+  bool get_vin  = 2;
+  bool get_vout = 3;
+  bool get_iin  = 4;
+  bool get_iout = 5;
+  bool get_pin  = 6;
+  bool get_pout = 7;
 }
 
 // Possible capabilities for a thermal sensor module.
 // currently maps to onlp_thermal_info_t defined in thermal.h
-enum ThermalCaps {
-  THERMAL_CAPS_UNKNOWN                = 0;
-  THERMAL_CAPS_GET_TEMPERATURE        = 1;
-  THERMAL_CAPS_GET_WARNING_THRESHOLD  = 2;
-  THERMAL_CAPS_GET_ERROR_THRESHOLD    = 4;
-  THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD = 8;
+message ThermalCaps {
+  bool get_temperature        = 1;
+  bool get_warning_threshold  = 2;
+  bool get_error_threshold    = 3;
+  bool get_shutdown_threshold = 4;
 }
 
 // Possible capabilities for a LED module.
 // currently maps to onlp_led_info_t defined in led.h
-enum LedCaps {
-  LED_CAPS_UNKNOWN          = 0;
-  LED_CAPS_OFF              = 1;
-  LED_CAPS_AUTO             = 2;
-  LED_CAPS_AUTO_BLINKING    = 4;
-  LED_CAPS_CHAR             = 8;
-  LED_CAPS_RED              = 16;
-  LED_CAPS_RED_BLINKING     = 32;
-  LED_CAPS_ORANGE           = 64;
-  LED_CAPS_ORANGE_BLINKING  = 128;
-  LED_CAPS_YELLOW           = 256;
-  LED_CAPS_YELLOW_BLINKING  = 512;
-  LED_CAPS_GREEN            = 1024;
-  LED_CAPS_GREEN_BLINKING   = 2048;
-  LED_CAPS_BLUE             = 4096;
-  LED_CAPS_BLUE_BLINKING    = 8192;
-  LED_CAPS_PURPLE           = 16384;
-  LED_CAPS_PURPLE_BLINKING  = 32768;   
+message LedCaps {
+  bool off             = 1;
+  bool auto            = 2;
+  bool auto_blinking   = 3;
+  bool char            = 4;
+  bool red             = 5;
+  bool red_blinking    = 6;
+  bool orange          = 7;
+  bool orange_blinking = 8;
+  bool yellow          = 9;
+  bool yellow_blinking = 10;
+  bool green           = 11;
+  bool green_blinking  = 12;
+  bool blue            = 13;
+  bool blue_blinking   = 14;
+  bool purple          = 15;
+  bool purple_blinking = 16;
 }
 
 // Possible modes for a LED module.

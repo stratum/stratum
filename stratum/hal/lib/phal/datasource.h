@@ -23,6 +23,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
@@ -154,6 +155,15 @@ class NeverUpdate : public CachePolicy {
   NeverUpdate() = default;
   bool CacheHasExpired() override { return false; }
   void CacheUpdated() override {}
+};
+
+// Simple helper class to create different types of CachePolicy
+class CachePolicyFactory {
+  public:
+    // Static helper function to create CachePolicy instances
+    static ::util::StatusOr<CachePolicy*> CreateInstance(
+        CachePolicyType cache_type, 
+        int32 timed_cache_value=0);
 };
 
 // The following two datasources are complete implementations, provided for the

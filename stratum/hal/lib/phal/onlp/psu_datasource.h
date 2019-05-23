@@ -23,7 +23,6 @@
 // FIXME remove when onlp_wrapper.h is stable
 // #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
@@ -42,12 +41,11 @@ class OnlpPsuDataSource : public DataSource {
   // OnlpPsuDataSource does not take ownership of onlp_interface. We expect
   // onlp_interface remains valid during OnlpPsuDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpPsuDataSource>> Make(
-      OnlpOid psu_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
-
-  ::util::Status IsCapable(PsuCaps psu_caps);
+      int psu_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetPsuId() { return &psu_id_; }
+  ManagedAttribute* GetPsuDesc() { return &psu_desc_; }
   ManagedAttribute* GetPsuHardwareState() { return &psu_hw_state_; }
   ManagedAttribute* GetPsuModel() { return &psu_model_name_; }
   ManagedAttribute* GetPsuSerialNumber() { return &psu_serial_number_; }
@@ -58,30 +56,37 @@ class OnlpPsuDataSource : public DataSource {
   ManagedAttribute* GetPsuInputPower() { return &psu_pin_; }
   ManagedAttribute* GetPsuOutputPower() { return &psu_pout_; }
   ManagedAttribute* GetPsuType() { return &psu_type_; }
+  // Psu Capabilities
+  ManagedAttribute* GetCapGetType() { return &psu_cap_type_; }
+  ManagedAttribute* GetCapGetVIn() { return &psu_cap_vin_; }
+  ManagedAttribute* GetCapGetVOut() { return &psu_cap_vout_; }
+  ManagedAttribute* GetCapGetIIn() { return &psu_cap_iin_; }
+  ManagedAttribute* GetCapGetIOut() { return &psu_cap_iout_; }
+  ManagedAttribute* GetCapGetPIn() { return &psu_cap_pin_; }
+  ManagedAttribute* GetCapGetPOut() { return &psu_cap_pout_; }
 
  private:
-  OnlpPsuDataSource(OnlpOid psu_id, OnlpInterface* onlp_interface,
+  OnlpPsuDataSource(int psu_id, OnlpInterface* onlp_interface,
                     CachePolicy* cache_policy, const PsuInfo& psu_info);
 
-  static ::util::Status ValidateOnlpPsuInfo(OnlpOid oid,
+  static ::util::Status ValidateOnlpPsuInfo(OnlpOid psu_oid,
                                             OnlpInterface* onlp_interface) {
-    ASSIGN_OR_RETURN(OidInfo oid_info, onlp_interface->GetOidInfo(oid));
-    CHECK_RETURN_IF_FALSE(oid_info.Present())
-        << "The PSU with OID " << oid << " is not currently present.";
-    return ::util::OkStatus();
+
+    return onlp_interface->GetOidInfo(psu_oid).status();
   }
 
   ::util::Status UpdateValues() override;
-
-  OnlpOid psu_oid_;
 
   // We do not own ONLP stub object. ONLP stub is created on PHAL creation and
   // destroyed when PHAL deconstruct. Do not delete onlp_stub_.
   OnlpInterface* onlp_stub_;
 
+  OnlpOid psu_oid_;
+
   // A list of managed attributes.
   // Hardware Info.
-  TypedAttribute<OnlpOid> psu_id_{this};
+  TypedAttribute<int> psu_id_{this};
+  TypedAttribute<std::string> psu_desc_{this};
   EnumAttribute psu_hw_state_{HwState_descriptor(), this};
   TypedAttribute<std::string> psu_model_name_{this};
   TypedAttribute<std::string> psu_serial_number_{this};
@@ -93,6 +98,14 @@ class OnlpPsuDataSource : public DataSource {
   TypedAttribute<double> psu_pout_{this};
   // Psu Type.
   EnumAttribute psu_type_{PsuType_descriptor(), this};
+  // Psu Capabilities
+  TypedAttribute<bool> psu_cap_type_{this};
+  TypedAttribute<bool> psu_cap_vin_{this};
+  TypedAttribute<bool> psu_cap_vout_{this};
+  TypedAttribute<bool> psu_cap_iin_{this};
+  TypedAttribute<bool> psu_cap_iout_{this};
+  TypedAttribute<bool> psu_cap_pin_{this};
+  TypedAttribute<bool> psu_cap_pout_{this};
 };
 
 }  // namespace onlp

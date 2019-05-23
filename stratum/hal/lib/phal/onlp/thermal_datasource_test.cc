@@ -32,46 +32,42 @@ using ::testing::HasSubstr;
 using ::testing::Return;
 using ::stratum::test_utils::StatusIs;
 
-TEST(ThermalDatasourceTest, InitializeFailedNoThermal) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+class ThermalDatasourceTest : public ::testing::Test {
+ public:
+   void SetUp() override {
+     id_ = 12345;
+     oid_ = ONLP_THERMAL_ID_CREATE(id_);
+   }
 
-  std::string error_message =
-      "The THERMAL with OID 12345 is not currently present.";
-  EXPECT_THAT(OnlpThermalDataSource::Make(12345, &mock_onlp_interface, nullptr),
-              StatusIs(_, _, HasSubstr(error_message)));
-}
+   int id_;             // Id for this THERMAL
+   OnlpOid oid_;        // OID for this THERMAL (i.e. Type + Id)
+   onlp_oid_hdr_t mock_oid_info_;
+   MockOnlpWrapper mock_onlp_interface_;
+};
 
-TEST(ThermalDatasourceTest, InitializeThermalWithEmptyInfo) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+TEST_F(ThermalDatasourceTest, InitializeThermalWithEmptyInfo) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillOnce(Return(OidInfo(mock_oid_info_)));
 
   onlp_thermal_info_t mock_thermal_info = {};
   mock_thermal_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetThermalInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetThermalInfo(oid_))
       .Times(2)
       .WillRepeatedly(Return(ThermalInfo(mock_thermal_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpThermalDataSource>> result =
-      OnlpThermalDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpThermalDataSource::Make(id_, &mock_onlp_interface_, nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpThermalDataSource> thermal_datasource =
       result.ConsumeValueOrDie();
   EXPECT_NE(thermal_datasource.get(), nullptr);
 }
 
-TEST(ThermalDatasourceTest, GetThermalData) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillRepeatedly(Return(OidInfo(mock_oid_info)));
+TEST_F(ThermalDatasourceTest, GetThermalData) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillRepeatedly(Return(OidInfo(mock_oid_info_)));
 
   onlp_thermal_info_t mock_thermal_info = {};
   mock_thermal_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
@@ -83,11 +79,11 @@ TEST(ThermalDatasourceTest, GetThermalData) {
   mock_thermal_info.caps = (ONLP_THERMAL_CAPS_GET_TEMPERATURE
                             |ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
 
-  EXPECT_CALL(mock_onlp_interface, GetThermalInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetThermalInfo(oid_))
       .WillRepeatedly(Return(ThermalInfo(mock_thermal_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpThermalDataSource>> result =
-      OnlpThermalDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpThermalDataSource::Make(id_, &mock_onlp_interface_, nullptr);
 
   ASSERT_OK(result);
 
@@ -98,12 +94,15 @@ TEST(ThermalDatasourceTest, GetThermalData) {
 
   // Update value and check attribute fields.
   EXPECT_OK(thermal_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
-
-  EXPECT_OK(thermal_datasource->IsCapable((ThermalCaps)(ONLP_THERMAL_CAPS_GET_TEMPERATURE
-            |ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD)));
+  
+  // Check capabilities
+  EXPECT_THAT(thermal_datasource->GetCapTemp(), ContainsValue(true));
+  EXPECT_THAT(thermal_datasource->GetCapWarnThresh(), ContainsValue(true));
+  EXPECT_THAT(thermal_datasource->GetCapErrThresh(), ContainsValue(false));
+  EXPECT_THAT(thermal_datasource->GetCapShutdownThresh(), ContainsValue(false));
 
   EXPECT_THAT(thermal_datasource->GetThermalId(),
-              ContainsValue<OnlpOid>(12345));
+              ContainsValue<int>(id_));
 
   EXPECT_THAT(thermal_datasource->GetThermalCurTemp(),
               ContainsValue<double>(1111 / 1000.0));
@@ -120,7 +119,7 @@ TEST(ThermalDatasourceTest, GetThermalData) {
 }
 
 // TODO(phani-karanam): Add implementation.
-// TEST(ThermalDatasourceTest, SetThermalData) {}
+// TEST_F(ThermalDatasourceTest, SetThermalData) {}
 
 }  // namespace onlp
 }  // namespace phal

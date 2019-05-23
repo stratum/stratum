@@ -38,55 +38,52 @@ using ::testing::HasSubstr;
 using ::testing::Return;
 using ::stratum::test_utils::StatusIs;
 
-TEST(SfpDatasourceTest, InitializeFailedNoSfp) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+class SfpDatasourceTest : public ::testing::Test {
+ public:
+   void SetUp() override {
+     id_ = 12345;
+     oid_ = ONLP_SFP_ID_CREATE(id_);
+   }
 
-  std::string error_message =
-      "The SFP with OID 12345 is not currently present.";
-  EXPECT_THAT(OnlpSfpDataSource::Make(12345, &mock_onlp_interface, nullptr),
-              StatusIs(_, _, HasSubstr(error_message)));
-}
+   int id_;             // Id for this SFP
+   OnlpOid oid_;        // OID for this SFP (i.e. Type + Id)
+   onlp_oid_hdr_t mock_oid_info_;
+   MockOnlpWrapper mock_onlp_interface_;
+};
 
-TEST(SfpDatasourceTest, InitializeSFPWithEmptyInfo) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+TEST_F(SfpDatasourceTest, InitializeSFPWithEmptyInfo) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillOnce(Return(OidInfo(mock_oid_info_)));
 
   onlp_sfp_info_t mock_sfp_info = {};
   mock_sfp_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
   mock_sfp_info.dom.nchannels = 0;
   mock_sfp_info.sff.sfp_type = SFF_SFP_TYPE_SFP;
-  EXPECT_CALL(mock_onlp_interface, GetSfpInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetSfpInfo(oid_))
       .Times(2)
       .WillRepeatedly(Return(SfpInfo(mock_sfp_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result =
-      OnlpSfpDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpSfpDataSource::Make(id_, &mock_onlp_interface_, nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpSfpDataSource> sfp_datasource =
       result.ConsumeValueOrDie();
   EXPECT_NE(sfp_datasource.get(), nullptr);
 }
 
-TEST(SfpDatasourceTest, GetSfpData) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillRepeatedly(Return(OidInfo(mock_oid_info)));
+TEST_F(SfpDatasourceTest, GetSfpData) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillRepeatedly(Return(OidInfo(mock_oid_info_)));
 
   onlp_sfp_info_t mock_sfp_info = {};
   mock_sfp_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
   mock_sfp_info.type = ONLP_SFP_TYPE_SFP;
   mock_sfp_info.sff.sfp_type = SFF_SFP_TYPE_SFP;
   mock_sfp_info.sff.module_type = SFF_MODULE_TYPE_1G_BASE_SX;
-  mock_sfp_info.sff.caps = SFF_MODULE_CAPS_F_1G;
+  mock_sfp_info.sff.caps = 
+    static_cast<sff_module_caps_t>(SFF_MODULE_CAPS_F_1G|SFF_MODULE_CAPS_F_100G);
   mock_sfp_info.sff.length = 100;
 
   // FIXME
@@ -120,11 +117,11 @@ TEST(SfpDatasourceTest, GetSfpData) {
   mock_sfp_dom_info->channels[1].tx_power = 4444;
   mock_sfp_dom_info->channels[1].rx_power = 5555;
   mock_sfp_dom_info->channels[1].bias_cur = 6666;
-  EXPECT_CALL(mock_onlp_interface, GetSfpInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetSfpInfo(oid_))
       .WillRepeatedly(Return(SfpInfo(mock_sfp_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result =
-      OnlpSfpDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpSfpDataSource::Make(id_, &mock_onlp_interface_, nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpSfpDataSource> sfp_datasource =
       result.ConsumeValueOrDie();
@@ -138,7 +135,7 @@ TEST(SfpDatasourceTest, GetSfpData) {
               ContainsValue<std::string>("test_sfp_model"));
   EXPECT_THAT(sfp_datasource->GetSfpSerialNumber(),
               ContainsValue<std::string>("test_sfp_serial"));
-  EXPECT_THAT(sfp_datasource->GetSfpId(), ContainsValue<OnlpOid>(12345));
+  EXPECT_THAT(sfp_datasource->GetSfpId(), ContainsValue<int>(id_));
   // Convert 0.1uW to dBm unit.
   EXPECT_THAT(sfp_datasource->GetSfpTxPower(0),
               ContainsValue<double>(10 * log10(1111.0 / (10.0 * 1000.0))));
@@ -168,14 +165,20 @@ TEST(SfpDatasourceTest, GetSfpData) {
   EXPECT_THAT(
       sfp_datasource->GetSfpModuleType(),
       ContainsValue(SfpModuleType_descriptor()->FindValueByName("SFP_MODULE_TYPE_1G_BASE_SX")));
-  EXPECT_THAT(
-      sfp_datasource->GetSfpModuleCaps(),
-      ContainsValue(SfpModuleCaps_descriptor()->FindValueByName("SFP_MODULE_CAPS_F_1G")));
+
+  // Check Module Caps
+  EXPECT_THAT(sfp_datasource->GetModCapF100(), ContainsValue(false));
+  EXPECT_THAT(sfp_datasource->GetModCapF1G(), ContainsValue(true));
+  EXPECT_THAT(sfp_datasource->GetModCapF10G(), ContainsValue(false));
+  EXPECT_THAT(sfp_datasource->GetModCapF40G(), ContainsValue(false));
+  EXPECT_THAT(sfp_datasource->GetModCapF100G(), ContainsValue(true));
+
   EXPECT_THAT(sfp_datasource->GetSfpCableLength(),
               ContainsValue<int>(100));
   EXPECT_THAT(sfp_datasource->GetSfpCableLengthDesc(),
               ContainsValue<std::string>("test_cable_len"));
 }
+
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

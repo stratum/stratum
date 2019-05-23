@@ -144,21 +144,14 @@ class SfpInfo : public OidInfo {
         return SFP_MODULE_TYPE_UNKNOWN;
     }
   }
-  SfpModuleCaps GetSfpModuleCaps() const {
-    switch(sfp_info_.sff.caps) {
-      case SFF_MODULE_CAPS_F_100:
-        return SFP_MODULE_CAPS_F_100;
-      case SFF_MODULE_CAPS_F_1G:
-        return SFP_MODULE_CAPS_F_1G;
-      case SFF_MODULE_CAPS_F_10G:
-        return SFP_MODULE_CAPS_F_10G;
-      case SFF_MODULE_CAPS_F_40G:
-        return SFP_MODULE_CAPS_F_40G;
-      case SFF_MODULE_CAPS_F_100G:
-        return SFP_MODULE_CAPS_F_100G;
-      default:
-        return SFP_MODULE_CAPS_UNKNOWN;
-    }
+
+  void GetModuleCaps(SfpModuleCaps* caps) const {
+    // set all relevant capabilities flags
+    caps->set_f_100(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_100);
+    caps->set_f_1g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_1G);
+    caps->set_f_10g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_10G);
+    caps->set_f_40g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_40G);
+    caps->set_f_100g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_100G);
   }
 
   // The lifetimes of pointers returned by these functions are managed by this
@@ -191,10 +184,14 @@ class FanInfo : public OidInfo {
     }
   }
 
-  bool Capable(FanCaps fan_capability) const {
-    int compare_caps;
-    compare_caps = (fan_info_.caps & fan_capability);
-    return compare_caps == fan_capability;
+  void GetCaps(FanCaps* caps) const {
+    // set all relevant capabilities flags
+    caps->set_set_dir(fan_info_.caps & ONLP_FAN_CAPS_SET_DIR);
+    caps->set_get_dir(fan_info_.caps & ONLP_FAN_CAPS_GET_DIR);
+    caps->set_set_rpm(fan_info_.caps & ONLP_FAN_CAPS_SET_RPM);
+    caps->set_set_percentage(fan_info_.caps & ONLP_FAN_CAPS_SET_PERCENTAGE);
+    caps->set_get_rpm(fan_info_.caps & ONLP_FAN_CAPS_GET_RPM);
+    caps->set_get_percentage(fan_info_.caps & ONLP_FAN_CAPS_GET_PERCENTAGE);
   }
 
   ::util::StatusOr<const onlp_fan_info_t*> GetOnlpFan() const {
@@ -224,10 +221,15 @@ class PsuInfo : public OidInfo {
     }
   }
 
-  bool Capable(PsuCaps psu_capability) const {
-    int compare_caps;
-    compare_caps = (psu_info_.caps & psu_capability);
-    return compare_caps == psu_capability;
+  void GetCaps(PsuCaps* caps) const {
+    // set all relevant capabilities flags
+    caps->set_get_type(psu_info_.caps & ONLP_PSU_CAPS_GET_TYPE);
+    caps->set_get_vin(psu_info_.caps & ONLP_PSU_CAPS_GET_VIN);
+    caps->set_get_vout(psu_info_.caps & ONLP_PSU_CAPS_GET_VOUT);
+    caps->set_get_iin(psu_info_.caps & ONLP_PSU_CAPS_GET_IIN);
+    caps->set_get_iout(psu_info_.caps & ONLP_PSU_CAPS_GET_IOUT);
+    caps->set_get_pin(psu_info_.caps & ONLP_PSU_CAPS_GET_PIN);
+    caps->set_get_pout(psu_info_.caps & ONLP_PSU_CAPS_GET_POUT);
   }
 
   ::util::StatusOr<const onlp_psu_info_t*> GetOnlpPsu() const {
@@ -259,12 +261,18 @@ class ThermalInfo : public OidInfo {
     return thermal_info_.thresholds.shutdown;
   }
 
-  bool Capable(ThermalCaps thermal_capability) const {
-    int compare_caps;
-    compare_caps = (thermal_info_.caps & thermal_capability);
-    return compare_caps == thermal_capability;
+  void GetCaps(ThermalCaps* caps) const {
+    // set all relevant capabilities flags
+    caps->set_get_temperature(
+      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_TEMPERATURE);
+    caps->set_get_warning_threshold(
+      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
+    caps->set_get_error_threshold(
+      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_ERROR_THRESHOLD);
+    caps->set_get_shutdown_threshold(
+      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD);
   }
-  
+
  private:
   onlp_thermal_info_t thermal_info_;
 };
@@ -312,11 +320,29 @@ class LedInfo : public OidInfo {
         return LED_MODE_UNKNOWN;
     }
   }
+
   char GetLedChar() const {
     return led_info_.character;
   }
-  bool Capable(LedCaps led_capability) const {
-    return led_info_.caps & led_capability;
+
+  void GetCaps(LedCaps* caps) const {
+    // set all relevant capabilities flags
+    caps->set_off(led_info_.caps & ONLP_LED_CAPS_OFF);
+    caps->set_auto_(led_info_.caps & ONLP_LED_CAPS_AUTO);
+    caps->set_auto_blinking(led_info_.caps & ONLP_LED_CAPS_AUTO_BLINKING);
+    caps->set_char_(led_info_.caps & ONLP_LED_CAPS_CHAR);
+    caps->set_red(led_info_.caps & ONLP_LED_CAPS_RED);
+    caps->set_red_blinking(led_info_.caps & ONLP_LED_CAPS_RED_BLINKING);
+    caps->set_orange(led_info_.caps & ONLP_LED_CAPS_ORANGE);
+    caps->set_orange_blinking(led_info_.caps & ONLP_LED_CAPS_ORANGE_BLINKING);
+    caps->set_yellow(led_info_.caps & ONLP_LED_CAPS_YELLOW);
+    caps->set_yellow_blinking(led_info_.caps & ONLP_LED_CAPS_YELLOW_BLINKING);
+    caps->set_green(led_info_.caps & ONLP_LED_CAPS_GREEN);
+    caps->set_green_blinking(led_info_.caps & ONLP_LED_CAPS_GREEN_BLINKING);
+    caps->set_blue(led_info_.caps & ONLP_LED_CAPS_BLUE);
+    caps->set_blue_blinking(led_info_.caps & ONLP_LED_CAPS_BLUE_BLINKING);
+    caps->set_purple(led_info_.caps & ONLP_LED_CAPS_PURPLE);
+    caps->set_purple_blinking(led_info_.caps & ONLP_LED_CAPS_PURPLE_BLINKING);
   }
 
  private:

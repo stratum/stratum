@@ -16,12 +16,14 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/onlp/onlpphal.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 //FIXME remove when onlp_wrapper.h is stable
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+#include "stratum/hal/lib/phal/attribute_database.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
              "Maximum number of channel writers for transceiver events.");
@@ -41,15 +43,27 @@ ABSL_CONST_INIT absl::Mutex OnlpPhal::init_lock_(absl::kConstInit);
 ::util::Status OnlpPhalSfpEventCallback::HandleStatusChange(
     const OidInfo& oid_info) {
 
-  // Format TransceiverEvent
-  TransceiverEvent event;
-  event.slot = kDefaultSlot;
-  event.port = oid_info.GetId();
-  event.state = oid_info.GetHardwareState();
+  // Check OID Type
+  OnlpOid oid = oid_info.GetId();
+  switch (ONLP_OID_TYPE_GET(oid)) {
 
-  // Write the event to each writer
-  ::util::Status result = onlpphal_->WriteTransceiverEvent(event);
-  return result;
+  // SFP event
+  case ONLP_OID_TYPE_SFP:
+    // Format TransceiverEvent
+    TransceiverEvent event;
+    event.slot = kDefaultSlot;
+    event.port = ONLP_OID_ID_GET(oid);
+    event.state = oid_info.GetHardwareState();
+    RETURN_IF_ERROR(onlpphal_->HandleTransceiverEvent(event));
+    break;
+
+  // TODO(craig): we probably need to handle more than just
+  //              transceiver events over time.
+  default:
+    return MAKE_ERROR() << "unhandled status change, oid: " << oid;
+  }
+ 
+  return ::util::OkStatus();
 }
 
 OnlpPhal::OnlpPhal() :
@@ -60,21 +74,42 @@ OnlpPhal::OnlpPhal() :
 
 OnlpPhal::~OnlpPhal() {}
 
-::util::Status OnlpPhal::PushChassisConfig(const ChassisConfig& config) {
-  absl::WriterMutexLock l(&config_lock_);
+// Initialize the onlp interface and phal DB
+::util::Status OnlpPhal::Initialize() {
+
   if (!initialized_) {
 
     // Create the OnlpWrapper object
     RETURN_IF_ERROR(InitializeOnlpInterface());
 
-    //Creates Data Source objects.
-    RETURN_IF_ERROR(InitializeOnlpOids());
+    // Create attribute database and load initial phal DB
+    RETURN_IF_ERROR(InitializePhalDB());
 
     // Create the OnlpEventHandler object with given OnlpWrapper
     RETURN_IF_ERROR(InitializeOnlpEventHandler());
 
     initialized_ = true;
   }
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpPhal::InitializePhalDB() {
+
+  // Create onlp switch configurator instance
+  ASSIGN_OR_RETURN(auto configurator,
+      OnlpSwitchConfigurator::Make(this, onlp_interface_.get()));
+
+  // Create attribute database and load initial phal DB
+  ASSIGN_OR_RETURN(std::move(database_), 
+      AttributeDatabase::MakePhalDB(std::move(configurator)));
+
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpPhal::PushChassisConfig(const ChassisConfig& config) {
+  absl::WriterMutexLock l(&config_lock_);
+
+  // TODO: Process Chassis Config here
 
   return ::util::OkStatus();
 }
@@ -92,6 +127,28 @@ OnlpPhal::~OnlpPhal() {}
   initialized_ = false;
 
   return ::util::OkStatus();
+}
+
+::util::Status OnlpPhal::HandleTransceiverEvent(TransceiverEvent& event) {
+
+  // Send event to Sfp configurator first to ensure
+  // attribute database is in order before and calls are
+  // made from the upper layer components.
+  const std::pair<int, int>& slot_port_pair = 
+                        std::make_pair(event.slot, event.port);
+  auto configurator = slot_port_to_configurator_[slot_port_pair];
+
+  // Check to make sure we've got a configurator for this slot/port
+  if (configurator == nullptr) {
+    RETURN_ERROR()
+        << "card[" << event.slot << "]/port[" << event.port << "]: "
+        << "no configurator for this transceiver";
+  }
+
+  RETURN_IF_ERROR(configurator->HandleEvent(event.state));
+
+  // Write the event to each writer
+  return WriteTransceiverEvent(event);
 }
 
 ::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
@@ -182,13 +239,13 @@ OnlpPhal::~OnlpPhal() {}
 
   //Get slot port pair to lookup sfpdatasource.
   const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
+  auto configurator = slot_port_to_configurator_[slot_port_pair];
+  auto sfp_src = configurator->GetSfpDataSource();
 
-  std::shared_ptr<OnlpSfpDataSource> sfp_src = slot_port_to_sfp_data_[slot_port_pair];
-
-  if (!sfp_src) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "No SFP DataSource for slot "
-                                       << slot << ", port " << port << ".";
-  }
+  // Check if Sfp inserted
+  if (sfp_src == nullptr) 
+    RETURN_ERROR()
+        << "card[" << slot << "]/port[" << port << "]: Sfp not inserted";
 
   //Update sfp datasource values.
   sfp_src->UpdateValuesUnsafelyWithoutCacheOrLock();
@@ -259,6 +316,7 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 
   if (!singleton_) {
     singleton_ = new OnlpPhal();
+    singleton_->Initialize();
   }
 
   return singleton_;
@@ -305,30 +363,16 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
     return ::util::OkStatus();
 }
 
-::util::Status OnlpPhal::InitializeOnlpOids() {
-  //Get list of sfps.
-  ::util::Status status = ::util::OkStatus();
-   ASSIGN_OR_RETURN(
-          std::vector <OnlpOid> OnlpOids,
-          onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP));
-  //TODO: Need to support multiple slots.
-  for(unsigned int i = 0; i < OnlpOids.size(); i++) {
-    //Adding 1, because port numbering starts from 1.
-    const std::pair<int, int> slot_port_pair = std::make_pair(kDefaultSlot, i+1);
-    ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result =
-      OnlpSfpDataSource::Make(OnlpOids[i], onlp_interface_.get(), NULL);
+// Register the configurator so we can use later
+::util::Status OnlpPhal::RegisterSfpConfigurator(
+    int slot, int port, SfpConfigurator* configurator) {
 
-    if (!result.ok()) {
-      LOG(ERROR) << result.status();
-      APPEND_STATUS_IF_ERROR(status, result.status());
-      // Skip invalid data source
-      continue;
-    }
+    const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
 
-    std::shared_ptr<OnlpSfpDataSource> sfp_data_src = result.ConsumeValueOrDie();
-    slot_port_to_sfp_data_[slot_port_pair] = sfp_data_src;
-  }
-  return status;
+    slot_port_to_configurator_[slot_port_pair] = 
+        (OnlpSfpConfigurator *)configurator;
+
+    return ::util::OkStatus();
 }
 
 }  // namespace onlp

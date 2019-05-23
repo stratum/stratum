@@ -109,6 +109,7 @@ stratum_cc_library(
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
+        ":switch_configurator",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
@@ -215,6 +216,7 @@ stratum_cc_library(
     deps = [
         ":attribute_database_interface",
         ":managed_attribute",
+        ":phal_proto",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
@@ -350,31 +352,6 @@ stratum_cc_test(
     ],
 )
 '''
-
-stratum_cc_binary(
-    name = "phal_cli",
-    srcs = ["phal_cli.cc"],
-    arches = EMBEDDED_ARCHES,
-    linkopts = [
-        "-lpthread",
-        "-ldl",
-        "-lrt",
-        "-ludev",
-    ],
-    deps = [
-        ":attribute_database",
-        ":attribute_database_interface",
-        ":system_real",
-        "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/time",
-        "//stratum/glue:init_google",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/lib:macros",
-        "@com_googlesource_code_re2//:re2",
-    ],
-)
 
 stratum_package(
     name = "phal_cli_pkg",
@@ -645,6 +622,7 @@ stratum_cc_library(
     hdrs = ["phal_sim.h"],
     deps = [
         ":phal_proto",
+        ":sfp_configurator",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
         "//stratum/hal/lib/common:constants",
@@ -689,3 +667,24 @@ stratum_cc_library(
         "@com_google_googletest//:gtest",
     ],
 )
+
+stratum_cc_library(
+    name = "switch_configurator",
+    hdrs = ["switch_configurator.h"],
+    deps = [
+        ":attribute_group",
+        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/glue/status",
+    ],
+)
+
+stratum_cc_library(
+    name = "sfp_configurator",
+    hdrs = ["sfp_configurator.h"],
+    deps = [
+        ":attribute_group",
+        "//stratum/hal/lib/common:common_proto",
+        "//stratum/glue/status",
+    ],
+)
+

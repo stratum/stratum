@@ -20,6 +20,7 @@
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
+#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
@@ -29,6 +30,11 @@ namespace onlp {
 class MockOnlpWrapper : public OnlpInterface {
  public:
   ~MockOnlpWrapper() override{};
+
+  static ::util::StatusOr<std::unique_ptr<MockOnlpWrapper>> Make() {
+    LOG(INFO) << "Initializing Mock ONLP.";
+    return absl::WrapUnique(new MockOnlpWrapper());
+  }
 
   MOCK_CONST_METHOD1(GetOidInfo, ::util::StatusOr<OidInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetSfpInfo, ::util::StatusOr<SfpInfo>(OnlpOid oid));

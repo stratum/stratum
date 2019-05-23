@@ -21,17 +21,14 @@ package stratum.hal.phal;
 
 import "stratum/hal/lib/common/common.proto";
 
-// IN PROGRESS
-// DO NOT USE
-
-// TODO: Flesh out the db proto definition.
-
-// The unfinished top level message in the PHAL attribute database.
 // This proto encodes all of the data that can possibly be provided
 // by the VANE-PHAL.
 message PhalDB {
   repeated Card cards = 1;
   repeated FanTray fan_trays = 2;
+  repeated PsuTray psu_trays = 3;
+  repeated LedGroup led_groups = 4;
+  repeated ThermalGroup thermal_groups = 5;
 }
 
 message Card {
@@ -41,16 +38,83 @@ message Card {
 // TODO: Add fan tray LED support and fan tray type.
 message FanTray {
   message Fan {
-    double rpm = 1;
-    int32 speed_control = 2;  // Stores a percent value in [0,100]. Writable.
+    int32 id = 1;
+    string description = 2;
+    HwState hardware_state = 3;
+    string err_msg = 4;
+    HardwareInfo info = 5;
+
+    string model = 6;
+    string serial_number = 7;
+    double rpm = 8;
+    int32 speed_control = 9;  // Stores a percent value in [0,100]. Writable.
+    FanDir direction = 10;
+    FanCaps capabilities = 11;
   }
   repeated Fan fans = 1;
   HardwareInfo info = 2;
 }
 
+message PsuTray {
+  message Psu {
+    int32 id = 1;
+    string description = 2;
+    HwState hardware_state = 3;
+    string err_msg = 4;
+    HardwareInfo info = 5;
+
+    double input_voltage = 6;
+    double output_voltage = 7;
+    double input_current = 8;
+    double output_current = 9;
+    double input_power = 10;
+    double output_power = 11;
+    PsuType type = 12;
+    PsuCaps capabilities = 13;
+  }
+  repeated Psu psus = 1;
+  HardwareInfo info = 2;
+}
+
+message LedGroup {
+  message Led {
+    int32 id = 1;
+    string description = 2;
+    HwState hardware_state = 3;
+    string err_msg = 4;
+    HardwareInfo info = 5;
+
+    LedCaps capabilities = 6;
+    LedMode mode = 7;
+    LedState state = 8;
+    LedColor color = 9;
+    // we'll use int32 as no char equivalent in protobufs
+    int32 character = 10;
+  }
+  repeated Led leds = 1;
+}
+
+message ThermalGroup {
+  message Thermal {
+    int32 id = 1;
+    string description = 2;
+    HwState hardware_state = 3;
+    string err_msg = 4;
+    HardwareInfo info = 5;
+
+    double cur_temp = 6;
+    double warn_temp = 7;
+    double error_temp = 8;
+    double shut_down_temp = 9;
+    ThermalCaps capabilities = 10;
+  }
+  repeated Thermal thermals = 1;
+}
+
 message Port {
-  PhysicalPortType physical_port_type = 1;
-  Transceiver transceiver = 2;
+  int32 id = 1;
+  PhysicalPortType physical_port_type = 2;
+  Transceiver transceiver = 3;
 }
 
 message AlarmStatus {
@@ -78,14 +142,25 @@ message SFPChannel {
 }
 
 message Transceiver {
-  bool data_ready = 1;
-  HardwareInfo info = 2;
-  MediaType media_type = 3;
-  double temperature = 4;  // Measured in degrees Celsius.
-  double vcc = 5;          // Measured in volts.
-  AlarmStatus temperature_alarm = 6;
-  AlarmStatus vcc_alarm = 7;
-  repeated SFPChannel channels = 8;
+  int32 id = 1;
+  string description = 2;
+  HwState hardware_state = 3;
+  string err_msg = 4;
+  HardwareInfo info = 5;
+
+  bool data_ready = 6;
+  MediaType media_type = 7;
+  SfpType connector_type = 8;
+  SfpModuleType module_type = 9;
+  SfpModuleCaps module_capabilities = 10;
+  int32 cable_length = 11;
+  string cable_length_desc = 12;
+  double temperature = 13;  // Measured in degrees Celsius.
+  double vcc = 14;         // Measured in volts.
+  AlarmStatus temperature_alarm = 15;
+  AlarmStatus vcc_alarm = 16;
+  int32 channel_count = 17;
+  repeated SFPChannel channels = 18;
 }
 
 // Data optionally available for every piece of hardware in the PHAL db.
@@ -100,8 +175,7 @@ message HardwareInfo {
   // Google additions:
   uint32 mfg_date = 7;
   uint32 firmware_version_no = 8;
-  HwState state = 9;
-  repeated TemperatureData temperatures = 10;
+  repeated TemperatureData temperatures = 9;
 }
 
 message TemperatureData {

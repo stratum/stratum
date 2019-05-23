@@ -38,47 +38,43 @@ using ::testing::HasSubstr;
 using ::testing::Return;
 using ::stratum::test_utils::StatusIs;
 
-TEST(PsuDatasourceTest, InitializeFailedNoPsu) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_UNPLUGGED;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+class PsuDatasourceTest : public ::testing::Test {
+ public:
+   void SetUp() override {
+     id_ = 12345;
+     oid_ = ONLP_PSU_ID_CREATE(id_);
+   }
 
-  std::string error_message =
-      "The PSU with OID 12345 is not currently present.";
-  EXPECT_THAT(OnlpPsuDataSource::Make(12345, &mock_onlp_interface, nullptr),
-              StatusIs(_, _, HasSubstr(error_message)));
-}
+   int id_;             // Id for this PSU
+   OnlpOid oid_;        // OID for this PSU (i.e. Type + Id)
+   onlp_oid_hdr_t mock_oid_info_;
+   MockOnlpWrapper mock_onlp_interface_;
+};
 
-TEST(PsuDatasourceTest, InitializePSUWithEmptyInfo) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillOnce(Return(OidInfo(mock_oid_info)));
+TEST_F(PsuDatasourceTest, InitializePSUWithEmptyInfo) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillOnce(Return(OidInfo(mock_oid_info_)));
 
   onlp_psu_info_t mock_psu_info = {};
   mock_psu_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
 
-  EXPECT_CALL(mock_onlp_interface, GetPsuInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetPsuInfo(oid_))
       .Times(2)
       .WillRepeatedly(Return(PsuInfo(mock_psu_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpPsuDataSource>> result =
-      OnlpPsuDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpPsuDataSource::Make(id_, &mock_onlp_interface_, nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpPsuDataSource> psu_datasource =
       result.ConsumeValueOrDie();
   EXPECT_NE(psu_datasource.get(), nullptr);
 }
 
-TEST(PsuDatasourceTest, GetPsuData) {
-  MockOnlpWrapper mock_onlp_interface;
-  onlp_oid_hdr_t mock_oid_info;
-  mock_oid_info.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface, GetOidInfo(12345))
-      .WillRepeatedly(Return(OidInfo(mock_oid_info)));
+TEST_F(PsuDatasourceTest, GetPsuData) {
+  mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
+  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+      .WillRepeatedly(Return(OidInfo(mock_oid_info_)));
 
   onlp_psu_info_t mock_psu_info = {};
   mock_psu_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
@@ -96,11 +92,11 @@ TEST(PsuDatasourceTest, GetPsuData) {
   mock_psu_info.type = ONLP_PSU_TYPE_AC;
   mock_psu_info.caps = (ONLP_PSU_CAPS_GET_VIN | ONLP_PSU_CAPS_GET_IIN);
 
-  EXPECT_CALL(mock_onlp_interface, GetPsuInfo(12345))
+  EXPECT_CALL(mock_onlp_interface_, GetPsuInfo(oid_))
       .WillRepeatedly(Return(PsuInfo(mock_psu_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpPsuDataSource>> result =
-      OnlpPsuDataSource::Make(12345, &mock_onlp_interface, nullptr);
+      OnlpPsuDataSource::Make(id_, &mock_onlp_interface_, nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpPsuDataSource> psu_datasource =
       result.ConsumeValueOrDie();
@@ -108,13 +104,21 @@ TEST(PsuDatasourceTest, GetPsuData) {
 
   // Update value and check attribute fields.
   EXPECT_OK(psu_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
-  EXPECT_OK(psu_datasource->IsCapable((PsuCaps)(ONLP_PSU_CAPS_GET_VIN
-            |ONLP_PSU_CAPS_GET_IIN)));
+
+  // Check capabilities
+  EXPECT_THAT(psu_datasource->GetCapGetType(), ContainsValue(false));
+  EXPECT_THAT(psu_datasource->GetCapGetVIn(), ContainsValue(true));
+  EXPECT_THAT(psu_datasource->GetCapGetVOut(), ContainsValue(false));
+  EXPECT_THAT(psu_datasource->GetCapGetIIn(), ContainsValue(true));
+  EXPECT_THAT(psu_datasource->GetCapGetIOut(), ContainsValue(false));
+  EXPECT_THAT(psu_datasource->GetCapGetPIn(), ContainsValue(false));
+  EXPECT_THAT(psu_datasource->GetCapGetPOut(), ContainsValue(false));
+
   EXPECT_THAT(psu_datasource->GetPsuModel(),
               ContainsValue<std::string>("test_psu_model"));
   EXPECT_THAT(psu_datasource->GetPsuSerialNumber(),
               ContainsValue<std::string>("test_psu_serial"));
-  EXPECT_THAT(psu_datasource->GetPsuId(), ContainsValue<OnlpOid>(12345));
+  EXPECT_THAT(psu_datasource->GetPsuId(), ContainsValue<int>(id_));
 
   EXPECT_THAT(psu_datasource->GetPsuInputVoltage(),
               ContainsValue<double>(1111 / 1000.0));
