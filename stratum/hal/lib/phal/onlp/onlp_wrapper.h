@@ -53,35 +53,14 @@ using OnlpPortNumber = onlp_oid_t;
 // specialized classes for specific OID types should derive from this.
 class OidInfo {
  public:
+  OidInfo() = default;
   explicit OidInfo(const onlp_oid_hdr_t& oid_info) : oid_info_(oid_info) {}
   explicit OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
-                   HwState state) {
-    oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
-    oid_info_.status = (state == HW_STATE_PRESENT ?
-        ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
-  }
-  OidInfo() {}
+                   HwState state);
 
-  HwState GetHardwareState() const {
-    if (Present()) {
-      if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, UNPLUGGED)) {
-        return HW_STATE_OFF; // FIXME(Yi): is this right?
-      }
-      if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, FAILED)) {
-        return HW_STATE_FAILED;
-      }
-      if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, OPERATIONAL)) {
-        return HW_STATE_READY;
-      }
-      return HW_STATE_PRESENT;
-    }
+  bool Present() const;
 
-    return HW_STATE_NOT_PRESENT;
-  }
-
-  bool Present() const {
-    return ONLP_OID_PRESENT(&oid_info_);
-  }
+  HwState GetHardwareState() const;
 
   const OnlpOidHeader* GetHeader() const { return &oid_info_; }
   uint32_t GetId() const { return (oid_info_.id & 0xFFFFFF); }
