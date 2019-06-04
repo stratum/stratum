@@ -94,7 +94,7 @@ TEST_F(ThermalDatasourceTest, GetThermalData) {
 
   // Update value and check attribute fields.
   EXPECT_OK(thermal_datasource->UpdateValuesUnsafelyWithoutCacheOrLock());
-  
+
   // Check capabilities
   EXPECT_THAT(thermal_datasource->GetCapTemp(), ContainsValue(true));
   EXPECT_THAT(thermal_datasource->GetCapWarnThresh(), ContainsValue(true));

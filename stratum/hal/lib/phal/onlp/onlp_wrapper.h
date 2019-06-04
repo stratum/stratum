@@ -19,6 +19,7 @@
 
 #include <bitset>
 extern "C" {
+#include <onlp/onlp.h>
 #include <onlp/oids.h>
 #include <onlp/sfp.h>
 #include <onlp/fan.h>
@@ -61,7 +62,6 @@ class OidInfo {
   bool Present() const;
 
   HwState GetHardwareState() const;
-
   const OnlpOidHeader* GetHeader() const { return &oid_info_; }
   uint32_t GetId() const { return (oid_info_.id & 0xFFFFFF); }
 
@@ -74,74 +74,15 @@ class SfpInfo : public OidInfo {
   explicit SfpInfo(const onlp_sfp_info_t& sfp_info)
       : OidInfo(sfp_info.hdr), sfp_info_(sfp_info) {}
   SfpInfo() {}
-
-  MediaType GetMediaType() const {
-    if (sfp_info_.type == ONLP_SFP_TYPE_SFP) {
-      return MEDIA_TYPE_SFP;
-    }
-    // Others are of QSFP/QSFP++/QSFP28 type.
-    switch (sfp_info_.sff.module_type) {
-      case SFF_MODULE_TYPE_100G_BASE_SR4:
-        return MEDIA_TYPE_QSFP_CSR4;
-      case SFF_MODULE_TYPE_100G_BASE_LR4:
-        return MEDIA_TYPE_QSFP_CLR4;
-      case SFF_MODULE_TYPE_40G_BASE_CR4:
-        return MEDIA_TYPE_QSFP_COPPER;
-      case SFF_MODULE_TYPE_40G_BASE_SR4:
-        return MEDIA_TYPE_QSFP_SR4;
-      case SFF_MODULE_TYPE_40G_BASE_LR4:
-        // TODO: Need connector type (LC or MPO) which is missing.
-      default:
-        return MEDIA_TYPE_UNKNOWN;
-    }
-  }
-
-  SfpType GetSfpType() const {
-    switch(sfp_info_.sff.sfp_type) {
-      case SFF_SFP_TYPE_SFP:
-        return SFP_TYPE_SFP;
-      case SFF_SFP_TYPE_QSFP:
-        return SFP_TYPE_QSFP;
-      case SFF_SFP_TYPE_QSFP_PLUS:
-        return SFP_TYPE_QSFP_PLUS;
-      case SFF_SFP_TYPE_QSFP28:
-        return SFP_TYPE_QSFP28;
-      default:
-        return SFP_TYPE_UNKNOWN;
-    }
-  }
-
-  SfpModuleType GetSfpModuleType() const {
-    switch(sfp_info_.sff.module_type) {
-      case SFF_MODULE_TYPE_100G_BASE_CR4:
-        return SFP_MODULE_TYPE_100G_BASE_CR4;
-      case SFF_MODULE_TYPE_10G_BASE_CR:
-        return SFP_MODULE_TYPE_10G_BASE_CR;
-      case SFF_MODULE_TYPE_1G_BASE_SX:
-        return SFP_MODULE_TYPE_1G_BASE_SX;
-      default:
-        return SFP_MODULE_TYPE_UNKNOWN;
-    }
-  }
-
-  void GetModuleCaps(SfpModuleCaps* caps) const {
-    // set all relevant capabilities flags
-    caps->set_f_100(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_100);
-    caps->set_f_1g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_1G);
-    caps->set_f_10g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_10G);
-    caps->set_f_40g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_40G);
-    caps->set_f_100g(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_100G);
-  }
+  MediaType GetMediaType() const;
+  SfpType GetSfpType() const;
+  SfpModuleType GetSfpModuleType() const;
+  void GetModuleCaps(SfpModuleCaps* caps) const;
 
   // The lifetimes of pointers returned by these functions are managed by this
   // object. The returned pointer will never be nullptr.
   const SffDomInfo* GetSffDomInfo() const { return &sfp_info_.dom; }
-
-  ::util::StatusOr<const SffInfo*> GetSffInfo() const {
-    CHECK_RETURN_IF_FALSE(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
-          << "Cannot get SFF info: Invalid SFP type.";
-    return &sfp_info_.sff;
-  }
+  ::util::StatusOr<const SffInfo*> GetSffInfo() const;
 
  private:
   onlp_sfp_info_t sfp_info_;
@@ -152,30 +93,9 @@ class FanInfo : public OidInfo {
   explicit FanInfo(const onlp_fan_info_t& fan_info)
       : OidInfo(fan_info.hdr), fan_info_(fan_info) {}
   FanInfo() {}
-  FanDir GetFanDir() const {
-    switch(fan_info_.dir) {
-      case ONLP_FAN_DIR_B2F:
-        return FAN_DIR_B2F;
-      case ONLP_FAN_DIR_F2B:
-        return FAN_DIR_F2B;
-      default:
-        return FAN_DIR_UNKNOWN;
-    }
-  }
-
-  void GetCaps(FanCaps* caps) const {
-    // set all relevant capabilities flags
-    caps->set_set_dir(fan_info_.caps & ONLP_FAN_CAPS_SET_DIR);
-    caps->set_get_dir(fan_info_.caps & ONLP_FAN_CAPS_GET_DIR);
-    caps->set_set_rpm(fan_info_.caps & ONLP_FAN_CAPS_SET_RPM);
-    caps->set_set_percentage(fan_info_.caps & ONLP_FAN_CAPS_SET_PERCENTAGE);
-    caps->set_get_rpm(fan_info_.caps & ONLP_FAN_CAPS_GET_RPM);
-    caps->set_get_percentage(fan_info_.caps & ONLP_FAN_CAPS_GET_PERCENTAGE);
-  }
-
-  ::util::StatusOr<const onlp_fan_info_t*> GetOnlpFan() const {
-    return &fan_info_;
-  }
+  FanDir GetFanDir() const;
+  void GetCaps(FanCaps* caps) const;
+  ::util::StatusOr<const onlp_fan_info_t*> GetOnlpFan() const;
 
  private:
   onlp_fan_info_t fan_info_;
@@ -186,34 +106,9 @@ class PsuInfo : public OidInfo {
   explicit PsuInfo(const onlp_psu_info_t& psu_info)
       : OidInfo(psu_info.hdr), psu_info_(psu_info) {}
   PsuInfo() {}
-
-  PsuType GetPsuType() const {
-    switch(psu_info_.type) {
-      case ONLP_PSU_TYPE_AC:
-        return PSU_TYPE_AC;
-      case ONLP_PSU_TYPE_DC12:
-        return PSU_TYPE_DC12;
-      case ONLP_PSU_TYPE_DC48:
-        return PSU_TYPE_DC48;
-      default:
-        return PSU_TYPE_UNKNOWN;
-    }
-  }
-
-  void GetCaps(PsuCaps* caps) const {
-    // set all relevant capabilities flags
-    caps->set_get_type(psu_info_.caps & ONLP_PSU_CAPS_GET_TYPE);
-    caps->set_get_vin(psu_info_.caps & ONLP_PSU_CAPS_GET_VIN);
-    caps->set_get_vout(psu_info_.caps & ONLP_PSU_CAPS_GET_VOUT);
-    caps->set_get_iin(psu_info_.caps & ONLP_PSU_CAPS_GET_IIN);
-    caps->set_get_iout(psu_info_.caps & ONLP_PSU_CAPS_GET_IOUT);
-    caps->set_get_pin(psu_info_.caps & ONLP_PSU_CAPS_GET_PIN);
-    caps->set_get_pout(psu_info_.caps & ONLP_PSU_CAPS_GET_POUT);
-  }
-
-  ::util::StatusOr<const onlp_psu_info_t*> GetOnlpPsu() const {
-    return &psu_info_;
-  }
+  PsuType GetPsuType() const;
+  void GetCaps(PsuCaps* caps) const;
+  ::util::StatusOr<const onlp_psu_info_t*> GetOnlpPsu() const;
 
  private:
   onlp_psu_info_t psu_info_;
@@ -224,34 +119,11 @@ class ThermalInfo : public OidInfo {
   explicit ThermalInfo(const onlp_thermal_info_t& thermal_info)
       : OidInfo(thermal_info.hdr), thermal_info_(thermal_info) {}
   ThermalInfo() {}
-  int GetThermalCurTemp() const {
-    return thermal_info_.mcelsius;
-  }
-
-  int GetThermalWarnTemp() const {
-    return thermal_info_.thresholds.warning;
-  }
-
-  int GetThermalErrorTemp() const {
-    return thermal_info_.thresholds.error;
-  }
-
-  int GetThermalShutDownTemp() const {
-    return thermal_info_.thresholds.shutdown;
-  }
-
-  void GetCaps(ThermalCaps* caps) const {
-    // set all relevant capabilities flags
-    caps->set_get_temperature(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_TEMPERATURE);
-    caps->set_get_warning_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
-    caps->set_get_error_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_ERROR_THRESHOLD);
-    caps->set_get_shutdown_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD);
-  }
-
+  int GetThermalCurTemp() const;
+  int GetThermalWarnTemp() const;
+  int GetThermalErrorTemp() const;
+  int GetThermalShutDownTemp() const;
+  void GetCaps(ThermalCaps* caps) const;
  private:
   onlp_thermal_info_t thermal_info_;
 };
@@ -261,68 +133,9 @@ class LedInfo : public OidInfo {
   explicit LedInfo(const onlp_led_info_t& led_info)
       : OidInfo(led_info.hdr), led_info_(led_info) {}
   LedInfo() {}
-  LedMode GetLedMode() const {
-    switch (led_info_.mode) {
-      case ONLP_LED_MODE_OFF:
-        return LED_MODE_OFF;
-      case ONLP_LED_MODE_AUTO:
-        return LED_MODE_AUTO;
-      case ONLP_LED_MODE_AUTO_BLINKING:
-        return LED_MODE_AUTO_BLINKING;
-      case ONLP_LED_MODE_CHAR:
-        return LED_MODE_CHAR;
-      case ONLP_LED_MODE_RED:
-        return LED_MODE_RED;
-      case ONLP_LED_MODE_RED_BLINKING:
-        return LED_MODE_RED_BLINKING;
-      case ONLP_LED_MODE_ORANGE:
-        return LED_MODE_ORANGE;
-      case ONLP_LED_MODE_ORANGE_BLINKING:
-        return LED_MODE_ORANGE_BLINKING;
-      case ONLP_LED_MODE_YELLOW:
-        return LED_MODE_YELLOW;
-      case ONLP_LED_MODE_YELLOW_BLINKING:
-        return LED_MODE_YELLOW_BLINKING;
-      case ONLP_LED_MODE_GREEN:
-        return LED_MODE_GREEN;
-      case ONLP_LED_MODE_GREEN_BLINKING:
-        return LED_MODE_GREEN_BLINKING;
-      case ONLP_LED_MODE_BLUE:
-        return LED_MODE_BLUE;
-      case ONLP_LED_MODE_BLUE_BLINKING:
-        return LED_MODE_BLUE_BLINKING;
-      case ONLP_LED_MODE_PURPLE:
-        return LED_MODE_PURPLE;
-      case ONLP_LED_MODE_PURPLE_BLINKING:
-        return LED_MODE_PURPLE_BLINKING;
-      default:
-        return LED_MODE_UNKNOWN;
-    }
-  }
-
-  char GetLedChar() const {
-    return led_info_.character;
-  }
-
-  void GetCaps(LedCaps* caps) const {
-    // set all relevant capabilities flags
-    caps->set_off(led_info_.caps & ONLP_LED_CAPS_OFF);
-    caps->set_auto_(led_info_.caps & ONLP_LED_CAPS_AUTO);
-    caps->set_auto_blinking(led_info_.caps & ONLP_LED_CAPS_AUTO_BLINKING);
-    caps->set_char_(led_info_.caps & ONLP_LED_CAPS_CHAR);
-    caps->set_red(led_info_.caps & ONLP_LED_CAPS_RED);
-    caps->set_red_blinking(led_info_.caps & ONLP_LED_CAPS_RED_BLINKING);
-    caps->set_orange(led_info_.caps & ONLP_LED_CAPS_ORANGE);
-    caps->set_orange_blinking(led_info_.caps & ONLP_LED_CAPS_ORANGE_BLINKING);
-    caps->set_yellow(led_info_.caps & ONLP_LED_CAPS_YELLOW);
-    caps->set_yellow_blinking(led_info_.caps & ONLP_LED_CAPS_YELLOW_BLINKING);
-    caps->set_green(led_info_.caps & ONLP_LED_CAPS_GREEN);
-    caps->set_green_blinking(led_info_.caps & ONLP_LED_CAPS_GREEN_BLINKING);
-    caps->set_blue(led_info_.caps & ONLP_LED_CAPS_BLUE);
-    caps->set_blue_blinking(led_info_.caps & ONLP_LED_CAPS_BLUE_BLINKING);
-    caps->set_purple(led_info_.caps & ONLP_LED_CAPS_PURPLE);
-    caps->set_purple_blinking(led_info_.caps & ONLP_LED_CAPS_PURPLE_BLINKING);
-  }
+  LedMode GetLedMode() const;
+  char GetLedChar() const;
+  void GetCaps(LedCaps* caps) const;
 
  private:
   onlp_led_info_t led_info_;

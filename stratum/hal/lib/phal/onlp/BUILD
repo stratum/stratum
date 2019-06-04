@@ -38,7 +38,7 @@ stratum_cc_library(
     srcs = ["onlp_event_handler.cc"],
     hdrs = ["onlp_event_handler.h"],
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
@@ -82,22 +82,14 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
-    name = "onlp_wrapper_header",
-    hdrs = [
-        "onlp_wrapper.h",
-    ],
-    deps = [
-        "@local_onlp_bin//:onlp_headers",
-    ],
-)
-
-stratum_cc_library(
     name = "onlp_wrapper",
     srcs = [
         "onlp_wrapper.cc",
     ],
+    hdrs = [
+        "onlp_wrapper.h",
+    ],
     deps = [
-        ":onlp_wrapper_header",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -118,10 +110,10 @@ stratum_cc_library(
     ],
     arches = HOST_ARCHES,
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
+        "@com_google_googletest//:gtest",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
-        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -150,7 +142,7 @@ stratum_cc_library(
         "sfp_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -196,7 +188,7 @@ stratum_cc_library(
         "fan_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -242,7 +234,7 @@ stratum_cc_library(
         "psu_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -288,7 +280,7 @@ stratum_cc_library(
         "thermal_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -310,7 +302,7 @@ stratum_cc_library(
         "led_datasource.h",
     ],
     deps = [
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_proto",
@@ -434,21 +426,6 @@ stratum_cc_library(
     ],
 )
 
-# TODO(Yi) remove onlp library dependency from this test
-#stratum_cc_test(
-#    name = "onlpphal_test",
-#    srcs = ["onlpphal_test.cc"],
-#    deps = [
-#        ":onlpphal",
-#        ":onlp_wrapper_mock",
-#        ":switch_configurator",
-#        "@com_google_googletest//:gtest_main",
-#        "//stratum/glue/status",
-#        "//stratum/glue/status:status_test_util",
-#        "//stratum/lib:macros",
-#    ],
-#)
-
 stratum_cc_library(
     name = "switch_configurator",
     srcs = ["switch_configurator.cc"],
@@ -461,7 +438,7 @@ stratum_cc_library(
         ":thermal_datasource",
         ":onlp_event_handler",
         ":sfp_configurator",
-        ":onlp_wrapper_header",
+        ":onlp_wrapper",
         "//stratum/hal/lib/common:common_proto",
         "//stratum/hal/lib/phal:phal_proto",
         "//stratum/hal/lib/phal:attribute_group",
@@ -590,3 +567,15 @@ stratum_cc_test(
     ],
 )
 
+stratum_cc_test(
+    name = "onlpphal_test",
+    srcs = ["onlpphal_test.cc"],
+    deps = [
+        ":onlpphal",
+        ":onlp_wrapper_mock",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:macros",
+    ],
+)
