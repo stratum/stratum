@@ -1798,7 +1798,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   EXPECT_CALL(*bcm_chassis_ro_mock_, GetPortState(kNodeId1, kPortId1))
       .WillOnce(Return(PORT_STATE_UP));
   EXPECT_CALL(*bcm_sdk_mock_, GetKnetHeaderForDirectTx(kUnit1, kLogicalPort1,
-                                                       kDefaultCos, _, _))
+                                                       kDefaultCos, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*LibcProxyMock::Instance(), SendMsg(kSocket1, _, _))
       .WillOnce(Return(64));  // 64 is tot_len of the packet.
@@ -1843,7 +1843,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   EXPECT_CALL(*bcm_chassis_ro_mock_, GetPortState(kNodeId1, kPortId1))
       .WillOnce(Return(PORT_STATE_UP));
   EXPECT_CALL(*bcm_sdk_mock_, GetKnetHeaderForDirectTx(kUnit1, kLogicalPort1,
-                                                       kDefaultCos, _, _))
+                                                       kDefaultCos, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*LibcProxyMock::Instance(), SendMsg(kSocket1, _, _))
       .WillOnce(Return(64));  // 64 is tot_len of the packet.

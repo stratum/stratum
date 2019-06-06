@@ -196,9 +196,13 @@ BcmNode::~BcmNode() {}
   }
   std::set<uint32> table_ids = {};
   std::set<uint32> action_profile_ids = {};
+  std::set<uint32> clone_session_ids = {};
+  std::set<uint32> multicast_group_ids = {};
   bool table_entries_requested = false;
   bool action_profile_members_requested = false;
   bool action_profile_groups_requested = false;
+  bool clone_sessions_requested = false;
+  bool multicast_groups_requested = false;
   for (const auto& entity : req.entities()) {
     ::util::Status status = ::util::OkStatus();
     switch (entity.entity_case()) {
@@ -219,6 +223,20 @@ BcmNode::~BcmNode() {}
         action_profile_ids.insert(
             entity.action_profile_group().action_profile_id());
         action_profile_groups_requested = true;
+        break;
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+        if (entity.packet_replication_engine_entry().has_multicast_group_entry()) {
+          multicast_group_ids.insert(
+              entity.packet_replication_engine_entry().multicast_group_entry()
+                  .multicast_group_id());
+          multicast_groups_requested = true;
+        }
+        if (entity.packet_replication_engine_entry().has_clone_session_entry()) {
+            clone_session_ids.insert(
+              entity.packet_replication_engine_entry().clone_session_entry()
+                  .session_id());
+          clone_sessions_requested = true;
+        }
         break;
       case ::p4::v1::Entity::kMeterEntry:
         // TODO(unknown): Implement this.
@@ -295,6 +313,14 @@ BcmNode::~BcmNode() {}
   if (action_profile_groups_requested) {
     RETURN_IF_ERROR(bcm_table_manager_->ReadActionProfileGroups(
         action_profile_ids, writer));
+  }
+  if (clone_sessions_requested) {
+    RETURN_IF_ERROR(bcm_table_manager_->ReadMulticastGroups(
+        clone_session_ids, writer));
+  }
+  if (multicast_groups_requested) {
+    RETURN_IF_ERROR(bcm_table_manager_->ReadCloneSessions(
+        multicast_group_ids, writer));
   }
 
   return ::util::OkStatus();
@@ -506,6 +532,13 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
           consumed = true;
           break;
+        case BcmFlowEntry::BCM_TABLE_L2_UNICAST:
+          RETURN_IF_ERROR(
+              bcm_l2_manager_->InsertL2Entry(bcm_flow_entry));
+          // Update the internal records in BcmTableManager.
+          RETURN_IF_ERROR(bcm_table_manager_->AddTableEntry(entry));
+          consumed = true;
+          break;
         case BcmFlowEntry::BCM_TABLE_MY_STATION:
           RETURN_IF_ERROR(
               bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
@@ -545,6 +578,14 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
           RETURN_IF_ERROR(bcm_tunnel_manager_->ModifyTableEntry(entry));
           consumed = true;
           break;
+        case BcmFlowEntry::BCM_TABLE_L2_UNICAST:
+          // TODO(max): do we need modify?
+          // RETURN_IF_ERROR(
+          //     bcm_l2_manager_->ModifyL2Entry(bcm_flow_entry));
+          // Update the internal records in BcmTableManager.
+          // RETURN_IF_ERROR(bcm_table_manager_->ModifyTableEntry(entry));
+          // consumed = true;
+          break;
         default:
           break;
       }
@@ -563,6 +604,13 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         case BcmFlowEntry::BCM_TABLE_L2_MULTICAST:
           RETURN_IF_ERROR(
               bcm_l2_manager_->DeleteMulticastGroup(bcm_flow_entry));
+          // Update the internal records in BcmTableManager.
+          RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
+          consumed = true;
+          break;
+        case BcmFlowEntry::BCM_TABLE_L2_UNICAST:
+          RETURN_IF_ERROR(
+              bcm_l2_manager_->DeleteL2Entry(bcm_flow_entry));
           // Update the internal records in BcmTableManager.
           RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
           consumed = true;
@@ -705,32 +753,49 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   bool consumed = false;
   switch (type) {
     case ::p4::v1::Update::INSERT: {
-      switch (replicationType) {  // NOLINTNEXTLINE
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
-          ABSL_FALLTHROUGH_INTENDED;  // NOLINTNEXTLINE
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry:
-          // TODO(unknown): inform responsible bcm_*_manager(s) about new
-          // mapping here
+      switch (replicationType) {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry: {
+          BcmPacketReplicationEntry bcm_entry;
+          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->AddCloneSession(entry.clone_session_entry()));
+          // There is nothing to be done here. All packets cloned by COPY_TO_CPU
+          // are sent to the CPU and then controller on bcm.
           consumed = true;
-          LOG(WARNING) << "stratum_bcm only has preliminary support"
-              " for PacketReplicationEngineEntry";
           break;
+        }
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+          BcmPacketReplicationEntry bcm_entry;
+          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(bcm_packetio_manager_->InsertPacketReplicationEntry(
+              bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->AddMulticastGroup(entry.multicast_group_entry()));
+          consumed = true;
+          break;
+        }
         default:
           break;
       }
       break;
     }
     case ::p4::v1::Update::DELETE: {
-      switch (replicationType) {  // NOLINTNEXTLINE
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
-          ABSL_FALLTHROUGH_INTENDED;  // NOLINTNEXTLINE
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry:
-          // TODO(unknown): inform responsible bcm_*_manager(s) about new
-          // mapping here
+
+      switch (replicationType) {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry: {
+          BcmPacketReplicationEntry bcm_entry;
+          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->DeleteCloneSession(entry.clone_session_entry()));
           consumed = true;
-          LOG(WARNING) << "stratum_bcm only has preliminary support"
-              " for PacketReplicationEngineEntry";
           break;
+        }
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+          BcmPacketReplicationEntry bcm_entry;
+          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(bcm_packetio_manager_->DeletePacketReplicationEntry(
+              bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->DeleteMulticastGroup(entry.multicast_group_entry()));
+          consumed = true;
+          break;
+        }
         default:
           break;
       }

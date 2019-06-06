@@ -23,7 +23,6 @@
 
 #include <functional>
 #include <string>
-#include "absl/container/flat_hash_map.h"
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -112,12 +111,11 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                 const BcmPortOptions& options) override;
   ::util::Status GetPortOptions(int unit, int port,
                                 BcmPortOptions* options) override;
+  ::util::Status GetPortCounters(int unit, int port, PortCounters* pc) override;
   ::util::Status StartDiagShellServer() override;
-  ::util::Status StartLinkscan(int unit) override;
-
-  ::util::Status StopLinkscan(int unit) override;
+  ::util::Status StartLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status StopLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
   void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
-
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
       int priority) override LOCKS_EXCLUDED(linkscan_writers_lock_);
@@ -189,6 +187,19 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                           int vlan_mask, uint64 dst_mac,
                                           uint64 dst_mac_mask) override;
   ::util::Status DeleteMyStationEntry(int unit, int station_id) override;
+  ::util::Status AddL2Entry(int unit, int _vlan, uint64 dst_mac,
+                            int logical_port, int trunk_port,
+                            int l2_mcast_group_id, int class_id,
+                            bool copy_to_cpu, bool dst_drop) override;
+  ::util::Status DeleteL2Entry(int unit, int vlan, uint64 dst_mac) override;
+  ::util::Status AddL2MulticastEntry(int unit, int priority, int vlan,
+                                     int vlan_mask, uint64 dst_mac,
+                                     uint64 dst_mac_mask, bool copy_to_cpu,
+                                     bool drop,
+                                     uint8 l2_mcast_group_id) override;
+  ::util::Status DeleteL2MulticastEntry(int unit, int vlan, int vlan_mask,
+                                        uint64 dst_mac,
+                                        uint64 dst_mac_mask) override;
   ::util::Status DeleteL2EntriesByVlan(int unit, int vlan) override;
   ::util::Status AddVlanIfNotFound(int unit, int vlan) override;
   ::util::Status DeleteVlanIfFound(int unit, int vlan) override;
@@ -216,10 +227,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status SetRateLimit(
       int unit, const RateLimitConfig& rate_limit_config) override;
   ::util::Status GetKnetHeaderForDirectTx(int unit, int port, int cos,
-                                          uint64 smac,
+                                          uint64 smac, size_t packet_len,
                                           std::string* header) override;
   ::util::Status GetKnetHeaderForIngressPipelineTx(
-      int unit, uint64 smac, std::string* header) override;
+      int unit, uint64 smac, size_t packet_len, std::string* header) override;
   size_t GetKnetHeaderSizeForRx(int unit) override;
   ::util::Status ParseKnetHeaderForRx(int unit, const std::string& header,
                                       int* ingress_logical_port,
@@ -253,6 +264,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
                              BcmAclStats* stats) override;
   ::util::Status SetAclPolicer(int unit, int flow_id,
                                const BcmMeterConfig& meter) override;
+  ::util::Status InsertPacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry) override;
+  ::util::Status DeletePacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -328,6 +343,23 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                            const std::string& attr,
                                            uint32 value);
 
+  // Helper function called in InitializeSdk() to spawn a SDKLT shell.
+  ::util::Status InitCLI();
+
+  // Helper function to create a Knet filter for software multicast.
+  // Required because CreateKnetFilter does not allow setting a FP match filter.
+  ::util::StatusOr<int> CreateKnetFilterForMulticast(int unit, uint8 acl_rule);
+
+  // Helper function the get the front panel port from logical port.
+  // This should work because PC_PHYS_PORT is a R/O table.
+  ::util::StatusOr<int> GetPanelPort(int unit, int port);
+
+  // Helper to check if a unit exists.
+  int CheckIfUnitExists(int unit);
+
+  // Helper to check if a port exists.
+  int CheckIfPortExists(int unit, int port) LOCKS_EXCLUDED(data_lock_);
+
   // RW mutex lock for protecting the internal maps.
   mutable absl::Mutex data_lock_;
 
@@ -399,6 +431,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
                           ", dst_mac:", absl::Hex(dst_mac),
                           ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
     }
+    template <typename H>
+    friend H AbslHashValue(H h, const MyStationEntry& e) {
+      return H::combine(std::move(h), e.vlan, e.vlan_mask, e.dst_mac, e.dst_mac_mask);
+    }
   };
 
   // Map from unit number to mystation maximum entries
@@ -434,6 +470,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
     std::string ToString() const {
       return absl::StrCat("(vlan:", vlan,
                           ", mac:", absl::Hex(mac), ")");
+    }
+    template <typename H>
+    friend H AbslHashValue(H h, const L3Interfaces& i) {
+      return H::combine(std::move(h), i.mac, i.vlan);
     }
   };
 
@@ -564,7 +604,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
   // Writers to forward the linkscan events to. They are registered by
   // external manager classes to receive the SDK linkscan events. The managers
   // can be running in different threads. The is sorted based on the
-  // the priority of the BcmLinkscanEventWriter intances.
+  // the priority of the BcmLinkscanEventWriter instances.
   std::multiset<BcmLinkscanEventWriter, BcmLinkscanEventWriterComp>
       linkscan_event_writers_ GUARDED_BY(linkscan_writers_lock_);
 };

@@ -1259,7 +1259,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->DeparsePacketInMetadata(mapped_packet_metadata,
                                                       &p4_packet_metadata));
   EXPECT_EQ(1, p4_packet_metadata.metadata_id());
-  EXPECT_EQ(std::string("\x0\x0\x10\x01", 4), p4_packet_metadata.value());
+  EXPECT_EQ(std::string("\x10\x01", 2), p4_packet_metadata.value());
 
   // Deparse ingress trunk for a packet to be sent to the controller.
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_INGRESS_TRUNK);
@@ -1267,7 +1267,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->DeparsePacketInMetadata(mapped_packet_metadata,
                                                       &p4_packet_metadata));
   EXPECT_EQ(2, p4_packet_metadata.metadata_id());
-  EXPECT_EQ(std::string("\x0\x0\x10\x02", 4), p4_packet_metadata.value());
+  EXPECT_EQ(std::string("\x10\x02", 2), p4_packet_metadata.value());
 
   // Deparse egress port for a packet to be sent to the controller.
   mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_PORT);
@@ -1275,7 +1275,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->DeparsePacketInMetadata(mapped_packet_metadata,
                                                       &p4_packet_metadata));
   EXPECT_EQ(3, p4_packet_metadata.metadata_id());
-  EXPECT_EQ(std::string("\x0\x0\x10\x03", 4), p4_packet_metadata.value());
+  EXPECT_EQ(std::string("\x10\x03", 2), p4_packet_metadata.value());
 
   // Note that there is no way to deparse the unknown metadata in the set of
   // ingress metadata.
@@ -1331,7 +1331,7 @@ TEST_F(P4TableMapperTest, DeparsePacketInMetadataDuplicateType) {
   ASSERT_OK(p4_table_mapper_->DeparsePacketInMetadata(mapped_packet_metadata,
                                                       &p4_packet_metadata));
   EXPECT_EQ(3, p4_packet_metadata.metadata_id());
-  EXPECT_EQ(std::string("\x0\x0\x12\x34", 4), p4_packet_metadata.value());
+  EXPECT_EQ(std::string("\x12\x34", 2), p4_packet_metadata.value());
 }
 
 TEST_F(P4TableMapperTest, ParsePacketOutMetadataSuccess) {
@@ -1385,8 +1385,15 @@ TEST_F(P4TableMapperTest, DeparsePacketOutMetadataSuccess) {
   ASSERT_OK(p4_table_mapper_->DeparsePacketOutMetadata(mapped_packet_metadata,
                                                        &p4_packet_metadata));
   EXPECT_EQ(1, p4_packet_metadata.metadata_id());
-  EXPECT_EQ(std::string("\x0\x0\x0\x0\x0\x0\x10\x03", 8),
-            p4_packet_metadata.value());
+  EXPECT_EQ(std::string("\x10\x03", 2), p4_packet_metadata.value());
+
+  // Check if null values are encoded correctly.
+  mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_PORT);
+  mapped_packet_metadata.set_u64(0);
+  ASSERT_OK(p4_table_mapper_->DeparsePacketOutMetadata(mapped_packet_metadata,
+                                                       &p4_packet_metadata));
+  EXPECT_EQ(1, p4_packet_metadata.metadata_id());
+  EXPECT_EQ(std::string("\x00", 1), p4_packet_metadata.value());
 
   // Note that there is no way to deparse the unknown metadata in the set of
   // egress metadata.

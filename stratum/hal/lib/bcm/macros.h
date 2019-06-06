@@ -87,7 +87,7 @@ class BooleanBcmStatus {
 // A macro for simplify checking and logging the return value of a BCM function
 // call.
 #define RETURN_IF_BCM_ERROR(expr) \
-  if (const BooleanBcmStatus __ret = (expr)) { \
+  if (const BooleanBcmStatus __ret = BooleanBcmStatus(expr)) { \
   } else  /* NOLINT */ \
     return MAKE_ERROR(__ret.error_code()) \
            << "'" << #expr << "' failed with error message: " \
@@ -98,7 +98,7 @@ class BooleanBcmStatus {
 // will not return. The variable given as "status" must be an object of type
 // ::util::Status.
 #define APPEND_STATUS_IF_BCM_ERROR(status, expr) \
-  if (const BooleanBcmStatus __ret = (expr)) { \
+  if (const BooleanBcmStatus __ret = BooleanBcmStatus(expr)) { \
   } else  /* NOLINT */ \
     status = APPEND_ERROR( \
         !status.ok() \

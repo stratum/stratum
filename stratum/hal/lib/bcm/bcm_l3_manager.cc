@@ -500,14 +500,12 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
                  << "Invalid field type. Expecting IPV4_DST or VRF types only: "
                  << bcm_flow_entry.ShortDebugString() << ".";
         }
-        // Validations.
-        if (key->subnet_ipv4 == 0 ||
+        // Validations. Having a mask does not make sense for host routes.
+        if (key->mask_ipv4 != 0 &&
             bcm_table_type == BcmFlowEntry::BCM_TABLE_IPV4_HOST) {
-          if (key->mask_ipv4 != 0) {
-            return MAKE_ERROR(ERR_INVALID_PARAM)
-                   << "Must not specify mask when subnet is 0 or a host dst "
-                   << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
-          }
+          return MAKE_ERROR(ERR_INVALID_PARAM)
+                  << "Must not specify mask on host dst routes "
+                  << "IP: " << bcm_flow_entry.ShortDebugString() << ".";
         }
       }
       break;

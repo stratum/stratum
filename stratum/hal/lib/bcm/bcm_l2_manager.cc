@@ -13,15 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <set>
-
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
+
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
@@ -154,6 +153,29 @@ BcmL2Manager::~BcmL2Manager() {}
   return ::util::OkStatus();
 }
 
+::util::Status BcmL2Manager::InsertL2Entry(const BcmFlowEntry& bcm_flow_entry) {
+  ASSIGN_OR_RETURN(const L2Entry& entry,
+                   ValidateAndParseL2Entry(bcm_flow_entry));
+
+  RETURN_IF_ERROR(bcm_sdk_interface_->AddL2Entry(
+      unit_, entry.vlan, entry.dst_mac, entry.logical_port, entry.trunk_port,
+      entry.l2_mcast_group_id, entry.class_id, entry.copy_to_cpu,
+      entry.dst_drop));
+
+  return ::util::OkStatus();
+}
+
+// TODO(max): implement ModifyL2Entry if needed
+
+::util::Status BcmL2Manager::DeleteL2Entry(const BcmFlowEntry& bcm_flow_entry) {
+  ASSIGN_OR_RETURN(const L2Entry& entry,
+                   ValidateAndParseL2Entry(bcm_flow_entry));
+  RETURN_IF_ERROR(
+      bcm_sdk_interface_->DeleteL2Entry(unit_, entry.vlan, entry.dst_mac));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmL2Manager::InsertMulticastGroup(
     const BcmFlowEntry& bcm_flow_entry) {
   // We will have two cases here:
@@ -169,6 +191,13 @@ BcmL2Manager::~BcmL2Manager() {}
   // pipeline config. Enabling Broadcast MAC for these two are already done as
   // part of config push. So there is nothing to be done. If there is a use
   // case to do this for any other case we need to implement this method.
+  ASSIGN_OR_RETURN(const L2MulticastEntry& entry,
+                   ValidateAndParseL2MulticastEntry(bcm_flow_entry));
+  RETURN_IF_ERROR(bcm_sdk_interface_->AddL2MulticastEntry(
+      unit_, entry.priority, entry.vlan, entry.vlan_mask, entry.dst_mac,
+      entry.dst_mac_mask, entry.copy_to_cpu, entry.drop,
+      entry.l2_mcast_group_id));
+
   return ::util::OkStatus();
 }
 
@@ -186,6 +215,11 @@ BcmL2Manager::~BcmL2Manager() {}
   // TODO(unknown): At the moment this call is not even used as we do not
   // disable broadcast for default/ARP VLAN. If there is any other use case,
   // we need to implement this.
+  ASSIGN_OR_RETURN(const L2MulticastEntry& entry,
+                   ValidateAndParseL2MulticastEntry(bcm_flow_entry));
+  RETURN_IF_ERROR(bcm_sdk_interface_->DeleteL2MulticastEntry(
+      unit_, entry.vlan, entry.vlan_mask, entry.dst_mac, entry.dst_mac_mask));
+
   return ::util::OkStatus();
 }
 
@@ -281,7 +315,8 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
       << bcm_flow_entry.ShortDebugString() << ".";
   // We do not expect any field other than vlan, dst_mac, and their masks.
   int vlan = 0, vlan_mask = 0;
-  uint64 dst_mac = 0, dst_mac_mask = 0xffffffffffffULL;
+  uint64 dst_mac = 0;
+  uint64 dst_mac_mask = 0;  // P4RT specifies missing mask as don't care
   for (const auto& field : bcm_flow_entry.fields()) {
     if (field.type() == BcmField::ETH_DST) {
       dst_mac = field.value().u64();
@@ -320,6 +355,209 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
                      : kRegularMyStationEntryPriority;
 
   return MyStationEntry(priority, vlan, vlan_mask, dst_mac, dst_mac_mask);
+}
+
+::util::StatusOr<BcmL2Manager::L2Entry> BcmL2Manager::ValidateAndParseL2Entry(
+    const BcmFlowEntry& bcm_flow_entry) const {
+  // Initial validation.
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
+                        BcmFlowEntry::BCM_TABLE_L2_UNICAST)
+      << "Invalid table_id for node " << node_id_ << ": "
+      << BcmFlowEntry::BcmTableType_Name(bcm_flow_entry.bcm_table_type())
+      << ", found in " << bcm_flow_entry.ShortDebugString() << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+      << "Received BcmFlowEntry for wrong unit " << unit_ << " on node "
+      << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
+
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.fields_size() <= 2)
+      << "Received BcmFlowEntry with missing fields: "
+      << bcm_flow_entry.ShortDebugString() << ".";
+
+  int vlan = 0;
+  uint64 dst_mac;
+  for (const auto& field : bcm_flow_entry.fields()) {
+    if (field.type() == BcmField::ETH_DST) {
+      dst_mac = field.value().u64();
+      // L2 FDB is exact match
+      CHECK_RETURN_IF_FALSE(!field.has_mask())
+          << "Received entry with "
+          << "ETH_DST mask for L2 FDB for node " << node_id_ << ": "
+          << bcm_flow_entry.ShortDebugString() << ".";
+    } else if (field.type() == BcmField::VLAN_VID) {
+      // Note: we should not never translate vlan = 0 to vlan = kDefaultVlan.
+      // We let the controller decide on the values.
+      vlan = static_cast<int>(field.value().u32());
+      CHECK_RETURN_IF_FALSE(!field.has_mask())
+          << "Received entry with "
+          << "VLAN_VID mask for L2 FDB for node " << node_id_ << ": "
+          << bcm_flow_entry.ShortDebugString() << ".";
+    } else {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Received fields other than ETH_DST and VLAN_VID for node "
+             << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
+    }
+  }
+
+  int logical_port = 0;
+  int trunk_port = 0;
+  int l2_mcast_group_id = 0;
+  int class_id = 0;
+  bool copy_to_cpu = false;
+  bool dst_drop = false;
+  for (const auto& action : bcm_flow_entry.actions()) {
+    switch (action.type()) {
+      case BcmAction::DROP: {
+        if (action.params_size() != 0) {
+          MAKE_ERROR(ERR_INVALID_PARAM)
+              << "Invalid drop action. "
+              << "Expected no parameters in: " << action.ShortDebugString();
+        }
+        dst_drop = true;
+        break;
+      }
+      case BcmAction::OUTPUT_PORT:
+      case BcmAction::OUTPUT_TRUNK:
+      case BcmAction::SET_L2_MCAST_GROUP: {
+        if (action.params_size() != 1) {
+          MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid action. "
+                                        << "Expected exactly one parameter in: "
+                                        << action.ShortDebugString();
+        }
+        for (const auto& param : action.params()) {
+          if (param.type() == BcmAction::Param::LOGICAL_PORT) {
+            logical_port = param.value().u32();
+          } else if (param.type() == BcmAction::Param::TRUNK_PORT) {
+            trunk_port = param.value().u32();
+          } else if (param.type() == BcmAction::Param::L2_MCAST_GROUP_ID) {
+            l2_mcast_group_id = param.value().u32();
+          } else {
+            return MAKE_ERROR(ERR_INVALID_PARAM)
+                   << "Invalid action parameter "
+                   << "in: " << action.ShortDebugString();
+          }
+        }
+        break;
+      }
+      case BcmAction::SET_VFP_DST_CLASS_ID: {
+        CHECK_RETURN_IF_FALSE(action.params_size() == 1 ||
+                              action.params(0).type() !=
+                                  BcmAction::Param::VFP_DST_CLASS_ID)
+            << "Expected exactly one parameter of type VFP_DST_CLASS_ID for "
+            << "action of type SET_VFP_DST_CLASS_ID: "
+            << bcm_flow_entry.ShortDebugString() << ".";
+        class_id = action.params(0).value().u32();
+      }
+      default:
+        return MAKE_ERROR(ERR_INVALID_PARAM)
+               << "Invalid action type: " << bcm_flow_entry.ShortDebugString()
+               << ".";
+    }
+  }
+
+  return L2Entry(vlan, dst_mac, logical_port, trunk_port, l2_mcast_group_id,
+                 class_id, copy_to_cpu, dst_drop);
+}
+
+::util::StatusOr<BcmL2Manager::L2MulticastEntry>
+BcmL2Manager::ValidateAndParseL2MulticastEntry(
+    const BcmFlowEntry& bcm_flow_entry) const {
+  // Initial validation.
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
+                        BcmFlowEntry::BCM_TABLE_L2_MULTICAST)
+      << "Invalid table_type for node " << node_id_ << ": "
+      << BcmFlowEntry::BcmTableType_Name(bcm_flow_entry.bcm_table_type())
+      << ", found in " << bcm_flow_entry.ShortDebugString() << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.unit() == unit_)
+      << "Received BcmFlowEntry for wrong unit " << unit_ << " on node "
+      << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.fields_size() == 2)
+      << "Received BcmFlowEntry with missing fields: "
+      << bcm_flow_entry.ShortDebugString() << ".";
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.actions_size() <= 2)
+      << "Received entry with more than 2 actions for node " << node_id_ << ": "
+      << bcm_flow_entry.ShortDebugString() << ".";
+
+  int vlan = 0;
+  int vlan_mask = 0;
+  uint64 dst_mac = 0;
+  uint64 dst_mac_mask = 0;
+  for (const auto& field : bcm_flow_entry.fields()) {
+    if (field.type() == BcmField::ETH_DST) {
+      dst_mac = field.value().u64();
+      if (field.has_mask()) {
+        dst_mac_mask = field.mask().u64();
+      } else {
+        dst_mac_mask = kBroadcastMac;
+      }
+      CHECK_RETURN_IF_FALSE(dst_mac_mask == kBroadcastMac)
+          << "Received invalid ethernet destination MAC address mask. "
+          << "Current implementation of L2 multicast only allows exact "
+          << "matches: " << bcm_flow_entry.ShortDebugString() << ".";
+    } else if (field.type() == BcmField::VLAN_VID) {
+      // Note: we should not never translate vlan = 0 to vlan = kDefaultVlan.
+      // We let the controller decide on the values.
+      vlan = static_cast<int>(field.value().u32());
+      if (field.has_mask()) {
+        vlan_mask = static_cast<int>(field.mask().u32());
+      }
+    } else {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Received fields other than ETH_DST and VLAN_VID for node "
+             << node_id_ << ": " << bcm_flow_entry.ShortDebugString() << ".";
+    }
+  }
+
+  bool copy_to_cpu = false;
+  bool drop = false;
+  int l2_mcast_group_id = 0;
+  for (const auto& action : bcm_flow_entry.actions()) {
+    switch (action.type()) {
+      case BcmAction::DROP: {
+        if (action.params_size() != 0) {
+          MAKE_ERROR(ERR_INVALID_PARAM)
+              << "Invalid drop action. "
+              << "Expected no parameters in: " << action.ShortDebugString();
+        }
+        drop = true;
+        break;
+      }
+      case BcmAction::COPY_TO_CPU: {
+        CHECK_RETURN_IF_FALSE(action.params_size() == 0)
+            << "Expected no parameters for action of type COPY_TO_CPU: "
+            << bcm_flow_entry.ShortDebugString() << ".";
+        copy_to_cpu = true;
+        break;
+      }
+      case BcmAction::SET_L2_MCAST_GROUP: {
+        if (action.params_size() != 1) {
+          MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid action. "
+                                        << "Expected exactly one parameter in: "
+                                        << action.ShortDebugString();
+        }
+        for (const auto& param : action.params()) {
+          if (param.type() == BcmAction::Param::L2_MCAST_GROUP_ID) {
+            l2_mcast_group_id = param.value().u32();
+          } else {
+            return MAKE_ERROR(ERR_INVALID_PARAM)
+                   << "Invalid action parameter "
+                   << "in: " << action.ShortDebugString();
+          }
+        }
+        break;
+      }
+      default:
+        return MAKE_ERROR(ERR_INVALID_PARAM)
+               << "Invalid action type: " << bcm_flow_entry.ShortDebugString()
+               << ".";
+    }
+  }
+
+  int priority = bcm_flow_entry.priority() > 0
+                     ? bcm_flow_entry.priority()
+                     : kSoftwareMulticastMyStationEntryPriority;
+
+  return L2MulticastEntry(priority, vlan, vlan_mask, dst_mac, dst_mac_mask,
+                          copy_to_cpu, drop, l2_mcast_group_id);
 }
 
 }  // namespace bcm

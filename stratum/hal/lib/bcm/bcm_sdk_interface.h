@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_INTERFACE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_INTERFACE_H_
 
@@ -26,12 +25,12 @@
 #include <memory>
 #include <set>
 
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/channel/channel.h"
-#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {
@@ -52,6 +51,8 @@ class BcmSdkInterface {
 
   // The type of KNET filter to add. Given to CreateKnetFilter API.
   enum class KnetFilterType {
+    // Catch all packets.
+    CATCH_ALL,
     // Catch all non-flow packets hit by an FP rule.
     CATCH_NON_SFLOW_FP_MATCH,
     // Catch all SFLOW samples from egress port.
@@ -136,7 +137,7 @@ class BcmSdkInterface {
   struct RateLimitConfig {
     // Global rate limit in pps. If not given (default of 0), we set no limit.
     int max_rate_pps;
-    // Max # of pakcet received in single burst. If not given (default of 0),
+    // Max # of packet received in single burst. If not given (default of 0),
     // we set no limit.
     int max_burst_pkts;
     // Map from cos to its rate limit config.
@@ -227,6 +228,10 @@ class BcmSdkInterface {
   virtual ::util::Status GetPortOptions(int unit, int port,
                                         BcmPortOptions* options) = 0;
 
+  // Gets the counters for a given logical port.
+  virtual ::util::Status GetPortCounters(int unit, int port,
+                                         PortCounters* pc) = 0;
+
   // Starts the diag shell server for listening to client telnet connections.
   virtual ::util::Status StartDiagShellServer() = 0;
 
@@ -237,6 +242,9 @@ class BcmSdkInterface {
 
   // Stops linkscan.
   virtual ::util::Status StopLinkscan(int unit) = 0;
+
+  // Create link scan event message
+  virtual void OnLinkscanEvent(int unit, int port, PortState linkstatus) = 0;
 
   // Registers a Writer through which to send any linkscan events. The message
   // contains a tuple (unit, port, state), where port refers to the Broadcom SDK
@@ -312,8 +320,7 @@ class BcmSdkInterface {
   // router_intf_id).
   virtual ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
                                                 stratum::uint64 nexthop_mac,
-                                                int port,
-                                                int vlan,
+                                                int port, int vlan,
                                                 int router_intf_id) = 0;
 
   // Modifies an already existing L3 intf on a unit given its ID to become an
@@ -464,6 +471,46 @@ class BcmSdkInterface {
   // return error if the entry does not exist.
   virtual ::util::Status DeleteMyStationEntry(int unit, int station_id) = 0;
 
+  // Adds an entry to match the given (vlan, dst_mac) to the L2 FDB hash table.
+  // Failure if the entry already exists.
+  virtual ::util::Status AddL2Entry(int unit, int vlan, uint64 dst_mac,
+                                    int logical_port, int trunk_port,
+                                    int l2_mcast_group_id, int class_id,
+                                    bool copy_to_cpu, bool dst_drop) = 0;
+
+  // Delete a previously added entry from the L2 FDB. Will return error if
+  // entry does not exist.
+  virtual ::util::Status DeleteL2Entry(int unit, int vlan, uint64 dst_mac) = 0;
+
+  // Adds an entry to match the given (vlan, vlan_mask, dst_mac, dst_mac_mask)
+  // to the my station TCAM. Matched packets are punted to the CPU and cast to
+  // all ports of the l2_mcast_group_id. Once native L2 multicast becomes
+  // availabe in SDKLT, this can be changed.
+  virtual ::util::Status AddL2MulticastEntry(int unit, int priority, int vlan,
+                                             int vlan_mask, uint64 dst_mac,
+                                             uint64 dst_mac_mask,
+                                             bool copy_to_cpu, bool drop,
+                                             uint8 l2_mcast_group_id) = 0;
+
+  // Removes a previously added entry from my station TCAM using the given
+  // (vlan, vlan_mask, dst_mac, dst_mac_mask). Will return error if the entry
+  // does not exist.
+  virtual ::util::Status DeleteL2MulticastEntry(int unit, int vlan,
+                                                int vlan_mask, uint64 dst_mac,
+                                                uint64 dst_mac_mask) = 0;
+
+  // Creates a packet replication entry.
+  // Only multicast groups are supported for now. Creating clone sessions is
+  // not necessary yet, as all packets arriving at the CPU are forwared to the
+  // controller.
+  virtual ::util::Status InsertPacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry) = 0;
+
+  // Deletes an previously created packet replication entry. Will return error
+  // if the entry does not exist.
+  virtual ::util::Status DeletePacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry) = 0;
+
   // Deletes all the L2 addresses learnt for a given VLAN on a given unit.
   virtual ::util::Status DeleteL2EntriesByVlan(int unit, int vlan) = 0;
 
@@ -540,12 +587,13 @@ class BcmSdkInterface {
   // 'header' will have a fixed size.
   virtual ::util::Status GetKnetHeaderForDirectTx(int unit, int port, int cos,
                                                   uint64 smac,
+                                                  size_t packet_len,
                                                   std::string* header) = 0;
 
   // Gets the KNET header for a TX packet destined to ingress pipeline. The
   // filled 'header' will have a fixed size.
   virtual ::util::Status GetKnetHeaderForIngressPipelineTx(
-      int unit, uint64 smac, std::string* header) = 0;
+      int unit, uint64 smac, size_t packet_len, std::string* header) = 0;
 
   // Returns the fixed size KNET header size for packets received from a port.
   virtual size_t GetKnetHeaderSizeForRx(int unit) = 0;

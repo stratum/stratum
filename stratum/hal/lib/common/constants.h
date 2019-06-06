@@ -48,7 +48,8 @@ constexpr uint16 kArpVlan = 4050;
 // used as ID for any other port.
 // This value must match CPU_PORT in
 // TODO(fix path to parser): p4/spec/parser.p4
-constexpr uint64 kCpuPortId = 0xFFFFFFFD;
+// constexpr uint64 kCpuPortId = 0xFFFFFFFD;
+constexpr uint64 kCpuPortId = 0xFD;
 
 // Constant broadcast MAC.
 constexpr uint64 kBroadcastMac = 0xFFFFFFFFFFFFULL;

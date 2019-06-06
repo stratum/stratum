@@ -95,6 +95,10 @@ class BcmChassisRoInterface {
   virtual ::util::StatusOr<AdminState> GetPortAdminState(
       uint64 node_id, uint32 port_id) const = 0;
 
+  // Gets the counters for a given singleton port.
+  virtual ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
+                                         PortCounters* pc) const = 0;
+
  protected:
   // Default constructor.
   BcmChassisRoInterface() {}

@@ -1,0 +1,67 @@
+description: "Stratum device device:s204"
+chassis {
+  platform: PLT_GENERIC_TOMAHAWK
+  name: "as7712"
+}
+nodes {
+  id: 1
+  name: "as7712 node 1"
+  slot: 1
+  index: 1
+  config_params {
+    vlan_configs {
+      vlan_id: 2
+#       disable_l2_learning: true
+    }
+  }
+}
+singleton_ports {
+  id: 34
+  name: "3/0"
+  slot: 1
+  port: 3
+  speed_bps: 40000000000
+  node: 1
+}
+
+singleton_ports {
+  id: 35
+  name: "4/0"
+  slot: 1
+  port: 4
+  speed_bps: 40000000000
+  node: 1
+}
+singleton_ports {
+  id: 1
+  name: "1/0"
+  slot: 1
+  port: 1
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 2
+  name: "2/0"
+  slot: 1
+  port: 2
+  speed_bps: 100000000000
+  node: 1
+}
+# Loopback ports
+singleton_ports {
+  id: 9
+  name: "9/0"
+  slot: 1
+  port: 31
+  speed_bps: 40000000000
+  node: 1
+}
+singleton_ports {
+  id: 13
+  name: "13/0"
+  slot: 1
+  port: 32
+  speed_bps: 40000000000
+  node: 1
+}

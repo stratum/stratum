@@ -453,6 +453,7 @@ message BcmFlowEntry {
     BCM_TABLE_ACL = 6;
     BCM_TABLE_L2_MULTICAST = 7;
     BCM_TABLE_TUNNEL = 8;
+    BCM_TABLE_L2_UNICAST = 9;
   }
   // The unit to program this flow.
   int32 unit = 1;  // required
@@ -527,6 +528,26 @@ message BcmMultipathNexthop {
   }
   int32 unit = 2;
   repeated BcmMultipathNexthopMember members = 3;
+}
+
+// BcmPacketReplicationEntry represents the Bcm specific details about
+// a P4 PacketReplicationEntry.
+// TODO(max): complete this if necessary.
+message BcmPacketReplicationEntry {
+  message MulticastGroupEntry {
+    uint32 multicast_group_id = 1;
+    repeated int32 ports = 2;
+  }
+  message BcmCloneSessionEntry {
+    uint32 clone_session_id = 1;
+    repeated int32 ports = 2;
+    uint32 cos = 3;
+  }
+  int32 unit = 1; // required
+  oneof type {
+    MulticastGroupEntry multicast_group_entry = 2;
+    BcmCloneSessionEntry clone_session_entry = 3;
+  }
 }
 
 //------------------------------------------------------------------------------

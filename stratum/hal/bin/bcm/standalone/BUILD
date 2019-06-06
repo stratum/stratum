@@ -64,7 +64,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/bcm:bcm_switch",
         "//stratum/hal/lib/bcm:bcm_table_manager",
         "//stratum/hal/lib/bcm:bcm_tunnel_manager",
-        "@local_bcm_bin//:bcm_sdklt",
+        "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/p4:p4_table_mapper",
         # TODO(craigs): need to add real phal deps here

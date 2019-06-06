@@ -55,7 +55,7 @@ enum P4TableType {
   P4_TABLE_L2_MULTICAST = 3;   // The multicast logical table in L2 stage.
   P4_TABLE_L2_MY_STATION = 4;  // The table that identifies whether a packet
                                // can be L3 routed based on (MAC, VLAN).
-  P4_TABLE_L2_UNICAST = 5;     // L2 Unicast table
+  P4_TABLE_L2_UNICAST = 5;     // The unicast logical table in L2 stage.
 }
 
 // This enum defines values to identify the table mapping output for match

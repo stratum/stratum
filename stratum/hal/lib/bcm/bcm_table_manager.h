@@ -166,8 +166,16 @@ class BcmTableManager {
   FillBcmMultipathNexthopsWithPort(uint32 port_id) const;
 
   // Transer meter configuration from P4 MeterConfig to BcmMeterConfig.
+  // TODO(max): Why is this function not virtual like the rest
   ::util::Status FillBcmMeterConfig(const ::p4::v1::MeterConfig& p4_meter,
                                     BcmMeterConfig* bcm_meter) const;
+
+  // Given a P4 PacketReplicationEngineEntry, populates the BCM specific
+  // BcmPacketReplicationEntry message to be passed to low-level managers
+  // to program the ASIC.
+  virtual ::util::Status FillBcmReplicationConfig(
+      const ::p4::v1::PacketReplicationEngineEntry replication_entry,
+      BcmPacketReplicationEntry* bcm_replication_entry) const;
 
   // Saves a copy of P4 TableEntry for sending back to controller later.
   // This is called after the flow is programmed on hardware. This should not be
@@ -216,6 +224,16 @@ class BcmTableManager {
       const ::p4::v1::ActionProfileGroup& action_profile_group,
       int egress_intf_id);
 
+  // Saves a copy of the P4 MulticastGroupEntry for sending back to the
+  // controller later.
+  virtual ::util::Status AddMulticastGroup(
+      const ::p4::v1::MulticastGroupEntry& multicast_group);
+
+  // Saves a copy of the P4 CloneSessionEntry for sending back to the
+  // controller later.
+  virtual ::util::Status AddCloneSession(
+      const ::p4::v1::CloneSessionEntry& clone_session);
+
   // Replaces an existing copy of P4 ActionProfileMember with the one
   // passed to the function and matches the copy (assumes there is one copy that
   // matches the given P4 ActionProfileMember). This function also
@@ -251,6 +269,18 @@ class BcmTableManager {
   // from hardware.
   virtual ::util::Status DeleteActionProfileGroup(
       const ::p4::v1::ActionProfileGroup& action_profile_group);
+
+  // Deletes an existing copy of P4 MulticastGroupEntry which is matching
+  // the one passed to the function. This is called after the group is removed
+  // from hardware.
+  virtual ::util::Status DeleteMulticastGroup(
+      const ::p4::v1::MulticastGroupEntry& multicast_group);
+
+  // Deletes an existing copy of P4 CloneSessionEntry which is matching
+  // the one passed to the function. This is called after the group is removed
+  // from hardware.
+  virtual ::util::Status DeleteCloneSession(
+      const ::p4::v1::CloneSessionEntry& clone_session);
 
   // Returns the vector of the IDs of all the groups which a member is part of.
   virtual ::util::StatusOr<std::set<uint32>> GetGroupsForMember(
@@ -320,6 +350,20 @@ class BcmTableManager {
   // returns all the P4 ActionProfileGroup(s) programmed on the node.
   virtual ::util::Status ReadActionProfileGroups(
       const std::set<uint32>& action_profile_ids,
+      WriterInterface<::p4::v1::ReadResponse>* writer) const;
+
+  // Reads the P4 MulticastGroupEntry(s) whose multicast_group_id fields
+  // are in multicast_group_ids of the node. If multicast_group_ids is empty,
+  // returns all the P4 MulticastGroupEntry(s) programmed on the node.
+  virtual ::util::Status ReadMulticastGroups(
+      const std::set<uint32>& multicast_group_ids,
+      WriterInterface<::p4::v1::ReadResponse>* writer) const;
+
+  // Reads the P4 CloneSessionEntry(s) whose session_id fields
+  // are in clone_session_ids of the node. If clone_session_ids is empty,
+  // returns all the P4 CloneSessionEntry(s) programmed on the node.
+  virtual ::util::Status ReadCloneSessions(
+      const std::set<uint32>& clone_session_ids,
       WriterInterface<::p4::v1::ReadResponse>* writer) const;
 
   // Takes the input P4 table_entry for the given node and maps it to the output
@@ -478,6 +522,12 @@ class BcmTableManager {
   // Map from id to the ActionProfileGroups (multipath egress objects)
   // programmed on the node.
   absl::flat_hash_map<uint32, ::p4::v1::ActionProfileGroup> groups_;
+
+  // Map from id to the CloneSessionEntry programmed on the node.
+  absl::flat_hash_map<uint32, ::p4::v1::CloneSessionEntry> clone_sessions_;
+
+  // Map from id to the MulticastGroupEntry programmed on the node.
+  absl::flat_hash_map<uint32, ::p4::v1::MulticastGroupEntry> multicast_groups_;
 
   // ***************************************************************************
   // Table Maps

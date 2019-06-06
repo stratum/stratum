@@ -336,26 +336,9 @@ BcmSwitch::~BcmSwitch() {}
         // - node_id: req.port_counters().node_id()
         // - port_id: req.port_counters().port_id()
         // and then write it into the response.
-        auto* counters = resp.mutable_port_counters();
-        // To simulate the counters being incremented the current time expressed
-        // in nanoseconds since Jan 1st, 1970 is used.
-        // TODO(unknown) Remove this hack once the real counters are
-        // available.
-        uint64 now = absl::GetCurrentTimeNanos();
-        counters->set_in_octets(now);
-        counters->set_out_octets(now);
-        counters->set_in_unicast_pkts(now);
-        counters->set_out_unicast_pkts(now);
-        counters->set_in_broadcast_pkts(now);
-        counters->set_out_broadcast_pkts(now);
-        counters->set_in_multicast_pkts(now);
-        counters->set_out_multicast_pkts(now);
-        counters->set_in_discards(now);
-        counters->set_out_discards(now);
-        counters->set_in_unknown_protos(now);
-        counters->set_in_errors(now);
-        counters->set_out_errors(now);
-        counters->set_in_fcs_errors(now);
+        status.Update(bcm_chassis_manager_->GetPortCounters(
+            req.port_counters().node_id(), req.port_counters().port_id(),
+            resp.mutable_port_counters()));
         break;
       }
       case DataRequest::Request::kHealthIndicator:

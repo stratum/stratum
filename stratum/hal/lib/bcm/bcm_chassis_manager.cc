@@ -282,7 +282,8 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
 ::util::StatusOr<std::map<uint64, int>> BcmChassisManager::GetNodeIdToUnitMap()
     const {
   if (!initialized_) {
-    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+    return MAKE_ERROR(ERR_NOT_INITIALIZED).without_logging()
+        << "Not initialized!";
   }
 
   return node_id_to_unit_;
@@ -411,10 +412,13 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
       << "Node " << node_id << " is not configured or not known.";
   const TrunkMembershipInfo* membership_info =
       gtl::FindOrNull(*port_id_to_trunk_membership_info, port_id);
-  CHECK_RETURN_IF_FALSE(membership_info != nullptr)
+  // We can't use CHECK_RETURN_IF_FALSE here, because we want without_logging()
+  if (membership_info == nullptr) {
+    return MAKE_ERROR(ERR_INVALID_PARAM).without_logging()
       << "Port " << port_id
       << " is not known or does not belong to any trunk on node " << node_id
       << ".";
+  }
 
   return membership_info->parent_trunk_id;
 }
@@ -432,6 +436,17 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   CHECK_RETURN_IF_FALSE(admin_state != nullptr)
       << "Unknown port " << port_id << " on node " << node_id << ".";
   return *admin_state;
+}
+
+::util::Status BcmChassisManager::GetPortCounters(uint64 node_id,
+                                                  uint32 port_id,
+                                                  PortCounters* pc) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto bcm_port, GetBcmPort(node_id, port_id));
+  return bcm_sdk_interface_->GetPortCounters(unit, bcm_port.logical_port(), pc);
 }
 
 ::util::Status BcmChassisManager::SetTrunkMemberBlockState(
@@ -983,6 +998,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
+  std::stringstream ss;
+  ss << "Portmap:\nPanel, logical (PORT_ID), physical (PC_PHYS_PORT_ID)\n";
   for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
     BcmPort p(bcm_port);
     if (target_bcm_chassis_map.auto_add_logical_ports() ||
@@ -997,7 +1014,10 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           return ProtoEqual(x, p); }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
+    ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),
+                          bcm_port.logical_port(), bcm_port.physical_port());
   }
+  LOG(INFO) << ss.str();
 
   // Generate the config.bcm file given target_bcm_chassis_map.
   RETURN_IF_ERROR(
@@ -1615,9 +1635,9 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
-  // TODO(unknown): Implement this function.
-  std::stringstream buffer;
-  RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
+    // TODO: Implement this function.
+    // std::stringstream buffer;
+    // RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
 
   return ::util::OkStatus();
 }
@@ -1981,6 +2001,8 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // We first get the front panel port info from PHAL. Then using this info
     // (read and parsed from the transceiver module EEPROM) we configure serdes
     // for all BCM ports.
+    // TODO(max): Uncomment once serdes is supported by bcm_sdk_wrapper.
+    /*
     FrontPanelPortInfo fp_port_info;
     RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(
         port_group_key.slot, port_group_key.port, &fp_port_info));
@@ -2009,8 +2031,8 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
       VLOG(1) << "Serdes setting done for SingletonPort "
               << PrintBcmPort(*bcm_port) << ".";
     }
+    */
   }
-
   // The option applies to all the ports.
   for (const auto* bcm_port : bcm_ports) {
     RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
@@ -2041,7 +2063,11 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
 
 ::util::Status BcmChassisManager::EnablePort(const SdkPort& sdk_port,
                                              bool enable) const {
-  // TODO: Implement this.
+  BcmPortOptions options;
+  options.set_enabled(enable ? TRI_STATE_TRUE : TRI_STATE_FALSE);
+  RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
+        sdk_port.unit, sdk_port.logical_port, options));
+
   return ::util::OkStatus();
 }
 

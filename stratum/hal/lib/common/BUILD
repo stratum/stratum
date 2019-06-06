@@ -423,6 +423,7 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/lib:macros",
+        "//stratum/lib:utils",
         "//stratum/glue/gtl:source_location",
     ],
 )

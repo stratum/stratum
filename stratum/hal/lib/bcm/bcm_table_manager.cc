@@ -468,7 +468,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     // Add the table priority. This allows us to separate logical tables within
     // the same physical table. The priority in the CommonFlowEntry is the
     // relative priority within the table.
-    priority += acl_table->Priority() * kAclTablePriorityRange;
+    // TODO: Not needed in SDKLT
+    // priority += acl_table->Priority() * kAclTablePriorityRange;
   }
   bcm_flow_entry->set_priority(priority);
 
@@ -581,61 +582,59 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
   std::vector<BcmField> bcm_fields;
 
-// FIXME(craigs) - need ConstConditions in AclTable Class
-//   const auto& conditions = table.ConstConditions();
-//   for (const auto& condition : conditions) {
-//     const P4HeaderType& header = condition.first;
-//     if (!condition.second) {
-//       // TODO(richardyu): BcmSdkWrapper does not currently support negative
-//       // checks. We also need to add logic to prune overlapping
-//       // conditions during table creation (e.g. !IPv4 & IPv6 should only
-//       // report IPv6).
-//       continue;
-//     }
-//     BcmField bcm_field;
-//     switch (header) {
-//       case P4_HEADER_ARP:
-//         bcm_field.set_type(BcmField::IP_TYPE);
-//         bcm_field.mutable_value()->set_u32(kEtherTypeArp);
-//         break;
-//       case P4_HEADER_IPV4:
-//         bcm_field.set_type(BcmField::IP_TYPE);
-//         bcm_field.mutable_value()->set_u32(kEtherTypeIPv4);
-//         break;
-//       case P4_HEADER_IPV6:
-//         bcm_field.set_type(BcmField::IP_TYPE);
-//         bcm_field.mutable_value()->set_u32(kEtherTypeIPv6);
-//         break;
-//       case P4_HEADER_TCP:
-//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-//         bcm_field.mutable_value()->set_u32(kIpProtoTcp);
-//         break;
-//       case P4_HEADER_UDP:
-//       case P4_HEADER_UDP_PAYLOAD:
-//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-//         bcm_field.mutable_value()->set_u32(kIpProtoUdp);
-//         break;
-//       case P4_HEADER_GRE:
-//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-//         bcm_field.mutable_value()->set_u32(kIpProtoGre);
-//         break;
-//       case P4_HEADER_ICMP:
-//         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-//         if (conditions.count(P4_HEADER_IPV6) &&
-//                           conditions.at(P4_HEADER_IPV6)) {
-//           bcm_field.mutable_value()->set_u32(kIpProtoIPv6Icmp);
-//         } else {
-//           bcm_field.mutable_value()->set_u32(kIpProtoIcmp);
-//         }
-//         break;
-//       default:
-//         return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-//                << "Validity check for header type: "
-//                << P4HeaderType_Name(header) << " in table " << table.Name()
-//                << " is not supported.";
-//     }
-//     bcm_fields.push_back(bcm_field);
-//   }
+  const auto& conditions = table.ConstConditions();
+  for (const auto& condition : conditions) {
+    const P4HeaderType& header = condition.first;
+    if (!condition.second) {
+      // TODO(richardyu): BcmSdkWrapper does not currently support negative
+      // checks. We also need to add logic to prune overlapping
+      // conditions during table creation (e.g. !IPv4 & IPv6 should only report
+      // IPv6).
+      continue;
+    }
+    BcmField bcm_field;
+    switch (header) {
+      case P4_HEADER_ARP:
+        bcm_field.set_type(BcmField::IP_TYPE);
+        bcm_field.mutable_value()->set_u32(kEtherTypeArp);
+        break;
+      case P4_HEADER_IPV4:
+        bcm_field.set_type(BcmField::IP_TYPE);
+        bcm_field.mutable_value()->set_u32(kEtherTypeIPv4);
+        break;
+      case P4_HEADER_IPV6:
+        bcm_field.set_type(BcmField::IP_TYPE);
+        bcm_field.mutable_value()->set_u32(kEtherTypeIPv6);
+        break;
+      case P4_HEADER_TCP:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        bcm_field.mutable_value()->set_u32(kIpProtoTcp);
+        break;
+      case P4_HEADER_UDP:
+      case P4_HEADER_UDP_PAYLOAD:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        bcm_field.mutable_value()->set_u32(kIpProtoUdp);
+        break;
+      case P4_HEADER_GRE:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        bcm_field.mutable_value()->set_u32(kIpProtoGre);
+        break;
+      case P4_HEADER_ICMP:
+        bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
+        if (conditions.count(P4_HEADER_IPV6) && conditions.at(P4_HEADER_IPV6)) {
+          bcm_field.mutable_value()->set_u32(kIpProtoIPv6Icmp);
+        } else {
+          bcm_field.mutable_value()->set_u32(kIpProtoIcmp);
+        }
+        break;
+      default:
+        return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+               << "Validity check for header type: "
+               << P4HeaderType_Name(header) << " in table " << table.Name()
+               << " is not supported.";
+    }
+    bcm_fields.push_back(bcm_field);
+  }
   return bcm_fields;
 }
 
@@ -694,6 +693,53 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
   bcm_meter->set_committed_burst(static_cast<uint32>(p4_meter.cburst()));
   bcm_meter->set_peak_rate(static_cast<uint32>(p4_meter.pir()));
   bcm_meter->set_peak_burst(static_cast<uint32>(p4_meter.pburst()));
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::FillBcmReplicationConfig(
+      const ::p4::v1::PacketReplicationEngineEntry replication_entry,
+      BcmPacketReplicationEntry* bcm_replication_entry) const {
+
+  bcm_replication_entry->set_unit(unit_);
+  switch (replication_entry.type_case()) {
+    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
+      // BCM does not implement truncation
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().packet_length_bytes() == 0);
+      // We simulate having one clone session with hard-coded Id
+      CHECK_RETURN_IF_FALSE(replication_entry.clone_session_entry().session_id()
+          == kCloneSessionId) << "Bcm only allow a dummy clone session,"
+          << " with Id " << kCloneSessionId;
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().class_of_service() == 0)
+          << "CoS is not supported on cloned packets";
+      // Only allow cloning to Cpu port
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().replicas_size() == 1)
+          << "Bcm only allows cloning to a single port";
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().replicas(0).egress_port() == kCpuPortId)
+          << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ")";
+      break;
+    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+      auto mcast_grp = bcm_replication_entry->mutable_multicast_group_entry();
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.multicast_group_entry().multicast_group_id() != 0);
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.multicast_group_entry().multicast_group_id() <= kuint8max);
+      mcast_grp->set_multicast_group_id(
+          replication_entry.multicast_group_entry().multicast_group_id());
+      for (auto const& replica : replication_entry.multicast_group_entry().replicas()) {
+        CHECK_RETURN_IF_FALSE(replica.instance() == 1) << "instances are not suppoted";
+        mcast_grp->add_ports(replica.egress_port());
+      }
+      break;
+    }
+    default:
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+          << "Unsupported PacketReplicationEngineEntry "
+          << replication_entry.ShortDebugString();
+  }
   return ::util::OkStatus();
 }
 
@@ -818,6 +864,9 @@ namespace {
               }
               break;
             }
+            case P4_FIELD_TYPE_VLAN_VID:
+              bcm_non_multipath_nexthop->set_vlan(field.u32());
+              break;
             case P4_FIELD_TYPE_L3_CLASS_ID:
               // TODO: Ignore class_id for now till we have a
               // resolution for b/73264766.
@@ -991,8 +1040,7 @@ namespace {
   BcmFlowTable* table = statusor.ConsumeValueOrDie();
   auto statusor2 = table->DeleteEntry(table_entry);
   if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
-    LOG(ERROR) << "Failed to delete flow " << table_entry.ShortDebugString()
-    << ".";
+    LOG(ERROR) << "Failed to delete flow " << table_entry.ShortDebugString() << ".";
     return statusor2.status();
   }
   ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
@@ -1035,8 +1083,7 @@ namespace {
   BcmFlowTable* table = statusor.ConsumeValueOrDie();
   auto statusor2 = table->Lookup(table_entry);
   if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
-    LOG(ERROR) << "Failed to find flow " << table_entry.ShortDebugString()
-    << ".";
+    LOG(ERROR) << "Failed to find flow " << table_entry.ShortDebugString() << ".";
     return statusor2.status();
   }
   ::p4::v1::TableEntry modified_entry = statusor2.ConsumeValueOrDie();
@@ -1159,6 +1206,46 @@ namespace {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Inconsistent state. Group with ID " << group_id << " already "
            << "exists in groups_.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::AddMulticastGroup(
+    const ::p4::v1::MulticastGroupEntry& multicast_group) {
+  // Sanity checking.
+  if (!multicast_group.multicast_group_id()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "Need non-zero multicast_group_id: "
+        << multicast_group.ShortDebugString() << ".";
+  }
+  uint32 group_id = multicast_group.multicast_group_id();
+
+  // Save a copy of P4 MulticastGroupEntry.
+  if (!gtl::InsertIfNotPresent(&multicast_groups_, {group_id, multicast_group})) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "Inconsistent state. Multicast group with ID " << group_id
+        << " already exists in multicast_groups_.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::AddCloneSession(
+    const ::p4::v1::CloneSessionEntry& clone_session) {
+  // Sanity checking.
+  if (!clone_session.session_id()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "Need non-zero session_id: "
+        << clone_session.ShortDebugString() << ".";
+  }
+  uint32 session_id = clone_session.session_id();
+
+  // Save a copy of P4 CloneSessionEntry.
+  if (!gtl::InsertIfNotPresent(&clone_sessions_, {session_id, clone_session})) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "Inconsistent state. Multicast group with ID " << session_id
+        << " already exists in multicast_groups_.";
   }
 
   return ::util::OkStatus();
@@ -1325,6 +1412,28 @@ namespace {
   CHECK_RETURN_IF_FALSE(groups_.erase(group_id) == 1)
       << "Inconsistent state. Old group with ID " << group_id << " did not "
       << "exist in groups_.";
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::DeleteMulticastGroup(
+    const ::p4::v1::MulticastGroupEntry& multicast_group) {
+  uint32 group_id = multicast_group.multicast_group_id();
+  // Delete the copy of P4 MulticastGroupEntry matching the input.
+  CHECK_RETURN_IF_FALSE(multicast_groups_.erase(group_id) == 1)
+      << "Inconsistent state. Old multicast group with ID " << group_id
+      << " did not exist in multicast_groups_.";
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::DeleteCloneSession(
+    const ::p4::v1::CloneSessionEntry& clone_session) {
+  uint32 session_id = clone_session.session_id();
+  // Delete the copy of P4 CloneSessionEntry matching the input.
+  CHECK_RETURN_IF_FALSE(clone_sessions_.erase(session_id) == 1)
+      << "Inconsistent state. Old clone session with ID " << session_id
+      << " did not exist in clone_sessions_.";
 
   return ::util::OkStatus();
 }
@@ -1592,6 +1701,52 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
         action_profile_ids.count(group.second.action_profile_id())) {
       auto* entity = resp.add_entities();
       *entity->mutable_action_profile_group() = group.second;
+    }
+  }
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::ReadMulticastGroups(
+    const std::set<uint32>& multicast_group_ids,
+    WriterInterface<::p4::v1::ReadResponse>* writer) const {
+  if (writer == nullptr) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Null writer.";
+  }
+
+  ::p4::v1::ReadResponse resp;
+  for (const auto& group : multicast_groups_) {
+    if (multicast_group_ids.empty() ||
+        multicast_group_ids.count(group.second.multicast_group_id())) {
+      auto* entity = resp.add_entities();
+      *entity->mutable_packet_replication_engine_entry()
+          ->mutable_multicast_group_entry() = group.second;
+    }
+  }
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmTableManager::ReadCloneSessions(
+    const std::set<uint32>& clone_session_ids,
+    WriterInterface<::p4::v1::ReadResponse>* writer) const {
+  if (writer == nullptr) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Null writer.";
+  }
+
+  ::p4::v1::ReadResponse resp;
+  for (const auto& session : clone_sessions_) {
+    if (clone_session_ids.empty() ||
+        clone_session_ids.count(session.second.session_id())) {
+      auto* entity = resp.add_entities();
+      *entity->mutable_packet_replication_engine_entry()
+          ->mutable_clone_session_entry() = session.second;
     }
   }
   if (!writer->Write(resp)) {
@@ -2155,6 +2310,9 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     case P4_TABLE_L2_MULTICAST:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_L2_MULTICAST;
       break;
+    case P4_TABLE_L2_UNICAST:
+      bcm_table_type = BcmFlowEntry::BCM_TABLE_L2_UNICAST;
+      break;
     case P4_TABLE_L2_MY_STATION:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_MY_STATION;
       break;
@@ -2179,7 +2337,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
   if (acl_lookup != acl_tables_.end()) {
     return &(acl_lookup->second);
   }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND).without_logging()
          << "Table " << table_id << " not present.";
 }
 

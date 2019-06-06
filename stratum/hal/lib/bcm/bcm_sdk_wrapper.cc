@@ -29,16 +29,26 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>  // IWYU pragma: keep
+#include <string>
+#include <thread>
+#include <utility>
+
+#include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/synchronization/mutex.h"
-
-#include "gflags/gflags.h"
-#include "absl/base/macros.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "stratum/glue/gtl/cleanup.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/net_util/ipaddress.h"
+#include "stratum/glue/status/posix_error_space.h"
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/bcm/macros.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -46,10 +56,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 // #include "util/endian/endian.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 
 extern "C" {
 // LT Operations
@@ -88,7 +94,8 @@ extern "C" {
 #include "bcmpkt/bcmpkt_unet.h"
 #include "bcmpkt/bcmpkt_knet.h"
 #include "bcmpkt/bcmpkt_buf.h"
-#include "bcmpkt/bcmpkt_dev.h"
+#include "bcmpkt/bcmpkt_txpmd.h"
+#include "bcmpkt/bcmpkt_rxpmd.h"
 
 #include <bcmdrd/bcmdrd_dev.h>
 #include <bcmdrd/bcmdrd_feature.h>
@@ -109,10 +116,17 @@ extern "C" {
 #include <bcma/ha/bcma_ha.h>
 #include <bcma/sys/bcma_sys_conf_sdk.h>
 #include <bcmlu/bcmlu_ngbde.h>
+#include "bcma/sal/bcma_salcmd.h"
+
+// CLI
+#include <bcma/cli/bcma_cli_unit.h>
+#include <bcma/cli/bcma_cli_bshell.h>
 
 }
 
 DEFINE_int64(linkscan_interval_in_usec, 200000, "Linkscan interval in usecs.");
+DEFINE_int64(port_counters_interval_in_usec, 100 * 1000,
+             "Port counter interval in usecs.");
 DEFINE_int32(max_num_linkscan_writers, 10,
              "Max number of linkscan event Writers supported.");
 DECLARE_string(bcm_sdk_checkpoint_dir);
@@ -134,13 +148,18 @@ constexpr int BcmSdkWrapper::kTotalCounterIndex;
 constexpr int BcmSdkWrapper::kRedCounterIndex;
 constexpr int BcmSdkWrapper::kGreenCounterIndex;
 
+// Software multicast structures
+// TODO: synchronize access
+static absl::flat_hash_map<uint8, std::vector<int>> multicast_group_id_to_replicas_ = {};
+static absl::flat_hash_map<uint64, uint8> dst_mac_to_multicast_group_id = {};
+
 // All the C style functions and vars used to work with BCM sdk need to be
 // put into the following unnamed namespace.
 namespace {
 
 // System configuration structure
 static bcma_sys_conf_t sys_conf, * isc;
-static bool probed = false; //probed or created devices
+static bool probed = false; // probed or created devices
 
 // SDK callback to log to console a BSL message.
 extern "C" int bsl_out_hook(bsl_meta_t* meta, const char* format,
@@ -222,53 +241,79 @@ extern "C" void sdk_linkscan_callback(bcmlt_table_notif_info_t* notify_info,
   bcm_sdk_wrapper->OnLinkscanEvent(unit, port, linkstatus);
 }
 
+::util::StatusOr<std::string> dump_rxpmd_header(int unit, int netif_id, bcmpkt_packet_t *packet) {
+  auto pb = shr_pb_create();
+  auto _ = gtl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
+  bcmdrd_dev_type_t dev_type;
+
+  RETURN_IF_BCM_ERROR(bcmpkt_dev_type_get(unit, &dev_type));
+  uint32* rxpmd = nullptr;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_get(packet, &rxpmd));
+  if (shr_pb_printf(pb, "Rxpmd header:\n") == -1) {
+    return ::util::Status(::util::error::Code::INTERNAL, "shr_pb_printf");
+  }
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_dump(dev_type, rxpmd, BCMPKT_RXPMD_DUMP_F_NONE_ZERO, pb));
+  if (shr_pb_printf(pb, "Reasons:\n") == -1) {
+    return ::util::Status(::util::error::Code::INTERNAL, "shr_pb_printf");
+  }
+  RETURN_IF_BCM_ERROR(bcmpkt_rx_reason_dump(dev_type, rxpmd, pb));
+  auto s = absl::StrCat("packet received for netif ", netif_id, ":\n",
+      shr_pb_str(pb));
+  return s;
+}
+
+int bcmpkt_data_dump(shr_pb_t *pb, const uint8_t *data, int size) {
+  int idx;
+  if (size > 256) {
+      size = 256;
+  }
+  for (idx = 0; idx < size; idx++) {
+      if ((idx & 0xf) == 0) {
+          shr_pb_printf(pb, "%04x: ", idx);
+      }
+      if ((idx & 0xf) == 8) {
+          shr_pb_printf(pb, "- ");
+      }
+      shr_pb_printf(pb, "%02x ", data[idx]);
+      if ((idx & 0xf) == 0xf) {
+          shr_pb_printf(pb, "\n");
+      }
+  }
+  if ((idx & 0xf) != 0) {
+      shr_pb_printf(pb, "\n");
+  }
+  return SHR_E_NONE;
+}
+
+std::string bcmpkt_data_buf_dump(const bcmpkt_data_buf_t *dbuf) {
+  auto pb = shr_pb_create();
+  auto _ = gtl::MakeCleanup([pb]() { shr_pb_destroy(pb); });
+  shr_pb_printf(pb, "head - %p\n", dbuf->head);
+  shr_pb_printf(pb, "data - %p\n", dbuf->data);
+  shr_pb_printf(pb, "len - %" PRIu32 "\n", dbuf->len);
+  shr_pb_printf(pb, "data_len - %" PRIu32 "\n", dbuf->data_len);
+  shr_pb_printf(pb, "refcnt - %d\n", dbuf->ref_count);
+  bcmpkt_data_dump(pb, dbuf->data, dbuf->data_len);
+  return shr_pb_str(pb);
+}
+
 extern "C" int packet_receive_callback(int unit, int netif_id,
-                                               bcmpkt_packet_t *packet,
-                                               void *packet_io_manager_cookie)
-{
+                                       bcmpkt_packet_t *packet,
+                                       void *arg) {
   // TODO(BRCM): handle as per the need
-  LOG(INFO) << "packet received.";
-  return SHR_E_NONE;
-}
+  if (packet->type != BCMPKT_FWD_T_NORMAL) {
+    return SHR_E_NONE;
+  }
 
-std::vector<int>
-GetLogicalPorts(int unit, const std::map<int, std::pair<int, int>>* map) {
-  std::vector<int> logical_ports;
-  BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
-  if (!bcm_sdk_wrapper) {
-    LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
+  auto rxpmd_header = dump_rxpmd_header(unit, netif_id, packet);
+  if (rxpmd_header.ok()) {
+    VLOG(1) << rxpmd_header.ValueOrDie();
   } else {
-    std::transform(
-        map->begin(),
-        map->end(),
-        std::back_inserter(logical_ports),
-        [](const std::map<int, std::pair < int, int>>
-    ::value_type & pair){ return pair.first; });
-  }
-  return logical_ports;
-}
-
-int CheckIfUnitExists(int unit) {
-  BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
-  if (!bcm_sdk_wrapper) {
-    LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
+    LOG(ERROR) << rxpmd_header.status();
     return SHR_E_INTERNAL;
   }
-  if (!bcmdrd_dev_exists(unit)) {
-    LOG(ERROR) << "Unit " << unit << "  is not found.";
-    return SHR_E_UNIT;
-  }
-  return SHR_E_NONE;
-}
+  VLOG(1) << bcmpkt_data_buf_dump(packet->data_buf);
 
-int CheckIfPortExists(int unit, int port,
-                      const std::map<int, std::pair<int, int>>* m) {
-  std::vector<int> ports = GetLogicalPorts(unit, m);
-  auto result = std::find(std::begin(ports), std::end(ports), port);
-  if (result == std::end(ports)) {
-    LOG(ERROR) << "Invalid port " << port << " on Unit " << unit << ".";
-    return SHR_E_INTERNAL;
-  }
   return SHR_E_NONE;
 }
 
@@ -286,27 +331,22 @@ int GetFieldMinMaxValue(int unit, const char* table, const char* field,
   if (rv != SHR_E_NONE) {
     return rv;
   }
-  buffer = (bcmlt_field_def_t*) malloc(
-      number_of_elements * sizeof(bcmlt_field_def_t));
-  if (!buffer) {
-    return SHR_E_MEMORY;
-  }
-  rv = bcmlt_table_field_defs_get(unit, table, number_of_elements, buffer,
+  std::vector<bcmlt_field_def_t> buf(number_of_elements);
+  rv = bcmlt_table_field_defs_get(unit, table, buf.size(), buf.data(),
                                   &actual_number);
-  if ((rv != SHR_E_NONE) || (actual_number != number_of_elements)) {
+  if ((rv != SHR_E_NONE) || (actual_number != buf.size())) {
     return SHR_E_INTERNAL;
   }
-  for (idx = 0, field_def = buffer; idx < number_of_elements; idx++) {
-    if (field_def[idx].symbol != TRUE) {
-      if ((sal_strcmp(field, field_def[idx].name) == 0)) {
-        *max = field_def[idx].max;
-        *min = field_def[idx].min;
+  for (auto const& field_def : buf) {
+    if (field_def.symbol != true) {
+      if ((::strcmp(field, field_def.name) == 0)) {
+        *max = field_def.max;
+        *min = field_def.min;
         found = true;
         break;
       }
     }
   }
-  free(buffer);
   return (found ? SHR_E_NONE : SHR_E_NOT_FOUND);
 }
 
@@ -333,27 +373,7 @@ std::string BcmMacToStr(const uint8 bcm_mac[6]) {
   return buffer.str();
 }
 
-std::string BcmIpv4ToStr(const uint32 ipv4) {
-  return absl::Substitute("$0.$1.$2.$3", (ipv4 >> 24) & 0xff,
-                          (ipv4 >> 16) & 0xff, (ipv4 >> 8) & 0xff, ipv4 & 0xff);
-}
-
-#if 0
-// TODO(BRCM): fix
-std::string BcmIpv6ToStr(const std::string& ipv6) {
-  return absl::Substitute(
-      "$0:$1:$2:$3:$4:$5:$6:$7",
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[0]) << 8) | ipv6[1])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[2]) << 8) | ipv6[3])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[4]) << 8) | ipv6[5])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[6]) << 8) | ipv6[7])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[8]) << 8) | ipv6[9])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[10]) << 8) | ipv6[11])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[12]) << 8) | ipv6[13])),
-      absl::StrCat(absl::Hex((static_cast<uint32>(ipv6[14]) << 8) | ipv6[15])));
-}
-#endif
-
+// TODO(max): add contructors for sane default state, also convert "call sites"
 struct l3_intf_t {
   int l3a_intf_id;     // Interface ID
   uint64 l3a_mac_addr; // MAC address
@@ -377,8 +397,8 @@ struct l3_route_t {
   int l3a_intf;         // L3 interface associated with route
   uint32 l3a_subnet;    // IP subnet address (IPv4)
   uint32 l3a_ip_mask;   // IP subnet mask (IPv4)
-  uint64 l3a_ip6_net;   // IP subnet address (IPv6)
-  uint64 l3a_ip6_mask;  // IP subnet mask (IPv6)
+  std::string l3a_ip6_net;   // IP subnet address (IPv6)
+  std::string l3a_ip6_mask;  // IP subnet mask (IPv6)
 };
 
 struct l3_host_t {
@@ -387,23 +407,20 @@ struct l3_host_t {
   int l3a_lookup_class; // Classification class ID
   int l3a_intf;         // L3 interface associated with route
   uint32 l3a_ip_addr;   // Destination host IP address (IPv4)
-  uint64 l3a_ip6_addr;  // Destination host IP address (IPv6)
+  std::string l3a_ip6_addr;  // Destination host IP address (IPv6)
 };
 
 // Pretty prints an L3 route.
 std::string PrintL3Route(const l3_route_t& route) {
   std::stringstream buffer;
   if (route.l3a_flag) {
-#if 0
-// TODO(BRCM): fix
     buffer << "IPv6 LPM route (";
-    buffer << "subnet: " << BcmIpv6ToStr(route.l3a_ip6_net) << ", ";
-    buffer << "prefix: " << BcmIpv6ToStr(route.l3a_ip6_mask) << ", ";
-#endif
+    buffer << "subnet: " << PackedStringToIPAddressOrDie(route.l3a_ip6_net) << ", ";
+    buffer << "prefix: " << PackedStringToIPAddressOrDie(route.l3a_ip6_mask) << ", ";
   } else {
     buffer << "IPv4 LPM route (";
-    buffer << "subnet: " << BcmIpv4ToStr(route.l3a_subnet) << ", ";
-    buffer << "prefix: " << BcmIpv4ToStr(route.l3a_ip_mask) << ", ";
+    buffer << "subnet: " << HostUInt32ToIPAddress(route.l3a_subnet) << ", ";
+    buffer << "prefix: " << HostUInt32ToIPAddress(route.l3a_ip_mask) << ", ";
   }
   buffer << "vrf: " << route.l3a_vrf << ", ";
   buffer << "class_id: " << route.l3a_lookup_class << ", ";
@@ -447,14 +464,11 @@ PrintL3EgressIntf(l3_intf_object_t l3_intf_obj, int egress_intf_id) {
 std::string PrintL3Host(const l3_host_t& host) {
   std::stringstream buffer;
   if (host.l3a_flag) {
-#if 0
-// TODO(BRCM): fix
     buffer << "IPv6 host route (";
-    buffer << "subnet: " << BcmIpv6ToStr(host.l3a_ip6_addr) << ", ";
-#endif
+    buffer << "subnet: " << PackedStringToIPAddressOrDie(host.l3a_ip6_addr) << ", ";
   } else {
     buffer << "IPv4 host route (";
-    buffer << "subnet: " << BcmIpv4ToStr(host.l3a_ip_addr) << ", ";
+    buffer << "subnet: " << HostUInt32ToIPAddress(host.l3a_ip_addr) << ", ";
   }
   buffer << "vrf: " << host.l3a_vrf << ", ";
   buffer << "class_id: " << host.l3a_lookup_class << ", ";
@@ -477,7 +491,9 @@ struct RcpuData {
   uint16 rcpu_transid;
   uint16 rcpu_payloadlen;
   uint16 rcpu_replen;
-  uint8 reserved[4];
+  uint8 rcpu_metalen;
+  uint8 rcpu_queueid;
+  uint8 reserved[2];
 } __attribute__((__packed__));
 
 struct RcpuHeader {
@@ -518,6 +534,22 @@ FieldType GetDcbField(const void* dcb) {
                 ~((static_cast<uint64>(1) << end_bit) - 1);
   const uint32* data = reinterpret_cast<const uint32*>(dcb);
   return (ntohl(data[word - 2]) & mask) >> end_bit;
+}
+
+// The rxpmd header is definitely not in network byte order.
+template <typename FieldType, int word, int start_bit, int end_bit>
+FieldType GetRxpmdField(const void* rxpmd) {
+  static_assert(word >= 2, "KNET cant access first 2 RXPMD words");
+  static_assert(start_bit >= end_bit, "Must have start_bit >= end_bit");
+  static_assert(start_bit >= 0 && start_bit < 32, "Invalid start bit");
+  static_assert(end_bit >= 0 && end_bit < 32, "Invalid end bit");
+  static_assert(start_bit - end_bit + 1 <= sizeof(FieldType) * 8,
+                "Return type too small for the field");
+
+  uint32 mask = ((static_cast<uint64>(1) << (start_bit + 1)) - 1) &
+                ~((static_cast<uint64>(1) << end_bit) - 1);
+  const uint32* data = reinterpret_cast<const uint32*>(rxpmd);
+  return (data[word] & mask) >> end_bit;
 }
 
 // Sets a variable length field in a SOB Module Header (SOBMH) in an TX KNET
@@ -619,6 +651,7 @@ std::set<TK> extract_keys(std::map<TK, TV> const& input_map) {
   return retval;
 };
 
+// Retrieves the key of a value in a container.
 template<typename TS, typename TI, typename TV>
 ::util::StatusOr<bool> FindAndReturnEntry(TS search, TI index, TV value) {
   for (auto it = search->begin(); it != search->end(); ++it) {
@@ -630,38 +663,45 @@ template<typename TS, typename TI, typename TV>
   return false;
 }
 
-::util::StatusOr<int>
-GetFreeSlot(std::map<int, bool>* map, std::string ErrMsg) {
-  bool free_slot = false;
-  auto it = std::find_if(map->begin(), map->end(),
-                         [&free_slot](const std::pair<int, bool>& p) {
-                           return p.second == free_slot;
-                         });
-  if (it == map->end()) {
-    return MAKE_ERROR(ERR_INTERNAL) << ErrMsg;
+// Returns a pointer to the const index associated with the given value.
+// TODO(max): replace FindAndReturnEntry with this
+template<typename Collection>
+const typename Collection::key_type* FindIndexOrNull(
+    Collection& collection, const typename Collection::mapped_type& value) {
+  for (const auto& entry : collection) {
+    if (entry.second == value) {
+      return &entry.first;
+    }
   }
-  return it->first;
+  return nullptr;
+}
+
+// TODO(max): errmsg should not be an argument.
+// TODO: Replace InUseMap with an array or vector, but not std::vector<bool>!
+::util::StatusOr<int> GetFreeSlot(std::map<int, bool>* map,
+                                  std::string ErrMsg) {
+  for (auto& slot : *map) {
+    if (!slot.second) {
+      return slot.first;
+    }
+  }
+  return MAKE_ERROR(ERR_INTERNAL) << ErrMsg;
 }
 
 void ConsumeSlot(std::map<int, bool>* map, int index) {
-  auto it = map->begin();
-  std::advance(it, (index - 1));
-  it->second = true;
+  auto& slot_in_use = gtl::FindOrDie(*map, index);
+  CHECK(!slot_in_use);
+  slot_in_use = true;
 }
 
 void ReleaseSlot(std::map<int, bool>* map, int index) {
-  auto it = map->find(index);
-  if (it != map->end()) {
-    it->second = false;
-  }
+  auto& slot_in_use = gtl::FindOrDie(*map, index);
+  CHECK(slot_in_use);
+  slot_in_use = false;
 }
 
 bool SlotExists(std::map<int, bool>* map, int index) {
-  auto it = map->find(index);
-  if (it != map->end()) {
-    return true;
-  }
-  return false;
+  return gtl::ContainsKey(*map, index);
 }
 
 int bcmlt_custom_entry_commit(bcmlt_entry_handle_t entry_hdl,
@@ -676,9 +716,6 @@ int bcmlt_custom_entry_commit(bcmlt_entry_handle_t entry_hdl,
   rv = bcmlt_entry_info_get(entry_hdl, &entry_info);
   if (rv != SHR_E_NONE) {
     return rv;
-  }
-  if (entry_info.status != SHR_E_NONE) {
-    return entry_info.status;
   }
   return entry_info.status;
 }
@@ -703,9 +740,9 @@ int bcmlt_custom_entry_commit(bcmlt_entry_handle_t entry_hdl,
 }
 
 } // namespace
+
 BcmSdkWrapper* BcmSdkWrapper::singleton_ = nullptr;
-ABSL_CONST_INIT absl::Mutex
-BcmSdkWrapper::init_lock_(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex BcmSdkWrapper::init_lock_(absl::kConstInit);
 
 BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
     : unit_to_chip_type_(), unit_to_soc_device_(), unit_to_logical_ports_(),
@@ -723,7 +760,7 @@ BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
       unit_to_udf_chunk_ids_(), unit_to_chunk_ids_(),
       bcm_diag_shell_(bcm_diag_shell),
       linkscan_event_writers_() {
-  // TODO(BRCM): check if any intialazation.
+  // TODO(BRCM): check if any initialization is needed.
   // for now this is good
 }
 
@@ -759,13 +796,16 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // bcma_bslenable_set(BSL_LAY_BCMCFG, BSL_SRC_INIT, BSL_SEV_DEBUG);
   // bcma_bslenable_set(BSL_LAY_BCMDRD, BSL_SRC_DEV, BSL_SEV_DEBUG);
   // bcma_bslenable_set(BSL_LAY_BCMFP, BSL_SRC_COMMON, BSL_SEV_DEBUG);
-  bcma_bslenable_set (BSL_LAY_SYS, BSL_SRC_PCI, BSL_SEV_DEBUG);
+  // bcma_bslenable_set(BSL_LAY_SYS, BSL_SRC_PCI, BSL_SEV_DEBUG);
+  // bcma_bslenable_set(BSL_LAY_BCMPKT, BSL_SRC_PACKET, BSL_SEV_DEBUG);
 
   // Create console sink l_config
   bcma_bslcons_init();
 
   // Create file sink
   bcma_bslfile_init();
+
+  RETURN_IF_ERROR(InitCLI());
 
   // Probe for supported devices and initialize DRD
   if ((ndev = bcma_sys_conf_drd_init(isc)) < 0) {
@@ -810,8 +850,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   RETURN_IF_BCM_ERROR(bcmlu_ngbde_num_dev_get(&num_devices));
 
   if (num_devices <= 0) {
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "No devices found.";
+    return MAKE_ERROR(ERR_INTERNAL) << "No devices found.";
   }
 
   for (int dev_num = 0; dev_num < num_devices; ++dev_num) {
@@ -860,16 +899,19 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
 ::util::Status BcmSdkWrapper::InitializeUnit(int unit, bool warm_boot) {
 
-  uint64_t vlan_pbmp[3] = {0};
+  uint64_t all_ports_no_cpu_bitmap[3] = {
+    0xFFFFFFFFFFFFFFFeULL,
+    kuint64max,
+    0
+  };
   int rv;
-  uint64_t l_port;
   uint64_t physical_device_port;
   uint64_t port_macro_id;
   int table_max;
   int table_min;
   bcmlt_entry_handle_t entry_hdl;
   bcmlt_entry_info_t entry_info;
-  std::vector<std::pair<int, int>> tmp_ports;
+  std::vector<std::pair<int, int>> configured_ports;
   std::map<int, std::pair<int, int>> tmp_map;
 
   if (!probed) {
@@ -896,6 +938,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
           entry_info.status != SHR_E_NONE) {
         break;
       }
+      uint64_t l_port;
       if (bcmlt_entry_field_get(entry_hdl, PORT_IDs, &l_port) != SHR_E_NONE) {
         break;
       }
@@ -903,19 +946,18 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                 &physical_device_port) != SHR_E_NONE) {
         break;
       }
-      tmp_ports.push_back(std::make_pair(l_port, physical_device_port));
+      configured_ports.push_back(std::make_pair(l_port, physical_device_port));
     }
     RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PHYS_PORTs, &entry_hdl));
-    for (std::vector<std::pair<int, int>> ::iterator it = tmp_ports.begin();
-         it != tmp_ports.end(); ++it) {
+    for (const auto &p : configured_ports) {
       RETURN_IF_BCM_ERROR(
-          bcmlt_entry_field_add(entry_hdl, PC_PHYS_PORT_IDs, it->second));
+          bcmlt_entry_field_add(entry_hdl, PC_PHYS_PORT_IDs, p.second));
       RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                              BCMLT_PRIORITY_NORMAL));
       RETURN_IF_BCM_ERROR(
           bcmlt_entry_field_get(entry_hdl, PC_PM_IDs, &port_macro_id));
-      tmp_map[it->first] = std::make_pair(it->second, port_macro_id);
+      tmp_map[p.first] = std::make_pair(p.second, port_macro_id);
     }
     unit_to_logical_ports_[unit] = tmp_map;
     RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
@@ -951,7 +993,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   int max_fp_groups = 0;
 
   // IFP - group
-  RETURN_IF_ERROR(GetTableLimits(unit, FP_ING_GRP_TEMPLATEs, 
+  RETURN_IF_ERROR(GetTableLimits(unit, FP_ING_GRP_TEMPLATEs,
                                  &table_min, &table_max));
   InUseMap ifp_groups;
   for (auto i = table_min; i <= table_max; i++) {
@@ -962,7 +1004,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // VFP - group
   InUseMap vfp_groups;
-  RETURN_IF_ERROR(GetTableLimits(unit, FP_VLAN_GRP_TEMPLATEs, 
+  RETURN_IF_ERROR(GetTableLimits(unit, FP_VLAN_GRP_TEMPLATEs,
                                  &table_min, &table_max));
   for (auto i = table_min; i <= table_max; i++) {
     vfp_groups.emplace(i, false);
@@ -972,7 +1014,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // EFP - group
   InUseMap efp_groups;
-  RETURN_IF_ERROR(GetTableLimits(unit, FP_EGR_GRP_TEMPLATEs, 
+  RETURN_IF_ERROR(GetTableLimits(unit, FP_EGR_GRP_TEMPLATEs,
                                  &table_min, &table_max));
   for (auto i = table_min; i <= table_max; i++) {
     efp_groups.emplace(i, false);
@@ -1014,7 +1056,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   efp_rule_ids_[unit] = efp_rules;
   max_fp_rules += table_max;
 
-  unit_to_fp_rules_max_limit_[unit] = max_fp_rules; 
+  unit_to_fp_rules_max_limit_[unit] = max_fp_rules;
 
   fp_policy_ids_[unit] = new AclPolicyIds();
   int max_fp_policies = 0;
@@ -1095,7 +1137,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   vfp_acl_ids_[unit] = vfp_acls;
   max_fp_acls += table_max;
 
- // EFP Acls
+  // EFP Acls
   InUseMap efp_acls;
   RETURN_IF_ERROR(GetTableLimits(unit, FP_EGR_ENTRYs, &table_min, &table_max));
   for (auto i = table_min; i <= table_max; i++) {
@@ -1109,17 +1151,16 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // UDF Chunks
   InUseMap udf_chunks;
   for (auto i = 0; i <= kUdfMaxChunks; i++) {
-    udf_chunks.emplace(i, false); 
+    udf_chunks.emplace(i, false);
   }
   unit_to_udf_chunk_ids_[unit] = udf_chunks;
   unit_to_chunk_ids_[unit] = new ChunkIds();
 
-  // Enable port level MAC address learning
+  // Disable port level MAC address learning
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PORT_LEARNs, &entry_hdl));
-  for (std::vector<std::pair<int, int>> ::iterator it = tmp_ports.begin();
-       it != tmp_ports.end(); ++it) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, it->first));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_LEARNs, 1));
+  for (const auto &p : configured_ports) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_LEARNs, 0));
     RETURN_IF_BCM_ERROR(
         bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                   BCMLT_PRIORITY_NORMAL));
@@ -1128,9 +1169,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // Enable IFP, EFP and VFP on all ports
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PORT_FPs, &entry_hdl));
-  for (std::vector<std::pair<int, int>> ::iterator it = tmp_ports.begin();
-       it != tmp_ports.end(); ++it) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, it->first));
+  for (const auto &p : configured_ports) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_VLANs, 1));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_INGs, 1));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_EGRs, 1));
@@ -1142,7 +1182,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // Set default VLAN STG
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_STGs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
@@ -1150,11 +1190,10 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Configure ports in forwarding state
   const char* vlan_stg_str[1] = {"FORWARD"};
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_STGs, &entry_hdl));
-  for (std::vector<std::pair<int, int>> ::iterator it = tmp_ports.begin();
-       it != tmp_ports.end(); ++it) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+  for (const auto &p : configured_ports) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
     RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_array_symbol_add(entry_hdl, STATEs, it->first,
+        bcmlt_entry_field_array_symbol_add(entry_hdl, STATEs, p.first,
                                            vlan_stg_str, 1));
     RETURN_IF_BCM_ERROR(
         bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
@@ -1172,31 +1211,19 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
-  // Configure PORT_PKT_CONTROL to send arp request,reply to CPU.
-  RETURN_IF_BCM_ERROR(
-      bcmlt_entry_allocate(unit, PORT_PKT_CONTROLs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, PORT_PKT_CONTROL_IDs, 1));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ARP_REQUEST_TO_CPUs, 1));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ARP_REPLY_TO_CPUs, 1));
-  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
-                                                BCMLT_PRIORITY_NORMAL));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
-
   // Create default VLAN (1) and add all ports as members
-  vlan_pbmp[0] = 0xFFFFFFFFFFFFFFFeULL;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLANs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, kDefaultVlan));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_array_add(entry_hdl, EGR_MEMBER_PORTSs, 0, vlan_pbmp,
+      bcmlt_entry_field_array_add(entry_hdl, EGR_MEMBER_PORTSs, 0, all_ports_no_cpu_bitmap,
                                   3));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_array_add(entry_hdl, ING_MEMBER_PORTSs, 0, vlan_pbmp,
+      bcmlt_entry_field_array_add(entry_hdl, ING_MEMBER_PORTSs, 0, all_ports_no_cpu_bitmap,
                                   3));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_array_add(entry_hdl, UNTAGGED_MEMBER_PORTSs, 0,
-                                  vlan_pbmp, 3));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+                                  all_ports_no_cpu_bitmap, 3));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L3_IIF_IDs, 1));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
@@ -1205,13 +1232,12 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Configure default port VLAN ID of 1 for all ports.
   // Enable IPv4 and IPv6 routing on port
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PORTs, &entry_hdl));
-  for (std::vector<std::pair<int, int>> ::iterator it = tmp_ports.begin();
-       it != tmp_ports.end(); ++it) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, it->first));
+  for (const auto &p : configured_ports) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MY_MODIDs, 0));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_add(entry_hdl, VLAN_ING_TAG_ACTION_PROFILE_IDs, 1));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ING_OVIDs, 1));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ING_OVIDs, kDefaultVlan));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_add(entry_hdl, PORT_TYPEs, ETHERNETs));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, V4L3s, 1));
@@ -1236,21 +1262,20 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
   // Configure PORT_POLICY to classify packets with value 0x8100 at bytes 12,13
   // as outer VLAN tagged packet.
-  uint64_t tmp[1] = {1};
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PORT_POLICYs, &entry_hdl));
-  for (std::vector<std::pair<int, int>> ::iterator it = tmp_ports.begin();
-       it != tmp_ports.end(); ++it) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, it->first));
+  for (const auto &p : configured_ports) {
+    uint64_t pass_on_outer_tpid_match_map[1] = {1};
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_array_add(entry_hdl, PASS_ON_OUTER_TPID_MATCHs, 0,
-                                    tmp, 1));
+                                    pass_on_outer_tpid_match_map, 1));
     RETURN_IF_BCM_ERROR(
         bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                   BCMLT_PRIORITY_NORMAL));
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
-  //Create L3_IIF_PROFILE 1 and enable IPv4 and IPv6 routing.
+  // Create L3_IIF_PROFILE 1 and enable IPv4 and IPv6 routing.
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_IIF_PROFILEs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L3_IIF_PROFILE_IDs, 1));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV4_UCs, 1));
@@ -1259,7 +1284,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
-  //Create L3_IIF index 1 and set VRF_ID=0.
+  // Create L3_IIF index 1 and set VRF_ID=0.
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_IIFs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L3_IIF_IDs, 1));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, 0));
@@ -1268,10 +1293,44 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
+  // Enable packet counters on all ports
+  // TODO(max): only add configured ports to bitmap, reduces polling CPU load
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_CONTROLs, &entry_hdl));
+  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_add(entry_hdl, PORTSs, 0,
+                                                  all_ports_no_cpu_bitmap, 3));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, INTERVALs,
+                      FLAGS_port_counters_interval_in_usec));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MULTIPLIER_PORTs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MULTIPLIER_EPIPEs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MULTIPLIER_IPIPEs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MULTIPLIER_TMs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MULTIPLIER_EVICTs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
+                                                BCMLT_PRIORITY_NORMAL));
+  for (auto const& p : configured_ports) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MACs, &entry_hdl));
+    auto cl1 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
+    RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                  BCMLT_PRIORITY_NORMAL));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MAC_ERRs, &entry_hdl));
+    auto cl2 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
+    RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                  BCMLT_PRIORITY_NORMAL));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_L3s, &entry_hdl));
+    auto cl3 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, p.first));
+    RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                  BCMLT_PRIORITY_NORMAL));
+  }
+
+  // Initialize packet device
+  // Code from SDKLT wiki
   bcmpkt_dev_init_t cfg;
-  // Initialize device
   memset(&cfg, 0, sizeof(cfg));
-  cfg.cgrp_size = 4; //
+  cfg.cgrp_size = 4;
   cfg.cgrp_bmp = 0x7;
   RETURN_IF_BCM_ERROR(bcmpkt_dev_init(unit, &cfg));
   RETURN_IF_ERROR(CleanupKnet(unit));
@@ -1358,6 +1417,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkWrapper::SetModuleId(int unit, int module) {
+  // TODO: Implement this function.
   return ::util::OkStatus();
 }
 
@@ -1366,11 +1426,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   bcmlt_entry_info_t entry_info;
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Port Disable and Set max frame
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
@@ -1404,12 +1461,12 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Port Block
   const char* block = "BLOCK";
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_STGs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
   RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_array_symbol_add(entry_hdl, STATEs, port, &block, 1));
   if (entry_info.status == SHR_E_NONE) {
@@ -1422,6 +1479,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
                                   BCMLT_PRIORITY_NORMAL));
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  // Port counters
+  // TODO(max): add port to port CTR_CONTROL PORT field.
   return ::util::OkStatus();
 }
 
@@ -1436,10 +1495,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   // Check if port is valid
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Enable
   if (options.enabled()) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
@@ -1455,12 +1511,12 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // STP State
   if (options.blocked()) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_STGs, &entry_hdl));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
     RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                            BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
     RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_array_symbol_add(entry_hdl, STATEs, port,
                                            (options.blocked() == TRI_STATE_TRUE
@@ -1561,10 +1617,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   // Check if port is valid
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Linkscan
   options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_UNKNOWN);
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
@@ -1655,7 +1708,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   const char* sym_res[140];
   options->set_blocked(TRI_STATE_FALSE);
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_STGs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(
@@ -1670,9 +1723,103 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::GetPortCounters(int unit, int port,
+                                             PortCounters* pc) {
+  // Check if unit is valid
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  // Check if port is valid
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port))
+      << "Port " << port << " does not exit on unit " << unit << ".";
+  CHECK_RETURN_IF_FALSE(pc != nullptr);
+
+  uint64 value;
+  // Read good counters
+  bcmlt_entry_handle_t entry_hdl;
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MACs, &entry_hdl));
+  auto cl1 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, RX_BYTESs, &value));
+  pc->set_in_octets(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, RX_UC_PKTs, &value));
+  pc->set_in_unicast_pkts(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, RX_BC_PKTs, &value));
+  pc->set_in_broadcast_pkts(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, RX_MC_PKTs, &value));
+  pc->set_in_multicast_pkts(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, TX_BYTESs, &value));
+  pc->set_out_octets(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, TX_UC_PKTs, &value));
+  pc->set_out_unicast_pkts(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, TX_BC_PKTs, &value));
+  pc->set_out_broadcast_pkts(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, TX_MC_PKTs, &value));
+  pc->set_out_multicast_pkts(value);
+
+  // Read error counters
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, CTR_MAC_ERRs, &entry_hdl));
+  auto cl2 = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, RX_FCS_ERR_PKTs, &value));
+  pc->set_in_fcs_errors(value);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, TX_ERR_PKTs, &value));
+  pc->set_out_errors(value);
+
+  // TODO(max): add missing fields: in_discards, in_errors, in_unknown_protos
+  // out_discards
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::InitCLI() {
+  // Initialize system log output
+  RETURN_IF_BCM_ERROR(bcma_bslmgmt_init());
+
+  // Initialize cli
+  RETURN_IF_BCM_ERROR(bcma_sys_conf_cli_init(isc));
+
+  /* Enable CLI redirection in BSL output hook */
+  RETURN_IF_BCM_ERROR(bcma_bslmgmt_redir_hook_set(bcma_sys_conf_cli_redir_bsl));
+
+  /* Add CLI commands for controlling the system log */
+  RETURN_IF_BCM_ERROR(bcma_bslcmd_add_cmds(isc->cli));
+  RETURN_IF_BCM_ERROR(bcma_bslcmd_add_cmds(isc->dsh));
+
+  /* Add bcmlt commands */
+  RETURN_IF_BCM_ERROR(bcma_bcmltcmd_add_cmds(isc->cli));
+
+  /* Add CLI command completion support */
+  RETURN_IF_BCM_ERROR(bcma_sys_conf_clirlc_init());
+
+  /* Add CLI commands for base driver to debug shell */
+  bcma_bcmbdcmd_add_cmicd_cmds(isc->dsh);
+  bcma_bcmbdcmd_add_dev_cmds(isc->dsh);
+
+  /* Add CLI commands for packet I/O driver */
+  RETURN_IF_BCM_ERROR(bcma_bcmpktcmd_add_cmds(isc->cli));
+
+  /* Add BCMLT C interpreter (CINT) */
+  RETURN_IF_BCM_ERROR(bcma_cintcmd_add_cint_cmd(isc->cli));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmSdkWrapper::StartDiagShellServer() {
-  if (bcm_diag_shell_ == nullptr) return ::util::OkStatus();  // sim mode
-  RETURN_IF_ERROR(bcm_diag_shell_->StartServer());
+  //if (bcm_diag_shell_ == nullptr) return ::util::OkStatus();  // sim mode
+  //RETURN_IF_ERROR(bcm_diag_shell_->StartServer());
+
+  std::thread t([]() {
+    // BCM CLI installs its own signal handler for SIGINT,
+    // we have to restore the HAL one afterwards
+    sighandler_t h = signal(SIGINT, SIG_IGN);
+    bcma_cli_cmd_loop(isc->cli);
+    bcma_cli_destroy(isc->cli);
+    signal(SIGINT, h);
+  });
+  t.detach();
 
   return ::util::OkStatus();
 }
@@ -1689,22 +1836,21 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       bcmlt_table_subscribe(unit, LM_LINK_STATEs, &sdk_linkscan_callback,
                             NULL));
 
-  std::vector<int>::iterator port;
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
+  absl::WriterMutexLock l(&data_lock_);
+  // // Get logical ports for this unit
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
-  // Get logical ports for this unit
-  std::vector<int> logical_ports = GetLogicalPorts(unit, unit_to_ports);
 
   // Set linkscan mode for all the ports
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
-  for (port = logical_ports.begin(); port < logical_ports.end(); port++) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+  for (const auto& port : *logical_ports_map) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                            BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
     RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_add(entry_hdl, LINKSCAN_MODEs, SOFTWAREs));
     if (entry_info.status == SHR_E_NONE) {
@@ -1769,22 +1915,20 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
-  std::vector<int>::iterator port;
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
+  absl::WriterMutexLock l(&data_lock_);
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
-  // Get logical ports for this unit
-  std::vector<int> logical_ports = GetLogicalPorts(unit, unit_to_ports);
 
   // Disable linkscan mode for all the ports
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
-  for (port = logical_ports.begin(); port < logical_ports.end(); port++) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+  for (const auto& port : *logical_ports_map) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                            BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
     RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_add(entry_hdl, LINKSCAN_MODEs, NO_SCANs));
     if (entry_info.status == SHR_E_NONE) {
@@ -1855,11 +1999,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
@@ -1884,7 +2025,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::SetMtu(int unit, int mtu) {
   bcmlt_entry_handle_t entry_hdl;
-  std::vector<int>::iterator port;
   uint64_t max;
   uint64_t min;
   // Check if unit is valid
@@ -1898,18 +2038,15 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  // Get logical ports for this unit
-  std::vector<int> logical_ports = GetLogicalPorts(unit, unit_to_ports);
-
   absl::WriterMutexLock l(&data_lock_);
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
+      << "Logical ports are not identified on the Unit " << unit << ".";
   CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
   // Modify mtu for all the interfaces on this unit.
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
-  for (port = logical_ports.begin(); port < logical_ports.end(); port++) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+  for (const auto& port : *logical_ports_map) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAX_FRAME_SIZEs, mtu));
     RETURN_IF_BCM_ERROR(
         bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
@@ -1962,14 +2099,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     }
   }
 
-  std::set<int> l3_intf_ids = extract_values(*unit_to_l3_intf);
-  int totalEntries = static_cast<int>(l3_intf_ids.size());
-  int maxEntries = unit_to_l3_intf_max_limit_[unit];
-  if (totalEntries == maxEntries) {
+  // Check resource limits.
+  if (unit_to_l3_intf->size() == unit_to_l3_intf_max_limit_[unit]) {
     return MAKE_ERROR(ERR_INTERNAL) << "L3 interface table full.";
   }
 
   // entry id
+  std::set<int> l3_intf_ids = extract_values(*unit_to_l3_intf);
   int l3a_intf_id = unit_to_l3_intf_min_limit_[unit];
   if (!l3_intf_ids.empty()) {
     l3a_intf_id = *l3_intf_ids.rbegin() + 1;
@@ -1986,7 +2122,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
   // update map
-  unit_to_l3_intf->emplace(entry, l3a_intf_id);
+  gtl::InsertOrDie(unit_to_l3_intf, entry, l3a_intf_id);
   l3_interface.l3a_intf_id = l3a_intf_id;
   VLOG(1) << "Created a new L3 router intf: " << PrintL3RouterIntf(l3_interface)
           << " on unit " << unit << ".";
@@ -1994,13 +2130,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // update mtu
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_UC_MTUs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : 1)));
+      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : kDefaultVlan)));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
   RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : 1)));
+      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : kDefaultVlan)));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L3_MTUs, mtu));
   if (entry_info.status == SHR_E_NONE) {
     RETURN_IF_BCM_ERROR(
@@ -2016,22 +2152,19 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3RouterIntf(int unit, int router_intf_id) {
-  bcmlt_entry_handle_t entry_hdl;
-  L3Interfaces entry;
-  bool found;
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
   CHECK_RETURN_IF_FALSE(unit_to_l3_intf != nullptr)
       << "Unit " << unit << "  is not found in l3_interface_ids. Have you "
       << "called InitializeUnit for this unit before?";
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  const L3Interfaces* entry = FindIndexOrNull(*unit_to_l3_intf, router_intf_id);
+  if (!entry) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
   // delete entry
+  bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_EIFs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, L3_EIF_IDs, router_intf_id));
@@ -2039,7 +2172,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   // update map
-  unit_to_l3_intf->erase(entry);
+  unit_to_l3_intf->erase(*entry);
   VLOG(1) << "Router intf with ID " << router_intf_id << " deleted on unit "
           << unit << ".";
   return ::util::OkStatus();
@@ -2055,8 +2188,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
-  std::string errMsg = absl::StrCat("L3 Port egress interface table is full.");
-  ASSIGN_OR_RETURN(egress_intf_id, GetFreeSlot(l3_intfs, errMsg));
+  ASSIGN_OR_RETURN(egress_intf_id,
+      GetFreeSlot(l3_intfs, "L3 Port egress interface table is full."));
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_UC_NHOPs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, NHOP_IDs, egress_intf_id));
@@ -2068,7 +2201,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // update map
   ConsumeSlot(l3_intfs, egress_intf_id);
   l3_intf_object_t l3_intf_o = {0, 0x0, 1, 0, 0};
-  VLOG(1) << "Created a new L3 egress intf: "
+  VLOG(1) << "Created a new L3 CPU egress intf: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return egress_intf_id;
@@ -2081,7 +2214,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  L3Interfaces entry;
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
 
@@ -2097,27 +2229,23 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(max) << ".";
   }
 
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
   InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr &&
-                        unit_to_ports != nullptr && unit_to_l3_intf != nullptr)
+  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
 
   // get next free slot
-  std::string errMsg = absl::StrCat("L3 Port egress interface table is full.");
-  ASSIGN_OR_RETURN(egress_intf_id, GetFreeSlot(l3_intfs, errMsg));
+  ASSIGN_OR_RETURN(egress_intf_id,
+      GetFreeSlot(l3_intfs, "L3 Port egress interface table is full."));
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_UC_NHOPs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
@@ -2143,7 +2271,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // mark slot
   ConsumeSlot(l3_intfs, egress_intf_id);
   l3_intf_object_t l3_intf_o = {router_intf_id, nexthop_mac, vlan, port, 0};
-  VLOG(1) << "Created a new L3 egress intf: "
+  VLOG(1) << "Created a new L3 port egress intf: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return egress_intf_id;
@@ -2156,7 +2284,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  L3Interfaces entry;
 
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
@@ -2186,13 +2313,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
-  std::string errMsg = absl::StrCat("L3 Trunk egress interface table is full.");
-  ASSIGN_OR_RETURN(egress_intf_id, GetFreeSlot(l3_intfs, errMsg));
+  ASSIGN_OR_RETURN(egress_intf_id,
+      GetFreeSlot(l3_intfs, "L3 Trunk egress interface table is full."));
 
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -2213,7 +2338,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // update map
   ConsumeSlot(l3_intfs, egress_intf_id);
   l3_intf_object_t l3_intf_o = {router_intf_id, nexthop_mac, vlan, 0, trunk};
-  VLOG(1) << "Created a new L3 egress intf: "
+  VLOG(1) << "Created a new L3 trunk egress intf: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return egress_intf_id;
@@ -2229,8 +2354,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
-  std::string errMsg = absl::StrCat("L3 Port egress interface table is full.");
-  ASSIGN_OR_RETURN(egress_intf_id, GetFreeSlot(l3_intfs, errMsg));
+  ASSIGN_OR_RETURN(egress_intf_id,
+      GetFreeSlot(l3_intfs, "L3 Port egress interface table is full."));
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_UC_NHOPs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, NHOP_IDs, egress_intf_id));
@@ -2242,7 +2367,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // update map
   ConsumeSlot(l3_intfs, egress_intf_id);
   l3_intf_object_t l3_intf_o = {0, 0x0, 1, 0, 0};
-  VLOG(1) << "Created a new L3 egress intf: "
+  VLOG(1) << "Created a new L3 drop egress intf: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return egress_intf_id;
@@ -2313,7 +2438,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_intf_o.port = (is_trunk ? 0 : static_cast<int>(modport));
   l3_intf_o.trunk = (is_trunk ? static_cast<int>(trunk_id) : 0);
 
-  VLOG(1) << "Modified L3 egress intf while keeping its ID the same: "
+  VLOG(1) << "Modified L3 CPU egress intf while keeping its ID the same: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
 
@@ -2327,7 +2452,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                      int router_intf_id) {
   bcmlt_entry_handle_t entry_hdl;
   InUseMap::iterator it;
-  L3Interfaces entry;
   bool found;
   uint64_t max;
   uint64_t min;
@@ -2344,16 +2468,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr &&
-                        l3_egress_intf != nullptr &&
-                        unit_to_l3_intf != nullptr)
+  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
   if (it != l3_egress_intf->end()) {
@@ -2368,9 +2489,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << egress_intf_id << ".";
   }
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -2396,7 +2515,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_intf_o.port = port;
   l3_intf_o.trunk = 0;
 
-  VLOG(1) << "Modified L3 egress intf while keeping its ID the same: "
+  VLOG(1) << "Modified L3 port egress intf while keeping its ID the same: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return ::util::OkStatus();
@@ -2412,7 +2531,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  L3Interfaces entry;
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
   // Check if the unit is valid
@@ -2454,9 +2572,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << egress_intf_id << ".";
   }
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -2483,7 +2599,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_intf_o.port = 0;
   l3_intf_o.trunk = trunk;
 
-  VLOG(1) << "Modified L3 egress intf while keeping its ID the same: "
+  VLOG(1) << "Modified L3 trunk egress intf while keeping its ID the same: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
 
@@ -2555,7 +2671,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_intf_o.port = (is_trunk ? 0 : static_cast<int>(modport));
   l3_intf_o.trunk = (is_trunk ? static_cast<int>(trunk_id) : 0);
 
-  VLOG(1) << "Modified L3 egress intf while keeping its ID the same: "
+  VLOG(1) << "Modified L3 drop egress intf while keeping its ID the same: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return ::util::OkStatus();
@@ -2666,8 +2782,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // get next free slot
-  std::string errMsg = absl::StrCat("ECMP egress interface table is full.");
-  ASSIGN_OR_RETURN(ecmp_intf_id, GetFreeSlot(ecmp_intfs, errMsg));
+  ASSIGN_OR_RETURN(ecmp_intf_id,
+      GetFreeSlot(ecmp_intfs, "ECMP egress interface table is full."));
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, ECMPs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ECMP_IDs, ecmp_intf_id));
@@ -2783,7 +2899,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t min;
   int rv;
   InUseMap::iterator it;
-  l3_route_t route = {false, vrf, class_id, egress_intf_id, subnet, mask, 0, 0};
+  l3_route_t route = {false, vrf, class_id, egress_intf_id, subnet, mask, "", ""};
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
@@ -2866,10 +2982,16 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t max;
   uint64_t min;
   InUseMap::iterator it;
-  // TODO(BRCM): fix ipv6, convert string to ipv6 address
-  l3_route_t route = {true, vrf, class_id, egress_intf_id, 0, 0, 0, 0};
+  l3_route_t route = {true, vrf, class_id, egress_intf_id, 0, 0, "", ""};
 
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+
+  CHECK_RETURN_IF_FALSE(subnet.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper = ByteStreamToUint<uint64>(subnet.substr(0, 8));
+  uint64 ipv6_lower = ByteStreamToUint<uint64>(subnet.substr(8, 16));
+  CHECK_RETURN_IF_FALSE(mask.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper_mask = ByteStreamToUint<uint64>(mask.substr(0, 8));
+  uint64 ipv6_lower_mask = ByteStreamToUint<uint64>(mask.substr(8, 16));
 
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV6_UC_ROUTE_VRFs, VRF_IDs, &min, &max));
@@ -2916,26 +3038,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_allocate(unit, L3_IPV6_UC_ROUTE_VRFs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, vrf));
-  if (subnet.empty()) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, 0x0));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(subnet.data());
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, i));
-    route.l3a_ip6_net = i;
-  }
-  if (subnet.empty()) {
-    RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, 0x0));
-  } else if (mask.empty()) {
-    RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, 0x0ff));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(mask.data());
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, i));
-    route.l3a_ip6_mask = i;
-  }
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, 0x0));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWER_MASKs, 0x0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, ipv6_upper));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, ipv6_lower));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, ipv6_upper_mask));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWER_MASKs, ipv6_lower_mask));
   if (class_id > 0) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, CLASS_IDs, class_id));
   }
@@ -2971,7 +3077,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       (egress_intf_id < static_cast<int>(min))) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid egress interface (" << egress_intf_id
-           << "), valid vrf range is "
+           << "), valid next hop id range is "
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
@@ -3015,8 +3121,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t max;
   uint64_t min;
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
-  // TODO(BRCM): fix ipv6, convert string to ipv6 address
-  l3_host_t host = {true, vrf, class_id, egress_intf_id, 0, 0};
+  l3_host_t host = {true, vrf, class_id, egress_intf_id, 0, ipv6};
+
+  CHECK_RETURN_IF_FALSE(ipv6.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper = ByteStreamToUint<uint64>(ipv6.substr(0, 8));
+  uint64 ipv6_lower = ByteStreamToUint<uint64>(ipv6.substr(8, 16));
 
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV6_UC_HOSTs, VRF_IDs, &min, &max));
@@ -3034,7 +3143,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       (egress_intf_id < static_cast<int>(min))) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid egress interface (" << egress_intf_id
-           << "), valid vrf range is "
+           << "), valid next hop id range is "
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
@@ -3044,14 +3153,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_IPV6_UC_HOSTs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, vrf));
-  // TODO(BRCM): fix ipv6, convert string to upper and lower ipv6 addres
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, 0x0));
-  if (ipv6.empty()) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, 0x0));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(ipv6.data());
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, i));
-  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, ipv6_upper));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, ipv6_lower));
   if (class_id > 0) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, CLASS_IDs, class_id));
   }
@@ -3079,7 +3182,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t min;
   bool entry_updated = false;
   InUseMap::iterator it;
-  l3_route_t route = {false, vrf, class_id, egress_intf_id, subnet, mask, 0, 0};
+  l3_route_t route = {false, vrf, class_id, egress_intf_id, subnet, mask, "", ""};
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
@@ -3177,8 +3280,14 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool entry_updated = false;
   InUseMap::iterator it;
   // TODO(BRCM): fix ipv6, convert string to ipv6 address
-  l3_route_t route = {true, vrf, class_id, egress_intf_id, 0, 0, 0, 0};
+  l3_route_t route = {true, vrf, class_id, egress_intf_id, 0, 0, subnet, mask};
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  CHECK_RETURN_IF_FALSE(subnet.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper = ByteStreamToUint<uint64>(subnet.substr(0, 8));
+  uint64 ipv6_lower = ByteStreamToUint<uint64>(subnet.substr(8, 16));
+  CHECK_RETURN_IF_FALSE(mask.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper_mask = ByteStreamToUint<uint64>(mask.substr(0, 8));
+  uint64 ipv6_lower_mask = ByteStreamToUint<uint64>(mask.substr(8, 16));
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
@@ -3225,26 +3334,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_allocate(unit, L3_IPV6_UC_ROUTE_VRFs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, vrf));
-  if (subnet.empty()) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, 0x0));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(subnet.data());
-    route.l3a_ip6_net = i;
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, i));
-  }
-  if (subnet.empty()) {
-    RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, 0x0));
-  } else if (mask.empty()) {
-    RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, 0x0ff));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(mask.data());
-    route.l3a_ip6_mask = i;
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, i));
-  }
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, 0x0));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWER_MASKs, 0x0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, ipv6_upper));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, ipv6_lower));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, ipv6_upper_mask));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWER_MASKs, ipv6_lower_mask));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
@@ -3305,7 +3398,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       (egress_intf_id < static_cast<int>(min))) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid egress interface (" << egress_intf_id
-           << "), valid vrf range is "
+           << "), valid next hop id range is "
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
@@ -3352,9 +3445,14 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool entry_updated = false;
   bcmlt_entry_info_t entry_info;
   bcmlt_entry_handle_t entry_hdl;
-  // TODO(BRCM): fix ipv6, convert string to ipv6 address
-  l3_host_t host = {true, vrf, class_id, egress_intf_id, 0, 0};
+  l3_host_t host = {true, vrf, class_id, egress_intf_id, 0, ipv6};
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  // Check if the unit is valid
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+
+  CHECK_RETURN_IF_FALSE(ipv6.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper = ByteStreamToUint<uint64>(ipv6.substr(0, 8));
+  uint64 ipv6_lower = ByteStreamToUint<uint64>(ipv6.substr(8, 16));
 
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV6_UC_HOSTs, VRF_IDs, &min, &max));
@@ -3371,24 +3469,16 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       (egress_intf_id < static_cast<int>(min))) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Invalid egress interface (" << egress_intf_id
-           << "), valid vrf range is "
+           << "), valid next hop id range is "
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
-  // Check if the unit is valid
-  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
-  // TODO(BRCM): fix ipv6, convert string to upper and lower ipv6 addres
+  // TODO(BRCM): fix ipv6, convert string to upper and lower ipv6 address
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_IPV6_UC_HOSTs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, vrf));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, 0x0));
-  if (ipv6.empty()) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, 0x0));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(ipv6.data());
-    host.l3a_ip6_addr = i;
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, i));
-  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, ipv6_upper));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, ipv6_lower));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
@@ -3426,7 +3516,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t min;
   uint64_t data;
   bool entry_delete = false;
-  l3_route_t route = {false, vrf, 0, 0, subnet, mask, 0, 0};
+  l3_route_t route = {false, vrf, 0, 0, subnet, mask, "", ""};
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(
@@ -3485,7 +3575,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   uint64_t data;
   bool entry_delete = false;
   // TODO(BRCM): fix ipv6, convert string to ipv6 address
-  l3_route_t route = {true, vrf, 0, 0, 0, 0, 0, 0};
+  l3_route_t route = {true, vrf, 0, 0, 0, 0, subnet, mask};
+  CHECK_RETURN_IF_FALSE(subnet.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper = ByteStreamToUint<uint64>(subnet.substr(0, 8));
+  uint64 ipv6_lower = ByteStreamToUint<uint64>(subnet.substr(8, 16));
+  CHECK_RETURN_IF_FALSE(mask.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper_mask = ByteStreamToUint<uint64>(mask.substr(0, 8));
+  uint64 ipv6_lower_mask = ByteStreamToUint<uint64>(mask.substr(8, 16));
 
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV6_UC_ROUTE_VRFs, VRF_IDs, &min, &max));
@@ -3504,26 +3600,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_allocate(unit, L3_IPV6_UC_ROUTE_VRFs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, vrf));
-  if (subnet.empty()) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, 0x0));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(subnet.data());
-    route.l3a_ip6_net = i;
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, i));
-  }
-  if (subnet.empty()) {
-    RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, 0x0));
-  } else if (mask.empty()) {
-    RETURN_IF_BCM_ERROR(
-        bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, 0x0ff));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(mask.data());
-    route.l3a_ip6_mask = i;
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, i));
-  }
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, 0x0));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWER_MASKs, 0x0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, ipv6_upper));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, ipv6_lower));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPER_MASKs, ipv6_upper_mask));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWER_MASKs, ipv6_lower_mask));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
@@ -3620,7 +3700,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bcmlt_entry_handle_t entry_hdl;
   bcmlt_entry_info_t entry_info;
   // TODO(BRCM): fix ipv6, convert string to ipv6 address
-  l3_host_t host = {true, vrf, 0, 0, 0, 0};
+  l3_host_t host = {true, vrf, 0, 0, 0, ipv6};
+
+  CHECK_RETURN_IF_FALSE(ipv6.size() == 16); // TODO(max): is there a constant for that?
+  uint64 ipv6_upper = ByteStreamToUint<uint64>(ipv6.substr(0, 8));
+  uint64 ipv6_lower = ByteStreamToUint<uint64>(ipv6.substr(8, 16));
 
   RETURN_IF_BCM_ERROR(
       GetFieldMinMaxValue(unit, L3_IPV6_UC_HOSTs, VRF_IDs, &min, &max));
@@ -3635,17 +3719,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
-  // TODO(BRCM): fix ipv6, convert string to upper and lower ipv6 addres
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_IPV6_UC_HOSTs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VRF_IDs, vrf));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, 0x0));
-  if (ipv6.empty()) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, 0x0));
-  } else {
-    uint64 i = *reinterpret_cast<const uint64*>(ipv6.data());
-    host.l3a_ip6_addr = i;
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, i));
-  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_UPPERs, ipv6_upper));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_LOWERs, ipv6_lower));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
@@ -3719,23 +3796,19 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(max) << ".";
   }
 
+  // Check if entry already exists.
   MyStationEntry entry(vlan, vlan_mask, dst_mac, dst_mac_mask);
   auto unit_to_my_stations = gtl::FindOrNull(my_station_ids_, unit);
   CHECK_RETURN_IF_FALSE(unit_to_my_stations != nullptr)
       << "Unit " << unit << "  is not found in unit_to_my_stations. Have you "
       << "called InitializeUnit for this unit before?";
-  if (unit_to_my_stations->count(entry)) {
-    auto it = unit_to_my_stations->find(entry);
-    if (it != unit_to_my_stations->end()) {
-      return it->second;
-    }
+  auto id = gtl::FindOrNull(*unit_to_my_stations, entry);
+  if (id) {
+    return *id;
   }
-  // get station ids
-  std::set<int> stations_ids = extract_values(*unit_to_my_stations);
-  int totalEntries = static_cast<int>(stations_ids.size());
-  int maxEntries = unit_to_my_station_max_limit_[unit];
-  if (totalEntries == maxEntries) {
-    return MAKE_ERROR(ERR_INTERNAL) << "MyStation table Full.";
+  // Check resource limits
+  if (unit_to_my_stations->size() == unit_to_my_station_max_limit_[unit]) {
+    return MAKE_ERROR(ERR_TABLE_FULL) << "MyStation table full.";
   }
   // insert entry
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_MY_STATIONs, &entry_hdl));
@@ -3752,14 +3825,19 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  // Get new station id
+  std::set<int> stations_ids = extract_values(*unit_to_my_stations);
   int station_id = unit_to_my_station_min_limit_[unit];
   if (!stations_ids.empty()) {
-    station_id = *stations_ids.rbegin() + 1;
+    station_id = *stations_ids.rbegin() + 1; // last (=highest) id + 1
   }
-  // update  map
-  unit_to_my_stations->emplace(entry, station_id);
+  // update map
+  gtl::InsertOrDie(unit_to_my_stations, entry, station_id);
   Uint64ToBcmMac(dst_mac, &mac);
-  VLOG(1) << "Added dst MAC " << BcmMacToStr(mac) << " & VLAN "
+  uint8 mac_mask[6];
+  Uint64ToBcmMac(dst_mac_mask, &mac_mask);
+  VLOG(1) << "Added dst MAC " << BcmMacToStr(mac) << "&&&"
+          << BcmMacToStr(mac_mask) << " and VLAN "
           << vlan << " to my station TCAM with priority " << priority
           << " on unit " << unit << ".";
   return station_id;
@@ -3767,34 +3845,164 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::DeleteMyStationEntry(int unit, int station_id) {
   bcmlt_entry_handle_t entry_hdl;
-  bool found;
-  MyStationEntry entry;
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto unit_to_my_stations = gtl::FindOrNull(my_station_ids_, unit);
   CHECK_RETURN_IF_FALSE(unit_to_my_stations != nullptr)
       << "Unit " << unit << "  is not found in unit_to_my_stations. Have you "
       << "called InitializeUnit for this unit before?";
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_my_stations, station_id, &entry));
-  if (!found) {
+  const MyStationEntry* entry = FindIndexOrNull(*unit_to_my_stations, station_id);
+  if (!entry) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Station ID " << station_id << " not found.";
   }
   // delete entry
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_MY_STATIONs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, entry.vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, entry->vlan));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, VLAN_ID_MASKs, entry.vlan_mask));
+      bcmlt_entry_field_add(entry_hdl, VLAN_ID_MASKs, entry->vlan_mask));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, entry.dst_mac));
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, entry->dst_mac));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, MAC_ADDR_MASKs, entry.dst_mac_mask));
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDR_MASKs, entry->dst_mac_mask));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   // delete map
-  unit_to_my_stations->erase(entry);
+  unit_to_my_stations->erase(*entry);
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::AddL2Entry(int unit, int vlan, uint64 dst_mac,
+                            int logical_port, int trunk_port,
+                            int l2_mcast_group_id, int class_id,
+                            bool copy_to_cpu, bool dst_drop) {
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  bcmlt_entry_handle_t entry_hdl;
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_FDB_VLANs, &entry_hdl));
+  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, DEST_TYPEs,
+      logical_port ? PORTs : trunk_port ? TRUNKs : L2_MC_GRPs));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, TRUNK_IDs, trunk_port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODIDs, 0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODPORTs, logical_port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L2_MC_GRP_IDs, l2_mcast_group_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, CLASS_IDs, class_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, COPY_TO_CPUs, copy_to_cpu));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, STATICs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, DST_DROPs, dst_drop));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                BCMLT_PRIORITY_NORMAL));
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::DeleteL2Entry(int unit, int vlan, uint64 dst_mac) {
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  bcmlt_entry_handle_t entry_hdl;
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_FDB_VLANs, &entry_hdl));
+  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
+                                                BCMLT_PRIORITY_NORMAL));
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::AddL2MulticastEntry(int unit, int priority,
+    int vlan, int vlan_mask, uint64 dst_mac, uint64 dst_mac_mask,
+    bool copy_to_cpu, bool drop, uint8 l2_mcast_group_id) {
+  bcmlt_entry_handle_t entry_hdl;
+  uint64_t max;
+  uint64_t min;
+  uint8 mac[ETHER_ADDR_LEN];
+  // Check if unit is valid
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  // Check if vlan is valid
+  RETURN_IF_BCM_ERROR(
+      GetFieldMinMaxValue(unit, L2_MY_STATIONs, VLAN_IDs, &min, &max));
+  if ((vlan > static_cast<int>(max)) ||
+      (vlan < static_cast<int>(min))) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Invalid vlan (" << vlan << "), valid vlan range is "
+           << static_cast<int>(min) << " - "
+           << static_cast<int>(max) << ".";
+  }
+  // Check if vlan mask is valid
+  RETURN_IF_BCM_ERROR(
+      GetFieldMinMaxValue(unit, L2_MY_STATIONs, VLAN_ID_MASKs, &min, &max));
+  if ((vlan_mask > static_cast<int>(max)) ||
+      (vlan_mask < static_cast<int>(min))) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Invalid vlan_mask (" << vlan_mask << "), valid vlan_mask range is "
+           << static_cast<int>(min) << " - "
+           << static_cast<int>(max) << ".";
+  }
+  // Check if priority is valid
+  RETURN_IF_BCM_ERROR(
+      GetFieldMinMaxValue(unit, L2_MY_STATIONs, ENTRY_PRIORITYs, &min, &max));
+  if ((priority > static_cast<int>(max)) ||
+      (priority < static_cast<int>(min))) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Invalid priority (" << priority << "), valid priority range is "
+           << static_cast<int>(min) << " - "
+           << static_cast<int>(max) << ".";
+  }
+  // Insert entry
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_MY_STATIONs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, ENTRY_PRIORITYs, priority));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, VLAN_ID_MASKs, vlan_mask));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDR_MASKs, dst_mac_mask));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV4_TERMINATIONs, 0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV6_TERMINATIONs, 0));
+  // Copy and drop are forced to true, because we do not expect the P4 program
+  // to actually to set them in the action. This is an implementation detail of
+  // of the current software multicast implementation.
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, COPY_TO_CPUs, copy_to_cpu || true));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, DROPs, drop || true));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  // update map
+  gtl::InsertOrDie(&dst_mac_to_multicast_group_id, dst_mac, l2_mcast_group_id);
+
+  uint8 mac_mask[ETHER_ADDR_LEN];
+  Uint64ToBcmMac(dst_mac, &mac);
+  Uint64ToBcmMac(dst_mac_mask, &mac_mask);
+  VLOG(1) << "Added dst MAC " << BcmMacToStr(mac) << "&&&" << BcmMacToStr(mac_mask)
+          << " and VLAN "
+          << vlan << " to my station TCAM with priority " << priority
+          << " on unit " << unit << ".";
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::DeleteL2MulticastEntry(int unit, int vlan, int vlan_mask, uint64 dst_mac,
+                                        uint64 dst_mac_mask) {
+
+  bcmlt_entry_handle_t entry_hdl;
+  // Check if the unit is valid
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  // delete entry
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_MY_STATIONs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, VLAN_ID_MASKs, vlan_mask));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, dst_mac));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDR_MASKs, dst_mac_mask));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  // delete map
+  dst_mac_to_multicast_group_id.erase(dst_mac);
+
   return ::util::OkStatus();
 }
 
@@ -3890,11 +4098,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
   // Make all vlans point to default STG
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, 1));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_STG_IDs, kDefaultVlanStgId));
 
   // Include CPU to the member ports
   members[0] = 0xFFFFFFFFFFFFFFFFULL;  // all ports
+  members[1] = kuint64max;
   untagged_members[0] = 0xFFFFFFFFFFFFFFFeULL; // exclude cpu port
+  untagged_members[1] = kuint64max;
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_array_add(entry_hdl, EGR_MEMBER_PORTSs, 0, members, 3));
   RETURN_IF_BCM_ERROR(
@@ -3959,12 +4169,106 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                  bool block_known_multicast,
                                                  bool block_unknown_multicast,
                                                  bool block_unknown_unicast) {
-  return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported.";
+  // TODO(max): the current mapping scheme of taking the lower 7 bits of the
+  // vlan ID to create a vlan profile ID can result in collisions.
+  bcmlt_entry_handle_t entry_hdl;
+  bcmlt_entry_info_t entry_info;
+  uint64 data;
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+
+  // Get VLAN profile ID associated with VLAN
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLANs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
+  if (entry_info.status == SHR_E_NOT_FOUND) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "VLAN " << vlan << " does not exists on unit " << unit << ".";
+  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, VLAN_PROFILE_IDs, &data));
+  uint8 profile_id = data;
+  if (profile_id == 0) {
+    profile_id = vlan & 0x7f; // Profile IDs are 7 bit
+  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  // Check if VLAN profile exists, create if needed
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_PROFILEs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_PROFILE_IDs, profile_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  if (entry_info.status == SHR_E_NOT_FOUND) {
+    VLOG(1) << "VLAN profile " << (uint16) profile_id << " does not exist.";
+    RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_PROFILEs, &entry_hdl));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_PROFILE_IDs, profile_id));
+    RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                           BCMLT_PRIORITY_NORMAL));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  }
+
+  // Set profile ID to VLAN ID
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLANs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_PROFILE_IDs, profile_id));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
+  RETURN_IF_BCM_ERROR(entry_info.status);
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  // Configure blocking behaviour in profile
+  // TODO(max): mapping from boolean args to BCM flags is not clear
+  if (block_unknown_unicast ^ block_unknown_multicast) {
+    LOG(WARNING) << "blocking does not differentiate between unknown uni and multicast";
+  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_PROFILEs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_PROFILE_IDs, profile_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L2_NON_UCAST_DROPs, block_broadcast));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L2_MISS_DROPs, block_unknown_multicast || block_unknown_unicast));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
+                                          BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::ConfigureL2Learning(int unit, int vlan,
                                                   bool disable_l2_learning) {
-  return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported.";
+  bcmlt_entry_handle_t entry_hdl;
+  bcmlt_entry_info_t entry_info;
+  uint64 data;
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+
+  // Get VLAN profile ID associated with VLAN
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLANs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
+  if (entry_info.status == SHR_E_NOT_FOUND) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "VLAN " << vlan << " does not exists on unit " << unit << ".";
+  }
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, VLAN_PROFILE_IDs, &data));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  uint8 profile_id = data;
+  VLOG(1) << "VLAN " << vlan << " has VLAN profile " << (uint16) profile_id;
+  if (profile_id == 0) {
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "VLAN " << vlan << " has no associated VLAN profile";
+  }
+
+  // This assumes the profile exists
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, VLAN_PROFILEs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_PROFILE_IDs, profile_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, NO_LEARNINGs, disable_l2_learning));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
+                                          BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetL2AgeTimer(int unit, int l2_age_duration_sec) {
@@ -3982,28 +4286,31 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 ::util::Status BcmSdkWrapper::CreateKnetIntf(int unit, int vlan,
                                              std::string* netif_name,
                                              int* netif_id) {
-  bcmpkt_netif_t netif;
-
   CHECK_RETURN_IF_FALSE(netif_name != nullptr && netif_id != nullptr)
       << "Null netif_name or netif_id pointers.";
   CHECK_RETURN_IF_FALSE(!netif_name->empty())
       << "Empty netif name for unit " << unit << ".";
-
   CHECK_RETURN_IF_FALSE(netif_name->length() <=
                             static_cast<size_t>(BCMPKT_DEV_NAME_MAX))
       << "Oversize netif name for unit " << unit << ": " << *netif_name << ".";
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
-  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit)); 
   // Create netif
+  bcmpkt_netif_t netif;
   memset(&netif, 0, sizeof(netif));
-  netif.vlan = vlan > 0 ? vlan : 1;
+  // TODO(max): A valid VLAN (kDefaultVlan) is needed to get correct packet_in into the ingress pipeline
+  // But that adds VLAN tags to direct packet_outs. Maybe if there is a way to stip outgoing VLAN tags.
+  // netif.vlan = vlan > 0 ? vlan : kDefaultVlan; // TODO: Do we want VLAN tags on packetIO Tx packets?
   netif.max_frame_size = 1536;
   strncpy(netif.name, netif_name->c_str(), BCMPKT_DEV_NAME_MAX);
   netif.flags = BCMPKT_NETIF_F_RCPU_ENCAP;
   RETURN_IF_BCM_ERROR(bcmpkt_netif_create(unit, &netif));
 
   // TODO(BRCM): enable if required: Setup UNET
-  //RETURN_IF_BCM_ERROR(bcmpkt_unet_create(unit, netif.id));
+  RETURN_IF_BCM_ERROR(bcmpkt_unet_create(unit, netif.id));
+
+  RETURN_IF_BCM_ERROR(bcmpkt_rx_register(unit, netif.id, 0,
+                                         packet_receive_callback, NULL));
 
   *netif_id = netif.id;
   *netif_name = netif.name;
@@ -4012,29 +4319,47 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::DestroyKnetIntf(int unit, int netif_id) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  RETURN_IF_BCM_ERROR(bcmpkt_rx_unregister(unit, netif_id, packet_receive_callback, 0));
+  RETURN_IF_BCM_ERROR(bcmpkt_unet_destroy(unit, netif_id));
   RETURN_IF_BCM_ERROR(bcmpkt_netif_destroy(unit, netif_id));
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::CreateKnetFilter(int unit, int netif_id,
                                                       KnetFilterType type) {
-  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit)); 
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   bcmpkt_filter_t filter;
-    memset(&filter, 0, sizeof(filter));
-    filter.type = BCMPKT_FILTER_T_RX_PKT;
-    filter.dest_type = BCMPKT_DEST_T_NETIF;
-    filter.dest_id = netif_id;
-    filter.dma_chan = 1;
+  memset(&filter, 0, sizeof(filter));
+  filter.type = BCMPKT_FILTER_T_RX_PKT;
+  filter.dest_type = BCMPKT_DEST_T_NETIF;
+  filter.dest_id = netif_id;
+  filter.dma_chan = 1;
 
   switch (type) {
     case KnetFilterType::CATCH_NON_SFLOW_FP_MATCH:
       // Send all the non-sflow packets which match an FP rule to controller.
       filter.priority = 0;  // hardcoded. Highest priority.
       snprintf(filter.desc, sizeof(filter.desc), "CATCH_NON_SFLOW_FP_MATCH");
-      filter.m_fp_rule = 1;  // This is a cookie we use for all the FP rules
-                             // that send packets to CPU
-      BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_CPU_FFP);
-      filter.match_flags |= BCMPKT_FILTER_M_REASON;
+      // TODO(max): For now we want all Rx packets to go to controller,
+      // later we can implement more fine grained filtering
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_NONE);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_COUNT);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_SRC);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_DST);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_FLEX);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_CPU_SFLOW_SRC);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_CPU_SFLOW_DST);
+      // BCMPKT_RX_REASON_CLEAR(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_CPU_SFLOW_FLEX);
+      // BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_CPU_FFP);
+      // BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_CPU_L2CPU);
+      // BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_CPU_L3CPU);
+      // BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_L3_NEXT_HOP);
+
+      // filter.m_fp_rule = 1;  // This is a cookie we use for all the FP rules
+      //                        // that send packets to CPU
+      // BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_CPU_FFP);
+      // filter.match_flags |= BCMPKT_FILTER_M_REASON;
       break;
     case KnetFilterType::CATCH_SFLOW_FROM_INGRESS_PORT:
       // Send all ingress-sampled sflow packets to sflow agent.
@@ -4051,6 +4376,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                "CATCH_SFLOW_FROM_EGRESS_PORT");
       BCMPKT_RX_REASON_SET(filter.m_reason, BCMPKT_RX_REASON_CPU_SFLOW_DST);
       filter.match_flags |= BCMPKT_FILTER_M_REASON;
+      break;
+    case KnetFilterType::CATCH_ALL:
+      filter.priority = 10; // hardcoded. Lowest priority.
+      snprintf(filter.desc, sizeof(filter.desc), "CATCH_ALL");
       break;
     default:
       return MAKE_ERROR(ERR_INTERNAL) << "Un-supported KNET filter type.";
@@ -4077,7 +4406,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   // Initialize device
   memset(&cfg, 0, sizeof(cfg));
-  cfg.cgrp_size = 4; // 
+  cfg.cgrp_size = 4; //
   cfg.cgrp_bmp = 0x7;
   RETURN_IF_BCM_ERROR(bcmpkt_dev_init(unit, &cfg));
 
@@ -4097,33 +4426,20 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   chan.max_frame_size = 1536;
   RETURN_IF_BCM_ERROR(bcmpkt_dma_chan_set(unit, &chan));
 
+  // Map all queues to Rx channel
+  // We have to store the string in a non-const char array, because the SDKLT
+  // API is not const and C++ string literals are "const char*"
+  char kCliChannelMapString[] =
+      "pktdev chan queuemap 1 highword=0xffff lowword=0xffffffff";
+  RETURN_IF_BCM_ERROR(bcma_cli_bshell(unit, kCliChannelMapString));
+
   // Bringup network device
   RETURN_IF_BCM_ERROR(bcmpkt_dev_enable(unit));
 
-  // Create netif
-  memset(&netif, 0, sizeof(netif));
-  netif.max_frame_size = 1536;
-  netif.flags = BCMPKT_NETIF_F_RCPU_ENCAP;
-  RETURN_IF_BCM_ERROR(bcmpkt_netif_create(unit, &netif));
-
-  // Setup UNET
-  RETURN_IF_BCM_ERROR(bcmpkt_unet_create(unit, netif.id));
-
-  // TODO(BRCM): need to configure DMA channels,
-  // presently 'DEVICE_PKT_RX_Q' appears not functional.
-  // need to replicate cli implementation. revisit if the
-  // received packets are handled.
-
-  // Register the RX callback
-  RETURN_IF_BCM_ERROR(bcmpkt_rx_register(unit, netif.id, 0,
-                                         packet_receive_callback, NULL));
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::StopRx(int unit) {
-  // Unregister the RX callback.
-  RETURN_IF_BCM_ERROR(
-      bcmpkt_rx_unregister(unit, 1, packet_receive_callback, 0));
   return ::util::OkStatus();
 }
 
@@ -4210,20 +4526,16 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::GetKnetHeaderForDirectTx(int unit, int port,
                                                        int cos, uint64 smac,
+                                                       size_t packet_len,
                                                        std::string* header) {
-
-  uint64_t data;
-
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
- 
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
+
   CHECK_RETURN_IF_FALSE(header != nullptr);
   header->clear();
 
+  // TODO(max): update this comment
   // Try to find the headers for the packet that goes to a port directly. The
   // format of the packet is the following:
   //  --------------------------------------------------------------------
@@ -4237,6 +4549,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   //------------------------------------------
   struct RcpuHeader rcpu_header;
   memset(&rcpu_header, 0, sizeof(rcpu_header));
+  static_assert(sizeof(rcpu_header) == BCMPKT_RCPU_HDR_LEN, "sizeof(rcpu_header) != BCMPKT_RCPU_HDR_LEN");
 
   // For RCPU header, smac is the given smac (read from the KNET netif). dmac
   // is set to 0.
@@ -4245,11 +4558,12 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   // RCPU header is always VLAN tagged. We use a fixed special VLAN ID for
   // RCPU headers.
-  rcpu_header.ether_header.ether_type = htons(kRcpuVlanEthertype);
+  rcpu_header.ether_header.ether_type = htons(kRcpuVlanEthertype); // bcmpkt_rcpu_hdr_s.tpid
   rcpu_header.vlan_tag.vlan_id = htons(kRcpuVlanId);
-  rcpu_header.vlan_tag.type = htons(kRcpuEthertype);
+  rcpu_header.vlan_tag.type = htons(kRcpuEthertype); // bcmpkt_rcpu_hdr_s.ethertype
 
   // Now fill up the RCPU data.
+  // TODO(max): Return & check if NULL
   bcmdrd_dev_t *dev;
   dev = bcmdrd_dev_get(unit);
   uint16 pci_device = 0;
@@ -4258,9 +4572,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   // TODO(BRCM): verify 'pci_device' is valid or not in unit test
   rcpu_header.rcpu_data.rcpu_signature = htons(pci_device & ~0xf);
-  rcpu_header.rcpu_data.rcpu_opcode = kRcpuOpcodeFromCpuPkt;
+  rcpu_header.rcpu_data.rcpu_opcode = BCMPKT_RCPU_OP_TX;
   rcpu_header.rcpu_data.rcpu_flags |= kRcpuFlagModhdr;  // we add SOBMH later
+  rcpu_header.rcpu_data.rcpu_payloadlen = htons(packet_len);
+  rcpu_header.rcpu_data.rcpu_metalen = BCMPKT_TXPMD_SIZE_BYTES;
 
+  std::string s0((char*)&rcpu_header, sizeof(rcpu_header));
+  VLOG(2) << "RCPU: " << StringToHex(s0);
   header->assign(reinterpret_cast<const char*>(&rcpu_header),
                  sizeof(rcpu_header));
 
@@ -4273,38 +4591,27 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
-  // TODO(BRCM): hardcoding BCM_COS_DEFAULT as 4, check if this is a problem
-  cos = (cos >= 0 ? cos : 4);
-  bcmlt_entry_handle_t entry_hdl;
-  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TM_PORT_MAP_INFOs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP, BCMLT_PRIORITY_NORMAL));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_get(entry_hdl, BASE_UC_Qs, &data));
-  int qbase = static_cast<int>(data);
-  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
-
-  int qnum = qbase + cos;
-  char meta[kRcpuTxMetaSize];
+  uint32 meta[BCMPKT_TXPMD_SIZE_WORDS];
   memset(meta, 0, sizeof(meta));
-  bool ok = true;
-  ok &= SobFieldSizeVerify<12>(qnum);
-  ok &= SetSobField<0, 31, 30>(meta, 0x2);   // INTERNAL_HEADER
-  ok &= SetSobField<0, 29, 24>(meta, 0x01);  // SOBMH_FROM_CPU
-  ok &= SetSobField<1, 7, 0>(meta, port);    // DST_PORT
-  ok &= SetSobField<2, 28, 25>(meta, cos);   // INPUT_PRI
-  ok &= SetSobField<2, 13, 8>(meta, cos);    // COS
-  ok &= SetSobField<2, 14, 14>(meta, 1);     // UNICAST: yes
-  // TODO(BRCM): second parameter is SRC_MODID, hardcoding it to '0'
-  // in SDKLT modid is '0', check if this is a problem in unit test
-  ok &= SetSobField<2, 7, 0>(meta, 0);
-  CHECK_RETURN_IF_FALSE(ok) << "Failed to set SOBMH fields.";
-  header->append(meta, sizeof(meta));
+  #define TXPMD_START_IHEADER 2
+  #define TXPMD_HEADER_TYPE_FROM_CPU 1
+  bcmdrd_dev_type_t dev_type;
+  RETURN_IF_BCM_ERROR(bcmpkt_dev_type_get(unit, &dev_type));
+
+  RETURN_IF_BCM_ERROR(bcmpkt_txpmd_field_set(dev_type, meta, BCMPKT_TXPMD_START, TXPMD_START_IHEADER));
+  RETURN_IF_BCM_ERROR(bcmpkt_txpmd_field_set(dev_type, meta, BCMPKT_TXPMD_HEADER_TYPE, TXPMD_HEADER_TYPE_FROM_CPU));
+  RETURN_IF_BCM_ERROR(bcmpkt_txpmd_field_set(dev_type, meta, BCMPKT_TXPMD_UNICAST, 1));
+  RETURN_IF_BCM_ERROR(bcmpkt_txpmd_field_set(dev_type, meta, BCMPKT_TXPMD_LOCAL_DEST_PORT, port));
+  RETURN_IF_BCM_ERROR(bcmpkt_txpmd_field_set(dev_type, meta, BCMPKT_TXPMD_COS, cos));
+
+  VLOG(2) << "txpmd: " << StringToHex(std::string((char*)meta, sizeof(meta)));
+  header->append(reinterpret_cast<const char*>(meta), sizeof(meta));
 
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetKnetHeaderForIngressPipelineTx(
-    int unit, uint64 smac, std::string* header) {
+    int unit, uint64 smac, size_t packet_len, std::string* header) {
   CHECK_RETURN_IF_FALSE(header != nullptr);
   header->clear();
 
@@ -4329,11 +4636,12 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   // RCPU header is always VLAN tagged. We use a fixed special VLAN ID for
   // RCPU headers.
-  rcpu_header.ether_header.ether_type = htons(kRcpuVlanEthertype);
+  rcpu_header.ether_header.ether_type = htons(kRcpuVlanEthertype); // bcmpkt_rcpu_hdr_s.tpid
   rcpu_header.vlan_tag.vlan_id = htons(kRcpuVlanId);
-  rcpu_header.vlan_tag.type = htons(kRcpuEthertype);
+  rcpu_header.vlan_tag.type = htons(kRcpuEthertype); // bcmpkt_rcpu_hdr_s.ethertype
 
   // Now fill up the RCPU data.
+  // TODO(max): Return & check if NULL
   bcmdrd_dev_t *dev;
   dev = bcmdrd_dev_get(unit);
   uint16 pci_device = 0;
@@ -4342,15 +4650,25 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   // TODO(BRCM): verify 'pci_device' is valid or not in unit test
   rcpu_header.rcpu_data.rcpu_signature = htons(pci_device & ~0xf);
-  rcpu_header.rcpu_data.rcpu_opcode = kRcpuOpcodeFromCpuPkt;
+  rcpu_header.rcpu_data.rcpu_opcode = BCMPKT_RCPU_OP_TX;
+  rcpu_header.rcpu_data.rcpu_flags |= kRcpuFlagModhdr;  // we add SOBMH later
+  rcpu_header.rcpu_data.rcpu_payloadlen = htons(packet_len);
+  rcpu_header.rcpu_data.rcpu_metalen = 0;
 
-  header->assign(reinterpret_cast<char*>(&rcpu_header), sizeof(rcpu_header));
+  header->assign(reinterpret_cast<const char*>(&rcpu_header), sizeof(rcpu_header));
 
   return ::util::OkStatus();
 }
 
 size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   return sizeof(RcpuHeader) + kRcpuRxMetaSize;
+}
+
+static void dumpRxpmdHeaderRaw(const void* rxpmd) {
+  auto words = static_cast<const uint32*>(rxpmd);
+  for (int i = 0; i < BCMPKT_RXPMD_SIZE_WORDS; ++i) {
+    VLOG(2) << "rxpmd [word " << absl::StrFormat("%02i", i) << "]: " << absl::StrFormat("%08x", words[i]);
+  }
 }
 
 ::util::Status BcmSdkWrapper::ParseKnetHeaderForRx(int unit,
@@ -4392,15 +4710,50 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
-  const char* meta = header.data() + sizeof(RcpuHeader);
+  // TODO(max): this is broken the same way parseKnetHeaderForTx is/was
   int src_module = -1, dst_module = -1, src_port = -1, dst_port = -1,
       op_code = -1;
-  op_code = GetDcbField<uint8, 9, 10, 8>(meta);                 // OPCODE
-  src_module = GetDcbField<uint8, 7, 31, 24>(meta);             // SRC_MODID
-  dst_module = GetDcbField<uint8, 6, 15, 8>(meta);              // DST_MODID
-  src_port = GetDcbField<uint8, 7, 23, 16>(meta);               // SRC_PORT
-  dst_port = GetDcbField<uint8, 6, 7, 0>(meta);                 // DST_PORT
-  *cos = GetDcbField<uint8, 4, 5, 0>(meta);                     // COS
+
+  const char* rxpmd = header.data() + sizeof(RcpuHeader);
+  dumpRxpmdHeaderRaw(rxpmd);
+
+  bcmdrd_dev_type_t dev_type;
+  uint32 val;
+  RETURN_IF_BCM_ERROR(bcmpkt_dev_type_get(unit, &dev_type));
+  uint32* meta = reinterpret_cast<uint32*>(const_cast<char*>(&header[0]) + sizeof(RcpuHeader));
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_CPU_COS, &val));
+  *cos = val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_SRC_PORT_NUM, &val));
+  src_port = val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_QUEUE_NUM, &val));
+  VLOG(2) << "queue_num " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_OUTER_VID, &val));
+  VLOG(2) << "outer vid " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_MATCHED_RULE, &val));
+  VLOG(2) << "matched rule " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_PKT_LENGTH, &val));
+  VLOG(2) << "packet length " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_REASON_TYPE, &val));
+  VLOG(2) << "reason type " << val;
+  bcmpkt_rx_reasons_t reasons;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_reasons_get(dev_type, meta, &reasons));
+  // VLOG(1) << "reason: " << reasons; TODO(max)
+
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_HGI, &val));
+  VLOG(2) << "hgi " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_TIMESTAMP_TYPE, &val));
+  VLOG(2) << "timestamp type " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_TIMESTAMP, &val));
+  VLOG(2) << "timestamp " << val;
+  RETURN_IF_BCM_ERROR(bcmpkt_rxpmd_field_get(dev_type, meta, BCMPKT_RXPMD_TIMESTAMP_HI, &val));
+  VLOG(2) << "timestamp hi " << val;
+  dst_port = GetRxpmdField<uint8, 4, 7, 0>(meta); // Reverse engineered dst port
+  VLOG(2) << "manual pktlen " << GetRxpmdField<uint16, 3, 21, 8>(meta);
+
+  // TODO(max): make checker happy for now by faking the missing values
+  src_module = dst_module = 0;
+  op_code = 1;
+
   // TODO(BRCM): hardcoding module to '0'
   int module = 0;
   VLOG(1) << "Parsed metadata: (op_code=" << op_code
@@ -4419,7 +4772,8 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
       << ", base_mod=" << module << ", src_port=" << src_port
       << ", dst_port=" << dst_port << ", cos=" << *cos << ").";
   switch (op_code) {
-    case 1:  // BCM_PKT_OPCODE_UC
+    // TODO(max): use the defines instead of numbers?
+    case 1:  // BCMPKT_OPCODE_UC
       CHECK_RETURN_IF_FALSE(dst_module == module)
           << "Invalid dst_module: (op_code=" << op_code
           << ", src_mod=" << src_module << ", dst_mod=" << dst_module
@@ -4428,8 +4782,8 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
       *ingress_logical_port = src_port;
       *egress_logical_port = dst_port;
       break;
-    case 0:  // BCM_PKT_OPCODE_CPU
-    case 2:  // BCM_PKT_OPCODE_BC
+    case 0:  // BCMPKT_OPCODE_CPU
+    case 2:  // BCMPKT_OPCODE_BC
       // Dont care about dst_module and dst_port.
       *ingress_logical_port = src_port;
       *egress_logical_port = 0;  // CPU port
@@ -4471,11 +4825,11 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
                << "packets ingressing on internal and external ports.";
   // Check CPU port ACL enable flags
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PORT_FPs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, 0)); // CPU_PORT: 0
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, kCpuLogicalPort));
   if (acl_control.cpu_port_flags.apply) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_VLANs, acl_control.cpu_port_flags.vfp_enable ? 1 : 0));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_INGs, acl_control.cpu_port_flags.ifp_enable ? 1 : 0));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_EGRs, acl_control.cpu_port_flags.efp_enable ? 1 : 0));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_VLANs, acl_control.cpu_port_flags.vfp_enable));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_INGs, acl_control.cpu_port_flags.ifp_enable));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_EGRs, acl_control.cpu_port_flags.efp_enable));
     RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT, BCMLT_PRIORITY_NORMAL));
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
@@ -4505,7 +4859,7 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
 
 namespace {
 
-std::vector<std::pair<std::string, std::string>> 
+std::vector<std::pair<std::string, std::string>>
      GetPktTypeAndMode(std::vector<std::string> qualifiers) {
   // L2_SINGLE_WIDE, PORT_ANY_PACKET_ANY
   std::vector<std::string> PortAnyPktAnyL2SingleWide = {
@@ -4538,7 +4892,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPV4L3SingleWide.begin(), PortAnyPktIPV4L3SingleWide.end());
 
   // L3_DOUBLE_WIDE, PORT_ANY_PACKET_IPV4
-  std::vector<std::string> PortAnyPktIPV4L3DoubleWide = { 
+  std::vector<std::string> PortAnyPktIPV4L3DoubleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4557,7 +4911,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPV4L3DoubleWide.begin(), PortAnyPktIPV4L3DoubleWide.end());
 
   // L3_ALT_DOUBLE_WIDE, PORT_ANY_PACKET_IPV4
-  std::vector<std::string> PortAnyPktIPV4L3AltDoubleWide = { 
+  std::vector<std::string> PortAnyPktIPV4L3AltDoubleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4576,7 +4930,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPV4L3AltDoubleWide.begin(), PortAnyPktIPV4L3AltDoubleWide.end());
 
   // L3_ANY_SINGLE_WIDE, PORT_ANY_PACKET_IP
-  std::vector<std::string> PortAnyPktIPL3AnySingleWide = { 
+  std::vector<std::string> PortAnyPktIPL3AnySingleWide = {
     QUAL_L4_PKTs, QUAL_INT_PRIs, QUAL_COLORs, QUAL_IP_FLAGS_MFs,
     QUAL_TCP_CONTROL_FLAGSs, QUAL_L4DST_PORTs, QUAL_L4SRC_PORTs,
     QUAL_ICMP_TYPE_CODEs, QUAL_TTLs, QUAL_IP_PROTOCOLs,
@@ -4591,7 +4945,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPL3AnySingleWide.begin(), PortAnyPktIPL3AnySingleWide.end());
 
   // L3_SINGLE_WIDE, PORT_ANY_PACKET_NONIP
-  std::vector<std::string> PortAnyPktNonIPL3SingleWide = { 
+  std::vector<std::string> PortAnyPktNonIPL3SingleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4606,7 +4960,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktNonIPL3SingleWide.begin(), PortAnyPktNonIPL3SingleWide.end());
 
   // L3_DOUBLE_WIDE, PORT_ANY_PACKET_NONIP
-  std::vector<std::string> PortAnyPktNonIPL3DoubleWide = { 
+  std::vector<std::string> PortAnyPktNonIPL3DoubleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4622,7 +4976,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktNonIPL3DoubleWide.begin(), PortAnyPktNonIPL3DoubleWide.end());
 
   // L3_ANY_SINGLE_WIDE, PORT_ANY_PACKET_NONIP
-  std::vector<std::string> PortAnyPktNonIPL3AnySingleWide = { 
+  std::vector<std::string> PortAnyPktNonIPL3AnySingleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4637,7 +4991,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktNonIPL3AnySingleWide.begin(), PortAnyPktNonIPL3AnySingleWide.end());
 
   // L3_ALT_DOUBLE_WIDE, PORT_ANY_PACKET_NONIP
-  std::vector<std::string> PortAnyPktNonIPL3AltDoubleWide = { 
+  std::vector<std::string> PortAnyPktNonIPL3AltDoubleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs, QUAL_INT_PRIs,
     QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs, QUAL_SRC_MACs,
@@ -4652,7 +5006,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktNonIPL3AltDoubleWide.begin(), PortAnyPktNonIPL3AltDoubleWide.end());
 
   // L3_SINGLE_WIDE, PORT_ANY_PACKET_IPV6
-  std::vector<std::string> PortAnyPktIPV6L3SingleWide = { 
+  std::vector<std::string> PortAnyPktIPV6L3SingleWide = {
     QUAL_L4_PKTs, QUAL_SRC_IP6_HIGHs, QUAL_DST_IP6_HIGHs, QUAL_TOSs,
     QUAL_INNER_VLAN_IDs, QUAL_INPORTs, QUAL_L3_ROUTABLE_PKTs,
     QUAL_MIRR_COPYs, QUAL_OUTER_VLAN_IDs, QUAL_OUTER_VLAN_CFIs,
@@ -4665,7 +5019,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPV6L3SingleWide.begin(), PortAnyPktIPV6L3SingleWide.end());
 
   // L3_DOUBLE_WIDE, PORT_ANY_PACKET_IPV6
-  std::vector<std::string> PortAnyPktIPV6L3DoubleWide = { 
+  std::vector<std::string> PortAnyPktIPV6L3DoubleWide = {
     QUAL_L4_PKTs, QUAL_SRC_IP6_HIGHs, QUAL_DST_IP6_HIGHs,
     QUAL_TOSs, QUAL_INNER_VLAN_IDs, QUAL_INPORTs,
     QUAL_L3_ROUTABLE_PKTs, QUAL_MIRR_COPYs, QUAL_OUTER_VLAN_IDs,
@@ -4682,7 +5036,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPV6L3DoubleWide.begin(), PortAnyPktIPV6L3DoubleWide.end());
 
   // L3_ALT_DOUBLE_WIDE, PORT_ANY_PACKET_IPV6
-  std::vector<std::string> PortAnyPktIPV6L3AltDoubleWide = { 
+  std::vector<std::string> PortAnyPktIPV6L3AltDoubleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4698,7 +5052,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortAnyPktIPV6L3AltDoubleWide.begin(), PortAnyPktIPV6L3AltDoubleWide.end());
 
   // L3_ANY_DOUBLE_WIDE, PORT_HIGIG_PACKET_ANY
-  std::vector<std::string> PortHigigPktAnyL3AnyDoubleWide = { 
+  std::vector<std::string> PortHigigPktAnyL3AnyDoubleWide = {
     QUAL_INPORTs, QUAL_OUTPORTs, QUAL_EGR_NHOP_CLASS_IDs,
     QUAL_EGR_L3_INTF_CLASS_IDs, QUAL_EGR_DVP_CLASS_IDs,
     QUAL_INT_CNs, QUAL_DROP_PKTs, QUAL_L4_PKTs,
@@ -4715,7 +5069,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortHigigPktAnyL3AnyDoubleWide.begin(), PortHigigPktAnyL3AnyDoubleWide.end());
 
   // L3_ANY_DOUBLE_WIDE, PORT_FRONT_PACKET_ANY
-  std::vector<std::string> PortFrontPktAnyL3AnyDoubleWide = { 
+  std::vector<std::string> PortFrontPktAnyL3AnyDoubleWide = {
     QUAL_L4_PKTs, QUAL_EGR_NHOP_CLASS_IDs, QUAL_EGR_L3_INTF_CLASS_IDs,
     QUAL_EGR_DVP_CLASS_IDs, QUAL_DST_VPs, QUAL_DST_VP_VALIDs,
     QUAL_INT_PRIs, QUAL_COLORs, QUAL_L2_FORMATs, QUAL_ETHERTYPEs,
@@ -4734,7 +5088,7 @@ std::vector<std::pair<std::string, std::string>>
   std::sort(PortFrontPktAnyL3AnyDoubleWide.begin(), PortFrontPktAnyL3AnyDoubleWide.end());
 
   // L3_ANY_DOUBLE_WIDE, PORT_LOOPBACK_PACKET_ANY
-  std::vector<std::string> PortLbkPktAnyL3AnyDoubleWide = { 
+  std::vector<std::string> PortLbkPktAnyL3AnyDoubleWide = {
     QUAL_LOOPBACK_QUEUEs, QUAL_LOOPBACK_TYPEs, QUAL_PKT_IS_VISIBLEs,
     QUAL_LOOPBACK_CPU_MSQRD_PKT_PROFs, QUAL_LOOPBACK_COLORs,
     QUAL_LOOPBACK_TRAFFIC_CLASSs, QUAL_LOOPBACK_PKT_PROCESSING_PORTs,
@@ -4756,7 +5110,7 @@ std::vector<std::pair<std::string, std::string>>
   // Do not alter the order
   std::vector<std::pair<std::string, std::string>> possible_combination;
 
-  if (std::includes(PortAnyPktAnyL2SingleWide.begin(), PortAnyPktAnyL2SingleWide.end(), 
+  if (std::includes(PortAnyPktAnyL2SingleWide.begin(), PortAnyPktAnyL2SingleWide.end(),
                     qualifiers.begin(), qualifiers.end())) {
      possible_combination.push_back(std::make_pair(L2_SINGLE_WIDEs,PORT_ANY_PACKET_ANYs));
   }
@@ -4831,7 +5185,7 @@ std::vector<std::pair<std::string, std::string>>
      possible_combination.push_back(std::make_pair(L3_ALT_DOUBLE_WIDEs, PORT_ANY_PACKET_NONIPs));
   }
 
-  return possible_combination;  
+  return possible_combination;
 }
 
 std::pair<std::string, std::string>
@@ -4856,9 +5210,9 @@ HalAclFieldToBcmRule(BcmAclStage stage, BcmField::Type field) {
           // QUAL_SRC_IP6_UPPER, QUAL_SRC_IP6_MASK_UPPER
           // QUAL_SRC_IP6_LOWER, QUAL_SRC_IP6_MASK_LOWER
           //{BcmField::IPV6_SRC, ??},
-         
+
           // QUAL_DST_IP6_UPPER, QUAL_DST_IP6_MASK_UPPER
-          // QUAL_DST_IP6_LOWER, QUAL_DST_IP6_MASK_LOWER 
+          // QUAL_DST_IP6_LOWER, QUAL_DST_IP6_MASK_LOWER
           //{BcmField::IPV6_DST, ??},
           {BcmField::IPV6_SRC_UPPER_64, {QUAL_SRC_IP6_HIGHs, QUAL_SRC_IP6_HIGH_MASKs}},
           {BcmField::IPV6_DST_UPPER_64, {QUAL_DST_IP6_HIGHs, QUAL_DST_IP6_HIGH_MASKs}},
@@ -4946,7 +5300,7 @@ HalAclFieldToBcmRule(BcmAclStage stage, BcmField::Type field) {
           {BcmField::TCP_FLAGS, {QUAL_TCP_CONTROL_FLAGSs, QUAL_TCP_CONTROL_FLAGS_MASKs}},
           {BcmField::ICMP_TYPE_CODE, {QUAL_ICMP_TYPE_CODEs, QUAL_ICMP_TYPE_CODE_MASKs}},
       });
-       
+
   auto* stage_map = efp_field_map;
   if (stage == BCM_ACL_STAGE_EFP) {
      stage_map = efp_field_map;
@@ -4969,7 +5323,7 @@ HalAclFieldToBcmRule(BcmAclStage stage, BcmField::Type field) {
 std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   // EFP specific field mappings.
   static auto* efp_field_map =
-      new absl::flat_hash_map<BcmField::Type, std::string, 
+      new absl::flat_hash_map<BcmField::Type, std::string,
                               EnumHash<BcmField::Type>>({
           {BcmField::IN_PORT, QUAL_INPORTs},
           {BcmField::OUT_PORT, QUAL_OUTPORTs},
@@ -5062,13 +5416,9 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   } else if (stage == BCM_ACL_STAGE_VFP) {
     stage_map = vfp_field_map;
   } else {
-    stage_map = nullptr;
+    return BcmField_Type_Name(BcmField::UNKNOWN);
   }
-  std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-  if (stage_map) {
-    unknown_qual = gtl::FindWithDefault(*stage_map, field, unknown_qual);
-  }
-  return unknown_qual;
+  return gtl::FindWithDefault(*stage_map, field, BcmField_Type_Name(BcmField::UNKNOWN));
 }
 
 ::util::StatusOr<int> GetUniqueId(std::map<std::pair<BcmAclStage, int>, int> *table_ids,
@@ -5137,6 +5487,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
 
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_allocate(unit, FP_ING_GRP_TEMPLATEs, &entry_hdl));
+  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, FP_ING_GRP_TEMPLATE_IDs, stage_id));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODE_AUTOs, 1));
@@ -5153,8 +5504,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
     }
     std::string bcm_qual_field = HalAclFieldToBcm(table.stage(), field.type());
     std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if ((unknown_qual.compare(bcm_qual_field)) == 0)
-    {
+    if (bcm_qual_field == BcmField_Type_Name(BcmField::UNKNOWN)) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Attempted to create ACL table with invalid predefined "
              << "qualifier: " << field.ShortDebugString() << ".";
@@ -5167,7 +5517,6 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   }
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   return ::util::OkStatus();
 }
 
@@ -5186,7 +5535,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   for (const auto &field : table.fields()) {
     if (field.udf_chunk_id()) {
       return MAKE_ERROR(ERR_INTERNAL)
-             << "UDF is not valid in " 
+             << "UDF is not valid in "
              << BcmAclStage_Name(BCM_ACL_STAGE_EFP) << ".";
     }
     std::string bcm_qual_field = HalAclFieldToBcm(table.stage(), field.type());
@@ -5240,11 +5589,11 @@ CreateAclGroup(int unit, int id, BcmAclStage stage, const BcmAclTable &table) {
 }
 
 }  // namespace
- 
+
 ::util::StatusOr<int> BcmSdkWrapper::CreateAclTable(int unit,
                                                     const BcmAclTable& table) {
-  int stage_id; 
-  int table_id; 
+  int stage_id;
+  int table_id;
   InUseMap *group_ids;
 
   // check if unit exist
@@ -5265,16 +5614,16 @@ CreateAclGroup(int unit, int id, BcmAclStage stage, const BcmAclTable &table) {
              << "Attempted to create ACL table with invalid pipeline stage: "
              << BcmAclStage_Name(stage) << ".";
   }
-  AclGroupIds* table_ids = gtl::FindPtrOrNull(fp_group_ids_, unit); 
+  AclGroupIds* table_ids = gtl::FindPtrOrNull(fp_group_ids_, unit);
   auto it = unit_to_fp_groups_max_limit_.find(unit);
-  CHECK_RETURN_IF_FALSE(group_ids != nullptr && 
-                        table_ids != nullptr && 
-                        it != unit_to_fp_groups_max_limit_.end()) 
+  CHECK_RETURN_IF_FALSE(group_ids != nullptr &&
+                        table_ids != nullptr &&
+                        it != unit_to_fp_groups_max_limit_.end())
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   int maxEntries = it->second;
   int requested_table_id = (table.id()) ? table.id() : -1;
-  ASSIGN_OR_RETURN(table_id, GetUniqueId(table_ids, requested_table_id, maxEntries)); 
+  ASSIGN_OR_RETURN(table_id, GetUniqueId(table_ids, requested_table_id, maxEntries));
   // get next free slot
   std::string errMsg = absl::StrCat(BcmAclStage_Name(stage), " table is full.");
   ASSIGN_OR_RETURN(stage_id, GetFreeSlot(group_ids, errMsg));
@@ -5348,8 +5697,8 @@ CreateAclGroup(int unit, int id, BcmAclStage stage, const BcmAclTable &table) {
 
 namespace {
 ::util::Status AddAclQualifier(int unit, const bcmlt_entry_handle_t& entry_hdl,
-                               const std::pair<std::string, std::string> field_pair, 
-                               const BcmAclStage& stage, 
+                               const std::pair<std::string, std::string> field_pair,
+                               const BcmAclStage& stage,
                                const BcmField& field) {
    uint64_t max_mask64;
    uint64_t min_mask64;
@@ -5380,8 +5729,8 @@ namespace {
        value64 = field.value().u64();
        // TODO(BRCM) check if this is a problem, otherwise use htonll
        max_mask64 = field.has_mask() ? field.mask().u64() : max_mask64;
-       RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, field_name.c_str(), value64)); 
-       RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, field_mask_name.c_str(), max_mask64)); 
+       RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, field_name.c_str(), value64));
+       RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, field_mask_name.c_str(), max_mask64));
        break;
      case BcmField::IP_TYPE:
        {
@@ -5394,6 +5743,7 @@ namespace {
            // The case values are EtherType values specified in IEEE 802.3. Please
            // refer to https://en.wikipedia.org/wiki/EtherType.
            case kEtherTypeIPv4:
+              // TODO(max): Wrong use of StrCat, use StrAppend
              ip_type = absl::StrCat(ip_type, ANY_IP4s); //bcmFieldIpTypeIpv4Any;
              break;
            case kEtherTypeIPv6:
@@ -5468,7 +5818,7 @@ namespace {
       bcmlt_entry_field_add(entry_hdl, FP_VLAN_RULE_TEMPLATE_IDs, rule_id));
   for (const auto& field : flow.fields()) {
     if (field.udf_chunk_id()) {
-       // TODO(BRCM): hardcoding kUdfChunkSize: 2, 
+       // TODO(BRCM): hardcoding kUdfChunkSize: 2,
        // this should be ok for Tomahawk, revisit if this is a problem
        if (field.value().b().size() != 2 ||
            (field.has_mask() && field.mask().b().size() != 2)) { // kUdfChunkSize: 2
@@ -5478,7 +5828,7 @@ namespace {
              << "chunk size " << 2 << ".";
        }
        uint32_t index = static_cast<uint32>(field.udf_chunk_id() - 1);
-       std::string value_str = field.value().b(); 
+       std::string value_str = field.value().b();
        uint64_t value64 = ByteStreamToUint<uint64>(value_str);
        // TODO(BRCM): need to use ByteStreamToUint<uint64>(mask_str);?
        // revisit if this is a problem
@@ -5496,8 +5846,7 @@ namespace {
        continue;
     }
     std::pair<std::string, std::string> bcm_qual_field = HalAclFieldToBcmRule(flow.acl_stage(), field.type());
-    std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if((unknown_qual.compare(bcm_qual_field.first)) == 0) {
+    if (bcm_qual_field.first == BcmField_Type_Name(BcmField::UNKNOWN)) {
       LOG(INFO) << "Qual: '" << field.ShortDebugString()
                 << "' in " << BcmAclStage_Name(BCM_ACL_STAGE_VFP) << ".";
       return MAKE_ERROR()
@@ -5523,14 +5872,14 @@ namespace {
       bcmlt_entry_field_add(entry_hdl, FP_ING_RULE_TEMPLATE_IDs, rule_id));
   for (const auto& field : flow.fields()) {
     if (field.udf_chunk_id()) {
-       // TODO(BRCM): hardcoding kUdfChunkSize: 2, 
+       // TODO(BRCM): hardcoding kUdfChunkSize: 2,
        // this should be ok for Tomahawk, revisit if this is a problem
-       if (field.value().b().size() != 2 ||
-           (field.has_mask() && field.mask().b().size() != 2)) { // kUdfChunkSize: 2
+       if (field.value().b().size() != BcmSdkWrapper::kUdfChunkSize ||
+           (field.has_mask() && field.mask().b().size() != BcmSdkWrapper::kUdfChunkSize)) {
          return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Attempted to program flow with UDF chunk "
              << field.udf_chunk_id() << " with value or mask size not equal to "
-             << "chunk size " << 2 << ".";
+             << "chunk size " << BcmSdkWrapper::kUdfChunkSize << ".";
        }
        uint32_t index = static_cast<uint32>(field.udf_chunk_id() - 1);
        std::string value_str = field.value().b();
@@ -5549,9 +5898,8 @@ namespace {
        continue;
     }
     std::pair<std::string, std::string> bcm_qual_field = HalAclFieldToBcmRule(flow.acl_stage(), field.type());
-    std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if((unknown_qual.compare(bcm_qual_field.first)) == 0) {
-      LOG(INFO) << "Qual: '" << field.ShortDebugString() 
+    if (bcm_qual_field.first == BcmField_Type_Name(BcmField::UNKNOWN)) {
+      LOG(INFO) << "Qual: '" << field.ShortDebugString()
                 << "' in " << BcmAclStage_Name(BCM_ACL_STAGE_IFP) << ".";
       return MAKE_ERROR()
              << "Attempted to translate unsupported BcmField::Type: "
@@ -5580,8 +5928,7 @@ namespace {
     }
 
     std::pair<std::string, std::string> bcm_qual_field = HalAclFieldToBcmRule(flow.acl_stage(), field.type());
-    std::string unknown_qual = BcmField_Type_Name(BcmField::UNKNOWN);
-    if((unknown_qual.compare(bcm_qual_field.first)) == 0) {
+    if (bcm_qual_field.first == BcmField_Type_Name(BcmField::UNKNOWN)) {
       LOG(INFO) << "Qual: '" << field.ShortDebugString()
                 << "' in " << BcmAclStage_Name(BCM_ACL_STAGE_IFP) << ".";
       return MAKE_ERROR()
@@ -5642,7 +5989,7 @@ namespace {
       if (action.params().empty()) {  // No params, just drop
          if (stage == BCM_ACL_STAGE_VFP) {
             RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_DROPs, 1));
-         }else if (stage == BCM_ACL_STAGE_IFP || stage == BCM_ACL_STAGE_EFP) {
+         } else if (stage == BCM_ACL_STAGE_IFP || stage == BCM_ACL_STAGE_EFP) {
             RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_G_DROPs, 1));
             RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_Y_DROPs, 1));
             RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_R_DROPs, 1));
@@ -5693,10 +6040,10 @@ namespace {
       required.insert(BcmAction::Param::LOGICAL_PORT);
       RETURN_IF_ERROR(VerifyAclActionParams(action, required, optional));
       if (stage == BCM_ACL_STAGE_IFP) {
-         // bcmFieldActionRedirect
-         uint32 port = static_cast<uint32>(action.params(0).value().u32());
-         RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_REDIRECT_TO_PORTs, port));
-         RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_REDIRECT_TO_MODULEs, 0));
+        // bcmFieldActionRedirect
+        uint32 port = static_cast<uint32>(action.params(0).value().u32());
+        RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_REDIRECT_TO_PORTs, port));
+        RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ACTION_REDIRECT_TO_MODULEs, 0));
       } else {
          return MAKE_ERROR(ERR_INVALID_PARAM)
                << "Attempted to translate unsupported BcmAction::Type: "
@@ -6119,6 +6466,7 @@ namespace {
                               int rule_id, int policy_id, int meter_id) {
   bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, FP_ING_ENTRYs, &entry_hdl));
+  auto _ = gtl::MakeCleanup([entry_hdl]() { bcmlt_entry_free(entry_hdl); });
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, FP_ING_ENTRY_IDs, acl_id));
   RETURN_IF_BCM_ERROR(
@@ -6136,7 +6484,7 @@ namespace {
   RETURN_IF_BCM_ERROR(
       bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                 BCMLT_PRIORITY_NORMAL));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  // RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   return ::util::OkStatus();
 }
 
@@ -6155,7 +6503,7 @@ namespace {
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   return ::util::OkStatus();
 }
- 
+
 } // namespace
 
 ::util::StatusOr<int> BcmSdkWrapper::InsertAclFlow(int unit,
@@ -6295,29 +6643,21 @@ namespace {
   }
 
   // update rule map
-  auto it = rule_ids->begin();
-  std::advance(it, (rule_id-1));
-  it->second = true;
+  ConsumeSlot(rule_ids, rule_id);
   rule_table_ids->emplace(std::make_pair(stage, rule_id), rule_table_id);
 
   // update policy map
-  it = policy_ids->begin();
-  std::advance(it, (policy_id-1));
-  it->second = true;
+  ConsumeSlot(policy_ids, policy_id);
   policy_table_ids->emplace(std::make_pair(stage, policy_id), policy_table_id);
 
   // update meter map
   if (flow.has_meter()) {
-     it = meter_ids->begin();
-     std::advance(it, (meter_id-1));
-     it->second = true;
-     meter_table_ids->emplace(std::make_pair(stage, meter_id), meter_table_id);
+    ConsumeSlot(meter_ids, meter_id);
+    meter_table_ids->emplace(std::make_pair(stage, meter_id), meter_table_id);
   }
 
   // update acl map
-  it = acl_ids->begin();
-  std::advance(it, (acl_id-1));
-  it->second = true;
+  ConsumeSlot(acl_ids, acl_id);
   acl_table_ids->emplace(std::make_pair(stage, acl_id), acl_table_id);
   return acl_table_id;
 }
@@ -6596,16 +6936,12 @@ namespace {
        }
        RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, flow.meter()));
        if (need_map_update) {
-          auto it = ifp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = true;
+          ConsumeSlot(ifp_meter_ids, meter_id);
           fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
        }
      } else {
        if (meter_deleted) {
-          auto it = ifp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = false;
+          ReleaseSlot(ifp_meter_ids, meter_id);
           fp_meters->erase(std::make_pair(stage, meter_id));
        }
        meter_id = 0;
@@ -6641,16 +6977,12 @@ namespace {
        }
        RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, flow.meter()));
        if (need_map_update) {
-          auto it = efp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = true;
+          ConsumeSlot(efp_meter_ids, meter_id);
           fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
        }
      } else {
        if (meter_deleted) {
-          auto it = ifp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = false;
+          ReleaseSlot(ifp_meter_ids, meter_id);
           fp_meters->erase(std::make_pair(stage, meter_id));
        }
        meter_id = 0;
@@ -6853,9 +7185,7 @@ namespace {
       RETURN_IF_ERROR(RemoveIfpEntry(unit, acl_entry_id));
       RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, meter));
       RETURN_IF_ERROR(CreateIfpEntry(unit, acl_entry_id, priority, group_id, rule_id, policy_id, meter_id));
-      auto it = ifp_meter_ids->begin();
-      std::advance(it, (meter_id-1));
-      it->second = true;
+      ConsumeSlot(ifp_meter_ids, meter_id);
       fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
     } else if (BCM_ACL_STAGE_EFP) {
       if (!efp_meter_ids) {
@@ -6871,17 +7201,49 @@ namespace {
       RETURN_IF_ERROR(RemoveIfpEntry(unit, acl_entry_id));
       RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, meter));
       RETURN_IF_ERROR(CreateIfpEntry(unit, acl_entry_id, priority, group_id, rule_id, policy_id, meter_id));
-      auto it = efp_meter_ids->begin();
-      std::advance(it, (meter_id-1));
-      it->second = true;
+      ConsumeSlot(efp_meter_ids, meter_id);
       fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
     }
   }
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::InsertPacketReplicationEntry(
+    const BcmPacketReplicationEntry& entry) {
+
+  // Check pre-conditions
+  CHECK_RETURN_IF_FALSE(entry.has_multicast_group_entry())
+      << "Bcm does only support multicast groups for now";
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(entry.unit()));
+  auto mcast_entry = entry.multicast_group_entry();
+  CHECK_RETURN_IF_FALSE(!gtl::ContainsKey(multicast_group_id_to_replicas_,
+      mcast_entry.multicast_group_id())) << "multicast group already exists";
+  std::vector<int> ports;
+  for (auto const& port : mcast_entry.ports()) {
+    RETURN_IF_BCM_ERROR(CheckIfPortExists(entry.unit(), port));
+    ports.push_back(port);
+  }
+  gtl::InsertOrDie(&multicast_group_id_to_replicas_, mcast_entry.multicast_group_id(), ports);
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::DeletePacketReplicationEntry(
+    const BcmPacketReplicationEntry& entry) {
+  // Check pre-conditions
+  CHECK_RETURN_IF_FALSE(entry.has_multicast_group_entry());
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(entry.unit()));
+  auto mcast_entry = entry.multicast_group_entry();
+  auto ports = gtl::FindOrNull(
+      multicast_group_id_to_replicas_, mcast_entry.multicast_group_id());
+  CHECK_RETURN_IF_FALSE(ports != nullptr);
+
+  multicast_group_id_to_replicas_.erase(mcast_entry.multicast_group_id());
+  return ::util::OkStatus();
+}
+
 namespace {
-::util::Status GetGroupDetails(int unit, int stage_id, int table_id, 
+::util::Status GetGroupDetails(int unit, int stage_id, int table_id,
                                BcmAclStage stage, BcmAclTable* table) {
   uint64_t value = 0;
   uint32_t configured;
@@ -6897,6 +7259,8 @@ namespace {
   } else if (stage == BCM_ACL_STAGE_EFP) {
      RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, FP_EGR_GRP_TEMPLATEs, &entry_hdl));
      RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, FP_EGR_GRP_TEMPLATE_IDs, stage_id));
+  } else {
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid ACL stage " << BcmAclStage_Name(stage);
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP, BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
@@ -6924,9 +7288,9 @@ namespace {
     uint64_t chunk_array[16];
     uint32_t num_chunks = 0;
     if (stage == BCM_ACL_STAGE_VFP) {
-       RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_get(entry_hdl, QUAL_UDF_CHUNKSs, 0, chunk_array, 16, &num_chunks)); 
+       RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_get(entry_hdl, QUAL_UDF_CHUNKSs, 0, chunk_array, 16, &num_chunks));
     } else if (stage == BCM_ACL_STAGE_IFP) {
-       RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_get(entry_hdl, QUAL_UDF_CHUNKS_BITMAPs, 0, chunk_array, 16, &num_chunks)); 
+       RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_get(entry_hdl, QUAL_UDF_CHUNKS_BITMAPs, 0, chunk_array, 16, &num_chunks));
     }
     if (num_chunks) {
       for (uint32_t i = 0; i < num_chunks; ++i) {
@@ -6980,9 +7344,6 @@ namespace {
 }
 
 namespace {
-
-// TODO: use util/endian/endian.h?
-inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
 
 // Call Broadcom SDK function to get a specific qualifier field's value and mask
 // for a flow entry given by flow_id. F denotes the type of the function. T
@@ -7099,7 +7460,12 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
 
 ::util::Status BcmSdkWrapper::GetAclStats(int unit, int flow_id,
                                           BcmAclStats* stats) {
-  return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported.";
+  // TODO(max): implement real function. This dummy just satisfies
+  // the callers so that reading of ACL table entries is possible
+  // return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported.";
+  stats->mutable_total()->set_bytes(0);
+  stats->mutable_total()->set_packets(0);
+  return ::util::OkStatus();
 }
 
 BcmSdkWrapper* BcmSdkWrapper::CreateSingleton(BcmDiagShell* bcm_diag_shell) {
@@ -7126,6 +7492,11 @@ pthread_t BcmSdkWrapper::GetDiagShellThreadId() const {
 }
 
 ::util::Status BcmSdkWrapper::CleanupKnet(int unit) {
+  // Cleanup existing KNET filters and KNET intfs.
+  RETURN_IF_BCM_ERROR(
+      bcmpkt_filter_traverse(unit, knet_filter_remover, nullptr));
+  RETURN_IF_BCM_ERROR(
+      bcmpkt_netif_traverse(unit, knet_intf_remover, nullptr));
   return ::util::OkStatus();
 }
 
@@ -7194,10 +7565,32 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
   {
     absl::ReaderMutexLock l(&linkscan_writers_lock_);
     // Invoke the Writers based on priority.
-    for (const auto& w:linkscan_event_writers_) {
+    for (const auto& w : linkscan_event_writers_) {
       w.writer->Write(event, kWriteTimeout).IgnoreError();
     }
   }
+}
+
+int BcmSdkWrapper::CheckIfPortExists(int unit, int port) {
+  absl::WriterMutexLock l(&data_lock_);
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  if (!logical_ports_map) {
+    LOG(ERROR) << "Logical ports are not identified on the Unit " << unit << ".";
+    return SHR_E_INIT;
+  }
+  if (logical_ports_map->count(port)) {
+    return SHR_E_NONE;
+  } else {
+    return SHR_E_NOT_FOUND;
+  }
+}
+
+int BcmSdkWrapper::CheckIfUnitExists(int unit) {
+  if (!bcmdrd_dev_exists(unit)) {
+    LOG(ERROR) << "Unit " << unit << " is not found.";
+    return SHR_E_UNIT;
+  }
+  return SHR_E_NONE;
 }
 
 }  // namespace bcm

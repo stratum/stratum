@@ -71,7 +71,7 @@ OnlpSfpEventCallback::OnlpSfpEventCallback() {}
 OnlpSfpEventCallback::~OnlpSfpEventCallback() {
   VLOG(3) << "Entering OnlpSfpEventCallback destructor...";
   if (handler_ != nullptr) {
-    ::util::Status unregister_result =
+    ::util::Status unregister_result = 
       handler_->UnregisterSfpEventCallback(this);
     if (!unregister_result.ok()) {
       LOG(ERROR)

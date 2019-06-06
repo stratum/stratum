@@ -151,6 +151,9 @@ class BcmChassisManager : public BcmChassisRoInterface {
   ::util::StatusOr<AdminState> GetPortAdminState(uint64 node_id,
                                                  uint32 port_id) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
+  ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
+                                 PortCounters* pc) const override
+      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Sets the block state of a trunk member on a node specified by node_id. The
   // id of the member is given by port_id. The ID of the trunk which the port is

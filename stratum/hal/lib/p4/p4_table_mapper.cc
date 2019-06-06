@@ -405,14 +405,16 @@ namespace {
 
 // These two functions take an unsigned 64/32 bit integer and encode it as a
 // byte stream in network order.
-// TODO(unknown): We add leading zeros at the moment when reporting back to
-// controller. Is that a problem?
 std::string Uint64ToByteStream(uint64 val) {
   uint64 tmp = (htonl(1) == 1)
                    ? val
                    : (static_cast<uint64>(htonl(val)) << 32) | htonl(val >> 32);
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint64));
+  // Strip leading zeroes.
+  while (bytes.size() > 1 && bytes[0] == '\x00') {
+    bytes = bytes.substr(1);
+  }
   return bytes;
 }
 
@@ -420,10 +422,14 @@ std::string Uint32ToByteStream(uint32 val) {
   uint32 tmp = htonl(val);
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
+  // Strip leading zeroes.
+  while (bytes.size() > 1 && bytes[0] == '\x00') {
+    bytes = bytes.substr(1);
+  }
   return bytes;
 }
 
-// TODO(unknown): If needed, add extra validation of the unsigned int values to
+// TODO: If needed, add extra validation of the unsigned int values to
 // to be in range [1, 2^bitwidth -1].
 ::util::Status DeparseMetadataHelper(
     const MetadataTypeToIdBitwidthMap& metadata_type_to_id_bitwidth_pair,
