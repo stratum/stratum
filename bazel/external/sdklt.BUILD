@@ -30,3 +30,16 @@ cc_library(
     ],
     strip_include_prefix = "src/shr/include",
 )
+
+# trick to export headers in a convenient way
+cc_library(
+    name = "bcm_headers",
+    hdrs = glob(["bcm-bin/include/sdklt/**/*.h" ]),
+    includes = ["bcm-bin/include/sdklt"],
+)
+
+cc_import(
+  name = "bcm_sdklt",
+  hdrs = [],  # see cc_library rule above
+  static_library = "bcm-bin/lib/libsdklt.a",
+)

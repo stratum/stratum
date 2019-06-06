@@ -269,14 +269,15 @@ def stratum_deps():
             commit = "e443c54b396a236e0d3823f46c6a931e1c9939f2",
         )
 # -----------------------------------------------------------------------------
-#        Chipset and Platform specific C++ libraries
+#        Chipset and Platform specific C/C++ libraries
 # -----------------------------------------------------------------------------
-    if "com_github_bcm_sdklt" not in native.existing_rules():
-        remote_workspace(
-            name = "com_github_bcm_sdklt",
-            remote = "https://github.com/Broadcom-Network-Switching-Software/SDKLT",
-            branch = "master", # FIXME(Yi): Use ONF branch?
+    if "local_bcm_bin" not in native.existing_rules():
+        http_archive(
+            name = "local_bcm_bin",
             build_file = "@//bazel:external/sdklt.BUILD",
+            sha256 = "d2e6021cb33423879424a3cd8ec5eef2bbd37bd9f02411445aee5f7191602cc0",
+            strip_prefix = "",
+            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/c6cec7d4/sdklt-4.14.49.tgz"],
         )
 
 # -----------------------------------------------------------------------------

@@ -34,7 +34,7 @@ The `stratum_bcm` binary is a standalone executable which includes:
 - links to the Broadcom SDKLT libraries and headers
 
 To build the `stratum_bcm` binary you will need to:
-1. make sure that the Broadcom SDKLT environment variables are set (see example above in the `SDKLT Installation` section). 
+1. make sure that the Broadcom SDKLT environment variables are set (see example above in the `SDKLT Installation` section).
 2. Clone the Stratum repository
 3. Change into the stratum directory
 4. Setup the development environment (kicks off a container)
@@ -52,7 +52,52 @@ cd stratum
 bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm
 ```
 
+You can build the binary on your build server and copy it over to the switch.
+
 ## Running the `stratum_bcm` binary
 
-Work in progress - BCM binary does not run at this point, sdk wrapper code
-needs to be completed.
+Running `stratum_bcm` requires four configuration files, passed as CLI flags:
+
+- base_bcm_chassis_map_file: Protobuf defining chip capabilities and all possible port configurations of a chassis.
+    Example found under: `/stratum/hal/config/accton7710_bcm_chassis_map_minimal.pb.txt`
+- chassis_config_file: Protobuf setting the config of a specific node.
+    Selects a subset of the available port configurations from the chassis map. Determines
+    which ports will be available.
+    Example found under: `/stratum/hal/config/accton7710_bcm_chassis_config_minimal.pb.txt`
+- bcm_sdk_config_file: Yaml config passed to the SDKLT. Must match the chassis map.
+    Example found under: `/stratum/hal/config/AS7712-stratum.config.yml`
+- bcm_hardware_specs_file: ACL and UDF properties of chips. Found under: `/stratum/hal/config/bcm_hardware_specs.pb.txt`
+
+Depending on your actual cabling, you'll have to adjust the config files. Panel ports 31 & 32 are in loopback mode and should work without cables.
+
+The config flags are best stored in a flagfile `stratum.flags`:
+
+```bash
+-external_hercules_urls=0.0.0.0:28000
+-persistent_config_dir=/tmp/hercules
+-base_bcm_chassis_map_file=/root/as7712_cfg/accton7710_bcm_chassis_map_max.pb.txt
+-chassis_config_file=/root/as7712_cfg/accton7710_bcm_chassis_config_max.pb.txt
+-bcm_sdk_config_file=/root/as7712-stratum-test-pft-tests/cfg/AS7712-stratum.config.yml
+-bcm_hardware_specs_file=/root/as7712_cfg/bcm_hardware_specs.pb.txt
+-forwarding_pipeline_configs_file=/tmp/hercules/pipeline_cfg.pb.txt
+-write_req_log_file=/tmp/hercules/p4_writes.pb.txt
+-bcm_serdes_db_proto_file=/root/as7712_cfg/dummy_serdes_db.pb.txt
+-bcm_sdk_checkpoint_dir=/tmp/bcm_chkpt
+-colorlogtostderr
+-alsologtostderr
+-logtosyslog=false
+-v=0
+```
+
+(You can also use a bash script, passing the flags individually. Prevents [Issue 61](https://github.com/gflags/gflags/issues/61)).
+
+Start stratum:
+```bash
+./stratum_bcm -flagfile=stratum.flags
+```
+
+You should see the ports coming up and have a SDKLT shell prompt:
+```
+I0628 18:29:10.806623  7930 bcm_chassis_manager.cc:1738] State of SingletonPort (node_id: 1, port_id: 34, slot: 1, port: 3, unit: 0, logical_port: 34, speed: 40G): UP
+BCMLT.0>
+```

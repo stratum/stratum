@@ -119,10 +119,13 @@ class BcmL2ManagerTest : public ::testing::Test {
   static constexpr int kStationId = 10;
   static constexpr uint64 kDstMac = 0x123456789012;
   static constexpr uint64 kDstMacMask = 0xfffffffffffa;
+  static constexpr int kL2McastGroupId = 20;
   static constexpr int kRegularMyStationEntryPriority =
       BcmL2Manager::kRegularMyStationEntryPriority;
   static constexpr int kL3PromoteMyStationEntryPriority =
       BcmL2Manager::kL3PromoteMyStationEntryPriority;
+  static constexpr int kSoftwareMulticastMyStationEntryPriority =
+      BcmL2Manager::kSoftwareMulticastMyStationEntryPriority;
 
   std::unique_ptr<BcmChassisRoMock> bcm_chassis_ro_mock_;
   std::unique_ptr<BcmSdkMock> bcm_sdk_mock_;
@@ -715,12 +718,12 @@ TEST_F(BcmL2ManagerTest, InsertAndDeleteMyStationEntrySuccess) {
   // First add the entry.
   EXPECT_CALL(*bcm_sdk_mock_,
               AddMyStationEntry(kUnit, kRegularMyStationEntryPriority, 0, 0,
-                                kDstMac, 0xffffffffffff))
+                                kDstMac, 0))
       .WillOnce(Return(kStationId));
 
   EXPECT_OK(bcm_l2_manager_->InsertMyStationEntry(bcm_flow_entry));
   VerifyL3PromoteMyStationEntry(-1, false);
-  VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, kStationId, true);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, 0, kStationId, true);
 
   // Then remove the same entry.
   EXPECT_CALL(*bcm_sdk_mock_, DeleteMyStationEntry(kUnit, kStationId))
@@ -728,7 +731,7 @@ TEST_F(BcmL2ManagerTest, InsertAndDeleteMyStationEntrySuccess) {
 
   EXPECT_OK(bcm_l2_manager_->DeleteMyStationEntry(bcm_flow_entry));
   VerifyL3PromoteMyStationEntry(-1, false);
-  VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, -1, false);
+  VerifyRegularMyStationEntry(0, 0, kDstMac, 0, -1, false);
 
   // Now add a new entry for a specific dst_mac and a specific VLAN.
   bcm_flow_entry.clear_fields();
@@ -736,6 +739,7 @@ TEST_F(BcmL2ManagerTest, InsertAndDeleteMyStationEntrySuccess) {
     auto* field = bcm_flow_entry.add_fields();
     field->set_type(BcmField::ETH_DST);
     field->mutable_value()->set_u64(kDstMac);
+    field->mutable_mask()->set_u64(0xffffffffffff);
   }
   {
     auto* field = bcm_flow_entry.add_fields();
@@ -803,6 +807,7 @@ TEST_F(BcmL2ManagerTest, InsertMyStationEntryFailureWhenAddFailsOnHw) {
     auto* field = bcm_flow_entry.add_fields();
     field->set_type(BcmField::ETH_DST);
     field->mutable_value()->set_u64(kDstMac);
+    field->mutable_mask()->set_u64(0xffffffffffff);
   }
 
   EXPECT_CALL(*bcm_sdk_mock_,
@@ -912,6 +917,7 @@ TEST_F(BcmL2ManagerTest, DeleteMyStationEntryFailureWhenDeleteFailsOnHw) {
     auto* field = bcm_flow_entry.add_fields();
     field->set_type(BcmField::ETH_DST);
     field->mutable_value()->set_u64(kDstMac);
+    field->mutable_mask()->set_u64(0xffffffffffff);
   }
 
   EXPECT_CALL(*bcm_sdk_mock_,
@@ -928,11 +934,63 @@ TEST_F(BcmL2ManagerTest, DeleteMyStationEntryFailureWhenDeleteFailsOnHw) {
   VerifyRegularMyStationEntry(0, 0, kDstMac, 0xffffffffffff, kStationId, true);
 }
 
-TEST_F(BcmL2ManagerTest, InsertThenDeleteMulticastGroupSuccess) {
+TEST_F(BcmL2ManagerTest, InsertAndDeleteL2EntrySuccess) {
   BcmFlowEntry bcm_flow_entry;
 
-  // NOOP at the moment.
+  // Simple entry without actions
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_L2_UNICAST);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+    field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::VLAN_VID);
+    field->mutable_value()->set_u32(kDefaultVlan);
+  }
+
+  EXPECT_CALL(*bcm_sdk_mock_, AddL2Entry(kUnit, kDefaultVlan, kDstMac, 0, 0, 0,
+                                         0, false, false))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_OK(bcm_l2_manager_->InsertL2Entry(bcm_flow_entry));
+
+  // Delete entry
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteL2Entry(kUnit, kDefaultVlan, kDstMac))
+      .WillOnce(Return(::util::OkStatus()));
+
+  EXPECT_OK(bcm_l2_manager_->DeleteL2Entry(bcm_flow_entry));
+}
+
+TEST_F(BcmL2ManagerTest, InsertThenDeleteMulticastGroupSuccess) {
+  BcmFlowEntry bcm_flow_entry;
+  bcm_flow_entry.set_bcm_table_type(BcmFlowEntry::BCM_TABLE_L2_MULTICAST);
+  bcm_flow_entry.set_unit(kUnit);
+  {
+    auto* field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::ETH_DST);
+    field->mutable_value()->set_u64(kDstMac);
+    field->mutable_mask()->set_u64(kBroadcastMac);
+    field = bcm_flow_entry.add_fields();
+    field->set_type(BcmField::VLAN_VID);
+    field->mutable_value()->set_u32(kDefaultVlan);
+    auto* action = bcm_flow_entry.add_actions();
+    action->set_type(BcmAction::SET_L2_MCAST_GROUP);
+    auto* param = action->add_params();
+    param->set_type(BcmAction::Param::L2_MCAST_GROUP_ID);
+    param->mutable_value()->set_u32(kL2McastGroupId);
+  }
+
+  EXPECT_CALL(*bcm_sdk_mock_,
+              AddL2MulticastEntry(
+                  kUnit, kSoftwareMulticastMyStationEntryPriority, kDefaultVlan,
+                  0, kDstMac, kBroadcastMac, false, false, kL2McastGroupId))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(bcm_l2_manager_->InsertMulticastGroup(bcm_flow_entry));
+
+  EXPECT_CALL(*bcm_sdk_mock_, DeleteL2MulticastEntry(kUnit, kDefaultVlan, 0,
+                                                     kDstMac, kBroadcastMac))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_OK(bcm_l2_manager_->DeleteMulticastGroup(bcm_flow_entry));
 }
 

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_L2_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_L2_MANAGER_H_
 
@@ -24,6 +23,9 @@
 #include <tuple>
 #include <string>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/strings/str_cat.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
@@ -31,9 +33,6 @@
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/strings/str_cat.h"
 
 namespace stratum {
 namespace hal {
@@ -72,6 +71,13 @@ class BcmL2Manager {
   // does not exist.
   virtual ::util::Status DeleteMyStationEntry(
       const BcmFlowEntry& bcm_flow_entry);
+
+  // Inserts a MAC address + VLAN into the L2 FDB.
+  virtual ::util::Status InsertL2Entry(const BcmFlowEntry& bcm_flow_entry);
+
+  // Deletes a MAC address + VLAN from the L2 FDB. Fails if the entry does not
+  // exists.
+  virtual ::util::Status DeleteL2Entry(const BcmFlowEntry& bcm_flow_entry);
 
   // Creates an L2 multicast or broadcast group. Each multicast or broadcast
   // group is specified by a multicast_group_id given by an action of type
@@ -165,8 +171,8 @@ class BcmL2Manager {
     // 2- A zero value with mask 0x010000000000: all dst MAC, except multicast
     //    MAC, for cases where multicast are not allowed (for example for L3
     //    promote entry for default VLAN).
-    // The default value for dst_mac_mask is 0xffffffffffff so that when mask
-    // is not given the entry matches only the given dst MAC.
+    // The default value for dst_mac_mask is 0x0 so that when mask
+    // is not given the entry becomes a wildcard match.
     uint64 dst_mac;
     uint64 dst_mac_mask;
     MyStationEntry()
@@ -206,11 +212,79 @@ class BcmL2Manager {
     }
   };
 
+  // A struct that encapsulates a L2 FDB hash entry. Corresponds to the
+  // L2_FDB_VLAN table.
+  struct L2Entry {
+    int vlan;
+    uint64 dst_mac;
+    int logical_port;
+    int trunk_port;
+    int l2_mcast_group_id;
+    int class_id;
+    bool copy_to_cpu;
+    bool dst_drop;
+    L2Entry()
+        : vlan(0),
+          dst_mac(0),
+          logical_port(0),
+          trunk_port(0),
+          l2_mcast_group_id(0),
+          class_id(0),
+          copy_to_cpu(false),
+          dst_drop(false) {}
+    L2Entry(int _vlan, uint64 _dst_mac, int _logical_port, int _trunk_port,
+            int _l2_mcast_group_id, int _class_id, bool _copy_to_cpu,
+            bool _dst_drop)
+        : vlan(_vlan),
+          dst_mac(_dst_mac),
+          logical_port(_logical_port),
+          trunk_port(_trunk_port),
+          l2_mcast_group_id(_l2_mcast_group_id),
+          class_id(_class_id),
+          copy_to_cpu(_copy_to_cpu),
+          dst_drop(_dst_drop) {}
+  };
+
+  // A struct that encapsulates a L2 multicast entry. This is mapped to the
+  // L2_MY_STATION table at the moment.
+  struct L2MulticastEntry {
+    int priority;
+    int vlan;
+    int vlan_mask;
+    uint64 dst_mac;
+    uint64 dst_mac_mask;
+    bool copy_to_cpu;
+    bool drop;
+    uint8 l2_mcast_group_id;
+    L2MulticastEntry()
+        : priority(0),
+          vlan(0),
+          vlan_mask(0),
+          dst_mac(0),
+          dst_mac_mask(0),
+          copy_to_cpu(false),
+          drop(false),
+          l2_mcast_group_id(0) {}
+    L2MulticastEntry(int _priority, int _vlan, int _vlan_mask, uint64 _dst_mac,
+                     uint64 _dst_mac_mask, bool _copy_to_cpu, bool _drop,
+                     uint8 _l2_mcast_group_id)
+        : priority(_priority),
+          vlan(_vlan),
+          vlan_mask(_vlan_mask),
+          dst_mac(_dst_mac),
+          dst_mac_mask(_dst_mac_mask),
+          copy_to_cpu(_copy_to_cpu),
+          drop(_drop),
+          l2_mcast_group_id(_l2_mcast_group_id) {}
+  };
+
   // The priority used for all the my station entries which are typically
   // match a specific dst MAC.
   static constexpr int kRegularMyStationEntryPriority = 100;
   // The priority used for the L3 promote entry for default VLAN.
   static constexpr int kL3PromoteMyStationEntryPriority = 1;
+  // The priority used for software multicast entries.
+  static constexpr int kSoftwareMulticastMyStationEntryPriority = 2;
 
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
@@ -226,6 +300,18 @@ class BcmL2Manager {
   // a MyStationEntry struct corresponding to the entry after successful
   // parsing of the BcmFlowEntry.
   ::util::StatusOr<MyStationEntry> ValidateAndParseMyStationEntry(
+      const BcmFlowEntry& bcm_flow_entry) const;
+
+  // Helper to validate a BcmFlowEntry given to update the L2 FDB. Returns a
+  // L2Entry struct corresponding to the entry after successful parsing of the
+  // BcmFlowEntry.
+  ::util::StatusOr<L2Entry> ValidateAndParseL2Entry(
+      const BcmFlowEntry& bcm_flow_entry) const;
+
+  // Helper to validate a BcmFlowEntry given to update the L2 multicast table.
+  // Returns a L2MulticastEntry to the entry after successful
+  // parsing of the BcmFlowEntry.
+  ::util::StatusOr<L2MulticastEntry> ValidateAndParseL2MulticastEntry(
       const BcmFlowEntry& bcm_flow_entry) const;
 
   // Map from MyStationEntry structs, corresponding to the entries added to my

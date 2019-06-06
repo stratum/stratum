@@ -47,9 +47,11 @@ class BcmSdkMock : public BcmSdkInterface {
                                               const BcmPortOptions& options));
   MOCK_METHOD3(GetPortOptions,
                ::util::Status(int unit, int port, BcmPortOptions* options));
+  MOCK_METHOD3(GetPortCounters, ::util::Status(int unit, int port, PortCounters* pc));
   MOCK_METHOD0(StartDiagShellServer, ::util::Status());
   MOCK_METHOD1(StartLinkscan, ::util::Status(int unit));
   MOCK_METHOD1(StopLinkscan, ::util::Status(int unit));
+  MOCK_METHOD3(OnLinkscanEvent, void(int unit, int port, PortState linkstatus));
   MOCK_METHOD2(
       RegisterLinkscanEventWriter,
       ::util::StatusOr<int>(std::unique_ptr<ChannelWriter<LinkscanEvent>>,
@@ -133,6 +135,24 @@ class BcmSdkMock : public BcmSdkInterface {
                                      int vlan_mask, uint64 dst_mac,
                                      uint64 dst_mac_mask));
   MOCK_METHOD2(DeleteMyStationEntry, ::util::Status(int unit, int station_id));
+  MOCK_METHOD9(AddL2Entry, ::util::Status(int unit, int vlan, uint64 dst_mac,
+                                          int logical_port, int trunk_port,
+                                          int l2_mcast_group_id, int class_id,
+                                          bool copy_to_cpu, bool dst_drop));
+  MOCK_METHOD3(DeleteL2Entry,
+               ::util::Status(int unit, int vlan, uint64 dst_mac));
+  MOCK_METHOD9(AddL2MulticastEntry,
+               ::util::Status(int unit, int vlan, int priority, int vlan_mask,
+                              uint64 dst_mac, uint64 dst_mac_mask,
+                              bool copy_to_cpu, bool drop,
+                              uint8 l2_mcast_group_id));
+  MOCK_METHOD5(DeleteL2MulticastEntry,
+               ::util::Status(int unit, int vlan, int vlan_mask, uint64 dst_mac,
+                              uint64 dst_mac_mask));
+  MOCK_METHOD1(InsertPacketReplicationEntry,
+               ::util::Status(const BcmPacketReplicationEntry& entry));
+  MOCK_METHOD1(DeletePacketReplicationEntry,
+               ::util::Status(const BcmPacketReplicationEntry& entry));
   MOCK_METHOD2(DeleteL2EntriesByVlan, ::util::Status(int unit, int vlan));
   MOCK_METHOD2(AddVlanIfNotFound, ::util::Status(int unit, int vlan));
   MOCK_METHOD2(DeleteVlanIfFound, ::util::Status(int unit, int vlan));
@@ -164,11 +184,11 @@ class BcmSdkMock : public BcmSdkInterface {
   MOCK_METHOD2(SetRateLimit,
                ::util::Status(int unit,
                               const RateLimitConfig& rate_limit_config));
-  MOCK_METHOD5(GetKnetHeaderForDirectTx,
+  MOCK_METHOD6(GetKnetHeaderForDirectTx,
                ::util::Status(int unit, int port, int cos, uint64 smac,
-                              std::string* header));
-  MOCK_METHOD3(GetKnetHeaderForIngressPipelineTx,
-               ::util::Status(int unit, uint64 smac, std::string* header));
+                              size_t packet_len, std::string* header));
+  MOCK_METHOD4(GetKnetHeaderForIngressPipelineTx,
+               ::util::Status(int unit, uint64 smac, size_t packet_len, std::string* header));
   MOCK_METHOD1(GetKnetHeaderSizeForRx, size_t(int unit));
   MOCK_METHOD5(ParseKnetHeaderForRx,
                ::util::Status(int unit, const std::string& header,

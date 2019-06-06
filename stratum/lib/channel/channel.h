@@ -555,13 +555,15 @@ template <typename T>
 ::util::Status Channel<T>::Read(T* t, absl::Duration timeout) {
   absl::MutexLock l(&queue_lock_);
   // Check Channel closure. If closed, will not be signaled during wait.
-  if (closed_) return MAKE_ERROR(ERR_CANCELLED) << "Channel is closed.";
+  if (closed_)
+    return MAKE_ERROR(ERR_CANCELLED).without_logging() << "Channel is closed.";
   // Wait with timeout for non-empty internal buffer.
   absl::Time deadline = absl::Now() + timeout;
   while (queue_.empty()) {
     bool expired = cond_not_empty_.WaitWithDeadline(&queue_lock_, deadline);
     // Could have been signalled because Channel is now closed.
-    if (closed_) return MAKE_ERROR(ERR_CANCELLED) << "Channel is closed.";
+    if (closed_) return MAKE_ERROR(ERR_CANCELLED).without_logging()
+        << "Channel is closed.";
     // Could have been signalled even if timeout has expired.
     if (expired && queue_.empty()) {
       return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)

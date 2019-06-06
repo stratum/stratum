@@ -248,7 +248,7 @@ struct PacketInMetadata {
   uint32 egress_port_id;
   // The CoS for the received packet.
   int cos;
-  // TODO(unknown): How about reason bit. Should we capture that as well?
+  // TODO: How about reason bit. Should we capture that as well?
   PacketInMetadata()
       : ingress_port_id(0),
         ingress_trunk_id(0),
@@ -311,6 +311,14 @@ class BcmPacketioManager {
   virtual ::util::StatusOr<BcmKnetRxStats> GetRxStats(
       GoogleConfig::BcmKnetIntfPurpose purpose) const
       LOCKS_EXCLUDED(rx_stats_lock_);
+
+  // Creates a packet replication group.
+  virtual ::util::Status InsertPacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry);
+
+  // Deletes a packet replication group.
+  virtual ::util::Status DeletePacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry);
 
   // Returns the RX/TX stats for all KNET intfs as string. It also dumps the
   // string to stdout.
@@ -412,6 +420,9 @@ class BcmPacketioManager {
   ::util::Status DeparsePacketInMetadata(const PacketInMetadata& meta,
                                          ::p4::v1::PacketIn* packet);
 
+  ::util::Status DeparsePacketOutMetadata(const PacketOutMetadata& meta,
+                                          ::p4::v1::PacketOut* packet);
+
   // Helper called by TransmitPacket() to send packet (KNET headers + payload).
   ::util::Status TxPacket(GoogleConfig::BcmKnetIntfPurpose purpose, int sock,
                           int vlan, int netif_index, bool direct_tx,
@@ -423,6 +434,9 @@ class BcmPacketioManager {
   // the packet (directly to a port or to ingress pipeline).
   ::util::Status ParsePacketOutMetadata(const ::p4::v1::PacketOut& packet,
                                         PacketOutMetadata* meta);
+
+  ::util::Status ParsePacketInMetadata(const ::p4::v1::PacketIn& packet,
+                                       PacketInMetadata* meta);
 
   // KNET interface RX thread function.
   static void* KnetIntfRxThreadFunc(void* arg);

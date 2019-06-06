@@ -50,6 +50,8 @@ DEFINE_int32(grpc_keepalive_min_ping_interval, 10000,
 DEFINE_int32(grpc_keepalive_permit, 1, "grpc keep alive permit");
 DEFINE_uint32(grpc_max_recv_msg_size, 0,
               "grpc server max receive message size in MB");
+DEFINE_uint32(grpc_max_send_msg_size, 0,
+              "grpc server max send message size in MB");
 
 namespace stratum {
 namespace hal {
@@ -210,6 +212,12 @@ Hal::~Hal() {
     if (FLAGS_grpc_max_recv_msg_size > 0) {
       builder.SetMaxReceiveMessageSize(
           FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
+      builder.AddChannelArgument<int>(GRPC_ARG_MAX_METADATA_SIZE,
+          FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
+    }
+    if (FLAGS_grpc_max_send_msg_size) {
+      builder.SetMaxSendMessageSize(
+          FLAGS_grpc_max_send_msg_size * 1024 * 1024);
     }
     builder.RegisterService(config_monitoring_service_.get());
     builder.RegisterService(p4_service_.get());

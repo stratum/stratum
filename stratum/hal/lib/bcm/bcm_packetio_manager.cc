@@ -146,7 +146,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
   // We have the following cases:
   // 1- If the config is pushed for the first time, purpose_to_knet_intf_
   //    will be empty and bcm_rx_config_, bcm_tx_config_, bcm_tx_config_, and
-  //    bcm_rate_limit_config_ will all be nullptr. In this case, configur and
+  //    bcm_rate_limit_config_ will all be nullptr. In this case, configure and
   //    start RX/TX and create the KNET interface(s) for this node. At any
   //    stage, if the operation goes OK update the internal state.
   // 2- For configs that are pushed later on, we only retry the operations which
@@ -428,6 +428,10 @@ BcmPacketioManager::~BcmPacketioManager() {}
   if (!status.ok()) {
     INCREMENT_TX_COUNTER(purpose, tx_drops_metadata_parse_error);
   }
+  VLOG(1) << "PacketOutMetadata.egress_port_id: " << meta.egress_port_id
+      << "\n" << "PacketOutMetadata.egress_trunk_id: " << meta.egress_trunk_id
+      << "\n" << "PacketOutMetadata.cos: " << meta.cos
+      << "\n" << "PacketOutMetadata.use_ingress_pipeline: " << meta.use_ingress_pipeline;
 
   // Now try to send the packet. There are several cases:
   // 1- Direct packet to physical port.
@@ -479,7 +483,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
     }
     std::string header = "";
     RETURN_IF_ERROR(bcm_sdk_interface_->GetKnetHeaderForDirectTx(
-        unit_, *logical_port, meta.cos, intf->smac, &header));
+        unit_, *logical_port, meta.cos, intf->smac, packet.payload().size(), &header));
     RETURN_IF_ERROR(TxPacket(purpose, intf->tx_sock, intf->vlan,
                              intf->netif_index, true, header,
                              packet.payload()));
@@ -487,7 +491,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
   } else {
     std::string header = "";
     RETURN_IF_ERROR(bcm_sdk_interface_->GetKnetHeaderForIngressPipelineTx(
-        unit_, intf->smac, &header));
+        unit_, intf->smac, packet.payload().size(), &header));
     RETURN_IF_ERROR(TxPacket(purpose, intf->tx_sock, intf->vlan,
                              intf->netif_index, false, header,
                              packet.payload()));
@@ -519,6 +523,16 @@ BcmPacketioManager::~BcmPacketioManager() {}
       << node_id_ << ".";
 
   return *stats;
+}
+
+::util::Status BcmPacketioManager::InsertPacketReplicationEntry(
+    const BcmPacketReplicationEntry& entry) {
+  return bcm_sdk_interface_->InsertPacketReplicationEntry(entry);
+}
+
+::util::Status BcmPacketioManager::DeletePacketReplicationEntry(
+    const BcmPacketReplicationEntry& entry) {
+  return bcm_sdk_interface_->DeletePacketReplicationEntry(entry);
 }
 
 std::string BcmPacketioManager::DumpStats() const {
@@ -734,6 +748,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
              << entry.second.netif_name << " created for node with ID "
              << node_id_ << " (unit: " << unit_ << ", purpose: "
              << GoogleConfig::BcmKnetIntfPurpose_Name(entry.first)
+             << ", vlan: " << entry.second.vlan
              << ", cpu_queue: " << entry.second.cpu_queue
              << ", netif_id: " << entry.second.netif_id
              << ", netif_index: " << entry.second.netif_index
@@ -744,6 +759,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
               << " created for node with ID " << node_id_ << " (unit: " << unit_
               << ", purpose: "
               << GoogleConfig::BcmKnetIntfPurpose_Name(entry.first)
+              << ", vlan: " << entry.second.vlan
               << ", cpu_queue: " << entry.second.cpu_queue
               << ", netif_id: " << entry.second.netif_id
               << ", netif_index: " << entry.second.netif_index
@@ -799,13 +815,14 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, intf->netif_name.c_str(), IFNAMSIZ);
   ifr.ifr_mtu = intf->mtu ? intf->mtu : kDefaultKnetIntfMtu;
-  if (ioctl(sock, SIOCSIFMTU, &ifr) == -1) {
-    close(sock);
-    return MAKE_ERROR(ERR_INTERNAL)
-           << "Couldn't set MTU for KNET interface " << intf->netif_name
-           << " (unit " << unit_ << " and purpose "
-           << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << ").";
-  }
+  // MTU is set at KNET creation
+  // if (ioctl(sock, SIOCSIFMTU, &ifr) == -1) {
+  //   close(sock);
+  //   return MAKE_ERROR(ERR_INTERNAL)
+  //          << "Couldn't set MTU for KNET interface " << intf->netif_name
+  //          << " (unit " << unit_ << " and purpose "
+  //          << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << ").";
+  // }
 
   // Get interface ifindex
   memset(&ifr, 0, sizeof(ifr));
@@ -845,7 +862,9 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   switch (purpose) {
     case GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER:
       knet_filter_types.push_back(
-          BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH);
+          BcmSdkInterface::KnetFilterType::CATCH_ALL);
+          // TODO(max): enable later?
+          // BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH);
       break;
     case GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW:
       knet_filter_types.push_back(
@@ -1012,6 +1031,8 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     }
     struct epoll_event pevents[1];  // we care about one event at a time.
     int ret = epoll_wait(efd, pevents, 1, FLAGS_knet_rx_poll_timeout_ms);
+    VLOG(2) << "RXThread " << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
+        << " epoll_wait() = " << ret;
     if (ret < 0) {
       VLOG(1) << "Error in epoll_wait(). errno: " << errno << ".";
       INCREMENT_RX_COUNTER(purpose, rx_errors_epoll_wait_failures);
@@ -1069,6 +1090,11 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
           if (egress_logical_port == kCpuLogicalPort) {
             // This means CPU port by default.
             meta.egress_port_id = kCpuPortId;
+          } else if (egress_logical_port == 1) {
+            // SDKLT sets egress port to 1 for packets that do not match
+            // MY_STATION table or got dropped by the ASIC?
+            // TODO: check this and decide what to report upwards
+            meta.egress_port_id = 1;
           } else {
             uint32* egress_port_id =
                 gtl::FindOrNull(logical_port_to_port_id_, egress_logical_port);
@@ -1080,6 +1106,10 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
             }
             meta.egress_port_id = *egress_port_id;
           }
+          VLOG(1) << "PacketInMetadata.ingress_port_id: " << meta.ingress_port_id
+              << "\n" << "PacketInMetadata.ingress_trunk_id: " << meta.ingress_trunk_id
+              << "\n" << "PacketInMetadata.egress_port_id: " << meta.egress_port_id
+              << "\n" << "PacketInMetadata.cos: " << meta.cos;
           status = DeparsePacketInMetadata(meta, &packet);
           if (!status.ok()) {
             INCREMENT_RX_COUNTER(purpose, rx_drops_metadata_deparse_error);
@@ -1260,6 +1290,40 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   return ::util::OkStatus();
 }
 
+::util::Status BcmPacketioManager::DeparsePacketOutMetadata(
+    const PacketOutMetadata& meta, ::p4::v1::PacketOut* packet) {
+  // Note: We are down-casting to uint32 for the port/trunk IDs in this method.
+  // This should not cause an issue as controller is already using 32 bit port
+  // or trunk IDs.
+  if (meta.egress_trunk_id > 0) {
+    MappedPacketMetadata mapped_packet_metadata;
+    mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_TRUNK);
+    mapped_packet_metadata.set_u32(meta.egress_trunk_id);
+    RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketOutMetadata(
+        mapped_packet_metadata, packet->add_metadata()));
+  }
+  if (meta.egress_port_id > 0) {
+    MappedPacketMetadata mapped_packet_metadata;
+    mapped_packet_metadata.set_type(P4_FIELD_TYPE_EGRESS_PORT);
+    mapped_packet_metadata.set_u32(meta.egress_port_id);
+    RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketOutMetadata(
+        mapped_packet_metadata, packet->add_metadata()));
+  }
+  // TODO: Controller has not defined any metadata for CoS yet. Enable
+  // this after this is done.
+  /*
+  if (meta.cos > 0) {
+    MappedPacketMetadata mapped_packet_metadata;
+    mapped_packet_metadata.set_type(P4_FIELD_TYPE_COS);
+    mapped_packet_metadata.set_u32(static_cast<uint32>(meta.cos));
+    RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketInMetadata(
+        mapped_packet_metadata, packet->add_metadata()));
+  }
+  */
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmPacketioManager::TxPacket(
     GoogleConfig::BcmKnetIntfPurpose purpose, int sock, int vlan,
     int netif_index, bool direct_tx, const std::string& header,
@@ -1271,56 +1335,18 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   size_t idx = 0;       // points to the current iov being filled up
   ssize_t tot_len = 0;  // total packet size to be transmitted
   memset(&iov, 0, sizeof(iov));
-  uint16 vlan_tag[2];  // used only if we need to add VLAN tags
 
   iov[idx].iov_base = const_cast<char*>(header.data());
   iov[idx].iov_len = header.length();
   tot_len += iov[idx].iov_len;
   idx++;
-  if (direct_tx) {
-    // Add payload without caring about VLAN tag.
-    iov[idx].iov_base = const_cast<char*>(payload.data());
-    iov[idx].iov_len = payload.length();
-    tot_len += iov[idx].iov_len;
-    idx++;
-  } else {
-    // Packet going to ingress pipeline. No SOBMH in this case is added before
-    // payload. Note that for packets going to ingress pipeline, we need to
-    // make sure VLAN tag exists.
-    auto* ether_hdr =
-        reinterpret_cast<const struct ether_header*>(payload.data());
-    uint16 ether_type = ntohs(ether_hdr->ether_type);
-    if (ether_type != ETHERTYPE_VLAN) {
-      // No VLAN tag. We will need to VLAN tags ourselves. If vlan = 0, use the
-      // default VLAN.
-      vlan = vlan ? vlan : kDefaultVlan;
-      vlan_tag[0] = htons(ETHERTYPE_VLAN);
-      vlan_tag[1] = htons(static_cast<uint16>(vlan));
-      // Add src/dst mac
-      iov[idx].iov_base = const_cast<char*>(payload.data());
-      iov[idx].iov_len = ETH_ALEN * 2;
-      tot_len += iov[idx].iov_len;
-      idx++;
-      // Add vlan tag
-      iov[idx].iov_base = reinterpret_cast<char*>(&vlan_tag);
-      iov[idx].iov_len = sizeof(vlan_tag);
-      tot_len += iov[idx].iov_len;
-      idx++;
-      // Add rest of payload
-      iov[idx].iov_base = const_cast<char*>(payload.data() + ETH_ALEN * 2);
-      iov[idx].iov_len = payload.length() - ETH_ALEN * 2;
-      tot_len += iov[idx].iov_len;
-      idx++;
-    } else {
-      // VLAN tag there. Just send the payload.
-      iov[idx].iov_base = const_cast<char*>(payload.data());
-      iov[idx].iov_len = payload.length();
-      tot_len += iov[idx].iov_len;
-      idx++;
-    }
-  }
+  // Add payload without caring about (missing) VLAN tag.
+  iov[idx].iov_base = const_cast<char*>(payload.data());
+  iov[idx].iov_len = payload.length();
+  tot_len += iov[idx].iov_len;
+  idx++;
 
-  CHECK_RETURN_IF_FALSE(idx <= kMaxIovLen);  // juts in case. Will never happen
+  CHECK_RETURN_IF_FALSE(idx <= kMaxIovLen);  // just in case. Will never happen
 
   // Here sa.sll_addr is left zeroed out, matching what's in rcpu_hdr.
   struct sockaddr_ll sa;
@@ -1388,8 +1414,39 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   }
   // If the port/trunk is given we transmit the port directly to the port/trunk.
   // Otherwise, we transmit the packet to ingress pipeline of the given node.
+  // TODO(max): This implicit way is in conflict with the explicit flag in packet_out header
   meta->use_ingress_pipeline =
       (meta->egress_port_id == 0 && meta->egress_trunk_id == 0);
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmPacketioManager::ParsePacketInMetadata(
+    const ::p4::v1::PacketIn& packet, PacketInMetadata* meta) {
+  meta->cos = kDefaultCos;  // default
+  for (const auto& metadata : packet.metadata()) {
+    // Query P4TableMapper to understand what this metadata refers to.
+    MappedPacketMetadata mapped_packet_metadata;
+    RETURN_IF_ERROR(p4_table_mapper_->ParsePacketInMetadata(
+        metadata, &mapped_packet_metadata));
+    LOG(INFO) << "mapped_packet_metadata.type(): " << mapped_packet_metadata.type();
+    LOG(INFO) << "mapped_packet_metadata.u32(): " << mapped_packet_metadata.u32();
+    switch (mapped_packet_metadata.type()) {
+      case P4_FIELD_TYPE_EGRESS_PORT:
+        meta->egress_port_id = mapped_packet_metadata.u32();
+        break;
+      case P4_FIELD_TYPE_INGRESS_PORT:
+        meta->ingress_port_id = mapped_packet_metadata.u32();
+        break;
+      case P4_FIELD_TYPE_COS:
+        meta->cos = static_cast<int>(mapped_packet_metadata.u32());
+        break;
+      default:
+        VLOG(1) << "Unknown/unsupported meta: " << metadata.ShortDebugString()
+                << ".";
+        break;
+    }
+  }
 
   return ::util::OkStatus();
 }

@@ -15,14 +15,14 @@
 # limitations under the License.
 #
 
-# This Skylark rule imports the Broadcom SDK-LT shared libraries and headers. 
+# This Skylark rule imports the Broadcom SDK-LT shared libraries and headers.
 # The SDKLT_INSTALL environment variable needs to be set, otherwise the Stratum
 # rules for Broadcom platforms cannot be built.
 
 def _impl(repository_ctx):
     if "SDKLT_INSTALL" not in repository_ctx.os.environ:
         repository_ctx.file("BUILD", """
-""")
+        """)
         return
     sdklt_path = repository_ctx.os.environ["SDKLT_INSTALL"]
     repository_ctx.symlink(sdklt_path, "bcm-bin")
@@ -48,4 +48,4 @@ cc_import(
 bcm_configure = repository_rule(
     implementation=_impl,
     local = True,
-    environ = ["SDKT_INSTALL"])
+    environ = ["SDKLT_INSTALL"])

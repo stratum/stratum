@@ -423,7 +423,18 @@ std::string Uint32ToByteStream(uint32 val) {
   return bytes;
 }
 
-// TODO(unknown): If needed, add extra validation of the unsigned int values to
+// Strip leading zero bytes from a ByteString, preserving the last one.
+// TODO: strip leading 0xff bytes for negative values.
+std::string CanonicalizeByteString(std::string val) {
+  while (val.size() > 1) {
+    if (val[0] == '\x00') {
+      val = val.substr(1);
+    }
+  }
+  return val;
+}
+
+// TODO: If needed, add extra validation of the unsigned int values to
 // to be in range [1, 2^bitwidth -1].
 ::util::Status DeparseMetadataHelper(
     const MetadataTypeToIdBitwidthMap& metadata_type_to_id_bitwidth_pair,
@@ -448,7 +459,7 @@ std::string Uint32ToByteStream(uint32 val) {
                << mapped_packet_metadata.ShortDebugString() << ".";
       }
       p4_packet_metadata->set_value(
-          Uint32ToByteStream(mapped_packet_metadata.u32()));
+          CanonicalizeByteString(Uint32ToByteStream(mapped_packet_metadata.u32())));
       break;
     }
     case MappedPacketMetadata::kU64: {
@@ -459,7 +470,7 @@ std::string Uint32ToByteStream(uint32 val) {
                << mapped_packet_metadata.ShortDebugString() << ".";
       }
       p4_packet_metadata->set_value(
-          Uint64ToByteStream(mapped_packet_metadata.u64()));
+          CanonicalizeByteString(Uint64ToByteStream(mapped_packet_metadata.u64())));
       break;
     }
     case MappedPacketMetadata::kB: {

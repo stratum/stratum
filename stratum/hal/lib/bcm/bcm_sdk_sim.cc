@@ -171,14 +171,14 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkSim::GetKnetHeaderForDirectTx(int unit, int port, int cos,
-                                                   uint64 smac,
+                                                   uint64 smac, size_t packet_len,
                                                    std::string *header) {
   *header = "";
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }
 
 ::util::Status BcmSdkSim::GetKnetHeaderForIngressPipelineTx(
-    int unit, uint64 smac, std::string *header) {
+    int unit, uint64 smac, size_t packet_len, std::string *header) {
   *header = "";
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";
 }

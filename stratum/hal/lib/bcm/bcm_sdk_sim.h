@@ -74,10 +74,10 @@ class BcmSdkSim : public BcmSdkWrapper {
   ::util::Status SetRateLimit(
       int unit, const RateLimitConfig& rate_limit_config) override;
   ::util::Status GetKnetHeaderForDirectTx(int unit, int port, int cos,
-                                          uint64 smac,
+                                          uint64 smac, size_t packet_len,
                                           std::string* header) override;
   ::util::Status GetKnetHeaderForIngressPipelineTx(
-      int unit, uint64 smac, std::string* header) override;
+      int unit, uint64 smac, size_t packet_len, std::string* header) override;
   size_t GetKnetHeaderSizeForRx(int unit) override;
   ::util::Status ParseKnetHeaderForRx(int unit, const std::string& header,
                                       int* ingress_logical_port,

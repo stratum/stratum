@@ -60,6 +60,9 @@ class BcmChassisRoMock : public BcmChassisRoInterface {
   MOCK_CONST_METHOD2(GetPortAdminState,
                      ::util::StatusOr<AdminState>(uint64 node_id,
                                                   uint32 port_id));
+  MOCK_CONST_METHOD3(GetPortCounters,
+                     ::util::Status(uint64 node_id, uint32 port_id,
+                                    PortCounters* pc));
 };
 
 }  // namespace bcm
