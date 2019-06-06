@@ -7,6 +7,7 @@ package cdl
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"cdlang"
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -35,6 +36,12 @@ type Visitor struct {
 	// While building a gNMI path a pointer to the object is kept here to allow
 	// elements to be added by independent calls to VisitGnmiPathElem().
 	currPath *gnmiPath
+
+	// Keeps track of open gRPC streams to detect situation when a not open stream is used.
+	openStreams map[string]bool
+
+	// Known gRPC domain.method combinations that result in opening a stream.
+	streamOpeners map[string]map[string]func(string) *Instruction
 }
 
 // NewVisitor creates a new visitor instance.
@@ -43,6 +50,15 @@ func NewVisitor(dom *DOM) *Visitor {
 		BaseParseTreeVisitor: &antlr.BaseParseTreeVisitor{},
 		BaseCDLangVisitor:    &cdlang.BaseCDLangVisitor{},
 		dom:                  dom,
+		openStreams:          map[string]bool{},
+		streamOpeners: map[string]map[string]func(string) *Instruction{
+			"gNMI": map[string]func(string) *Instruction{
+				"Subscribe": newOpenGNMIStr,
+			},
+			"gNOI": map[string]func(string) *Instruction{
+				"Execute": newOpenCTRLStr,
+			},
+		},
 	}
 }
 
@@ -137,22 +153,83 @@ func (v *Visitor) VisitContract(ctx *cdlang.ContractContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *Visitor) openStreamNames() string {
+	os := make([]string, 0, len(v.openStreams))
+	for s := range v.openStreams {
+		os = append(os, s)
+	}
+	return strings.Join(os, ", ")
+}
+
+// VisitConstProto handles 'constProto' element of CDLang grammar. Returns error detected by children of this element.
+func (v *Visitor) VisitConstProto(ctx *cdlang.ConstProtoContext) interface{} {
+	v.pushInst(newConstProto())
+	defer v.popInst()
+	result := v.VisitChildren(ctx)
+	n := ctx.GetN().GetText()
+	if _, ok := v.dom.GlobalInst[n]; ok {
+		return fmt.Errorf("const proto '%s' already defined", n)
+	}
+	v.dom.GlobalInst[n] = v.peekInst()
+	return result
+}
+
+// VisitMapping handles 'mapping' element of CDLang grammar. Returns error detected by children of this element.
+func (v *Visitor) VisitMapping(ctx *cdlang.MappingContext) interface{} {
+	v.dom.AddProtoTypeToFuncNameMapping(ctx.GetReq().GetText(), ctx.GetF().GetText())
+	v.dom.AddProtoTypeToFuncNameMapping(ctx.GetResp().GetText(), ctx.GetF().GetText())
+	v.dom.AddProtoTypeToNamespaceMapping(ctx.GetReq().GetText(), ctx.GetFd().GetText())
+	v.dom.AddProtoTypeToNamespaceMapping(ctx.GetResp().GetText(), ctx.GetFd().GetText())
+	return v.VisitChildren(ctx)
+}
+
 // VisitScenario handles 'scenario' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitScenario(ctx *cdlang.ScenarioContext) interface{} {
 	s := newScenario(ctx.GetName().GetText())
-	v.dom.Scenarios[ctx.GetName().GetText()] = s
+	sos := ctx.GetSos().GetStart()
+	if ctx.GetDisabled() != nil {
+		s.Disabled = true
+		sos = ctx.GetDisabled().GetStart()
+	}
+	s.Source = ctx.GetSos().GetInputStream().GetText(sos, ctx.GetEos().GetStop())
 	v.pushInstGroup(s)
 	defer v.popInstGroup()
-	return v.VisitChildren(ctx)
+	if result := v.VisitChildren(ctx); result != nil {
+		return result
+	}
+	if len(v.openStreams) != 0 {
+		return fmt.Errorf("scenario '%s': missing stream close for '%s'", s.Name, v.openStreamNames())
+	}
+	if _, ok := v.dom.OtherScenarios[s.Name][s.Version.String()]; ok {
+		return fmt.Errorf("scenario '%s' version %s is already defined", s.Name, s.Version)
+	}
+	if _, ok := v.dom.OtherScenarios[s.Name]; !ok {
+		v.dom.OtherScenarios[s.Name] = map[string]*Instruction{}
+	}
+	v.dom.OtherScenarios[s.Name][s.Version.String()] = s
+	return nil
 }
 
 // VisitSubScenario handles 'subScenario' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitSubScenario(ctx *cdlang.SubScenarioContext) interface{} {
 	s := newSubScenario(ctx.GetName().GetText())
-	v.dom.SubScenarios[ctx.GetName().GetText()] = s
+	s.Source = ctx.GetSos().GetInputStream().GetText(ctx.GetSos().GetStart(), ctx.GetEos().GetStop())
 	v.pushInstGroup(s)
 	defer v.popInstGroup()
-	return v.VisitChildren(ctx)
+	if result := v.VisitChildren(ctx); result != nil {
+		return result
+	}
+	if len(v.openStreams) != 0 {
+		return fmt.Errorf("sub-scenario '%s': missing stream close for '%s'", s.Name, v.openStreamNames())
+	}
+	if _, ok := v.dom.OtherSubScenarios[s.Name][s.Version.String()]; ok {
+		return fmt.Errorf("sub-scenario '%s' version %s is already defined", s.Name, s.Version)
+	}
+	if _, ok := v.dom.OtherSubScenarios[s.Name]; !ok {
+		v.dom.OtherSubScenarios[s.Name] = map[string]*Instruction{}
+	}
+	v.dom.OtherSubScenarios[s.Name][s.Version.String()] = s
+	return nil
 }
 
 // VisitVariableDeclaration handles 'variableDeclaration' element of CDLang grammar. Returns error detected by children of this element.
@@ -210,9 +287,82 @@ func (v *Visitor) VisitInstruction(ctx *cdlang.InstructionContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+// VisitCall handles 'call' element of CDLang grammar. Returns error detected by children of this element.
+func (v *Visitor) VisitCall(ctx *cdlang.CallContext) interface{} {
+	v.pushInst(newCall("Call"))
+	defer v.popInst()
+	result := v.VisitChildren(ctx)
+	v.peekInstGroup().addInstruction(v.peekInst())
+	return result
+}
+
+// VisitCallResponse handles 'callResponse' element of CDLang grammar. Returns error detected by children of this element.
+func (v *Visitor) VisitCallResponse(ctx *cdlang.CallResponseContext) interface{} {
+	// VisitProtobuf will override Protobuf field that points to the request.
+	// Save it here, before calling VisitChildren, so it can be restored.
+	callInst := v.peekInst()
+	request := callInst.Protobuf
+	callInst.Protobuf = nil
+	result := v.VisitChildren(ctx)
+	switch {
+	case ctx.GetOk() != nil:
+		// Protobuf field points to the response; move the response to correct field.
+		callInst.Response = callInst.Protobuf
+	case ctx.GetErr() != nil:
+		callInst.ErrorExpected = true
+	default:
+		return fmt.Errorf("unsupported gNMI GET/SET status")
+	}
+	// Make Protobuf to point to the request (again).
+	callInst.Protobuf = request
+	return result
+}
+
+// VisitOpenStream handles 'open_stream' element of CDLang grammar. Returns error detected by children of this element.
+func (v *Visitor) VisitOpenStream(ctx *cdlang.OpenStreamContext) interface{} {
+	domain := ctx.GetDomain().GetText()
+	d, ok := v.streamOpeners[domain]
+	if !ok {
+		return fmt.Errorf("unknown gRPC domain '%s'", domain)
+	}
+	method := ctx.GetMethod().GetText()
+	m, ok := d[method]
+	if !ok {
+		return fmt.Errorf("unknown gRPC method '%s.%s'", domain, method)
+	}
+	n := ctx.GetStream().GetText()
+	if v.openStreams[n] {
+		return fmt.Errorf("gRPC stream '%s' is already open", n)
+	}
+	v.openStreams[n] = true
+	v.pushInst(m(n))
+	defer v.popInst()
+	result := v.VisitChildren(ctx)
+	v.peekInstGroup().addInstruction(v.peekInst())
+	return result
+}
+
+// VisitCloseStream handles 'close_stream' element of CDLang grammar. Returns error detected by children of this element.
+func (v *Visitor) VisitCloseStream(ctx *cdlang.CloseStreamContext) interface{} {
+	n := ctx.GetStream().GetText()
+	if !v.openStreams[n] {
+		return fmt.Errorf("gRPC stream '%s' is already closed", n)
+	}
+	delete(v.openStreams, n)
+	v.pushInst(newCloseStr("CloseStream", ctx.GetStream().GetText()))
+	defer v.popInst()
+	result := v.VisitChildren(ctx)
+	v.peekInstGroup().addInstruction(v.peekInst())
+	return result
+}
+
 // VisitSend handles 'send' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitSend(ctx *cdlang.SendContext) interface{} {
-	v.pushInst(newSend("Send", ctx.GetCh().GetText()))
+	n := ctx.GetCh().GetText()
+	if !v.openStreams[n] {
+		return fmt.Errorf("gRPC stream '%s' is not open", n)
+	}
+	v.pushInst(newSend("Send", n))
 	defer v.popInst()
 	result := v.VisitChildren(ctx)
 	v.peekInstGroup().addInstruction(v.peekInst())
@@ -221,39 +371,14 @@ func (v *Visitor) VisitSend(ctx *cdlang.SendContext) interface{} {
 
 // VisitReceive handles 'receive' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitReceive(ctx *cdlang.ReceiveContext) interface{} {
-	v.pushInst(newReceive("Receive", ctx.GetCh().GetText()))
+	n := ctx.GetCh().GetText()
+	if !v.openStreams[n] {
+		return fmt.Errorf("gRPC stream '%s' is not open", n)
+	}
+	v.pushInst(newReceive("Receive", n))
 	defer v.popInst()
 	result := v.VisitChildren(ctx)
 	v.peekInstGroup().addInstruction(v.peekInst())
-	return result
-}
-
-// VisitCheck handles 'check' element of CDLang grammar. Returns error detected by children of this element.
-func (v *Visitor) VisitCheck(ctx *cdlang.CheckContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-// VisitCheckRegex handles 'checkRegex' element of CDLang grammar. Returns error detected by children of this element.
-func (v *Visitor) VisitCheckRegex(ctx *cdlang.CheckRegexContext) interface{} {
-	c := newCheckRegExMatch("CheckRegExMatch")
-	v.pushInst(c)
-	defer v.popInst()
-	v.pushWithParam(c)
-	defer v.popWithParam()
-	result := v.VisitChildren(ctx)
-	v.peekInstGroup().addInstruction(c)
-	return result
-}
-
-// VisitCheckUnique handles 'checkUnique' element of CDLang grammar. Returns error detected by children of this element.
-func (v *Visitor) VisitCheckUnique(ctx *cdlang.CheckUniqueContext) interface{} {
-	c := newCheckUnique("CheckUnique")
-	v.pushInst(c)
-	defer v.popInst()
-	v.pushWithParam(c)
-	defer v.popWithParam()
-	result := v.VisitChildren(ctx)
-	v.peekInstGroup().addInstruction(c)
 	return result
 }
 
@@ -295,7 +420,7 @@ func (v *Visitor) VisitProtobuf(ctx *cdlang.ProtobufContext) interface{} {
 	v.pushProtobufFieldGroup(proto)
 	defer v.popProtobufFieldGroup()
 	result := v.VisitChildren(ctx)
-	if t := v.peekInst().Type; t == SendInst || t == ReceiveInst {
+	if t := v.peekInst().Type; t == SendInst || t == ReceiveInst || t == CallInst {
 		v.peekInst().Protobuf = proto
 	}
 	return result
@@ -372,6 +497,14 @@ func (v *Visitor) VisitProtobufFieldRepeated(ctx *cdlang.ProtobufFieldRepeatedCo
 // VisitProtobufFieldRepeatedRow handles 'protobufFieldRepeatedRow' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitProtobufFieldRepeatedRow(ctx *cdlang.ProtobufFieldRepeatedRowContext) interface{} {
 	row := newProtobufFieldRepeatedRow()
+	switch {
+	case ctx.GetZero_or_more() != nil:
+		row.SequenceSize = protobufFieldSequenceSizeZeroOrMore
+	case ctx.GetOne_or_more() != nil:
+		row.SequenceSize = protobufFieldSequenceSizeOneOrMore
+	case ctx.GetZero_or_one() != nil:
+		row.SequenceSize = protobufFieldSequenceSizeZeroOrOne
+	}
 	v.pushProtobufFieldGroup(row)
 	result := v.VisitChildren(ctx)
 	v.popProtobufFieldGroup()
@@ -397,11 +530,14 @@ func (v *Visitor) VisitPathElement(ctx *cdlang.PathElementContext) interface{} {
 		switch {
 		case ctx.GetA() != nil:
 			v.currPath.addElemKeyValue(ctx.GetName().GetText(), ctx.GetKey().GetText(), newStringConstant(ctx.GetA().GetText()))
-		case ctx.GetV() != nil:
+		case ctx.GetRd_var() != nil || ctx.GetWr_var() != nil:
 			v.pushWithParam(newProtobufFieldVariable())
 			defer func() {
 				if e, ok := v.peekWithParam().(*protobufFieldVariable); ok {
-					v.currPath.addElemKeyValue(ctx.GetName().GetText(), "name", e.Param())
+					if ctx.GetWr_var() != nil {
+						e.Param().ParameterKind = variableDecl
+					}
+					v.currPath.addElemKeyValue(ctx.GetName().GetText(), ctx.GetKey().GetText(), e.Param())
 				}
 				v.popWithParam()
 			}()
@@ -412,7 +548,10 @@ func (v *Visitor) VisitPathElement(ctx *cdlang.PathElementContext) interface{} {
 		}
 	case ctx.GetParam() != nil:
 		v.pushWithParam(newGNMIPathElem())
-		defer v.popWithParam()
+		defer func() {
+			v.currPath.addExistingElem(v.peekWithParam().(*gnmiPathElem))
+			v.popWithParam()
+		}()
 	}
 	return v.VisitChildren(ctx)
 }
@@ -420,11 +559,12 @@ func (v *Visitor) VisitPathElement(ctx *cdlang.PathElementContext) interface{} {
 // VisitChildren visits children nodes in the parser tree.
 // TODO(tmadejski): remove VisitChildren when antlr4 Go has such functionality internaly supported.
 func (v *Visitor) VisitChildren(node antlr.RuleNode) interface{} {
-	var result interface{}
 	for _, child := range node.GetChildren() {
 		if p, ok := child.(antlr.ParseTree); ok {
-			result = p.Accept(v)
+			if err, ok := p.Accept(v).(error); ok {
+				return err
+			}
 		}
 	}
-	return result
+	return nil
 }

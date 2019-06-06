@@ -1,4 +1,4 @@
-// The cdl is a Contract Definition Language (go/cdlang )transpiler.
+// The cdl is a Contract Definition Language (go/cdlang) transpiler.
 // It takes a source file written in CDLang and a Go template file and produces
 // an output file that is a result of processing the template file with data
 // from the CDLang file.
@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"flag"
@@ -23,9 +24,22 @@ import (
 	"cdlang"
 )
 
+type TmplFileNames []string 
+
+func (arr *TmplFileNames) String() string {
+	return fmt.Sprint(arr)
+}
+
+func (arr *TmplFileNames) Set(value string) error {
+	*arr = append(*arr, strings.Split(value, ",")...)
+	return nil
+}
+
 var (
-	outputFileName   = flag.String("o", "out.txt", "the output file path")
-	templateFileName = flag.String("t", "", "the template file path")
+	outputFileName = flag.String("o", "out.txt", "the output file path")
+	tmplFileNames  TmplFileNames
+	version        = flag.String("v", "latest", "version of scenarios to be used")
+	logLevel       = flag.Int("l", 0, "log level")
 )
 
 // last() is called from the template.
@@ -89,21 +103,32 @@ func buildAbstractSyntaxTreeFromFile(fileName string) cdlang.IContractContext {
 	// Read the file contents.
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		log.Fatalf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v", err)
 	}
 	tree, err := cdl.BuildAbstractSyntaxTree(string(data))
 	if err != nil {
-		log.Fatalf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v", err)
 	}
 	return tree
 }
 
 // processTemplate() executes the template using data from the `dom` object.
 func processTemplate(dom *cdl.DOM) {
-	// Prepare the template.
-	t, err := template.New(filepath.Base(*templateFileName)).Funcs(template.FuncMap{"last": last, "vars": vars, "arr": arr, "concat": concat}).ParseFiles(*templateFileName)
+	if len(tmplFileNames) == 0 {
+		log.Fatal("cdl: templates have not been specified.")
+	}
+	// Create template t by parsing files passed with -t option.
+	// The template lib API requires that the name used in New() is base
+	// name of one of the files listed in ParseFiles().
+	t, err := template.New(filepath.Base(tmplFileNames[0])).Funcs(template.FuncMap{
+		"last":   last,
+		"vars":   vars,
+		"arr":    arr,
+		"concat": concat,
+		"TeX":    cdl.TeX,
+	}).ParseFiles(tmplFileNames...)
 	if err != nil {
-		log.Fatalf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v", err)
 	}
 	// Produce output file using the template and the DOM.
 	// First create a buffer where the output of the template will be stored
@@ -111,16 +136,21 @@ func processTemplate(dom *cdl.DOM) {
 	var b bytes.Buffer
 	// Then, execute the template.
 	if err := t.Execute(&b, dom); err != nil {
-		log.Fatalf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v", err)
 	}
 	// If everything is OK, then write the output to the output file.
 	if err = ioutil.WriteFile(*outputFileName, b.Bytes(), os.ModePerm); err != nil {
-		log.Fatalf("cdl: %v\n", err)
+		log.Fatalf("cdl: %v", err)
 	}
 }
 
 func main() {
+	flag.Var(&tmplFileNames, "t", "list of templates")
 	flag.Parse()
+	ver, err := cdl.NewVersion(*version)
+	if err != nil {
+		log.Fatalf("cdl: %v", err)
+	}
 	dom := cdl.NewDOM()
 	// Process all CDLang input files.
 	for _, fileName := range flag.Args() {
@@ -128,13 +158,15 @@ func main() {
 		// Now DOM can be updated by the visitor.
 		status := tree.Accept(cdl.NewVisitor(dom))
 		if status != nil && status.(error) != nil {
-			log.Fatalf("cdl: %s: %v\n", fileName, status)
+			log.Fatalf("cdl: %s: %v", fileName, status)
 		}
 	}
 	// All input files have been processed. Now the DOM has to be post-processed.
-	dom.PostProcess()
-	// Dump the DOM to console.
-	fmt.Println(dom.Marshal())
+	dom.PostProcess(ver, *logLevel)
+	// Dump the DOM the console.
+	if *logLevel == 1 {
+		log.Println(dom.Marshal())
+	}
 	// Process the template file with DOM as input.
 	processTemplate(dom)
 }

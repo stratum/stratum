@@ -8,6 +8,8 @@ package cdl
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -41,16 +43,22 @@ const (
 	GroupZeroOrMoreInst
 	// GroupAtLeastOnceInst indicates an at-least-once grouping instruction.
 	GroupAtLeastOnceInst
-	// CheckRegexMatchInst indicates a check regex instruction.
-	CheckRegexMatchInst
-	// CheckUniqueInst indicates a check unique instruction.
-	CheckUniqueInst
 	// VarDeclarationInst indicates a instruction declaring a variable.
 	VarDeclarationInst
 	// ScenarioInst indicates a sceanario instruction.
 	ScenarioInst
 	// SubScenarioInst indicates a sub-sceanrtio instruction.
 	SubScenarioInst
+	// OpenGNMIStrInst indicates an open-GNMI-stream instruction.
+	OpenGNMIStrInst
+	// OpenCTRLStrInst indicates an open-CTRL-stream instruction.
+	OpenCTRLStrInst
+	// CloseStrInst indicates a close-stream instruction.
+	CloseStrInst
+	// CallInst indicates a gRPC call instruction.
+	CallInst
+	// ConstProtoInst indicates a PROTOBUF that will be reused in scenarios.
+	ConstProtoInst
 )
 
 var instTypeToString = map[InstType]string{
@@ -60,16 +68,19 @@ var instTypeToString = map[InstType]string{
 	GroupZeroOrMoreInst:  "zero_or_more",
 	GroupAtLeastOnceInst: "at_least_once",
 	GroupAnyOrderInst:    "any_order",
-	CheckRegexMatchInst:  "check_regex_match",
-	CheckUniqueInst:      "check_uniqe",
 	VarDeclarationInst:   "var_declaration",
 	ScenarioInst:         "scenario",
 	SubScenarioInst:      "sub_scenario",
+	OpenGNMIStrInst:      "open_gnmi_stream",
+	OpenCTRLStrInst:      "open_ctrl_stream",
+	CloseStrInst:         "close_stream",
+	CallInst:             "call",
+	ConstProtoInst:       "const-proto",
 }
 
 // String returns a string specifying type of instruction. Used for debugging.
-func (s *InstType) String() string {
-	if name, ok := instTypeToString[*s]; ok {
+func (s InstType) String() string {
+	if name, ok := instTypeToString[s]; ok {
 		return name
 	}
 	return "?"
@@ -81,23 +92,29 @@ type Instruction struct {
 	Type InstType
 	Name string
 	ID   int32
+	// Valid for Call, Send and Receive only.
+	Protobuf *protobuf `json:",omitempty"` // Protobuf to be sent or received.
+	// Valid for Call only.
+	Response      *protobuf `json:",omitempty"` // Protobuf expected as a call response.
+	ErrorExpected bool      `json:",omitempty"` // Expected error status of the call.
 	// Valid for Send and Receive only.
-	Protobuf *protobuf // Protobuf to be sent or received.
-	Channel  string    // Either 'gnmi' or 'ctrl'.
+	Channel string `json:",omitempty"` // The name of the stream.
 	// Valid for receive only.
-	Next *Instruction // Another message that can be recived at this point.
-	Skip bool         // This instruction is received in preciding loop.
+	Next *Instruction `json:",omitempty"` // Another message that can be recived at this point.
+	Skip bool         `json:",omitempty"` // This instruction is received in preciding loop.
 	// Valid for varDeclaration only.
-	Variable *Param
-	// Valid for execute and check* only.
-	Params []*Param
+	Variable *Param `json:",omitempty"`
+	// Valid for execute only.
+	Params []*Param `json:",omitempty"`
 	// Instructions that are frouped by this instruction.
-	Children []*Instruction
+	Children []*Instruction `json:",omitempty"`
 	// Valid for sceanrio and sub-scenario only
-	Version *Version
+	Version  *Version `json:",omitempty"`
+	Disabled bool     `json:",omitempty"` // Set to true if scenario should not be executed.
+	Source   string   `json:",omitempty"` // The source code of the (sub-)scenario.
 	// Valid for AnyOrder group only.
-	GNMI []*Instruction
-	CTRL []*Instruction
+	GNMI []*Instruction `json:",omitempty"`
+	CTRL []*Instruction `json:",omitempty"`
 }
 
 // shortDebugString returns a debug string showing details of the instruction.
@@ -168,6 +185,48 @@ func (s *Instruction) setVersion(major, minor, patch int64) {
 	s.Version.Patch = patch
 }
 
+var protoNameToFuncName = map[string]string{
+	// gNMI Requests
+	"CapabilityRequest": "Capabilities",
+	"GetRequest":        "Get",
+	"SetRequest":        "Set",
+	"SubscribeRequest":  "Subscribe",
+	// gNMI Responses
+	"CapabilityResponse": "Capabilities",
+	"GetResponse":        "Get",
+	"SetResponse":        "Set",
+	"SubscribeResponse":  "Subscribe",
+	// gNOI Request
+	"ExecuteRequest": "Execute",
+	// gNOI Response
+	"ExecuteResponse": "Execute",
+}
+
+var protoNameToNamespace = map[string]string{
+	// gNMI Requests
+	"CapabilityRequest": "gnmi",
+	"GetRequest":        "gnmi",
+	"SetRequest":        "gnmi",
+	"SubscribeRequest":  "gnmi",
+	// gNMI Responses
+	"CapabilityResponse": "gnmi",
+	"GetResponse":        "gnmi",
+	"SetResponse":        "gnmi",
+	"SubscribeResponse":  "gnmi",
+	// gNOI Request
+	"ExecuteRequest": "ctrl",
+	// gNOI Response
+	"ExecuteResponse": "ctrl",
+}
+
+// FuncName returns gRPC function name that accepts the type of protobuf specified by Protobuf field.
+func (s *Instruction) FuncName() string {
+	if name, ok := protoNameToFuncName[s.Protobuf.TypeName]; ok {
+		return name
+	}
+	return "?"
+}
+
 // A CDLang scenario and sub-scenario are versioned.
 type versioned interface {
 	setVersion(major, minor, patch int64)
@@ -178,6 +237,55 @@ type Version struct {
 	Major int64
 	Minor int64
 	Patch int64
+}
+
+var re = regexp.MustCompile("(?P<major>([0-9]+)).(?P<minor>([0-9]+)).(?P<patch>([0-9]+))")
+
+// NewVersion converts version in a form of a string into Version object.
+func NewVersion(ver string) (*Version, error) {
+	if ver == "latest" {
+		return &Version{Major: math.MaxInt64, Minor: math.MaxInt64, Patch: math.MaxInt64}, nil
+	}
+	match := re.FindStringSubmatch(ver)
+	m := make(map[string]string)
+	for i, name := range re.SubexpNames() {
+		if i != 0 && len(match) > i && len(name) > 0 {
+			m[name] = match[i]
+		}
+	}
+	major, err := strconv.ParseInt(m["major"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("while parsing major part of version string '%s': %v", ver, err)
+	}
+	minor, err := strconv.ParseInt(m["minor"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("while parsing minor part of version string '%s': %v", ver, err)
+	}
+	patch, err := strconv.ParseInt(m["patch"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("while parsing patch part of version string '%s': %v", ver, err)
+	}
+	return &Version{Major: major, Minor: minor, Patch: patch}, nil
+}
+
+// Compare returns 0 if both versions are equal, a negative number if v is lower version, a positive number otherwise.
+func (v Version) Compare(o *Version) int64 {
+	if o == nil {
+		return 1
+	}
+	major := v.Major - o.Major
+	if major != 0 {
+		return major
+	}
+	minor := v.Minor - o.Minor
+	if minor != 0 {
+		return minor
+	}
+	return v.Patch - o.Patch
+}
+
+func (v Version) String() string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
 // Returns initialized instance of scenario.
@@ -195,6 +303,41 @@ func newSubScenario(name string) *Instruction {
 		Type:    SubScenarioInst,
 		Name:    name,
 		Version: &Version{},
+	}
+}
+
+// newOpenGNMIStr returns a CDLang instruction that opens a streaming gNMI interface.
+func newOpenGNMIStr(channel string) *Instruction {
+	return &Instruction{
+		Type:    OpenGNMIStrInst,
+		Name:    "OpenGNMIStream",
+		Channel: channel,
+	}
+}
+
+// newOpenCTRLStr returns a CDLang instruction that opens a streaming gNOI interface.
+func newOpenCTRLStr(channel string) *Instruction {
+	return &Instruction{
+		Type:    OpenCTRLStrInst,
+		Name:    "OpenCTRLStream",
+		Channel: channel,
+	}
+}
+
+// newCloseStr returns a CDLang instruction that closes an open streaming gRPC interface.
+func newCloseStr(name, channel string) *Instruction {
+	return &Instruction{
+		Type:    CloseStrInst,
+		Name:    name,
+		Channel: channel,
+	}
+}
+
+// newCall returns a CDLang instruction that performs gNMI GET or SET operation.
+func newCall(name string) *Instruction {
+	return &Instruction{
+		Type: CallInst,
+		Name: name,
 	}
 }
 
@@ -220,22 +363,6 @@ func newReceive(name string, channel string) *Instruction {
 func newExecute(name string) *Instruction {
 	return &Instruction{
 		Type: ExecuteInst,
-		Name: name,
-	}
-}
-
-// Returns initialized instance of checkRegExMatch.
-func newCheckRegExMatch(name string) *Instruction {
-	return &Instruction{
-		Type: CheckRegexMatchInst,
-		Name: name,
-	}
-}
-
-// Returns initialized instance of checkUnique.
-func newCheckUnique(name string) *Instruction {
-	return &Instruction{
-		Type: CheckUniqueInst,
 		Name: name,
 	}
 }
@@ -273,6 +400,15 @@ func newGroupZeroOrMore() *Instruction {
 	}
 }
 
+// Returns initialized instance of constProto.
+func newConstProto() *Instruction {
+	return &Instruction{
+		Type: ConstProtoInst,
+		Name: "ConstProto",
+	}
+}
+
+// ParameterKind defines the type of the parameter.
 // ParameterKind defines the type of the parameter.
 // A CDLang instruction paramater can be either a variable or a constant.
 type ParameterKind int
@@ -283,10 +419,28 @@ const (
 	otherConstant
 	declaration
 	ignored
+	variableDecl
 )
 
+var paramTypeToString = map[ParameterKind]string{
+	variable:       "variable",
+	declaration:    "declaration",
+	stringConstant: "string",
+	otherConstant:  "other",
+	ignored:        "ignored",
+	variableDecl:   "variableDecl",
+}
+
+// IsType returns true if the input parameter is equal to the name of the kind of the parameter.
+func (p *ParameterKind) IsType(paramType string) bool {
+	if name, ok := paramTypeToString[*p]; ok {
+		return name == paramType
+	}
+	return false
+}
+
 // Param is a CDLang instruction run-time paramater.
-// Some instructions as `execute` or `check unique` accept parameters.
+// Some instructions as `execute` accept parameters.
 type Param struct {
 	ParameterKind ParameterKind
 	Name          string
@@ -301,7 +455,7 @@ func (p *Param) Ignore() bool {
 // String returns the parameter in a form that can be used in the template.
 func (p *Param) String() string {
 	switch p.ParameterKind {
-	case variable:
+	case variable, variableDecl:
 		return strconv.Quote("$" + p.Name)
 	case declaration:
 		return p.Name
@@ -362,8 +516,9 @@ func newIgnoredValue() *Param {
 }
 
 type gnmiPathElem struct {
-	Name string
-	Key  map[string]*Param
+	Name       string
+	Key        map[string]*Param `json:",omitempty"`
+	Parameters []*Param          `json:",omitempty"`
 }
 
 // Returns initialized instance of gnmiPathElem.
@@ -378,23 +533,31 @@ func (p *gnmiPathElem) String() string {
 }
 
 func (p *gnmiPathElem) Ignore() bool {
-	// TODO(tmadejski): add code that will decide in this element of path can be ignored.
-	return false
+	param := p.Param()
+	if param == nil {
+		return false
+	}
+	return param.Ignore()
 }
 
-func (p *gnmiPathElem) IsType(fieldType int) bool {
-	// TODO(tmadejski): add code that will check if the field is or right type.
-	return false
+// IsType returns true if the input parameter is equal to the name of the type of the field.
+func (p *gnmiPathElem) IsType(fieldType string) bool {
+	param := p.Param()
+	if param == nil {
+		return false
+	}
+	return param.ParameterKind.IsType(fieldType)
 }
 
 func (p *gnmiPathElem) addParam(param *Param) {
-	log.Fatal("Wrong version of addParam() has been called!")
+	p.Parameters = append(p.Parameters, param)
 }
 
 func (p *gnmiPathElem) Params() []*Param {
-	result := []*Param{}
+	result := p.Parameters
 	for _, v := range p.Key {
-		if v.ParameterKind == variable {
+		switch v.ParameterKind {
+		case variable, variableDecl:
 			result = append(result, v)
 		}
 	}
@@ -409,7 +572,7 @@ func (p *gnmiPathElem) Param() *Param {
 }
 
 type gnmiPath struct {
-	Elem []*gnmiPathElem
+	Elem []*gnmiPathElem `json:",omitempty"`
 }
 
 func newGNMIPath() *gnmiPath {
@@ -440,12 +603,22 @@ const (
 	repeatedField
 )
 
+var fieldTypeToString = map[protobufFieldType]string{
+	stringField:      "string",
+	numberField:      "number",
+	gnmiPathField:    "gnmiPath",
+	enumField:        "enum",
+	variableField:    "variable",
+	sequenceOfFields: "sequence",
+	repeatedField:    "repeated",
+}
+
 type protobufField interface {
 	setName(name string)
 	setValue(val interface{}) bool
 	IsSimple() bool
 	IsRepeated() bool
-	IsType(fieldType int) bool
+	IsType(fieldType string) bool
 	Ignore() bool
 }
 
@@ -471,8 +644,11 @@ func (f *genericProtobufField) IsRepeated() bool {
 	return false
 }
 
-func (f *genericProtobufField) IsType(fieldType int) bool {
-	return int(f.FieldType) == fieldType
+func (f *genericProtobufField) IsType(fieldType string) bool {
+	if name, ok := fieldTypeToString[f.FieldType]; ok {
+		return name == fieldType
+	}
+	return false
 }
 
 func (f *genericProtobufField) Ignore() bool {
@@ -505,7 +681,7 @@ func (f *protobufFieldString) String() string {
 
 type protobufFieldVariable struct {
 	*genericProtobufField
-	Parameters []*Param
+	Parameters []*Param `json:",omitempty"`
 }
 
 // Returns initialized instance of protobufFieldVariable.
@@ -596,19 +772,19 @@ func (f *protobufFieldEnum) String() string {
 	return f.Value
 }
 
-type protobufFieldGnmiPath struct {
+type protobufFieldGNMIPath struct {
 	*genericProtobufField
 	Value *gnmiPath
 }
 
-// Returns initialized instance of protobufFieldGnmiPath.
-func newProtobufFieldGnmiPath() *protobufFieldGnmiPath {
-	return &protobufFieldGnmiPath{
+// Returns initialized instance of protobufFieldGNMIPath.
+func newProtobufFieldGnmiPath() *protobufFieldGNMIPath {
+	return &protobufFieldGNMIPath{
 		genericProtobufField: newGenericProtobufField(gnmiPathField),
 	}
 }
 
-func (f *protobufFieldGnmiPath) setValue(val interface{}) bool {
+func (f *protobufFieldGNMIPath) setValue(val interface{}) bool {
 	if v, ok := val.(*gnmiPath); ok {
 		f.Value = v
 		return true
@@ -616,22 +792,23 @@ func (f *protobufFieldGnmiPath) setValue(val interface{}) bool {
 	return false
 }
 
-func (f *protobufFieldGnmiPath) Sting() string {
-	var result string
+// String returns a string specifying the gNMI YANG model path in compact, human-readable form.
+func (f *protobufFieldGNMIPath) String() string {
+	var sb strings.Builder
 	for _, elem := range f.Value.Elem {
-		result += "/" + elem.String()
-		if elem.Key != nil {
-			result += "["
+		fmt.Fprintf(&sb, "/%s", elem.Name)
+		if len(elem.Key) > 0 {
+			sb.WriteString("[")
 			for key, val := range elem.Key {
-				result = fmt.Sprint(result, key, "=", val)
+				fmt.Fprintf(&sb, "%s=%s", key, val)
 			}
-			result += "]"
+			sb.WriteString("]")
 		}
 	}
-	return result
+	return sb.String()
 }
 
-func (f *protobufFieldGnmiPath) IsSimple() bool {
+func (f *protobufFieldGNMIPath) IsSimple() bool {
 	return false
 }
 
@@ -641,10 +818,27 @@ type protobufFieldGroup interface {
 	Vars() []*Param
 }
 
+type protobufFieldSequenceSize int
+
+const (
+	protobufFieldSequenceSizeOne protobufFieldSequenceSize = iota
+	protobufFieldSequenceSizeZeroOrOne
+	protobufFieldSequenceSizeZeroOrMore
+	protobufFieldSequenceSizeOneOrMore
+)
+
+var sequenceSizeToString = map[protobufFieldSequenceSize]string{
+	protobufFieldSequenceSizeOne:        "1",
+	protobufFieldSequenceSizeZeroOrOne:  "?",
+	protobufFieldSequenceSizeZeroOrMore: "*",
+	protobufFieldSequenceSizeOneOrMore:  "+",
+}
+
 // Used to represent a complex (as in: not-simple) protobuf field.
 type protobufFieldSequence struct {
 	*genericProtobufField
-	Fields []protobufField
+	Fields       []protobufField `json:",omitempty"`
+	SequenceSize protobufFieldSequenceSize
 }
 
 // Returns initialized instance of protobufFieldSequence.
@@ -679,6 +873,14 @@ func (p *protobufFieldSequence) LastField() protobufField {
 	return p.Fields[len(p.Fields)-1]
 }
 
+// IsSize returns true is its parameter is equal to this sequence multiplication spec.
+func (p *protobufFieldSequence) IsSize(s string) bool {
+	if ps, ok := sequenceSizeToString[p.SequenceSize]; ok {
+		return ps == s
+	}
+	return false
+}
+
 func (p *protobufFieldSequence) IsSimple() bool {
 	return false
 }
@@ -693,7 +895,7 @@ func (p *protobufFieldSequence) Vars() []*Param {
 		switch v := f.(type) {
 		case *protobufFieldVariable:
 			result = append(result, v.Param())
-		case *protobufFieldGnmiPath:
+		case *protobufFieldGNMIPath:
 			if v := v.Value.Elem; v != nil {
 				for _, e := range v {
 					if v := e.Param(); v != nil {
@@ -730,32 +932,147 @@ func newProtobuf(typeName string) *protobuf {
 	}
 }
 
+// Namespace returns namespace of protobuf type specified by Protobuf field.
+func (p protobuf) Namespace() string {
+	if n, ok := protoNameToNamespace[p.TypeName]; ok {
+		return n
+	}
+	return "?"
+}
+
+// Path describes an YANG schema path. This type is used to keep information
+// about all paths that are covered by scenarios.
+type Path struct {
+	Path      string                          `json:",omitempty"` // The path as a text string.
+	Protobuf  *protobufFieldGNMIPath          `json:",omitempty"` // The path in protobuf format.
+	Scenarios map[GNMIReqMode]map[string]bool `json:",omitempty"` // List of scenarios that cover this path.
+}
+
+// GNMIReqMode specifies the type of a gNMI request.
+type GNMIReqMode int
+
+const (
+	// Get denotes a gNMI GET type of request.
+	Get GNMIReqMode = iota
+	// Set denotes a gNMI SET type of request.
+	Set
+	// SubscribePoll denotes a gNMI SUBSCRIBE POLL type of request.
+	SubscribePoll
+	// SubscribeOnce denotes a gNMI SUBSCRIBE ONCE type of request.
+	SubscribeOnce
+	// SubscribeOnChange denotes a gNMI SUBSCRIBE STREAM:ON_CHANGE type of request.
+	SubscribeOnChange
+	// SubscribeSample denotes a gNMI SUBSCRIBE STREAM:SAMPLE type of request.
+	SubscribeSample
+	// SubscribeTargetDefined denotes a gNMI SUBSCRIBE STREAM:TARGET_DEFINED type of request.
+	SubscribeTargetDefined
+	// Response denotes a gNMI response to a gNMI request.
+	Response
+	// Other denotes a not interesting type of request. Most likely non-gNMI one.
+	Other
+)
+
+var gnmiReqModeToString = map[GNMIReqMode]string{
+	Get:                    "GET",
+	Set:                    "SET",
+	SubscribePoll:          "SUBSCRIBE:POLL",
+	SubscribeOnce:          "SUBSCRIBE:ONCE",
+	SubscribeOnChange:      "SUBSCRIBE:STREAM:ON_CHANGE",
+	SubscribeSample:        "SUBSCRIBE:STREAM:SAMPLE",
+	SubscribeTargetDefined: "SUBSCRIBE:STREAM:TARGET_DEFINED",
+	Response:               "RESPONSE",
+	Other:                  "OTHER",
+}
+
+// String returns a string specifying type of gNMI Request.
+func (m GNMIReqMode) String() string {
+	if name, ok := gnmiReqModeToString[m]; ok {
+		return name
+	}
+	return "?"
+}
+
+// TeX returns TeX-friendly version of a string.
+func TeX(s string) string {
+	return strings.Replace(strings.Replace(s, "_", "\\_", -1), "$", "", -1)
+}
+
+func newPath(p *protobufFieldGNMIPath, s *Instruction, m GNMIReqMode) *Path {
+	return &Path{
+		Path:      p.String(),
+		Protobuf:  p,
+		Scenarios: map[GNMIReqMode]map[string]bool{m: {s.Name: true}},
+	}
+}
+
 // DOM contains information extracted from the input CDLang files.
 type DOM struct {
-	Scenarios    map[string]*Instruction
-	SubScenarios map[string]*Instruction
+	GlobalInst        map[string]*Instruction            `json:",omitempty"`
+	Scenarios         map[string]*Instruction            `json:",omitempty"`
+	SubScenarios      map[string]*Instruction            `json:",omitempty"`
+	OtherScenarios    map[string]map[string]*Instruction `json:",omitempty"`
+	OtherSubScenarios map[string]map[string]*Instruction `json:",omitempty"`
+	CoveredPaths      map[string]*Path                   `json:",omitempty"`
 }
 
 // NewDOM returns initialized instance of DOM.
 func NewDOM() *DOM {
 	return &DOM{
-		Scenarios:    map[string]*Instruction{},
-		SubScenarios: map[string]*Instruction{},
+		GlobalInst:        map[string]*Instruction{},
+		Scenarios:         map[string]*Instruction{},
+		SubScenarios:      map[string]*Instruction{},
+		OtherScenarios:    map[string]map[string]*Instruction{},
+		OtherSubScenarios: map[string]map[string]*Instruction{},
+		CoveredPaths:      map[string]*Path{},
 	}
+}
+
+// AddProtoTypeToFuncNameMapping adds mapping between PROTO and gRPC method related to it.
+func (d *DOM) AddProtoTypeToFuncNameMapping(proto, funcName string) error {
+	if n, ok := protoNameToFuncName[proto]; ok && n == funcName {
+		return fmt.Errorf("conflicting mapping from Proto to Function: '%s' vs. '%s'", n, funcName)
+	}
+	protoNameToFuncName[proto] = funcName
+	return nil
+}
+
+// AddProtoTypeToNamespaceMapping adds mapping between PROTO and gRPC namespace related to it.
+func (d *DOM) AddProtoTypeToNamespaceMapping(proto, namespace string) error {
+	if n, ok := protoNameToNamespace[proto]; ok && n == namespace {
+		return fmt.Errorf("conflicting mapping from Proto to Namespace: '%s' vs. '%s'", n, namespace)
+	}
+	protoNameToNamespace[proto] = namespace
+	return nil
 }
 
 // PostProcess augments the DOM object after the visitor is done.
 // It verifies that the tree is consistent and adds information that could not be
 // added during the visitor run.
-func (d *DOM) PostProcess() {
-	fmt.Println("Adding var declarations.")
+func (d *DOM) PostProcess(ver *Version, logLevel int) {
+	if logLevel != 1 {
+		log.Printf("Selecting scenarios compliant with version: %d.%d.%d", ver.Major, ver.Minor, ver.Patch)
+	}
+	d.Accept(newFilterScenariosByVersionVisitor(d, ver))
+	if logLevel == 1 {
+		log.Printf("Adding var declarations.")
+	}
 	d.Accept(newAddVarDeclVisitor())
-	fmt.Println("Adding IDs.")
+	if logLevel == 1 {
+		log.Printf("Adding IDs.")
+	}
 	d.Accept(newSetIDVisitor())
-	fmt.Println("Adding references to receive instructions.")
+	if logLevel == 1 {
+		log.Printf("Adding references to receive instructions.")
+	}
 	d.Accept(newAddNextInstRefVisitor())
-	fmt.Println("Grouping messages in AnyOrder group.")
+	if logLevel == 1 {
+		log.Printf("Grouping messages in AnyOrder group.")
+	}
 	d.Accept(newUpdateAnyOrderVisitor())
+	if logLevel == 1 {
+		log.Printf("Adding information about covered paths.")
+	}
+	d.Accept(newCoveredPathsVisitor(d))
 }
 
 // Marshal returns a JSON formatted string with the contents of DOM.

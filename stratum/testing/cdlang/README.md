@@ -17,7 +17,7 @@ is added by the fact that OpenConfig management model is not a simple
 well as notifications sent by the switch in response to external events.
 
 ## Overview
-********************************************************************************
+
 Due to the sequential nature of the gNMI/OpenConfig protocol the best way to
 describe the contract is a set of scenarios that focus on specific usage cases
 and explicitly list messages being exchanged interleaved with event triggers
@@ -33,7 +33,7 @@ tests that will be compiled and executed as well as to generate documentation.
 ## Design
 
 The design document can be found
-[here](https://docs.google.com/document/d/1yQtz-wVqLvGLp2aritAdTLpq2DK2ZF0ylKaOA4bWgWI)
+[here](g3doc/cdlang.md)
 
 ## Implementation
 
@@ -69,7 +69,7 @@ an object that is then passed to the golang template processing engine together
 with a template file. The template engine replaces special fields in the
 template file with data from the document object model.
 
-There can be multiple template files, like `scenarios.tmpl.cc` located in
+There can be multiple template files, like `scenarios.cc.tmpl` located in
 //platforms/networking/hercules/testing/gnmi_standalone.
 
 The document object model is implemented by the code in: `dom.go`.

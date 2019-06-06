@@ -1,19 +1,36 @@
 // define a grammar called Contract Definition Language
 grammar CDLang;
 contract:
-        (scenario | subScenario)*
+        (constProto | mapping | scenario | subScenario)*
+        ;
+
+constName:
+        n=ID
+        ;
+
+constProto:
+        n=constName ':=' p=protobuf
+        ;
+
+domainName:
+        ('::')? (ID '::')* ID
+        ;
+
+mapping:
+        'rpc' fd=domainName '.' f=ID '(' (reqd=domainName '.')? req=ID ')'
+            '=>' (respd=domainName '.')? resp=ID
         ;
 
 scenario:
-        'scenario' name=ID '(' ')' ver=version '{'
+        (disabled='disabled')? sos='scenario' name=ID '(' ')' ver=version '{'
         instruction*
-        '}'
+        eos='}'
         ;
 
 subScenario:
-        'scenario' name=ID '(' variableDeclaration (',' variableDeclaration)* ')' ver=version '{'
+        sos='scenario' name=ID '(' variableDeclaration (',' variableDeclaration)* ')' ver=version '{'
         instruction*
-        '}'
+        eos='}'
         ;
 
 variableDeclaration:
@@ -33,31 +50,31 @@ version:
         ;
 
 instruction:
-        send | receive | check | group | execute
+        send | receive | group | execute | openStream | closeStream | call
+        ;
+
+call:
+        req=protobuf '>>' '{' callResponse '}'
+        ;
+
+callResponse:
+        (ok='OK' ',' resp=protobuf) | (err='ERROR')
+        ;
+
+openStream:
+        stream=ID ':=' domain=ID '.' method=ID
+        ;
+
+closeStream:
+        'close' stream=ID
         ;
 
 send:
-        (stream=ID ':=')? ch=channel '<<' protobuf
+        ch=ID '<<' protobuf
         ;
 
 receive:
-        ch=channel '>>' protobuf
-        ;
-
-channel:
-        'gnmi' | 'ctrl'
-        ;
-
-check:
-        checkRegex | checkUnique
-        ;
-
-checkRegex:
-        'check' 'regex' 'match' '(' variable ',' (variable|constant) ')'
-        ;
-
-checkUnique:
-        'check' 'unique' '(' variable (',' variable)+ ')'
+        ch=ID '>>' protobuf
         ;
 
 group:
@@ -71,7 +88,7 @@ execute:
         ;
 
 protobuf:
-        name=ID '{' protobufField* '}'
+        (domain=ID '.') ? name=ID '{' protobufField* '}'
         ;
 
 protobufField:
@@ -79,7 +96,11 @@ protobufField:
         ;
 
 protobufFieldSimple:
-        name=ID ':' (val_number=NUMBER | val_string=STRING | val_enum=ID | val_var=variable | val_path=path)
+        name=ID ':' (val_number=NUMBER | val_string=STRING | val_enum=enumer | val_var=variable | val_path=path)
+        ;
+
+enumer:
+        ('::')? ID ('::' ID)*
         ;
 
 protobufFieldGroup:
@@ -91,7 +112,7 @@ protobufFieldRepeated:
         ;
 
 protobufFieldRepeatedRow:
-        '{' protobufField+ '}' ','?
+        '{' protobufField+ '}' (zero_or_more='*' | one_or_more='+' | zero_or_one='?')? ','?
         ;
 
 path:
@@ -99,7 +120,10 @@ path:
         ;
 
 pathElement:
-        name=ID ('[' key=ID '=' (a='*'|v=variable|e=ID) ']')?| param=variable
+        name=ID
+        | name=ID '[' key=ID '=' (a='*'|rd_var=variable|e=ID) ']'
+        | name=ID '[' wr_var=variable ':=' key=ID ']'
+        | param=variable
         ;
 
 ID: [a-zA-Z_][a-zA-Z0-9_-]* ;
