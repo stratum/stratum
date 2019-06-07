@@ -1,0 +1,59 @@
+module openconfig-interfaces-stratum {
+
+    yang-version "1";
+
+    // namespace
+    namespace "http://opennetworking.org/yang/interfaces-stratum";
+
+    prefix "oc-if-stm";
+
+    import openconfig-interfaces { prefix oc-if; }
+
+    // meta
+    organization "Open Networking Foundation";
+
+    contact
+      "Open Networking Foundation
+      https://lists.stratumproject.org/listinfo/stratum-announce";
+
+    description
+    "Model of augmentations and deviations to openconfig-interfaces
+    specifically for Stratum";
+
+    revision "2019-06-05" {
+        description
+            "Add OpenConfig module metadata extensions.";
+        reference "0.1.0";
+    }
+
+    deviation "/oc-if:interfaces/oc-if:interface/oc-if:config/oc-if:type" {
+        description "Stratum does not support interface/config/type";
+        deviate not-supported;
+    }
+
+    deviation "/oc-if:interfaces/oc-if:interface/oc-if:config/oc-if:mtu" {
+        description "Stratum does not support interface/config/mtu";
+        deviate not-supported;
+    }
+
+    deviation "/oc-if:interfaces/oc-if:interface/oc-if:config/oc-if:loopback-mode" {
+        description "Stratum does not support interface/config/loopback-mode";
+        deviate not-supported;
+    }
+
+    deviation "/oc-if:interfaces/oc-if:interface/oc-if:config/oc-if:description" {
+        description "Stratum does not support interface/config/description";
+        deviate not-supported;
+    }
+
+
+    deviation "/oc-if:interfaces/oc-if:interface/oc-if:subinterfaces" {
+        description "Stratum does not support interface/subinterfaces";
+        deviate not-supported;
+    }
+
+    deviation "/oc-if:interfaces/oc-if:interface/oc-if:hold-time" {
+        description "Stratum does not support interface/hold-time";
+        deviate not-supported;
+    }
+}

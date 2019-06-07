@@ -1,0 +1,134 @@
+module openconfig-qos-interfaces-stratum {
+
+  yang-version "1";
+
+  // namespace
+  namespace "http://opennetworking.org/yang/openconfig-qos-stratum";
+
+  prefix "oc-qos-stm";
+
+  import openconfig-qos { prefix oc-qos; }
+
+  // meta
+  organization "Open Networking Foundation";
+
+  contact
+    "Open Networking Foundation
+    https://lists.stratumproject.org/listinfo/stratum-announce";
+
+  description
+    "Model of augmentations and deviations to openconfig-qos-interfaces
+    specifically for Stratum";
+
+  revision "2019-06-05" {
+      description
+          "Add OpenConfig module metadata extensions.";
+      reference "0.1.0";
+  }
+
+  deviation "/oc-qos:qos/oc-qos:config" {
+      description "Stratum does not support qos/config";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:state" {
+      description "Stratum does not support qos/state";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:config" {
+      description "Stratum does not support qos/interfaces/interface/config";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:state" {
+      description "Stratum does not support qos/interfaces/interface/state";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:interface-ref" {
+      description "Stratum does not support qos/interfaces/interface/interface-ref";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:input" {
+      description "Stratum does not support qos/interfaces/interface/input";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:config" {
+      description "Stratum does not support qos/interfaces/interface/output/config";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:state" {
+      description "Stratum does not support qos/interfaces/interface/output/state";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:interface-ref" {
+      description "Stratum does not support qos/interfaces/interface/output/interface-ref";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:classifers" {
+      description "Stratum does not support qos/interfaces/interface/output/classifers";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:scheduler-policy" {
+      description "Stratum does not support qos/interfaces/interface/output/scheduler-policy";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:interfaces/oc-qos:interface/oc-qos:output/oc-qos:queues/oc-qos:queue/oc-qos:config" {
+      description "Stratum does not support qos/interfaces/interface/output/queues/queue/config";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:state/oc-qos:name" {
+      description "Stratum does not support qos/queues/queue/state/queue-name";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:state/oc-qos:queue-type" {
+      description "Stratum does not support qos/queues/queue/state/queue-type";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:config/oc-qos:name" {
+      description "Stratum does not support qos/queues/queue/config/queue-name";
+      deviate not-supported;
+  }
+  
+  deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:config/oc-qos:queue-type" {
+      description "Stratum does not support qos/queues/queue/config/queue-type";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:red" {
+      description "Stratum does not support qos/queues/queue/red";
+      deviate not-supported;
+  }
+  
+  deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:wred" {
+      description "Stratum does not support qos/queues/queue/wred";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:classifiers" {
+      description "Stratum does not support qos/classifiers";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:forwarding-groups" {
+      description "Stratum does not support qos/forwarding-groups";
+      deviate not-supported;
+  }
+
+  deviation "/oc-qos:qos/oc-qos:scheduler-policies" {
+      description "Stratum does not support qos/scheduler-policies";
+      deviate not-supported;
+  }
+
+}

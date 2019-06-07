@@ -1,0 +1,77 @@
+module openconfig-platform-stratum {
+
+  yang-version "1";
+
+  // namespace
+  namespace "http://openconfig.net/yang/platform-stratum";
+
+  prefix "oc-platform-stm";
+
+  import openconfig-platform { prefix oc-platform; }
+
+  // meta
+  organization "Open Networking Foundation";
+
+  contact
+    "Open Networking Foundation
+    https://lists.stratumproject.org/listinfo/stratum-announce";
+
+  description
+    "Model of augmentations and deviations to openconfig-qos-interfaces
+    specifically for Stratum";
+
+  revision "2019-06-05" {
+      description
+          "Add OpenConfig module metadata extensions.";
+      reference "0.1.0";
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:state" {
+      description "Stratum does not support components/component/state";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:config" {
+      description "Stratum does not support components/component/config";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:properties" {
+      description "Stratum does not support components/component/properties";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:subcomponents" {
+      description "Stratum does not support components/component/subcomponents";
+      deviate not-supported;
+  }
+  
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:power-supply" {
+      description "Stratum does not support components/component/power-supply";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:fan" {
+      description "Stratum does not support components/component/fan";
+      deviate not-supported;
+  }
+    deviation "/oc-platform:components/oc-platform:component/oc-platform:fabric" {
+      description "Stratum does not support components/component/fabric";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:storage" {
+      description "Stratum does not support components/component/storage";
+      deviate not-supported;
+  }  
+  
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:cpu" {
+      description "Stratum does not support interface/config/cpu";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-platform:backplane" {
+      description "Stratum does not support components/component/backplane";
+      deviate not-supported;
+  }
+}

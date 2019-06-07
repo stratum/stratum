@@ -1,0 +1,132 @@
+module openconfig-platform-transceiver-stratum {
+
+  yang-version "1";
+
+  // namespace
+  namespace "http://openconfig.net/yang/platform/transceiver-stratum";
+
+  prefix "oc-transceiver-stm";
+
+  // import types
+  import openconfig-platform { prefix oc-platform; }
+  import openconfig-platform-transceiver { prefix oc-transceiver; }
+  
+  // meta
+  organization "Open Networking Foundation";
+
+  contact
+    "Open Networking Foundation
+    https://lists.stratumproject.org/listinfo/stratum-announce";
+
+  description
+    "Model of augmentations and deviations to openconfig-qos-interfaces
+    specifically for Stratum";
+
+  revision "2019-06-05" {
+      description
+          "Add OpenConfig module metadata extensions.";
+      reference "0.1.0";
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:config" {
+      description "Stratum does not support components/component/transceiver/config";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:enabled" {
+      description "Stratum does not support components/component/transceiver/state/enabled";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:form-factor-preconf" {
+      description "Stratum does not support components/component/transceiver/state/form-factor-preconf";
+      deviate not-supported;
+  }
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:ethernet-pmd-preconf" {
+      description "Stratum does not support components/component/transceiver/state/ethernet-pmd-preconf";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-mode" {
+      description "Stratum does not support components/component/transceiver/state/fec-mode";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:vendor-rev" {
+      description "Stratum does not support components/component/transceiver/state/vendor-rev";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:ethernet-pmd" {
+      description "Stratum does not support components/component/transceiver/state/ethernet-pmd";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:sonet-sdh-compliance-code" {
+      description "Stratum does not support components/component/transceiver/state/sonet-sdh-compliance-code";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:otn-compliance-code" {
+      description "Stratum does not support components/component/transceiver/state/otn-compliance-code";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:date-code" {
+      description "Stratum does not support components/component/transceiver/state/date-code";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fault-condition" {
+      description "Stratum does not support components/component/transceiver/state/fault-condition";
+      deviate not-supported;
+  }
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-status" {
+      description "Stratum does not support components/component/transceiver/state/fec-status";
+      deviate not-supported;
+  }  
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-uncorrectable-blocks" {
+      description "Stratum does not support components/component/transceiver/state/fec-uncorrectable-blocks";
+      deviate not-supported;
+  }  
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-uncorrectable-words" {
+      description "Stratum does not support components/component/transceiver/state/fec-uncorrectable-words";
+      deviate not-supported;
+  }  
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-corrected-bytes" {
+      description "Stratum does not support components/component/transceiver/state/fec-corrected-bytes";
+      deviate not-supported;
+  }  
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-corrected-bits" {
+      description "Stratum does not support components/component/transceiver/state/fec-corrected-bits";
+      deviate not-supported;
+  }  
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:pre-fec-ber" {
+      description "Stratum does not support components/component/transceiver/state/pre-fec-ber";
+      deviate not-supported;
+  }  
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:post-fec-ber" {
+      description "Stratum does not support components/component/transceiver/state/porst-fec-ber";
+      deviate not-supported;
+  } 
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:output-power" {
+      description "Stratum does not support components/component/transceiver/state/output-power";
+      deviate not-supported;
+  } 
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:input-power" {
+      description "Stratum does not support components/component/transceiver/state/input-power";
+      deviate not-supported;
+  } 
+
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:laser-bias-current" {
+      description "Stratum does not support components/component/transceiver/state/laser-bias-current";
+      deviate not-supported;
+  }                
+  deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:physical-channels" {
+      description "Stratum does not support components/component/transceiver/physical-channels";
+      deviate not-supported;
+  }
+
+}

@@ -1,0 +1,59 @@
+module openconfig-lacp-stratum {
+
+      yang-version "1";
+
+    // namespace
+    namespace "http://opennetworking.org/yang/lacp-stratum";
+
+    prefix "oc-lacp-stm";
+
+    import openconfig-lacp { prefix oc-lacp; }
+
+
+    // meta
+    organization "Open Networking Foundation";
+
+    contact
+      "Open Networking Foundation
+      https://lists.stratumproject.org/listinfo/stratum-announce";
+
+    description
+    "Model of augmentations and deviations to openconfig-lacp
+    specifically for Stratum";
+
+    revision "2019-06-05" {
+        description
+            "Add OpenConfig module metadata extensions.";
+        reference "0.1.0";
+    }
+
+    deviation "/oc-lacp:lacp/oc-lacp:config" {
+        description "Stratum does not support lacp/config";
+        deviate not-supported;
+    }
+
+    deviation "/oc-lacp:lacp/oc-lacp:state" {
+        description "Stratum does not support lacp/state";
+        deviate not-supported;
+    }
+
+    deviation "/oc-lacp:lacp/oc-lacp:interfaces/oc-lacp:interface/oc-lacp:config" {
+        description "Stratum does not support lacp/interfaces/interface/config";
+        deviate not-supported;
+    }
+
+    deviation "/oc-lacp:lacp/oc-lacp:interfaces/oc-lacp:interface/oc-lacp:state/oc-lacp:interval" {
+        description "Stratum does not support lacp/interfaces/interface/state/interval";
+        deviate not-supported;
+    }
+
+    deviation "/oc-lacp:lacp/oc-lacp:interfaces/oc-lacp:interface/oc-lacp:state/oc-lacp:lacp-mode" {
+        description "Stratum does not support lacp/interfaces/interface/state/lacp-mode;
+        deviate not-supported;
+    }
+
+    deviation "/oc-lacp:lacp/oc-lacp:interfaces/oc-lacp:interface/oc-lacp:members/oc-lacp:member" {
+        description "Stratum does not support lacp/interfaces/interface/members/mem";
+        deviate not-supported;
+    }
+}
