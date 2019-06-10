@@ -20,9 +20,9 @@ Stratum can be run on Tofino-based platforms in 2 different modes:
 
 ## Installing the SDE
 
-These instructions are for SDE version 8.8.0. Starting with SDE release 8.7.0,
-Barefoot's P4Studio Build tool comes with a default Stratum profile, which takes
-care of installing all the necessary dependencies and builds the SDE with the
+These instructions are valid for SDE versions 8.8.0 through 8.9.0. Barefoot's
+P4Studio Build tool comes with a default Stratum profile, which takes care of
+installing all the necessary dependencies and builds the SDE with the
 appropriate flags.
 
 Please follow these steps:

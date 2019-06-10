@@ -26,6 +26,7 @@ DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   InitGoogle(argv[0], &argc, &argv, true);
+  stratum::InitHerculesLogging();
 
   bool tmpdir_created = false;
   if (FLAGS_test_tmpdir.empty()) {
