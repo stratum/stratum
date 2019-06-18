@@ -326,7 +326,7 @@ using SfpBitmap = onlp_sfp_bitmap_t;
 class OidInfo {
  public:
   explicit OidInfo(const onlp_oid_hdr_t& oid_info) : oid_info_(oid_info) {}
-  explicit OidInfo(const onlp_oid_type_t type, OnlpPortNumber port, 
+  explicit OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
                    HwState state) {
 	  oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
 	  oid_info_.status = (state == HW_STATE_PRESENT ?
@@ -349,7 +349,7 @@ class OidInfo {
   }
 
   uint32_t GetId() const {
-    return (oid_info_.id & 0xFFFFFF);
+    return ONLP_OID_ID_GET(oid_info_.id);
   }
 
   bool Present() const {
@@ -478,12 +478,12 @@ class OnlpWrapper : public OnlpInterface {
 	LOG(INFO) << "Deinitializing ONLP.";
   };
 
-  // Fake implementations to get rid of compilation errors when building 
+  // Fake implementations to get rid of compilation errors when building
   // onlphal_test
   ::util::StatusOr<std::vector<OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const override {
     return ::util::OkStatus(); };
-#if 0 
+#if 0
   ::util::StatusOr<std::vector<OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const override {
 
@@ -512,7 +512,7 @@ class OnlpWrapper : public OnlpInterface {
     return ::util::OkStatus(); };
   ::util::StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap() const override {
     return ::util::OkStatus(); };
-  ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override { 
+  ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override {
     return 16; };
 #if 0
   ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override {
@@ -553,7 +553,7 @@ class OnlpSfpPresentMap {
   OnlpSfpPresentMap() {}
   OnlpSfpPresentMap(std::bitset<256>& map) : bitmap_(map) {}
 
-  bool IsPresent(int port) const { 
+  bool IsPresent(int port) const {
     if (port <=0 || port > max_port_)
       return false;
     return bitmap_.test(port-1);

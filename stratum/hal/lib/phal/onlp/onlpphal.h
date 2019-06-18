@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
 
 #include <functional>
+#include <map>
+#include <memory>
+#include <set>
+#include <utility>
 
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
 #include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
-
-
+#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
 
 namespace stratum {
 namespace hal {
@@ -44,9 +45,9 @@ class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
  public:
   // Creates a new OnlpPhalSfpEventCallback that receives callbacks for status
   // changes that occur for any SFPs.
-  OnlpPhalSfpEventCallback() : onlpphal_(nullptr) {};
+  OnlpPhalSfpEventCallback() : onlpphal_(nullptr) {}
   OnlpPhalSfpEventCallback(const OnlpPhalSfpEventCallback& other) = delete;
-  OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) = 
+  OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) =
       delete;
   ~OnlpPhalSfpEventCallback() override {};
 
@@ -81,8 +82,8 @@ class OnlpPhal : public PhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status RegisterSfpConfigurator(int slot, int port, 
-      SfpConfigurator* configurator) override;
+  ::util::Status RegisterSfpConfigurator(
+      int slot, int port, SfpConfigurator* configurator) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -108,18 +109,19 @@ class OnlpPhal : public PhalInterface {
   OnlpPhal();
 
   // Calls all the one time start initialisations
-  virtual ::util::Status Initialize();
+  virtual ::util::Status Initialize() LOCKS_EXCLUDED(config_lock_);
 
   // One time initialization of the OnlpWrapper
-  virtual ::util::Status InitializeOnlpInterface() 
-    EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
+  virtual ::util::Status InitializeOnlpInterface()
+      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // Inialize the PhalDB on start up
-  ::util::Status InitializePhalDB();
+  ::util::Status InitializePhalDB() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the OnlpEventHandler. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
-  ::util::Status InitializeOnlpEventHandler() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
+  ::util::Status InitializeOnlpEventHandler()
+      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the data sources. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
@@ -139,11 +141,11 @@ class OnlpPhal : public PhalInterface {
   mutable absl::Mutex config_lock_;
 
   // Determines if PHAL is fully initialized.
-  bool initialized_ = false GUARDED_BY(config_lock_);
+  bool initialized_ GUARDED_BY(config_lock_) = false;
 
   // Writers to forward the Transceiver events to. They are registered by
-  // external manager classes to receive the SFP Transceiver events. The managers
-  // can be running in different threads. The is sorted based on the
+  // external manager classes to receive the SFP Transceiver events. The
+  // managers can be running in different threads. The is sorted based on the
   // the priority of the TrasnceiverEventWriter intances.
   std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>
       transceiver_event_writers_ GUARDED_BY(config_lock_);
@@ -157,11 +159,11 @@ class OnlpPhal : public PhalInterface {
 
   // Map from std::pair<int, int> representing (slot, port) of singleton port
   // to the vector of sfp datasource id
-  std::map<std::pair<int, int>, OnlpSfpConfigurator*> 
+  std::map<std::pair<int, int>, OnlpSfpConfigurator*>
       slot_port_to_configurator_;
 };
 
-}  //namespace onlp
+}  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum

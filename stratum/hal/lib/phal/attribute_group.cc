@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/phal/attribute_group.h"
 
 #include <functional>
@@ -26,13 +25,13 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -145,8 +144,8 @@ class LockedAttributeGroup : public MutableAttributeGroup {
 class AttributeGroupInternal : public AttributeGroup,
                                public MutableAttributeGroup {
  public:
-  explicit AttributeGroupInternal(const google::protobuf::Descriptor* descriptor,
-                                  unsigned int depth)
+  explicit AttributeGroupInternal(
+      const google::protobuf::Descriptor* descriptor, unsigned int depth)
       : descriptor_(descriptor), depth_(depth) {}
 
   std::unique_ptr<ReadableAttributeGroup> AcquireReadable() override {
@@ -156,35 +155,39 @@ class AttributeGroupInternal : public AttributeGroup,
     return absl::make_unique<LockedAttributeGroup>(this, true);
   }
 
-  // Mutator functions:
-  ::util::Status AddAttribute(const std::string& name, ManagedAttribute* value);
-  ::util::StatusOr<AttributeGroup*> AddChildGroup(const std::string& name);
+  // Mutator functions
+  ::util::Status AddAttribute(const std::string& name,
+                              ManagedAttribute* value) override;
+  ::util::StatusOr<AttributeGroup*> AddChildGroup(
+      const std::string& name) override;
   ::util::StatusOr<AttributeGroup*> AddRepeatedChildGroup(
-      const std::string& name);
-  ::util::Status RemoveAttribute(const std::string& name);
-  ::util::Status RemoveChildGroup(const std::string& name);
-  ::util::Status RemoveRepeatedChildGroup(const std::string& name);
+      const std::string& name) override;
+  ::util::Status RemoveAttribute(const std::string& name) override;
+  ::util::Status RemoveChildGroup(const std::string& name) override;
+  ::util::Status RemoveRepeatedChildGroup(const std::string& name) override;
   void AddRuntimeConfigurator(
-      std::unique_ptr<RuntimeConfiguratorInterface> configurator);
+      std::unique_ptr<RuntimeConfiguratorInterface> configurator) override;
 
-  // Accessor functions:
+  // Accessor functions
   ::util::StatusOr<ManagedAttribute*> GetAttribute(
-      const std::string& name) const;
+      const std::string& name) const override;
   ::util::StatusOr<AttributeGroup*> GetChildGroup(
-      const std::string& name) const;
+      const std::string& name) const override;
   ::util::StatusOr<AttributeGroup*> GetRepeatedChildGroup(
-      const std::string& name, int idx) const;
+      const std::string& name, int idx) const override;
 
-  bool HasAttribute(const std::string& name) const;
-  bool HasChildGroup(const std::string& name) const;
-  std::set<std::string> GetAttributeNames() const;
-  std::set<std::string> GetChildGroupNames() const;
-  std::set<std::string> GetRepeatedChildGroupNames() const;
+  bool HasAttribute(const std::string& name) const override;
+  bool HasChildGroup(const std::string& name) const override;
+  std::set<std::string> GetAttributeNames() const override;
+  std::set<std::string> GetChildGroupNames() const override;
+  std::set<std::string> GetRepeatedChildGroupNames() const override;
   ::util::StatusOr<int> GetRepeatedChildGroupSize(
-      const std::string& name) const;
+      const std::string& name) const override;
 
-  const google::protobuf::Descriptor* GetDescriptor() const { return descriptor_; }
-  AttributeGroupVersionId GetVersionId() const { return version_id_; }
+  const google::protobuf::Descriptor* GetDescriptor() const override {
+    return descriptor_;
+  }
+  AttributeGroupVersionId GetVersionId() const override { return version_id_; }
 
   ::util::Status RegisterQuery(AttributeGroupQuery* query,
                                std::vector<Path> paths) override;
@@ -307,8 +310,9 @@ class AttributeGroupInternal : public AttributeGroup,
   absl::MutexLock lock(&parent_query_->query_lock_);
   parent_query_->query_updated_ = true;
   ASSIGN_OR_RETURN(auto field, GetFieldDescriptor(name));
-  CHECK_RETURN_IF_FALSE(field->cpp_type() !=
-                        google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE)
+  CHECK_RETURN_IF_FALSE(
+      field->cpp_type() !=
+      google::protobuf::FieldDescriptor::CppType::CPPTYPE_MESSAGE)
       << "Attempted to query \"" << name
       << "\" as an attribute, but it's an attribute group. This shouldn't "
          "happen!";
@@ -331,8 +335,8 @@ class AttributeGroupInternal : public AttributeGroup,
     case FieldDescriptor::CppType::CPPTYPE_STRING:
       return ATTRIBUTE_SETTER_FUNCTION(SetString, std::string);
     case FieldDescriptor::CppType::CPPTYPE_ENUM:
-      return ATTRIBUTE_SETTER_FUNCTION(SetEnum,
-                                       const google::protobuf::EnumValueDescriptor*);
+      return ATTRIBUTE_SETTER_FUNCTION(
+          SetEnum, const google::protobuf::EnumValueDescriptor*);
     default:
       return MAKE_ERROR() << "Invalid protobuf field type passed to "
                           << "QuerySingleAttribute!";
@@ -529,18 +533,20 @@ template <typename T>
     case FieldDescriptor::CppType::CPPTYPE_ENUM:
       // In addition to checking that the given ManagedAttribute is
       // an enum, we also need to check that it has a compatible enum type.
-      if (!absl::holds_alternative<const google::protobuf::EnumValueDescriptor*>(
+      if (!absl::holds_alternative<
+              const google::protobuf::EnumValueDescriptor*>(
               value->GetValue())) {
         return MAKE_ERROR() << "Attempted to assign non-enum type to enum "
                             << "attribute " << name << ".";
       }
-      if ((absl::get<const google::protobuf::EnumValueDescriptor*>(value->GetValue()))
+      if ((absl::get<const google::protobuf::EnumValueDescriptor*>(
+               value->GetValue()))
               ->type() != field->enum_type()) {
         return MAKE_ERROR()
                << "Attempted to assign incorrect enum type to " << name << ".";
       }
-      return AttemptAddAttribute<const google::protobuf::EnumValueDescriptor*>(name,
-                                                                       value);
+      return AttemptAddAttribute<const google::protobuf::EnumValueDescriptor*>(
+          name, value);
     default:
       return MAKE_ERROR() << "Field " << name << " has unexpected type.";
   }
@@ -990,24 +996,27 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
   RETURN_IF_ERROR(RegisterQuery(&query, std::move(paths)));
 
   ::util::Status set_result = ::util::OkStatus();
-  APPEND_STATUS_IF_ERROR(set_result, TraverseQuery(
-      &query,
-      [&group_locks](std::unique_ptr<ReadableAttributeGroup> group) mutable {
-        group_locks.push(std::move(group));
-        return ::util::OkStatus();
-      },
-      [&](ManagedAttribute* attribute, const Path& querying_path,
-          const AttributeSetterFunction& setter) -> ::util::Status {
-        CHECK_RETURN_IF_FALSE(attribute->CanSet())
-            << "Attempted to set an unsettable attribute.";
-        auto value = gtl::FindOrNull(values, querying_path);
-        CHECK_RETURN_IF_FALSE(value)
-            << "Setting an attribute value, but no corresponding value exists. "
-               "This is a bug.";
-        RETURN_IF_ERROR(attribute->Set(*value));
-        datasources_to_flush.insert(attribute->GetDataSource());
-        return ::util::OkStatus();
-      }));
+  APPEND_STATUS_IF_ERROR(
+      set_result,
+      TraverseQuery(
+          &query,
+          [&group_locks](
+              std::unique_ptr<ReadableAttributeGroup> group) mutable {
+            group_locks.push(std::move(group));
+            return ::util::OkStatus();
+          },
+          [&](ManagedAttribute* attribute, const Path& querying_path,
+              const AttributeSetterFunction& setter) -> ::util::Status {
+            CHECK_RETURN_IF_FALSE(attribute->CanSet())
+                << "Attempted to set an unsettable attribute.";
+            auto value = gtl::FindOrNull(values, querying_path);
+            CHECK_RETURN_IF_FALSE(value) << "Setting an attribute value, but "
+                                            "no corresponding value exists. "
+                                            "This is a bug.";
+            RETURN_IF_ERROR(attribute->Set(*value));
+            datasources_to_flush.insert(attribute->GetDataSource());
+            return ::util::OkStatus();
+          }));
 
   for (auto datasource : datasources_to_flush) {
     APPEND_STATUS_IF_ERROR(set_result, datasource->LockAndFlushWrites());
@@ -1086,7 +1095,8 @@ std::set<std::string> LockedAttributeGroup::GetRepeatedChildGroupNames() const {
     const std::string& name) const {
   return group_->GetRepeatedChildGroupSize(name);
 }
-const google::protobuf::Descriptor* LockedAttributeGroup::GetDescriptor() const {
+const google::protobuf::Descriptor* LockedAttributeGroup::GetDescriptor()
+    const {
   return group_->GetDescriptor();
 }
 AttributeGroupVersionId LockedAttributeGroup::GetVersionId() const {

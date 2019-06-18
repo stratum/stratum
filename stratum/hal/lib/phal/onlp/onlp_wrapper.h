@@ -63,7 +63,8 @@ class OidInfo {
 
   HwState GetHardwareState() const;
   const OnlpOidHeader* GetHeader() const { return &oid_info_; }
-  uint32_t GetId() const { return (oid_info_.id & 0xFFFFFF); }
+  uint32_t GetId() const { return ONLP_OID_ID_GET(oid_info_.id); }
+  uint8_t GetType() const { return ONLP_OID_TYPE_GET(oid_info_.id); }
 
  private:
   onlp_oid_hdr_t oid_info_;

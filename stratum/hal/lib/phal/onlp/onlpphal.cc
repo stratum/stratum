@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/onlp/onlpphal.h"
+
+#include <string>
+
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-//FIXME remove when onlp_wrapper.h is stable
+#include "stratum/lib/macros.h"
+// FIXME remove when onlp_wrapper.h is stable
 //#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
-#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
              "Maximum number of channel writers for transceiver events.");
@@ -39,46 +41,42 @@ using TransceiverEventWriter = PhalInterface::TransceiverEventWriter;
 OnlpPhal* OnlpPhal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex OnlpPhal::init_lock_(absl::kConstInit);
 
-
 ::util::Status OnlpPhalSfpEventCallback::HandleStatusChange(
     const OidInfo& oid_info) {
-
   // Check OID Type
-  OnlpOid oid = oid_info.GetId();
-  switch (ONLP_OID_TYPE_GET(oid)) {
+  switch (oid_info.GetType()) {
+    // SFP event
+    case ONLP_OID_TYPE_SFP:
+      // Format TransceiverEvent
+      TransceiverEvent event;
+      event.slot = kDefaultSlot;
+      event.port = oid_info.GetId();
+      event.state = oid_info.GetHardwareState();
+      RETURN_IF_ERROR(onlpphal_->HandleTransceiverEvent(event));
+      break;
 
-  // SFP event
-  case ONLP_OID_TYPE_SFP:
-    // Format TransceiverEvent
-    TransceiverEvent event;
-    event.slot = kDefaultSlot;
-    event.port = ONLP_OID_ID_GET(oid);
-    event.state = oid_info.GetHardwareState();
-    RETURN_IF_ERROR(onlpphal_->HandleTransceiverEvent(event));
-    break;
-
-  // TODO(craig): we probably need to handle more than just
-  //              transceiver events over time.
-  default:
-    return MAKE_ERROR() << "unhandled status change, oid: " << oid;
+    // TODO(craig): we probably need to handle more than just
+    //              transceiver events over time.
+    default:
+      return MAKE_ERROR() << "unhandled status change, oid: "
+                          << oid_info.GetHeader()->id;
   }
- 
+
   return ::util::OkStatus();
 }
 
-OnlpPhal::OnlpPhal() :
-    onlp_interface_(nullptr),
-    onlp_event_handler_(nullptr),
-    sfp_event_callback_(nullptr) {
-}
+OnlpPhal::OnlpPhal()
+    : onlp_interface_(nullptr),
+      onlp_event_handler_(nullptr),
+      sfp_event_callback_(nullptr) {}
 
 OnlpPhal::~OnlpPhal() {}
 
 // Initialize the onlp interface and phal DB
 ::util::Status OnlpPhal::Initialize() {
+  absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
-
     // Create the OnlpWrapper object
     RETURN_IF_ERROR(InitializeOnlpInterface());
 
@@ -94,14 +92,13 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::Status OnlpPhal::InitializePhalDB() {
-
   // Create onlp switch configurator instance
   ASSIGN_OR_RETURN(auto configurator,
-      OnlpSwitchConfigurator::Make(this, onlp_interface_.get()));
+                   OnlpSwitchConfigurator::Make(this, onlp_interface_.get()));
 
   // Create attribute database and load initial phal DB
-  ASSIGN_OR_RETURN(std::move(database_), 
-      AttributeDatabase::MakePhalDB(std::move(configurator)));
+  ASSIGN_OR_RETURN(std::move(database_),
+                   AttributeDatabase::MakePhalDB(std::move(configurator)));
 
   return ::util::OkStatus();
 }
@@ -130,19 +127,17 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::Status OnlpPhal::HandleTransceiverEvent(TransceiverEvent& event) {
-
   // Send event to Sfp configurator first to ensure
   // attribute database is in order before and calls are
   // made from the upper layer components.
-  const std::pair<int, int>& slot_port_pair = 
-                        std::make_pair(event.slot, event.port);
+  const std::pair<int, int>& slot_port_pair =
+      std::make_pair(event.slot, event.port);
   auto configurator = slot_port_to_configurator_[slot_port_pair];
 
   // Check to make sure we've got a configurator for this slot/port
   if (configurator == nullptr) {
-    RETURN_ERROR()
-        << "card[" << event.slot << "]/port[" << event.port << "]: "
-        << "no configurator for this transceiver";
+    RETURN_ERROR() << "card[" << event.slot << "]/port[" << event.port << "]: "
+                   << "no configurator for this transceiver";
   }
 
   RETURN_IF_ERROR(configurator->HandleEvent(event.state));
@@ -165,8 +160,8 @@ OnlpPhal::~OnlpPhal() {}
 
   // Find the next available ID for the Writer.
   int next_id = kInvalidWriterId;
-  for (int id = 1; id <= static_cast<int>(transceiver_event_writers_.size()) + 1;
-       ++id) {
+  for (int id = 1;
+       id <= static_cast<int>(transceiver_event_writers_.size()) + 1; ++id) {
     auto it = std::find_if(
         transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
         [id](const TransceiverEventWriter& w) { return w.id == id; });
@@ -185,14 +180,14 @@ OnlpPhal::~OnlpPhal() {}
   //       callback once.
   if (sfp_event_callback_ == nullptr) {
     // Create OnlpSfpEventCallback
-    std::unique_ptr<OnlpPhalSfpEventCallback>
-        callback(new OnlpPhalSfpEventCallback());
+    std::unique_ptr<OnlpPhalSfpEventCallback> callback(
+        new OnlpPhalSfpEventCallback());
     sfp_event_callback_ = std::move(callback);
     sfp_event_callback_->onlpphal_ = this;
 
     // Register OnlpSfpEventCallback
-    ::util::Status result =
-      onlp_event_handler_->RegisterSfpEventCallback(sfp_event_callback_.get());
+    ::util::Status result = onlp_event_handler_->RegisterSfpEventCallback(
+        sfp_event_callback_.get());
     CHECK_RETURN_IF_FALSE(result.ok())
         << "Failed to register SFP event callback.";
   }
@@ -234,27 +229,29 @@ OnlpPhal::~OnlpPhal() {}
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  if(slot < 0 || port < 0)
+  if (slot < 0 || port < 0)
     RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
 
-  //Get slot port pair to lookup sfpdatasource.
+  // Get slot port pair to lookup sfpdatasource.
   const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
   auto configurator = slot_port_to_configurator_[slot_port_pair];
   auto sfp_src = configurator->GetSfpDataSource();
 
   // Check if Sfp inserted
-  if (sfp_src == nullptr) 
-    RETURN_ERROR()
-        << "card[" << slot << "]/port[" << port << "]: Sfp not inserted";
+  if (sfp_src == nullptr)
+    RETURN_ERROR() << "card[" << slot << "]/port[" << port
+                   << "]: Sfp not inserted";
 
-  //Update sfp datasource values.
+  // Update sfp datasource values.
   sfp_src->UpdateValuesUnsafelyWithoutCacheOrLock();
 
-  ManagedAttribute *sfptype_attrib = sfp_src->GetSfpType();
+  ManagedAttribute* sfptype_attrib = sfp_src->GetSfpType();
 
   ManagedAttribute* hw_state_attrib = sfp_src->GetSfpHardwareState();
-  ASSIGN_OR_RETURN(auto hw_state_val,
-                   hw_state_attrib->ReadValue<const google::protobuf::EnumValueDescriptor*>());
+  ASSIGN_OR_RETURN(
+      auto hw_state_val,
+      hw_state_attrib
+          ->ReadValue<const google::protobuf::EnumValueDescriptor*>());
   fp_port_info->set_hw_state(static_cast<HwState>(hw_state_val->index()));
 
   if (fp_port_info->hw_state() == HW_STATE_NOT_PRESENT) {
@@ -262,13 +259,14 @@ OnlpPhal::~OnlpPhal() {}
   }
 
   ASSIGN_OR_RETURN(
-        auto sfptype_value,
-        sfptype_attrib->ReadValue<const google::protobuf::EnumValueDescriptor*>());
+      auto sfptype_value,
+      sfptype_attrib
+          ->ReadValue<const google::protobuf::EnumValueDescriptor*>());
 
   SfpType sfval = static_cast<SfpType>(sfptype_value->index());
-  //Need to map SfpType to PhysicalPortType
+  // Need to map SfpType to PhysicalPortType
   PhysicalPortType actual_val;
-  switch(sfval) {
+  switch (sfval) {
     case SFP_TYPE_SFP:
       actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
       break;
@@ -282,30 +280,25 @@ OnlpPhal::~OnlpPhal() {}
   }
   fp_port_info->set_physical_port_type(actual_val);
 
-  ManagedAttribute *mediatype_attrib = sfp_src->GetSfpMediaType();
+  ManagedAttribute* mediatype_attrib = sfp_src->GetSfpMediaType();
   ASSIGN_OR_RETURN(
-        auto mediatype_value,
-        mediatype_attrib->ReadValue<const google::protobuf::EnumValueDescriptor*>());
+      auto mediatype_value,
+      mediatype_attrib
+          ->ReadValue<const google::protobuf::EnumValueDescriptor*>());
 
   MediaType mediat_val = static_cast<MediaType>(mediatype_value->index());
   fp_port_info->set_media_type(mediat_val);
 
-  ManagedAttribute *vendor_attrib = sfp_src->GetSfpVendor();
-  ASSIGN_OR_RETURN(
-        auto vendor_value,
-        vendor_attrib->ReadValue<std::string>());
+  ManagedAttribute* vendor_attrib = sfp_src->GetSfpVendor();
+  ASSIGN_OR_RETURN(auto vendor_value, vendor_attrib->ReadValue<std::string>());
   fp_port_info->set_vendor_name(vendor_value);
 
-   ManagedAttribute *model_attrib = sfp_src->GetSfpModel();
-  ASSIGN_OR_RETURN(
-        auto model_value,
-        model_attrib->ReadValue<std::string>());
+  ManagedAttribute* model_attrib = sfp_src->GetSfpModel();
+  ASSIGN_OR_RETURN(auto model_value, model_attrib->ReadValue<std::string>());
   fp_port_info->set_part_number(model_value);
 
-  ManagedAttribute *serial_attrib = sfp_src->GetSfpSerialNumber();
-  ASSIGN_OR_RETURN(
-        auto serial_value,
-        serial_attrib->ReadValue<std::string>());
+  ManagedAttribute* serial_attrib = sfp_src->GetSfpSerialNumber();
+  ASSIGN_OR_RETURN(auto serial_value, serial_attrib->ReadValue<std::string>());
   fp_port_info->set_serial_number(serial_value);
 
   return ::util::OkStatus();
@@ -328,12 +321,8 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>::iterator
-    it;
-  for (it = transceiver_event_writers_.begin();
-       it != transceiver_event_writers_.end();
-       ++ it) {
-
+  for (auto it = transceiver_event_writers_.begin();
+       it != transceiver_event_writers_.end(); ++it) {
     it->writer->Write(event, absl::InfiniteDuration());
   }
 
@@ -341,42 +330,36 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 }
 
 ::util::Status OnlpPhal::SetPortLedState(int slot, int port, int channel,
-                                        LedColor color, LedState state) {
+                                         LedColor color, LedState state) {
   // TODO: Implement this.
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhal::InitializeOnlpInterface() {
   // Create the OnlpInterface object
-  ASSIGN_OR_RETURN(
-        onlp_interface_,
-        OnlpWrapper::Make());
-    return ::util::OkStatus();
-
+  ASSIGN_OR_RETURN(onlp_interface_, OnlpWrapper::Make());
+  return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhal::InitializeOnlpEventHandler() {
   // Create the OnlpEventHandler object
-  ASSIGN_OR_RETURN(
-        onlp_event_handler_,
-        OnlpEventHandler::Make(onlp_interface_.get()));
-    return ::util::OkStatus();
+  ASSIGN_OR_RETURN(onlp_event_handler_,
+                   OnlpEventHandler::Make(onlp_interface_.get()));
+  return ::util::OkStatus();
 }
 
 // Register the configurator so we can use later
 ::util::Status OnlpPhal::RegisterSfpConfigurator(
     int slot, int port, SfpConfigurator* configurator) {
+  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
 
-    const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
+  slot_port_to_configurator_[slot_port_pair] =
+      static_cast<OnlpSfpConfigurator*>(configurator);
 
-    slot_port_to_configurator_[slot_port_pair] = 
-        (OnlpSfpConfigurator *)configurator;
-
-    return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-

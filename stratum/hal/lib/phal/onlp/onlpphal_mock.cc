@@ -19,33 +19,34 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-OnlpPhalMock* OnlpPhalMock::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex OnlpPhalMock::init_lock_(absl::kConstInit);
+OnlpPhalMock* OnlpPhalMock::singleton_ GUARDED_BY(OnlpPhalMock::init_lock_) =
+    nullptr;
 
-OnlpPhalMock::OnlpPhalMock() :
-    onlp_interface_(nullptr) {
-}
+OnlpPhalMock::OnlpPhalMock() : onlp_interface_(nullptr) {}
 
 OnlpPhalMock::~OnlpPhalMock() {}
 
-// Override Initialize() 
 // Note: don't call anything, leave that to the test function
 ::util::Status OnlpPhalMock::Initialize() {
-
+  absl::WriterMutexLock l(&config_lock_);
+  initialized_ = true;
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhalMock::InitializeOnlpInterface() {
-    if (initialized_) {
-        return MAKE_ERROR(ERR_INTERNAL)
-            << "InitializeOnlpInterface() can be called only before "
-            << "the class is initialized";
-    }
+  absl::WriterMutexLock l(&config_lock_);
 
-    // Create the OnlpInterface object
-    ASSIGN_OR_RETURN(onlp_interface_, MockOnlpWrapper::Make());
-    
-    return ::util::OkStatus();
+  if (initialized_) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "InitializeOnlpInterface() can be called only before "
+           << "the class is initialized";
+  }
+
+  // Create the OnlpInterface object
+  ASSIGN_OR_RETURN(onlp_interface_, MockOnlpWrapper::Make());
+
+  return ::util::OkStatus();
 }
 
 OnlpPhalMock* OnlpPhalMock::CreateSingleton() {

@@ -25,57 +25,60 @@ namespace onlp {
 
 class OnlpPhalMock : public PhalInterface {
  public:
-    ~OnlpPhalMock() override;
+  ~OnlpPhalMock() override;
 
-    ::util::Status Initialize();
-    ::util::Status InitializeOnlpInterface();
+  ::util::Status Initialize();
+  ::util::Status InitializeOnlpInterface() LOCKS_EXCLUDED(config_lock_);
 
-    // PhalInterface public methods
-    //::util::Status PushChassisConfig(const ChassisConfig& config) override {};
-    MOCK_METHOD1(PushChassisConfig, 
-       ::util::Status(const ChassisConfig& config) override);
-    MOCK_METHOD1(VerifyChassisConfig, 
-       ::util::Status(const ChassisConfig& config));
-    MOCK_METHOD0(Shutdown, ::util::Status());
-    MOCK_METHOD2(RegisterTransceiverEventWriter, ::util::StatusOr<int>(
-       std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
-       int priority));
-    MOCK_METHOD1(UnregisterTransceiverEventWriter,
-        ::util::Status(int id));
-    MOCK_METHOD3(GetFrontPanelPortInfo,
-        ::util::Status(int slot, int port, FrontPanelPortInfo* fp_port_info));
-    MOCK_METHOD5(SetPortLedState,
-        ::util::Status(int slot, int port, int channel, 
-                       LedColor color, LedState state));
-    MOCK_METHOD3(RegisterSfpConfigurator,
-        ::util::Status(int slot, int port, SfpConfigurator* configurator));
+  // PhalInterface public methods
+  //::util::Status PushChassisConfig(const ChassisConfig& config) override {};
+  MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
+  MOCK_METHOD1(VerifyChassisConfig,
+               ::util::Status(const ChassisConfig& config));
+  MOCK_METHOD0(Shutdown, ::util::Status());
+  MOCK_METHOD2(RegisterTransceiverEventWriter,
+               ::util::StatusOr<int>(
+                   std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
+                   int priority));
+  MOCK_METHOD1(UnregisterTransceiverEventWriter, ::util::Status(int id));
+  MOCK_METHOD3(GetFrontPanelPortInfo,
+               ::util::Status(int slot, int port,
+                              FrontPanelPortInfo* fp_port_info));
+  MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
+                                               LedColor color, LedState state));
+  MOCK_METHOD3(RegisterSfpConfigurator,
+               ::util::Status(int slot, int port,
+                              SfpConfigurator* configurator));
 
-    // Need this function to grab onlp_interface
-    MockOnlpWrapper* GetOnlpInterface() { 
-        return (MockOnlpWrapper *)onlp_interface_.get(); 
-    };
+  // Need this function to grab onlp_interface
+  MockOnlpWrapper* GetOnlpInterface() {
+    return (MockOnlpWrapper*)onlp_interface_.get();
+  };
 
-    // Creates the singleton instance. Expected to be called once to initialize
-    // the instance.
-    static OnlpPhalMock* CreateSingleton() LOCKS_EXCLUDED(config_lock_);
+  // Creates the singleton instance. Expected to be called once to initialize
+  // the instance.
+  static OnlpPhalMock* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
 
  private:
-    friend class OnlpSwitchConfiguratorTest;
-    friend class OnlpSfpConfiguratorTest;
+  friend class OnlpSwitchConfiguratorTest;
+  friend class OnlpSfpConfiguratorTest;
 
-    OnlpPhalMock();
+  OnlpPhalMock();
 
-    // Internal mutex lock for protecting the internal maps and initializing the
-    // singleton instance.
-    static absl::Mutex init_lock_;
+  // Internal mutex lock for protecting the internal maps and initializing the
+  // singleton instance.
+  static absl::Mutex init_lock_;
 
-    // The singleton instance.
-    static OnlpPhalMock* singleton_ GUARDED_BY(init_lock_);
+  // The singleton instance.
+  static OnlpPhalMock* singleton_ GUARDED_BY(init_lock_);
 
-    // Determines if PHAL is fully initialized.
-    bool initialized_ = false GUARDED_BY(config_lock_);
+  // Mutex lock for protecting the internal state
+  mutable absl::Mutex config_lock_;
 
-    std::unique_ptr<OnlpInterface> onlp_interface_;
+  // Determines if PHAL is fully initialized.
+  bool initialized_ GUARDED_BY(config_lock_) = false;
+
+  std::unique_ptr<OnlpInterface> onlp_interface_;
 };
 
 }  // namespace onlp
