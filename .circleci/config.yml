@@ -29,7 +29,7 @@ var_3: &bazel_cache_path ~/.cache/bazel
 jobs:
   unit_tests:
     docker:
-      - image: stratumproject/build:bazel-0.23.2
+      - image: stratumproject/build:build
     steps:
       - checkout
       - restore_cache:
@@ -49,7 +49,7 @@ jobs:
             - *bazel_cache_path
   coverage:
     docker:
-      - image: stratumproject/build:bazel-0.23.2
+      - image: stratumproject/build:build
     steps:
       - checkout
       - restore_cache:
@@ -67,11 +67,31 @@ jobs:
           key: *bazel_covarage_cache_0
           paths:
             - *bazel_cache_path
-
+  update-docker-images:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build Stratum docker images
+          command: |
+            docker build -f Dockerfile.build -t stratumproject/build:build .
+            docker build -f Dockerfile -t stratumproject/build:runtime .
+      - run:
+          name: Push images to docker hub
+          command: |
+            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push stratumproject/build:build
+            docker push stratumproject/build:runtime
 
 workflows:
-  version: 2.1
+  version: 2
   build_and_test:
     jobs:
       - unit_tests
       - coverage
+  docker-publish:
+    jobs:
+      - update-docker-images:
+          filters:
+            branches:
+              only: master

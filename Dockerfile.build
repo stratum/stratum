@@ -1,7 +1,4 @@
-# Not supported with default docker version on Ubuntu 14.04 (1.13)
-# ARG DEBIAN_TAG=jessie
-# FROM debian:${DEBIAN_TAG}
-FROM debian:jessie
+FROM debian:9@sha256:75f7d0590b45561bfa443abad0b3e0f86e2811b1fc176f786cd30eb078d1846f
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum"
 
