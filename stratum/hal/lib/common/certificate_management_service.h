@@ -21,7 +21,7 @@
 
 #include <memory>
 
-#include "github.com/openconfig/gnoi/cert/cert.grpc.pb.h"
+#include "gnoi/cert/cert.grpc.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_interface.h"

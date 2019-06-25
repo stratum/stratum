@@ -47,14 +47,14 @@ def oss_transformations():
     ),
     core.replace(
         before = "//googleapis/google/rpc:status.proto",
-        after = "@com_github_googleapis//:status_cc_proto",
+        after = "@com_google_googleapis//google/rpc:status_cc_proto",
         paths = glob(
             include = ["**BUILD"],
         ),
     ),
     core.replace(
         before = "//googleapis/google/rpc:code.proto",
-        after = "@com_github_googleapis//:code_cc_proto",
+        after = "@com_google_googleapis//google/rpc:code_cc_proto",
         paths = glob(
             include = ["**BUILD"],
         ),
@@ -89,7 +89,7 @@ def oss_transformations():
     ),
     core.replace(
         before = "//sandblaze/prebuilt/grpc",
-        after = "@com_google_grpc//:grpc++",
+        after = "@com_github_grpc_grpc//:grpc++",
         paths = glob(
             include = ["**BUILD"],
         ),

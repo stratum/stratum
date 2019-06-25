@@ -21,7 +21,7 @@
 #include <pthread.h>
 #include <time.h>
 
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+#include "gnmi/gnmi.grpc.pb.h"
 //FIXME(boc) is this required?
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"

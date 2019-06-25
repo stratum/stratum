@@ -135,7 +135,7 @@ cc_test(
         "@com_google_absl//absl/memory",
         "@com_github_p4lang_p4c//:p4c_toolkit",
         "//stratum/p4c_backends/fpm:p4c_switch_utils",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
     ],
 )
 
@@ -172,7 +172,7 @@ cc_test(
     deps = [
         ":test_target_info",
         "@com_google_googletest//:gtest_main",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
     ],
 )
 

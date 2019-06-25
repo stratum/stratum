@@ -258,21 +258,21 @@ TEST_P(AdminServiceTest, SetPackageRemoteOptionSFTP) {
   ASSERT_OK(admin_service_->Setup(false));
 
   auto package = new ::gnoi::system::Package();
-  auto remoteDownload = new ::gnoi::RemoteDownload();
-  auto hash_type = new ::gnoi::HashType();
+  auto remoteDownload = new ::gnoi::common::RemoteDownload();
+  auto hash_type = new ::gnoi::types::HashType();
 
   // Configure expected calls
   std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
       writer = stub_->SetPackage(&context, &resp);
 
-  remoteDownload->set_protocol(::gnoi::RemoteDownload_Protocol_SFTP);
+  remoteDownload->set_protocol(::gnoi::common::RemoteDownload_Protocol_SFTP);
   package->set_filename(std::string("/home/user/filename"));
   package->set_allocated_remote_download(remoteDownload);
   req.set_allocated_package(package);
   if (!writer->Write(req)) {
     LOG(ERROR) << "Broken stream";
   }
-  hash_type->set_method(::gnoi::HashType_HashMethod_SHA256);
+  hash_type->set_method(::gnoi::types::HashType_HashMethod_SHA256);
   hash_type->set_hash("Incorrect Hash");
   req.set_allocated_hash(hash_type);
   if (!writer->Write(req)) {
@@ -338,7 +338,7 @@ TEST_P(AdminServiceTest, SetPackageUNCPECIFIEDHash) {
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
-  auto hash_type = new ::gnoi::HashType();
+  auto hash_type = new ::gnoi::types::HashType();
   ASSERT_OK(admin_service_->Setup(false));
 
   // Configure expected calls
@@ -375,7 +375,7 @@ TEST_P(AdminServiceTest, SetPackageUNCPECIFIEDHash) {
     LOG(ERROR) << "Broken stream";
   }
 
-  hash_type->set_method(::gnoi::HashType_HashMethod_UNSPECIFIED);
+  hash_type->set_method(::gnoi::types::HashType_HashMethod_UNSPECIFIED);
   req.set_allocated_hash(hash_type);
   if (!writer->Write(req)) {
     LOG(ERROR) << "Broken stream";
@@ -393,7 +393,7 @@ TEST_P(AdminServiceTest, SetPackageIncorrectHash) {
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
-  auto hash_type = new ::gnoi::HashType();
+  auto hash_type = new ::gnoi::types::HashType();
   ASSERT_OK(admin_service_->Setup(false));
 
   // Configure expected calls
@@ -419,7 +419,7 @@ TEST_P(AdminServiceTest, SetPackageIncorrectHash) {
   EXPECT_CALL(*(fs_helper_.get()),
               CheckHashSumFile("tmpfile",
                                "Incorrect Hash",
-                               ::gnoi::HashType_HashMethod_SHA256))
+                               ::gnoi::types::HashType_HashMethod_SHA256))
       .WillOnce(::testing::Return(false));
 
   std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
@@ -436,7 +436,7 @@ TEST_P(AdminServiceTest, SetPackageIncorrectHash) {
     LOG(ERROR) << "Broken stream";
   }
 
-  hash_type->set_method(::gnoi::HashType_HashMethod_SHA256);
+  hash_type->set_method(::gnoi::types::HashType_HashMethod_SHA256);
   hash_type->set_hash("Incorrect Hash");
   req.set_allocated_hash(hash_type);
   if (!writer->Write(req)) {
@@ -455,7 +455,7 @@ TEST_P(AdminServiceTest, SetPackageSHA256Success) {
   ::gnoi::system::SetPackageResponse resp;
   ::gnoi::system::SetPackageRequest req;
   auto package = new ::gnoi::system::Package();
-  auto hash_type = new ::gnoi::HashType();
+  auto hash_type = new ::gnoi::types::HashType();
   ASSERT_OK(admin_service_->Setup(false));
 
   // Configure expected calls
@@ -481,7 +481,7 @@ TEST_P(AdminServiceTest, SetPackageSHA256Success) {
   EXPECT_CALL(*(fs_helper_.get()),
               CheckHashSumFile("tmpfile",
                                "correct hash",
-                               ::gnoi::HashType_HashMethod_SHA256))
+                               ::gnoi::types::HashType_HashMethod_SHA256))
       .WillOnce(::testing::Return(true));
 
   std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
@@ -499,7 +499,7 @@ TEST_P(AdminServiceTest, SetPackageSHA256Success) {
   }
 
   std::istringstream isstream("Some data");
-  hash_type->set_method(::gnoi::HashType_HashMethod_SHA256);
+  hash_type->set_method(::gnoi::types::HashType_HashMethod_SHA256);
   hash_type->set_hash("correct hash");
   req.set_allocated_hash(hash_type);
   if (!writer->Write(req)) {

@@ -1,7 +1,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+#include "gnmi/gnmi.grpc.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 

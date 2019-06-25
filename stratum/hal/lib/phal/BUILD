@@ -25,7 +25,6 @@ load(
     "stratum_cc_library",
     "stratum_cc_test",
     "stratum_package",
-    "stratum_cc_proto_library",
     "EMBEDDED_ARCHES",
     "HOST_ARCHES",
 )
@@ -44,7 +43,7 @@ stratum_cc_library(
         "@com_google_absl//absl/types:variant",
         "//stratum/glue:integral_types",
         "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/phal:db_proto",
+        "//stratum/hal/lib/phal:db_cc_proto",
         "//stratum/lib/channel",
     ],
 )
@@ -102,10 +101,10 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":attribute_group",
         ":datasource",
-        ":db_proto",
+        ":db_cc_proto",
         ":dummy_threadpool",
         ":managed_attribute",
-        ":phal_proto",
+        ":phal_cc_proto",
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
@@ -135,7 +134,7 @@ stratum_cc_test(
         "system_fake",
         ":attribute_database",
         ":attribute_group_mock",
-        ":db_proto",
+        ":db_cc_proto",
         ":dummy_threadpool",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
@@ -190,7 +189,7 @@ stratum_cc_test(
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
         "//stratum/glue/status:status_test_util",
-        "//stratum/hal/lib/phal/test:test_proto",
+        "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
     ],
 )
@@ -216,7 +215,7 @@ stratum_cc_library(
     deps = [
         ":attribute_database_interface",
         ":managed_attribute",
-        ":phal_proto",
+        ":phal_cc_proto",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
@@ -238,13 +237,17 @@ stratum_cc_library(
     ],
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "db_proto",
-    hdrs = ["db.proto"],
-    #python_support = True,
+    srcs = ["db.proto"],
     deps = [
         "//stratum/hal/lib/common:common_proto",
     ],
+)
+
+cc_proto_library(
+    name = "db_cc_proto",
+    deps = [":db_proto"]
 )
 
 stratum_cc_library(
@@ -298,7 +301,7 @@ stratum_cc_test(
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
-        "//stratum/hal/lib/phal/test:test_proto",
+        "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
     ],
 )
@@ -328,7 +331,7 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "//stratum/glue/status",
-        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
@@ -576,7 +579,7 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
-        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:phal_cc_proto",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/glue/gtl:stl_util",
@@ -584,13 +587,17 @@ stratum_cc_library(
 )
 '''
 
-stratum_cc_proto_library(
+proto_library(
     name = "phal_proto",
-    hdrs = ["phal.proto"],
-    #python_support = True,
+    srcs = ["phal.proto"],
     deps = [
         "//stratum/hal/lib/common:common_proto",
     ],
+)
+
+cc_proto_library(
+    name = "phal_cc_proto",
+    deps = [":phal_proto"]
 )
 
 '''FIXME(boc) google only
@@ -599,13 +606,13 @@ stratum_cc_library(
     srcs = ["phal_proxy.cc"],
     hdrs = ["phal_proxy.h"],
     deps = [
-        ":phal_proto",
+        ":phal_cc_proto",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/hal/lib/common:client_sync_reader_writer",
-        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:constants",
@@ -621,7 +628,7 @@ stratum_cc_library(
     srcs = ["phal_sim.cc"],
     hdrs = ["phal_sim.h"],
     deps = [
-        ":phal_proto",
+        ":phal_cc_proto",
         ":sfp_configurator",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
@@ -673,7 +680,7 @@ stratum_cc_library(
     hdrs = ["switch_configurator.h"],
     deps = [
         ":attribute_group",
-        "//stratum/hal/lib/phal:phal_proto",
+        "//stratum/hal/lib/phal:phal_cc_proto",
         "//stratum/glue/status",
     ],
 )
@@ -683,7 +690,7 @@ stratum_cc_library(
     hdrs = ["sfp_configurator.h"],
     deps = [
         ":attribute_group",
-        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/glue/status",
     ],
 )

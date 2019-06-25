@@ -96,7 +96,7 @@ cc_library(
         ":status",
         ":statusor",
         "@com_google_googletest//:gtest",
-        "//stratum/public/proto:error_proto",
+        "//stratum/public/proto:error_cc_proto",
     ],
 )
 

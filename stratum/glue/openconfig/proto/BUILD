@@ -1,7 +1,6 @@
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "stratum_cc_proto_library",
 )
 
 package(default_visibility = STRATUM_INTERNAL)
@@ -9,14 +8,14 @@ package(default_visibility = STRATUM_INTERNAL)
 licenses(["notice"])  # Apache v2
 
 # This command edits the old/deprecated openconfig protos to be compiled by
-# stratum_cc_proto_library rule. This command is expected to go away as soon as we move
+# cc_proto_library rule. This command is expected to go away as soon as we move
 # to the new protos.
 old_proto_edit_cmd = ("cat $(SRCS) " +
                       "| sed 's|platforms/networking/hercules/public/proto/openconfig/old/|platforms/networking/hercules/glue/openconfig/proto/|g' " +
                       "| sed 's|/ywrappers|/old_ywrapper|g' > $@")
 
 # This command edits the third_party openconfig protos to be compiled by
-# stratum_cc_proto_library rule.
+# cc_proto_library rule.
 proto_edit_cmd = ("cat $(SRCS) " +
                   "| sed 's|golang/ygot/proto/ywrapper/|platforms/networking/hercules/glue/openconfig/proto/|g' " +
                   "| sed 's|golang/ygot/proto/yext/|platforms/networking/hercules/glue/openconfig/proto/|g' " +
@@ -172,19 +171,23 @@ genrule(
 )
 
 # TODO(aghaffar): Remove the old proto rule when we start using the new protos.
-stratum_cc_proto_library(
+proto_library(
     name = "old_openconfig_proto",
-    hdrs = [
+    srcs = [
         "old_openconfig.proto",
         "old_openconfig_google_bcm.proto",
         "old_yext.proto",
         "old_ywrapper.proto",
     ],
 )
+cc_proto_library(
+    name = "old_openconfig_cc_proto",
+    deps = [":old_openconfig_proto"],
+)
 
-stratum_cc_proto_library(
+proto_library(
     name = "openconfig_proto",
-    hdrs = [
+    srcs = [
         "enums.proto",
         "hercules.proto",
         "openconfig.proto",
@@ -196,4 +199,9 @@ stratum_cc_proto_library(
         "yext.proto",
         "ywrapper.proto",
     ],
+)
+
+cc_proto_library(
+    name = "openconfig_cc_proto",
+    deps = [":openconfig_proto"],
 )

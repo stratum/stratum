@@ -34,7 +34,7 @@ stratum_cc_library(
     name = "pi_node",
     srcs = ["pi_node.cc"],
     hdrs = ["pi_node.h"],
-    deps = ["@com_github_googleapis//:status_cc_proto",
+    deps = ["@com_google_googleapis//google/rpc:status_cc_proto",
             "@com_github_p4lang_p4runtime//:p4info_cc_proto",
             "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
             "@com_github_p4lang_PI//proto/frontend:pifeproto",
@@ -44,6 +44,6 @@ stratum_cc_library(
             "//stratum/hal/lib/common:writer_interface",
             "//stratum/lib:constants",
             "//stratum/lib:macros",
-            "//stratum/hal/lib/common:common_proto",
+            "//stratum/hal/lib/common:common_cc_proto",
     ],
 )

@@ -4,18 +4,21 @@ package(
 
 load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
 
+# TODO(Yi) Move to CC
 py_binary(
     name = "cli",
     srcs = ["cli.py"],
-    deps = ["//stratum/hal/lib/dummy:dummy_test_py_proto",
-            "//stratum/hal/lib/common:common_py_proto"]
+    deps = [
+        "//stratum/hal/lib/dummy:dummy_test_py_grpc",
+        "//stratum/hal/lib/common:common_py_proto",
+    ]
 )
 
 py_binary(
     name = "port_counter_sim",
     srcs = ["port_counter_sim.py"],
     deps = ["//stratum/hal/bin/dummy:cli",
-            "//stratum/hal/lib/dummy:dummy_test_py_proto",
+            "//stratum/hal/lib/dummy:dummy_test_py_grpc",
             "//stratum/hal/lib/common:common_py_proto"]
 )
 

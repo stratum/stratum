@@ -40,7 +40,7 @@ stratum_cc_library(
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
-        "//stratum/public/proto:error_proto",
+        "//stratum/public/proto:error_cc_proto",
     ],
 )
 
@@ -60,9 +60,9 @@ cc_test(
     deps = [
         ":error",
         ":test_main",
-        "@com_google_grpc//:grpc++",
-        "@com_github_googleapis//:code_cc_proto",
-        "@com_github_googleapis//:status_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",

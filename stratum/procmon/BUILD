@@ -5,8 +5,8 @@ load(
     "stratum_cc_library",
     "stratum_cc_test",
     "stratum_package",
-    "stratum_cc_proto_library",
 )
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
 package(
     #default_hdrs_check = "strict",
@@ -15,10 +15,21 @@ package(
 
 licenses(["notice"])  # Apache v2
 
-stratum_cc_proto_library(
+proto_library(
     name = "procmon_proto",
     srcs = ["procmon.proto"],
-    with_grpc = True,
+)
+
+cc_proto_library(
+    name = "procmon_cc_proto",
+    deps = [":procmon_proto"]
+)
+
+cc_grpc_library(
+    name = "procmon_cc_grpc",
+    srcs = [":procmon_proto"],
+    deps = [":procmon_cc_proto"],
+    grpc_only = True,
 )
 
 stratum_cc_library(
@@ -26,7 +37,8 @@ stratum_cc_library(
     srcs = ["procmon.cc"],
     hdrs = ["procmon.h"],
     deps = [
-        ":procmon_proto",
+        ":procmon_cc_proto",
+        ":procmon_cc_grpc",
         "@com_github_google_glog//:glog",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
@@ -41,8 +53,9 @@ stratum_cc_library(
     srcs = ["procmon_service_impl.cc"],
     hdrs = ["procmon_service_impl.h"],
     deps = [
-        ":procmon_proto",
-        "@com_google_grpc//:grpc++",
+        ":procmon_cc_proto",
+        ":procmon_cc_grpc",
+        "@com_github_grpc_grpc//:grpc++",
     ],
 )
 
@@ -51,7 +64,8 @@ stratum_cc_test(
     srcs = ["procmon_test.cc"],
     deps = [
         ":procmon",
-        ":procmon_proto",
+        ":procmon_cc_proto",
+        ":procmon_cc_grpc",
         "@com_github_google_glog//:glog",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
@@ -72,7 +86,8 @@ stratum_cc_binary(
     ],
     deps = [
         ":procmon",
-        ":procmon_proto",
+        ":procmon_cc_proto",
+        ":procmon_cc_grpc",
         ":procmon_service_impl",
         "@com_github_google_glog//:glog",
         "//stratum/glue:init_google",
@@ -80,7 +95,7 @@ stratum_cc_binary(
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         #"//sandblaze/prebuilt/openssl",
         "//stratum/glue/status:status",
     ],

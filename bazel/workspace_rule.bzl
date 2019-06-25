@@ -9,6 +9,8 @@ def _build_http_archive(
     commit = None,
     tag = None,
     build_file = None,
+    patches = [],
+    patch_args = [],
     ):
   if not remote.startswith("https://github.com"):
     # This is only currently support for github repos
@@ -37,12 +39,16 @@ def _build_http_archive(
       urls = urls,
       strip_prefix = prefix,
       build_file = build_file,
+      patches = patches,
+      patch_args = patch_args,
     )
   else:
     http_archive(
       name = name,
       urls = urls,
       strip_prefix = prefix,
+      patches = patches,
+      patch_args = patch_args,
     )
   return True
 
@@ -87,6 +93,8 @@ def remote_workspace(
     tag = None,
     build_file = None,
     use_git = False,
+    patches = [],
+    patch_args = [],
     ):
   ref_count = 0
   if branch:
@@ -112,7 +120,7 @@ def remote_workspace(
 
   # Prefer http_archive
   if not use_git and _build_http_archive(
-      name, remote, branch, commit, tag,build_file):
+      name, remote, branch, commit, tag, build_file, patches, patch_args):
     return
 
   # Fall back to git_repository

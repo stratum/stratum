@@ -31,7 +31,7 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: a95222eca9b039f6398c048d7e1a1bf7f49b7235.
+we used for testing: 0bcaeda2269a4f2f0539cf8eac49868e389a8c18.
 
 ### Install bmv2
 ```
@@ -44,7 +44,7 @@ make [-j4]
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 5d25d0d94681492d155d3e5b72b16a56121f8dfe.
+we used for testing: 6f700badd1c5040d04dec24f446982ad63fa64c9.
 
 ## Building the `stratum_bmv2` binary
 

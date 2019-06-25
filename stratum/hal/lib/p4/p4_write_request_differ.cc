@@ -168,10 +168,10 @@ bool P4WriteRequestComparator::IsMatch(
     const std::vector<google::protobuf::util::MessageDifferencer::SpecificField>&
     parent_fields) const {
   const ::p4::v1::Update& update1 =
-      *google::protobuf::internal::DynamicCastToGenerated<const ::p4::v1::Update>(
+      *google::protobuf::DynamicCastToGenerated<const ::p4::v1::Update>(
           &message1);
   const ::p4::v1::Update& update2 =
-      *google::protobuf::internal::DynamicCastToGenerated<const ::p4::v1::Update>(
+      *google::protobuf::DynamicCastToGenerated<const ::p4::v1::Update>(
           &message2);
   if (!update1.entity().has_table_entry()) return false;
   if (!update2.entity().has_table_entry()) return false;

@@ -14,8 +14,8 @@ sc_package                                  stratum_package
 services = ["grpc"]                         with_grpc = True
 python_support = True                       #python_support = True
 
-//stratum:code_proto                        @com_github_googleapis//:code_cc_proto
-//stratum:status_cc_proto                      @com_github_googleapis//:status_cc_proto
+//stratum:code_proto                        @com_google_googleapis//google/rpc:code_cc_proto
+//stratum:status_cc_proto                      @com_google_googleapis//google/rpc:status_cc_proto
 
 BUILD files copybara
 --------------------
@@ -25,13 +25,13 @@ proto_include = "."                         #proto_include = "."
 //absl                                      @com_google_absl//absl
 //base                                      @com_github_google_glog//:glog
 "//file/base:path"                          #"//file/base:path"
-//googleapis/google/rpc:status.proto        @com_github_googleapis//:status_cc_proto
-//googleapis/google/rpc:code.proto          @com_github_googleapis//:code_cc_proto
+//googleapis/google/rpc:status.proto        @com_google_googleapis//google/rpc:status_cc_proto
+//googleapis/google/rpc:code.proto          @com_google_googleapis//google/rpc:code_cc_proto
 //protobuf                                  @com_google_protobuf//:protobuf
 //sandblaze/p4lang                          @com_github_p4lang_PI//
 //sandblaze/gnmi                            @com_github_openconfig_gnmi//
 //sandblaze/prebuilt/eudev                  @com_github_systemd_systemd//:libudev
-//sandblaze/prebuilt/grpc                   @com_google_grpc//:grpc++
+//sandblaze/prebuilt/grpc                   @com_github_grpc_grpc//:grpc++
 //sandblaze/prebuilt/p4lang:vans-p4lang-pi  @com_github_p4lang_p4runtime//:p4runtime_cc_grpc #WARNING conflicts with //sandblaze/p4lang
 //sandblaze/prebuilt/openssl                #//sandblaze/prebuilt/openssl           #NOTE replace with boring ssl if required
 //testing/base/public:gunit_no_google3      @com_google_googletest//:gtest
@@ -70,7 +70,7 @@ C files copybara
 ?                                           #include "google/protobuf/descriptor.h"
 ?                                           #include "google/protobuf/util/message_differencer.h"
 #include "sandblaze/p4lang/p4/              #include "p4/
-#include "sandblaze/gnmi                    #include "github.com/openconfig/gnmi/proto/gnmi
+#include "sandblaze/gnmi                    #include "gnmi
 #include "eudev/libudev.h"                  #include <libudev.h>
 #include "bcm/error.h"                      #include "shr/shr_error.h"
 #include "soc/error.h"                      //#include "soc/error.h"

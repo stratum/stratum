@@ -21,7 +21,6 @@ exports_files(["LICENSE"])
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "stratum_cc_proto_library",
 )
 
 package(
@@ -29,57 +28,80 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "error_proto",
-    hdrs = [
-        "error.proto",
-    ],
+    srcs = ["error.proto"],
+)
+
+cc_proto_library(
+    name = "error_cc_proto",
+    deps = [":error_proto"],
 )
 
 #FIXME(boc) pull this from upstream repo directly
-stratum_cc_proto_library(
+proto_library(
     name = "openconfig_proto",
-    hdrs = [
+    srcs = [
         "openconfig.proto",
         "openconfig-goog-bcm.proto",
         "yang_wrappers.proto",
     ],
     deps = [
         "//stratum/public/proto/openconfig:openconfig_proto",
+        "@com_google_protobuf//:any_proto",
     ],
+)
+cc_proto_library(
+    name = "openconfig_cc_proto",
+    deps = [":openconfig_proto"]
 )
 
 #FIXME(boc) pull this from upstream repo directly
-stratum_cc_proto_library(
+proto_library(
     name = "sc_yang_proto",
-    hdrs = [
+    srcs = [
         "yext.proto",
         "ywrapper.proto",
     ],
-)
-
-stratum_cc_proto_library(
-    name = "p4_annotation_proto",
-    hdrs = [
-        "p4_annotation.proto",
-    ],
     deps = [
-        ":p4_table_defs_proto",
-    ],
+        "@com_google_protobuf//:descriptor_proto",
+        "@com_google_protobuf//:any_proto",
+    ]
+)
+cc_proto_library(
+    name = "sc_yang_cc_proto",
+    deps = [":sc_yang_proto"],
 )
 
-stratum_cc_proto_library(
+proto_library(
+    name = "p4_annotation_proto",
+    srcs = ["p4_annotation.proto"],
+    deps = [":p4_table_defs_proto"],
+)
+
+cc_proto_library(
+    name = "p4_annotation_cc_proto",
+    deps = [":p4_annotation_proto"]
+)
+
+proto_library(
     name = "p4_table_defs_proto",
-    hdrs = [
-        "p4_table_defs.proto",
-    ],
+    srcs = ["p4_table_defs.proto"],
 )
 
-stratum_cc_proto_library(
+cc_proto_library(
+    name = "p4_table_defs_cc_proto",
+    deps = [":p4_table_defs_proto"]
+)
+
+proto_library(
     name = "hal_proto",
-    hdrs = [
-        "hal.proto",
-    ],
+    srcs = ["hal.proto"],
+)
+
+cc_proto_library(
+    name = "hal_cc_proto",
+    deps = [":hal_proto"]
 )
 
 ''' FIXME(boc) expose gNMI and P4RT protos

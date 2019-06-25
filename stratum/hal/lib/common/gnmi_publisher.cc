@@ -18,7 +18,7 @@
 #include <list>
 #include <string>
 
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
+#include "gnmi/gnmi.pb.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 #include "absl/synchronization/mutex.h"

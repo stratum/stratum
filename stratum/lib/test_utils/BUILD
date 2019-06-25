@@ -48,9 +48,9 @@ stratum_cc_library(
     srcs = ["p4_proto_builders.cc"],
     hdrs = ["p4_proto_builders.h"],
     deps = [
-        "//stratum/hal/lib/p4:p4_control_proto",
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/hal/lib/p4:p4_control_cc_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
     ],

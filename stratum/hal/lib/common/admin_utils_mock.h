@@ -44,12 +44,12 @@ class FileSystemHelperMock : public FileSystemHelper {
                      bool(
                          const std::string& path,
                          const std::string& old_hash,
-                         ::gnoi::HashType_HashMethod method));
+                         ::gnoi::types::HashType_HashMethod method));
 
   MOCK_CONST_METHOD2(GetHashSum,
                      std::string(
                          std::istream & istream,
-                         ::gnoi::HashType_HashMethod method));
+                         ::gnoi::types::HashType_HashMethod method));
 
   MOCK_CONST_METHOD0(CreateTempDir, std::string());
 

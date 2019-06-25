@@ -246,7 +246,7 @@ std::string FileSystemHelper::TempFileName(std::string path) const {
 bool FileSystemHelper::CheckHashSumFile(
     const std::string& path,
     const std::string& old_hash,
-    ::gnoi::HashType_HashMethod method) const {
+    ::gnoi::types::HashType_HashMethod method) const {
 
   std::ifstream istream(path, std::ios::binary);
   return old_hash == GetHashSum(istream, method);
@@ -254,14 +254,14 @@ bool FileSystemHelper::CheckHashSumFile(
 
 std::string FileSystemHelper::GetHashSum(
     std::istream& istream,
-    ::gnoi::HashType_HashMethod method) const {
+    ::gnoi::types::HashType_HashMethod method) const {
 
   const int BUFFER_SIZE = 1024;
   std::vector<char> buffer(BUFFER_SIZE, 0);
   unsigned char* hash = nullptr;
   size_t digest_len = 0;
   switch (method) {
-    case ::gnoi::HashType_HashMethod_SHA256: {
+    case ::gnoi::types::HashType_HashMethod_SHA256: {
       digest_len = SHA256_DIGEST_LENGTH;
       unsigned char hash_SHA256[SHA256_DIGEST_LENGTH];
       SHA256_CTX sha256;
@@ -275,7 +275,7 @@ std::string FileSystemHelper::GetHashSum(
       hash = hash_SHA256;
       break;
     }
-    case ::gnoi::HashType_HashMethod_SHA512: {
+    case ::gnoi::types::HashType_HashMethod_SHA512: {
       digest_len = SHA512_DIGEST_LENGTH;
       unsigned char hash_SHA512[SHA512_DIGEST_LENGTH];
       SHA512_CTX sha512;
@@ -289,7 +289,7 @@ std::string FileSystemHelper::GetHashSum(
       hash = hash_SHA512;
       break;
     }
-    case ::gnoi::HashType_HashMethod_MD5: {
+    case ::gnoi::types::HashType_HashMethod_MD5: {
       digest_len = MD5_DIGEST_LENGTH;
       unsigned char hash_MD5[MD5_DIGEST_LENGTH];
       MD5_CTX md5;
@@ -303,7 +303,7 @@ std::string FileSystemHelper::GetHashSum(
       hash = hash_MD5;
       break;
     }
-    case ::gnoi::HashType_HashMethod_UNSPECIFIED: {
+    case ::gnoi::types::HashType_HashMethod_UNSPECIFIED: {
       LOG(WARNING) << "HashType_HashMethod_UNSPECIFIED";
       return std::string();
     }

@@ -233,7 +233,7 @@ AdminService::AdminService(OperationMode mode,
                           "The last message must have hash");
   }
 
-  if (msg.hash().method() == ::gnoi::HashType_HashMethod_UNSPECIFIED) {
+  if (msg.hash().method() == ::gnoi::types::HashType_HashMethod_UNSPECIFIED) {
     fs_helper->RemoveFile(tmp_file_name);
     fs_helper->RemoveDir(tmp_dir_name);
     return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,

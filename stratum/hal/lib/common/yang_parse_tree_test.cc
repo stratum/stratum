@@ -15,7 +15,7 @@
 #include "stratum/hal/lib/common/yang_parse_tree_mock.h"
 
 #include "google/protobuf/text_format.h"
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.pb.h"
+#include "gnmi/gnmi.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"

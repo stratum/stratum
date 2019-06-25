@@ -23,7 +23,6 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
-    "stratum_cc_proto_library",
     "HOST_ARCHES",
 )
 
@@ -32,22 +31,32 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "common_flow_entry_proto",
-    hdrs = ["common_flow_entry.proto"],
+    srcs = ["common_flow_entry.proto"],
     deps = [
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
         "//stratum/public/proto:p4_table_defs_proto",
         "//stratum/public/proto:p4_annotation_proto",
     ],
 )
 
-stratum_cc_proto_library(
+cc_proto_library(
+    name = "common_flow_entry_cc_proto",
+    deps = [":common_flow_entry_proto"],
+)
+
+proto_library(
     name = "forwarding_pipeline_configs_proto",
-    hdrs = ["forwarding_pipeline_configs.proto"],
+    srcs = ["forwarding_pipeline_configs.proto"],
     deps = [
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
     ],
+)
+
+cc_proto_library(
+    name = "forwarding_pipeline_configs_cc_proto",
+    deps = [":forwarding_pipeline_configs_proto"],
 )
 
 stratum_cc_library(
@@ -56,8 +65,8 @@ stratum_cc_library(
     hdrs = ["p4_action_mapper.h"],
     deps = [
         ":p4_info_manager",
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         ":utils",
         "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -75,8 +84,8 @@ stratum_cc_test(
     deps = [
         ":p4_action_mapper",
         ":p4_info_manager_mock",
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         ":testdata",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
@@ -84,8 +93,8 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -96,22 +105,22 @@ stratum_cc_library(
     srcs = ["p4_config_verifier.cc"],
     hdrs = ["p4_config_verifier.h"],
     deps = [
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         ":p4_write_request_differ",
         ":utils",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
-        "//stratum/public/proto:p4_annotation_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -123,8 +132,8 @@ stratum_cc_test(
     deps = [
         ":p4_config_verifier",
         ":p4_info_manager",
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         ":testdata",
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest_main",
@@ -156,7 +165,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "//stratum/glue/gtl:map_util",
@@ -186,7 +195,7 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "//stratum/lib:utils",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
     ],
 )
 
@@ -195,12 +204,12 @@ stratum_cc_library(
     srcs = ["p4_match_key.cc"],
     hdrs = ["p4_match_key.h"],
     deps = [
-        ":common_flow_entry_proto",
-        ":p4_table_map_proto",
+        ":common_flow_entry_cc_proto",
+        ":p4_table_map_cc_proto",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/memory",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
@@ -215,41 +224,56 @@ stratum_cc_test(
         ":p4_match_key",
         "@com_google_googletest//:gtest_main",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/public/lib:error",
     ],
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "p4_control_proto",
-    hdrs = ["p4_control.proto"],
+    srcs = ["p4_control.proto"],
     deps = [
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
     ],
 )
 
-stratum_cc_proto_library(
+cc_proto_library(
+    name = "p4_control_cc_proto",
+    deps = [":p4_control_proto"],
+)
+
+proto_library(
     name = "p4_pipeline_config_proto",
-    hdrs = ["p4_pipeline_config.proto"],
+    srcs = ["p4_pipeline_config.proto"],
     deps = [
         ":p4_control_proto",
         ":p4_table_map_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_proto",
         "//stratum/public/proto:p4_annotation_proto",
     ],
 )
 
-stratum_cc_proto_library(
+cc_proto_library(
+    name = "p4_pipeline_config_cc_proto",
+    deps = [":p4_pipeline_config_proto"],
+)
+
+proto_library(
     name = "p4_table_map_proto",
-    hdrs = ["p4_table_map.proto"],
+    srcs = ["p4_table_map.proto"],
     deps = [
         ":common_flow_entry_proto",
-        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4info_proto",
         "//stratum/public/proto:p4_annotation_proto",
         "//stratum/public/proto:p4_table_defs_proto",
     ],
+)
+
+cc_proto_library(
+    name = "p4_table_map_cc_proto",
+    deps = [":p4_table_map_proto"],
 )
 
 filegroup(
@@ -265,7 +289,7 @@ filegroup(
 #    hdrs = ["p4_static_entry_mapper.h"],
 #    deps = [
 #        ":p4_table_mapper",
-#        ":p4_pipeline_config_proto",
+#        ":p4_pipeline_config_cc_proto",
 #        ":p4_write_request_differ",
 #        "@com_github_google_glog//:glog",
 #        "//stratum/glue/status",
@@ -314,12 +338,12 @@ stratum_cc_library(
         "p4_table_mapper.h",
     ],
     deps = [
-        ":common_flow_entry_proto",
+        ":common_flow_entry_cc_proto",
         ":p4_config_verifier",
         ":p4_info_manager",
         ":p4_match_key",
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         ":p4_write_request_differ",
         ":utils",
         "@com_github_google_glog//:glog",
@@ -331,11 +355,11 @@ stratum_cc_library(
         "//stratum/glue:logging",
         "//stratum/glue/net_util:ipaddress",
         "//stratum/glue/status",
-        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
         "//stratum/glue/gtl:map_util",
     ],
 )
@@ -408,8 +432,8 @@ stratum_cc_library(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
         "@com_google_absl//absl/strings",
@@ -427,8 +451,8 @@ stratum_cc_test(
         "utils_test.cc",
     ],
     deps = [
-        ":p4_pipeline_config_proto",
-        ":p4_table_map_proto",
+        ":p4_pipeline_config_cc_proto",
+        ":p4_table_map_cc_proto",
         ":testdata",
         ":utils",
         "//stratum/lib/test_utils:matchers",

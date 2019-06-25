@@ -23,10 +23,8 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
-    "stratum_cc_proto_library",
 )
-
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(
     #default_hdrs_check = "strict",
@@ -45,7 +43,7 @@ stratum_cc_library(
         ":admin_utils",
         ":admin_utils_interface",
         "@com_google_googletest//:gtest",
-        ":common_proto",
+        ":common_cc_proto",
         ":error_buffer",
         ":switch_interface",
         "@com_github_google_glog//:glog",
@@ -53,7 +51,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "@com_github_openconfig_gnoi//:system_cc_grpc",
         "//stratum/lib:constants",
@@ -84,7 +82,7 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         #FIXME(boc) "@com_github_openconfig_gnoi//:system_cc_grpc",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
@@ -119,10 +117,11 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
         "@com_github_google_glog//:glog",
-        "@com_github_openconfig_gnoi//:gnoi_cc_proto",
+        "@com_github_openconfig_gnoi//:types_cc_proto",
+        "@com_github_openconfig_gnoi//:common_cc_proto",
         "@com_github_openconfig_gnoi//:system_cc_grpc",
         "@com_google_absl//absl/memory",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
     ],
 )
 
@@ -135,7 +134,7 @@ stratum_cc_library(
         "certificate_management_service.h",
     ],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         ":error_buffer",
         ":switch_interface",
         "@com_github_google_glog//:glog",
@@ -143,7 +142,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "@com_github_openconfig_gnoi//:cert_cc_grpc",
         "//stratum/lib:constants",
@@ -173,7 +172,7 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         #FIXME(boc) "@com_github_openconfig_gnoi//:system_cc_grpc",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
@@ -189,21 +188,27 @@ stratum_cc_library(
     deps = [
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
     ],
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "common_proto",
-    hdrs = ["common.proto"],
-    #python_support = True,
+    srcs = ["common.proto"],
+)
+
+cc_proto_library(
+    name = "common_cc_proto",
+    deps = [":common_proto"]
 )
 
 py_proto_library(
     name = "common_py_proto",
-    protos = ["common.proto"],
-    # with_grpc = True,
+    deps = [
+        ":common_proto"
+    ],
+    well_known_protos = False,
 )
 
 stratum_cc_library(
@@ -222,7 +227,7 @@ stratum_cc_library(
     ],
     deps = [
         ":channel_writer_wrapper",
-        ":common_proto",
+        ":common_cc_proto",
         ":error_buffer",
         ":openconfig_converter",
         ":switch_interface",
@@ -237,10 +242,11 @@ stratum_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
-        "@com_google_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
         "//stratum/glue:logging",
-        "//stratum/public/proto:openconfig_proto",
+        "//stratum/public/proto:openconfig_cc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:constants",
@@ -277,8 +283,8 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "@com_google_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:constants",
         "//stratum/lib:timer_daemon",
@@ -295,8 +301,8 @@ cc_library(
     hdrs = ["subscribe_reader_writer_mock.h"],
     deps = [
         "@com_google_googletest//:gtest",
-        "@com_google_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
     ],
 )
 
@@ -310,7 +316,7 @@ cc_library(
         "yang_parse_tree.h",
     ],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         ":switch_interface",
         ":switch_mock",
         ":writer_interface",
@@ -319,7 +325,8 @@ cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "@com_github_openconfig_gnmi//:gnmi_proto",
+        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:macros",
@@ -347,7 +354,7 @@ stratum_cc_library(
         "diag_service.h",
     ],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         ":error_buffer",
         ":switch_interface",
         "@com_github_google_glog//:glog",
@@ -355,7 +362,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "@com_github_openconfig_gnoi//:diag_cc_grpc",
         "//stratum/lib:constants",
@@ -384,7 +391,7 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         #FIXME(boc) "@com_github_openconfig_gnoi//:system_cc_grpc",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
@@ -437,7 +444,7 @@ stratum_cc_library(
         "file_service.h",
     ],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         ":error_buffer",
         ":switch_interface",
         "@com_github_google_glog//:glog",
@@ -445,7 +452,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "@com_github_openconfig_gnoi//:file_cc_grpc",
         "//stratum/lib:constants",
@@ -475,7 +482,7 @@ stratum_cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         #FIXME(boc) "@com_github_openconfig_gnoi//:system_cc_grpc",
         "//stratum/lib:constants",
         "//stratum/lib:utils",
@@ -492,7 +499,7 @@ stratum_cc_library(
     deps = [
         ":admin_service",
         ":certificate_management_service",
-        ":common_proto",
+        ":common_cc_proto",
         ":config_monitoring_service",
         ":diag_service",
         ":error_buffer",
@@ -505,7 +512,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
@@ -545,7 +552,7 @@ stratum_cc_library(
     hdrs = ["p4_service.h"],
     deps = [
         ":channel_writer_wrapper",
-        ":common_proto",
+        ":common_cc_proto",
         ":error_buffer",
         ":server_writer_wrapper",
         ":switch_interface",
@@ -559,14 +566,14 @@ stratum_cc_library(
         "@com_google_protobuf//:protobuf",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "@com_google_grpc//:grpc++",
-        "@com_github_googleapis//:code_cc_proto",
-        "@com_github_googleapis//:status_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/p4:forwarding_pipeline_configs_proto",
+        "//stratum/hal/lib/p4:forwarding_pipeline_configs_cc_proto",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
@@ -594,8 +601,8 @@ stratum_cc_test(
         "@com_google_absl//absl/numeric:int128",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/synchronization",
-        "@com_google_grpc//:grpc++",
-        "@com_github_googleapis//:code_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
@@ -609,7 +616,7 @@ stratum_cc_library(
     name = "phal_interface",
     hdrs = ["phal_interface.h"],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         "//stratum/hal/lib/phal:sfp_configurator",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -647,7 +654,7 @@ stratum_cc_library(
     hdrs = ["server_writer_wrapper.h"],
     deps = [
         ":writer_interface",
-        "@com_google_grpc//:grpc++",
+        "@com_github_grpc_grpc//:grpc++",
     ],
 )
 
@@ -667,13 +674,14 @@ stratum_cc_library(
         "switch_interface.h",
     ],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         ":writer_interface",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "@com_github_openconfig_gnmi//:gnmi_proto",
+        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:timer_daemon",
@@ -710,7 +718,7 @@ stratum_cc_library(
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -743,11 +751,11 @@ stratum_cc_library(
         "openconfig_converter.h",
     ],
     deps = [
-        ":common_proto",
+        ":common_cc_proto",
         "@com_google_absl//absl/strings",
         "//stratum/glue:logging",
         #FIXME(boc) "//stratum/glue/openconfig/proto:old_openconfig_proto",
-        "//stratum/public/proto:openconfig_proto",
+        "//stratum/public/proto:openconfig_cc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",

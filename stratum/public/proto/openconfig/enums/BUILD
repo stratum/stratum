@@ -21,7 +21,6 @@ exports_files(["LICENSE"])
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "stratum_cc_proto_library",
 )
 
 package(
@@ -29,12 +28,17 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "enums_proto",
-    hdrs = [
+    srcs = [
         "enums.proto",
     ],
     deps = [
         "//stratum/public/proto:sc_yang_proto",
     ],
+)
+
+cc_proto_library(
+    name = "enums_cc_proto",
+    deps = [":enums_proto"],
 )

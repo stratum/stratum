@@ -19,9 +19,9 @@
 #include <memory>
 #include <vector>
 
-#include "github.com/openconfig/gnoi/types.pb.h"
+#include "gnoi/types/types.pb.h"
 #include "stratum/glue/status/status.h"
-#include "github.com/openconfig/gnoi/system/system.grpc.pb.h"
+#include "gnoi/system/system.grpc.pb.h"
 #include "stratum/glue/integral_types.h"
 
 namespace {
@@ -105,10 +105,10 @@ class FileSystemHelper {
 
   virtual bool CheckHashSumFile(const std::string& path,
                                 const std::string& old_hash,
-                                ::gnoi::HashType_HashMethod method) const;
+                                ::gnoi::types::HashType_HashMethod method) const;
 
   virtual std::string GetHashSum(std::istream& istream,
-                                 ::gnoi::HashType_HashMethod method) const;
+                                 ::gnoi::types::HashType_HashMethod method) const;
 
   // Create temporary directory and return it name
   // @return Temporary directory name in std:string

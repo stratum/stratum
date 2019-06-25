@@ -23,11 +23,10 @@ load(
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
-    "stratum_cc_proto_library",
     "HOST_ARCHES",
 )
-
-load("@org_pubref_rules_protobuf//python:rules.bzl", "py_proto_library")
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -53,7 +52,7 @@ stratum_cc_library(
             "//stratum/glue/gtl:flat_hash_map",
             "//stratum/glue/status:status_macros",
             "//stratum/hal/lib/common:writer_interface",
-            "//stratum/hal/lib/common:common_proto",
+            "//stratum/hal/lib/common:common_cc_proto",
             "//stratum/public/lib:error",
             ":dummy_box",
             ":dummy_global_vars",
@@ -100,31 +99,46 @@ stratum_cc_library(
     ],
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "dummy_test_proto",
-    hdrs = ["dummy_test.proto"],
-    deps = ["//stratum/public/proto/openconfig:openconfig_proto",
-            "//stratum/hal/lib/common:common_proto"
+    srcs = ["dummy_test.proto"],
+    deps = ["//stratum/hal/lib/common:common_proto"
     ]
 )
 
+cc_proto_library(
+    name = "dummy_test_cc_proto",
+    deps = [":dummy_test_proto"]
+)
+
+cc_grpc_library(
+    name = "dummy_test_cc_grpc",
+    srcs = [":dummy_test_proto"],
+    deps = [":dummy_test_cc_proto"],
+    grpc_only = True,
+)
+
 py_proto_library(
-    name = "dummy_test_py_proto",
-    protos = ["dummy_test.proto"],
-    proto_deps = [
-        "//stratum/hal/lib/common:common_py_proto"
-    ]
+    name = "dummy_test_py_grpc",
+    deps = [
+        ":dummy_test_proto"
+    ],
+    well_known_protos = False,
 )
 
 stratum_cc_library(
     name = "dummy_box",
     srcs = ["dummy_box.cc"],
     hdrs = ["dummy_box.h"],
-    deps = ["@com_google_absl//absl/time:time",
-            "@com_google_absl//absl/synchronization",
-            "//stratum/glue/status:status",
-            "//stratum/hal/lib/common:switch_interface",
-            "//stratum/hal/lib/common:phal_interface",
-            "//stratum/hal/lib/common:common_proto",
-            ":dummy_test_proto"]
+    deps = [
+        "@com_google_absl//absl/time:time",
+        "@com_google_absl//absl/synchronization",
+        "@com_github_grpc_grpc//:grpc++",
+        "//stratum/glue/status:status",
+        "//stratum/hal/lib/common:switch_interface",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/common:common_cc_proto",
+        ":dummy_test_cc_proto",
+        ":dummy_test_cc_grpc",
+    ]
 )

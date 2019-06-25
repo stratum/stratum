@@ -40,7 +40,7 @@ cc_library(
         "//stratum/hal/lib/bcm:bcm_switch",
         "//stratum/hal/lib/bcm:bcm_table_manager",
         "//stratum/hal/lib/bcm:bcm_tunnel_manager",
-        "//stratum/hal/lib/common:common_proto",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/p4:p4_table_mapper",
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/lib:macros",

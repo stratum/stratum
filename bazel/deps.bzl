@@ -6,6 +6,12 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl",
      "git_repository",
      "new_git_repository")
 
+P4RUNTIME_VER = "1.0.0"
+P4RUNTIME_SHA = "667464bd369b40b58dc9552be2c84e190a160b6e77137b735bd86e5b81c6adc0"
+
+GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a";
+GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
+
 def stratum_deps():
 # -----------------------------------------------------------------------------
 #        Protobuf + gRPC compiler and external models
@@ -14,39 +20,23 @@ def stratum_deps():
         remote_workspace(
             name = "com_google_protobuf",
             remote = "https://github.com/google/protobuf",
-            tag = "3.6.1.3",
+            tag = "3.7.1",
         )
 
     if "com_github_grpc_grpc" not in native.existing_rules():
         remote_workspace(
             name = "com_github_grpc_grpc",
             remote = "https://github.com/grpc/grpc",
-            tag = "1.17.2",
-        )
-        # TODO this is a hack for the pubref rules
-        #remote_workspace(
-        #    name = "com_google_grpc",
-        #    remote = "https://github.com/grpc/grpc",
-        #    tag = "1.12.1",
-        #)
-
-    if "org_pubref_rules_protobuf" not in native.existing_rules():
-        # ----- protoc w/ gRPC compiler -----
-        #FIXME update to upstream when pull requests are merged
-        remote_workspace(
-            name = "org_pubref_rules_protobuf",
-            # remote = "https://github.com/bocon13/rules_protobuf",
-            # branch = "master",
-            remote = "https://github.com/pubref/rules_protobuf",
-            branch = "master",
+            tag = "1.21.1",
+            patches = ["@//bazel/patches:grpc.patch"],
+            patch_args = ["-p1"],
         )
 
-    if "com_github_googleapis" not in native.existing_rules():
+    if "com_google_googleapis" not in native.existing_rules():
         remote_workspace(
-            name = "com_github_googleapis",
+            name = "com_google_googleapis",
             remote = "https://github.com/googleapis/googleapis",
-            commit = "a19256f36347fde5f2ab44e24e6e6c6b2a314041",
-            build_file = "@//bazel:external/googleapis.BUILD",
+            commit = "1079c999f0683196d857795ae6951ced9e15ce72",
         )
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
@@ -59,12 +49,19 @@ def stratum_deps():
         )
 
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
-        # ----- P4 Runtime -----
-        remote_workspace(
+        http_archive(
             name = "com_github_p4lang_p4runtime",
-            remote = "https://github.com/p4lang/p4runtime",
-            tag = "1.0.0",
+            urls = ["https://github.com/p4lang/p4runtime/archive/v%s.zip" % P4RUNTIME_VER],
+            sha256 = P4RUNTIME_SHA,
+            strip_prefix = "p4runtime-%s/proto" % P4RUNTIME_VER,
             build_file = "@//bazel:external/p4runtime.BUILD",
+        )
+
+    if "build_stack_rules_proto" not in native.existing_rules():
+        remote_workspace(
+            name = "build_stack_rules_proto",
+            remote = "https://github.com/stackb/rules_proto",
+            commit = "2f4e4f62a3d7a43654d69533faa0652e1c4f5082",
         )
 
     if "com_github_p4lang_PI" not in native.existing_rules():
@@ -72,23 +69,41 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "f9a5c6c74f7dcde382e27c63af2fe5dffc755364",
+            commit = "0bcaeda2269a4f2f0539cf8eac49868e389a8c18",
         )
 
     if "com_github_openconfig_gnmi" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_openconfig_gnmi",
-            remote = "https://github.com/openconfig/gnmi",
-            branch = "master",
+            urls = ["https://github.com/bocon13/gnmi/archive/%s.zip" % GNMI_COMMIT],
+            sha256 = GNMI_SHA,
+            strip_prefix = "gnmi-%s/proto" % GNMI_COMMIT,
             build_file = "@//bazel:external/gnmi.BUILD",
         )
 
     if "com_github_openconfig_gnoi" not in native.existing_rules():
         remote_workspace(
             name = "com_github_openconfig_gnoi",
-            remote = "https://github.com/bocon13/gnoi",
-            branch = "no-bazel",
+            remote = "https://github.com/openconfig/gnoi",
+            commit = "437c62e630389aa4547b4f0521d0bca3fb2bf811",
             build_file = "@//bazel:external/gnoi.BUILD",
+        )
+
+    if "io_bazel_rules_python" not in native.existing_rules():
+        remote_workspace(
+            name = "io_bazel_rules_python",
+            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
+            remote = "https://github.com/bazelbuild/rules_python.git",
+        )
+    if "cython" not in native.existing_rules():
+        http_archive(
+            name = "cython",
+            build_file = "@com_github_grpc_grpc//third_party:cython.BUILD",
+            sha256 = "d68138a2381afbdd0876c3cb2a22389043fa01c4badede1228ee073032b07a27",
+            strip_prefix = "cython-c2b80d87658a8525ce091cbe146cb7eaa29fed5c",
+            urls = [
+                "https://github.com/cython/cython/archive/c2b80d87658a8525ce091cbe146cb7eaa29fed5c.tar.gz",
+            ],
         )
 
 # -----------------------------------------------------------------------------

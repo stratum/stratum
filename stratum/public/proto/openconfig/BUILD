@@ -21,7 +21,6 @@ exports_files(["LICENSE"])
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "stratum_cc_proto_library",
 )
 
 package(
@@ -29,9 +28,9 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-stratum_cc_proto_library(
+proto_library(
     name = "openconfig_proto",
-    hdrs = [
+    srcs = [
         "openconfig.proto",
     ],
     deps = [
@@ -44,4 +43,9 @@ stratum_cc_proto_library(
         "//stratum/public/proto/openconfig/openconfig_platform:openconfig_platform_proto",
         "//stratum/public/proto/openconfig/openconfig_qos:openconfig_qos_proto",
     ],
+)
+
+cc_proto_library(
+    name = "openconfig_cc_proto",
+    deps = [":openconfig_proto"],
 )

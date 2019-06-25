@@ -45,7 +45,7 @@ cc_library(
     features = ["-use_header_modules"],  # Incompatible with -fexceptions.
     deps = [
         "//stratum/p4c_backends/fpm:target_info",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
     ],
 )
 
@@ -64,7 +64,7 @@ cc_test(
     deps = [
         ":bcm_target_info",
         "@com_google_googletest//:gtest_main",
-        "//stratum/public/proto:p4_annotation_proto",
+        "//stratum/public/proto:p4_annotation_cc_proto",
     ],
 )
 
@@ -85,8 +85,8 @@ cc_library(
         "@com_google_protobuf//:protobuf",
         "//stratum/p4c_backends/fpm:p4c_switch_utils",
         "//stratum/p4c_backends/fpm:tunnel_optimizer_interface",
-        "//stratum/hal/lib/p4:p4_table_map_proto",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/hal/lib/p4:p4_table_map_cc_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
     ],
 )
 
@@ -107,8 +107,8 @@ cc_test(
         ":bcm_tunnel_optimizer",
         "@com_google_googletest//:gtest_main",
         "@com_github_p4lang_p4c//:p4c_toolkit",
-        "//stratum/hal/lib/p4:p4_table_map_proto",
+        "//stratum/hal/lib/p4:p4_table_map_cc_proto",
         "//stratum/lib:utils",
-        "//stratum/public/proto:p4_table_defs_proto",
+        "//stratum/public/proto:p4_table_defs_cc_proto",
     ],
 )

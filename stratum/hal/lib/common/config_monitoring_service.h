@@ -22,7 +22,7 @@
 
 #include <memory>
 
-#include "github.com/openconfig/gnmi/proto/gnmi/gnmi.grpc.pb.h"
+#include "gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/error_buffer.h"
