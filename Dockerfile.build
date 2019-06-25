@@ -1,11 +1,17 @@
+ARG BAZEL_VERSION=0.23.2
+# PI should match what in bazel/deps.bzl until #252 is fixed
+ARG PI_COMMIT=f9a5c6c74f7dcde382e27c63af2fe5dffc755364
+ARG BMV2_COMMIT=e11cf2017c572086a00ed71b4edd23d2ef57093e
+ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
+
+# Reasonable for CI
+ARG JOBS=2
+
 FROM debian:9@sha256:75f7d0590b45561bfa443abad0b3e0f86e2811b1fc176f786cd30eb078d1846f
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum"
 
-ARG BAZEL_VERSION=0.23.2
-ENV JDK_URL https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
-ENV JAVA_HOME /usr/local/lib/jvm
-ENV PATH=$PATH:/usr/local/lib/jvm/bin
+ARG JOBS
 
 # bazel dependencies
 # + wget to download bazel binary
@@ -13,18 +19,46 @@ ENV PATH=$PATH:/usr/local/lib/jvm/bin
 ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
     libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
-    lcov curl
+    lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
+    libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
 
+ARG BAZEL_VERSION
 RUN wget https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
     chmod +x bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
     ./bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
     rm -f bazel-$BAZEL_VERSION-installer-linux-x86_64.sh
 
 # Install java and lcov for Bazel coverage
+ARG JDK_URL
+ENV JAVA_HOME /usr/local/lib/jvm
 RUN wget $JDK_URL -O $HOME/jdk_11.0.2.tar.gz && \
     mkdir -p $JAVA_HOME && \
     tar xf $HOME/jdk_11.0.2.tar.gz -C $JAVA_HOME --strip-components=1 && \
     rm $HOME/jdk_11.0.2.tar.gz
+ENV PATH=$PATH:/usr/local/lib/jvm/bin
+
+ARG PI_COMMIT
+RUN git clone https://github.com/p4lang/PI.git /tmp/PI && \
+    cd /tmp/PI && git checkout ${PI_COMMIT} && \
+    git submodule update --init --recursive && \
+    ./autogen.sh && \
+    ./configure --without-bmv2 --without-proto --without-fe-cpp \
+        --without-cli --without-internal-rpc && \
+    make -j${JOBS} && make install && ldconfig && \
+    rm -rf /tmp/PI
+
+ARG BMV2_COMMIT
+ENV BMV2_INSTALL /usr/local
+RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
+    cd /tmp/bmv2 && git checkout ${BMV2_COMMIT} && \
+    ./autogen.sh && \
+    ./configure --without-targets --with-pi --disable-elogger \
+        --without-nanomsg --without-thrift --prefix=${BMV2_INSTALL} \
+        CPPFLAGS="-I${PWD}/targets/simple_switch -DWITH_SIMPLE_SWITCH -isystem${BMV2_INSTALL}/include" && \
+    make -j${JOBS} && make install && ldconfig && \
+    cd targets/simple_switch && \
+    make -j${JOBS} && make install && ldconfig && \
+    rm -rf /tmp/bmv2
