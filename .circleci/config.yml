@@ -16,15 +16,10 @@
 
 version: 2.1
 # Dependecy caching from most to least specific matching cache. See: https://circleci.com/docs/2.0/caching/
-var_0: &bazel_cache_key_0 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/build-targets.txt" }}-{{ checksum ".circleci/test-targets.txt" }}
-var_1: &bazel_cache_key_1 bazel-cache-{{ checksum "Dockerfile.build" }}-{{ checksum "WORKSPACE" }}-{{ checksum "bazel/deps.bzl" }}
-var_2: &bazel_cache_key_2 bazel-cache
-
-var_4: &bazel_covarage_cache_0 bazel-coverage-{{ .Branch }}-{{ .BuildNum }}
-var_5: &bazel_covarage_cache_1 bazel-coverage-{{ .Branch }}
-var_6: &bazel_covarage_cache_2 bazel-coverage
-
-var_3: &bazel_cache_path ~/.cache/bazel
+var_0: &bazel_disk_cache_key v1-bazel-disk-cache
+var_1: &bazel_cov_cache_key v1-bazel-cache-cov
+var_2: &bazel_disk_cache_path /bazel-cache
+var_3: &bazel_cov_cache_path /root/.cache
 
 jobs:
   unit_tests:
@@ -34,19 +29,23 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - *bazel_cache_key_0
-            - *bazel_cache_key_1
-            - *bazel_cache_key_2
+            - *bazel_disk_cache_key
+      - run:
+          name: Make sure cache dir exists
+          command: mkdir -p /bazel-cache
+      - run:
+          name: Place bazel rc file
+          command: cp .circleci/bazelrc .bazelrc
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build -j 2
+          command: xargs -a .circleci/build-targets.txt bazel build --disk_cache=/bazel-cache
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test -j 2
+          command: xargs -a .circleci/test-targets.txt bazel test --disk_cache=/bazel-cache
       - save_cache:
-          key: *bazel_cache_key_0
+          key: *bazel_disk_cache_key
           paths:
-            - *bazel_cache_path
+            - *bazel_disk_cache_path
   coverage:
     docker:
       - image: stratumproject/build:build
@@ -54,19 +53,20 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - *bazel_covarage_cache_0
-            - *bazel_covarage_cache_1
-            - *bazel_covarage_cache_2
+            - *bazel_cov_cache_key
+      - run:
+          name: Place bazel rc file
+          command: cp .circleci/bazelrc .bazelrc
       - run:
           name: Run test and collect coverage data
-          command: xargs -a .circleci/test-targets.txt bazel coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main -j 2
+          command: xargs -a .circleci/test-targets.txt bazel coverage
       - run:
           name: Upload coverage report
           command: bash <(curl -s https://codecov.io/bash) -f bazel-out/_coverage/_coverage_report.dat -X s3
       - save_cache:
-          key: *bazel_covarage_cache_0
+          key: *bazel_cov_cache_key
           paths:
-            - *bazel_cache_path
+            - *bazel_cov_cache_path
   update-docker-images:
     machine: true
     steps:

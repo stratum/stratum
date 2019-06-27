@@ -1,0 +1,4 @@
+build --conlyopt='-std=gnu11' --cxxopt='-std=gnu++11'
+build --local_cpu_resources=2 --local_ram_resources=3000
+test --local_cpu_resources=2 --local_ram_resources=3000
+coverage --local_cpu_resources=2 --local_ram_resources=3000 --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
