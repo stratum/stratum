@@ -1,4 +1,29 @@
+build --announce_rc
+
+# Set convenient location for Bazel files to cache
+startup --output_user_root=/tmp/bazel-cache/output-root
+
+# Bazel doesn't calculate resource ceiling correctly when running under Docker.
+# Memory, CPU cores, disk I/O
+build --local_resources=3072,2.0,1.0
+
+# Also limit memory allocated to the JVM
+startup --host_jvm_args=-Xmx3g --host_jvm_args=-Xms2g
+
+# More details on failures
+build --verbose_failures=true
+
+# Produce output suitable for consumption on the CircleCI logs
+build --curses=no --color=yes
+test --test_summary=terse
+test --test_output=errors
+test --test_verbose_timeout_warnings
+
+# Profile build
+build --profile=/tmp/bazel.profile
+
+# Coverage
+coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
+
+# C options
 build --conlyopt='-std=gnu11' --cxxopt='-std=gnu++11'
-build --local_cpu_resources=2 --local_ram_resources=3000
-test --local_cpu_resources=2 --local_ram_resources=3000
-coverage --local_cpu_resources=2 --local_ram_resources=3000 --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main

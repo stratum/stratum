@@ -15,58 +15,85 @@
 #
 
 version: 2.1
-# Dependecy caching from most to least specific matching cache. See: https://circleci.com/docs/2.0/caching/
-var_0: &bazel_disk_cache_key v1-bazel-disk-cache
-var_1: &bazel_cov_cache_key v1-bazel-cache-cov
-var_2: &bazel_disk_cache_path /bazel-cache
-var_3: &bazel_cov_cache_path /root/.cache
+
+# Cache Bazel output root (see bazelrc) to speed up job execution time.
+# The idea is to use the last cache available for the same branch, or the one
+# from master if this is the first build for this branch.
+# TODO: consider using Bazel remote cache (e.g. local HTTP proxy cache backed by S3)
+restore_bazel_cache: &restore_bazel_cache
+  restore_cache:
+      keys:
+        - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+        - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+        - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
+save_bazel_cache: &save_bazel_cache
+  save_cache:
+    # Always saving the cache, even in case of failures, helps with completing
+    # jobs where the bazel process was killed because it took too long or OOM.
+    # Restart the job if you see the bazel server being terminated abruptly.
+    when: always
+    key: v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+    paths:
+      - /tmp/bazel-cache
+
+# Print Bazel profiling info and generate HTML report to upload as artifact.
+analyze_bazel_profile: &analyze_bazel_profile
+  run:
+    name: Analyze Bazel profile
+    command: |
+      bazel analyze-profile /tmp/bazel.profile
+      mkdir /tmp/bazel_profile
+      bazel analyze-profile --html /tmp/bazel.profile
+      mv /tmp/bazel.profile.html /tmp/bazel_profile/profile.html
+store_bazel_profile: &store_bazel_profile
+  store_artifacts:
+    path: /tmp/bazel_profile
+
+# Use a bazelrc file convenient for CI jobs.
+set_bazelrc: &set_bazelrc
+  run:
+    name: Set bazelrc
+    command: cp .circleci/bazelrc .bazelrc
 
 jobs:
+
+  # Build targets and run unit tests.
   unit_tests:
     docker:
       - image: stratumproject/build:build
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - *bazel_disk_cache_key
-      - run:
-          name: Make sure cache dir exists
-          command: mkdir -p /bazel-cache
-      - run:
-          name: Place bazel rc file
-          command: cp .circleci/bazelrc .bazelrc
+      - *restore_bazel_cache
+      - *set_bazelrc
       - run:
           name: Build Stratum targets
-          command: xargs -a .circleci/build-targets.txt bazel build --disk_cache=/bazel-cache
+          command: xargs -a .circleci/build-targets.txt bazel build
+      - *analyze_bazel_profile
+      - *store_bazel_profile
       - run:
           name: Test Stratum targets
-          command: xargs -a .circleci/test-targets.txt bazel test --disk_cache=/bazel-cache
-      - save_cache:
-          key: *bazel_disk_cache_key
-          paths:
-            - *bazel_disk_cache_path
+          command: xargs -a .circleci/test-targets.txt bazel test
+      - *save_bazel_cache
+
+  # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
       - image: stratumproject/build:build
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - *bazel_cov_cache_key
-      - run:
-          name: Place bazel rc file
-          command: cp .circleci/bazelrc .bazelrc
+      - *restore_bazel_cache
+      - *set_bazelrc
       - run:
           name: Run test and collect coverage data
           command: xargs -a .circleci/test-targets.txt bazel coverage
+      - *analyze_bazel_profile
+      - *store_bazel_profile
       - run:
           name: Upload coverage report
           command: bash <(curl -s https://codecov.io/bash) -f bazel-out/_coverage/_coverage_report.dat -X s3
-      - save_cache:
-          key: *bazel_cov_cache_key
-          paths:
-            - *bazel_cov_cache_path
+      - *save_bazel_cache
+
+  # Update images on Docker Hub (should be execute only from master)
   update-docker-images:
     machine: true
     steps:

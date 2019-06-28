@@ -1,7 +1,7 @@
 ARG BAZEL_VERSION=0.23.2
 # PI should match what in bazel/deps.bzl until #252 is fixed
-ARG PI_COMMIT=f9a5c6c74f7dcde382e27c63af2fe5dffc755364
-ARG BMV2_COMMIT=e11cf2017c572086a00ed71b4edd23d2ef57093e
+ARG PI_COMMIT=0bcaeda2269a4f2f0539cf8eac49868e389a8c18
+ARG BMV2_COMMIT=10c2d3434a7212631f11d5d1e3bc802ba6365f6a
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
 
 # Reasonable for CI
