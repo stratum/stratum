@@ -204,7 +204,7 @@ def main():
   func = globals().get(func_name, None)
 
   if not func:
-    print 'Cannot find build function for %s update message' % args.state_to_update
+    print('Cannot find build function for %s update message' % args.state_to_update)
     return
 
   if args.state_to_update in node_port_states:
