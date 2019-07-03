@@ -1,3 +1,4 @@
 bazel-*
-**/Dockerfile
+**/Dockerfile*
 **/*.md
+.clwb

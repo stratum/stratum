@@ -22,10 +22,10 @@ version: 2.1
 # TODO: consider using Bazel remote cache (e.g. local HTTP proxy cache backed by S3)
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
-      keys:
-        - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
-        - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
-        - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
+    keys:
+      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
@@ -93,22 +93,40 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash) -f bazel-out/_coverage/_coverage_report.dat -X s3
       - *save_bazel_cache
 
-  # Update images on Docker Hub (should be execute only from master)
+  # Update images on Docker Hub
   update-docker-images:
     machine: true
+    environment:
+      - BUILD_IMG: stratumproject/build:build
+      - RUNTIME_IMG: stratumproject/build:runtime
+      - MININET_IMG: opennetworking/mn-stratum
     steps:
       - checkout
       - run:
-          name: Build Stratum docker images
-          command: |
-            docker build -f Dockerfile.build -t stratumproject/build:build .
-            docker build -f Dockerfile -t stratumproject/build:runtime .
-      - run:
-          name: Push images to docker hub
+          name: Pull images from Docker Hub
           command: |
             echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-            docker push stratumproject/build:build
-            docker push stratumproject/build:runtime
+            docker pull $BUILD_IMG
+            docker pull $RUNTIME_IMG
+            docker pull $MININET_IMG
+      - run:
+          name: Build Stratum Docker images
+          command: |
+            docker build -f Dockerfile.build -t $BUILD_IMG .
+            docker build -f Dockerfile -t $RUNTIME_IMG .
+            docker build -f tools/mininet/Dockerfile -t $MININET_IMG .
+      - run:
+          name: Test Stratum Docker images
+          # Test that all shared objects are present
+          command: |
+            docker run --rm --entrypoint stratum_bmv2 $MININET_IMG -version
+            docker run --rm --entrypoint mn $MININET_IMG --version
+      - run:
+          name: Push images to Docker Hub
+          command: |
+            docker push $BUILD_IMG
+            docker push $RUNTIME_IMG
+            docker push $MININET_IMG
 
 workflows:
   version: 2
