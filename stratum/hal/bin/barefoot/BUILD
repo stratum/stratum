@@ -12,7 +12,6 @@ stratum_cc_binary(
     arches = HOST_ARCHES,
     deps = [
         "@com_github_google_glog//:glog",
-        "@com_github_p4lang_PI//proto/frontend:pifeproto",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
@@ -31,6 +30,8 @@ stratum_cc_binary(
         "@local_barefoot_bin//:bf_utils",
         "@local_barefoot_bin//:bf_pdfixed_thrift",
         "@local_thrift_bin//:thrift",
+        "@local_pi_bin//:pifeproto",
+        "@local_pi_bin//:piall",
     ],
     data = [
         "tofino_skip_p4.conf",

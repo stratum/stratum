@@ -12,7 +12,6 @@ stratum_cc_binary(
     arches = HOST_ARCHES,
     deps = [
         "@com_github_google_glog//:glog",
-        "@com_github_p4lang_PI//proto/frontend:pifeproto",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/bmv2:bmv2_switch",
@@ -24,6 +23,8 @@ stratum_cc_binary(
         "@local_bmv2_bin//:bmv2_headers",
         "@local_bmv2_bin//:bmv2_simple_switch",
         "@local_bmv2_bin//:bmv2_pi",
+        "@local_pi_bin//:pifeproto",
+        "@local_pi_bin//:piall",
     ],
     data = ["dummy.json"],
 )

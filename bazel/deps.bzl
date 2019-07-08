@@ -27,7 +27,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_grpc_grpc",
             remote = "https://github.com/grpc/grpc",
-            tag = "1.21.1",
+            tag = "1.21.3",
             patches = ["@//bazel/patches:grpc.patch"],
             patch_args = ["-p1"],
         )
@@ -36,7 +36,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_google_googleapis",
             remote = "https://github.com/googleapis/googleapis",
-            commit = "1079c999f0683196d857795ae6951ced9e15ce72",
+            commit = "84c8ad4e52f8eec8f08a60636cfa597b86969b5c",
         )
 
     if "com_github_p4lang_p4c" not in native.existing_rules():
@@ -70,6 +70,14 @@ def stratum_deps():
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
             commit = "0bcaeda2269a4f2f0539cf8eac49868e389a8c18",
+        )
+
+    if "judy" not in native.existing_rules():
+        http_archive(
+            name = "judy",
+            build_file = "@com_github_p4lang_PI//bazel/external:judy.BUILD",
+            url = "http://archive.ubuntu.com/ubuntu/pool/universe/j/judy/judy_1.0.5.orig.tar.gz",
+            strip_prefix = "judy-1.0.5",
         )
 
     if "com_github_openconfig_gnmi" not in native.existing_rules():
