@@ -2,8 +2,6 @@
 # from root e.g.:
 # docker build -t <some tag> -f tools/mininet/Dockerfile .
 
-ARG JOBS=2
-
 # We use a 2-stage build. Build all tools first, then copy only the strict necessary
 # to a new image with runtime dependencies.
 FROM stratumproject/build:build as builder

@@ -55,6 +55,24 @@ set_bazelrc: &set_bazelrc
     name: Set bazelrc
     command: cp .circleci/bazelrc .bazelrc
 
+# Convenience anchors to update published Docker images. Images are first pulled
+# to allow for layer cache hits and reduce build times.
+docker_login: &docker_login
+  run:
+    name: Docker login
+    command: echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+docker_build: &docker_build
+  run:
+    name: Build Docker image
+    command: |
+      docker pull $DOCKER_IMG || true
+      cd $DOCKER_SCOPE
+      docker build -f $DOCKER_FILE -t $DOCKER_IMG --cache-from $DOCKER_IMG .
+docker_push: &docker_push
+  run:
+    name: Push Docker image
+    command: docker push $DOCKER_IMG
+
 jobs:
 
   # Build targets and run unit tests.
@@ -94,39 +112,52 @@ jobs:
       - *save_bazel_cache
 
   # Update images on Docker Hub
-  update-docker-images:
+  publish-docker-build:
     machine: true
     environment:
-      - BUILD_IMG: stratumproject/build:build
-      - RUNTIME_IMG: stratumproject/build:runtime
-      - MININET_IMG: opennetworking/mn-stratum
+      - DOCKER_SCOPE: .
+      - DOCKER_FILE: Dockerfile.build
+      - DOCKER_IMG: stratumproject/build:build
     steps:
       - checkout
+      - *docker_build
+      - *docker_push
+
+  publish-docker-mininet:
+    machine: true
+    environment:
+      - DOCKER_SCOPE: .
+      - DOCKER_FILE: tools/mininet/Dockerfile
+      - DOCKER_IMG: opennetworking/mn-stratum
+    steps:
+      - checkout
+      - *docker_login
+      - *set_bazelrc
+      - *docker_build
       - run:
-          name: Pull images from Docker Hub
-          command: |
-            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-            docker pull $BUILD_IMG
-            docker pull $RUNTIME_IMG
-            docker pull $MININET_IMG
-      - run:
-          name: Build Stratum Docker images
-          command: |
-            docker build -f Dockerfile.build -t $BUILD_IMG .
-            docker build -f Dockerfile -t $RUNTIME_IMG .
-            docker build -f tools/mininet/Dockerfile -t $MININET_IMG .
-      - run:
-          name: Test Stratum Docker images
+          name: Test Mininet Docker image
           # Test that all shared objects are present
           command: |
-            docker run --rm --entrypoint stratum_bmv2 $MININET_IMG -version
-            docker run --rm --entrypoint mn $MININET_IMG --version
+            docker run --entrypoint stratum_bmv2 $DOCKER_IMG -version
+            docker run --entrypoint mn $DOCKER_IMG --version
+      - *docker_push
+
+  publish-docker-p4c-fpm:
+    machine: true
+    environment:
+      - DOCKER_SCOPE: .
+      - DOCKER_FILE: stratum/p4c_backends/fpm/Dockerfile
+      - DOCKER_IMG: opennetworking/p4c-fpm
+    steps:
+      - checkout
+      - *docker_login
+      - *set_bazelrc
+      - *docker_build
       - run:
-          name: Push images to Docker Hub
+          name: Test p4c-fpm Docker image
           command: |
-            docker push $BUILD_IMG
-            docker push $RUNTIME_IMG
-            docker push $MININET_IMG
+            docker run $DOCKER_IMG -version
+      - *docker_push
 
 workflows:
   version: 2
@@ -136,7 +167,13 @@ workflows:
       - coverage
   docker-publish:
     jobs:
-      - update-docker-images:
+      - publish-docker-build:
           filters:
             branches:
               only: master
+      - publish-docker-mininet:
+          requires:
+            - publish-docker-build
+      - publish-docker-p4c-fpm:
+          requires:
+            - publish-docker-build
