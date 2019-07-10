@@ -56,7 +56,7 @@ control if_in_meter_if(inout headers hdr, inout test_metadata_t meta,
     if (meta.enum_color != meter_color_t.COLOR_GREEN) {
       clone3(CloneType.I2E, 1024, {});
       if (meta.enum_color == meter_color_t.COLOR_RED) {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
       }
     }
   }

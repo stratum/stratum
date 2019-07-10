@@ -44,7 +44,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_p4c",
             remote = "https://github.com/p4lang/p4c",
-            commit = "b7664d8247d00ad68d49567c1195e0fbc5885389",
+            commit = "43568b75796d68a6424ad22eebeee62f46ccd3fe",
             build_file = "@//bazel:external/p4c.BUILD",
         )
 

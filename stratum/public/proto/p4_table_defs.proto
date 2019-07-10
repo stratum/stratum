@@ -133,6 +133,7 @@ enum P4FieldType {
                                           // diffserv or IPv6 traffic class.
   P4_FIELD_TYPE_UDF_VALUE_SET = 54;       // UDF based on a P4 parser value set.
   P4_FIELD_TYPE_UDP_PAYLOAD_DATA = 55;    // Parsed subset of UDP payload data.
+  P4_FIELD_TYPE_ENCAP_TUNNEL_ID = 56;     // Encapsulation tunnel ID
 
   P4_FIELD_TYPE_ERSPAN_VERSION = 60;      // ERSPAN encapsulation version.
   P4_FIELD_TYPE_ERSPAN_VLAN = 61;         // ERSPAN original frame VLAN.

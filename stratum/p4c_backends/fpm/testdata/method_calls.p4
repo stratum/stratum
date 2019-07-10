@@ -34,7 +34,7 @@ control ingress(inout headers hdr, inout test_metadata_t meta,
   meter(32w1, MeterType.packets) test_meter;
 
   action drop_statement() {
-    mark_to_drop();
+    mark_to_drop(standard_metadata);
   }
   action clone3_statement_const_port() {
     clone3(CloneType.I2E, 1024, {});

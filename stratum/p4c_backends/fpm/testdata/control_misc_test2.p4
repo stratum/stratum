@@ -39,7 +39,7 @@ control control_nop_if(inout headers hdr, inout test_metadata_t meta,
   apply {
     if (table1.apply().hit) {
       if (meta.enum_color == meter_color_t.COLOR_RED) {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
       }
     }
   }

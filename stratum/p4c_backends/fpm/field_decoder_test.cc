@@ -99,7 +99,7 @@ TEST_F(FieldDecoderTest, TestSimpleHeaderConversion) {
               table_map.table_map().end());
   EXPECT_TRUE(table_map.table_map().find("ipv4.ttl") !=
               table_map.table_map().end());
-  EXPECT_TRUE(table_map.table_map().find("standard_metadata.drop") !=
+  EXPECT_TRUE(table_map.table_map().find("standard_metadata.priority") !=
               table_map.table_map().end());
   EXPECT_TRUE(table_map.table_map().find("standard_metadata.egress_port") !=
               table_map.table_map().end());

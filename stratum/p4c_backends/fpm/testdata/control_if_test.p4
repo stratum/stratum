@@ -47,7 +47,7 @@ control egress(inout headers hdr, inout test_metadata_t meta,
                inout standard_metadata_t standard_metadata) {
   apply {
     if (hdr.ethernet.isValid()) {
-      mark_to_drop();
+      mark_to_drop(standard_metadata);
     }
   }
 }
@@ -71,7 +71,7 @@ control ingress(inout headers hdr, inout test_metadata_t meta,
     if (test_table.apply().hit) {
       meta.color = COLOR_GREEN;
     } else {
-      standard_metadata.drop = 1;
+      mark_to_drop(standard_metadata);
     }
   }
 }

@@ -74,7 +74,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
     if (hdr.ethernet.isValid()) {
       if (upper_table.apply().hit) {
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -85,7 +85,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
       if (upper_table.apply().hit) {
         meta.other_metadata = 1;
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -96,7 +96,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
       if (!upper_table.apply().hit) {
         if (middle_table.apply().hit) {
           if (meta.enum_color == meter_color_t.COLOR_RED) {
-            mark_to_drop();
+            mark_to_drop(standard_metadata);
           }
         }
       }
@@ -109,7 +109,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
           clone3(CloneType.I2E, 1024, {});
         }
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -120,7 +120,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
         if (!middle_table.apply().hit) {
           if (lower_table.apply().hit) {
             if (meta.enum_color == meter_color_t.COLOR_RED) {
-              mark_to_drop();
+              mark_to_drop(standard_metadata);
             }
           }
         }
@@ -133,7 +133,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
         meta.other_metadata = 1;
       } else {
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -143,7 +143,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
       if (!upper_table.apply().hit) {
         meta.other_metadata = 1;
       } else if (meta.enum_color == meter_color_t.COLOR_RED) {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
       }
     }
 
@@ -163,7 +163,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
       }
       if (middle_table.apply().hit) {
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -176,7 +176,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
       if (!middle_table.apply().hit) {
         if (lower_table.apply().hit) {
           if (meta.enum_color == meter_color_t.COLOR_RED) {
-            mark_to_drop();
+            mark_to_drop(standard_metadata);
           }
         }
       }
@@ -188,7 +188,7 @@ control hit_var_valid_statements(inout headers hdr, inout test_metadata_t meta,
         switch (middle_table.apply().action_run) {
           dummy_action: {
             if (meta.enum_color == meter_color_t.COLOR_YELLOW)
-              mark_to_drop();
+              mark_to_drop(standard_metadata);
           }
         }
       }

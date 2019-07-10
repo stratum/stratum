@@ -48,7 +48,7 @@ control ingress(inout headers hdr, inout test_metadata_t meta, inout standard_me
   apply {
     test_table.apply();
     if(meta.color != COLOR_GREEN) {
-      standard_metadata.drop = 1;
+      mark_to_drop(standard_metadata);
     }
   }
 }

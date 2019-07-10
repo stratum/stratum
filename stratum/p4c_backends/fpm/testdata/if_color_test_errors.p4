@@ -39,7 +39,7 @@ control ifs_with_errors(inout headers hdr, inout test_metadata_t meta,
     // Condition is too complex.
     if (meta.enum_color == meter_color_t.COLOR_GREEN ||
         meta.enum_color == meter_color_t.COLOR_YELLOW) {
-      mark_to_drop();
+      mark_to_drop(standard_metadata);
       local_color = meta.enum_color;
     }
 
@@ -49,12 +49,12 @@ control ifs_with_errors(inout headers hdr, inout test_metadata_t meta,
     // directly to a PathExpression, whereas meta.enum_color goes indirectly
     // to a PathExpression via an IR::Member.
     if (local_color == meter_color_t.COLOR_GREEN) {
-      mark_to_drop();
+      mark_to_drop(standard_metadata);
     }
 
     // Condition does not allow Stratum to determine the color in effect.
     if (local_color == meta.enum_color) {
-      mark_to_drop();
+      mark_to_drop(standard_metadata);
     }
 
     // The frontent transforms the extern call into a temporary variable
@@ -62,7 +62,7 @@ control ifs_with_errors(inout headers hdr, inout test_metadata_t meta,
     // Any calls to externs that potentially translate colors in an unknown
     // way should probably be rejected.
     //  if (color_function(meter_color_t.COLOR_RED) == meta.enum_color) {
-    //    mark_to_drop();
+    //    mark_to_drop(standard_metadata);
     //  }
 
     // The p4c frontend rejects these before they get to the backend,

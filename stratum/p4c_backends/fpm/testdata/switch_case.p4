@@ -50,7 +50,7 @@ control normal_clone_drop(inout headers hdr, inout test_metadata_t meta,
       }
       case2_drop_not_green: {
         if (meta.enum_color != meter_color_t.COLOR_GREEN) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }

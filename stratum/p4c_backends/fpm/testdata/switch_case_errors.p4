@@ -43,7 +43,7 @@ control ingress_nested_if(inout headers hdr, inout test_metadata_t meta,
         // The backend does not allow nested if statements inside cases.
         if (meta.enum_color != meter_color_t.COLOR_GREEN) {
           if (meta.enum_color != meter_color_t.COLOR_YELLOW) {
-            mark_to_drop();
+            mark_to_drop(standard_metadata);
           }
         }
       }

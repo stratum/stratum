@@ -48,7 +48,7 @@ control ingress(inout headers hdr, inout test_metadata_t meta,
   }
   apply {
     if (!test_table.apply().hit) {
-      mark_to_drop();
+      mark_to_drop(standard_metadata);
     }
   }
 }

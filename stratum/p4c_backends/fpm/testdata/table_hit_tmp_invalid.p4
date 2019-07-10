@@ -91,7 +91,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
     if (hdr.ethernet.isValid()) {
       if (!table1.apply().hit) {
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -100,7 +100,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
     // and meter.
     if (hdr.ethernet.isValid()) {
       if (table1.apply().hit && meta.enum_color == meter_color_t.COLOR_RED) {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
       }
     }
 
@@ -108,7 +108,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
     if (hdr.ethernet.isValid()) {
       if (!table1.apply().hit) {
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -119,7 +119,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
       if (table1.apply().hit) {
         meta.other_metadata = 1;
       } else if (meta.enum_color == meter_color_t.COLOR_RED) {
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
       }
     }
 
@@ -129,7 +129,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
         meta.other_metadata = 1;
       } else {
         if (meta.enum_color == meter_color_t.COLOR_RED) {
-          mark_to_drop();
+          mark_to_drop(standard_metadata);
         }
       }
     }
@@ -140,7 +140,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
       if (table1.apply().hit) {
         if (meta.other_metadata == 5) {
           if (meta.enum_color == meter_color_t.COLOR_RED) {
-            mark_to_drop();
+            mark_to_drop(standard_metadata);
           }
         }
       }
@@ -152,7 +152,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
         switch (table2.apply().action_run) {
           dummy_action: {
             if (meta.enum_color == meter_color_t.COLOR_YELLOW)
-              mark_to_drop();
+              mark_to_drop(standard_metadata);
           }
         }
       }
@@ -173,7 +173,7 @@ control hit_var_invalid(inout headers hdr, inout test_metadata_t meta,
     // Statement index 11: Standalone meter color evaluation with no table hit.
     if (hdr.ethernet.isValid()) {
       if (meta.enum_color == meter_color_t.COLOR_YELLOW)
-        mark_to_drop();
+        mark_to_drop(standard_metadata);
     }
 
     // Statement index 12: Hit variable can't be used after another apply.
