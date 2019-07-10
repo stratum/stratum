@@ -120,6 +120,7 @@ jobs:
       - DOCKER_IMG: stratumproject/build:build
     steps:
       - checkout
+      - *docker_login
       - *docker_build
       - *docker_push
 
