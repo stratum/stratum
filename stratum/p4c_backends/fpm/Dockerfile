@@ -24,7 +24,7 @@ FROM bitnami/minideb:stretch as runtime
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="Docker-based distribution of the Stratum p4c FPM backend"
 
-ENV RUNTIME_DEPS libgmp10 libgmpxx4ldbl
+ENV RUNTIME_DEPS libgmp10 libgmpxx4ldbl gcc
 RUN install_packages ${RUNTIME_DEPS}
 
 COPY --from=builder /output /
