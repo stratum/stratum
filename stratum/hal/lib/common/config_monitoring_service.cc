@@ -480,6 +480,8 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
         if (publisher->HandlePoll(h) != ::util::OkStatus()) {
           ReportError("Error while executing ONCE.", stream);
           ++problems_found;
+        } else {
+          send_sync_response = true;
         }
       } else {
         // Report error.
