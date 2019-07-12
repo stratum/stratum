@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-> Note: You can skip installing system dependencies, bmv2, and PI if you are
+> You can skip installing system dependencies, bmv2, and PI if you are
 > using the Docker environment (setup_dev_env.sh)
 
 ### Install system dependencies
@@ -31,7 +31,7 @@ will need to run `sudo ldconfig` after the installation.*
 git clone https://github.com/p4lang/PI.git
 cd PI
 ./autogen.sh
-./configure --without-bmv2 --with-proto --with-fe-cpp --without-cli --without-internal-rpc --prefix=$PI_INSTALL
+./configure --with-proto --prefix=$PI_INSTALL
 make [-j4]
 [sudo] make install
 [sudo ldconfig]
@@ -44,8 +44,9 @@ we used for testing: `0bcaeda2269a4f2f0539cf8eac49868e389a8c18`
 git clone https://github.com/p4lang/behavioral-model.git bmv2
 cd bmv2
 ./autogen.sh
-./configure CPPFLAGS="-isystem$BMV2_INSTALL/include -isystem$PI_INSTALL/include -L$PI_INSTALL/lib" \
-  --without-nanomsg --without-thrift --with-pi --prefix=$BMV2_INSTALL
+./configure --without-targets --with-pi --disable-elogger \
+  --without-nanomsg --without-thrift --prefix=${BMV2_INSTALL} \
+  CXXFLAGS="-I${PWD}/targets/simple_switch -DWITH_SIMPLE_SWITCH -isystem$BMV2_INSTALL/include -isystem$PI_INSTALL/include -L$PI_INSTALL/lib"
 make [-j4]
 [sudo] make install
 [sudo ldconfig]

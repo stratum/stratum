@@ -4,6 +4,7 @@ Choose the location where you will be installing the SDE. This environment
 variable MUST be set for the Stratum build.
 ```
 export BF_SDE_INSTALL=...
+export PI_INSTALL=$BF_SDE_INSTALL
 ```
 
 ## BSP or BSP-less mode (with ONLP)?
