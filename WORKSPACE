@@ -87,6 +87,13 @@ load("//stratum/testing/cdlang:deps.bzl", "cdlang_rules_dependencies")
 cdlang_rules_dependencies()
 
 # ---------------------------------------------------------------------------
+#       Load dependencies for `latex_document` rule.
+# ---------------------------------------------------------------------------
+load("@bazel_latex//:repositories.bzl", "latex_repositories")
+
+latex_repositories()
+
+# ---------------------------------------------------------------------------
 #       Load dependencies for `python_grpc_library` rule
 # ---------------------------------------------------------------------------
 load("@build_stack_rules_proto//python:deps.bzl", "python_grpc_library")

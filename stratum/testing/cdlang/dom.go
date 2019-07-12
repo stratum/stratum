@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -113,8 +114,7 @@ type Instruction struct {
 	Disabled bool     `json:",omitempty"` // Set to true if scenario should not be executed.
 	Source   string   `json:",omitempty"` // The source code of the (sub-)scenario.
 	// Valid for AnyOrder group only.
-	GNMI []*Instruction `json:",omitempty"`
-	CTRL []*Instruction `json:",omitempty"`
+	ChildrenPerChannel map[string][]*Instruction `json:",omitempty"`
 }
 
 // shortDebugString returns a debug string showing details of the instruction.
@@ -196,9 +196,9 @@ var protoNameToFuncName = map[string]string{
 	"GetResponse":        "Get",
 	"SetResponse":        "Set",
 	"SubscribeResponse":  "Subscribe",
-	// gNOI Request
+	// ctrl Request
 	"ExecuteRequest": "Execute",
-	// gNOI Response
+	// ctrl Response
 	"ExecuteResponse": "Execute",
 }
 
@@ -213,9 +213,9 @@ var protoNameToNamespace = map[string]string{
 	"GetResponse":        "gnmi",
 	"SetResponse":        "gnmi",
 	"SubscribeResponse":  "gnmi",
-	// gNOI Request
+	// ctrl Request
 	"ExecuteRequest": "ctrl",
-	// gNOI Response
+	// ctrl Response
 	"ExecuteResponse": "ctrl",
 }
 
@@ -285,6 +285,9 @@ func (v Version) Compare(o *Version) int64 {
 }
 
 func (v Version) String() string {
+	if v.Major == math.MaxInt64 && v.Minor == math.MaxInt64 && v.Patch == math.MaxInt64 {
+		return "latest"
+	}
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
@@ -315,7 +318,7 @@ func newOpenGNMIStr(channel string) *Instruction {
 	}
 }
 
-// newOpenCTRLStr returns a CDLang instruction that opens a streaming gNOI interface.
+// newOpenCTRLStr returns a CDLang instruction that opens a streaming ctrl interface.
 func newOpenCTRLStr(channel string) *Instruction {
 	return &Instruction{
 		Type:    OpenCTRLStrInst,
@@ -601,16 +604,26 @@ const (
 	variableField
 	sequenceOfFields
 	repeatedField
+	serializedSequenceOfFields
 )
 
 var fieldTypeToString = map[protobufFieldType]string{
-	stringField:      "string",
-	numberField:      "number",
-	gnmiPathField:    "gnmiPath",
-	enumField:        "enum",
-	variableField:    "variable",
-	sequenceOfFields: "sequence",
-	repeatedField:    "repeated",
+	stringField:                "string",
+	numberField:                "number",
+	gnmiPathField:              "gnmiPath",
+	enumField:                  "enum",
+	variableField:              "variable",
+	sequenceOfFields:           "sequence",
+	repeatedField:              "repeated",
+	serializedSequenceOfFields: "serialized",
+}
+
+type textproto struct {
+	Meta *struct {
+		Name string
+		Type string
+	}
+	Text string
 }
 
 type protobufField interface {
@@ -620,6 +633,7 @@ type protobufField interface {
 	IsRepeated() bool
 	IsType(fieldType string) bool
 	Ignore() bool
+	GetTextproto() []textproto
 }
 
 type genericProtobufField struct {
@@ -655,6 +669,10 @@ func (f *genericProtobufField) Ignore() bool {
 	return false
 }
 
+func (f *genericProtobufField) GetTextproto() []textproto {
+	return []textproto{{nil, fmt.Sprintf("%s: <something>", f.Name)}}
+}
+
 type protobufFieldString struct {
 	*genericProtobufField
 	Value string
@@ -677,6 +695,10 @@ func (f *protobufFieldString) setValue(val interface{}) bool {
 
 func (f *protobufFieldString) String() string {
 	return strconv.Quote(f.Value)
+}
+
+func (f *protobufFieldString) GetTextproto() []textproto {
+	return []textproto{{nil, fmt.Sprintf("%s: \"%s\" ", f.Name, f.Value)}}
 }
 
 type protobufFieldVariable struct {
@@ -722,6 +744,10 @@ func (f *protobufFieldVariable) Param() *Param {
 	return nil
 }
 
+func (f *protobufFieldVariable) GetTextproto() []textproto {
+	return []textproto{{nil, fmt.Sprintf("%s: %s ", f.Name, f.Param().String())}}
+}
+
 type protobufFieldInt struct {
 	*genericProtobufField
 	Value int64
@@ -748,6 +774,10 @@ func (f *protobufFieldInt) String() string {
 	return strconv.FormatInt(f.Value, 10)
 }
 
+func (f *protobufFieldInt) GetTextproto() []textproto {
+	return []textproto{{nil, fmt.Sprintf("%s: %v ", f.Name, f.Value)}}
+}
+
 type protobufFieldEnum struct {
 	*genericProtobufField
 	Value string
@@ -770,6 +800,10 @@ func (f *protobufFieldEnum) setValue(val interface{}) bool {
 
 func (f *protobufFieldEnum) String() string {
 	return f.Value
+}
+
+func (f *protobufFieldEnum) GetTextproto() []textproto {
+	return []textproto{{nil, fmt.Sprintf("%s: %s ", f.Name, f.Value)}}
 }
 
 type protobufFieldGNMIPath struct {
@@ -812,6 +846,22 @@ func (f *protobufFieldGNMIPath) IsSimple() bool {
 	return false
 }
 
+func (f *protobufFieldGNMIPath) GetTextproto() []textproto {
+	var sb strings.Builder
+	sb.WriteString("\npath { ")
+	for _, elem := range f.Value.Elem {
+		fmt.Fprintf(&sb, "\nelem { name: \"%s\"", elem.Name)
+		if len(elem.Key) > 0 {
+			for key, val := range elem.Key {
+				fmt.Fprintf(&sb, " key { key: \"%s\" value: %s }", key, val)
+			}
+		}
+		sb.WriteString(" }")
+	}
+	sb.WriteString("\n}")
+	return []textproto{{nil, sb.String()}}
+}
+
 type protobufFieldGroup interface {
 	addField(field protobufField)
 	LastField() protobufField
@@ -839,10 +889,16 @@ type protobufFieldSequence struct {
 	*genericProtobufField
 	Fields       []protobufField `json:",omitempty"`
 	SequenceSize protobufFieldSequenceSize
+	CastType     string
 }
 
 // Returns initialized instance of protobufFieldSequence.
-func newProtobufFieldSequence() *protobufFieldSequence {
+func newProtobufFieldSequence(serialized bool) *protobufFieldSequence {
+	if serialized {
+		return &protobufFieldSequence{
+			genericProtobufField: newGenericProtobufField(serializedSequenceOfFields),
+		}
+	}
 	return &protobufFieldSequence{
 		genericProtobufField: newGenericProtobufField(sequenceOfFields),
 	}
@@ -881,6 +937,10 @@ func (p *protobufFieldSequence) IsSize(s string) bool {
 	return false
 }
 
+func (p *protobufFieldSequence) IsSerialized() bool {
+	return p.FieldType == serializedSequenceOfFields
+}
+
 func (p *protobufFieldSequence) IsSimple() bool {
 	return false
 }
@@ -890,22 +950,28 @@ func (p *protobufFieldSequence) IsRepeated() bool {
 }
 
 func (p *protobufFieldSequence) Vars() []*Param {
-	result := []*Param{}
+	unique := map[string]*Param{}
 	for _, f := range p.Fields {
 		switch v := f.(type) {
 		case *protobufFieldVariable:
-			result = append(result, v.Param())
+			unique[v.Param().Name] = v.Param()
 		case *protobufFieldGNMIPath:
 			if v := v.Value.Elem; v != nil {
 				for _, e := range v {
 					if v := e.Param(); v != nil {
-						result = append(result, v)
+						unique[v.Name] = v
 					}
 				}
 			}
 		case *protobufFieldSequence:
-			result = append(result, v.Vars()...)
+			for _, v := range v.Vars() {
+				unique[v.Name] = v
+			}
 		}
+	}
+	result := []*Param{}
+	for _, v := range unique {
+		result = append(result, v)
 	}
 	return result
 }
@@ -918,6 +984,43 @@ func (p *protobufFieldSequence) setValue(val interface{}) bool {
 	return false
 }
 
+// RandomString - Generate a random string of A-Z chars with len
+func RandomString(len int) string {
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		bytes[i] = byte(65 + rand.Intn(25))  // A=65 and Z = 65+25
+	}
+	return string(bytes)
+}
+
+func (p *protobufFieldSequence) GetTextproto() []textproto {
+	ret := []textproto{}
+	result := []string{}
+	var m *struct{Name, Type string}
+	if p.IsSerialized() {
+		n := "$$"+RandomString(16)
+		ret = append(ret, textproto{nil, p.Name+": \""+n+"\""})
+		m = &struct{Name, Type string}{n, p.CastType}
+	}
+	if len(p.Name) > 0 && p.FieldType != repeatedField && !p.IsSerialized() {
+		result = append(result, p.Name)
+		result = append(result, "{")
+	}
+	for _, f := range p.Fields {
+		for _, t := range f.GetTextproto() {
+			if t.Meta != nil {
+				ret = append(ret, t)
+			} else {
+				result = append(result, t.Text)
+			}
+		}
+	}
+	if len(p.Name) > 0 && p.FieldType != repeatedField && !p.IsSerialized() {
+		result = append(result, "}")
+	}
+	return append(ret, textproto{m, strings.Join(result[:], " ")})
+}
+
 // Used to represent a ProtoBuf as a whole entity.
 type protobuf struct {
 	*protobufFieldSequence
@@ -927,7 +1030,7 @@ type protobuf struct {
 // Returns initialized instance of Protobuf.
 func newProtobuf(typeName string) *protobuf {
 	return &protobuf{
-		protobufFieldSequence: newProtobufFieldSequence(),
+		protobufFieldSequence: newProtobufFieldSequence(false),
 		TypeName:              typeName,
 	}
 }
@@ -1029,7 +1132,7 @@ func NewDOM() *DOM {
 
 // AddProtoTypeToFuncNameMapping adds mapping between PROTO and gRPC method related to it.
 func (d *DOM) AddProtoTypeToFuncNameMapping(proto, funcName string) error {
-	if n, ok := protoNameToFuncName[proto]; ok && n == funcName {
+	if n, ok := protoNameToFuncName[proto]; ok && n != funcName {
 		return fmt.Errorf("conflicting mapping from Proto to Function: '%s' vs. '%s'", n, funcName)
 	}
 	protoNameToFuncName[proto] = funcName
@@ -1038,7 +1141,7 @@ func (d *DOM) AddProtoTypeToFuncNameMapping(proto, funcName string) error {
 
 // AddProtoTypeToNamespaceMapping adds mapping between PROTO and gRPC namespace related to it.
 func (d *DOM) AddProtoTypeToNamespaceMapping(proto, namespace string) error {
-	if n, ok := protoNameToNamespace[proto]; ok && n == namespace {
+	if n, ok := protoNameToNamespace[proto]; ok && n != namespace {
 		return fmt.Errorf("conflicting mapping from Proto to Namespace: '%s' vs. '%s'", n, namespace)
 	}
 	protoNameToNamespace[proto] = namespace
@@ -1050,7 +1153,7 @@ func (d *DOM) AddProtoTypeToNamespaceMapping(proto, namespace string) error {
 // added during the visitor run.
 func (d *DOM) PostProcess(ver *Version, logLevel int) {
 	if logLevel != 1 {
-		log.Printf("Selecting scenarios compliant with version: %d.%d.%d", ver.Major, ver.Minor, ver.Patch)
+		log.Printf("Selecting scenarios compliant with version: %s", ver)
 	}
 	d.Accept(newFilterScenariosByVersionVisitor(d, ver))
 	if logLevel == 1 {

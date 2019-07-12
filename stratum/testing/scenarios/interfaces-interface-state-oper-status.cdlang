@@ -1,0 +1,34 @@
+scenario SubscribeOperState(ifname: string) version 1.0.0 {
+  gnmi := gNMI.Subscribe
+  gnmi << SubscribeRequest {
+         subscribe {
+             mode: ONCE
+             subscription [ {
+                 path: /interfaces/interface[name=$ifname]/state/oper-status } ] } }
+  gnmi >> SubscribeResponse {
+         update {
+           update [ {
+             path: /interfaces/interface[name=$ifname]/state/oper-status
+             val { string_val: _ } } ] } }
+  gnmi >> SubscribeResponse { sync_response: true }
+  close gnmi
+}
+
+scenario SubscribeOperStateOnFirstInterface() version 1.0.0 {
+  gnmi := gNMI.Subscribe
+  gnmi << SubscribeRequest {
+         subscribe {
+             mode: ONCE
+             subscription [ { path: /interfaces/interface[name=*]/state/ifindex } ] } }
+  gnmi >> SubscribeResponse {
+         update {
+           update [ {
+             path: /interfaces/interface[$ifname:=name]/state/ifindex
+             val { int_val: _ } } ] } }
+  execute SubscribeOperState( $ifname )
+  ZeroOrMore {
+    gnmi >> SubscribeResponse { update { update [ { path: _ val { int_val: _ } } ] } }
+  }
+  gnmi >> SubscribeResponse { sync_response: true }
+  close gnmi
+}

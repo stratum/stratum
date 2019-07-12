@@ -1,0 +1,522 @@
+{{- /* ==================================================================== */}}
+{{- /* Template entry point                                                 */}}
+{{- /* ==================================================================== */}}
+{{- define "instructions"}}
+{{- range .Children}}
+  {{- if eq .Type.String "send"}} {{template "send" vars "req" .}}
+  {{- else if eq .Type.String "receive"}} {{template "receive" .}}
+  {{- else if eq .Type.String "execute"}} {{template "execute" .}}
+  {{- else if eq .Type.String "any_order"}} {{template "any_order" .}}
+  {{- else if eq .Type.String "zero_or_more"}} {{template "zero_or_more" .}}
+  {{- else if eq .Type.String "at_least_once"}} {{template "at_least_once" .}}
+  {{- else if eq .Type.String "var_declaration"}} {{template "var-decl" .}}
+  {{- else if eq .Type.String "open_gnmi_stream"}} {{template "open-gnmi-stream" .}}
+  {{- else if eq .Type.String "open_ctrl_stream"}} {{template "open-ctrl-stream" .}}
+  {{- else if eq .Type.String "close_stream"}} {{template "close-stream" .}}
+  {{- else if eq .Type.String "call"}} {{template "call" .}}
+  {{- end}}
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Utilities.                                                           */}}
+{{- /* ==================================================================== */}}
+{{- define "utilities"}}
+  template <class T>
+  void ReplaceWithValue(const string& name, const T& val, string* req) {
+    // Replace `name` with contents of variable `val`.
+    LOG(INFO) << "Replacing '"<< name << "' with '" << val << "'";
+    size_t pos = 0;
+    while ((pos = req->find(name, pos)) != std::string::npos) {
+      req->replace(pos, (name).length(), val);
+      pos += val.length();
+    }
+  }
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints variable declaration.                                         */}}
+{{- /* ==================================================================== */}}
+{{- define "var-decl"}}
+    {{.Variable.ParameterType}} {{.Variable.Name}};
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints input parameters of (SUB)SCENARIO.                            */}}
+{{- /* ==================================================================== */}}
+{{- define "parameters"}}
+{{- range $i, $p := .Params}}
+{{- $p.ParameterType}} {{$p.Name}}{{if last $i $.Params | not}}, {{end}}
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code initializing a protobuf.                                 */}}
+{{- /* ==================================================================== */}}
+{{- define "build-proto"}}
+  // Build the {{.Protobuf.Namespace}}{{.Protobuf.TypeName}} request.
+  {{- $txtp:=.Protobuf.GetTextproto}}
+  {{- range $i, $s := $txtp}}
+  {{$.Protobuf.Namespace}}::{{if $s.Meta}}{{$s.Meta.Type}}{{else}}{{$.Protobuf.TypeName}}{{end}} req_{{$i}};
+  std::string kReq_{{$i}} = R"proto(
+   {{$s.Text}}
+  )proto";
+
+  {{- range $.Protobuf.Vars}}
+  // Replace `${{.Name}}` with contents of variable `{{.Name}}`.
+  ReplaceWithValue("${{.Name}}", {{.Name}}, &kReq_{{$i}});
+  {{- end}}
+
+  {{- range $ii, $ss := $txtp}}
+  {{- if and (lt $ii $i) ($ss.Meta)}}
+  // Replace `{{$ss.Meta.Name}}` with contents of variable `kReq_{{$ii}}_{{$ss.Meta.Name}}`.
+  ReplaceWithValue("{{$ss.Meta.Name}}", kReq_{{$ii}}_{{$ss.Meta.Name}}, &kReq_{{$i}});
+  {{- end}}
+  {{- end}}
+
+  // Parse kReq_{{$i}} and initialize req_{{$i}}. Report error the string
+  // cannot be parsed.
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq_{{$i}}, &req_{{$i}}))
+      << "Invalid proto: " << kReq_{{$i}};
+
+  {{- if $s.Meta}}
+  std::string kReq_{{$i}}_{{$s.Meta.Name}};
+  req_{{$i}}.SerializeToString(&kReq_{{$i}}_{{$s.Meta.Name}});
+  {{- end}}
+  {{- if last $i $txtp}}
+  // Define and initialize the final protobuf.
+  {{$.Protobuf.Namespace}}::{{$.Protobuf.TypeName}} req = req_{{$i}};
+  {{- end}}
+  {{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code of CALL pseudo-instruction.                               */}}
+{{- /* ==================================================================== */}}
+{{- define "call"}}
+  { // Start of CALL gNMI.{{.FuncName}}().
+  {{template "build-proto" .}}
+
+  LOG(INFO) << "Sending request: " << req.ShortDebugString();
+
+  {{.Protobuf.Namespace}}::{{.Response.TypeName}} resp;
+  grpc::ClientContext context{{.ID}};
+  // Whole test cannot take longer than 10s.
+  context{{.ID}}.set_deadline(std::chrono::system_clock::now() +
+                              std::chrono::seconds(10));
+  auto result{{.ID}} = gnmi_stub_->{{.FuncName}}(&context{{.ID}}, req, &resp);
+
+  LOG(INFO) << "Status: " << result{{.ID}};
+  // Check if status returned by this gNMI RPC call is the expected one.
+  // Report error if it is not.
+  {{- if .ErrorExpected}}
+  ASSERT_FALSE(result{{.ID}}.ok()) << result{{.ID}}.error_message();
+  {{- else}}
+  ASSERT_TRUE(result{{.ID}}.ok()) << result{{.ID}}.error_message();
+  {{- end}}
+  {{if not .ErrorExpected}}
+  LOG(INFO) << "Received: " << resp.ShortDebugString();
+
+  // Define a lambda that checks if the response resp contains expected fields
+  // and values.
+  auto check_received_response{{.ID}} =
+      [](const {{.Response.Namespace}}::{{.Response.TypeName}}& resp) {
+    {{- template "is-protobuf" .Response}}
+
+    // Looks like this is the expected response.
+    return true;
+  };
+  // Call the defined above lambda and report error if the received protobuf
+  // does not contain expected fields and values.
+  ASSERT_TRUE(check_received_response{{.ID}}(resp))
+      << "Unexpected message received: `" << resp.ShortDebugString() << "`";
+  {{- end}}
+  } // End of CALL gNMI.{{.FuncName}}().
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Print code of OPEN STREAM pseudo-instruction.                        */}}
+{{- /* ==================================================================== */}}
+{{- define "open-gnmi-stream"}}
+  // Create and open a gNMI stream.
+  ::grpc::ClientContext gnmi_context{{.ID}};
+  // Whole test cannot take longer than 10s.
+  gnmi_context{{.ID}}.set_deadline(std::chrono::system_clock::now() +
+                                   std::chrono::seconds(10));
+  std::unique_ptr<grpc::ClientReaderWriter<::gnmi::SubscribeRequest,
+                                           ::gnmi::SubscribeResponse>>
+      {{.Channel}}(gnmi_stub_->Subscribe(&gnmi_context{{.ID}}));
+  // Check if the stream was openned successfully.
+  ASSERT_NE({{.Channel}}, nullptr);
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code of CLOSE STREAM pseudo-instruction.                      */}}
+{{- /* ==================================================================== */}}
+{{- define "close-stream"}}
+  // gNMI stream is closed automatically here.
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code of SEND pseudo-instruction.                              */}}
+{{- /* ==================================================================== */}}
+{{- define "send"}}
+  { // Start of SEND {{(index . "req").Protobuf.TypeName}}
+  {{template "build-proto" (index . "req")}}
+
+  LOG(INFO) << "Sending request: " << req.ShortDebugString();
+  ASSERT_TRUE({{(index . "req").Channel}}->Write(req))
+      << "Writing original subscribe request failed.";
+  } // End of SEND {{(index . "req").Protobuf.TypeName}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code of RECEIVE pseudo-instruction.                           */}}
+{{- /* ==================================================================== */}}
+{{- define "receive"}}
+{{- if not .Skip}}
+  { // Start of RECEIVE {{.Protobuf.TypeName}}
+  ::{{.Protobuf.Namespace}}::{{.Protobuf.TypeName}} resp;
+  LOG(INFO) << "Waiting for response from " << "{{.Channel}}";
+  if (!{{.Channel}}->Read(&resp)) {
+    // Something went wrong. Report error. Stop the test.
+    FAIL() << "{{.Channel}}.Read() operation returned FALSE.";
+  } else {
+    LOG(INFO) << "Received resp: " << resp.ShortDebugString();
+  }
+  auto check_received_response{{.ID}} =
+      [](const ::{{.Protobuf.Namespace}}::{{.Protobuf.TypeName}}& resp) {
+    {{- template "is-protobuf" .Protobuf}}
+
+    // Looks like this is the expected response.
+    return true;
+  };
+  {{- if .Next}}
+  // In the case of ZERO_OR_MORE pseudo-instruction as well as in the case of
+  // AT_LEAST_ONCE it is possible that the protobuf received in this loop is
+  // the one that is expected _after_ this pseudo-instruction.
+  // Let's check if this is the one (and leave the loop if this is true).
+  auto check_if_next_{{.Next.ID}} =
+      [](const ::{{.Next.Protobuf.Namespace}}::{{.Next.Protobuf.TypeName}}& resp) {
+    {{- template "is-protobuf" .Next.Protobuf}}
+
+    // Looks like this is the protobuf expected _after_ this grouping pseudo-
+    // instruction.
+    return true;
+  };
+  if (check_if_next_{{.Next.ID}}(resp)) break;
+  {{- end}}
+  ASSERT_TRUE(check_received_response{{.ID}}(resp))
+      << "Unexpected protobuf received: " << resp.ShortDebugString();
+  {{- template "get-vars-protobuf" .Protobuf}}
+  } // End of RECEIVE {{.Protobuf.TypeName}}
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints run-time parameters of EXECUTE call.                          */}}
+{{- /* ==================================================================== */}}
+{{- define "run_time_parameters"}}
+{{- range $i, $p := .Params}}
+{{- $p.Name}}{{if last $i $.Params | not}}, {{end}}
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code of EXECUTE pseudo-instruction.                           */}}
+{{- /* ==================================================================== */}}
+{{- define "execute"}}
+  // EXECUTE {{.Name}}
+  {{.Name}}({{template "run_time_parameters" .}});
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code that handles waiting for one or more protobufs.          */}}
+{{- /* It makes sure that all expected messages are received and nothing    */}}
+{{- /* more.                                                                */}}
+{{- /* ==================================================================== */}}
+{{- define "wait_for"}}
+  {{$req:=(index $ "req")}}{{$prefix:=(index $ "prefix")}}
+  {{- if $req}}
+  std::map<int, int> {{$prefix}}_msgs;
+  {{- range $i := $req}}
+  {{$prefix}}_msgs[{{$i.ID}}] = 0;
+  auto check_received_response{{.ID}} =
+      [](const ::{{.Protobuf.Namespace}}::{{.Protobuf.TypeName}}& resp) {
+    {{- template "is-protobuf" .Protobuf}}
+
+    // Looks like this is the expected response.
+    return true;
+  };
+  {{- end}}
+
+  // {{$prefix}}_resp will be used in the loop below to store received message.
+  {{$proto:=(index $req 0)}}
+  ::{{$proto.Protobuf.Namespace}}::{{$proto.Protobuf.TypeName}} {{$prefix}}_resp;
+
+  while (true) {
+    LOG(INFO) << "Waiting for response from {{$prefix}}";
+    if (!{{$prefix}}->Read(&{{$prefix}}_resp)) {
+      // Something went wrong. Report error. Stop the test.
+      FAIL() << "Read() operation returned FALSE.";
+    } else {
+      LOG(INFO) << "Received {{$prefix}}_resp: "
+                << {{$prefix}}_resp.ShortDebugString();
+    }
+    {{- range $i := $req}}
+    if (check_received_response{{$i.ID}}({{$prefix}}_resp)) {
+      {{$prefix}}_msgs[ {{$i.ID}} ]++;
+      {{- template "get-vars-protobuf" .Protobuf}}
+    } else
+    {{- end}} {
+      FAIL() << "Unexpected message: " << {{$prefix}}_resp.ShortDebugString();
+    }
+    if ({{- range $i := $req}}{{$prefix}}_msgs[{{$i.ID}}] == 1 &&{{end}}true) {
+      // All messages from {{$prefix}} have been received!
+      LOG(INFO) << "AnyOrder: Got all {{$prefix}} messages!";
+      break;
+    }
+  }
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code for ANY_ORDER pseudo-instruction.                        */}}
+{{- /* ==================================================================== */}}
+{{- define "any_order"}}
+  {  // Start of ANY_ORDER
+  {{- if .IsInstructionGroup}}
+    {{- range $c, $g := .ChildrenPerChannel}}
+      {{- template "wait_for" vars "req" $g "prefix" $c}}
+    {{- end}}
+    {{- range $c, $g := .ChildrenPerChannel}}
+      {{- range $i := $g}}
+  ASSERT_EQ({{$c}}_msgs[{{$i.ID}}], 1);
+      {{- end}}
+    {{- end}}
+  {{- end}}
+  }  // End of ANY_ORDER.
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code for AT_LEAST_ONCE pseudo-instruction.                    */}}
+{{- /* ==================================================================== */}}
+{{- define "at_least_once"}}
+  while (true) {  // Start of AT_LEAST_ONCE
+  {{- if .IsInstructionGroup}}
+    {{- template "instructions" .}}
+  {{- end}}
+  }  // End of AT_LEAST_ONCE.
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code for ZERO_OR_MORE pseudo-instruction.                     */}}
+{{- /* ==================================================================== */}}
+{{- define "zero_or_more"}}
+  while (true) {  // Start of ZERO_OR_MORE
+  {{- if .IsInstructionGroup}}
+    {{- template "instructions" .}}
+  {{- end}}
+  }  // End of ZERO_OR_MORE.
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /*                                                                      */}}
+{{- /* ==================================================================== */}}
+{{- define "prefix"}}resp.{{range .}}{{.}}.{{end}}{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code that checks if received protobuf is the expected one.    */}}
+{{- /* ==================================================================== */}}
+{{- define "is-protobuf"}}
+  // Check if received protobuf is the expected one.
+  {{- range .Fields}}
+    {{- template "is-protobuf-field"  vars "req" . "prefix" (arr ) "it" "i"}}
+  {{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code that checks if received protobuf field is the expected   */}}
+{{- /* one.                                                                 */}}
+{{- /* ==================================================================== */}}
+{{- define "is-protobuf-field"}}
+{{- $req:=(index $ "req")}}{{$prefix:=(index $ "prefix")}}{{$it:=(index $ "it")}}
+{{- if $req.IsSimple}}
+  {{- if not $req.Ignore}}
+    {{- if not ($req.IsType "variable")}}
+  if ({{template "prefix" $prefix}}{{$req.Name}}() != {{$req.String}}) {
+    return false;
+  }
+    {{- end}}
+  {{- else}}
+  // Ignoring {{template "prefix" $prefix}}{{$req.Name}}() {{(concat $prefix)}}
+  {{- end}}
+{{- else if $req.IsRepeated}}
+  {{- range $i, $f := $req.Fields}}
+    auto check_received_response{{$i}} = [&](int {{$it}}) {
+      if ({{template "prefix" $prefix}}{{$req.Name}}_size() <= {{$it}}) {
+        return false;
+      }
+    {{- range $f.Fields}}
+      {{- template "is-protobuf-field" vars "req" . "prefix" (arr $prefix (concat $f.Name "(" $it ")")) "it" (concat $it "i")}}
+    {{- end}}
+      // All required fields found and accounted for!
+      return true;
+    };
+  {{- end}}
+    // Let's count how many times each row is present.
+  {{- range $i, $f := $req.Fields}}
+    int count_{{$i}} = 0;
+  {{- end}}
+    for (int j=0; j<{{template "prefix" $prefix}}{{$req.Name}}_size(); ++j) {
+      {{- range $i, $f := $req.Fields}}
+      if (check_received_response{{$i}}(j)) count_{{$i}}++;
+      {{- end}}
+    }
+    // Let's check if the actual number of matched rows is the expected one.
+  {{- range $i, $f := $req.Fields}}
+    // {{$f.Name}}({{$i}}): This row
+    {{- if $f.IsSize "1"}} can appear only once.
+    if (count_{{$i}} != 1) return false;
+    {{- else if $f.IsSize "?"}} can appear at most once.
+    if (count_{{$i}} > 1) return false;
+    {{- else if $f.IsSize "+"}} should appear one or more times.
+    if (count_{{$i}} < 1) return false;
+    {{- else if $f.IsSize "*"}} should appear zero or more times.
+    // Nothing to do.
+    {{- end}}
+  {{- end}}
+    // Sanity check.
+    int count_all = 0;
+  {{- range $i, $f := $req.Fields}}
+    count_all += count_{{$i}};
+  {{- end}}
+    if ({{template "prefix" $prefix}}{{$req.Name}}_size() != count_all) {
+      return false;
+    }
+{{- else}}
+  if (!{{template "prefix" $prefix}}has_{{$req.Name}}()) { return false; }
+{{- if $req.IsType "gnmiPath"}}
+  {{- template "is-gnmi-path" vars "req" $req "prefix" (arr $prefix (concat $req.Name "()"))}}
+{{- else}}
+  {{- range $req.Fields}}
+    {{- template "is-protobuf-field" vars "req" . "prefix" (arr $prefix (concat $req.Name "()")) "it" (concat $it "i")}}
+  {{- end}}
+{{- end}}
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Prints code that checks if received gNMI path is the expected one.   */}}
+{{- /* ==================================================================== */}}
+{{- define "is-gnmi-path"}}
+{{- $req:=(index $ "req")}}{{$prefix:=(index $ "prefix")}}
+{{- range $i, $e := $req.Value.Elem}}
+  if ({{template "prefix" $prefix}}elem_size() <= {{$i}}) { return false; }
+  {{- if or (or ($e.Ignore) ($e.IsType "variable")) ($e.IsType "variableDecl")}}
+  // Ignoring {{template "prefix" $prefix}}elem({{$i}}) as requested.
+  {{- else}}
+  if ({{template "prefix" $prefix}}elem({{$i}}).name() != {{$e.String}}) {
+    return false;
+  }
+  {{- end}}
+{{- if $e.Key}}
+{{- range $k, $v := $e.Key}}
+  if ({{template "prefix" $prefix}}elem({{$i}}).key_size() == 0) {
+    return false;
+  };
+  if (gtl::FindOrNull(
+        {{template "prefix" $prefix}}elem({{$i}}).key(), "{{$k}}") == nullptr) {
+    return false;
+  }
+  {{- if $req.IsType "variable"}}
+  // Add check if this is valid content.
+  {{- end}}
+{{- end}}
+{{- end}}{{end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Retrieve all variables from a protobuf.                              */}}
+{{- /* ==================================================================== */}}
+{{- define "get-vars-protobuf"}}
+  {{- if .Fields}}
+  // Process the received protobuf and extract the values of variables.
+  {{- range .Fields}}
+  {{- template "get-vars-protobuf-field"  vars "req" . "prefix" (arr )}}
+  {{- end}}
+  {{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Retreives variable from a protobuf field.                            */}}
+{{- /* ==================================================================== */}}
+{{- define "get-vars-protobuf-field"}}
+{{- $req:=(index $ "req")}}{{$prefix:=(index $ "prefix")}}
+{{- if $req.IsSimple}}
+  {{- if not $req.Ignore}}
+    {{- if $req.IsType "variable"}}
+  {{$req.Param.Name}} = {{template "prefix" $prefix}}{{$req.Name}}();
+    {{- end}}
+  {{- end}}
+{{- else if $req.IsRepeated}}
+  {{- range $i, $f := $req.Fields}}
+    {{- range $f.Fields}}
+      {{- template "get-vars-protobuf-field" vars "req" . "prefix" (arr $prefix (concat $f.Name "(" $i ")"))}}
+    {{- end}}
+  {{- end}}
+{{- else}}
+{{- if $req.IsType "gnmiPath"}}
+  {{- template "get-vars-gnmi-path" vars "req" $req "prefix" (arr $prefix (concat $req.Name "()"))}}
+{{- else}}
+  {{- range $req.Fields}}
+    {{- template "get-vars-protobuf-field" vars "req" . "prefix" (arr $prefix (concat $req.Name "()"))}}
+  {{- end}}
+{{- end}}
+{{- end}}
+{{- end}}
+{{- /* ==================================================================== */}}
+
+{{- /* ==================================================================== */}}
+{{- /* Retreives variable from a gNMI path.                                 */}}
+{{- /* ==================================================================== */}}
+{{- define "get-vars-gnmi-path"}}
+{{- $req:=(index $ "req")}}{{$prefix:=(index $ "prefix")}}
+{{- range $i, $e := $req.Value.Elem}}
+{{- if $e.Key}}
+{{- range $k, $v := $e.Key}}
+  {{- if and (not $v.Ignore) ($v.ParameterKind.IsType "variableDecl")}}
+  {{$v.Name}} =
+    *gtl::FindOrNull({{template "prefix" $prefix}}elem({{$i}}).key(), "{{$k}}");
+  {{- end}}
+{{- end}}
+{{- else if $e.Param}}
+  {{- if $e.Ignore}}
+  // Ignoring {{template "prefix" $prefix}}elem({{$i}}) as requested.
+  {{- else if $e.IsType "variableDecl"}}
+  {{$e.Param.Name}} = {{template "prefix" $prefix}}elem({{$i}}).name();
+  {{- end}}
+{{- end}}{{end}}
+{{- end}}
+{{- /* ==================================================================== */}}

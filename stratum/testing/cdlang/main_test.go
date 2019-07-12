@@ -155,6 +155,57 @@ func TestParseCDLangCode(t *testing.T) {
 			},
 		},
 		{
+			name: "empty scenario with mapping",
+			inCDLangCode: "" +
+				"rpc foo.Bar(BarRequest) => BarResponse" +
+				" " +
+				"scenario test() version 1.2.3 {}",
+			wantDOM: &DOM{
+				Scenarios: map[string]*Instruction{
+					"test": {Type: ScenarioInst,
+						Name: "test",
+						Version: &Version{
+							Major: 1,
+							Minor: 2,
+							Patch: 3,
+						},
+						Source: "scenario test() version 1.2.3 {}",
+					},
+				},
+				OtherScenarios: map[string]map[string]*Instruction{},
+				SubScenarios:   map[string]*Instruction{},
+			},
+		},
+		{
+			name: "empty scenario with constant",
+			inCDLangCode: "" +
+				"kProto := Proto {}" +
+				" " +
+				"scenario test() version 1.2.3 {}",
+			wantDOM: &DOM{
+				GlobalInst: map[string]*Instruction{
+					"kProto": {Type: ConstProtoInst,
+						Name: "ConstProto",
+						ID:   0,
+					},
+				},
+				Scenarios: map[string]*Instruction{
+					"test": {Type: ScenarioInst,
+						Name: "test",
+						Version: &Version{
+							Major: 1,
+							Minor: 2,
+							Patch: 3,
+						},
+						Source: "scenario test() version 1.2.3 {}",
+					},
+				},
+				OtherScenarios: map[string]map[string]*Instruction{},
+				SubScenarios:   map[string]*Instruction{},
+			},
+		},
+		{
+
 			name:         "disabled empty scenario",
 			inCDLangCode: "disabled scenario test() version 1.2.3 {}",
 			wantDOM: &DOM{
@@ -1730,54 +1781,56 @@ func TestParseCDLangCode(t *testing.T) {
 										Channel: "gnmi",
 									},
 								},
-								GNMI: []*Instruction{
-									{
-										Type: ReceiveInst,
-										Name: "Receive",
-										ID:   2,
-										Protobuf: &protobuf{
-											protobufFieldSequence: &protobufFieldSequence{
-												genericProtobufField: &genericProtobufField{
-													Name:      "",
-													FieldType: sequenceOfFields,
-												},
-												Fields: []protobufField{
-													&protobufFieldInt{
-														genericProtobufField: &genericProtobufField{
-															Name:      "id",
-															FieldType: numberField,
+								ChildrenPerChannel: map[string][]*Instruction{
+									"gnmi": []*Instruction{
+										{
+											Type: ReceiveInst,
+											Name: "Receive",
+											ID:   2,
+											Protobuf: &protobuf{
+												protobufFieldSequence: &protobufFieldSequence{
+													genericProtobufField: &genericProtobufField{
+														Name:      "",
+														FieldType: sequenceOfFields,
+													},
+													Fields: []protobufField{
+														&protobufFieldInt{
+															genericProtobufField: &genericProtobufField{
+																Name:      "id",
+																FieldType: numberField,
+															},
+															Value: 1,
 														},
-														Value: 1,
 													},
 												},
+												TypeName: "SubscribeResponse",
 											},
-											TypeName: "SubscribeResponse",
+											Channel: "gnmi",
 										},
-										Channel: "gnmi",
-									},
-									{
-										Type: ReceiveInst,
-										Name: "Receive",
-										ID:   3,
-										Protobuf: &protobuf{
-											protobufFieldSequence: &protobufFieldSequence{
-												genericProtobufField: &genericProtobufField{
-													Name:      "",
-													FieldType: sequenceOfFields,
-												},
-												Fields: []protobufField{
-													&protobufFieldInt{
-														genericProtobufField: &genericProtobufField{
-															Name:      "id",
-															FieldType: numberField,
+										{
+											Type: ReceiveInst,
+											Name: "Receive",
+											ID:   3,
+											Protobuf: &protobuf{
+												protobufFieldSequence: &protobufFieldSequence{
+													genericProtobufField: &genericProtobufField{
+														Name:      "",
+														FieldType: sequenceOfFields,
+													},
+													Fields: []protobufField{
+														&protobufFieldInt{
+															genericProtobufField: &genericProtobufField{
+																Name:      "id",
+																FieldType: numberField,
+															},
+															Value: 2,
 														},
-														Value: 2,
 													},
 												},
+												TypeName: "SubscribeResponse",
 											},
-											TypeName: "SubscribeResponse",
+											Channel: "gnmi",
 										},
-										Channel: "gnmi",
 									},
 								},
 							},
@@ -2072,7 +2125,7 @@ func TestParseCDLangCode(t *testing.T) {
 			name: "open-ctrl scenario",
 			inCDLangCode: "" +
 				"scenario test() version 1.2.3 {" +
-				"  ctrl := gNOI.Execute" +
+				"  ctrl := ctrl.Execute" +
 				"  close ctrl" +
 				"}",
 			wantDOM: &DOM{
@@ -2087,7 +2140,7 @@ func TestParseCDLangCode(t *testing.T) {
 						},
 						Source: "" +
 							"scenario test() version 1.2.3 {" +
-							"  ctrl := gNOI.Execute" +
+							"  ctrl := ctrl.Execute" +
 							"  close ctrl" +
 							"}",
 						Children: []*Instruction{
@@ -2432,6 +2485,24 @@ func TestErrorWhileBuildDOMFromCDLangCode(t *testing.T) {
 			name:         "missing stream close in a sub-scenario",
 			inCDLangCode: "scenario test(i: int) version 1.2.3 { gnmi := gNMI.Subscribe }",
 		},
+		{
+			name: "RPC re-definition different namespaces",
+			inCDLangCode: "rpc foo.Bar(BarRequest) => BarResponse" +
+				" " +
+				"rpc bar.Bar(BarRequest) => BarResponse",
+		},
+		{
+			name: "RPC re-definition different function names",
+			inCDLangCode: "rpc foo.Bar1(BarRequest) => BarResponse" +
+				" " +
+				"rpc foo.Bar2(BarRequest) => BarResponse",
+		},
+		{
+			name: "const re-definition",
+			inCDLangCode: "kConst := Proto {}" +
+				" " +
+				"kConst := Proto {}",
+		},
 	}
 	for _, tt := range tests {
 		tree, err := BuildAbstractSyntaxTree(tt.inCDLangCode)
@@ -2541,7 +2612,7 @@ func TestCallInputProtoToFuncName(t *testing.T) {
 			"gnmi",
 		},
 		{
-			"gNOI::ExecuteRequest -> gNOI::Execute",
+			"ctrl::ExecuteRequest -> ctrl::Execute",
 			&Instruction{
 				Type: SendInst,
 				Name: "Send",

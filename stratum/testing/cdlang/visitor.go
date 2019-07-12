@@ -55,7 +55,7 @@ func NewVisitor(dom *DOM) *Visitor {
 			"gNMI": map[string]func(string) *Instruction{
 				"Subscribe": newOpenGNMIStr,
 			},
-			"gNOI": map[string]func(string) *Instruction{
+			"ctrl": map[string]func(string) *Instruction{
 				"Execute": newOpenCTRLStr,
 			},
 		},
@@ -176,10 +176,22 @@ func (v *Visitor) VisitConstProto(ctx *cdlang.ConstProtoContext) interface{} {
 
 // VisitMapping handles 'mapping' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitMapping(ctx *cdlang.MappingContext) interface{} {
-	v.dom.AddProtoTypeToFuncNameMapping(ctx.GetReq().GetText(), ctx.GetF().GetText())
-	v.dom.AddProtoTypeToFuncNameMapping(ctx.GetResp().GetText(), ctx.GetF().GetText())
-	v.dom.AddProtoTypeToNamespaceMapping(ctx.GetReq().GetText(), ctx.GetFd().GetText())
-	v.dom.AddProtoTypeToNamespaceMapping(ctx.GetResp().GetText(), ctx.GetFd().GetText())
+	req := ctx.GetReq().GetText()
+	fun := ctx.GetF().GetText()
+	resp := ctx.GetResp().GetText()
+	ns := ctx.GetFd().GetText()
+	if err := v.dom.AddProtoTypeToFuncNameMapping(req, fun); err != nil {
+		return err
+	}
+	if err := v.dom.AddProtoTypeToFuncNameMapping(resp, fun); err != nil {
+		return err
+	}
+	if err := v.dom.AddProtoTypeToNamespaceMapping(req, ns); err != nil {
+		return err
+	}
+	if err := v.dom.AddProtoTypeToNamespaceMapping(resp, ns); err != nil {
+		return err
+	}
 	return v.VisitChildren(ctx)
 }
 
@@ -470,7 +482,13 @@ func (v *Visitor) VisitProtobufFieldSimple(ctx *cdlang.ProtobufFieldSimpleContex
 
 // VisitProtobufFieldGroup handles 'protobufFieldGroup' element of CDLang grammar. Returns error detected by children of this element.
 func (v *Visitor) VisitProtobufFieldGroup(ctx *cdlang.ProtobufFieldGroupContext) interface{} {
-	group := newProtobufFieldSequence()
+	var group *protobufFieldSequence
+	if ctx.GetCast() != nil {
+		group = newProtobufFieldSequence(true)
+		group.CastType = ctx.GetCast().GetText()
+	} else {
+		group = newProtobufFieldSequence(false)
+	}
 	v.pushProtobufFieldGroup(group)
 	result := v.VisitChildren(ctx)
 	v.popProtobufFieldGroup()

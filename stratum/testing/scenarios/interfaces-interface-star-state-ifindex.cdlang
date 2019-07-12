@@ -1,0 +1,16 @@
+scenario GetAllInterfaceIfindexes() version 1.0.0 {
+  gnmi := gNMI.Subscribe
+  gnmi << SubscribeRequest {
+         subscribe {
+             mode: ONCE
+             subscription [ { path: /interfaces/interface[name=*]/state/ifindex } ] } }
+  AtLeastOnce {
+    gnmi >> SubscribeResponse {
+              update {
+                update [ {
+                  path: /interfaces/interface[$ifname:=name]/state/ifindex
+                  val { int_val: _ } } ] } }
+  }
+  gnmi >> SubscribeResponse { sync_response: true }
+  close gnmi
+}

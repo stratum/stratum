@@ -96,7 +96,10 @@ protobufField:
         ;
 
 protobufFieldSimple:
-        name=ID ':' (val_number=NUMBER | val_string=STRING | val_enum=enumer | val_var=variable | val_path=path)
+        name=ID ':'
+        (val_number=NUMBER | val_string=STRING | val_enum=enumer
+        | val_var=variable | val_path=path
+        )
         ;
 
 enumer:
@@ -104,7 +107,7 @@ enumer:
         ;
 
 protobufFieldGroup:
-        name=ID '{' protobufField* '}'
+        name=ID ('<' cast=domainName '>')? '{' protobufField* '}'
         ;
 
 protobufFieldRepeated:

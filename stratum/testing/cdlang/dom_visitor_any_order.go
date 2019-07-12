@@ -50,18 +50,12 @@ func (v updateAnyOrderVisitor) VisitGroupZeroOrMore(i *Instruction) interface{} 
 
 // VisitGroupAnyOrder is called for each AnyOrder group.
 func (v updateAnyOrderVisitor) VisitGroupAnyOrder(i *Instruction) interface{} {
-	i.GNMI = nil
-	i.CTRL = nil
+	i.ChildrenPerChannel = map[string][]*Instruction{}
 	for _, c := range i.Children {
 		if c.Type != ReceiveInst {
 			continue
 		}
-		switch c.Channel {
-		case "gnmi":
-			i.GNMI = append(i.GNMI, c)
-		case "ctrl":
-			i.CTRL = append(i.CTRL, c)
-		}
+		i.ChildrenPerChannel[c.Channel] = append(i.ChildrenPerChannel[c.Channel], c)
 	}
 	return i.VisitChildren(v)
 }

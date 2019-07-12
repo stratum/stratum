@@ -1,0 +1,53 @@
+scenario GetSetHealthIndicator(ifname: string) version 1.0.0 {
+  // Set is disabled until problem with unexpected closure of 'gnmi' stream
+  // in GetSetHealthIndicatorOnFirstInterface is fixed.
+  SetRequest {
+    replace [ {
+      path: /interfaces/interface[name=$ifname]/config/health-indicator
+      val { string_val: "GOOD" }
+    } ]
+  }
+  >> { OK,
+  SetResponse {
+    response [ {
+      path: /interfaces/interface[name=$ifname]/config/health-indicator
+      op: gnmi::UpdateResult::REPLACE
+    } ]
+    timestamp: _
+  } }
+  gnmi := gNMI.Subscribe
+  gnmi << SubscribeRequest {
+         subscribe {
+             mode: ONCE
+             subscription [ {
+                 path: /interfaces/interface[name=$ifname]/config/health-indicator } ] } }
+  gnmi >> SubscribeResponse {
+         update {
+           update [ {
+             path: /interfaces/interface[name=$ifname]/config/health-indicator
+             val { string_val: _ } } ] } }
+  gnmi >> SubscribeResponse { sync_response: true }
+  close gnmi
+}
+
+scenario GetSetHealthIndicatorOnFirstInterface() version 1.0.0 {
+  // Find the name of the first interface...
+  gnmi := gNMI.Subscribe
+  gnmi << SubscribeRequest {
+         subscribe {
+             mode: ONCE
+             subscription [ { path: /interfaces/interface[name=*]/state/ifindex } ] } }
+  gnmi >> SubscribeResponse {
+         update {
+           update [ {
+             path: /interfaces/interface[$ifname:=name]/state/ifindex
+             val { int_val: _ } } ] } }
+  ZeroOrMore {
+    gnmi >> SubscribeResponse { update { update [ { path: _ val { int_val: _ } } ] } }
+  }
+  gnmi >> SubscribeResponse { sync_response: true }
+  close gnmi
+
+  // ... and run the actual test.
+  execute GetSetHealthIndicator( $ifname )
+}

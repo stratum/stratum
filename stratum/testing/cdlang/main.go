@@ -9,7 +9,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,10 +23,14 @@ import (
 	"cdlang"
 )
 
-type TmplFileNames []string 
+type TmplFileNames []string
 
 func (arr *TmplFileNames) String() string {
-	return fmt.Sprint(arr)
+	ret := ""
+	for _, s := range *arr {
+		ret = ret + s
+	}
+	return ret
 }
 
 func (arr *TmplFileNames) Set(value string) error {

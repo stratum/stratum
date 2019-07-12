@@ -4,7 +4,7 @@ This module defines rules that are used to generate (and compile) files
 from CDLang source and Go template files using the cdl_tool.
 """
 
-load("//tools/build_defs/tex:def.bzl", "pdflatex_document")
+load("@bazel_latex//:latex.bzl", "latex_document")
 
 def cc_cdlang_library(name, srcs, deps, template, ver = "latest", libs = None, testonly = False, visibility = None):
     """Generates C++ code using Go templates and CDLang source files.
@@ -53,10 +53,10 @@ def pdf_cdlang(name, srcs, template, ver = "latest", libs = None, visibility = N
         templates += libs
     ext = ".tex"
     _genrules(name, srcs, templates, ver, [name + ext], visibility, ext)
-    pdflatex_document(
+    latex_document(
         name = name,
-        src = name + ext,
-        additional_srcs = [],
+        main = name + ext,
+        srcs = [],
     )
 
 def _genrules(name, srcs, templates, ver, out_files, visibility, ext):
@@ -69,7 +69,7 @@ def _genrules(name, srcs, templates, ver, out_files, visibility, ext):
             fail("Source files must be CDLang files ending with .cdlang.", "srcs")
     srcs += templates
     cmd = ("mkdir $$$$.tmp ; " + "cp $(SRCS) $$$$.tmp/ ; " + "cd $$$$.tmp ; " +
-           ("../$(location //startum/testing/cdlang:cdl_tool) " +
+           ("../$(location //stratum/testing/cdlang:cdl_tool) " +
             "-t " + (",".join(templates)) +
             " -v " + ver +
             " -o " + name + ext + " " +

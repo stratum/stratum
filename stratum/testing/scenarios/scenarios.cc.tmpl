@@ -1,0 +1,128 @@
+// This file has been generated using the cdl_tool. Do not modify.
+
+#include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "gnmi/gnmi.grpc.pb.h"
+#include "google/protobuf/text_format.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/status/status.h"
+
+DEFINE_string(gnmi_url, "localhost:28000",
+              "URL (including the port) for gNMI server to connect to.");
+
+namespace switchstack {
+namespace testing {
+namespace stratum {
+
+using std::string;
+using google::int64;
+
+using namespace ::stratum;
+
+namespace {
+{{ template "utilities" }}
+
+string ToString(const grpc::Status& x) {
+  return x.ok() ? "OK" : x.error_message();
+}
+
+std::ostream& operator<<(std::ostream& os, const ::grpc::Status& x) {
+  os << ToString(x);
+  return os;
+}
+}  // namespace
+
+// A base class used to implement gNMI tests.
+// It contains code and data that are used by all the tests.
+class GnmiTest : public ::testing::Test {
+ public:
+  // Constructor.
+  GnmiTest() {
+    gnmi_stub_ =
+      ::gnmi::gNMI::NewStub(
+        ::grpc::CreateChannel(FLAGS_gnmi_url,
+                              ::grpc::InsecureChannelCredentials()));
+  }
+
+  // A method called before the test. All shared initialization goes here.
+  void SetUp() override {}
+
+  // A method called after the test. All shared finalization code goes here.
+  void TearDown() override {}
+
+ protected:
+  // Methods generated from sub-scenarios.
+  {{- range $k, $v := .SubScenarios}}
+  void {{$k}}({{template "parameters" $v}});
+  {{- end}}
+
+  // gNMI stub used for gNMI RPC calls.
+  std::unique_ptr<::gnmi::gNMI::Stub> gnmi_stub_;
+};
+
+// A helper that initializes correctly ::gnmi::Path objects.
+class GetPath {
+ public:
+  explicit GetPath(const string& name) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+  }
+  GetPath(const string& name, const string& search) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+    (*elem->mutable_key())["name"] = search;
+  }
+
+  GetPath operator()(const string& name) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+    return *this;
+  }
+
+  GetPath operator()(const string& name, const string& search) {
+    auto* elem = path_.add_elem();
+    elem->set_name(name);
+    (*elem->mutable_key())["name"] = search;
+    return *this;
+  }
+
+  gnmi::Path operator()() { return path_; }
+
+ private:
+  gnmi::Path path_;
+};
+
+{{range $k, $v := .SubScenarios}}
+////////////////////////////////////////////////////////////////////////////////
+//
+// The {{$k}} sub-scenario.
+//
+////////////////////////////////////////////////////////////////////////////////
+void GnmiTest::{{$k}}( {{template "parameters" $v}} ) {
+{{ template "instructions" $v}}
+
+  LOG(INFO) << "GnmiTest::{{$k}}() has finished.";
+}  // End of GnmiTest::{{$k}}().
+{{end}}
+
+{{range $k, $v := .Scenarios}}
+{{- if not .Disabled}}
+////////////////////////////////////////////////////////////////////////////////
+//
+// The test testing {{$k}} scenario.
+//
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(GnmiTest, {{$k}}) {
+{{- template "instructions" $v}}
+
+  LOG(INFO) << "GnmiTest::{{$k}} test finished.";
+}  // End of GnmiTest::{{$k}} test.
+{{- end}}
+{{end}}
+
+}  // namespace hercules
+}  // namespace testing
+}  // namespace switchstack
+

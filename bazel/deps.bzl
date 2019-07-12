@@ -186,6 +186,17 @@ def stratum_deps():
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
 # -----------------------------------------------------------------------------
+    if "bazel_latex" not in native.existing_rules():
+        http_archive(
+            name = "bazel_latex",
+            sha256 = "66ca4240628a4e40cc02d7f77f06b93269dad0068e7a844009fd439e5c55f5a9",
+            strip_prefix = "bazel-latex-0.17",
+            url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
+        )
+
+# -----------------------------------------------------------------------------
+#      Golang specific libraries.
+# -----------------------------------------------------------------------------
     if "net_zlib" not in native.existing_rules():
         native.bind(
             name = "zlib",
