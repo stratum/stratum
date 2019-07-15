@@ -1543,6 +1543,78 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteActionProfileGroup) {
   EXPECT_EQ(1U, results.size());
 }
 
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertCloneSessionEntry) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  auto* update = req.add_updates();
+  update->set_type(::p4::v1::Update::INSERT);
+  auto* entity = update->mutable_entity();
+  auto* entry = entity->mutable_packet_replication_engine_entry();
+  auto* clone = entry->mutable_clone_session_entry();
+  std::vector<::util::Status> results = {};
+
+  // TODO(max): expect calls to bcm_*_managers here, once implemented
+
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteCloneSessionEntry) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  auto* update = req.add_updates();
+  update->set_type(::p4::v1::Update::DELETE);
+  auto* entity = update->mutable_entity();
+  auto* entry = entity->mutable_packet_replication_engine_entry();
+  auto* clone = entry->mutable_clone_session_entry();
+  std::vector<::util::Status> results = {};
+
+  // TODO(max): expect calls to bcm_*_managers here, once implemented
+
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertMulticastGroupEntry) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  auto* update = req.add_updates();
+  update->set_type(::p4::v1::Update::INSERT);
+  auto* entity = update->mutable_entity();
+  auto* entry = entity->mutable_packet_replication_engine_entry();
+  auto* mcast = entry->mutable_multicast_group_entry();
+  std::vector<::util::Status> results = {};
+
+  // TODO(max): expect calls to bcm_*_managers here, once implemented
+
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
+TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteMulticastGroupEntry) {
+  ASSERT_NO_FATAL_FAILURE(PushChassisConfigWithCheck());
+
+  ::p4::v1::WriteRequest req;
+  req.set_device_id(kNodeId);
+  auto* update = req.add_updates();
+  update->set_type(::p4::v1::Update::DELETE);
+  auto* entity = update->mutable_entity();
+  auto* entry = entity->mutable_packet_replication_engine_entry();
+  auto* mcast = entry->mutable_multicast_group_entry();
+  std::vector<::util::Status> results = {};
+
+  // TODO(max): expect calls to bcm_*_managers here, once implemented
+
+  EXPECT_OK(WriteForwardingEntries(req, &results));
+  EXPECT_EQ(1U, results.size());
+}
+
 // RegisterPacketReceiveWriter() should forward the call to BcmPacketioManager
 // and return success or error based on the returned result.
 TEST_F(BcmNodeTest, RegisterPacketReceiveWriter) {

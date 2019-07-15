@@ -165,6 +165,11 @@ class BcmNode {
   ::util::Status ActionProfileGroupWrite(
       const ::p4::v1::ActionProfileGroup& group, ::p4::v1::Update::Type type);
 
+  // Write a single P4 PacketReplicationEngineEntry.
+  ::util::Status PacketReplicationEngineEntryWrite(
+      const ::p4::v1::PacketReplicationEngineEntry& entry,
+      ::p4::v1::Update::Type type);
+
   // Reader-writer lock used to protect access to node-specific state.
   mutable absl::Mutex lock_;
 

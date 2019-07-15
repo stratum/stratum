@@ -446,6 +446,10 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
                  << "Direct counter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
         break;
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+        status = PacketReplicationEngineEntryWrite(
+            update.entity().packet_replication_engine_entry(), update.type());
+        break;
       case ::p4::v1::Entity::ENTITY_NOT_SET:
         status = MAKE_ERROR(ERR_INVALID_PARAM)
                  << "Empty entity: " << update.ShortDebugString() << ".";
@@ -688,6 +692,54 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       << "Do not know what to do with this ActionProfileMember: "
       << member.ShortDebugString() << ".";
 
+  return ::util::OkStatus();
+}
+
+// TODO(max): complete implementation
+::util::Status BcmNode::PacketReplicationEngineEntryWrite(
+    const ::p4::v1::PacketReplicationEngineEntry& entry,
+    ::p4::v1::Update::Type type) {
+
+  auto replicationType = entry.type_case();
+
+  bool consumed = false;
+  switch (type) {
+    case ::p4::v1::Update::INSERT: {
+      switch (replicationType) {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
+          ABSL_FALLTHROUGH_INTENDED;
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry:
+          // TODO: inform responsible bcm_*_manager(s) about new mapping here
+          consumed = true;
+          LOG(WARNING) << "stratum_bcm only has preliminary support"
+              " for PacketReplicationEngineEntry";
+          break;
+        default:
+          break;
+      }
+      break;
+    }
+    case ::p4::v1::Update::DELETE: {
+      switch (replicationType) {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
+          ABSL_FALLTHROUGH_INTENDED;
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry:
+          // TODO: inform responsible bcm_*_manager(s) about new mapping here
+          consumed = true;
+          LOG(WARNING) << "stratum_bcm only has preliminary support"
+              " for PacketReplicationEngineEntry";
+          break;
+        default:
+          break;
+      }
+    }
+    default:
+      break;
+  }
+
+  CHECK_RETURN_IF_FALSE(consumed)
+      << "Do not know what to do with this " << ::p4::v1::Update::Type_Name(type)
+      << " PacketReplicationEngineEntry: " << entry.ShortDebugString() << ".";
   return ::util::OkStatus();
 }
 
