@@ -61,6 +61,7 @@ ENV RUNTIME_DEPS \
     telnet \
     python-pexpect \
     tcpdump \
+    screen \
     libboost-filesystem1.62.0 \
     libboost-program-options1.62.0 \
     libboost-thread1.62.0 \
