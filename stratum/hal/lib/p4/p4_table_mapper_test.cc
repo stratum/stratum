@@ -1735,5 +1735,27 @@ TEST_F(P4TableMapperTest, TestHiddenTableActionID) {
   EXPECT_EQ(TRI_STATE_UNKNOWN, hidden_state);
 }
 
+// Tests null pointer checks.
+TEST_F(P4TableMapperTest,
+       TestNullPtrChecks) {
+  ::util::Status status = p4_table_mapper_->MapFlowEntry(
+      table_entry_, ::p4::v1::Update::INSERT, nullptr);
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Null flow_entry!"));
+
+  status = p4_table_mapper_->MapActionProfileMember(
+      action_profile_member_, nullptr);
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Null mapped_action!"));
+
+  status = p4_table_mapper_->MapActionProfileGroup(
+      action_profile_group_, nullptr);
+  EXPECT_FALSE(status.ok());
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("Null mapped_action!"));
+}
+
 }  // namespace hal
 }  // namespace stratum

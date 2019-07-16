@@ -77,7 +77,6 @@ stratum_cc_library(
     ],
 )
 
-''' FIXME(boc) missing EXPECT_OK
 stratum_cc_test(
     name = "p4_action_mapper_test",
     srcs = ["p4_action_mapper_test.cc"],
@@ -96,9 +95,9 @@ stratum_cc_test(
         "//stratum/public/proto:p4_annotation_cc_proto",
         "//stratum/public/proto:p4_table_defs_cc_proto",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status:status_test_util",
     ],
 )
-'''
 
 stratum_cc_library(
     name = "p4_config_verifier",
@@ -125,7 +124,6 @@ stratum_cc_library(
     ],
 )
 
-''' FIXME(boc) missing FindOrDie
 stratum_cc_test(
     name = "p4_config_verifier_test",
     srcs = ["p4_config_verifier_test.cc"],
@@ -139,7 +137,7 @@ stratum_cc_test(
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/memory",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc", #FIXME actually p4runtime_cc_proto
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
@@ -147,7 +145,6 @@ stratum_cc_test(
         "//stratum/glue/gtl:map_util",
     ],
 )
-'''
 
 stratum_cc_library(
     name = "p4_info_manager",
@@ -375,8 +372,6 @@ stratum_cc_library(
     ],
 )
 
-#FIXME disabling test due to missing test_p4_info.pb.txt
-''' START GOOGLE ONLY
 stratum_cc_test(
     name = "p4_table_mapper_test",
     srcs = ["p4_table_mapper_test.cc"],
@@ -395,7 +390,6 @@ stratum_cc_test(
         "//stratum/lib/test_utils:matchers",
     ],
 )
-    END GOOGLE ONLY '''
 
 stratum_cc_library(
     name = "p4_write_request_differ",
@@ -444,7 +438,6 @@ stratum_cc_library(
     ],
 )
 
-''' FIXME(boc) missing InsertOrDie
 stratum_cc_test(
     name = "utils_test",
     srcs = [
@@ -461,9 +454,9 @@ stratum_cc_test(
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "//stratum/lib:utils",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status:status_test_util",
     ],
 )
-'''
 
 stratum_cc_library(
     name = "testdata",

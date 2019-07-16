@@ -23,6 +23,7 @@
 #include "absl/strings/substitute.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/status/status_test_util.h"
 
 using ::testing::HasSubstr;
 
