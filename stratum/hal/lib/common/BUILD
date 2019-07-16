@@ -259,6 +259,10 @@ stratum_cc_library(
         #FIXME(boc)
         #"//util/time:clock",
     ],
+    data = [
+        # TODO(Yi): generate this when we generating the OpenConfig proto files
+        "gnmi_caps.pb.txt"
+    ],
 )
 
 stratum_cc_test(
@@ -292,6 +296,10 @@ stratum_cc_test(
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+    ],
+    data = [
+        # TODO(Yi): generate this when we generating the OpenConfig proto files
+        "gnmi_caps.pb.txt"
     ],
 )
 

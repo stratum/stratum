@@ -108,6 +108,13 @@ class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
   ConfigMonitoringService& operator=(const ConfigMonitoringService&) = delete;
 
  private:
+  // The actual method that implements 'Capabilites' the allows a client to
+  // request the switch to send models it supported.
+  // This is implemented this way to enable unit tests of the Capabilites
+  // method.
+  ::grpc::Status DoCapabilities(::grpc::ServerContext* context,
+                                const ::gnmi::CapabilityRequest* req,
+                                ::gnmi::CapabilityResponse* resp);
   // The actual method that implements 'Subscribe' that allows a client to
   // request the switch to send it values of particular paths within the
   // config/state tree. These values may be streamed at a particular cadence

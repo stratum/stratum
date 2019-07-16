@@ -131,6 +131,13 @@ class ConfigMonitoringServiceTest
     return config_monitoring_service_->DoSet(context, req, resp);
   }
 
+  // A proxy to private method of ConfigMonitoringService class.
+  ::grpc::Status DoCapabilities(::grpc::ServerContext* context,
+                                const ::gnmi::CapabilityRequest* req,
+                                ::gnmi::CapabilityResponse* resp) {
+    return config_monitoring_service_->DoCapabilities(context, req, resp);
+  }
+
   static constexpr char kChassisConfigTemplate[] = R"PROTO(
       description: "Sample test config."
       nodes {
@@ -1185,6 +1192,20 @@ TEST_P(ConfigMonitoringServiceTest,
   // Clean-up.
   EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
       .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(config_monitoring_service_->Teardown());
+}
+
+TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
+  ::gnmi::CapabilityResponse expected_resp;
+  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", &expected_resp);
+
+  ::grpc::ServerContext context;
+  ::gnmi::CapabilityRequest req;
+  ::gnmi::CapabilityResponse actual_resp;
+  auto grpc_status = DoCapabilities(&context, &req, &actual_resp);
+  EXPECT_TRUE(grpc_status.ok());
+  EXPECT_TRUE(ProtoEqual(expected_resp, actual_resp));
+  // Clean-up.
   ASSERT_OK(config_monitoring_service_->Teardown());
 }
 

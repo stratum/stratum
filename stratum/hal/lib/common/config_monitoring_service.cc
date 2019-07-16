@@ -155,7 +155,16 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 ::grpc::Status ConfigMonitoringService::Capabilities(
     ::grpc::ServerContext* context, const ::gnmi::CapabilityRequest* req,
     ::gnmi::CapabilityResponse* resp) {
-  // TODO: Implement this.
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, ConfigMonitoringService,
+                           Capabilities, context);
+  return DoCapabilities(context, req, resp);
+}
+
+::grpc::Status ConfigMonitoringService::DoCapabilities(
+    ::grpc::ServerContext* context, const ::gnmi::CapabilityRequest* req,
+    ::gnmi::CapabilityResponse* resp) {
+  // TODO(Yi): Use auto generated file or code.
+  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", resp);
   return ::grpc::Status::OK;
 }
 
