@@ -15,7 +15,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_OPENCONFIG_CONVERTER_H_
 #define STRATUM_HAL_LIB_COMMON_OPENCONFIG_CONVERTER_H_
 
-#include "stratum/public/proto/openconfig.pb.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/public/proto/openconfig-goog-bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
@@ -28,14 +28,14 @@ namespace hal {
 
 class OpenconfigConverter {
  public:
-  // Converts ChassisConfig to ::oc::Device.
-  static ::util::StatusOr<oc::Device> ChassisConfigToOcDevice(
+  // Converts ChassisConfig to ::openconfig::Device.
+  static ::util::StatusOr<openconfig::Device> ChassisConfigToOcDevice(
       const ChassisConfig& in);
-  // Converts oc::Device to ChassisConfig.
+  // Converts openconfig::Device to ChassisConfig.
   static ::util::StatusOr<ChassisConfig> OcDeviceToChassisConfig(
-      const oc::Device& in);
+      const openconfig::Device& in);
   // Checks if oc:Device proto is consistent.
-  static ::util::Status ValidateOcDeviceProto(const oc::Device& in);
+  static ::util::Status ValidateOcDeviceProto(const openconfig::Device& in);
 };
 
 }  // namespace hal

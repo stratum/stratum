@@ -15,7 +15,7 @@
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 
 #include "gnmi/gnmi.pb.h"
-#include "stratum/public/proto/openconfig.pb.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
@@ -671,7 +671,7 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
     if (typed_value->value_case() != gnmi::TypedValue::kBytesVal) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a bytes stream!";
     }
-    oc::Device in;
+    openconfig::Device in;
     // Deserialize the input proto.
     CHECK_RETURN_IF_FALSE(in.ParseFromString(typed_value->bytes_val()));
     // Convert the input proto into the internal format.

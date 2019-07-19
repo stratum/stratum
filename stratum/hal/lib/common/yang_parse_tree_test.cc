@@ -16,11 +16,13 @@
 
 #include "google/protobuf/text_format.h"
 #include "gnmi/gnmi.pb.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
+#include "stratum/lib/utils.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
@@ -520,11 +522,17 @@ TEST_F(YangParseTreeTest, FindRoot) {
   ASSERT_EQ(node, &GetRoot());
   auto root = AddNode(GetPath()());
   ASSERT_EQ(node, root);
+
+  openconfig::Device device;
+  ASSERT_OK(ReadProtoFromTextFile(
+      "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt", &device));
+
+  string msg_bytes;
+  device.SerializeToString(&msg_bytes);
+
   // Prepare a SET request.
   ::gnmi::TypedValue req;
-  constexpr char kReq[] = R"PROTO(bytes_val: "")PROTO";
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
-      << "Failed to parse proto from the following string: " << kReq;
+  req.set_bytes_val(msg_bytes);
 
   ChassisConfig config;
   CopyOnWriteChassisConfig copy_on_write_config(&config);

@@ -50,6 +50,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "openconfig/openconfig.pb.h"
 #include <google/protobuf/text_format.h>
 
 DECLARE_string(chassis_config_file);
@@ -985,11 +986,15 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
 
   // Prepare a SET request.
   ::gnmi::SetRequest req;
-  constexpr char kReq[] = R"PROTO(
-    replace { val { bytes_val: "" } }
-  )PROTO";
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(kReq, &req))
-      << "Failed to parse proto from the following string: " << kReq;
+
+  openconfig::Device device;
+  ASSERT_OK(ReadProtoFromTextFile(
+      "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt", &device));
+
+  string msg_bytes;
+  device.SerializeToString(&msg_bytes);
+
+  req.add_replace()->mutable_val()->set_bytes_val(msg_bytes);
 
   // This is a config-changing set, so, one PushChassisConfig() calls, and
   // no SetValue().

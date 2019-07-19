@@ -1,0 +1,101 @@
+chassis {
+  name: "dummy switch 1"
+}
+nodes {
+  id: 1
+  name: ":lc-1"
+  slot: 1
+  config_params {
+    vlan_configs {
+      block_unknown_multicast: true
+      block_unknown_unicast: true
+      disable_l2_learning: true
+    }
+  }
+}
+singleton_ports {
+  id: 1
+  name: "1/1/1"
+  slot: 1
+  port: 1
+  channel: 1
+  speed_bps: 10000000
+  node: 1
+}
+singleton_ports {
+  id: 2
+  name: "1/2/1"
+  slot: 1
+  port: 2
+  channel: 1
+  speed_bps: 100000000
+  node: 1
+}
+singleton_ports {
+  id: 3
+  name: "1/3/1"
+  slot: 1
+  port: 3
+  channel: 1
+  speed_bps: 1000000000
+  node: 1
+}
+singleton_ports {
+  id: 4
+  name: "1/4/1"
+  slot: 1
+  port: 4
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 5
+  name: "1/5/1"
+  slot: 1
+  port: 5
+  channel: 1
+  speed_bps: 25000000000
+  node: 1
+}
+singleton_ports {
+  id: 6
+  name: "1/6/1"
+  slot: 1
+  port: 6
+  channel: 1
+  speed_bps: 40000000000
+  node: 1
+}
+singleton_ports {
+  id: 7
+  name: "1/7/1"
+  slot: 1
+  port: 7
+  channel: 1
+  speed_bps: 50000000000
+  node: 1
+}
+singleton_ports {
+  id: 8
+  name: "1/8/1"
+  slot: 1
+  port: 8
+  channel: 1
+  speed_bps: 100000000000
+  node: 1
+}
+trunk_ports {
+  id: 9
+  name: "trk-1"
+  type: STATIC_TRUNK
+  members: 1
+  members: 2
+}
+trunk_ports {
+  id: 10
+  name: "trk-2"
+  type: LACP_TRUNK
+  members: 3
+  members: 4
+}

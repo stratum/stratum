@@ -1,0 +1,116 @@
+bcm_chassis_map_id {
+  value: "dummy switch 1"
+}
+node_id_to_knet_config {
+  key: 1
+  value {
+    knet_intf_configs {
+      key: 0
+      value {
+        vlan {
+          value: 10
+        }
+        purpose: BCM_KNET_IF_PURPOSE_CONTROLLER
+        id {
+        }
+        mtu {
+          value: 1350
+        }
+        cpu_queue {
+          value: 1
+        }
+      }
+    }
+    node_uid {
+      value: 1
+    }
+  }
+}
+node_id_to_rx_config {
+  key: 1
+  value {
+    max_burst_pkts {
+      value: 100000
+    }
+    rx_pool_bytes_per_pkt {
+      value: 1500
+    }
+    max_pkt_size_bytes {
+      value: 2000
+    }
+    pkts_per_chain {
+      value: 1000
+    }
+    max_rate_pps {
+      value: 1000000
+    }
+    node_uid {
+      value: 1
+    }
+    rx_pool_pkt_count {
+      value: 1000
+    }
+    use_interrupt {
+      value: true
+    }
+    dma_channel_configs {
+      key: 1
+      value {
+        strip_vlan {
+        }
+        oversized_packets_ok {
+        }
+        no_pkt_parsing {
+        }
+        cos_set {
+          value: 1
+        }
+        cos_set {
+          value: 2
+        }
+        id {
+          value: 1
+        }
+        chains {
+          value: 1
+        }
+        strip_crc {
+          value: true
+        }
+      }
+    }
+  }
+}
+node_id_to_tx_config {
+  key: 1
+  value {
+  }
+}
+node_id_to_rate_limit_config {
+  key: 1
+  value {
+    max_burst_pkts {
+      value: 1000000
+    }
+    per_cos_rate_limit_configs {
+      key: 1
+      value {
+        id {
+          value: 1
+        }
+        max_rate_pps {
+          value: 100000
+        }
+        max_burst_pkts {
+          value: 100000
+        }
+      }
+    }
+    node_uid {
+      value: 1
+    }
+    max_rate_pps {
+      value: 1000000
+    }
+  }
+}

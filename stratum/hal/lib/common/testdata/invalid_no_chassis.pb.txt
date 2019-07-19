@@ -1,0 +1,14 @@
+# invalid open config config, no chassis defined
+component {
+  name: ":lc-1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    id {
+      value: "1"
+    }
+  }
+}

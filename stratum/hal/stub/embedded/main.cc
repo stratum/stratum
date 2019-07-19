@@ -41,7 +41,7 @@
 #include "gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "stratum/public/proto/openconfig.pb.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"

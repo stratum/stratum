@@ -1,0 +1,74 @@
+chassis {
+  name: "dummy switch 1"
+}
+nodes {
+  id: 1
+  name: ":lc-1"
+  slot: 1
+  config_params {
+    vlan_configs {
+      block_unknown_multicast: true
+      block_unknown_unicast: true
+      disable_l2_learning: true
+    }
+  }
+}
+vendor_config {
+  google_config {
+    bcm_chassis_map_id: "dummy switch 1"
+    node_id_to_knet_config {
+      key: 1
+      value {
+        knet_intf_configs {
+          mtu: 1350
+          cpu_queue: 1
+          vlan: 10
+          purpose: BCM_KNET_INTF_PURPOSE_CONTROLLER
+        }
+      }
+    }
+    node_id_to_rx_config {
+      key: 1
+      value {
+        rx_pool_pkt_count: 1000
+        rx_pool_bytes_per_pkt: 1500
+        max_pkt_size_bytes: 2000
+        pkts_per_chain: 1000
+        max_rate_pps: 1000000
+        max_burst_pkts: 100000
+        use_interrupt: true
+        dma_channel_configs {
+          key: 1
+          value {
+            chains: 1
+            strip_crc: true
+            strip_vlan: false
+            oversized_packets_ok: false
+            no_pkt_parsing: false
+            cos_set: 1
+            cos_set: 2
+          }
+        }
+      }
+    }
+    node_id_to_tx_config {
+      key: 1
+      value {
+      }
+    }
+    node_id_to_rate_limit_config {
+      key: 1
+      value {
+        max_rate_pps: 1000000
+        max_burst_pkts: 1000000
+        per_cos_rate_limit_configs {
+          key: 1
+          value {
+            max_rate_pps: 100000
+            max_burst_pkts: 100000
+          }
+        }
+      }
+    }
+  }
+}

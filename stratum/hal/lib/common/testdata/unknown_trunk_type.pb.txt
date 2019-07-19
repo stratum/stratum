@@ -1,0 +1,8 @@
+# unknown trunk type
+trunk_ports {
+  id: 9
+  name: "trk-1"
+  type: UNKNOWN_TRUNK
+  members: 1
+  members: 2
+}

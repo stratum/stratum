@@ -52,7 +52,7 @@ stratum_cc_binary(
         #"//sandblaze/prebuilt/openssl",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
-        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
         "//stratum/glue/openconfig/proto:old_openconfig_proto",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:openconfig_converter",

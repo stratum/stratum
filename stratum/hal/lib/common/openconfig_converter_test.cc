@@ -17,115 +17,162 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+#include <google/protobuf/text_format.h>
 
 namespace stratum {
 
 namespace hal {
 
-TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_SampleGeneric Tomahawk100gConfig) {
+TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_SimpleConfig) {
   ChassisConfig chassis_config;
   ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/"
-      "testdata/test_chassis_config_generic_tomahawk_100g_hercules.pb.txt",
+      "stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
       &chassis_config));
-  ::util::StatusOr<oc::Device> ret =
+  ::util::StatusOr<openconfig::Device> ret =
       OpenconfigConverter::ChassisConfigToOcDevice(chassis_config);
   ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
 
-TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_SampleGeneric Tomahawk40g100gConfig) {
+  const openconfig::Device &device = ret.ConsumeValueOrDie();
+
+  openconfig::Device device_from_file;
+  ASSERT_OK(ReadProtoFromTextFile(
+      "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt",
+      &device_from_file));
+
+  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(device, device_from_file));
+}  // OpenconfigConverterTest.ChassisConfigToOcDevice_SimpleConfig
+
+TEST(OpenconfigConverterTest, OcDeviceToChassisConfig_SimpleConfig) {
+  openconfig::Device device;
+  ASSERT_OK(ReadProtoFromTextFile(
+      "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt",
+      &device));
+
+  ::util::StatusOr<ChassisConfig> ret =
+      OpenconfigConverter::OcDeviceToChassisConfig(device);
+  ASSERT_OK(ret);
+
+  const ChassisConfig &chassis_config = ret.ConsumeValueOrDie();
+
+  ChassisConfig chassis_config_from_file;
+  ASSERT_OK(ReadProtoFromTextFile(
+      "stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
+      &chassis_config_from_file));
+
+  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(chassis_config, chassis_config_from_file));
+}  // OpenconfigConverterTest.OcDeviceToChassisConfig_SimpleConfig
+
+TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_VendorConfig) {
   ChassisConfig chassis_config;
   ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/testdata/"
-      "test_chassis_config_generic_tomahawk_40g_100g_hercules.pb.txt",
+      "stratum/hal/lib/common/testdata/vendor_specific_chassis.pb.txt",
       &chassis_config));
-  ::util::StatusOr<oc::Device> ret =
+  ::util::StatusOr<openconfig::Device> ret =
       OpenconfigConverter::ChassisConfigToOcDevice(chassis_config);
   ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
 
-TEST(OpenconfigConverterTest,
-     ChassisConfigToOcDevice_SampleGeneric Trident240gConfig) {
-  ChassisConfig chassis_config;
+  const openconfig::Device &device = ret.ConsumeValueOrDie();
+
+  oc::Bcm::Chassis::Config vendor_config_from_file;
   ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/testdata/"
-      "test_chassis_config_generic_trident2_40g_hercules.pb.txt",
-      &chassis_config));
-  ::util::StatusOr<oc::Device> ret =
-      OpenconfigConverter::ChassisConfigToOcDevice(chassis_config);
-  ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
+      "stratum/hal/lib/common/testdata/oc_vendor_config.pb.txt",
+      &vendor_config_from_file));
 
-TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_SampleGeneric Trident240gConfig) {
-  ChassisConfig chassis_config;
+
+  for (auto& component_key : device.component()) {
+    auto& component = component_key.component();
+    if (component.has_chassis()) {
+      auto& chassis = component.chassis();
+
+      oc::Bcm::Chassis::Config vendor_config;
+      chassis.vendor_specific().UnpackTo(&vendor_config);
+      ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(vendor_config, vendor_config_from_file));
+      break;
+    }
+  }
+}  // OpenconfigConverterTest.ChassisConfigToOcDevice_VendorConfig
+
+TEST(OpenconfigConverterTest, OcDeviceToVendorConfig) {
+  // openconfig::Device::ComponentKey -> ChassisConfig with GoogleConfig
+  // The ComponentKey includes vendor-specific config
+
+  openconfig::Device device;
+  oc::Bcm::Chassis::Config vendor_config;
   ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/testdata/"
-      "test_chassis_config_generic_trident2_40g_hercules.pb.txt",
-      &chassis_config));
-  ::util::StatusOr<oc::Device> ret =
-      OpenconfigConverter::ChassisConfigToOcDevice(chassis_config);
-  ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
+      "stratum/hal/lib/common/testdata/oc_vendor_config.pb.txt",
+      &vendor_config));
+  openconfig::Device::ComponentKey *component_key = device.add_component();
 
-TEST(OpenconfigConverterTest, OcDeviceToChassisConfig_SampleGeneric Tomahawk40g100gConfig) {
-  oc::Device oc_device;
-  ASSERT_OK(
-      ReadProtoFromTextFile("platforms/networking/hercules/hal/lib/common/"
-                            "testdata/test_oc_device_generic_tomahawk_100g_hercules.pb.txt",
-                            &oc_device));
-  ASSERT_OK(OpenconfigConverter::ValidateOcDeviceProto(oc_device));
+  component_key->set_name("dummy switch 1");
+  component_key->mutable_component()->mutable_chassis()->mutable_vendor_specific()->PackFrom(vendor_config);
+
+  // linecard
+  component_key = device.add_component();
+  component_key->set_name(":lc-1");
+  component_key->mutable_component()->mutable_id()->set_value("1");
+  component_key->mutable_component()->mutable_linecard()->mutable_slot_id()->set_value("1");
+
+
   ::util::StatusOr<ChassisConfig> ret =
-      OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
-  ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
-
-TEST(OpenconfigConverterTest, OcDeviceToChassisConfig_SampleGeneric Tomahawk100gConfig) {
-  oc::Device oc_device;
+      OpenconfigConverter::OcDeviceToChassisConfig(device);
+  const ChassisConfig &chassis_config = ret.ConsumeValueOrDie();
+  ChassisConfig chassis_config_from_file;
   ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/testdata/"
-      "test_oc_device_generic_tomahawk_40g_100g_hercules.pb.txt",
-      &oc_device));
-  ASSERT_OK(OpenconfigConverter::ValidateOcDeviceProto(oc_device));
-  ::util::StatusOr<ChassisConfig> ret =
-      OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
-  ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
+      "stratum/hal/lib/common/testdata/vendor_specific_chassis.pb.txt",
+      &chassis_config_from_file));
 
-TEST(OpenconfigConverterTest,
-     OcDeviceToChassisConfig_SampleGeneric Trident240gConfig) {
-  oc::Device oc_device;
-  ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/testdata/"
-      "test_oc_device_generic_trident2_40g_hercules.pb.txt",
-      &oc_device));
-  ASSERT_OK(OpenconfigConverter::ValidateOcDeviceProto(oc_device));
-  ::util::StatusOr<ChassisConfig> ret =
-      OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
-  ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
+  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(chassis_config, chassis_config_from_file));
 
-TEST(OpenconfigConverterTest, OcDeviceToChassisConfig_SampleGeneric Trident240gConfig) {
-  oc::Device oc_device;
-  ASSERT_OK(ReadProtoFromTextFile(
-      "platforms/networking/hercules/hal/lib/common/testdata/"
-      "test_oc_device_generic_trident2_40g_hercules.pb.txt",
-      &oc_device));
-  ASSERT_OK(OpenconfigConverter::ValidateOcDeviceProto(oc_device));
-  ::util::StatusOr<ChassisConfig> ret =
-      OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
-  ASSERT_OK(ret);
-  // TODO(aghaffar): Check the output.
-}
+}  // OpenconfigConverterTest.OcDeviceToVendorConfig
+
+#define ASSERT_CONFIG_ERROR(config_class, config_file_path, status_code, config_func) \
+  do { \
+    config_class the_config; \
+    ASSERT_OK(ReadProtoFromTextFile(config_file_path, &the_config)); \
+    auto statusor = config_func(the_config); \
+    ASSERT_FALSE(statusor.ok()); \
+    ASSERT_EQ(statusor.status().error_code(), status_code); \
+  } while(0);
+
+TEST(OpenconfigConverterTest, InvalidChassisConfigs) {
+  ASSERT_CONFIG_ERROR(ChassisConfig,
+                      "stratum/hal/lib/common/testdata/invalid_speed.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::ChassisConfigToOcDevice)
+  ASSERT_CONFIG_ERROR(ChassisConfig,
+                      "stratum/hal/lib/common/testdata/unknown_trunk_member.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::ChassisConfigToOcDevice)
+  ASSERT_CONFIG_ERROR(ChassisConfig,
+                      "stratum/hal/lib/common/testdata/unknown_trunk_type.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::ChassisConfigToOcDevice)
+}  // OpenconfigConverterTest.InvalidChassisConfigs
+
+TEST(OpenconfigConverterTest, InvalidOcDevice) {
+  ASSERT_CONFIG_ERROR(openconfig::Device,
+                      "stratum/hal/lib/common/testdata/invalid_iface_component.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::OcDeviceToChassisConfig)
+
+  ASSERT_CONFIG_ERROR(openconfig::Device,
+                      "stratum/hal/lib/common/testdata/invalid_no_node.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::OcDeviceToChassisConfig)
+
+  ASSERT_CONFIG_ERROR(openconfig::Device,
+                      "stratum/hal/lib/common/testdata/invalid_no_chassis.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::OcDeviceToChassisConfig)
+
+  ASSERT_CONFIG_ERROR(openconfig::Device,
+                      "stratum/hal/lib/common/testdata/invalid_oc_speed.pb.txt",
+                      ERR_INVALID_PARAM,
+                      OpenconfigConverter::OcDeviceToChassisConfig)
+
+}  // OpenconfigConverterTest.InvalidOcDevice
 
 }  // namespace hal
-
 }  // namespace stratum

@@ -26,7 +26,7 @@ cc_proto_library(
 
 cc_proto_library(
     name = "gnmi_cc_proto",
-    deps = ["@com_github_openconfig_gnmi//:gnmi_proto"],
+    deps = [":gnmi_proto"],
 )
 
 cc_grpc_library(

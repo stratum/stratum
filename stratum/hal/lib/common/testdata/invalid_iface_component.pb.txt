@@ -1,0 +1,43 @@
+# interface without interface component
+component {
+  name: "dummy switch 1"
+  component {
+    chassis {
+      platform: OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC
+    }
+  }
+}
+component {
+  name: ":lc-1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    id {
+      value: "1"
+    }
+  }
+}
+interface {
+  name: "1/1/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10MB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 1
+    }
+    ifindex {
+      value: 1
+    }
+  }
+}

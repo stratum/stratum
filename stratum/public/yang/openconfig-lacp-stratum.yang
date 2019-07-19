@@ -48,7 +48,7 @@ module openconfig-lacp-stratum {
     }
 
     deviation "/oc-lacp:lacp/oc-lacp:interfaces/oc-lacp:interface/oc-lacp:state/oc-lacp:lacp-mode" {
-        description "Stratum does not support lacp/interfaces/interface/state/lacp-mode;
+        description "Stratum does not support lacp/interfaces/interface/state/lacp-mode";
         deviate not-supported;
     }
 

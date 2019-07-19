@@ -5,6 +5,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl",
      "git_repository",
      "new_git_repository")
+load("@bazel_gazelle//:deps.bzl", "go_repository")
 
 P4RUNTIME_VER = "1.0.0"
 P4RUNTIME_SHA = "667464bd369b40b58dc9552be2c84e190a160b6e77137b735bd86e5b81c6adc0"
@@ -80,9 +81,9 @@ def stratum_deps():
             strip_prefix = "judy-1.0.5",
         )
 
-    if "com_github_openconfig_gnmi" not in native.existing_rules():
+    if "com_github_openconfig_gnmi_proto" not in native.existing_rules():
         http_archive(
-            name = "com_github_openconfig_gnmi",
+            name = "com_github_openconfig_gnmi_proto",
             urls = ["https://github.com/bocon13/gnmi/archive/%s.zip" % GNMI_COMMIT],
             sha256 = GNMI_SHA,
             strip_prefix = "gnmi-%s/proto" % GNMI_COMMIT,
@@ -112,6 +113,29 @@ def stratum_deps():
             urls = [
                 "https://github.com/cython/cython/archive/c2b80d87658a8525ce091cbe146cb7eaa29fed5c.tar.gz",
             ],
+        )
+    if "com_github_openconfig_public" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_openconfig_public",
+            remote = "https://github.com/openconfig/public",
+            commit = "5897507ecdb54453d4457e7dbb0a3d4b7ead4314",
+            build_file = "@//bazel:external/ocpublic.BUILD",
+        )
+
+    if "com_github_openconfig_hercules" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_openconfig_hercules",
+            remote = "https://github.com/openconfig/hercules",
+            commit = "cd48feeaaa54426df561d8c961d18d344365998b",
+            build_file = "@//bazel:external/hercules.BUILD",
+        )
+
+    if "com_github_yang_models_yang" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_yang_models_yang",
+            remote = "https://github.com/YangModels/yang",
+            commit = "31daa2507ae507776c23b4d4176b6cdcef2a308c",
+            build_file = "@//bazel:external/yang.BUILD",
         )
 
 # -----------------------------------------------------------------------------
@@ -194,9 +218,6 @@ def stratum_deps():
             url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
         )
 
-# -----------------------------------------------------------------------------
-#      Golang specific libraries.
-# -----------------------------------------------------------------------------
     if "net_zlib" not in native.existing_rules():
         native.bind(
             name = "zlib",

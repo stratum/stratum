@@ -1,0 +1,25 @@
+From 30dbc97a2033fe5fe5bbd0bf05c3e47b4c8487ae Mon Sep 17 00:00:00 2001
+From: Yi Tseng <yi@opennetworking.org>
+Date: Thu, 23 May 2019 01:00:45 -0700
+Subject: [PATCH] debug
+
+---
+ ygen/protogen.go | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ygen/protogen.go b/ygen/protogen.go
+index b537989..9630064 100644
+--- a/ygen/protogen.go
++++ b/ygen/protogen.go
+@@ -296,7 +296,8 @@ func writeProto3Header(in proto3Header) (string, error) {
+ 	if in.CallerName == "" {
+ 		in.CallerName = callerName()
+ 	}
+-
++	// Force add "google.protobuf.any" package
++	in.Imports = append(in.Imports, protoAnyPackage)
+ 	// Sort the list of imports such that they are output in alphabetical
+ 	// order, minimising diffs.
+ 	sort.Strings(in.Imports)
+--
+2.19.0

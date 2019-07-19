@@ -10,7 +10,7 @@ cc_cdlang_library(
     template = "scenarios.cc.tmpl",
     deps = [
         "@com_github_grpc_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googletest//:gtest",
         "//stratum/glue/gtl:map_util",

@@ -59,6 +59,8 @@ def _build_git_repository(
     commit = None,
     tag = None,
     build_file = None,
+    patches = [],
+    patch_args = []
     ):
 
   # Strip trailing / from remote
@@ -73,6 +75,8 @@ def _build_git_repository(
       branch = branch,
       commit = commit,
       tag = tag,
+      patches = patches,
+      patch_args = patch_args,
       build_file = build_file,
     )
   else:
@@ -82,6 +86,8 @@ def _build_git_repository(
       branch = branch,
       commit = commit,
       tag = tag,
+      patches = patches,
+      patch_args = patch_args,
     )
   return True
 
@@ -125,7 +131,7 @@ def remote_workspace(
 
   # Fall back to git_repository
   if _build_git_repository(
-      name, remote, branch, commit, tag,build_file):
+      name, remote, branch, commit, tag, build_file, patches, patch_args):
     return
 
   fail("could not generate remote workspace for " + name)

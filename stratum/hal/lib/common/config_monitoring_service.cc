@@ -31,7 +31,7 @@
 
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
-#include "stratum/public/proto/openconfig.pb.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -286,7 +286,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       auto* update = notification->add_update();
       *update->mutable_path() = path;
       // Convert the configuration from the internal format.
-      ::util::StatusOr<oc::Device> out =
+      ::util::StatusOr<openconfig::Device> out =
           OpenconfigConverter::ChassisConfigToOcDevice(
               *running_chassis_config_);
       if (out.ok()) {

@@ -37,40 +37,9 @@ cc_proto_library(
     name = "error_cc_proto",
     deps = [":error_proto"],
 )
-
-#FIXME(boc) pull this from upstream repo directly
-proto_library(
-    name = "openconfig_proto",
-    srcs = [
-        "openconfig.proto",
-        "openconfig-goog-bcm.proto",
-        "yang_wrappers.proto",
-    ],
-    deps = [
-        "//stratum/public/proto/openconfig:openconfig_proto",
-        "@com_google_protobuf//:any_proto",
-    ],
-)
 cc_proto_library(
     name = "openconfig_cc_proto",
     deps = [":openconfig_proto"]
-)
-
-#FIXME(boc) pull this from upstream repo directly
-proto_library(
-    name = "sc_yang_proto",
-    srcs = [
-        "yext.proto",
-        "ywrapper.proto",
-    ],
-    deps = [
-        "@com_google_protobuf//:descriptor_proto",
-        "@com_google_protobuf//:any_proto",
-    ]
-)
-cc_proto_library(
-    name = "sc_yang_cc_proto",
-    deps = [":sc_yang_proto"],
 )
 
 proto_library(
@@ -102,6 +71,17 @@ proto_library(
 cc_proto_library(
     name = "hal_cc_proto",
     deps = [":hal_proto"]
+)
+
+proto_library(
+    name = "openconfig_goog_bcm_proto",
+    srcs = ["openconfig-goog-bcm.proto"],
+    deps = ["@com_github_openconfig_ygot_proto//:ywrapper_proto"]
+)
+
+cc_proto_library(
+    name = "openconfig_goog_bcm_cc_proto",
+    deps = [":openconfig_goog_bcm_proto"]
 )
 
 ''' FIXME(boc) expose gNMI and P4RT protos

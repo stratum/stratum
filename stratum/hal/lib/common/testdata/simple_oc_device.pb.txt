@@ -1,0 +1,477 @@
+component {
+  name: "dummy switch 1"
+  component {
+    chassis {
+      platform: OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC
+    }
+  }
+}
+component {
+  name: ":lc-1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    id {
+      value: "1"
+    }
+  }
+}
+component {
+  name: "1/1/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/1/1"
+    }
+    port {
+      port_id {
+        value: 1
+      }
+    }
+  }
+}
+component {
+  name: "1/2/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/2/1"
+    }
+    port {
+      port_id {
+        value: 2
+      }
+    }
+  }
+}
+component {
+  name: "1/3/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/3/1"
+    }
+    port {
+      port_id {
+        value: 3
+      }
+    }
+  }
+}
+component {
+  name: "1/4/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/4/1"
+    }
+    port {
+      port_id {
+        value: 4
+      }
+    }
+  }
+}
+component {
+  name: "1/5/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/5/1"
+    }
+    port {
+      port_id {
+        value: 5
+      }
+    }
+  }
+}
+component {
+  name: "1/6/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/6/1"
+    }
+    port {
+      port_id {
+        value: 6
+      }
+    }
+  }
+}
+component {
+  name: "1/7/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/7/1"
+    }
+    port {
+      port_id {
+        value: 7
+      }
+    }
+  }
+}
+component {
+  name: "1/8/1"
+  component {
+    linecard {
+      slot_id {
+        value: "1"
+      }
+    }
+    transceiver {
+      channel {
+        index: 1
+      }
+    }
+    integrated_circuit {
+      node_id {
+        value: 1
+      }
+    }
+    subcomponent {
+      name: "1/8/1"
+    }
+    port {
+      port_id {
+        value: 8
+      }
+    }
+  }
+}
+component {
+  name: "trk-1"
+  component {
+    port {
+      port_id {
+        value: 9
+      }
+    }
+  }
+}
+component {
+  name: "trk-2"
+  component {
+    port {
+      port_id {
+        value: 10
+      }
+    }
+  }
+}
+interface {
+  name: "1/1/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10MB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 1
+    }
+    ifindex {
+      value: 1
+    }
+  }
+}
+interface {
+  name: "1/2/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100MB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 2
+    }
+    ifindex {
+      value: 2
+    }
+  }
+}
+interface {
+  name: "1/3/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_1GB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 3
+    }
+    ifindex {
+      value: 3
+    }
+  }
+}
+interface {
+  name: "1/4/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10GB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 4
+    }
+    ifindex {
+      value: 4
+    }
+  }
+}
+interface {
+  name: "1/5/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_25GB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 5
+    }
+    ifindex {
+      value: 5
+    }
+  }
+}
+interface {
+  name: "1/6/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_40GB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 6
+    }
+    ifindex {
+      value: 6
+    }
+  }
+}
+interface {
+  name: "1/7/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_50GB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 7
+    }
+    ifindex {
+      value: 7
+    }
+  }
+}
+interface {
+  name: "1/8/1"
+  interface {
+    enabled {
+    }
+    physical_channel {
+      value: 1
+    }
+    ethernet {
+      port_speed: OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100GB
+      auto_negotiate {
+      }
+    }
+    id {
+      value: 8
+    }
+    ifindex {
+      value: 8
+    }
+  }
+}
+interface {
+  name: "trk-1"
+  interface {
+    enabled {
+    }
+    id {
+      value: 9
+    }
+    ifindex {
+      value: 9
+    }
+    aggregation {
+      lag_type: OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC
+      member {
+        value: "1/1/1"
+      }
+      member {
+        value: "1/2/1"
+      }
+    }
+  }
+}
+interface {
+  name: "trk-2"
+  interface {
+    enabled {
+    }
+    id {
+      value: 10
+    }
+    ifindex {
+      value: 10
+    }
+    aggregation {
+      lag_type: OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_LACP
+      member {
+        value: "1/3/1"
+      }
+      member {
+        value: "1/4/1"
+      }
+    }
+  }
+}

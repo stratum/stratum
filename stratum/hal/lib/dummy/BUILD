@@ -102,8 +102,7 @@ stratum_cc_library(
 proto_library(
     name = "dummy_test_proto",
     srcs = ["dummy_test.proto"],
-    deps = ["//stratum/hal/lib/common:common_proto"
-    ]
+    deps = ["//stratum/hal/lib/common:common_proto"]
 )
 
 cc_proto_library(

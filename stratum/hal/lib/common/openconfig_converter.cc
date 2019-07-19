@@ -17,10 +17,11 @@
 #include <iostream>
 #include <list>
 #include "stratum/glue/logging.h"
-#include "stratum/public/proto/ywrapper.pb.h"
+#include "github.com/openconfig/ygot/proto/ywrapper/ywrapper.pb.h"
 #include "stratum/lib/constants.h"
 #include "absl/strings/substitute.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/hal/lib/common/utils.h"
 
 namespace stratum {
 
@@ -28,102 +29,63 @@ namespace hal {
 
 namespace {
 
+using namespace openconfig::enums;
+
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   Node
 // to:
-//   std::list<oc::Components::Component>
+//   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Components::Component>> NodeToComponent(
+::util::StatusOr<std::list<openconfig::Device::ComponentKey>> NodeToComponent(
     const Node &in) {
   std::string linecard_name = absl::Substitute(":lc-$0", in.slot());
+  std::string component_id = std::to_string(in.id());
 
-  oc::Components::Component linecard;
-  linecard.set_type(oc::OpenconfigPlatformTypes::HW_LINECARD);
-  linecard.mutable_config()->mutable_name()->set_value(linecard_name);
-  linecard.mutable_config()->mutable_slot_id()->set_value(in.slot());
-  linecard.mutable_linecard()->mutable_config()->mutable_slot_id()->set_value(
-      in.slot());
-
-  oc::Components::Component::Subcomponents::Subcomponent reference;
-  reference.mutable_name()->set_value(in.name());
-  reference.mutable_config()->mutable_name()->set_value(in.name());
-
-  (*linecard.mutable_subcomponents()->mutable_subcomponent())[in.name()] =
-      reference;
-
-  oc::Components::Component node;
-  node.set_type(oc::OpenconfigPlatformTypes::HW_NODE);
-  node.mutable_config()->mutable_name()->set_value(in.name());
-  node.mutable_node()->mutable_config()->mutable_linecard()->set_value(
-      linecard_name);
-  node.mutable_node()->mutable_config()->mutable_uid()->set_value(in.id());
-  node.mutable_node()->mutable_config()->mutable_index()->set_value(in.index());
-
-  oc::Components::Component::Node::Config::ConfigParams config_params;
-
-  *node.mutable_node()->mutable_config()->mutable_config_params() =
-      config_params;
+  openconfig::Device::ComponentKey component_key;
+  component_key.set_name(linecard_name);
+  auto component = component_key.mutable_component();
+  component->mutable_id()->set_value(component_id);
+  auto linecard = component->mutable_linecard();
+  linecard->mutable_slot_id()->set_value(std::to_string(in.slot()));
 
   // TODO(aghaffar): There are still a lot of things we are not supporting for
   // nodes, including VLAN configs. Add support for those in the YANG model as
   // well as the proto encodings. Then add support here in the code.
 
-  return std::list<oc::Components::Component>({linecard, node});
+  return std::list<openconfig::Device::ComponentKey>({component_key});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   Chassis
 // to:
-//   std::list<oc::Components::Component>
+//   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Components::Component>> ChassisToComponent(
+::util::StatusOr<openconfig::Component> ChassisToComponent(
     const Chassis &in) {
-  oc::Components::Component component;
+  openconfig::Component component;
+  auto chassis = component.mutable_chassis();
 
-  component.set_type(oc::OpenconfigPlatformTypes::HW_BCM_BASED_CHASSIS);
-  component.mutable_config()->mutable_name()->set_value(in.name());
-  component.mutable_chassis()->mutable_config()->mutable_name()->set_value(
-      in.name());
-  oc::Bcm::Chassis::Config bcm_config;
+  // TODO(Yi Tseng): platform from yang model does not fit to platform from
+  // the common.proto
   switch (in.platform()) {
-    case Platform::PLT_GENERIC_TRIDENT2:
-      break;
-    case Platform::PLT_GENERIC_TRIDENT2:
-      break;
-    case Platform::PLT_GENERIC_TOMAHAWK:
-      break;
-    case Platform::PLT_P4_SOFT_SWITCH:
-      bcm_config.set_platform(oc::Bcm::HerculesChassis::P4_SOFT_SWITCH);
-      break;
-    case Platform::PLT_MLNX_SN2700:
-      bcm_config.set_platform(oc::Bcm::HerculesChassis::MLNX_SN2700);
-      break;
     default:
-      // Hmm...
-      LOG(ERROR) << "Unknown 'platform': " << in.ShortDebugString();
+      chassis->set_platform(OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC);
       break;
   }
-  component.mutable_chassis()
-      ->mutable_config()
-      ->mutable_vendor_specific()
-      ->PackFrom(bcm_config);
-  return std::list<oc::Components::Component>({component});
+  return component;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   VendorConfig
 // to:
-//   std::list<oc::Components::Component>
+//   oc::Bcm::Chassis::Config
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Components::Component>> VendorConfigToComponent(
+::util::StatusOr<oc::Bcm::Chassis::Config> VendorConfigToBcmConfig(
     const VendorConfig &in) {
-  oc::Components::Component component;
-
   oc::Bcm::Chassis::Config bcm_config;
-
   for (const auto &entry : in.google_config().node_id_to_knet_config()) {
     oc::Bcm::Chassis::Config::NodeIdToKnetConfig oc_knet_cfg;
     oc_knet_cfg.mutable_node_uid()->set_value(entry.first);
@@ -222,253 +184,222 @@ namespace {
         oc_rate_limit_cfg;
   }
 
-  component.mutable_chassis()
-      ->mutable_config()
-      ->mutable_vendor_specific()
-      ->PackFrom(bcm_config);
-
-  return std::list<oc::Components::Component>({component});
+  bcm_config.mutable_bcm_chassis_map_id()->set_value(in.google_config().bcm_chassis_map_id());
+  return bcm_config;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   SingletonPort
 // to:
-//   std::list<oc::Components::Component>
+//   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Components::Component>>
+::util::StatusOr<std::list<openconfig::Device::ComponentKey>>
 SingletonPortToComponents(const SingletonPort &in) {
-  std::list<oc::Components::Component> ret;
+  openconfig::Device::ComponentKey component_key;
+  component_key.set_name(in.name());
+  auto component = component_key.mutable_component();
+  auto transceiver = component->mutable_transceiver();
+  auto channel_key = transceiver->add_channel();
 
-  std::string transceiver_name =
-      absl::Substitute(":txrx-$0/$1", in.slot(), in.port());
-  oc::Components::Component transceiver;
-  transceiver.set_type(oc::OpenconfigPlatformTypes::HW_TRANSCEIVER);
-  transceiver.mutable_config()->mutable_name()->set_value(transceiver_name);
+  channel_key->set_index(in.channel());
 
-  oc::Components::Component::Transceiver::PhysicalChannels::Channel channel;
-  channel.mutable_config()->mutable_index()->set_value(in.channel());
-  channel.mutable_index()->set_value(in.channel());
-  (*transceiver.mutable_transceiver()
-        ->mutable_physical_channels()
-        ->mutable_channel())[in.channel()] = channel;
+  auto subcomponent_key = component->add_subcomponent();
+  subcomponent_key->set_name(in.name());
+  auto port = component->mutable_port();
+  port->mutable_port_id()->set_value(in.id());
 
-  ret.push_back(transceiver);
+  // No slot-id from component.port or interface,
+  // here we could store the linecard of this port
+  auto linecard = component->mutable_linecard();
+  linecard->mutable_slot_id()->set_value(std::to_string(in.slot()));
 
-  oc::Components::Component::Subcomponents::Subcomponent reference;
-  reference.mutable_name()->set_value(transceiver_name);
-  reference.mutable_config()->mutable_name()->set_value(transceiver_name);
+  // No node-id from component.port or interface
+  // here we could store the integrated circuit of this port
+  auto integrated_circuit = component->mutable_integrated_circuit();
+  integrated_circuit->mutable_node_id()->set_value(in.node());
 
-  oc::Components::Component port;
-  port.set_type(oc::OpenconfigPlatformTypes::HW_PORT);
-  port.mutable_config()->mutable_slot_id()->set_value(in.slot());
-  port.mutable_config()->mutable_port_id()->set_value(in.port());
-  port.mutable_config()->mutable_channel_id()->set_value(in.channel());
-  port.mutable_config()->mutable_name()->set_value(in.name());
-
-  (*port.mutable_subcomponents()->mutable_subcomponent())[transceiver_name] =
-      reference;
-
-  ret.push_back(port);
-  return ret;
+  return std::list<openconfig::Device::ComponentKey>({component_key});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   SingletonPort
 // to:
-//   std::list<oc::Interfaces::Interface>
+//   std::list<openconfig::InterfaceKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Interfaces::Interface>>
+::util::StatusOr<std::list<openconfig::Device::InterfaceKey>>
 SingletonPortToInterfaces(const SingletonPort &in) {
-  oc::Interfaces::Interface singleton;
+  openconfig::Device::InterfaceKey interface_key;
+  interface_key.set_name(in.name());
+  auto interface = interface_key.mutable_interface();
 
-  singleton.mutable_name()->set_value(in.name());
-  // config
-  singleton.mutable_config()->set_type(oc::IetfInterfaces::ETHERNET_CSMACD);
-  singleton.mutable_config()->mutable_enabled()->set_value(true);
-  singleton.mutable_config()->mutable_name()->set_value(in.name());
-  singleton.mutable_config()->mutable_hardware_port()->set_value(in.name());
-  // ethernet
-  singleton.mutable_ethernet()->mutable_config()->set_duplex_mode(
-      ::oc::Interfaces::Interface::Ethernet::Config::FULL);
+  // SingletonPort.id -> /interfaces/interface/state/id(ifindex)
+  interface->mutable_id()->set_value(in.id());
+  interface->mutable_ifindex()->set_value(in.id());
+
+  // SingletonPort.speed_bps -> /interfaces/interface/ethernet/config/port-speed
   switch (in.speed_bps()) {
     case 10000000:  // 10Mbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_10MB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10MB);
       break;
     case 100000000:  // 100Mbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_100MB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100MB);
       break;
     case 1000000000:  // 1Gbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_1GB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_1GB);
       break;
     case kTenGigBps:  // 10Gbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_10GB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10GB);
       break;
     case kTwentyFiveGigBps:  // 25Gbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_25GB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_25GB);
       break;
     case kFortyGigBps:  // 40Gbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_40GB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_40GB);
       break;
     case kFiftyGigBps:  // 50Gbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_50GB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_50GB);
       break;
     case kHundredGigBps:  // 100Gbps
-      singleton.mutable_ethernet()->mutable_config()->set_port_speed(
-          oc::OpenconfigIfEthernet::SPEED_100GB);
+      interface->mutable_ethernet()
+          ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100GB);
       break;
     default:
-      LOG(ERROR) << "unknown 'speed_bps' " << in.ShortDebugString();
-      break;
+      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown 'speed_bps' " << in.ShortDebugString();
   }
-  singleton.mutable_ethernet()
-      ->mutable_config()
-      ->mutable_enable_flow_control()
-      ->set_value(true);
-  singleton.mutable_ethernet()
-      ->mutable_config()
+
+  // SingletonPort.config_params.admin_state -> /interfaces/interface/config/enabled
+  interface->mutable_enabled()
+      ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
+
+  // SingletonPort.config_params.autoneg -> /interfaces/interface/ethernet/config/auto-negotiate
+  interface->mutable_ethernet()
       ->mutable_auto_negotiate()
-      ->set_value(false);
+      ->set_value(IsPortAutonegEnabled(in.config_params().autoneg()));
 
-  // state
-  // hold_time
-  // hercules_interface
-  singleton.mutable_hercules_interface()
-      ->mutable_config()
-      ->mutable_uid()
-      ->set_value(in.id());
+  // FIXME(Yi Tseng): Should we use other field to store interface channel?
+  interface->add_physical_channel()->set_value(in.channel());
+
   // subinterfaces
   // aggregation
-  return std::list<oc::Interfaces::Interface>({singleton});
+  return std::list<openconfig::Device::InterfaceKey>({interface_key});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   TrunkPort
 // to:
-//   std::list<oc::Components::Component>
+//   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Components::Component>> TrunkPortToComponents(
+::util::StatusOr<std::list<openconfig::Device::ComponentKey>> TrunkPortToComponents(
     const TrunkPort &in) {
-  std::list<oc::Components::Component> ret;
-
-  oc::Components::Component port;
-  port.set_type(oc::OpenconfigPlatformTypes::HW_PORT);
-  port.mutable_config()->mutable_name()->set_value(in.name());
-
-  ret.push_back(port);
-  return ret;
+  openconfig::Device::ComponentKey component_key;
+  component_key.set_name(in.name());
+  auto component = component_key.mutable_component();
+  component->mutable_port()->mutable_port_id()->set_value(in.id());
+  return std::list<openconfig::Device::ComponentKey>({component_key});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
 //   TrunkPort
 // to:
-//   std::list<oc::Interfaces::Interface>
+//   std::list<openconfig::Device::InterfaceKey>
 ////////////////////////////////////////////////////////////////////////////////
-::util::StatusOr<std::list<oc::Interfaces::Interface>> TrunkPortToInterfaces(
+::util::StatusOr<std::list<openconfig::Device::InterfaceKey>> TrunkPortToInterfaces(
     const ChassisConfig &root, const TrunkPort &in) {
-  std::list<oc::Interfaces::Interface> ret;
-  oc::Interfaces::Interface trunk;
+  openconfig::Device::InterfaceKey interface_key;
+  interface_key.set_name(in.name());
+  auto trunk = interface_key.mutable_interface();
 
-  trunk.mutable_name()->set_value(in.name());
-  // config
-  trunk.mutable_config()->set_type(oc::IetfInterfaces::IEEE_8023_AD_LAG);
-  trunk.mutable_config()->mutable_enabled()->set_value(true);
-  trunk.mutable_config()->mutable_name()->set_value(in.name());
-  // ethernet
-  // state
-  // hold_time
-  // hercules_interface
-  trunk.mutable_hercules_interface()
-      ->mutable_config()
-      ->mutable_uid()
-      ->set_value(in.id());
-  // subinterfaces
-  // aggregation
+  // SingletonPort.id -> /interfaces/interface/state/id(ifindex)
+  trunk->mutable_id()->set_value(in.id());
+  trunk->mutable_ifindex()->set_value(in.id());
+
+  // SingletonPort.config_params.admin_state -> /interfaces/interface/config/enabled
+  trunk->mutable_enabled()
+      ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
+
+  switch (in.type()) {
+    case TrunkPort::LACP_TRUNK:
+      trunk->mutable_aggregation()->set_lag_type(OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_LACP);
+      break;
+    case TrunkPort::STATIC_TRUNK:
+      trunk->mutable_aggregation()->set_lag_type(OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC);
+      break;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown trunk type " << in.type();
+  }
+
   std::map<int64, std::string> id_to_name;
   for (const auto &hal_singleton : root.singleton_ports()) {
     id_to_name[hal_singleton.id()] = hal_singleton.name();
   }
-  for (int64 member_id : in.members()) {
-    oc::Interfaces::Interface member;
 
+  for (int64 member_id : in.members()) {
     std::string *name = gtl::FindOrNull(id_to_name, member_id);
     if (name == nullptr) {
-      LOG(ERROR) << "unknown 'members' " << in.ShortDebugString();
-      continue;
+      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown 'members' " << in.ShortDebugString();
     }
 
-    member.mutable_name()->set_value(*name);
-    member.mutable_config()->mutable_name()->set_value(*name);
-    member.mutable_ethernet()
-        ->mutable_config()
-        ->mutable_aggregate_id()
-        ->set_value(in.name());
-
-    ret.push_back(member);
+    auto member = trunk->mutable_aggregation()->add_member();
+    member->set_value(*name);
   }
-  ret.push_back(trunk);
-  return ret;
+  return std::list<openconfig::Device::InterfaceKey>({interface_key});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   oc::Device + oc::Components::Component
+//   openconfig::Device + openconfig::Device::ComponentKey
 // to:
 //   Chassis
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<Chassis> ComponentToChassis(
-    const oc::Device &device, const oc::Components::Component &component) {
+    const openconfig::Device &device,
+    const openconfig::Device::ComponentKey &component_key) {
   Chassis to;
+  to.set_name(component_key.name());
+  auto component = component_key.component();
 
-  to.set_name(component.chassis().config().name().value());
-
-  if (component.chassis()
-          .config()
-          .vendor_specific()
-          .Is<oc::Bcm::Chassis::Config>()) {
-    oc::Bcm::Chassis::Config bcm_specific;
-    component.chassis().config().vendor_specific().UnpackTo(&bcm_specific);
-    switch (bcm_specific.platform()) {
-      default:
-        break;
-    }
+  // TODO(Yi Tseng): platform from yang model does not fit to platform from
+  // the common.proto
+  switch (component.chassis().platform()) {
+    default:
+      to.set_platform(PLT_UNKNOWN);
   }
-
   return to;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   oc::Device + oc::Components::Component
+//   openconfig::Device + openconfig::Device::ComponentKey
 // to:
 //   Node
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<Node> ComponentToNode(
-    const oc::Device &device, const oc::Components::Component &component) {
+    const openconfig::Device &device,
+    const openconfig::Device::ComponentKey &component_key) {
   Node to;
+  auto component = component_key.component();
 
-  to.set_id(component.node().config().uid().value());
-  to.set_name(component.config().name().value());
+  to.set_id(std::stoi(component.id().value()));
+  to.set_name(component_key.name());
+
+  auto linecard = component.linecard();
   // No need to check if linecard component is present. This method will not be
   // called if it is missing.
-  to.set_slot(device.components()
-                  .component()
-                  .at(component.node().config().linecard().value())
-                  .linecard()
-                  .config()
-                  .slot_id()
-                  .value());
-  to.set_index(component.node().config().index().value());
+  to.set_slot(std::stoi(linecard.slot_id().value()));
+
+  // TODO(Yi): no index defined in the model
+  // to.set_index();
 
   // TODO(aghaffar): For now by default disable learning on default VLAN.
   // This will eventually come from gNMI.
@@ -488,20 +419,20 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   oc::Device + oc::Components::Component
+//   openconfig::Device::ComponentKey
 // to:
 //   GoogleConfig
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<GoogleConfig> ComponentToChassisBcmChipSpecific(
-    const oc::Device &device, const oc::Components::Component &component) {
+    const openconfig::Device::ComponentKey &component_key) {
+  auto component = component_key.component();
   GoogleConfig to;
 
   if (component.chassis()
-          .config()
-          .vendor_specific()
-          .Is<oc::Bcm::Chassis::Config>()) {
+      .vendor_specific()
+      .Is<oc::Bcm::Chassis::Config>()) {
     oc::Bcm::Chassis::Config bcm_specific;
-    component.chassis().config().vendor_specific().UnpackTo(&bcm_specific);
+    component.chassis().vendor_specific().UnpackTo(&bcm_specific);
 
     *to.mutable_bcm_chassis_map_id() =
         bcm_specific.bcm_chassis_map_id().value();
@@ -594,93 +525,113 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   oc::Device + oc::Interfaces::Interface
+//   openconfig::Device + openconfig::InterfaceKey
 // to:
 //   TrunkPort
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<TrunkPort> InterfaceToTrunkPort(
-    const oc::Device &device, const oc::Interfaces::Interface &interface) {
+    const openconfig::Device &device, const openconfig::Device::InterfaceKey &interface_key) {
   TrunkPort to;
+  auto interface = interface_key.interface();
 
-  to.set_id(interface.hercules_interface().config().uid().value());
-  to.set_name(interface.config().name().value());
+  to.set_id(interface.id().value());
+  to.set_name(interface_key.name());
 
-  switch (interface.aggregation().config().lag_type()) {
-    case oc::OpenconfigIfAggregate::AGGREGATION_TYPE_LACP:
+  switch (interface.aggregation().lag_type()) {
+    case OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_LACP:
       to.set_type(TrunkPort::LACP_TRUNK);
       break;
-    case oc::OpenconfigIfAggregate::AGGREGATION_TYPE_STATIC:
+    case OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC:
       to.set_type(TrunkPort::STATIC_TRUNK);
       break;
     default:
       break;
   }
 
-  for (const auto &entry : device.interfaces().interface()) {
-    const oc::Interfaces::Interface &i = entry.second;
-    if (i.config().type() != oc::IetfInterfaces::ETHERNET_CSMACD ||
-        i.ethernet().config().aggregate_id().value() !=
-            interface.config().name().value()) {
+  std::map<std::string, int64> name_to_id;
+  for (const auto &entry : device.interface()) {
+    const auto &interface_name = entry.name();
+    const auto &interface_id = entry.interface().id().value();
+    name_to_id[interface_name] = interface_id;
+  }
+
+  for (const auto &member_name : interface.aggregation().member()) {
+    auto id = gtl::FindOrNull(name_to_id, member_name.value());
+    if (id == nullptr) {
+      LOG(ERROR) << "unknown 'members' " << member_name.value();
       continue;
     }
-    to.add_members(i.hercules_interface().config().uid().value());
+    to.add_members(*id);
   }
 
   return to;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
-//   oc::Device + oc::Interfaces::Interface
+//   openconfig::Device + openconfig::Interfaces::Interface
 // to:
 //   SingletonPort
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<SingletonPort> InterfaceToSingletonPort(
-    const oc::Device &device, const oc::Interfaces::Interface &interface) {
+    const openconfig::Device &device, const openconfig::Device::InterfaceKey &interface_key) {
   SingletonPort to;
+  auto &interface = interface_key.interface();
+  to.set_id(interface.id().value());
+  to.set_name(interface_key.name());
 
-  to.set_id(interface.hercules_interface().config().uid().value());
-  to.set_name(interface.config().name().value());
+  openconfig::Device::ComponentKey if_component_key;
+  for (auto &component_key : device.component()) {
+    if (component_key.name() == interface_key.name()) {
+      if_component_key.CopyFrom(component_key);
+      break;
+    }
+  }
 
-  const oc::Components::Component *port =
-      gtl::FindOrNull(device.components().component(),
-                      interface.config().hardware_port().value());
-  // No need to check for nullptr as this method will not be called if the
-  // hardware_port component is not present.
-  to.set_slot(port->config().slot_id().value());
-  to.set_port(port->config().port_id().value());
-  to.set_channel(port->config().channel_id().value());
-  // TODO(aghaffar): This is temporary till we have the correct proto and have
-  // the map from the port to nodes. This will eventually come from gNMI.
-  to.set_node(1);
+  if (!if_component_key.has_component()) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Cannot find component for interface " << interface_key.name();
+  }
 
-  switch (interface.ethernet().config().port_speed()) {
-    case oc::OpenconfigIfEthernet::SPEED_10MB:
+  auto if_component = if_component_key.component();
+
+  to.set_slot(std::stoi(if_component.linecard().slot_id().value()));
+  to.set_port(if_component.port().port_id().value());
+  to.set_node(if_component.integrated_circuit().node_id().value());
+
+  switch (interface.ethernet().port_speed()) {
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10MB:
       to.set_speed_bps(10000000);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_100MB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100MB:
       to.set_speed_bps(100000000);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_1GB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_1GB:
       to.set_speed_bps(1000000000);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_10GB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_10GB:
       to.set_speed_bps(kTenGigBps);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_25GB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_25GB:
       to.set_speed_bps(kTwentyFiveGigBps);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_40GB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_40GB:
       to.set_speed_bps(kFortyGigBps);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_50GB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_50GB:
       to.set_speed_bps(kFiftyGigBps);
       break;
-    case oc::OpenconfigIfEthernet::SPEED_100GB:
+    case OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100GB:
       to.set_speed_bps(kHundredGigBps);
       break;
     default:
-      break;
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid interface speed " << interface.ethernet().port_speed();
+  }
+
+  // FIXME(Yi Tseng): Should we use other field to store interface channel?
+  for (auto &channel : interface.physical_channel()) {
+    to.set_channel(channel.value());
+    break;
   }
 
   return to;
@@ -690,31 +641,38 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 // Some useful macros used in the code.
 ////////////////////////////////////////////////////////////////////////////////
 #define MERGE_ALL_COMPONENTS(list)                                  \
-  for (const auto &component : list) {                              \
-    (*to.mutable_components()                                       \
-          ->mutable_component())[component.config().name().value()] \
-        .MergeFrom(component);                                      \
+  for (const auto &component_key : (list)) {                          \
+    to.add_component()->CopyFrom(component_key);                     \
   }
 
 #define MERGE_ALL_INTERFACES(list)                                  \
-  for (const auto &interface : list) {                              \
-    (*to.mutable_interfaces()                                       \
-          ->mutable_interface())[interface.config().name().value()] \
-        .MergeFrom(interface);                                      \
+  for (const auto &interface_key : (list)) {                          \
+    to.add_interface()->CopyFrom(interface_key);                      \
   }
 
 }  // namespace
 
-::util::StatusOr<oc::Device> OpenconfigConverter::ChassisConfigToOcDevice(
+::util::StatusOr<openconfig::Device> OpenconfigConverter::ChassisConfigToOcDevice(
     const ChassisConfig &in) {
-  oc::Device to;
+  openconfig::Device to;
 
   // Handle 'description' field.
   // Nothing to do here.
 
   // Handle 'chassis' field.
-  ASSIGN_OR_RETURN(auto components, ChassisToComponent(in.chassis()));
-  MERGE_ALL_COMPONENTS(components);
+  ASSIGN_OR_RETURN(auto chassis_component, ChassisToComponent(in.chassis()));
+
+  if (in.has_vendor_config()) {
+    ASSIGN_OR_RETURN(auto vendor_config,
+                     VendorConfigToBcmConfig(in.vendor_config()));
+    chassis_component.mutable_chassis()->mutable_vendor_specific()->PackFrom(vendor_config);
+  }
+
+  auto ckey = to.add_component();
+  ckey->set_name(in.chassis().name());
+  ckey->mutable_component()->CopyFrom(chassis_component);
+
+//  LOG(INFO) << to.DebugString();
 
   // Handle 'nodes' repeated field.
   for (const auto &hal_node : in.nodes()) {
@@ -741,68 +699,48 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   // Handle 'port_groups' repeated field.
   // Nothing to do here.
 
-  // Handle 'vendor_config' repeated field.
-  oc::Components::Component *vendor =
-      &(*to.mutable_components()->mutable_component())[in.chassis().name()];
-  ASSIGN_OR_RETURN(auto vendor_components,
-                   VendorConfigToComponent(in.vendor_config()));
-  for (const auto &component : vendor_components) {
-    vendor->MergeFrom(component);
-  }
-
-  VLOG(1) << "The convetred oc::Device proto:\n" << to.ShortDebugString();
+  VLOG(1) << "The convetred openconfig::Device proto:\n" << to.ShortDebugString();
 
   return to;
 }
 
 ::util::StatusOr<ChassisConfig> OpenconfigConverter::OcDeviceToChassisConfig(
-    const oc::Device &in) {
+    const openconfig::Device &in) {
   ChassisConfig to;
 
   // Validate the input before doing anything.
   RETURN_IF_ERROR(ValidateOcDeviceProto(in));
 
-  for (const auto &entry : in.components().component()) {
-    const oc::Components::Component &component = entry.second;
-
-    switch (component.type()) {
-      case oc::OpenconfigPlatformTypes::HW_BCM_BASED_CHASSIS: {
-        // Set chassis field.
-        ASSIGN_OR_RETURN(*to.mutable_chassis(),
-                         ComponentToChassis(in, component));
+  for (const auto &compoennt_key : in.component()) {
+    const auto &component = compoennt_key.component();
+    if (component.has_chassis()) {
+      // Set chassis field.
+      ASSIGN_OR_RETURN(*to.mutable_chassis(),
+                       ComponentToChassis(in, compoennt_key));
+      if (component.chassis().has_vendor_specific()) {
         // Set vendor_config.google_config field.
         ASSIGN_OR_RETURN(*to.mutable_vendor_config()->mutable_google_config(),
-                         ComponentToChassisBcmChipSpecific(in, component));
-      } break;
-
-      case oc::OpenconfigPlatformTypes::HW_NODE: {
-        // Create nodes elements.
-        ASSIGN_OR_RETURN(*to.add_nodes(), ComponentToNode(in, component));
-      } break;
-
-      default:
-        break;
+                         ComponentToChassisBcmChipSpecific(compoennt_key));
+      }
+    }
+    // There is no type defined in the model, need to determine which type of
+    // component by using fields stores in this component
+    if (component.has_linecard() && !component.has_port()) {
+      ASSIGN_OR_RETURN(*to.add_nodes(), ComponentToNode(in, compoennt_key));
     }
   }
 
-  // Create singleton_ports elements.
-  for (const auto &entry : in.interfaces().interface()) {
-    const oc::Interfaces::Interface &interface = entry.second;
-    if (interface.config().type() != oc::IetfInterfaces::ETHERNET_CSMACD) {
-      continue;
+  for (const auto &interface_key : in.interface()) {
+    const auto &interface = interface_key.interface();
+    if (interface.has_aggregation()) {
+      // Trunk port
+      ASSIGN_OR_RETURN(*to.add_trunk_ports(),
+                       InterfaceToTrunkPort(in, interface_key));
+    } else {
+      // Singleton port
+      ASSIGN_OR_RETURN(*to.add_singleton_ports(),
+                       InterfaceToSingletonPort(in, interface_key));
     }
-    ASSIGN_OR_RETURN(*to.add_singleton_ports(),
-                     InterfaceToSingletonPort(in, interface));
-  }
-
-  // Create trunk_ports elements.
-  for (const auto &entry : in.interfaces().interface()) {
-    const oc::Interfaces::Interface &interface = entry.second;
-    if (interface.config().type() != oc::IetfInterfaces::IEEE_8023_AD_LAG) {
-      continue;
-    }
-    ASSIGN_OR_RETURN(*to.add_trunk_ports(),
-                     InterfaceToTrunkPort(in, interface));
   }
 
   VLOG(1) << "The converted ChassisConfig proto:\n" << to.ShortDebugString();
@@ -811,42 +749,32 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 }
 
 ::util::Status OpenconfigConverter::ValidateOcDeviceProto(
-    const oc::Device &in) {
+    const openconfig::Device &in) {
+  bool node_exists = false;
+  bool chassis_exists = false;
+
   // Verify components.
-  for (const auto &entry : in.components().component()) {
-    const oc::Components::Component &component = entry.second;
-    switch (component.type()) {
-      case oc::OpenconfigPlatformTypes::HW_NODE:
-        // A node.
-        CHECK_RETURN_IF_FALSE(
-            gtl::FindOrNull(in.components().component(),
-                            component.node().config().linecard().value()) !=
-            nullptr)
-            << "Unknown linecard: " << component.ShortDebugString();
-        break;
-      default:
-        break;
+  for (const auto &component_key : in.component()) {
+    const auto &component = component_key.component();
+
+    if (component.has_linecard() && !component.has_port()) {
+      // A node exists
+      node_exists = true;
+    }
+
+    if (component.has_chassis()) {
+      // Chassis exists
+      chassis_exists = true;
     }
   }
 
+  CHECK_RETURN_IF_FALSE(node_exists);
+  CHECK_RETURN_IF_FALSE(chassis_exists);
+
   // Verify interfaces.
-  for (const auto &entry : in.interfaces().interface()) {
-    const oc::Interfaces::Interface &interface = entry.second;
-    switch (interface.config().type()) {
-      case oc::IetfInterfaces::ETHERNET_CSMACD:
-        // Regular Ethernet interface.
-        CHECK_RETURN_IF_FALSE(
-            gtl::FindOrNull(in.components().component(),
-                            interface.config().hardware_port().value()) !=
-            nullptr)
-            << "Unknown hardware_port: " << interface.ShortDebugString();
-        break;
-      case oc::IetfInterfaces::IEEE_8023_AD_LAG:
-        // Trunk interface.
-        break;
-      default:
-        break;
-    }
+  for (const auto &interface_key : in.interface()) {
+    // Every interface must stores an id
+    CHECK_RETURN_IF_FALSE(interface_key.interface().has_id());
   }
 
   return ::util::OkStatus();

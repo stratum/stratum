@@ -243,10 +243,10 @@ stratum_cc_library(
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
         "@com_github_grpc_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
-        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
         "//stratum/glue:logging",
-        "//stratum/public/proto:openconfig_cc_proto",
+        "@com_github_openconfig_hercules//:openconfig_cc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:constants",
@@ -288,7 +288,7 @@ stratum_cc_test(
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
         "@com_github_grpc_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:constants",
         "//stratum/lib:timer_daemon",
@@ -296,6 +296,8 @@ stratum_cc_test(
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        ":testdata",
+        "@com_github_openconfig_hercules//:openconfig_cc_proto",
     ],
     data = [
         # TODO(Yi): generate this when we generating the OpenConfig proto files
@@ -310,7 +312,7 @@ cc_library(
     deps = [
         "@com_google_googletest//:gtest",
         "@com_github_grpc_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
     ],
 )
 
@@ -333,8 +335,8 @@ cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
-        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/lib:macros",
@@ -688,8 +690,8 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/synchronization",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-        "@com_github_openconfig_gnmi//:gnmi_cc_proto",
-        "@com_github_openconfig_gnmi//:gnmi_cc_grpc",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:timer_daemon",
@@ -761,19 +763,20 @@ stratum_cc_library(
     deps = [
         ":common_cc_proto",
         "@com_google_absl//absl/strings",
+        "@com_github_openconfig_hercules//:openconfig_cc_proto",
+        "//stratum/public/proto:openconfig_goog_bcm_cc_proto",
         "//stratum/glue:logging",
         #FIXME(boc) "//stratum/glue/openconfig/proto:old_openconfig_proto",
-        "//stratum/public/proto:openconfig_cc_proto",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/glue/gtl:map_util",
+        "//stratum/hal/lib/common:utils",
     ],
 )
 
-''' FIXME(boc) missing test config files
 stratum_cc_test(
     name = "openconfig_converter_test",
     srcs = ["openconfig_converter_test.cc"],
@@ -788,7 +791,6 @@ stratum_cc_test(
         "//stratum/lib/test_utils:matchers",
     ],
 )
-'''
 
 cc_library(
     name = "testdata",

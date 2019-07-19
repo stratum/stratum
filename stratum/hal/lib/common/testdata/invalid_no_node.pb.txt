@@ -1,0 +1,9 @@
+# invalid open config config, no linecard(node)
+component {
+  name: "dummy switch 1"
+  component {
+    chassis {
+      platform: OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC
+    }
+  }
+}
