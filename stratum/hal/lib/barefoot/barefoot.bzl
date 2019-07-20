@@ -52,12 +52,6 @@ cc_import(
   shared_library = "barefoot-bin/lib/libbfutils.so",
   alwayslink = 1,
 )
-cc_import(
-  name = "bf_pdfixed_thrift",
-  hdrs = [],  # see cc_library rule above
-  shared_library = "barefoot-bin/lib/libtofinopdfixed_thrift.so",
-  alwayslink = 1,
-)
 """)
 
 barefoot_configure = repository_rule(

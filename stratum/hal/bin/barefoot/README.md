@@ -84,12 +84,7 @@ downloaded and we will build against it. This is useful if you are building
 switch (in this case just make sure the correct ONLP library for your platform
 is loaded at runtime).
 
-**`stratum_bf` currently needs to link to the thrift library, until support for
-  gNMI is complete. As a result you need to set the `THRIFT_INSTALL` environment
-  variable to point to the directory where `libthrift.so` is installed. For most
-  users, this directory should be `/usr/local/lib`**
 ```
-export THRIFT_INSTALL=/usr/local/lib
 bazel build //stratum/hal/bin/barefoot:stratum_bf
 ```
 

@@ -28,8 +28,6 @@ stratum_cc_binary(
         "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_sys",
         "@local_barefoot_bin//:bf_utils",
-        "@local_barefoot_bin//:bf_pdfixed_thrift",
-        "@local_thrift_bin//:thrift",
         "@local_pi_bin//:pifeproto",
         "@local_pi_bin//:piall",
     ],
