@@ -8,6 +8,7 @@ FROM stratumproject/build:build as builder
 
 ENV BUILD_DEPS \
     python-setuptools \
+    python-pip \
     help2man
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ${BUILD_DEPS}
@@ -39,7 +40,21 @@ RUN cp --parents /usr/local/lib/libpifecpp.so.0.0.0 /output
 RUN cp --parents /usr/local/lib/libpiconvertproto.so.0.0.0 /output
 RUN cp --parents /usr/local/lib/libpiprotobuf.so.0.0.0 /output
 RUN cp --parents /usr/local/lib/libpip4info.so.0.0.0 /output
-RUN cp --parents /usr/local/lib/libprotobuf.so.18.0.0 /output
+RUN cp --parents --preserve=links /usr/local/lib/libprotobuf.so.* /output
+
+# As well as the P4Runtime Python bindings installed by PI. This is not needed
+# to run mininet, but it's useful to execute Python scripts acting as a
+# P4Runtime client, e.g. control plane apps or PTF tests.
+RUN cp --parents -r /usr/local/lib/python*/dist-packages/p4/* /output
+# Google API (e.g. status proto) needed by P4Runtime.
+RUN cp --parents -r /usr/local/lib/python*/dist-packages/google/* /output
+# Install a version of the protobuf and grpc python bindings that is
+# compatible to that used to generate the P4Runtime ones.
+RUN export PROTOBUF_VER=$(protoc --version | cut -d' ' -f2) \
+    && pip install --root /output "protobuf<=${PROTOBUF_VER}"
+# Is there a better way of getting the grpc version?
+RUN export GRPC_VER=$(readlink -f /usr/local/lib/libgrpc++.so | awk -F'.so.' '{print $2}') \
+    && pip install --root /output "grpcio<=${GRPC_VER}"
 
 # Final stage, runtime.
 FROM bitnami/minideb:stretch as runtime
