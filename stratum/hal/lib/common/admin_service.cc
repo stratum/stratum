@@ -62,6 +62,8 @@ AdminService::AdminService(OperationMode mode,
 ::grpc::Status AdminService::Time(::grpc::ServerContext* context,
                                   const ::gnoi::system::TimeRequest* req,
                                   ::gnoi::system::TimeResponse* resp) {
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, Time,
+                           context);
   resp->set_time(helper_->GetTime());
   return ::grpc::Status::OK;
 }
@@ -69,6 +71,8 @@ AdminService::AdminService(OperationMode mode,
 ::grpc::Status AdminService::Reboot(::grpc::ServerContext* context,
                                     const ::gnoi::system::RebootRequest* req,
                                     ::gnoi::system::RebootResponse* resp) {
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, Reboot,
+                           context);
   absl::WriterMutexLock l(&reboot_lock_);
 
   if (reboot_timer_) {
@@ -114,7 +118,8 @@ AdminService::AdminService(OperationMode mode,
     ::grpc::ServerContext* context,
     const ::gnoi::system::RebootStatusRequest* req,
     ::gnoi::system::RebootStatusResponse* resp) {
-
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, RebootStatus,
+                           context);
   if (!reboot_timer_) {
     resp->set_active(false);
     return ::grpc::Status::OK;
@@ -135,6 +140,8 @@ AdminService::AdminService(OperationMode mode,
     ::grpc::ServerContext* context,
     const ::gnoi::system::CancelRebootRequest* req,
     ::gnoi::system::CancelRebootResponse* resp) {
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, CancelReboot,
+                           context);
   absl::WriterMutexLock l(&reboot_lock_);
   reboot_timer_.reset();
   LOG(INFO) << "Reboot canceled";
@@ -185,7 +192,8 @@ AdminService::AdminService(OperationMode mode,
     ::grpc::ServerContext* context,
     ::grpc::ServerReader<::gnoi::system::SetPackageRequest>* reader,
     ::gnoi::system::SetPackageResponse* resp) {
-
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, AdminService, SetPackage,
+                           context);
   ::gnoi::system::SetPackageRequest msg;
   auto fs_helper = helper_->GetFileSystemHelper();
 
