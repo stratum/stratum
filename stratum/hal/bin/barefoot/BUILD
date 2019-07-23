@@ -20,7 +20,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/phal/onlp:onlpphal",
-        "//stratum/hal/lib/pi:pi_node",
+        "//stratum/hal/lib/pi:pi_node_bf",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
         "@local_barefoot_bin//:bf_headers",
@@ -28,8 +28,6 @@ stratum_cc_binary(
         "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_sys",
         "@local_barefoot_bin//:bf_utils",
-        "@local_pi_bin//:pifeproto",
-        "@local_pi_bin//:piall",
     ],
     data = [
         "tofino_skip_p4.conf",

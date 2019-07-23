@@ -10,49 +10,44 @@
 sudo apt-get install libjudy-dev libgmp-dev libpcap-dev libboost1.58-all-dev
 ```
 
-### Create a local directory where you will install bmv2 and PI
-
+### Create a local directory where you will install bmv2
 ```
 mkdir bmv2_install
 export BMV2_INSTALL=`pwd`/bmv2_install
-export PI_INSTALL=`pwd`/pi_install
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BMV2_INSTALL/lib
 ```
-
 *If you plan on adding interfaces to bmv2 (which can be done by providing the
 appropriate Chassis Config file when starting bmv2), you will need to run the
 binary as root and therefore you may want to install bmv2 in a standard system
-directory instead. For example you can set `BMV2_INSTALL` and `PI_INSTALL`to 
-`/usr/local`. In this case you do not need to modify `LD_LIBRARY_PATH` but you
-will need to run `sudo ldconfig` after the installation.*
+directory instead. For example you can set `BMV2_INSTALL` to /usr/local. In this
+case you do not need to modify `LD_LIBRARY_PATH` but you will need to run `sudo
+ldconfig` after the installation.*
 
 ### Install PI
 ```
 git clone https://github.com/p4lang/PI.git
 cd PI
 ./autogen.sh
-./configure --with-proto --prefix=$PI_INSTALL
+./configure --without-bmv2 --without-proto --without-fe-cpp --without-cli --without-internal-rpc --prefix=$BMV2_INSTALL
 make [-j4]
 [sudo] make install
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: `0bcaeda2269a4f2f0539cf8eac49868e389a8c18`
+we used for testing: ca0291420b5b47fa2596a00877d1713aab61dc7a.
 
 ### Install bmv2
 ```
 git clone https://github.com/p4lang/behavioral-model.git bmv2
 cd bmv2
 ./autogen.sh
-./configure --without-targets --with-pi --disable-elogger \
-  --without-nanomsg --without-thrift --prefix=${BMV2_INSTALL} \
-  CXXFLAGS="-I${PWD}/targets/simple_switch -DWITH_SIMPLE_SWITCH -isystem$BMV2_INSTALL/include -isystem$PI_INSTALL/include -L$PI_INSTALL/lib"
+./configure CPPFLAGS="-isystem$BMV2_INSTALL/include" --without-nanomsg --without-thrift --with-pi --prefix=$BMV2_INSTALL
 make [-j4]
 [sudo] make install
 [sudo ldconfig]
 ```
 The *master* branch should work for this repo, but you can also used the commit
-we used for testing: `10c2d3434a7212631f11d5d1e3bc802ba6365f6a`
+we used for testing: 6f700badd1c5040d04dec24f446982ad63fa64c9.
 
 ## Building the `stratum_bmv2` binary
 
@@ -60,9 +55,8 @@ The `stratum_bmv2` binary is a standalone executable which includes:
 1. a Stratum implementation for bmv2
 2. the `v1model` datapath
 
-To build `stratum_bmv2`, make sure that the `BMV2_INSTALL` and `PI_INSTALL`
-environment variable is set and points to your local bmv2 installation.
-Then build the Bazel target:
+To build `stratum_bmv2`, make sure that the `BMV2_INSTALL` environment variable
+is set and points to your local bmv2 installation. Then build the Bazel target:
 ```
 bazel build //stratum/hal/bin/bmv2:stratum_bmv2
 ```

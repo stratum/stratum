@@ -34,12 +34,6 @@ RUN mkdir -p /output/usr/local/bin
 RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
 RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
 RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
-RUN cp --parents /usr/local/lib/libpifeproto.so.0.0.0 /output
-RUN cp --parents /usr/local/lib/libpiall.so.0.0.0 /output
-RUN cp --parents /usr/local/lib/libpifecpp.so.0.0.0 /output
-RUN cp --parents /usr/local/lib/libpiconvertproto.so.0.0.0 /output
-RUN cp --parents /usr/local/lib/libpiprotobuf.so.0.0.0 /output
-RUN cp --parents /usr/local/lib/libpip4info.so.0.0.0 /output
 RUN cp --parents --preserve=links /usr/local/lib/libprotobuf.so.* /output
 
 # As well as the P4Runtime Python bindings installed by PI. This is not needed

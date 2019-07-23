@@ -30,21 +30,33 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+pi_node_common_deps = [
+    "@com_google_googleapis//google/rpc:status_cc_proto",
+    "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+    "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+    "//stratum/glue:integral_types",
+    "//stratum/glue:logging",
+    "//stratum/glue/status:status_macros",
+    "//stratum/hal/lib/common:writer_interface",
+    "//stratum/lib:constants",
+    "//stratum/lib:macros",
+    "//stratum/hal/lib/common:common_cc_proto",
+]
+
+# Default PI Node
 stratum_cc_library(
     name = "pi_node",
     srcs = ["pi_node.cc"],
     hdrs = ["pi_node.h"],
-    deps = ["@com_google_googleapis//google/rpc:status_cc_proto",
-            "@com_google_googleapis//google/rpc:code_cc_proto",
-            "@com_github_p4lang_p4runtime//:p4info_cc_proto",
-            "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
-            "@local_pi_bin//:pi_headers",
-            "//stratum/glue:integral_types",
-            "//stratum/glue:logging",
-            "//stratum/glue/status:status_macros",
-            "//stratum/hal/lib/common:writer_interface",
-            "//stratum/lib:constants",
-            "//stratum/lib:macros",
-            "//stratum/hal/lib/common:common_cc_proto",
-    ],
+    deps = pi_node_common_deps +
+           ["@com_github_p4lang_PI//proto/frontend:pifeproto"]
+)
+
+# PI Node for Barefoot targets
+stratum_cc_library(
+    name = "pi_node_bf",
+    srcs = ["pi_node.cc"],
+    hdrs = ["pi_node.h"],
+    deps = pi_node_common_deps +
+           ["@com_github_p4lang_PI_bf//proto/frontend:pifeproto"]
 )

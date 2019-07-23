@@ -23,8 +23,6 @@ stratum_cc_binary(
         "@local_bmv2_bin//:bmv2_headers",
         "@local_bmv2_bin//:bmv2_simple_switch",
         "@local_bmv2_bin//:bmv2_pi",
-        "@local_pi_bin//:pifeproto",
-        "@local_pi_bin//:piall",
     ],
     data = ["dummy.json"],
 )

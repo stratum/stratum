@@ -49,6 +49,15 @@ def stratum_deps():
             build_file = "@//bazel:external/p4c.BUILD",
         )
 
+    if "judy" not in native.existing_rules():
+        # TODO(Yi): add judy.BUILD to bazel/external/ instead depending on specific one
+        http_archive(
+            name = "judy",
+            build_file = "@com_github_p4lang_PI//bazel/external:judy.BUILD",
+            url = "http://archive.ubuntu.com/ubuntu/pool/universe/j/judy/judy_1.0.5.orig.tar.gz",
+            strip_prefix = "judy-1.0.5",
+        )
+
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
         http_archive(
             name = "com_github_p4lang_p4runtime",
@@ -70,15 +79,15 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "0bcaeda2269a4f2f0539cf8eac49868e389a8c18",
+            commit = "ca0291420b5b47fa2596a00877d1713aab61dc7a",
         )
 
-    if "judy" not in native.existing_rules():
-        http_archive(
-            name = "judy",
-            build_file = "@com_github_p4lang_PI//bazel/external:judy.BUILD",
-            url = "http://archive.ubuntu.com/ubuntu/pool/universe/j/judy/judy_1.0.5.orig.tar.gz",
-            strip_prefix = "judy-1.0.5",
+    if "com_github_p4lang_PI_bf" not in native.existing_rules():
+        # ----- PI for Barefoot targets -----
+        remote_workspace(
+            name = "com_github_p4lang_PI_bf",
+            remote = "https://github.com/p4lang/PI.git",
+            commit = "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
         )
 
     if "com_github_openconfig_gnmi_proto" not in native.existing_rules():
