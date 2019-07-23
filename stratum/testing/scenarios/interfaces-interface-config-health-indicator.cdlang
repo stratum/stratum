@@ -15,6 +15,20 @@ scenario GetSetHealthIndicator(ifname: string) version 1.0.0 {
     } ]
     timestamp: _
   } }
+  SetRequest {
+    update [ {
+      path: /interfaces/interface[name=$ifname]/config/health-indicator
+      val { string_val: "GOOD" }
+    } ]
+  }
+  >> { OK,
+  SetResponse {
+    response [ {
+      path: /interfaces/interface[name=$ifname]/config/health-indicator
+      op: gnmi::UpdateResult::UPDATE
+    } ]
+    timestamp: _
+  } }
   gnmi := gNMI.Subscribe
   gnmi << SubscribeRequest {
          subscribe {

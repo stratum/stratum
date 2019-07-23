@@ -41,6 +41,7 @@
 #include "stratum/public/lib/error.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
 #include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",
@@ -192,6 +193,10 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
                             status.error_message());
     }
+    // Add to response object in SetResponse
+    ::gnmi::UpdateResult* res = resp->add_response();
+    res->mutable_path()->CopyFrom(path);
+    res->set_op(::gnmi::UpdateResult_Operation::UpdateResult_Operation_DELETE);
   }
   for (const auto& replace : req->replace()) {
     const auto& path = replace.path();
@@ -202,6 +207,10 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
                             status.error_message());
     }
+    // Add to response object in SetResponse
+    ::gnmi::UpdateResult* res = resp->add_response();
+    res->mutable_path()->CopyFrom(replace.path());
+    res->set_op(::gnmi::UpdateResult_Operation::UpdateResult_Operation_REPLACE);
   }
   for (const auto& update : req->update()) {
     const auto& path = update.path();
@@ -212,6 +221,10 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
                             status.error_message());
     }
+    // Add to response object in SetResponse
+    ::gnmi::UpdateResult* res = resp->add_response();
+    res->mutable_path()->CopyFrom(update.path());
+    res->set_op(::gnmi::UpdateResult_Operation::UpdateResult_Operation_UPDATE);
   }
 
   if (config.HasBeenChanged()) {
@@ -245,6 +258,11 @@ ConfigMonitoringService::~ConfigMonitoringService() {
                             status.error_message());
     }
   }
+
+  // Add data to SetResponse Object
+  resp->mutable_prefix()->CopyFrom(req->prefix());
+  resp->mutable_extension()->CopyFrom(req->extension());
+  resp->set_timestamp(absl::GetCurrentTimeNanos());
   return ::grpc::Status::OK;
 }
 
