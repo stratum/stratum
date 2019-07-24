@@ -34,21 +34,33 @@ RUN mkdir -p /output/usr/local/bin
 RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
 RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
 RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
-RUN cp --parents --preserve=links /usr/local/lib/libprotobuf.so.* /output
 
 # As well as the P4Runtime Python bindings installed by PI. This is not needed
 # to run mininet, but it's useful to execute Python scripts acting as a
 # P4Runtime client, e.g. control plane apps or PTF tests.
-RUN cp --parents -r /usr/local/lib/python*/dist-packages/p4/* /output
+RUN bazel build @com_github_p4lang_p4runtime//:p4runtime_py_grpc
+
+ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
+RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
+    cp -r bazel-bin/external/com_github_p4lang_p4runtime/p4/* $PYTHON_PACKAGE_BASE/p4 && \
+    touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py
+
 # Google API (e.g. status proto) needed by P4Runtime.
-RUN cp --parents -r /usr/local/lib/python*/dist-packages/google/* /output
+RUN mkdir -p $PYTHON_PACKAGE_BASE/google && \
+    cp -r bazel-bin/external/com_google_protobuf/google/* $PYTHON_PACKAGE_BASE/google && \
+    cp -r bazel-bin/external/com_google_googleapis/google/* $PYTHON_PACKAGE_BASE/google && \
+    touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py
+
 # Install a version of the protobuf and grpc python bindings that is
 # compatible to that used to generate the P4Runtime ones.
-RUN export PROTOBUF_VER=$(protoc --version | cut -d' ' -f2) \
-    && pip install --root /output "protobuf<=${PROTOBUF_VER}"
-# Is there a better way of getting the grpc version?
-RUN export GRPC_VER=$(readlink -f /usr/local/lib/libgrpc++.so | awk -F'.so.' '{print $2}') \
-    && pip install --root /output "grpcio<=${GRPC_VER}"
+ARG PROTOBUF_VER=3.7.1
+ARG GRPC_VER=1.21.3
+RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
+RUN pip install --root /output "grpcio<=${GRPC_VER}"
 
 # Final stage, runtime.
 FROM bitnami/minideb:stretch as runtime
