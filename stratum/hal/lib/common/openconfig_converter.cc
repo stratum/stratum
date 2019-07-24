@@ -369,11 +369,31 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   to.set_name(component_key.name());
   auto component = component_key.component();
 
-  // TODO(Yi Tseng): platform from yang model does not fit to platform from
-  // the common.proto
   switch (component.chassis().platform()) {
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT_PLUS:
+      to.set_platform(PLT_GENERIC_TRIDENT2);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TRIDENT2:
+      to.set_platform(PLT_GENERIC_TOMAHAWK);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_GENERIC_TOMAHAWK:
+      to.set_platform(PLT_GENERIC_TRIDENT_PLUS);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_MLNX_SN2700:
+      to.set_platform(PLT_MLNX_SN2700);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_P4_SOFT_SWITCH:
+      to.set_platform(PLT_P4_SOFT_SWITCH);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO:
+      to.set_platform(PLT_BAREFOOT_TOFINO);
+      break;
+    case OPENCONFIGHERCULESPLATFORMPLATFORMTYPE_BAREFOOT_TOFINO2:
+      to.set_platform(PLT_BAREFOOT_TOFINO2);
+      break;
     default:
       to.set_platform(PLT_UNKNOWN);
+      break;
   }
   return to;
 }

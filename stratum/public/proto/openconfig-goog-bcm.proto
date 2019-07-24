@@ -150,8 +150,10 @@ message Chassis {
         4;  //[(yext.path) = "node_id_to_knet_config"];
     map<uint64, NodeIdToRxConfig> node_id_to_rx_config =
         5;  //[(yext.path) = "node_id_to_rx_config"];
-    HerculesChassis.Platform platform = 6;  //[(yext.path) = "platform"];
+    // Unused
+    // HerculesChassis.Platform platform = 6;  //[(yext.path) = "platform"];
     ConfigParams config_params = 7;         //[(yext.path) = "config-params"];
+    reserved 6;
   }
 
   // Components.Component.Chassis.State represents the
@@ -261,12 +263,14 @@ message Chassis {
         2;  //[(yext.path) = "node_id_to_tx_config"];
     map<uint64, NodeIdToRateLimitConfig> node_id_to_rate_limit_config =
         3;  //[(yext.path) = "node_id_to_rate_limit_config"];
-    HerculesChassis.Platform platform = 4;  //[(yext.path) = "platform"];
+    // Unused
+    // HerculesChassis.Platform platform = 4;  //[(yext.path) = "platform"];
     ConfigParams config_params = 5;         //[(yext.path) = "config-params"];
     ywrapper.StringValue bcm_chassis_map_id =
         6;  //[(yext.path) = "bcm_chassis_map_id"];
     map<uint64, NodeIdToKnetConfig> node_id_to_knet_config =
         7;                           //[(yext.path) = "node_id_to_knet_config"];
+    reserved 4;
   }
 
   Config config = 1;  //[(yext.path) = "config"];
@@ -281,15 +285,5 @@ message HerculesBcmChip {
     BCM_KNET_IF_PURPOSE_CONTROLLER = 1;
     BCM_KNET_IF_PURPOSE_SFLOW = 2;
     BCM_KNET_IF_PURPOSE_UNKNOWN = 3;
-  }
-}
-
-// HerculesChassis.PLATFORM represents the corresponding enumerated node in the
-// YANG schema.
-message HerculesChassis {
-  enum Platform {
-    UNSET = 0;
-    MLNX_SN2700 = 2;
-    P4_SOFT_SWITCH = 3;
   }
 }

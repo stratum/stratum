@@ -1,6 +1,6 @@
 description: "Sample config"
 chassis {
-  platform: PLT_P4_SOFT_SWITCH
+  platform: PLT_BAREFOOT_TOFINO
   name: "tofino"
 }
 nodes {

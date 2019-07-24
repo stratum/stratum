@@ -55,7 +55,7 @@ class ChassisConfigBuilder {
       : node_id(node_id) {
     config_.set_description("Test config for BFChassisManager");
     auto* chassis = config_.mutable_chassis();
-    chassis->set_platform(PLT_P4_SOFT_SWITCH);
+    chassis->set_platform(PLT_BAREFOOT_TOFINO);
     chassis->set_name("Tofino");
 
     auto* node = config_.add_nodes();

@@ -7,9 +7,16 @@ module stratum {
 
   import openconfig-platform { prefix oc-platform; }
   import openconfig-extensions { prefix oc-ext; }
+  import openconfig-hercules-platform { prefix herc-platform; }
   oc-ext:openconfig-version "0.2.0";
 
-  revision 2019-05-22 {
+  revision "2019-07-23" {
+    description
+      "Added supported platform types.";
+    reference "0.0.2";
+  }
+
+  revision "2019-05-22" {
     description
       "Initial version.";
     reference "0.0.1";
@@ -23,5 +30,46 @@ module stratum {
         description "Vendor specific data of the chassis";
       }
 
+  }
+
+  // All platforms listed in common.proto
+
+  identity GENERIC_TRIDENT_PLUS {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
+  identity GENERIC_TRIDENT2 {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
+
+
+
+
+
+  identity GENERIC_TOMAHAWK {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
+  identity MLNX_SN2700 {
+    base herc-platform:PLATFORM_TYPE;
+  }
+
+  identity P4_SOFT_SWITCH {
+    base herc-platform:PLATFORM_TYPE;
+    description
+      "P4 behavioral model (bmv2): https://github.com/p4lang/behavioral-model";
+  }
+
+  identity BAREFOOT_TOFINO {
+    base herc-platform:PLATFORM_TYPE;
+    description
+      "Platforms based on the Barefoot Tofino ASIC";
+  }
+
+  identity BAREFOOT_TOFINO2 {
+    base herc-platform:PLATFORM_TYPE;
+    description
+      "Platforms based on the Barefoot Tofino2 ASIC";
   }
 }
