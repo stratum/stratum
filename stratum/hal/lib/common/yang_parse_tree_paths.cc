@@ -1175,7 +1175,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/forwarding-viable
-void SetUpInterfacesInterfaceEthernetConfigForwardingViability(
+void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id, uint32 port_id,
     bool forwarding_viability, TreeNode* node, YangParseTree* tree) {
   auto poll_functor = [forwarding_viability](const GnmiEvent& event,
                                              const ::gnmi::Path& path,
@@ -1184,10 +1184,44 @@ void SetUpInterfacesInterfaceEthernetConfigForwardingViability(
     // was configured!
     return SendResponse(GetResponse(path, forwarding_viability), stream);
   };
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+        const gnmi::TypedValue* typed_val =
+            dynamic_cast<const gnmi::TypedValue*>(&val);
+        if (typed_val == nullptr) {
+          return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+        }
+        TrunkMemberBlockState new_forwarding_viability = typed_val->bool_val() ?
+            TRUNK_MEMBER_BLOCK_STATE_FORWARDING : TRUNK_MEMBER_BLOCK_STATE_BLOCKED;
+        auto status = SetValue(node_id, port_id, tree,
+            &SetRequest::Request::Port::mutable_forwarding_viability,
+            &ForwardingViability::set_state, new_forwarding_viability);
+
+        if (status != ::util::OkStatus()) {
+          return status;
+        }
+
+        // Update the YANG parse tree.
+        auto poll_functor = [new_forwarding_viability](const GnmiEvent& event,
+                                           const ::gnmi::Path& path,
+                                           GnmiSubscribeStream* stream) {
+          return SendResponse(GetResponse(path,
+                                          ConvertTrunkMemberBlockStateToBool(new_forwarding_viability)),
+                              stream);
+        };
+        node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+
+        return ::util::OkStatus();
+  };
+
   auto on_change_functor = UnsupportedFunc();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
-      ->SetOnChangeHandler(on_change_functor);
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2253,7 +2287,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("forwarding-viable")());
   // TODO(tmadejski): Fix this value once HAL.PROTO has corresponding field.
-  SetUpInterfacesInterfaceEthernetConfigForwardingViability(
+  SetUpInterfacesInterfaceEthernetConfigForwardingViability(node_id, port_id,
       /* forwarding-viable */ true, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(

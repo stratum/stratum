@@ -1173,6 +1173,8 @@ message SetRequest {
         HealthIndicator health_indicator = 8;
         // The new autoneg status of the port.
         AutonegotiationStatus autoneg_status = 9;
+        // The new forwarding viability of the port.
+        ForwardingViability forwarding_viability = 10;
       }
     }
     // Data required to set info for a specific node.
