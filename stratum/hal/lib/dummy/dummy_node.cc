@@ -329,6 +329,10 @@ DummyNode::RetrievePortData(const Request& request) {
         resp.mutable_health_indicator()->
           set_state(port_status.health_indicator.state());
         break;
+    case Request::kHardwarePort:
+        // FIXME(Yi Tseng): Sets hardware port name
+        resp.mutable_hardware_port()->set_name("");
+        break;
       default:
         return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
   }

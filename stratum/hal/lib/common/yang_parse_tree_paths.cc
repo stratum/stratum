@@ -772,6 +772,45 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/state/hardware-port
+void SetUpInterfacesInterfaceStateHardwarePort(uint64 node_id, uint32 port_id,
+                                               TreeNode* node,
+                                               YangParseTree* tree) {
+  // Regular method using a template cannot be used to get the OnPoll functor as
+  // std::string fields are treated differently by the PROTO-to-C++ generator:
+  // the getter returns "const std::string&" instead of "string" which leads to
+  // the template compilation error.
+  auto poll_functor = [node_id, port_id, tree](const GnmiEvent& event,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_hardware_port();
+    request->set_node_id(node_id);
+    request->set_port_id(port_id);
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_hardware_port()) return false;
+      resp = in.hardware_port().name();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/health-indicator
 //
 void SetUpInterfacesInterfaceStateHealthIndicator(uint64 node_id,
@@ -2110,6 +2149,10 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("admin-status")());
   SetUpInterfacesInterfaceStateAdminStatus(node_id, port_id, node, tree);
+
+  node = tree->AddNode(GetPath("interfaces")(
+      "interface", name)("state")("hardware-port")());
+  SetUpInterfacesInterfaceStateHardwarePort(node_id, port_id, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("port-speed")());

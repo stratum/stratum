@@ -1074,6 +1074,11 @@ message AutonegotiationStatus {
   TriState state = 1;
 }
 
+// Wrapper around the hardware port.
+message HardwarePort {
+  string name = 1;
+}
+
 // DataRequest is a message used internally to request data about a component
 // or a set of components through SwitchInterface. It is specifically used in
 // ConfigMonitoringService, as part of gNMI Get/Subscribe RPC implementation.
@@ -1114,6 +1119,7 @@ message DataRequest {
       Port health_indicator = 14;
       Port autoneg_status = 15;
       Port front_panel_port_info = 16;
+      Port hardware_port = 17;
     }
   }
   repeated Request requests = 1;
@@ -1141,6 +1147,7 @@ message DataResponse {
     HealthIndicator health_indicator = 14;
     AutonegotiationStatus autoneg_status = 15;
     FrontPanelPortInfo front_panel_port_info = 16;
+    HardwarePort hardware_port = 17;
   }
 }
 
