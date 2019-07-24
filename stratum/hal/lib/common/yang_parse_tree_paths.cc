@@ -2121,6 +2121,38 @@ void SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /qos/queues/queue[name=<name>]/config/id
+void SetUpQusQueuesQueueConfigId(uint32 queue_id, TreeNode* node, YangParseTree* tree) {
+  auto poll_functor = [queue_id](const GnmiEvent& event,
+                                 const ::gnmi::Path& path,
+                                 GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when
+    // it was configured!
+    return SendResponse(GetResponse(path, queue_id), stream);
+  };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /qos/queues/queue[name=<name>]/state/id
+void SetUpQusQueuesQueueStateId(uint32 queue_id, TreeNode* node, YangParseTree* tree) {
+  auto poll_functor = [queue_id](const GnmiEvent& event,
+                                 const ::gnmi::Path& path,
+                                 GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when
+    // it was configured!
+    return SendResponse(GetResponse(path, queue_id), stream);
+  };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /debug/nodes/node[name=<name>]/packet-io/debug-string
 void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
                                             YangParseTree* tree) {
@@ -2343,6 +2375,12 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
         "output")("queues")("queue", queue_name)("state")("dropped-pkts")());
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
         node_id, port_id, queue_id, node, tree);
+
+    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)("config")("id")());
+    SetUpQusQueuesQueueConfigId(queue_id, node, tree);
+
+    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)("state")("id")());
+    SetUpQusQueuesQueueStateId(queue_id, node, tree);
   }
 
   return node;
