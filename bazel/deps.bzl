@@ -262,3 +262,15 @@ def stratum_deps():
             branch = "master",
             build_file = "@//bazel:external/sdklt.BUILD",
         )
+
+# -----------------------------------------------------------------------------
+#        P4 testing modules
+# -----------------------------------------------------------------------------
+
+    if "com_github_opennetworkinglab_fabric_p4test" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_opennetworkinglab_fabric_p4test",
+            remote = "https://github.com/opennetworkinglab/fabric-p4test",
+            commit = "5ddb0f279df51a2732c30b1235fd22ed02f47989",
+        )
+

@@ -107,5 +107,5 @@ cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
     --grpc-addr <YOUR_HOST_IP_ADDRESS>:28000 --json <prog>.json --p4info <prog>.proto.txt
 ```
 
-You can use the loopback program under `testdata/` if you do not have your own
+You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2` if you do not have your own
 P4 program.

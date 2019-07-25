@@ -125,3 +125,15 @@ pip_import(
 load("@grpc_py_deps//:requirements.bzl", grpc_pip_install = "pip_install")
 
 grpc_pip_install()
+
+# ---------------------------------------------------------------------------
+#       Load dependencies for pipeline PTF rules
+# ---------------------------------------------------------------------------
+pip_import(
+    name = "ptf_deps",
+    requirements = "//stratum/pipelines/ptf:requirements.txt",
+)
+
+load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
+
+ptf_pip_install()
