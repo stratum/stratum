@@ -21,15 +21,29 @@
 
 #include <google/protobuf/text_format.h>
 
+#include <tuple>
+
 namespace stratum {
 
 namespace hal {
 
-TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_SimpleConfig) {
+// This test fixture is instantiated with 2 Protobuf text file paths: the
+// chassis config and the corresponding OpenConfig config. It verifies that each
+// one can be converted to the other using the OpenconfigConverter.
+class OpenconfigConverterSimpleTest
+    : public testing::TestWithParam<std::tuple<const char *, const char *> > {
+ protected:
+  OpenconfigConverterSimpleTest()
+      : chassis_config_path(std::get<0>(GetParam())),
+        oc_config_path(std::get<1>(GetParam())) { }
+
+  const char *chassis_config_path;
+  const char *oc_config_path;
+};
+
+TEST_P(OpenconfigConverterSimpleTest, ChassisToOc) {
   ChassisConfig chassis_config;
-  ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
-      &chassis_config));
+  ASSERT_OK(ReadProtoFromTextFile(chassis_config_path, &chassis_config));
   ::util::StatusOr<openconfig::Device> ret =
       OpenconfigConverter::ChassisConfigToOcDevice(chassis_config);
   ASSERT_OK(ret);
@@ -37,18 +51,19 @@ TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_SimpleConfig) {
   const openconfig::Device &device = ret.ConsumeValueOrDie();
 
   openconfig::Device device_from_file;
-  ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt",
-      &device_from_file));
+  ASSERT_OK(ReadProtoFromTextFile(oc_config_path, &device_from_file));
 
-  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(device, device_from_file));
-}  // OpenconfigConverterTest.ChassisConfigToOcDevice_SimpleConfig
+  // TODO(antonin): there are some nicer EXPECT_ / ASSERT_ macros available to
+  // compare Protobuf messages (which can display the diff in case of mismatch),
+  // we should consider using them.
+  // See https://github.com/google/googletest/issues/1761
+  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      device, device_from_file));
+}
 
-TEST(OpenconfigConverterTest, OcDeviceToChassisConfig_SimpleConfig) {
+TEST_P(OpenconfigConverterSimpleTest, OcToChassis) {
   openconfig::Device device;
-  ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt",
-      &device));
+  ASSERT_OK(ReadProtoFromTextFile(oc_config_path, &device));
 
   ::util::StatusOr<ChassisConfig> ret =
       OpenconfigConverter::OcDeviceToChassisConfig(device);
@@ -58,11 +73,21 @@ TEST(OpenconfigConverterTest, OcDeviceToChassisConfig_SimpleConfig) {
 
   ChassisConfig chassis_config_from_file;
   ASSERT_OK(ReadProtoFromTextFile(
-      "stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
-      &chassis_config_from_file));
+      chassis_config_path, &chassis_config_from_file));
 
-  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(chassis_config, chassis_config_from_file));
-}  // OpenconfigConverterTest.OcDeviceToChassisConfig_SimpleConfig
+  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      chassis_config, chassis_config_from_file));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ConvertConfig,
+    OpenconfigConverterSimpleTest,
+    testing::Values(
+        std::make_tuple("stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
+                        "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt"),
+        std::make_tuple("stratum/hal/lib/common/testdata/port_config_params_chassis.pb.txt",
+                        "stratum/hal/lib/common/testdata/port_config_params_oc_device.pb.txt")));
+
 
 TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_VendorConfig) {
   ChassisConfig chassis_config;
@@ -88,7 +113,8 @@ TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_VendorConfig) {
 
       oc::Bcm::Chassis::Config vendor_config;
       chassis.vendor_specific().UnpackTo(&vendor_config);
-      ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(vendor_config, vendor_config_from_file));
+      ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+          vendor_config, vendor_config_from_file));
       break;
     }
   }
@@ -123,7 +149,8 @@ TEST(OpenconfigConverterTest, OcDeviceToVendorConfig) {
       "stratum/hal/lib/common/testdata/vendor_specific_chassis.pb.txt",
       &chassis_config_from_file));
 
-  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(chassis_config, chassis_config_from_file));
+  ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      chassis_config, chassis_config_from_file));
 
 }  // OpenconfigConverterTest.OcDeviceToVendorConfig
 
@@ -171,7 +198,6 @@ TEST(OpenconfigConverterTest, InvalidOcDevice) {
                       "stratum/hal/lib/common/testdata/invalid_oc_speed.pb.txt",
                       ERR_INVALID_PARAM,
                       OpenconfigConverter::OcDeviceToChassisConfig)
-
 }  // OpenconfigConverterTest.InvalidOcDevice
 
 }  // namespace hal

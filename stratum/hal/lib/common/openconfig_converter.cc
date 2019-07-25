@@ -200,6 +200,25 @@ SingletonPortToComponents(const SingletonPort &in) {
   component_key.set_name(in.name());
   auto component = component_key.mutable_component();
   auto transceiver = component->mutable_transceiver();
+
+  switch (in.config_params().fec_mode()) {
+    case FEC_MODE_UNKNOWN:
+      transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_UNSET);
+      break;
+    case FEC_MODE_ON:
+      transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_ENABLED);
+      break;
+    case FEC_MODE_OFF:
+      transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_DISABLED);
+      break;
+    case FEC_MODE_AUTO:
+      transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_AUTO);
+      break;
+    default:
+      transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_UNSET);
+      break;
+  }
+
   auto channel_key = transceiver->add_channel();
 
   channel_key->set_index(in.channel());
@@ -613,7 +632,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Cannot find component for interface " << interface_key.name();
   }
 
-  auto if_component = if_component_key.component();
+  const auto &if_component = if_component_key.component();
 
   to.set_slot(std::stoi(if_component.linecard().slot_id().value()));
   to.set_port(if_component.port().port_id().value());
@@ -646,6 +665,30 @@ SingletonPortToInterfaces(const SingletonPort &in) {
       break;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid interface speed " << interface.ethernet().port_speed();
+  }
+
+  auto config_params = to.mutable_config_params();
+
+  if (interface.ethernet().has_auto_negotiate()) {
+    if (interface.ethernet().auto_negotiate().value())
+      config_params->set_autoneg(TRI_STATE_TRUE);
+    else
+      config_params->set_autoneg(TRI_STATE_FALSE);
+  }
+
+  switch (if_component.transceiver().fec_mode()) {
+    case OPENCONFIGPLATFORMTYPESFECMODETYPE_UNSET:
+      config_params->set_fec_mode(FEC_MODE_UNKNOWN);
+      break;
+    case OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_ENABLED:
+      config_params->set_fec_mode(FEC_MODE_ON);
+      break;
+    case OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_DISABLED:
+      config_params->set_fec_mode(FEC_MODE_OFF);
+      break;
+    case OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_AUTO:
+      config_params->set_fec_mode(FEC_MODE_AUTO);
+      break;
   }
 
   // FIXME(Yi Tseng): Should we use other field to store interface channel?

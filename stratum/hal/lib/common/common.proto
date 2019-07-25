@@ -242,6 +242,14 @@ message PortFlowParams {
   // TODO(aghaffar): Complete this.
 }
 
+// FEC operational mode for a singleton port.
+enum FecMode {
+  FEC_MODE_UNKNOWN = 0;
+  FEC_MODE_ON = 1;
+  FEC_MODE_OFF = 2;
+  FEC_MODE_AUTO = 3;
+}
+
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
   // Per port hash config. Most of the hash configuration is given per node.
@@ -269,6 +277,8 @@ message PortConfigParams {
   HashConfig hash_config = 4;
   // The modulation type used for the port. Required for some platforms.
   ModulationType modulation_type = 5;
+  // FEC operational mode
+  FecMode fec_mode = 6;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
@@ -965,7 +975,7 @@ enum LedMode {
   LED_MODE_BLUE             = 13;
   LED_MODE_BLUE_BLINKING    = 14;
   LED_MODE_PURPLE           = 15;
-  LED_MODE_PURPLE_BLINKING  = 16;   
+  LED_MODE_PURPLE_BLINKING  = 16;
 }
 
 //------------------------------------------------------------------------------
@@ -1081,6 +1091,11 @@ message HardwarePort {
   string name = 1;
 }
 
+// Wrapper around the FEC mode.
+message FecStatus {
+  FecMode mode = 1;
+}
+
 // DataRequest is a message used internally to request data about a component
 // or a set of components through SwitchInterface. It is specifically used in
 // ConfigMonitoringService, as part of gNMI Get/Subscribe RPC implementation.
@@ -1122,6 +1137,7 @@ message DataRequest {
       Port autoneg_status = 15;
       Port front_panel_port_info = 16;
       Port hardware_port = 17;
+      Port fec_status = 18;
     }
   }
   repeated Request requests = 1;
@@ -1150,6 +1166,7 @@ message DataResponse {
     AutonegotiationStatus autoneg_status = 15;
     FrontPanelPortInfo front_panel_port_info = 16;
     HardwarePort hardware_port = 17;
+    FecStatus fec_status = 18;
   }
 }
 

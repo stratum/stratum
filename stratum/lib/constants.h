@@ -32,6 +32,8 @@ constexpr uint64 kTwentyFiveGigBps = 25 * kBitsPerGigabit;
 constexpr uint64 kFortyGigBps = 40 * kBitsPerGigabit;
 constexpr uint64 kFiftyGigBps = 50 * kBitsPerGigabit;
 constexpr uint64 kHundredGigBps = 100 * kBitsPerGigabit;
+constexpr uint64 kTwoHundredGigBps = 200 * kBitsPerGigabit;
+constexpr uint64 kFourHundredGigBps = 400 * kBitsPerGigabit;
 
 // Default paths for membership info & authorization policy proto files.
 constexpr char kDefaultMembershipInfoFilePath[] =

@@ -39,8 +39,9 @@ class BFPalMock : public BFPalInterface {
 
   MOCK_METHOD0(PortStatusChangeUnregisterEventWriter, ::util::Status());
 
-  MOCK_METHOD3(PortAdd,
-               ::util::Status(int unit, uint32 port_id, uint64 speed_bps));
+  MOCK_METHOD4(PortAdd,
+               ::util::Status(int unit, uint32 port_id, uint64 speed_bps,
+                              FecMode fec_mode));
 
   MOCK_METHOD2(PortDelete, ::util::Status(int unit, uint32 port_id));
 

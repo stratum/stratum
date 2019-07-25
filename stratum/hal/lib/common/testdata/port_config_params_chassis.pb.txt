@@ -1,0 +1,28 @@
+chassis {
+  name: "dummy switch 1"
+}
+nodes {
+  id: 1
+  name: ":lc-1"
+  slot: 1
+  config_params {
+    vlan_configs {
+      block_unknown_multicast: true
+      block_unknown_unicast: true
+      disable_l2_learning: true
+    }
+  }
+}
+singleton_ports {
+  id: 1
+  name: "1/1/1"
+  slot: 1
+  port: 1
+  channel: 1
+  speed_bps: 10000000
+  node: 1
+  config_params {
+    autoneg: TRI_STATE_TRUE
+    fec_mode: FEC_MODE_ON
+  }
+}

@@ -81,9 +81,10 @@ BFChassisManager::~BFChassisManager() = default;
 
   LOG(INFO) << "Adding port " << port_id << " in node " << node_id << ".";
   RETURN_IF_ERROR(bf_pal_interface_->PortAdd(
-      unit, port_id, singleton_port.speed_bps()));
+      unit, port_id, singleton_port.speed_bps(), config_params.fec_mode()));
   config->speed_bps = singleton_port.speed_bps();
   config->admin_state = ADMIN_STATE_DISABLED;
+  config->fec_mode = config_params.fec_mode();
 
   if (config_params.mtu() != 0) {
     RETURN_IF_ERROR(bf_pal_interface_->PortMtuSet(
@@ -114,9 +115,12 @@ BFChassisManager::~BFChassisManager() = default;
   if (!bf_pal_interface_->PortIsValid(unit, port_id)) {
     config->admin_state = ADMIN_STATE_UNKNOWN;
     config->speed_bps.reset();
+    config->fec_mode.reset();
     RETURN_ERROR(ERR_INTERNAL)
         << "Port " << port_id << " in node " << node_id << " is not valid.";
   }
+
+  const auto& config_params = singleton_port.config_params();
 
   // we do not support changing the speed (even for channel 0), ask the client
   // to remove the port and add it again
@@ -125,8 +129,13 @@ BFChassisManager::~BFChassisManager() = default;
         << "The speed for port " << port_id << " in node " << node_id
         << " has changed; you need to delete the port and add it again.";
   }
+  // same for FEC mode
+  if (config_params.fec_mode() != config_old.fec_mode) {
+    RETURN_ERROR(ERR_UNIMPLEMENTED)
+        << "The FEC mode for port " << port_id << " in node " << node_id
+        << " has changed; you need to delete the port and add it again.";
+  }
 
-  const auto& config_params = singleton_port.config_params();
   if (config_params.admin_state() == ADMIN_STATE_UNKNOWN) {
     RETURN_ERROR(ERR_INVALID_PARAM)
         << "Invalid admin state for port " << port_id << " in node " << node_id;
@@ -408,6 +417,13 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
           ));
       break;
     }
+    case Request::kFecStatus: {
+      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
+          request.fec_status().node_id(), request.fec_status().port_id()));
+      if (config->fec_mode)
+        resp.mutable_fec_status()->set_mode(*config->fec_mode);
+      break;
+    }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
@@ -488,11 +504,17 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
           << "Invalid internal state in BFChassisManager, "
           << "speed_bps field should contain a value";
     }
+    if (!config.fec_mode) {
+      RETURN_ERROR(ERR_INTERNAL)
+          << "Invalid internal state in BFChassisManager, "
+          << "fec_mode field should contain a value";
+    }
 
     RETURN_IF_ERROR(bf_pal_interface_->PortAdd(
-        unit, port_id, *config.speed_bps));
+        unit, port_id, *config.speed_bps, *config.fec_mode));
     config_new->speed_bps = *config.speed_bps;
     config_new->admin_state = ADMIN_STATE_DISABLED;
+    config_new->fec_mode = *config.fec_mode;
 
     if (config.mtu) {
       RETURN_IF_ERROR(bf_pal_interface_->PortMtuSet(

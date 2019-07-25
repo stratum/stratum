@@ -24,6 +24,7 @@
 #include "stratum/hal/lib/barefoot/bf_pal_mock.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
+#include "stratum/lib/constants.h"
 #include "absl/time/time.h"
 
 using ::testing::_;
@@ -46,7 +47,8 @@ constexpr int kUnit = 0;
 constexpr int kSlot = 1;
 constexpr int kPort = 1;
 constexpr uint32 kPortId = 12345;
-constexpr uint64 kDefaultSpeedBps = 100000000000;  // 100Gbps
+constexpr uint64 kDefaultSpeedBps = kHundredGigBps;
+constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
 
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
@@ -65,7 +67,8 @@ class ChassisConfigBuilder {
 
   SingletonPort* AddPort(uint32 port_id, int32 port,
                          AdminState admin_state,
-                         uint64 speed_bps = kDefaultSpeedBps) {
+                         uint64 speed_bps = kDefaultSpeedBps,
+                         FecMode fec_mode = kDefaultFecMode) {
     auto* sport = config_.add_singleton_ports();
     sport->set_id(port_id);
     sport->set_node(node_id);
@@ -74,6 +77,7 @@ class ChassisConfigBuilder {
     sport->set_channel(0);
     sport->set_speed_bps(speed_bps);
     sport->mutable_config_params()->set_admin_state(admin_state);
+    sport->mutable_config_params()->set_fec_mode(fec_mode);
     return sport;
   }
 
@@ -106,6 +110,7 @@ class BFChassisManagerTest : public ::testing::Test {
     bf_pal_mock_ = absl::make_unique<BFPalMock>();
     bf_chassis_manager_ = BFChassisManager::CreateInstance(
         phal_mock_.get(), bf_pal_mock_.get());
+    ON_CALL(*bf_pal_mock_, PortIsValid(_, _)).WillByDefault(Return(true));
   }
 
   ::util::Status CheckCleanInternalState() {
@@ -146,7 +151,8 @@ class BFChassisManagerTest : public ::testing::Test {
     // PortStatusChangeRegisterEventWriter called because this is the first call
     // to PushChassisConfig
     EXPECT_CALL(*bf_pal_mock_, PortStatusChangeRegisterEventWriter(_));
-    EXPECT_CALL(*bf_pal_mock_, PortAdd(kUnit, kPortId, kDefaultSpeedBps));
+    EXPECT_CALL(*bf_pal_mock_, PortAdd(
+        kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
     EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
     EXPECT_CALL(*phal_mock_,
@@ -233,10 +239,28 @@ TEST_F(BFChassisManagerTest, RemovePort) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+TEST_F(BFChassisManagerTest, AddPortFec) {
+  ChassisConfigBuilder builder;
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  auto portId = kPortId + 1;
+  auto port = kPort + 1;
+
+  builder.AddPort(
+      portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON);
+  EXPECT_CALL(*bf_pal_mock_, PortAdd(
+      kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
+  ASSERT_OK(PushChassisConfig(builder));
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
 TEST_F(BFChassisManagerTest, ReplayPorts) {
   ASSERT_OK(PushBaseChassisConfig());
 
-  EXPECT_CALL(*bf_pal_mock_, PortAdd(kUnit, kPortId, kDefaultSpeedBps));
+  EXPECT_CALL(*bf_pal_mock_, PortAdd(
+      kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
   // For now, when replaying the port configuration, we set the mtu and autoneg

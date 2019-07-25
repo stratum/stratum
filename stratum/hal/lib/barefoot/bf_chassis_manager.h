@@ -111,6 +111,7 @@ class BFChassisManager {
     absl::optional<uint64> speed_bps;  // empty if port add failed
     absl::optional<int32> mtu;  // empty if MTU configuration failed
     absl::optional<TriState> autoneg;  // empty if Autoneg configuration failed
+    absl::optional<FecMode> fec_mode;  // empty if port add failed
 
     PortConfig()
         : admin_state(ADMIN_STATE_UNKNOWN) { }

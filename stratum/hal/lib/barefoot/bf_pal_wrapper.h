@@ -47,7 +47,8 @@ class BFPalWrapper : public BFPalInterface {
   ::util::Status PortStatusChangeUnregisterEventWriter() override
       LOCKS_EXCLUDED(port_status_change_event_writer_lock_);
 
-  ::util::Status PortAdd(int unit, uint32 port_id, uint64 speed_bps) override;
+  ::util::Status PortAdd(
+       int unit, uint32 port_id, uint64 speed_bps, FecMode fec_mode) override;
 
   ::util::Status PortDelete(int unit, uint32 port_id) override;
 

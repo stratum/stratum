@@ -50,7 +50,8 @@ class BFPalInterface {
   virtual ::util::Status PortStatusChangeUnregisterEventWriter() = 0;
 
   virtual ::util::Status PortAdd(
-      int unit, uint32 port_id, uint64 speed_bps) = 0;
+      int unit, uint32 port_id, uint64 speed_bps,
+      FecMode fec_mode = FEC_MODE_UNKNOWN) = 0;
 
   virtual ::util::Status PortDelete(int unit, uint32 port_id) = 0;
 

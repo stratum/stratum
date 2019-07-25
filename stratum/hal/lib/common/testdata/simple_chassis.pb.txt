@@ -20,6 +20,9 @@ singleton_ports {
   port: 1
   channel: 1
   speed_bps: 10000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -29,6 +32,9 @@ singleton_ports {
   port: 2
   channel: 1
   speed_bps: 100000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -38,6 +44,9 @@ singleton_ports {
   port: 3
   channel: 1
   speed_bps: 1000000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -47,6 +56,9 @@ singleton_ports {
   port: 4
   channel: 1
   speed_bps: 10000000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -56,6 +68,9 @@ singleton_ports {
   port: 5
   channel: 1
   speed_bps: 25000000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -65,6 +80,9 @@ singleton_ports {
   port: 6
   channel: 1
   speed_bps: 40000000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -74,6 +92,9 @@ singleton_ports {
   port: 7
   channel: 1
   speed_bps: 50000000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 singleton_ports {
@@ -83,6 +104,9 @@ singleton_ports {
   port: 8
   channel: 1
   speed_bps: 100000000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
   node: 1
 }
 trunk_ports {

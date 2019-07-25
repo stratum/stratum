@@ -168,17 +168,42 @@ namespace {
   }
 }
 
+::util::StatusOr<bf_fec_type_t> FecModeHalToBf(FecMode fec_mode,
+                                               uint64 speed_bps) {
+  if (fec_mode == FEC_MODE_UNKNOWN || fec_mode == FEC_MODE_OFF) {
+    return BF_FEC_TYP_NONE;
+  } else if (fec_mode == FEC_MODE_ON || fec_mode == FEC_MODE_AUTO) {
+    // we have to "guess" the FEC type to use based on the port speed.
+    switch (speed_bps) {
+      case kOneGigBps:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode for 1Gbps mode.";
+      case kTenGigBps:
+      case kFortyGigBps:
+        return BF_FEC_TYP_FIRECODE;
+      case kTwentyFiveGigBps:
+      case kFiftyGigBps:
+      case kHundredGigBps:
+      case kTwoHundredGigBps:
+      case kFourHundredGigBps:
+        return BF_FEC_TYP_REED_SOLOMON;
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported port speed.";
+    }
+  }
+  RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode.";
+}
+
 }  // namespace
 
 ::util::Status BFPalWrapper::PortAdd(
-     int unit, uint32 port_id, uint64 speed_bps) {
+     int unit, uint32 port_id, uint64 speed_bps, FecMode fec_mode) {
   ASSIGN_OR_RETURN(auto bf_speed, PortSpeedHalToBf(speed_bps));
+  ASSIGN_OR_RETURN(auto bf_fec_mode, FecModeHalToBf(fec_mode, speed_bps));
   auto bf_status = bf_pal_port_add(
       static_cast<bf_dev_id_t>(unit),
       static_cast<bf_dev_port_t>(port_id),
       bf_speed,
-      // TODO(antonin): should this setting be exposed? If so, how?
-      BF_FEC_TYP_NONE);
+      bf_fec_mode);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when adding port with BF_PAL.";
   }
