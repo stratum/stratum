@@ -39,6 +39,9 @@ namespace dummy_switch {
   if (!chassis_mgr_status.ok()) {
     return chassis_mgr_status;
   }
+  dummy_nodes_.clear();
+  node_port_id_to_slot.clear();
+  node_port_id_to_port.clear();
   for (auto& node : config.nodes()) {
     LOG(INFO) <<
       absl::StrFormat("Creating node \"%s\" (id: %d). Slot %d, Index: %d.",
