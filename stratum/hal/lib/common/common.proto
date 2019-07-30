@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-// This file include all the common internal messages used by Hercules stack.
+// This file include all the common internal messages used by Stratum stack.
 
 syntax = "proto3";
 
@@ -28,9 +28,9 @@ package stratum.hal;
 // Mode of operation of the stack.
 enum OperationMode {
   OPERATION_MODE_UNKNOWN = 0;
-  OPERATION_MODE_STANDALONE = 1;  // Standalone Hercules.
-  OPERATION_MODE_COUPLED = 2;     // Hercules running as part of Sandcastle.
-  OPERATION_MODE_SIM = 3;         // Hercules running in sim mode.
+  OPERATION_MODE_STANDALONE = 1;  // Standalone Stratum.
+  OPERATION_MODE_COUPLED = 2;     // Stratum running as part of Sandcastle.
+  OPERATION_MODE_SIM = 3;         // Stratum running in sim mode.
 }
 
 // Tri-state boolean for the case 'false' is not a default.
@@ -652,7 +652,7 @@ message VendorConfig {
 // switching box with one or more switching nodes managed by a mgmt interface.
 // The proto includes all the not-so-frequent settings that are required before
 // the switch can accept flow programming requests from the controller.
-// NOTE: In Hercules the external interface for pushing config is gNMI. The
+// NOTE: In Stratum the external interface for pushing config is gNMI. The
 // proto realization of the YANG models for the config is internally converted
 // to a ChassisConfig before it is consumed by the internal stack components.
 message ChassisConfig {

@@ -47,7 +47,7 @@ using stratum::p4c_backends::TargetInfo;
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
-  stratum::InitHerculesLogging();
+  stratum::InitStratumLogging();
   std::unique_ptr<BcmTargetInfo> bcm_target_info(new BcmTargetInfo);
   TargetInfo::InjectSingleton(bcm_target_info.get());
   std::unique_ptr<BcmTunnelOptimizer> bcm_tunnel_optimizer(

@@ -19,7 +19,7 @@ option cc_generic_services = false;
 
 package stratum;
 
-// The custom error space for the hercules stack. Used by all the stack
+// The custom error space for the stratum stack. Used by all the stack
 // components to propagate the errors.
 // TODO: This is still WIP.
 enum ErrorCode {

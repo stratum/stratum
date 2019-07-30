@@ -97,19 +97,19 @@ inline const std::string FixMessage(const std::string& msg) {
 // new code.
 // TODO(swiggett): Delete after we've fixed all users.
 
-namespace hercules_error_impl {
+namespace stratum_error_impl {
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc,
                                                int code) {
   return ::util::StatusBuilder(
-      ::util::Status(::google::hercules::HerculesErrorSpace(), code, ""), loc);
+      ::util::Status(::google::stratum::StratumErrorSpace(), code, ""), loc);
 }
 inline ::util::StatusBuilder MakeStatusBuilder(gtl::source_location loc) {
-  return MakeStatusBuilder(loc, ::google::hercules::ERR_UNKNOWN);
+  return MakeStatusBuilder(loc, ::google::stratum::ERR_UNKNOWN);
 }
 _error_impl
 
 #define MAKE_ERROR(...) \
-  hercules_error_impl::MakeStatusBuilder(GTL_LOC, ##__VA_ARGS__)
+  stratum_error_impl::MakeStatusBuilder(GTL_LOC, ##__VA_ARGS__)
 
 #define APPEND_ERROR(status) \
   ::util::StatusBuilder((status), GTL_LOC).SetAppend()

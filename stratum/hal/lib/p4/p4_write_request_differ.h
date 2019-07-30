@@ -17,7 +17,7 @@
 // The P4WriteRequestDiffer class compares a pair of P4 WriteRequest
 // messages. Its typical use case is to find any differences between
 // P4 WriteRequests that represent static table entries from different
-// versions of the Hercules P4 program.
+// versions of the Stratum P4 program.
 
 #ifndef STRATUM_HAL_LIB_P4_P4_WRITE_REQUEST_DIFFER_H_
 #define STRATUM_HAL_LIB_P4_P4_WRITE_REQUEST_DIFFER_H_

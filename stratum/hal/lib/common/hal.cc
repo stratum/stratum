@@ -31,11 +31,11 @@
 #include "absl/synchronization/mutex.h"
 
 // TODO(aghaffar): Use FLAG_DEFINE for all flags.
-DEFINE_string(external_hercules_urls, "",
+DEFINE_string(external_stratum_urls, "",
             "Comma-separated list of URLs for server to listen to for external"
             " calls from SDN controller, etc.");
-DEFINE_string(local_hercules_url, stratum::kLocalHerculesUrl,
-              "URL for listening to local calls from hercules stub.");
+DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,
+              "URL for listening to local calls from stratum stub.");
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
 DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
               "URL of the procmon service to connect to.");
@@ -105,19 +105,19 @@ Hal::~Hal() {
 }
 
 ::util::Status Hal::SanityCheck() {
-  const std::vector<std::string> external_hercules_urls =
-          absl::StrSplit(FLAGS_external_hercules_urls, ',');
-  CHECK_RETURN_IF_FALSE(!external_hercules_urls.empty())
+  const std::vector<std::string> external_stratum_urls =
+          absl::StrSplit(FLAGS_external_stratum_urls, ',');
+  CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
-  auto it = std::find_if(external_hercules_urls.begin(),
-                         external_hercules_urls.end(), [](const std::string& url) {
-                           return (url == FLAGS_local_hercules_url ||
+  auto it = std::find_if(external_stratum_urls.begin(),
+                         external_stratum_urls.end(), [](const std::string& url) {
+                           return (url == FLAGS_local_stratum_url ||
                                    //FIXME(boc) google only url == FLAGS_cmal_service_url ||
                                    url == FLAGS_procmon_service_addr);
                          });
-  CHECK_RETURN_IF_FALSE(it == external_hercules_urls.end())
+  CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_hercules_url << ", " /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
+      << FLAGS_local_stratum_url << ", " /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
       << FLAGS_procmon_service_addr << ".";
 
   CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
@@ -186,20 +186,20 @@ Hal::~Hal() {
 
 ::util::Status Hal::Run() {
   // All HAL external facing services listen to a list of secure external URLs
-  // given by external_hercules_urls flag, as well as a local insecure URLs for
-  // given by local_hercules_url flag. The insecure URLs is used by any local
-  // hercules_stub binary running on the switch, since local connections cannot
+  // given by external_stratum_urls flag, as well as a local insecure URLs for
+  // given by local_stratum_url flag. The insecure URLs is used by any local
+  // stratum_stub binary running on the switch, since local connections cannot
   // support auth.
-  const std::vector<std::string> external_hercules_urls =
-          absl::StrSplit(FLAGS_external_hercules_urls, ',');
+  const std::vector<std::string> external_stratum_urls =
+          absl::StrSplit(FLAGS_external_stratum_urls, ',');
   {
     std::shared_ptr<::grpc::ServerCredentials> server_credentials =
         credentials_manager_->GenerateExternalFacingServerCredentials();
     ::grpc::ServerBuilder builder;
     SetGrpcServerKeepAliveArgs(&builder);
-    builder.AddListeningPort(FLAGS_local_hercules_url,
+    builder.AddListeningPort(FLAGS_local_stratum_url,
                              ::grpc::InsecureServerCredentials());
-    for (const auto& url : external_hercules_urls) {
+    for (const auto& url : external_stratum_urls) {
       builder.AddListeningPort(url, server_credentials);
     }
     if (FLAGS_grpc_max_recv_msg_size > 0) {
@@ -215,12 +215,12 @@ Hal::~Hal() {
     external_server_ = builder.BuildAndStart();
     if (external_server_ == nullptr) {
       return MAKE_ERROR(ERR_INTERNAL)
-             << "Failed to start Hercules external facing services. This is an "
+             << "Failed to start Stratum external facing services. This is an "
              << "internal error.";
     }
-    LOG(ERROR) << "Hercules external facing services are listening to "
-               << absl::StrJoin(external_hercules_urls, ", ") << ", "
-               << FLAGS_local_hercules_url << "...";
+    LOG(ERROR) << "Stratum external facing services are listening to "
+               << absl::StrJoin(external_stratum_urls, ", ") << ", "
+               << FLAGS_local_stratum_url << "...";
   }
 
   if (mode_ != OPERATION_MODE_SIM) {

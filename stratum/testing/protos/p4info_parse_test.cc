@@ -42,7 +42,7 @@ class P4InfoFilesTest
   }
 
   std::string GetTestFilePath() {
-    return "platforms/networking/hercules/testing/protos/";
+    return "platforms/networking/stratum/testing/protos/";
   }
 
   // Tests read the P4Info file into this message.
@@ -203,47 +203,47 @@ TEST_P(P4InfoFilesTest, TestPipelineConfigTextEqualsBinary) {
 }
 
 // P4InfoFilesTest expects the test files to be in this path:
-// "platforms/networking/hercules/hal/config/"
+// "platforms/networking/stratum/hal/config/"
 INSTANTIATE_TEST_SUITE_P(
     P4InfoFiles, P4InfoFilesTest,
     ::testing::Values(
-        std::make_tuple("test_p4_info_hercules_b4.pb.txt",
-                        "test_p4_pipeline_config_hercules_b4.pb.txt",
-                        "test_p4_pipeline_config_hercules_b4.pb.bin"),
-        std::make_tuple("test_p4_info_hercules_fbr_s2.pb.txt",
-                        "test_p4_pipeline_config_hercules_fbr_s2.pb.txt",
-                        "test_p4_pipeline_config_hercules_fbr_s2.pb.bin"),
-        std::make_tuple("test_p4_info_hercules_fbr_s3.pb.txt",
-                        "test_p4_pipeline_config_hercules_fbr_s3.pb.txt",
-                        "test_p4_pipeline_config_hercules_fbr_s3.pb.bin"),
-        std::make_tuple("test_p4_info_hercules_middleblock.pb.txt",
-                        "test_p4_pipeline_config_hercules_middleblock.pb.txt",
-                        "test_p4_pipeline_config_hercules_middleblock.pb.bin"),
-        std::make_tuple("test_p4_info_hercules_spine.pb.txt",
-                        "test_p4_pipeline_config_hercules_spine.pb.txt",
-                        "test_p4_pipeline_config_hercules_spine.pb.bin"),
-        std::make_tuple("test_p4_info_hercules_tor.pb.txt",
-                        "test_p4_pipeline_config_hercules_tor.pb.txt",
-                        "test_p4_pipeline_config_hercules_tor.pb.bin"),
+        std::make_tuple("test_p4_info_stratum_b4.pb.txt",
+                        "test_p4_pipeline_config_stratum_b4.pb.txt",
+                        "test_p4_pipeline_config_stratum_b4.pb.bin"),
+        std::make_tuple("test_p4_info_stratum_fbr_s2.pb.txt",
+                        "test_p4_pipeline_config_stratum_fbr_s2.pb.txt",
+                        "test_p4_pipeline_config_stratum_fbr_s2.pb.bin"),
+        std::make_tuple("test_p4_info_stratum_fbr_s3.pb.txt",
+                        "test_p4_pipeline_config_stratum_fbr_s3.pb.txt",
+                        "test_p4_pipeline_config_stratum_fbr_s3.pb.bin"),
+        std::make_tuple("test_p4_info_stratum_middleblock.pb.txt",
+                        "test_p4_pipeline_config_stratum_middleblock.pb.txt",
+                        "test_p4_pipeline_config_stratum_middleblock.pb.bin"),
+        std::make_tuple("test_p4_info_stratum_spine.pb.txt",
+                        "test_p4_pipeline_config_stratum_spine.pb.txt",
+                        "test_p4_pipeline_config_stratum_spine.pb.bin"),
+        std::make_tuple("test_p4_info_stratum_tor.pb.txt",
+                        "test_p4_pipeline_config_stratum_tor.pb.txt",
+                        "test_p4_pipeline_config_stratum_tor.pb.bin"),
         // These files are auto-generated based on the Orion P4 files.
-        std::make_tuple("hercules_tor_p4_info.pb.txt",
-                        "hercules_tor_p4_pipeline.pb.txt",
-                        "hercules_tor_p4_pipeline.pb.bin"),
-        std::make_tuple("hercules_spine_p4_info.pb.txt",
-                        "hercules_spine_p4_pipeline.pb.txt",
-                        "hercules_spine_p4_pipeline.pb.bin"),
-        std::make_tuple("hercules_middleblock_p4_info.pb.txt",
-                        "hercules_middleblock_p4_pipeline.pb.txt",
-                        "hercules_middleblock_p4_pipeline.pb.bin"),
-        std::make_tuple("hercules_b4_p4_info.pb.txt",
-                        "hercules_b4_p4_pipeline.pb.txt",
-                        "hercules_b4_p4_pipeline.pb.bin"),
-        std::make_tuple("hercules_fbr_s2_p4_info.pb.txt",
-                        "hercules_fbr_s2_p4_pipeline.pb.txt",
-                        "hercules_fbr_s2_p4_pipeline.pb.bin"),
-        std::make_tuple("hercules_fbr_s3_p4_info.pb.txt",
-                        "hercules_fbr_s3_p4_pipeline.pb.txt",
-                        "hercules_fbr_s3_p4_pipeline.pb.bin")));
+        std::make_tuple("stratum_tor_p4_info.pb.txt",
+                        "stratum_tor_p4_pipeline.pb.txt",
+                        "stratum_tor_p4_pipeline.pb.bin"),
+        std::make_tuple("stratum_spine_p4_info.pb.txt",
+                        "stratum_spine_p4_pipeline.pb.txt",
+                        "stratum_spine_p4_pipeline.pb.bin"),
+        std::make_tuple("stratum_middleblock_p4_info.pb.txt",
+                        "stratum_middleblock_p4_pipeline.pb.txt",
+                        "stratum_middleblock_p4_pipeline.pb.bin"),
+        std::make_tuple("stratum_b4_p4_info.pb.txt",
+                        "stratum_b4_p4_pipeline.pb.txt",
+                        "stratum_b4_p4_pipeline.pb.bin"),
+        std::make_tuple("stratum_fbr_s2_p4_info.pb.txt",
+                        "stratum_fbr_s2_p4_pipeline.pb.txt",
+                        "stratum_fbr_s2_p4_pipeline.pb.bin"),
+        std::make_tuple("stratum_fbr_s3_p4_info.pb.txt",
+                        "stratum_fbr_s3_p4_pipeline.pb.txt",
+                        "stratum_fbr_s3_p4_pipeline.pb.bin")));
 
 }  // namespace hal
 

@@ -14,7 +14,7 @@
 
 
 // This file declares proto messages for representing the P4 program control
-// flow output from the Hercules p4c backend.  It is part of the P4 pipeline
+// flow output from the Stratum p4c backend.  It is part of the P4 pipeline
 // configuration.
 
 syntax = "proto3";
@@ -202,7 +202,7 @@ message P4HeaderValidCondition {
 //  return/exit - represent return and exit statements in the P4 program.
 //  fixed_pipeline - provides a statement to represent all of the logic that
 //      the compiler can assign to a fixed-function pipeline stage.
-//  other - contains a text description of a statement that the Hercules
+//  other - contains a text description of a statement that the Stratum
 //      backend does not know how to interpret.
 message P4ControlStatement {
   oneof statement {
@@ -242,7 +242,7 @@ message P4ControlBlock {
 //  name - name of the control in the P4 program, such as "ingress_tor" or
 //      "egress_tor".
 //  type - type of control according to the P4 model.  P4ControlType enumerates
-//      the types of interest to a Hercules switch.
+//      the types of interest to a Stratum switch.
 //  main - contains the block of statements that execute at the P4 control's
 //      main entry point.  If the P4 control's main level has if-statements,
 //      additional sub-blocks appear under the P4IfStatement true_block and

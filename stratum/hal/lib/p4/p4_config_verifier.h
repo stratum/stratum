@@ -18,7 +18,7 @@
 // P4ConfigVerifier verifies consistency among various P4 objects in the P4Info
 // and the P4PipelineConfig.  It helps P4TableMapper verify forwarding
 // pipeline config pushes.  It also has a role in some unit tests that verify
-// Hercules p4c output.  It may also be directly integrated into p4c to detect
+// Stratum p4c output.  It may also be directly integrated into p4c to detect
 // invalid output.
 
 #ifndef STRATUM_HAL_LIB_P4_P4_CONFIG_VERIFIER_H_

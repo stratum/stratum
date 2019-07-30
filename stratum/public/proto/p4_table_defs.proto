@@ -155,7 +155,7 @@ enum P4FieldType {
 }
 
 // This enum defines values to identify the table mapping output for P4
-// header types of protocols recognized by Hercules P4 programs.
+// header types of protocols recognized by Stratum P4 programs.
 enum P4HeaderType {
   P4_HEADER_UNKNOWN = 0;
   P4_HEADER_ARP = 1;
@@ -195,7 +195,7 @@ enum P4ActionType {
 // series of primitive operations defined by the P4 specification.  The enum
 // below represents each primitive action's operation.
 enum P4ActionOp {
-  P4_ACTION_OP_UNKNOWN = 0;  // Hercules addition for unmapped primitives.
+  P4_ACTION_OP_UNKNOWN = 0;  // Stratum addition for unmapped primitives.
   P4_ACTION_OP_DROP = 1;     // Drop the packet on table hit.
   P4_ACTION_OP_NOP = 2;      // No action on table hit.
   P4_ACTION_OP_CLONE = 3;    // Action replicates a packet.
@@ -214,7 +214,7 @@ enum P4MeterColor {
 
 // These enum values identify header encap/decap operations.
 // TODO(teverman): This enum is replaced by P4HeaderOp.  Remove it when no
-// longer referenced by any hercules testing proto files.
+// longer referenced by any stratum testing proto files.
 enum P4TunnelOp {
   P4_TUNNEL_NONE = 0;
   P4_TUNNEL_DECAP = 1;
@@ -223,7 +223,7 @@ enum P4TunnelOp {
 
 // These enum values represent action statements that explicitly or implicitly
 // alter a packet header's valid state.  They provide clues for encap/decap
-// operations.  Since Hercules P4 programs tend to aggressively alter header
+// operations.  Since Stratum P4 programs tend to aggressively alter header
 // valid states, a single change in a header's valid state is often not
 // enough to deduce encap/decap without considering other factors at compile
 // time and/or runtime.

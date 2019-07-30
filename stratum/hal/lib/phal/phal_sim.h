@@ -30,7 +30,7 @@ namespace stratum {
 namespace hal {
 
 // Class "PhalSim" is an implementation of PhalInterface which is used to
-// simulate the PHAL events to Hercules.
+// simulate the PHAL events to Stratum.
 class PhalSim : public PhalInterface {
  public:
   ~PhalSim() override;

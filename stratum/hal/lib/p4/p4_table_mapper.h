@@ -209,7 +209,7 @@ class P4TableMapper {
   //    table, action, or other P4 resource changes that new P4PipelineConfig
   //    requires by calling PushForwardingPipelineConfig in this instance
   //    of P4TableMapper.  It should also push the new pipeline config
-  //    to any other P4PipelineConfig-aware Hercules objects.
+  //    to any other P4PipelineConfig-aware Stratum objects.
   //  - After the new pipeline config is committed, the switch implementation
   //    calls HandlePostPushStaticEntryChanges with new_static_config
   //    referring to static_table_entries from the new P4PipelineConfig in the
@@ -232,7 +232,7 @@ class P4TableMapper {
   // IsTableStageHidden determines whether the input table_id maps to a
   // "HIDDEN" pipeline stage.  The "HIDDEN" stage applies to P4 logical tables
   // that have no equivalent physical table in the forwarding pipeline.  The
-  // Hercules implementation absorbs the hidden table actions into related
+  // Stratum implementation absorbs the hidden table actions into related
   // physical tables.  IsTableStageHidden returns a TriState value:
   //  TRI_STATE_TRUE - the table is valid and maps to a hidden pipeline stage.
   //  TRI_STATE_FALSE - the table is valid and maps to a physical stage.

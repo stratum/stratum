@@ -1764,13 +1764,13 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
 //   Error
 //     All other cases.
 // TODO: The clone port (P4_FIELD_TYPE_CLONE_PORT) is a recent
-// addition to Hercules P4 programs.  For the current implementation that
+// addition to Stratum P4 programs.  For the current implementation that
 // expects all cloning actions to have a CPU target, it provides no additional
 // information.  After evolution to PSA, it won't exist - PSA replaces it
 // with a clone-session-ID.  However, there may be a short term window where
 // P4_FIELD_TYPE_CLONE_PORT needs to be recognized to support new cloning
 // and replication features such as "packet chamber" if they are required
-// before Hercules supports PSA.
+// before Stratum supports PSA.
 ::util::Status BcmTableManager::ConvertSendOrCopyToCpuAction(
     P4ActionFunction* action_function,
     std::vector<BcmAction>* bcm_actions) const {
@@ -1853,7 +1853,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       copy_colors.erase(color);
     }
   } else if (send_to_cpu) {
-    // TODO: This is now a punt table feature in recent Hercules
+    // TODO: This is now a punt table feature in recent Stratum
     // P4 programs.  A cloned and metered copy of the packet goes to the CPU
     // while the original ingress packet gets dropped.  It needs to be supported
     // to comply with the latest P4 specs.

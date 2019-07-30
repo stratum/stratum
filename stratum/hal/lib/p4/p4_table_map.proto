@@ -43,7 +43,7 @@ import "p4/config/v1/p4info.proto";
 //   switch chip.
 // - P4 object specific data for P4 runtime RPC translation, which is defined
 //   in more detail by the descriptor messages below.
-// The p4c compiler backend for Hercules switches generates the descriptor data
+// The p4c compiler backend for Stratum switches generates the descriptor data
 // into a P4TableMap as one of its output files.  The P4TableMap map becomes
 // part of the pipeline spec that switches receive during P4 runtime
 // configuration.
@@ -214,9 +214,9 @@ message P4FieldDescriptor {
 // 3) Metering operations can be encoded as either item 1 or 2 above with
 //    a set of color-based qualifiers.
 // P4ActionDescriptors represent two sources of actions.  The first source is
-// actions that the Hercules backend compiles directly from the P4 program.
+// actions that the Stratum backend compiles directly from the P4 program.
 // These actions correspond 1-to-1 with actions in the program's P4Info.  The
-// second source is actions that the Hercules backend generates internally.
+// second source is actions that the Stratum backend generates internally.
 // The internal actions generally represent a merger of actions from multiple
 // logical tables into a single combined action for a physical table.  Internal
 // actions do not have a corresponding P4Info entry.
@@ -316,7 +316,7 @@ message P4ActionDescriptor {
   //          for 4-in-4 and 6-in-4 tunnels.
   //    decap - contains properties specific to decap tunnels.
   //      decap_inner_headers - indicates the type of allowed headers that an
-  //          action recognizes for tunnel decap or termination.  Hercules P4
+  //          action recognizes for tunnel decap or termination.  Stratum P4
   //          programs generally decap IPv4 and IPv6 inner headers in the same
   //          action, so the field repeats to cover both possibilities.
   message P4TunnelProperties {
@@ -352,7 +352,7 @@ message P4ActionDescriptor {
     }
   }
 
-  // The Hercules p4c backend includes P4InternalActionLink and P4ActionRedirect
+  // The Stratum p4c backend includes P4InternalActionLink and P4ActionRedirect
   // messages in action descriptors when it merges actions from multiple logical
   // tables into one combined action for a physical table.  They add references
   // from the original P4 action to the replacement internal action.
@@ -462,7 +462,7 @@ message P4ActionDescriptor {
   //      the final P4PipelineConfig output.
   //  action_redirects - lists any redirections this action does to incorporate
   //      actions from HIDDEN tables or other internally generated actions.
-  //      Upon adding a field to action_redirects, the Hercules p4c backend
+  //      Upon adding a field to action_redirects, the Stratum p4c backend
   //      removes the field's original assignments entry.  Thus, the same field
   //      should never appear in both the assignments and the action_redirects
   //      lists.
@@ -505,7 +505,7 @@ message P4HeaderDescriptor {
 }
 
 // This message defines one table map entry in the P4PipelineConfig.  The
-// Hercules p4c backend generates the table map for the switch stack as the
+// Stratum p4c backend generates the table map for the switch stack as the
 // P4 program compiles.  This map can vary from vendor to vendor, and it can
 // conceivably also vary from chip to chip for the same vendor.
 message P4TableMapValue {

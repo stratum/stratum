@@ -44,9 +44,9 @@ using ::google::WARNING;
 #define LOG_EXT(facility, level) LOG(level)
 
 namespace stratum {
-// Initializes all Hercules specific changes to logging. This should be called
-// after InitGoogle by every Hercules binary.
-void InitHerculesLogging();
+// Initializes all Stratum specific changes to logging. This should be called
+// after InitGoogle by every Stratum binary.
+void InitStratumLogging();
 }  // namespace stratum
 
 #endif  // STRATUM_GLUE_LOGGING_H_

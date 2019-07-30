@@ -70,7 +70,7 @@ with a template file. The template engine replaces special fields in the
 template file with data from the document object model.
 
 There can be multiple template files, like `scenarios.cc.tmpl` located in
-//platforms/networking/hercules/testing/gnmi_standalone.
+//platforms/networking/stratum/testing/gnmi_standalone.
 
 The document object model is implemented by the code in: `dom.go`.
 

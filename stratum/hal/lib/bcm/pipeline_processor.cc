@@ -332,7 +332,7 @@ PipelineProcessor::CreateInstance(const P4ControlBlock& control_block) {
   if ((branch.has_false_block() && branch.condition().not_operator()) ||
       (branch.has_true_block() && !branch.condition().not_operator())) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-           << "On-hit actions are not supported by Hercules.";
+           << "On-hit actions are not supported by Stratum.";
   }
   PipelineNode branch_node = base_node;
   branch_node.parent = hit_table;

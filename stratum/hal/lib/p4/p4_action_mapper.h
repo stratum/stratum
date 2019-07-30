@@ -60,7 +60,7 @@ class P4ActionMapper {
   // that do not identify P4 tables, such as action profile groups and members.
   // Since it has no table ID, MapActionID always returns an error status if
   // it finds a mapping to an internal action with table restrictions.  (Note:
-  // Hercules P4 programs do not generate any such mappings.)  Both methods
+  // Stratum P4 programs do not generate any such mappings.)  Both methods
   // return an error if the input action ID is invalid.
   ::util::StatusOr<const P4ActionDescriptor*> MapActionIDAndTableID(
       uint32 action_id, uint32 table_id) const;

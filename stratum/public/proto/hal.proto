@@ -14,7 +14,7 @@
 
 
 // This file includes all the messages needed to configure and monitor a
-// switching platform running the Hercules switch stack. The messages are
+// switching platform running the Stratum switch stack. The messages are
 // carefully designed to meet the following requirements:
 // 1- Be vendor-agnostic as much as possible. Although, vendor-specific config
 // is allowed.
@@ -451,7 +451,7 @@ message VendorConfig {
 // switching box with one or more switching nodes managed by a mgmt interface.
 // The proto includes all the not-so-frequent settings that are required before
 // the switch can accept flow programming requests from the controller.
-// NOTE: In Hercules the external interface for pushing config is gNMI. The
+// NOTE: In Stratum the external interface for pushing config is gNMI. The
 // proto realization of the YANG models for the config is internally converted
 // to a ChassisConfig before it is consumed by the internal stack components.
 message ChassisConfig {

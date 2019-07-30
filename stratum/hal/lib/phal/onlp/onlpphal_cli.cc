@@ -164,7 +164,7 @@ class OnlpPhalCli {
 ::util::Status Main(int argc, char** argv) {
   InitGoogle("onlpphal_cli --phal_config_path <config_path>", &argc, &argv,
              true);
-  stratum::InitHerculesLogging();
+  stratum::InitStratumLogging();
 
   // Need to init Onlp Interface
   auto onlpphal = OnlpPhal::CreateSingleton();

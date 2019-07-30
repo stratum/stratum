@@ -101,15 +101,15 @@ using namespace openconfig::enums;
       switch (intf_config.purpose()) {
         case GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER:
           oc_intf_config.set_purpose(
-              oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_CONTROLLER);
+              oc::Bcm::StratumBcmChip::BCM_KNET_IF_PURPOSE_CONTROLLER);
           break;
         case GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW:
           oc_intf_config.set_purpose(
-              oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_SFLOW);
+              oc::Bcm::StratumBcmChip::BCM_KNET_IF_PURPOSE_SFLOW);
           break;
         case GoogleConfig::BCM_KNET_INTF_PURPOSE_UNKNOWN:
           oc_intf_config.set_purpose(
-              oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_UNKNOWN);
+              oc::Bcm::StratumBcmChip::BCM_KNET_IF_PURPOSE_UNKNOWN);
           break;
         default:
           // Hmm...
@@ -483,10 +483,10 @@ SingletonPortToInterfaces(const SingletonPort &in) {
         GoogleConfig::BcmKnetConfig::BcmKnetIntfConfig intf;
 
         switch (config.second.purpose()) {
-          case oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_CONTROLLER:
+          case oc::Bcm::StratumBcmChip::BCM_KNET_IF_PURPOSE_CONTROLLER:
             intf.set_purpose(GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER);
             break;
-          case oc::Bcm::HerculesBcmChip::BCM_KNET_IF_PURPOSE_SFLOW:
+          case oc::Bcm::StratumBcmChip::BCM_KNET_IF_PURPOSE_SFLOW:
             intf.set_purpose(GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW);
             break;
           default:

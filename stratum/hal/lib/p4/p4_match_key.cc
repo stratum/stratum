@@ -267,7 +267,7 @@ std::string P4MatchKey::CreateStringMask(int field_width, int mask_length) {
   // number of bytes required to encode the match key's bit width in all cases,
   // even when leading zeroes are present.
   // TODO(teverman): Separate rules apply for fields of P4 type varbit.  These
-  // fields will need additional support if Hercules P4 programs start using
+  // fields will need additional support if Stratum P4 programs start using
   // varbit types.
   if (FLAGS_enforce_bytestring_length && spec_bytes != bytes_value.size()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)

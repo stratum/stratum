@@ -25,7 +25,7 @@ bazel build //stratum/hal/bin/dummy:stratum_dummy
 
 ```
 bazel run //stratum/hal/bin/dummy:stratum_dummy -- \
-  --external_hercules_urls=0.0.0.0:28000 \
+  --external_stratum_urls=0.0.0.0:28000 \
   --persistent_config_dir=/tmp/ \
   --chassis_config_file=$(pwd)/stratum/hal/bin/dummy/chassis_config \
   --forwarding_pipeline_configs_file=/tmp/dummy_pipeline_cfg

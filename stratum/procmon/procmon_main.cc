@@ -23,7 +23,7 @@ namespace procmon {
 
 ::util::Status Main(int argc, char**argv) {
   InitGoogle(argv[0], &argc, &argv, true);
-  InitHerculesLogging();
+  InitStratumLogging();
 
   // Read the procmon config.
   CHECK_RETURN_IF_FALSE(!FLAGS_procmon_config_file.empty())

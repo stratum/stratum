@@ -30,22 +30,22 @@
 #include "external/com_github_p4lang_p4c/lib/error.h"
 #include "external/com_github_p4lang_p4c/lib/gc.h"
 
-using HerculesP4cContext = P4CContextWithOptions<CompilerOptions>;
+using StratumP4cContext = P4CContextWithOptions<CompilerOptions>;
 
 namespace stratum {
 namespace p4c_backends {
 
 P4cFrontMidReal::P4cFrontMidReal()
-    : p4c_context_(new HerculesP4cContext),
-      p4c_options_(HerculesP4cContext::get().options()),
+    : p4c_context_(new StratumP4cContext),
+      p4c_options_(StratumP4cContext::get().options()),
       p4_program_(nullptr) {
   mid_end_callback_ = std::function<std::unique_ptr<MidEndInterface>(
       CompilerOptions* p4c_options)>(&P4cFrontMidReal::CreateDefaultMidend);
 }
 
 P4cFrontMidReal::P4cFrontMidReal(MidEndCreateCallback callback)
-    : p4c_context_(absl::IgnoreLeak(new HerculesP4cContext)),
-      p4c_options_(HerculesP4cContext::get().options()),
+    : p4c_context_(absl::IgnoreLeak(new StratumP4cContext)),
+      p4c_options_(StratumP4cContext::get().options()),
       p4_program_(nullptr),
       mid_end_callback_(std::move(callback)) {}
 

@@ -719,7 +719,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   // Finally after all the KNET intfs are setup, bring up the RX threads.
   // If spawning the thread has some issues we will return error but we will
   // not retry after the next config push. This probably points to a serious
-  // system issue unrelated to Hercules.
+  // system issue unrelated to Stratum.
   for (auto& entry : purpose_to_knet_intf_) {
     KnetIntfRxThreadData* data =
         new KnetIntfRxThreadData(node_id_, entry.first, this);

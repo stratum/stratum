@@ -22,12 +22,12 @@
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 
-// Hercules P4 programs contain some "hidden" tables with const entries.  These
+// Stratum P4 programs contain some "hidden" tables with const entries.  These
 // tables have no direct mapping to physical tables on the target switch.  They
 // are often related to tables that occur earlier in the forwarding pipeline.
 // For example, P4 encap/decap is spread across two tables, where the first
 // table decides the type of encap/decap, and a later table does the actual
-// header pushes or pops.  In Hercules, the second table is hidden, and when
+// header pushes or pops.  In Stratum, the second table is hidden, and when
 // FLAGS_remap_hidden_table_const_entries is true, the switch stack combines
 // actions from its const entries into the actions for the first table.
 // When the flag is false, the switch stack treats const entries in hidden

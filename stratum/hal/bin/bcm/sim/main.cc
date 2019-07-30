@@ -85,9 +85,9 @@ struct PerNodeInstances {
 
 int Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
-  InitHerculesLogging();
+  InitStratumLogging();
 
-  LOG(INFO) << "Starting Hercules in SIM mode for a Broadcom-based switch...";
+  LOG(INFO) << "Starting Stratum in SIM mode for a Broadcom-based switch...";
 
   // Create chassis-wide and per-node class instances.
   auto* bcm_sdk_sim = BcmSdkSim::CreateSingleton(FLAGS_bcm_sdk_sim_bin);
@@ -116,7 +116,7 @@ int Main(int argc, char** argv) {
   auto* hal = Hal::CreateSingleton(OPERATION_MODE_SIM, bcm_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK(hal != nullptr) << "Failed to create the Hercules Hal instance.";
+  CHECK(hal != nullptr) << "Failed to create the Stratum Hal instance.";
 
   // Sanity check, setup and start serving RPCs.
   ::util::Status status = hal->SanityCheck();
@@ -127,12 +127,12 @@ int Main(int argc, char** argv) {
   status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
-        << "Error when setting up Hercules HAL (but we will continue running): "
+        << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
   status = hal->Run();  // blocking
   if (!status.ok()) {
-    LOG(ERROR) << "Error when running Hercules HAL: " << status.error_message();
+    LOG(ERROR) << "Error when running Stratum HAL: " << status.error_message();
     return -1;
   }
 

@@ -30,7 +30,7 @@ using stratum::p4c_backends::P4cFrontMidReal;
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
-  stratum::InitHerculesLogging();
+  stratum::InitStratumLogging();
   std::unique_ptr<P4cFrontMidReal> p4c_real_fe_me(new P4cFrontMidReal);
   std::vector<BackendExtensionInterface*> no_extensions = {};
   std::unique_ptr<BackendPassManager> backend(

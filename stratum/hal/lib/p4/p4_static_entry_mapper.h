@@ -25,7 +25,7 @@
 // type consists of entries in "hidden" tables.  These entries are never
 // directly programmed into physical tables.  Instead, they typically get
 // combined into actions for other physical tables.  Encap/decap operations
-// in Hercules P4 programs are an example of this type.  Both types of static
+// in Stratum P4 programs are an example of this type.  Both types of static
 // entries can be affected by changes to the P4PipelineConfig.
 //
 // P4StaticEntryMapper is platform independent.  It provides common information

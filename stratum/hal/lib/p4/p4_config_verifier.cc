@@ -37,14 +37,14 @@
 // condition.  The flags are intended to set the error strictness according to
 // the environment in which the P4ConfigVerifier is running.  The "error" level
 // is appropriate for all conditions that indicate an inconsistency in the
-// P4PipelineConfig that prohibits successful execution in the Hercules switch
+// P4PipelineConfig that prohibits successful execution in the Stratum switch
 // stack.  The "warn" level is appropriate for conditions that need to be
-// addressed before production, but which do not block ongoing Hercules
+// addressed before production, but which do not block ongoing Stratum
 // development.  The "vlog" level's typical use is to suppress the warning
 // level messages in some environments.  For example, "warn" may be the
 // choice for unit tests and presubmits, but "vlog" will suppress log spam
 // for those errors on the switch.  The default values are currently set for
-// the needs of the Hercules switch stack environment.
+// the needs of the Stratum switch stack environment.
 
 DEFINE_string(match_field_error_level, "vlog", "Controls errors for table "
               "match fields that do not have a known field descriptor type");

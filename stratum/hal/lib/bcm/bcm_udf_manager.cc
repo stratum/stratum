@@ -126,7 +126,7 @@ bool BcmUdfManager::DefaultIsUdfEligible(const MappedField& mapped_field,
     case P4_FIELD_TYPE_ARP_TPA:
       return true;
     // The following case exists in Sandcastle but may not be needed for
-    // Hercules.
+    // Stratum.
     // case P4_FIELD_TYPE_ETH_DST:
     //   return stage == BCM_ACL_STAGE_IFP;
     default:

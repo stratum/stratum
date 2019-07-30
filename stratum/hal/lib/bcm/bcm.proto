@@ -534,7 +534,7 @@ message BcmMultipathNexthop {
 
 // This message encapsulates all the static data required for fast encoding and
 // decoding of Knet headers for each unit.
-// NOTE: At the moment this proto is used only in coupled mode of Hercules to
+// NOTE: At the moment this proto is used only in coupled mode of Stratum to
 // query the static data from HAL. In standalone mode there is no use for this
 // proto.
 message BcmKnetStaticData {

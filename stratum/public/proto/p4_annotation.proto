@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-// This file describes protobufs used in P4 annotations accepted by the Hercules
+// This file describes protobufs used in P4 annotations accepted by the Stratum
 // SwitchStack.
 syntax = "proto3";
 
@@ -21,7 +21,7 @@ package stratum;
 
 import "stratum/public/proto/p4_table_defs.proto";
 
-// Hercules annotations. These annotations are expected to be provided one at a
+// Stratum annotations. These annotations are expected to be provided one at a
 // time in the annotation blocks of p4 entity definitions.
 //
 // Usage: In  P4 Annotation, surround the annotation with:
@@ -36,7 +36,7 @@ import "stratum/public/proto/p4_table_defs.proto";
 //   not directly map to a programmable section of the physical pipeline.  A
 //   common case is the encap and decap table logic, where one P4 logical table
 //   makes the encap/decap decision, but it defers the actual encap/decap
-//   operation on the packet header to a second table.  The Hercules switch
+//   operation on the packet header to a second table.  The Stratum switch
 //   stack applies the "HIDDEN" pipeline_stage annotation to the second table,
 //   indicating that the actions from both tables need to be merged into a
 //   single physical table.

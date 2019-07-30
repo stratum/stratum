@@ -41,11 +41,11 @@ constexpr char kDefaultMembershipInfoFilePath[] =
 constexpr char kDefaultAuthPolicyFilePath[] =
     "/mnt/region_config/switchstack/keys/authorization_policy.proto.txt";
 
-// This URL is used by a local Hercules stub binary running on the switch to
-// talk to Hercules process over an insecure connection.
-constexpr char kLocalHerculesUrl[] = "localhost:28000";
+// This URL is used by a local Stratum stub binary running on the switch to
+// talk to Stratum process over an insecure connection.
+constexpr char kLocalStratumUrl[] = "localhost:28000";
 
-// Default URLs for the Sandcastle services Hercules service will connect to
+// Default URLs for the Sandcastle services Stratum service will connect to
 // over gRPC.
 constexpr char kProcmonServiceUrl[] = "localhost:28001";
 constexpr char kHalServiceUrl[] = "localhost:28002";

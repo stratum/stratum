@@ -53,7 +53,7 @@ class SyslogSink : public LogSink {
 };
 }  // namespace
 
-void InitHerculesLogging() {
+void InitStratumLogging() {
   google::InitGoogleLogging(ProgramInvocationShortName());
   google::InstallFailureSignalHandler();
   // Make sure we only setup log_sink once.

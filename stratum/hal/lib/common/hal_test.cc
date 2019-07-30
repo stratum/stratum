@@ -28,12 +28,12 @@
 #include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
 
-extern absl::Flag<std::vector<string>> FLAGS_external_hercules_urls;
+extern absl::Flag<std::vector<string>> FLAGS_external_stratum_urls;
 DECLARE_bool(warmboot);
 DECLARE_string(chassis_config_file);
 DECLARE_string(forwarding_pipeline_configs_file);
 DECLARE_string(test_tmpdir);
-DECLARE_string(local_hercules_url);
+DECLARE_string(local_stratum_url);
 //FIXME(boc) google only
 //DECLARE_string(procmon_service_addr);
 DECLARE_string(persistent_config_dir);
@@ -128,8 +128,8 @@ class HalTest : public ::testing::Test {
     FLAGS_forwarding_pipeline_configs_file =
         FLAGS_test_tmpdir + "/forwarding_pipeline_configs_file.pb.txt";
     FLAGS_persistent_config_dir = FLAGS_test_tmpdir + "/config_dir";
-    absl::SetFlag(&FLAGS_external_hercules_urls, {RandomURL(), RandomURL()});
-    FLAGS_local_hercules_url = RandomURL();
+    absl::SetFlag(&FLAGS_external_stratum_urls, {RandomURL(), RandomURL()});
+    FLAGS_local_stratum_url = RandomURL();
     FLAGS_cmal_service_url = RandomURL();
     ASSERT_OK(hal_->SanityCheck());
     hal_->ClearErrors();
@@ -231,7 +231,7 @@ Hal* HalTest::hal_ = nullptr;
 //::grpc::Server* HalTest::procmon_server_ = nullptr;
 
 TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
-  absl::SetFlag(&FLAGS_external_hercules_urls, {});
+  absl::SetFlag(&FLAGS_external_stratum_urls, {});
   ::util::Status status = hal_->SanityCheck();
   ASSERT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(), HasSubstr("No external URL was given"));
@@ -239,8 +239,8 @@ TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
 
 TEST_F(HalTest, SanityCheckFailureWhenExtURLsAreInvalid) {
   const auto& url = RandomURL();
-  absl::SetFlag(&FLAGS_external_hercules_urls, {url, "blah"});
-  FLAGS_local_hercules_url = url;
+  absl::SetFlag(&FLAGS_external_stratum_urls, {url, "blah"});
+  FLAGS_local_stratum_url = url;
   ::util::Status status = hal_->SanityCheck();
   ASSERT_FALSE(status.ok());
   EXPECT_THAT(status.error_message(),

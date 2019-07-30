@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-// This is the main entry for Hercules Channel-related tests.
+// This is the main entry for Stratum Channel-related tests.
 #include <stdlib.h>
 
 #include "gflags/gflags.h"
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
   bool tmpdir_created = false;
   if (FLAGS_test_tmpdir.empty()) {
-    char tmpdir[] = "/tmp/hercules_channel_test.XXXXXX";
+    char tmpdir[] = "/tmp/stratum_channel_test.XXXXXX";
     CHECK(mkdtemp(tmpdir));
     FLAGS_test_tmpdir = tmpdir;
     tmpdir_created = true;

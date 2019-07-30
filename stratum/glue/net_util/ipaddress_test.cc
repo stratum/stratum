@@ -3446,4 +3446,4 @@ TEST(NetMaskToMaskLength, IPv6) {
   }
 }
 
-}  //  namespace hercules
+}  //  namespace stratum

@@ -1,4 +1,4 @@
-# Hercules PHAL Overview (Physical Hardware Access Layer)
+# Stratum PHAL Overview (Physical Hardware Access Layer)
 
 [TOC]
 
@@ -69,11 +69,11 @@ linked at the top of this file.
 
 TODO({{USERNAME}}): Add a section here for any new adapters you write!
 
-### Hercules PHAL Interface
+### Stratum PHAL Interface
 
-The Hercules PHAL provides an implementation of
-google3/platforms/networking/hercules/hal/lib/common/phal_interface.h. This
+The Stratum PHAL provides an implementation of
+google3/platforms/networking/stratum/hal/lib/common/phal_interface.h. This
 implementation can be found at
-google3/platforms/networking/hercules/hal/lib/phal/google_phal.h. This interface
+google3/platforms/networking/stratum/hal/lib/phal/google_phal.h. This interface
 is used to query information about transceivers, and to receive messages
 whenever transceivers are plugged or unplugged.

@@ -34,7 +34,7 @@
 namespace stratum {
 
 // Channels provide intra-process typed message-passing, designed to
-// enable thread-safe data transfer within the Hercules switch-stack.
+// enable thread-safe data transfer within the Stratum switch-stack.
 //
 // A Channel<T> synchronizes communication between multiple ChannelWriter<T>s
 // and ChannelReader<T>s. Messages are handled in FIFO order.

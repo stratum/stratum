@@ -22,9 +22,9 @@ namespace stratum {
 namespace hal {
 
 // An interface for a wrapper around the Write operation for various data
-// transport mechanisms, e.g. Hercules Channel, gRPC ServerWriter. This class
+// transport mechanisms, e.g. Stratum Channel, gRPC ServerWriter. This class
 // makes the SwitchInterface class more abstract and eliminates the dependency
-// to gRPC as well as Hercules-internal constructs.
+// to gRPC as well as Stratum-internal constructs.
 template <typename T>
 class WriterInterface {
  public:

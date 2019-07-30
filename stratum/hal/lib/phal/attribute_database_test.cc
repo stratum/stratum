@@ -213,8 +213,8 @@ class RealAttributeDatabaseTest : public ::testing::Test {
   void SetUp() override {
     ASSERT_OK_AND_ASSIGN(database_,
                          AttributeDatabase::MakeGoogle(
-                             "platforms/networking/hercules/hal/config/"
-                             "legacy_phal_init_config_generic_trident2_hercules.pb.txt",
+                             "platforms/networking/stratum/hal/config/"
+                             "legacy_phal_init_config_generic_trident2_stratum.pb.txt",
                              &system_));
 
     ASSERT_OK(ParseProtoFromString(

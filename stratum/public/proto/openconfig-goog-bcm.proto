@@ -18,16 +18,16 @@
 //
 // Schema compression enabled: false
 // Input schema modules:
-//  - hercules-bcm-chip.yang
-//  - hercules-chassis.yang
-//  - hercules-extensions.yang
-//  - hercules-interface-flow-params.yang
-//  - hercules-interface.yang
-//  - hercules-linecard.yang
-//  - hercules-node-flow-params.yang
-//  - hercules-node.yang
-//  - hercules-platform.yang
-//  - hercules-port.yang
+//  - stratum-bcm-chip.yang
+//  - stratum-chassis.yang
+//  - stratum-extensions.yang
+//  - stratum-interface-flow-params.yang
+//  - stratum-interface.yang
+//  - stratum-linecard.yang
+//  - stratum-node-flow-params.yang
+//  - stratum-node.yang
+//  - stratum-platform.yang
+//  - stratum-port.yang
 // Include paths:
 //   - ...
 syntax = "proto3";
@@ -128,7 +128,7 @@ message Chassis {
       // YANG schema element.
       message KnetIntfConfigs {
         ywrapper.IntValue vlan = 1;  //[(yext.path) = "vlan"];
-        HerculesBcmChip.BcmKnetIfPurpose purpose =
+        StratumBcmChip.BcmKnetIfPurpose purpose =
             2;                               //[(yext.path) = "purpose"];
         ywrapper.IntValue id = 3;         //[(yext.path) = "id"];
         ywrapper.IntValue mtu = 4;        //[(yext.path) = "mtu"];
@@ -151,7 +151,7 @@ message Chassis {
     map<uint64, NodeIdToRxConfig> node_id_to_rx_config =
         5;  //[(yext.path) = "node_id_to_rx_config"];
     // Unused
-    // HerculesChassis.Platform platform = 6;  //[(yext.path) = "platform"];
+    // StratumChassis.Platform platform = 6;  //[(yext.path) = "platform"];
     ConfigParams config_params = 7;         //[(yext.path) = "config-params"];
     reserved 6;
   }
@@ -178,7 +178,7 @@ message Chassis {
         ywrapper.IntValue mtu = 1;        //[(yext.path) = "mtu"];
         ywrapper.IntValue cpu_queue = 2;  //[(yext.path) = "cpu_queue"];
         ywrapper.IntValue vlan = 3;       //[(yext.path) = "vlan"];
-        HerculesBcmChip.BcmKnetIfPurpose purpose =
+        StratumBcmChip.BcmKnetIfPurpose purpose =
             4;                        //[(yext.path) = "purpose"];
         ywrapper.IntValue id = 5;  //[(yext.path) = "id"];
       }
@@ -264,7 +264,7 @@ message Chassis {
     map<uint64, NodeIdToRateLimitConfig> node_id_to_rate_limit_config =
         3;  //[(yext.path) = "node_id_to_rate_limit_config"];
     // Unused
-    // HerculesChassis.Platform platform = 4;  //[(yext.path) = "platform"];
+    // StratumChassis.Platform platform = 4;  //[(yext.path) = "platform"];
     ConfigParams config_params = 5;         //[(yext.path) = "config-params"];
     ywrapper.StringValue bcm_chassis_map_id =
         6;  //[(yext.path) = "bcm_chassis_map_id"];
@@ -277,9 +277,9 @@ message Chassis {
   State state = 2;    //[(yext.path) = "state"];
 }
 
-// HerculesBcmChip_BCM_KNET_IF_PURPOSE represents the corresponding enumerated
+// StratumBcmChip_BCM_KNET_IF_PURPOSE represents the corresponding enumerated
 // node in the YANG schema.
-message HerculesBcmChip {
+message StratumBcmChip {
   enum BcmKnetIfPurpose {
     UNSET = 0;
     BCM_KNET_IF_PURPOSE_CONTROLLER = 1;

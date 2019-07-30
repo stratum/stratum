@@ -93,7 +93,7 @@ bazel build //stratum/hal/bin/barefoot:stratum_bf
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
      ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf \
-       --external_hercules_urls=0.0.0.0:28000 \
+       --external_stratum_urls=0.0.0.0:28000 \
        --grpc_max_recv_msg_size=256 \
        --bf_sde_install=$BF_SDE_INSTALL \
        --persistent_config_dir=<config dir> \

@@ -33,7 +33,7 @@ namespace hal {
 
 // This unnamed namespace hides the text strings that parse into static table
 // update entries for testing.  The test strings are pasted from static entry
-// output in the generated P4PipelineConfig for Hercules tor.p4.
+// output in the generated P4PipelineConfig for Stratum tor.p4.
 namespace {
 
 const char* kTestUpdate1 = R"(

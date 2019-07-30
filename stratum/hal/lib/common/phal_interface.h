@@ -32,7 +32,7 @@
 namespace stratum {
 namespace hal {
 
-// The "PhalInterface" class implements a hercules wrapper around the
+// The "PhalInterface" class implements a stratum wrapper around the
 // PHAL library. It provides an abstraction layer for accessing all the
 // platform peripherals except the switch ASIC. This includes fans, QSFP modules
 // power units, etc. An implementation of this class is expected to be self

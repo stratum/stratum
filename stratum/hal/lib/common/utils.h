@@ -32,7 +32,7 @@ namespace stratum {
 namespace hal {
 
 // PortKey is a generic data structure which is meant to be used as a key that
-// uniquely identifies a "port" in hercules code base. By "port" we mean a
+// uniquely identifies a "port" in stratum code base. By "port" we mean a
 // singleton port, a transceiver port, a flex/non-flex port group (i.e. a set
 // of ports with the same (slot, port) which are either flex or non-flex), etc.
 // The port whose key is identified by this data strcuture can be channelized (

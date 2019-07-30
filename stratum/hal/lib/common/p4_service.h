@@ -260,11 +260,11 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
       GUARDED_BY(config_lock_);
 
   // Determines the mode of operation:
-  // - OPERATION_MODE_STANDALONE: when Hercules stack runs independently and
+  // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
   // therefore needs to do all the SDK initialization itself.
-  // - OPERATION_MODE_COUPLED: when Hercules stack runs as part of Sandcastle
+  // - OPERATION_MODE_COUPLED: when Stratum stack runs as part of Sandcastle
   // stack, coupled with the rest of stack processes.
-  // - OPERATION_MODE_SIM: when Hercules stack runs in simulation mode.
+  // - OPERATION_MODE_SIM: when Stratum stack runs in simulation mode.
   // Note that this variable is set upon initialization and is never changed
   // afterwards.
   OperationMode mode_;

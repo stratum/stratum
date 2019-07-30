@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-// This file contains the code for a version of Hercules stub intended to be
+// This file contains the code for a version of Stratum stub intended to be
 // used on the embedded switches. Therefore the code here does not use any
 // non-portable google3 code (e.g. no use of //net/grpc). Note that although
 // this is intended to run on embedded switches, we still build a host version
@@ -51,18 +51,18 @@
 #include "stratum/lib/utils.h"
 #include "stratum/glue/gtl/map_util.h"
 
-DEFINE_string(url, stratum::kLocalHerculesUrl,
-              "URL for Hercules server to connect to.");
+DEFINE_string(url, stratum::kLocalStratumUrl,
+              "URL for Stratum server to connect to.");
 DEFINE_bool(push_open_config, false,
-            "Issue gNMI Set RPC to Hercules to push OpenConfig-based config "
-            "data to the switch. This option is used only when Hercules is "
+            "Issue gNMI Set RPC to Stratum to push OpenConfig-based config "
+            "data to the switch. This option is used only when Stratum is "
             "used in standalone mode.");
 DEFINE_string(test_oc_device_file, "",
               "Path to a test oc::Device text proto file. The proto will be "
-              "serialized in SetRequest send to Hercules by gNMI Set RPC when "
+              "serialized in SetRequest send to Stratum by gNMI Set RPC when "
               "--push_open_config is given.");
 DEFINE_bool(push_forwarding_pipeline_config, false,
-            "Issue P4Runtime SetForwardingPipelineConfig RPC to Hercules.");
+            "Issue P4Runtime SetForwardingPipelineConfig RPC to Stratum.");
 DEFINE_string(test_p4_info_file, "",
               "Path to an optional P4Info text proto file. If specified, file "
               "content will be serialzied into the p4info field in "
@@ -75,14 +75,14 @@ DEFINE_string(test_p4_pipeline_config_file, "",
               "pushed to the switch when "
               "--push_forwarding_pipeline_config is given.");
 DEFINE_bool(write_forwarding_entries, false,
-            "Issue P4Runtime Write RPC to Hercules.");
+            "Issue P4Runtime Write RPC to Stratum.");
 DEFINE_string(test_write_request_file, "",
               "Path to a test WriteRequest text proto file. The proto will be "
               "passed to switch directly via P4Runtime Write RPC.");
 DEFINE_bool(read_forwarding_entries, false,
-            "Issue P4Runtime Read RPC to Hercules.");
+            "Issue P4Runtime Read RPC to Stratum.");
 DEFINE_bool(start_controller_session, false,
-            "Start the controller streaming channel to Hercules. When set to  "
+            "Start the controller streaming channel to Stratum. When set to  "
             "true, a controller session using the election ID given by "
             "FLAGS_election_id is started towards the node with ID given by "
             "FLAGS_node_id. The session stays active until the program exits.");
@@ -545,7 +545,7 @@ class HalServiceClient {
         case ::p4::v1::StreamMessageResponse::kDigest:
         case ::p4::v1::StreamMessageResponse::kIdleTimeoutNotification:
         case ::p4::v1::StreamMessageResponse::UPDATE_NOT_SET:
-          // TODO(hercules-dev): Handle kDigest and kIdleTimeoutNotification.
+          // TODO(stratum-dev): Handle kDigest and kIdleTimeoutNotification.
           LOG(ERROR) << "Invalid message received from the switch: "
                      << resp.ShortDebugString();
           break;
@@ -751,7 +751,7 @@ ABSL_CONST_INIT absl::Mutex HalServiceClient::lock_(absl::kConstInit);
 
 int Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
-  InitHerculesLogging();
+  InitStratumLogging();
   HalServiceClient client(FLAGS_url);
   if (FLAGS_push_open_config) {
     client.PushOpenConfig(FLAGS_test_oc_device_file);

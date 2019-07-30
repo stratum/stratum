@@ -76,7 +76,7 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
 
 int Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
-  InitHerculesLogging();
+  InitStratumLogging();
 
   DeviceMgr::init(256 /* max devices */);
 
@@ -166,7 +166,7 @@ int Main(int argc, char* argv[]) {
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
   if (!hal) {
-    LOG(ERROR) << "Failed to create the Hercules Hal instance.";
+    LOG(ERROR) << "Failed to create the Stratum Hal instance.";
     return -1;
   }
 
@@ -177,12 +177,12 @@ int Main(int argc, char* argv[]) {
   ::util::Status status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
-        << "Error when setting up Hercules HAL (but we will continue running): "
+        << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
   status = hal->Run();  // blocking
   if (!status.ok()) {
-    LOG(ERROR) << "Error when running Hercules HAL: " << status.error_message();
+    LOG(ERROR) << "Error when running Stratum HAL: " << status.error_message();
     return -1;
   }
 

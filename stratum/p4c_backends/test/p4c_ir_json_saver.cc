@@ -110,7 +110,7 @@ void ConvertP4ToJson() {
 
 int main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
-  stratum::InitHerculesLogging();
+  stratum::InitStratumLogging();
   stratum::p4c_backends::ConvertP4ToJson();
   return 0;
 }

@@ -34,40 +34,40 @@ namespace {
 // File path to BCM SDK simulator binary used by the BcmSdkSim. Note, the
 // extension ".k8" is truncated.
 constexpr char kBcmSimBin[] =
-    "google3/platforms/networking/hercules/hal/bin/bcm/sim/bcm_pcid_sim";
+    "google3/platforms/networking/stratum/hal/bin/bcm/sim/bcm_pcid_sim";
 
 // File path to the only chassis config used for testing. We use a test Generic Trident2
 // chassis config.
 constexpr char kTestChassisConfigFile[] =
-    "platforms/networking/hercules/testing/protos/"
-    "test_chassis_config_generic_trident2_40g_hercules.pb.txt";
+    "platforms/networking/stratum/testing/protos/"
+    "test_chassis_config_generic_trident2_40g_stratum.pb.txt";
 
 // Test P4Info and P4PipelineConfig files used for testing. We test the ToR
 // P4 specs only.
 constexpr char kTestP4InfoFile[] =
-    "platforms/networking/hercules/testing/protos/"
-    "test_p4_info_hercules_tor.pb.txt";
+    "platforms/networking/stratum/testing/protos/"
+    "test_p4_info_stratum_tor.pb.txt";
 constexpr char kTestP4PipelineConfigFile[] =
-    "platforms/networking/hercules/testing/protos/"
-    "test_p4_pipeline_config_hercules_tor.pb.txt";
+    "platforms/networking/stratum/testing/protos/"
+    "test_p4_pipeline_config_stratum_tor.pb.txt";
 
 // Test WriteRequest proto used for testing. The proto is compatible with the
 // forwarding pipeline config pushed.
 constexpr char kTestWriteRequestFile[] =
-    "platforms/networking/hercules/testing/protos/"
-    "test_write_request_hercules_tor_generic_trident2_generic_tomahawk.pb.txt";
+    "platforms/networking/stratum/testing/protos/"
+    "test_write_request_stratum_tor_generic_trident2_generic_tomahawk.pb.txt";
 
 // File path to BCM serdes db which is required for chassis manager
 // initialization.
 constexpr char kTestBcmSerdesDbFile[] =
-    "google3/platforms/networking/hercules/hal/config/"
-    "generic_trident2_bcm_serdes_db_hercules.pb.bin";
+    "google3/platforms/networking/stratum/hal/config/"
+    "generic_trident2_bcm_serdes_db_stratum.pb.bin";
 
 // File path to BCM chassis map which is required for chassis manager
 // initialization.
 constexpr char kTestBaseBcmChassisMapFile[] =
-    "google3/platforms/networking/hercules/hal/config/"
-    "base_bcm_chassis_map_generic_trident2_hercules.pb.txt";
+    "google3/platforms/networking/stratum/hal/config/"
+    "base_bcm_chassis_map_generic_trident2_stratum.pb.txt";
 
 // File path for chassis manager to dump the BCM config file loaded by the SDK
 // simulator.
@@ -83,7 +83,7 @@ constexpr char kTestBcmSdkCheckpointDir[] = "/tmp/sdk_checkpoint";
 // File path to BCM hardware map which is required for acl manager
 // initialization.
 constexpr char kTestBcmHardwareMap[] =
-    "google3/platforms/networking/hercules/hal/config/"
+    "google3/platforms/networking/stratum/hal/config/"
     "bcm_hardware_specs.pb.txt";
 
 }  // namespace
