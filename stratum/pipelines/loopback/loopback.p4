@@ -134,7 +134,7 @@ control egress(inout headers_t hdr,
 // CHECKSUM VERIFICATION
 //------------------------------------------------------------------------------
 
-control verify_checksum(inout headers_t hdr,
+control verify_cksum(inout headers_t hdr,
                 inout pgm_metadata_t local_metadata) {
 
     apply{ }
@@ -145,7 +145,7 @@ control verify_checksum(inout headers_t hdr,
 // CHECKSUM UPDATE 
 //------------------------------------------------------------------------------
 
-control compute_checksum(inout headers_t hdr,
+control compute_cksum(inout headers_t hdr,
                 inout pgm_metadata_t local_metadata) {
 
     apply{ }
@@ -166,9 +166,9 @@ control deparser(packet_out packet, in headers_t hdr) {
 //------------------------------------------------------------------------------
 
 V1Switch(parser_impl(),
-         verify_checksum(),
+         verify_cksum(),
          ingress(),
          egress(),
-         compute_checksum(),
+         compute_cksum(),
          deparser()) main;
 
