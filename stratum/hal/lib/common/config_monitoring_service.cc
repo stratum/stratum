@@ -290,7 +290,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 
   for (const auto& path : req->path()) {
     VLOG(1) << "GET: " << path.ShortDebugString();
-    if (path == GetPath("/")()) {
+    if (path == GetPath()()) {
       // Special case - whole configuration.
       if (req->type() != ::gnmi::GetRequest::CONFIG) {
         // Unsupported case!

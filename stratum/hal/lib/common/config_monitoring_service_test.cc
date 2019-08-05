@@ -796,7 +796,6 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfigBeforePush) {
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"PROTO(
   path {
-    elem { name: "/" }
   }
   type: CONFIG
   encoding: PROTO
@@ -824,7 +823,6 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonConfig) {
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"PROTO(
   path {
-    elem { name: "/" }
   }
   type: STATE
   encoding: PROTO
@@ -852,7 +850,6 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootNonProto) {
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"PROTO(
   path {
-    elem { name: "/" }
   }
   type: CONFIG
   encoding: JSON
@@ -880,7 +877,6 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfig) {
   ::gnmi::GetRequest req;
   constexpr char kReq[] = R"PROTO(
   path {
-    elem { name: "/" }
   }
   type: CONFIG
   encoding: PROTO
@@ -894,7 +890,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiGetRootConfig) {
   auto grpc_status = DoGet(&context, &req, &resp);
   EXPECT_TRUE(grpc_status.ok()) << grpc_status.error_message();
 
-  EXPECT_TRUE(resp.notification(0).update(0).path() == GetPath("/")());
+  EXPECT_TRUE(resp.notification(0).update(0).path() == GetPath()());
 }
 
 // DoGet() should fail if requested to handle not-existent path.
