@@ -55,3 +55,7 @@ __pycache__/
 
 # vi
 *.swp
+
+# Tarballs
+*.tgz
+*.tar.xz
