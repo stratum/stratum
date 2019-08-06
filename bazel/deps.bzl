@@ -271,6 +271,6 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_opennetworkinglab_fabric_p4test",
             remote = "https://github.com/opennetworkinglab/fabric-p4test",
-            commit = "5ddb0f279df51a2732c30b1235fd22ed02f47989",
+            commit = "ac2b0bf26c4fb91d883492cb85394304cde392c6",
         )
 
