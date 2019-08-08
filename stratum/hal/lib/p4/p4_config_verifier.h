@@ -25,6 +25,7 @@
 #define STRATUM_HAL_LIB_P4_P4_CONFIG_VERIFIER_H_
 
 #include <memory>
+#include <string>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"

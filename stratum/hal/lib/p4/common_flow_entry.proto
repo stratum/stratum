@@ -124,7 +124,7 @@ message P4ActionFunction {
   //      execution is unconditional.  Otherwise, meter_colors specify one
   //      or more metering colors, one of which must be satisfied for the
   //      primitive to run.
-  // TODO: Some op_codes will need one or more parameter values.
+  // TODO(unknown): Some op_codes will need one or more parameter values.
   message P4ActionPrimitive {
     P4ActionOp op_code = 1;
     repeated P4MeterColor meter_colors = 2;
@@ -144,7 +144,7 @@ message P4ActionFunction {
 //  profile_member_id/profile_group_id: identify the profile member or group
 //      when type is P4_ACTION_TYPE_PROFILE_MEMBER_ID or
 //      P4_ACTION_TYPE_PROFILE_GROUP_ID, respectively.
-// TODO: A separate mapping will be defined to convey a
+// TODO(unknown): A separate mapping will be defined to convey a
 // P4ActionFunction that updates an action profile.
 message MappedAction {
   P4ActionType type = 1;

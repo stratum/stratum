@@ -23,7 +23,7 @@
 
 #include "google/protobuf/util/message_differencer.h"
 #include "gmock/gmock.h"
-//FIXME(boc) already included
+// FIXME(boc) already included
 #include "gmock/gmock-matchers.h"  // NOLINT
 #include "gtest/gtest.h"
 

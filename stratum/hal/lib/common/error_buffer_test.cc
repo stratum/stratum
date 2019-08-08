@@ -17,6 +17,7 @@
 
 #include <pthread.h>
 #include <memory>
+#include <algorithm>
 
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"

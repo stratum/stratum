@@ -36,7 +36,7 @@ enum Platform {
   PLT_GENERIC_TOMAHAWK = 3;
   PLT_MLNX_SN2700 = 9;
   PLT_P4_SOFT_SWITCH = 10;
-  // TODO: Add all the BCM and MLNX based platforms.
+  // TODO(unknown): Add all the BCM and MLNX based platforms.
 }
 
 //------------------------------------------------------------------------------
@@ -44,12 +44,12 @@ enum Platform {
 //------------------------------------------------------------------------------
 // Config-related parameters for the entire chassis.
 message ChassisConfigParams {
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // Flow-related parameters for for switching nodes (aka chips).
 message NodeFlowParams {
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // Intended use of a QoS queue. IDs are assigned to be compatible with
@@ -114,17 +114,17 @@ message NodeConfigParams {
   repeated VlanConfig vlan_configs = 2;
   L2Config l2_config = 3;
   repeated QosConfig qos_configs = 4;
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // Flow-related parameters for the ports (singleton and trunk ports).
 message PortFlowParams {
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // Chassis uniquely identifies a switch with a single management interface,
@@ -359,7 +359,7 @@ message GoogleConfig {
       int32 cpu_queue = 2;
       int32 vlan = 3;
       BcmKnetIntfPurpose purpose = 4;
-      // TODO: Anything else?
+      // TODO(unknown): Anything else?
     }
     repeated BcmKnetIntfConfig knet_intf_configs = 1;
   }

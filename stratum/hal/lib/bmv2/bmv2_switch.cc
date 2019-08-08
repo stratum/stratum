@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#include "stratum/hal/lib/bmv2/bmv2_switch.h"
 
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <set>
 
+#include "stratum/hal/lib/bmv2/bmv2_switch.h"
 #include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"

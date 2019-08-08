@@ -32,9 +32,9 @@ namespace hal {
 // The class "ErrorBuffer" is a thread-safe buffer for all the critical errors
 // HAL components may encounter. It can be safely passed to different HAL
 // services to log the critical errors they enounter.
-// TODO: Unable to use CircularBuffer now due to some //base dependency.
+// TODO(unknown): Unable to use CircularBuffer now due to some base dependency.
 // Needs investigation.
-// TODO: Try logging the time as well along with the error.
+// TODO(unknown): Try logging the time as well along with the error.
 class ErrorBuffer {
  public:
   ErrorBuffer() {}

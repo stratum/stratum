@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
-
 #include <functional>
 #include <vector>
+
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/macros.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-//#include "absl/synchronization/mutex.h"
-//#include "absl/time/time.h"
+// #include "absl/synchronization/mutex.h"
+// #include "absl/time/time.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {
@@ -60,7 +60,6 @@ class OnlpPhalTest : public ::testing::Test {
 
 
 TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
-
   std::shared_ptr<Channel<TransceiverEvent>> channel =
       Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
 
@@ -70,14 +69,14 @@ TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
 
   // Register writer1
   ::util::StatusOr<int> result = onlpphal_->RegisterTransceiverEventWriter(
-        std::move(writer1) ,PhalInterface::kTransceiverEventWriterPriorityMed);
+        std::move(writer1) , PhalInterface::kTransceiverEventWriterPriorityMed);
   EXPECT_TRUE(result.ok());
   int id1 = result.ValueOrDie();
   EXPECT_EQ(id1, 1);
 
   // Register writer2
-  result = onlpphal_->RegisterTransceiverEventWriter(
-        std::move(writer2) ,PhalInterface::kTransceiverEventWriterPriorityHigh);
+  result = onlpphal_->RegisterTransceiverEventWriter(std::move(writer2) ,
+                    PhalInterface::kTransceiverEventWriterPriorityHigh);
   EXPECT_TRUE(result.ok());
   int id2 = result.ValueOrDie();
   EXPECT_EQ(id2, 2);
@@ -101,14 +100,14 @@ TEST_F(OnlpPhalTest, OnlpPhalWriteTransceiverEvent) {
 
   // Register writer1
   ::util::StatusOr<int> result = onlpphal_->RegisterTransceiverEventWriter(
-        std::move(writer1) ,PhalInterface::kTransceiverEventWriterPriorityMed);
+        std::move(writer1) , PhalInterface::kTransceiverEventWriterPriorityMed);
   EXPECT_TRUE(result.ok());
   int id1 = result.ValueOrDie();
   EXPECT_EQ(id1, 1);
 
   // Register writer2
   result = onlpphal_->RegisterTransceiverEventWriter(
-        std::move(writer2) ,PhalInterface::kTransceiverEventWriterPriorityHigh);
+      std::move(writer2) , PhalInterface::kTransceiverEventWriterPriorityHigh);
   EXPECT_TRUE(result.ok());
   int id2 = result.ValueOrDie();
   EXPECT_EQ(id2, 2);
@@ -117,7 +116,7 @@ TEST_F(OnlpPhalTest, OnlpPhalWriteTransceiverEvent) {
   TransceiverEvent event;
   event.slot = 1;
   event.port = 3;
-  event.state = HW_STATE_PRESENT; // 2
+  event.state = HW_STATE_PRESENT;  // 2
 
   EXPECT_OK(onlpphal_->WriteTransceiverEvent(event));
 
@@ -135,7 +134,7 @@ TEST_F(OnlpPhalTest, DISABLED_OnlpPhalGetFrontPanelPortInfo) {
   EXPECT_EQ(fp_port_info1.physical_port_type(), PHYSICAL_PORT_TYPE_SFP_CAGE);
   EXPECT_EQ(fp_port_info1.media_type(), MEDIA_TYPE_SFP);
   EXPECT_EQ(fp_port_info1.vendor_name(), "test_sfp_vendor");
-  //EXPECT_EQ(fp_port_info1.get_part_number(), 6);
+  // EXPECT_EQ(fp_port_info1.get_part_number(), 6);
   EXPECT_EQ(fp_port_info1.serial_number(), "test_sfp_serial");
 
   // SFP 2
@@ -144,7 +143,7 @@ TEST_F(OnlpPhalTest, DISABLED_OnlpPhalGetFrontPanelPortInfo) {
   EXPECT_EQ(fp_port_info2.physical_port_type(), PHYSICAL_PORT_TYPE_SFP_CAGE);
   EXPECT_EQ(fp_port_info2.media_type(), MEDIA_TYPE_SFP);
   EXPECT_EQ(fp_port_info2.vendor_name(), "sfp_vendor_222");
-  //EXPECT_EQ(fp_port_info2.get_part_number(), 6);
+  // EXPECT_EQ(fp_port_info2.get_part_number(), 6);
   EXPECT_EQ(fp_port_info2.serial_number(), "sfp_serial_222");
 }
 

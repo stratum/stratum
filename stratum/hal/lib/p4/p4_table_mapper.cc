@@ -47,14 +47,14 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
 
 ::util::Status P4TableMapper::PushChassisConfig(const ChassisConfig& config,
                                                 uint64 node_id) {
-  // TODO: Use the given ChassisConfig proto if needed.
+  // TODO(unknown): Use the given ChassisConfig proto if needed.
   node_id_ = node_id;
   return ::util::OkStatus();
 }
 
 ::util::Status P4TableMapper::VerifyChassisConfig(const ChassisConfig& config,
                                                   uint64 node_id) {
-  // TODO: Implement if needed.
+  // TODO(unknown): Implement if needed.
   return ::util::OkStatus();
 }
 
@@ -101,7 +101,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
   // the mapping data and the P4 object ID gets created here. This function
   // assumes that P4InfoManager has already verified the validity of name and
   // ID fields in each object's preamble.
-  // TODO: Only match fields and actions are mapped now; add others.
+  // TODO(unknown): Only match fields and actions are mapped now; add others.
   for (const auto& action : p4_info.actions()) {
     ::util::Status status = AddMapEntryFromPreamble(action.preamble());
     if (!status.ok()) {
@@ -158,14 +158,14 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
           }
         }
         if (!conversion_found) {
-          // TODO: For now, assume this is due to in-progress
+          // TODO(unknown): For now, assume this is due to in-progress
           // table map file development.
           LOG(WARNING) << "Match field " << match_field.ShortDebugString()
                        << " in table " << table.preamble().name()
                        << " has no known mapping conversion";
         }
       } else {
-        // TODO: Not all fields are defined yet, so just warn.
+        // TODO(unknown): Not all fields are defined yet, so just warn.
         LOG(WARNING) << "P4TableMapper is ignoring match field "
                      << match_field.ShortDebugString() << " in table "
                      << table.preamble().name();
@@ -177,7 +177,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
     // mappings needed to decode the action's parameters.
     // - Create a map/set indicating all valid combinations.
     for (const auto& action_ref : table.action_refs()) {
-      // TODO: For now, assume any non-OK status is due to
+      // TODO(unknown): For now, assume any non-OK status is due to
       // in-progress table map file development.
       auto action_status =
           param_mapper_->AddAction(table.preamble().id(), action_ref.id());
@@ -195,7 +195,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
        p4_info.controller_packet_metadata()) {
     // Unfortunately other than parsing the names, there is no better way to
     // distinguish packet in vs packet out metadata.
-    // TODO: Find a better way to distinguish packet in vs out.
+    // TODO(unknown): Find a better way to distinguish packet in vs out.
     const std::string& name = controller_packet_metadata.preamble().name();
     if (name != kIngressMetadataPreambleName &&
         name != kEgressMetadataPreambleName) {
@@ -260,7 +260,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
 // table map entries.  At present, it doesn't care about unmapped objects.
 // This is a short term development short cut so that only a limited number
 // of interesting P4 objects need to be mapped.
-// TODO: Address this longer term as a the switch implementation
+// TODO(unknown): Address this longer term as a the switch implementation
 // supports a broader set of P4 objects.  This is getting closer to reality.
 // The current obstacle is the treatment of internal objects that p4c fails
 // to hide from its output P4Info.
@@ -306,7 +306,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
 }
 
 ::util::Status P4TableMapper::Shutdown() {
-  // TODO: Implement this function if needed.
+  // TODO(unknown): Implement this function if needed.
   return ::util::OkStatus();
 }
 
@@ -393,7 +393,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
       const ::p4::config::v1::ActionProfile& unused_profile_p4_info,
       p4_info_manager_->FindActionProfileByID(group.action_profile_id()));
   mapped_action->set_type(P4_ACTION_TYPE_PROFILE_GROUP_ID);
-  // TODO: Refactor the code in P4InfoManager so that you do not
+  // TODO(unknown): Refactor the code in P4InfoManager so that you do not
   // need to do tricks like this to work around the "unused var" error.
   VLOG(4) << unused_profile_p4_info.ShortDebugString();
 
@@ -404,7 +404,7 @@ namespace {
 
 // These two functions take an unsigned 64/32 bit integer and encode it as a
 // byte stream in network order.
-// TODO: We add leading zeros at the moment when reporting back to
+// TODO(unknown): We add leading zeros at the moment when reporting back to
 // controller. Is that a problem?
 std::string Uint64ToByteStream(uint64 val) {
   uint64 tmp = (htonl(1) == 1)
@@ -422,7 +422,7 @@ std::string Uint32ToByteStream(uint32 val) {
   return bytes;
 }
 
-// TODO: If needed, add extra validation of the unsigned int values to
+// TODO(unknown): If needed, add extra validation of the unsigned int values to
 // to be in range [1, 2^bitwidth -1].
 ::util::Status DeparseMetadataHelper(
     const MetadataTypeToIdBitwidthMap& metadata_type_to_id_bitwidth_pair,
@@ -479,7 +479,7 @@ std::string Uint32ToByteStream(uint32 val) {
   return ::util::OkStatus();
 }
 
-// TODO: If needed, add extra validation of the unsigned int values to
+// TODO(unknown): If needed, add extra validation of the unsigned int values to
 // to be in range [1, 2^bitwidth -1].
 ::util::Status ParseMetadataHelper(
     const MetadataIdToTypeBitwidthMap& metadata_id_to_type_bitwidth_pair,
@@ -611,13 +611,13 @@ std::unique_ptr<P4TableMapper> P4TableMapper::CreateInstance() {
       const auto& descriptor = iter->second;
       global_id_table_map_[preamble.id()] = &descriptor;
     } else {
-      // TODO: Objects with no mapping only generate a warning so
+      // TODO(unknown): Objects with no mapping only generate a warning so
       // development can proceed without full mapping data.
       LOG(WARNING) << "No table mapping for P4 object: "
                    << preamble.DebugString();
     }
   } else {
-    // TODO: Missing P4 names are currently just logged;
+    // TODO(unknown): Missing P4 names are currently just logged;
     // make missing names an error.
     LOG(WARNING) << "Missing P4 object name in preamble: "
                  << preamble.DebugString();
@@ -765,7 +765,7 @@ std::string P4TableMapper::GetMapperNameKey(
 
   // Action profile group and member IDs are easy - the ID just copies
   // directly to the output flow_entry.
-  // TODO: Should there be validation that the actions embedded in
+  // TODO(unknown): Should there be validation that the actions embedded in
   // the profile are valid for the table in table_p4_info?  This might
   // require a lot of state.  It could potentially be done during the action
   // profile updates instead.
@@ -888,10 +888,10 @@ std::string P4TableMapper::GetMapperNameKey(
         }
       }
 
-      // TODO: Complete deprecation of destination_field_names.
+      // TODO(unknown): Complete deprecation of destination_field_names.
       if (color_op.destination_field_names_size() != 0 ||
           !color_op.destination_field_name().empty()) {
-        // TODO: All of the existing P4 roles have color-qualified
+        // TODO(unknown): All of the existing P4 roles have color-qualified
         // action primitives only. Add support here if this changes.
         LOG(WARNING) << "Meter color action has unexpected destination field "
                      << "assignments: " << color_op.ShortDebugString();
@@ -920,7 +920,7 @@ std::string P4TableMapper::GetMapperNameKey(
   // a hidden table without static entries seems like a non-viable use case,
   // but perhaps there will be a need for a hidden table with nothing but
   // a const default action.
-  // TODO: Maybe p4c should detect and reject this case.
+  // TODO(unknown): Maybe p4c should detect and reject this case.
   if (descriptor.pipeline_stage() == P4Annotation::HIDDEN) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Updates to hidden P4 table " << table_p4_info.preamble().name()
@@ -970,13 +970,13 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
   for (const auto& param_info : action_info.params()) {
     auto desc_status =
         FindParameterDescriptor(param_info.name(), action_descriptor);
-    if (!desc_status.ok()) continue;  // TODO: Append an error.
+    if (!desc_status.ok()) continue;  // TODO(unknown): Append an error.
     auto param_descriptor = desc_status.ValueOrDie();
     P4ActionParamEntry param_entry;
     param_entry.bit_width = param_info.bitwidth();
     param_entry.param_descriptor = param_descriptor;
     AddAssignedFields(&param_entry)
-        .IgnoreError();  // TODO: Check status.
+        .IgnoreError();  // TODO(unknown): Check status.
     const auto param_key = std::make_pair(action_id, param_info.id());
     action_param_map_[param_key] = param_entry;
   }
@@ -996,7 +996,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
                      << PrintP4ObjectID(action_id);
       }
       entry.param_descriptor = &param_descriptor;
-      AddAssignedFields(&entry).IgnoreError();  // TODO: Check status.
+      AddAssignedFields(&entry).IgnoreError();  // TODO(unknown): Check status.
       constant_descriptors.push_back(entry);
     }
   }
@@ -1081,7 +1081,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
     P4ActionParamEntry* param_entry) const {
   // This loop finds the header-field type for any field that this action
   // modifies.
-  // TODO: Should this enforce the same bitwidth in action parameter
+  // TODO(unknown): Should this enforce the same bitwidth in action parameter
   // and the header field info?  This could become a problem for constant
   // assignments, which are currently treated as 64 bits.
   CHECK_RETURN_IF_FALSE(param_entry->param_descriptor != nullptr);
@@ -1101,7 +1101,7 @@ P4TableMapper::P4ActionParamMapper::P4ActionParamMapper(
       const auto& field_descriptor = field_desc_iter->second.field_descriptor();
       param_entry->field_types.push_back(field_descriptor.type());
     } else {
-      // TODO: Append an error.
+      // TODO(unknown): Append an error.
     }
   }
 
@@ -1120,7 +1120,7 @@ void P4TableMapper::P4ActionParamMapper::MapActionAssignment(
   }
   for (int op = 0; op < param_map_entry.param_descriptor->primitives_size();
        ++op) {
-    // TODO: Which primitives need param_value?
+    // TODO(unknown): Which primitives need param_value?
     auto primitive = action_function->add_primitives();
     primitive->set_op_code(param_map_entry.param_descriptor->primitives(op));
   }

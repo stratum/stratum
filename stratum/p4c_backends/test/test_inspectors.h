@@ -16,8 +16,11 @@
 
 // This file contains IR Inspector subclasses to collect data for unit tests.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
+#ifndef STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
+#define STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
+
+#include <string>
+#include <set>
 
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "external/com_github_p4lang_p4c/ir/visitor.h"
@@ -166,4 +169,4 @@ class OptimizedTableInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
+#endif  // STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_

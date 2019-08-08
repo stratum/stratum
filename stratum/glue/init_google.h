@@ -18,8 +18,8 @@
 #ifndef STRATUM_GLUE_INIT_GOOGLE_H_
 #define STRATUM_GLUE_INIT_GOOGLE_H_
 
-//TODO(boc) google only: this is not required for open source
-//#include "base/init_google.h"  // IWYU pragma: export
+// TODO(boc): google only: this is not required for open source
+// #include "base/init_google.h"  // IWYU pragma: export
 
 // InitGoogle is not defined in portable base, so we instead emulate its
 // behavior.
@@ -27,7 +27,8 @@
 
 #include "gflags/gflags.h"
 
-//TODO need to define transformation or comment this out on Google's side
+// TODO(unknown) need to define transformation or comment this out on
+// Google's side
 using gflags::ParseCommandLineFlags;
 
 inline void InitGoogle(const char *usage, int *argc, char ***argv,

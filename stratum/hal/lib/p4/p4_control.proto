@@ -167,10 +167,10 @@ message P4IfStatement {
 //  is_valid - expresses a decision based on the validity of a packet header.
 //  unknown - provides a text description of conditions that the p4c backend
 //      does not currently recognize or support.
-// TODO: Minimize the number of "unknown" conditions in existing P4
+// TODO(unknown): Minimize the number of "unknown" conditions in existing P4
 //      programs.  The most significant unsupported condition is currently
 //      comparison of fields, such as (local_metadata.color != METER_GREEN).
-// TODO: More complex conditions, for example (is_valid(foo_header) &&
+// TODO(unknown): More complex conditions, for example (is_valid(foo_header) &&
 //      metadata_field == XX) are not represented.  What does p4c do with these
 //      in the IR?
 message P4BranchCondition {

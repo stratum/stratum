@@ -18,6 +18,10 @@
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
+#include <memory>
+#include <string>
+#include <list>
+
 #include "gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"

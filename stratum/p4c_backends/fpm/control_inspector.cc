@@ -124,7 +124,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
     DecodeApplyTable(*instance->to<P4::ApplyMethod>());
   } else if (instance->is<P4::ExternMethod>()) {
     AddStatement();
-    // TODO: Evaluate for additional support in Stratum use cases.
+    // TODO(unknown): Evaluate for additional support in Stratum use cases.
     const std::string pseudo_code = absl::StrFormat(
         "extern method %s", instance->to<P4::ExternMethod>()->
             originalExternType->name.toString().c_str());
@@ -135,7 +135,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
       AddValidHeaderCondition(built_in->appliedTo->toString().c_str());
     } else {
       AddStatement();
-      // TODO: Evaluate for additional support in Stratum use cases.
+      // TODO(unknown): Evaluate for additional support in Stratum use cases.
       const std::string pseudo_code = absl::StrFormat(
           "built-in method %s",
           instance->to<P4::BuiltInMethod>()->name.toString().c_str());
@@ -143,7 +143,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
     }
   } else if (instance->is<P4::ActionCall>()) {
     AddStatement();
-    // TODO: Evaluate for additional support in Stratum use cases.
+    // TODO(unknown): Evaluate for additional support in Stratum use cases.
     working_statement_->set_other("MethodCallExpression action call");
   } else if (instance->is<P4::ExternFunction>()) {
     AddStatement();
@@ -159,7 +159,7 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
     }
   } else {
     AddStatement();
-    // TODO: Evaluate for additional support in Stratum use cases.
+    // TODO(unknown): Evaluate for additional support in Stratum use cases.
     working_statement_->set_other("Unknown MethodCallExpression");
   }
   return true;
@@ -175,7 +175,7 @@ bool ControlInspector::preorder(const IR::AssignmentStatement* assignment) {
       P4::TableApplySolver::isHit(assignment->right, ref_map_, type_map_);
   DCHECK(table_hit == nullptr) << "Did HitAssignMapper transform run?";
   AddStatement();
-  // TODO: There are two items to consider here:
+  // TODO(unknown): There are two items to consider here:
   //  1) Support for various field assignments by the control.
   //  2) Can the existing code for assignment statements in action bodies
   //     be refactored to support this?

@@ -20,8 +20,8 @@
 // backend processing.  The transformed node is an IR::IfStatement subclass
 // with additional information linking it to a P4MeterColorAction message.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
 
 #include <string>
 
@@ -123,7 +123,7 @@ class IfStatementColorInspector : public Inspector {
   // is possible, Transform returns false.  When a transform is possible,
   // Transform returns true.  The transform decision does not consider
   // whether an IR::MeterColorStatement is valid in its current context.
-  // TODO: Consider how much validation is useful to do here.
+  // TODO(unknown): Consider how much validation is useful to do here.
   bool CanTransform(const IR::IfStatement& statement);
 
   // These methods override the IR::Inspector base class to visit the nodes
@@ -174,4 +174,4 @@ class IfStatementColorInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_METER_COLOR_MAPPER_H_

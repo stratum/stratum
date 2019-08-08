@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <utility>
 
 #include "stratum/hal/lib/phal/udev_event_handler.h"
 
@@ -28,7 +29,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-// TODO: Add a udev action type enum for ADD, REMOVE, and CHANGE.
+// TODO(unknown): Add a udev action type enum for ADD, REMOVE, and CHANGE.
 
 UdevEventCallback::UdevEventCallback(const std::string& udev_filter,
                                      const std::string& dev_path)

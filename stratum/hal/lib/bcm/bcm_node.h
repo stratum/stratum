@@ -18,6 +18,9 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 
+#include <memory>
+#include <vector>
+
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"

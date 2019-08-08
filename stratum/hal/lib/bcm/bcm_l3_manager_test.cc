@@ -1013,7 +1013,7 @@ TEST_F(BcmL3ManagerTest, UpdateMultipathGroupsForPortFailure) {
   EXPECT_EQ("error2", status.error_message());
 }
 
-// TODO: Define static proto text and others constants in the test
+// TODO(unknown): Define static proto text and others constants in the test
 // class, similar to nexthops.
 TEST_F(BcmL3ManagerTest,
        InsertLpmOrHostFlowSuccessForIpv4LpmFlowAndMultipathNexthop) {
@@ -1905,7 +1905,7 @@ TEST_F(BcmL3ManagerTest, DeleteLpmOrHostFlowP4ConversionFailure) {
   ASSERT_FALSE(bcm_l3_manager_->DeleteTableEntry(p4_table_entry).ok());
 }
 
-// TODO: Add more coverage for the failure case.
+// TODO(unknown): Add more coverage for the failure case.
 
 }  // namespace bcm
 }  // namespace hal

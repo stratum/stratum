@@ -38,7 +38,6 @@
 #include "gnmi/gnmi.grpc.pb.h"
 #include "p4/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
-#include "gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "openconfig/openconfig.pb.h"
@@ -227,7 +226,8 @@ class GetPath {
 // ::grpc::Status includes a binary error detail which is encoding a serialized
 // version of ::google::rpc::Status proto in which the details are captured
 // using proto any messages.
-// TODO: As soon as we can use internal libraries here, move to common/lib.
+// TODO(unknown): As soon as we can use internal libraries here,
+// move to common/lib.
 std::string ToString(const ::grpc::Status& status) {
   std::stringstream ss;
   if (!status.error_details().empty()) {
@@ -362,7 +362,7 @@ class HalServiceClient {
 
   static void* TxPacket(void* arg) {
     TxThreadData* data = static_cast<TxThreadData*>(arg);
-    //FIXME(boc) might use CHECK_NOTNULL instead of ABSL_DIE_IF_NULL
+    // FIXME(boc) might use CHECK_NOTNULL instead of ABSL_DIE_IF_NULL
     ClientStreamChannelReaderWriter* stream = ABSL_DIE_IF_NULL(data->stream);
     P4TableMapper* p4_table_mapper = ABSL_DIE_IF_NULL(data->p4_table_mapper);
     ::p4::v1::StreamMessageRequest req;

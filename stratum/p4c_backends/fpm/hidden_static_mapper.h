@@ -24,11 +24,12 @@
 // The InternalAction becomes a single action for a Stratum switch physical
 // table that combines the functionality of multiple P4 logical tables.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
 
 #include <map>
 #include <string>
+#include <utility>
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
@@ -97,4 +98,4 @@ class HiddenStaticMapper {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_HIDDEN_STATIC_MAPPER_H_

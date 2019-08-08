@@ -975,8 +975,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   }
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
     CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
-                                      base_bcm_chassis_map.bcm_chips().end(),
-                                      [&bcm_chip](const ::google::protobuf::Message& x) {
+                          base_bcm_chassis_map.bcm_chips().end(),
+                          [&bcm_chip](const ::google::protobuf::Message& x) {
                                         return ProtoEqual(x, bcm_chip);
                                       }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
@@ -992,7 +992,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     CHECK_RETURN_IF_FALSE(std::any_of(
         base_bcm_chassis_map.bcm_ports().begin(),
         base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) { return ProtoEqual(x, p); }))
+        [&p](const ::google::protobuf::Message& x) {
+          return ProtoEqual(x, p); }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
@@ -1613,7 +1614,7 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   std::stringstream buffer;
   RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
 
@@ -2001,7 +2002,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
           bcm_port->serdes_core(), bcm_port->serdes_lane(),
           bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
           serdes_register_configs, serdes_attr_configs));
-      // TODO: For some transceivers (e.g. 100G cSR4 QSFPs) we also
+      // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
       // need to write some control values to the QSFP module control registers.
       // Take care of that part too.
       VLOG(1) << "Serdes setting done for SingletonPort "

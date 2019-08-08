@@ -17,6 +17,9 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_PSU_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_PSU_DATASOURCE_H_
 
+#include <memory>
+#include <string>
+
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
@@ -71,7 +74,6 @@ class OnlpPsuDataSource : public DataSource {
 
   static ::util::Status ValidateOnlpPsuInfo(OnlpOid psu_oid,
                                             OnlpInterface* onlp_interface) {
-
     return onlp_interface->GetOidInfo(psu_oid).status();
   }
 

@@ -105,10 +105,11 @@ class EnumAttribute
   // Does not transfer ownership of datasource.
   explicit EnumAttribute(const ::google::protobuf::EnumDescriptor* descriptor,
                          DataSource* datasource)
-      : TypedAttribute<const ::google::protobuf::EnumValueDescriptor*>(datasource) {
+  : TypedAttribute<const ::google::protobuf::EnumValueDescriptor*>(datasource) {
     value_ = descriptor->FindValueByNumber(0);  // Default enum value.
   }
-  ::util::Status AssignValue(const google::protobuf::EnumValueDescriptor* value) {
+  ::util::Status AssignValue(
+    const google::protobuf::EnumValueDescriptor* value) {
     if (value->type() != value_->type()) {
       return MAKE_ERROR() << "Attempted to assign incorrect enum type "
                           << value->type()->name()

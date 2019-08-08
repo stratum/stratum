@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "stratum/glue/gtl/cleanup.h"
-
 #include <functional>
 #include <type_traits>
+#include <string>
 
 #include "gtest/gtest.h"
+#include "stratum/glue/gtl/cleanup.h"
 
 using std::string;
 

@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"

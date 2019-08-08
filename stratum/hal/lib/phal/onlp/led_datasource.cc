@@ -40,7 +40,7 @@ namespace onlp {
       new OnlpLedDataSource(led_id, onlp_interface, cache_policy, led_info));
 
   // Retrieve attributes' initial values.
-  // TODO: Move the logic to Configurator later?
+  // TODO(unknown): Move the logic to Configurator later?
   // led_data_source->updateValues();
   led_data_source->UpdateValuesUnsafelyWithoutCacheOrLock();
   return led_data_source;

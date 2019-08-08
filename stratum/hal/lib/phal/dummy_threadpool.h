@@ -32,7 +32,7 @@ namespace hal {
 namespace phal {
 
 // An extremely elegant threadpool that executes all tasks serially.
-// TODO: Make or find a real threadpool.
+// TODO(unknown): Make or find a real threadpool.
 class DummyThreadpool : public ThreadpoolInterface {
  public:
   void Start() override;

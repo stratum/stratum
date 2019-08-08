@@ -33,7 +33,7 @@ OidInfo::OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
   oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
   oid_info_.status = (state == HW_STATE_PRESENT ?
       ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
-};
+}
 
 bool OidInfo::Present() const {
   return ONLP_OID_PRESENT(&oid_info_);
@@ -42,7 +42,7 @@ bool OidInfo::Present() const {
 HwState OidInfo::GetHardwareState() const {
   if (Present()) {
     if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, UNPLUGGED)) {
-      return HW_STATE_OFF; // FIXME(Yi): is this right?
+      return HW_STATE_OFF;  // FIXME(Yi): is this right?
     }
     if (ONLP_OID_STATUS_FLAG_IS_SET(&oid_info_, FAILED)) {
       return HW_STATE_FAILED;
@@ -177,10 +177,10 @@ OnlpWrapper::~OnlpWrapper() {
   onlp_sfp_bitmap_t_init(&presence);
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
            << "Failed to get presence bitmap ONLP.";
-  int k=0;
-  for(int i=0; i<kOnlpBitmapWordCount; i++){
-    for(int j=0; j<kOnlpBitmapBitsPerWord; j++) {
-      if( presence.hdr.words[i]&(1<<j))
+  int k = 0;
+  for (int i = 0; i < kOnlpBitmapWordCount; i++) {
+    for (int j = 0; j < kOnlpBitmapBitsPerWord; j++) {
+      if (presence.hdr.words[i] & (1 << j))
         bitset.set(k);
       else
         bitset.reset(k);
@@ -188,7 +188,7 @@ OnlpWrapper::~OnlpWrapper() {
       k++;
     }
   }
-  return bitset; 
+  return bitset;
 }
 
 ::util::StatusOr<PsuInfo> OnlpWrapper::GetPsuInfo(OnlpOid oid) const {
@@ -206,7 +206,6 @@ OnlpWrapper::~OnlpWrapper() {
 
 ::util::StatusOr<std::vector<OnlpOid>> OnlpWrapper::GetOidList(
       onlp_oid_type_flag_t type) const {
-
   std::vector<OnlpOid> oid_list;
   biglist_t* oid_hdr_list;
 
@@ -216,7 +215,8 @@ OnlpWrapper::~OnlpWrapper() {
   // Iterate though the returned list and add the OIDs to oid_list
   biglist_t* curr_node = oid_hdr_list;
   while (curr_node != nullptr) {
-    onlp_oid_hdr_t* oid_hdr = (onlp_oid_hdr_t*) curr_node->data;
+    onlp_oid_hdr_t* oid_hdr =
+                    reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
     oid_list.emplace_back(oid_hdr->id);
     curr_node = curr_node->next;
   }
@@ -229,7 +229,7 @@ OnlpWrapper::~OnlpWrapper() {
   SfpBitmap bitmap;
   onlp_sfp_bitmap_t_init(&bitmap);
   int result = onlp_sfp_bitmap_get(&bitmap);
-  if(result < 0) {
+  if (result < 0) {
     LOG(ERROR) << "Failed to get valid SFP port bitmap from ONLP.";
   }
 
@@ -237,11 +237,11 @@ OnlpWrapper::~OnlpWrapper() {
   int i, j;
   for (i = 0; i < kOnlpBitmapWordCount; i ++) {
     for (j = 0; j < kOnlpBitmapBitsPerWord; j ++) {
-      if (bitmap.words[i] & (1<<j)) {
+      if (bitmap.words[i] & (1 << j)) {
         port_num = i * kOnlpBitmapBitsPerWord + j + 1;
         // Note: return here only if the valid port numbers start from
         //       port 1 and are consecutive.
-        //return port_num;
+        // return port_num;
       }
     }
   }
@@ -250,7 +250,7 @@ OnlpWrapper::~OnlpWrapper() {
 }
 
 // Several converter functions.
-// TODO: Revise the conversion logic here.
+// TODO(unknown): Revise the conversion logic here.
 // Get MediaType from the given SFP connector type and SFF module type.
 MediaType SfpInfo::GetMediaType() const {
   if (sfp_info_.type == ONLP_SFP_TYPE_SFP) {
@@ -267,7 +267,7 @@ MediaType SfpInfo::GetMediaType() const {
     case SFF_MODULE_TYPE_40G_BASE_SR4:
       return MEDIA_TYPE_QSFP_SR4;
     case SFF_MODULE_TYPE_40G_BASE_LR4:
-      // TODO: Need connector type (LC or MPO) which is missing.
+      // TODO(unknown): Need connector type (LC or MPO) which is missing.
     default:
       return MEDIA_TYPE_UNKNOWN;
   }

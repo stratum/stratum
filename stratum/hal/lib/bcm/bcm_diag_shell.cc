@@ -13,8 +13,6 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
-
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -24,8 +22,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "absl/synchronization/mutex.h"
 
+#include <string>
+
+#include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
@@ -53,7 +54,7 @@ BcmDiagShell* BcmDiagShell::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex BcmDiagShell::init_lock_(absl::kConstInit);
 
 ::util::Status BcmDiagShell::StartServer() {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -88,11 +89,11 @@ void* BcmDiagShell::ShellThreadFunc(void *arg) {
 // These part is working as expected and there is not reason or intend to
 // change anything in them.
 void BcmDiagShell::RunServer() {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
 }
 
 void BcmDiagShell::RunDiagShell() {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
 }
 
 void BcmDiagShell::ForwardTelnetSession() {

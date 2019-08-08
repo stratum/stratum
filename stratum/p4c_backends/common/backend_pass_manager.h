@@ -17,8 +17,10 @@
 // This file declares a BackendPassManager class to oversee the execution
 // of a Stratum-specific p4c backend.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_
+#define STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_
+
+#include <vector>
 
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_interface.h"
@@ -56,4 +58,4 @@ class BackendPassManager {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_BACKEND_PASS_MANAGER_H_

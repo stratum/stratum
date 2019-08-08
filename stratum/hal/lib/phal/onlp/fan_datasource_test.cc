@@ -39,15 +39,15 @@ using ::stratum::test_utils::StatusIs;
 
 class FanDatasourceTest : public ::testing::Test {
  public:
-   void SetUp() override {
-     id_ = 12345;
-     oid_ = ONLP_FAN_ID_CREATE(id_);
-   }
+  void SetUp() override {
+    id_ = 12345;
+    oid_ = ONLP_FAN_ID_CREATE(id_);
+  }
 
-   int id_;             // Id for this FAN
-   OnlpOid oid_;        // OID for this FAN (i.e. Type + Id)
-   onlp_oid_hdr_t mock_oid_info_;
-   MockOnlpWrapper mock_onlp_interface_;
+  int id_;             // Id for this FAN
+  OnlpOid oid_;        // OID for this FAN (i.e. Type + Id)
+  onlp_oid_hdr_t mock_oid_info_;
+  MockOnlpWrapper mock_onlp_interface_;
 };
 
 TEST_F(FanDatasourceTest, InitializeFANWithEmptyInfo) {

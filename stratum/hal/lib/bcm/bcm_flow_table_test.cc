@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
 
 #include "stratum/hal/lib/bcm/bcm_flow_table.h"
-
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"

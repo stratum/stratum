@@ -18,6 +18,9 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_MOCK_H_
 
+#include <memory>
+#include <vector>
+
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"

@@ -23,7 +23,7 @@
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/lib/macros.h"
 // FIXME remove when onlp_wrapper.h is stable
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
+// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 
@@ -106,27 +106,27 @@ OnlpPhal::~OnlpPhal() {}
 ::util::Status OnlpPhal::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&config_lock_);
 
-  // TODO: Process Chassis Config here
+  // TODO(unknown): Process Chassis Config here
 
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhal::VerifyChassisConfig(const ChassisConfig& config) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
-  // TODO: add clean up code
+  // TODO(unknown): add clean up code
 
   initialized_ = false;
 
   return ::util::OkStatus();
 }
 
-::util::Status OnlpPhal::HandleTransceiverEvent(TransceiverEvent& event) {
+::util::Status OnlpPhal::HandleTransceiverEvent(const TransceiverEvent& event) {
   // Send event to Sfp configurator first to ensure
   // attribute database is in order before and calls are
   // made from the upper layer components.
@@ -331,7 +331,7 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 
 ::util::Status OnlpPhal::SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 

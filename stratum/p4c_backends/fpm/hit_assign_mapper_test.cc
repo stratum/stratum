@@ -14,6 +14,9 @@
 
 // Contains unit tests for HitAssignMapper.
 
+#include <memory>
+#include <tuple>
+
 #include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
 
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
@@ -184,8 +187,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 2),
         std::make_tuple("if_color_test.ir.json", "ifs_with_transforms", 0),
         std::make_tuple("switch_case.ir.json", "inverted_conditions", 0),
-        std::make_tuple("switch_case.ir.json", "normal_clone_drop", 0)
-    ));
+        std::make_tuple("switch_case.ir.json", "normal_clone_drop", 0)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

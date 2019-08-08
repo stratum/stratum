@@ -20,6 +20,8 @@
 
 #include <memory>
 #include <utility>
+#include <string>
+#include <vector>
 
 #include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
@@ -199,7 +201,7 @@ class BcmL3Manager {
 
   // Map from router_intf_id to ref counts (the number egress intfs pointing to
   // this router intf).
-  // TODO: We keep this map as there is no good way to get this
+  // TODO(unknown): We keep this map as there is no good way to get this
   // directly from SDK. Investigate.
   absl::flat_hash_map<int, uint32> router_intf_ref_count_;
 

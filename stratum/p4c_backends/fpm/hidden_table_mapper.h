@@ -40,8 +40,8 @@
 // Subsequent comments refer to local metadata fields matching these
 // circumstances as "indirect action keys".
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_TABLE_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_TABLE_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_HIDDEN_TABLE_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_HIDDEN_TABLE_MAPPER_H_
 
 #include <map>
 #include <set>
@@ -235,4 +235,4 @@ class HiddenTableMapper {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIDDEN_TABLE_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_HIDDEN_TABLE_MAPPER_H_

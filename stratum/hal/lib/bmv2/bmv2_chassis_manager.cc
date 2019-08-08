@@ -13,16 +13,14 @@
  * limitations under the License.
  */
 
-#include "stratum/hal/lib/bmv2/bmv2_chassis_manager.h"
-
-#include "bm/bm_sim/dev_mgr.h"
-#include "bm/simple_switch/runner.h"
-
 #include <functional>  // std::bind
 #include <map>
 #include <memory>
 #include <utility>  // std::pair
 
+#include "bm/bm_sim/dev_mgr.h"
+#include "bm/simple_switch/runner.h"
+#include "stratum/hal/lib/bmv2/bmv2_chassis_manager.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"

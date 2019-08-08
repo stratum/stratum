@@ -33,7 +33,7 @@
 #include "absl/time/time.h"
 #include "re2/re2.h"
 
-using namespace std;
+using namespace std;  // NOLINT
 
 namespace stratum {
 namespace hal {
@@ -44,7 +44,7 @@ namespace onlp {
 class OnlpPhalCli {
  public:
   // All CLI queries are run on the given attribute database.
-  OnlpPhalCli(OnlpPhal* onlpphal)
+  explicit OnlpPhalCli(OnlpPhal* onlpphal)
       : onlpphal_(onlpphal) {}
 
   // Reads the given string into a PHAL query. Returns a failure if the given

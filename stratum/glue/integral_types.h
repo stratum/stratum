@@ -16,7 +16,7 @@
 // Adopted from https://github.com/google/google-api-cpp-client
 // --> src/googleapis/base/integral_types.h
 
-//TODO Move Stratum over to _t types and remove this file
+// TODO(unknow) Move Stratum over to _t types and remove this file
 
 #ifndef STRATUM_GLUE_INTEGRAL_TYPES_H_
 #define STRATUM_GLUE_INTEGRAL_TYPES_H_
@@ -70,19 +70,22 @@ namespace stratum {
 
     #endif  // COMPILER_MSVC
 
-    static const uint8  kuint8max  = (( uint8) 0xFF);
-    static const uint16 kuint16max = ((uint16) 0xFFFF);
-    static const uint32 kuint32max = ((uint32) 0xFFFFFFFF);
-    static const uint64 kuint64max = ((uint64) GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
-    static const  int8  kint8min   = ((  int8) ~0x7F);
-    static const  int8  kint8max   = ((  int8) 0x7F);
-    static const  int16 kint16min  = (( int16) ~0x7FFF);
-    static const  int16 kint16max  = (( int16) 0x7FFF);
-    static const  int32 kint32min  = (( int32) ~0x7FFFFFFF);
-    static const  int32 kint32max  = (( int32) 0x7FFFFFFF);
-    static const  int64 kint64min  = (( int64) GG_LONGLONG(~0x7FFFFFFFFFFFFFFF));
-    static const  int64 kint64max  = (( int64) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
+    static const uint8  kuint8max  = ((uint8) 0xFF);
+    static const uint16 kuint16max = static_cast<uint16>(0xFFFF);
+    static const uint32 kuint32max = static_cast<uint64>(0xFFFFFFFF);
+    static const uint64 kuint64max =
+                        static_cast<uint64>(GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
+    static const  int8  kint8min   = ((int8) ~0x7F);
+    static const  int8  kint8max   = ((int8) 0x7F);
+    static const  int16 kint16min  = static_cast<int16>(~0x7FFF);
+    static const  int16 kint16max  = static_cast<int16>(0x7FFF);
+    static const  int32 kint32min  = static_cast<int32>(~0x7FFFFFFF);
+    static const  int32 kint32max  = static_cast<int32>(0x7FFFFFFF);
+    static const  int64 kint64min  =
+                        static_cast<int64>(GG_LONGLONG(~0x7FFFFFFFFFFFFFFF));
+    static const  int64 kint64max  =
+                        static_cast<int64>(GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 
-}
+}  // namespace stratum
 
 #endif  // STRATUM_GLUE_INTEGRAL_TYPES_H_

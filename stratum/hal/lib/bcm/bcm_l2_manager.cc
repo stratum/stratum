@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <set>
 
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
-
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/lib/macros.h"
@@ -66,7 +66,7 @@ BcmL2Manager::~BcmL2Manager() {}
             unit_, node.config_params().l2_config().l2_age_duration_sec()));
       }
     }
-    // TODO: Remove the unused VLANs. Keep track of IDs of the VLANs
+    // TODO(unknown): Remove the unused VLANs. Keep track of IDs of the VLANs
     // in the config and remove all the VLANs that are configured and not used
     // (except the default VLAN).
     break;
@@ -163,7 +163,7 @@ BcmL2Manager::~BcmL2Manager() {}
   // 2- If MAC is not broadcast MAC, we return error as multicast is not
   //    supported yet.
 
-  // TODO: At the moment this will be called for default/ARP VLAN and
+  // TODO(unknown): At the moment this will be called for default/ARP VLAN and
   // broadcast MAC, as part of pushing the static entries in the forwarding
   // pipeline config. Enabling Broadcast MAC for these two are already done as
   // part of config push. So there is nothing to be done. If there is a use
@@ -182,7 +182,7 @@ BcmL2Manager::~BcmL2Manager() {}
   // 2- If MAC is not broadcast MAC, we return error as multicast is not
   //    supported yet.
 
-  // TODO: At the moment this call is not even used as we do not
+  // TODO(unknown): At the moment this call is not even used as we do not
   // disable broadcast for default/ARP VLAN. If there is any other use case,
   // we need to implement this.
   return ::util::OkStatus();

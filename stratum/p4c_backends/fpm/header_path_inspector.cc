@@ -89,7 +89,7 @@ bool HeaderPathInspector::preorder(const IR::StructField* field) {
   // IR::Type_Bits and IR::Type_Enum occur on reaching the end of the header
   // path, so the output map can be updated with information about the current
   // header type.
-  // TODO: This backend should restrict enums to metadata types.
+  // TODO(unknown): This backend should restrict enums to metadata types.
   // They don't have bit widths, which will cause problems for enums appearing
   // in packet headers during parser state decoding.
   if (field->type->is<IR::Type_Bits>() || field->type->is<IR::Type_Enum>()) {

@@ -20,8 +20,8 @@
 // that appear within P4Action and P4Control bodies.  It may also be useful
 // for decoding expressions in IR::IfStatement conditions.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
 
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
@@ -98,4 +98,4 @@ class ExpressionInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_EXPRESSION_INSPECTOR_H_

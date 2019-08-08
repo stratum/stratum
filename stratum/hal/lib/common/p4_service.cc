@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
+#include <utility>
 
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
@@ -57,7 +58,7 @@ DEFINE_int32(max_num_controller_connections, 20,
 namespace stratum {
 namespace hal {
 
-// TODO: This class move possibly big configs in memory. See if there
+// TODO(unknown): This class move possibly big configs in memory. See if there
 // is a way to make this more efficient.
 
 P4Service::P4Service(OperationMode mode, SwitchInterface* switch_interface,
@@ -76,7 +77,7 @@ P4Service::~P4Service() {}
 ::util::Status P4Service::Setup(bool warmboot) {
   // If we are coupled mode and are coldbooting, we wait for controller to push
   // the forwarding pipeline config. We do not do anything here.
-  // TODO: This will be removed when we completely move to
+  // TODO(unknown): This will be removed when we completely move to
   // standalone mode.
   if (!warmboot && mode_ == OPERATION_MODE_COUPLED) {
     LOG(INFO) << "Skipped pushing the saved forwarding pipeline config(s) in "
@@ -183,7 +184,8 @@ P4Service::~P4Service() {}
 
 namespace {
 
-// TODO: This needs to be changed later per p4 runtime error reporting scheme.
+// TODO(unknown): This needs to be changed later per p4 runtime error
+// reporting scheme.
 ::grpc::Status ToGrpcStatus(const ::util::Status& status,
                             const std::vector<::util::Status>& details) {
   // We need to create a ::google::rpc::Status and populate it with all the
@@ -375,8 +377,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       // If the config push was successful or reported reboot required, save
       // the config in file. But only mutate the internal copy if we status
       // was OK.
-      // TODO: this may not be appropriate for the VERIFY_AND_SAVE -> COMMIT
-      // sequence of operations.
+      // TODO(unknown): this may not be appropriate for the VERIFY_AND_SAVE ->
+      // COMMIT sequence of operations.
       if (error.ok() || error.error_code() == ERR_REBOOT_REQUIRED) {
         (*configs_to_save_in_file.mutable_node_id_to_config())[node_id] =
             req->config();
@@ -766,7 +768,7 @@ bool P4Service::IsWritePermitted(uint64 node_id, absl::uint128 election_id,
   absl::ReaderMutexLock l(&controller_lock_);
   auto it = node_id_to_controllers_.find(node_id);
   if (it == node_id_to_controllers_.end() || it->second.empty()) return false;
-  // TODO: Find a way to check for uri as well.
+  // TODO(unknown): Find a way to check for uri as well.
   return it->second.begin()->election_id() == election_id;
 }
 

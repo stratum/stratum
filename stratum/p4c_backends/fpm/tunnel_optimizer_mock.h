@@ -16,8 +16,8 @@
 
 // This file declares a TunnelOptimizerInterface mock for unit tests.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
+#define STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
 
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 #include "gmock/gmock.h"
@@ -39,4 +39,4 @@ class TunnelOptimizerMock : public TunnelOptimizerInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_MOCK_H_

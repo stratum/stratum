@@ -23,6 +23,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 #include "stratum/lib/channel/channel_internal.h"
 #include "stratum/lib/macros.h"
@@ -215,7 +216,7 @@ class SelectResult {
     const std::vector<channel_internal::ChannelBase*>& channels,
     absl::Duration timeout);
 
-// TODO: add support for optional en/dequeue timestamping.
+// TODO(unknown): add support for optional en/dequeue timestamping.
 template <typename T>
 class Channel : public channel_internal::ChannelBase {
   // Check the type requirements documented at the top of this file.
@@ -361,7 +362,7 @@ class ChannelReader {
   // Private constructor which initializes a ChannelReader from the given
   // Channel.
   explicit ChannelReader(std::shared_ptr<Channel<T>> channel)
-      //FIXME ABSL_DIE_IF_NULL not available in absl
+      // FIXME ABSL_DIE_IF_NULL not available in absl
       : channel_(/*FIXME ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
 
   std::shared_ptr<Channel<T>> channel_;
@@ -405,7 +406,7 @@ class ChannelWriter {
  private:
   // Private constructor which initializes a ChannelWriter to the given Channel.
   explicit ChannelWriter(std::shared_ptr<Channel<T>> channel)
-      //FIXME ABSL_DIE_IF_NULL not available in absl
+      // FIXME ABSL_DIE_IF_NULL not available in absl
       : channel_(/*ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
 
   std::shared_ptr<Channel<T>> channel_;
@@ -479,7 +480,7 @@ template <typename T>
   }
   // Queue size should never exceed maximum queue depth.
   if (queue_.size() > max_depth_) {
-    // TODO: Change to CRITICAL error once that is an option.
+    // TODO(unknown): Change to CRITICAL error once that is an option.
     return MAKE_ERROR(ERR_INTERNAL)
            << "Channel load " << queue_.size() << " exceeds max queue depth "
            << max_depth_ << ".";
@@ -525,7 +526,7 @@ template <typename T>
   }
   // Queue size should never exceed maximum queue depth.
   if (queue_.size() > max_depth_) {
-    // TODO: Change to CRITICAL error once that is an option.
+    // TODO(unknown): Change to CRITICAL error once that is an option.
     return MAKE_ERROR(ERR_INTERNAL)
            << "Channel load " << queue_.size() << " exceeds max queue depth "
            << max_depth_ << ".";

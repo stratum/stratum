@@ -17,6 +17,8 @@
 #ifndef STRATUM_LIB_CHANNEL_CHANNEL_INTERNAL_H_
 #define STRATUM_LIB_CHANNEL_CHANNEL_INTERNAL_H_
 
+#include <memory>
+
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
 

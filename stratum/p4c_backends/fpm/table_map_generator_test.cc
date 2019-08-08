@@ -281,7 +281,7 @@ TEST_F(TableMapGeneratorTest, TestSetFieldValueSetUndefined) {
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
 }
 
-// TODO: Parameterize the next two tests to cover many combinations
+// TODO(unknown): Parameterize the next two tests to cover many combinations
 // of match type and field width.
 TEST_F(TableMapGeneratorTest, TestAddFieldMatchExact) {
   SetUpTestP4ModelNames();

@@ -18,6 +18,8 @@
 
 #include <set>
 #include <string>
+#include <memory>
+#include <vector>
 
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"

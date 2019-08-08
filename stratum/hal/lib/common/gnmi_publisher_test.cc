@@ -343,10 +343,10 @@ TEST_F(SubscriptionTest, PromisedOnChangeOnlyLeafsAreSupported) {
       GetPath("interfaces")("interface")("...")(), &stream, &h));
 }
 
-//FIXME(boc) google only (using new path)
+// FIXME(boc) google only (using new path)
 // Some of the paths support only OnPoll mode, so, they cannot be tested by
 // the parametrized test below.
-//TEST_F(SubscriptionTest, PromisedOnPollOnlyLeafsAreSupported) {
+// TEST_F(SubscriptionTest, PromisedOnPollOnlyLeafsAreSupported) {
 //  SubscribeReaderWriterMock stream;
 //  SubscriptionHandle h;
 //
@@ -354,7 +354,7 @@ TEST_F(SubscriptionTest, PromisedOnChangeOnlyLeafsAreSupported) {
 //      GetPath("debug")("nodes")(
 //          "node", "xy1switch.prod.google.com")("packet-io")("debug-string")(),
 //      &stream, &h));
-//}
+// }
 
 // All remaining paths support all modes and can be tested by this parametrized
 // test that takes the path as a parameter.
@@ -362,8 +362,8 @@ class SubscriptionSupportedPathsTest
     : public SubscriptionTestBase,
       public ::testing::TestWithParam<::gnmi::Path> {};
 
-//FIXME(boc) google only
-//TEST_P(SubscriptionSupportedPathsTest, PromisedLeafsAreSupported) {
+// FIXME(boc) google only
+// TEST_P(SubscriptionSupportedPathsTest, PromisedLeafsAreSupported) {
 //  SubscribeReaderWriterMock stream;
 //  SubscriptionHandle h;
 //
@@ -373,9 +373,9 @@ class SubscriptionSupportedPathsTest
 //  EXPECT_OK(
 //      gnmi_publisher_->SubscribePeriodic(Periodic(1000), path, &stream, &h));
 //  EXPECT_OK(gnmi_publisher_->SubscribePoll(path, &stream, &h));
-//}
+// }
 
-// TODO: add all supported paths here!
+// TODO(unknown): add all supported paths here!
 INSTANTIATE_TEST_SUITE_P(
     SubscriptionSupportedOtherPathsTestWithPath, SubscriptionSupportedPathsTest,
     ::testing::Values(
@@ -524,7 +524,7 @@ class ReplaceSupportedPathsTest
       public ::testing::TestWithParam<::gnmi::Path> {};
 
 // FIXME(boc) google only
-//TEST_P(ReplaceSupportedPathsTest, PromisedLeafsAreSupported) {
+// TEST_P(ReplaceSupportedPathsTest, PromisedLeafsAreSupported) {
 //  SubscribeReaderWriterMock stream;
 //  SubscriptionHandle h;
 //
@@ -536,7 +536,7 @@ class ReplaceSupportedPathsTest
 //  if (!status.ok()) {
 //    EXPECT_THAT(status.ToString(), Not(HasSubstr("unsupported")));
 //  }
-//}
+// }
 
 // Due to Google's restriction on the size of a function frame, this automation
 // had to be split into separate calls.

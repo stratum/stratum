@@ -12,6 +12,9 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_THERMAL_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_THERMAL_DATASOURCE_H_
 
+#include <memory>
+#include <string>
+
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
@@ -30,8 +33,9 @@ namespace phal {
 namespace onlp {
 
 class OnlpThermalDataSource : public DataSource {
-  // Makes a shared_ptr to an ThermalDataSource which manages an ONLP THERMAL object.
-  // Returns error if the OID object is not of the correct type or not present.
+  // Makes a shared_ptr to an ThermalDataSource which manages an ONLP THERMAL
+  // object. Returns error if the OID object is not of the correct type or
+  // not present.
  public:
   // OnlpThermalDataSource does not take ownership of onlp_interface. We expect
   // onlp_interface remains valid during OnlpThermalDataSource's lifetime.
@@ -46,13 +50,15 @@ class OnlpThermalDataSource : public DataSource {
   ManagedAttribute* GetThermalCurTemp() { return &thermal_cur_temp_; }
   ManagedAttribute* GetThermalWarnTemp() { return &thermal_warn_temp_; }
   ManagedAttribute* GetThermalErrorTemp() { return &thermal_error_temp_; }
-  ManagedAttribute* GetThermalShutDownTemp() { return &thermal_shut_down_temp_; }
+  ManagedAttribute* GetThermalShutDownTemp() {
+    return &thermal_shut_down_temp_;
+  }
 
   // Thermal capabilities
   ManagedAttribute* GetCapTemp() { return &thermal_cap_temp_; }
   ManagedAttribute* GetCapWarnThresh() { return &thermal_cap_warn_thresh_; }
   ManagedAttribute* GetCapErrThresh() { return &thermal_cap_err_thresh_; }
-  ManagedAttribute* GetCapShutdownThresh() 
+  ManagedAttribute* GetCapShutdownThresh()
     { return &thermal_cap_shutdown_thresh_; }
 
  private:

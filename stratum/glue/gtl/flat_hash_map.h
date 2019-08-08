@@ -18,6 +18,9 @@
 #define STRATUM_GLUE_GTL_FLAT_HASH_MAP_H_
 
 #include <unordered_map>
+#include <utility>
+#include <memory>
+#include <functional>
 
 namespace stratum {
 namespace gtl {

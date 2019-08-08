@@ -18,6 +18,9 @@
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_MOCK_H_
 
+#include <utility>
+#include <string>
+
 #include "stratum/hal/lib/phal/udev_interface.h"
 #include "gmock/gmock.h"
 

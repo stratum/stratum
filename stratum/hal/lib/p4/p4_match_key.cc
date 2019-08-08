@@ -28,7 +28,7 @@
 // according to P4Runtime spec section 8.3.  When the flag is disabled,
 // P4MatchKey ignores bytestring lengths and simply requires that the integer
 // value of the bytestring fit within the bitwidth specified by the P4Info.
-// TODO: This flag anticipates getting the P4 API WG to relax the
+// TODO(unknown): This flag anticipates getting the P4 API WG to relax the
 // P4Runtime requirement in favor of better upward compatibility.  Once the
 // decision is made, remove this flag and enforce the final requirement.
 DEFINE_bool(enforce_bytestring_length, false,
@@ -57,7 +57,7 @@ std::unique_ptr<P4MatchKey> P4MatchKey::CreateInstance(
       // runs.
       return P4MatchKeyUnspecified::CreateInstance(p4_field_match);
     default:
-      // TODO: Delete when P4Runtime removal of valid match support
+      // TODO(unknown): Delete when P4Runtime removal of valid match support
       // is integrated from github.  This is only here to avoid compiler
       // complaints about "'kValid' not handled in switch".
       break;

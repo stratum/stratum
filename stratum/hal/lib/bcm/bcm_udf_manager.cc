@@ -1,3 +1,17 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "stratum/hal/lib/bcm/bcm_udf_manager.h"
 
 #include <algorithm>
@@ -235,7 +249,8 @@ bool BcmUdfManager::DefaultIsUdfEligible(const MappedField& mapped_field,
   const std::vector<uint32> empty_vector;
   for (const auto& pair : udf_sets_per_table) {
     ASSIGN_OR_RETURN(int udf_set_id, AllocateUdfSet(pair.second, static_sets));
-    //FIXME error message: _ << " Failed to allocate UDF set for table " << pair.first->Id() << "."
+    // FIXME error message: _ << " Failed to allocate UDF set for table "
+    // << pair.first->Id() << "."
     for (uint32 match_field : gtl::FindWithDefault(udf_match_fields_per_table,
                                                    pair.first, empty_vector)) {
       RETURN_IF_ERROR(pair.first->MarkUdfMatchField(match_field, udf_set_id));

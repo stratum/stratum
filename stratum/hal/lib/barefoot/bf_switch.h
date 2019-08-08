@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/pi/pi_node.h"

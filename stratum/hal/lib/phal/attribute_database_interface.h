@@ -22,6 +22,8 @@
 #include <memory>
 #include <tuple>
 #include <vector>
+#include <utility>
+#include <string>
 
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/lib/channel/channel.h"
@@ -38,7 +40,7 @@ using Attribute =
     absl::variant<char, int32, int64, uint32, uint64, float, double, bool,
                   std::string, const google::protobuf::EnumValueDescriptor*>;
 
-// TODO: Add an 'optional' flag to PathEntry. This flag indicates
+// TODO(unknown): Add an 'optional' flag to PathEntry. This flag indicates
 // that it is okay to skip querying this path if the marked PathEntry is not
 // present in the database.
 struct PathEntry {
@@ -126,7 +128,7 @@ class Query {
 class AttributeDatabaseInterface {
  public:
   virtual ~AttributeDatabaseInterface() {}
-  // TODO: Implement and document Set. This interface will likely
+  // TODO(unknown): Implement and document Set. This interface will likely
   // change.
   virtual ::util::Status Set(const AttributeValueMap& values) = 0;
   // Creates a new query that reads the given query paths. The results of this

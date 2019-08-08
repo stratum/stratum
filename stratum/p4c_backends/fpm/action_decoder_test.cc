@@ -20,6 +20,7 @@
 
 #include <set>
 #include <string>
+#include <memory>
 
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"

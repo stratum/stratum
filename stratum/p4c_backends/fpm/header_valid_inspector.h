@@ -43,8 +43,8 @@
 //      else if (header2.isValid())
 //        table2.apply();
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
 
 #include <map>
 #include <set>
@@ -161,4 +161,4 @@ class HeaderValidInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_HEADER_VALID_INSPECTOR_H_

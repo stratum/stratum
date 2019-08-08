@@ -24,6 +24,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "absl/container/flat_hash_map.h"
 #include "stratum/glue/status/status.h"

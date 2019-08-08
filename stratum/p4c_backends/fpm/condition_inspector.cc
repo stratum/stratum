@@ -67,7 +67,8 @@ bool ConditionInspector::preorder(const IR::Operation_Binary* expression) {
 bool ConditionInspector::Compare(const IR::Operation_Relation& compare_op) {
   DCHECK_NE(nullptr, compare_op.left) << "Compare operation is missing LHS";
   DCHECK_NE(nullptr, compare_op.right) << "Compare operation is missing RHS";
-  description_ = absl::StrFormat("%s %s %s", compare_op.left->toString().c_str(),
+  description_ = absl::StrFormat("%s %s %s",
+                              compare_op.left->toString().c_str(),
                               compare_op.getStringOp().c_str(),
                               compare_op.right->toString().c_str());
 

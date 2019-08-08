@@ -14,6 +14,8 @@
 
 // This file implements the Stratum p4c backend's HeaderValidInspector.
 
+#include <utility>
+
 #include "stratum/p4c_backends/fpm/header_valid_inspector.h"
 
 #include "stratum/glue/logging.h"
@@ -167,7 +169,7 @@ void HeaderValidInspector::ProcessValidTableHeaders(
   auto map_ret = table_header_map_->insert(
       std::make_pair(table_name, *valid_headers_in_scope_));
   if (!map_ret.second) {
-    // TODO: The header set found in the map should probably be
+    // TODO(unknown): The header set found in the map should probably be
     // compared to valid_headers_in_scope_.  If they are equivalent, it
     // could be that the P4 program developer wants to do some variation
     // of this, which should be OK:

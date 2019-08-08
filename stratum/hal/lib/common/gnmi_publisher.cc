@@ -17,6 +17,7 @@
 
 #include <list>
 #include <string>
+#include <utility>
 
 #include "gnmi/gnmi.pb.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
@@ -209,7 +210,7 @@ GnmiPublisher::~GnmiPublisher() {}
 
 ::util::Status GnmiPublisher::UnSubscribe(EventHandlerRecord* h) {
   absl::WriterMutexLock l(&access_lock_);
-  // TODO: Add implementation.
+  // TODO(unknown): Add implementation.
   return ::util::OkStatus();
 }
 

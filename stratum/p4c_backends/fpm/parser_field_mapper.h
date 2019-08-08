@@ -24,8 +24,8 @@
 // It does not validate the overall P4 parser behavior relative to the target
 // hardware.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
 
 #include <deque>
 #include <set>
@@ -219,4 +219,4 @@ class ParserFieldMapper {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_PARSER_FIELD_MAPPER_H_

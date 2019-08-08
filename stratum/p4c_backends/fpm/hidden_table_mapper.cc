@@ -68,7 +68,7 @@ void HiddenTableMapper::ProcessTables(
     iter.second->FindActions(*p4_pipeline_cfg);
   }
 
-  // TODO: Add more checks for disqualifying uses:
+  // TODO(unknown): Add more checks for disqualifying uses:
   //  - Decide how to behave if a key has a mix of uses in qualified and
   //    disqualified tables.
 
@@ -95,7 +95,7 @@ void HiddenTableMapper::CheckTableForIndirectActionKey(
   // P4 programs.  With some additional complexity, this technique could
   // also be applied to tables with keys consisting of multiple local metadata
   // match fields, should the need arise.
-  // TODO: What if the metadata field is used as a single key in
+  // TODO(unknown): What if the metadata field is used as a single key in
   // one table and in combination with other fields for another table's key?
   // It may be helpful to give a warning suggesting that the P4 program can
   // be optimized for Stratum switches by splitting the field in question.

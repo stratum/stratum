@@ -19,6 +19,7 @@
 #define STRATUM_HAL_LIB_PHAL_DATASOURCE_H_
 
 #include <memory>
+#include <utility>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
@@ -51,7 +52,7 @@ class CachePolicy {
   virtual void CacheUpdated() = 0;
 };
 
-// TODO: Add support for datasources that automatically update on a
+// TODO(unknown): Add support for datasources that automatically update on a
 // timer.
 
 // A partial implementation of a datasource. Complete datasource implementations
@@ -159,11 +160,10 @@ class NeverUpdate : public CachePolicy {
 
 // Simple helper class to create different types of CachePolicy
 class CachePolicyFactory {
-  public:
+ public:
     // Static helper function to create CachePolicy instances
     static ::util::StatusOr<CachePolicy*> CreateInstance(
-        CachePolicyType cache_type, 
-        int32 timed_cache_value=0);
+        CachePolicyType cache_type, int32 timed_cache_value = 0);
 };
 
 // The following two datasources are complete implementations, provided for the

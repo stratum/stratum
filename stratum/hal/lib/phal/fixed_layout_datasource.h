@@ -22,6 +22,9 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <utility>
+#include <set>
+#include <string>
 
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
@@ -410,7 +413,7 @@ class EnumField : public FixedLayoutField {
       return MAKE_ERROR() << "No enum value for byte value "
                           << static_cast<int32>(buffer[offset_]);
     }
-    // TODO: Change operator= to another AssignValue.
+    // TODO(unknown): Change operator= to another AssignValue.
     *attribute_ = found->second;
     return ::util::OkStatus();
   }

@@ -17,12 +17,12 @@
 // The ConditionsInspector is a p4c Inspector subclass that visits the node
 // hierarchy under an IR::Expression that defines an IfStatement condition in
 // a P4 program.  The current output is a descriptive string for the condition.
-// TODO: Add more detailed output as needed; the current role
+// TODO(unknown): Add more detailed output as needed; the current role
 // of this class is limited to describing unsupported conditions in the
 // ControlInspector's P4Control output.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_CONDITION_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_CONDITION_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_CONDITION_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_CONDITION_INSPECTOR_H_
 
 #include <string>
 
@@ -73,4 +73,4 @@ class ConditionInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_CONDITION_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_CONDITION_INSPECTOR_H_

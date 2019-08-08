@@ -19,6 +19,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <utility>
 
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
@@ -158,12 +159,12 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::Status BcmSwitch::Freeze() {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSwitch::Unfreeze() {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
@@ -322,7 +323,7 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_negotiated_port_speed()->set_speed_bps(kFortyGigBps);
         break;
       case DataRequest::Request::kMacAddress:
-        // TODO Find out why the controller needs it.
+        // TODO(unknown) Find out why the controller needs it.
         // Find MAC address of port located at:
         // - node_id: req.mac_address().node_id()
         // - port_id: req.mac_address().port_id()
@@ -337,7 +338,7 @@ BcmSwitch::~BcmSwitch() {}
         auto* counters = resp.mutable_port_counters();
         // To simulate the counters being incremented the current time expressed
         // in nanoseconds since Jan 1st, 1970 is used.
-        // TODO Remove this hack once the real counters are
+        // TODO(unknown) Remove this hack once the real counters are
         // available.
         uint64 now = absl::GetCurrentTimeNanos();
         counters->set_in_octets(now);
@@ -402,7 +403,7 @@ BcmSwitch::~BcmSwitch() {}
         auto* counters = resp.mutable_port_qos_counters();
         // To simulate the counters being incremented the current time expressed
         // in nanoseconds since Jan 1st, 1970 is used.
-        // TODO Remove this hack once the real counters are
+        // TODO(unknown) Remove this hack once the real counters are
         // available.
         uint64 now = absl::GetCurrentTimeNanos();
         counters->set_out_octets(now);
@@ -431,7 +432,7 @@ BcmSwitch::~BcmSwitch() {}
 }
 
 ::util::StatusOr<std::vector<std::string>> BcmSwitch::VerifyState() {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   LOG(INFO) << "State verification is currently a NOP.";
   return std::vector<std::string>();
 }

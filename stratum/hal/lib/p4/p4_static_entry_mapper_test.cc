@@ -18,6 +18,7 @@
 #include "stratum/hal/lib/p4/p4_static_entry_mapper.h"
 
 #include <memory>
+#include <vector>
 
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"

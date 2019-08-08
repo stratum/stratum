@@ -18,6 +18,8 @@
 #define STRATUM_GLUE_GTL_ENUM_SET_H_
 
 #include <set>
+#include <memory>
+#include <functional>
 
 namespace stratum {
 namespace gtl {

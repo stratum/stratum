@@ -19,7 +19,7 @@
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/switch_mock.h"
-//#include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
+// #include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/security/credentials_manager_mock.h"
 #include "stratum/lib/utils.h"
@@ -34,8 +34,8 @@ DECLARE_string(chassis_config_file);
 DECLARE_string(forwarding_pipeline_configs_file);
 DECLARE_string(test_tmpdir);
 DECLARE_string(local_stratum_url);
-//FIXME(boc) google only
-//DECLARE_string(procmon_service_addr);
+// FIXME(boc) google only
+// DECLARE_string(procmon_service_addr);
 DECLARE_string(persistent_config_dir);
 
 namespace stratum {
@@ -47,9 +47,9 @@ using ::testing::Return;
 
 MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 
-//FIXME(boc) google only
+// FIXME(boc) google only
 // A fake implementation of ProcmonService for unit testing.
-//class FakeProcmonService final : public procmon::ProcmonService::Service {
+// class FakeProcmonService final : public procmon::ProcmonService::Service {
 // public:
 //  FakeProcmonService() : pid_(-1) {}
 //  ~FakeProcmonService() override {}
@@ -64,7 +64,8 @@ MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 //    if (req->checkin_key() == pid_) {
 //      return ::grpc::Status::OK;
 //    }
-//    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT, "Invalid pid.");
+//    return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+//     "Invalid pid.");
 //  }
 //
 //  // FakeProcmonService is neither copyable nor movable.
@@ -73,7 +74,7 @@ MATCHER_P(EqualsProto, proto, "") { return ProtoEqual(arg, proto); }
 //
 // private:
 //  int pid_;
-//};
+// };
 
 class HalTest : public ::testing::Test {
  protected:
@@ -94,8 +95,8 @@ class HalTest : public ::testing::Test {
                                 credentials_manager_mock_);
     ASSERT_NE(hal_, nullptr);
 
-    //FIXME(boc) google only
-    // Create and start a FakeProcmonService instance for testing purpose.
+// FIXME(boc) google only
+// Create and start a FakeProcmonService instance for testing purpose.
 //    FLAGS_procmon_service_addr = RandomURL();
 //    procmon_service_ = new FakeProcmonService();
 //    ::grpc::ServerBuilder builder;
@@ -108,12 +109,12 @@ class HalTest : public ::testing::Test {
 
   // Per-test-case tear-down.
   static void TearDownTestCase() {
-    //FIXME(boc) google only
-//    procmon_server_->Shutdown(std::chrono::system_clock::now());
+    // FIXME(boc) google only
+    // procmon_server_->Shutdown(std::chrono::system_clock::now());
     delete switch_mock_;
     delete auth_policy_checker_mock_;
     delete credentials_manager_mock_;
-    //FIXME(boc) google only
+    // FIXME(boc) google only
 //    delete procmon_service_;
 //    delete procmon_server_;
     switch_mock_ = nullptr;
@@ -207,7 +208,7 @@ class HalTest : public ::testing::Test {
   static ::testing::StrictMock<CredentialsManagerMock>*
       credentials_manager_mock_;
   static Hal* hal_;  // pointer which points to the singleton instance
-    //FIXME(boc) google only
+    // FIXME(boc) google only
 //  static FakeProcmonService* procmon_service_;
 //  static ::grpc::Server* procmon_server_;
 };
@@ -226,9 +227,9 @@ constexpr OperationMode HalTest::kMode;
 ::testing::StrictMock<CredentialsManagerMock>*
     HalTest::credentials_manager_mock_ = nullptr;
 Hal* HalTest::hal_ = nullptr;
-//FIXME(boc) google only
-//FakeProcmonService* HalTest::procmon_service_ = nullptr;
-//::grpc::Server* HalTest::procmon_server_ = nullptr;
+// FIXME(boc) google only
+// FakeProcmonService* HalTest::procmon_service_ = nullptr;
+// ::grpc::Server* HalTest::procmon_server_ = nullptr;
 
 TEST_F(HalTest, SanityCheckFailureWhenExtURLsNotGiven) {
   absl::SetFlag(&FLAGS_external_stratum_urls, {});
@@ -566,7 +567,7 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinSucceeds) {
   EXPECT_CALL(*credentials_manager_mock_,
               GenerateExternalFacingServerCredentials())
       .WillOnce(Return(::grpc::InsecureServerCredentials()));
-//FIXME(boc) google only
+// FIXME(boc) google only
 //  procmon_service_->SetPid(getpid());
 
   pthread_t tid;
@@ -586,8 +587,8 @@ TEST_F(HalTest, StartAndShutdownServerWhenProcmonCheckinFails) {
   EXPECT_CALL(*credentials_manager_mock_,
               GenerateExternalFacingServerCredentials())
       .WillOnce(Return(::grpc::InsecureServerCredentials()));
-//FIXME(boc) google only
-//procmon_service_->SetPid(getpid() + 1);
+// FIXME(boc) google only
+// procmon_service_->SetPid(getpid() + 1);
 
   pthread_t tid;
   ASSERT_EQ(0, pthread_create(&tid, nullptr, &TestShutdownThread, hal_));

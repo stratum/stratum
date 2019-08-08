@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -95,7 +96,7 @@ class PhalInterface {
   // PushChassisConfig().
   virtual ::util::Status Shutdown() = 0;
 
-  // TODO: Add Freeze() and Unfreeze() functions to perform NSF
+  // TODO(unknown): Add Freeze() and Unfreeze() functions to perform NSF
   // warmboot.
 
   // Registers a ChannelWriter to send transceiver module (QSFP) insert/removal

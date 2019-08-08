@@ -14,6 +14,9 @@
 
 // Contains unit tests for SimpleHitInspector.
 
+#include <memory>
+#include <tuple>
+
 #include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
 
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
@@ -126,8 +129,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("table_hit_tmp_valid.ir.json",
                         "hit_var_valid_statements", 0, true, false),
         std::make_tuple("table_hit_tmp_valid.ir.json",
-                        "hit_var_scope_ok", -1, true, false)
-    ));
+                        "hit_var_scope_ok", -1, true, false)));
 
 INSTANTIATE_TEST_SUITE_P(
     ComplexHitTests,
@@ -141,7 +143,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("complex_hits.ir.json", "complex_hits", 6, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 7, true, false),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 8, false, true)
-    ));
+    ));  // NOLINT
 
 }  // namespace p4c_backends
 }  // namespace stratum

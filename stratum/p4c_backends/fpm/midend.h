@@ -19,8 +19,8 @@
 // of some IR passes that synthesize temporary tables and actions that tune
 // the IR for the bmv2 pipeline.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
+#define STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
 
 #include <memory>
 
@@ -68,4 +68,4 @@ class MidEnd : public PassManager, MidEndInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_MIDEND_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_MIDEND_H_

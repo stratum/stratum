@@ -15,6 +15,8 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_MOCK_H_
 
+#include <memory>
+
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 
@@ -31,7 +33,7 @@ class OnlpPhalMock : public PhalInterface {
   ::util::Status InitializeOnlpInterface() LOCKS_EXCLUDED(config_lock_);
 
   // PhalInterface public methods
-  //::util::Status PushChassisConfig(const ChassisConfig& config) override {};
+  // ::util::Status PushChassisConfig(const ChassisConfig& config) override {};
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
   MOCK_METHOD1(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config));
@@ -52,8 +54,8 @@ class OnlpPhalMock : public PhalInterface {
 
   // Need this function to grab onlp_interface
   MockOnlpWrapper* GetOnlpInterface() {
-    return (MockOnlpWrapper*)onlp_interface_.get();
-  };
+    return (MockOnlpWrapper*)onlp_interface_.get(); // NOLINT
+  }
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.

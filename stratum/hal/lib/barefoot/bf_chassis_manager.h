@@ -18,7 +18,7 @@
 
 #include <map>
 #include <memory>
-#include <thread>
+#include <thread>  // NOLINT
 
 #include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 #include "stratum/hal/lib/common/gnmi_events.h"

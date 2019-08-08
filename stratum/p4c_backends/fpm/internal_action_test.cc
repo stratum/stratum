@@ -14,6 +14,8 @@
 
 // This file tests the InternalAction class.
 
+#include <memory>
+
 #include "stratum/p4c_backends/fpm/internal_action.h"
 
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"

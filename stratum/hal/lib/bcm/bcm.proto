@@ -30,7 +30,7 @@ import "stratum/hal/lib/common/common.proto";
 // This message specifies all the port options for a specific BCM port. This
 // message can be used to both get and set the options.
 // NOTE: Any update in this proto needs to be added to PrintBcmPortOptions().
-// TODO: This is not complete yet.
+// TODO(unknown): This is not complete yet.
 message BcmPortOptions {
   enum LinkscanMode {
     LINKSCAN_MODE_UNKNOWN = 0;  // default
@@ -405,7 +405,7 @@ enum BcmAclStage {
 }
 
 // BcmAclTable refers to an ACL table implemented in BCM's ContentAware TCAMs.
-// TODO: Complete this. This is still WIP and not complete.
+// TODO(unknown): Complete this. This is still WIP and not complete.
 message BcmAclTable {
   // Table priority.
   uint32 priority = 1;  // required.
@@ -435,7 +435,7 @@ message BcmMeterConfig {
 }
 
 // BcmFlowEntry refers to an element in a flow table as described by BCM SDK.
-// TODO: Complete this. This is still WIP and not complete.
+// TODO(unknown): Complete this. This is still WIP and not complete.
 message BcmFlowEntry {
   // List of all the supported tables that specify hardware resources on a BCM
   // chip. The resource could be actually a physical table (LPM, TCAM, etc) or
@@ -515,7 +515,7 @@ message BcmNonMultipathNexthop {
 }
 
 // BcmPortGroup defines a collection of ports forming an ECMP/WCMP group.
-// TODO: Complete this. This is still WIP and not complete.
+// TODO(unknown): Complete this. This is still WIP and not complete.
 message BcmMultipathNexthop {
   message BcmMultipathNexthopMember {
     // Each member of the multipath nexthop is itself a non-multipath nexthop

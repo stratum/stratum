@@ -53,13 +53,14 @@ std::unordered_map<std::string, bm::Logger::LogLevel> log_level_map = {
     {"error", bm::Logger::LogLevel::ERROR},
     {"off", bm::Logger::LogLevel::OFF}};
 
+// NOLINTNEXTLINE
 void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   for (int i = 1; i < argc; i++) {
     char* intf;
     if ((intf = strchr(argv[i], '@')) != nullptr) {
       // Found an interface
       int intf_num = strtol(argv[i], &intf, 10);
-      intf += 1; // Point to the start of the interface name
+      intf += 1;  // Point to the start of the interface name
       LOG(INFO) << "Parsed intf from command line: port " << intf_num
                 << " -> " << intf;
       parser.ifaces.add(intf_num, intf);
@@ -67,8 +68,7 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
                    << "and you will not be able to perform gNMI RPCs to "
                    << "modify port config or access port state; "
                    << "please use --chassis_config_file instead";
-    }
-    else {
+    } else {
       LOG(ERROR) << "Ignoring extraneous non-option argument: " << argv[i];
     }
   }
@@ -93,7 +93,8 @@ int Main(int argc, char* argv[]) {
   // Sets up bmv2 log level
   auto log_level_it = log_level_map.find(FLAGS_bmv2_log_level);
   if (log_level_it == log_level_map.end()) {
-    LOG(WARNING) << "Invalid value " << FLAGS_bmv2_log_level << " for -bmv2_log_level\n"
+    LOG(WARNING) << "Invalid value " << FLAGS_bmv2_log_level
+              << " for -bmv2_log_level\n"
               << "Run with -help to see possible values\n";
     parser.log_level = bm::Logger::LogLevel::INFO;
   } else {

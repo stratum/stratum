@@ -233,7 +233,7 @@ STRATUM_INTERNAL = [
 # Set _TRACE_SRCS to show sources in embedded sc_cc_lib compile steps.
 # This is more general than it may seem: genrule doesn't have hdrs or deps
 # attributes, so all embedded dependencies appear as a `src'.
-# TODO: if useful again then inject from cmdline else kill feature.
+# TODO(unknown): if useful again then inject from cmdline else kill feature.
 _TRACE_SRCS = False
 
 # Used for all gcc invocations.
@@ -249,7 +249,7 @@ _EMBEDDED_FLAGS = [
     "-fno-builtin-realloc",
     "-fno-builtin-free",
     "-D__STDC_FORMAT_MACROS=1",
-    # TODO: Figure out how we can use $(CC_FLAGS) instead of this.
+    # TODO(unknown): Figure out how we can use $(CC_FLAGS) instead of this.
     "-D__GOOGLE_STL_LEGACY_COMPATIBILITY",
 ]
 
@@ -517,7 +517,7 @@ def _gen_proto_lib(
     """
     bash_vars = ["g3=$${PWD}"]
 
-    # TODO: Switch protobuf to using the proto_include mechanism
+    # TODO(unknown): Switch protobuf to using the proto_include mechanism
     protoc_label = _PROTOC
     protobuf_label = _PROTOBUF
     protobuf_hdrs = "%s:well_known_types_srcs" % protobuf_label
@@ -825,7 +825,7 @@ def _gen_py_proto_lib(name, srcs, deps, visibility, testonly):
         testonly = testonly,
     )
 
-# TODO: Add support for depending on normal proto_library rules.
+# TODO(unknown): Add support for depending on normal proto_library rules.
 def sc_proto_lib(
         name = None,
         srcs = [],

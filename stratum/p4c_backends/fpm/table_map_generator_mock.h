@@ -16,8 +16,11 @@
 
 // This is a mock implementation of TableMapGenerator.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_
+#define STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_
+
+#include <string>
+#include <set>
 
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "gmock/gmock.h"
@@ -86,4 +89,4 @@ class TableMapGeneratorMock : public TableMapGenerator {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_MOCK_H_

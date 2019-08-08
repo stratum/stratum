@@ -14,6 +14,9 @@
 
 // Contains ExpressionInspector unit tests.
 
+#include <memory>
+#include <string>
+
 #include "stratum/p4c_backends/fpm/expression_inspector.h"
 
 #include "stratum/p4c_backends/fpm/utils.h"
@@ -84,7 +87,7 @@ TEST_F(ExpressionInspectorTest, TestEnum) {
   ASSERT_NE(nullptr, test_expression);
   ExpressionInspector test_inspector(ir_helper_->mid_end_refmap(),
                                      ir_helper_->mid_end_typemap());
-  // TODO: Enum support requires implementation in the Member
+  // TODO(unknown): Enum support requires implementation in the Member
   // preorder.  Adjust these expectations when the implementation is ready.
   EXPECT_FALSE(test_inspector.Inspect(*test_expression));
   EXPECT_EQ(0, ::errorCount());

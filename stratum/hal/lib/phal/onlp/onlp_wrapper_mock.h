@@ -17,9 +17,12 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_MOCK_H_
 
+#include <memory>
+#include <vector>
+
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-//FIXME remove when onlp_wrapper.h is stable
-//#include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
+// FIXME remove when onlp_wrapper.h is stable
+// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
 #include "absl/memory/memory.h"
@@ -48,8 +51,10 @@ class MockOnlpWrapper : public OnlpInterface {
   MOCK_CONST_METHOD2(SetFanRpm, ::util::Status(OnlpOid oid, int val));
   MOCK_CONST_METHOD2(SetFanDir, ::util::Status(OnlpOid oid, FanDir dir));
   MOCK_CONST_METHOD1(GetPsuInfo, ::util::StatusOr<PsuInfo>(OnlpOid oid));
-  MOCK_CONST_METHOD1(GetThermalInfo, ::util::StatusOr<ThermalInfo>(OnlpOid oid));
-  MOCK_CONST_METHOD0(GetSfpPresenceBitmap, ::util::StatusOr<OnlpPresentBitmap>());
+  MOCK_CONST_METHOD1(GetThermalInfo,
+    ::util::StatusOr<ThermalInfo>(OnlpOid oid));
+  MOCK_CONST_METHOD0(GetSfpPresenceBitmap,
+    ::util::StatusOr<OnlpPresentBitmap>());
   MOCK_CONST_METHOD1(GetSfpPresent, ::util::StatusOr<bool>(OnlpOid port));
   MOCK_CONST_METHOD0(GetSfpMaxPortNumber, ::util::StatusOr<OnlpPortNumber>());
   MOCK_CONST_METHOD1(GetOidList, ::util::StatusOr<std::vector<OnlpOid>>(

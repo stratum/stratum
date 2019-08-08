@@ -16,16 +16,17 @@
 #ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_PHAL_H_
 #define STRATUM_HAL_LIB_DUMMY_DUMMY_PHAL_H_
 
-#include "stratum/hal/lib/dummy/dummy_phal.h"
-
 #include <memory>
 #include <functional>
+#include <utility>
+#include <map>
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
+#include "stratum/hal/lib/dummy/dummy_phal.h"
 
 namespace stratum {
 namespace hal {

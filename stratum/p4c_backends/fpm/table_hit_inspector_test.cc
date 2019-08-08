@@ -13,6 +13,9 @@
 // limitations under the License.
 
 // Contains unit tests for TableHitInspector.
+#include <memory>
+#include <tuple>
+#include <vector>
 
 #include "stratum/p4c_backends/fpm/table_hit_inspector.h"
 
@@ -123,8 +126,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("control_if_test.ir.json",
                         "verifyChecksum", -1, false, false),
         std::make_tuple("control_misc_test.ir.json",
-                        "computeChecksum", -1, false, false)
-    ));
+                        "computeChecksum", -1, false, false)));
 
 INSTANTIATE_TEST_SUITE_P(
     ApplyNoErrorTests,
@@ -174,8 +176,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("control_return.ir.json",
                         "control_nested_return", -1, true, false),
         std::make_tuple("table_hit_tmp_valid.ir.json",
-                        "hit_var_scope_ok", -1, true, false)
-    ));
+                        "hit_var_scope_ok", -1, true, false)));
 
 INSTANTIATE_TEST_SUITE_P(
     ApplyWithErrorTests,
@@ -208,8 +209,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("table_hit_tmp_invalid.ir.json",
                         "hit_var_invalid", 12, true, true),
         std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", -1, true, true)
-    ));
+                        "hit_var_invalid", -1, true, true)));
 
 INSTANTIATE_TEST_SUITE_P(
     NoApplyWithErrorTests,
@@ -231,8 +231,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("meter_colors.ir.json",
                         "meter_if_yellow", -1, false, true),
         std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 11, false, true)
-    ));
+                        "hit_var_invalid", 11, false, true)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

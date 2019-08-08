@@ -17,6 +17,7 @@
 #define STRATUM_HAL_LIB_PI_PI_NODE_H_
 
 #include <memory>
+#include <vector>
 
 #include "PI/frontends/proto/device_mgr.h"
 #include "stratum/glue/integral_types.h"
@@ -115,4 +116,4 @@ class PINode final {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PI_PI_SWITCH_H_
+#endif  // STRATUM_HAL_LIB_PI_PI_NODE_H_

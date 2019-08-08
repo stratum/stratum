@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
-
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/constants.h"

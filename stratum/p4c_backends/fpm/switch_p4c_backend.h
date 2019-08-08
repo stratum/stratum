@@ -18,8 +18,8 @@
 // It manages the translation from the p4c Internal Representation (IR) to a
 // HAL P4PipelineConfig.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
+#define STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
 
 #include <map>
 #include <memory>
@@ -66,7 +66,7 @@ class SwitchP4cBackend : public BackendExtensionInterface {
   // The Compile method does all the work to translate the top_level IR program
   // into a P4PipelineConfig for runtime use on a Stratum fixed-function
   // switch.
-  // TODO: Are there variations among platforms, e.g. Tomahawk vs.
+  // TODO(unknown): Are there variations among platforms, e.g. Tomahawk vs.
   //                 Tomahawk 2/3 that will need to be differentiated by
   //                 command-line flag or even separate subclasses?
   void Compile(const IR::ToplevelBlock& top_level,
@@ -136,14 +136,14 @@ class SwitchP4cBackend : public BackendExtensionInterface {
   std::unique_ptr<hal::P4InfoManager> p4_info_manager_;
 
   // Uses parser state and expressions to interpret header field types.
-  // TODO: Evaluate injecting a mock ParserDecoder, although
+  // TODO(unknown): Evaluate injecting a mock ParserDecoder, although
   // intuitively it seems like ParserDecoder output will be complex enough that
   // it's not a good candidate for mocking.
   std::unique_ptr<ParserDecoder> parser_decoder_;
 
   // Uses IR StructLike, Header, and KeyElement types to derive field
   // descriptor entries in the P4PipelineConfig table map.
-  // TODO: As above, is FieldDecoder mocking practical?
+  // TODO(unknown): As above, is FieldDecoder mocking practical?
   std::unique_ptr<FieldDecoder> field_decoder_;
 
   // Provides a container to accumulate HeaderPathInspector output from
@@ -192,4 +192,4 @@ class SwitchP4cBackend : public BackendExtensionInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_SWITCH_P4C_BACKEND_H_

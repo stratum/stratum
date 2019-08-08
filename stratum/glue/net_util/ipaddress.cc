@@ -37,7 +37,7 @@
 #include "absl/strings/substitute.h"
 #include "stratum/glue/net_util/bits.h"
 
-//TODO not required for Google internally
+// TODO(unknown) not required for Google internally
 using absl::numbers_internal::safe_strto32_base;
 using absl::numbers_internal::safe_strtou64_base;
 
@@ -890,7 +890,7 @@ bool InternalStringToNetmaskLength(const char* str, int host_address_family,
   }
 
   int32 parsed_length = 0;
-  if (!safe_strto32_base(str, &parsed_length, 10)){
+  if (!safe_strto32_base(str, &parsed_length, 10)) {
     // Malformed or missing prefix length, or junk after it.
     // Continue on to the next test...
     parsed_length = -1;
@@ -1321,7 +1321,8 @@ bool MaskLengthToIPAddress(int family, int length, IPAddress* address) {
         return false;
 
       // uint28 << 128 is undefined, so case on length.
-      absl::uint128 mask = length == 0 ? 0 : absl::kuint128max << (128 - length);
+      absl::uint128 mask =
+                  length == 0 ? 0 : absl::kuint128max << (128 - length);
       if (address)
         *address = UInt128ToIPAddress(mask);
       return true;

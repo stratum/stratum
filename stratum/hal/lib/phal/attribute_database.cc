@@ -23,7 +23,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
-//#include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+// #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "absl/memory/memory.h"
@@ -68,8 +68,8 @@ DatabaseQuery::~DatabaseQuery() {
     // If the result of this query has changed, set the update bit.
     ASSIGN_OR_RETURN(auto polling_result, Get());
     if (last_polling_result_ == nullptr ||
-        !google::protobuf::util::MessageDifferencer::Equals(*last_polling_result_,
-                                                    *polling_result)) {
+        !google::protobuf::util::MessageDifferencer::Equals(
+                                    *last_polling_result_, *polling_result)) {
       query_.MarkUpdated();
       last_polling_result_ = std::move(polling_result);
     }
@@ -166,8 +166,8 @@ AttributeDatabase::~AttributeDatabase() {
   root_ = nullptr;
 }
 
-//::util::StatusOr<std::unique_ptr<AttributeDatabase>>
-//AttributeDatabase::MakeGoogle(const std::string& legacy_phal_config_path,
+// ::util::StatusOr<std::unique_ptr<AttributeDatabase>>
+// AttributeDatabase::MakeGoogle(const std::string& legacy_phal_config_path,
 //                              const SystemInterface* system_interface) {
 //  LegacyPhalInitConfig config;
 //  RETURN_IF_ERROR(ReadProtoFromTextFile(legacy_phal_config_path, &config));
@@ -176,13 +176,15 @@ AttributeDatabase::~AttributeDatabase() {
 //  ASSIGN_OR_RETURN(std::unique_ptr<UdevEventHandler> udev,
 //                   UdevEventHandler::MakeUdevEventHandler(system_interface));
 //  //auto configurator =
-//  //    absl::make_unique<GoogleSwitchConfigurator>(system_interface, udev.get());
+//  //    absl::make_unique<GoogleSwitchConfigurator>(system_interface,
+//  //    udev.get());
 //  //RETURN_IF_ERROR(configurator->ConfigureSwitch(config, root_group.get()));
 //  ASSIGN_OR_RETURN(
 //      std::unique_ptr<AttributeDatabase> database,
 //      Make(std::move(root_group), absl::make_unique<DummyThreadpool>()));
 //  AttributeDatabase* database_ptr = database.get();
-//  udev->AddUpdateCallback([database_ptr](::util::Status update_status) -> void {
+//  udev->AddUpdateCallback([database_ptr](::util::Status update_status)
+//                                                              -> void {
 //    if (update_status.ok()) {
 //      absl::MutexLock lock(&database_ptr->polling_lock_);
 //      ::util::Status result = database_ptr->FlushQueries();
@@ -210,7 +212,7 @@ AttributeDatabase::MakePhalDB(
   // use the phal_init_config file if it's been passed in
   } else {
     // Read Phal initial config
-    RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_phal_config_path, 
+    RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_phal_config_path,
                                           &phal_config));
   }
 

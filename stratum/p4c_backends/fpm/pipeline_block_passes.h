@@ -32,8 +32,8 @@
 // p4c developers prefer to reclaim unused memory via a garbage collector,
 // IR nodes have no real ownership strategy.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_BLOCK_PASSES_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_BLOCK_PASSES_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_PIPELINE_BLOCK_PASSES_H_
+#define STRATUM_P4C_BACKENDS_FPM_PIPELINE_BLOCK_PASSES_H_
 
 #include <set>
 #include <vector>
@@ -268,4 +268,4 @@ class PipelineIfElsePass : public Transform {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_BLOCK_PASSES_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_PIPELINE_BLOCK_PASSES_H_

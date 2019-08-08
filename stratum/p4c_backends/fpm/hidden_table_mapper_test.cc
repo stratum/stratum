@@ -20,6 +20,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
@@ -307,7 +308,7 @@ class HiddenTableMapperTest
 
   // Verifies metadata key consistency between the input redirect_map and
   // corresponding metadata_keys entries in pipeline config field descriptors.
-  // TODO: This code might be useful in p4_config_verifier.
+  // TODO(unknown): This code might be useful in p4_config_verifier.
   void ExpectMetaDataKeyConsistency(
       const HiddenTableMapper::ActionRedirectMap& redirect_map) {
     // These sets accumulate field and table references from action descriptors

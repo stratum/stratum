@@ -45,7 +45,6 @@ class OnlpEventHandlerMock : public OnlpEventHandler {
                ::util::Status(OnlpSfpEventCallback* callback));
   MOCK_METHOD1(UnregisterSfpEventCallback,
                ::util::Status(OnlpSfpEventCallback* callback));
-
 };
 
 }  // namespace onlp

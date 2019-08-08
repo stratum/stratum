@@ -412,7 +412,7 @@ TEST_F(P4cUtilsTest, TestIsPipelineStageFixed) {
 }
 
 TEST_F(P4cUtilsTest, TestIsTableApplyInstance) {
-  // TODO: There is no obvious public way to create a
+  // TODO(unknown): There is no obvious public way to create a
   // P4::MethodInstance for direct unit tests of IsTableApplyInstance, but
   // it gets reasonable indirect coverage from the pipeline pass tests.
 }

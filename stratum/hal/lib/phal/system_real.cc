@@ -29,7 +29,7 @@ absl::Mutex singleton_lock_;
 const SystemReal* singleton_instance_ GUARDED_BY(singleton_lock_);
 }  // namespace
 
-// TODO: Test this code. This needs to be tested on a device with
+// TODO(unknown): Test this code. This needs to be tested on a device with
 // actual udev support, since its correctness is entirely dependent on correct
 // usage of the udev interface.
 
@@ -108,7 +108,7 @@ UdevReal::EnumerateSubsystem(const std::string& subsystem) {
     std::string dev_path = "/sys" + std::string(dev_path_cstr);
     // We pretend that the most recent event was an "add", indicating that the
     // device is present and operational.
-    // TODO: Check for other possible states -- e.g. the device could
+    // TODO(unknown): Check for other possible states -- e.g. the device could
     // be present, but disabled, failed, etc.
     found_devices.push_back(std::make_pair(dev_path, "add"));
     udev_device_unref(device);

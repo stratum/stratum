@@ -53,7 +53,7 @@ constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
  public:
-  ChassisConfigBuilder(uint64 node_id = kNodeId)
+  explicit ChassisConfigBuilder(uint64 node_id = kNodeId)
       : node_id(node_id) {
     config_.set_description("Test config for BFChassisManager");
     auto* chassis = config_.mutable_chassis();

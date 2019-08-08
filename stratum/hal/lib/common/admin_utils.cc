@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/common/admin_utils_interface.h"
 
 #include <unistd.h>
 #include <sys/sysinfo.h>
 #include <sys/wait.h>
 #include <linux/reboot.h>
 #include <sys/reboot.h>
+#include <openssl/sha.h>
+#include <openssl/md5.h>
+
 #include <cerrno>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <utility>
-#include <regex>
+#include <regex>  // NOLINT
 #include <sstream>
-#include <thread>
+#include <thread>  // NOLINT
 
-#include <openssl/sha.h>
-#include <openssl/md5.h>
-
+#include "stratum/hal/lib/common/admin_utils_interface.h"
 #include "stratum/glue/logging.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/lib/macros.h"
@@ -51,7 +51,7 @@ std::vector<std::string> splitLineByRegex(const std::string& s,
   return ret;
 }
 
-}
+}  // namespace
 
 namespace stratum {
 namespace hal {
@@ -230,7 +230,7 @@ std::string FileSystemHelper::CreateTempDir() const {
   if (tmp_dir_name == nullptr) {
     LOG(ERROR) << "Can't create temporary directory. Error: "
                << std::string(std::strerror(errno));
-    // TODO throw some exception
+    // TODO(unknown): throw some exception
     return std::string("/tmp");
   }
   return tmp_dir_name;
@@ -313,10 +313,10 @@ std::string FileSystemHelper::GetHashSum(
   // conver char array to hexstring
   std::stringstream ss;
   for (uint i = 0; i < digest_len; i++) {
-    ss << std::hex << std::setw(2) << std::setfill('0') << (int) hash[i];
+    ss << std::hex << std::setw(2) << std::setfill('0') <<
+    static_cast<int>(hash[i]);
   }
   return ss.str();
-
 }
 
 ::util::Status FileSystemHelper::StringToFile(
@@ -357,13 +357,12 @@ std::string FileSystemHelper::GetHashSum(
   CHECK_RETURN_IF_FALSE(!path.empty());
   CHECK_RETURN_IF_FALSE(PathExists(path)) << path << " does not exist.";
   CHECK_RETURN_IF_FALSE(IsDir(path)) << path << " is not a dir.";
-  //TODO Is Dir Empty ?
+  // TODO(unknown): Is Dir Empty ?
   int ret = remove(path.c_str());
   if (ret != 0) {
     return MAKE_ERROR(ERR_INTERNAL)
         << "Failed to remove '" << path << "'. Return value: " << ret << ".";
   }
-
   return ::util::OkStatus();
 }
 
@@ -383,5 +382,5 @@ std::string FileSystemHelper::GetHashSum(
   return ::util::OkStatus();
 }
 
-} // namespace hal
-} // namespace stratum
+}  // namespace hal
+}  // namespace stratum

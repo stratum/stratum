@@ -15,6 +15,8 @@
 
 // P4InfoManager implementation.
 
+#include <utility>
+
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 
 #include "gflags/gflags.h"
@@ -156,7 +158,7 @@ P4InfoManager::FindValueSetByName(const std::string& value_set_name) const {
   const ::p4::config::v1::Preamble* preamble_ptr = *preamble_ptr_ptr;
   P4Annotation p4_annotation;
   for (const auto& annotation : preamble_ptr->annotations()) {
-    // TODO: Investigate to what degree p4c enforces annotation
+    // TODO(unknown): Investigate to what degree p4c enforces annotation
     // syntax and whether something beyond the simple parsing below is needed.
 
     auto stripped_annotation = absl::StripAsciiWhitespace(annotation);

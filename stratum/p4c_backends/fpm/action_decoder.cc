@@ -60,7 +60,7 @@ void ActionDecoder::ConvertActionBlock(
 
   // This loop iterates over all the statements in the action block.
   for (auto statement : block) {
-    // TODO: This setting of has_body_statements is overly broad.
+    // TODO(unknown): This setting of has_body_statements is overly broad.
     // For example, returns and exits should probably not count.
     has_body_statements = true;
     if (!statement->is<IR::Statement>()) {
@@ -157,7 +157,7 @@ void ActionDecoder::ConvertMethodCall(
     const std::string& p4_action_name) {
   MethodCallDecoder method_call_decoder(ref_map_, type_map_);
   if (method_call_decoder.DecodeStatement(method_call)) {
-    // TODO: ActionDecoder currently expects MethodCallDecoder output
+    // TODO(unknown): ActionDecoder currently expects MethodCallDecoder output
     // to be limited to tunnel actions, the drop primitive, or a NOP.  This
     // needs to be generalized as more P4 externs are supported.  This may
     // benefit from expanding table_mapper_'s public API to take the raw

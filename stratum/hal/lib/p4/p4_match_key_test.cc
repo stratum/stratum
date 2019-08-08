@@ -15,10 +15,10 @@
 
 // This file contains unit tests for P4MatchKey and its subclasses.
 
-#include "stratum/hal/lib/p4/p4_match_key.h"
-
 #include <string>
+#include <tuple>
 
+#include "stratum/hal/lib/p4/p4_match_key.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/public/lib/error.h"
@@ -348,7 +348,7 @@ TEST_F(P4MatchKeyTest, TestConvertRaw) {
 // Tests conversion of a match against a boolean "valid" key.
 // TODO(teverman): This is currently just a raw conversion until support for
 // this key type is implemented.
-//FIXME(boc) google only
+// FIXME(boc) google only
 /*
 TEST_F(P4MatchKeyTest, TestConvertValidMatch) {
   SetUpValidMatch(true);
@@ -365,7 +365,7 @@ TEST_F(P4MatchKeyTest, TestConvertValidMatch) {
  */
 
 // Tests conversion of a match against a range key.
-// TODO: This is currently just a raw conversion until support for
+// TODO(unknown): This is currently just a raw conversion until support for
 // this key type is implemented.
 TEST_F(P4MatchKeyTest, TestConvertRangeMatch) {
   const std::string kLowValue = {1, 2};
@@ -941,7 +941,7 @@ TEST_P(P4MatchKeyLPMPrefixWidthTest, TestLPMPrefixLengthBytes) {
     EXPECT_EQ(lpm_match_value, mapped_field_.value().b());
     const int expected_mask_width = 1 + (lpm_field_width_param() - 1) / 8;
     EXPECT_EQ(expected_mask_width, mapped_field_.mask().b().size());
-    // TODO: Add more detailed expectations for the mask value.
+    // TODO(unknown): Add more detailed expectations for the mask value.
   } else {
     EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
     EXPECT_THAT(status.ToString(), HasSubstr("LPM prefix length"));

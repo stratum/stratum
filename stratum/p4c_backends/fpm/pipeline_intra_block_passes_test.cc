@@ -14,6 +14,10 @@
 
 // This file contains unit tests of the pipeline intra-block optimizing classes.
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
 #include "stratum/p4c_backends/fpm/pipeline_block_passes.h"

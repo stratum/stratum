@@ -18,8 +18,8 @@
 // general behavior suitable for tests that don't need to use the
 // TargetInfoMock class to define specific TargetInfo expectations.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_TARGET_INFO_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_TARGET_INFO_H_
+#ifndef STRATUM_P4C_BACKENDS_TEST_TEST_TARGET_INFO_H_
+#define STRATUM_P4C_BACKENDS_TEST_TEST_TARGET_INFO_H_
 
 #include "stratum/p4c_backends/fpm/target_info.h"
 
@@ -52,4 +52,4 @@ class TestTargetInfo : public TargetInfo {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_TEST_TARGET_INFO_H_
+#endif  // STRATUM_P4C_BACKENDS_TEST_TEST_TARGET_INFO_H_

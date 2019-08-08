@@ -21,7 +21,7 @@ package stratum;
 
 // The custom error space for the stratum stack. Used by all the stack
 // components to propagate the errors.
-// TODO: This is still WIP.
+// TODO(unknown): This is still WIP.
 enum ErrorCode {
   // These are reserved errors. Their value is the same as the corresponding
   // error codes in (codes.proto). This way the return status from

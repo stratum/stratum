@@ -17,6 +17,7 @@
 #include "stratum/p4c_backends/fpm/midend.h"
 
 #include <memory>
+#include <string>
 
 #include "stratum/p4c_backends/common/program_inspector.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"

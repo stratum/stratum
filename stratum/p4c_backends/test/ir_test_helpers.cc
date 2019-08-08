@@ -119,7 +119,7 @@ const IR::P4Control* IRTestHelperJson::TransformP4Control(
 }
 
 bool IRTestHelperJson::RunMapPass() {
-  mid_end_refmap_.setIsV1(true);  // TODO: Handle PSA.
+  mid_end_refmap_.setIsV1(true);  // TODO(unknown): Handle PSA.
 
   // This simplified invocation of PassManager populates mid_end_refmap_ and
   // mid_end_typemap_.  The EvaluatorPass constructs a ToplevelBlock from

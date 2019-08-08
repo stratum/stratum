@@ -21,17 +21,22 @@
 // It hides the dependency on ONLP library for unit testing of the
 // OnlpEventHandler and Onlphal.
 
-//extern "C" {
-//#include "sandblaze/onlp/include/onlp/oids.h"
-//#include "sandblaze/onlp/include/onlp/sfp.h"
-//}
+#include <bitset>
+
+#include <memory>
+#include <utility>
+#include <vector>
+
+// extern "C" {
+// #include "sandblaze/onlp/include/onlp/oids.h"
+// #include "sandblaze/onlp/include/onlp/sfp.h"
+// }
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "absl/memory/memory.h"
-#include <bitset>
 
 namespace stratum {
 namespace hal {
@@ -44,7 +49,7 @@ namespace onlp {
 
 // From onlp/oids.h
 typedef uint32_t onlp_oid_t;
-//typedef uint32_t onlp_oid_id_t;
+// typedef uint32_t onlp_oid_id_t;
 typedef uint32_t onlp_oid_status_flags_t;
 
 #define ONLP_OID_DESC_SIZE 128
@@ -252,7 +257,7 @@ typedef struct aim_bitmap_hdr_s {
     int allocated;
 } aim_bitmap_hdr_t;
 
-//#define AIM_BITMAP_BITS_PER_WORD (sizeof(aim_bitmap_word_t)*8)
+// #define AIM_BITMAP_BITS_PER_WORD (sizeof(aim_bitmap_word_t)*8)
 #define AIM_BITMAP_BITS_PER_WORD (4*8)
 #define AIM_BITMAP_WORD_COUNT    8
 
@@ -328,9 +333,9 @@ class OidInfo {
   explicit OidInfo(const onlp_oid_hdr_t& oid_info) : oid_info_(oid_info) {}
   explicit OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
                    HwState state) {
-	  oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
-	  oid_info_.status = (state == HW_STATE_PRESENT ?
-	     ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
+    oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
+    oid_info_.status = (state == HW_STATE_PRESENT ?
+      ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
   }
   OidInfo() {}
 
@@ -353,9 +358,9 @@ class OidInfo {
   }
 
   bool Present() const {
-	HwState state = GetHardwareState();
-	return !(state == HW_STATE_NOT_PRESENT);
-    //return ONLP_OID_PRESENT(&oid_info_);
+    HwState state = GetHardwareState();
+    return !(state == HW_STATE_NOT_PRESENT);
+    // return ONLP_OID_PRESENT(&oid_info_);
   }
 
   const OnlpOidHeader* GetHeader() const { return &oid_info_; }
@@ -385,14 +390,14 @@ class SfpInfo : public OidInfo {
       case SFF_MODULE_TYPE_40G_BASE_SR4:
         return MEDIA_TYPE_QSFP_SR4;
       case SFF_MODULE_TYPE_40G_BASE_LR4:
-        // TODO: Need connector type (LC or MPO) which is missing.
+        // TODO(unknown): Need connector type (LC or MPO) which is missing.
       default:
         return MEDIA_TYPE_UNKNOWN;
     }
   }
 
   SfpType GetSfpType() const {
-    switch(sfp_info_.sff.sfp_type) {
+    switch (sfp_info_.sff.sfp_type) {
     case SFF_SFP_TYPE_SFP:
       return SFP_TYPE_SFP;
     case SFF_SFP_TYPE_QSFP:
@@ -402,7 +407,7 @@ class SfpInfo : public OidInfo {
     }
   }
   SfpModuleType GetSfpModuleType()const {
-    switch(sfp_info_.sff.module_type) {
+    switch (sfp_info_.sff.module_type) {
     case SFF_MODULE_TYPE_100G_BASE_CR4:
       return SFP_MODULE_TYPE_100G_BASE_CR4;
     case SFF_MODULE_TYPE_10G_BASE_CR:
@@ -414,7 +419,7 @@ class SfpInfo : public OidInfo {
     }
   }
   SfpModuleCaps GetSfpModuleCaps() const {
-    switch(sfp_info_.sff.caps) {
+    switch (sfp_info_.sff.caps) {
     case SFF_MODULE_CAPS_F_100:
       return SFP_MODULE_CAPS_F_100;
     case SFF_MODULE_CAPS_F_1G:
@@ -458,7 +463,6 @@ class OnlpInterface {
 
   // Get the maximum valid SFP port number.
   virtual ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const = 0;
-
 };
 
 
@@ -475,7 +479,7 @@ class OnlpWrapper : public OnlpInterface {
   OnlpWrapper(const OnlpWrapper& other) = delete;
   OnlpWrapper& operator=(const OnlpWrapper& other) = delete;
   ~OnlpWrapper() override {
-	LOG(INFO) << "Deinitializing ONLP.";
+    LOG(INFO) << "Deinitializing ONLP.";
   };
 
   // Fake implementations to get rid of compilation errors when building
@@ -486,7 +490,6 @@ class OnlpWrapper : public OnlpInterface {
 #if 0
   ::util::StatusOr<std::vector<OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const override {
-
     std::vector<OnlpOid> oid_list;
     biglist_t* oid_hdr_list;
 
@@ -496,7 +499,8 @@ class OnlpWrapper : public OnlpInterface {
     // Iterate though the returned list and add the OIDs to oid_list
     biglist_t* curr_node = oid_hdr_list;
     while (curr_node != nullptr) {
-      onlp_oid_hdr_t* oid_hdr = (onlp_oid_hdr_t*) curr_node->data;
+      onlp_oid_hdr_t* oid_hdr =
+      reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
       oid_list.emplace_back(oid_hdr->id);
       curr_node = curr_node->next;
     }
@@ -519,7 +523,7 @@ class OnlpWrapper : public OnlpInterface {
     SfpBitmap bitmap;
     onlp_sfp_bitmap_t_init(&bitmap);
     int result = onlp_sfp_bitmap_get(&bitmap);
-    if(result < 0) {
+    if (result < 0) {
       LOG(ERROR) << "Failed to get valid SFP port bitmap from ONLP.";
     }
 
@@ -529,11 +533,11 @@ class OnlpWrapper : public OnlpInterface {
     int i, j;
     for (i = 0; i < word_count; i ++) {
       for (j = 0; j < bits_per_word; j ++) {
-        if (bitmap.words[i] & (1<<j)) {
+      if (bitmap.words[i] & (1 << j)) {
           port_num = i * bits_per_word + j + 1;
           // Note: return here only if the valid port numbers start from
           //       port 1 and are consecutive.
-          //return port_num;
+          // return port_num;
         }
       }
     }

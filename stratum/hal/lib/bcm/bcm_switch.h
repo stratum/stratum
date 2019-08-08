@@ -20,6 +20,8 @@
 
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 #include "stratum//hal/lib/bcm/bcm_global_vars.h"

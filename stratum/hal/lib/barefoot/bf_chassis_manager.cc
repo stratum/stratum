@@ -17,6 +17,7 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -413,8 +414,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       RETURN_IF_ERROR(GetFrontPanelPortInfo(
           request.front_panel_port_info().node_id(),
           request.front_panel_port_info().port_id(),
-          resp.mutable_front_panel_port_info()
-          ));
+          resp.mutable_front_panel_port_info()));
       break;
     }
     case Request::kFecStatus: {
@@ -567,15 +567,18 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
   return ::util::OkStatus();
 }
 
-::util::Status BFChassisManager::GetFrontPanelPortInfo(uint64 node_id, uint32 port_id,
-                                     FrontPanelPortInfo* fp_port_info) {
-  auto* port_id_to_port_key = gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
+::util::Status BFChassisManager::GetFrontPanelPortInfo(uint64 node_id,
+                    uint32 port_id, FrontPanelPortInfo* fp_port_info) {
+  auto* port_id_to_port_key =
+          gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_port_key != nullptr)
         << "Node " << node_id << " is not configured or not known.";
   auto* port_key = gtl::FindOrNull(*port_id_to_port_key, port_id);
   CHECK_RETURN_IF_FALSE(port_key != nullptr)
-        << "Node " << node_id << ", port " << port_id << " is not configured or not known.";
-  return phal_interface_->GetFrontPanelPortInfo(port_key->slot, port_key->port, fp_port_info);
+        << "Node " << node_id << ", port " << port_id
+        << " is not configured or not known.";
+  return phal_interface_->GetFrontPanelPortInfo(port_key->slot, port_key->port,
+                                                fp_port_info);
 }
 
 std::unique_ptr<BFChassisManager> BFChassisManager::CreateInstance(

@@ -756,7 +756,7 @@ TEST_F(P4ConfigVerifierTest, TestActionInternalLinkWithUnknownAppliedTables) {
   EXPECT_THAT(status.ToString(), HasSubstr("unknown-applied-table"));
 }
 
-// TODO: When P4ConfigVerifier supports header-to-header copy
+// TODO(unknown): When P4ConfigVerifier supports header-to-header copy
 // verification, add a test for an invalid copy, i.e. one where the header
 // has no header descriptor.
 

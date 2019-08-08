@@ -18,8 +18,8 @@
 // P4Test midend.  This midend acts as the default midend pass for the
 // Stratum p4c backend when it is not overridden by a custom midend.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_
+#define STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_
 
 #include <memory>
 
@@ -60,4 +60,4 @@ class MidEndP4cOpen : public MidEndInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_MIDEND_P4C_OPEN_H_

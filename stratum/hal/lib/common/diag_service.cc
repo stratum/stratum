@@ -35,26 +35,26 @@ DiagService::DiagService(OperationMode mode, SwitchInterface* switch_interface,
       error_buffer_(ABSL_DIE_IF_NULL(error_buffer)) {}
 
 ::util::Status DiagService::Setup(bool warmboot) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
 ::util::Status DiagService::Teardown() {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
 ::grpc::Status DiagService::StartBERT(::grpc::ServerContext* context,
                                       const ::gnoi::diag::StartBERTRequest* req,
                                       ::gnoi::diag::StartBERTResponse* resp) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::grpc::Status::OK;
 }
 
 ::grpc::Status DiagService::StopBERT(::grpc::ServerContext* context,
                                      const ::gnoi::diag::StopBERTRequest* req,
                                      ::gnoi::diag::StopBERTResponse* resp) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::grpc::Status::OK;
 }
 
@@ -62,7 +62,7 @@ DiagService::DiagService(OperationMode mode, SwitchInterface* switch_interface,
     ::grpc::ServerContext* context,
     const ::gnoi::diag::GetBERTResultRequest* req,
     ::gnoi::diag::GetBERTResultResponse* resp) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::grpc::Status::OK;
 }
 

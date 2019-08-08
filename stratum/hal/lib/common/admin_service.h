@@ -92,7 +92,7 @@ class AdminService final : public ::gnoi::system::System::Service {
   AdminService& operator=(const AdminService&) = delete;
 
  private:
-  // Checks if we received valid initial SetPackage message and provided 
+  // Checks if we received valid initial SetPackage message and provided
   // Package can be accepted and processed
   ::grpc::Status ValidatePackageMessage(const gnoi::system::Package& package);
 
@@ -135,7 +135,6 @@ class AdminService final : public ::gnoi::system::System::Service {
 
   // Function which sends signal to the HAL
   HalSignalHandle hal_signal_handle_;
-
 };
 
 }  // namespace hal

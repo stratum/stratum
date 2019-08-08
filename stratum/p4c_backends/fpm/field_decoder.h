@@ -19,12 +19,13 @@
 // output P4PipelineConfig.  It also provides some decoded output for
 // subsequent use in parser field mapping.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_DECODER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_DECODER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_FIELD_DECODER_H_
+#define STRATUM_P4C_BACKENDS_FPM_FIELD_DECODER_H_
 
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "stratum/p4c_backends/fpm/header_path_inspector.h"
 #include "stratum/p4c_backends/fpm/parser_map.pb.h"
@@ -152,4 +153,4 @@ class FieldDecoder {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_DECODER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_FIELD_DECODER_H_

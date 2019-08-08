@@ -31,6 +31,6 @@ TEST(flat_hash_map, size) {
   EXPECT_EQ(1, map.size());
 }
 
-}  // <empty>
+}  // namespace
 }  // namespace gtl
 }  // namespace stratum

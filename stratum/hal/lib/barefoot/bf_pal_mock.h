@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <memory>
+
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/barefoot/bf_pal_interface.h"
 

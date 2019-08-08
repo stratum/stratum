@@ -16,8 +16,8 @@
 
 // BcmTargetInfo is a TargetInfo subclass for BCM switch chips.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TARGET_INFO_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TARGET_INFO_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TARGET_INFO_H_
+#define STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TARGET_INFO_H_
 
 #include "stratum/p4c_backends/fpm/target_info.h"
 
@@ -40,4 +40,4 @@ class BcmTargetInfo : public TargetInfo {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TARGET_INFO_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TARGET_INFO_H_

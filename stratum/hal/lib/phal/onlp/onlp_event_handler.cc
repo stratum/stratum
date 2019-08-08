@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 
 #include <algorithm>
+#include <utility>
 
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 #include "gflags/gflags.h"
 #include "stratum/lib/macros.h"
 #include "absl/container/flat_hash_map.h"
@@ -32,7 +33,7 @@
 // unlikely edge cases it could cause issues. E.g. if a transceiver is removed
 // and a different one is inserted into the same port in less than ~200ms, we
 // won't report any change in hardware state.
-// TODO: Deal more precisely with removable hardware components. For
+// TODO(unknown): Deal more precisely with removable hardware components. For
 // instance, if we notice that fixed fields for a transceiver have changed, we
 // should report this as a removal event and an insertion event.
 DEFINE_int32(onlp_polling_interval_ms, 200,
@@ -54,7 +55,8 @@ OnlpOidEventCallback::OnlpOidEventCallback(OnlpOid oid)
 
 OnlpOidEventCallback::~OnlpOidEventCallback() {
   if (handler_ != nullptr) {
-    ::util::Status unregister_result = handler_->UnregisterOidEventCallback(this);
+    ::util::Status unregister_result =
+                                handler_->UnregisterOidEventCallback(this);
     if (!unregister_result.ok()) {
       LOG(ERROR)
           << "Encountered error while unregistering an ONLP Oid event callback:"
@@ -68,7 +70,7 @@ OnlpSfpEventCallback::OnlpSfpEventCallback() {}
 OnlpSfpEventCallback::~OnlpSfpEventCallback() {
   VLOG(3) << "Entering OnlpSfpEventCallback destructor...";
   if (handler_ != nullptr) {
-    ::util::Status unregister_result = 
+    ::util::Status unregister_result =
       handler_->UnregisterSfpEventCallback(this);
     if (!unregister_result.ok()) {
       LOG(ERROR)
@@ -312,7 +314,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
     OnlpPresentBitmap previous_map = sfp_status_monitor_.previous_map;
 
     // for each bit in bitmap, check if it was changed
-    for (OnlpPortNumber port = 1; port <= max_front_port_num_; port ++ ) {
+    for (OnlpPortNumber port = 1; port <= max_front_port_num_; port++) {
       if (previous_map.test(port-1) == new_map.test(port-1)) {
         continue;
       }
@@ -322,7 +324,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
                       HW_STATE_PRESENT : HW_STATE_NOT_PRESENT;
       OidInfo oid_info(ONLP_OID_TYPE_SFP, port, state);
       LOG(INFO) << "OnlpEventHandler::PollSfpPresence, OidInfo, port="
-    		    << port << ", state=" << oid_info.GetHardwareState();
+                      << port << ", state=" << oid_info.GetHardwareState();
       // add to the updated_ports list
       updated_ports.push_back(oid_info);
     }

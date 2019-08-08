@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "stratum/hal/lib/common/admin_service.h"
 
 #include "gflags/gflags.h"
@@ -152,19 +154,19 @@ AdminService::AdminService(OperationMode mode,
     const gnoi::system::Package& package) {
 
   if (package.activate()) {
-    //TODO remove when ActivatePackage will be implemented
+    // TODO(unknown): remove when ActivatePackage will be implemented
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                           "Package activation not supported");
   }
 
   if (!package.version().empty()) {
-    //TODO remove when SetPackageVersion will be implemented
+    // TODO(unknown): remove when SetPackageVersion will be implemented
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                           "Package version not supported");
   }
 
   if (package.has_remote_download()) {
-    //TODO remove when remote download will be implemented
+    // TODO(unknown): remove when remote download will be implemented
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                           "Remote download not supported");
   }
@@ -182,7 +184,8 @@ AdminService::AdminService(OperationMode mode,
   auto dir_name = dirname(strdup(package.filename().c_str()));
   if (!helper_->GetFileSystemHelper()->PathExists(dir_name)) {
     return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
-                          ("Directory " + package.filename() + " doesn't exist"));
+                          ("Directory " + package.filename() +
+                            " doesn't exist"));
   }
 
   return ::grpc::Status::OK;
@@ -227,7 +230,7 @@ AdminService::AdminService(OperationMode mode,
     }
 
   } else {
-    //TODO uncomment when remote download will be implemented
+    // TODO(unknown) uncomment when remote download will be implemented
     // // read next msg from stream (hash msg)
     // if (!reader->Read(&msg)) {
     //   return ::grpc::Status(::grpc::StatusCode::ABORTED, "Broken Stream");

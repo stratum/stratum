@@ -67,7 +67,7 @@ void FetchOnce::CacheUpdated() { should_update_ = false; }
 // Create a new CachePolicy instance
 // note: is passed to DataSource who then manages the deletion
 ::util::StatusOr<CachePolicy*> CachePolicyFactory::CreateInstance(
-    CachePolicyType cache_type, 
+    CachePolicyType cache_type,
     int32 timed_cache_value) {
 
     switch (cache_type) {

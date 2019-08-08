@@ -20,8 +20,8 @@
 #include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 
-using namespace std;
-using namespace google::protobuf::util;
+using namespace std;  // NOLINT
+using namespace google::protobuf::util;  // NOLINT
 
 namespace stratum {
 namespace hal {
@@ -31,18 +31,17 @@ namespace onlp {
 OnlpSfpConfigurator::OnlpSfpConfigurator(int id,
     std::shared_ptr<OnlpSfpDataSource>datasource,
     AttributeGroup* sfp_group, OnlpInterface* onlp_interface)
-      : id_(id), 
+      : id_(id),
         datasource_(datasource),
         sfp_group_(sfp_group),
         onlp_interface_(onlp_interface) {
-
     // lock us so we can modify
     auto mutable_sfp = sfp_group_->AcquireMutable();
 
     // Ok, now go add the sfp attributes
     mutable_sfp->AddAttribute("id", datasource_->GetSfpId());
     mutable_sfp->AddAttribute("description", datasource_->GetSfpDesc());
-    mutable_sfp->AddAttribute("hardware_state", 
+    mutable_sfp->AddAttribute("hardware_state",
         datasource_->GetSfpHardwareState());
 }
 
@@ -57,7 +56,6 @@ OnlpSfpConfigurator::Make(int id,
 }
 
 ::util::Status OnlpSfpConfigurator::HandleEvent(HwState state) {
-
     // Check SFP state
     switch (state) {
       // Add SFP attributes
@@ -84,7 +82,6 @@ OnlpSfpConfigurator::Make(int id,
 //       attribute group.  Could be a bug, but for now the code below
 //       works around the problem.
 ::util::Status OnlpSfpConfigurator::AddSfp() {
-
     // Make sure we don't already have a datasource added to the DB
     absl::WriterMutexLock l(&config_lock_);
     if (initialized_) {
@@ -95,15 +92,15 @@ OnlpSfpConfigurator::Make(int id,
     auto mutable_sfp = sfp_group_->AcquireMutable();
 
     mutable_sfp->AddAttribute("media_type", datasource_->GetSfpMediaType());
-    mutable_sfp->AddAttribute("connector_type", 
+    mutable_sfp->AddAttribute("connector_type",
         datasource_->GetSfpType());
     mutable_sfp->AddAttribute("module_type", datasource_->GetSfpModuleType());
     mutable_sfp->AddAttribute("cable_length", datasource_->GetSfpCableLength());
-    mutable_sfp->AddAttribute("cable_length_desc", 
+    mutable_sfp->AddAttribute("cable_length_desc",
         datasource_->GetSfpCableLengthDesc());
     mutable_sfp->AddAttribute("temperature", datasource_->GetSfpTemperature());
     mutable_sfp->AddAttribute("vcc", datasource_->GetSfpVoltage());
-    mutable_sfp->AddAttribute("channel_count", 
+    mutable_sfp->AddAttribute("channel_count",
         datasource_->GetSfpChannelCount());
 
     // Get HardwareInfo DB group
@@ -123,7 +120,7 @@ OnlpSfpConfigurator::Make(int id,
 
     // Get SfpModuleCaps DB group
     mutable_sfp = sfp_group_->AcquireMutable();
-    ASSIGN_OR_RETURN(auto caps, 
+    ASSIGN_OR_RETURN(auto caps,
         mutable_sfp->AddChildGroup("module_capabilities"));
 
     // release sfp & acquire caps lock
@@ -145,7 +142,6 @@ OnlpSfpConfigurator::Make(int id,
     ASSIGN_OR_RETURN(sfp_channel_count_,
         datasource_->GetSfpChannelCount()->ReadValue<int>());
     for (int id=0; id < sfp_channel_count_; id++) {
-
         // lock us so we can modify
         mutable_sfp = sfp_group_->AcquireMutable();
 
@@ -159,7 +155,6 @@ OnlpSfpConfigurator::Make(int id,
         // Note: don't move pointer, just a reference
         AddChannel(id, channel);
     }
-    
 
     // we're now initialized
     initialized_ = true;
@@ -168,7 +163,6 @@ OnlpSfpConfigurator::Make(int id,
 }
 
 ::util::Status OnlpSfpConfigurator::RemoveSfp() {
-
     // Make sure we have a been initialized
     absl::WriterMutexLock l(&config_lock_);
     if (!initialized_) {
@@ -200,7 +194,7 @@ OnlpSfpConfigurator::Make(int id,
     RETURN_IF_ERROR(mutable_sfp->RemoveChildGroup("info"));
 
     // Get SfpModuleCaps DB group
-    ASSIGN_OR_RETURN(auto caps, 
+    ASSIGN_OR_RETURN(auto caps,
         mutable_sfp->GetChildGroup("module_capabilities"));
     auto mutable_caps = caps->AcquireMutable();
 
@@ -218,7 +212,6 @@ OnlpSfpConfigurator::Make(int id,
     // Remove SFPChannel Attributes
     // note: use a 0-based index for both database and ONLP
     for (int id=0; id < sfp_channel_count_; id++) {
-
         // Get channel group
         ASSIGN_OR_RETURN(auto channel,
             mutable_sfp->GetRepeatedChildGroup("channels", id));

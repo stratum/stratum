@@ -28,8 +28,8 @@
 // to determine sub types for each bit slice of meta_type.flags_field
 // according to the destination field types.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SLICE_CROSS_REFERENCE_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SLICE_CROSS_REFERENCE_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_SLICE_CROSS_REFERENCE_H_
+#define STRATUM_P4C_BACKENDS_FPM_SLICE_CROSS_REFERENCE_H_
 
 #include <memory>
 #include <vector>
@@ -92,4 +92,4 @@ class SliceCrossReference {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SLICE_CROSS_REFERENCE_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_SLICE_CROSS_REFERENCE_H_

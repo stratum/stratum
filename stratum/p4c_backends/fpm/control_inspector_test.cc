@@ -662,8 +662,8 @@ TEST_F(ControlInspectorTest, TestOptimizedControl) {
   for (int t = 0; t < fixed_tables.tables_size(); ++t) {
     const ::p4::config::v1::Preamble& table_info =
         test_tables[t + 1].preamble();
-    SCOPED_TRACE(absl::StrFormat("Expected table %s does not appear in expected "
-                              "order in pipeline stage, found table %s",
+    SCOPED_TRACE(absl::StrFormat("Expected table %s does not appear in expected"
+                              " order in pipeline stage, found table %s",
                               table_info.name().c_str(),
                               fixed_tables.tables(t).table_name().c_str()));
     EXPECT_EQ(table_info.name(), fixed_tables.tables(t).table_name());

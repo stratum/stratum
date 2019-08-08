@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
 
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"

@@ -29,7 +29,7 @@
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 
-using namespace std;
+using namespace std;  // NOLINT
 
 namespace stratum {
 namespace hal {
@@ -44,7 +44,7 @@ class OnlpCli {
       : onlp_interface_(nullptr) {}
 
   // Print OID List
-  ::util::Status  PrintOidList(string use_wrapper, 
+  ::util::Status  PrintOidList(string use_wrapper,
     string stype, onlp_oid_type_flag_t type) {
 
     // call onlp directly
@@ -54,9 +54,10 @@ class OnlpCli {
         onlp_oid_hdr_get_all(ONLP_OID_CHASSIS, type, 0, &oid_hdr_list);
 
         biglist_t* curr_node = oid_hdr_list;
-        //std::cout << stype << " OID List:" << std::endl;
+        // std::cout << stype << " OID List:" << std::endl;
         while (curr_node != nullptr) {
-            onlp_oid_hdr_t* oid_hdr = (onlp_oid_hdr_t*) curr_node->data;
+            onlp_oid_hdr_t* oid_hdr =
+                          reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
             std::cout << "  oid: " << oid_hdr->id << std::endl;
             curr_node = curr_node->next;
         }
@@ -72,17 +73,15 @@ class OnlpCli {
             return ::util::OkStatus();
         }
         std::cout << stype << " OID List:" << std::endl;
-        for(unsigned int i = 0; i < OnlpOids.size(); i++) {
+        for (unsigned int i = 0; i < OnlpOids.size(); i++) {
             std::cout << "  " << i << ": oid: " << OnlpOids[i] << std::endl;
         }
-
-    }            
+    }
     return ::util::OkStatus();
   }
 
   // Runs the main CLI loop.
   ::util::Status  RunCli() {
-
     // Create the OnlpInterface object
     ASSIGN_OR_RETURN(onlp_interface_, OnlpWrapper::Make());
 

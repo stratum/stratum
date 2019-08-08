@@ -50,7 +50,7 @@ PosixErrorSpace::PosixErrorSpace() : ErrorSpace("util::PosixErrorSpace") {}
 
 PosixErrorSpace::~PosixErrorSpace() {}
 
-// TODO: Move to glog/StrError().
+// TODO(unknown): Move to glog/StrError().
 std::string PosixErrorSpace::String(int code) const { return StrError(code); }
 
 ::util::error::Code PosixErrorSpace::CanonicalCode(

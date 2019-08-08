@@ -19,8 +19,8 @@
 // of affected fields to indicate for which tables the field participates
 // in the match key.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
 
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
@@ -58,4 +58,4 @@ class MetaKeyMapper {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_META_KEY_MAPPER_H_

@@ -80,7 +80,7 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
     action_ = std::string(case_label->path->name.name);
     auto iter = action_name_map_.find(action_);
     if (iter == action_name_map_.end()) {
-      // TODO: This might be a compiler bug.
+      // TODO(unknown): This might be a compiler bug.
       ::error("Backend: Internal action name %s is not an externally "
               "visible action", action_);
       return;
@@ -99,7 +99,7 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
 
   // When all switch cases decode without errors, the color-based actions are
   // written to the P4PipelineConfig via table_mapper_.
-  // TODO: This should be converted to use IndirectActions.
+  // TODO(unknown): This should be converted to use IndirectActions.
   if (::errorCount() == 0) {
     for (const auto& mapper_pair : color_actions_) {
       table_mapper_->AddMeterColorActionsFromString(

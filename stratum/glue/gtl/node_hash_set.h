@@ -18,6 +18,8 @@
 #define STRATUM_GLUE_GTL_NODE_HASH_SET_H_
 
 #include <unordered_set>
+#include <memory>
+#include <functional>
 
 namespace stratum {
 namespace gtl {

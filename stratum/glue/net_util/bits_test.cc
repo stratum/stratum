@@ -25,6 +25,8 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <limits>
+#include <utility>
 
 #include "stratum/glue/logging.h"
 #include "gtest/gtest.h"

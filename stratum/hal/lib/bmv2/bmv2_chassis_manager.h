@@ -16,13 +16,13 @@
 #ifndef STRATUM_HAL_LIB_BMV2_BMV2_CHASSIS_MANAGER_H_
 #define STRATUM_HAL_LIB_BMV2_BMV2_CHASSIS_MANAGER_H_
 
-#include "bm/bm_sim/dev_mgr.h"
-
 #include <map>
 #include <memory>
 #include <utility>
-#include <thread>
+#include <string>
+#include <thread>  // NOLINT
 
+#include "bm/bm_sim/dev_mgr.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"

@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "stratum/hal/lib/bcm/bcm_node.h"
-
 #include <utility>
+#include <set>
 
 #include "gflags/gflags.h"
 #include "stratum/lib/macros.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 
-// TODO: This flag is currently false to skip static entry writes
+// TODO(unknown): This flag is currently false to skip static entry writes
 // until all related hardware tables and related mapping are implemented.
 DEFINE_bool(enable_static_table_writes, true,
             "Enables writes of static table "
@@ -159,12 +158,12 @@ BcmNode::~BcmNode() {}
 }
 
 ::util::Status BcmNode::Freeze() {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmNode::Unfreeze() {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
@@ -203,7 +202,7 @@ BcmNode::~BcmNode() {}
     ::util::Status status = ::util::OkStatus();
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kExternEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                << "Extern entries are not currently supported.";
       case ::p4::v1::Entity::kTableEntry:
@@ -221,21 +220,21 @@ BcmNode::~BcmNode() {}
         action_profile_groups_requested = true;
         break;
       case ::p4::v1::Entity::kMeterEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Meter entries are not currently supported: "
                  << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
         break;
       case ::p4::v1::Entity::kDirectMeterEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Direct meter entries are not currently supported: "
                  << entity.ShortDebugString() << ".";
         if (details != nullptr) details->push_back(status);
         break;
       case ::p4::v1::Entity::kCounterEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Counter entries are not currently supported: "
                  << entity.ShortDebugString() << ".";
@@ -380,7 +379,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   std::vector<::util::Status> static_results;
   ::util::Status static_status =
       DoWriteForwardingEntries(static_write_request, &static_results);
-  // TODO: The per-entry results ultimately should be folded into
+  // TODO(unknown): The per-entry results ultimately should be folded into
   // static_status for return with the overall pipeline config push result.
   if (!static_status.ok()) {
     for (const auto& entry_result : static_results) {
@@ -402,7 +401,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
       case ::p4::v1::Entity::kExternEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Extern entries are not currently supported.";
         break;
@@ -418,7 +417,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
                                          update.type());
         break;
       case ::p4::v1::Entity::kMeterEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Meter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
@@ -435,13 +434,13 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         }
         break;
       case ::p4::v1::Entity::kCounterEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Counter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
         break;
       case ::p4::v1::Entity::kDirectCounterEntry:
-        // TODO: Implement this.
+        // TODO(unknown): Implement this.
         status = MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
                  << "Direct counter entries are not currently supported: "
                  << update.ShortDebugString() << ".";
@@ -475,7 +474,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   return ::util::OkStatus();
 }
 
-// TODO: Complete this function for all the update types.
+// TODO(unknown): Complete this function for all the update types.
 ::util::Status BcmNode::TableWrite(const ::p4::v1::TableEntry& entry,
                                    ::p4::v1::Update::Type type) {
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED);
@@ -705,11 +704,12 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   bool consumed = false;
   switch (type) {
     case ::p4::v1::Update::INSERT: {
-      switch (replicationType) {
+      switch (replicationType) {  // NOLINTNEXTLINE
         case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
-          ABSL_FALLTHROUGH_INTENDED;
+          ABSL_FALLTHROUGH_INTENDED;  // NOLINTNEXTLINE
         case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry:
-          // TODO: inform responsible bcm_*_manager(s) about new mapping here
+          // TODO(unknown): inform responsible bcm_*_manager(s) about new
+          // mapping here
           consumed = true;
           LOG(WARNING) << "stratum_bcm only has preliminary support"
               " for PacketReplicationEngineEntry";
@@ -720,11 +720,12 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       break;
     }
     case ::p4::v1::Update::DELETE: {
-      switch (replicationType) {
+      switch (replicationType) {  // NOLINTNEXTLINE
         case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
-          ABSL_FALLTHROUGH_INTENDED;
+          ABSL_FALLTHROUGH_INTENDED;  // NOLINTNEXTLINE
         case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry:
-          // TODO: inform responsible bcm_*_manager(s) about new mapping here
+          // TODO(unknown): inform responsible bcm_*_manager(s) about new
+          // mapping here
           consumed = true;
           LOG(WARNING) << "stratum_bcm only has preliminary support"
               " for PacketReplicationEngineEntry";
@@ -738,8 +739,8 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   }
 
   CHECK_RETURN_IF_FALSE(consumed)
-      << "Do not know what to do with this " << ::p4::v1::Update::Type_Name(type)
-      << " PacketReplicationEngineEntry: " << entry.ShortDebugString() << ".";
+    << "Do not know what to do with this " << ::p4::v1::Update::Type_Name(type)
+    << " PacketReplicationEngineEntry: " << entry.ShortDebugString() << ".";
   return ::util::OkStatus();
 }
 

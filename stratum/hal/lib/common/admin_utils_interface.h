@@ -24,7 +24,7 @@
 #include "gnoi/system/system.grpc.pb.h"
 #include "stratum/glue/integral_types.h"
 
-namespace {
+namespace {  // NOLINT
 const int ERROR_RETURN_CODE = -1;
 }
 
@@ -38,7 +38,7 @@ class AdminServiceShellHelper {
   explicit AdminServiceShellHelper(const std::string& command)
       : command_(command),
         cmd_return_code_(
-            ERROR_RETURN_CODE) {};
+            ERROR_RETURN_CODE) {}
 
   // Runs the command provided in the constructor
   // @return true if cmd succeeded, false if failure
@@ -50,6 +50,7 @@ class AdminServiceShellHelper {
 
   // Gets the return code of the executed command
   int GetReturnCode();
+
  private:
   // Command to be executed (cmdline)
   std::string command_;
@@ -104,10 +105,10 @@ class FileSystemHelper {
   virtual ~FileSystemHelper() = default;
 
   virtual bool CheckHashSumFile(const std::string& path,
-                                const std::string& old_hash,
-                                ::gnoi::types::HashType_HashMethod method) const;
+                              const std::string& old_hash,
+                              ::gnoi::types::HashType_HashMethod method) const;
 
-  virtual std::string GetHashSum(std::istream& istream,
+  virtual std::string GetHashSum(std::istream& istream,  // NOLINTNEXTKINE
                                  ::gnoi::types::HashType_HashMethod method) const;
 
   // Create temporary directory and return it name
@@ -139,7 +140,7 @@ class FileSystemHelper {
 // To use, retrieve the desired object via Get___Helper
 class AdminServiceUtilsInterface {
  public:
-  AdminServiceUtilsInterface() : file_system_helper_(new FileSystemHelper) {};
+  AdminServiceUtilsInterface() : file_system_helper_(new FileSystemHelper) {}
   virtual ~AdminServiceUtilsInterface() = default;
 
   virtual std::shared_ptr<AdminServiceShellHelper>
@@ -158,7 +159,7 @@ class AdminServiceUtilsInterface {
   std::shared_ptr<FileSystemHelper> file_system_helper_;
 };
 
-} // namespace hal
-} // namespace stratum
+}  // namespace hal
+}  // namespace stratum
 
-#endif //STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_INTERFACE_H_
+#endif  // STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_INTERFACE_H_

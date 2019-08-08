@@ -146,7 +146,7 @@ TEST_F(FieldDecoderTest, TestExtractedFields) {
     const auto& field_list = iter.second;
     EXPECT_FALSE(field_list.empty());
     for (const auto& field_iter : field_list) {
-      // TODO: Metadata types are a problem for this test, although
+      // TODO(unknown): Metadata types are a problem for this test, although
       // they don't seem to cause any problems in tor.p4 compilations.
       if (iter.first == "routing_metadata_t")
         continue;

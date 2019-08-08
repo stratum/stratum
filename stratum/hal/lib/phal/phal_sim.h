@@ -20,6 +20,9 @@
 
 #include <functional>
 #include <set>
+#include <map>
+#include <memory>
+#include <utility>
 
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
@@ -90,7 +93,7 @@ class PhalSim : public PhalInterface {
 
   // Map from std::pair<int, int> representing (slot, port) of singleton port
   // to the vector of sfp datasource id
-  std::map<std::pair<int, int>, 
+  std::map<std::pair<int, int>,
     ::stratum::hal::phal::SfpConfigurator*> slot_port_to_configurator_;
 
   // Determines if PHAL is fully initialized.

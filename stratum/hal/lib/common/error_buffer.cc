@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "stratum/hal/lib/common/error_buffer.h"
-
-#include "gflags/gflags.h"
-//FIXME(boc) google only
-//#include "file/base/path.h"
+#include <libgen.h>
+// FIXME(boc) google only
+// #include "file/base/path.h"
 // end google only
 #include <string>
-#include <libgen.h>
+
+#include "gflags/gflags.h"
+#include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "absl/strings/str_cat.h"
@@ -33,7 +32,7 @@ namespace stratum {
 namespace hal {
 
 std::string Basename(std::string path) {
-  //file::Basename(location.file_name())
+  // file::Basename(location.file_name())
   char* c_path = strdup(path.c_str());
   return basename(c_path);
 }
@@ -47,6 +46,7 @@ void ErrorBuffer::AddError(const ::util::Status& error,
       "): ", msg_to_prepend, error.error_message());
   LOG(ERROR) << error_message;
   if (static_cast<int>(errors_.size()) > FLAGS_max_num_errors_to_track) return;
+  // NOLINTNEXTLINE
   ::util::Status status = APPEND_ERROR(error.StripMessage())//.SetNoLogging() FIXME
                           << error_message;
   errors_.push_back(status);

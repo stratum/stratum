@@ -16,6 +16,7 @@
 
 #include <grpc++/grpc++.h>
 #include <memory>
+#include <string>
 
 #include "gflags/gflags.h"
 #include "stratum/glue/net_util/ports.h"

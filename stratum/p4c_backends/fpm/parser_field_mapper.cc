@@ -17,6 +17,8 @@
 #include "stratum/p4c_backends/fpm/parser_field_mapper.h"
 
 #include <tuple>
+#include <utility>
+#include <vector>
 
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
@@ -320,7 +322,7 @@ bool ParserFieldMapper::ProcessStatePair(
   // If a P4 state doesn't extract a header, it's probably one of the built
   // in states that terminates the sequence.  If the header has already been
   // processed in another transition sequence, no more work is needed.
-  // TODO: Does the P4 parser allow intermediate states that don't
+  // TODO(unknown): Does the P4 parser allow intermediate states that don't
   // extract any header?  The correct behavior in that case would be to
   // check for a non-built-in state and queue another work entry with the same
   // target_state and the p4_state's next state.
@@ -554,7 +556,7 @@ void ParserFieldMapper::SelectTransitions(const ParserState& target_state,
   // the P4 state cases.  When a match occurs, both states should be advancing
   // to a state that extracts the same header, which generates a work queue
   // entry for further processing.
-  // TODO: What can be done here to confirm that both input states
+  // TODO(unknown): What can be done here to confirm that both input states
   // select on the same field?
   for (const auto& target_case : target_select.cases()) {
     if (target_case.is_default())
@@ -567,7 +569,7 @@ void ParserFieldMapper::SelectTransitions(const ParserState& target_state,
       DCHECK_EQ(1, p4_case.keyset_values_size())
           << "Invalid keyset values in normalized P4 select expression";
       // The keyset mask is not important for this comparison.
-      // TODO: Could this keyset ever be a value set?
+      // TODO(unknown): Could this keyset ever be a value set?
       if (p4_case.keyset_values(0).constant().value() ==
           target_case.keyset_values(0).constant().value()) {
         VLOG(1) << "Adding field map work queue entry for "
@@ -590,13 +592,13 @@ ParserSelectExpression ParserFieldMapper::NormalizeSelect(
     return select;  // No normalization required.
   }
 
-  // TODO: The only current use case for multiple select fields is
+  // TODO(unknown): The only current use case for multiple select fields is
   // in the tor.p4 IPv4 parser state, where a non-zero fragment offset is used
   // to avoid further transitions on the IP protocol.  This usage is not
   // important here, so the select case gets normalized to a single entry,
   // which should indicate the next states for each IP protocol type.  The
   // logic below is specific to this case.
-  // TODO: In P4_16, the select expression uses a concat operator
+  // TODO(unknown): In P4_16, the select expression uses a concat operator
   // to combine select fields into one value.
   ParserSelectExpression normalized;
   int select_index = select.selector_fields_size() - 1;

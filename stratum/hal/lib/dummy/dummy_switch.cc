@@ -280,7 +280,8 @@ namespace dummy_switch {
         int slot = node_port_id_to_slot[node_port_pair];
         int port = node_port_id_to_port[node_port_pair];
         ::util::Status status =
-            phal_interface_->GetFrontPanelPortInfo(slot, port, resp_val.mutable_front_panel_port_info());
+            phal_interface_->GetFrontPanelPortInfo(slot, port,
+                                  resp_val.mutable_front_panel_port_info());
         if (status.ok()) {
           resp = resp_val;
         }

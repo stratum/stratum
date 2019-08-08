@@ -23,6 +23,7 @@
 #include <tuple>
 #include <vector>
 #include <set>
+#include <utility>
 
 #include "google/protobuf/message.h"
 #include "absl/container/flat_hash_set.h"
@@ -31,7 +32,7 @@
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/db.pb.h"
-//#include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+// #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/hal/lib/phal/switch_configurator.h"
@@ -58,7 +59,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
 
   // Creates a new attribute database that runs on a google-developed switch
   // platform. <deprecated>
-  //static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakeGoogle(
+  // static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakeGoogle(
   //    const std::string& legacy_phal_config_path,
   //    const SystemInterface* system_interface);
 
@@ -80,9 +81,9 @@ class AttributeDatabase : public AttributeDatabaseInterface {
       : root_(std::move(root)), threadpool_(std::move(threadpool)) {}
 
   // Creates a new attribute database that uses the given group as its root node
-  // and executes queries on the given threadpool. MakeGoogle or MakePhalDB 
-  // should typically be called rather than this function. If 
-  // run_polling_thread is false, no streaming query polling will occur 
+  // and executes queries on the given threadpool. MakeGoogle or MakePhalDB
+  // should typically be called rather than this function. If
+  // run_polling_thread is false, no streaming query polling will occur
   // unless PollQueries is called manually.
   static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> Make(
       std::unique_ptr<AttributeGroup> root,
@@ -137,8 +138,8 @@ class AttributeDatabase : public AttributeDatabaseInterface {
 };
 
 // DatabaseQuery is a wrapper for AttributeGroupQuery that transforms query
-// responses from google::protobuf::Message into PhalDB. It also handles polling for
-// streaming queries.
+// responses from google::protobuf::Message into PhalDB. It also handles
+// polling for streaming queries.
 class DatabaseQuery : public Query {
  public:
   DatabaseQuery(const DatabaseQuery& other) = delete;

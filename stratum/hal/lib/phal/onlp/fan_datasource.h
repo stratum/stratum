@@ -17,6 +17,9 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_FAN_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_FAN_DATASOURCE_H_
 
+#include <string>
+#include <memory>
+
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"

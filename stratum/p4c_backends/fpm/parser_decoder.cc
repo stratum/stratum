@@ -29,7 +29,7 @@ ParserDecoder::ParserDecoder()
       type_map_(nullptr) {
 }
 
-// TODO: The Stratum p4c backend needs a consistent approach for
+// TODO(unknown): The Stratum p4c backend needs a consistent approach for
 // handling errors.  Errors can occur in several ways:
 // - Bad input from prior p4c passes due to undetected compiler bugs.
 // - Unrecognized input from prior passes due to new p4c features or changes.
@@ -64,12 +64,13 @@ bool ParserDecoder::DecodeParser(const IR::P4Parser& p4_parser,
   // map entry with the decoded output for each encountered state.
   for (const auto ir_parser_state : p4_parser.states) {
     // We can't use externalName() here. See pull request #182
-    const std::string state_name = std::string(ir_parser_state->getName().toString());
+    const std::string state_name =
+                            std::string(ir_parser_state->getName().toString());
     VLOG(2) << "ParserState: " << state_name;
     ParserState* decoded_state =
         &(*parser_states_.mutable_parser_states())[state_name];
     if (!decoded_state->name().empty()) {
-      // TODO: Should this be handled as a compiler bug?
+      // TODO(unknown): Should this be handled as a compiler bug?
       LOG(FATAL) << "Multiple P4Parser states have name " << state_name;
       return false;
     }
@@ -113,7 +114,7 @@ bool ParserDecoder::DecodeParser(const IR::P4Parser& p4_parser,
   }
 
   if (start_state == nullptr) {
-    // TODO: Is this a compiler bug?  Promote to FATAL?
+    // TODO(unknown): Is this a compiler bug?  Promote to FATAL?
     LOG(ERROR) << "P4Parser has no start state";
     return false;
   }
@@ -157,7 +158,7 @@ bool ParserDecoder::DecodeStatements(
     } else if (component->is<IR::AssignmentStatement>()) {
       auto assignment = component->to<IR::AssignmentStatement>();
       VLOG(1) << "AssignmentStatement: " << assignment->toString();
-      // TODO: Add implementation.
+      // TODO(unknown): Add implementation.
     } else {
       LOG(WARNING) << "Ignoring unknown component " << component->toString();
     }
@@ -287,7 +288,7 @@ void ParserDecoder::DecodeComplexSelectKeySet(
     const IR::ListExpression& key_set, const IR::ListExpression& select,
     ParserSelectCase* decoded_case) {
   if (key_set.components.size() != select.components.size()) {
-    // TODO: Should the compiler catch this?
+    // TODO(unknown): Should the compiler catch this?
     LOG(ERROR) << "Number of values in select case key set does not match "
                << "the number of select arguments";
     return;
@@ -406,7 +407,7 @@ std::string ParserDecoder::ExtractHeaderType(
         auto arg = method_call->arguments->at(0);
         auto arg_type = type_map_->getType(arg, true);
         if (!arg_type->is<IR::Type_Header>()) {
-          // TODO: Should the compiler catch this earlier?
+          // TODO(unknown): Should the compiler catch this earlier?
           LOG(ERROR) << "extract expects arg type to be Type_Header";
           return header_type_name;
         }

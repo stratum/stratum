@@ -17,6 +17,7 @@
 #include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
 
 #include <memory>
+#include <string>
 
 #include "gflags/gflags.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"

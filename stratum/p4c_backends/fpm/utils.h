@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_UTILS_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_UTILS_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_UTILS_H_
+#define STRATUM_P4C_BACKENDS_FPM_UTILS_H_
 
 #include <string>
 #include <vector>
@@ -202,4 +202,4 @@ void DeleteRepeatedNonPtrFields(
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_UTILS_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_UTILS_H_

@@ -22,7 +22,9 @@
 
 #include <functional>
 #include <string>
-#include "absl/container/flat_hash_map.h"
+#include <memory>
+#include <vector>
+#include <set>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"

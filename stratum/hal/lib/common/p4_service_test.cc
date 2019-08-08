@@ -1285,7 +1285,8 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   ::p4::v1::GetForwardingPipelineConfigRequest getRequest;
   ::p4::v1::GetForwardingPipelineConfigResponse getResponse;
   getRequest.set_device_id(kNodeId1);
-  getRequest.set_response_type(::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY);
+  getRequest.set_response_type(
+    ::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY);
   status = p4_service_->GetForwardingPipelineConfig(&context,
                                                     &getRequest,
                                                     &getResponse);

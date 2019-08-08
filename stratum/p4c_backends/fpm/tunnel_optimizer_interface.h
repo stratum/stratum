@@ -18,8 +18,8 @@
 // Since optimization decisions may differ by target type, the implementations
 // will be in target-specific subclasses.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
+#define STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
 
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 
@@ -71,4 +71,4 @@ class TunnelOptimizerInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TUNNEL_OPTIMIZER_INTERFACE_H_

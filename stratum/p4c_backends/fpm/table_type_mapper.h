@@ -18,8 +18,8 @@
 // attempts to determine additional P4TableDescriptor details from a
 // table's match fields, pipeline stage, and action outputs.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_TYPE_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_TYPE_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TABLE_TYPE_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_TABLE_TYPE_MAPPER_H_
 
 #include <string>
 
@@ -85,4 +85,4 @@ class TableTypeMapper {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_TYPE_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TABLE_TYPE_MAPPER_H_

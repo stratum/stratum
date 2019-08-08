@@ -18,6 +18,9 @@
 #ifndef STRATUM_HAL_LIB_COMMON_CHANNEL_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_CHANNEL_WRITER_WRAPPER_H_
 
+#include <memory>
+#include <utility>
+
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
 

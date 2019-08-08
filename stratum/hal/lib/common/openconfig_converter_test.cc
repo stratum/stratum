@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <tuple>
+
+#include <google/protobuf/text_format.h>
+
 #include "stratum/hal/lib/common/openconfig_converter.h"
 
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "gtest/gtest.h"
-
-#include <google/protobuf/text_format.h>
-
-#include <tuple>
 
 namespace stratum {
 
@@ -88,7 +88,6 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("stratum/hal/lib/common/testdata/port_config_params_chassis.pb.txt",
                         "stratum/hal/lib/common/testdata/port_config_params_oc_device.pb.txt")));
 
-
 TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_VendorConfig) {
   ChassisConfig chassis_config;
   ASSERT_OK(ReadProtoFromTextFile(
@@ -131,13 +130,14 @@ TEST(OpenconfigConverterTest, OcDeviceToVendorConfig) {
       &vendor_config));
   openconfig::Device::ComponentKey *component_key = device.add_component();
 
-  component_key->set_name("dummy switch 1");
+  component_key->set_name("dummy switch 1");  // NOLINTNEXTLINE
   component_key->mutable_component()->mutable_chassis()->mutable_vendor_specific()->PackFrom(vendor_config);
 
   // linecard
   component_key = device.add_component();
   component_key->set_name(":lc-1");
   component_key->mutable_component()->mutable_id()->set_value("1");
+  // NOLINTNEXTLINE
   component_key->mutable_component()->mutable_linecard()->mutable_slot_id()->set_value("1");
 
 
@@ -154,35 +154,35 @@ TEST(OpenconfigConverterTest, OcDeviceToVendorConfig) {
 
 }  // OpenconfigConverterTest.OcDeviceToVendorConfig
 
-#define ASSERT_CONFIG_ERROR(config_class, config_file_path, status_code, config_func) \
+#define ASSERT_CONFIG_ERROR(config_class, config_file_path, status_code, \
+                            config_func) \
   do { \
     config_class the_config; \
     ASSERT_OK(ReadProtoFromTextFile(config_file_path, &the_config)); \
     auto statusor = config_func(the_config); \
     ASSERT_FALSE(statusor.ok()); \
     ASSERT_EQ(statusor.status().error_code(), status_code); \
-  } while(0);
-
+  } while (0);
 TEST(OpenconfigConverterTest, InvalidChassisConfigs) {
   ASSERT_CONFIG_ERROR(ChassisConfig,
                       "stratum/hal/lib/common/testdata/invalid_speed.pb.txt",
                       ERR_INVALID_PARAM,
                       OpenconfigConverter::ChassisConfigToOcDevice)
   ASSERT_CONFIG_ERROR(ChassisConfig,
-                      "stratum/hal/lib/common/testdata/unknown_trunk_member.pb.txt",
-                      ERR_INVALID_PARAM,
-                      OpenconfigConverter::ChassisConfigToOcDevice)
+                "stratum/hal/lib/common/testdata/unknown_trunk_member.pb.txt",
+                ERR_INVALID_PARAM,
+                OpenconfigConverter::ChassisConfigToOcDevice)
   ASSERT_CONFIG_ERROR(ChassisConfig,
-                      "stratum/hal/lib/common/testdata/unknown_trunk_type.pb.txt",
-                      ERR_INVALID_PARAM,
+                "stratum/hal/lib/common/testdata/unknown_trunk_type.pb.txt",
+                ERR_INVALID_PARAM,
                       OpenconfigConverter::ChassisConfigToOcDevice)
 }  // OpenconfigConverterTest.InvalidChassisConfigs
 
 TEST(OpenconfigConverterTest, InvalidOcDevice) {
   ASSERT_CONFIG_ERROR(openconfig::Device,
-                      "stratum/hal/lib/common/testdata/invalid_iface_component.pb.txt",
-                      ERR_INVALID_PARAM,
-                      OpenconfigConverter::OcDeviceToChassisConfig)
+              "stratum/hal/lib/common/testdata/invalid_iface_component.pb.txt",
+              ERR_INVALID_PARAM,
+              OpenconfigConverter::OcDeviceToChassisConfig)
 
   ASSERT_CONFIG_ERROR(openconfig::Device,
                       "stratum/hal/lib/common/testdata/invalid_no_node.pb.txt",
@@ -190,9 +190,9 @@ TEST(OpenconfigConverterTest, InvalidOcDevice) {
                       OpenconfigConverter::OcDeviceToChassisConfig)
 
   ASSERT_CONFIG_ERROR(openconfig::Device,
-                      "stratum/hal/lib/common/testdata/invalid_no_chassis.pb.txt",
-                      ERR_INVALID_PARAM,
-                      OpenconfigConverter::OcDeviceToChassisConfig)
+                    "stratum/hal/lib/common/testdata/invalid_no_chassis.pb.txt",
+                    ERR_INVALID_PARAM,
+                    OpenconfigConverter::OcDeviceToChassisConfig)
 
   ASSERT_CONFIG_ERROR(openconfig::Device,
                       "stratum/hal/lib/common/testdata/invalid_oc_speed.pb.txt",

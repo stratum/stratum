@@ -20,8 +20,11 @@
 
 #include <map>
 #include <memory>
+#include <utility>
+#include <string>
+#include <vector>
 
-//FIXME(boc) google only #include "base/basictypes.h"
+// FIXME(boc) google only #include "base/basictypes.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"

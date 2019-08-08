@@ -75,7 +75,7 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
     const std::string &config_file_path,
     const std::string &config_flush_file_path,
     const std::string &bcm_shell_log_file_path) {
-  // TODO: hardcode one simulator instance for now. Later get the
+  // TODO(unknown): hardcode one simulator instance for now. Later get the
   // map from config_file_path.
   std::map<int, BcmChip::BcmChipType> unit_to_type = {{0, BcmChip::TRIDENT2}};
 
@@ -130,7 +130,7 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkSim::DeleteL2EntriesByVlan(int unit, int vlan) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   LOG(WARNING) << "Skipped DeleteL2EntriesByVlan in sim mode.";
   return ::util::OkStatus();
 }
@@ -300,7 +300,7 @@ BcmSdkSim *BcmSdkSim::CreateSingleton(const std::string& bcm_sdk_sim_bin) {
 }
 
 ::util::Status BcmSdkSim::ShutdownAllSimProcesses() {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 

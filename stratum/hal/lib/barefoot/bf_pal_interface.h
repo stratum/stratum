@@ -36,7 +36,7 @@ class BFPalInterface {
     PortState state;
   };
 
-  virtual ~BFPalInterface() { };
+  virtual ~BFPalInterface() { }
 
   virtual ::util::StatusOr<PortState> PortOperStateGet(
       int unit, uint32 port_id) = 0;

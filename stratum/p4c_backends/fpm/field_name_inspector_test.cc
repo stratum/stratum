@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <set>
 
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
@@ -146,7 +147,7 @@ TEST_F(FieldNameInspectorTest, TestExtractTwice) {
   EXPECT_TRUE(inspector_->field_name().empty());
 }
 
-// TODO: Additional test coverage for header stacks and for fields
+// TODO(unknown): Additional test coverage for header stacks and for fields
 //                 extracted from action assignments.
 
 }  // namespace p4c_backends

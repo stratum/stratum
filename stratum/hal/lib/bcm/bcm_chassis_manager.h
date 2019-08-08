@@ -42,7 +42,6 @@
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/public/proto/hal.pb.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
 

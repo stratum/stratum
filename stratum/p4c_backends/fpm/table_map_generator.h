@@ -18,8 +18,8 @@
 // P4PipelineConfig table map entries as the backend identifies fields,
 // matches, tables, etc.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_H_
 
 #include <memory>
 #include <set>
@@ -57,7 +57,7 @@ class TableMapGenerator {
   //      type takes precedence.  If the backend calls SetFieldAttributes
   //      multiple times with different widths or offsets for the same field,
   //      TableMapGenerator logs an error but uses the most recent values.
-  //      TODO: Changing field type should probably be treated as
+  // TODO(unknown): Changing field type should probably be treated as
   //      some kind of compiler or P4 program bug, but the current behavior
   //      precedent has been in place for some time.
   //  SetFieldLocalMetadataFlag - Sets the is_local_metadata field in the
@@ -230,4 +230,4 @@ class TableMapGenerator {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TABLE_MAP_GENERATOR_H_

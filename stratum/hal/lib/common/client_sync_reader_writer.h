@@ -20,6 +20,7 @@
 
 #include <grpcpp/grpcpp.h>
 #include <memory>
+#include <utility>
 
 #include "stratum/glue/logging.h"
 #include "absl/base/thread_annotations.h"

@@ -18,8 +18,8 @@
 // It allows custom midends and open source midends to be used interchangeably
 // as long as a wrapper implementation exists.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
+#define STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
 
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
@@ -47,4 +47,4 @@ class MidEndInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_MIDEND_INTERFACE_H_

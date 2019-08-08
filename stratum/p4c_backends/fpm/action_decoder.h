@@ -17,8 +17,8 @@
 // The ActionDecoder processes P4Action nodes in the p4c IR.  It adds table map
 // ActionDescriptor data to the backend's output P4PipelineConfig.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_ACTION_DECODER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_ACTION_DECODER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_ACTION_DECODER_H_
+#define STRATUM_P4C_BACKENDS_FPM_ACTION_DECODER_H_
 
 #include <set>
 #include <string>
@@ -83,4 +83,4 @@ class ActionDecoder {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_ACTION_DECODER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_ACTION_DECODER_H_

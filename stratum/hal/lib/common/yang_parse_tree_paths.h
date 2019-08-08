@@ -17,6 +17,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
 #define STRATUM_HAL_LIB_COMMON_YANG_PARSE_TREE_PATHS_H_
 
+#include <string>
+
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 
 namespace stratum {

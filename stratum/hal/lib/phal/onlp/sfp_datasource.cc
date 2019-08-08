@@ -48,8 +48,8 @@ double ConvertMicrowattsTodBm(double microwatts) {
       new OnlpSfpDataSource(sfp_id, onlp_interface, cache_policy, sfp_info));
 
   // Retrieve attributes' initial values.
-  // TODO: Move the logic to Configurator later?
-  //sfp_data_source->updateValues();
+  // TODO(unknown): Move the logic to Configurator later?
+  // sfp_data_source->updateValues();
   sfp_data_source->UpdateValuesUnsafelyWithoutCacheOrLock();
   return sfp_data_source;
 }

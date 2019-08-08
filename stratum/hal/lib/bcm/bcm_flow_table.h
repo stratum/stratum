@@ -18,6 +18,10 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_FLOW_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_FLOW_TABLE_H_
 
+#include <utility>
+#include <string>
+#include <algorithm>
+
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"

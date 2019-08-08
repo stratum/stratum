@@ -262,7 +262,7 @@ TEST_F(P4TableMapperTest, PushForwardingPipelineConfigReboot) {
   EXPECT_THAT(status.error_message(), HasSubstr("require a reboot"));
 }
 
-// TODO: Many of the tests below that expect ERR_OPER_NOT_SUPPORTED
+// TODO(unknown): Many of the tests below that expect ERR_OPER_NOT_SUPPORTED
 // need to expect status.ok() once P4TableMapper is complete.
 
 // Tests mapping of an exact field with U64 value conversion when table type is
@@ -717,7 +717,7 @@ TEST_F(P4TableMapperTest, TestTableActionDropNotGreen) {
 }
 
 // Tests mapping of an action with a color-based header field assignment.
-// TODO: Update this test when the mapping operation is supported.
+// TODO(unknown): Update this test when the mapping operation is supported.
 TEST_F(P4TableMapperTest, TestTableActionAssignWhenGreen) {
   ASSERT_OK(p4_table_mapper_->PushForwardingPipelineConfig(
       forwarding_pipeline_config_));

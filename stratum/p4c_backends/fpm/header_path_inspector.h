@@ -22,8 +22,8 @@
 // type h_t, the HeaderPathInspector output includes the strings "p.h" for the
 // path name (inclusive of the header name "h") and the type of h itself, "h_t".
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_PATH_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_PATH_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_HEADER_PATH_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_HEADER_PATH_INSPECTOR_H_
 
 #include <deque>
 #include <map>
@@ -38,7 +38,7 @@ namespace p4c_backends {
 // Typical usage is to construct a HeaderPathInspector, call the Inspect
 // method with the PathExpression of interest, and then use the output provided
 // by the path_to_header_type_map accessor.
-// TODO: Given current usage where SwitchP4cBackend accumulates output
+// TODO(unknown): Given current usage where SwitchP4cBackend accumulates output
 // from multiple HeaderPathInspector instances, it may be more optimum to allow
 // the Inspect method to run repeatedly in one HeaderPathInspector instance.
 class HeaderPathInspector : public Inspector {
@@ -150,4 +150,4 @@ class HeaderPathInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HEADER_PATH_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_HEADER_PATH_INSPECTOR_H_

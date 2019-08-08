@@ -21,7 +21,7 @@
 #include "control_stubs.p4"
 #include "simple_headers.p4"
 
-// TODO: Given recent instability in the P4 checksum API and
+// TODO(unknown): Given recent instability in the P4 checksum API and
 // likely additional turbulence through PSA, consider moving these tests
 // to some other control.
 // The checksum verify control is overloaded to test an unsupported comparison

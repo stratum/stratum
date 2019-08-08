@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/posix_error_space.h"

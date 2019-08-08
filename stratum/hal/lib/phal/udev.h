@@ -18,11 +18,12 @@
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_H_
 
+#include <libudev.h>
+
 #include <memory>
 #include <string>
 #include <utility>
 
-#include <libudev.h>
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/udev_interface.h"

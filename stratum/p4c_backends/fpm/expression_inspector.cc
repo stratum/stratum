@@ -57,7 +57,7 @@ bool ExpressionInspector::preorder(const IR::Member* member) {
     value_.set_source_header_name(field_inspector.field_name());
     value_valid_ = true;
   } else if (member->type->is<IR::Type_Enum>()) {
-    // TODO: Add support here to handle enum values.
+    // TODO(unknown): Add support here to handle enum values.
     LOG(WARNING) << "Ignoring assignment from IR::Member Type_Enum - "
                  << inspect_expression_->srcInfo.toBriefSourceFragment();
   } else {
@@ -74,7 +74,7 @@ bool ExpressionInspector::preorder(const IR::Member* member) {
 // violated.
 bool ExpressionInspector::preorder(const IR::PathExpression* path) {
   VLOG(1) << "preorder PathExpression " << path->toString();
-  // TODO: The bmv2 backend's ExpressionConverter now does a ref_map_
+  // TODO(unknown): The bmv2 backend's ExpressionConverter now does a ref_map_
   // declaration lookup on the path and verifies that it really is an
   // IR::Parameter.
   value_.set_parameter_name(path->toString());

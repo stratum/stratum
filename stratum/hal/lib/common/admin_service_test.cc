@@ -16,6 +16,7 @@
 
 #include <grpc++/grpc++.h>
 #include <memory>
+#include <string>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
@@ -141,7 +142,7 @@ TEST_P(AdminServiceTest, RebootColdSuccess) {
   ::gnoi::system::RebootResponse resp;
   ASSERT_OK(admin_service_->Setup(false));
 
-  req.set_delay(1000000); // 1ms
+  req.set_delay(1000000);  // 1ms
   req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
@@ -164,7 +165,7 @@ TEST_P(AdminServiceTest, CancelReboot) {
   ::gnoi::system::RebootResponse resp;
   ASSERT_OK(admin_service_->Setup(false));
 
-  req.set_delay(5000000); // 5ms
+  req.set_delay(5000000);  // 5ms
   req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
@@ -187,7 +188,7 @@ TEST_P(AdminServiceTest, CancelReboot) {
   ASSERT_OK(admin_service_->Teardown());
 }
 
-TEST_P(AdminServiceTest, RebootUnknownFail){
+TEST_P(AdminServiceTest, RebootUnknownFail) {
   ::grpc::ClientContext context;
   ::gnoi::system::RebootRequest req;
   ::gnoi::system::RebootResponse resp;
@@ -201,7 +202,7 @@ TEST_P(AdminServiceTest, RebootUnknownFail){
   EXPECT_TRUE(status.error_code() == ::grpc::StatusCode::INVALID_ARGUMENT);
 }
 
-TEST_P(AdminServiceTest, RebootStatusInactiveSuccess){
+TEST_P(AdminServiceTest, RebootStatusInactiveSuccess) {
   ::grpc::ClientContext context;
   ::gnoi::system::RebootStatusRequest req;
   ::gnoi::system::RebootStatusResponse resp;
@@ -209,8 +210,8 @@ TEST_P(AdminServiceTest, RebootStatusInactiveSuccess){
 
   stub_->RebootStatus(&context, req, &resp);
   EXPECT_TRUE(!resp.active());
-  EXPECT_TRUE(resp.wait() == 0);
-  EXPECT_TRUE(resp.when() == 0);
+  EXPECT_EQ(resp.wait(), 0);
+  EXPECT_EQ(resp.when(), 0);
   EXPECT_TRUE(resp.reason().empty());
 
   // cleanup
@@ -551,6 +552,7 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
   EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_))
   .Times(0);
 
+//  NOLINTNEXTLINE
   EXPECT_CALL(*(fs_helper_.get()), StringToFile(::testing::_, ::testing::_, ::testing::_))
   .Times(0);
 

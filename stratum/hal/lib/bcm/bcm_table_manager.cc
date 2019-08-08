@@ -149,7 +149,7 @@ BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
           {P4_FIELD_TYPE_IPV4_PROTO, BcmField::IP_PROTO_NEXT_HDR},
           {P4_FIELD_TYPE_IPV4_DIFFSERV, BcmField::IP_DSCP_TRAF_CLASS},
           {P4_FIELD_TYPE_NW_TTL, BcmField::IP_TTL_HOP_LIMIT},
-          // TODO: Use BcmField::IPV6_SRC & BcmField::IPV6_DST if
+          // TODO(unknown): Use BcmField::IPV6_SRC & BcmField::IPV6_DST if
           // prefix length > 64 bits or if this is not an ACL table. Requires a
           // refactor of this code.
           {P4_FIELD_TYPE_IPV6_SRC, BcmField::IPV6_SRC_UPPER_64},
@@ -335,7 +335,7 @@ BcmTableManager::~BcmTableManager() {}
   port_id_to_logical_port_ = port_id_to_logical_port;
   trunk_id_to_trunk_port_ = trunk_id_to_trunk_port;
 
-  // TODO: You are not done yet. You need to make sure any change in
+  // TODO(unknown): You are not done yet. You need to make sure any change in
   // the port maps (e.g. due to change in the flex ports) are reflected in the
   // programmed flows and groups as well.
 
@@ -358,13 +358,13 @@ BcmTableManager::~BcmTableManager() {}
 
 ::util::Status BcmTableManager::PushForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
-  // TODO: Implement this function if needed.
+  // TODO(unknown): Implement this function if needed.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmTableManager::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
-  // TODO: Implement this function if needed.
+  // TODO(unknown): Implement this function if needed.
   return ::util::OkStatus();
 }
 
@@ -431,7 +431,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       continue;
     }
     auto* bcm_field = bcm_flow_entry->add_fields();
-    RETURN_IF_ERROR_WITH_APPEND(MappedFieldToBcmField(bcm_table_type, field, bcm_field))
+    RETURN_IF_ERROR_WITH_APPEND(MappedFieldToBcmField(bcm_table_type, field,
+      bcm_field))
         << common_flow_entry_string;
     if (field.type() == P4_FIELD_TYPE_VRF) {
       has_vrf_field = true;
@@ -586,8 +587,8 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
 //     if (!condition.second) {
 //       // TODO(richardyu): BcmSdkWrapper does not currently support negative
 //       // checks. We also need to add logic to prune overlapping
-//       // conditions during table creation (e.g. !IPv4 & IPv6 should only report
-//       // IPv6).
+//       // conditions during table creation (e.g. !IPv4 & IPv6 should only
+//       // report IPv6).
 //       continue;
 //     }
 //     BcmField bcm_field;
@@ -619,7 +620,8 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
 //         break;
 //       case P4_HEADER_ICMP:
 //         bcm_field.set_type(BcmField::IP_PROTO_NEXT_HDR);
-//         if (conditions.count(P4_HEADER_IPV6) && conditions.at(P4_HEADER_IPV6)) {
+//         if (conditions.count(P4_HEADER_IPV6) &&
+//                           conditions.at(P4_HEADER_IPV6)) {
 //           bcm_field.mutable_value()->set_u32(kIpProtoIPv6Icmp);
 //         } else {
 //           bcm_field.mutable_value()->set_u32(kIpProtoIcmp);
@@ -936,17 +938,17 @@ namespace {
   uint32 table_id = table_entry.table_id();
 
   auto statusor = GetMutableFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
     LOG(ERROR) << "Could not find table " << table_id << ".";
     return statusor.status();
-  } 
+  }
   BcmFlowTable* table = statusor.ConsumeValueOrDie();
   auto statusor2 = table->ModifyEntry(table_entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
-    LOG(ERROR) << "Failed to update flow " 
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
+    LOG(ERROR) << "Failed to update flow "
                << table_entry.ShortDebugString() << ".";
     return statusor2.status();
-  } 
+  }
   ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
 
   // Update the flow_ref_count for the old/new member or group.
@@ -981,16 +983,17 @@ namespace {
   uint32 table_id = table_entry.table_id();
 
   auto statusor = GetMutableFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
     LOG(ERROR) << "Could not find table " << table_id << ".";
     return statusor.status();
-  } 
+  }
   BcmFlowTable* table = statusor.ConsumeValueOrDie();
   auto statusor2 = table->DeleteEntry(table_entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
-    LOG(ERROR) << "Failed to delete flow " << table_entry.ShortDebugString() << ".";
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
+    LOG(ERROR) << "Failed to delete flow " << table_entry.ShortDebugString()
+    << ".";
     return statusor2.status();
-  } 
+  }
   ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
 
   // Update the flow_ref_count for the member or group.
@@ -1024,16 +1027,17 @@ namespace {
   }
 
   auto statusor = GetMutableFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
     LOG(ERROR) << "Could not find table " << table_id << ".";
     return statusor.status();
-  } 
+  }
   BcmFlowTable* table = statusor.ConsumeValueOrDie();
   auto statusor2 = table->Lookup(table_entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
-    LOG(ERROR) << "Failed to find flow " << table_entry.ShortDebugString() << ".";
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
+    LOG(ERROR) << "Failed to find flow " << table_entry.ShortDebugString()
+    << ".";
     return statusor2.status();
-  } 
+  }
   ::p4::v1::TableEntry modified_entry = statusor2.ConsumeValueOrDie();
 
   *modified_entry.mutable_meter_config() = meter.config();
@@ -1240,7 +1244,7 @@ namespace {
           BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
         int port = member_nexthop_info->bcm_port;
         // std::unorderd_set doesn't have a ContainsKey
-        //if (!gtl::ContainsKey(ports, port)) {
+        // if (!gtl::ContainsKey(ports, port)) {
         if (!ports.contains(port)) {
           auto* group_ids = gtl::FindOrNull(port_to_group_ids_, port);
           if (!group_ids) {
@@ -1347,7 +1351,7 @@ BcmTableManager::FillBcmMultipathNexthopsWithPort(uint32 port_id) const {
 ::util::StatusOr<std::set<uint32>> BcmTableManager::GetGroupsForMember(
     uint32 member_id) const {
   std::set<uint32> group_ids = {};
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return group_ids;
 }
 
@@ -1443,10 +1447,10 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
   const BcmFlowTable* table;
 
   auto statusor = GetConstantFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
     LOG(ERROR) << "Could not find table " << table_id << " to delete.";
     return statusor.status();
-  } 
+  }
   table = statusor.ConsumeValueOrDie();
   std::vector<::p4::v1::TableEntry> entries;
   for (const auto& entry : *table) {
@@ -1535,18 +1539,18 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
     const ::p4::v1::TableEntry& entry) const {
 
   auto statusor = GetConstantFlowTable(entry.table_id());
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) { 
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
     LOG(ERROR) << "Could not find table " << entry.table_id() << ".";
     return statusor.status();
-  } 
+  }
   const BcmFlowTable* table = statusor.ConsumeValueOrDie();
   auto statusor2 = table->Lookup(entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) { 
+  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
     LOG(ERROR) << "Table " << entry.table_id()
                << " does not contain a matching flow for "
                << entry.ShortDebugString() << ".";
     return statusor2.status();
-  } 
+  }
   ::p4::v1::TableEntry lookup = statusor2.ConsumeValueOrDie();
 
   return lookup;
@@ -1763,7 +1767,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
 //        CPU_QUEUE_ID +    CPU EGRESS_PORT + Any DROP + No CLONE
 //   Error
 //     All other cases.
-// TODO: The clone port (P4_FIELD_TYPE_CLONE_PORT) is a recent
+// TODO(unknown): The clone port (P4_FIELD_TYPE_CLONE_PORT) is a recent
 // addition to Stratum P4 programs.  For the current implementation that
 // expects all cloning actions to have a CPU target, it provides no additional
 // information.  After evolution to PSA, it won't exist - PSA replaces it
@@ -1853,7 +1857,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
       copy_colors.erase(color);
     }
   } else if (send_to_cpu) {
-    // TODO: This is now a punt table feature in recent Stratum
+    // TODO(unkown): This is now a punt table feature in recent Stratum
     // P4 programs.  A cloned and metered copy of the packet goes to the CPU
     // while the original ingress packet gets dropped.  It needs to be supported
     // to comply with the latest P4 specs.

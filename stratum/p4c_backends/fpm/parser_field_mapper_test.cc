@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
@@ -908,7 +909,7 @@ TEST_F(ParserFieldMapperTest, TestNonExtractedHeaderOuterInner) {
       p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
-// TODO: Coverage is needed for normalization of P4 parser states
+// TODO(unknown): Coverage is needed for normalization of P4 parser states
 // using multiple fields, either comma-separated or via P4 "concat" operator.
 
 // This set of parameters tests some normal subfield combinations.
@@ -923,8 +924,7 @@ INSTANTIATE_TEST_SUITE_P(
         SubFieldTestParam{"parse_l3_protocol_2", -1, std::vector<int>{2, 0, 3}},
         SubFieldTestParam{"parse_l3_protocol_2", -1,
                           std::vector<int>{5, 0, 2, 0}},
-        SubFieldTestParam{"parse_l3_protocol_2", -1, std::vector<int>{4, 3}}
-    ));
+        SubFieldTestParam{"parse_l3_protocol_2", -1, std::vector<int>{4, 3}}));
 
 // This set of parameters tests various failures to match on subfields.
 INSTANTIATE_TEST_SUITE_P(
@@ -938,8 +938,7 @@ INSTANTIATE_TEST_SUITE_P(
         SubFieldTestParam{"parse_l3_protocol_2", 4, std::vector<int>{2, 0}},
         SubFieldTestParam{"parse_l3_protocol_2", 4, std::vector<int>{2, 0, 3}},
         SubFieldTestParam{"parse_l3_protocol_2", 5, std::vector<int>{2, 0, 3}},
-        SubFieldTestParam{"parse_l3_protocol_2", 9, std::vector<int>{5, 3}}
-    ));
+        SubFieldTestParam{"parse_l3_protocol_2", 9, std::vector<int>{5, 3}}));
 
 }  // namespace p4c_backends
 }  // namespace stratum

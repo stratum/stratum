@@ -20,6 +20,7 @@ extern "C" {
 }
 
 #include <memory>
+#include <utility>
 
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"

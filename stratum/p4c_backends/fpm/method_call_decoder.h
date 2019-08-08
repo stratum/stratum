@@ -24,8 +24,8 @@
 // the statement or expression, and then evaluate the output to see whether
 // it is valid within the current control or action context.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METHOD_CALL_DECODER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METHOD_CALL_DECODER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_METHOD_CALL_DECODER_H_
+#define STRATUM_P4C_BACKENDS_FPM_METHOD_CALL_DECODER_H_
 
 #include <string>
 
@@ -100,7 +100,7 @@ class MethodCallDecoder {
   bool decode_done_;
 
   // The Decode method stores its output in these members.
-  // TODO: Consolidate both types of output into a single
+  // TODO(unknown): Consolidate both types of output into a single
   // hal::P4ActionDescriptor.
   hal::P4ActionDescriptor::P4ActionInstructions method_op_;
   hal::P4ActionDescriptor::P4TunnelAction tunnel_op_;
@@ -113,4 +113,4 @@ class MethodCallDecoder {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_METHOD_CALL_DECODER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_METHOD_CALL_DECODER_H_

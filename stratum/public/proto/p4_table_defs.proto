@@ -42,12 +42,12 @@ package stratum;
 // to P4FieldType.  Although this value is defined here, it will only be
 // referenced in the mapping logic for vendor A's HAL implementation.
 //
-// TODO: Another approach would be to maintain generic tables, fields,
+// TODO(unknown): Another approach would be to maintain generic tables, fields,
 // and actions here.  If the generic P4 mapper can't resolve an object, it
 // does what it can, then hands off the table update to a platform-specific
 // mapper.
 
-// TODO: More table types are needed.
+// TODO(unknown): More table types are needed.
 enum P4TableType {
   P4_TABLE_UNKNOWN = 0;        // Default.
   P4_TABLE_L3_IP = 1;          // Common table type for L3 IPv4/v6, host/LPM.
@@ -201,7 +201,7 @@ enum P4ActionOp {
   P4_ACTION_OP_NOP = 2;      // No action on table hit.
   P4_ACTION_OP_CLONE = 3;    // Action replicates a packet.
 
-  // TODO: This enum currently contains only primitives needed
+  // TODO(unknown): This enum currently contains only primitives needed
   // by tor.p4.  The list needs to evolve with P4 spec changes.
 }
 

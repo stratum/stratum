@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
+#include <map>
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/flat_hash_map.h"

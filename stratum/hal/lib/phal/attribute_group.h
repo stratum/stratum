@@ -21,6 +21,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "google/protobuf/message.h"
 #include "stratum/glue/status/status.h"
@@ -217,7 +218,8 @@ class AttributeGroupQuery {
       : root_group_(root_group), threadpool_(threadpool) {
     auto descriptor = root_group->AcquireReadable()->GetDescriptor();
     const google::protobuf::Message* prototype_message =
-        google::protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
+    google::protobuf::MessageFactory::generated_factory()->
+    GetPrototype(descriptor);
     CHECK(prototype_message != nullptr);
     query_result_.reset(prototype_message->New());
   }
@@ -229,7 +231,8 @@ class AttributeGroupQuery {
   // Executes this query, and writes all of the values read from the attribute
   // database into the given output protobuf. The passed protobuf must be of the
   // same type used for the descriptor of root_group.
-  ::util::Status Get(google::protobuf::Message* out) LOCKS_EXCLUDED(query_lock_);
+  ::util::Status Get(google::protobuf::Message* out)
+    LOCKS_EXCLUDED(query_lock_);
   ::util::Status Subscribe(std::unique_ptr<ChannelWriter<PhalDB>> subscriber,
                            absl::Duration polling_interval)
       LOCKS_EXCLUDED(query_lock_);

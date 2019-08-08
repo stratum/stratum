@@ -49,8 +49,8 @@
 // of at least one table apply prior to table N evaluated to false, so
 // table N was never applied.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SIMPLE_HIT_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SIMPLE_HIT_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_SIMPLE_HIT_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_SIMPLE_HIT_INSPECTOR_H_
 
 #include <set>
 #include <string>
@@ -152,4 +152,4 @@ class SimpleHitInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SIMPLE_HIT_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_SIMPLE_HIT_INSPECTOR_H_

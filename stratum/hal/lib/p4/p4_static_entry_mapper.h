@@ -43,7 +43,7 @@ namespace stratum {
 namespace hal {
 
 // Forward reference for closely-coupled class, breaking circular dependency.
-// TODO: There are a couple of potential ways to resolve this,
+// TODO(unknown): There are a couple of potential ways to resolve this,
 // depending on future P4StaticEntryMapper implementation for tunneling.
 // At present, P4StaticEntryMapper only depends on IsTableStageHidden from
 // P4TableMapper.  This could be reworked to pass in a set of
@@ -66,7 +66,7 @@ class P4StaticEntryMapper {
   // P4StaticEntryMapper does not provide a verify method.  It depends on
   // P4ConfigVerifier to do pre-push verification of static entries relative
   // to other parts of the P4PipelineConfig.
-  // TODO: It may be beneficial for P4ConfigVerifier to be able to
+  // TODO(unknown): It may be beneficial for P4ConfigVerifier to be able to
   // call a Verify method in this class for assistance.
 
   // These two methods support P4PipelineConfig pushes.  The role of these
@@ -122,7 +122,7 @@ class P4StaticEntryMapper {
 
   // This P4 WriteRequest contains the subset of entries that apply only
   // to hidden non-physical tables.
-  // TODO: These probably need to be known by p4_table_mapper_,
+  // TODO(unknown): These probably need to be known by p4_table_mapper_,
   // but this form facilitates easier change detection during P4PipelineConfig
   // pushes.
   ::p4::v1::WriteRequest hidden_static_entries_;

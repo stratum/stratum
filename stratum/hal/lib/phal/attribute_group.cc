@@ -204,7 +204,7 @@ class AttributeGroupInternal : public AttributeGroup,
                      ThreadpoolInterface* threadpool) override;
   void UnregisterQuery(AttributeGroupQuery* query) override;
 
-  // TODO: move access_lock_ out of the public section.
+  // TODO(unknown): move access_lock_ out of the public section.
   absl::Mutex access_lock_;
 
  private:

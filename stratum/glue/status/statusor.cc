@@ -18,6 +18,7 @@
 #include "stratum/glue/status/statusor.h"
 
 #include <errno.h>
+#include <algorithm>
 
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/posix_error_space.h"
@@ -30,7 +31,7 @@ namespace internal {
       "Status::OK is not a valid constructor argument to StatusOr<T>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
-  // TODO: Change this to ::util::error::INVALID_ARGUMENT.
+  // TODO(unknown): Change this to ::util::error::INVALID_ARGUMENT.
   return ::util::PosixErrorToStatus(EINVAL, kMessage);
 }
 
@@ -39,7 +40,7 @@ namespace internal {
       "NULL is not a valid constructor argument to StatusOr<T*>";
   LOG(DFATAL) << kMessage;
   // In optimized builds, we will fall back on an EINVAL status.
-  // TODO: Change this to ::util::error::INVALID_ARGUMENT.
+  // TODO(unknown): Change this to ::util::error::INVALID_ARGUMENT.
   return ::util::PosixErrorToStatus(EINVAL, kMessage);
 }
 

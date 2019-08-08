@@ -341,7 +341,7 @@ bool IsAdminStateEnabled(const AdminState& admin_state) {
 }
 
 std::string ConvertMediaTypeToString(const MediaType& type) {
-  switch(type) {
+  switch (type) {
     case MEDIA_TYPE_SFP:
       return "SFP";
     case MEDIA_TYPE_CFP_COPPER:

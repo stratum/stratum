@@ -20,6 +20,7 @@
 #include <ostream>  // NOLINT
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -372,7 +373,7 @@ inline matchers_internal::StatusIsMatcher StatusIs(
 #define ASSERT_CONCAT1(prefix, postfix) prefix ## postfix
 #define ASSERT_CONCAT(prefix, postfix) ASSERT_CONCAT1(prefix, postfix)
 #define ASSERT_UNIQUE(prefix) ASSERT_CONCAT(prefix, __LINE__)
-    
+
 #define ASSERT_OK_AND_ASSIGN(lhs, statement) \
   auto ASSERT_UNIQUE(result) = statement; \
   ASSERT_OK(ASSERT_UNIQUE(result)); \

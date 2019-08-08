@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <tuple>
+#include <string>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"

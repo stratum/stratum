@@ -51,7 +51,7 @@ DEFINE_int32(knet_max_num_packets_to_read_at_once, 8,
              "Determines the number of packets we try to read at once as soon "
              "as the socket FD becomes available.");
 
-// TODO: I really really wish we could use google3 thread libraries.
+// TODO(unknown): I really really wish we could use google3 thread libraries.
 namespace stratum {
 namespace hal {
 namespace bcm {
@@ -134,7 +134,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
                        // to correct ID in the messages/errors.
 
   // Simulation mode does not support KNET.
-  // TODO: Find a way to do packet I/O in sim mode.
+  // TODO(unknown): Find a way to do packet I/O in sim mode.
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped pushing config to BcmPacketioManager for node "
                  << node_id_ << " in sim mode.";
@@ -654,7 +654,7 @@ int GetWithDefault(int value, int def) { return value > 0 ? value : def; }
 
 ::util::Status BcmPacketioManager::StartTx(
     const GoogleConfig::BcmTxConfig& bcm_tx_config) const {
-  // TODO: Seems like for KNET there is nothing to configure for TX.
+  // TODO(unknown): Seems like for KNET there is nothing to configure for TX.
   // Investigate this more.
   return ::util::OkStatus();
 }
@@ -724,7 +724,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     KnetIntfRxThreadData* data =
         new KnetIntfRxThreadData(node_id_, entry.first, this);
     knet_intf_rx_thread_data_.push_back(data);
-    // TODO: How about some thread attributes. Do we need any?
+    // TODO(unknown): How about some thread attributes. Do we need any?
     int ret = pthread_create(&entry.second.rx_thread_id, nullptr,
                              &BcmPacketioManager::KnetIntfRxThreadFunc, data);
     if (ret != 0) {
@@ -1244,7 +1244,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketInMetadata(
         mapped_packet_metadata, packet->add_metadata()));
   }
-  // TODO: Controller has not defined any metadata for CoS yet. Enable
+  // TODO(unknown): Controller has not defined any metadata for CoS yet. Enable
   // this after this is done.
   /*
   if (meta.cos > 0) {

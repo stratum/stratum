@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <memory>
 
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"

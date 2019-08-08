@@ -17,6 +17,7 @@
 #include "stratum/p4c_backends/fpm/tunnel_type_mapper.h"
 
 #include <string>
+#include <tuple>
 
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"

@@ -278,7 +278,7 @@ filegroup(
     srcs = glob(["*.proto"]),
 )
 
-# TODO: Restore this rule if circular dependencies between
+# TODO(unknown): Restore this rule if circular dependencies between
 # p4_static_entry_mapper and p4_table_mapper can be resolved.
 #stratum_cc_library(
 #    name = "p4_static_entry_mapper",

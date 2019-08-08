@@ -14,7 +14,7 @@
 
 # This file contains annotation map data for match fields and packet IO metadata
 # fields that the p4c backend expects to find when compiling tor.p4.
-# TODO: Will all or part of this be common with other P4 specs?
+# TODO(unknown): Will all or part of this be common with other P4 specs?
 field_addenda_map {
   key: "standard_metadata.egress_port"
   value {
@@ -46,7 +46,7 @@ field_addenda_map {
   }
 }
 
-# TODO: Convert these to @switchstack annotations in P4 programs.
+# TODO(unknown): Convert these to @switchstack annotations in P4 programs.
 field_addenda_map {
   key: "local_metadata.class_id"
   value {

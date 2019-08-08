@@ -17,8 +17,8 @@
 // This file declares a subclass of P4cFrontMidInterface that works with the
 // real p4c frontend and midend passes.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_REAL_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_REAL_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_REAL_H_
+#define STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_REAL_H_
 
 #include <functional>
 #include <memory>
@@ -91,4 +91,4 @@ class P4cFrontMidReal : public P4cFrontMidInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_REAL_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_P4C_FRONT_MID_REAL_H_

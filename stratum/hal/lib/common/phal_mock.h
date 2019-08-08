@@ -18,6 +18,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 
+#include <memory>
+
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "gmock/gmock.h"
 
@@ -41,8 +43,8 @@ class PhalMock : public PhalInterface {
   MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
                                                LedColor color, LedState state));
   MOCK_METHOD3(RegisterSfpConfigurator,
-	       ::util::Status(int slot, int port,
-			      ::stratum::hal::phal::SfpConfigurator* configurator));
+    :util::Status(int slot, int port,
+      ::stratum::hal::phal::SfpConfigurator* configurator));
 };
 
 }  // namespace hal

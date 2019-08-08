@@ -21,8 +21,8 @@
 // subclass that contains the names of the temporary hit variable and the
 // applied table.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIT_ASSIGN_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIT_ASSIGN_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_HIT_ASSIGN_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_HIT_ASSIGN_MAPPER_H_
 
 #include <string>
 
@@ -77,4 +77,4 @@ class HitAssignMapper : public Transform {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_HIT_ASSIGN_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_HIT_ASSIGN_MAPPER_H_

@@ -39,7 +39,7 @@ import "stratum/public/proto/p4_table_defs.proto";
 // fields, although a typical expression consists of only one field.  Given
 // a P4 parser state like this, which selects on two 8-bit header fields:
 //
-//  TODO: Convert this example to P4_16.
+//  TODO(unknown): Convert this example to P4_16.
 //  parser parse1 {
 //    extract(my_header);
 //    return select(latest.f1, latest.f2) {
@@ -172,7 +172,7 @@ message ParserKeySetValue {
 //  next_state - names the next ParserState transition upon matching this case.
 //  is_tunnel_entry - true when the transition leads to a state that expects
 //      an encapsulated header.
-// TODO: Consider folding is_default into ParserKeySetValue.
+// TODO(unknown): Consider folding is_default into ParserKeySetValue.
 message ParserSelectCase {
   repeated ParserKeySetValue keyset_values = 1;
   bool is_default = 2;

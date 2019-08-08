@@ -61,7 +61,7 @@ void TableMapGenerator::SetFieldAttributes(
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find field " << field_name << " to set attributes";
     return;
   }
@@ -95,7 +95,7 @@ void TableMapGenerator::SetFieldLocalMetadataFlag(
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find field " << field_name
                << " to set local metadata flag";
     return;
@@ -110,7 +110,7 @@ void TableMapGenerator::SetFieldValueSet(
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find field " << field_name
                << " to set value set name";
     return;
@@ -127,7 +127,7 @@ void TableMapGenerator::AddFieldMatch(
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find field " << field_name << " to add match data";
     return;
   }
@@ -150,9 +150,9 @@ void TableMapGenerator::AddFieldMatch(
         "Field name: %s",
         field_name);
   } else if (match_type == p4_model_names.selector_match()) {
-    // TODO: Needs more implementation.
+    // TODO(unknown): Needs more implementation.
   } else {
-    // TODO: Needs more implementation.
+    // TODO(unknown): Needs more implementation.
   }
 
   if (bit_width <= 32) {
@@ -285,7 +285,7 @@ void TableMapGenerator::AddMeterColorAction(
     hal::P4ActionDescriptor::P4MeterColorAction* append_color_action =
         action_descriptor->mutable_color_actions(color_action_index);
     for (const auto& meter_op : color_action.ops()) {
-      // TODO: Should this check for duplication of a meter_op
+      // TODO(unknown): Should this check for duplication of a meter_op
       // that's already present in the action descriptor?
       *(append_color_action->add_ops()) = meter_op;
     }
@@ -336,7 +336,7 @@ void TableMapGenerator::AddTable(const std::string& table_name) {
     new_table.mutable_table_descriptor()->set_type(P4_TABLE_UNKNOWN);
     (*generated_map_->mutable_table_map())[table_name] = new_table;
   } else {
-    // TODO: When this occurs, the entry should be checked to make
+    // TODO(unknown): When this occurs, the entry should be checked to make
     // sure it has a table_descriptor, so it's not a conflict between an action
     // or field name and the table name.  Field and Action adds should do the
     // same thing relative to their descriptor types.
@@ -348,7 +348,7 @@ void TableMapGenerator::SetTableType(const std::string& table_name,
                                      P4TableType type) {
   auto iter = generated_map_->mutable_table_map()->find(table_name);
   if (iter == generated_map_->mutable_table_map()->end()) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find table " << table_name << " to set type";
     return;
   }
@@ -359,7 +359,7 @@ void TableMapGenerator::SetTableStaticEntriesFlag(
     const std::string& table_name) {
   auto iter = generated_map_->mutable_table_map()->find(table_name);
   if (iter == generated_map_->mutable_table_map()->end()) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find table " << table_name
                << " to set static entry flag";
     return;
@@ -371,7 +371,7 @@ void TableMapGenerator::SetTableValidHeaders(
     const std::string& table_name, const std::set<std::string>& header_names) {
   auto iter = generated_map_->mutable_table_map()->find(table_name);
   if (iter == generated_map_->mutable_table_map()->end()) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find table " << table_name
                << " to set valid headers";
     return;
@@ -406,7 +406,7 @@ void TableMapGenerator::SetHeaderAttributes(
     const std::string& header_name, P4HeaderType type, int32 depth) {
   auto iter = generated_map_->mutable_table_map()->find(header_name);
   if (iter == generated_map_->mutable_table_map()->end()) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Unable to find header " << header_name
                << " to set attributes";
     return;
@@ -445,7 +445,7 @@ hal::P4ActionDescriptor* TableMapGenerator::FindActionDescriptor(
 
   hal::P4TableMapValue& action_entry = iter->second;
   if (!action_entry.has_action_descriptor()) {
-    // TODO: Treat as internal compiler BUG exception?
+    // TODO(unknown): Treat as internal compiler BUG exception?
     LOG(ERROR) << "Missing action descriptor for " << action_name;
     return nullptr;
   }
@@ -459,8 +459,9 @@ int TableMapGenerator::FindColorAction(
   ::google::protobuf::util::MessageDifferencer msg_differencer;
   msg_differencer.set_repeated_field_comparison(
       ::google::protobuf::util::MessageDifferencer::AS_SET);
-  const ::google::protobuf::Descriptor* proto_descriptor = hal::P4ActionDescriptor::
-      P4MeterColorAction::default_instance().GetDescriptor();
+  const ::google::protobuf::Descriptor* proto_descriptor =
+        hal::P4ActionDescriptor::
+                      P4MeterColorAction::default_instance().GetDescriptor();
   msg_differencer.IgnoreField(proto_descriptor->FindFieldByName("ops"));
 
   for (int i = 0; i < action_descriptor.color_actions_size(); ++i) {

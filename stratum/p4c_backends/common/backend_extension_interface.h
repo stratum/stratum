@@ -17,8 +17,8 @@
 // This file declares an interface that runs a platform-specific backend pass
 // as an extension of the third-party p4c compiler.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
+#define STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
 
 #include "p4/config/v1/p4info.pb.h"
 #include "p4/v1/p4runtime.pb.h"
@@ -63,4 +63,4 @@ class BackendExtensionInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_INTERFACE_H_

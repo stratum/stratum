@@ -37,14 +37,14 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 
-//FIXME(boc) not required for Google
+// FIXME(boc) not required for Google
 using absl::kuint128max;
 
 namespace stratum {
 
 #define ARRAYSIZE(a) \
   ((sizeof(a) / sizeof(*(a))) / \
-   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+    static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 
 #define HAVE_SCOPEDMOCKLOG 0
 #define HAVE_FIXEDARRAY 0
@@ -1739,7 +1739,8 @@ TEST(SocketAddressTest, SocketAddressOrdering) {
 
   EXPECT_EQ(6u, sock_addrs.size());
 
-  std::vector<SocketAddress> sorted_sock_addrs(sock_addrs.begin(), sock_addrs.end());
+  std::vector<SocketAddress> sorted_sock_addrs(sock_addrs.begin(),
+                                                sock_addrs.end());
   ASSERT_EQ(6u, sorted_sock_addrs.size());
   EXPECT_EQ(sock_addr0, sorted_sock_addrs[0]);
   EXPECT_EQ(sock_addr3, sorted_sock_addrs[1]);
@@ -1955,8 +1956,8 @@ TEST(IPRangeTest, ToAndFromString4) {
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString5, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString6, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString7, &subnet));
-  //FIXME(boc) there seems to be a behavior difference in open source absl
-  //EXPECT_FALSE(StringToIPRange(kBogusSubnetString8, &subnet));
+  // FIXME(boc) there seems to be a behavior difference in open source absl
+  // EXPECT_FALSE(StringToIPRange(kBogusSubnetString8, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString9, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString10, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString11, &subnet));
@@ -1978,8 +1979,8 @@ TEST(IPRangeTest, ToAndFromString4) {
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString5, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString6, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString7, &subnet));
-  //FIXME(boc) there seems to be a behavior difference in open source absl
-  //EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString8, &subnet));
+  // FIXME(boc) there seems to be a behavior difference in open source absl
+  // EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString8, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString9, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString10, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString11, &subnet));
@@ -2110,8 +2111,8 @@ TEST(IPRangeTest, ToAndFromString6) {
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString5, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString6, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString7, &subnet));
-  //FIXME there seems to be a behavior difference in open source absl
-  //EXPECT_FALSE(StringToIPRange(kBogusSubnetString8, &subnet));
+  // FIXME there seems to be a behavior difference in open source absl
+  // EXPECT_FALSE(StringToIPRange(kBogusSubnetString8, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString9, &subnet));
   EXPECT_FALSE(StringToIPRange(kBogusSubnetString10, &subnet));
   ASSERT_TRUE(StringToIPRange(kSubnetString, NULL));
@@ -2132,8 +2133,8 @@ TEST(IPRangeTest, ToAndFromString6) {
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString5, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString6, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString7, &subnet));
-  //FIXME there seems to be a behavior difference in open source absl
-  //EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString8, &subnet));
+  // FIXME there seems to be a behavior difference in open source absl
+  // EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString8, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString9, &subnet));
   EXPECT_FALSE(StringToIPRangeAndTruncate(kBogusSubnetString10, &subnet));
 }
@@ -2591,7 +2592,8 @@ TEST(IPRangeTest, PacksIPv4AndIPv6Range) {
 
 TEST(IPRangeTest, VerifyPackedStringFormat) {
   std::string ipranges[] = {"0.0.0.0/0", "::/0"};
-  std::string expected_packed[] = {std::string("\xc8", 1), std::string("\x00", 1)};
+  std::string expected_packed[] =
+    {std::string("\xc8", 1), std::string("\x00", 1)};
   for (size_t i = 0; i < ARRAYSIZE(ipranges); ++i) {
     IPRange iprange = StringToIPRangeOrDie(ipranges[i]);
     std::string packed;

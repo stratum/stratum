@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
-
 #include <sys/socket.h>
+#include <sys/epoll.h>
 
 #include <functional>
+#include <string>
 
+#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
@@ -35,7 +35,6 @@
 // #include "util/libcproxy/libcproxy.h"
 // #include "util/libcproxy/libcwrapper.h"
 // #include "util/libcproxy/passthrough_proxy.h"
-#include <sys/epoll.h>
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -61,24 +60,43 @@ namespace {
 
 // FIXME: Implement actual LibcProxy
 class PassthroughLibcProxy {
-  public:
+ public:
     PassthroughLibcProxy() {}
     virtual ~PassthroughLibcProxy() {}
     virtual int close(int fd) { return ::close(fd); }
-    virtual int socket(int domain, int type, int protocol) { return socket(domain, type, protocol); }
-    virtual int setsockopt(int sockfd, int level, int optname, const void* optval, socklen_t optlen) { return setsockopt(sockfd, level, optname, optval, optlen); }
-    virtual int ioctl(int fd, unsigned long int request, void* arg) { return ioctl(fd, request, arg); };
-    virtual int bind(int sockfd, const struct sockaddr* my_addr, socklen_t addrlen) { return bind(sockfd, my_addr, addrlen); }
-    virtual ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags) { return sendmsg(sockfd, msg, flags); }
-    virtual ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags) { return recvmsg(sockfd, msg, flags); }
+    virtual int socket(int domain, int type, int protocol) {
+      return socket(domain, type, protocol);
+    }
+    virtual int setsockopt(int sockfd, int level, int optname,
+      const void* optval, socklen_t optlen) {
+      return setsockopt(sockfd, level, optname, optval, optlen);
+    }
+    virtual int ioctl(int fd, uint64 request, void* arg) {
+      return ioctl(fd, request, arg);
+    }
+    virtual int bind(int sockfd, const struct sockaddr* my_addr,
+      socklen_t addrlen) {
+      return bind(sockfd, my_addr, addrlen);
+    }
+    virtual ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags) {
+      return sendmsg(sockfd, msg, flags);
+    }
+    virtual ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags) {
+      return recvmsg(sockfd, msg, flags);
+    }
     virtual int epoll_create1(int flags) { return epoll_create1(flags); }
-    virtual int epoll_ctl(int efd, int op, int fd, struct epoll_event* event) { return epoll_ctl(efd, op, fd, event); }
-    virtual int epoll_wait(int efd, struct epoll_event* events, int maxevents, int timeout) { return epoll_wait(efd, events, maxevents, timeout); }
+    virtual int epoll_ctl(int efd, int op, int fd, struct epoll_event* event) {
+      return epoll_ctl(efd, op, fd, event);
+    }
+    virtual int epoll_wait(int efd, struct epoll_event* events, int maxevents,
+      int timeout) {
+      return epoll_wait(efd, events, maxevents, timeout);
+    }
     virtual bool ShouldProxyEpollCreate() { return false; }
 };
 
 class LibcWrapper {
-  public:
+ public:
     static void SetLibcProxy(PassthroughLibcProxy* proxy) {}
 };
 
@@ -1115,7 +1133,7 @@ TEST_P(BcmPacketioManagerTest,
 }
 
 TEST_P(BcmPacketioManagerTest, PushChassisConfigFailureForErrorInStartTx) {
-  // TODO: At the moment, there is nothing to configure for TX. Add
+  // TODO(unknown): At the moment, there is nothing to configure for TX. Add
   // test if we add things for StartTx.
 }
 

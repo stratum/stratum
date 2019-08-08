@@ -22,6 +22,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
+#include <set>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -308,7 +310,8 @@ class BcmSdkInterface {
   // L3 intf pointing to a regular port given its (nexthop_mac, port, vlan,
   // router_intf_id).
   virtual ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
-                                                stratum::uint64 nexthop_mac, int port,
+                                                stratum::uint64 nexthop_mac,
+                                                int port,
                                                 int vlan,
                                                 int router_intf_id) = 0;
 

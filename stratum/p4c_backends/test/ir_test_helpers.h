@@ -17,12 +17,14 @@
 // The ir_test_helpers classes provide some common support for p4c_backends
 // unit tests that need the compiler's P4 Internal Representation (IR) as input.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
+#ifndef STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
+#define STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
 
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
+
 #include "stratum/p4c_backends/common/p4c_front_mid_real.h"
 #include "stratum/p4c_backends/common/program_inspector.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
@@ -157,4 +159,4 @@ class IRTestHelperJson {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
+#endif  // STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_

@@ -17,8 +17,8 @@
 // A FieldNameInspector is a p4c Inspector subclass that visits the node
 // hierarchy under various types of IR fields to extract a field name string.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_NAME_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_NAME_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_FIELD_NAME_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_FIELD_NAME_INSPECTOR_H_
 
 #include <string>
 #include <vector>
@@ -53,14 +53,14 @@ class FieldNameInspector : public Inspector {
   // instance.  Upon successful return, the field name is available via the
   // field_name() accessor.  In some cases, additional names may be available
   // via the stacked_header_names() accessor.
-  // TODO: Should this return the name directly?  This requires
+  // TODO(unknown): Should this return the name directly?  This requires
   //                 figuring out how to deal with expressions that the switch
   //                 can't support, such as arithmetic expressions in an
   //                 action assignment.
   void ExtractName(const IR::Expression& expression);
 
   // The postorder overrides below extract various pieces of the field name.
-  // TODO: Do postorder matches for unsupported types need to be
+  // TODO(unknown): Do postorder matches for unsupported types need to be
   //                 added in order to handle syntax errors?
   void postorder(const IR::Member* member) override;
   void postorder(const IR::Type_Stack* stack) override;
@@ -108,4 +108,4 @@ class FieldNameInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_NAME_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_FIELD_NAME_INSPECTOR_H_

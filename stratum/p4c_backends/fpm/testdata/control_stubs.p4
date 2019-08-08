@@ -22,8 +22,8 @@
 
 #include "simple_headers.p4"
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_
+#define STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_
 
 control egress_stub(inout headers hdr, inout test_metadata_t meta,
                     inout standard_metadata_t standard_metadata) {
@@ -47,4 +47,4 @@ control compute_checksum_stub(inout headers hdr, inout test_metadata_t meta) {
   apply {}
 }
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TESTDATA_CONTROL_STUBS_P4_

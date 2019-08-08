@@ -19,6 +19,9 @@ limitations under the License.
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 #include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/container/flat_hash_map.h"
@@ -42,7 +45,7 @@ TEST(MapUtil, Find) {
   EXPECT_EQ("bar", gtl::FindWithDefault(m, "foo", ""));
   EXPECT_EQ("bar", *gtl::FindOrNull(m, "foo"));
   string str;
-  EXPECT_TRUE(m.count("foo") > 0);
+  EXPECT_GT(m.count("foo"), 0);
   EXPECT_EQ(m["foo"], "bar");
 }
 
@@ -82,8 +85,8 @@ class MapUtilSet : public ::testing::Test {
   T collection_;
 };
 using SetTypes = ::testing::Types<
-  std::set<int>, std::unordered_set<int>, ::absl::flat_hash_set<int>, ::absl::node_hash_set<int>
->;
+  std::set<int>, std::unordered_set<int>, ::absl::flat_hash_set<int>,
+  ::absl::node_hash_set<int>>;
 TYPED_TEST_SUITE(MapUtilSet, SetTypes);
 
 TYPED_TEST(MapUtilSet, ContainsKey) {
@@ -104,8 +107,8 @@ class MapUtilMap : public ::testing::Test {
   T collection_;
 };
 using MapTypes = ::testing::Types<
-  std::map<int, string>, std::unordered_map<int, string>, ::absl::flat_hash_map<int, string>, ::absl::node_hash_map<int, string>
->;
+  std::map<int, string>, std::unordered_map<int, string>,
+  ::absl::flat_hash_map<int, string>, ::absl::node_hash_map<int, string>>;
 TYPED_TEST_SUITE(MapUtilMap, MapTypes);
 
 TYPED_TEST(MapUtilMap, ContainsKey) {

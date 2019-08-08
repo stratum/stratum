@@ -81,7 +81,7 @@ control complex_hits(inout headers hdr, inout test_metadata_t meta,
     //      tmp_15 = (meta.smaller_metadata == 0);
     //    if (tmp_15)
     //      meta.smaller_metadata = 1;
-    // TODO: SimpleHitInspector can't currently detect that this is
+    // TODO(unknown): SimpleHitInspector can't currently detect that this is
     // invalid.  It will need to be rejected by the parent TableHitInspector.
     if (hdr.ethernet.isValid()) {
       if (!table1.apply().hit && meta.smaller_metadata == 0) {

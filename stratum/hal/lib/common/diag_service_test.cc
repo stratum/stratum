@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/common/diag_service.h"
 
 #include <grpc++/grpc++.h>
 #include <memory>
+#include <string>
 
+#include "stratum/hal/lib/common/diag_service.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"

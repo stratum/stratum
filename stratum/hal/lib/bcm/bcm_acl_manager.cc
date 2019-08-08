@@ -16,6 +16,8 @@
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 
 #include <iterator>
+#include <utility>
+#include <set>
 
 #include "gflags/gflags.h"
 #include "stratum/hal/lib/bcm/acl_table.h"
@@ -178,7 +180,7 @@ BcmAclManager::~BcmAclManager() {}
   p4_pipeline_config_ = p4_pipeline_config;
 
   // Clean all the ACL tables before applying the new config.
-  // TODO: This should be replaced with a reconcile if the new
+  // TODO(unknown): This should be replaced with a reconcile if the new
   // pipeline config is a superset of the old one.
   RETURN_IF_ERROR(ClearAllAclTables());
 
@@ -191,7 +193,7 @@ BcmAclManager::~BcmAclManager() {}
     RETURN_IF_ERROR_WITH_APPEND(result.status())
         << " Failed to set up acl pipelines for control: " << control.name()
         << ", type: " << control.type() << ".";
-    auto pat = result.ValueOrDie(); 
+    auto pat = result.ValueOrDie();
     physical_acl_tables.insert(physical_acl_tables.end(),
                                make_move_iterator(pat.begin()),
                                make_move_iterator(pat.end()));
@@ -232,12 +234,12 @@ BcmAclManager::~BcmAclManager() {}
 
 ::util::Status BcmAclManager::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
-  // TODO: Implement if needed.
+  // TODO(unknown): Implement if needed.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmAclManager::Shutdown() {
-  // TODO: Implement if needed.
+  // TODO(unknown): Implement if needed.
   return ::util::OkStatus();
 }
 
@@ -255,7 +257,7 @@ BcmAclManager::~BcmAclManager() {}
       entry, ::p4::v1::Update::INSERT, &bcm_flow_entry))
       << " Failed to insert table entry: " << entry.ShortDebugString() << ".";
 
-  // TODO: Implement stat coloring options.
+  // TODO(unknown): Implement stat coloring options.
   auto bcm_result =
       bcm_sdk_interface_->InsertAclFlow(unit_, bcm_flow_entry, true, false);
   RETURN_IF_ERROR_WITH_APPEND(bcm_result.status())
@@ -496,7 +498,7 @@ BcmAclManager::GetTableMatchTypes(const AclTable& table) const {
     BcmField::Type bcm_type =
         bcm_table_manager_->P4FieldTypeToBcmFieldType(field.type());
     if (bcm_type == BcmField::UNKNOWN) {
-      // TODO: Once we get full capability, this should be changed to
+      // TODO(unknown): Once we get full capability, this should be changed to
       // return an INVALID_PARAM error.
       LOG(WARNING) << "Table " << table.Id()
                    << " contains unsupported match field: "

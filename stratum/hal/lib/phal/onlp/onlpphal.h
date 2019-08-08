@@ -37,7 +37,8 @@ namespace onlp {
 
 class OnlpPhal;
 
-// TODO: We don't support multiple slot for now, use slot 1 as default slot.
+// TODO(Yi-Tseng): We don't support multiple slot for now,
+// use slot 1 as default slot.
 constexpr int kDefaultSlot = 1;
 
 // Implements a callback for status changes on ONLP SFPs.
@@ -97,7 +98,7 @@ class OnlpPhal : public PhalInterface {
   ::util::Status WriteTransceiverEvent(const TransceiverEvent& event);
 
   // Handle a sfp status change event
-  ::util::Status HandleTransceiverEvent(TransceiverEvent& event);
+  ::util::Status HandleTransceiverEvent(const TransceiverEvent& event);
 
  private:
   friend class OnlpPhalCli;
@@ -125,7 +126,7 @@ class OnlpPhal : public PhalInterface {
 
   // One time initialization of the data sources. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
-  // TODO: move it to OnlpConfigurator
+  // TODO(unknown): move it to OnlpConfigurator
   ::util::Status InitializeOnlpOids() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // Internal mutex lock for protecting the internal maps and initializing the

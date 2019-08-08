@@ -27,11 +27,11 @@
 // limitations under the License.
 
 
-#include "stratum/hal/lib/common/config_monitoring_service.h"
-
 #include <grpcpp/grpcpp.h>
 #include <memory>
+#include <string>
 
+#include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/text_format.h"
 #include "stratum/glue/status/status_test_util.h"
@@ -51,7 +51,6 @@
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
 #include "openconfig/openconfig.pb.h"
-#include <google/protobuf/text_format.h>
 
 DECLARE_string(chassis_config_file);
 DECLARE_string(test_tmpdir);
@@ -1009,9 +1008,9 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
   ASSERT_OK(config_monitoring_service_->Teardown());
 }
 
-//FIXME(boc) google only
+// FIXME(boc) google only
 // Unsuccessful DoSet() execution for simple leaf gNMI SET UPDATE message.
-//TEST_P(ConfigMonitoringServiceTest, GnmiSetRootUpdate) {
+// TEST_P(ConfigMonitoringServiceTest, GnmiSetRootUpdate) {
 //  if (mode_ == OPERATION_MODE_COUPLED) return;
 //
 //  // Prepare and push configuration. The method under test requires the
@@ -1042,11 +1041,11 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
 //  EXPECT_CALL(*switch_mock_, UnregisterEventNotifyWriter())
 //      .WillOnce(Return(::util::OkStatus()));
 //  ASSERT_OK(config_monitoring_service_->Teardown());
-//}
+// }
 
-//FIXME(boc) google only
+// FIXME(boc) google only
 // Successful DoSet() execution for simple leaf gNMI SET UPDATE message.
-//TEST_P(ConfigMonitoringServiceTest,
+// TEST_P(ConfigMonitoringServiceTest,
 //       GnmiSetInterfacesInterfaceConfigHealthIndicatorUpdate) {
 //  if (mode_ == OPERATION_MODE_COUPLED) return;
 //
@@ -1197,7 +1196,7 @@ TEST_P(ConfigMonitoringServiceTest,
 }
 
 TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
-  ::gnmi::CapabilityResponse expected_resp;
+  ::gnmi::CapabilityResponse expected_resp;  // NOLINTNEXTLINE
   ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", &expected_resp);
 
   ::grpc::ServerContext context;
@@ -1210,7 +1209,7 @@ TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
   ASSERT_OK(config_monitoring_service_->Teardown());
 }
 
-// TODO: Finish the unit testing.
+// TODO(unknown): Finish the unit testing.
 
 INSTANTIATE_TEST_SUITE_P(ConfigMonitoringServiceTestWithMode,
                         ConfigMonitoringServiceTest,

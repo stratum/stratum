@@ -182,7 +182,8 @@ bool InsertIfNotPresent(
                             typename Collection::value_type(key, value));
 }
 
-// Same as InsertIfNotPresent except dies if the key already exists in the collection.
+// Same as InsertIfNotPresent except dies if the key already exists
+// in the collection.
 template <class Collection>
 void InsertOrDie(Collection* const collection,
                  const typename Collection::value_type& vt) {

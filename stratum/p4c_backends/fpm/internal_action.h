@@ -26,8 +26,8 @@
 // same action, and new internal actions contain logic that varies from
 // table to table.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_INTERNAL_ACTION_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_INTERNAL_ACTION_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_INTERNAL_ACTION_H_
+#define STRATUM_P4C_BACKENDS_FPM_INTERNAL_ACTION_H_
 
 #include <string>
 
@@ -160,4 +160,4 @@ class InternalAction {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_INTERNAL_ACTION_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_INTERNAL_ACTION_H_

@@ -37,6 +37,6 @@ TEST(enum_set, size) {
   EXPECT_EQ(1, set.size());
 }
 
-}  // <empty>
+}  // namespace
 }  // namespace gtl
 }  // namespace stratum

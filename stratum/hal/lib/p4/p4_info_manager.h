@@ -118,7 +118,7 @@ class P4InfoManager {
   virtual ::util::StatusOr<P4Annotation> GetSwitchStackAnnotations(
       const std::string& p4_object_name) const;
 
-  // TODO: Consider a method to verify the data in a TableWrite RPC,
+  // TODO(unknown): Consider a method to verify the data in a TableWrite RPC,
   // i.e. doing a verification that all P4 resources referenced by the RPC
   // actually exist in the P4Info.
 

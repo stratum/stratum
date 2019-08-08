@@ -26,6 +26,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <utility>
+#include <string>
 
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
@@ -83,7 +85,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
   }
 
   // If we are coupled mode and are coldbooting, we do not do anything here.
-  // TODO: This will be removed when we completely move to
+  // TODO(unknown): This will be removed when we completely move to
   // standalone mode.
   if (!warmboot && mode_ == OPERATION_MODE_COUPLED) {
     LOG(INFO) << "Skipped pushing the saved chassis config in coupled mode "
@@ -298,7 +300,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
                               "Get '/' can be done for CONFIG elements only.");
       }
       auto* notification = resp->add_notification();
-      // TODO: Set correct timestamp.
+      // TODO(unknown): Set correct timestamp.
       notification->set_timestamp(0ll);
       // Prepare the update information.
       auto* update = notification->add_update();
@@ -359,7 +361,7 @@ void ReportError(const std::string& msg,
   LOG(ERROR) << msg;
   // Report error to the remote side.
   ::gnmi::Error error;
-  // TODO: make the error code an input parameter.
+  // TODO(unknown): make the error code an input parameter.
   error.set_code(1);
   error.set_message(msg);
   ::gnmi::SubscribeResponse resp;
@@ -528,7 +530,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
     ++problems_found;
   }
 
-  // TODO: Find out what to do if one (or more) of many subscription
+  // TODO(unknown): Find out what to do if one (or more) of many subscription
   // paths is unsupported. For now this functions returns OK and expect the
   // remote end to close the connection.
   return ::util::OkStatus();

@@ -40,7 +40,7 @@ namespace stratum {
 // to bool.
 class BooleanStatus {
  public:
-  BooleanStatus(::util::Status status) : status_(status) {}
+  BooleanStatus(::util::Status status) : status_(status) {}  // NOLINT
   // Implicitly cast to bool.
   operator bool() const { return status_.ok(); }
   inline ::util::Status status() const { return status_; }

@@ -29,8 +29,8 @@
 // FieldCrossReference also applies this property transitively across
 // multiple assignments.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_CROSS_REFERENCE_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_CROSS_REFERENCE_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_FIELD_CROSS_REFERENCE_H_
+#define STRATUM_P4C_BACKENDS_FPM_FIELD_CROSS_REFERENCE_H_
 
 #include <map>
 #include <set>
@@ -104,4 +104,4 @@ class FieldCrossReference {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_FIELD_CROSS_REFERENCE_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_FIELD_CROSS_REFERENCE_H_

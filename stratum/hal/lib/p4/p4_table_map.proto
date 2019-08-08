@@ -17,7 +17,7 @@
 // runtime RPC requests/responses and a "flow entry" that can be understood by
 // HAL table management code.
 //
-// TODO: Provide a specific reference to the "flow entry" definition.
+// TODO(unknown): Provide a specific reference to the "flow entry" definition.
 
 syntax = "proto3";
 
@@ -56,9 +56,9 @@ import "p4/config/v1/p4info.proto";
 //   behavior of the P4 table/field/action in a device-specific context.  This
 //   data has meaning only to the switch implementation; it is opaque to the
 //   p4c extension, the P4TableMapper, and the P4InfoManager.
-// TODO: Consider changing the data field to google::protobuf::Any and
+// TODO(unknown): Consider changing the data field to google::protobuf::Any and
 //                 packing/unpacking relative to a target-specific proto.
-// TODO: Would it be useful to have the option for two sets of
+// TODO(unknown): Would it be useful to have the option for two sets of
 //                 P4DeviceProgramData per object, with one set for P4 config
 //                 setup and the other set to be attached to each runtime flow?
 message P4DeviceProgramData {
@@ -93,7 +93,7 @@ message P4TableDescriptor {
   //      the table when the given header type is valid.  Multiple entries
   //      mean all of the specified header types must be valid before the
   //      P4 program applies the table.
-  // TODO: Is it possible to deprecate the type field and
+  // TODO(unknown): Is it possible to deprecate the type field and
   // replace all of its references with pipeline_stage?
   P4TableType type = 1;
   P4Annotation.PipelineStage pipeline_stage = 2;
@@ -123,7 +123,7 @@ message P4FieldDescriptor {
     P4_CONVERT_TO_BYTES = 6;           // Example: exact match IPv6 address.
     P4_CONVERT_TO_BYTES_AND_MASK = 7;  // Example: IPv6 LPM match field.
 
-    // TODO: And so on for additional conversions.
+    // TODO(unknown): And so on for additional conversions.
   }
 
   // This message is a pseudo-map for field value conversions.  (A real proto
@@ -137,7 +137,7 @@ message P4FieldDescriptor {
     p4.config.v1.MatchField.MatchType match_type = 1;
     P4FieldValueConversion conversion = 2;
 
-    // TODO: This per-conversion width is replaced by the overall
+    // TODO(unknown): This per-conversion width is replaced by the overall
     // P4FieldDescriptor bit_width below.  All code references have been
     // removed.  The field itself can be removed after all test file references
     // are cleaned up.
@@ -151,7 +151,7 @@ message P4FieldDescriptor {
   // technique to decide whether to encap/decap in one table while deferring
   // the header push/pop actions to a later table.
   //  table_name - Identifies a table that uses this field as a key.
-  // TODO: This is a provisional definition.  Other items for
+  // TODO(unknown): This is a provisional definition.  Other items for
   // consideration:
   //  - Should this identify tables in pairs, i.e. the table that assigns
   //    the metadata together with the table that uses it as a key?

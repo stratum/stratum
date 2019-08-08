@@ -25,6 +25,9 @@
 #include <functional>
 #include <map>
 #include <vector>
+#include <memory>
+#include <string>
+#include <set>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
@@ -244,7 +247,7 @@ struct PacketInMetadata {
   uint32 egress_port_id;
   // The CoS for the received packet.
   int cos;
-  // TODO: How about reason bit. Should we capture that as well?
+  // TODO(unknown): How about reason bit. Should we capture that as well?
   PacketInMetadata()
       : ingress_port_id(0),
         ingress_trunk_id(0),
@@ -254,7 +257,7 @@ struct PacketInMetadata {
 
 // The "BcmPacketioManager" class is in charge of setting up and managing KNET
 // interface(s) for packet I/O.
-// TODO: Add stats collection functionality.
+// TODO(unknown): Add stats collection functionality.
 class BcmPacketioManager {
  public:
   virtual ~BcmPacketioManager();

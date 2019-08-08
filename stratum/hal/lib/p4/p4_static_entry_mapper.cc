@@ -73,7 +73,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
   RETURN_IF_ERROR(hidden_differ.Compare(
       &hidden_deletes, nullptr, nullptr, &hidden_unchanged));
 
-  // TODO: Finish implementation - hidden_deletes need to be saved
+  // TODO(unknown): Finish implementation - hidden_deletes need to be saved
   // with internal hidden tables.
   physical_static_entries_ = physical_unchanged;
   hidden_static_entries_ = hidden_unchanged;
@@ -120,7 +120,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
       << "P4StaticEntryMapper API misuse: "
       << hidden_deletes.ShortDebugString();
 
-  // TODO: Finish implementation - hidden_adds need to be saved with
+  // TODO(unknown): Finish implementation - hidden_adds need to be saved with
   // internal hidden tables; This class also needs more sophistication
   // to handle the modified output from P4WriteRequestDiffer.
   physical_static_entries_ = physical_request;
@@ -146,7 +146,7 @@ P4StaticEntryMapper::P4StaticEntryMapper() : p4_table_mapper_(nullptr) {}
       // TRI_STATE_UNKNOWN is not an error when called from pre-push because
       // the table_id may represent a new table in the pipeline config that
       // is being pushed.
-      // TODO: TRI_STATE_UNKNOWN should probably be an error in the
+      // TODO(unknown): TRI_STATE_UNKNOWN should probably be an error in the
       // post-push for adding new entries.
       continue;
     } else if (hidden_status == TRI_STATE_TRUE &&

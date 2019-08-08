@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 
 #include "stratum/hal/lib/bcm/bcm_node.h"
-
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager_mock.h"
@@ -1664,7 +1664,7 @@ TEST_F(BcmNodeTest, TestUpdatePortState) {
   EXPECT_EQ(expected_error.ToString(), status.ToString());
 }
 
-// TODO: Complete unit test coverage.
+// TODO(unknown): Complete unit test coverage.
 
 }  // namespace bcm
 }  // namespace hal

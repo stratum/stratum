@@ -857,7 +857,7 @@ enum MediaType {
   MEDIA_TYPE_QSFP_CCR4 = 14;    // 100G copper
 }
 
-// TODO: revise these enum as needed per ASIC integration
+// TODO(unknown): revise these enum as needed per ASIC integration
 //       currently maps to sff_sfp_type_t defined in sff.h
 enum SfpType {
   SFP_TYPE_UNKNOWN   = 0;
@@ -867,7 +867,7 @@ enum SfpType {
   SFP_TYPE_QSFP28    = 4;
 }
 
-// TODO: revise these enum as needed per ASIC integration
+// TODO(unknown): revise these enum as needed per ASIC integration
 //       currently maps to sff_module_type_t defined in sff.h
 enum SfpModuleType {
   SFP_MODULE_TYPE_UNKNOWN = 0;

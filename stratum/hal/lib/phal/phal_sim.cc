@@ -36,7 +36,7 @@ PhalSim::~PhalSim() {}
 ::util::Status PhalSim::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
-    // TODO: Implement this function.
+    // TODO(unknown): Implement this function.
     initialized_ = true;
   }
 
@@ -44,7 +44,7 @@ PhalSim::~PhalSim() {}
 }
 
 ::util::Status PhalSim::VerifyChassisConfig(const ChassisConfig& config) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -110,7 +110,7 @@ PhalSim::~PhalSim() {}
 
 ::util::Status PhalSim::GetFrontPanelPortInfo(
     int slot, int port, FrontPanelPortInfo* fp_port_info) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 

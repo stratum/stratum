@@ -39,7 +39,7 @@ namespace onlp {
       new OnlpPsuDataSource(psu_id, onlp_interface, cache_policy, psu_info));
 
   // Retrieve attributes' initial values.
-  // TODO: Move the logic to Configurator later?
+  // TODO(unknown): Move the logic to Configurator later?
   // psu_data_source->updateValues();
   psu_data_source->UpdateValuesUnsafelyWithoutCacheOrLock();
   return psu_data_source;

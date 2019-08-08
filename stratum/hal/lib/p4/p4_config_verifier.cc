@@ -130,7 +130,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
     APPEND_STATUS_IF_ERROR(status, static_modify_status);
   }
 
-  // TODO: Add comparisons for more reboot-required deltas.
+  // TODO(unknown): Add comparisons for more reboot-required deltas.
 
   return status;
 }
@@ -228,7 +228,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
             << table_entry.ShortDebugString();
         APPEND_STATUS_IF_ERROR(entry_status, match_size_status);
       }
-      // TODO: More things that could be verified:
+      // TODO(unknown): More things that could be verified:
       //  1) The field IDs in table_entry.match() could be checked.
       //  2) The table_entry.action() value can be verified.
       // Since both of these items have many possible valid combinations, the
@@ -398,7 +398,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
 }
 
 ::util::Status P4ConfigVerifier::VerifyHeaderAssignment() {
-  // TODO:  Implement this function.  The table map now has header
+  // TODO(unknown):  Implement this function.  The table map now has header
   // descriptors, so one should exist for the source and the destination.
   return ::util::OkStatus();
 }
@@ -421,7 +421,7 @@ std::unique_ptr<P4ConfigVerifier> P4ConfigVerifier::CreateInstance(
   // exist, and it must contain a known field type.  Constants and action
   // parameters do not need any extra verification when used as an assignment
   // source.
-  // TODO: One possible exception is "local_metadata.l3_class_id",
+  // TODO(unknown): One possible exception is "local_metadata.l3_class_id",
   // which is assigned in a P4 action but never referenced elsewhere in the
   // P4 program.  It is, however, needed by the switch stack, so a way is
   // needed to handle metadata that communicates data to the switch stack

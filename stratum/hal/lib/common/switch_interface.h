@@ -19,6 +19,8 @@
 #define STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 
 #include <vector>
+#include <memory>
+#include <string>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -212,7 +214,7 @@ class SwitchInterface {
   // consistent. Returns an error status if any failure occurs in the process of
   // verification.
   //
-  // TODO: Explore the possibility of adding an argument to this
+  // TODO(unknown): Explore the possibility of adding an argument to this
   // call to specify an aspect/multiple aspects of state to verify.
   virtual ::util::StatusOr<std::vector<std::string>> VerifyState() = 0;
 

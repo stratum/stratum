@@ -20,8 +20,8 @@
 // stack should treat them as UDFs whose packet payload offset is configured
 // dynamically by the P4Runtime configuration of a parser value set.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_VALUE_SET_MAPPER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_VALUE_SET_MAPPER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_PARSER_VALUE_SET_MAPPER_H_
+#define STRATUM_P4C_BACKENDS_FPM_PARSER_VALUE_SET_MAPPER_H_
 
 #include <map>
 #include <string>
@@ -124,4 +124,4 @@ class ParserValueSetMapper : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PARSER_VALUE_SET_MAPPER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_PARSER_VALUE_SET_MAPPER_H_

@@ -132,7 +132,8 @@ class CLANG_WARN_UNUSED_RESULT StatusOr {
   template <typename U>
   StatusOr& operator=(const StatusOr<U>& other);
 
-  StatusOr(const StatusBuilder& status_builder) : status_(status_builder) {
+  explicit StatusOr(
+    const StatusBuilder& status_builder) : status_(status_builder) {
     EnsureNotOk();
   }
 
@@ -314,7 +315,8 @@ inline void StatusOr<T>::EnsureNotOk() {
 }
 
 template <typename T>
-inline std::ostream& operator<<(std::ostream& os, const ::util::StatusOr<T>& x) {
+inline std::ostream& operator<<(std::ostream& os,
+  const ::util::StatusOr<T>& x) {
   os << x.status().ToString();
   return os;
 }

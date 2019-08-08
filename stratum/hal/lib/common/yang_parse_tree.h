@@ -19,6 +19,9 @@
 
 #include <unordered_map>
 #include <utility>
+#include <memory>
+#include <string>
+#include <map>
 
 #include "stratum/lib/macros.h"
 #include "stratum/glue/status/status.h"
@@ -384,7 +387,8 @@ class TreeNode {
 // work with the tree.
 class YangParseTree {
  public:
-  explicit YangParseTree(SwitchInterface*) LOCKS_EXCLUDED(root_access_lock_);
+  explicit YangParseTree(SwitchInterface*)  // NOLINT
+              LOCKS_EXCLUDED(root_access_lock_);
   virtual ~YangParseTree() {}
 
   // Registers a writer for sending gNMI events.
@@ -497,7 +501,7 @@ class YangParseTree {
   // In most cases the TARGET_DEFINED mode is ON_CHANGE mode as this mode
   // is the least resource-hungry. But to make the gNMI demo more realistic it
   // is changed to SAMPLE with the period of 1s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   TreeNode::TargetDefinedModeFunc stream_sample_mode_ =
       [](::gnmi::Subscription* subscription) {

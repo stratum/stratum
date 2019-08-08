@@ -18,13 +18,15 @@
 #ifndef STRATUM_HAL_LIB_PHAL_SYSTEM_REAL_H_
 #define STRATUM_HAL_LIB_PHAL_SYSTEM_REAL_H_
 
+#include <libudev.h>
+
 #include <map>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
-#include <libudev.h>
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/system_interface.h"
@@ -35,7 +37,7 @@ namespace phal {
 
 class UdevReal : public Udev {
  public:
-  UdevReal(struct udev* udev) : udev_(udev) {}
+  explicit UdevReal(struct udev* udev) : udev_(udev) {}
   ~UdevReal() override;
 
   ::util::StatusOr<std::unique_ptr<UdevMonitor>> MakeUdevMonitor() override;

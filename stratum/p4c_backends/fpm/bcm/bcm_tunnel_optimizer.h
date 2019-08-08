@@ -17,8 +17,8 @@
 // This file declares a TunnelOptimizerInterface subclass that tunes tunnel
 // actions for Broadcom devices.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_
+#define STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_
 
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_interface.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
@@ -95,4 +95,4 @@ class BcmTunnelOptimizer : public TunnelOptimizerInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_BCM_BCM_TUNNEL_OPTIMIZER_H_

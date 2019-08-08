@@ -18,11 +18,11 @@
 // the available forwarding pipeline stages. It runs various optimization
 // passes to place as many tables and related logic as possibe into fixed-
 // function pipeline stages.
-// TODO: Consider an interface wrapper around this class to handle
+// TODO(unknown): Consider an interface wrapper around this class to handle
 // different types of targets in the future.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_
+#define STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_
 
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
@@ -61,4 +61,4 @@ class PipelineOptimizer {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_PIPELINE_OPTIMIZER_H_

@@ -35,7 +35,7 @@ TEST(absl, safe_strto32_base) {
      strings will trailing spaces, which the unittest indicates should be invalid.
     */
     // expected based on other tests
-    //EXPECT_FALSE(safe_strto32_base(string1, &value, 10));
+    // EXPECT_FALSE(safe_strto32_base(string1, &value, 10));
     // actual behavior
     EXPECT_TRUE(safe_strto32_base(string1, &value, 10));
 }

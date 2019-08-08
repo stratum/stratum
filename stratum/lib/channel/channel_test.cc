@@ -19,7 +19,8 @@
 #include <unistd.h>
 
 #include <set>
-#include <thread>
+#include <thread>  // NOLINT
+#include <string>
 
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
@@ -230,9 +231,9 @@ TEST(ChannelTest, TestBlockingWrite) {
 
 namespace {
 
-ABSL_CONST_INIT absl::Mutex arr_dst_lock(absl::kConstInit);
+ABSL_CONST_INIT absl::Mutex arr_dst_lock(absl::kConstInit);  // NOLINTNEXTLINE
  // Opensource version of absl::CondVar has takes no arguments: https://github.com/abseil/abseil-cpp/blob/master/absl/synchronization/mutex.h#L777
-absl::CondVar arr_dst_done/*(base::LINKER_INITIALIZED)*/;
+absl::CondVar arr_dst_done /*(base::LINKER_INITIALIZED)*/;
 constexpr size_t kArrTestSize = 5;
 int test_arr_src[kArrTestSize];
 size_t read_cnt = 0;
@@ -352,7 +353,8 @@ void* StressTestChannelWriterFunc(void* arg) {
       ::util::Status status;
       do {
         status = args->writer->TryWrite(data);
-        // Prevent starvation of reader threads. FIXME: this should already be guaranteed by absl::Mutex
+        // Prevent starvation of reader threads.
+        // FIXME: this should already be guaranteed by absl::Mutex
         if (status.error_code() == ERR_NO_RESOURCE)
           std::this_thread::yield();
       } while (status.error_code() == ERR_NO_RESOURCE);

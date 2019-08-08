@@ -24,7 +24,6 @@
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "absl/synchronization/mutex.h"
-#include "stratum/glue/status/status.h"
 
 namespace stratum {
 namespace hal {

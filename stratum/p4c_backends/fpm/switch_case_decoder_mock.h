@@ -16,8 +16,12 @@
 
 // This is a mock implementation of SwitchCaseDecoder.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
+#define STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
+
+#include <string>
+#include <set>
+#include <map>
 
 #include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 #include "gmock/gmock.h"
@@ -40,4 +44,4 @@ class SwitchCaseDecoderMock : public SwitchCaseDecoder {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_

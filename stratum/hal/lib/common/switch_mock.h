@@ -18,6 +18,10 @@
 #ifndef STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "gmock/gmock.h"
 

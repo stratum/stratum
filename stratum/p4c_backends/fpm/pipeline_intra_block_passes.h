@@ -33,8 +33,8 @@
 // IR node ownership and the implications for IR transforms are described
 // by the file header comments in pipeline_block_passes.h.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
+#define STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
 
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
@@ -216,4 +216,4 @@ class IntraBlockOptimizer : public Transform {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_PIPELINE_INTRA_BLOCK_PASSES_H_

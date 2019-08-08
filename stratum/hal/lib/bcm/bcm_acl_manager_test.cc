@@ -17,6 +17,8 @@
 
 #include <vector>
 #include <functional>
+#include <utility>
+#include <string>
 
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "gmock/gmock.h"
@@ -28,7 +30,6 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/glue/status/status.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
@@ -471,7 +472,8 @@ const P4ControlBlock& DefaultControlBlock() {
 
 // Sets the BcmAclStage for all tables within a map.
 const absl::flat_hash_map<int, BcmAclTable> SetStage(
-    const absl::flat_hash_map<int, BcmAclTable>& original_tables, BcmAclStage stage) {
+    const absl::flat_hash_map<int, BcmAclTable>& original_tables,
+    BcmAclStage stage) {
   auto tables = original_tables;
   for (auto& pair : tables) {
     pair.second.set_stage(stage);
@@ -659,7 +661,7 @@ void BcmAclManagerTest::SetUpBcmSdkMock() {
       return ::util::OkStatus();
     }
   }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)//.SetNoLogging() // FIXME
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)  // .SetNoLogging() // FIXME
          << "No field_type found for table " << table_id << ", match "
          << match_id << ".";
 }
@@ -909,8 +911,9 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
       return std::hash<std::string>{}(serialized);
     }
   };
-  
-  absl::flat_hash_set<BcmAclTable, BcmAclTableHasher, PriorityCompare> bcm_tables; // FIXME: See comment above
+
+  absl::flat_hash_set<BcmAclTable, BcmAclTableHasher,
+                    PriorityCompare> bcm_tables;  // FIXME: See comment above
   EXPECT_CALL(*bcm_sdk_mock_, CreateAclTable(kUnit, _))
       .Times(4)
       .WillRepeatedly(

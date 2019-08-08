@@ -21,8 +21,13 @@
 #include <pthread.h>
 #include <time.h>
 
+#include <memory>
+#include <string>
+#include <algorithm>
+#include <map>
+
 #include "gnmi/gnmi.grpc.pb.h"
-//FIXME(boc) is this required?
+// FIXME(boc) is this required?
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -208,16 +213,16 @@ class GnmiPublisher {
           [this](const GnmiEvent& event_base, GnmiSubscribeStream* stream)
               EXCLUSIVE_LOCKS_REQUIRED(access_lock_) {
                 // Special case - change of configuration.
-                //FIXME(boc) VLOG(1) does not appear to work inside of a lambda
-                //VLOG(1) << "Configuration has changed.";
-                //FIXME(boc) the following statement is a temporary hack
-                if(FLAGS_v >= 1) LOG(INFO) << "Configuration has changed.";
+                // FIXME(boc) VLOG(1) does not appear to work inside of a lambda
+                // VLOG(1) << "Configuration has changed.";
+                // FIXME(boc) the following statement is a temporary hack
+                if (FLAGS_v >= 1) LOG(INFO) << "Configuration has changed.";
                 if (auto* event = dynamic_cast<const ConfigHasBeenPushedEvent*>(
                         &event_base)) {
                   parse_tree_.ProcessPushedConfig(*event);
                 }
                 return ::util::OkStatus();
-              };
+              };  // NOLINT
   SubscriptionHandle on_config_pushed_;
 
   friend class ConfigMonitoringServiceTest;

@@ -18,6 +18,8 @@
 #ifndef STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_ACL_TABLE_H_
 
+#include <utility>
+
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
@@ -37,8 +39,9 @@ class AclTable : public BcmFlowTable {
   //***************************************************************************
   //  Constructors
   //***************************************************************************
-  AclTable(const ::p4::config::v1::Table& table, BcmAclStage stage, int priority,
-           const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>& const_conditions)
+  AclTable(const ::p4::config::v1::Table& table, BcmAclStage stage,
+           int priority, const absl::flat_hash_map<P4HeaderType, bool,
+           EnumHash<P4HeaderType>>& const_conditions)
       : BcmFlowTable(table),
         stage_(stage),
         match_fields_(),
@@ -53,9 +56,12 @@ class AclTable : public BcmFlowTable {
     }
   }
 
-  AclTable(const ::p4::config::v1::Table& table, P4Annotation::PipelineStage stage,
-           int priority, const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>& const_conditions)
-      : AclTable(table, P4PipelineToBcmAclStage(stage), priority, const_conditions) {}
+  AclTable(const ::p4::config::v1::Table& table,
+           P4Annotation::PipelineStage stage, int priority,
+           const absl::flat_hash_map<P4HeaderType, bool,
+           EnumHash<P4HeaderType>>& const_conditions)
+      : AclTable(table, P4PipelineToBcmAclStage(stage), priority,
+        const_conditions) {}
 
   AclTable(const AclTable& other)
       : BcmFlowTable(other),
@@ -111,8 +117,13 @@ class AclTable : public BcmFlowTable {
   bool IsUdfField(uint32 field) const { return udf_match_fields_.count(field); }
   bool HasUdf() const { return !udf_match_fields_.empty(); }
   int UdfSetId() const { return udf_set_id_; }
-  const absl::flat_hash_set<uint32>& UdfMatchFields() const { return udf_match_fields_; }
-  const absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>>& ConstConditions() const { return const_conditions_; }
+  const absl::flat_hash_set<uint32>& UdfMatchFields() const {
+    return udf_match_fields_;
+  }
+  const absl::flat_hash_map<P4HeaderType, bool,
+    EnumHash<P4HeaderType>>& ConstConditions() const {
+      return const_conditions_;
+  }
 
   // Returns the BCM ACL ID for an entry in this table.
   // Returns ERR_ENTRY_NOT_FOUND if the entry does not exist in this table.
@@ -133,7 +144,8 @@ class AclTable : public BcmFlowTable {
 
   // Performs a dry-run of InsertEntry. Returns an error if the entry cannot be
   // inserted into the table. Returns util::OkStatus if it can.
-  util::Status DryRunInsertEntry(const ::p4::v1::TableEntry& entry) const override;
+  util::Status DryRunInsertEntry(const ::p4::v1::TableEntry& entry)
+  const override;
 
   // Attempts to add the entry to this table with the provided Bcm ACL ID
   // mapping.
@@ -191,10 +203,12 @@ class AclTable : public BcmFlowTable {
   // match_fields_.
   absl::flat_hash_set<uint32> udf_match_fields_;
   // Mapping from entries to their respective Bcm ACL IDs.
-  absl::flat_hash_map<::p4::v1::TableEntry, uint32, TableEntryHash, TableEntryEqual>
+  absl::flat_hash_map<::p4::v1::TableEntry, uint32,
+  TableEntryHash, TableEntryEqual>
       bcm_acl_id_map_;
   // Stores const conditions
-  absl::flat_hash_map<P4HeaderType, bool, EnumHash<P4HeaderType>> const_conditions_;
+  absl::flat_hash_map<P4HeaderType, bool,
+  EnumHash<P4HeaderType>> const_conditions_;
 };
 
 }  // namespace bcm

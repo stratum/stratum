@@ -39,15 +39,15 @@ using ::stratum::test_utils::StatusIs;
 
 class SfpDatasourceTest : public ::testing::Test {
  public:
-   void SetUp() override {
-     id_ = 12345;
-     oid_ = ONLP_SFP_ID_CREATE(id_);
-   }
+  void SetUp() override {
+    id_ = 12345;
+    oid_ = ONLP_SFP_ID_CREATE(id_);
+  }
 
-   int id_;             // Id for this SFP
-   OnlpOid oid_;        // OID for this SFP (i.e. Type + Id)
-   onlp_oid_hdr_t mock_oid_info_;
-   MockOnlpWrapper mock_onlp_interface_;
+  int id_;             // Id for this SFP
+  OnlpOid oid_;        // OID for this SFP (i.e. Type + Id)
+  onlp_oid_hdr_t mock_oid_info_;
+  MockOnlpWrapper mock_onlp_interface_;
 };
 
 TEST_F(SfpDatasourceTest, InitializeSFPWithEmptyInfo) {
@@ -81,7 +81,7 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
   mock_sfp_info.type = ONLP_SFP_TYPE_SFP;
   mock_sfp_info.sff.sfp_type = SFF_SFP_TYPE_SFP;
   mock_sfp_info.sff.module_type = SFF_MODULE_TYPE_1G_BASE_SX;
-  mock_sfp_info.sff.caps = 
+  mock_sfp_info.sff.caps =
     static_cast<sff_module_caps_t>(SFF_MODULE_CAPS_F_1G|SFF_MODULE_CAPS_F_100G);
   mock_sfp_info.sff.length = 100;
 
@@ -162,7 +162,7 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
       sfp_datasource->GetSfpType(),
       ContainsValue(SfpType_descriptor()->FindValueByName("SFP_TYPE_SFP")));
   EXPECT_THAT(
-      sfp_datasource->GetSfpModuleType(),
+      sfp_datasource->GetSfpModuleType(),  // NOLINTNEXTLINE
       ContainsValue(SfpModuleType_descriptor()->FindValueByName("SFP_MODULE_TYPE_1G_BASE_SX")));
 
   // Check Module Caps

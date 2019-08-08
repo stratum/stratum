@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/p4c_backends/fpm/parser_decoder.h"

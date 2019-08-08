@@ -41,7 +41,7 @@ namespace onlp {
       new OnlpFanDataSource(fan_id, onlp_interface, cache_policy, fan_info));
 
   // Retrieve attributes' initial values.
-  // TODO: Move the logic to Configurator later?
+  // TODO(unknown): Move the logic to Configurator later?
   // fan_data_source->updateValues();
   fan_data_source->UpdateValuesUnsafelyWithoutCacheOrLock();
   return fan_data_source;

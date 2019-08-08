@@ -40,15 +40,14 @@ using ::stratum::test_utils::StatusIs;
 
 class LedDatasourceTest : public ::testing::Test {
  public:
-   void SetUp() override {
-     id_ = 12345;
-     oid_ = ONLP_LED_ID_CREATE(id_);
-   }
-
-   int id_;             // Id for this LED
-   OnlpOid oid_;        // OID for this LED (i.e. Type + Id)
-   onlp_oid_hdr_t mock_oid_info_;
-   MockOnlpWrapper mock_onlp_interface_;
+  void SetUp() override {
+    id_ = 12345;
+    oid_ = ONLP_LED_ID_CREATE(id_);
+  }
+  int id_;             // Id for this LED
+  OnlpOid oid_;        // OID for this LED (i.e. Type + Id)
+  onlp_oid_hdr_t mock_oid_info_;
+  MockOnlpWrapper mock_onlp_interface_;
 };
 
 TEST_F(LedDatasourceTest, InitializeLEDWithEmptyInfo) {
@@ -200,11 +199,12 @@ TEST_F(LedDatasourceTest, SetLedData) {
 
   EXPECT_TRUE(led_datasource->GetLedChar()->CanSet());
 
-  EXPECT_CALL(mock_onlp_interface_, SetLedCharacter(oid_, (int)'2'))
+  EXPECT_CALL(mock_onlp_interface_, SetLedCharacter(oid_,
+    static_cast<int>('2'))
       .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(
-      led_datasource->GetLedChar()->Set((int)'2'));
+      led_datasource->GetLedChar()->Set(static_cast<int>('2'));
 }
 
 }  // namespace onlp

@@ -18,6 +18,7 @@
 
 #include <set>
 #include <string>
+#include <memory>
 
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
@@ -240,7 +241,7 @@ TEST_P(PipelinePassesTest, TestIfElseNoOptimization) {
   EXPECT_EQ(pass2_control, final_control);
 }
 
-// TODO: Add more PipelineIfElsePass tests to:
+// TODO(unknown): Add more PipelineIfElsePass tests to:
 // - Test true-block applies LPM stage but false-block is empty.
 // - Test true-block applies LPM stage but false-block is non-apply statement.
 // - Test true-block applies LPM stage but false-block applies ACL stage.

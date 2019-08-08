@@ -26,7 +26,7 @@
 #include "absl/base/attributes.h"
 #include "absl/strings/str_cat.h"
 
-// TODO: Move to Abseil-status when it is available.
+// TODO(unknown): Move to Abseil-status when it is available.
 //
 namespace util {
 namespace error {
@@ -371,7 +371,8 @@ inline Status OkStatus() { return Status(); }
 
 class ABSL_MUST_USE_RESULT StatusBuilder {
  public:
-  StatusBuilder(::util::error::Code code, ::stratum::gtl::source_location location)
+  StatusBuilder(::util::error::Code code,
+    ::stratum::gtl::source_location location)
       : code_(code),
         line_(location.line()),
         file_(location.file_name().c_str()),
@@ -435,19 +436,23 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
   std::string stream_;
 };
 
-inline StatusBuilder AbortedErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder AbortedErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::ABORTED, location);
 }
 
-inline StatusBuilder AlreadyExistsErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder AlreadyExistsErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::ALREADY_EXISTS, location);
 }
 
-inline StatusBuilder CancelledErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder CancelledErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::CANCELLED, location);
 }
 
-inline StatusBuilder DataLossErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder DataLossErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::DATA_LOSS, location);
 }
 
@@ -461,7 +466,8 @@ inline StatusBuilder FailedPreconditionErrorBuilder(
   return StatusBuilder(::util::error::Code::FAILED_PRECONDITION, location);
 }
 
-inline StatusBuilder InternalErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder InternalErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::INTERNAL, location);
 }
 
@@ -470,11 +476,13 @@ inline StatusBuilder InvalidArgumentErrorBuilder(
   return StatusBuilder(::util::error::Code::INVALID_ARGUMENT, location);
 }
 
-inline StatusBuilder NotFoundErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder NotFoundErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::NOT_FOUND, location);
 }
 
-inline StatusBuilder OutOfRangeErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder OutOfRangeErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::OUT_OF_RANGE, location);
 }
 
@@ -493,15 +501,18 @@ inline StatusBuilder ResourceExhaustedErrorBuilder(
   return StatusBuilder(::util::error::Code::RESOURCE_EXHAUSTED, location);
 }
 
-inline StatusBuilder UnavailableErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder UnavailableErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::UNAVAILABLE, location);
 }
 
-inline StatusBuilder UnimplementedErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder UnimplementedErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::UNIMPLEMENTED, location);
 }
 
-inline StatusBuilder UnknownErrorBuilder(::stratum::gtl::source_location location) {
+inline StatusBuilder UnknownErrorBuilder(
+  ::stratum::gtl::source_location location) {
   return StatusBuilder(::util::error::Code::UNKNOWN, location);
 }
 

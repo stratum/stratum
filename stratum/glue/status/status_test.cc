@@ -19,6 +19,8 @@
 
 #include <stdio.h>
 
+#include <algorithm>
+
 #include "absl/strings/str_cat.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"

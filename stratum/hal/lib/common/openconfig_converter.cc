@@ -16,6 +16,9 @@
 
 #include <iostream>
 #include <list>
+#include <map>
+#include <string>
+
 #include "stratum/glue/logging.h"
 #include "github.com/openconfig/ygot/proto/ywrapper/ywrapper.pb.h"
 #include "stratum/lib/constants.h"
@@ -29,7 +32,7 @@ namespace hal {
 
 namespace {
 
-using namespace openconfig::enums;
+using namespace openconfig::enums;  // NOLINT
 
 ////////////////////////////////////////////////////////////////////////////////
 // converts:
@@ -183,7 +186,7 @@ using namespace openconfig::enums;
     (*bcm_config.mutable_node_id_to_rate_limit_config())[entry.first] =
         oc_rate_limit_cfg;
   }
-
+// NOLINTNEXTLINE
   bcm_config.mutable_bcm_chassis_map_id()->set_value(in.google_config().bcm_chassis_map_id());
   return bcm_config;
 }
@@ -292,14 +295,17 @@ SingletonPortToInterfaces(const SingletonPort &in) {
           ->set_port_speed(OPENCONFIGIFETHERNETETHERNETSPEED_SPEED_100GB);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown 'speed_bps' " << in.ShortDebugString();
+      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown 'speed_bps' " <<
+      in.ShortDebugString();
   }
 
-  // SingletonPort.config_params.admin_state -> /interfaces/interface/config/enabled
+  // SingletonPort.config_params.admin_state
+  // -> /interfaces/interface/config/enabled
   interface->mutable_enabled()
       ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
 
-  // SingletonPort.config_params.autoneg -> /interfaces/interface/ethernet/config/auto-negotiate
+  // SingletonPort.config_params.autoneg
+  // -> /interfaces/interface/ethernet/config/auto-negotiate
   interface->mutable_ethernet()
       ->mutable_auto_negotiate()
       ->set_value(IsPortAutonegEnabled(in.config_params().autoneg()));
@@ -318,6 +324,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 // to:
 //   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
+// NOLINTNEXTLINE
 ::util::StatusOr<std::list<openconfig::Device::ComponentKey>> TrunkPortToComponents(
     const TrunkPort &in) {
   openconfig::Device::ComponentKey component_key;
@@ -333,6 +340,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 // to:
 //   std::list<openconfig::Device::InterfaceKey>
 ////////////////////////////////////////////////////////////////////////////////
+// NOLINTNEXTLINE
 ::util::StatusOr<std::list<openconfig::Device::InterfaceKey>> TrunkPortToInterfaces(
     const ChassisConfig &root, const TrunkPort &in) {
   openconfig::Device::InterfaceKey interface_key;
@@ -343,15 +351,16 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   trunk->mutable_id()->set_value(in.id());
   trunk->mutable_ifindex()->set_value(in.id());
 
-  // SingletonPort.config_params.admin_state -> /interfaces/interface/config/enabled
+  // SingletonPort.config_params.admin_state
+  // -> /interfaces/interface/config/enabled
   trunk->mutable_enabled()
       ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
 
   switch (in.type()) {
-    case TrunkPort::LACP_TRUNK:
+    case TrunkPort::LACP_TRUNK:  // NOLINTNEXTLINE
       trunk->mutable_aggregation()->set_lag_type(OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_LACP);
       break;
-    case TrunkPort::STATIC_TRUNK:
+    case TrunkPort::STATIC_TRUNK:  // NOLINTNEXTLINE
       trunk->mutable_aggregation()->set_lag_type(OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC);
       break;
     default:
@@ -366,7 +375,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   for (int64 member_id : in.members()) {
     std::string *name = gtl::FindOrNull(id_to_name, member_id);
     if (name == nullptr) {
-      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown 'members' " << in.ShortDebugString();
+      RETURN_ERROR(ERR_INVALID_PARAM) << "unknown 'members' " <<
+      in.ShortDebugString();
     }
 
     auto member = trunk->mutable_aggregation()->add_member();
@@ -569,7 +579,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 //   TrunkPort
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<TrunkPort> InterfaceToTrunkPort(
-    const openconfig::Device &device, const openconfig::Device::InterfaceKey &interface_key) {
+    const openconfig::Device &device,
+    const openconfig::Device::InterfaceKey &interface_key) {
   TrunkPort to;
   auto interface = interface_key.interface();
 
@@ -614,7 +625,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 //   SingletonPort
 ////////////////////////////////////////////////////////////////////////////////
 ::util::StatusOr<SingletonPort> InterfaceToSingletonPort(
-    const openconfig::Device &device, const openconfig::Device::InterfaceKey &interface_key) {
+    const openconfig::Device &device,
+    const openconfig::Device::InterfaceKey &interface_key) {
   SingletonPort to;
   auto &interface = interface_key.interface();
   to.set_id(interface.id().value());
@@ -629,7 +641,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   }
 
   if (!if_component_key.has_component()) {
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Cannot find component for interface " << interface_key.name();
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Cannot find component for interface " <<
+    interface_key.name();
   }
 
   const auto &if_component = if_component_key.component();
@@ -664,7 +677,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
       to.set_speed_bps(kHundredGigBps);
       break;
     default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid interface speed " << interface.ethernet().port_speed();
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid interface speed " <<
+      interface.ethernet().port_speed();
   }
 
   auto config_params = to.mutable_config_params();
@@ -714,7 +728,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   }
 
 }  // namespace
-
+// NOLINTNEXTLINE
 ::util::StatusOr<openconfig::Device> OpenconfigConverter::ChassisConfigToOcDevice(
     const ChassisConfig &in) {
   openconfig::Device to;
@@ -728,6 +742,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   if (in.has_vendor_config()) {
     ASSIGN_OR_RETURN(auto vendor_config,
                      VendorConfigToBcmConfig(in.vendor_config()));
+    // NOLINTNEXTLINE
     chassis_component.mutable_chassis()->mutable_vendor_specific()->PackFrom(vendor_config);
   }
 
@@ -762,7 +777,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   // Handle 'port_groups' repeated field.
   // Nothing to do here.
 
-  VLOG(1) << "The convetred openconfig::Device proto:\n" << to.ShortDebugString();
+  VLOG(1) << "The convetred openconfig::Device proto:\n" <<
+  to.ShortDebugString();
 
   return to;
 }

@@ -16,6 +16,7 @@
 
 #include <grpc++/grpc++.h>
 #include <memory>
+#include <string>
 
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"

@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <vector>
 
 #include "stratum/hal/lib/bcm/bcm_l3_manager.h"
-
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
@@ -54,7 +55,7 @@ BcmL3Manager::~BcmL3Manager() {}
     ASSIGN_OR_RETURN(default_drop_intf_,
                      bcm_sdk_interface_->FindOrCreateL3DropIntf(unit_));
   }
-  // TODO: Any other thing we need to do as part of config push?
+  // TODO(unknown): Any other thing we need to do as part of config push?
 
   return ::util::OkStatus();
 }
@@ -168,7 +169,7 @@ BcmL3Manager::~BcmL3Manager() {}
   // groups with one member. If we detect we have a group with one member, we
   // duplicate the members. This will not affect the functionality of the
   // group.
-  // TODO: This needs to be revisted. We are talking to Broadcom
+  // TODO(unknown): This needs to be revisted. We are talking to Broadcom
   // about this. http://b/75337931 is tracking this.
   if (member_ids.size() == 1) {
     VLOG(1) << "Got a group with only one member: " << member_ids[0] << ".";

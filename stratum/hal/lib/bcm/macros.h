@@ -20,7 +20,7 @@
 
 extern "C" {
 #include "shr/shr_error.h"
-//#include "soc/error.h"
+// #include "soc/error.h"
 }
 
 #include "stratum/glue/status/status.h"
@@ -35,7 +35,7 @@ namespace bcm {
 // This is used in BCM_RET_CHECK Macro.
 class BooleanBcmStatus {
  public:
-  BooleanBcmStatus(int status) : status_(status) {}
+  explicit BooleanBcmStatus(int status) : status_(status) {}
   // Implicitly cast to bool.
   operator bool() const { return SHR_SUCCESS(status_); }
   // Return the actual value.

@@ -983,7 +983,7 @@ TEST_F(YangParseTreeTest,
 }
 
 // Check if the 'config/mac-address' OnPoll action works correctly.
-// TODO: Modify this test once the MAC Address is added to the config
+// TODO(unknown): Modify this test once the MAC Address is added to the config
 // proto. Today the test depends on the hack - this address is always
 // initialized to be "11:22:33:44:55:66".
 TEST_F(YangParseTreeTest,
@@ -2044,7 +2044,7 @@ TEST_F(YangParseTreeTest,
        InterfacesInterfaceEthernetConfigForwardingViabilityOnChangeSuccess) {
   auto path = GetPath("interfaces")(
       "interface", "interface-1")("ethernet")("config")("forwarding-viable")();
-  // TODO: add test when gNMI SET operation is implemented.
+  // TODO(unknown): add test when gNMI SET operation is implemented.
 }
 
 // Check if the '/interfaces/interface/state/health-indicator' OnPoll

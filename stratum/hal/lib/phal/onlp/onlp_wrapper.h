@@ -17,7 +17,6 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
 
-#include <bitset>
 extern "C" {
 #include <onlp/onlp.h>
 #include <onlp/oids.h>
@@ -27,6 +26,11 @@ extern "C" {
 #include <onlp/thermal.h>
 #include <onlp/led.h>
 }
+
+#include <bitset>
+#include <memory>
+#include <vector>
+
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"

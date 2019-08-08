@@ -1,9 +1,26 @@
+/*
+ * Copyright 2018 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef STRATUM_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_UDF_MANAGER_H_
 
 #include <functional>
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "stratum/hal/lib/bcm/acl_table.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
@@ -230,7 +247,7 @@ class BcmUdfManager {
     explicit UdfSet(int max_chunks) : UdfSet(kStatic, 0, max_chunks) {}
 
     // Empty constructor for ::util::StatusOr<BcmUdfManager::UdfSet> uses
-    explicit UdfSet() : UdfSet(kStatic, 0, 0) {}
+    UdfSet() : UdfSet(kStatic, 0, 0) {}
 
     // Returns read-only view of the chunks in this set.
     const absl::flat_hash_set<UdfChunk, UdfChunkHash, UdfChunkEq>& chunks()
@@ -310,7 +327,8 @@ class BcmUdfManager {
   // ***************************************************************************
   BcmSdkInterface* bcm_sdk_interface_;   // Interface to the Bcm SDK. Not owned
                                          // by this class.
-  absl::flat_hash_map<int, UdfSet> udf_sets_;  // UDF sets managed by this object.
+  absl::flat_hash_map<int, UdfSet> udf_sets_;  // UDF sets managed by
+                                               // this object.
   int chunk_size_;                       // The size of each chunk in bits.
   int chunks_per_set_;                   // Number of chunks available per set.
 

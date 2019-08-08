@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <grpcpp/grpcpp.h>
+
+#include <string>
+#include <vector>
 
 #include "stratum/public/lib/error.h"
-
-#include <grpcpp/grpcpp.h>
 
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
@@ -43,7 +45,7 @@ TEST(ErrorTest, TestSingleton) {
   EXPECT_EQ(error_space, StratumErrorSpace());
 }
 
-// TODO: We dont have the fancy google3 proto utils which allows for
+// TODO(unknown): We dont have the fancy google3 proto utils which allows for
 // looping around enum values. Investigate if we can port them to depot3 or
 // we move to google3.
 TEST(ErrorTest, TestErrorCodes) {
@@ -164,7 +166,8 @@ TEST(CommonUtilsTest, TestCanonicalCodes) {
                            ::google::rpc::UNIMPLEMENTED);
   TestCanonicalCodesHelper(ERR_DATA_LOSS, ::grpc::StatusCode::DATA_LOSS,
                            ::google::rpc::DATA_LOSS);
-//FIXME(boc)   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or googleapi's code.proto
+// FIXME(boc)   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or
+// googleapi's code.proto
 //  TestCanonicalCodesHelper(ERR_UNAUTHENTICATED,
 //                           ::grpc::StatusCode::UNAUTHENTICATED,
 //                           ::google::rpc::UNAUTHENTICATED);

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
+
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 
 #include "gnmi/gnmi.pb.h"
@@ -941,7 +943,8 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id && singleton_port->id() == port_id) {
+        if (singleton_port->node() == node_id &&
+            singleton_port->id() == port_id) {  // NOLINTNEXTLINE
             singleton_port->mutable_config_params()->set_admin_state(typed_state);
             break;
         }
@@ -1056,7 +1059,8 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     std::string speed_string = typed_val->string_val();
-    ::google::protobuf::uint64 speed_bps = ConvertStringToSpeedBps(speed_string);
+    ::google::protobuf::uint64 speed_bps =
+        ConvertStringToSpeedBps(speed_string);
     if (speed_bps == 0) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
@@ -1073,7 +1077,8 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id && singleton_port->id() == port_id) {
+        if (singleton_port->node() == node_id &&
+            singleton_port->id() == port_id) {
             singleton_port->set_speed_bps(speed_bps);
             break;
         }
@@ -1144,7 +1149,8 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id && singleton_port->id() == port_id) {
+        if (singleton_port->node() == node_id &&
+            singleton_port->id() == port_id) {  // NOLINTNEXTLINE
             singleton_port->mutable_config_params()->set_autoneg(autoneg_status);
             break;
         }
@@ -1175,8 +1181,9 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/forwarding-viable
-void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id, uint32 port_id,
-    bool forwarding_viability, TreeNode* node, YangParseTree* tree) {
+void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id,
+        uint32 port_id, bool forwarding_viability, TreeNode* node,
+        YangParseTree* tree) {
   auto poll_functor = [forwarding_viability](const GnmiEvent& event,
                                              const ::gnmi::Path& path,
                                              GnmiSubscribeStream* stream) {
@@ -1194,7 +1201,8 @@ void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id, u
           return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
         }
         TrunkMemberBlockState new_forwarding_viability = typed_val->bool_val() ?
-            TRUNK_MEMBER_BLOCK_STATE_FORWARDING : TRUNK_MEMBER_BLOCK_STATE_BLOCKED;
+            TRUNK_MEMBER_BLOCK_STATE_FORWARDING :
+                TRUNK_MEMBER_BLOCK_STATE_BLOCKED;
         auto status = SetValue(node_id, port_id, tree,
             &SetRequest::Request::Port::mutable_forwarding_viability,
             &ForwardingViability::set_state, new_forwarding_viability);
@@ -1208,8 +1216,8 @@ void SetUpInterfacesInterfaceEthernetConfigForwardingViability(uint64 node_id, u
                                            const ::gnmi::Path& path,
                                            GnmiSubscribeStream* stream) {
           return SendResponse(GetResponse(path,
-                                          ConvertTrunkMemberBlockStateToBool(new_forwarding_viability)),
-                              stream);
+                  ConvertTrunkMemberBlockStateToBool(new_forwarding_viability)),
+                  stream);
         };
         node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
 
@@ -1378,7 +1386,7 @@ void SetUpInterfacesInterfaceStateCountersInOctets(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1401,7 +1409,7 @@ void SetUpInterfacesInterfaceStateCountersOutOctets(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1424,7 +1432,7 @@ void SetUpInterfacesInterfaceStateCountersInUnicastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1447,7 +1455,7 @@ void SetUpInterfacesInterfaceStateCountersOutUnicastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1470,7 +1478,7 @@ void SetUpInterfacesInterfaceStateCountersInBroadcastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1491,7 +1499,7 @@ void SetUpInterfacesInterfaceStateCountersOutBroadcastPkts(
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1514,7 +1522,7 @@ void SetUpInterfacesInterfaceStateCountersInDiscards(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1537,7 +1545,7 @@ void SetUpInterfacesInterfaceStateCountersOutDiscards(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1560,7 +1568,7 @@ void SetUpInterfacesInterfaceStateCountersInUnknownProtos(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1583,7 +1591,7 @@ void SetUpInterfacesInterfaceStateCountersInMulticastPkts(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1606,7 +1614,7 @@ void SetUpInterfacesInterfaceStateCountersInErrors(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1629,7 +1637,7 @@ void SetUpInterfacesInterfaceStateCountersOutErrors(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1652,7 +1660,7 @@ void SetUpInterfacesInterfaceStateCountersInFcsErrors(uint64 node_id,
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1673,7 +1681,7 @@ void SetUpInterfacesInterfaceStateCountersOutMulticastPkts(
   // In most cases the TARGET_DEFINED mode is changed into ON_CHANGE mode as
   // this mode is the least resource-hungry. But to make the gNMI demo more
   // realistic it is changed to SAMPLE with the period of 10s.
-  // TODO: remove/update this functor once the support for reading
+  // TODO(unknown): remove/update this functor once the support for reading
   // counters is implemented.
   node->SetTargetDefinedMode(tree->GetStreamSampleModeFunc());
 }
@@ -1918,9 +1926,9 @@ void SetUpComponentsComponentTransceiverStateSerialNo(
           resp = in.front_panel_port_info().serial_number();
           return true;
         });
-        // Query the switch. The returned status is ignored as there is no way to
-        // notify the controller that something went wrong. The error is logged when
-        // it is created.
+        // Query the switch. The returned status is ignored as there is no
+        // way to notify the controller that something went wrong.
+        // The error is logged when it is created.
         tree->GetSwitchInterface()
             ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
             .IgnoreError();
@@ -1939,9 +1947,9 @@ void SetUpComponentsComponentTransceiverStateVendor(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
 
   auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
-                               GnmiSubscribeStream* stream) {
-
+      [tree, node_id, port_id](const GnmiEvent& event,
+                              const ::gnmi::Path& path,
+                              GnmiSubscribeStream* stream) {
     // Create a data retrieval request.
     DataRequest req;
     auto* request = req.add_requests()->mutable_front_panel_port_info();
@@ -1957,8 +1965,8 @@ void SetUpComponentsComponentTransceiverStateVendor(
       return true;
     });
     // Query the switch. The returned status is ignored as there is no way to
-    // notify the controller that something went wrong. The error is logged when
-    // it is created.
+    // notify the controller that something went wrong. The error is
+    // logged when it is created.
     tree->GetSwitchInterface()
         ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
         .IgnoreError();
@@ -1976,8 +1984,9 @@ void SetUpComponentsComponentTransceiverStateVendor(
 void SetUpComponentsComponentTransceiverStateVendorPart(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
-                               GnmiSubscribeStream* stream) {
+      [tree, node_id, port_id](const GnmiEvent& event,
+                                const ::gnmi::Path& path,
+                                GnmiSubscribeStream* stream) {
         // Create a data retrieval request.
         DataRequest req;
         auto* request = req.add_requests()->mutable_front_panel_port_info();
@@ -1992,9 +2001,9 @@ void SetUpComponentsComponentTransceiverStateVendorPart(
           resp = in.front_panel_port_info().part_number();
           return true;
         });
-        // Query the switch. The returned status is ignored as there is no way to
-        // notify the controller that something went wrong. The error is logged when
-        // it is created.
+        // Query the switch. The returned status is ignored as there is no
+        // way to notify the controller that something went wrong.
+        // The error is logged when it is created.
         tree->GetSwitchInterface()
             ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
             .IgnoreError();
@@ -2122,7 +2131,8 @@ void SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /qos/queues/queue[name=<name>]/config/id
-void SetUpQusQueuesQueueConfigId(uint32 queue_id, TreeNode* node, YangParseTree* tree) {
+void SetUpQusQueuesQueueConfigId(uint32 queue_id, TreeNode* node,
+                                 YangParseTree* tree) {
   auto poll_functor = [queue_id](const GnmiEvent& event,
                                  const ::gnmi::Path& path,
                                  GnmiSubscribeStream* stream) {
@@ -2138,7 +2148,8 @@ void SetUpQusQueuesQueueConfigId(uint32 queue_id, TreeNode* node, YangParseTree*
 
 ////////////////////////////////////////////////////////////////////////////////
 // /qos/queues/queue[name=<name>]/state/id
-void SetUpQusQueuesQueueStateId(uint32 queue_id, TreeNode* node, YangParseTree* tree) {
+void SetUpQusQueuesQueueStateId(uint32 queue_id, TreeNode* node,
+                                YangParseTree* tree) {
   auto poll_functor = [queue_id](const GnmiEvent& event,
                                  const ::gnmi::Path& path,
                                  GnmiSubscribeStream* stream) {
@@ -2188,7 +2199,8 @@ void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name-of-component>]/integrated-circuit/config/node-id
-void SetUpComponentsComponentIntegratedCircuitConfigNodeId(uint64 node_id, TreeNode* node,
+void SetUpComponentsComponentIntegratedCircuitConfigNodeId(uint64 node_id,
+                                                           TreeNode* node,
                                                            YangParseTree* tree) {
   auto poll_functor = [node_id](const GnmiEvent& event,
                                 const ::gnmi::Path& path,
@@ -2203,7 +2215,8 @@ void SetUpComponentsComponentIntegratedCircuitConfigNodeId(uint64 node_id, TreeN
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name-of-component>]/integrated-circuit/state/node-id
-void SetUpComponentsComponentIntegratedCircuitStateNodeId(uint64 node_id, TreeNode* node,
+void SetUpComponentsComponentIntegratedCircuitStateNodeId(uint64 node_id,
+                                                          TreeNode* node,
                                                           YangParseTree* tree) {
   auto poll_functor = [node_id](const GnmiEvent& event,
                                 const ::gnmi::Path& path,
@@ -2360,7 +2373,8 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("auto-negotiate")());
-  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceEthernetStateAutoNegotiate(node_id, port_id,
+                                                      node, tree);
 
   absl::flat_hash_map<uint32, uint32> internal_priority_to_q_num;
   absl::flat_hash_map<uint32, TrafficClass> q_num_to_trafic_class;
@@ -2407,10 +2421,12 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
     SetUpQosInterfacesInterfaceOutputQueuesQueueStateDroppedPkts(
         node_id, port_id, queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)("config")("id")());
+    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)(
+           "config")("id")());
     SetUpQusQueuesQueueConfigId(queue_id, node, tree);
 
-    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)("state")("id")());
+    node = tree->AddNode(GetPath("qos")("queues")("queue", queue_name)(
+           "state")("id")());
     SetUpQusQueuesQueueStateId(queue_id, node, tree);
   }
 
@@ -2450,7 +2466,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("port-speed")());
   SetUpInterfacesInterfaceEthernetConfigPortSpeed(node_id, port_id,
-                                                  singleton.speed_bps(), node, tree);
+                                                  singleton.speed_bps(), node,
+                                                  tree);
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
   SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(node_id, port_id,
@@ -2466,7 +2483,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   SetUpComponentsComponentTransceiverStatePresent(node, tree, node_id, port_id);
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("serial-no")());
-  SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id, port_id);
+  SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id,
+                                                   port_id);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("vendor")());
@@ -2474,11 +2492,13 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("vendor-part")());
-  SetUpComponentsComponentTransceiverStateVendorPart(node, tree, node_id, port_id);
+  SetUpComponentsComponentTransceiverStateVendorPart(node, tree, node_id,
+                                                     port_id);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("form-factor")());
-  SetUpComponentsComponentTransceiverStateFormFactor(node, tree, node_id, port_id);
+  SetUpComponentsComponentTransceiverStateFormFactor(node, tree, node_id,
+                                                     port_id);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
@@ -2488,11 +2508,13 @@ void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   SetUpDebugNodesNodePacketIoDebugString(node.id(), tree_node, tree);
   tree_node = tree->AddNode(GetPath("components")("component", node.name())
       ("integrated-circuit")("config")("node-id")());
-  SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(), tree_node, tree);
+  SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(),
+                                                        tree_node, tree);
 
   tree_node = tree->AddNode(GetPath("components")("component", node.name())
       ("integrated-circuit")("state")("node-id")());
-  SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(), tree_node, tree);
+  SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(),
+                                                       tree_node, tree);
 }
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,

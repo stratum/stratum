@@ -22,6 +22,9 @@
 
 #include <memory>
 #include <utility>
+#include <string>
+#include <vector>
+#include <set>
 
 #include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"

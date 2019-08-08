@@ -57,7 +57,7 @@ control normal_clone_drop(inout headers hdr, inout test_metadata_t meta,
   }
 }
 
-// TODO: Given recent instability in the P4 checksum API and
+// TODO(unknown): Given recent instability in the P4 checksum API and
 // likely additional turbulence through PSA, consider moving these tests
 // to some other control.
 // The checksum verify control is overloaded to test what happens when

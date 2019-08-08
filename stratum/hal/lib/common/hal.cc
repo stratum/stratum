@@ -22,7 +22,7 @@
 #include "stratum/glue/logging.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
-//include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
+// include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
 #include "stratum/lib/utils.h"
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
@@ -100,7 +100,7 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       old_signal_handlers_() {}
 
 Hal::~Hal() {
-  // TODO: Handle this error?
+  // TODO(unknown): Handle this error?
   UnregisterSignalHandlers().IgnoreError();
 }
 
@@ -109,15 +109,19 @@ Hal::~Hal() {
           absl::StrSplit(FLAGS_external_stratum_urls, ',');
   CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
+
   auto it = std::find_if(external_stratum_urls.begin(),
-                         external_stratum_urls.end(), [](const std::string& url) {
+                         external_stratum_urls.end(),
+                         [](const std::string& url) {
                            return (url == FLAGS_local_stratum_url ||
-                                   //FIXME(boc) google only url == FLAGS_cmal_service_url ||
+                                   // FIXME(boc) google only url ==
+                                   // FLAGS_cmal_service_url ||
                                    url == FLAGS_procmon_service_addr);
                          });
   CHECK_RETURN_IF_FALSE(it == external_stratum_urls.end())
       << "You used one of these reserved local URLs as your external URLs: "
-      << FLAGS_local_stratum_url << ", " /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
+      << FLAGS_local_stratum_url << ", "
+      /*FIXME(boc) google only << FLAGS_cmal_service_url */<< ", "
       << FLAGS_procmon_service_addr << ".";
 
   CHECK_RETURN_IF_FALSE(!FLAGS_persistent_config_dir.empty())
@@ -292,8 +296,8 @@ Hal* Hal::GetSingleton() {
   CHECK_IS_NULL(diag_service_);
   CHECK_IS_NULL(file_service_);
   CHECK_IS_NULL(external_server_);
-  //FIXME(boc) google only
-  //CHECK_IS_NULL(internal_server_);
+  // FIXME(boc) google only
+  // CHECK_IS_NULL(internal_server_);
 
   // Reset error_buffer_.
   error_buffer_->ClearErrors();
@@ -345,7 +349,7 @@ Hal* Hal::GetSingleton() {
 }
 
 ::util::Status Hal::ProcmonCheckin() {
-    //FIXME replace Procmon with gNOI
+// FIXME replace Procmon with gNOI
 //  std::unique_ptr<procmon::ProcmonService::Stub> stub =
 //      procmon::ProcmonService::NewStub(::grpc::CreateChannel(
 //          FLAGS_procmon_service_addr, ::grpc::InsecureChannelCredentials()));

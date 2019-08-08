@@ -14,6 +14,8 @@
 
 // Contains unit tests for MidEndP4cOpen.
 
+#include <string>
+
 #include "stratum/p4c_backends/common/midend_p4c_open.h"
 
 #include "stratum/p4c_backends/test/ir_test_helpers.h"

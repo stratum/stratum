@@ -17,6 +17,7 @@
 
 #include <wordexp.h>
 #include <sstream>
+#include <string>
 
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
@@ -50,8 +51,9 @@ int BackendPassManager::Compile() {
   // The options for the third-party front and midend code are all embedded
   // within a single gflag.  The code below uses wordexp to parse
   // FLAGS_p4c_fe_options into an argc/argv pair for the p4c CompilerOptions.
-  const std::string p4c_command = std::string(google::ProgramInvocationShortName()) +
-                                  std::string(" ") + FLAGS_p4c_fe_options;
+  const std::string p4c_command =
+                          std::string(google::ProgramInvocationShortName()) +
+                          std::string(" ") + FLAGS_p4c_fe_options;
   LOG(INFO) << "p4c compiler options: " << p4c_command;
   wordexp_t parsed_options = {0};
   int ret = wordexp(p4c_command.c_str(), &parsed_options,

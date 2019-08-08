@@ -19,12 +19,13 @@
 // program.  The output is a hal::P4Control message that defines the control's
 // sequence of applied tables, hit/miss conditions, etc.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_CONTROL_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_CONTROL_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_CONTROL_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_CONTROL_INSPECTOR_H_
 
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
@@ -198,4 +199,4 @@ class ControlInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_CONTROL_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_CONTROL_INSPECTOR_H_

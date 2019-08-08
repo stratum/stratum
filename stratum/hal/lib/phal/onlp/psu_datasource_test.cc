@@ -40,15 +40,15 @@ using ::stratum::test_utils::StatusIs;
 
 class PsuDatasourceTest : public ::testing::Test {
  public:
-   void SetUp() override {
-     id_ = 12345;
-     oid_ = ONLP_PSU_ID_CREATE(id_);
-   }
+  void SetUp() override {
+    id_ = 12345;
+    oid_ = ONLP_PSU_ID_CREATE(id_);
+  }
 
-   int id_;             // Id for this PSU
-   OnlpOid oid_;        // OID for this PSU (i.e. Type + Id)
-   onlp_oid_hdr_t mock_oid_info_;
-   MockOnlpWrapper mock_onlp_interface_;
+  int id_;             // Id for this PSU
+  OnlpOid oid_;        // OID for this PSU (i.e. Type + Id)
+  onlp_oid_hdr_t mock_oid_info_;
+  MockOnlpWrapper mock_onlp_interface_;
 };
 
 TEST_F(PsuDatasourceTest, InitializePSUWithEmptyInfo) {

@@ -16,8 +16,8 @@
 
 // This file declares a BackendExtensionInterface mock for unit tests.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
+#define STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
 
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "gmock/gmock.h"
@@ -36,4 +36,4 @@ class BackendExtensionMock : public BackendExtensionInterface {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_

@@ -35,7 +35,7 @@ message Card {
   repeated Port ports = 1;
 }
 
-// TODO: Add fan tray LED support and fan tray type.
+// TODO(unknown): Add fan tray LED support and fan tray type.
 message FanTray {
   message Fan {
     int32 id = 1;

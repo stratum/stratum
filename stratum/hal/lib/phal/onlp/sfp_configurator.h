@@ -18,10 +18,11 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_SFP_CONFIGURATOR_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_SFP_CONFIGURATOR_H_
 
+#include <memory>
+
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
-#include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/sfp_configurator.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -52,9 +53,9 @@ class OnlpSfpConfigurator : public SfpConfigurator {
     std::shared_ptr<OnlpSfpDataSource> GetSfpDataSource() const
         { return datasource_; }
 
-  private:
+ private:
     // OnlpSfpConfigurator() = delete;
-    OnlpSfpConfigurator() {};
+    OnlpSfpConfigurator() {}
     OnlpSfpConfigurator(int id, std::shared_ptr<OnlpSfpDataSource> datasource,
         AttributeGroup* sfp_group, OnlpInterface* onlp_interface);
 

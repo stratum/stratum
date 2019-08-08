@@ -27,6 +27,9 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>  // IWYU pragma: keep
+#include <utility>
+#include <string>
+
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
@@ -44,8 +47,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 // #include "util/endian/endian.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
 
@@ -54,7 +55,7 @@ DEFINE_int32(max_num_linkscan_writers, 10,
              "Max number of linkscan event Writers supported.");
 DECLARE_string(bcm_sdk_checkpoint_dir);
 
-// TODO: There are many CHECK_RETURN_IF_FALSE in this file which will
+// TODO(unknown): There are many CHECK_RETURN_IF_FALSE in this file which will
 // need to be changed to return ERR_INTERNAL as opposed to ERR_INVALID_PARAM.
 
 namespace stratum {
@@ -161,7 +162,7 @@ BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
       unit_to_soc_device_(),
       bcm_diag_shell_(bcm_diag_shell),
       linkscan_event_writers_() {
-  // TODO: Add implementation.
+  // TODO(unknown): Add implementation.
 }
 
 BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
@@ -170,23 +171,23 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     const std::string& config_file_path,
     const std::string& config_flush_file_path,
     const std::string& bcm_shell_log_file_path) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::FindUnit(int unit, int pci_bus, int pci_slot,
                                        BcmChip::BcmChipType chip_type) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::InitializeUnit(int unit, bool warm_boot) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::ShutdownUnit(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -213,24 +214,24 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkWrapper::SetModuleId(int unit, int module) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::InitializePort(int unit, int port) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetPortOptions(int unit, int port,
                                              const BcmPortOptions& options) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetPortOptions(int unit, int port,
                                              BcmPortOptions* options) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -242,12 +243,12 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkWrapper::StartLinkscan(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::StopLinkscan(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -312,7 +313,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 ::util::Status BcmSdkWrapper::SetMtu(int unit, int mtu) {
   absl::WriterMutexLock l(&data_lock_);
   CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
-  // TODO: Modify mtu for all the interfaces on this unit.
+  // TODO(unknown): Modify mtu for all the interfaces on this unit.
   unit_to_mtu_[unit] = mtu;
 
   return ::util::OkStatus();
@@ -321,45 +322,45 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3RouterIntf(int unit,
                                                               uint64 router_mac,
                                                               int vlan) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindOrCreateL3RouterIntf is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3RouterIntf(int unit, int router_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3CpuEgressIntf(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindOrCreateL3CpuEgressIntf is not implemented.";
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3PortEgressIntf(
     int unit, uint64 nexthop_mac, int port, int vlan, int router_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindOrCreateL3PortEgressIntf is not implemented.";
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3TrunkEgressIntf(
     int unit, uint64 nexthop_mac, int trunk, int vlan, int router_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindOrCreateL3TrunkEgressIntf is not implemented.";
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3DropIntf(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindOrCreateL3DropIntf is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::ModifyL3CpuEgressIntf(int unit,
                                                     int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -368,7 +369,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                      uint64 nexthop_mac,
                                                      int port, int vlan,
                                                      int router_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -377,43 +378,43 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                       uint64 nexthop_mac,
                                                       int trunk, int vlan,
                                                       int router_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::ModifyL3DropIntf(int unit, int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3EgressIntf(int unit, int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindRouterIntfFromEgressIntf(
     int unit, int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindRouterIntfFromEgressIntf is not implemented.";
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateEcmpEgressIntf(
     int unit, const std::vector<int>& member_ids) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED)
       << "FindOrCreateEcmpEgressIntf is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::ModifyEcmpEgressIntf(
     int unit, int egress_intf_id, const std::vector<int>& member_ids) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteEcmpEgressIntf(int unit,
                                                    int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -421,7 +422,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                              uint32 mask, int class_id,
                                              int egress_intf_id,
                                              bool is_intf_multipath) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -430,20 +431,20 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                              const std::string& mask,
                                              int class_id, int egress_intf_id,
                                              bool is_intf_multipath) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::AddL3HostIpv4(int unit, int vrf, uint32 ipv4,
                                             int class_id, int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::AddL3HostIpv6(int unit, int vrf,
                                             const std::string& ipv6,
                                             int class_id, int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -452,21 +453,21 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                 int class_id,
                                                 int egress_intf_id,
                                                 bool is_intf_multipath) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::ModifyL3RouteIpv6(
     int unit, int vrf, const std::string& subnet, const std::string& mask,
     int class_id, int egress_intf_id, bool is_intf_multipath) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::ModifyL3HostIpv4(int unit, int vrf, uint32 ipv4,
                                                int class_id,
                                                int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -474,31 +475,31 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                const std::string& ipv6,
                                                int class_id,
                                                int egress_intf_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3RouteIpv4(int unit, int vrf,
                                                 uint32 subnet, uint32 mask) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3RouteIpv6(int unit, int vrf,
                                                 const std::string& subnet,
                                                 const std::string& mask) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3HostIpv4(int unit, int vrf, uint32 ipv4) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3HostIpv6(int unit, int vrf,
                                                const std::string& ipv6) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -506,27 +507,27 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                        int vlan, int vlan_mask,
                                                        uint64 dst_mac,
                                                        uint64 dst_mac_mask) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED) << "AddMyStationEntry is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::DeleteMyStationEntry(int unit, int station_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL2EntriesByVlan(int unit, int vlan) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::AddVlanIfNotFound(int unit, int vlan) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteVlanIfFound(int unit, int vlan) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -535,18 +536,18 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                  bool block_known_multicast,
                                                  bool block_unknown_multicast,
                                                  bool block_unknown_unicast) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::ConfigureL2Learning(int unit, int vlan,
                                                   bool disable_l2_learning) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetL2AgeTimer(int unit, int l2_age_duration_sec) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -555,59 +556,59 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     int serdes_num_lanes, const std::string& intf_type,
     const SerdesRegisterConfigs& serdes_register_configs,
     const SerdesAttrConfigs& serdes_attr_configs) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::CreateKnetIntf(int unit, int vlan,
                                              std::string* netif_name,
                                              int* netif_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DestroyKnetIntf(int unit, int netif_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::CreateKnetFilter(int unit, int netif_id,
                                                       KnetFilterType type) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED) << "CreateKnetFilter is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::DestroyKnetFilter(int unit, int filter_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::StartRx(int unit, const RxConfig& rx_config) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::StopRx(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetRateLimit(
     int unit, const RateLimitConfig& rate_limit_config) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetKnetHeaderForDirectTx(int unit, int port,
                                                        int cos, uint64 smac,
                                                        std::string* header) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetKnetHeaderForIngressPipelineTx(
     int unit, uint64 smac, std::string* header) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -620,39 +621,39 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
                                                    int* ingress_logical_port,
                                                    int* egress_logical_port,
                                                    int* cos) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::InitAclHardware(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetAclControl(int unit,
                                             const AclControl& acl_control) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetAclUdfChunks(int unit, const BcmUdfSet& udfs) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetAclUdfChunks(int unit, BcmUdfSet* udfs) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::CreateAclTable(int unit,
                                                     const BcmAclTable& table) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED) << "CreateAclTable is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::DestroyAclTable(int unit, int table_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -660,36 +661,36 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
                                                    const BcmFlowEntry& flow,
                                                    bool add_stats,
                                                    bool color_aware) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   RETURN_ERROR(ERR_UNIMPLEMENTED) << "InsertAclFlow is not implemented.";
 }
 
 ::util::Status BcmSdkWrapper::ModifyAclFlow(int unit, int flow_id,
                                             const BcmFlowEntry& flow) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::RemoveAclFlow(int unit, int flow_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetAclPolicer(int unit, int flow_id,
                                             const BcmMeterConfig& meter) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetAclTable(int unit, int table_id,
                                           BcmAclTable* table) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 namespace {
 
-// TODO: use util/endian/endian.h?
+// TODO(unknown): use util/endian/endian.h?
 inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
 
 // Call Broadcom SDK function to get a specific qualifier field's value and mask
@@ -714,36 +715,36 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
 
 ::util::Status BcmSdkWrapper::GetAclFlow(int unit, int flow_id,
                                          BcmFlowEntry* flow) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::StatusOr<std::string> BcmSdkWrapper::MatchAclFlow(
     int unit, int flow_id, const BcmFlowEntry& flow) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return std::string();
 }
 
 ::util::Status BcmSdkWrapper::GetAclTableFlowIds(int unit, int table_id,
                                                  std::vector<int>* flow_ids) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::AddAclStats(int unit, int table_id, int flow_id,
                                           bool color_aware) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::RemoveAclStats(int unit, int flow_id) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::GetAclStats(int unit, int flow_id,
                                           BcmAclStats* stats) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -779,7 +780,7 @@ pthread_t BcmSdkWrapper::GetDiagShellThreadId() const {
 }
 
 ::util::Status BcmSdkWrapper::CleanupKnet(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
@@ -846,7 +847,7 @@ pthread_t BcmSdkWrapper::GetDiagShellThreadId() const {
 }
 
 ::util::Status BcmSdkWrapper::RegisterSdkCheckpointFile(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   // Find the checkpoint file size for this unit.
   ASSIGN_OR_RETURN(const int checkpoint_file_size,
                    FindSdkCheckpointFileSize(unit));
@@ -862,33 +863,33 @@ pthread_t BcmSdkWrapper::GetDiagShellThreadId() const {
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindSdkCheckpointFileSize(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return kSdkCheckpointFileSize;
 }
 
 ::util::StatusOr<BcmChip::BcmChipType> BcmSdkWrapper::GetChipType(int unit) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return BcmChip::UNKNOWN;
 }
 
 ::util::Status BcmSdkWrapper::SetIntfAndConfigurePhyForPort(
     int unit, int port, BcmChip::BcmChipType chip_type, uint64 speed_bps,
     const std::string& intf_type) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetSerdesRegisterForPort(
     int unit, int port, BcmChip::BcmChipType chip_type, int serdes_lane,
     uint32 reg, uint32 value) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::SetSerdesAttributeForPort(
     int unit, int port, BcmChip::BcmChipType chip_type, const std::string& attr,
     uint32 value) {
-  // TODO: Implement this function.
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 

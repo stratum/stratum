@@ -65,8 +65,8 @@
 //      a.apply();
 //      if (color == RED) drop();  // Ambiguous table hit or miss.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_HIT_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_HIT_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TABLE_HIT_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_FPM_TABLE_HIT_INSPECTOR_H_
 
 #include <set>
 #include <string>
@@ -168,4 +168,4 @@ class TableHitInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TABLE_HIT_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TABLE_HIT_INSPECTOR_H_

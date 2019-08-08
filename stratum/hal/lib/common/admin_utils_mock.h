@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_MOCK_H_
-#define STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_MOCK_H_
-
-#include "admin_utils_interface.h"
+#ifndef STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_MOCK_H_
+#define STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_MOCK_H_
 
 #include <string>
+#include <memory>
+#include <vector>
+
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/common/admin_utils_interface.h"
 #include "absl/memory/memory.h"
 
 namespace stratum {
@@ -26,7 +28,7 @@ namespace hal {
 
 class AdminServiceShellHelperMock : public AdminServiceShellHelper {
  public:
-  AdminServiceShellHelperMock(const std::string& s)
+  explicit AdminServiceShellHelperMock(const std::string& s)
       : AdminServiceShellHelper(s) {}
   MOCK_METHOD0(Execute, bool());
   MOCK_METHOD0(GetStdout, std::vector<std::string>());
@@ -97,7 +99,7 @@ class AdminServiceUtilsInterfaceMock : public AdminServiceUtilsInterface {
   MOCK_METHOD0(Reboot, ::util::Status());
 };
 
-} // namespace hal
-} // namespace stratum
+}  // namespace hal
+}  // namespace stratum
 
-#endif //STRATUM_HAL_LIB_COMMON_ADMIN_SERVICE_MOCK_H_
+#endif  // STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_MOCK_H_

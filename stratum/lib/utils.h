@@ -43,7 +43,7 @@
 namespace stratum {
 
 // This is a simple stopwatch/timer class. The implementation is not threadsafe.
-// TODO: Use internal Google3 timers when moved there.
+// TODO(unknown): Use internal Google3 timers when moved there.
 class Timer {
  public:
   Timer() : started_(false) {}

@@ -169,7 +169,7 @@ bool TunnelTypeMapper::FindGreHeader(
       p4_tunnel_properties_.set_is_gre_tunnel(true);
       gre_header_op_ = tunnel_action.header_op();
     } else {
-      // TODO: Are there any valid use cases for GRE header copies?
+      // TODO(unknown): Are there any valid use cases for GRE header copies?
       tunnel_error_message_ +=
           "GRE header-to-header copy is an invalid tunnel operation. ";
       return true;
@@ -269,7 +269,7 @@ void TunnelTypeMapper::ProcessTunnelAssignments(
           tunnel_error_message_ += absl::Substitute(
               "Action $0 has ambiguous outer encap headers $1 and $2. ",
               action_name_.c_str(), P4HeaderType_Name(outer_encap_type).c_str(),
-              P4HeaderType_Name( header_descriptor.type()).c_str());
+              P4HeaderType_Name(header_descriptor.type()).c_str());
         }
       }
     }

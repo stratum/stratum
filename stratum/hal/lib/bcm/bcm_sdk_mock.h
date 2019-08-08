@@ -18,6 +18,10 @@
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_MOCK_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_MOCK_H_
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "gmock/gmock.h"
 

@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <tuple>
 
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/lib/utils.h"
@@ -515,8 +516,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("control_misc_test.ir.json", "egress"),
         std::make_tuple("control_misc_test.ir.json", "ingress"),
         std::make_tuple("control_misc_test.ir.json", "verifyChecksum"),
-        std::make_tuple("control_misc_test.ir.json", "computeChecksum")
-    ));
+        std::make_tuple("control_misc_test.ir.json", "computeChecksum")));
 
 // This set of test parameters is for transform attempts that produce errors.
 // The first member of the tuple is the name of the JSON IR file to load for
@@ -536,8 +536,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("switch_case_errors.ir.json", "bad_condition"),
         std::make_tuple("switch_case_errors.ir.json", "ingress_nested_if"),
         std::make_tuple("switch_case_errors2.ir.json",
-                        "unsupported_function_test")
-    ));
+                        "unsupported_function_test")));
 
 // This set of test parameters tests IR::IfStatements with valid meter
 // color conditions.  The test parameter is a tuple, with these members:
@@ -587,9 +586,8 @@ INSTANTIATE_TEST_SUITE_P(
     // These values account for skips due to p4c's insertion of temporary
     // values for evaluating table hits.
     Values(
-        std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 11),
-        std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 13)
-    ));
+      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 11),
+      std::make_tuple("if_color_test.ir.json", "ifs_with_no_transforms", 13)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

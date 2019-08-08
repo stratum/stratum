@@ -18,15 +18,16 @@
 // P4 program's IR on behalf of a backend extension.  It records nodes of
 // possible interest to the backend for subsequent processing.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
+#ifndef STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
+#define STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h" // FIXME: figure out better include path
+// FIXME: figure out better include path
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -107,7 +108,7 @@ class ProgramInspector : public Inspector {
  private:
   // These containers record the visited nodes for use after this inspector
   // is applied.
-  // TODO: Does the P4Action need the P4Control?
+  // TODO(unknown): Does the P4Action need the P4Control?
   std::map<const IR::P4Action*, const IR::P4Control*> actions_;
   std::vector<const IR::Type_StructLike*> struct_likes_;
   std::vector<const IR::Type_Header*> header_types_;
@@ -130,4 +131,4 @@ class ProgramInspector : public Inspector {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_
+#endif  // STRATUM_P4C_BACKENDS_COMMON_PROGRAM_INSPECTOR_H_

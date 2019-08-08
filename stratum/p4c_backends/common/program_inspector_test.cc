@@ -32,7 +32,8 @@ class ProgramInspectorTest : public testing::Test {
  public:
   void SetUp() override {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string kTestP4IRFile = "stratum/p4c_backends/fpm/testdata/field_inspect_test.ir.json";
+    const std::string kTestP4IRFile =
+              "stratum/p4c_backends/fpm/testdata/field_inspect_test.ir.json";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestP4IRFile));
   }
 

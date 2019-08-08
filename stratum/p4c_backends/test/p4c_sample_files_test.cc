@@ -44,7 +44,8 @@ DEFINE_string(p4c_binary_path,
 
 DEFINE_string(test_tmpdir, "", "Temp directory to be used for tests.");
 
-DEFINE_string(test_srcdir, "external/com_github_p4lang_p4c", "Source directory of the P4 test files to feed to the p4c compiler.");
+DEFINE_string(test_srcdir, "external/com_github_p4lang_p4c",
+        "Source directory of the P4 test files to feed to the p4c compiler.");
 
 namespace stratum {
 namespace p4c_backends {
@@ -54,10 +55,12 @@ namespace p4c_backends {
 // p4c_test_files namespace.
 namespace {
 
-// Build a list of file paths to P4 test files. Bazel includes them as data deps in filegroup "testdata_p4_16_samples".
-// We could (should?) build this list dynamically at runtime by reading the filesystem, but doing so is
-// not portable until C++17 std::filesystem or would involve boost.
-// TODO: include more test files
+// Build a list of file paths to P4 test files. Bazel includes them as data
+// deps in filegroup "testdata_p4_16_samples".
+// We could (should?) build this list dynamically at runtime by reading the
+// filesystem, but doing so is not portable until C++17 std::filesystem or
+// would involve boost.
+// TODO(unknown): include more test files
 std::vector<std::string> CreateP4v16FileList() {
   return {
     "testdata/p4_16_samples/alias.p4",

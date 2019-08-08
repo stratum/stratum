@@ -132,7 +132,7 @@ class P4InfoManagerTest : public testing::Test {
   }
 
   void SetUpTestP4ActionProfiles() {
-    // TODO: Tests get only one basic profile preamble at present.
+    // TODO(unknown): Tests get only one basic profile preamble at present.
     auto new_profile = p4_test_info_.add_action_profiles();
     new_profile->mutable_preamble()->set_id(kFirstActionProfileID);
     new_profile->mutable_preamble()->set_name("Action-Profile-1");
@@ -140,7 +140,7 @@ class P4InfoManagerTest : public testing::Test {
   }
 
   void SetUpTestP4Counters() {
-    // TODO: Tests get only one basic counter preamble at present.
+    // TODO(unknown): Tests get only one basic counter preamble at present.
     auto new_counter = p4_test_info_.add_counters();
     new_counter->mutable_preamble()->set_id(kFirstCounterID);
     new_counter->mutable_preamble()->set_name("Counter-1");
@@ -148,7 +148,7 @@ class P4InfoManagerTest : public testing::Test {
   }
 
   void SetUpTestP4Meters() {
-    // TODO: Tests get only one basic meter preamble at present.
+    // TODO(unknown): Tests get only one basic meter preamble at present.
     auto new_meter = p4_test_info_.add_meters();
     new_meter->mutable_preamble()->set_id(kFirstMeterID);
     new_meter->mutable_preamble()->set_name("Meter-1");
@@ -164,7 +164,7 @@ class P4InfoManagerTest : public testing::Test {
     SetUpNewP4Info();
   }
 
-  //FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
+  // FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
   // Populates p4_test_info_ with all resources from the tor.p4 spec.  This
   // data provides assurance that P4InfoManager can handle real P4 compiler
   // output.
@@ -658,7 +658,7 @@ TEST_F(P4InfoManagerTest, TestDumpNamesToIDs) {
   p4_test_manager_->DumpNamesToIDs();
 }
 
-//FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
+// FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
 /*
 // Tests ability to handle a "real" P4 spec (tor.p4).
 TEST_F(P4InfoManagerTest, TestTorP4Info) {
@@ -744,7 +744,7 @@ TEST_F(P4InfoManagerTest, TestDuplicateIDTableAndAction) {
  */
 
 #if 0
-// TODO: Rework this test for 2 objects with global IDs.
+// TODO(unknown): Rework this test for 2 objects with global IDs.
 // Tests name duplication across resource types.
 TEST_F(P4InfoManagerTest, TestDuplicateNameHeaderFieldAndAction) {
   SetUpTorP4Info();
@@ -782,7 +782,7 @@ TEST_F(P4InfoManagerTest, TestTableMissingActionXref) {
   EXPECT_THAT(status.error_message(), HasSubstr("refers to an invalid"));
 }
 
-//FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
+// FIXME(boc) disabling test due to missing tor_p4_info.pb.txt
 // Tests GetSwitchStackAnnotations with a pipeline_stage.
 /*
 TEST_F(P4InfoManagerTest, TestPipelineStageAnnotations) {

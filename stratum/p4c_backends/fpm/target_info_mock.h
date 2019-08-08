@@ -16,8 +16,8 @@
 
 // This file defines the TargetInfoMock class.
 
-#ifndef THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
-#define THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
+#ifndef STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
+#define STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
 
 #include "stratum/p4c_backends/fpm/target_info.h"
 
@@ -35,4 +35,4 @@ class TargetInfoMock : public TargetInfo {
 }  // namespace p4c_backends
 }  // namespace stratum
 
-#endif  // THIRD_PARTY_STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
+#endif  // STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_

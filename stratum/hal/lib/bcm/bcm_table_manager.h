@@ -23,6 +23,7 @@
 #include <memory>
 #include <set>
 #include <utility>
+#include <vector>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
