@@ -49,6 +49,51 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+namespace {
+
+void registerDeviceMgrLogger() {
+  using ::pi::fe::proto::LogWriterIface;
+  using ::pi::fe::proto::LoggerConfig;
+  class P4RuntimeLogger : public LogWriterIface {
+    void write(Severity severity, const char *msg) override {
+      ::google::LogSeverity new_severity = INFO;
+      switch (severity) {
+        case Severity::TRACE:
+          if (!VLOG_IS_ON(3)) return;
+          new_severity = INFO;
+          break;
+        case Severity::DEBUG:
+          if (!VLOG_IS_ON(1)) return;
+          new_severity = INFO;
+          break;
+        case Severity::INFO:
+          new_severity = INFO;
+          break;
+        case Severity::WARN:
+          new_severity = WARNING;
+          break;
+        case Severity::ERROR:
+          new_severity = ERROR;
+          break;
+        case Severity::CRITICAL:
+          new_severity = FATAL;
+          break;
+      }
+
+      // we use google::LogMessage directly (instead of the LOG macro) so we can
+      // control the file name and line number displayed in the logs. Probably
+      // not ideal but stratum/glue/status/status.h already does the same thing.
+      constexpr char kDummyFile[] = "PI-device_mgr.cpp";
+      constexpr int kDummyLine = 0;
+      google::LogMessage log_message(kDummyFile, kDummyLine, new_severity);
+      log_message.stream() << msg;
+    }
+  };
+  LoggerConfig::set_writer(std::make_shared<P4RuntimeLogger>());
+}
+
+}  // namespace
+
 int
 Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
@@ -96,8 +141,9 @@ Main(int argc, char* argv[]) {
     }
   }
 
-  // no longer done the Barefoot SDE starting with 8.7.0
+  // no longer done by the Barefoot SDE starting with 8.7.0
   DeviceMgr::init(256 /* max devices */);
+  registerDeviceMgrLogger();
 
   int unit(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate

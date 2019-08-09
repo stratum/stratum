@@ -103,7 +103,7 @@ sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
        --bf_sim
 ```
 
-For a sample `chassis_config.pb.txt` file, see sample_config.proto.txt in this
+For a sample `chassis_config.pb.txt` file, see sample_config.pb.txt in this
 directory. *Do not use the ucli or the Thrift PAL RPC service for port
 configuration.* You may use the ucli to check port status (`pm show`).
 
@@ -127,9 +127,34 @@ Platforms with repeaters (such as the Wedge 100bf-65x) are not currently
 supported in BSP-less mode.
 
 We only support DAC cables at the moment, and autoneg must be forced "on" for
-every port. See [sample_config.proto.txt](sample_config.proto.txt) for an
-example (look for `autoneg: TRI_STATE_TRUE`). We are working on adding support
-for optical cables.
+every port. See [sample_config.pb.txt](sample_config.pb.txt) for an example
+(look for `autoneg: TRI_STATE_TRUE`). We are working on adding support for
+optical cables.
+
+By default FEC is turned off for every port. You can turn on FEC for a given
+port in the chassis config file by adding `fec_mode: FEC_MODE_ON` to the
+`config_params` message field for the appropriate singleton port entry. FEC will
+then be configured automatically based on the port speed: Firecode for 10G and
+40G, Reed-Solomon for all other speeds (25G, 50G, 100G and other supported port
+speeds). For example:
+```
+singleton_ports {
+  id: 132
+  port: 132
+  speed_bps: 100000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+    autoneg: TRI_STATE_TRUE
+    fec_mode: FEC_MODE_ON
+  }
+  node: 1
+  name: "132"
+  slot: 1
+}
+```
+will configure device port 132 in 100G mode with Reed-Solomon (RS) FEC.
+
+FEC can also be configured when adding a port through gNMI.
 
 ## Testing gNMI
 
@@ -140,3 +165,17 @@ python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 set /interfaces/interfac
 python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 sub /interfaces/interface[name=128]/state/oper-status
 ```
 
+## Using p4runtime-shell
+
+[p4runtime-shell](https://github.com/p4lang/p4runtime-shell) is an interactive
+Python shell for P4Runtime. While it can also be used to set the P4 forwarding
+pipeline and issue P4Runtime `Write` RPCs, it especially comes in handy when you
+want to read the forwarding state of the switch.
+
+To start a shell session, you can use (requires Docker):
+```
+./p4runtime-sh-docker --grpc-addr <Stratum IP>:28000 --device-id 1 --election-id 0,1
+```
+
+Refer to the [p4runtime-shell](https://github.com/p4lang/p4runtime-shell)
+documentation for more information.
