@@ -75,7 +75,10 @@ RUN mkdir -p $OUTPUT_BASE/bin && \
     cp $STRATUM_BF_BASE/docker/stratum.flags $OUTPUT_BASE/share/stratum/ && \
     cp $STRATUM_BF_BASE/*.conf $OUTPUT_BASE/share/stratum/ && \
     touch $OUTPUT_BASE/share/stratum/phal_config.pb.txt && \
-    cp $STRATUM_BF_BASE/chassis_config.pb.txt $OUTPUT_BASE/share/stratum/
+    cp $STRATUM_BF_BASE/chassis_config.pb.txt $OUTPUT_BASE/share/stratum/ && \
+    mkdir -p /output/stratum/hal/lib/common/ && \
+    cp stratum/hal/lib/common/gnmi_caps.pb.txt /output/stratum/hal/lib/common/
+    # TODO(Yi Tseng): Remove two lines above when we are able to generate cap response automatically
 
 FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
