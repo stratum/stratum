@@ -169,8 +169,13 @@ OnlpSwitchConfigurator::Make(
     auto mutable_root = root->AcquireMutable();
 
     // Add cards
-    for (int card_id=0; card_id < phal_config.cards_size(); card_id++) {
-        auto card_config = phal_config.cards(card_id);
+    for (int j=0; j < phal_config.cards_size(); j++) {
+
+        auto card_config = phal_config.cards(j);
+
+        // If id set to default (i.e. not set) then use
+        // the 1-based index of this config item
+        int card_id = (card_config.id() == 0 ? (j+1): card_config.id());
 
         // Add Card to attribute DB
         ASSIGN_OR_RETURN(auto card,
@@ -398,8 +403,8 @@ OnlpSwitchConfigurator::Make(
     // Check to make sure port exists
     // Note: will need to figure out how to map card id and port id
     //       into an OID, for now we ignore card id.
-    ASSIGN_OR_RETURN(OidInfo oid_info,
-        GetOidInfo(sfp, ONLP_SFP_ID_CREATE(port_id)));
+    auto status = GetOidInfo(sfp, ONLP_SFP_ID_CREATE(port_id));
+    if (!status.ok()) return status.status();
 
     // If it's an SFP/QSFP then the transceiver data source
     // will be added dynamically upon insertion
@@ -430,11 +435,6 @@ OnlpSwitchConfigurator::Make(
             RETURN_IF_ERROR(phal_interface_->RegisterSfpConfigurator(
                 card_id, port_id, configurator.get()));
 
-            // If the Sfp is present add it
-            if (oid_info.Present()) {
-                configurator->AddSfp();
-            }
-
             // Save it in the database
             auto mutable_sfp = sfp->AcquireMutable();
             mutable_sfp->AddRuntimeConfigurator(std::move(configurator));
@@ -443,8 +443,8 @@ OnlpSwitchConfigurator::Make(
 
     // All other port types
     default:
-        LOG(INFO) << "card " << card_id << "port " << port_id
-            << " transceiver type " << PhysicalPortType_descriptor()
+        LOG(INFO) << "card[" << card_id << "]/port[" << port_id 
+            << "]: transceiver type " << PhysicalPortType_descriptor()
                   ->FindValueByNumber(config.physical_port_type())
                   ->name()
             << " not handled.";

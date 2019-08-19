@@ -44,8 +44,7 @@ message PhalCardConfig {
   // This message encapsulates all the data needed to specify a physical 
   //port on a switch chassis.
   message Port {
-    // (optional) identifier
-    int32 id = 1;
+    int32 id = 1;                 // (optional) 1-base index identifier
     // Physical Port type
     PhysicalPortType physical_port_type = 2;
     // Attribute DB Cache Policy 
@@ -57,9 +56,11 @@ message PhalCardConfig {
     // Transceiver module TX disable path for all the 4 channels.
     repeated string tx_disable_paths = 7;
   }
-  repeated Port ports = 1;
+
+  int32 id = 1;                 // (optional) 1-base index identifier
+  repeated Port ports = 2;
   // Attribute DB Cache Policy
-  CachePolicyConfig cache_policy = 2;
+  CachePolicyConfig cache_policy = 3;
 }
 
 // This message encapsulates all of the data needed to specify a fan tray.
@@ -74,12 +75,13 @@ message PhalFanTrayConfig {
     // Path to set the fan speed.
     string fan_control_path = 4;
   }
-  string tray_presence_path = 1;
+  int32 id = 1;                 // (optional) 1-base index identifier
+  string tray_presence_path = 2;
   // Fan tray info EEPROM path.
-  string tray_info_path = 2;
-  repeated Fan fans = 3;
+  string tray_info_path = 3;
+  repeated Fan fans = 4;
   // Attribute DB Cache Policy
-  CachePolicyConfig cache_policy = 4;
+  CachePolicyConfig cache_policy = 5;
 }
 
 // This message encapsulates all of the data needed to specify a psu tray.
@@ -90,9 +92,10 @@ message PhalPsuTrayConfig {
     // Attribute DB Cache Policy 
     CachePolicyConfig cache_policy = 2;
   }
-  repeated Psu psus = 1;
+  int32 id = 1;                 // (optional) 1-base index identifier
+  repeated Psu psus = 2;
   // Attribute DB Cache Policy
-  CachePolicyConfig cache_policy = 2;
+  CachePolicyConfig cache_policy = 3;
 }
 
 // This message encapsulates the data required by PHAL to be able to find, 
@@ -110,9 +113,10 @@ message PhalLedGroupConfig {
     // critical.
     repeated string led_control_path = 4;
   }
-  repeated Led leds = 1;
+  int32 id = 1;                 // (optional) 1-base index identifier
+  repeated Led leds = 2;
   // Attribute DB Cache Policy
-  CachePolicyConfig cache_policy = 2;
+  CachePolicyConfig cache_policy = 3;
 }
 
 // ThermalConfig encapsulates the data required by PHAL to be able to find
@@ -124,9 +128,10 @@ message PhalThermalGroupConfig {
     // Attribute DB Cache Policy 
     CachePolicyConfig cache_policy = 2;
   }
-  repeated Thermal thermals = 1;
+  int32 id = 1;                 // (optional) 1-base index identifier
+  repeated Thermal thermals = 2;
   // Attribute DB Cache Policy
-  CachePolicyConfig cache_policy = 2;
+  CachePolicyConfig cache_policy = 3;
 }
 
 // Message used to initialize the PHAL on real hardware.

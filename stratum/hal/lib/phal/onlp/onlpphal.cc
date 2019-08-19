@@ -235,6 +235,11 @@ OnlpPhal::~OnlpPhal() {}
   // Get slot port pair to lookup sfpdatasource.
   const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
   auto configurator = slot_port_to_configurator_[slot_port_pair];
+  // Check to make sure we've got a configurator for this slot/port
+  if (configurator == nullptr) {
+    RETURN_ERROR() << "card[" << slot << "]/port[" << port << "]: "
+                   << "no configurator for this transceiver";
+  }
   auto sfp_src = configurator->GetSfpDataSource();
 
   // Check if Sfp inserted
