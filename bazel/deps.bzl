@@ -154,7 +154,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_google_absl",
             remote = "https://github.com/abseil/abseil-cpp",
-            branch = "master",
+            branch = "lts_2019_08_08",
         )
 
     if "com_googlesource_code_cctz" not in native.existing_rules():
@@ -162,42 +162,42 @@ def stratum_deps():
         remote_workspace(
             name = "com_googlesource_code_cctz",
             remote = "https://github.com/google/cctz",
-            branch = "master",
+            commit = "b4935eef53820cf1643355bb15e013b4167a2867",
         )
 
     if "com_github_google_glog" not in native.existing_rules():
         remote_workspace(
             name = "com_github_google_glog",
             remote = "https://github.com/google/glog",
-            branch = "master",
+            commit = "ba8a9f6952d04d1403b97df24e6836227751454e",
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
         remote_workspace(
             name = "com_github_gflags_gflags",
             remote = "https://github.com/gflags/gflags",
-            branch = "master",
+            commit = "28f50e0fed19872e0fd50dd23ce2ee8cd759338e",
         )
 
     if "com_google_googletest" not in native.existing_rules():
         remote_workspace(
             name = "com_google_googletest",
             remote = "https://github.com/google/googletest",
-            branch = "master",
+            branch = "3525e3984282c827c7207245b1d4a47f4eaf3c91",
         )
 
     if "com_googlesource_code_re2" not in native.existing_rules():
         remote_workspace(
             name = "com_googlesource_code_re2",
             remote = "https://github.com/google/re2",
-            branch = "master",
+            commit = "be0e1305d264b2cbe1d35db66b8c5107fc2a727e",
         )
 
     if "com_github_systemd_systemd" not in native.existing_rules():
         remote_workspace(
             name = "com_github_systemd_systemd",
             remote = "https://github.com/systemd/systemd",
-            branch = "master",
+            commit = "06e93130b4045db1c75f8de506d2447642de74cf",
             build_file = "@//bazel:external/systemd.BUILD",
         )
 
@@ -259,7 +259,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_bcm_sdklt",
             remote = "https://github.com/Broadcom-Network-Switching-Software/SDKLT",
-            branch = "master",
+            branch = "master", # FIXME(Yi): Use ONF branch?
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
