@@ -32,9 +32,9 @@ OnlpSfpConfigurator::OnlpSfpConfigurator(int id,
     std::shared_ptr<OnlpSfpDataSource>datasource,
     AttributeGroup* sfp_group, OnlpInterface* onlp_interface)
       : id_(id),
-        datasource_(datasource),
-        sfp_group_(sfp_group),
-        onlp_interface_(onlp_interface) {
+        datasource_(ABSL_DIE_IF_NULL(datasource)),
+        sfp_group_(ABSL_DIE_IF_NULL(sfp_group)),
+        onlp_interface_(ABSL_DIE_IF_NULL(onlp_interface)) {
     // lock us so we can modify
     auto mutable_sfp = sfp_group_->AcquireMutable();
 
@@ -222,9 +222,6 @@ OnlpSfpConfigurator::Make(int id,
 
     // Remove all the channel groups
     RETURN_IF_ERROR(mutable_sfp->RemoveRepeatedChildGroup("channels"));
-
-    // free up datasource
-    datasource_ = nullptr;
 
     // we're now not initialized
     initialized_ = false;
