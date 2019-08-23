@@ -9,11 +9,11 @@ FROM stratumproject/build:build as builder
 COPY . /tmp/stratum
 WORKDIR /tmp/stratum
 
-RUN bazel build //stratum/p4c_backends/fpm:p4c_herc_switch
+RUN bazel build //stratum/p4c_backends/fpm:p4c-fpm
 
 # Put aside binary and other runtime dependencies.
 RUN mkdir -p /output/usr/local/bin
-RUN install bazel-bin/stratum/p4c_backends/fpm/p4c_herc_switch /output/usr/local/bin/
+RUN install bazel-bin/stratum/p4c_backends/fpm/p4c-fpm /output/usr/local/bin/
 
 RUN mkdir -p /output/usr/share/p4c
 RUN cp -r $(bazel info output_base)/external/com_github_p4lang_p4c/p4include /output/usr/share/p4c/
@@ -29,5 +29,5 @@ RUN install_packages ${RUNTIME_DEPS}
 
 COPY --from=builder /output /
 
-ENTRYPOINT ["p4c_herc_switch"]
+ENTRYPOINT ["p4c-fpm"]
 CMD ["-help"]

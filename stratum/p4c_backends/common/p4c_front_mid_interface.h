@@ -54,7 +54,7 @@ class P4cFrontMidInterface {
   // and argv, then pass the result into ProcessCommandLineOptions.  Refer to
   // code in BackendPassManager for an example.  A sample command line appears
   // below:
-  //  blaze-bin/<path-to-compiler/p4c_herc_switch \
+  //  blaze-bin/<path-to-compiler/p4c-fpm \
   //      --p4_info_file=/tmp/p4c_tor_p4_info.txt \
   //      --p4c_fe_options="--p4-14 ~/tmp_new_p4/tor_cc69e56.p4"
   virtual int ProcessCommandLineOptions(int argc, char* const argv[]) = 0;

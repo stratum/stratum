@@ -1892,7 +1892,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "p4c_herc_switch",
+    name = "p4c-fpm",
     srcs = ["p4c_switch_main.cc"],
     copts = [
         "-fexceptions",
