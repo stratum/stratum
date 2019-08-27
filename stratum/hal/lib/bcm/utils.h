@@ -74,6 +74,8 @@ std::string PrintBcmPort(const BcmPort& p);
 // Prints BcmPortOptions message in a consistent and readable format.
 std::string PrintBcmPortOptions(const BcmPortOptions& options);
 
+std::string SpeedBpsToBcmPortSpeedStr(const uint64 speed_bps);
+
 }  // namespace bcm
 }  // namespace hal
 }  // namespace stratum

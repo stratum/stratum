@@ -81,6 +81,26 @@ std::string PrintBcmPortOptions(const BcmPortOptions& options) {
   return buffer.str();
 }
 
+std::string SpeedBpsToBcmPortSpeedStr(const uint64 speed_bps) {
+  switch(speed_bps) {
+    case 10000000000: return "PC_PORT_OPMODE_10G";
+    case 12000000000: return "PC_PORT_OPMODE_12G";
+    case 13000000000: return "PC_PORT_OPMODE_13G";
+    case 20000000000: return "PC_PORT_OPMODE_20G";
+    case 25000000000: return "PC_PORT_OPMODE_25G";
+    case 21000000000: return "PC_PORT_OPMODE_21G";
+    case 40000000000: return "PC_PORT_OPMODE_40G";
+    case 42000000000: return "PC_PORT_OPMODE_42G";
+    case 50000000000: return "PC_PORT_OPMODE_50G";
+    case 100000000000: return "PC_PORT_OPMODE_100G";
+    case 120000000000: return "PC_PORT_OPMODE_120G";
+    case 127000000000: return "PC_PORT_OPMODE_127G";
+    case 200000000000: return "PC_PORT_OPMODE_200G";
+    case 400000000000: return "PC_PORT_OPMODE_400G";
+    default: return "PC_PORT_OPMODE_ANY";
+  }
+}
+
 }  // namespace bcm
 }  // namespace hal
 }  // namespace stratum

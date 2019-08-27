@@ -161,6 +161,7 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
+        "@com_github_jbeder_yaml_cpp//:yaml_cpp",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
