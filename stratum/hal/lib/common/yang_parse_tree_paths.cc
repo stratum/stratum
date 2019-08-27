@@ -2468,14 +2468,20 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   SetUpInterfacesInterfaceEthernetConfigPortSpeed(node_id, port_id,
                                                   singleton.speed_bps(), node,
                                                   tree);
+  bool port_auto_neg_enabled = false;
+  bool port_enabled = false;
+  if (singleton.has_config_params()) {
+    port_auto_neg_enabled = IsPortAutonegEnabled(singleton.config_params().autoneg());
+    port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
+  }
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
   SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(node_id, port_id,
-                                                      true, node, tree);
+                                                      port_auto_neg_enabled, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("config")("enabled")());
-  SetUpInterfacesInterfaceConfigEnabled(false, node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node, tree);
 
   // Paths for transceiver
   node = tree->AddNode(GetPath("components")(
