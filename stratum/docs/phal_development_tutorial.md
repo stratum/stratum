@@ -46,10 +46,9 @@ many environments, the PHAL is broken into several layers:
     response. The attribute database handles all synchronization, so any number
     of adapters can run in parallel.
 
-<center>
-![drawing](images/attrib_db_layout_simple.png)
 
-*Anatomy of a PHAL* </center>
+![drawing](images/attrib_db_layout_simple.png)
+<center>*Anatomy of a PHAL* </center>
 
 Note that the attribute database is a single point of contact between clients
 and the system itself. Everything above the attribute database only needs to
@@ -302,6 +301,8 @@ takes an `AttributeGroup*` as input, acquires a writer lock on it (via
 `AcquireMutable()`), then adds attributes and child attribute groups. Such a
 function often also takes a configuration message as input.
 
+**Note:** The switch configurators have been fully documented [here](configurators.md)
+
 #### Example
 
 Let's try configuring an AttributeGroup to contain the boolean attribute we
@@ -483,10 +484,156 @@ channel (in which case the normal subscription mechanism is all that's
 necessary) or it can make callbacks to its client, in which case a new thread is
 necessary.
 
-At the moment there are no utilities to assist in writing clean adapters, but
-they may be added in the future. E.g. it may be useful to have a general
-framework for adapters that read from the database and push the result over a
-gRPC connection.
+#### The Adapter class
 
-TODO: Update this section once more tools exist for writing clean
-adapter implementations. Possibly add an example.
+There is a simple `Adapter` class that provides the basic `Get()`, `Subscribe()` and
+`Set()` PhalDB functions by mapping to their appropriate counterparts in the
+attribute_database_interface.  This class can be used as the base class for application specific
+adapter classes.  
+
+The `SfpAdapater` class is one such example of a derived adapter class that handles the
+translation of attribute database query responses (i.e. in PhalDB protobuf messages) to HAL
+specific messages (i.e. the FrontPanelPortInfo message from the [hal.proto](../public/proto/hal.proto)
+protobuf used in the `GetFrontPanelPortInfo()` function).
+
+![drawing](images/attrib_db_adapter.png)
+
+### The PhalDB grpc service
+
+The PhalDB has been exposed via a set of grpc services (see the [db.proto](../hal/lib/phal/db.proto) 
+protobuf for a complete list of services) that allow the caller to `Get()`, `Subscribe()`
+or `Set()` PhalDB attributes via a grpc call. 
+
+This can be very useful for debugging problems with the hardware or even to get telemtry
+directly without needing to go through the gnmi.  The db.proto protobuf file details the
+services that are available and the message structure of these requests.
+
+### The PhalDB cli tool
+
+A PhalDB grpc client tool has been written to collect information from the PhalDB via
+this grpc interface (i.e. while stratum is running).  This can be used to debug hardware
+problems or even test code that is not easily tested in a simulated environment (i.e. dynamic
+configurator testing).
+
+This tool can be built as follows:
+
+```
+~/stratum$ bazel build //stratum/hal/lib/phal:phal_cli
+Starting local Bazel server and connecting to it...
+INFO: Analysed target //stratum/hal/lib/phal:phal_cli (42 packages loaded, 2655 targets configured).
+INFO: Found 1 target...
+Target //stratum/hal/lib/phal:phal_cli up-to-date:
+  bazel-bin/stratum/hal/lib/phal/phal_cli
+INFO: Elapsed time: 11.331s, Critical Path: 0.30s
+INFO: 0 processes.
+INFO: Build completed successfully, 1 total action
+```
+
+once built the executable can then be run either from the stratum machine locally or remotely by specifying
+the correct stratum url to the command.
+
+```
+stratum$ ./bazel-bin/stratum/hal/lib/phal/phal_cli --stratum_url <stratum-ip-address>:28000
+```
+
+Once connected queries can be made against a live stratum PhalDB by entering a search
+path using the db.proto path tree as a syntax reference.  
+
+The high level steps of the phal_cli command are as follows:
+1. Reads the given string into a grpc PhalDBSvc GetRequest message.
+2. Sends the GetRequest to the stratum server as a grpc call.
+3. The PhalDBSvc in the stratum server will construct a PhalDB Path from the query string to query the database.
+4. The PhalDBSvc will then call the `Get()` function in the PhalDB Adapter to query the database and return a PhalDB message to the client.
+5. The phal_cli command will then print out the response from the stratum PhalDB.
+
+The query string should consist of at least one '/' separated field. Each field is an attribute group
+or attribute name followed by an optional index. The index is bracketed, and consists of either a 
+non-negative integer or '@' indicating all indices. The last field may optionally end with a '/' to 
+indicate a terminal group.
+
+Some valid examples:
+* Get All cards: "cards[@]/"
+* Get Card 0: "cards[0]/"
+* Get Card 0 Port 0: "cards[0]/ports[0]/"
+* Get Card 0 Port 0 hardware state: "cards[0]/ports[0]/transceiver/hardware_state"
+* Get Fan Tray 0: "fan_trays[0]/"
+* Get PSU Tray 0: "psu_trays[0]/"
+* Get LED Group 0: "led_groups[0]/"
+* Get Thermal Group 0: "thermal_groups[0]/"
+
+Some invalid examples:
+* "/"  (at least one field is required)
+* "foo//bar"
+* "foo/bar[-1]/"
+
+
+Some example output from the card queries are shown below:
+
+```
+Enter a PHAL path: cards[0]/
+phal_db {
+  cards {
+    ports {
+      transceiver {
+        id: 1
+        description: "SFP 0"
+        hardware_state: HW_STATE_PRESENT
+        info {
+          mfg_name: "DELL            "
+          serial_no: "CN0769626BB47BD "
+          part_no: "P7C7N           "
+        }
+        connector_type: SFP_TYPE_QSFP28
+        module_type: SFP_MODULE_TYPE_100G_BASE_CR4
+        module_capabilities {
+          f_100g: true
+        }
+        cable_length: 1
+        cable_length_desc: "1m"
+      }
+    }
+    ports {
+      transceiver {
+        id: 2
+        description: "SFP 1"
+        hardware_state: HW_STATE_PRESENT
+        info {
+          mfg_name: "DELL            "
+          serial_no: "CN0769626BB47BD "
+          part_no: "P7C7N           "
+        }
+        connector_type: SFP_TYPE_QSFP28
+        module_type: SFP_MODULE_TYPE_100G_BASE_CR4
+        module_capabilities {
+          f_100g: true
+        }
+        cable_length: 1
+        cable_length_desc: "1m"
+      }
+    }
+    ports {
+      transceiver {
+        id: 3
+        hardware_state: HW_STATE_NOT_PRESENT
+      }
+    }
+  }
+}
+
+Executed query in 234540 us.
+
+Enter a PHAL path: cards[0]/ports[0]/transceiver/hardware_state
+phal_db {
+  cards {
+    ports {
+      transceiver {
+        hardware_state: HW_STATE_PRESENT
+      }
+    }
+  }
+}
+
+Executed query in 96758 us.
+```
+
+
