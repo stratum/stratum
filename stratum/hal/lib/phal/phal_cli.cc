@@ -141,7 +141,10 @@ class PhalCli {
               << std::endl;
         start_time = absl::Now();
 
-        if (num_responses > 0 && --cnt == 0) break;
+        if (num_responses > 0 && --cnt == 0) {
+            std::cout << "Reached max polls" << std::endl;
+            return ::util::OkStatus();
+        }
     }
 
     auto status = reader->Finish();
