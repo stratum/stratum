@@ -510,10 +510,9 @@ services that are available and the message structure of these requests.
 
 ### The PhalDB cli tool
 
-A PhalDB grpc client tool has been written to collect information from the PhalDB via
-this grpc interface (i.e. while stratum is running).  This can be used to debug hardware
-problems or even test code that is not easily tested in a simulated environment (i.e. dynamic
-configurator testing).
+A PhalDB grpc client tool has been written to interact with the PhalDB via the grpc interface (i.e. while stratum is running).  This can be used to debug hardware problems or even test code that is not easily tested in a simulated environment (i.e. dynamic configurator testing).
+
+The phal_cli command has been updated to support `Get`, `Set` and `Subscribe` requests to the PhalDB.
 
 This tool can be built as follows:
 
@@ -567,9 +566,10 @@ Some invalid examples:
 * "foo/bar[-1]/"
 
 
-Some example output from the card queries are shown below:
+Some example output from the `Get` card queries are shown below:
 
 ```
+Cmd type <get, subscribe, set>: get
 Enter a PHAL path: cards[0]/
 phal_db {
   cards {
@@ -622,6 +622,7 @@ phal_db {
 
 Executed query in 234540 us.
 
+Cmd type <get, subscribe, set>: get
 Enter a PHAL path: cards[0]/ports[0]/transceiver/hardware_state
 phal_db {
   cards {
