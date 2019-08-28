@@ -35,8 +35,8 @@ namespace phal {
     absl::Duration poll_time) {
 
     ASSIGN_OR_RETURN(auto database, phal_interface_->GetPhalDB());
-    ASSIGN_OR_RETURN(auto db_query, database->MakeQuery({path}));
-    return (db_query->Subscribe(std::move(writer), poll_time));
+    ASSIGN_OR_RETURN(db_query_, database->MakeQuery({path}));
+    return db_query_->Subscribe(std::move(writer), poll_time);
 }
 
 ::util::Status Adapter::Set(const AttributeValueMap& attrs) {

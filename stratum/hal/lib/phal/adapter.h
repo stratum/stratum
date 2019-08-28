@@ -47,7 +47,7 @@ class Adapter {
   ::util::Status Set(const AttributeValueMap& values);
 
   PhalInterface* phal_interface_; // not owned by this class
-
+  std::unique_ptr<Query> db_query_; // used for subscribe requests
 };
 
 
