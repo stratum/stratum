@@ -98,6 +98,15 @@ class PhalDBService final : public ::stratum::hal::phal::PhalDBSvc::Service {
   // PhalDB Adapter
   PhalInterface* phal_interface_;
 
+  // Mutex which protects the creation and destruction of the 
+  // subscriber channels map.
+  mutable absl::Mutex subscriber_thread_lock_;
+
+  // Map of subscriber channels (key is thread id, given that
+  // each grpc request will have a different tid.
+  std::map<pthread_t, std::shared_ptr<Channel<::stratum::hal::phal::PhalDB>>>
+        subscriber_channels_ GUARDED_BY(subscriber_thread_lock_);
+
   friend class PhalDBServiceTest;
 };
 

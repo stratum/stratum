@@ -60,6 +60,17 @@ PhalDBService::~PhalDBService() {}
 
 ::util::Status PhalDBService::Teardown() {
   
+  LOG(INFO) << "PhalDBService::Teardown";
+
+  {
+    absl::MutexLock l(&subscriber_thread_lock_);
+    // Close Subscriber Channels.
+    for (const auto& pair : subscriber_channels_) {
+      pair.second->Close();
+    }
+    subscriber_channels_.clear();
+  }
+
   return ::util::OkStatus();
 }
 
@@ -355,6 +366,14 @@ namespace {
     std::shared_ptr<Channel<::stratum::hal::phal::PhalDB>> channel =
         Channel<::stratum::hal::phal::PhalDB>::Create(128);
 
+    {
+        // Lock subscriber channels
+        absl::MutexLock l(&subscriber_thread_lock_);
+
+        // Save channel to subscriber channel map
+        subscriber_channels_[pthread_self()] = channel;
+    }
+
     auto writer = 
             ChannelWriter<::stratum::hal::phal::PhalDB>::Create(channel);
 
@@ -415,9 +434,15 @@ namespace {
         } while (true);
     }
 
-    // Close the channel which will then cause the PhalDB writer
-    // to close and exit
-    channel->Close();
+    {
+        // Lock subscriber channels
+        absl::MutexLock l(&subscriber_thread_lock_);
+
+        // Close the channel which will then cause the PhalDB writer
+        // to close and exit
+        channel->Close();
+        subscriber_channels_.erase(pthread_self());
+    }
   }
 
   // Convert to grpc status and return
