@@ -371,6 +371,13 @@ namespace {
     if (status.ok()) {
 
         // Loop around processing messages from the PhalDB writer
+        // Note: if the client dies we'll only close the channel
+        //       and thus cancel the PhalDB subscription once we
+        //       get something from the PhalDB subscription (i.e.
+        //       if the poll timer expires and something has changed).
+        //       We could potentially put something in here to check
+        //       the stream and channel for changes but for now this
+        //       will do.
         do {
             ::stratum::hal::phal::PhalDB phaldb_resp;
             int code = reader->Read(&phaldb_resp, 
