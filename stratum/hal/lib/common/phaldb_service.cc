@@ -205,7 +205,7 @@ namespace {
   // Issue the get
   auto adapter = 
     absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
-  auto phaldb_res = adapter->Get(path);
+  auto phaldb_res = adapter->Get({path});
   if (phaldb_res.ok()) {
       auto phaldb_resp = std::move(phaldb_res.ConsumeValueOrDie());
       *resp->mutable_phal_db() = *phaldb_resp;
@@ -383,7 +383,7 @@ namespace {
     // Issue the subscribe
     auto adapter = 
         absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
-    status = adapter->Subscribe(path, std::move(writer), 
+    status = adapter->Subscribe({path}, std::move(writer), 
                                  absl::Seconds(req->polling_interval()));
 
     // If Subscribe ok

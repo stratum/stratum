@@ -21,21 +21,22 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-::util::StatusOr<std::unique_ptr<PhalDB>> Adapter::Get(const Path& path) {
+::util::StatusOr<std::unique_ptr<PhalDB>> Adapter::Get(
+    const std::vector<Path>& paths) {
 
     ASSIGN_OR_RETURN(auto database, phal_interface_->GetPhalDB());
-    ASSIGN_OR_RETURN(auto db_query, database->MakeQuery({path}));
+    ASSIGN_OR_RETURN(auto db_query, database->MakeQuery(paths));
     ASSIGN_OR_RETURN(auto phaldb_resp, db_query->Get());
 
     return std::move(phaldb_resp);
 }
 
-::util::Status Adapter::Subscribe(const Path& path,
+::util::Status Adapter::Subscribe(const std::vector<Path>& paths,
     std::unique_ptr<ChannelWriter<PhalDB>> writer,
     absl::Duration poll_time) {
 
     ASSIGN_OR_RETURN(auto database, phal_interface_->GetPhalDB());
-    ASSIGN_OR_RETURN(db_query_, database->MakeQuery({path}));
+    ASSIGN_OR_RETURN(db_query_, database->MakeQuery(paths));
     return db_query_->Subscribe(std::move(writer), poll_time);
 }
 

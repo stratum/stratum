@@ -38,9 +38,9 @@ class Adapter {
 
   virtual ~Adapter() = default;
 
-  ::util::StatusOr<std::unique_ptr<PhalDB>> Get(const Path& path);
+  ::util::StatusOr<std::unique_ptr<PhalDB>> Get(const std::vector<Path>& paths);
 
-  ::util::Status Subscribe(const Path& path,
+  ::util::Status Subscribe(const std::vector<Path>& paths,
                            std::unique_ptr<ChannelWriter<PhalDB>> writer,
                            absl::Duration poll_time);
 
