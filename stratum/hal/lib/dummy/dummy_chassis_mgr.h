@@ -24,7 +24,6 @@
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 

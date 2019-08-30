@@ -696,7 +696,6 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:timer_daemon",
         "//stratum/lib/channel",
-        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
     ],
 )

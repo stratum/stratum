@@ -22,7 +22,7 @@
 #include <map>
 
 #include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
@@ -121,7 +121,7 @@ class DummySwitch : public SwitchInterface {
 
   PhalInterface* phal_interface_;
   DummyChassisManager* chassis_mgr_;
-  ::stratum::gtl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
+  ::absl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
   std::shared_ptr<WriterInterface<GnmiEventPtr>> gnmi_event_writer_;
 
   // gets slot number for a node_id + port_id pair

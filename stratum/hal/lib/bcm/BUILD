@@ -250,7 +250,6 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
-        "//stratum/glue/gtl:node_hash_set",
     ],
 )
 

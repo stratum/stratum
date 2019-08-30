@@ -24,7 +24,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/glue/integral_types.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
@@ -187,7 +187,7 @@ class DummyNode {
 
  protected:
   ::absl::Mutex node_lock_;
-  ::stratum::gtl::flat_hash_map<uint64, SingletonPortStatus> ports_state_;
+  ::absl::flat_hash_map<uint64, SingletonPortStatus> ports_state_;
 
 // An event writer which updates node status (e.g. port status)
 // And forwards the event.

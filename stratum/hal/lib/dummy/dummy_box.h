@@ -26,7 +26,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
+#include "absl/container/flat_hash_map.h"
 #include "stratum/hal/lib/dummy/dummy_test.pb.h"
 #include "stratum/hal/lib/dummy/dummy_test.grpc.pb.h"
 #include "stratum/hal/lib/common/phal_interface.h"
@@ -134,7 +134,7 @@ class DummyBox : public Test::Service {
   int xcvr_writer_id_ GUARDED_BY(sdk_lock_);
   std::vector<PhalInterface::TransceiverEventWriter> xcvr_event_writers_
   GUARDED_BY(sdk_lock_);
-  stratum::gtl::flat_hash_map<uint32,
+  ::absl::flat_hash_map<uint32,
   std::shared_ptr<WriterInterface<DummyNodeEventPtr>>>
     node_event_notify_writers_
   GUARDED_BY(sdk_lock_);

@@ -47,7 +47,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
-        "//stratum/glue/gtl:flat_hash_map",
         "//stratum/glue/gtl:map_util",
 
     ],

@@ -344,7 +344,7 @@ DummySwitch::DummySwitch(PhalInterface* phal_interface,
                          DummyChassisManager* chassis_mgr)
   : phal_interface_(phal_interface),
     chassis_mgr_(chassis_mgr),
-    dummy_nodes_(::stratum::gtl::flat_hash_map<uint64, DummyNode*>()),
+    dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
     gnmi_event_writer_(nullptr) {
 }
 

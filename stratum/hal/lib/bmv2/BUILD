@@ -44,7 +44,7 @@ stratum_cc_library(
             "//stratum/hal/lib/pi:pi_node",
             "//stratum/lib:constants",
             "//stratum/lib:macros",
-            "//stratum/glue/gtl:flat_hash_map",
+            "@com_google_absl//absl/container:flat_hash_map",
             "//stratum/glue/gtl:map_util",
     ],
 )

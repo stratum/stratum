@@ -20,7 +20,6 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/logging.h"
-#include "stratum/glue/gtl/flat_hash_map.h"
 #include "stratum/hal/lib/common/common.pb.h"
 
 namespace stratum {
