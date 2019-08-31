@@ -401,6 +401,13 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
+      case DataRequest::Request::kFrontPanelPortInfo: {
+        RETURN_IF_ERROR(bcm_chassis_manager_->GetFrontPanelPortInfo(
+            req.front_panel_port_info().node_id(),
+            req.front_panel_port_info().port_id(),
+            resp.mutable_front_panel_port_info()));
+        break;
+      }
       default:
         status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
     }

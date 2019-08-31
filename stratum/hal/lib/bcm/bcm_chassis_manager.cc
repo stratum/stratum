@@ -449,6 +449,18 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   return bcm_sdk_interface_->GetPortCounters(unit, bcm_port.logical_port(), pc);
 }
 
+::util::Status BcmChassisManager::GetFrontPanelPortInfo(
+    uint64 node_id, uint32 port_id, FrontPanelPortInfo* fp_port_info) {
+
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  ASSIGN_OR_RETURN(auto bcm_port, GetBcmPort(node_id, port_id));
+
+  return phal_interface_->GetFrontPanelPortInfo(bcm_port.slot(), 
+            bcm_port.port(), fp_port_info);
+}
+
 ::util::Status BcmChassisManager::SetTrunkMemberBlockState(
     uint64 node_id, uint32 trunk_id, uint32 port_id,
     TrunkMemberBlockState state) {

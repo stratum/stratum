@@ -177,6 +177,10 @@ class BcmChassisManager : public BcmChassisRoInterface {
                                                   TrunkMemberBlockState state)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
+  // Gets the port info from the transceiver
+  ::util::Status GetFrontPanelPortInfo(uint64 node_id, uint32 port_id, 
+                                       FrontPanelPortInfo* fp_port_info);
+
   // Sets the admin state of a port, as requested by the SDN controller. This
   // method:
   // 1- Sends a request to SDK to enable/disable the port.
