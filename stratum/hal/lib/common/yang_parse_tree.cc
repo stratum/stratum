@@ -174,7 +174,7 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   std::unordered_set<std::string> trunk_names;
   for (const auto& trunk : change.new_config_.trunk_ports()) {
     // Find out on which node the trunk is created.
-    // TODO(b/70300190): Once TrunkPort message in hal.proto is extended to
+    // TODO(b/70300190): Once TrunkPort message in common.proto is extended to
     // include node_id remove 3 following lines.
     if (trunk_names.count(trunk.name())) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate trunk name: " << trunk.name();

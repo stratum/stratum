@@ -2352,7 +2352,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("health-indicator")());
-  // TODO(tmadejski): Fix this value once HAL.PROTO has corresponding field.
+  // TODO(tmadejski): Fix this value once common.proto has corresponding field.
   SetUpInterfacesInterfaceConfigHealthIndicator("GOOD", node_id, port_id, node,
                                                 tree);
 
@@ -2362,7 +2362,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("forwarding-viable")());
-  // TODO(tmadejski): Fix this value once HAL.PROTO has corresponding field.
+  // TODO(tmadejski): Fix this value once common.proto has corresponding field.
   SetUpInterfacesInterfaceEthernetConfigForwardingViability(node_id, port_id,
       /* forwarding-viable */ true, node, tree);
 

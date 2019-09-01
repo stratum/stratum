@@ -21,8 +21,6 @@
 #include <vector>
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-// FIXME remove when onlp_wrapper.h is stable
-// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
 #include "absl/memory/memory.h"

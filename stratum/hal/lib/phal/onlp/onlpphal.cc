@@ -22,8 +22,6 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/lib/macros.h"
-// FIXME remove when onlp_wrapper.h is stable
-// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 

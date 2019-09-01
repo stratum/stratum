@@ -64,16 +64,6 @@ cc_proto_library(
 )
 
 proto_library(
-    name = "hal_proto",
-    srcs = ["hal.proto"],
-)
-
-cc_proto_library(
-    name = "hal_cc_proto",
-    deps = [":hal_proto"]
-)
-
-proto_library(
     name = "openconfig_goog_bcm_proto",
     srcs = ["openconfig-goog-bcm.proto"],
     deps = ["@com_github_openconfig_ygot_proto//:ywrapper_proto"]

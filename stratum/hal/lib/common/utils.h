@@ -68,7 +68,7 @@ struct PortKey {
   }
 };
 
-// A custom hash functor for SingletonPort proto message in hal.proto.
+// A custom hash functor for SingletonPort proto message in common.proto.
 class SingletonPortHash {
  public:
   size_t operator()(const SingletonPort& port) const {
@@ -84,7 +84,7 @@ class SingletonPortHash {
   }
 };
 
-// A custom equal functor for SingletonPort proto messages in hal.proto.
+// A custom equal functor for SingletonPort proto messages in common.proto.
 class SingletonPortEqual {
  public:
   bool operator()(const SingletonPort& lhs, const SingletonPort& rhs) const {

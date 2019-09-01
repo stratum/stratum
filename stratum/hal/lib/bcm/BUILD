@@ -177,7 +177,6 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
-        "//stratum/public/proto:hal_cc_proto",
     ],
 )
 

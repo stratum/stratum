@@ -22,8 +22,6 @@
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-// FIXME remove when onlp_wrapper.h is stable
-// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_fake.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"

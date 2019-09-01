@@ -192,14 +192,14 @@ class SwitchInterface {
 
   // A generic method to retrieve a value specified by 'request'.
   // All types of data that can be retrieved using this method are defined in
-  // hal.proto
+  // common.proto
   virtual ::util::Status RetrieveValue(
       uint64 node_id, const DataRequest& request,
       WriterInterface<DataResponse>* writer,
       std::vector<::util::Status>* details) = 0;
 
   // A generic method to set a value specified by 'request'. All types of data
-  // that can be set using this method are defined in hal.proto.
+  // that can be set using this method are defined in common.proto.
   // The 'request' will be processed in the context of the node identified by
   // 'node_id' and the result of each sub-request that is part of the 'request'
   // will be stored in 'details'. The order of statuses in 'details' is the
