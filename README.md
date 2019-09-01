@@ -1,12 +1,46 @@
-[Stratum - A P4Runtime based reference framework](https://github.com/opennetworkinglab/stratum.git)
+![stratum logo](stratum/docs/images/stratum-logo.png)
+
+# Stratum - Enabling the era of next-generation SDN
 
 Copyright 2018 Google LLC
+
+Stratum is an open source silicon-independent switch operating system for software defined networks. It is building an open, minimal production-ready distribution for white box switches. Stratum exposes a set of next-generation SDN interfaces including P4Runtime and OpenConfig, enabling interchangeability of forwarding devices and programmability of forwarding behaviors. Current support includes Barefoot Tofino and Broadcom Tomahawk devices, as well as the bmv2 software switch.
 
 Build status (master): [![CircleCI Status](https://circleci.com/gh/opennetworkinglab/stratum/tree/master.svg?style=svg&circle-token=4daca5c647bfe024b4420c9fa21e9f6272bcd50d)](https://circleci.com/gh/opennetworkinglab/stratum)
 
 # Documentation
 
-# Overview
+## Running Stratum
+
+[Broadcom](stratum/hal/bin/bcm/standalone/README.md)
+
+[Tofino](stratum/hal/bin/barefoot/README.md)
+
+[bmv2](stratum/hal/bin/bmv2/README.md)
+
+[dummy](stratum/hal/bin/dummy/README.md)
+
+[Stratum inside Docker](TODO)
+
+## Other Topics
+
+[p4c-fpm](stratum/p4c_backends/README.md)
+
+[PHAL](stratum/docs/phal.md)
+
+[PHAL Development Tutorial](stratum/docs/phal_development_tutorial.md)
+
+[PHAL DB Configurators](stratum/docs/configurators.md)
+
+[gNMI](stratum/docs/gnmi/README.md)
+
+[cdlang](stratum/testing/cdlang/README.md)
+
+[testvectors](stratum/public/proto/tv.proto)
+
+# Component Overview
+
+![img](stratum/docs/images/stratum_architecture.png)
 
 [P4Runtime](https://p4.org/p4-runtime) provides a flexible mechanism for
 configuring the forwarding pipeline on a network switch.
@@ -15,12 +49,43 @@ configuring the forwarding pipeline on a network switch.
 framework for network device management that uses gRPC as the transport
 mechanism.
 
+[SDKLT](https://github.com/Broadcom-Network-Switching-Software/SDKLT) is used
+to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
+
+# Supported Devices
+
+## Tofino
+
+- Edgecore Wedge 100BF 32x
+
+- Delta AG9064v1
+
+- Edgecore Wedge 100BF 65x
+
+- Inventec D5254
+
+## Broadcom
+
+- Edgecore AS7712-32X
+
+- QCT QuantaMesh IX1
+
+- Dell Z9100
+
+- Inventec D7032
+
+## Software Switches
+
+- bmv2
+
+- dummy
+
 # Source code
 
 This repository contains source code for a reference implementation of
 the P4Runtime and gNMI services, that serves as the hardware abstraction layer
 for a network switch. It has been successfully prototyped at Google, running on
-production hardware on a data center network subsytem.
+production hardware on a data center network subsystem.
 
 # Development environment
 
