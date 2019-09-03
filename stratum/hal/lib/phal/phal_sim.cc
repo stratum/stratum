@@ -132,6 +132,12 @@ PhalSim::~PhalSim() {}
     return ::util::OkStatus();
 }
 
+::util::StatusOr<::stratum::hal::phal::AttributeDatabaseInterface*> 
+        PhalSim::GetPhalDB() {
+
+    RETURN_ERROR(ERR_UNIMPLEMENTED) << "GetPhalDB unimplemented";
+}
+
 PhalSim* PhalSim::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {

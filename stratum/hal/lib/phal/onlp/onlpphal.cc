@@ -145,6 +145,13 @@ OnlpPhal::~OnlpPhal() {}
   return WriteTransceiverEvent(event);
 }
 
+::util::StatusOr<AttributeDatabaseInterface*> OnlpPhal::GetPhalDB() {
+  if (database_ == nullptr) {
+    RETURN_ERROR() << "database_ is nullptr";
+  }
+  return(database_.get());
+}
+
 ::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
     std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority) {
   absl::WriterMutexLock l(&config_lock_);

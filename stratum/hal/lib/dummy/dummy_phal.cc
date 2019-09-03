@@ -110,6 +110,12 @@ DummyPhal::~DummyPhal() {}
   return ::util::OkStatus();
 }
 
+::util::StatusOr<::stratum::hal::phal::AttributeDatabaseInterface*> 
+        DummyPhal::GetPhalDB() {
+
+    RETURN_ERROR(ERR_UNIMPLEMENTED) << "GetPhalDB unimplemented";
+}
+
 DummyPhal* DummyPhal::CreateSingleton() {
   LOG(INFO) << __FUNCTION__;
   if (phal_singleton_ == nullptr) {

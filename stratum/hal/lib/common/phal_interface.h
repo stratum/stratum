@@ -151,6 +151,10 @@ class PhalInterface {
   virtual ::util::Status RegisterSfpConfigurator(int slot, int port,
         ::stratum::hal::phal::SfpConfigurator* configurator) = 0;
 
+  // Return the Phal Attribute DB pointer
+  virtual ::util::StatusOr<::stratum::hal::phal::AttributeDatabaseInterface*>
+        GetPhalDB() = 0;
+
  protected:
   // Default constructor. To be called by the Mock class instance or any
   // factory function which uses the default constructor.

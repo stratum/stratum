@@ -70,6 +70,10 @@ class DummyPhal : public PhalInterface {
   ::util::Status RegisterSfpConfigurator(int slot, int port,
         ::stratum::hal::phal::SfpConfigurator* configurator) override;
 
+  ::util::StatusOr<
+        ::stratum::hal::phal::AttributeDatabaseInterface*> GetPhalDB()
+        override;
+
   // Factory function for creating the instance of the DummyPhal.
   static DummyPhal* CreateSingleton() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
