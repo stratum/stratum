@@ -41,8 +41,12 @@ export SDE_INSTALL=$BF_SDE_INSTALL
     please refer to the P4Studio Build documentation. If you are using the
     reference BSP provided by Barefoot, you may also use P4Studio Build to
     install the BSP (see [below](#installing-the-reference-bsp-for-the-wedge)).
+    Also, we drop Thrift support in Stratum, the Stratum profile will
+    be updated in next version. Now you need to remove the Thrift dependency
+    by using `sed` command (see below) if you are using SDE version 8.8.0 or 8.9.1.
 ```
 cd $SDE/p4studio_build
+sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.1
 ./p4studio_build.py -up profiles/stratum_profile.yaml
 ```
 
@@ -66,6 +70,7 @@ export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
 Replace step 3 in the sequence above with:
 ```
 cd $SDE/p4studio_build
+sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.1
 ./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH
 ```
 
