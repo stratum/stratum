@@ -334,7 +334,7 @@ namespace {
     ::grpc::ServerWriter<::stratum::hal::phal::SubscribeResponse>* stream) {
 
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService, 
-                           Subsribe, context);
+                           Subscribe, context);
 
   ::util::Status status;
   ::util::StatusOr<::stratum::hal::phal::Path> result;
@@ -414,10 +414,16 @@ namespace {
             if (code == ERR_ENTRY_NOT_FOUND) {
                 LOG(ERROR) << "Subscribe read with infinite timeout "
                            << "failed with ENTRY_NOT_FOUND.";
-                status = MAKE_ERROR(ERR_INTERNAL) 
-                            << "Subscribe read with infinite timeout "
-                            << "failed with ENTRY_NOT_FOUND.";
                 continue;
+            }
+
+            // If we get nothing in message then close the channel
+            // - this is also used to mock the PhalDB Subscribe
+            if (phaldb_resp.ByteSizeLong() == 0) {
+                LOG(ERROR) << "Subscribe read returned zero bytes.";
+                status = MAKE_ERROR(ERR_INTERNAL) 
+                            << "Subscribe read returned zero bytes.";
+                break;
             }
 
             // Send message to client

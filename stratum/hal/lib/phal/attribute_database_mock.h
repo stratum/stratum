@@ -34,16 +34,48 @@ class AttributeDatabaseMock : public AttributeDatabaseInterface {
  public:
   MOCK_METHOD1(
       Set, ::util::Status(const AttributeValueMap& values));
-  MOCK_METHOD1(MakeQuery, ::util::StatusOr<std::unique_ptr<Query>>(
-                              const std::vector<Path>& query_paths));
+
+  MOCK_METHOD1(DoMakeQuery, std::unique_ptr<Query>
+          (const std::vector<Path>& query_paths));
+
+  // Mock can't seem to handle the StatusOr macro returning
+  // a unique pointer so we need this extra step.
+  ::util::StatusOr<std::unique_ptr<Query>> MakeQuery(
+    const std::vector<Path>& query_paths) override {
+        return std::move(DoMakeQuery(query_paths));
+  };
 };
 
 class QueryMock : public Query {
  public:
-  MOCK_METHOD0(Get, ::util::StatusOr<std::unique_ptr<PhalDB>>());
-  MOCK_METHOD2(Subscribe,
-               ::util::Status(std::unique_ptr<ChannelWriter<PhalDB>> subscriber,
-                              absl::Duration polling_interval));
+  MOCK_METHOD0(DoGet, ::util::StatusOr<std::unique_ptr<PhalDB>>());
+
+  // Mock can't seem to handle the StatusOr macro returning
+  // a unique pointer so we need this extra step.
+  ::util::StatusOr<std::unique_ptr<PhalDB>> Get() override {
+        return std::move(DoGet());
+  };
+
+  MOCK_METHOD1(DoSubscribe, PhalDB*(absl::Duration polling_interval));
+
+  // We'll override the Subscribe with a function that grabs the
+  // response from the Mock function and sends it on the channel.
+  ::util::Status Subscribe(std::unique_ptr<ChannelWriter<PhalDB>> writer,
+                           absl::Duration polling_interval) override {
+
+      // Grab response from mock
+      auto resp = DoSubscribe(polling_interval);
+
+      // Send the response
+      writer->TryWrite(*resp);
+
+      // Now send a zero length response to cause
+      // the reader to close the channel.
+      writer->TryWrite(PhalDB());
+
+      return ::util::OkStatus();
+  }
+
 };
 
 }  // namespace phal
