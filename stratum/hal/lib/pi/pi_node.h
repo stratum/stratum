@@ -106,6 +106,8 @@ class PINode final {
 
   const int unit_;
 
+  bool pipeline_initialized_ GUARDED_BY(lock_);
+
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the
   // lifetime of the class.

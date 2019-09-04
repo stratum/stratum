@@ -81,7 +81,8 @@ void StreamMessageCb(
 }
 
 PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
-    : device_mgr_(device_mgr), unit_(unit), node_id_(0) {}
+    : device_mgr_(device_mgr), unit_(unit), node_id_(0),
+      pipeline_initialized_(false) {}
 
 PINode::~PINode() = default;
 
@@ -102,17 +103,20 @@ PINode::~PINode() = default;
 
 ::util::Status PINode::PushForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
+  absl::WriterMutexLock l(&lock_);
   auto status = device_mgr_->pipeline_config_set(
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT,
       config);
   // This is required by DeviceMgr in case the device is re-assigned internally
   device_mgr_->stream_message_response_register_cb(
       StreamMessageCb, static_cast<void*>(this));
+  pipeline_initialized_ = (status.code() == Code::OK);
   return toUtilStatus(status);
 }
 
 ::util::Status PINode::SaveForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
+  absl::WriterMutexLock l(&lock_);
   auto status = device_mgr_->pipeline_config_set(
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE,
       config);
@@ -123,9 +127,11 @@ PINode::~PINode() = default;
 }
 
 ::util::Status PINode::CommitForwardingPipelineConfig() {
+  absl::WriterMutexLock l(&lock_);
   auto status = device_mgr_->pipeline_config_set(
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_COMMIT,
       ::p4::v1::ForwardingPipelineConfig());
+  pipeline_initialized_ = (status.code() == Code::OK);
   return toUtilStatus(status);
 }
 
@@ -138,6 +144,8 @@ PINode::~PINode() = default;
 }
 
 ::util::Status PINode::Shutdown() {
+  absl::WriterMutexLock l(&lock_);
+  pipeline_initialized_ = false;
   return ::util::OkStatus();
 }
 
@@ -151,6 +159,10 @@ PINode::~PINode() = default;
 
 ::util::Status PINode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
+  absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_initialized_) {
+    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+  }
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
   CHECK_RETURN_IF_FALSE(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
@@ -163,6 +175,10 @@ PINode::~PINode() = default;
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
+  absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_initialized_) {
+    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+  }
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
 
@@ -190,6 +206,10 @@ PINode::~PINode() = default;
 }
 
 ::util::Status PINode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+  absl::ReaderMutexLock l(&lock_);
+  if (!pipeline_initialized_) {
+    RETURN_ERROR(ERR_INTERNAL) << "Pipeline not initialized";
+  }
   ::p4::v1::StreamMessageRequest msg;
   // a const_cast for the sake of avoiding a copy; should be ok because
   // stream_message_request_handle does not modify the message.
