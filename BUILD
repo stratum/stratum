@@ -1,4 +1,5 @@
 #
+# Copyright 2018 Google LLC
 # Copyright 2018-present Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +15,6 @@
 # limitations under the License.
 #
 
-FROM stratumproject/build:build
+licenses(["notice"])  # Apache v2
 
-ARG USER_NAME=default
-ARG USER_ID=1000
-ARG GIT_GLOBAL_NAME=
-ARG GIT_GLOBAL_EMAIL=
-ARG GIT_GLOBAL_EDITOR=vim
-
-RUN useradd -ms /bin/bash -l -u $USER_ID $USER_NAME && \
-    adduser $USER_NAME sudo && \
-    echo "%sudo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers
-
-USER $USER_NAME
-
-RUN (test "$GIT_GLOBAL_NAME" = "" || git config --global user.name "$GIT_GLOBAL_NAME") && \
-    (test "$GIT_GLOBAL_EMAIL" = "" || git config --global user.email "$GIT_GLOBAL_EMAIL") && \
-    (test "$GIT_GLOBAL_EDITOR" = "" || git config --global code.editor "$GIT_GLOBAL_EDITOR")
+exports_files(["LICENSE"])

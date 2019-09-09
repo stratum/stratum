@@ -1,5 +1,6 @@
 #
-# Copyright 2019 NoviFlow Inc.
+# Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +15,10 @@
 # limitations under the License.
 #
 
+licenses(["notice"])  # Apache v2
+
 load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 load(":scapy_exec.bzl", "scapy_exec")
-
-licenses(["notice"])  # Apache v2
 
 exports_files(["LICENSE"])
 

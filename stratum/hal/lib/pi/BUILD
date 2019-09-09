@@ -16,8 +16,6 @@
 
 licenses(["notice"])  # Apache v2
 
-exports_files(["LICENSE"])
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",

@@ -16,8 +16,6 @@
 
 licenses(["notice"])  # Apache v2
 
-exports_files(["LICENSE"])
-
 package(
     default_visibility = ["//visibility:public"],
 )

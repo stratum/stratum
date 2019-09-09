@@ -3,6 +3,7 @@
 # Stratum - Enabling the era of next-generation SDN
 
 Copyright 2018 Google LLC
+Copyright 2018-present Open Networking Foundation
 
 Stratum is an open source silicon-independent switch operating system for software defined networks. It is building an open, minimal production-ready distribution for white box switches. Stratum exposes a set of next-generation SDN interfaces including P4Runtime and OpenConfig, enabling interchangeability of forwarding devices and programmability of forwarding behaviors. Current support includes Barefoot Tofino and Broadcom Tomahawk devices, as well as the bmv2 software switch.
 
