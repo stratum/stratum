@@ -52,6 +52,7 @@ interface {
   name: "1/1/1"
   interface {
     enabled {
+      value: true
     }
     physical_channel {
       value: 1

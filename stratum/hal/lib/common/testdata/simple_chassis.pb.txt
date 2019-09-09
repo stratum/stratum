@@ -21,6 +21,7 @@ singleton_ports {
   channel: 1
   speed_bps: 10000000
   config_params {
+    admin_state: ADMIN_STATE_ENABLED
     autoneg: TRI_STATE_FALSE
   }
   node: 1
@@ -33,6 +34,7 @@ singleton_ports {
   channel: 1
   speed_bps: 100000000
   config_params {
+    admin_state: ADMIN_STATE_DISABLED
     autoneg: TRI_STATE_FALSE
   }
   node: 1
@@ -45,6 +47,7 @@ singleton_ports {
   channel: 1
   speed_bps: 1000000000
   config_params {
+    admin_state: ADMIN_STATE_UNKNOWN
     autoneg: TRI_STATE_FALSE
   }
   node: 1

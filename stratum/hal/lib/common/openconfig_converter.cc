@@ -301,8 +301,10 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 
   // SingletonPort.config_params.admin_state
   // -> /interfaces/interface/config/enabled
-  interface->mutable_enabled()
-      ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
+  if(in.config_params().admin_state() != ADMIN_STATE_UNKNOWN) {
+    interface->mutable_enabled()
+        ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
+  }
 
   // SingletonPort.config_params.autoneg
   // -> /interfaces/interface/ethernet/config/auto-negotiate
@@ -709,6 +711,10 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   for (auto &channel : interface.physical_channel()) {
     to.set_channel(channel.value());
     break;
+  }
+
+  if (interface.has_enabled()) {
+    config_params->set_admin_state(interface.enabled().value() ? ADMIN_STATE_ENABLED : ADMIN_STATE_DISABLED);
   }
 
   return to;

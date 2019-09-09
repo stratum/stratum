@@ -24,5 +24,6 @@ singleton_ports {
   config_params {
     autoneg: TRI_STATE_TRUE
     fec_mode: FEC_MODE_ON
+    admin_state: ADMIN_STATE_ENABLED
   }
 }
