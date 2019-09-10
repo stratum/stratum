@@ -2,15 +2,15 @@
 
 P4 Pipelines used for simple demonstrations of the `Stratum` software using `bmv2`.
 
-Before proceeding with the instructions below, be sure to build the `stratum_bmv2` software switch using [these instructions](https://github.com/opennetworkinglab/stratum/blob/master/stratum/hal/bin/bmv2/README.md).
+Before proceeding with the instructions below, be sure to build the `stratum_bmv2` software switch using [these instructions](../hal/bin/bmv2/README.md).
 
-In the instructions below, _stratum_dir_ and  _bmv2_install_dir_ represent the directories where `Stratum` and `bmv2` are installed.  Directory _bmv2_dir_ represents the directory where the `bmv2` repository was cloned. See [these instructions](https://github.com/opennetworkinglab/stratum/blob/master/stratum/hal/bin/bmv2/README.md).
+In the instructions below, _stratum_dir_ and  _bmv2_install_dir_ represent the directories where `Stratum` and `bmv2` are installed.  Directory _bmv2_dir_ represents the directory where the `bmv2` repository was cloned. See [these instructions](../hal/bin/bmv2/README.md).
 
 ## Environment variables
 
 Environment variables used throughout these instructions.
 
-Variables used to build `stratum_bmv2` and described in [these instructions](https://github.com/opennetworkinglab/stratum/blob/master/stratum/hal/bin/bmv2/README.md):
+Variables used to build `stratum_bmv2` and described in [these instructions](../hal/bin/bmv2/README.md):
 ```
     $ export BMV2_INSTALL=<bmv2_install_dir>
     $ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BMV2_INSTALL/lib

@@ -46,7 +46,7 @@ An example is shown below:
 export SDKLT=~/SDKLT
 export SDK=$SDKLT/src
 export SDKLT_INSTALL=$SDK/appl/sdklib/build/xlr_linux
-git clone https://github.com/opennetworkinglab/stratum.git
+git clone https://github.com/stratum/stratum.git
 cd stratum
 ./setup_dev_env.sh
 bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm

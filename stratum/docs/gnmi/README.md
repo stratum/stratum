@@ -202,7 +202,7 @@ node->SetOnTimerHandler(poll_functor)
 
 Note that if the default handler is an empty handler which returns `OK` or `UNAVAILABLE` status.
 
-Please find more example from [`yang_parse_tree_paths.cc`](https://github.com/opennetworkinglab/stratum/blob/master/stratum/hal/lib/common/yang_parse_tree_paths.cc) for tree node creation.
+Please find more example from [`yang_parse_tree_paths.cc`](../../hal/lib/common/yang_parse_tree_paths.cc) for tree node creation.
 
 The root path
 ----
