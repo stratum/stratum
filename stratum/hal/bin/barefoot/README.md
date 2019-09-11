@@ -1,6 +1,19 @@
 # Running Stratum on a Barefoot Tofino based switch
 
-Choose the location where you will be installing the SDE. This environment
+## Getting Started with Pre-Build Docker Images
+
+The Docker image contains pre-built Stratum binaries, latest Barefoot Software Development Environment (SDE) binaries, and some required configuration files.
+
+For more information, visit the [docker](./docker) directory.
+
+## Building Stratum from Scratch
+
+If you want or need to build Stratum yourself or if you need to make changes to how the BF SDE is built, you can follow
+these instructions.
+
+Note: To do this, you will need to have SELA with Intel (Barefoot) to access P4 Studio SDE. Contact Intel for more details.
+
+First, choose the location where you will be installing the SDE. This environment
 variable MUST be set for the Stratum build.
 ```
 export BF_SDE_INSTALL=...
