@@ -1,5 +1,6 @@
 #
 # Copyright 2018-present Open Networking Foundation
+# Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,13 +33,14 @@ package(
 # trick to export headers in a convenient way
 cc_library(
     name = "bcm_headers",
-    hdrs = glob(["bcm-bin/include/sdklt/shr/*.h" ]),
+    hdrs = glob(["bcm-bin/include/sdklt/**/*.h" ]),
     includes = ["bcm-bin/include/sdklt"],
 )
 cc_import(
   name = "bcm_sdklt",
   hdrs = [],  # see cc_library rule above
-  shared_library = "bcm-bin/lib/libsdklt.so",
+  #shared_library = "bcm-bin/lib/libsdklt.so",
+  static_library = "bcm-bin/lib/libsdklt.a",
   alwayslink = 1,
 )
 """)
