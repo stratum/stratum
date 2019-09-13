@@ -1,6 +1,7 @@
 /*
  * Copyright 2018 Google LLC
  * Copyright 2018-present Open Networking Foundation
+ * Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +16,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
 
@@ -23,9 +23,7 @@
 
 #include <functional>
 #include <string>
-#include <memory>
-#include <vector>
-#include <set>
+#include "absl/container/flat_hash_map.h"
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -116,7 +114,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                 BcmPortOptions* options) override;
   ::util::Status StartDiagShellServer() override;
   ::util::Status StartLinkscan(int unit) override;
+
   ::util::Status StopLinkscan(int unit) override;
+  void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
+
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
       int priority) override LOCKS_EXCLUDED(linkscan_writers_lock_);
@@ -342,6 +343,217 @@ class BcmSdkWrapper : public BcmSdkInterface {
   // unit.
   absl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
       GUARDED_BY(data_lock_);
+
+  // Map from index to usage flag
+  typedef std::map<int, bool> InUseMap;
+
+  // Map from pair of Acl stage, correspoding logical table id, and
+  // software maintained table id
+  typedef std::map<std::pair<BcmAclStage, int>, int> AclIds;
+
+  typedef AclIds AclGroupIds;
+  typedef AclIds AclRuleIds;
+  typedef AclIds AclPolicyIds;
+  typedef AclIds AclMeterIds;
+
+  // Map from unit number to logical ports and associated port macro id,
+  // physical device port number
+  absl::flat_hash_map<int, std::map<int, std::pair<int, int>>>
+      unit_to_logical_ports_ GUARDED_BY(data_lock_);
+
+  // This struct encapsulates all the data required to handle mystation
+  // entries associated with a unit.
+  struct MyStationEntry {
+    int vlan;
+    int vlan_mask;
+    uint64 dst_mac;
+    uint64 dst_mac_mask;
+    MyStationEntry()
+       : vlan(0),
+         vlan_mask(0),
+         dst_mac(0),
+         dst_mac_mask(0xffffffffffffULL) {}
+    MyStationEntry(int _vlan, int _vlan_mask, uint64 _dst_mac,
+                   uint64 _dst_mac_mask)
+        : vlan(_vlan),
+          vlan_mask(_vlan_mask),
+          dst_mac(_dst_mac),
+          dst_mac_mask(_dst_mac_mask) {}
+    bool operator<(const MyStationEntry& other) const {
+      return (vlan < other.vlan ||
+             (vlan == other.vlan &&
+             (vlan_mask < other.vlan_mask ||
+             (vlan_mask == other.vlan_mask &&
+             (dst_mac < other.dst_mac ||
+             (dst_mac == other.dst_mac &&
+             (dst_mac_mask < other.dst_mac_mask)))))));
+    }
+    bool operator==(const MyStationEntry& other) const {
+      return (vlan == other.vlan &&
+              vlan_mask == other.vlan_mask && dst_mac == other.dst_mac &&
+              dst_mac_mask == other.dst_mac_mask);
+    }
+    std::string ToString() const {
+      return absl::StrCat("(vlan:", vlan,
+                          ", vlan_mask:", absl::Hex(vlan_mask),
+                          ", dst_mac:", absl::Hex(dst_mac),
+                          ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
+    }
+  };
+
+  // Map from unit number to mystation maximum entries
+  absl::flat_hash_map<int, int> unit_to_my_station_max_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to mystation minimum entries
+  absl::flat_hash_map<int, int> unit_to_my_station_min_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to mystation entries
+  absl::flat_hash_map<int, std::map<MyStationEntry, int>> my_station_ids_
+      GUARDED_BY(data_lock_);
+
+  // This struct encapsulates all the data required to handle l3 interfaces
+  // associated with a unit.
+  struct L3Interfaces {
+    uint64 mac;
+    int vlan;
+    L3Interfaces()
+      : mac(0),
+        vlan(0) {}
+    L3Interfaces(uint64 _mac, int _vlan)
+      : mac(_mac),
+        vlan(_vlan) {}
+    bool operator<(const L3Interfaces& other) const {
+      return (mac < other.mac || (mac == other.mac && vlan < other.vlan));
+    }
+    bool operator==(const L3Interfaces& other) const {
+      return (vlan == other.vlan &&
+              mac == other.mac);
+    }
+    std::string ToString() const {
+      return absl::StrCat("(vlan:", vlan,
+                          ", mac:", absl::Hex(mac), ")");
+    }
+  };
+
+  // This struct encapsulates all the data required to handle
+  // UDF chunks associated with a unit.
+  struct UdfDataQualifier {
+    BcmUdfSet::PacketLayer packet_layer;
+    uint64 offset;
+    int length;
+    std::vector<int> idxs;
+  };
+
+  // Map from unit number to UDF chunks
+  typedef std::map<int, UdfDataQualifier> ChunkIds;
+
+  // Map from unit number to l3 interfaces maximum entries
+  absl::flat_hash_map<int, int> unit_to_l3_intf_max_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to l3 interfaces minimum entries
+  absl::flat_hash_map<int, int> unit_to_l3_intf_min_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to l3 interfaces
+  absl::flat_hash_map<int, std::map<L3Interfaces, int>> l3_interface_ids_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to l3 egress interfaces
+  absl::flat_hash_map<int, InUseMap> l3_egress_interface_ids_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to ecmp interfaces
+  absl::flat_hash_map<int, InUseMap> l3_ecmp_egress_interface_ids_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to max ACL Groups supported
+  absl::flat_hash_map<int, int> unit_to_fp_groups_max_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of IFP group
+  absl::flat_hash_map<int, InUseMap> ifp_group_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of EFP group
+  absl::flat_hash_map<int, InUseMap> efp_group_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of VFP group
+  absl::flat_hash_map<int, InUseMap> vfp_group_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to ACL groups
+  absl::flat_hash_map<int, AclGroupIds*> fp_group_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to maximum ACL Rules supported
+  absl::flat_hash_map<int, int> unit_to_fp_rules_max_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of IFP rules
+  absl::flat_hash_map<int, InUseMap> ifp_rule_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of EFP rules
+  absl::flat_hash_map<int, InUseMap> efp_rule_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of VFP rules
+  absl::flat_hash_map<int, InUseMap> vfp_rule_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to ACL rules
+  absl::flat_hash_map<int, AclRuleIds*> fp_rule_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to maximum ACL Policies supported
+  absl::flat_hash_map<int, int> unit_to_fp_policy_max_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of IFP policies
+  absl::flat_hash_map<int, InUseMap> ifp_policy_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of EFP policies
+  absl::flat_hash_map<int, InUseMap> efp_policy_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of VFP policies
+  absl::flat_hash_map<int, InUseMap> vfp_policy_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to ACL policies
+  absl::flat_hash_map<int, AclPolicyIds*> fp_policy_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to maximum ACL meters supported
+  absl::flat_hash_map<int, int> unit_to_fp_meter_max_limit_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of IFP meters
+  absl::flat_hash_map<int, InUseMap> ifp_meter_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of EFP meters
+  absl::flat_hash_map<int, InUseMap> efp_meter_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to ACL meters
+  absl::flat_hash_map<int, AclMeterIds*> fp_meter_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to maximum ACLs supported
+  absl::flat_hash_map<int, int> unit_to_fp_max_limit_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of IFP ACLs
+  absl::flat_hash_map<int, InUseMap> ifp_acl_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of EFP ACLs
+  absl::flat_hash_map<int, InUseMap> efp_acl_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to logical table indexes of VFP ACLs
+  absl::flat_hash_map<int, InUseMap> vfp_acl_ids_ GUARDED_BY(data_lock_);
+
+  // Map from unit number to ACLs
+  absl::flat_hash_map<int, AclIds*> fp_acl_ids_ GUARDED_BY(data_lock_);
+
+  // maximum number of UDFs
+  static constexpr int kUdfMaxChunks = 16;
+
+  // Map from unit number to logical table indexes of UDF
+  absl::flat_hash_map<int, InUseMap> unit_to_udf_chunk_ids_
+      GUARDED_BY(data_lock_);
+
+  // Map from unit number to UDF chunks
+  absl::flat_hash_map<int, ChunkIds*> unit_to_chunk_ids_ GUARDED_BY(data_lock_);
 
   // Pointer to BcmDiagShell singleton instance. Not owned by this class.
   BcmDiagShell* bcm_diag_shell_;

@@ -1,6 +1,7 @@
 #
 # Copyright 2018 Google LLC
 # Copyright 2018-present Open Networking Foundation
+# Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +17,8 @@
 #
 
 licenses(["notice"])  # Apache v2
+
+exports_files(["LICENSE"])
 
 load(
     "//bazel:rules.bzl",
@@ -38,11 +41,12 @@ stratum_cc_binary(
         "main.cc",
     ],
     arches = EMBEDDED_ARCHES,
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
-        "-lrt",
         "-lutil",
+        "-lrt",
+        "-lyaml",
     ],
     deps = [
         "@com_github_google_glog//:glog",
@@ -60,6 +64,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/bcm:bcm_switch",
         "//stratum/hal/lib/bcm:bcm_table_manager",
         "//stratum/hal/lib/bcm:bcm_tunnel_manager",
+        "@local_bcm_bin//:bcm_sdklt",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/p4:p4_table_mapper",
         # TODO(craigs): need to add real phal deps here
