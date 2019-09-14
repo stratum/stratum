@@ -284,7 +284,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
 ::util::Status BcmPacketioManager::Shutdown() {
   // Simulation mode does not support KNET.
-  // TODO(aghaffar): Find a way to do packet I/O in sim mode.
+  // TODO: Find a way to do packet I/O in sim mode.
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped shutting down BcmPacketioManager for node "
                  << node_id_ << " in sim mode.";

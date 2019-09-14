@@ -53,7 +53,7 @@ using namespace openconfig::enums;  // NOLINT
   auto linecard = component->mutable_linecard();
   linecard->mutable_slot_id()->set_value(std::to_string(in.slot()));
 
-  // TODO(aghaffar): There are still a lot of things we are not supporting for
+  // TODO: There are still a lot of things we are not supporting for
   // nodes, including VLAN configs. Add support for those in the YANG model as
   // well as the proto encodings. Then add support here in the code.
 
@@ -453,7 +453,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   // TODO(Yi): no index defined in the model
   // to.set_index();
 
-  // TODO(aghaffar): For now by default disable learning on default VLAN.
+  // TODO: For now by default disable learning on default VLAN.
   // This will eventually come from gNMI.
   auto *vlan_config = to.mutable_config_params()->add_vlan_configs();
   vlan_config->set_block_broadcast(false);
@@ -462,7 +462,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   vlan_config->set_block_unknown_unicast(true);
   vlan_config->set_disable_l2_learning(true);
 
-  // TODO(aghaffar): There are still a lot of things we are not supporting for
+  // TODO: There are still a lot of things we are not supporting for
   // nodes, including VLAN configs. Add support for those in the YANG model as
   // well as the proto encodings.  Then add support here in the code.
 

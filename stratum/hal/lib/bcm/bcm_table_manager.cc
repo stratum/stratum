@@ -479,7 +479,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   // and nothing else. Note that there is no need for mapping actions in case of
   // table entry delete. No logic that consumes BcmFlowEntry should rely on
   // actions when deleting a table entry. Otherwise we have a bug.
-  // TODO(aghaffar): Per b/77525702, we still need to clarify what the expected
+  // TODO: Per b/77525702, we still need to clarify what the expected
   // behavior is in case we have actions populated when deleting a table entry.
   if (type == ::p4::v1::Update::DELETE) return ::util::OkStatus();
   switch (common_flow_entry.action().type()) {
@@ -819,7 +819,7 @@ namespace {
               break;
             }
             case P4_FIELD_TYPE_L3_CLASS_ID:
-              // TODO(aghaffar): Ignore class_id for now till we have a
+              // TODO: Ignore class_id for now till we have a
               // resolution for b/73264766.
               break;
             default:

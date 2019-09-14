@@ -31,7 +31,7 @@
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
 
-// TODO(aghaffar): Use FLAG_DEFINE for all flags.
+// TODO: Use FLAG_DEFINE for all flags.
 DEFINE_string(external_stratum_urls, "",
             "Comma-separated list of URLs for server to listen to for external"
             " calls from SDN controller, etc.");

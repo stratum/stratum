@@ -25,7 +25,7 @@ ProcmonServiceImpl::~ProcmonServiceImpl() {}
 ::grpc::Status ProcmonServiceImpl::Checkin(::grpc::ServerContext* context,
                                            const CheckinRequest* req,
                                            CheckinResponse* resp) {
-  // TODO(aghaffar): Implement this RPC.
+  // TODO: Implement this RPC.
   return ::grpc::Status::OK;
 }
 

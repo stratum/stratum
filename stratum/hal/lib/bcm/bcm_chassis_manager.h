@@ -518,7 +518,7 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // Map from node ID to another map from port ID to its trunk membership info,
   // when the port is part of a trunk. Trunk membership of the ports is updated
   // as part of each "trunk event".
-  // TODO(aghaffar): The assumption here is that each port can be part of one
+  // TODO: The assumption here is that each port can be part of one
   // trunk only. If this assumption is not correct, change the map.
   std::map<uint64, std::map<uint32, TrunkMembershipInfo>>
       node_id_to_port_id_to_trunk_membership_info_;

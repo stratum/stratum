@@ -85,7 +85,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
     return ::util::OkStatus();
   }
 
-  // TODO(aghaffar): If the old pushed forwarding pipeline config needs to be
+  // TODO: If the old pushed forwarding pipeline config needs to be
   // examined to handle the diff, do this here. At the moment, there is no
   // need to do this though. We recreate the state from scratch as part of any
   // new config push.

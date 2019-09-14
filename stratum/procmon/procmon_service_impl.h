@@ -29,7 +29,7 @@ namespace procmon {
 // checkin) from the rest of the processes.
 class ProcmonServiceImpl final : public ProcmonService::Service {
  public:
-  // TODO(aghaffar): Pass a pointer to Procmon class instance to this class.
+  // TODO: Pass a pointer to Procmon class instance to this class.
   ProcmonServiceImpl();
   ~ProcmonServiceImpl() override;
 

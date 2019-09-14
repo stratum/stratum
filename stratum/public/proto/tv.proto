@@ -15,8 +15,8 @@
 
 // This file includes the proto definitions for test vectors used for blackbox
 // testing. For more details see go/blackbox-sw-qual.
-// TODO(aghaffar): This is still WIP. Expect changes etc.
-// TODO(aghaffar): The location of this file is not fixed yet. We need to find
+// TODO: This is still WIP. Expect changes etc.
+// TODO: The location of this file is not fixed yet. We need to find
 // a better more permanent location for this proto file.
 syntax = "proto3";
 
@@ -147,7 +147,7 @@ message DataPlaneExpectation {
     // Define packet out distribution in case packets are sent to an ECMP group
     // ( i.e. more than one output ports are given).
     message Distribution {
-      // TODO(aghaffar)
+      // TODO
     }
     message Packet {
       // raw packet
@@ -209,7 +209,7 @@ message PortStimulus {
 // Signal to a possibly external device to simulate an alarm situation.
 message AlarmStimulus {
   gnmi.Path alarm = 1;
-  // TODO(aghaffar): Complete the proto.
+  // TODO: Complete the proto.
 }
 
 message ConfigExpectation {
@@ -245,7 +245,7 @@ message TelemetryExpectation {
   //    passes. Otherwise it fails.
   message Requirement {
     // timing requirements, etc for actions.
-    // TODO(aghaffar): add
+    // TODO: add
   }
   Requirement requirement = 1;
   // The single gNMI write request to send over the stream.
@@ -270,19 +270,19 @@ message TelemetryExpectation {
 //////////////////////////////////////////////
 
 message SecurityOperation {
-  // TODO(aghaffar)
+  // TODO
 }
 
 message DiagOperation {
-  // TODO(aghaffar)
+  // TODO
 }
 
 message SystemOperation {
-  // TODO(aghaffar)
+  // TODO
 }
 
 message FileOperation {
-  // TODO(aghaffar)
+  // TODO
 }
 
 message ManagementOperation {
@@ -303,7 +303,7 @@ message ManagementOperation {
 message Action {
   message Requirement {
     // timing requirements, etc for actions.
-    // TODO(aghaffar): add
+    // TODO: add
   }
   Requirement requirement = 1;
   oneof actions {
@@ -337,7 +337,7 @@ message SequentialActionGroup {
 message ParallelActionGroup {
   message Options {
     // defines the parallelism options.
-    // TODO(aghaffar): Add this
+    // TODO: Add this
   }
   Options options = 1;
   repeated Action actions = 2;
@@ -347,7 +347,7 @@ message ParallelActionGroup {
 message RandomizedActionGroup {
   message Options {
     // defines the randomization options.
-    // TODO(aghaffar): Add this
+    // TODO: Add this
   }
   Options options = 1;
   repeated Action actions = 2;
@@ -381,7 +381,7 @@ message TestCase {
 
 // Defines the properties of the SUT which are required by the test vectors.
 message Target {
-  // TODO(aghaffar)
+  // TODO
 }
 
 message TestVector {

@@ -437,20 +437,20 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
 ::util::Status BcmChassisManager::SetTrunkMemberBlockState(
     uint64 node_id, uint32 trunk_id, uint32 port_id,
     TrunkMemberBlockState state) {
-  // TODO(aghaffar): Implement this method.
+  // TODO: Implement this method.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmChassisManager::SetPortAdminState(uint64 node_id,
                                                     uint32 port_id,
                                                     AdminState state) {
-  // TODO(aghaffar): Implement this method.
+  // TODO: Implement this method.
   return ::util::OkStatus();
 }
 ::util::Status BcmChassisManager::SetPortHealthState(uint64 node_id,
                                                      uint32 port_id,
                                                      HealthState state) {
-  // TODO(aghaffar): Implement this method.
+  // TODO: Implement this method.
   return ::util::OkStatus();
 }
 
@@ -480,7 +480,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
 }  // namespace
 
-// TODO(aghaffar): Include MGMT ports in the config if needed.
+// TODO: Include MGMT ports in the config if needed.
 ::util::Status BcmChassisManager::GenerateBcmChassisMapFromConfig(
     const ChassisConfig& config, BcmChassisMap* base_bcm_chassis_map,
     BcmChassisMap* target_bcm_chassis_map) const {
@@ -1259,7 +1259,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     uint64 node_id = trunk_port.node();    // already verified as known
     uint32 trunk_id = trunk_port.id();     // already verified as known
     int unit = node_id_to_unit_[node_id];  // already verified as known
-    // TODO(aghaffar): Populate the rest of trunk related maps. Also add support
+    // TODO: Populate the rest of trunk related maps. Also add support
     // for restoring trunk state/members. At the moment, we populate the maps
     // with invalid data.
     node_id_to_trunk_ids_[node_id].insert(trunk_id);
@@ -1271,7 +1271,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     node_id_to_trunk_id_to_members_[node_id][trunk_id] = {};
   }
 
-  // TODO(aghaffar): Update the LED of all the ports.
+  // TODO: Update the LED of all the ports.
 
   return ::util::OkStatus();
 }
@@ -1706,7 +1706,7 @@ void BcmChassisManager::LinkscanEventHandler(int unit, int logical_port,
   SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
 
   // Log details about the port state change for debugging purposes.
-  // TODO(aghaffar): The extra map lookups here are only for debugging and
+  // TODO: The extra map lookups here are only for debugging and
   // pretty printing the ports. We may not need them. If not, simplify the
   // state reporting.
   const std::map<uint32, PortKey>* port_id_to_singleton_port_key =
@@ -2041,7 +2041,7 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
 
 ::util::Status BcmChassisManager::EnablePort(const SdkPort& sdk_port,
                                              bool enable) const {
-  // TODO(aghaffar): Implement this.
+  // TODO: Implement this.
   return ::util::OkStatus();
 }
 
