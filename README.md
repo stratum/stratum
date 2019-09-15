@@ -57,23 +57,25 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 ## Tofino
 
-- Edgecore Wedge 100BF 32x
-
 - Delta AG9064v1
+
+- Edgecore Wedge 100BF 32x
 
 - Edgecore Wedge 100BF 65x
 
 - Inventec D5254
 
+- Stordis BF6064X
+
 ## Broadcom
 
 - Edgecore AS7712-32X
 
-- QCT QuantaMesh IX1
-
 - Dell Z9100
 
 - Inventec D7032
+
+- QCT QuantaMesh T7032-IX1
 
 ## Software Switches
 
@@ -90,14 +92,18 @@ production hardware on a data center network subsystem.
 
 # Development environment
 
-We provide a script to create a Docker development environment for Stratum. Run
-`setup_dev_env.sh -h` for more information. Typical usage looks like this:
+We provide a script to create a Docker development environment for Stratum.
 
-    ./setup_dev_env.sh --pull --mount-ssh --git-name <name> --git-email <email>
+To start the container, run the following in your `stratum` directory:
+
+    ./setup_dev_env.sh
 
 The script will build a Docker image using Dockerfile.dev and run a bash session
 in it. This directory will be mounted in the Docker image and you will be able
 to run git, edit code, and build Stratum / run tests using Bazel.
+
+For more information, you can see a complete list of arguments by running:
+`setup_dev_env.sh -h`
 
 If you are using Docker on Linux, make sure that you can use Docker as a
 non-root user, otherwise you will not be able to run setup_dev_env.sh:
