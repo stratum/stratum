@@ -226,7 +226,7 @@ nodes {{
             self.logfd.flush()
 
             self.bmv2popen = self.popen(cmd_string, stdout=self.logfd, stderr=self.logfd)
-            print "⚡️ %s @ %d" % (STRATUM_BMV2, self.grpcPort)
+            print("⚡️ %s @ %d" % (STRATUM_BMV2, self.grpcPort))
 
             # We want to be notified if stratum_bmv2 quits prematurely...
             self.stopped = False
@@ -240,14 +240,14 @@ nodes {{
 
     def printLog(self):
         if os.path.isfile(self.logfile):
-            print "-" * 80
-            print "%s log (from %s):" % (self.name, self.logfile)
+            print("-" * 80)
+            print("%s log (from %s):" % (self.name, self.logfile))
             with open(self.logfile, 'r') as f:
                 lines = f.readlines()
                 if len(lines) > BMV2_LOG_LINES:
-                    print "..."
+                    print("...")
                 for line in lines[-BMV2_LOG_LINES:]:
-                    print line.rstrip()
+                    print(line.rstrip())
 
     def cleanupTmpFiles(self):
         self.cmd("rm -rf %s" % self.tmpDir)

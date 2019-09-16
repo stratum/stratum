@@ -10,8 +10,8 @@
 FROM stratumproject/build:build as builder
 
 ENV BUILD_DEPS \
-    python-setuptools \
-    python-pip \
+    python3-setuptools \
+    python3-pip \
     help2man
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ${BUILD_DEPS}
@@ -88,10 +88,23 @@ ENV RUNTIME_DEPS \
     iperf \
     arping \
     telnet \
-    python-pexpect \
+    python3-pexpect \
     tcpdump \
-    screen
+    screen \
+    libboost-filesystem1.62.0 \
+    libboost-program-options1.62.0 \
+    libboost-thread1.62.0 \
+    libjudydebian1 \
+    libgmp10 \
+    libpcap0.8 \
+    locales
+
 RUN install_packages $RUNTIME_DEPS
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 COPY --from=builder /output /
 
