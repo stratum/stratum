@@ -593,7 +593,7 @@ stratum_cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "@local_bcm_bin//:bcm_headers",
+        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",

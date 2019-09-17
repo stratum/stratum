@@ -271,13 +271,13 @@ def stratum_deps():
 # -----------------------------------------------------------------------------
 #        Chipset and Platform specific C/C++ libraries
 # -----------------------------------------------------------------------------
-    if "local_bcm_bin" not in native.existing_rules():
+    if "com_github_opennetworkinglab_sdklt" not in native.existing_rules():
         http_archive(
-            name = "local_bcm_bin",
+            name = "com_github_opennetworkinglab_sdklt",
             build_file = "@//bazel:external/sdklt.BUILD",
-            sha256 = "d2e6021cb33423879424a3cd8ec5eef2bbd37bd9f02411445aee5f7191602cc0",
+            sha256 = "99c198222d90c2566d9d10cc097d4dbc8e89c6165c3dad304c3f0117e511906a",
             strip_prefix = "",
-            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/c6cec7d4/sdklt-4.14.49.tgz"],
+            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/b1058a61/sdklt-4.14.49.tgz"],
         )
 
 # -----------------------------------------------------------------------------

@@ -20,26 +20,15 @@ package(
     default_visibility = [ "//visibility:public" ],
 )
 
-cc_library(
-    name = "error",
-    hdrs = [
-        "src/shr/include/shr/shr_error.h",
-    ],
-    srcs = [
-        "src/shr/error/shr_error.c",
-    ],
-    strip_include_prefix = "src/shr/include",
-)
-
 # trick to export headers in a convenient way
 cc_library(
     name = "bcm_headers",
-    hdrs = glob(["bcm-bin/include/sdklt/**/*.h" ]),
-    includes = ["bcm-bin/include/sdklt"],
+    hdrs = glob(["include/sdklt/**/*.h" ]),
+    includes = ["include/sdklt"],
 )
 
 cc_import(
   name = "bcm_sdklt",
   hdrs = [],  # see cc_library rule above
-  static_library = "bcm-bin/lib/libsdklt.a",
+  static_library = "lib/libsdklt.a",
 )
