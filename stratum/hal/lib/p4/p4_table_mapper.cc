@@ -405,14 +405,16 @@ namespace {
 
 // These two functions take an unsigned 64/32 bit integer and encode it as a
 // byte stream in network order.
-// TODO(unknown): We add leading zeros at the moment when reporting back to
-// controller. Is that a problem?
 std::string Uint64ToByteStream(uint64 val) {
   uint64 tmp = (htonl(1) == 1)
                    ? val
                    : (static_cast<uint64>(htonl(val)) << 32) | htonl(val >> 32);
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint64));
+  // Strip leading zeroes.
+  while (bytes.size() > 1 && bytes[0] == '\x00') {
+    bytes = bytes.substr(1);
+  }
   return bytes;
 }
 
@@ -420,18 +422,11 @@ std::string Uint32ToByteStream(uint32 val) {
   uint32 tmp = htonl(val);
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
-  return bytes;
-}
-
-// Strip leading zero bytes from a ByteString, preserving the last one.
-// TODO: strip leading 0xff bytes for negative values.
-std::string CanonicalizeByteString(std::string val) {
-  while (val.size() > 1) {
-    if (val[0] == '\x00') {
-      val = val.substr(1);
-    }
+  // Strip leading zeroes.
+  while (bytes.size() > 1 && bytes[0] == '\x00') {
+    bytes = bytes.substr(1);
   }
-  return val;
+  return bytes;
 }
 
 // TODO: If needed, add extra validation of the unsigned int values to
@@ -459,7 +454,7 @@ std::string CanonicalizeByteString(std::string val) {
                << mapped_packet_metadata.ShortDebugString() << ".";
       }
       p4_packet_metadata->set_value(
-          CanonicalizeByteString(Uint32ToByteStream(mapped_packet_metadata.u32())));
+          Uint32ToByteStream(mapped_packet_metadata.u32()));
       break;
     }
     case MappedPacketMetadata::kU64: {
@@ -470,7 +465,7 @@ std::string CanonicalizeByteString(std::string val) {
                << mapped_packet_metadata.ShortDebugString() << ".";
       }
       p4_packet_metadata->set_value(
-          CanonicalizeByteString(Uint64ToByteStream(mapped_packet_metadata.u64())));
+          Uint64ToByteStream(mapped_packet_metadata.u64()));
       break;
     }
     case MappedPacketMetadata::kB: {
