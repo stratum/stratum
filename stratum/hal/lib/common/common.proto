@@ -279,6 +279,7 @@ message PortConfigParams {
   ModulationType modulation_type = 5;
   // FEC operational mode
   FecMode fec_mode = 6;
+  // The configured mac address for this port.
   uint64 mac_address =7;
 }
 
