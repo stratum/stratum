@@ -35,6 +35,9 @@ singleton_ports {
   channel: 1
   speed_bps: 100000000000  # 100Gbps
   node: 1
+  config_params {
+    mac_address: 0x111111111111
+  }
 }
 singleton_ports {
   id: 2
@@ -44,4 +47,7 @@ singleton_ports {
   channel: 1
   speed_bps: 100000000000  # 100Gbps
   node: 1
+  config_params {
+    mac_address: 0x222222222222
+  }
 }

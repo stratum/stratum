@@ -2455,9 +2455,6 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("mac-address")());
-  // TODO(tmadejski) Replace the mock value of config MAC address
-  // (0x112233445566) with a value read from the configuration pushed by the
-  // controller once such field is added.
   SetUpInterfacesInterfaceEthernetConfigMacAddress(0x112233445566, node);
 
   node = tree->AddNode(GetPath("interfaces")(
@@ -2471,18 +2468,24 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
                                                   tree);
   bool port_auto_neg_enabled = false;
   bool port_enabled = false;
+  uint64 mac_address = 0;
   if (singleton.has_config_params()) {
     port_auto_neg_enabled = IsPortAutonegEnabled(singleton.config_params().autoneg());
     port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
+    mac_address = singleton.config_params().mac_address();
   }
+
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
   SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(node_id, port_id,
                                                       port_auto_neg_enabled, node, tree);
-
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node, tree);
+
+  node = tree->AddNode(GetPath("interfaces")(
+      "interface", name)("ethernet")("config")("mac-address")());
+  SetUpInterfacesInterfaceEthernetConfigMacAddress(mac_address, node);
 
   // Paths for transceiver
   node = tree->AddNode(GetPath("components")(
