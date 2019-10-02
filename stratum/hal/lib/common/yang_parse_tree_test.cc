@@ -1002,6 +1002,50 @@ TEST_F(YangParseTreeTest,
   EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
 }
 
+// Check if the 'config/mac-address' OnUpdate action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetConfigMacAddressOnUpdateSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("config")("mac-address")();
+  static constexpr char kMacAddressYangString[] = "11:22:33:44:55:66";
+  static constexpr uint64 kMacAddressUint64 = 0x112233445566ull;
+  static constexpr char kMacAddressSomethingString[] = "00;00;00;00;00;00";
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  SetRequest req;
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kMacAddressYangString);
+  ASSERT_OK(ExecuteOnUpdate(path, val, &req, &notification));
+
+  // Check that the set request sent via SwitchInterface has correct content.
+  ASSERT_THAT(req.requests(), SizeIs(1));
+  EXPECT_EQ(req.requests(0).port().mac_address().mac_address(),
+            kMacAddressUint64);
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  PortMacAddressChangedEvent* event =
+      dynamic_cast<PortMacAddressChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetMacAddress(), kMacAddressUint64);
+
+  // Check reaction to wrong value.
+  val.set_string_val(kMacAddressSomethingString);
+  EXPECT_THAT(ExecuteOnUpdate(path, val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("wrong value")));
+
+  // Check reaction to wrong value type.
+  ::gnmi::Value wrong_type_val;
+  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+}
+
 // Checks if the 'state/port-speed' OnPoll action works correctly.
 TEST_F(YangParseTreeTest, InterfacesInterfaceStatePortSpeedOnPollSuccess) {
   auto path = GetPath("interfaces")(

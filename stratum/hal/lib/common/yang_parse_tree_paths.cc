@@ -1047,7 +1047,7 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
     std::string mac_address_string = typed_val->string_val();
     ::google::protobuf::uint64 mac_address =
         YangStringToMacAddress(mac_address_string);
-    if (mac_address == 0) {
+    if (mac_address_string.compare("00:00:00:00:00:00") !=0 && mac_address == 0) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
 
@@ -1081,6 +1081,10 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
     };
     node->SetOnTimerHandler(poll_functor)
         ->SetOnPollHandler(poll_functor);
+
+    // Trigger change notification.
+    tree->SendNotification(GnmiEventPtr(
+        new PortMacAddressChangedEvent(node_id, port_id, mac_address)));
 
     return ::util::OkStatus();
   };
