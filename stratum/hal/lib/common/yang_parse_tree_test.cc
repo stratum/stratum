@@ -58,6 +58,7 @@ class YangParseTreeTest : public ::testing::Test {
   static constexpr Alarm::Severity kAlarmSeverityEnum = Alarm::CRITICAL;
   static constexpr uint64 kAlarmTimeCreated = 12345ull;
   static constexpr bool kAlarmStatusTrue = true;
+  static constexpr uint64 kInterfaceMac = 0x112233445566ull;
 
   YangParseTreeTest() : parse_tree_(&switch_) {}
 
@@ -118,6 +119,7 @@ class YangParseTreeTest : public ::testing::Test {
     singleton.set_node(kInterface1NodeId);
     singleton.set_id(kInterface1PortId);
     singleton.set_speed_bps(kTwentyFiveGigBps);
+    singleton.mutable_config_params()->set_mac_address(kInterfaceMac);
     // Add one per port per queue stat for this interface.
     NodeConfigParams node_config;
     {
@@ -984,9 +986,6 @@ TEST_F(YangParseTreeTest,
 }
 
 // Check if the 'config/mac-address' OnPoll action works correctly.
-// TODO(unknown): Modify this test once the MAC Address is added to the config
-// proto. Today the test depends on the hack - this address is always
-// initialized to be "11:22:33:44:55:66".
 TEST_F(YangParseTreeTest,
        InterfacesInterfaceEthernetConfigMacAddressOnPollSuccess) {
   auto path = GetPath("interfaces")(
