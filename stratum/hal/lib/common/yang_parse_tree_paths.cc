@@ -1019,8 +1019,11 @@ void SetUpLacpInterfacesInterfaceStateSystemPriority(uint64 node_id,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/ethernet/config/mac-address
-void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 mac_address,
-                                                      TreeNode* node) {
+void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
+                                                      uint32 port_id,
+                                                      uint64 mac_address,
+                                                      TreeNode* node,
+                                                      YangParseTree* tree) {
   auto poll_functor = [mac_address](const GnmiEvent& event,
                                     const ::gnmi::Path& path,
                                     GnmiSubscribeStream* stream) {
@@ -1030,9 +1033,63 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 mac_address,
                         stream);
   };
   auto on_change_functor = UnsupportedFunc();
+
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path,
+          const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    std::string mac_address_string = typed_val->string_val();
+    ::google::protobuf::uint64 mac_address =
+        YangStringToMacAddress(mac_address_string);
+    if (mac_address == 0) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
+    }
+
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_mac_address,
+                           &MacAddress::set_mac_address, mac_address);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
+        auto* singleton_port = new_config->mutable_singleton_ports(i);
+        if (singleton_port->node() == node_id &&
+            singleton_port->id() == port_id) {
+            singleton_port->mutable_config_params()->set_mac_address(mac_address);
+            break;
+        }
+    }
+
+    // Update the YANG parse tree.
+    auto poll_functor = [mac_address](const GnmiEvent& event,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when it
+      // was configured!
+      return SendResponse(GetResponse(path, MacAddressToYangString(mac_address)),
+                          stream);
+    };
+    node->SetOnTimerHandler(poll_functor)
+        ->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
-      ->SetOnChangeHandler(on_change_functor);
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2454,10 +2511,6 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   SetUpLacpInterfacesInterfaceStateSystemIdMac(node_id, port_id, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
-      "interface", name)("ethernet")("config")("mac-address")());
-  SetUpInterfacesInterfaceEthernetConfigMacAddress(0x112233445566, node);
-
-  node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("state")("mac-address")());
   SetUpInterfacesInterfaceEthernetStateMacAddress(node_id, port_id, node, tree);
 
@@ -2485,7 +2538,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("mac-address")());
-  SetUpInterfacesInterfaceEthernetConfigMacAddress(mac_address, node);
+  SetUpInterfacesInterfaceEthernetConfigMacAddress(node_id, port_id, mac_address, node, tree);
 
   // Paths for transceiver
   node = tree->AddNode(GetPath("components")(
