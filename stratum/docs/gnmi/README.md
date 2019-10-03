@@ -55,11 +55,11 @@ In general, there are four types of operations supported by the tree:
 
 **Read**
 
-In response to gNMI Get requests or subscriptions of type sampled or poll, a functor is provided for each leaf that retrieves a value. For configuration state, the value is typically embedded in a functor instance and returned when the functor is called. The value is updated by creating a new functor with a new captured value, and the functor pointer is replaced (typically by the set functor). For operational or other state, the functor makes calls to `SwitchInterface::RetrieveValue()` to retrieve the latest value. The convenction is to call this type of functor *poll-functor*. This functor is also responsible for sending the value to the subscription client.
+In response to gNMI Get requests or subscriptions of type sampled or poll, a functor is provided for each leaf that retrieves a value. For configuration state, the value is typically embedded in a functor instance and returned when the functor is called. The value is updated by creating a new functor with a new captured value, and the functor pointer is replaced (typically by the set functor). For operational or other state, the functor makes calls to `SwitchInterface::RetrieveValue()` to retrieve the latest value. The convention is to call this type of functor *poll-functor*. This functor is also responsible for sending the value to the subscription client.
 
 The poll functor is usually registered for two of a `TreeNode` handlers:
 - The on timer handler, which is called in response to a timer event for a given sampled subscription
-- The on poll hanler, which is called in reponse to a client poll request for poll subscription as well as for gNMI Get requests
+- The on poll handler, which is called in response to a client poll request for poll subscription as well as for gNMI Get requests
 
 Technically, a tree could have different read functors for the timer handler and poll handler, but we don't have a good use case for that at the moment.
 
@@ -71,13 +71,13 @@ For gNMI on change and target defined subscriptions, a functor is provided which
 
 The first is the on change register functor (called *register_functor*) which is used to subscribe a leaf node to a particular type of events. The functor is registered as a `TreeNode`'s on change registration, which is called for each subscribed leaf when an on change subscription is created.
 
-The second is the on change functor which converts an event (of the registered type) into an update which is sent to the subscription client. The new value is not typically stored in the tree as the functor is purely a stateless mapper. The functor is registered as a `TreeNode`'s on change handler, which gets called whenever the GnmiPublisher recieves an event of the type that is registered by the first functor.
+The second is the on change functor which converts an event (of the registered type) into an update which is sent to the subscription client. The new value is not typically stored in the tree as the functor is purely a stateless mapper. The functor is registered as a `TreeNode`'s on change handler, which gets called whenever the GnmiPublisher receives an event of the type that is registered by the first functor.
 
 **Write**
 
-For gNMI set requests, a functor is provided which accepts new values for configuration state, which is typically called *on_set_functor*. This functor is responsible for processing the new value, and then either (i) passing the new value to `SwitchInterface::SetValue()` (if the poll functor retreives its value from switch interface) or (ii) creating a new functor that returns the new value and updating the on poll and on timer handlers for this node.
+For gNMI set requests, a functor is provided which accepts new values for configuration state, which is typically called *on_set_functor*. This functor is responsible for processing the new value, and then either (i) passing the new value to `SwitchInterface::SetValue()` (if the poll functor retrieves its value from switch interface) or (ii) creating a new functor that returns the new value and updating the on poll and on timer handlers for this node.
 
-This functor is usually registered as both the on update handler and on replace handler, which is called when the client sents a gNMI Set message with either the update or replace fields set, respectively.
+This functor is usually registered as both the on update handler and on replace handler, which is called when the client sends a gNMI Set message with either the update or replace fields set, respectively.
 
 **Deletion**
 
@@ -175,7 +175,7 @@ After node initialized, add handlers to the node:
 auto poll_functor = [](const GnmiEvent& event,
                        const ::gnmi::Path& path,
                        GnmiSubscribeStream* stream) {
-  // Poll value from switch interface or whereever you want
+  // Poll value from switch interface or wherever you want
   // and send to stream
 }
 
@@ -187,9 +187,9 @@ auto on_change_functor = [](const GnmiEvent& event,
   // Gets updated value from GnmiEvent, convert to
   // value supported by gNMI (e.g. string) and send to stream
 };
-auto on_update_functior = [](const ::gnmi::Path& path,
-                             const ::google::protobuf::Message& val,
-                             CopyOnWriteChassisConfig* config) {
+auto on_update_functor = [](const ::gnmi::Path& path,
+                            const ::google::protobuf::Message& val,
+                            CopyOnWriteChassisConfig* config) {
   // Sets value to switch
 };
 
