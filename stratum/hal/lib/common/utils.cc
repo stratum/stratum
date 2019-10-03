@@ -338,7 +338,7 @@ std::string MacAddressToYangString(
   std::string tmp_str = yang_string;
   // Remove colons
   tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'), tmp_str.end());
-  return strtoul(tmp_str.c_str(), NULL, 16);
+  return strtoull(tmp_str.c_str(), NULL, 16);
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
