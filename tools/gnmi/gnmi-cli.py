@@ -18,13 +18,11 @@
 import re
 import argparse
 from time import sleep
+import ast
 
 import grpc
 from gnmi import gnmi_pb2
-import google.protobuf.text_format
-import struct
-import signal
-import sys
+from gnmi import gnmi_pb2_grpc
 import threading
 import Queue
 
@@ -35,7 +33,7 @@ def str2bool(v):
 parser = argparse.ArgumentParser(description='Test gNMI subscription')
 parser.add_argument('--grpc-addr', help='gNMI server address',
                     type=str, action="store", default='localhost:28000')
-parser.add_argument('cmd', help='gNMI command', type=str, choices=['get', 'set', 'sub'])
+parser.add_argument('cmd', help='gNMI command', type=str, choices=['get', 'set', 'sub-onchange', 'sub-sample', 'cap', 'del'])
 parser.add_argument('path', help='gNMI Path', type=str)
 
 # gNMI options for SetRequest
@@ -49,6 +47,12 @@ parser.add_argument('--string-val', help='[SetRequest only] Set string value',
                     type=str, action="store", required=False)
 parser.add_argument('--float-val', help='[SetRequest only] Set float value',
                     type=float, action="store", required=False)
+parser.add_argument('--bytes-val', help='[SetRequest only] Set bytes value',
+                    type=str, action="store", required=False)
+parser.add_argument('--interval', help='[Sample subcribe only] Sample subscribe poll interval in ms',
+                    type=int, action="store", default=5000)
+parser.add_argument('--replace', help='[SetRequest only] use replace instead of update',
+                    action="store_true", required=False)
 
 args = parser.parse_args()
 
@@ -60,8 +64,7 @@ def parse_key_val(key_val_str):
 # parse path_str string and add elements to path (gNMI Path class)
 def build_path(path_str, path):
     if path_str == '/':
-        pe = path.elem.add()
-        pe.name = '/'
+        # the root path should be an empty path
         return
 
     path_elem_info_list = re.findall(r'/([^/\[]+)(\[([^=]+=[^\]]+)\])?', path_str)
@@ -77,23 +80,30 @@ def build_path(path_str, path):
                 pe.key[kv[0]] = kv[1]
 
 def print_msg(msg, prompt):
-    print "***************************"
-    print prompt
-    print msg
-    print "***************************"
+    print("***************************")
+    print(prompt)
+    print(msg)
+    print("***************************")
 
 def build_gnmi_get_req():
     req = gnmi_pb2.GetRequest()
     req.encoding = gnmi_pb2.PROTO
     path = req.path.add()
     build_path(args.path, path)
+    if args.path == '/':
+        # Special case
+        req.type = gnmi_pb2.GetRequest.CONFIG
     return req
 
 def build_gnmi_set_req():
     req = gnmi_pb2.SetRequest()
-    update = req.update.add()
+    if (args.replace):
+        update = req.replace.add()
+    else:
+        update = req.update.add()
     path = update.path
-    build_path(args.path, path)
+    if (args.path != '/'):
+        build_path(args.path, path)
     if (args.bool_val is not None):
         update.val.bool_val = args.bool_val
     elif (args.int_val is not None):
@@ -104,9 +114,17 @@ def build_gnmi_set_req():
         update.val.string_val = args.string_val
     elif (args.float_val is not None):
         update.val.float_val = args.float_val
+    elif (args.bytes_val is not None):
+        update.val.bytes_val = ast.literal_eval("b'" + args.bytes_val + "'")
     else:
-        print "No typed value set"
+        print("No typed value set")
         return None
+    return req
+
+def build_gnmi_del_req():
+    req = gnmi_pb2.SetRequest()
+    delete = req.delete.add()
+    build_path(args.path, delete)
     return req
 
 # for subscrption
@@ -114,7 +132,7 @@ stream_out_q = Queue.Queue()
 stream_in_q = Queue.Queue()
 stream = None
 
-def build_gnmi_sub():
+def build_gnmi_sub_onchange():
     req = gnmi_pb2.SubscribeRequest()
     subList = req.subscribe
     subList.mode = gnmi_pb2.SubscriptionList.STREAM
@@ -124,6 +142,19 @@ def build_gnmi_sub():
     path = sub.path
     build_path(args.path, path)
     return req
+
+def build_gnmi_sub_sample():
+    req = gnmi_pb2.SubscribeRequest()
+    subList = req.subscribe
+    subList.mode = gnmi_pb2.SubscriptionList.STREAM
+    subList.updates_only = True
+    sub = subList.subscription.add()
+    sub.mode = gnmi_pb2.SAMPLE
+    sub.sample_interval = args.interval
+    path = sub.path
+    build_path(args.path, path)
+    return req
+
 
 def req_iterator():
     while True:
@@ -140,9 +171,8 @@ def stream_recv(stream):
 
 def main():
     channel = grpc.insecure_channel(args.grpc_addr)
-    stub = gnmi_pb2.gNMIStub(channel)
+    stub = gnmi_pb2_grpc.gNMIStub(channel)
     req = None
-    path = None
 
     if args.cmd == 'get':
         req = build_gnmi_get_req()
@@ -154,8 +184,13 @@ def main():
         print_msg(req, "REQUEST")
         resp = stub.Set(req)
         print_msg(resp, "RESPONSE")
-    elif args.cmd == 'sub':
-        req = build_gnmi_sub()
+    elif args.cmd == 'del':
+        req = build_gnmi_del_req()
+        print_msg(req, "REQUEST")
+        resp = stub.Set(req)
+        print_msg(resp, "RESPONSE")
+    elif args.cmd == 'sub-onchange':
+        req = build_gnmi_sub_onchange()
         stream_out_q.put(req)
         stream = stub.Subscribe(req_iterator())
         stream_recv_thread = threading.Thread(
@@ -168,9 +203,30 @@ def main():
         except KeyboardInterrupt:
             stream_out_q.put(None)
             stream_recv_thread.join()
+    elif args.cmd == 'sub-sample':
+        req = build_gnmi_sub_sample()
+        stream_out_q.put(req)
+        stream = stub.Subscribe(req_iterator())
+        stream_recv_thread = threading.Thread(
+            target=stream_recv, args=(stream,))
+        stream_recv_thread.start()
+
+        try:
+            while True:
+                sleep(1)
+        except KeyboardInterrupt:
+            stream_out_q.put(None)
+            stream_recv_thread.join()
+
+    elif args.cmd == 'cap':
+        req = gnmi_pb2.CapabilityRequest()
+        print_msg(req, "REQUEST")
+        resp = stub.Capabilities(req)
+        print_msg(resp, "RESPONSE")
     else:
-        print 'Unknown command %s', args.cmd
+        print('Unknown command %s', args.cmd)
         return
 
 if __name__ == '__main__':
     main()
+
