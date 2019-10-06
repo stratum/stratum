@@ -277,7 +277,7 @@ def stratum_deps():
             build_file = "@//bazel:external/sdklt.BUILD",
             sha256 = "99c198222d90c2566d9d10cc097d4dbc8e89c6165c3dad304c3f0117e511906a",
             strip_prefix = "",
-            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/b1058a61/sdklt-4.14.49.tgz"],
+            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/r69/sdklt-4.14.49.tgz"],
         )
 
 # -----------------------------------------------------------------------------

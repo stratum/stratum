@@ -42,6 +42,7 @@ constexpr int kDefaultMaxFrameSize = 1518;
 constexpr int kMaxEcmpGroupSize = 1024;
 constexpr int kDefaultMtu = 1500;
 constexpr int kCloneSessionId = 511;
+constexpr int kDefaultVlanStgId = 1;
 
 // The upper 16 bits of an Acl table entry's priority reflect the table
 // priority. The lower 16 bits are the entry's relative priority within the

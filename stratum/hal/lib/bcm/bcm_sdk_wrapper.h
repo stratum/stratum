@@ -355,14 +355,15 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::StatusOr<int> GetPanelPort(int unit, int port);
 
   // Helper function to get all logical ports
-  std::vector<int> GetLogicalPorts(int unit, const std::map<int, std::pair<int, int>>* map);
+  std::vector<int> GetLogicalPorts(int unit,
+      const absl::flat_hash_map<int, std::pair<int, int>>* map);
 
   // Helper to check if a unit exists
   int CheckIfUnitExists(int unit);
 
   // Helper to check if a port exists
   int CheckIfPortExists(int unit, int port,
-                      const std::map<int, std::pair<int, int>>* m);
+      const absl::flat_hash_map<int, std::pair<int, int>>* m);
 
   // RW mutex lock for protecting the internal maps.
   mutable absl::Mutex data_lock_;
@@ -381,12 +382,11 @@ class BcmSdkWrapper : public BcmSdkInterface {
       GUARDED_BY(data_lock_);
 
   // Map from index to usage flag
-  // TODO(max): std::map -> absl::flat_hash_map
-  typedef std::map<int, bool> InUseMap;
+  typedef absl::flat_hash_map<int, bool> InUseMap;
 
   // Map from pair of Acl stage, correspoding logical table id, and
   // software maintained table id
-  typedef std::map<std::pair<BcmAclStage, int>, int> AclIds;
+  typedef absl::flat_hash_map<std::pair<BcmAclStage, int>, int> AclIds;
 
   typedef AclIds AclGroupIds;
   typedef AclIds AclRuleIds;
@@ -395,7 +395,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
 
   // Map from unit number to logical ports and associated port macro id,
   // physical device port number
-  absl::flat_hash_map<int, std::map<int, std::pair<int, int>>>
+  absl::flat_hash_map<int, absl::flat_hash_map<int, std::pair<int, int>>>
       unit_to_logical_ports_ GUARDED_BY(data_lock_);
 
   // This struct encapsulates all the data required to handle mystation
@@ -436,6 +436,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
                           ", dst_mac:", absl::Hex(dst_mac),
                           ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
     }
+    template <typename H>
+    friend H AbslHashValue(H h, const MyStationEntry& e) {
+      return H::combine(std::move(h), e.vlan, e.vlan_mask, e.dst_mac, e.dst_mac_mask);
+    }
   };
 
   // Map from unit number to mystation maximum entries
@@ -447,7 +451,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
       GUARDED_BY(data_lock_);
 
   // Map from unit number to mystation entries
-  absl::flat_hash_map<int, std::map<MyStationEntry, int>> my_station_ids_
+  absl::flat_hash_map<int, absl::flat_hash_map<MyStationEntry, int>> my_station_ids_
       GUARDED_BY(data_lock_);
 
   // This struct encapsulates all the data required to handle l3 interfaces
@@ -472,6 +476,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
       return absl::StrCat("(vlan:", vlan,
                           ", mac:", absl::Hex(mac), ")");
     }
+    template <typename H>
+    friend H AbslHashValue(H h, const L3Interfaces& i) {
+      return H::combine(std::move(h), i.mac, i.vlan);
+    }
   };
 
   // This struct encapsulates all the data required to handle
@@ -484,7 +492,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
   };
 
   // Map from unit number to UDF chunks
-  typedef std::map<int, UdfDataQualifier> ChunkIds;
+  typedef absl::flat_hash_map<int, UdfDataQualifier> ChunkIds;
 
   // Map from unit number to l3 interfaces maximum entries
   absl::flat_hash_map<int, int> unit_to_l3_intf_max_limit_
@@ -495,7 +503,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
       GUARDED_BY(data_lock_);
 
   // Map from unit number to l3 interfaces
-  absl::flat_hash_map<int, std::map<L3Interfaces, int>> l3_interface_ids_
+  absl::flat_hash_map<int, absl::flat_hash_map<L3Interfaces, int>> l3_interface_ids_
       GUARDED_BY(data_lock_);
 
   // Map from unit number to l3 egress interfaces

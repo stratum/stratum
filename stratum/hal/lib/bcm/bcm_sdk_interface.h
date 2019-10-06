@@ -137,7 +137,7 @@ class BcmSdkInterface {
   struct RateLimitConfig {
     // Global rate limit in pps. If not given (default of 0), we set no limit.
     int max_rate_pps;
-    // Max # of pakcet received in single burst. If not given (default of 0),
+    // Max # of packet received in single burst. If not given (default of 0),
     // we set no limit.
     int max_burst_pkts;
     // Map from cos to its rate limit config.

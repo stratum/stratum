@@ -1014,7 +1014,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           return ProtoEqual(x, p); }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
-    ss << absl::StrFormat("%2i, %2i, %2i\n", bcm_port.port(),
+    ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),
                           bcm_port.logical_port(), bcm_port.physical_port());
   }
   LOG(INFO) << ss.str();
@@ -2001,7 +2001,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // We first get the front panel port info from PHAL. Then using this info
     // (read and parsed from the transceiver module EEPROM) we configure serdes
     // for all BCM ports.
-    // TODO(max): Segfault on shared pointer in GetSfpDataSource() call
+    // TODO(max): Uncomment once serdes is supported by bcm_sdk_wrapper.
     /*
     FrontPanelPortInfo fp_port_info;
     RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(

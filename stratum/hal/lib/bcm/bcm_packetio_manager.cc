@@ -812,17 +812,19 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   }
 
   // Configure MTU.
+  // FIXME: With SDKLT the MTU is set at KNET interface creation.
+  /*
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, intf->netif_name.c_str(), IFNAMSIZ);
   ifr.ifr_mtu = intf->mtu ? intf->mtu : kDefaultKnetIntfMtu;
-  // MTU is set at KNET creation
-  // if (ioctl(sock, SIOCSIFMTU, &ifr) == -1) {
-  //   close(sock);
-  //   return MAKE_ERROR(ERR_INTERNAL)
-  //          << "Couldn't set MTU for KNET interface " << intf->netif_name
-  //          << " (unit " << unit_ << " and purpose "
-  //          << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << ").";
-  // }
+  if (ioctl(sock, SIOCSIFMTU, &ifr) == -1) {
+    close(sock);
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Couldn't set MTU for KNET interface " << intf->netif_name
+           << " (unit " << unit_ << " and purpose "
+           << GoogleConfig::BcmKnetIntfPurpose_Name(purpose) << ").";
+  }
+  */
 
   // Get interface ifindex
   memset(&ifr, 0, sizeof(ifr));
@@ -1429,8 +1431,6 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     MappedPacketMetadata mapped_packet_metadata;
     RETURN_IF_ERROR(p4_table_mapper_->ParsePacketInMetadata(
         metadata, &mapped_packet_metadata));
-    LOG(INFO) << "mapped_packet_metadata.type(): " << mapped_packet_metadata.type();
-    LOG(INFO) << "mapped_packet_metadata.u32(): " << mapped_packet_metadata.u32();
     switch (mapped_packet_metadata.type()) {
       case P4_FIELD_TYPE_EGRESS_PORT:
         meta->egress_port_id = mapped_packet_metadata.u32();
