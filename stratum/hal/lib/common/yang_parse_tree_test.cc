@@ -1029,13 +1029,6 @@ TEST_F(YangParseTreeTest,
       dynamic_cast<PortMacAddressChangedEvent*>(&*notification);
   ASSERT_NE(event, nullptr);
   EXPECT_EQ(event->GetMacAddress(), kMacAddressUint64);
-
-  // Check reaction to wrong value type.
-  ::gnmi::Value wrong_type_val;
-  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
-                              /* SetValue will not be called */ nullptr,
-                              /* Notification will not be called */ nullptr),
-              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 }
 
 // Check if the 'config/mac-address' OnUpdate action rejects malformed mac string.
@@ -1062,17 +1055,21 @@ TEST_F(YangParseTreeTest,
       "st:ra:tu:mr:oc:ks"     // None hex digits
     };
 
+  // Set new value.
+  ::gnmi::TypedValue invalid_val;
+  ::gnmi::Value wrong_type_val ;
+  ::gnmi::SubscribeResponse resp;
+
+  // Check reaction to wrong value type.
+  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+
   for(auto mac_string : kMacStrings){
-      ::gnmi::SubscribeResponse resp;
-
-      // Set new value.
-      SetRequest req;
-      ::gnmi::TypedValue val;
-      GnmiEventPtr notification;
-
       // Check reaction to wrong value.
-      val.set_string_val(mac_string);
-      EXPECT_THAT(ExecuteOnUpdate(path, val,
+      invalid_val.set_string_val(mac_string);
+      EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
                                   /* SetValue will not be called */ nullptr,
                                   /* Notification will not be called */ nullptr),
                   StatusIs(_, _, ContainsRegex("wrong value")));
