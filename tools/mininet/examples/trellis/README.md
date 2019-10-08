@@ -5,7 +5,7 @@ of `stratum_bmv2` switches controlled by Trellis, a set of SDN applications
 running on top of ONOS to provide the control plane for an IP fabric based on
 MPLS segment-routing.
 
-To learn more about Trellis: <https://www.opennetworking.org/trellis/>
+To learn more about Trellis: <https://docs.trellisfabric.org>
 
 ## P4 program
 
