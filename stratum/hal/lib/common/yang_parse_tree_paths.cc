@@ -1044,13 +1044,14 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
     if (typed_val == nullptr) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
+
     std::string mac_address_string = typed_val->string_val();
-    ::google::protobuf::uint64 mac_address =
-        YangStringToMacAddress(mac_address_string);
-    if (mac_address_string.compare("00:00:00:00:00:00") !=0 && mac_address == 0) {
+    if (!IsMacAddressValid(mac_address_string)) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "wrong value!";
     }
 
+    ::google::protobuf::uint64 mac_address =
+        YangStringToMacAddress(mac_address_string);
     // Set the value.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_mac_address,

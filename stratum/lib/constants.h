@@ -51,6 +51,8 @@ constexpr char kLocalStratumUrl[] = "localhost:28000";
 constexpr char kProcmonServiceUrl[] = "localhost:28001";
 constexpr char kHalServiceUrl[] = "localhost:28002";
 
+// Rexgex pattern for mac address in openconfig-yang-types.yang
+constexpr char kMacAddressRegex[] = "^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$";
 }  // namespace stratum
 
 #endif  // STRATUM_LIB_CONSTANTS_H_

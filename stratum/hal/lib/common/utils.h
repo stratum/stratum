@@ -212,6 +212,9 @@ std::string MacAddressToYangString(
 ::google::protobuf::uint64 YangStringToMacAddress(
     const std::string& yang_string);
 
+// A helper function that check if string of mac_address is valid.
+bool IsMacAddressValid(const std::string& mac_address);
+
 // A helper function that check if autoneg state is enabled.
 bool IsPortAutonegEnabled(const TriState& state);
 

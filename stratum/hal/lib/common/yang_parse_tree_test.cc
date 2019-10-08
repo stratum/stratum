@@ -1009,7 +1009,6 @@ TEST_F(YangParseTreeTest,
       "interface", "interface-1")("ethernet")("config")("mac-address")();
   static constexpr char kMacAddressYangString[] = "11:22:33:44:55:66";
   static constexpr uint64 kMacAddressUint64 = 0x112233445566ull;
-  static constexpr char kMacAddressSomethingString[] = "00;00;00;00;00;00";
   ::gnmi::SubscribeResponse resp;
 
   // Set new value.
@@ -1031,19 +1030,59 @@ TEST_F(YangParseTreeTest,
   ASSERT_NE(event, nullptr);
   EXPECT_EQ(event->GetMacAddress(), kMacAddressUint64);
 
-  // Check reaction to wrong value.
-  val.set_string_val(kMacAddressSomethingString);
-  EXPECT_THAT(ExecuteOnUpdate(path, val,
-                              /* SetValue will not be called */ nullptr,
-                              /* Notification will not be called */ nullptr),
-              StatusIs(_, _, ContainsRegex("wrong value")));
-
   // Check reaction to wrong value type.
   ::gnmi::Value wrong_type_val;
   EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
                               /* SetValue will not be called */ nullptr,
                               /* Notification will not be called */ nullptr),
               StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+}
+
+// Check if the 'config/mac-address' OnUpdate action rejects malformed mac string.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetConfigMacAddressOnUpdateFailure) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("config")("mac-address")();
+
+  static constexpr char kMacAddressAsString[] = "11:22:33:44:55:66";
+  static constexpr char kMacStrings[][21] = {
+      "11:22:33:44:55",       // Too short string
+      "11:22:33:44:55:66:77", // Too long string
+      "11;22;33;44;55;66",    // Incorrect delimiter
+      "11-22-33-44-55-66",    // Unsupported delimiter
+      "11::22:33:44:55:66",   // Too many delimiter in between
+      ":11:22:33:44:55:66",   // Too many delimiter in the beginning
+      "11:22:33:44:55:66:",   // Too many delimiter in the end
+      "1122:3344:5566",       // Unsupported format
+      "0",                    // No colon
+      "00112233445566",       // No colon
+      "11:22:333:44:55:66",   // Too many hex digits
+      "11:22:3:44:55:66",     // Too few hex digits
+      "",                     // empty mac string
+      "st:ra:tu:mr:oc:ks"     // None hex digits
+    };
+
+  for(auto mac_string : kMacStrings){
+      ::gnmi::SubscribeResponse resp;
+
+      // Set new value.
+      SetRequest req;
+      ::gnmi::TypedValue val;
+      GnmiEventPtr notification;
+
+      // Check reaction to wrong value.
+      val.set_string_val(mac_string);
+      EXPECT_THAT(ExecuteOnUpdate(path, val,
+                                  /* SetValue will not be called */ nullptr,
+                                  /* Notification will not be called */ nullptr),
+                  StatusIs(_, _, ContainsRegex("wrong value")));
+
+      // Check if mac_address remains unchanged.
+      ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+      ASSERT_THAT(resp.update().update(), SizeIs(1));
+      EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
+  }
 }
 
 // Checks if the 'state/port-speed' OnPoll action works correctly.

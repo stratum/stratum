@@ -17,6 +17,7 @@
 #include "stratum/hal/lib/common/utils.h"
 
 #include <sstream>  // IWYU pragma: keep
+#include <regex>
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -339,6 +340,11 @@ std::string MacAddressToYangString(
   // Remove colons
   tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'), tmp_str.end());
   return strtoull(tmp_str.c_str(), NULL, 16);
+}
+
+bool IsMacAddressValid(const std::string& mac_address) {
+  const std::regex mac_address_regex(kMacAddressRegex);
+  return regex_match(mac_address, mac_address_regex);
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
