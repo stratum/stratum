@@ -139,7 +139,7 @@ class GnmiPublisher {
       const ::gnmi::Path& path, ::gnmi::Subscription* subscription)
       LOCKS_EXCLUDED(access_lock_);
 
-  virtual ::util::Status UnSubscribe(EventHandlerRecord* h)
+  virtual ::util::Status UnSubscribe(const SubscriptionHandle& h)
       LOCKS_EXCLUDED(access_lock_);
 
   // The method sends a gNMI message denoting the end of initial set of values.
