@@ -1029,6 +1029,12 @@ TEST_F(YangParseTreeTest,
       dynamic_cast<PortMacAddressChangedEvent*>(&*notification);
   ASSERT_NE(event, nullptr);
   EXPECT_EQ(event->GetMacAddress(), kMacAddressUint64);
+
+  // Check if mac_address has been updated properly.
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressYangString);
 }
 
 // Check if the 'config/mac-address' OnUpdate action rejects malformed mac string.
