@@ -51,7 +51,7 @@ parser.add_argument('--bytes-val', help='[SetRequest only] Set bytes value',
                     type=str, action="store", required=False)
 parser.add_argument('--interval', help='[Sample subcribe only] Sample subscribe poll interval in ms',
                     type=int, action="store", default=5000)
-parser.add_argument('--replace', help='[SetRequest only] use replace instead of update',
+parser.add_argument('--replace', help='[SetRequest only] Use replace instead of update',
                     action="store_true", required=False)
 
 args = parser.parse_args()
