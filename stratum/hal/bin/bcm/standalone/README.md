@@ -4,28 +4,7 @@ The following guide details how to compile the Stratum binary to run on a Broadc
 
 ## Dependencies
 
-Requires the Broadcom SDKLT to be installed (see SDKLT Installation instructions below).
-
-### SDKLT Installation
-
-The Broadcom SDKLT needs to be built and installed as a prerequisite to building Stratum and can be achieved by building the SDKLT Demo App.
-
-The detailed instructions for building the SDKLT Demo App are contained in the SDKLT github repository here: https://github.com/Broadcom-Network-Switching-Software/SDKLT/wiki/Building-the-Demo-App.
-
-An example is given below:
-
-```
-sudo apt-get install libyaml-dev python-yaml
-git clone https://github.com/Broadcom-Network-Switching-Software/SDKLT.git
-cd SDKLT
-export SDKLT=$PWD
-export SDK=$SDKLT/src
-cd $SDK/appl/demo
-make -s TARGET_PLATFORM=native_thsim
-export SDKLT_INSTALL=$SDK/appl/sdklib/build/xlr_linux
-```
-
-It should be noted that the environment variables set here (i.e. SDK, SDKLT and SDKLT_INSTALL) will be required in the Stratum build steps below.
+Reasonable new GCC or Clang (preferred). [SDKLT](https://github.com/opennetworkinglab/SDKLT) is fetched by bazel automatically during the build process. At runtime two Kernel modules are required, which can be downloaded on [GitHub](https://github.com/opennetworkinglab/SDKLT/releases).
 
 ## Building the `stratum_bcm` binary
 
@@ -34,18 +13,14 @@ The `stratum_bcm` binary is a standalone executable which includes:
 - links to the Broadcom SDKLT libraries and headers
 
 To build the `stratum_bcm` binary you will need to:
-1. make sure that the Broadcom SDKLT environment variables are set (see example above in the `SDKLT Installation` section).
-2. Clone the Stratum repository
-3. Change into the stratum directory
-4. Setup the development environment (kicks off a container)
-5. Then build the target using Bazel
+1. Clone the Stratum repository
+2. Change into the stratum directory
+3. Setup the development environment (kicks off a container)
+4. Then build the target using Bazel
 
 An example is shown below:
 
 ```
-export SDKLT=~/SDKLT
-export SDK=$SDKLT/src
-export SDKLT_INSTALL=$SDK/appl/sdklib/build/xlr_linux
 git clone https://github.com/stratum/stratum.git
 cd stratum
 ./setup_dev_env.sh
@@ -55,6 +30,9 @@ bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm
 You can build the binary on your build server and copy it over to the switch.
 
 ## Running the `stratum_bcm` binary
+
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the release [tarball]((https://github.com/opennetworkinglab/SDKLT/releases)). Install them before running stratum:
+`insmod linux_ngbde.ko && insmod linux_ngknet.ko`
 
 Running `stratum_bcm` requires four configuration files, passed as CLI flags:
 

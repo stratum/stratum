@@ -1342,7 +1342,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   iov[idx].iov_len = header.length();
   tot_len += iov[idx].iov_len;
   idx++;
-  // Add payload without caring about (missing) VLAN tag.
+  // Add payload without caring about (missing) VLAN tags.
   iov[idx].iov_base = const_cast<char*>(payload.data());
   iov[idx].iov_len = payload.length();
   tot_len += iov[idx].iov_len;
