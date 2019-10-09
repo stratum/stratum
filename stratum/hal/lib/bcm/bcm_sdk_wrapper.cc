@@ -663,38 +663,31 @@ template<typename TS, typename TI, typename TV>
 }
 
 // TODO(max): errmsg should not be an argument.
-::util::StatusOr<int>
-GetFreeSlot(absl::flat_hash_map<int, bool>* map, std::string ErrMsg) {
-  bool free_slot = false;
-  auto it = std::find_if(map->begin(), map->end(),
-                         [&free_slot](const std::pair<int, bool>& p) {
-                           return p.second == free_slot;
-                         });
-  if (it == map->end()) {
-    return MAKE_ERROR(ERR_INTERNAL) << ErrMsg;
+// TODO: Replace InUseMap with an array or vector, but not std::vector<bool>!
+::util::StatusOr<int> GetFreeSlot(absl::flat_hash_map<int, bool>* map,
+                                  std::string ErrMsg) {
+  for (auto& slot : *map) {
+    if (!slot.second) {
+      return slot.first;
+    }
   }
-  return it->first;
+  return MAKE_ERROR(ERR_INTERNAL) << ErrMsg;
 }
 
 void ConsumeSlot(absl::flat_hash_map<int, bool>* map, int index) {
-  auto it = map->begin();
-  std::advance(it, (index - 1));
-  it->second = true;
+  auto& slot_in_use = gtl::FindOrDie(*map, index);
+  CHECK(!slot_in_use);
+  slot_in_use = true;
 }
 
 void ReleaseSlot(absl::flat_hash_map<int, bool>* map, int index) {
-  auto it = map->find(index);
-  if (it != map->end()) {
-    it->second = false;
-  }
+  auto& slot_in_use = gtl::FindOrDie(*map, index);
+  CHECK(slot_in_use);
+  slot_in_use = false;
 }
 
 bool SlotExists(absl::flat_hash_map<int, bool>* map, int index) {
-  auto it = map->find(index);
-  if (it != map->end()) {
-    return true;
-  }
-  return false;
+  return gtl::ContainsKey(*map, index);
 }
 
 int bcmlt_custom_entry_commit(bcmlt_entry_handle_t entry_hdl,
@@ -6687,29 +6680,21 @@ namespace {
   }
 
   // update rule map
-  auto it = rule_ids->begin();
-  std::advance(it, (rule_id-1));
-  it->second = true;
+  ConsumeSlot(rule_ids, rule_id);
   rule_table_ids->emplace(std::make_pair(stage, rule_id), rule_table_id);
 
   // update policy map
-  it = policy_ids->begin();
-  std::advance(it, (policy_id-1));
-  it->second = true;
+  ConsumeSlot(policy_ids, policy_id);
   policy_table_ids->emplace(std::make_pair(stage, policy_id), policy_table_id);
 
   // update meter map
   if (flow.has_meter()) {
-     it = meter_ids->begin();
-     std::advance(it, (meter_id-1));
-     it->second = true;
-     meter_table_ids->emplace(std::make_pair(stage, meter_id), meter_table_id);
+    ConsumeSlot(meter_ids, meter_id);
+    meter_table_ids->emplace(std::make_pair(stage, meter_id), meter_table_id);
   }
 
   // update acl map
-  it = acl_ids->begin();
-  std::advance(it, (acl_id-1));
-  it->second = true;
+  ConsumeSlot(acl_ids, acl_id);
   acl_table_ids->emplace(std::make_pair(stage, acl_id), acl_table_id);
   return acl_table_id;
 }
@@ -6988,16 +6973,12 @@ namespace {
        }
        RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, flow.meter()));
        if (need_map_update) {
-          auto it = ifp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = true;
+          ConsumeSlot(ifp_meter_ids, meter_id);
           fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
        }
      } else {
        if (meter_deleted) {
-          auto it = ifp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = false;
+          ReleaseSlot(ifp_meter_ids, meter_id);
           fp_meters->erase(std::make_pair(stage, meter_id));
        }
        meter_id = 0;
@@ -7033,16 +7014,12 @@ namespace {
        }
        RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, flow.meter()));
        if (need_map_update) {
-          auto it = efp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = true;
+          ConsumeSlot(efp_meter_ids, meter_id);
           fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
        }
      } else {
        if (meter_deleted) {
-          auto it = ifp_meter_ids->begin();
-          std::advance(it, (meter_id-1));
-          it->second = false;
+          ReleaseSlot(ifp_meter_ids, meter_id);
           fp_meters->erase(std::make_pair(stage, meter_id));
        }
        meter_id = 0;
@@ -7245,9 +7222,7 @@ namespace {
       RETURN_IF_ERROR(RemoveIfpEntry(unit, acl_entry_id));
       RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, meter));
       RETURN_IF_ERROR(CreateIfpEntry(unit, acl_entry_id, priority, group_id, rule_id, policy_id, meter_id));
-      auto it = ifp_meter_ids->begin();
-      std::advance(it, (meter_id-1));
-      it->second = true;
+      ConsumeSlot(ifp_meter_ids, meter_id);
       fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
     } else if (BCM_ACL_STAGE_EFP) {
       if (!efp_meter_ids) {
@@ -7263,9 +7238,7 @@ namespace {
       RETURN_IF_ERROR(RemoveIfpEntry(unit, acl_entry_id));
       RETURN_IF_ERROR(AddAclPolicer(unit, meter_id, stage, meter));
       RETURN_IF_ERROR(CreateIfpEntry(unit, acl_entry_id, priority, group_id, rule_id, policy_id, meter_id));
-      auto it = efp_meter_ids->begin();
-      std::advance(it, (meter_id-1));
-      it->second = true;
+      ConsumeSlot(efp_meter_ids, meter_id);
       fp_meters->emplace(std::make_pair(stage, meter_id), meter_table_id);
     }
   }
