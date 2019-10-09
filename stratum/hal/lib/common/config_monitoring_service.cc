@@ -326,7 +326,9 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       // `msg` PROTOBUF to the response that will be sent to the controller.
       InlineGnmiSubscribeStream stream(
           [resp](const ::gnmi::SubscribeResponse& msg) -> bool {
-            if (!msg.has_update()) return false;
+            //If update is empty, then it may be a sync_response for get request
+            if (!msg.has_update())
+                return msg.sync_response();
             *resp->add_notification() = msg.update();
             return true;
           });
