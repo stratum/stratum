@@ -595,6 +595,15 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
       break;
     }
   }
+
+  // Unsubscribe and delete all subscriptions and polls. This stops scheduled
+  // timers and prevents access to freed gRPC resources.
+  for (auto& subscription : subscriptions) {
+    publisher->UnSubscribe(subscription.second);
+  }
+  subscriptions.clear();
+  polls.clear();
+
   return ::grpc::Status::OK;
 }
 
