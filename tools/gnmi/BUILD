@@ -24,5 +24,6 @@ package(
 py_binary(
     name = "gnmi-cli",
     srcs = ["gnmi-cli.py"],
-    deps = ["@com_github_openconfig_gnmi_proto//:gnmi_py_grpc"]
+    deps = ["@com_github_openconfig_gnmi_proto//:gnmi_py_grpc"],
+    python_version = "PY2"
 )
