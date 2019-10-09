@@ -49,7 +49,7 @@ parser.add_argument('--float-val', help='[SetRequest only] Set float value',
                     type=float, action="store", required=False)
 parser.add_argument('--bytes-val', help='[SetRequest only] Set bytes value',
                     type=str, action="store", required=False)
-parser.add_argument('--interval', help='[Sample subcribe only] Sample subscribe poll interval in ms',
+parser.add_argument('--interval', help='[Sample subscribe only] Sample subscribe poll interval in ms',
                     type=int, action="store", default=5000)
 parser.add_argument('--replace', help='[SetRequest only] Use replace instead of update',
                     action="store_true", required=False)

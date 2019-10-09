@@ -31,7 +31,7 @@ optional arguments:
                         [SetRequest only] Set float value
   --bytes-val BYTES_VAL
                         [SetRequest only] Set bytes value
-  --interval INTERVAL   [Sample subcribe only] Sample subscribe poll interval in ms
+  --interval INTERVAL   [Sample subscribe only] Sample subscribe poll interval in ms
   --replace             [SetRequest only] Use replace instead of update
 ```
 
