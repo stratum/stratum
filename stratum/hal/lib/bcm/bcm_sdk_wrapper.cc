@@ -634,7 +634,7 @@ bool SobFieldSizeVerify(uint32 value) {
 }
 
 template<typename TK, typename TV>
-std::set<TV> extract_values(absl::flat_hash_map<TK, TV> const& input_map) {
+std::set<TV> extract_values(std::map<TK, TV> const& input_map) {
   std::set<TV> retval;
   for (auto const& element : input_map) {
     retval.insert(element.second);
@@ -643,7 +643,7 @@ std::set<TV> extract_values(absl::flat_hash_map<TK, TV> const& input_map) {
 };
 
 template<typename TK, typename TV>
-std::set<TK> extract_keys(absl::flat_hash_map<TK, TV> const& input_map) {
+std::set<TK> extract_keys(std::map<TK, TV> const& input_map) {
   std::set<TK> retval;
   for (auto const& element : input_map) {
     retval.insert(element.first);
@@ -651,6 +651,7 @@ std::set<TK> extract_keys(absl::flat_hash_map<TK, TV> const& input_map) {
   return retval;
 };
 
+// FIXME: replace with gtl helper
 template<typename TS, typename TI, typename TV>
 ::util::StatusOr<bool> FindAndReturnEntry(TS search, TI index, TV value) {
   for (auto it = search->begin(); it != search->end(); ++it) {
@@ -664,7 +665,7 @@ template<typename TS, typename TI, typename TV>
 
 // TODO(max): errmsg should not be an argument.
 // TODO: Replace InUseMap with an array or vector, but not std::vector<bool>!
-::util::StatusOr<int> GetFreeSlot(absl::flat_hash_map<int, bool>* map,
+::util::StatusOr<int> GetFreeSlot(std::map<int, bool>* map,
                                   std::string ErrMsg) {
   for (auto& slot : *map) {
     if (!slot.second) {
@@ -674,19 +675,19 @@ template<typename TS, typename TI, typename TV>
   return MAKE_ERROR(ERR_INTERNAL) << ErrMsg;
 }
 
-void ConsumeSlot(absl::flat_hash_map<int, bool>* map, int index) {
+void ConsumeSlot(std::map<int, bool>* map, int index) {
   auto& slot_in_use = gtl::FindOrDie(*map, index);
   CHECK(!slot_in_use);
   slot_in_use = true;
 }
 
-void ReleaseSlot(absl::flat_hash_map<int, bool>* map, int index) {
+void ReleaseSlot(std::map<int, bool>* map, int index) {
   auto& slot_in_use = gtl::FindOrDie(*map, index);
   CHECK(slot_in_use);
   slot_in_use = false;
 }
 
-bool SlotExists(absl::flat_hash_map<int, bool>* map, int index) {
+bool SlotExists(std::map<int, bool>* map, int index) {
   return gtl::ContainsKey(*map, index);
 }
 
@@ -898,7 +899,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   bcmlt_entry_handle_t entry_hdl;
   bcmlt_entry_info_t entry_info;
   std::vector<std::pair<int, int>> configured_ports;
-  absl::flat_hash_map<int, std::pair<int, int>> tmp_map;
+  std::map<int, std::pair<int, int>> tmp_map;
 
   if (!probed) {
     return MAKE_ERROR(ERR_INTERNAL)
@@ -2139,13 +2140,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // update mtu
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_UC_MTUs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : 1)));
+      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : kDefaultVlan)));
   RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                          BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
   RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : 1)));
+      bcmlt_entry_field_add(entry_hdl, VLAN_IDs, (vlan > 0 ? vlan : kDefaultVlan)));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, L3_MTUs, mtu));
   if (entry_info.status == SHR_E_NONE) {
     RETURN_IF_BCM_ERROR(
@@ -5458,7 +5459,7 @@ std::string HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   return gtl::FindWithDefault(*stage_map, field, BcmField_Type_Name(BcmField::UNKNOWN));
 }
 
-::util::StatusOr<int> GetUniqueId(absl::flat_hash_map<std::pair<BcmAclStage, int>, int> *table_ids,
+::util::StatusOr<int> GetUniqueId(std::map<std::pair<BcmAclStage, int>, int> *table_ids,
                                   int id, int max) {
   int acl_id = 0;
   std::set<int> setOfNumbers = extract_values(*table_ids);
@@ -5674,7 +5675,7 @@ CreateAclGroup(int unit, int id, BcmAclStage stage, const BcmAclTable &table) {
 ::util::Status BcmSdkWrapper::DestroyAclTable(int unit, int table_id) {
   bool found;
   int rv;
-  absl::flat_hash_map<int, bool>* group_ids;
+  std::map<int, bool>* group_ids;
   std::pair<BcmAclStage, int> entry;
   bcmlt_entry_handle_t entry_hdl;
   bool entry_deleted = false;
@@ -6929,8 +6930,8 @@ namespace {
   int meter_id = 0;
   int meter_table_id = 0;
   auto *fp_meters = gtl::FindPtrOrNull(fp_meter_ids_, unit);
-  absl::flat_hash_map<int, bool>* ifp_meter_ids = gtl::FindOrNull(ifp_meter_ids_, unit);;
-  absl::flat_hash_map<int, bool>* efp_meter_ids = gtl::FindOrNull(efp_meter_ids_, unit);;
+  std::map<int, bool>* ifp_meter_ids = gtl::FindOrNull(ifp_meter_ids_, unit);;
+  std::map<int, bool>* efp_meter_ids = gtl::FindOrNull(efp_meter_ids_, unit);;
 
   // Add policer if meter config is specified.
   int maxMeters = unit_to_fp_meter_max_limit_[unit];
@@ -7053,10 +7054,10 @@ namespace {
   int rule_id;
   int policy_id;
   int meter_id;
-  absl::flat_hash_map<int, bool>* rule_ids;
-  absl::flat_hash_map<int, bool>* policy_ids;
-  absl::flat_hash_map<int, bool>* meter_ids;
-  absl::flat_hash_map<int, bool>* entry_ids;
+  std::map<int, bool>* rule_ids;
+  std::map<int, bool>* policy_ids;
+  std::map<int, bool>* meter_ids;
+  std::map<int, bool>* entry_ids;
   auto *fp_rules = gtl::FindPtrOrNull(fp_rule_ids_, unit);
   auto *fp_policies = gtl::FindPtrOrNull(fp_policy_ids_, unit);
   auto *fp_meters = gtl::FindPtrOrNull(fp_meter_ids_, unit);
@@ -7148,8 +7149,8 @@ namespace {
   int policy_id = 0;
   int meter_id = 0;
   auto *fp_meters = gtl::FindPtrOrNull(fp_meter_ids_, unit);
-  absl::flat_hash_map<int, bool>* ifp_meter_ids = gtl::FindOrNull(ifp_meter_ids_, unit);;
-  absl::flat_hash_map<int, bool>* efp_meter_ids = gtl::FindOrNull(efp_meter_ids_, unit);;
+  std::map<int, bool>* ifp_meter_ids = gtl::FindOrNull(ifp_meter_ids_, unit);;
+  std::map<int, bool>* efp_meter_ids = gtl::FindOrNull(efp_meter_ids_, unit);;
   int maxMeters = unit_to_fp_meter_max_limit_[unit];
   int meter_table_id = 0;
 
@@ -7614,7 +7615,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
 }
 
 int BcmSdkWrapper::CheckIfPortExists(int unit, int port,
-                      const absl::flat_hash_map<int, std::pair<int, int>>* m) {
+                      const std::map<int, std::pair<int, int>>* m) {
   std::vector<int> ports = GetLogicalPorts(unit, m);
   auto result = std::find(std::begin(ports), std::end(ports), port);
   if (result == std::end(ports)) {
@@ -7626,7 +7627,7 @@ int BcmSdkWrapper::CheckIfPortExists(int unit, int port,
 
 // TODO(max): fix return API
 std::vector<int> BcmSdkWrapper::GetLogicalPorts(int unit,
-      const absl::flat_hash_map<int, std::pair<int, int>>* map) {
+      const std::map<int, std::pair<int, int>>* map) {
   std::vector<int> logical_ports;
   BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
   if (!bcm_sdk_wrapper) {
@@ -7636,7 +7637,7 @@ std::vector<int> BcmSdkWrapper::GetLogicalPorts(int unit,
         map->begin(),
         map->end(),
         std::back_inserter(logical_ports),
-        [](const absl::flat_hash_map<int, std::pair < int, int>>
+        [](const std::map<int, std::pair < int, int>>
     ::value_type &pair){ return pair.first; });
   }
   return logical_ports;
