@@ -17,6 +17,7 @@
 licenses(["notice"])  # Apache v2
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 
 package(
     default_visibility = [ "//visibility:public" ],
@@ -50,8 +51,11 @@ cc_proto_library(
 cc_grpc_library(
     name = "gnmi_cc_grpc",
     srcs = [":gnmi_proto"],
-    deps = [
-        ":gnmi_cc_proto"
-    ],
+    deps = [":gnmi_cc_proto"],
     grpc_only = True
+)
+
+python_grpc_library(
+    name = "gnmi_py_grpc",
+    deps = [":gnmi_proto"],
 )
