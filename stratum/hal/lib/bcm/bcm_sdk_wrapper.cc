@@ -1413,11 +1413,8 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   bcmlt_entry_info_t entry_info;
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Port Disable and Set max frame
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
@@ -1485,10 +1482,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   // Check if port is valid
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Enable
   if (options.enabled()) {
     RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
@@ -1610,10 +1604,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   // Check if port is valid
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Linkscan
   options->set_linkscan_mode(BcmPortOptions::LINKSCAN_MODE_UNKNOWN);
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
@@ -1724,10 +1715,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   // Check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   // Check if port is valid
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports))
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port))
       << "Port " << port << " does not exit on unit " << unit << ".";
   CHECK_RETURN_IF_FALSE(pc != nullptr);
 
@@ -1835,22 +1823,21 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       bcmlt_table_subscribe(unit, LM_LINK_STATEs, &sdk_linkscan_callback,
                             NULL));
 
-  std::vector<int>::iterator port;
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
+  absl::WriterMutexLock l(&data_lock_);
+  // // Get logical ports for this unit
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
-  // Get logical ports for this unit
-  std::vector<int> logical_ports = GetLogicalPorts(unit, unit_to_ports);
 
   // Set linkscan mode for all the ports
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
-  for (port = logical_ports.begin(); port < logical_ports.end(); port++) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+  for (const auto& port : *logical_ports_map) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                            BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
     RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_add(entry_hdl, LINKSCAN_MODEs, SOFTWAREs));
     if (entry_info.status == SHR_E_NONE) {
@@ -1915,22 +1902,20 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
-  std::vector<int>::iterator port;
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
+  absl::WriterMutexLock l(&data_lock_);
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
       << "Logical ports are not identified on the Unit " << unit << ".";
-  // Get logical ports for this unit
-  std::vector<int> logical_ports = GetLogicalPorts(unit, unit_to_ports);
 
   // Disable linkscan mode for all the ports
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
-  for (port = logical_ports.begin(); port < logical_ports.end(); port++) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+  for (const auto& port : *logical_ports_map) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
                                            BCMLT_PRIORITY_NORMAL));
     RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
     RETURN_IF_BCM_ERROR(bcmlt_entry_clear(entry_hdl));
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(
         bcmlt_entry_field_symbol_add(entry_hdl, LINKSCAN_MODEs, NO_SCANs));
     if (entry_info.status == SHR_E_NONE) {
@@ -2001,11 +1986,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
 
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, LM_PORT_CONTROLs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
@@ -2030,7 +2012,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::SetMtu(int unit, int mtu) {
   bcmlt_entry_handle_t entry_hdl;
-  std::vector<int>::iterator port;
   uint64_t max;
   uint64_t min;
   // Check if unit is valid
@@ -2044,18 +2025,15 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
-  // Get logical ports for this unit
-  std::vector<int> logical_ports = GetLogicalPorts(unit, unit_to_ports);
-
   absl::WriterMutexLock l(&data_lock_);
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  CHECK_RETURN_IF_FALSE(logical_ports_map != nullptr)
+      << "Logical ports are not identified on the Unit " << unit << ".";
   CHECK_RETURN_IF_FALSE(unit_to_mtu_.count(unit));
   // Modify mtu for all the interfaces on this unit.
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
-  for (port = logical_ports.begin(); port < logical_ports.end(); port++) {
-    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, *port));
+  for (const auto& port : *logical_ports_map) {
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port.first));
     RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAX_FRAME_SIZEs, mtu));
     RETURN_IF_BCM_ERROR(
         bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_UPDATE,
@@ -2243,15 +2221,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(max) << ".";
   }
 
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
   InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr &&
-                        unit_to_ports != nullptr && unit_to_l3_intf != nullptr)
+  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
   // Check if router interface is valid
   ASSIGN_OR_RETURN(found,
@@ -2490,16 +2466,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(min) << " - "
            << static_cast<int>(max) << ".";
   }
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
   InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr &&
-                        l3_egress_intf != nullptr &&
-                        unit_to_l3_intf != nullptr)
+  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr && unit_to_l3_intf != nullptr)
       << "Unit " << unit
       << " not initialized yet. Call InitializeUnit first.";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   // Check if egress interface is valid
   it = l3_egress_intf->find(egress_intf_id);
   if (it != l3_egress_intf->end()) {
@@ -4564,11 +4537,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                        size_t packet_len,
                                                        std::string* header) {
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, unit);
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr)
-      << "Logical ports are not identified on the Unit " << unit << ".";
   // Check if port is valid
-  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port, unit_to_ports));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
   CHECK_RETURN_IF_FALSE(header != nullptr);
   header->clear();
@@ -7253,14 +7223,12 @@ namespace {
   CHECK_RETURN_IF_FALSE(entry.has_multicast_group_entry())
       << "Bcm does only support multicast groups for now";
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(entry.unit()));
-  auto unit_to_ports = gtl::FindOrNull(unit_to_logical_ports_, entry.unit());
-  CHECK_RETURN_IF_FALSE(unit_to_ports != nullptr);
   auto mcast_entry = entry.multicast_group_entry();
   CHECK_RETURN_IF_FALSE(!gtl::ContainsKey(multicast_group_id_to_replicas_,
       mcast_entry.multicast_group_id())) << "multicast group already exists";
   std::vector<int> ports;
   for (auto const& port : mcast_entry.ports()) {
-    RETURN_IF_BCM_ERROR(CheckIfPortExists(entry.unit(), port, unit_to_ports));
+    RETURN_IF_BCM_ERROR(CheckIfPortExists(entry.unit(), port));
     ports.push_back(port);
   }
   gtl::InsertOrDie(&multicast_group_id_to_replicas_, mcast_entry.multicast_group_id(), ports);
@@ -7614,43 +7582,23 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, PortState linkstatus) {
   }
 }
 
-int BcmSdkWrapper::CheckIfPortExists(int unit, int port,
-                      const std::map<int, std::pair<int, int>>* m) {
-  std::vector<int> ports = GetLogicalPorts(unit, m);
-  auto result = std::find(std::begin(ports), std::end(ports), port);
-  if (result == std::end(ports)) {
-    LOG(ERROR) << "Invalid port " << port << " on Unit " << unit << ".";
+int BcmSdkWrapper::CheckIfPortExists(int unit, int port) {
+  absl::WriterMutexLock l(&data_lock_);
+  auto logical_ports_map = gtl::FindOrNull(unit_to_logical_ports_, unit);
+  if (!logical_ports_map) {
+    LOG(ERROR) << "Logical ports are not identified on the Unit " << unit << ".";
+    return SHR_E_INIT;
+  }
+  if (logical_ports_map->count(port)) {
+    return SHR_E_NONE;
+  } else {
     return SHR_E_NOT_FOUND;
   }
-  return SHR_E_NONE;
-}
-
-// TODO(max): fix return API
-std::vector<int> BcmSdkWrapper::GetLogicalPorts(int unit,
-      const std::map<int, std::pair<int, int>>* map) {
-  std::vector<int> logical_ports;
-  BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
-  if (!bcm_sdk_wrapper) {
-    LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
-  } else {
-    std::transform(
-        map->begin(),
-        map->end(),
-        std::back_inserter(logical_ports),
-        [](const std::map<int, std::pair < int, int>>
-    ::value_type &pair){ return pair.first; });
-  }
-  return logical_ports;
 }
 
 int BcmSdkWrapper::CheckIfUnitExists(int unit) {
-  BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
-  if (!bcm_sdk_wrapper) {
-    LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
-    return SHR_E_INTERNAL;
-  }
   if (!bcmdrd_dev_exists(unit)) {
-    LOG(ERROR) << "Unit " << unit << "  is not found.";
+    LOG(ERROR) << "Unit " << unit << " is not found.";
     return SHR_E_UNIT;
   }
   return SHR_E_NONE;

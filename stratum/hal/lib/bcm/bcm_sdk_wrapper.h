@@ -113,8 +113,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                 BcmPortOptions* options) override;
   ::util::Status GetPortCounters(int unit, int port, PortCounters* pc) override;
   ::util::Status StartDiagShellServer() override;
-  ::util::Status StartLinkscan(int unit) override;
-  ::util::Status StopLinkscan(int unit) override;
+  ::util::Status StartLinkscan(int unit) override  LOCKS_EXCLUDED(data_lock_);
+  ::util::Status StopLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
   void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
@@ -343,27 +343,22 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                            const std::string& attr,
                                            uint32 value);
 
-  // Helper function called in InitializeSdk() to spawn a SDKLT shell
+  // Helper function called in InitializeSdk() to spawn a SDKLT shell.
   ::util::Status InitCLI();
 
   // Helper function to create a Knet filter for software multicast.
   // Required because CreateKnetFilter does not allow setting a FP match filter.
   ::util::StatusOr<int> CreateKnetFilterForMulticast(int unit, uint8 acl_rule);
 
-  // Helper function the get the front panel port from logical port
-  // This should work because PC_PHYS_PORT is a R/O table
+  // Helper function the get the front panel port from logical port.
+  // This should work because PC_PHYS_PORT is a R/O table.
   ::util::StatusOr<int> GetPanelPort(int unit, int port);
 
-  // Helper function to get all logical ports
-  std::vector<int> GetLogicalPorts(int unit,
-      const std::map<int, std::pair<int, int>>* map);
-
-  // Helper to check if a unit exists
+  // Helper to check if a unit exists.
   int CheckIfUnitExists(int unit);
 
-  // Helper to check if a port exists
-  int CheckIfPortExists(int unit, int port,
-      const std::map<int, std::pair<int, int>>* m);
+  // Helper to check if a port exists.
+  int CheckIfPortExists(int unit, int port) LOCKS_EXCLUDED(data_lock_);
 
   // RW mutex lock for protecting the internal maps.
   mutable absl::Mutex data_lock_;
