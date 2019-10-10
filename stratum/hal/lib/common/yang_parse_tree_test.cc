@@ -109,15 +109,17 @@ class YangParseTreeTest : public ::testing::Test {
   }
 
   // A proxy for YangParseTree::AddSubtreeInterface().
-  SingletonPort& AddSubtreeInterface(const std::string& name) {
+  void AddSubtreeInterface(const std::string& name,
+                           SingletonPort* singleton_p) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
-
+    SingletonPort singleton;
+    SingletonPort* singleton_ptr = (singleton_p == nullptr)? &singleton \
+                                                           : singleton_p;
     // Add one singleton port.
-    static SingletonPort singleton;
-    singleton.set_name(name);
-    singleton.set_node(kInterface1NodeId);
-    singleton.set_id(kInterface1PortId);
-    singleton.set_speed_bps(kTwentyFiveGigBps);
+    singleton_ptr->set_name(name);
+    singleton_ptr->set_node(kInterface1NodeId);
+    singleton_ptr->set_id(kInterface1PortId);
+    singleton_ptr->set_speed_bps(kTwentyFiveGigBps);
     // Add one per port per queue stat for this interface.
     NodeConfigParams node_config;
     {
@@ -131,8 +133,7 @@ class YangParseTreeTest : public ::testing::Test {
       entry->set_internal_priority(2);  // some internal priority
       entry->set_q_num(kInterface1QueueId);
     }
-    parse_tree_.AddSubtreeInterfaceFromSingleton(singleton, node_config);
-    return singleton;
+    parse_tree_.AddSubtreeInterfaceFromSingleton(*singleton_ptr, node_config);
   }
 
   // A proxy for YangParseTree::AddSubtreeChassis().
@@ -172,7 +173,7 @@ class YangParseTreeTest : public ::testing::Test {
     // /interfaces/interface[name=*]/state/name
 
     // The test requires one interface branch to be added.
-    AddSubtreeInterface("interface-1");
+    AddSubtreeInterface("interface-1", nullptr);
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
 
@@ -334,17 +335,13 @@ class YangParseTreeTest : public ::testing::Test {
     // /interfaces/interface[name=*]/state/ifindex
     // /interfaces/interface[name=*]/state/name
 
+    ChassisConfig chassis_config;
     // The test requires one interface branch to be added.
-    SingletonPort& singleton = AddSubtreeInterface("interface-1");
+    AddSubtreeInterface("interface-1",
+                        chassis_config.add_singleton_ports());
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
     // Make a copy-on-write pointer to current chassis configuration.
-    ChassisConfig chassis_config;
-    SingletonPort* singleton_tmp = chassis_config.add_singleton_ports();
-    singleton_tmp->set_name(singleton.name());
-    singleton_tmp->set_node(singleton.node());
-    singleton_tmp->set_id(singleton.id());
-    singleton_tmp->set_speed_bps(singleton.speed_bps());
     CopyOnWriteChassisConfig config(&chassis_config);
 
     // Expect the SetValue() call only if the 'req' is not nullptr.
@@ -575,7 +572,7 @@ TEST_F(YangParseTreeTest, PerformActionForAllNodesOnePresent) {
   // /interfaces/interface[name=*]/state/name
 
   // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
+  AddSubtreeInterface("interface-1", nullptr);
 
   std::vector<const TreeNode*> nodes;
 
@@ -707,7 +704,7 @@ TEST_F(YangParseTreeTest, GetDataFromSwitchInterfaceDataConvertedCorrectly) {
   // /interfaces/interface[name=*]/state/name
 
   // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
+  AddSubtreeInterface("interface-1", nullptr);
 
   // Mock implementation of RetrieveValue() that sends a response set to
   // HW_STATE_READY.
@@ -775,7 +772,7 @@ TEST_F(YangParseTreeTest, ChangeDefaultTargetDefinedMode) {
 // subscription for "/interfaces/interface/state/counters" sets it to ON_CHANGE.
 TEST_F(YangParseTreeTest, DefaultTargetDefinedModeIsSampleForCounters) {
   // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
+  AddSubtreeInterface("interface-1", nullptr);
 
   const TreeNode* node = GetRoot().FindNodeOrNull(
       GetPath("interfaces")("interface", "interface-1")("state")("counters")());
@@ -877,7 +874,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateNameOnPollSuccess) {
   // /interfaces/interface[name=*]/state/name
 
   // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
+  AddSubtreeInterface("interface-1", nullptr);
 
   // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
   // of the 'resp' variable is then checked.
@@ -910,7 +907,7 @@ TEST_F(YangParseTreeTest, InterfacesInterfaceStateIfIndexOnPollSuccess) {
   // /interfaces/interface[name=*]/state/name
 
   // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
+  AddSubtreeInterface("interface-1", nullptr);
 
   // Mock gRPC stream that copies parameter of Write() to 'resp'. The contents
   // of the 'resp' variable is then checked.
@@ -2786,7 +2783,7 @@ TEST_F(YangParseTreeTest,
   // /interfaces/interface[name=*]/state/name
 
   // The test requires one interface branch to be added.
-  AddSubtreeInterface("interface-1");
+  AddSubtreeInterface("interface-1", nullptr);
 
   auto path = GetPath("interfaces")("interface")("...")();
 
