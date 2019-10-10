@@ -206,6 +206,15 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
 std::string MacAddressToYangString(
     const ::google::protobuf::uint64& mac_address);
 
+// A helper function that convert data received from the gNMI interface into a format
+// expected by the HAL (MAC addresses are expected to be
+// ::google::protobuf::uint64).
+::google::protobuf::uint64 YangStringToMacAddress(
+    const std::string& yang_string);
+
+// A helper function that check if string of mac_address is valid.
+bool IsMacAddressValid(const std::string& mac_address);
+
 // A helper function that check if autoneg state is enabled.
 bool IsPortAutonegEnabled(const TriState& state);
 
