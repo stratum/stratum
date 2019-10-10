@@ -109,11 +109,11 @@ class YangParseTreeTest : public ::testing::Test {
   }
 
   // A proxy for YangParseTree::AddSubtreeInterface().
-  void AddSubtreeInterface(const std::string& name) {
+  SingletonPort& AddSubtreeInterface(const std::string& name) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
 
     // Add one singleton port.
-    SingletonPort singleton;
+    static SingletonPort singleton;
     singleton.set_name(name);
     singleton.set_node(kInterface1NodeId);
     singleton.set_id(kInterface1PortId);
@@ -132,6 +132,7 @@ class YangParseTreeTest : public ::testing::Test {
       entry->set_q_num(kInterface1QueueId);
     }
     parse_tree_.AddSubtreeInterfaceFromSingleton(singleton, node_config);
+    return singleton;
   }
 
   // A proxy for YangParseTree::AddSubtreeChassis().
@@ -334,11 +335,16 @@ class YangParseTreeTest : public ::testing::Test {
     // /interfaces/interface[name=*]/state/name
 
     // The test requires one interface branch to be added.
-    AddSubtreeInterface("interface-1");
+    SingletonPort& singleton = AddSubtreeInterface("interface-1");
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
     // Make a copy-on-write pointer to current chassis configuration.
     ChassisConfig chassis_config;
+    SingletonPort* singleton_tmp = chassis_config.add_singleton_ports();
+    singleton_tmp->set_name(singleton.name());
+    singleton_tmp->set_node(singleton.node());
+    singleton_tmp->set_id(singleton.id());
+    singleton_tmp->set_speed_bps(singleton.speed_bps());
     CopyOnWriteChassisConfig config(&chassis_config);
 
     // Expect the SetValue() call only if the 'req' is not nullptr.
