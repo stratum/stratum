@@ -111,7 +111,7 @@ class YangParseTreeTest : public ::testing::Test {
 
   // A proxy for YangParseTree::AddSubtreeInterface().
   void AddSubtreeInterface(const std::string& name,
-                           SingletimePort* singleton_p = nullptr) {
+                           SingletonPort* singleton_p = nullptr) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
 
     // Add one singleton port.
