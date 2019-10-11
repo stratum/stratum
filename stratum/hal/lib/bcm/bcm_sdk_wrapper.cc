@@ -651,7 +651,7 @@ std::set<TK> extract_keys(std::map<TK, TV> const& input_map) {
   return retval;
 };
 
-// FIXME: replace with gtl helper
+// Retrieves the key of a value in a container.
 template<typename TS, typename TI, typename TV>
 ::util::StatusOr<bool> FindAndReturnEntry(TS search, TI index, TV value) {
   for (auto it = search->begin(); it != search->end(); ++it) {
@@ -661,6 +661,19 @@ template<typename TS, typename TI, typename TV>
     }
   }
   return false;
+}
+
+// Returns a pointer to the const index associated with the given value.
+// TODO(max): replace FindAndReturnEntry with this
+template<typename Collection>
+const typename Collection::key_type* FindIndexOrNull(
+    Collection& collection, const typename Collection::mapped_type& value) {
+  for (const auto& entry : collection) {
+    if (entry.second == value) {
+      return &entry.first;
+    }
+  }
+  return nullptr;
 }
 
 // TODO(max): errmsg should not be an argument.
@@ -2086,14 +2099,13 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
     }
   }
 
-  std::set<int> l3_intf_ids = extract_values(*unit_to_l3_intf);
-  int totalEntries = static_cast<int>(l3_intf_ids.size());
-  int maxEntries = unit_to_l3_intf_max_limit_[unit];
-  if (totalEntries == maxEntries) {
+  // Check resource limits.
+  if (unit_to_l3_intf->size() == unit_to_l3_intf_max_limit_[unit]) {
     return MAKE_ERROR(ERR_INTERNAL) << "L3 interface table full.";
   }
 
   // entry id
+  std::set<int> l3_intf_ids = extract_values(*unit_to_l3_intf);
   int l3a_intf_id = unit_to_l3_intf_min_limit_[unit];
   if (!l3_intf_ids.empty()) {
     l3a_intf_id = *l3_intf_ids.rbegin() + 1;
@@ -2110,7 +2122,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
 
   // update map
-  unit_to_l3_intf->emplace(entry, l3a_intf_id);
+  gtl::InsertOrDie(unit_to_l3_intf, entry, l3a_intf_id);
   l3_interface.l3a_intf_id = l3a_intf_id;
   VLOG(1) << "Created a new L3 router intf: " << PrintL3RouterIntf(l3_interface)
           << " on unit " << unit << ".";
@@ -2140,22 +2152,19 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3RouterIntf(int unit, int router_intf_id) {
-  bcmlt_entry_handle_t entry_hdl;
-  L3Interfaces entry;
-  bool found;
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
   CHECK_RETURN_IF_FALSE(unit_to_l3_intf != nullptr)
       << "Unit " << unit << "  is not found in l3_interface_ids. Have you "
       << "called InitializeUnit for this unit before?";
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  const L3Interfaces* entry = FindIndexOrNull(*unit_to_l3_intf, router_intf_id);
+  if (!entry) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
   // delete entry
+  bcmlt_entry_handle_t entry_hdl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L3_EIFs, &entry_hdl));
   RETURN_IF_BCM_ERROR(
       bcmlt_entry_field_add(entry_hdl, L3_EIF_IDs, router_intf_id));
@@ -2163,7 +2172,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   // update map
-  unit_to_l3_intf->erase(entry);
+  unit_to_l3_intf->erase(*entry);
   VLOG(1) << "Router intf with ID " << router_intf_id << " deleted on unit "
           << unit << ".";
   return ::util::OkStatus();
@@ -2205,7 +2214,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  L3Interfaces entry;
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
 
@@ -2230,9 +2238,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
 
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -2278,7 +2284,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  L3Interfaces entry;
 
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
@@ -2312,9 +2317,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
       GetFreeSlot(l3_intfs, "L3 Trunk egress interface table is full."));
 
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -2449,7 +2452,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                      int router_intf_id) {
   bcmlt_entry_handle_t entry_hdl;
   InUseMap::iterator it;
-  L3Interfaces entry;
   bool found;
   uint64_t max;
   uint64_t min;
@@ -2487,9 +2489,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << egress_intf_id << ".";
   }
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -2531,7 +2531,6 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   bool found;
   uint64_t max;
   uint64_t min;
-  L3Interfaces entry;
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
   // Check if the unit is valid
@@ -2573,9 +2572,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << egress_intf_id << ".";
   }
   // Check if router interface is valid
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_l3_intf, router_intf_id, &entry));
-  if (!found) {
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Router ID " << router_intf_id << " not found.";
   }
@@ -3799,23 +3796,19 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
            << static_cast<int>(max) << ".";
   }
 
+  // Check if entry already exists.
   MyStationEntry entry(vlan, vlan_mask, dst_mac, dst_mac_mask);
   auto unit_to_my_stations = gtl::FindOrNull(my_station_ids_, unit);
   CHECK_RETURN_IF_FALSE(unit_to_my_stations != nullptr)
       << "Unit " << unit << "  is not found in unit_to_my_stations. Have you "
       << "called InitializeUnit for this unit before?";
-  if (unit_to_my_stations->count(entry)) {
-    auto it = unit_to_my_stations->find(entry);
-    if (it != unit_to_my_stations->end()) {
-      return it->second;
-    }
+  auto id = gtl::FindOrNull(*unit_to_my_stations, entry);
+  if (id) {
+    return *id;
   }
-  // get station ids
-  std::set<int> stations_ids = extract_values(*unit_to_my_stations);
-  int totalEntries = static_cast<int>(stations_ids.size());
-  int maxEntries = unit_to_my_station_max_limit_[unit];
-  if (totalEntries == maxEntries) {
-    return MAKE_ERROR(ERR_INTERNAL) << "MyStation table Full.";
+  // Check resource limits
+  if (unit_to_my_stations->size() == unit_to_my_station_max_limit_[unit]) {
+    return MAKE_ERROR(ERR_TABLE_FULL) << "MyStation table full.";
   }
   // insert entry
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_MY_STATIONs, &entry_hdl));
@@ -3832,12 +3825,14 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  // Get new station id
+  std::set<int> stations_ids = extract_values(*unit_to_my_stations);
   int station_id = unit_to_my_station_min_limit_[unit];
   if (!stations_ids.empty()) {
-    station_id = *stations_ids.rbegin() + 1;
+    station_id = *stations_ids.rbegin() + 1; // last (=highest) id + 1
   }
-  // update  map
-  unit_to_my_stations->emplace(entry, station_id);
+  // update map
+  gtl::InsertOrDie(unit_to_my_stations, entry, station_id);
   Uint64ToBcmMac(dst_mac, &mac);
   uint8 mac_mask[6];
   Uint64ToBcmMac(dst_mac_mask, &mac_mask);
@@ -3850,34 +3845,31 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::DeleteMyStationEntry(int unit, int station_id) {
   bcmlt_entry_handle_t entry_hdl;
-  bool found;
-  MyStationEntry entry;
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   auto unit_to_my_stations = gtl::FindOrNull(my_station_ids_, unit);
   CHECK_RETURN_IF_FALSE(unit_to_my_stations != nullptr)
       << "Unit " << unit << "  is not found in unit_to_my_stations. Have you "
       << "called InitializeUnit for this unit before?";
-  ASSIGN_OR_RETURN(found,
-                   FindAndReturnEntry(unit_to_my_stations, station_id, &entry));
-  if (!found) {
+  const MyStationEntry* entry = FindIndexOrNull(*unit_to_my_stations, station_id);
+  if (!entry) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Station ID " << station_id << " not found.";
   }
   // delete entry
   RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, L2_MY_STATIONs, &entry_hdl));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, entry.vlan));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, VLAN_IDs, entry->vlan));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, VLAN_ID_MASKs, entry.vlan_mask));
+      bcmlt_entry_field_add(entry_hdl, VLAN_ID_MASKs, entry->vlan_mask));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, entry.dst_mac));
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDRs, entry->dst_mac));
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_field_add(entry_hdl, MAC_ADDR_MASKs, entry.dst_mac_mask));
+      bcmlt_entry_field_add(entry_hdl, MAC_ADDR_MASKs, entry->dst_mac_mask));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   // delete map
-  unit_to_my_stations->erase(entry);
+  unit_to_my_stations->erase(*entry);
   return ::util::OkStatus();
 }
 
@@ -7352,9 +7344,6 @@ namespace {
 }
 
 namespace {
-
-// TODO: use util/endian/endian.h?
-inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
 
 // Call Broadcom SDK function to get a specific qualifier field's value and mask
 // for a flow entry given by flow_id. F denotes the type of the function. T
