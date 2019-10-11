@@ -155,6 +155,7 @@ stratum_cc_library(
         ":bcm_cc_proto",
         ":bcm_sdk_interface",
         ":bcm_serdes_db_manager",
+        ":bcm_sdk_config_util",
         ":utils",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
@@ -180,6 +181,15 @@ stratum_cc_library(
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
     ],
+)
+
+stratum_cc_library(
+    name = "bcm_sdk_config_util",
+    hdrs = ["bcm_sdk_config_util.h"],
+    deps = [
+        ":bcm_cc_proto",
+        "//stratum/glue/status:statusor",
+    ]
 )
 
 stratum_cc_library(
