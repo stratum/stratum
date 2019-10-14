@@ -104,6 +104,12 @@ message BcmPort {
     XE = 3;
     CE = 4;
   }
+  // BCM Specific operating mode for ports.
+  enum OpMode {
+    OPMODE_DEFAULT = 0;  // Default operating mode.
+    OPMODE_QSGMII = 1;   // Configure Gigabit core for QSGMII mode.
+    OPMODE_GPHY = 2;     // Configure Gigabit core to use internal copper PHYs.
+  }
   // Internal BCM prot type.
   BcmPortType type = 1;
   // The 1-base index of the slot (aka linecard) which hosts this port.
@@ -156,6 +162,10 @@ message BcmPort {
   bool internal = 20;
   // Port-level SDK properties (optional).
   repeated string sdk_properties = 21;
+  // Port operating mode.
+  OpMode op_mode = 22;
+  // Lane bitmap for the port
+  uint32 lane_map = 23;
 }
 
 // Defines a chassis map for a BCM-based platform.

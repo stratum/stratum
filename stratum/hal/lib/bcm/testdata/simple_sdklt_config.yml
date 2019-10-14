@@ -1,0 +1,40 @@
+---
+device:
+  0:
+    PC_PM:
+      ? PC_PM_ID: 12
+      : PM_OPMODE: [PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT]
+        SPEED_MAX: [100000, 0, 0, 0]
+        LANE_MAP: [15, 0, 0, 0]
+      ? PC_PM_ID: 13
+      : PM_OPMODE: [PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT]
+        SPEED_MAX: [100000, 0, 0, 0]
+        LANE_MAP: [15, 0, 0, 0]
+---
+device:
+  0:
+    PC_PM_CORE:
+      ? PC_PM_ID: 12
+        CORE_INDEX: 0
+      : RX_LANE_MAP: 4131
+        TX_LANE_MAP: 306
+        RX_POLARITY_FLIP: 12
+        TX_POLARITY_FLIP: 14
+      ? PC_PM_ID: 13
+        CORE_INDEX: 0
+      : RX_LANE_MAP: 4866
+        TX_LANE_MAP: 8961
+        RX_POLARITY_FLIP: 13
+        TX_POLARITY_FLIP: 2
+---
+device:
+  0:
+    PC_PORT:
+      ? PORT_ID: 50
+      : PC_PHYS_PORT_ID: 49
+        ENABLE: 1
+        OPMODE: PC_PORT_OPMODE_100G
+      ? PORT_ID: 54
+      : PC_PHYS_PORT_ID: 53
+        ENABLE: 1
+        OPMODE: PC_PORT_OPMODE_100G

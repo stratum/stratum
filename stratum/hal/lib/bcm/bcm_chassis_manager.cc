@@ -28,13 +28,12 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "yaml-cpp/yaml.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/utils.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_config_util.h"
+#include "stratum/hal/lib/bcm/bcm_sdklt_config_util.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -1637,7 +1636,8 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
-  ASSIGN_OR_RETURN(auto bcm_sdk_config, GenerateBcmSdkltConfig(base_bcm_chassis_map, target_bcm_chassis_map));
+  ASSIGN_OR_RETURN(auto bcm_sdk_config,
+      GenerateBcmSdkltConfig(base_bcm_chassis_map, target_bcm_chassis_map));
   return WriteStringToFile(bcm_sdk_config, FLAGS_bcm_sdk_config_file);
 }
 

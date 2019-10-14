@@ -155,14 +155,13 @@ stratum_cc_library(
         ":bcm_cc_proto",
         ":bcm_sdk_interface",
         ":bcm_serdes_db_manager",
-        ":bcm_sdk_config_util",
+        ":bcm_sdklt_config_util",
         ":utils",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@com_github_jbeder_yaml_cpp//:yaml_cpp",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status",
@@ -184,12 +183,31 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "bcm_sdk_config_util",
-    hdrs = ["bcm_sdk_config_util.h"],
+    name = "bcm_sdklt_config_util",
+    hdrs = ["bcm_sdklt_config_util.h"],
     deps = [
+        ":utils",
         ":bcm_cc_proto",
         "//stratum/glue/status:statusor",
+        "//stratum/glue:integral_types",
+        "//stratum/lib:macros",
+        "//stratum/lib:constants",
+        "@com_github_jbeder_yaml_cpp//:yaml_cpp",
+        "@com_google_absl//absl/container:flat_hash_map",
     ]
+)
+
+stratum_cc_test(
+    name = "bcm_sdklt_config_util_test",
+    srcs = ["bcm_sdklt_config_util_test.cc"],
+    deps = [
+        ":test_main",
+        ":bcm_sdklt_config_util",
+        ":testdata",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/glue/status:status_macros",
+        "//stratum/lib:utils",
+    ],
 )
 
 stratum_cc_library(
@@ -1042,4 +1060,9 @@ stratum_cc_test(
         "//stratum/hal/lib/p4:p4_table_mapper_mock",
         #FIXME(boc) "//util/endian",
     ],
+)
+
+cc_library(
+    name = "testdata",
+    data = glob(["testdata/**"]),
 )

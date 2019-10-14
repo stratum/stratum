@@ -1,0 +1,239 @@
+id: "DELL_Z9100"
+bcm_chassis {
+  sdk_properties: "os=unix"
+  sdk_properties: "schan_intr_enable=0"
+  sdk_properties: "ccm_dma_enable=0"
+  sdk_properties: "ccmdma_intr_enable=0"
+  sdk_properties: "l2_mem_entries=73728"
+  sdk_properties: "l2xmsg_mode=1"
+  sdk_properties: "l3_mem_entries=16384"
+  sdk_properties: "mem_cache_enable=0"
+  sdk_properties: "parity_correction=0"
+  sdk_properties: "parity_enable=0"
+  sdk_properties: "mmu_lossless=1"
+  sdk_properties: "dport_map_direct=0"
+  sdk_properties: "dport_map_enable=1"
+}
+bcm_chips {
+  type: TOMAHAWK
+  slot: 1
+  pci_bus: 1
+  is_oversubscribed: true
+}
+bcm_ports {
+  type: CE
+  slot: 1
+  port: 1
+  speed_bps: 100000000000
+  logical_port: 50
+  physical_port: 49
+  diag_port: 1
+  serdes_core: 12
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xe
+  rx_polarity_flip: 0xc
+  tx_lane_map: 0x0132
+  rx_lane_map: 0x1023
+}
+bcm_ports {
+  type: CE
+  slot: 1
+  port: 1
+  speed_bps: 40000000000
+  logical_port: 50
+  physical_port: 49
+  diag_port: 1
+  serdes_core: 12
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xe
+  rx_polarity_flip: 0xc
+  tx_lane_map: 0x0132
+  rx_lane_map: 0x1023
+}
+bcm_ports {
+  type: CE
+  slot: 1
+  port: 2
+  speed_bps: 100000000000
+  logical_port: 54
+  physical_port: 53
+  diag_port: 2
+  serdes_core: 13
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0x2
+  rx_polarity_flip: 0xd
+  tx_lane_map: 0x2301
+  rx_lane_map: 0x1302
+}
+bcm_ports {
+  type: CE
+  slot: 1
+  port: 2
+  speed_bps: 40000000000
+  logical_port: 54
+  physical_port: 53
+  diag_port: 2
+  serdes_core: 13
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0x2
+  rx_polarity_flip: 0xd
+  tx_lane_map: 0x2301
+  rx_lane_map: 0x1302
+}
+bcm_ports {
+  type: CE
+  slot: 1
+  port: 3
+  speed_bps: 100000000000
+  logical_port: 58
+  physical_port: 57
+  diag_port: 3
+  serdes_core: 14
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xa
+  rx_polarity_flip: 0x2
+  tx_lane_map: 0x0123
+  rx_lane_map: 0x1203
+}
+bcm_ports {
+ type: CE
+ slot: 1
+ port: 3
+ speed_bps: 40000000000
+ logical_port: 58
+ physical_port: 57
+ diag_port: 3
+ serdes_core: 14
+ num_serdes_lanes: 4
+ serdes_lane: 0
+ op_mode: OPMODE_DEFAULT
+ lane_map: 0xf
+ tx_polarity_flip: 0xa
+ rx_polarity_flip: 0x2
+ tx_lane_map: 0x0123
+ rx_lane_map: 0x1203
+}
+bcm_ports {
+  type: CE
+  slot: 1
+  port: 4
+  speed_bps: 100000000000
+  logical_port: 62
+  physical_port: 61
+  diag_port: 4
+  serdes_core: 15
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xb
+  rx_polarity_flip: 0xf
+  tx_lane_map: 0x3201
+  rx_lane_map: 0x1302
+}
+bcm_ports {
+  type: XE
+  slot: 1
+  port: 4
+  speed_bps: 40000000000
+  logical_port: 62
+  physical_port: 61
+  diag_port: 4
+  serdes_core: 15
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xb
+  rx_polarity_flip: 0xf
+  tx_lane_map: 0x3201
+  rx_lane_map: 0x1302
+}
+bcm_ports {
+  type: XE
+  slot: 1
+  port: 4
+  speed_bps: 10000000000
+  logical_port: 62
+  physical_port: 61
+  diag_port: 4
+  serdes_core: 15
+  num_serdes_lanes: 4
+  channel: 1
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xb
+  rx_polarity_flip: 0xf
+  tx_lane_map: 0x3201
+  rx_lane_map: 0x1302
+}
+bcm_ports {
+  type: XE
+  slot: 1
+  port: 5
+  speed_bps: 40000000000
+  logical_port: 68
+  physical_port: 65
+  diag_port: 5
+  serdes_core: 16
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0x2
+  rx_polarity_flip: 0xc
+  tx_lane_map: 0x3210
+  rx_lane_map: 0x3201
+}
+bcm_ports {
+  type: XE
+  slot: 1
+  port: 31
+  speed_bps: 40000000000
+  logical_port: 13
+  physical_port: 13
+  diag_port: 31
+  serdes_core: 2
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0x3
+  rx_polarity_flip: 0x8
+  tx_lane_map: 0x0123
+  rx_lane_map: 0x0213
+}
+bcm_ports {
+  type: XE
+  slot: 1
+  port: 32
+  speed_bps: 40000000000
+  logical_port: 9
+  physical_port: 9
+  diag_port: 32
+  serdes_core: 3
+  num_serdes_lanes: 4
+  serdes_lane: 0
+  op_mode: OPMODE_DEFAULT
+  lane_map: 0xf
+  tx_polarity_flip: 0xc
+  rx_polarity_flip: 0xc
+  tx_lane_map: 0x2301
+  rx_lane_map: 0x3201
+}
