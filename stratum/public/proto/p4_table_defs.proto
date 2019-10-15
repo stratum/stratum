@@ -152,6 +152,11 @@ enum P4FieldType {
   P4_FIELD_TYPE_DNS_AUTHORITY_RRS = 84;   // Number of NS RRs pointing towards authorities
   P4_FIELD_TYPE_DNS_ADDITIONAL_RRS = 85;  // Number of additional RRs
 
+  P4_FIELD_TYPE_MPLS_LABEL = 90;
+  P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS = 91;
+  P4_FIELD_TYPE_MPLS_BOS = 92;
+  P4_FIELD_TYPE_MPLS_TTL = 93;
+
   // Field IDs over 1000 are reserved for adding more fields to existing
   // headers without renumbering.  Example: P4_FIELD_TYPE_GRE_SEQUENCE.
 }
@@ -175,6 +180,7 @@ enum P4HeaderType {
   P4_HEADER_ERSPAN = 13;
   P4_HEADER_DNS = 14;
   P4_HEADER_L4_PAYLOAD = 15;
+  P4_HEADER_MPLS = 16;
 }
 
 // This enum defines values to identify the mapping output for P4 actions.
