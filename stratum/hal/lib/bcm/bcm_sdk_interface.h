@@ -283,6 +283,14 @@ class BcmSdkInterface {
   // Deletes an L3 router intf given its ID from a given unit.
   virtual ::util::Status DeleteL3RouterIntf(int unit, int router_intf_id) = 0;
 
+  // Finds an L3 router intf given its (vlan, router_mac) and if it does not
+  // exist tries to create it. In either case, returns the L3 intf ID of the
+  // router intf. Packets sent out through this intf will be encapsulated with
+  // (vlan, router_mac, mpls_label) given to this method. If vlan == 0,
+  // default VLAN will be used.
+  virtual ::util::StatusOr<int> FindOrCreateL3MplsRouterIntf(int unit,
+      uint64 router_mac, int vlan, uint32 mpls_label) = 0;
+
   // Finds an L3 egress intf for sending packets unchanged to CPU port on a
   // given unit. If it does not exist, tries to create it. In either case,
   // returns the ID of the egress intf.
@@ -292,7 +300,7 @@ class BcmSdkInterface {
   // port, vlan, router_intf_id). If it does not exist, tries to create it. In
   // either case, returns the ID of the egress intf. Packets sent to the intf
   // will be sent through the given port. DA will be the given nexthop_mac, and
-  // SA will be found using the given l3_intf_id, created previously using
+  // SA will be found using the given router_intf_id, created previously using
   // FindOrCreateL3RouterIntf(). The given port can be for CPU as well, in which
   // case nexthop_mac and router_intf_id are not used. If vlan == 0, default
   // VLAN will be used.
@@ -300,11 +308,20 @@ class BcmSdkInterface {
       int unit, stratum::uint64 nexthop_mac, int port, int vlan,
       int router_intf_id) = 0;
 
+  // Finds an L3 mpls egress intf defining the nexthop, given its (nexthop_mac,
+  // port, router_intf_id). If it does not exist, tries to create it. In either
+  // case, returns the ID of the egress intf. Packets sent to the intf
+  // will be sent through the given port. DA will be the given nexthop_mac, and
+  // SA will be found using the given router_intf_id, created previously using
+  // FindOrCreateL3RouterIntf().
+  virtual ::util::StatusOr<int> FindOrCreateL3MplsEgressIntf(
+    int unit, uint64 nexthop_mac, int port, int router_intf_id) = 0;
+
   // Finds an L3 trunk/lag egress intf defining the nexthop, given its
   // (nexthop_mac, trunk, vlan, router_intf_id). If it does not exist, tries to
   // create it. In either case, returns the ID of the egress intf. Packets sent
   // to the intf will be sent through the given trunk/LAG. DA will be the given
-  // nexthop_mac, and SA will be found using the given l3_intf_id, created
+  // nexthop_mac, and SA will be found using the given router_intf_id, created
   // previously using FindOrCreateL3RouterIntf(). If vlan == 0, default VLAN
   // will be used.
   virtual ::util::StatusOr<int> FindOrCreateL3TrunkEgressIntf(
@@ -326,6 +343,10 @@ class BcmSdkInterface {
   virtual ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
                                                 stratum::uint64 nexthop_mac,
                                                 int port, int vlan,
+                                                int router_intf_id) = 0;
+
+  virtual ::util::Status ModifyL3MplsEgressIntf(int unit, int egress_intf_id,
+                                                uint64 nexthop_mac, int port,
                                                 int router_intf_id) = 0;
 
   // Modifies an already existing L3 intf on a unit given its ID to become an

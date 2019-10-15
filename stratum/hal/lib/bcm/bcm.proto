@@ -511,6 +511,7 @@ message BcmNonMultipathNexthop {
   int32 vlan = 3;  // 0-based.
   fixed64 src_mac = 4;
   fixed64 dst_mac = 5;
+  uint32 mpls_label = 8;
   // The BCM-specific value of the port (aka BCM logical port) or trunk (aka
   // BCM trunk id or tid or simply trunk).
   oneof port {
