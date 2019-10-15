@@ -871,6 +871,10 @@ namespace {
               // TODO: Ignore class_id for now till we have a
               // resolution for b/73264766.
               break;
+            case P4_FIELD_TYPE_MPLS_LABEL:
+              // TODO(max):
+              bcm_non_multipath_nexthop->set_mpls_label(field.u32());
+              break;
             default:
               return MAKE_ERROR(ERR_INVALID_PARAM)
                      << "Invalid or unsupported P4 field type to modify: "

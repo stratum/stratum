@@ -126,11 +126,15 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status SetMtu(int unit, int mtu) override LOCKS_EXCLUDED(data_lock_);
   ::util::StatusOr<int> FindOrCreateL3RouterIntf(int unit, uint64 router_mac,
                                                  int vlan) override;
+  ::util::StatusOr<int> FindOrCreateL3MplsRouterIntf(int unit,
+      uint64 router_mac, int vlan, uint32 mpls_label) override;
   ::util::Status DeleteL3RouterIntf(int unit, int router_intf_id) override;
   ::util::StatusOr<int> FindOrCreateL3CpuEgressIntf(int unit) override;
   ::util::StatusOr<int> FindOrCreateL3PortEgressIntf(
       int unit, uint64 nexthop_mac, int port, int vlan,
       int router_intf_id) override;
+  ::util::StatusOr<int> FindOrCreateL3MplsEgressIntf(
+      int unit, uint64 nexthop_mac, int port, int router_intf_id) override;
   ::util::StatusOr<int> FindOrCreateL3TrunkEgressIntf(
       int unit, uint64 nexthop_mac, int trunk, int vlan,
       int router_intf_id) override;
@@ -139,7 +143,9 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status ModifyL3PortEgressIntf(int unit, int egress_intf_id,
                                         uint64 nexthop_mac, int port, int vlan,
                                         int router_intf_id) override;
-
+  ::util::Status ModifyL3MplsEgressIntf(int unit, int egress_intf_id,
+                                        uint64 nexthop_mac, int port,
+                                        int router_intf_id) override;
   ::util::Status ModifyL3TrunkEgressIntf(int unit, int egress_intf_id,
                                          uint64 nexthop_mac, int trunk,
                                          int vlan, int router_intf_id) override;
@@ -497,11 +503,14 @@ class BcmSdkWrapper : public BcmSdkInterface {
   absl::flat_hash_map<int, int> unit_to_l3_intf_min_limit_
       GUARDED_BY(data_lock_);
 
-  // Map from unit number to l3 interfaces
+  // Map from unit number to l3 interfaces.
+  // L3_EIF in SDKLT.
   absl::flat_hash_map<int, std::map<L3Interfaces, int>> l3_interface_ids_
       GUARDED_BY(data_lock_);
 
-  // Map from unit number to l3 egress interfaces
+  // Map from unit number to l3 egress interfaces.
+  // NHOP_ID in SDKLT. Unique across tables L3_UC_NHOP, TNL_MPLS_ENCAP_NHOP,
+  // TNL_MPLS_TRANSIT_NHOP.
   absl::flat_hash_map<int, InUseMap> l3_egress_interface_ids_
       GUARDED_BY(data_lock_);
 

@@ -161,12 +161,14 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
         if (!conversion_found) {
           // TODO(unknown): For now, assume this is due to in-progress
           // table map file development.
+          // FIXME
           LOG(WARNING) << "Match field " << match_field.ShortDebugString()
                        << " in table " << table.preamble().name()
                        << " has no known mapping conversion";
         }
       } else {
         // TODO(unknown): Not all fields are defined yet, so just warn.
+        // FIXME
         LOG(WARNING) << "P4TableMapper is ignoring match field "
                      << match_field.ShortDebugString() << " in table "
                      << table.preamble().name();
