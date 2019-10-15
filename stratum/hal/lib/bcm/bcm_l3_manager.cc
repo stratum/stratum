@@ -77,6 +77,7 @@ BcmL3Manager::~BcmL3Manager() {}
   int vlan = nexthop.vlan();
   uint64 src_mac = nexthop.src_mac();
   uint64 dst_mac = nexthop.dst_mac();
+  uint32 mpls_label = nexthop.mpls_label();
   int router_intf_id = -1, egress_intf_id = -1;
 
   // Given the router intf, find or create the egress intf.
@@ -87,7 +88,7 @@ BcmL3Manager::~BcmL3Manager() {}
         ASSIGN_OR_RETURN(
             egress_intf_id,
             bcm_sdk_interface_->FindOrCreateL3CpuEgressIntf(unit_));
-      } else if (logical_port >= 0 && src_mac > 0 && dst_mac > 0) {
+      } else if (logical_port >= 0 && src_mac > 0 && dst_mac > 0 && mpls_label == 0) {
         ASSIGN_OR_RETURN(
             router_intf_id,
             bcm_sdk_interface_->FindOrCreateL3RouterIntf(unit_, src_mac, vlan));
@@ -95,6 +96,16 @@ BcmL3Manager::~BcmL3Manager() {}
             egress_intf_id,
             bcm_sdk_interface_->FindOrCreateL3PortEgressIntf(
                 unit_, dst_mac, logical_port, vlan, router_intf_id));
+      } else if (logical_port >= 0 && src_mac > 0 && dst_mac > 0 && mpls_label > 0) {
+        // TODO(max): separate L3_EIF from TNL_MPLS_ENCAP creation?
+        ASSIGN_OR_RETURN(
+            router_intf_id,
+            bcm_sdk_interface_->FindOrCreateL3MplsRouterIntf(
+                unit_, src_mac, vlan, mpls_label));
+        ASSIGN_OR_RETURN(
+            egress_intf_id,
+            bcm_sdk_interface_->FindOrCreateL3MplsEgressIntf(
+                unit_, dst_mac, logical_port, router_intf_id));
       } else {
         return MAKE_ERROR(ERR_INVALID_PARAM)
                << "Invalid nexthop of type NEXTHOP_TYPE_PORT: "
