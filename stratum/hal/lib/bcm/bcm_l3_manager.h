@@ -70,6 +70,25 @@ struct LpmOrHostActionParams {
       : class_id(-1), egress_intf_id(-1), is_intf_multipath(false) {}
 };
 
+// This struct encapsulates the key for a Mpls flow.
+struct MplsKey {
+    // The ingress port to match on.
+    int port;
+    // The mpls label to match on.
+    uint32 mpls_label;
+    MplsKey()
+        : port(-1), mpls_label(-1) {}
+};
+
+struct MplsActionParams {
+  // Egress intf ID for the nexthop.
+  int egress_intf_id;
+  // A boolean determining whether the nexthop is an ECMP/WCMP group
+  bool is_intf_multipath;
+  MplsActionParams()
+      : egress_intf_id(-1), is_intf_multipath(false) {}
+};
+
 // The "BcmL3Manager" class implements the L3 routing functionality.
 class BcmL3Manager {
  public:
@@ -179,6 +198,20 @@ class BcmL3Manager {
   // define the key for the flow (the egress_intf_id or class_id not needed).
   ::util::Status DeleteLpmOrHostFlow(const BcmFlowEntry& bcm_flow_entry);
 
+  // Inserts a MPLS LSR (transit) flow. The function programs the
+  // low level routes into the given unit based on the given BcmFlowEntry.
+  ::util::Status InsertMplsFlow(const BcmFlowEntry& bcm_flow_entry);
+
+  // Inserts a MPLS LSR (transit) flow. The function programs the
+  // low level routes into the given unit based on the given BcmFlowEntry. The
+  // fields populated in BcmFlowEntry are the same as the ones populated when
+  // adding the flow in InsertLpmOrHostFlow().
+  ::util::Status ModifyMplsFlow(const BcmFlowEntry& bcm_flow_entry);
+
+  // Inserts a MPLS LSR (transit) flow. The fields populated in BcmFlowEntry
+  // define the key for the flow (the egress_intf_id or class_id not needed).
+  ::util::Status DeleteMplsFlow(const BcmFlowEntry& bcm_flow_entry);
+
   // Helper to extract IPv4/IPv6 L3 LPM/Host flow keys given BcmFlowEntry.
   ::util::Status ExtractLpmOrHostKey(const BcmFlowEntry& bcm_flow_entry,
                                      LpmOrHostKey* key);
@@ -186,6 +219,14 @@ class BcmL3Manager {
   // Helper to extract IPv4/IPv6 L3 LPM/Host flow actions given BcmFlowEntry.
   ::util::Status ExtractLpmOrHostActionParams(
       const BcmFlowEntry& bcm_flow_entry, LpmOrHostActionParams* action_params);
+
+  // Helper to extract Mpls LSR (transit) flow keys given BcmFlowEntry.
+  ::util::Status ExtractMplsKey(const BcmFlowEntry& bcm_flow_entry,
+                                MplsKey* key);
+
+  // Helper to extract Mpls LSR (transit) flow actions given BcmFlowEntry.
+  ::util::Status ExtractMplsActionParams(
+      const BcmFlowEntry& bcm_flow_entry, MplsActionParams* action_params);
 
   // A helper to find the sorted vector of the member egress intf ids of an
   // ECMP group. The output vector is going to have the following format:

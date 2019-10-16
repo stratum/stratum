@@ -53,6 +53,7 @@ message P4Annotation {
     ENCAP = 6;
     DECAP = 7;
     HIDDEN = 8;
+    L3_MPLS = 9;
   }
 
   // Defines the hardware pipeline stage of an entity.
