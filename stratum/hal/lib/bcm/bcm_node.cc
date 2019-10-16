@@ -528,6 +528,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
         case BcmFlowEntry::BCM_TABLE_IPV4_HOST:
         case BcmFlowEntry::BCM_TABLE_IPV6_LPM:
         case BcmFlowEntry::BCM_TABLE_IPV6_HOST:
+        case BcmFlowEntry::BCM_TABLE_MPLS:
           RETURN_IF_ERROR(bcm_l3_manager_->InsertTableEntry(entry));
           // BcmL3Manager updates the internal records in BcmTableManager.
           consumed = true;

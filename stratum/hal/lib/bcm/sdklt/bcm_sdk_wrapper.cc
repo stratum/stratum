@@ -2360,7 +2360,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3MplsRouterIntf(int unit,
                                                               uint64 router_mac,
                                                               int vlan,
-                                                              uint32 mpls_label) {
+                                                              uint32 mpls_label,
+                                                              uint32 mpls_ttl) {
   bcmlt_entry_handle_t entry_hdl;
   bcmlt_entry_info_t entry_info;
   uint64_t max;
@@ -2374,6 +2375,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   }
   CHECK_RETURN_IF_FALSE(router_mac);
   CHECK_RETURN_IF_FALSE(mpls_label);
+  CHECK_RETURN_IF_FALSE(mpls_ttl > 0 && mpls_ttl <= UINT8_MAX);
 
   // check if unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
@@ -2426,7 +2428,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MAX_LABELSs, 2));
   uint64 array_data[1] = {mpls_label};
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_add(entry_hdl, LABELs, 0, array_data, 1));
-  array_data[0] = 0x40;
+  array_data[0] = mpls_ttl;
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_add(entry_hdl, LABEL_TTLs, 0, array_data, 1));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
@@ -2646,6 +2648,81 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   // TODO(max): print mpls label
   l3_intf_object_t l3_intf_o = {router_intf_id, nexthop_mac, 0, port, 0};
   VLOG(1) << "Created a new L3 mpls egress intf: "
+          << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
+          << unit << ".";
+  return egress_intf_id;
+}
+
+::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3MplsTransitEgressIntf(
+    int unit, uint64 nexthop_mac, int port, int router_intf_id, uint32 mpls_label) {
+  bcmlt_entry_handle_t entry_hdl;
+  int egress_intf_id = 0;
+  CHECK_RETURN_IF_FALSE(nexthop_mac);
+  CHECK_RETURN_IF_FALSE(router_intf_id > 0);
+  CHECK_RETURN_IF_FALSE(mpls_label);
+
+  // Check if the unit is valid
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  // Check if port is valid
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
+
+  InUseMap* l3_intfs = gtl::FindOrNull(l3_egress_interface_ids_, unit);
+  auto unit_to_l3_intf = gtl::FindOrNull(l3_interface_ids_, unit);
+  CHECK_RETURN_IF_FALSE(l3_intfs != nullptr && unit_to_l3_intf != nullptr)
+      << "Unit " << unit
+      << " not initialized yet. Call InitializeUnit first.";
+
+  // Check if router interface is valid
+  if (!FindIndexOrNull(*unit_to_l3_intf, router_intf_id)) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Router ID " << router_intf_id << " not found.";
+  }
+
+  // get next free slot
+  ASSIGN_OR_RETURN(egress_intf_id,
+      GetFreeSlot(l3_intfs, "L3 Port egress interface table is full."));
+
+  // Create MPLS dst mac entry
+  // TODO(max): better id mapping
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TNL_MPLS_DST_MACs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, TNL_MPLS_DST_MAC_IDs,
+                                            egress_intf_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, DST_MACs, nexthop_mac));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  // Create mpls transit entry
+  // TODO(max): better id mapping
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TNL_MPLS_TRANSITs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, TNL_MPLS_TRANSIT_IDs,
+                                            egress_intf_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, LABELs, mpls_label));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  // Create transit next hop
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TNL_MPLS_TRANSIT_NHOPs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, NHOP_IDs, egress_intf_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODIDs, 0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODPORTs, port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, TNL_MPLS_DST_MAC_IDs,
+                                            egress_intf_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, TNL_MPLS_TRANSIT_IDs,
+                                            egress_intf_id));
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_field_add(entry_hdl, L3_EIF_IDs, router_intf_id));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  // mark slot
+  ConsumeSlot(l3_intfs, egress_intf_id);
+  // TODO(max): print mpls label
+  l3_intf_object_t l3_intf_o = {router_intf_id, nexthop_mac, 0, port, 0};
+  VLOG(1) << "Created a new L3 mpls transit egress intf: "
           << PrintL3EgressIntf(l3_intf_o, egress_intf_id) << " on unit "
           << unit << ".";
   return egress_intf_id;
@@ -3512,6 +3589,42 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::AddMplsRoute(int unit, int port,
+    uint32 mpls_label, int egress_intf_id) {
+  // Check if the unit is valid
+  RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
+  RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
+  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+  CHECK_RETURN_IF_FALSE(mpls_label > 0);
+
+  // Check if egress interface is valid
+  InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
+  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+      << "Unit " << unit
+      << " not initialized yet. Call InitializeUnit first.";
+  auto exists = gtl::FindOrNull(*l3_egress_intf, egress_intf_id);
+  if (!exists || !*exists) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+        << "Invalid L3 Egress interface "
+        << egress_intf_id << ".";
+  }
+
+  bcmlt_entry_handle_t entry_hdl;
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_allocate(unit, TNL_MPLS_DECAPs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MPLS_LABELs, mpls_label));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODIDs, 0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODPORTs, port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ECMP_IDs, egress_intf_id));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, BOS_ACTIONSs, SWAP_ECMPs));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, NON_BOS_ACTIONSs, SWAP_ECMPs));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmSdkWrapper::AddL3HostIpv4(int unit, int vrf, uint32 ipv4,
                                             int class_id, int egress_intf_id) {
   bcmlt_entry_handle_t entry_hdl;
@@ -3956,6 +4069,11 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::ModifyMplsRoute(int unit, int port,
+    uint32 mpls_label, int egress_intf_id) {
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+}
+
 ::util::Status BcmSdkWrapper::DeleteL3RouteIpv4(int unit, int vrf,
                                                 uint32 subnet, uint32 mask) {
   bcmlt_entry_handle_t entry_hdl;
@@ -4202,6 +4320,12 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
   return ::util::OkStatus();
 }
+
+::util::Status BcmSdkWrapper::DeleteMplsRoute(int unit, int port,
+    uint32 mpls_label) {
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+};
+
 
 ::util::StatusOr<int> BcmSdkWrapper::AddMyStationEntry(int unit, int priority,
                                                        int vlan, int vlan_mask,
