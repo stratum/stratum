@@ -167,6 +167,7 @@ BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
           {P4_FIELD_TYPE_ICMP_TYPE, BcmField::ICMP_TYPE_CODE},
           {P4_FIELD_TYPE_L3_CLASS_ID, BcmField::L3_DST_CLASS_ID},
           {P4_FIELD_TYPE_CLONE_PORT, BcmField::CLONE_PORT},
+          {P4_FIELD_TYPE_MPLS_LABEL, BcmField::MPLS_LABEL},
           // Currently unsupported field types below.
           {P4_FIELD_TYPE_IPV4_IHL, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_IPV4_TOTAL_LENGTH, BcmField::UNKNOWN},
@@ -872,8 +873,10 @@ namespace {
               // resolution for b/73264766.
               break;
             case P4_FIELD_TYPE_MPLS_LABEL:
-              // TODO(max):
               bcm_non_multipath_nexthop->set_mpls_label(field.u32());
+              break;
+            case P4_FIELD_TYPE_MPLS_TTL:
+              bcm_non_multipath_nexthop->set_mpls_ttl(field.u32());
               break;
             default:
               return MAKE_ERROR(ERR_INVALID_PARAM)
@@ -2320,6 +2323,8 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     case P4_TABLE_L2_MY_STATION:
       bcm_table_type = BcmFlowEntry::BCM_TABLE_MY_STATION;
       break;
+    case P4_TABLE_MPLS:
+      bcm_table_type = BcmFlowEntry::BCM_TABLE_MPLS;
     default:
       break;
   }

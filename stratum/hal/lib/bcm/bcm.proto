@@ -311,6 +311,7 @@ message BcmField {
     VFP_DST_CLASS_ID = 24;    // VFP Destination Class ID.
     L3_DST_CLASS_ID = 25;     // L3 Destination Class ID.
     CLONE_PORT = 26;          // Logical destination port for packet clone.
+    MPLS_LABEL = 27;          // MPLS label.
   };
   Type type = 1;                 // required
   BcmTableEntryValue value = 2;  // required
@@ -454,6 +455,7 @@ message BcmFlowEntry {
     BCM_TABLE_L2_MULTICAST = 7;
     BCM_TABLE_TUNNEL = 8;
     BCM_TABLE_L2_UNICAST = 9;
+    BCM_TABLE_MPLS = 10;
   }
   // The unit to program this flow.
   int32 unit = 1;  // required
@@ -509,6 +511,7 @@ message BcmNonMultipathNexthop {
   fixed64 src_mac = 4;
   fixed64 dst_mac = 5;
   uint32 mpls_label = 8;
+  uint32 mpls_ttl = 9;
   // The BCM-specific value of the port (aka BCM logical port) or trunk (aka
   // BCM trunk id or tid or simply trunk).
   oneof port {
