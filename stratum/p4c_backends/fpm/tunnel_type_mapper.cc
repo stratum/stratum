@@ -53,6 +53,7 @@ void TunnelTypeMapper::ProcessActionTunnel(
     hal::P4ActionDescriptor* action_descriptor) {
   // The per-action state needs to be reset.
   gre_header_op_ = P4_HEADER_NOP;
+  mpls_header_op_ = P4_HEADER_NOP;
   is_encap_ = false;
   is_decap_ = false;
   p4_tunnel_properties_.Clear();
@@ -61,10 +62,14 @@ void TunnelTypeMapper::ProcessActionTunnel(
   bool is_tunnel_action = false;
 
   for (const auto& tunnel_action : action_descriptor->tunnel_actions()) {
+    VLOG(1) << "Processing tunnel action: " << tunnel_action.ShortDebugString();
     bool found_encap_decap = FindInnerEncapHeader(tunnel_action);
     is_tunnel_action = is_tunnel_action || found_encap_decap;
     if (found_encap_decap) continue;
     found_encap_decap = FindGreHeader(tunnel_action);
+    is_tunnel_action = is_tunnel_action || found_encap_decap;
+    if (found_encap_decap) continue;
+    found_encap_decap = FindMplsHeader(tunnel_action);
     is_tunnel_action = is_tunnel_action || found_encap_decap;
     if (found_encap_decap) continue;
     found_encap_decap = FindInnerDecapHeader(tunnel_action);
@@ -72,7 +77,7 @@ void TunnelTypeMapper::ProcessActionTunnel(
   }
 
   if (is_tunnel_action) {
-    // The action does tunneling.  Some action-wide error checks are done
+    // The action does tunneling. Some action-wide error checks are done
     // below for consistency across all tunnel_actions in action_descriptor.
     if (is_encap_ && is_decap_) {
       tunnel_error_message_ +=
@@ -110,6 +115,9 @@ void TunnelTypeMapper::ProcessActionTunnel(
   } else {
     // The action's tunnel_actions turned out to be irrelevant, so the
     // action_descriptor doesn't need them.
+    LOG(WARNING) << "action descriptor has tunnel actions, but could not "
+        << "construct valid P4TunnelProperties from: "
+        << action_descriptor->ShortDebugString() << ".";
     action_descriptor->clear_tunnel_actions();
   }
 }
@@ -179,6 +187,41 @@ bool TunnelTypeMapper::FindGreHeader(
   return is_gre;
 }
 
+// The input tunnel_action represents a MPLS tunnel when:
+//  - The header descriptor indicates the MPLS header type.
+//  - The header valid bit is set or cleared directly.  A header-to-header
+//    copy (P4_HEADER_COPY_VALID) makes no sense for a MPLS header.
+bool TunnelTypeMapper::FindMplsHeader(
+    const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action) {
+  bool is_mpls = false;
+  const auto& header_descriptor = FindHeaderDescriptorOrDie(
+      tunnel_action.header_name(), *p4_pipeline_config_);
+
+  if (header_descriptor.type() == P4_HEADER_MPLS) {
+    is_mpls = true;
+    if (tunnel_action.header_op() == P4_HEADER_SET_VALID ||
+        tunnel_action.header_op() == P4_HEADER_SET_INVALID) {
+      if (mpls_header_op_ != P4_HEADER_NOP &&
+          mpls_header_op_ != tunnel_action.header_op()) {
+        tunnel_error_message_ +=
+            "MPLS encap and decap cannot occur in the same action. ";
+        return true;
+      }
+      p4_tunnel_properties_.set_is_mpls_tunnel(true);
+      mpls_header_op_ = tunnel_action.header_op();
+      is_encap_ = tunnel_action.header_op() == P4_HEADER_SET_VALID;
+      is_decap_ = tunnel_action.header_op() == P4_HEADER_SET_INVALID;
+    } else {
+      // TODO(unknown): Are there any valid use cases for MPLS header copies?
+      tunnel_error_message_ +=
+          "MPLS header-to-header copy is an invalid tunnel operation. ";
+      return true;
+    }
+  }
+
+  return is_mpls;
+}
+
 // The input tunnel_action represents a tunnel decap when:
 //  - The header valid bit is invalidated.
 //  - The header descriptor indicates an inner header.
@@ -228,6 +271,26 @@ bool TunnelTypeMapper::CheckInnerHeaderType(P4HeaderType header_type) {
 
 void TunnelTypeMapper::ProcessTunnelAssignments(
     hal::P4ActionDescriptor* action_descriptor) {
+  // Process MPLS tunnel
+  if (mpls_header_op_ != P4_HEADER_NOP) {
+    // Inner headers are fixed to IPv4/v6 with BCM
+    if (is_encap_) {
+      p4_tunnel_properties_.mutable_encap()->set_encap_outer_header(
+          P4_HEADER_MPLS);
+      p4_tunnel_properties_.mutable_encap()->add_encap_inner_headers(
+          P4_HEADER_IPV4);
+      p4_tunnel_properties_.mutable_encap()->add_encap_inner_headers(
+          P4_HEADER_IPV6);
+    }
+    if (is_decap_) {
+      p4_tunnel_properties_.mutable_decap()->add_decap_inner_headers(
+          P4_HEADER_IPV4);
+      p4_tunnel_properties_.mutable_decap()->add_decap_inner_headers(
+          P4_HEADER_IPV6);
+    }
+    return;
+  }
+
   // The default assumption is that ECN, DSCP, and TTL get copied between
   // outer and inner headers.
   p4_tunnel_properties_.mutable_ecn_value()->set_copy(true);

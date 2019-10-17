@@ -85,6 +85,8 @@ class TunnelTypeMapper {
       const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action);
   bool FindGreHeader(
       const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action);
+  bool FindMplsHeader(
+      const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action);
   bool FindInnerDecapHeader(
       const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action);
 
@@ -135,6 +137,7 @@ class TunnelTypeMapper {
   std::string action_name_;
   hal::P4ActionDescriptor::P4TunnelProperties p4_tunnel_properties_;
   P4HeaderOp gre_header_op_;
+  P4HeaderOp mpls_header_op_;
   bool is_encap_;
   bool is_decap_;
   std::vector<int> optimized_assignments_;
