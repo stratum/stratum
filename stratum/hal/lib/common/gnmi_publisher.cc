@@ -209,10 +209,13 @@ GnmiPublisher::~GnmiPublisher() {}
   return ::util::OkStatus();
 }
 
-::util::Status GnmiPublisher::UnSubscribe(EventHandlerRecord* h) {
+::util::Status GnmiPublisher::UnSubscribe(const SubscriptionHandle& h) {
   absl::WriterMutexLock l(&access_lock_);
-  // TODO(unknown): Add implementation.
-  return ::util::OkStatus();
+  // There is no way to match a subscription to a certain type of event.
+  // Therefore we have to try removing it from every list we register events
+  // on. Currently this is just TimerEvent.
+  // FIXME: Add UnRegister calls for other EventHandlerLists in use.
+  return EventHandlerList<TimerEvent>::GetInstance()->UnRegister(h);
 }
 
 ::util::Status

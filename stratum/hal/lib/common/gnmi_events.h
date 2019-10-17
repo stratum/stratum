@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <set>
 
 #include "gnmi/gnmi.grpc.pb.h"
 #include "stratum/glue/status/status.h"
@@ -544,16 +545,16 @@ class EventHandlerListBase {
   ::util::Status Register(const EventHandlerRecordPtr& record)
       LOCKS_EXCLUDED(access_lock_) {
     absl::WriterMutexLock l(&access_lock_);
-    handlers_[SubscriptionHandle(record).get()] = record;
+    handlers_.insert(record);
     return ::util::OkStatus();
   }
 
   // Removes a event handler from a list of handlers interested in this  ('E')
   // type of events.
-  ::util::Status UnRegister(const SubscriptionHandle& record)
+  ::util::Status UnRegister(const EventHandlerRecordPtr& record)
       LOCKS_EXCLUDED(access_lock_) {
     absl::WriterMutexLock l(&access_lock_);
-    handlers_.erase(SubscriptionHandle(record).get());
+    handlers_.erase(record);
     return ::util::OkStatus();
   }
 
@@ -569,13 +570,13 @@ class EventHandlerListBase {
  protected:
   // Removes pointers that are expired.
   void CleanUpInactiveRegistrations() EXCLUSIVE_LOCKS_REQUIRED(access_lock_) {
-    std::list<EventHandlerRecord*> entries_to_be_removed;
+    std::list<EventHandlerRecordPtr> entries_to_be_removed;
     for (const auto& entry : handlers_) {
-      if (entry.second.expired()) {
+      if (entry.expired()) {
         // The subscription has been silently (without calling UnRegister())
         // canceled by deleting the handle. Make a note of this record and
         // then delete it after all entries in handlers_ are processed.
-        entries_to_be_removed.push_back(entry.first);
+        entries_to_be_removed.push_back(entry);
       }
     }
     // Remove all subscriptions that have been silently canceled.
@@ -587,8 +588,8 @@ class EventHandlerListBase {
   // A Mutex used to guard access to the map of pointers to handlers.
   mutable absl::Mutex access_lock_;
 
-  // A list of event handlers that are interested in this ('E') type of events.
-  absl::flat_hash_map<EventHandlerRecord*, EventHandlerRecordPtr> handlers_
+  // A set of event handlers that are interested in this ('E') type of events.
+  std::set<EventHandlerRecordPtr, std::owner_less<EventHandlerRecordPtr>> handlers_
       GUARDED_BY(access_lock_);
 };
 
@@ -617,7 +618,7 @@ class EventHandlerList : public EventHandlerListBase {
       VLOG(1) << "Handling " << typeid(E).name();
       CleanUpInactiveRegistrations();
       for (const auto& entry : handlers_) {
-        if (auto handler = entry.second.lock()) {
+        if (auto handler = entry.lock()) {
           (*handler)(*event).IgnoreError();
         }
       }

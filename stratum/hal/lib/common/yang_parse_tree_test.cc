@@ -58,6 +58,7 @@ class YangParseTreeTest : public ::testing::Test {
   static constexpr Alarm::Severity kAlarmSeverityEnum = Alarm::CRITICAL;
   static constexpr uint64 kAlarmTimeCreated = 12345ull;
   static constexpr bool kAlarmStatusTrue = true;
+  static constexpr uint64 kInterfaceMac = 0x112233445566ull;
 
   YangParseTreeTest() : parse_tree_(&switch_) {}
 
@@ -109,15 +110,19 @@ class YangParseTreeTest : public ::testing::Test {
   }
 
   // A proxy for YangParseTree::AddSubtreeInterface().
-  void AddSubtreeInterface(const std::string& name) {
+  void AddSubtreeInterface(const std::string& name,
+                           SingletonPort* singleton_p = nullptr) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
 
     // Add one singleton port.
     SingletonPort singleton;
-    singleton.set_name(name);
-    singleton.set_node(kInterface1NodeId);
-    singleton.set_id(kInterface1PortId);
-    singleton.set_speed_bps(kTwentyFiveGigBps);
+    SingletonPort* singleton_ptr =
+        (singleton_p == nullptr) ? &singleton : singleton_p;
+    singleton_ptr->set_name(name);
+    singleton_ptr->set_node(kInterface1NodeId);
+    singleton_ptr->set_id(kInterface1PortId);
+    singleton_ptr->set_speed_bps(kTwentyFiveGigBps);
+    singleton_ptr->mutable_config_params()->set_mac_address(kInterfaceMac);
     // Add one per port per queue stat for this interface.
     NodeConfigParams node_config;
     {
@@ -131,7 +136,7 @@ class YangParseTreeTest : public ::testing::Test {
       entry->set_internal_priority(2);  // some internal priority
       entry->set_q_num(kInterface1QueueId);
     }
-    parse_tree_.AddSubtreeInterfaceFromSingleton(singleton, node_config);
+    parse_tree_.AddSubtreeInterfaceFromSingleton(*singleton_ptr, node_config);
   }
 
   // A proxy for YangParseTree::AddSubtreeChassis().
@@ -333,12 +338,13 @@ class YangParseTreeTest : public ::testing::Test {
     // /interfaces/interface[name=*]/state/ifindex
     // /interfaces/interface[name=*]/state/name
 
+    ChassisConfig chassis_config;
     // The test requires one interface branch to be added.
-    AddSubtreeInterface("interface-1");
+    AddSubtreeInterface("interface-1",
+                        chassis_config.add_singleton_ports());
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
     // Make a copy-on-write pointer to current chassis configuration.
-    ChassisConfig chassis_config;
     CopyOnWriteChassisConfig config(&chassis_config);
 
     // Expect the SetValue() call only if the 'req' is not nullptr.
@@ -984,9 +990,6 @@ TEST_F(YangParseTreeTest,
 }
 
 // Check if the 'config/mac-address' OnPoll action works correctly.
-// TODO(unknown): Modify this test once the MAC Address is added to the config
-// proto. Today the test depends on the hack - this address is always
-// initialized to be "11:22:33:44:55:66".
 TEST_F(YangParseTreeTest,
        InterfacesInterfaceEthernetConfigMacAddressOnPollSuccess) {
   auto path = GetPath("interfaces")(
@@ -1001,6 +1004,92 @@ TEST_F(YangParseTreeTest,
   // Check that the result of the call is what is expected.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
+}
+
+// Check if the 'config/mac-address' OnUpdate action works correctly.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetConfigMacAddressOnUpdateSuccess) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("config")("mac-address")();
+  static constexpr char kMacAddressYangString[] = "11:22:33:44:55:66";
+  static constexpr uint64 kMacAddressUint64 = 0x112233445566ull;
+  ::gnmi::SubscribeResponse resp;
+
+  // Set new value.
+  SetRequest req;
+  ::gnmi::TypedValue val;
+  GnmiEventPtr notification;
+  val.set_string_val(kMacAddressYangString);
+  ASSERT_OK(ExecuteOnUpdate(path, val, &req, &notification));
+
+  // Check that the set request sent via SwitchInterface has correct content.
+  ASSERT_THAT(req.requests(), SizeIs(1));
+  EXPECT_EQ(req.requests(0).port().mac_address().mac_address(),
+            kMacAddressUint64);
+
+  // Check that the notification contains new value.
+  ASSERT_NE(notification, nullptr);
+  PortMacAddressChangedEvent* event =
+      dynamic_cast<PortMacAddressChangedEvent*>(&*notification);
+  ASSERT_NE(event, nullptr);
+  EXPECT_EQ(event->GetMacAddress(), kMacAddressUint64);
+
+  // Check if mac_address has been updated properly.
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressYangString);
+}
+
+// Check if the 'config/mac-address' OnUpdate action rejects malformed mac string.
+TEST_F(YangParseTreeTest,
+       InterfacesInterfaceEthernetConfigMacAddressOnUpdateFailure) {
+  auto path = GetPath("interfaces")(
+      "interface", "interface-1")("ethernet")("config")("mac-address")();
+
+  static constexpr char kMacAddressAsString[] = "11:22:33:44:55:66";
+  static constexpr char kMacStrings[][21] = {
+      "11:22:33:44:55",       // Too short string
+      "11:22:33:44:55:66:77", // Too long string
+      "11;22;33;44;55;66",    // Incorrect delimiter
+      "11-22-33-44-55-66",    // Unsupported delimiter
+      "11::22:33:44:55:66",   // Too many delimiter in between
+      ":11:22:33:44:55:66",   // Too many delimiter in the beginning
+      "11:22:33:44:55:66:",   // Too many delimiter in the end
+      "1122:3344:5566",       // Unsupported format
+      "0",                    // No colon
+      "00112233445566",       // No colon
+      "11:22:333:44:55:66",   // Too many hex digits
+      "11:22:3:44:55:66",     // Too few hex digits
+      "",                     // empty mac string
+      "st:ra:tu:mr:oc:ks"     // None hex digits
+    };
+
+  // Set new value.
+  ::gnmi::TypedValue invalid_val;
+  ::gnmi::Value wrong_type_val ;
+  ::gnmi::SubscribeResponse resp;
+
+  // Check reaction to wrong value type.
+  EXPECT_THAT(ExecuteOnUpdate(path, wrong_type_val,
+                              /* SetValue will not be called */ nullptr,
+                              /* Notification will not be called */ nullptr),
+              StatusIs(_, _, ContainsRegex("not a TypedValue message")));
+
+  for(auto mac_string : kMacStrings){
+      // Check reaction to wrong value.
+      invalid_val.set_string_val(mac_string);
+      EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
+                                  /* SetValue will not be called */ nullptr,
+                                  /* Notification will not be called */ nullptr),
+                  StatusIs(_, _, ContainsRegex("wrong value")));
+
+      // Check if mac_address remains unchanged.
+      ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+      ASSERT_THAT(resp.update().update(), SizeIs(1));
+      EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
+  }
 }
 
 // Checks if the 'state/port-speed' OnPoll action works correctly.
