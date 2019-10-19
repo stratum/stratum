@@ -45,7 +45,10 @@ using stratum::p4c_backends::SwitchP4cBackend;
 using stratum::p4c_backends::TableMapGenerator;
 using stratum::p4c_backends::TargetInfo;
 
+DECLARE_int32(stderrthreshold);
+
 int main(int argc, char** argv) {
+  FLAGS_stderrthreshold = 1;
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
   std::unique_ptr<BcmTargetInfo> bcm_target_info(new BcmTargetInfo);

@@ -103,6 +103,10 @@ bool AnnotationMapper::ProcessAnnotations(
           success = false;
         break;
       case hal::P4TableMapValue::kActionDescriptor:
+        if (!HandleActionAnnotations(
+            table_map_iter.first, p4_info_manager,
+            table_map_iter.second.mutable_action_descriptor()))
+          success = false;
       case hal::P4TableMapValue::kHeaderDescriptor:
         break;
       case hal::P4TableMapValue::kInternalAction:
@@ -210,6 +214,56 @@ bool AnnotationMapper::MapTableAnnotation(
     }
     for (const auto& match : table_addendum->internal_match_fields()) {
       *table_descriptor->add_internal_match_fields() = match;
+    }
+  }
+
+  return true;
+}
+
+bool AnnotationMapper::HandleActionAnnotations(const std::string& action_name,
+                            const hal::P4InfoManager& p4_info_manager,
+                            hal::P4ActionDescriptor* action_descriptor) {
+  // The name is always the first annotation lookup.
+  bool name_ok = MapActionAnnotation(action_name, action_descriptor);
+  return name_ok;
+}
+
+bool AnnotationMapper::MapActionAnnotation(const std::string& annotation,
+                          hal::P4ActionDescriptor* action_descriptor) {
+  const auto& iter = annotation_map_.action_addenda_map().find(annotation);
+  if (iter == annotation_map_.action_addenda_map().end())
+    return true;  // It is OK not to have a matching annotation.
+
+  const P4ActionAnnotationValue& map_value = iter->second;
+  if (map_value.type() != P4_ACTION_TYPE_UNKNOWN)
+    action_descriptor->set_type(map_value.type());
+
+  for (const auto& addenda_name : map_value.addenda_names()) {
+    auto action_addendum = action_lookup_.FindAddenda(addenda_name);
+    if (action_addendum == nullptr) {
+      LOG(ERROR) << "Unable to find action addenda named "
+                 << addenda_name << " for annotation " << annotation;
+      return false;
+    }
+
+    if (action_addendum->assignment_primitive_replace()) {
+      action_descriptor->clear_assignments();
+      action_descriptor->clear_primitive_ops();
+    }
+
+    // Each device_data field from the annotation map is appended
+    // to the action_descriptor.
+    for (const auto& device_data : action_addendum->device_data()) {
+      *action_descriptor->add_device_data() = device_data;
+    }
+
+    // TODO(max): Check if assignment or primitive_op already exists and replace.
+    LOG(WARNING) << "P4ActionAddenda replacements are not implemented for " << annotation;
+    if (action_addendum->has_assignments_addenda()) {
+      *action_descriptor->add_assignments() = action_addendum->assignments_addenda();
+    }
+    if (action_addendum->primitive_ops_addenda()) {
+      action_descriptor->add_primitive_ops(action_addendum->primitive_ops_addenda());
     }
   }
 
