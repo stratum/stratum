@@ -3601,34 +3601,112 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 }
 
 ::util::Status BcmSdkWrapper::AddMplsRoute(int unit, int port,
-    uint32 mpls_label, int egress_intf_id) {
+    uint32 mpls_label, int egress_intf_id, bool is_intf_multipath) {
   // Check if the unit is valid
   RETURN_IF_BCM_ERROR(CheckIfUnitExists(unit));
   RETURN_IF_BCM_ERROR(CheckIfPortExists(unit, port));
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
   CHECK_RETURN_IF_FALSE(mpls_label > 0);
 
-  // Check if egress interface is valid
-  InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
-  CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
-      << "Unit " << unit
-      << " not initialized yet. Call InitializeUnit first.";
-  auto exists = gtl::FindOrNull(*l3_egress_intf, egress_intf_id);
-  if (!exists || !*exists) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Invalid L3 Egress interface "
-        << egress_intf_id << ".";
+  // In SDKLT the MPLS action (POP, SWAP, L3_NHI) is part of the same table
+  // (TNL_MPLS_DECAP) that defines the flow match (port and label). But usually
+  // the actions are allocated before the matches, especially with actions groups.
+  // When a new MPLS route is requested, we therefore look at the next hop given,
+  // and try to deduct the intended action from it.
+  // If egress is an ECMP interface, we have to "pierce through" it to
+  // see what's the real next hop type.
+  uint64 nhop_to_check = egress_intf_id;
+
+  if (!is_intf_multipath) {
+    // Check if egress interface is valid
+    InUseMap* l3_egress_intf = gtl::FindOrNull(l3_egress_interface_ids_, unit);
+    CHECK_RETURN_IF_FALSE(l3_egress_intf != nullptr)
+        << "Unit " << unit
+        << " not initialized yet. Call InitializeUnit first.";
+    auto exists = gtl::FindOrNull(*l3_egress_intf, egress_intf_id);
+    if (!exists || !*exists) {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+          << "Invalid L3 Egress interface "
+          << egress_intf_id << ".";
+    }
+  } else {
+    // Check if ECMP egress interface is valid
+    InUseMap* ecmp_intfs = gtl::FindOrNull(l3_ecmp_egress_interface_ids_, unit);
+    CHECK_RETURN_IF_FALSE(ecmp_intfs != nullptr)
+        << "Unit " << unit
+        << " not initialized yet. Call InitializeUnit first.";
+    auto exists = gtl::FindOrNull(*ecmp_intfs, egress_intf_id);
+    if (!exists || !*exists) {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+          << "Invalid L3 ECMP Egress interface "
+          << egress_intf_id << ".";
+    }
+
+    // Fetch first ECMP group member. We assume that an ECMP group only
+    // contains one type of next hops.
+    bcmlt_entry_handle_t entry_hdl;
+    bcmlt_entry_info_t entry_info;
+    RETURN_IF_BCM_ERROR(
+        bcmlt_entry_allocate(unit, ECMPs, &entry_hdl));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ECMP_IDs, egress_intf_id));
+    RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                          BCMLT_PRIORITY_NORMAL));
+    uint64 nhops[1] = {};
+    uint32 nhop_count = 0;
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_array_get(entry_hdl, NHOP_IDs, 0, nhops, 1, &nhop_count));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+    CHECK_RETURN_IF_FALSE(nhop_count != 0) << "Empty ECMP group.";
+    nhop_to_check = nhops[0];
   }
 
+  // Check if egress interface is transit or normal (decap)
+  auto bos_action = INVALIDs;
+  auto non_bos_action = INVALIDs;
   bcmlt_entry_handle_t entry_hdl;
+  bcmlt_entry_info_t entry_info;
   RETURN_IF_BCM_ERROR(
-      bcmlt_entry_allocate(unit, TNL_MPLS_DECAPs, &entry_hdl));
+      bcmlt_entry_allocate(unit, TNL_MPLS_TRANSIT_NHOPs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, NHOP_IDs, nhop_to_check));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  if (entry_info.status == SHR_E_NONE) {
+    // Transit (LSR) route
+    bos_action = is_intf_multipath ? SWAP_ECMPs : SWAP_NHIs;
+    non_bos_action = is_intf_multipath ? SWAP_ECMPs : SWAP_NHIs;
+    VLOG(1) << "Adding MPLS transit route for label " << mpls_label
+      << " from port " << port << " to egress interface " << egress_intf_id
+      << " on unit " << unit << ".";
+  }
+  RETURN_IF_BCM_ERROR(
+      bcmlt_entry_allocate(unit, L3_UC_NHOPs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, NHOP_IDs, nhop_to_check));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_commit(entry_hdl, BCMLT_OPCODE_LOOKUP,
+                                         BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_info_get(entry_hdl, &entry_info));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  if (entry_info.status == SHR_E_NONE) {
+    // Decap route
+    bos_action = is_intf_multipath ? L3_ECMPs : L3_NHIs;
+    non_bos_action = POPs;
+    VLOG(1) << "Adding MPLS decap route for label " << mpls_label
+      << " from port " << port << " to egress interface " << egress_intf_id
+      << " on unit " << unit << ".";
+  }
+
+  CHECK_RETURN_IF_FALSE(bos_action != INVALIDs && non_bos_action != INVALIDs)
+      << "Could not resolve type of next hop from egress interface "
+      << egress_intf_id << "on unit " << unit;
+
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TNL_MPLS_DECAPs, &entry_hdl));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MPLS_LABELs, mpls_label));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODIDs, 0));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODPORTs, port));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, IPV4_PAYLOADs, 1));
   RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, ECMP_IDs, egress_intf_id));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, BOS_ACTIONSs, SWAP_ECMPs));
-  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, NON_BOS_ACTIONSs, SWAP_ECMPs));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, BOS_ACTIONSs, bos_action));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_symbol_add(entry_hdl, NON_BOS_ACTIONSs, non_bos_action));
   RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_INSERT,
                                                 BCMLT_PRIORITY_NORMAL));
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
@@ -4081,7 +4159,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 }
 
 ::util::Status BcmSdkWrapper::ModifyMplsRoute(int unit, int port,
-    uint32 mpls_label, int egress_intf_id) {
+    uint32 mpls_label, int egress_intf_id, bool is_intf_multipath) {
+  // TODO(max): implement
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
 }
 
@@ -4334,7 +4413,19 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 
 ::util::Status BcmSdkWrapper::DeleteMplsRoute(int unit, int port,
     uint32 mpls_label) {
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+  bcmlt_entry_handle_t entry_hdl;
+  RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, TNL_MPLS_DECAPs, &entry_hdl));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MPLS_LABELs, mpls_label));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODIDs, 0));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, MODPORTs, port));
+  RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(entry_hdl, BCMLT_OPCODE_DELETE,
+                                                BCMLT_PRIORITY_NORMAL));
+  RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+
+  VLOG(1) << "Deleted MPLS route for label " << mpls_label << " from port "
+      << port << " on unit " << unit << ".";
+
+  return ::util::OkStatus();
 };
 
 

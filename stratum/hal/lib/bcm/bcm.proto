@@ -315,6 +315,7 @@ message BcmField {
     L3_DST_CLASS_ID = 25;     // L3 Destination Class ID.
     CLONE_PORT = 26;          // Logical destination port for packet clone.
     MPLS_LABEL = 27;          // MPLS label.
+    MPLS_BOS = 28;            // MPLS bottom-of-stack bit.
   };
   Type type = 1;                 // required
   BcmTableEntryValue value = 2;  // required

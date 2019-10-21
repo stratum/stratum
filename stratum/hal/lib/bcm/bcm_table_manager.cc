@@ -168,6 +168,7 @@ BcmField::Type GetBcmFieldType(P4FieldType p4_field_type) {
           {P4_FIELD_TYPE_L3_CLASS_ID, BcmField::L3_DST_CLASS_ID},
           {P4_FIELD_TYPE_CLONE_PORT, BcmField::CLONE_PORT},
           {P4_FIELD_TYPE_MPLS_LABEL, BcmField::MPLS_LABEL},
+          {P4_FIELD_TYPE_MPLS_BOS, BcmField::MPLS_BOS},
           // Currently unsupported field types below.
           {P4_FIELD_TYPE_IPV4_IHL, BcmField::UNKNOWN},
           {P4_FIELD_TYPE_IPV4_TOTAL_LENGTH, BcmField::UNKNOWN},
@@ -872,7 +873,7 @@ namespace {
               break;
             }
             case P4_FIELD_TYPE_VLAN_VID:
-              bcm_non_multipath_nexthop->set_vlan(field.u32());
+              bcm_non_multipath_nexthop->set_vlan(field.u32() + field.u64());
               break;
             case P4_FIELD_TYPE_L3_CLASS_ID:
               // TODO(unknown): Ignore class_id for now till we have a
