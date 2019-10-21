@@ -153,10 +153,10 @@ enum P4FieldType {
   P4_FIELD_TYPE_DNS_AUTHORITY_RRS = 84;   // Number of NS RRs pointing towards authorities
   P4_FIELD_TYPE_DNS_ADDITIONAL_RRS = 85;  // Number of additional RRs
 
-  P4_FIELD_TYPE_MPLS_LABEL = 90;
-  P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS = 91;
-  P4_FIELD_TYPE_MPLS_BOS = 92;
-  P4_FIELD_TYPE_MPLS_TTL = 93;
+  P4_FIELD_TYPE_MPLS_LABEL = 90;          // MPLS label
+  P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS = 91;  // MPLS traffic class
+  P4_FIELD_TYPE_MPLS_BOS = 92;            // MPLS bottom of stack bit
+  P4_FIELD_TYPE_MPLS_TTL = 93;            // MPLS TTL
 
   // Field IDs over 1000 are reserved for adding more fields to existing
   // headers without renumbering.  Example: P4_FIELD_TYPE_GRE_SEQUENCE.

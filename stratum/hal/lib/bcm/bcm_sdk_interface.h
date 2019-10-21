@@ -429,9 +429,9 @@ class BcmSdkInterface {
   // The egress intf used is given by egress_intf_id and is assumed to be
   // already created. The function will return error if a route with the same
   // (port, mpls_label) exists.
-  // TODO(max): Add options for ECMP/normal egress intf.
-  virtual ::util::Status AddMplsRoute(int unit_, int port, uint32 mpls_label,
-                                      int egress_intf_id) = 0;
+  virtual ::util::Status AddMplsRoute(int unit, int port, uint32 mpls_label,
+                                      int egress_intf_id,
+                                      bool is_intf_multipath) = 0;
 
   // Modifies class_id and/or egress_intf_id of an existing IPv4 L3 LPM route
   // with key (vrf, subnet, mask). If vrf == 0, default VRF is used. If
@@ -480,7 +480,8 @@ class BcmSdkInterface {
   // and is assumed to be already created. The function will return error if a
   // route with key (port, mpls_label) does not exist.
   virtual ::util::Status ModifyMplsRoute(int unit_, int port, uint32 mpls_label,
-                                         int egress_intf_id) = 0;
+                                         int egress_intf_id,
+                                         bool is_intf_multipath) = 0;
 
   // Deletes an IPv4 L3 LPM route given its (vrf, subnet, mask) key. Returns
   // error if the route with the given key does not exist.
