@@ -257,8 +257,6 @@ bool AnnotationMapper::MapActionAnnotation(const std::string& annotation,
       *action_descriptor->add_device_data() = device_data;
     }
 
-    // TODO(max): Check if assignment or primitive_op already exists and replace.
-    LOG(WARNING) << "P4ActionAddenda replacements are not implemented for " << annotation;
     if (action_addendum->has_assignments_addenda()) {
       *action_descriptor->add_assignments() = action_addendum->assignments_addenda();
     }

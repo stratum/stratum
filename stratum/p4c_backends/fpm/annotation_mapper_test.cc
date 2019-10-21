@@ -164,7 +164,7 @@ TEST_F(AnnotationMapperTest, TestInitMissingAddendaName) {
   EXPECT_FALSE(mapper_.InitFromP4AnnotationMap(test_map));
 }
 
-TEST_F(AnnotationMapperTest, TestInitDuplicatAddendaName) {
+TEST_F(AnnotationMapperTest, TestInitDuplicateAddendaName) {
   P4AnnotationMap test_map;
   const std::string kActionAddendaName = "test-action-addenda";
   P4ActionAnnotationValue map_value;
@@ -243,17 +243,32 @@ TEST_F(AnnotationMapperTest, TestProcessAnnotationsActionDescriptor) {
   SetUpAnnotationFileList();
   EXPECT_TRUE(mapper_.Init());
 
-  const std::string kActionName = "action-name-1";
+  const std::string kActionName = "action-annotation-1";
+  const std::string kActionParameterName = "action-parameter-name-1";
+  const std::string kActionDestinationFieldName = "action-destination-name-1";
   hal::P4TableMapValue table_map_value;
   table_map_value.mutable_action_descriptor()->set_type(
       P4_ACTION_TYPE_FUNCTION);
+  auto assignment = table_map_value.mutable_action_descriptor()->add_assignments();
+  assignment->mutable_assigned_value()->set_parameter_name(kActionParameterName);
+  assignment->set_destination_field_name(kActionDestinationFieldName);
   (*test_pipeline_cfg_.mutable_table_map())[kActionName] = table_map_value;
+
   EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
+  const auto iter = test_pipeline_cfg_.table_map().find(kActionName);
+  ASSERT_TRUE(iter != test_pipeline_cfg_.table_map().end());
+  EXPECT_EQ(P4_ACTION_TYPE_PROFILE_GROUP_ID, iter->second.action_descriptor().type());
+
+  // Check that the original assignment has been replaced
+  EXPECT_EQ(iter->second.action_descriptor().assignments().size(), 1);
+  auto as = iter->second.action_descriptor().assignments(0);
+  EXPECT_EQ(as.destination_field_name(), "fake-destination-field-name");
+  EXPECT_EQ(as.assigned_value().constant_param(), 1);
 }
 
 // In this test, test_pipeline_cfg_ has a table descriptor that gets its
-// type set according to the table name annotation.  The tested table is
-// in the test annotation files.  The mock_p4_info_ returns an empty
+// type set according to the table name annotation. The tested table is
+// in the test annotation files. The mock_p4_info_ returns an empty
 // P4Annotation message.
 TEST_F(AnnotationMapperTest, TestProcessAnnotationsMapTableType) {
   SetUpAnnotationFileList();

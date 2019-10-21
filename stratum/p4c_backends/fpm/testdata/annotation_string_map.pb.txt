@@ -1,11 +1,11 @@
 # Copyright 2019 Google LLC
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,13 @@ table_addenda_map {
     addenda_names: "table-addenda-A1"
   }
 }
+action_addenda_map {
+  key: "action-annotation-1"
+  value {
+    type: P4_ACTION_TYPE_PROFILE_GROUP_ID
+    addenda_names: "action-addenda-A1"
+  }
+}
 field_addenda {
   name: "match-field-addenda-A1"
   device_data {
@@ -36,4 +43,14 @@ table_addenda {
   device_data {
     name: "fake-table-device-data"
   }
+}
+action_addenda {
+  name: "action-addenda-A1"
+  assignments_addenda {
+    assigned_value {
+      constant_param: 1
+    }
+    destination_field_name: "fake-destination-field-name"
+  }
+  assignment_primitive_replace: true
 }
