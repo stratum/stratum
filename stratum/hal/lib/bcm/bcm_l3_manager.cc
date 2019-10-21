@@ -514,7 +514,7 @@ BcmL3Manager::~BcmL3Manager() {}
   RETURN_IF_ERROR(ExtractMplsActionParams(bcm_flow_entry, &action_params));
 
   return bcm_sdk_interface_->AddMplsRoute(unit_, key.port, key.mpls_label,
-      action_params.egress_intf_id);
+      action_params.egress_intf_id, action_params.is_intf_multipath);
 }
 
 ::util::Status BcmL3Manager::ModifyMplsFlow(const BcmFlowEntry& bcm_flow_entry) {

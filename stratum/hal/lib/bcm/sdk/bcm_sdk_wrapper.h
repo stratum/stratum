@@ -197,7 +197,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status AddL3HostIpv6(int unit, int vrf, const std::string& ipv6,
                                int class_id, int egress_intf_id) override;
   ::util::Status AddMplsRoute(int unit_, int port, uint32 mpls_label,
-                              int egress_intf_id) override;
+                              int egress_intf_id,
+                              bool is_intf_multipath) override;
   ::util::Status ModifyL3RouteIpv4(int unit, int vrf, uint32 subnet,
                                    uint32 mask, int class_id,
                                    int egress_intf_id,
@@ -211,7 +212,8 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status ModifyL3HostIpv6(int unit, int vrf, const std::string& ipv6,
                                   int class_id, int egress_intf_id) override;
   ::util::Status ModifyMplsRoute(int unit_, int port, uint32 mpls_label,
-                                 int egress_intf_id) override;
+                                 int egress_intf_id,
+                                 bool is_intf_multipath) override;
   ::util::Status DeleteL3RouteIpv4(int unit, int vrf, uint32 subnet,
                                    uint32 mask) override;
   ::util::Status DeleteL3RouteIpv6(int unit, int vrf, const std::string& subnet,
