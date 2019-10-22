@@ -237,18 +237,37 @@ TEST_F(AnnotationMapperTest, TestProcessAnnotationsUndefinedFieldAddenda) {
   EXPECT_FALSE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
 }
 
-// This test makes sure that AnnotationMapper doesn't gag on an unimplemented
-// action descriptor mapping.
-TEST_F(AnnotationMapperTest, TestProcessAnnotationsActionDescriptor) {
+// In this test, test_pipeline_cfg_ has an action descriptor that gets its
+// type set according to the action name annotation. The action table is
+// in the test annotation files. The mock_p4_info_ returns an empty
+// P4Annotation message.
+TEST_F(AnnotationMapperTest, TestProcessAnnotationsMapActionType) {
   SetUpAnnotationFileList();
   EXPECT_TRUE(mapper_.Init());
 
-  const std::string kActionName = "action-annotation-1";
+  const std::string kActionName = "action-name-with-type";
+  hal::P4TableMapValue table_map_value;
+  table_map_value.mutable_action_descriptor()->set_type(P4_ACTION_TYPE_UNKNOWN);
+  (*test_pipeline_cfg_.mutable_table_map())[kActionName] = table_map_value;
+
+  EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
+  const auto iter = test_pipeline_cfg_.table_map().find(kActionName);
+  ASSERT_TRUE(iter != test_pipeline_cfg_.table_map().end());
+  EXPECT_EQ(P4_ACTION_TYPE_FUNCTION, iter->second.action_descriptor().type());
+}
+
+// In this test, test_pipeline_cfg_ has an action descriptor that gets custom
+// replacement assignments and device data from the action descriptor name
+// annotation. The tested action is in the test annotation files.
+TEST_F(AnnotationMapperTest, TestProcessAnnotationsMapActionAssignmentsReplace) {
+  SetUpAnnotationFileList();
+  EXPECT_TRUE(mapper_.Init());
+
+  const std::string kActionName = "action-name-with-replace-addenda";
   const std::string kActionParameterName = "action-parameter-name-1";
   const std::string kActionDestinationFieldName = "action-destination-name-1";
   hal::P4TableMapValue table_map_value;
-  table_map_value.mutable_action_descriptor()->set_type(
-      P4_ACTION_TYPE_FUNCTION);
+  table_map_value.mutable_action_descriptor()->set_type(P4_ACTION_TYPE_FUNCTION);
   auto assignment = table_map_value.mutable_action_descriptor()->add_assignments();
   assignment->mutable_assigned_value()->set_parameter_name(kActionParameterName);
   assignment->set_destination_field_name(kActionDestinationFieldName);
@@ -257,13 +276,128 @@ TEST_F(AnnotationMapperTest, TestProcessAnnotationsActionDescriptor) {
   EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
   const auto iter = test_pipeline_cfg_.table_map().find(kActionName);
   ASSERT_TRUE(iter != test_pipeline_cfg_.table_map().end());
-  EXPECT_EQ(P4_ACTION_TYPE_PROFILE_GROUP_ID, iter->second.action_descriptor().type());
+  const auto& annotated_descriptor = iter->second.action_descriptor();
+  EXPECT_EQ(P4_ACTION_TYPE_FUNCTION, annotated_descriptor.type());
+  ASSERT_EQ(1, annotated_descriptor.device_data_size());
+  EXPECT_FALSE(annotated_descriptor.device_data(0).name().empty());
+  EXPECT_FALSE(annotated_descriptor.device_data(0).data().empty());
+  ASSERT_EQ(1, annotated_descriptor.assignments().size());
+  EXPECT_FALSE(annotated_descriptor.assignments(0).destination_field_name().empty());
+  EXPECT_TRUE(annotated_descriptor.assignments(0).has_assigned_value());
+}
 
-  // Check that the original assignment has been replaced
-  EXPECT_EQ(iter->second.action_descriptor().assignments().size(), 1);
-  auto as = iter->second.action_descriptor().assignments(0);
-  EXPECT_EQ(as.destination_field_name(), "fake-destination-field-name");
-  EXPECT_EQ(as.assigned_value().constant_param(), 1);
+// In this test, test_pipeline_cfg_ has an action descriptor that gets custom
+// additional assignments and device data from the action descriptor name
+// annotation. The tested action is in the test annotation files.
+TEST_F(AnnotationMapperTest, TestProcessAnnotationsMapActionAssignmentsAdd) {
+  SetUpAnnotationFileList();
+  EXPECT_TRUE(mapper_.Init());
+
+  const std::string kActionName = "action-name-with-addenda";
+  const std::string kActionParameterName = "action-parameter-name-1";
+  const std::string kActionDestinationFieldName = "action-destination-name-1";
+  hal::P4TableMapValue table_map_value;
+  table_map_value.mutable_action_descriptor()->set_type(P4_ACTION_TYPE_FUNCTION);
+  auto assignment = table_map_value.mutable_action_descriptor()->add_assignments();
+  assignment->mutable_assigned_value()->set_constant_param(1);
+  assignment->set_destination_field_name(kActionDestinationFieldName);
+  (*test_pipeline_cfg_.mutable_table_map())[kActionName] = table_map_value;
+
+  EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
+  const auto iter = test_pipeline_cfg_.table_map().find(kActionName);
+  ASSERT_TRUE(iter != test_pipeline_cfg_.table_map().end());
+  const auto& annotated_descriptor = iter->second.action_descriptor();
+  EXPECT_EQ(P4_ACTION_TYPE_FUNCTION, annotated_descriptor.type());
+  ASSERT_EQ(1, annotated_descriptor.device_data_size());
+  EXPECT_FALSE(annotated_descriptor.device_data(0).name().empty());
+  EXPECT_FALSE(annotated_descriptor.device_data(0).data().empty());
+  ASSERT_EQ(2, annotated_descriptor.assignments().size());
+  EXPECT_FALSE(annotated_descriptor.assignments(0).destination_field_name().empty());
+  EXPECT_TRUE(annotated_descriptor.assignments(0).has_assigned_value());
+  EXPECT_FALSE(annotated_descriptor.assignments(1).destination_field_name().empty());
+  EXPECT_TRUE(annotated_descriptor.assignments(1).has_assigned_value());
+  EXPECT_NE(annotated_descriptor.assignments(0).destination_field_name(),
+            annotated_descriptor.assignments(1).destination_field_name());
+  EXPECT_NE(annotated_descriptor.assignments(0).assigned_value().constant_param(),
+            annotated_descriptor.assignments(1).assigned_value().constant_param());
+  EXPECT_NE(annotated_descriptor.assignments(0).assigned_value().parameter_name(),
+            annotated_descriptor.assignments(1).assigned_value().parameter_name());
+}
+
+// In this test, test_pipeline_cfg_ has an action descriptor that gets multiple
+// sets of assignments and device_data from the action name annotation. The
+// tested action is in the test annotation files.
+TEST_F(AnnotationMapperTest, TestProcessAnnotationsMapActionMulti) {
+  SetUpAnnotationFileList();
+  EXPECT_TRUE(mapper_.Init());
+
+  const std::string kActionName = "action-name-with-type-and-multiple-addenda";
+  hal::P4TableMapValue table_map_value;
+  table_map_value.mutable_action_descriptor()->set_type(P4_ACTION_TYPE_UNKNOWN);
+  (*test_pipeline_cfg_.mutable_table_map())[kActionName] = table_map_value;
+
+  EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
+  const auto iter = test_pipeline_cfg_.table_map().find(kActionName);
+  ASSERT_TRUE(iter != test_pipeline_cfg_.table_map().end());
+  const auto& annotated_descriptor = iter->second.action_descriptor();
+  EXPECT_EQ(P4_ACTION_TYPE_FUNCTION, annotated_descriptor.type());
+  ASSERT_EQ(2, annotated_descriptor.device_data_size());
+  EXPECT_FALSE(annotated_descriptor.device_data(0).name().empty());
+  EXPECT_FALSE(annotated_descriptor.device_data(0).data().empty());
+  EXPECT_FALSE(annotated_descriptor.device_data(1).name().empty());
+  EXPECT_FALSE(annotated_descriptor.device_data(1).data().empty());
+  EXPECT_NE(annotated_descriptor.device_data(0).name(),
+            annotated_descriptor.device_data(1).name());
+  EXPECT_NE(annotated_descriptor.device_data(0).data(),
+            annotated_descriptor.device_data(1).data());
+
+  ASSERT_EQ(2, annotated_descriptor.assignments().size());
+  EXPECT_FALSE(annotated_descriptor.assignments(0).destination_field_name().empty());
+  EXPECT_TRUE(annotated_descriptor.assignments(0).has_assigned_value());
+  EXPECT_FALSE(annotated_descriptor.assignments(1).destination_field_name().empty());
+  EXPECT_TRUE(annotated_descriptor.assignments(1).has_assigned_value());
+  EXPECT_NE(annotated_descriptor.assignments(0).destination_field_name(),
+            annotated_descriptor.assignments(1).destination_field_name());
+  EXPECT_NE(annotated_descriptor.assignments(0).assigned_value().constant_param(),
+            annotated_descriptor.assignments(1).assigned_value().constant_param());
+  EXPECT_NE(annotated_descriptor.assignments(0).assigned_value().parameter_name(),
+            annotated_descriptor.assignments(1).assigned_value().parameter_name());
+}
+
+// In this test, test_pipeline_cfg_ has a action descriptor that has no
+// annotation mapping.
+TEST_F(AnnotationMapperTest, TestProcessAnnotationsUnmappedAction) {
+  SetUpAnnotationFileList();
+  EXPECT_TRUE(mapper_.Init());
+  const std::string kActionName = "match-action-unmapped";
+
+  hal::P4TableMapValue table_map_value;
+  table_map_value.mutable_action_descriptor()->set_type(P4_ACTION_TYPE_FUNCTION);
+  (*test_pipeline_cfg_.mutable_table_map())[kActionName] = table_map_value;
+  hal::P4PipelineConfig orig_pipeline_cfg = test_pipeline_cfg_;
+  EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
+  test_pipeline_cfg_.clear_idle_pipeline_stages();
+  EXPECT_TRUE(MessageDifferencer::Equals(
+      orig_pipeline_cfg, test_pipeline_cfg_));
+}
+
+// In this test, the action name has an annotation map entry, but an improperly
+// formed annotation map is missing the action addenda.
+TEST_F(AnnotationMapperTest, TestProcessAnnotationsUndefinedActionAddenda) {
+  P4AnnotationMap test_map;
+  GetAnnotationMap(&test_map);
+  P4ActionAnnotationValue action_map_value;
+  action_map_value.add_addenda_names("missing-action-addenda");
+  const std::string kActionWithMissingAddenda = "new-test-action";
+  (*test_map.mutable_action_addenda_map())[kActionWithMissingAddenda] =
+      action_map_value;
+  EXPECT_TRUE(mapper_.InitFromP4AnnotationMap(test_map));
+
+  hal::P4TableMapValue table_map_value;
+  table_map_value.mutable_action_descriptor()->set_type(P4_ACTION_TYPE_FUNCTION);
+  (*test_pipeline_cfg_.mutable_table_map())[kActionWithMissingAddenda] =
+      table_map_value;
+  EXPECT_FALSE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
 }
 
 // In this test, test_pipeline_cfg_ has a table descriptor that gets its
