@@ -844,6 +844,9 @@ namespace {
             case P4_FIELD_TYPE_ETH_DST:
               bcm_non_multipath_nexthop->set_dst_mac(field.u64());
               break;
+            case P4_FIELD_TYPE_ETH_TYPE:
+              // TODO: accept as part of action, but ignore for now
+              break;
             case P4_FIELD_TYPE_EGRESS_PORT: {
               uint32 port_id = static_cast<uint32>(field.u32() + field.u64());
               const int* port = nullptr;
@@ -884,6 +887,12 @@ namespace {
               break;
             case P4_FIELD_TYPE_MPLS_TTL:
               bcm_non_multipath_nexthop->set_mpls_ttl(field.u32());
+              break;
+            case P4_FIELD_TYPE_MPLS_BOS:
+              // TODO: accept as part of action, but ignore for now
+              break;
+            case P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS:
+              // TODO: accept as part of action, but ignore for now
               break;
             default:
               return MAKE_ERROR(ERR_INVALID_PARAM)
