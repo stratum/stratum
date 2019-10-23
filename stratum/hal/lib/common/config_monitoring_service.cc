@@ -291,6 +291,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
     return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
                           "Get response can only be encoded as PROTO.");
   }
+  VLOG(1) << "GetRequest: " << req->ShortDebugString();
 
   for (const auto& path : req->path()) {
     VLOG(1) << "GET: " << path.ShortDebugString();
@@ -334,7 +335,7 @@ ConfigMonitoringService::~ConfigMonitoringService() {
           });
       // Check if the path is supported.
       ::util::Status status;
-      if ((status = gnmi_publisher_.SubscribePoll(path, &stream, &h)).ok()) {
+      if ((status = gnmi_publisher_.SubscribePoll(path, req->type(), &stream, &h)).ok()) {
         // Get the value(s) represented by the path.
         if (!(status = gnmi_publisher_.HandlePoll(h)).ok()) {
           return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
@@ -462,7 +463,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
           // In ON_CHANGE subscription mode, before any updates can be sent, the
           // switch has to sent the current state of the leaf/node, so, prepare
           // and transmit the data.
-          if (publisher->SubscribePoll(subscription.path(), stream, &h) !=
+          if (publisher->SubscribePoll(subscription.path(), ::gnmi::GetRequest_DataType_ALL, stream, &h) !=
               ::util::OkStatus()) {
             // Report error.
             ReportError("Path supports ON_CHANGE but not POLL.", stream);
@@ -494,7 +495,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
         ++problems_found;
         continue;
       }
-      if (publisher->SubscribePoll(subscription.path(), stream, &h) ==
+      if (publisher->SubscribePoll(subscription.path(), ::gnmi::GetRequest_DataType_ALL, stream, &h) ==
           ::util::OkStatus()) {
         // A handle has to be saved, so, later we know what to unsubscribe
         // from.
@@ -507,7 +508,7 @@ constexpr int kThousandMilliseconds = 1000 /* milliseconds */;
     } else if (req.subscribe().mode() == ::gnmi::SubscriptionList::ONCE) {
       VLOG(1) << "one-shot ";
       // A one-shot request.
-      if (publisher->SubscribePoll(subscription.path(), stream, &h) ==
+      if (publisher->SubscribePoll(subscription.path(), ::gnmi::GetRequest_DataType_ALL, stream, &h) ==
           ::util::OkStatus()) {
         // Prepare and transmit the data.
         if (publisher->HandlePoll(h) != ::util::OkStatus()) {

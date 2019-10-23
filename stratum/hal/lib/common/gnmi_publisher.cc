@@ -133,8 +133,9 @@ GnmiPublisher::~GnmiPublisher() {}
                                                 const ::gnmi::Path& path,
                                                 GnmiSubscribeStream* stream,
                                                 SubscriptionHandle* h) {
+
   auto status = Subscribe(&TreeNode::AllSubtreeLeavesSupportOnTimer,
-                          &TreeNode::GetOnTimerHandler, path, stream, h);
+                          &TreeNode::GetOnTimerHandler, path, ::gnmi::GetRequest_DataType_ALL, stream, h);
   if (status != ::util::OkStatus()) {
     return status;
   }
@@ -151,17 +152,18 @@ GnmiPublisher::~GnmiPublisher() {}
 }
 
 ::util::Status GnmiPublisher::SubscribePoll(const ::gnmi::Path& path,
-                                            GnmiSubscribeStream* stream,
-                                            SubscriptionHandle* h) {
+                                   const ::gnmi::GetRequest_DataType& data_type,
+                                   GnmiSubscribeStream* stream,
+                                   SubscriptionHandle* h) {
   return Subscribe(&TreeNode::AllSubtreeLeavesSupportOnPoll,
-                   &TreeNode::GetOnPollHandler, path, stream, h);
+                   &TreeNode::GetOnPollHandler, path, data_type, stream, h);
 }
 
 ::util::Status GnmiPublisher::SubscribeOnChange(const ::gnmi::Path& path,
                                                 GnmiSubscribeStream* stream,
                                                 SubscriptionHandle* h) {
   auto status = Subscribe(&TreeNode::AllSubtreeLeavesSupportOnChange,
-                          &TreeNode::GetOnChangeHandler, path, stream, h);
+                          &TreeNode::GetOnChangeHandler, path, ::gnmi::GetRequest_DataType_ALL, stream, h);
   if (status != ::util::OkStatus()) {
     return status;
   }
@@ -175,7 +177,8 @@ GnmiPublisher::~GnmiPublisher() {}
 
 ::util::Status GnmiPublisher::Subscribe(
     const SupportOnPtr& all_leaves_support_mode,
-    const GetHandlerFunc& get_handler, const ::gnmi::Path& path,
+    const GetHandlerFunc& get_handler,
+    const ::gnmi::Path& path, const ::gnmi::GetRequest_DataType& data_type,
     GnmiSubscribeStream* stream, SubscriptionHandle* h) {
   absl::WriterMutexLock l(&access_lock_);
 
@@ -188,6 +191,24 @@ GnmiPublisher::~GnmiPublisher() {}
   }
   if (path.elem_size() == 0) {
     return MAKE_ERROR(ERR_INVALID_PARAM) << "path is empty!";
+  }
+  switch (data_type)
+  {
+    case ::gnmi::GetRequest_DataType_ALL:
+      VLOG(1) << "received getRequest ALL " << path.ShortDebugString();
+      break;
+    case ::gnmi::GetRequest_DataType_CONFIG:
+      VLOG(1) << "received getRequest CONFIG " << path.ShortDebugString();
+      // ::gnmi::PathElem* elem = nullptr;
+      // elem = path.add_elem();
+      // elem->set_name("config");
+      break;
+    case ::gnmi::GetRequest_DataType_STATE:
+      VLOG(1) << "received getRequest STATE " << path.ShortDebugString();
+      break;
+    case ::gnmi::GetRequest_DataType_OPERATIONAL:
+      VLOG(1) << "received getRequest OPERATIONAL" << path.ShortDebugString();
+      break;
   }
   // Map the input path to the supported one - walk the tree of known elements
   // element by element starting from the root and if the element is found the

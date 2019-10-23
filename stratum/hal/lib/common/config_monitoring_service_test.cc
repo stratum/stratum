@@ -528,7 +528,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeAndPollSuccess) {
       .WillOnce(Return(false));
 
   // Simulate path being found.
-  EXPECT_CALL(*gnmi_publisher_, SubscribePoll(_, _, _))
+  EXPECT_CALL(*gnmi_publisher_, SubscribePoll(_, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
 
   // Simulate successful poll operation.
@@ -689,7 +689,7 @@ TEST_P(ConfigMonitoringServiceTest, SubscribeOnChangeWithInitialValueSuccess) {
       .WillOnce(Return(::util::OkStatus()));
 
   // Simulate successful initial value poll operation.
-  EXPECT_CALL(*gnmi_publisher_, SubscribePoll(_, _, _))
+  EXPECT_CALL(*gnmi_publisher_, SubscribePoll(_, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*gnmi_publisher_, HandlePoll(_))
       .WillOnce(Return(::util::OkStatus()));
@@ -760,7 +760,7 @@ TEST_P(ConfigMonitoringServiceTest, CheckConvertTargetDefinedToOnChange) {
       .WillOnce(DoAll(SaveArg<0>(&resp), Return(true)));
 
   // Simulate successful initial value poll operation.
-  EXPECT_CALL(*gnmi_publisher_, SubscribePoll(_, _, _))
+  EXPECT_CALL(*gnmi_publisher_, SubscribePoll(_, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*gnmi_publisher_, HandlePoll(_))
       .WillOnce(Return(::util::OkStatus()));

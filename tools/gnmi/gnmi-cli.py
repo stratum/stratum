@@ -53,6 +53,10 @@ parser.add_argument('--interval', help='[Sample subscribe only] Sample subscribe
                     type=int, action="store", default=5000)
 parser.add_argument('--replace', help='[SetRequest only] Use replace instead of update',
                     action="store_true", required=False)
+parser.add_argument('--get-config-only', help='[GetRequest only] Config (rw) only elements',
+                    action="store_true", required=False)
+parser.add_argument('--get-state-only', help='[GetRequest only] State (ro) only elements',
+                    action="store_true", required=False)
 
 args = parser.parse_args()
 
@@ -90,6 +94,10 @@ def build_gnmi_get_req():
     req.encoding = gnmi_pb2.PROTO
     path = req.path.add()
     build_path(args.path, path)
+    if (args.get_config_only):
+        req.type = gnmi_pb2.GetRequest.CONFIG
+    if (args.get_state_only):
+        req.type = gnmi_pb2.GetRequest.STATE
     if args.path == '/':
         # Special case
         req.type = gnmi_pb2.GetRequest.CONFIG

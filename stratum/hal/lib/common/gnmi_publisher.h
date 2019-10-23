@@ -119,8 +119,9 @@ class GnmiPublisher {
                                            SubscriptionHandle* h);
 
   virtual ::util::Status SubscribePoll(const ::gnmi::Path& path,
-                                       GnmiSubscribeStream* stream,
-                                       SubscriptionHandle* h)
+                                   const ::gnmi::GetRequest_DataType& data_type,
+                                   GnmiSubscribeStream* stream,
+                                   SubscriptionHandle* h)
       LOCKS_EXCLUDED(access_lock_);
 
   virtual ::util::Status SubscribeOnChange(const ::gnmi::Path& path,
@@ -180,6 +181,7 @@ class GnmiPublisher {
   ::util::Status Subscribe(const SupportOnPtr& supports_on,
                            const GetHandlerFunc& get_handler,
                            const ::gnmi::Path& path,
+                           const ::gnmi::GetRequest_DataType& data_type,
                            GnmiSubscribeStream* stream, SubscriptionHandle* h)
       LOCKS_EXCLUDED(access_lock_);
 

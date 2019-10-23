@@ -32,9 +32,10 @@ class GnmiPublisherMock : public GnmiPublisher {
                ::util::Status(const Frequency &, const ::gnmi::Path &,
                               GnmiSubscribeStream *, SubscriptionHandle *));
 
-  MOCK_METHOD3(SubscribePoll,
-               ::util::Status(const ::gnmi::Path &, GnmiSubscribeStream *,
-                              SubscriptionHandle *));
+  MOCK_METHOD4(SubscribePoll,
+               ::util::Status(const ::gnmi::Path &,
+                              const ::gnmi::GetRequest_DataType& data_type,
+                              GnmiSubscribeStream *, SubscriptionHandle *));
   MOCK_METHOD3(SubscribeOnChange,
                ::util::Status(const ::gnmi::Path &, GnmiSubscribeStream *,
                               SubscriptionHandle *));

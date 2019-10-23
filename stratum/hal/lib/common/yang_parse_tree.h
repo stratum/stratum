@@ -81,6 +81,7 @@ class TreeNode {
         supports_on_poll_(false),
         supports_on_update_(false),
         supports_on_replace_(false),
+        // supports_data_type_(false),
         supports_on_delete_(false) {}
   TreeNode(const TreeNode& parent, const std::string& name,
            bool is_name_a_key = false)
@@ -92,6 +93,7 @@ class TreeNode {
         supports_on_poll_(false),
         supports_on_update_(false),
         supports_on_replace_(false),
+        // supports_data_type_(false),
         supports_on_delete_(false) {}
   TreeNode(const TreeNode& src);
 
@@ -308,6 +310,7 @@ class TreeNode {
       const EventHandlerRecordPtr& record) const;
 
   bool IsAKey() { return is_name_a_key_; }
+  bool supports_data_type(::gnmi::GetRequest_DataType&) const;
 
   // A Mutex used to guard access to the handlers.
   mutable absl::Mutex access_lock_;
@@ -375,6 +378,7 @@ class TreeNode {
   bool supports_on_timer_;
   bool supports_on_change_;
   bool supports_on_poll_;
+  bool supports_data_type_;
   bool supports_on_update_;
   bool supports_on_replace_;
   bool supports_on_delete_;

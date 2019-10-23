@@ -54,6 +54,7 @@ void TreeNode::CopySubtree(const TreeNode& src) {
   supports_on_change_ = src.supports_on_change_;
   supports_on_update_ = src.supports_on_update_;
   supports_on_replace_ = src.supports_on_replace_;
+  supports_data_type_ = src.supports_data_type_;
   supports_on_delete_ = src.supports_on_delete_;
   // Copy flags.
   is_name_a_key_ = src.is_name_a_key_;
