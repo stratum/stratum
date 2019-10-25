@@ -107,6 +107,7 @@ bool AnnotationMapper::ProcessAnnotations(
             table_map_iter.first, p4_info_manager,
             table_map_iter.second.mutable_action_descriptor()))
           success = false;
+        break;
       case hal::P4TableMapValue::kHeaderDescriptor:
         break;
       case hal::P4TableMapValue::kInternalAction:
@@ -260,7 +261,7 @@ bool AnnotationMapper::MapActionAnnotation(const std::string& annotation,
     if (action_addendum->has_assignments_addenda()) {
       *action_descriptor->add_assignments() = action_addendum->assignments_addenda();
     }
-    if (action_addendum->primitive_ops_addenda()) {
+    if (action_addendum->primitive_ops_addenda() != P4_ACTION_TYPE_UNKNOWN) {
       action_descriptor->add_primitive_ops(action_addendum->primitive_ops_addenda());
     }
   }
