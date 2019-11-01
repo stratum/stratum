@@ -227,6 +227,7 @@ nodes {{
             '-write_req_log_file=%s/write-reqs.txt' % self.tmpDir,
             '-logtosyslog=false',
             '-logtostderr=true',
+            '-bmv2_log_level=%s' % self.loglevel,
         ]
 
         cmd_string = " ".join(args)
