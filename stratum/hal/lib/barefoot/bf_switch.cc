@@ -45,9 +45,8 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
       node_id_to_pi_node_() {
   for (const auto& entry : unit_to_pi_node_) {
     CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
-    // TODO(antonin): investigate why this doesn't compile
-    // CHECK_NE(entry.second, nullptr)
-    //     << "Detected null PINode for unit " << entry.first << ".";
+    CHECK_NE(entry.second, nullptr)
+        << "Detected null PINode for unit " << entry.first << ".";
   }
 }
 

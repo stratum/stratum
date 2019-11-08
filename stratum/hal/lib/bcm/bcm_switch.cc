@@ -45,10 +45,8 @@ BcmSwitch::BcmSwitch(PhalInterface* phal_interface,
       node_id_to_bcm_node_() {
   for (auto entry : unit_to_bcm_node_) {
     CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
-    // TODO(craig): why doesn't this compile, seems to be a problem across
-    //              all platforms.
-    // CHECK_NE(entry.second, nullptr)
-    //     << "Detected null BcmNode for unit " << entry.first << ".";
+    CHECK_NE(entry.second, nullptr)
+        << "Detected null BcmNode for unit " << entry.first << ".";
   }
 }
 

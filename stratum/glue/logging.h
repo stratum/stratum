@@ -50,4 +50,14 @@ namespace stratum {
 void InitStratumLogging();
 }  // namespace stratum
 
+// ostream overload for std::nulptr_t for C++11
+// see: https://stackoverflow.com/a/46256849
+#if __cplusplus == 201103L
+#include <cstddef>
+#include <iostream>
+namespace std {
+::std::ostream& operator<<(::std::ostream& s, ::std::nullptr_t);
+}
+#endif  // __cplusplus
+
 #endif  // STRATUM_GLUE_LOGGING_H_

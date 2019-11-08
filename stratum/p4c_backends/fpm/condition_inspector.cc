@@ -19,18 +19,6 @@
 #include "stratum/glue/logging.h"
 #include "absl/strings/str_format.h"
 
-// ostream overload for std::nulptr_t for C++11
-// see: https://stackoverflow.com/a/46256849
-#if __cplusplus == 201103L
-#include <cstddef>
-#include <iostream>
-namespace std {
-::std::ostream& operator<<(::std::ostream& s, ::std::nullptr_t) {
-    return s << static_cast<void *>(nullptr);
-}
-}
-#endif
-
 namespace stratum {
 namespace p4c_backends {
 
