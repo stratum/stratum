@@ -132,6 +132,9 @@ class BcmFlowTable {
         entries_(std::move(other.entries_)),
         is_const_(other.is_const_) {}
 
+  // Copy assignment operator.
+  BcmFlowTable& operator=(const BcmFlowTable&) = default;
+
   // Destructor.
   virtual ~BcmFlowTable() {}
 

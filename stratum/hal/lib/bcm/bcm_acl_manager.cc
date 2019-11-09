@@ -194,10 +194,9 @@ BcmAclManager::~BcmAclManager() {}
     RETURN_IF_ERROR_WITH_APPEND(result.status())
         << " Failed to set up acl pipelines for control: " << control.name()
         << ", type: " << control.type() << ".";
-    auto pat = result.ValueOrDie();
     physical_acl_tables.insert(physical_acl_tables.end(),
-                               make_move_iterator(pat.begin()),
-                               make_move_iterator(pat.end()));
+                               make_move_iterator(result.ValueOrDie().begin()),
+                               make_move_iterator(result.ValueOrDie().end()));
   }
 
   // Install and update the ACL tables.
