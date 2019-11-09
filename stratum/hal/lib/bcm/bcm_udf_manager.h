@@ -197,7 +197,7 @@ class BcmUdfManager {
     int byte_size() const { return (size_ + 7) / 8; }
 
     // Returns a string representation of this UDF Chunk.
-    string ToString() const {
+    std::string ToString() const {
       return absl::StrCat("(layer: ", packet_layer(),
                           ", offset: ", bit_offset(), " bits",
                           ", size: ", bit_size(), " bits)");

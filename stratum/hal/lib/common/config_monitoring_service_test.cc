@@ -973,7 +973,7 @@ TEST_P(ConfigMonitoringServiceTest, GnmiSetRootReplace) {
   ASSERT_OK(ReadProtoFromTextFile(
       "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt", &device));
 
-  string msg_bytes;
+  std::string msg_bytes;
   device.SerializeToString(&msg_bytes);
 
   req.add_replace()->mutable_val()->set_bytes_val(msg_bytes);

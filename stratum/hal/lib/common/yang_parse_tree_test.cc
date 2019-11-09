@@ -534,7 +534,7 @@ TEST_F(YangParseTreeTest, FindRoot) {
   ASSERT_OK(ReadProtoFromTextFile(
       "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt", &device));
 
-  string msg_bytes;
+  std::string msg_bytes;
   device.SerializeToString(&msg_bytes);
 
   // Prepare a SET request.

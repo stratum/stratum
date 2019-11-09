@@ -388,7 +388,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
 ::util::Status BcmTableManager::CommonFlowEntryToBcmFlowEntry(
     const CommonFlowEntry& common_flow_entry, ::p4::v1::Update::Type type,
     BcmFlowEntry* bcm_flow_entry) const {
-  string common_flow_entry_string = absl::StrCat(
+  std::string common_flow_entry_string = absl::StrCat(
       " CommonFlowEntry is ", common_flow_entry.ShortDebugString(), ".");
   // bcm_flow_entry.unit
   //
