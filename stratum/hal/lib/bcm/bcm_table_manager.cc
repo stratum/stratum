@@ -986,20 +986,9 @@ namespace {
 ::util::Status BcmTableManager::UpdateTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-
-  auto statusor = GetMutableFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
-    LOG(ERROR) << "Could not find table " << table_id << ".";
-    return statusor.status();
-  }
-  BcmFlowTable* table = statusor.ConsumeValueOrDie();
-  auto statusor2 = table->ModifyEntry(table_entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
-    LOG(ERROR) << "Failed to update flow "
-               << table_entry.ShortDebugString() << ".";
-    return statusor2.status();
-  }
-  ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(
+      ::p4::v1::TableEntry old_entry, table->ModifyEntry(table_entry));
 
   // Update the flow_ref_count for the old/new member or group.
   uint32 old_member_id = old_entry.action().action_profile_member_id();
@@ -1031,19 +1020,9 @@ namespace {
 ::util::Status BcmTableManager::DeleteTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-
-  auto statusor = GetMutableFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
-    LOG(ERROR) << "Could not find table " << table_id << ".";
-    return statusor.status();
-  }
-  BcmFlowTable* table = statusor.ConsumeValueOrDie();
-  auto statusor2 = table->DeleteEntry(table_entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
-    LOG(ERROR) << "Failed to delete flow " << table_entry.ShortDebugString() << ".";
-    return statusor2.status();
-  }
-  ::p4::v1::TableEntry old_entry = statusor2.ConsumeValueOrDie();
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(
+      ::p4::v1::TableEntry old_entry, table->DeleteEntry(table_entry));
 
   // Update the flow_ref_count for the member or group.
   uint32 member_id = old_entry.action().action_profile_member_id();
@@ -1075,19 +1054,9 @@ namespace {
            << table_entry.ShortDebugString() << ".";
   }
 
-  auto statusor = GetMutableFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
-    LOG(ERROR) << "Could not find table " << table_id << ".";
-    return statusor.status();
-  }
-  BcmFlowTable* table = statusor.ConsumeValueOrDie();
-  auto statusor2 = table->Lookup(table_entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
-    LOG(ERROR) << "Failed to find flow " << table_entry.ShortDebugString() << ".";
-    return statusor2.status();
-  }
-  ::p4::v1::TableEntry modified_entry = statusor2.ConsumeValueOrDie();
-
+  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(
+      ::p4::v1::TableEntry modified_entry, table->Lookup(table_entry));
   *modified_entry.mutable_meter_config() = meter.config();
   RETURN_IF_ERROR_WITH_APPEND(table->ModifyEntry(modified_entry).status())
       << "Failed to insert entry with modified meter. Entry: "
@@ -1331,9 +1300,7 @@ namespace {
       if (member_nexthop_info->type ==
           BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT) {
         int port = member_nexthop_info->bcm_port;
-        // std::unorderd_set doesn't have a ContainsKey
-        // if (!gtl::ContainsKey(ports, port)) {
-        if (!ports.contains(port)) {
+        if (!gtl::ContainsKey(ports, port)) {
           auto* group_ids = gtl::FindOrNull(port_to_group_ids_, port);
           if (!group_ids) {
             return MAKE_ERROR(ERR_INTERNAL)
@@ -1554,14 +1521,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 }
 
 ::util::Status BcmTableManager::DeleteTable(uint32 table_id) {
-  const BcmFlowTable* table;
-
-  auto statusor = GetConstantFlowTable(table_id);
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
-    LOG(ERROR) << "Could not find table " << table_id << " to delete.";
-    return statusor.status();
-  }
-  table = statusor.ConsumeValueOrDie();
+  ASSIGN_OR_RETURN(
+      const BcmFlowTable* table, GetConstantFlowTable(table_id));
   std::vector<::p4::v1::TableEntry> entries;
   for (const auto& entry : *table) {
     entries.emplace_back(entry);
@@ -1647,22 +1608,9 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 
 ::util::StatusOr<::p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
     const ::p4::v1::TableEntry& entry) const {
-
-  auto statusor = GetConstantFlowTable(entry.table_id());
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {
-    LOG(ERROR) << "Could not find table " << entry.table_id() << ".";
-    return statusor.status();
-  }
-  const BcmFlowTable* table = statusor.ConsumeValueOrDie();
-  auto statusor2 = table->Lookup(entry);
-  if (ABSL_PREDICT_FALSE(!statusor2.ok())) {
-    LOG(ERROR) << "Table " << entry.table_id()
-               << " does not contain a matching flow for "
-               << entry.ShortDebugString() << ".";
-    return statusor2.status();
-  }
-  ::p4::v1::TableEntry lookup = statusor2.ConsumeValueOrDie();
-
+  ASSIGN_OR_RETURN(
+      const BcmFlowTable* table, GetConstantFlowTable(entry.table_id()));
+  ASSIGN_OR_RETURN(::p4::v1::TableEntry lookup, table->Lookup(entry));
   return lookup;
 }
 
