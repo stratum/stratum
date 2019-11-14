@@ -34,8 +34,6 @@
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 
-using stratum::uint64;
-
 namespace stratum {
 namespace hal {
 

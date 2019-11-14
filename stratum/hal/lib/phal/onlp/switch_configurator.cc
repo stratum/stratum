@@ -367,7 +367,7 @@ OnlpSwitchConfigurator::Make(
         auto mutable_group = group->AcquireMutable();
         mutable_group->AddAttribute("id",
             FixedDataSource<int>::Make(ONLP_OID_ID_GET(oid))->GetAttribute());
-        string err_msg = "Failed to get oid info for oid: "+to_string(oid)+
+        std::string err_msg = "Failed to get oid info for oid: "+to_string(oid)+
             " error code: "+to_string(result.status().error_code());
         mutable_group->AddAttribute("err_msg",
             FixedDataSource<std::string>::Make(err_msg)->GetAttribute());
@@ -443,7 +443,7 @@ OnlpSwitchConfigurator::Make(
 
     // All other port types
     default:
-        LOG(INFO) << "card[" << card_id << "]/port[" << port_id 
+        LOG(INFO) << "card[" << card_id << "]/port[" << port_id
             << "]: transceiver type " << PhysicalPortType_descriptor()
                   ->FindValueByNumber(config.physical_port_type())
                   ->name()

@@ -45,7 +45,7 @@ class OnlpCli {
 
   // Print OID List
   ::util::Status  PrintOidList(string use_wrapper,
-    string stype, onlp_oid_type_flag_t type) {
+    std::string stype, onlp_oid_type_flag_t type) {
 
     // call onlp directly
     if (use_wrapper == "n") {

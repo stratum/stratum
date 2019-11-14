@@ -35,8 +35,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/strings/str_cat.h"
 
-using std::string;
-
 namespace stratum {
 namespace hal {
 namespace bcm {
@@ -132,6 +130,9 @@ class BcmFlowTable {
         entries_(std::move(other.entries_)),
         is_const_(other.is_const_) {}
 
+  // Copy assignment operator.
+  BcmFlowTable& operator=(const BcmFlowTable&) = default;
+
   // Destructor.
   virtual ~BcmFlowTable() {}
 
@@ -143,7 +144,7 @@ class BcmFlowTable {
   virtual uint32 Id() const { return id_; }
 
   // Returns the table's P4 name.
-  virtual string Name() const { return name_; }
+  virtual std::string Name() const { return name_; }
 
   // Returns true if this table already has this entry.
   virtual bool HasEntry(const ::p4::v1::TableEntry& entry) const {
@@ -245,7 +246,7 @@ class BcmFlowTable {
 
  protected:
   // Returns the standard Table ID string.
-  string TableStr() const {
+  std::string TableStr() const {
     return absl::StrCat("Table <", Id(), "> (", Name(), ")");
   }
 
@@ -253,7 +254,7 @@ class BcmFlowTable {
   // Parameters
   // ***************************************************************************
   uint32 id_;
-  string name_;
+  std::string name_;
   // Keeps track of all entries currently in the table.
   TableEntrySet entries_;
   // True is this is a const table. Const tables can only be modified during

@@ -31,8 +31,6 @@
 
 #include "absl/meta/type_traits.h"
 
-using std::string;
-
 namespace stratum {
 namespace test_utils {
 namespace matchers_internal {
@@ -109,7 +107,7 @@ class IsOkAndHoldsMatcherImpl
     ::testing::StringMatchResultListener inner_listener;
     const bool matches = inner_matcher_.MatchAndExplain(
         actual_value.ValueOrDie(), &inner_listener);
-    const string inner_explanation = inner_listener.str();
+    const std::string inner_explanation = inner_listener.str();
     if (!inner_explanation.empty()) {
       *listener << "which contains value "
                 << ::testing::PrintToString(actual_value.ValueOrDie()) << ", "
@@ -231,7 +229,7 @@ class StatusIsMatcherCommonImpl {
   StatusIsMatcherCommonImpl(
       ::testing::Matcher<const ::util::ErrorSpace*> space_matcher,
       ::testing::Matcher<int> code_matcher,
-      ::testing::Matcher<const string&> message_matcher)
+      ::testing::Matcher<const std::string&> message_matcher)
       : space_matcher_(std::move(space_matcher)),
         code_matcher_(std::move(code_matcher)),
         message_matcher_(std::move(message_matcher)) {}
@@ -246,7 +244,7 @@ class StatusIsMatcherCommonImpl {
  private:
   const ::testing::Matcher<const ::util::ErrorSpace*> space_matcher_;
   const ::testing::Matcher<int> code_matcher_;
-  const ::testing::Matcher<const string&> message_matcher_;
+  const ::testing::Matcher<const std::string&> message_matcher_;
 };
 
 // Monomorphic implementation of matcher StatusIs() for a given type
@@ -282,7 +280,7 @@ class StatusIsMatcher {
   template <typename ErrorSpaceMatcher, typename StatusCodeMatcher>
   StatusIsMatcher(ErrorSpaceMatcher&& space_matcher,
                   StatusCodeMatcher&& code_matcher,
-                  ::testing::Matcher<const string&> message_matcher)
+                  ::testing::Matcher<const std::string&> message_matcher)
       : common_impl_(
             ToErrorSpaceMatcher(std::forward<ErrorSpaceMatcher>(space_matcher)),
             ToCodeMatcher(std::forward<StatusCodeMatcher>(code_matcher)),
@@ -324,7 +322,7 @@ IsOkAndHolds(InnerMatcher&& inner_matcher) {
 template <typename ErrorSpaceMatcher, typename StatusCodeMatcher>
 inline matchers_internal::StatusIsMatcher StatusIs(
     ErrorSpaceMatcher&& space_matcher, StatusCodeMatcher&& code_matcher,
-    ::testing::Matcher<const string&> message_matcher) {
+    ::testing::Matcher<const std::string&> message_matcher) {
   return matchers_internal::StatusIsMatcher(
       std::forward<ErrorSpaceMatcher>(space_matcher),
       std::forward<StatusCodeMatcher>(code_matcher),
@@ -347,7 +345,7 @@ inline matchers_internal::StatusIsMatcher StatusIs(
 template <typename StatusCodeMatcher>
 inline matchers_internal::StatusIsMatcher StatusIs(
     StatusCodeMatcher&& code_matcher,
-    ::testing::Matcher<const string&> message_matcher) {
+    ::testing::Matcher<const std::string&> message_matcher) {
   return matchers_internal::StatusIsMatcher(
       matchers_internal::GetErrorSpaceForStatusIs(code_matcher),
       std::forward<StatusCodeMatcher>(code_matcher),

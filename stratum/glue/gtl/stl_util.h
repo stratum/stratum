@@ -26,8 +26,6 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-using std::string;
-
 namespace stratum {
 namespace gtl {
 
@@ -35,7 +33,7 @@ namespace gtl {
 // The result is a valid "null-terminated byte string", even if *str is empty.
 // Up to C++14 it is not valid to *write* to the null terminator; as of C++17,
 // it is valid to write zero to the null terminator (but not any other value).
-inline char* string_as_array(string* str) { return &*str->begin(); }
+inline char* string_as_array(std::string* str) { return &*str->begin(); }
 
 // The following vector_as_array functions return raw pointers to the underlying
 // data buffer. The return value is unspecified (but valid) if the input range
@@ -54,7 +52,7 @@ inline const T* vector_as_array(const std::vector<T, Allocator>* v) {
 // result of resizing may be left uninitialized, rather than being filled with
 // '0' bytes. Typically used when code is then going to overwrite the backing
 // store of the string with known data. Uses a Google extension to ::string.
-inline void STLStringResizeUninitialized(string* s, size_t new_size) {
+inline void STLStringResizeUninitialized(std::string* s, size_t new_size) {
 #if __google_stl_resize_uninitialized_string
   s->resize_uninitialized(new_size);
 #else

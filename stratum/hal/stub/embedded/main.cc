@@ -624,7 +624,7 @@ class HalServiceClient {
     // Close this stream.
     stream->WritesDone();
 
-    string msg =
+    std::string msg =
         absl::StrCat("Found ", id_to_name.size(),
                      id_to_name.size() != 1 ? " interfaces:" : " interface:");
     for (const auto& entry : id_to_name) {
@@ -650,7 +650,7 @@ class HalServiceClient {
         // Build STREAM:ON_CHANGE
         // /interfaces/interface[name=<interface_name>]/status/oper-status
         // subscription request.
-        string interface_name = entry.second;
+        std::string interface_name = entry.second;
         ::gnmi::Subscription* subscription =
             req.mutable_subscribe()->add_subscription();
         *subscription->mutable_path() = GetPath("interfaces")(

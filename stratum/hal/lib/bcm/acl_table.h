@@ -86,6 +86,8 @@ class AclTable : public BcmFlowTable {
         udf_match_fields_(std::move(other.udf_match_fields_)),
         const_conditions_(std::move(other.const_conditions_)) {}
 
+  AclTable& operator=(const AclTable& other) = default;
+
   //***************************************************************************
   //  Static translators
   //***************************************************************************
