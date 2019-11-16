@@ -708,18 +708,18 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
           replication_entry.clone_session_entry().packet_length_bytes() == 0);
       // We simulate having one clone session with hard-coded Id
       CHECK_RETURN_IF_FALSE(replication_entry.clone_session_entry().session_id()
-          == kCloneSessionId) << "Bcm only allow a dummy clone session,"
-          << " with Id " << kCloneSessionId;
+          == kCloneSessionId) << "Bcm only allows one stub clone session "
+          << " with Id " << kCloneSessionId << ".";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().class_of_service() == 0)
-          << "CoS is not supported on cloned packets";
+          << "CoS is not supported on cloned packets.";
       // Only allow cloning to Cpu port
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().replicas_size() == 1)
-          << "Bcm only allows cloning to a single port";
+          << "Bcm only allows cloning to a single port.";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().replicas(0).egress_port() == kCpuPortId)
-          << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ")";
+          << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ").";
       break;
     case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
       auto mcast_grp = bcm_replication_entry->mutable_multicast_group_entry();
