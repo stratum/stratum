@@ -1851,7 +1851,14 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
              << ".";
     }
     // Port mask is ignored as it isn't possible to translate.
-    mapped_field.mutable_mask()->set_u32(~0);
+    // TODO(max): SDKLT and SDK6 work differently with port masks. We could
+    // either reject P4RT requests with masks (ternary) and let the sdk_wrapper
+    // do the right thing to make an exact match. Or we just accept whatever
+    // the controller sends.
+    // mapped_field.mutable_mask()->set_u32(~0);
+    if (common_field.has_mask()) {
+      *mapped_field.mutable_mask() = common_field.mask();
+    }
     FillBcmField(bcm_type, mapped_field, bcm_field);
     return ::util::OkStatus();
   }
