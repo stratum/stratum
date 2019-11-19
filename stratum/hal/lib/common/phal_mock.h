@@ -44,7 +44,7 @@ class PhalMock : public PhalInterface {
   MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
                                                LedColor color, LedState state));
   MOCK_METHOD3(RegisterSfpConfigurator,
-    :util::Status(int slot, int port,
+    ::util::Status(int slot, int port,
       ::stratum::hal::phal::SfpConfigurator* configurator));
 };
 
