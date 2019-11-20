@@ -98,10 +98,10 @@ def stratum_deps():
             commit = "1539ecd8a50c159b011d9c5a9c0eba99f122a845",
         )
 
-    if "com_github_p4lang_PI_bf" not in native.existing_rules():
-        # ----- PI for Barefoot targets -----
+    if "com_github_p4lang_PI_bf_8_9" not in native.existing_rules():
+        # ----- PI for Barefoot SDE 8.9.x targets -----
         remote_workspace(
-            name = "com_github_p4lang_PI_bf",
+            name = "com_github_p4lang_PI_bf_8_9",
             remote = "https://github.com/p4lang/PI.git",
             commit = "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
         )

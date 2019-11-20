@@ -40,7 +40,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/phal/onlp:onlp_wrapper",
         "//stratum/hal/lib/phal/onlp:onlpphal",
-        "//stratum/hal/lib/pi:pi_node_bf",
+        "//stratum/hal/lib/pi:pi_node",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
         "@local_barefoot_bin//:bf_headers",

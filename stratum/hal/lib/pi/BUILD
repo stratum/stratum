@@ -46,15 +46,15 @@ stratum_cc_library(
     name = "pi_node",
     srcs = ["pi_node.cc"],
     hdrs = ["pi_node.h"],
-    deps = pi_node_common_deps +
-           ["@com_github_p4lang_PI//proto/frontend:pifeproto"]
+    deps = pi_node_common_deps + select({
+        ":sde_8_9_2": ["@com_github_p4lang_PI_bf_8_9//proto/frontend:pifeproto"],
+        "//conditions:default": ["@com_github_p4lang_PI//proto/frontend:pifeproto"],
+    })
 )
 
-# PI Node for Barefoot targets
-stratum_cc_library(
-    name = "pi_node_bf",
-    srcs = ["pi_node.cc"],
-    hdrs = ["pi_node.h"],
-    deps = pi_node_common_deps +
-           ["@com_github_p4lang_PI_bf//proto/frontend:pifeproto"]
+config_setting(
+    name = "sde_8_9_2",
+    define_values = {
+        "sde_ver": "8.9.2",
+    },
 )
