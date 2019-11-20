@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-//
-
 #ifndef STRATUM_LIB_LIBCPROXY_PASSTHROUGH_PROXY_H_
 #define STRATUM_LIB_LIBCPROXY_PASSTHROUGH_PROXY_H_
-
-#include "stratum/glue/integral_types.h"
-#include "stratum/glue/logging.h"
 
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 

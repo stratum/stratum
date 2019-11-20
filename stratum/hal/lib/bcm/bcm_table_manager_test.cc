@@ -374,9 +374,9 @@ namespace {
   std::string bcm_field_proto_string =
       gtl::FindWithDefault(*field_map, p4_header_type, "");
   if (bcm_field_proto_string.empty()) {
-    return util::Status(util::NotFoundErrorBuilder(GTL_LOC)
+    return util::NotFoundErrorBuilder(GTL_LOC)
            << "No const condition for header type "
-           << P4HeaderType_Name(p4_header_type));
+           << P4HeaderType_Name(p4_header_type);
   }
   CHECK_OK(ParseProtoFromString(bcm_field_proto_string, &bcm_field));
   return bcm_field;

@@ -88,7 +88,6 @@ class LibcProxyMock : public PassthroughLibcProxy {
     return PassthroughLibcProxy::close(fd);
   }
   int ioctl(int fd, unsigned long int request, void* arg) override {  // NOLINT
-    LOG(ERROR) << "LibcProxyMock ioctl()";
     return Ioctl(fd, request, arg);
   }
   int bind(int sockfd, const struct sockaddr* my_addr,
@@ -1945,7 +1944,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
 
 INSTANTIATE_TEST_SUITE_P(BcmPacketioManagerTestWithMode, BcmPacketioManagerTest,
                         ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          // OPERATION_MODE_COUPLED,
+                                          OPERATION_MODE_COUPLED,
                                           OPERATION_MODE_SIM));
 
 }  // namespace bcm
