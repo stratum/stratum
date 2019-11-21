@@ -34,7 +34,7 @@ Stratum can be run on Tofino-based platforms in 2 different modes:
 
 ## Installing the SDE
 
-These instructions are valid for SDE versions 8.8.0 through 9.0.0. Barefoot's
+These instructions are valid for SDE versions 8.9.2 and 9.0.0. Barefoot's
 P4Studio Build tool comes with a default Stratum profile, which takes care of
 installing all the necessary dependencies and builds the SDE with the
 appropriate flags.
@@ -56,7 +56,7 @@ export SDE_INSTALL=$BF_SDE_INSTALL
     install the BSP (see [below](#installing-the-reference-bsp-for-the-wedge)).
     Also, we drop Thrift support in Stratum, the Stratum profile will
     be updated in next version. Now you need to remove the Thrift dependency
-    by using `sed` command (see below) if you are using SDE version 8.8.0 or 8.9.x.
+    by using `sed` command (see below) if you are using SDE version 8.9.x.
 ```
 cd $SDE/p4studio_build
 sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.x
