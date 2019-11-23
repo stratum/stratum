@@ -46,9 +46,9 @@ struct SerdesLaneSetting {
   BcmPort_OpMode op_mode[4];
 };
 
-const std::string kSdkltOpModeDefault = "PC_PM_OPMODE_DEFAULT";
-const std::string kSdkltOpModeQsgmii = "PC_PM_OPMODE_QSGMII";
-const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
+const char kSdkltOpModeDefault[] = "PC_PM_OPMODE_DEFAULT";
+const char kSdkltOpModeQsgmii[] = "PC_PM_OPMODE_QSGMII";
+const char kSdkltOpModeGphy[] = "PC_PM_OPMODE_GPHY";
 
 ::util::StatusOr<std::string> toBcmSdkltOpModeStr(BcmPort_OpMode op_mode) {
   switch (op_mode) {
@@ -61,7 +61,7 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown operation mode " << op_mode;
   }
-};
+}
 
 ::util::StatusOr<std::string> GenerateBcmSdkltConfig(
     const BcmChassisMap& base_bcm_chassis_map,
@@ -69,7 +69,7 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
   std::stringstream buffer;
 
   absl::flat_hash_map<int, SerdesLaneSetting*> serdes_lane_settings;
-  for(const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+  for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
     int serdes_core_id = bcm_port.serdes_core();
 
     if (!serdes_lane_settings.count(serdes_core_id)) {
