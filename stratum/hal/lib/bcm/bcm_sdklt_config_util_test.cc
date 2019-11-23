@@ -30,8 +30,8 @@ namespace bcm {
 
 DECLARE_string(test_tmpdir);
 
-const char kBaseConfigPath[] = "stratum/hal/lib/bcm/testdata/base_chassis_map.pb.txt";
-const char kTargetConfigPath[] = "stratum/hal/lib/bcm/testdata/target_chassis_map.pb.txt";
+const std::string kBaseConfigPath = "stratum/hal/lib/bcm/testdata/base_chassis_map.pb.txt";
+const std::string kTargetConfigPath = "stratum/hal/lib/bcm/testdata/target_chassis_map.pb.txt";
 
 // TODO(Yi): Should compare entire output yaml string, however, we cannot guarantee
 //           that the order of port config for each table.

@@ -46,9 +46,9 @@ struct SerdesLaneSetting {
   BcmPort_OpMode op_mode[4];
 };
 
-const char kSdkltOpModeDefault[] = "PC_PM_OPMODE_DEFAULT";
-const char kSdkltOpModeQsgmii[] = "PC_PM_OPMODE_QSGMII";
-const char kSdkltOpModeGphy[] = "PC_PM_OPMODE_GPHY";
+const std::string kSdkltOpModeDefault = "PC_PM_OPMODE_DEFAULT";
+const std::string kSdkltOpModeQsgmii = "PC_PM_OPMODE_QSGMII";
+const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
 
 ::util::StatusOr<std::string> toBcmSdkltOpModeStr(BcmPort_OpMode op_mode) {
   switch (op_mode) {
