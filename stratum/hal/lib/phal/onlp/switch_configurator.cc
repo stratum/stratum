@@ -169,13 +169,12 @@ OnlpSwitchConfigurator::Make(
     auto mutable_root = root->AcquireMutable();
 
     // Add cards
-    for (int j=0; j < phal_config.cards_size(); j++) {
-
-        auto card_config = phal_config.cards(j);
+    for (int card_id=0; card_id < phal_config.cards_size(); card_id++) {
+        auto card_config = phal_config.cards(card_id);
 
         // If id set to default (i.e. not set) then use
         // the 1-based index of this config item
-        int card_id = (card_config.id() == 0 ? (j+1): card_config.id());
+        int slot = (card_config.slot() == 0 ? (card_id+1): card_config.slot());
 
         // Add Card to attribute DB
         ASSIGN_OR_RETURN(auto card,
@@ -190,8 +189,8 @@ OnlpSwitchConfigurator::Make(
         }
 
         // Add ports per card
-        for (int i = 0; i < card_config.ports_size(); i++) {
-            auto config = card_config.ports(i);
+        for (int port_id = 0; port_id < card_config.ports_size(); port_id++) {
+            auto config = card_config.ports(port_id);
 
             // Use card cache policy if we have no port policy
             if (!config.has_cache_policy()) {
@@ -201,10 +200,11 @@ OnlpSwitchConfigurator::Make(
 
             // If id set to default (i.e. not set) then use
             // the 1-based index of this config item
-            int port_id = (config.id() == 0 ? (i+1): config.id());
+            int port = (config.id() == 0 ? (port_id+1): config.id());
 
             // Add Port to attribute DB
-            AddPort(card_id, port_id, mutable_card.get(), config);
+            AddPort(card_id, port_id, slot, port,
+                    mutable_card.get(), config);
         }
     }
 
@@ -367,7 +367,7 @@ OnlpSwitchConfigurator::Make(
         auto mutable_group = group->AcquireMutable();
         mutable_group->AddAttribute("id",
             FixedDataSource<int>::Make(ONLP_OID_ID_GET(oid))->GetAttribute());
-        std::string err_msg = "Failed to get oid info for oid: "+to_string(oid)+
+        string err_msg = "Failed to get oid info for oid: "+to_string(oid)+
             " error code: "+to_string(result.status().error_code());
         mutable_group->AddAttribute("err_msg",
             FixedDataSource<std::string>::Make(err_msg)->GetAttribute());
@@ -381,29 +381,23 @@ OnlpSwitchConfigurator::Make(
 
 ::util::Status OnlpSwitchConfigurator::AddPort(
     int card_id, int port_id,
+    int slot, int port,
     MutableAttributeGroup* mutable_card,
     const PhalCardConfig::Port& config) {
 
     // Add port to attribute DB
-    ASSIGN_OR_RETURN(auto port,
+    ASSIGN_OR_RETURN(auto port_group,
         mutable_card->AddRepeatedChildGroup("ports"));
-    auto mutable_port = port->AcquireMutable();
+    auto mutable_port = port_group->AcquireMutable();
 
     // Create a transceiver group in the Phal DB
     ASSIGN_OR_RETURN(auto sfp,
         mutable_port->AddChildGroup("transceiver"));
 
-    // Check to make sure we haven't already added this id
-    if (sfp_id_map_[port_id]) {
-        RETURN_ERROR(ERR_INVALID_PARAM)
-            << "duplicate sfp id: " << port_id;
-    }
-    sfp_id_map_[port_id] = true;
-
     // Check to make sure port exists
-    // Note: will need to figure out how to map card id and port id
-    //       into an OID, for now we ignore card id.
-    auto status = GetOidInfo(sfp, ONLP_SFP_ID_CREATE(port_id));
+    // Note: will need to figure out how to map slot and port
+    //       into an OID, for now we ignore slot.
+    auto status = GetOidInfo(sfp, ONLP_SFP_ID_CREATE(port));
     if (!status.ok()) return status.status();
 
     // If it's an SFP/QSFP then the transceiver data source
@@ -421,19 +415,19 @@ OnlpSwitchConfigurator::Make(
 
             // Create a new data source
             ASSIGN_OR_RETURN(auto datasource,
-                OnlpSfpDataSource::Make(port_id, onlp_interface_, cache));
+                OnlpSfpDataSource::Make(port, onlp_interface_, cache));
 
             // Create an SFP Configurator
             ASSIGN_OR_RETURN(auto configurator,
-                OnlpSfpConfigurator::Make(port_id, datasource, sfp,
-                                          onlp_interface_));
+                OnlpSfpConfigurator::Make(card_id, port_id, slot, port,
+                                          datasource, sfp, onlp_interface_));
 
             // Store a reference in onlpphal
             // Danger: Attribte Database should hold onto this pointer
             //         until the transceiver group is deleted.... which
             //         should be never.
             RETURN_IF_ERROR(phal_interface_->RegisterSfpConfigurator(
-                card_id, port_id, configurator.get()));
+                slot, port, configurator.get()));
 
             // Save it in the database
             auto mutable_sfp = sfp->AcquireMutable();

@@ -74,6 +74,7 @@ class BFSwitch : public SwitchInterface {
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
                           std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
+  PhalInterface * GetPhalInterface() { return phal_interface_; }
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFSwitch> CreateInstance(

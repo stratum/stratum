@@ -375,6 +375,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:sfp_adapter",
         "@com_google_absl//absl/synchronization",
     ],
 )
@@ -554,6 +555,8 @@ stratum_cc_test(
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:dummy_threadpool",
         "//stratum/hal/lib/phal:db_cc_proto",
+        "//stratum/hal/lib/phal:db_cc_grpc",
+        "//stratum/hal/lib/phal:adapter",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",

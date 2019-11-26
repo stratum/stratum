@@ -24,6 +24,7 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/dummy/dummy_phal.h"
@@ -69,6 +70,10 @@ class DummyPhal : public PhalInterface {
 
   ::util::Status RegisterSfpConfigurator(int slot, int port,
         ::stratum::hal::phal::SfpConfigurator* configurator) override;
+
+  ::util::StatusOr<
+        ::stratum::hal::phal::AttributeDatabaseInterface*> GetPhalDB()
+        override;
 
   // Factory function for creating the instance of the DummyPhal.
   static DummyPhal* CreateSingleton() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);

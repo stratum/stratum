@@ -51,6 +51,8 @@ class OnlpPhalMock : public PhalInterface {
   MOCK_METHOD3(RegisterSfpConfigurator,
                ::util::Status(int slot, int port,
                               SfpConfigurator* configurator));
+  MOCK_METHOD0(GetPhalDB,
+               ::util::StatusOr<AttributeDatabaseInterface*>());
 
   // Need this function to grab onlp_interface
   MockOnlpWrapper* GetOnlpInterface() {

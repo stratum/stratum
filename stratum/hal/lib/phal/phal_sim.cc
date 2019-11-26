@@ -117,7 +117,7 @@ PhalSim::~PhalSim() {}
 
 ::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
                                         LedColor color, LedState state) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
@@ -130,6 +130,11 @@ PhalSim::~PhalSim() {}
     slot_port_to_configurator_[slot_port_pair] = configurator;
 
     return ::util::OkStatus();
+}
+
+::util::StatusOr<::stratum::hal::phal::AttributeDatabaseInterface*>
+        PhalSim::GetPhalDB() {
+    RETURN_ERROR(ERR_UNIMPLEMENTED) << "GetPhalDB unimplemented";
 }
 
 PhalSim* PhalSim::CreateSingleton() {

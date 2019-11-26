@@ -38,6 +38,7 @@
 #include "absl/time/time.h"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/hal/lib/common/utils.h"
 
 DEFINE_string(forwarding_pipeline_configs_file, "",
               "The latest set of verified ForwardingPipelineConfig protos "
@@ -184,38 +185,6 @@ P4Service::~P4Service() {}
 }
 
 namespace {
-
-// TODO(unknown): This needs to be changed later per p4 runtime error
-// reporting scheme.
-::grpc::Status ToGrpcStatus(const ::util::Status& status,
-                            const std::vector<::util::Status>& details) {
-  // We need to create a ::google::rpc::Status and populate it with all the
-  // details, then convert it to ::grpc::Status.
-  ::google::rpc::Status from;
-  if (!status.ok()) {
-    from.set_code(ToGoogleRpcCode(status.CanonicalCode()));
-    from.set_message(status.error_message());
-    // Add individual errors only when the top level error code is not OK.
-    for (const auto& detail : details) {
-      // Each individual detail is converted to another ::google::rpc::Status,
-      // which is then serialized as one proto any in 'from' message above.
-      ::p4::v1::Error error;
-      if (!detail.ok()) {
-        error.set_canonical_code(ToGoogleRpcCode(detail.CanonicalCode()));
-        error.set_code(detail.error_code());
-        error.set_message(detail.error_message());
-      } else {
-        error.set_code(::google::rpc::OK);
-      }
-      from.add_details()->PackFrom(error);
-    }
-  } else {
-    from.set_code(::google::rpc::OK);
-  }
-
-  return ::grpc::Status(ToGrpcCode(from.code()), from.message(),
-                        from.SerializeAsString());
-}
 
 // Helper to facilitate logging the write requests to the desired log file.
 void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,

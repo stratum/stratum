@@ -81,6 +81,7 @@ class SwitchMock : public SwitchInterface {
   MOCK_METHOD3(SetValue,
                ::util::Status(uint64 node_id, const SetRequest& request,
                               std::vector<::util::Status>* details));
+  MOCK_METHOD0(GetPhalInterface, PhalInterface *());
   SwitchMock() {
     ::testing::DefaultValue<::util::Status>::Set(::util::OkStatus());
   }

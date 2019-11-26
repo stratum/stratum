@@ -53,7 +53,7 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
         AttributeGroup *group, OnlpOid oid) const;
 
   // Add a Port to the Phal DB
-  ::util::Status AddPort(int card_id, int port_id,
+  ::util::Status AddPort(int card_id, int port_id, int slot, int port,
         MutableAttributeGroup* mutable_card,
         const PhalCardConfig::Port& config);
 
@@ -89,7 +89,6 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
   CachePolicyConfig cache_policy_config_;
 
   // Need to make sure we don't add the same onlp id twice
-  std::map<int, bool> sfp_id_map_;
   std::map<int, bool> fan_id_map_;
   std::map<int, bool> psu_id_map_;
   std::map<int, bool> led_id_map_;

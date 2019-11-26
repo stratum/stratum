@@ -232,6 +232,13 @@ def stratum_deps():
             commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
         )
 
+    if "rules_cc" not in native.existing_rules():
+        remote_workspace(
+            name = "rules_cc",
+            remote = "https://github.com/bazelbuild/rules_cc",
+            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
+        )
+
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
 # -----------------------------------------------------------------------------
