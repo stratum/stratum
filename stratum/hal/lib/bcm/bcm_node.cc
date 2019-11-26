@@ -778,7 +778,6 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       break;
     }
     case ::p4::v1::Update::DELETE: {
-
       switch (replicationType) {
         case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry: {
           BcmPacketReplicationEntry bcm_entry;

@@ -468,7 +468,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     // Add the table priority. This allows us to separate logical tables within
     // the same physical table. The priority in the CommonFlowEntry is the
     // relative priority within the table.
-    // TODO: Not needed in SDKLT
+    // TODO(unknown): Not needed in SDKLT
     // priority += acl_table->Priority() * kAclTablePriorityRange;
   }
   bcm_flow_entry->set_priority(priority);
@@ -480,7 +480,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   // and nothing else. Note that there is no need for mapping actions in case of
   // table entry delete. No logic that consumes BcmFlowEntry should rely on
   // actions when deleting a table entry. Otherwise we have a bug.
-  // TODO: Per b/77525702, we still need to clarify what the expected
+  // TODO(unknown): Per b/77525702, we still need to clarify what the expected
   // behavior is in case we have actions populated when deleting a table entry.
   if (type == ::p4::v1::Update::DELETE) return ::util::OkStatus();
   switch (common_flow_entry.action().type()) {
@@ -699,7 +699,6 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
 ::util::Status BcmTableManager::FillBcmReplicationConfig(
       const ::p4::v1::PacketReplicationEngineEntry replication_entry,
       BcmPacketReplicationEntry* bcm_replication_entry) const {
-
   bcm_replication_entry->set_unit(unit_);
   switch (replication_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
@@ -868,7 +867,7 @@ namespace {
               bcm_non_multipath_nexthop->set_vlan(field.u32());
               break;
             case P4_FIELD_TYPE_L3_CLASS_ID:
-              // TODO: Ignore class_id for now till we have a
+              // TODO(unknown): Ignore class_id for now till we have a
               // resolution for b/73264766.
               break;
             default:

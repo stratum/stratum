@@ -2454,7 +2454,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   }
 
   for (const auto& e : q_num_to_trafic_class) {
-    // TODO: Use consistent names for queue numbers. Either q_num
+    // TODO(unknown): Use consistent names for queue numbers. Either q_num
     // or q_id or queue_id.
     uint32 queue_id = e.first;
     std::string queue_name = TrafficClass_Name(e.second);

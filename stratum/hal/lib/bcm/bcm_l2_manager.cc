@@ -15,6 +15,8 @@
 
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
 
+#include <set>
+
 #include "absl/memory/memory.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/common/constants.h"

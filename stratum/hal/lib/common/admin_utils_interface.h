@@ -109,7 +109,7 @@ class FileSystemHelper {
                               const std::string& old_hash,
                               ::gnoi::types::HashType_HashMethod method) const;
 
-  virtual std::string GetHashSum(std::istream& istream,  // NOLINTNEXTKINE
+  virtual std::string GetHashSum(std::istream& istream,
                                  ::gnoi::types::HashType_HashMethod method) const;
 
   // Create temporary directory and return it name

@@ -17,7 +17,7 @@
 #include "stratum/hal/lib/common/utils.h"
 
 #include <sstream>  // IWYU pragma: keep
-#include <regex>
+#include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"

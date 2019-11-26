@@ -553,7 +553,6 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
   EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_))
   .Times(0);
 
-//  NOLINTNEXTLINE
   EXPECT_CALL(*(fs_helper_.get()), StringToFile(::testing::_, ::testing::_, ::testing::_))
   .Times(0);
 
