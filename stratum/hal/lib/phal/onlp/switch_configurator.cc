@@ -420,7 +420,7 @@ OnlpSwitchConfigurator::Make(
 
             // Create an SFP Configurator
             ASSIGN_OR_RETURN(auto configurator,
-                OnlpSfpConfigurator::Make(card_id, port_id, slot, port, 
+                OnlpSfpConfigurator::Make(card_id, port_id, slot, port,
                                           datasource, sfp, onlp_interface_));
 
             // Store a reference in onlpphal
@@ -438,7 +438,7 @@ OnlpSwitchConfigurator::Make(
 
     // All other port types
     default:
-        LOG(INFO) << "card[" << card_id << "]/port[" << port_id 
+        LOG(INFO) << "card[" << card_id << "]/port[" << port_id
             << "]: transceiver type " << PhysicalPortType_descriptor()
                   ->FindValueByNumber(config.physical_port_type())
                   ->name()
