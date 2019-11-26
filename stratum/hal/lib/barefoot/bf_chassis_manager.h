@@ -112,6 +112,7 @@ class BFChassisManager {
     absl::optional<int32> mtu;  // empty if MTU configuration failed
     absl::optional<TriState> autoneg;  // empty if Autoneg configuration failed
     absl::optional<FecMode> fec_mode;  // empty if port add failed
+    absl::optional<LoopbackState> loopback_mode; // empty if loopback mode configuration failed
 
     PortConfig()
         : admin_state(ADMIN_STATE_UNKNOWN) { }
