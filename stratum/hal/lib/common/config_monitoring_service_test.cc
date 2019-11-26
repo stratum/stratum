@@ -1183,7 +1183,7 @@ TEST_P(ConfigMonitoringServiceTest,
 }
 
 TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
-  ::gnmi::CapabilityResponse expected_resp;  // NOLINTNEXTLINE
+  ::gnmi::CapabilityResponse expected_resp;
   ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", &expected_resp);
 
   ::grpc::ServerContext context;

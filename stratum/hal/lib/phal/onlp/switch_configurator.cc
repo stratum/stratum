@@ -163,14 +163,13 @@ OnlpSwitchConfigurator::Make(
 // Configure the switch's attribute database with the given
 // PhalInitConfig config.
 ::util::Status OnlpSwitchConfigurator::ConfigurePhalDB(
-    PhalInitConfig& phal_config, AttributeGroup* root) {
+    const PhalInitConfig& phal_config, AttributeGroup* root) {
 
     // Lock the root group
     auto mutable_root = root->AcquireMutable();
 
     // Add cards
     for (int j=0; j < phal_config.cards_size(); j++) {
-
         auto card_config = phal_config.cards(j);
 
         // If id set to default (i.e. not set) then use

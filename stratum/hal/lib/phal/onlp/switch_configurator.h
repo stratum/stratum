@@ -45,8 +45,7 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
 
   // Configure the Phal DB
-  ::util::Status ConfigurePhalDB(
-        PhalInitConfig& config, AttributeGroup* root) override;
+  ::util::Status ConfigurePhalDB(const PhalInitConfig& config, AttributeGroup* root) override;
 
  private:
   ::util::StatusOr<OidInfo> GetOidInfo(

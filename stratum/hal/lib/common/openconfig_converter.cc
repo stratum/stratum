@@ -53,7 +53,7 @@ using namespace openconfig::enums;  // NOLINT
   auto linecard = component->mutable_linecard();
   linecard->mutable_slot_id()->set_value(std::to_string(in.slot()));
 
-  // TODO: There are still a lot of things we are not supporting for
+  // TODO(unknown): There are still a lot of things we are not supporting for
   // nodes, including VLAN configs. Add support for those in the YANG model as
   // well as the proto encodings. Then add support here in the code.
 
@@ -187,7 +187,6 @@ using namespace openconfig::enums;  // NOLINT
     (*bcm_config.mutable_node_id_to_rate_limit_config())[entry.first] =
         oc_rate_limit_cfg;
   }
-// NOLINTNEXTLINE
   bcm_config.mutable_bcm_chassis_map_id()->set_value(in.google_config().bcm_chassis_map_id());
   return bcm_config;
 }
@@ -302,7 +301,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 
   // SingletonPort.config_params.admin_state
   // -> /interfaces/interface/config/enabled
-  if(in.config_params().admin_state() != ADMIN_STATE_UNKNOWN) {
+  if (in.config_params().admin_state() != ADMIN_STATE_UNKNOWN) {
     interface->mutable_enabled()
         ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
   }
@@ -327,7 +326,6 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 // to:
 //   std::list<openconfig::Device::ComponentKey>
 ////////////////////////////////////////////////////////////////////////////////
-// NOLINTNEXTLINE
 ::util::StatusOr<std::list<openconfig::Device::ComponentKey>> TrunkPortToComponents(
     const TrunkPort &in) {
   openconfig::Device::ComponentKey component_key;
@@ -343,7 +341,6 @@ SingletonPortToInterfaces(const SingletonPort &in) {
 // to:
 //   std::list<openconfig::Device::InterfaceKey>
 ////////////////////////////////////////////////////////////////////////////////
-// NOLINTNEXTLINE
 ::util::StatusOr<std::list<openconfig::Device::InterfaceKey>> TrunkPortToInterfaces(
     const ChassisConfig &root, const TrunkPort &in) {
   openconfig::Device::InterfaceKey interface_key;
@@ -360,10 +357,10 @@ SingletonPortToInterfaces(const SingletonPort &in) {
       ->set_value(IsAdminStateEnabled(in.config_params().admin_state()));
 
   switch (in.type()) {
-    case TrunkPort::LACP_TRUNK:  // NOLINTNEXTLINE
+    case TrunkPort::LACP_TRUNK:
       trunk->mutable_aggregation()->set_lag_type(OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_LACP);
       break;
-    case TrunkPort::STATIC_TRUNK:  // NOLINTNEXTLINE
+    case TrunkPort::STATIC_TRUNK:
       trunk->mutable_aggregation()->set_lag_type(OPENCONFIGIFAGGREGATEAGGREGATIONTYPE_STATIC);
       break;
     default:
@@ -453,7 +450,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   // TODO(Yi): no index defined in the model
   // to.set_index();
 
-  // TODO: For now by default disable learning on default VLAN.
+  // TODO(unknown): For now by default disable learning on default VLAN.
   // This will eventually come from gNMI.
   auto *vlan_config = to.mutable_config_params()->add_vlan_configs();
   vlan_config->set_block_broadcast(false);
@@ -462,7 +459,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   vlan_config->set_block_unknown_unicast(true);
   vlan_config->set_disable_l2_learning(true);
 
-  // TODO: There are still a lot of things we are not supporting for
+  // TODO(unknown): There are still a lot of things we are not supporting for
   // nodes, including VLAN configs. Add support for those in the YANG model as
   // well as the proto encodings.  Then add support here in the code.
 
@@ -715,7 +712,8 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   }
 
   if (interface.has_enabled()) {
-    config_params->set_admin_state(interface.enabled().value() ? ADMIN_STATE_ENABLED : ADMIN_STATE_DISABLED);
+    config_params->set_admin_state(
+        interface.enabled().value() ? ADMIN_STATE_ENABLED : ADMIN_STATE_DISABLED);
   }
 
   return to;
@@ -735,7 +733,7 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   }
 
 }  // namespace
-// NOLINTNEXTLINE
+
 ::util::StatusOr<openconfig::Device> OpenconfigConverter::ChassisConfigToOcDevice(
     const ChassisConfig &in) {
   openconfig::Device to;
@@ -749,7 +747,6 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   if (in.has_vendor_config()) {
     ASSIGN_OR_RETURN(auto vendor_config,
                      VendorConfigToBcmConfig(in.vendor_config()));
-    // NOLINTNEXTLINE
     chassis_component.mutable_chassis()->mutable_vendor_specific()->PackFrom(vendor_config);
   }
 

@@ -284,7 +284,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
 ::util::Status BcmPacketioManager::Shutdown() {
   // Simulation mode does not support KNET.
-  // TODO: Find a way to do packet I/O in sim mode.
+  // TODO(unknown): Find a way to do packet I/O in sim mode.
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped shutting down BcmPacketioManager for node "
                  << node_id_ << " in sim mode.";
@@ -1096,7 +1096,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
           } else if (egress_logical_port == 1) {
             // SDKLT sets egress port to 1 for packets that do not match
             // MY_STATION table or got dropped by the ASIC?
-            // TODO: check this and decide what to report upwards
+            // TODO(unknown): check this and decide what to report upwards
             meta.egress_port_id = 1;
           } else {
             uint32* egress_port_id =
@@ -1312,7 +1312,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketOutMetadata(
         mapped_packet_metadata, packet->add_metadata()));
   }
-  // TODO: Controller has not defined any metadata for CoS yet. Enable
+  // TODO(unknown): Controller has not defined any metadata for CoS yet. Enable
   // this after this is done.
   /*
   if (meta.cos > 0) {

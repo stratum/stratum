@@ -409,8 +409,8 @@ namespace internal {
 class UtilStatusConvertibleToBool {
  public:
   // Implicity conversion from a status to wrap.
-  // NOLINTNEXTLINE Need implicit conversion to allow in if-statement.
-  UtilStatusConvertibleToBool(::util::Status status)
+  // Need implicit conversion to allow in if-statement.
+  UtilStatusConvertibleToBool(::util::Status status)  // NOLINT(runtime/explicit)
       : status_(status) { }
   // Implicity cast to bool. True on ok() and false on error.
   operator bool() const { return ABSL_PREDICT_TRUE(status_.ok()); }

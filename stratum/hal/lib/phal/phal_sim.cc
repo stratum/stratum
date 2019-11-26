@@ -117,7 +117,7 @@ PhalSim::~PhalSim() {}
 
 ::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
                                         LedColor color, LedState state) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 

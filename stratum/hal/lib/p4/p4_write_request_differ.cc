@@ -166,7 +166,7 @@ void P4WriteRequestReporter::ReportMatched(
 //  - Both entries must have the same match fields.
 bool P4WriteRequestComparator::IsMatch(
     const google::protobuf::Message& message1,
-    const google::protobuf::Message& message2,  // NOLINTNEXTLINE
+    const google::protobuf::Message& message2,
     const std::vector<google::protobuf::util::MessageDifferencer::SpecificField>&
     parent_fields) const {
   const ::p4::v1::Update& update1 =

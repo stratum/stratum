@@ -26,7 +26,7 @@
 namespace stratum {
 namespace p4c_backends {
 
-BcmTunnelOptimizer::BcmTunnelOptimizer()  // NOLINTNEXTLINE
+BcmTunnelOptimizer::BcmTunnelOptimizer()
     : encap_or_decap_(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
 }
 
@@ -58,7 +58,7 @@ bool BcmTunnelOptimizer::MergeAndOptimize(
 }
 
 void BcmTunnelOptimizer::InitInternalState() {
-  internal_descriptor_.Clear();  // NOLINTNEXTLINE
+  internal_descriptor_.Clear();
   encap_or_decap_ = hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
 }
 
@@ -89,7 +89,7 @@ bool BcmTunnelOptimizer::IsValidTunnelAction(
 
 bool BcmTunnelOptimizer::MergeTunnelActions(
     const hal::P4ActionDescriptor& input_action1,
-    const hal::P4ActionDescriptor& input_action2) {  // NOLINTNEXTLINE
+    const hal::P4ActionDescriptor& input_action2) {
   DCHECK_NE(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET, encap_or_decap_);
 
   // The inner headers can be different in the merged actions.  Differences

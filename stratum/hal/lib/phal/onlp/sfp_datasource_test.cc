@@ -163,7 +163,7 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
       sfp_datasource->GetSfpType(),
       ContainsValue(SfpType_descriptor()->FindValueByName("SFP_TYPE_SFP")));
   EXPECT_THAT(
-      sfp_datasource->GetSfpModuleType(),  // NOLINTNEXTLINE
+      sfp_datasource->GetSfpModuleType(),
       ContainsValue(SfpModuleType_descriptor()->FindValueByName("SFP_MODULE_TYPE_1G_BASE_SX")));
 
   // Check Module Caps

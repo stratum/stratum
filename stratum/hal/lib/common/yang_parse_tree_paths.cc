@@ -945,7 +945,7 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
         if (singleton_port->node() == node_id &&
-            singleton_port->id() == port_id) {  // NOLINTNEXTLINE
+            singleton_port->id() == port_id) {
             singleton_port->mutable_config_params()->set_admin_state(typed_state);
             break;
         }
@@ -1213,7 +1213,7 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
         auto* singleton_port = new_config->mutable_singleton_ports(i);
         if (singleton_port->node() == node_id &&
-            singleton_port->id() == port_id) {  // NOLINTNEXTLINE
+            singleton_port->id() == port_id) {
             singleton_port->mutable_config_params()->set_autoneg(autoneg_status);
             break;
         }
@@ -2454,7 +2454,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   }
 
   for (const auto& e : q_num_to_trafic_class) {
-    // TODO: Use consistent names for queue numbers. Either q_num
+    // TODO(unknown): Use consistent names for queue numbers. Either q_num
     // or q_id or queue_id.
     uint32 queue_id = e.first;
     std::string queue_name = TrafficClass_Name(e.second);
@@ -2706,7 +2706,7 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
           return node.DoOnChangeRegistration(record);
         });
     return status;
-  };
+  }
 
   auto interfaces_on_poll = [tree](const GnmiEvent& event, const ::gnmi::Path& path,
                                    GnmiSubscribeStream* stream)
@@ -2722,7 +2722,7 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
     APPEND_STATUS_IF_ERROR(
         status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
     return status;
-  };
+  }
 
   // Add support for "/interfaces/interface/...".
   tree->AddNode(GetPath("interfaces")("interface")("...")())

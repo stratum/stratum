@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <tuple>
-
 #include <google/protobuf/text_format.h>
+
+#include <tuple>
 
 #include "stratum/hal/lib/common/openconfig_converter.h"
 
@@ -131,16 +131,16 @@ TEST(OpenconfigConverterTest, OcDeviceToVendorConfig) {
       &vendor_config));
   openconfig::Device::ComponentKey *component_key = device.add_component();
 
-  component_key->set_name("dummy switch 1");  // NOLINTNEXTLINE
-  component_key->mutable_component()->mutable_chassis()->mutable_vendor_specific()->PackFrom(vendor_config);
+  component_key->set_name("dummy switch 1");
+  component_key->mutable_component()->mutable_chassis()
+    ->mutable_vendor_specific()->PackFrom(vendor_config);
 
   // linecard
   component_key = device.add_component();
   component_key->set_name(":lc-1");
   component_key->mutable_component()->mutable_id()->set_value("1");
-  // NOLINTNEXTLINE
-  component_key->mutable_component()->mutable_linecard()->mutable_slot_id()->set_value("1");
-
+  component_key->mutable_component()->mutable_linecard()
+    ->mutable_slot_id()->set_value("1");
 
   ::util::StatusOr<ChassisConfig> ret =
       OpenconfigConverter::OcDeviceToChassisConfig(device);
@@ -152,7 +152,6 @@ TEST(OpenconfigConverterTest, OcDeviceToVendorConfig) {
 
   ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
       chassis_config, chassis_config_from_file));
-
 }  // OpenconfigConverterTest.OcDeviceToVendorConfig
 
 #define ASSERT_CONFIG_ERROR(config_class, config_file_path, status_code, \

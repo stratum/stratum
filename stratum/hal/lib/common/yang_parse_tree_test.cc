@@ -1049,25 +1049,25 @@ TEST_F(YangParseTreeTest,
 
   static constexpr char kMacAddressAsString[] = "11:22:33:44:55:66";
   static constexpr char kMacStrings[][21] = {
-      "11:22:33:44:55",       // Too short string
-      "11:22:33:44:55:66:77", // Too long string
-      "11;22;33;44;55;66",    // Incorrect delimiter
-      "11-22-33-44-55-66",    // Unsupported delimiter
-      "11::22:33:44:55:66",   // Too many delimiter in between
-      ":11:22:33:44:55:66",   // Too many delimiter in the beginning
-      "11:22:33:44:55:66:",   // Too many delimiter in the end
-      "1122:3344:5566",       // Unsupported format
-      "0",                    // No colon
-      "00112233445566",       // No colon
-      "11:22:333:44:55:66",   // Too many hex digits
-      "11:22:3:44:55:66",     // Too few hex digits
-      "",                     // empty mac string
-      "st:ra:tu:mr:oc:ks"     // None hex digits
+      "11:22:33:44:55",        // Too short string
+      "11:22:33:44:55:66:77",  // Too long string
+      "11;22;33;44;55;66",     // Incorrect delimiter
+      "11-22-33-44-55-66",     // Unsupported delimiter
+      "11::22:33:44:55:66",    // Too many delimiter in between
+      ":11:22:33:44:55:66",    // Too many delimiter in the beginning
+      "11:22:33:44:55:66:",    // Too many delimiter in the end
+      "1122:3344:5566",        // Unsupported format
+      "0",                     // No colon
+      "00112233445566",        // No colon
+      "11:22:333:44:55:66",    // Too many hex digits
+      "11:22:3:44:55:66",      // Too few hex digits
+      "",                      // empty mac string
+      "st:ra:tu:mr:oc:ks"      // None hex digits
     };
 
   // Set new value.
   ::gnmi::TypedValue invalid_val;
-  ::gnmi::Value wrong_type_val ;
+  ::gnmi::Value wrong_type_val;
   ::gnmi::SubscribeResponse resp;
 
   // Check reaction to wrong value type.
@@ -1076,7 +1076,7 @@ TEST_F(YangParseTreeTest,
                               /* Notification will not be called */ nullptr),
               StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 
-  for(auto mac_string : kMacStrings){
+  for (auto mac_string : kMacStrings) {
       // Check reaction to wrong value.
       invalid_val.set_string_val(mac_string);
       EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,

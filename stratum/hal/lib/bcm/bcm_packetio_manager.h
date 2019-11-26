@@ -248,7 +248,7 @@ struct PacketInMetadata {
   uint32 egress_port_id;
   // The CoS for the received packet.
   int cos;
-  // TODO: How about reason bit. Should we capture that as well?
+  // TODO(unknown): How about reason bit. Should we capture that as well?
   PacketInMetadata()
       : ingress_port_id(0),
         ingress_trunk_id(0),
