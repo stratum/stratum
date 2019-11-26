@@ -63,7 +63,7 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
   MockOnlpWrapper *onlp_interface_;
   PhalInitConfig config_;
   std::unique_ptr<OnlpSwitchConfigurator> configurator_;
-  string text_config_path = "phal_init_config.pb.txt";
+  std::string text_config_path = "phal_init_config.pb.txt";
 };
 
 namespace {

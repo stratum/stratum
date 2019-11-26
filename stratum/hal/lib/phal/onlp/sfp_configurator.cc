@@ -28,10 +28,14 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-OnlpSfpConfigurator::OnlpSfpConfigurator(int id,
+OnlpSfpConfigurator::OnlpSfpConfigurator(
+    int card_id, int port_id, int slot, int port,
     std::shared_ptr<OnlpSfpDataSource>datasource,
     AttributeGroup* sfp_group, OnlpInterface* onlp_interface)
-      : id_(id),
+      : card_id_(card_id),
+        port_id_(port_id),
+        slot_(slot),
+        port_(port),
         datasource_(ABSL_DIE_IF_NULL(datasource)),
         sfp_group_(ABSL_DIE_IF_NULL(sfp_group)),
         onlp_interface_(ABSL_DIE_IF_NULL(onlp_interface)) {
@@ -46,13 +50,15 @@ OnlpSfpConfigurator::OnlpSfpConfigurator(int id,
 }
 
 ::util::StatusOr<std::unique_ptr<OnlpSfpConfigurator>>
-OnlpSfpConfigurator::Make(int id,
+OnlpSfpConfigurator::Make(
+    int card_id, int port_id, int slot, int port,
     std::shared_ptr<OnlpSfpDataSource>datasource,
     AttributeGroup* sfp_group,
     OnlpInterface* onlp_interface) {
 
     return absl::WrapUnique(
-            new OnlpSfpConfigurator(id, datasource, sfp_group, onlp_interface));
+            new OnlpSfpConfigurator(card_id, port_id, slot, port,
+                                    datasource, sfp_group, onlp_interface));
 }
 
 ::util::Status OnlpSfpConfigurator::HandleEvent(HwState state) {
@@ -82,10 +88,12 @@ OnlpSfpConfigurator::Make(int id,
 //       attribute group.  Could be a bug, but for now the code below
 //       works around the problem.
 ::util::Status OnlpSfpConfigurator::AddSfp() {
+
     // Make sure we don't already have a datasource added to the DB
     absl::WriterMutexLock l(&config_lock_);
     if (initialized_) {
-        RETURN_ERROR() << "sfp id " << id_ << " already added";
+        RETURN_ERROR() << "cards[" << card_id_ << "]/ports[" 
+            << port_id_ << "]: sfp already added";
     }
 
     // lock us so we can modify
@@ -163,10 +171,12 @@ OnlpSfpConfigurator::Make(int id,
 }
 
 ::util::Status OnlpSfpConfigurator::RemoveSfp() {
+
     // Make sure we have a been initialized
     absl::WriterMutexLock l(&config_lock_);
     if (!initialized_) {
-        RETURN_ERROR() << "sfp id " << id_ << " has not been added";
+        RETURN_ERROR() << "cards[" << card_id_ << "]/ports[" 
+            << port_id_ << "]: sfp has not been added";
     }
 
     // lock us so we can modify

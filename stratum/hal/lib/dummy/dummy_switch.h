@@ -96,6 +96,7 @@ class DummySwitch : public SwitchInterface {
   LOCKS_EXCLUDED(chassis_lock) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState()
   LOCKS_EXCLUDED(chassis_lock) override;
+  PhalInterface * GetPhalInterface() { return phal_interface_; }
 
   // Factory function for creating the instance of the DummySwitch.
   static std::unique_ptr<DummySwitch>

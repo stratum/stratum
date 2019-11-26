@@ -28,6 +28,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/lib/channel/channel.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 
@@ -218,6 +219,9 @@ class SwitchInterface {
   // TODO(unknown): Explore the possibility of adding an argument to this
   // call to specify an aspect/multiple aspects of state to verify.
   virtual ::util::StatusOr<std::vector<std::string>> VerifyState() = 0;
+
+  // Get the PhalInterface pointer
+  virtual PhalInterface * GetPhalInterface() = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance only.

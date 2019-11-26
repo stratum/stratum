@@ -38,9 +38,16 @@ class OnlpSfpConfigurator : public SfpConfigurator {
 
     // Make a new OnlpSfpConfigurator
     static ::util::StatusOr<std::unique_ptr<OnlpSfpConfigurator>>
-        Make(int id, std::shared_ptr<OnlpSfpDataSource> datasource,
+        Make(int card_id, int port_id, int slot, int port,
+             std::shared_ptr<OnlpSfpDataSource> datasource,
              AttributeGroup* sfp_group,
              OnlpInterface* onlp_interface);
+
+    // Getters
+    int GetCardId() { return card_id_; }
+    int GetPortId() { return port_id_; }
+    int GetSlot() { return slot_; }
+    int GetPort() { return port_; }
 
     // Handle sfp state changes coming from onlp
     ::util::Status HandleEvent(HwState state) override;
@@ -56,10 +63,14 @@ class OnlpSfpConfigurator : public SfpConfigurator {
  private:
     // OnlpSfpConfigurator() = delete;
     OnlpSfpConfigurator() {}
-    OnlpSfpConfigurator(int id, std::shared_ptr<OnlpSfpDataSource> datasource,
+    OnlpSfpConfigurator(int card_id, int port_id, int slot, int port,
+        std::shared_ptr<OnlpSfpDataSource> datasource,
         AttributeGroup* sfp_group, OnlpInterface* onlp_interface);
 
-    int id_;
+    int card_id_;
+    int port_id_;
+    int slot_;
+    int port_;
     PhalCardConfig::Port config_;
     std::shared_ptr<OnlpSfpDataSource> datasource_;
     AttributeGroup* sfp_group_;      // Pointer to our attribute group

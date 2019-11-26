@@ -285,7 +285,8 @@ class AttributeGroupInternal : public AttributeGroup,
   AttributeGroupVersionId version_id_ = 0;
 
   absl::Mutex registered_query_lock_;
-  absl::flat_hash_map<AttributeGroupQuery*, RegisteredQuery> registered_queries_
+  absl::flat_hash_map<AttributeGroupQuery*,
+    std::unique_ptr<RegisteredQuery>> registered_queries_
       GUARDED_BY(registered_query_lock_);
 };
 }  // namespace
@@ -393,6 +394,7 @@ AttributeGroupQueryNode::AddRepeatedChildGroup(const std::string& name,
 void AttributeGroupQueryNode::RemoveAllFields() {
   absl::MutexLock lock(&parent_query_->query_lock_);
   node_->Clear();
+  reflection_ = node_->GetReflection();
 }
 
 ::util::Status AttributeGroupQuery::Get(google::protobuf::Message* out) {
@@ -501,7 +503,8 @@ template <typename T>
   UpdateVersionId();
   absl::WriterMutexLock lock(&registered_query_lock_);
   for (auto& query_info : registered_queries_) {
-    RETURN_IF_ERROR(RegisterQueryAttribute(&query_info.second, value, name));
+    RETURN_IF_ERROR(
+        RegisterQueryAttribute(query_info.second.get(), value, name));
   }
   return ::util::OkStatus();
 }
@@ -578,7 +581,8 @@ template <typename T>
   UpdateVersionId();
   absl::WriterMutexLock lock(&registered_query_lock_);
   for (auto& query_info : registered_queries_) {
-    RETURN_IF_ERROR(RegisterQueryChild(query_info.first, &query_info.second,
+    RETURN_IF_ERROR(RegisterQueryChild(query_info.first, 
+                                       query_info.second.get(),
                                        sub_group, name));
   }
   return sub_group;
@@ -603,7 +607,7 @@ template <typename T>
   absl::WriterMutexLock lock(&registered_query_lock_);
   for (auto& query_info : registered_queries_) {
     RETURN_IF_ERROR(RegisterQueryRepeatedChild(
-        query_info.first, &query_info.second, sub_group,
+        query_info.first, query_info.second.get(), sub_group,
         repeated_sub_groups_[name].size() - 1, name));
   }
   return sub_group;
@@ -632,9 +636,9 @@ template <typename T>
     // Remove this attribute from any queries that read it.
     absl::WriterMutexLock lock(&registered_query_lock_);
     for (auto& registered_query : registered_queries_) {
-      RegisteredQuery& query = registered_query.second;
-      query.registered_attributes.erase(attribute->second);
-      RETURN_IF_ERROR(query.query_node.RemoveField(name));
+      RegisteredQuery* query = registered_query.second.get();
+      query->registered_attributes.erase(attribute->second);
+      RETURN_IF_ERROR(query->query_node.RemoveField(name));
     }
     attributes_.erase(attribute);
     UpdateVersionId();
@@ -659,9 +663,9 @@ template <typename T>
     // Remove this attribute group from any queries that read it.
     absl::WriterMutexLock lock(&registered_query_lock_);
     for (auto& registered_query : registered_queries_) {
-      RegisteredQuery& query = registered_query.second;
-      query.registered_child_groups.erase(group->second.get());
-      RETURN_IF_ERROR(query.query_node.RemoveField(name));
+      RegisteredQuery* query = registered_query.second.get();
+      query->registered_child_groups.erase(group->second.get());
+      RETURN_IF_ERROR(query->query_node.RemoveField(name));
     }
     sub_groups_.erase(group);
     UpdateVersionId();
@@ -686,11 +690,11 @@ template <typename T>
     // Remove this repeated attribute group from any queries that read it.
     absl::WriterMutexLock lock(&registered_query_lock_);
     for (auto& registered_query : registered_queries_) {
-      RegisteredQuery& query = registered_query.second;
+      RegisteredQuery* query = registered_query.second.get();
       for (auto& group : repeated_group->second) {
-        query.registered_child_groups.erase(group.get());
+        query->registered_child_groups.erase(group.get());
       }
-      RETURN_IF_ERROR(query.query_node.RemoveField(name));
+      RETURN_IF_ERROR(query->query_node.RemoveField(name));
     }
     repeated_sub_groups_.erase(repeated_group);
     UpdateVersionId();
@@ -877,7 +881,11 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
     AttributeGroupQuery* query, AttributeGroupQueryNode query_node,
     const std::vector<Path>& paths, const Path* query_all) {
   absl::WriterMutexLock lock(&registered_query_lock_);
-  RegisteredQuery* query_info = &registered_queries_[query];
+  auto it = registered_queries_.find(query);
+  CHECK_RETURN_IF_FALSE(it == registered_queries_.end())
+    << "query already registered";
+  auto reg_query = absl::make_unique<RegisteredQuery>();
+  RegisteredQuery* query_info = reg_query.get();
   query_info->paths = paths;
   if (!query_info->query_all_fields) query_info->query_all_fields = query_all;
   query_info->query_node = query_node;
@@ -898,6 +906,10 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
           query, query_info, group_fields[i].get(), i, group_name));
     }
   }
+
+  // Save the query
+  registered_queries_[query] = std::move(reg_query);
+
   return ::util::OkStatus();
 }
 
@@ -965,10 +977,11 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
         attribute_function) {
   auto reader_lock = AcquireReadable();
   absl::ReaderMutexLock lock(&registered_query_lock_);
-  auto query_info = gtl::FindOrNull(registered_queries_, query);
-  CHECK_RETURN_IF_FALSE(query_info)
+  auto it = registered_queries_.find(query);
+  CHECK_RETURN_IF_FALSE(it != registered_queries_.end())
       << "Attempted to traverse a query that is not registered with this "
          "attribute group.";
+  auto query_info = it->second.get();
   for (auto& child_group : query_info->registered_child_groups) {
     RETURN_IF_ERROR(
         child_group->TraverseQuery(query, group_function, attribute_function));
@@ -1028,11 +1041,15 @@ std::set<std::string> AttributeGroupInternal::GetRepeatedChildGroupNames()
 
 void AttributeGroupInternal::UnregisterQuery(AttributeGroupQuery* query) {
   absl::WriterMutexLock lock(&registered_query_lock_);
-  auto query_info = gtl::FindOrNull(registered_queries_, query);
-  if (!query_info) return;
+  auto it = registered_queries_.find(query);
+  if (it == registered_queries_.end()) return;
+  auto query_info = it->second.get();
   for (auto child_group : query_info->registered_child_groups) {
     child_group->AcquireReadable()->UnregisterQuery(query);
   }
+  // Clear the registered attributes
+  query_info->registered_attributes.clear();
+  // Clean up the AttributeGroupQueryNode
   query_info->query_node.RemoveAllFields();
   registered_queries_.erase(query);
 }

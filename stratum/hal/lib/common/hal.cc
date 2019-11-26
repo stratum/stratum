@@ -99,6 +99,7 @@ Hal::Hal(OperationMode mode, SwitchInterface* switch_interface,
       certificate_management_service_(nullptr),
       diag_service_(nullptr),
       file_service_(nullptr),
+      phaldb_service_(nullptr),
       external_server_(nullptr),
       old_signal_handlers_() {}
 
@@ -150,6 +151,7 @@ Hal::~Hal() {
   RETURN_IF_ERROR(certificate_management_service_->Setup(FLAGS_warmboot));
   RETURN_IF_ERROR(diag_service_->Setup(FLAGS_warmboot));
   RETURN_IF_ERROR(file_service_->Setup(FLAGS_warmboot));
+  RETURN_IF_ERROR(phaldb_service_->Setup(FLAGS_warmboot));
   if (FLAGS_warmboot) {
     // In case of warmboot, we also call unfreeze the switch interface after
     // services are setup. Note that finding the saved configs in case of
@@ -180,6 +182,7 @@ Hal::~Hal() {
   APPEND_STATUS_IF_ERROR(status, certificate_management_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, diag_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, file_service_->Teardown());
+  APPEND_STATUS_IF_ERROR(status, phaldb_service_->Teardown());
   APPEND_STATUS_IF_ERROR(status, switch_interface_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, auth_policy_checker_->Shutdown());
   APPEND_STATUS_IF_ERROR(status, admin_service_->Teardown());
@@ -225,6 +228,7 @@ Hal::~Hal() {
     builder.RegisterService(certificate_management_service_.get());
     builder.RegisterService(diag_service_.get());
     builder.RegisterService(file_service_.get());
+    builder.RegisterService(phaldb_service_.get());
     external_server_ = builder.BuildAndStart();
     if (external_server_ == nullptr) {
       return MAKE_ERROR(ERR_INTERNAL)
@@ -253,6 +257,8 @@ Hal::~Hal() {
 
 void Hal::HandleSignal(int value) {
   LOG(INFO) << "Received signal: " << strsignal(value);
+  // Need to do Teardown first to clear up any services first
+  Teardown();
   // Calling Shutdown() so the blocking call to Wait() returns.
   // NOTE: Seems like if there is an active stream Read(), calling Shutdown()
   // with no deadline will block forever, as it waits for all the active RPCs
@@ -304,6 +310,7 @@ Hal* Hal::GetSingleton() {
   CHECK_IS_NULL(certificate_management_service_);
   CHECK_IS_NULL(diag_service_);
   CHECK_IS_NULL(file_service_);
+  CHECK_IS_NULL(phaldb_service_);
   CHECK_IS_NULL(external_server_);
   // FIXME(boc) google only
   // CHECK_IS_NULL(internal_server_);
@@ -326,6 +333,9 @@ Hal* Hal::GetSingleton() {
       mode_, switch_interface_, auth_policy_checker_, error_buffer_.get());
   file_service_ = absl::make_unique<FileService>(
       mode_, switch_interface_, auth_policy_checker_, error_buffer_.get());
+  phaldb_service_ = absl::make_unique<PhalDBService>(
+      mode_, switch_interface_->GetPhalInterface(), auth_policy_checker_,
+      error_buffer_.get());
 
   return ::util::OkStatus();
 }

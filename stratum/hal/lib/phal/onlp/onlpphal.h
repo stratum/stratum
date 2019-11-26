@@ -101,6 +101,9 @@ class OnlpPhal : public PhalInterface {
   // Handle a sfp status change event
   ::util::Status HandleTransceiverEvent(const TransceiverEvent& event);
 
+  // Return the Attribute DB pointer
+  ::util::StatusOr<AttributeDatabaseInterface*> GetPhalDB();
+
  private:
   friend class OnlpPhalCli;
   friend class OnlpPhalTest;

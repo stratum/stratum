@@ -232,6 +232,13 @@ def stratum_deps():
             commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
         )
 
+    if "rules_cc" not in native.existing_rules():
+        http_archive(
+            name = "rules_cc",
+	    strip_prefix = "rules_cc-master",
+	    urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
+        )
+
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
 # -----------------------------------------------------------------------------
