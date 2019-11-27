@@ -27,15 +27,19 @@ again.
 
 ### Steps to Follow
 
-1. Make sure your code passes unit tests. Create new ones for new code and **add them to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! You can also run them locally with bazel: `xargs -a .circleci/test-targets.txt bazel test`
+1. Fork Stratum into your namespace via the fork button on GitHub.
 
-2. Check code style with `cpplint` and `clang-format` (pre-installed in dev docker image).
+2. Make your code changes.
 
-3. Create a [PR on Github](https://github.com/stratum/stratum/compare). Either directly on the stratum repo or in your own fork. (Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes)
+3. Pass all unit tests locally. Create new tests for new code and **add the targets to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! To run all currently enabled tests execute this in the Stratum root directory: `xargs -a .circleci/test-targets.txt bazel test`
 
-4. Wait for [CI checks](https://circleci.com/gh/stratum/stratum) to pass. You can check the [coverage report](https://codecov.io/gh/stratum/stratum) after they ran. Repeat steps 1. and 2. as necessary. **Passing CI is mandatory.**
+4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container).
 
-5. Request review. You can add anyone you think is helpful, but only Collaborators and above can give final approval. **All changes must get at least one approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page) to bring additional attention to your PR.
+5. Create a [PR on Github](https://github.com/stratum/stratum/compare). Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes if you want direct assistance from Contributers.
+
+6. Wait for [CI checks](https://circleci.com/gh/stratum/stratum) to pass. You can check the [coverage report](https://codecov.io/gh/stratum/stratum) after they ran. Repeat steps 3. and 4. as necessary. **Passing CI is mandatory.** If the CI check does not run automatically, make sure you [unfollow your fork](https://support.circleci.com/hc/en-us/articles/360008097173) on CircleCI.
+
+7. Request review. You can add anyone you think is helpful, but only Collaborators and above can give final approval. **All changes must get at least one approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page) to bring additional attention to your PR.
 
 ## Community Guidelines
 
