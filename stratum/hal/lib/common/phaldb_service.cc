@@ -404,7 +404,6 @@ namespace {
     
             // Exit if the channel is closed
             if (code == ERR_CANCELLED) {
-                LOG(ERROR) << "PhalDB Subscribe closed the channel";
                 status = MAKE_ERROR(ERR_INTERNAL) 
                             << "PhalDB Subscribe closed the channel";
                 break;
@@ -420,7 +419,6 @@ namespace {
             // If we get nothing in message then close the channel
             // - this is also used to mock the PhalDB Subscribe
             if (phaldb_resp.ByteSizeLong() == 0) {
-                LOG(ERROR) << "Subscribe read returned zero bytes.";
                 status = MAKE_ERROR(ERR_INTERNAL) 
                             << "Subscribe read returned zero bytes.";
                 break;
@@ -432,7 +430,6 @@ namespace {
     
             // If Write fails then break out of the loop
             if (!stream->Write(resp)) {
-                LOG(ERROR) << "Subscribe stream write failed";
                 status = MAKE_ERROR(ERR_INTERNAL) 
                             << "Subscribe stream write failed";
                 break;

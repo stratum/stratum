@@ -25,6 +25,7 @@
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -56,7 +57,8 @@ class QueryMock : public Query {
         return std::move(DoGet());
   };
 
-  MOCK_METHOD1(DoSubscribe, PhalDB*(absl::Duration polling_interval));
+  MOCK_METHOD1(DoSubscribe, 
+               ::util::StatusOr<PhalDB*>(absl::Duration polling_interval));
 
   // We'll override the Subscribe with a function that grabs the
   // response from the Mock function and sends it on the channel.
@@ -64,7 +66,7 @@ class QueryMock : public Query {
                            absl::Duration polling_interval) override {
 
       // Grab response from mock
-      auto resp = DoSubscribe(polling_interval);
+      ASSIGN_OR_RETURN(auto resp, DoSubscribe(polling_interval));
 
       // Send the response
       writer->TryWrite(*resp);
