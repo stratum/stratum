@@ -250,8 +250,8 @@ namespace {
     }
 
     if (!attr_res.ok()) {
-        LOG(ERROR) << "Set update %d failed " << i
-                   << ": " << attr_res.status().error_message();
+        LOG(ERROR) << "Set update " << std::to_string(i) << " failed: "
+                   << attr_res.status().error_message();
         // If we got an error set the top level status
         status = attr_res.status();
         results.push_back(attr_res.status());

@@ -30,6 +30,7 @@
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -95,6 +96,11 @@ class PhalDBServiceTest : public ::testing::TestWithParam<OperationMode> {
   std::unique_ptr<::stratum::hal::phal::AttributeDatabaseMock> database_mock_;
 };
 
+TEST_P(PhalDBServiceTest, SetupWarm) {
+  auto status = phaldb_service_->Setup(true);
+  EXPECT_TRUE(status.ok());
+}
+
 TEST_P(PhalDBServiceTest, GetRequestStrSuccess) {
   ::grpc::ClientContext context;
   ::stratum::hal::phal::GetRequest req;
@@ -139,7 +145,7 @@ TEST_P(PhalDBServiceTest, GetRequestStrSuccess) {
   EXPECT_CALL(*db_query, DoGet())
     .WillOnce(Return(ByMove(std::move(phaldb_resp))));
 
-  req.set_str("cards[0]/ports[0]/transceiver");
+  req.set_str("cards[0]/ports[0]/transceiver/");
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Get", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -212,7 +218,7 @@ TEST_P(PhalDBServiceTest, GetRequestPathSuccess) {
   // Invoke the RPC and validate the results.
   // Call and validate results.
   auto status = stub_->Get(&context, req, &resp);
-  ASSERT_TRUE(status.ok());
+  EXPECT_TRUE(status.ok());
 }
 
 TEST_P(PhalDBServiceTest, SetRequestStrSuccess) {
@@ -253,7 +259,172 @@ TEST_P(PhalDBServiceTest, SetRequestStrSuccess) {
   // Invoke the RPC and validate the results.
   // Call and validate results.
   auto status = stub_->Set(&context, req, &resp);
-  ASSERT_TRUE(status.ok());
+  EXPECT_TRUE(status.ok());
+}
+
+TEST_P(PhalDBServiceTest, SetRequestInvalidStrFail) {
+  ::grpc::ClientContext context;
+  ::stratum::hal::phal::SetRequest req;
+  ::stratum::hal::phal::SetResponse resp;
+
+  // Setup Mock DB calls
+  auto phal_ptr = phal_mock_.get();
+  auto database = database_mock_.get();
+  EXPECT_CALL(*phal_ptr, GetPhalDB()).WillRepeatedly(Return(database));
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Create Set request
+  auto update = req.add_updates();
+  // Invalid request string
+  update->set_str("/fan_trays[0]/fans[0]/speed_control");
+  update->mutable_value()->set_int32_val(20);
+
+  // Invoke the RPC and validate the results.
+  // Call and validate results.
+  auto status = stub_->Set(&context, req, &resp);
+  EXPECT_FALSE(status.ok());
+}
+
+TEST_P(PhalDBServiceTest, SetRequestPathSuccess) {
+  ::grpc::ClientContext context;
+  ::stratum::hal::phal::SetRequest req;
+  ::stratum::hal::phal::SetResponse resp;
+
+  // Setup Mock DB calls
+  auto phal_ptr = phal_mock_.get();
+  auto database = database_mock_.get();
+  EXPECT_CALL(*phal_ptr, GetPhalDB()).WillRepeatedly(Return(database));
+
+  // AttributeValueMap for set
+  ::stratum::hal::phal::AttributeValueMap attrs;
+
+  // Create a path
+  std::vector<::stratum::hal::phal::PathEntry> path = {
+    ::stratum::hal::phal::PathEntry("fan_trays", 0),
+    ::stratum::hal::phal::PathEntry("fans", 0),
+    ::stratum::hal::phal::PathEntry("rpm", -1, false, false, true)
+  };
+  attrs[path] = 1000.0;
+
+  EXPECT_CALL(*database, Set(_))
+      .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
+
+  // Check the path and value
+  EXPECT_THAT(absl::get<double>(attrs[path]), Eq(1000.0));
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Create Set request
+  auto update = req.add_updates();
+
+  // Path entry
+  auto entry = update->mutable_path()->add_entries();
+  entry->set_name("cards");
+  entry->set_index(0);
+  entry->set_indexed(true);
+
+  entry = update->mutable_path()->add_entries();
+  entry->set_name("ports");
+  entry->set_index(0);
+  entry->set_indexed(true);
+
+  entry = update->mutable_path()->add_entries();
+  entry->set_name("transceiver");
+  entry->set_terminal_group(true);
+
+  // value
+  update->mutable_value()->set_double_val(1000.0);
+
+  // Invoke the RPC and validate the results.
+  // Call and validate results.
+  auto status = stub_->Set(&context, req, &resp);
+  EXPECT_TRUE(status.ok());
+}
+
+TEST_P(PhalDBServiceTest, SetRequestStringSuccess) {
+  ::grpc::ClientContext context;
+  ::stratum::hal::phal::SetRequest req;
+  ::stratum::hal::phal::SetResponse resp;
+
+  // Setup Mock DB calls
+  auto phal_ptr = phal_mock_.get();
+  auto database = database_mock_.get();
+  EXPECT_CALL(*phal_ptr, GetPhalDB()).WillRepeatedly(Return(database));
+
+  // AttributeValueMap for set
+  ::stratum::hal::phal::AttributeValueMap attrs;
+
+  // Create a path
+  std::vector<::stratum::hal::phal::PathEntry> path = {
+    ::stratum::hal::phal::PathEntry("fan_trays", 0),
+    ::stratum::hal::phal::PathEntry("fans", 0),
+    ::stratum::hal::phal::PathEntry("model", -1, false, false, true)
+  };
+  attrs[path] = std::string("model1234");
+
+  EXPECT_CALL(*database, Set(_))
+      .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
+
+  // Check the path and value
+  EXPECT_THAT(absl::get<std::string>(attrs[path]), Eq("model1234"));
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Create Set request
+  auto update = req.add_updates();
+  update->set_str("fan_trays[0]/fans[0]/model");
+  update->mutable_value()->set_string_val("model1234");
+
+  // Invoke the RPC and validate the results.
+  // Call and validate results.
+  auto status = stub_->Set(&context, req, &resp);
+  EXPECT_TRUE(status.ok());
+}
+
+TEST_P(PhalDBServiceTest, SetRequestBoolSuccess) {
+  ::grpc::ClientContext context;
+  ::stratum::hal::phal::SetRequest req;
+  ::stratum::hal::phal::SetResponse resp;
+
+  // Setup Mock DB calls
+  auto phal_ptr = phal_mock_.get();
+  auto database = database_mock_.get();
+  EXPECT_CALL(*phal_ptr, GetPhalDB()).WillRepeatedly(Return(database));
+
+  // AttributeValueMap for set
+  ::stratum::hal::phal::AttributeValueMap attrs;
+
+  // Create a path
+  std::vector<::stratum::hal::phal::PathEntry> path = {
+    ::stratum::hal::phal::PathEntry("cards", 0),
+    ::stratum::hal::phal::PathEntry("ports", 0),
+    ::stratum::hal::phal::PathEntry("transceiver"),
+    ::stratum::hal::phal::PathEntry("data_ready", -1, false, false, true)
+  };
+  attrs[path] = true;
+
+  EXPECT_CALL(*database, Set(_))
+      .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
+
+  // Check the path and value
+  EXPECT_THAT(absl::get<bool>(attrs[path]), Eq(true));
+
+  EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
+      .WillOnce(Return(::util::OkStatus()));
+
+  // Create Set request
+  auto update = req.add_updates();
+  update->set_str("fan_trays[0]/fans[0]/data_ready");
+  update->mutable_value()->set_bool_val(true);
+
+  // Invoke the RPC and validate the results.
+  // Call and validate results.
+  auto status = stub_->Set(&context, req, &resp);
+  EXPECT_TRUE(status.ok());
 }
 
 TEST_P(PhalDBServiceTest, SubscribeRequestSuccess) {
