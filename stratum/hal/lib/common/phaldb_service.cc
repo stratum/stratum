@@ -17,6 +17,8 @@
 
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
+#include <vector>
+#include <utility>
 
 #include "gflags/gflags.h"
 #include "absl/strings/str_split.h"
@@ -42,7 +44,7 @@
 namespace stratum {
 namespace hal {
 
-PhalDBService::PhalDBService(OperationMode mode, 
+PhalDBService::PhalDBService(OperationMode mode,
                      PhalInterface* phal_interface,
                      AuthPolicyChecker* auth_policy_checker,
                      ErrorBuffer* error_buffer)
@@ -59,7 +61,6 @@ PhalDBService::~PhalDBService() {}
 }
 
 ::util::Status PhalDBService::Teardown() {
-  
   LOG(INFO) << "PhalDBService::Teardown";
 
   {
@@ -78,7 +79,6 @@ namespace {
 
 ::grpc::Status ToGrpcStatus(const ::util::Status& status,
                             const std::vector<::util::Status>& details) {
-
   // We need to create a ::google::rpc::Status and populate it with all the
   // details, then convert it to ::grpc::Status.
   ::google::rpc::Status from;
@@ -203,7 +203,7 @@ namespace {
   auto path = result.ConsumeValueOrDie();
 
   // Issue the get
-  auto adapter = 
+  auto adapter =
     absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
   auto phaldb_res = adapter->Get({path});
   if (phaldb_res.ok()) {
@@ -229,7 +229,6 @@ namespace {
 
   // Spin thru each update
   for (int i=0; i < req->updates_size(); i++) {
-
     ::util::StatusOr<::stratum::hal::phal::Path> attr_res;
 
     // Get the update
@@ -259,7 +258,7 @@ namespace {
     }
 
     auto path = attr_res.ConsumeValueOrDie();
-    
+
     // Create attribute path:val pair base on value type
     switch (update.value().value_case()) {
       case ::stratum::hal::phal::UpdateValue::kDoubleVal: {
@@ -316,12 +315,12 @@ namespace {
   // Do Set if we have no errors
   if (status.ok()) {
     // Note: all updates are passed down to PhalDB as one Set call
-    //       so we won't get individual status on each adapter attribute 
+    //       so we won't get individual status on each adapter attribute
     //       update.
     results = {};
 
     // Do set for all attribute pairs
-    auto adapter = 
+    auto adapter =
         absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
     status = adapter->Set(attrs);
   }
@@ -333,7 +332,7 @@ namespace {
     const ::stratum::hal::phal::SubscribeRequest* req,
     ::grpc::ServerWriter<::stratum::hal::phal::SubscribeResponse>* stream) {
 
-  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService, 
+  RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService,
                            Subscribe, context);
 
   ::util::Status status;
@@ -374,21 +373,20 @@ namespace {
         subscriber_channels_[pthread_self()] = channel;
     }
 
-    auto writer = 
+    auto writer =
             ChannelWriter<::stratum::hal::phal::PhalDB>::Create(channel);
 
-    auto reader = 
+    auto reader =
         ChannelReader<::stratum::hal::phal::PhalDB>::Create(channel);
 
     // Issue the subscribe
-    auto adapter = 
+    auto adapter =
         absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
-    status = adapter->Subscribe({path}, std::move(writer), 
+    status = adapter->Subscribe({path}, std::move(writer),
                                  absl::Seconds(req->polling_interval()));
 
     // If Subscribe ok
     if (status.ok()) {
-
         // Loop around processing messages from the PhalDB writer
         // Note: if the client dies we'll only close the channel
         //       and thus cancel the PhalDB subscription once we
@@ -399,16 +397,16 @@ namespace {
         //       will do.
         do {
             ::stratum::hal::phal::PhalDB phaldb_resp;
-            int code = reader->Read(&phaldb_resp, 
+            int code = reader->Read(&phaldb_resp,
                                     absl::InfiniteDuration()).error_code();
-    
+
             // Exit if the channel is closed
             if (code == ERR_CANCELLED) {
-                status = MAKE_ERROR(ERR_INTERNAL) 
+                status = MAKE_ERROR(ERR_INTERNAL)
                             << "PhalDB Subscribe closed the channel";
                 break;
             }
-    
+
             // Error if read timesout
             if (code == ERR_ENTRY_NOT_FOUND) {
                 LOG(ERROR) << "Subscribe read with infinite timeout "
@@ -419,7 +417,7 @@ namespace {
             // If we get nothing in message then close the channel
             // - this is also used to mock the PhalDB Subscribe
             if (phaldb_resp.ByteSizeLong() == 0) {
-                status = MAKE_ERROR(ERR_INTERNAL) 
+                status = MAKE_ERROR(ERR_INTERNAL)
                             << "Subscribe read returned zero bytes.";
                 break;
             }
@@ -427,10 +425,10 @@ namespace {
             // Send message to client
             ::stratum::hal::phal::SubscribeResponse resp;
             *resp.mutable_phal_db() = phaldb_resp;
-    
+
             // If Write fails then break out of the loop
             if (!stream->Write(resp)) {
-                status = MAKE_ERROR(ERR_INTERNAL) 
+                status = MAKE_ERROR(ERR_INTERNAL)
                             << "Subscribe stream write failed";
                 break;
             }

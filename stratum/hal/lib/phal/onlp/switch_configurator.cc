@@ -170,7 +170,6 @@ OnlpSwitchConfigurator::Make(
 
     // Add cards
     for (int card_id=0; card_id < phal_config.cards_size(); card_id++) {
-
         auto card_config = phal_config.cards(card_id);
 
         // If id set to default (i.e. not set) then use

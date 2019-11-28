@@ -112,7 +112,6 @@ DummyPhal::~DummyPhal() {}
 
 ::util::StatusOr<::stratum::hal::phal::AttributeDatabaseInterface*>
         DummyPhal::GetPhalDB() {
-
     RETURN_ERROR(ERR_UNIMPLEMENTED) << "GetPhalDB unimplemented";
 }
 

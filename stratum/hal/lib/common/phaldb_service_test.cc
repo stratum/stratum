@@ -17,6 +17,8 @@
 
 #include <grpcpp/grpcpp.h>
 #include <memory>
+#include <vector>
+#include <utility>
 
 #include "gflags/gflags.h"
 #include "google/rpc/code.pb.h"
@@ -62,7 +64,7 @@ class PhalDBServiceTest : public ::testing::TestWithParam<OperationMode> {
     phal_mock_ = absl::make_unique<PhalMock>();
     auth_policy_checker_mock_ = absl::make_unique<AuthPolicyCheckerMock>();
     error_buffer_ = absl::make_unique<ErrorBuffer>();
-    phaldb_service_ = absl::make_unique<PhalDBService>(mode_, 
+    phaldb_service_ = absl::make_unique<PhalDBService>(mode_,
                                                phal_mock_.get(),
                                                auth_policy_checker_mock_.get(),
                                                error_buffer_.get());
@@ -77,11 +79,11 @@ class PhalDBServiceTest : public ::testing::TestWithParam<OperationMode> {
         ::grpc::CreateChannel(url, ::grpc::InsecureChannelCredentials()));
     ASSERT_NE(stub_, nullptr);
 
-    database_mock_ = 
+    database_mock_ =
         absl::make_unique<::stratum::hal::phal::AttributeDatabaseMock>();
   }
 
-  void TearDown() override { 
+  void TearDown() override {
     phaldb_service_->Teardown();
     server_->Shutdown();
   }
@@ -489,13 +491,13 @@ TEST_P(PhalDBServiceTest, SetRequestInt64Success) {
     ::stratum::hal::phal::PathEntry("transceiver"),
     ::stratum::hal::phal::PathEntry("int64", -1, false, false, true)
   };
-  attrs[path] = int64(10);
+  attrs[path] = static_cast<int64>(10);
 
   EXPECT_CALL(*database, Set(_))
       .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
 
   // Check the path and value
-  EXPECT_THAT(absl::get<int64>(attrs[path]), Eq(int64(10)));
+  EXPECT_THAT(absl::get<int64>(attrs[path]), Eq(static_cast<int64>(10)));
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -503,7 +505,7 @@ TEST_P(PhalDBServiceTest, SetRequestInt64Success) {
   // Create Set request
   auto update = req.add_updates();
   update->set_str("fan_trays[0]/fans[0]/int64");
-  update->mutable_value()->set_int64_val(int64(10));
+  update->mutable_value()->set_int64_val(static_cast<int64>(10));
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
@@ -531,13 +533,13 @@ TEST_P(PhalDBServiceTest, SetRequestUInt32Success) {
     ::stratum::hal::phal::PathEntry("transceiver"),
     ::stratum::hal::phal::PathEntry("uint32", -1, false, false, true)
   };
-  attrs[path] = uint32(10);
+  attrs[path] = static_cast<uint32>(10);
 
   EXPECT_CALL(*database, Set(_))
       .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
 
   // Check the path and value
-  EXPECT_THAT(absl::get<uint32>(attrs[path]), Eq(uint32(10)));
+  EXPECT_THAT(absl::get<uint32>(attrs[path]), Eq(static_cast<uint32>(10)));
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -545,7 +547,7 @@ TEST_P(PhalDBServiceTest, SetRequestUInt32Success) {
   // Create Set request
   auto update = req.add_updates();
   update->set_str("fan_trays[0]/fans[0]/uint32");
-  update->mutable_value()->set_uint32_val(uint32(10));
+  update->mutable_value()->set_uint32_val(static_cast<uint32>(10));
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
@@ -573,13 +575,13 @@ TEST_P(PhalDBServiceTest, SetRequestUInt64Success) {
     ::stratum::hal::phal::PathEntry("transceiver"),
     ::stratum::hal::phal::PathEntry("uint64", -1, false, false, true)
   };
-  attrs[path] = uint64(10);
+  attrs[path] = static_cast<uint64>(10);
 
   EXPECT_CALL(*database, Set(_))
       .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
 
   // Check the path and value
-  EXPECT_THAT(absl::get<uint64>(attrs[path]), Eq(uint64(10)));
+  EXPECT_THAT(absl::get<uint64>(attrs[path]), Eq(static_cast<uint64>(10)));
 
   EXPECT_CALL(*auth_policy_checker_mock_, Authorize("PhalDBService", "Set", _))
       .WillOnce(Return(::util::OkStatus()));
@@ -587,7 +589,7 @@ TEST_P(PhalDBServiceTest, SetRequestUInt64Success) {
   // Create Set request
   auto update = req.add_updates();
   update->set_str("fan_trays[0]/fans[0]/uint64");
-  update->mutable_value()->set_uint64_val(uint64(10));
+  update->mutable_value()->set_uint64_val(static_cast<uint64>(10));
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
@@ -678,7 +680,7 @@ TEST_P(PhalDBServiceTest, SubscribeRequestSuccess) {
   EXPECT_CALL(*database, DoMakeQuery(_))
       .WillOnce(Return(ByMove(std::move(db_query_mock))));
 
-  EXPECT_CALL(*auth_policy_checker_mock_, 
+  EXPECT_CALL(*auth_policy_checker_mock_,
       Authorize("PhalDBService", "Subscribe", _))
           .WillOnce(Return(::util::OkStatus()));
 
@@ -756,7 +758,7 @@ TEST_P(PhalDBServiceTest, SubscribeRequestFail) {
   EXPECT_CALL(*database, DoMakeQuery(_))
       .WillOnce(Return(ByMove(std::move(db_query_mock))));
 
-  EXPECT_CALL(*auth_policy_checker_mock_, 
+  EXPECT_CALL(*auth_policy_checker_mock_,
       Authorize("PhalDBService", "Subscribe", _))
           .WillOnce(Return(::util::OkStatus()));
 
@@ -823,17 +825,7 @@ TEST_P(PhalDBServiceTest, SubscribeRequestStringFail) {
   // Need to get pointer before it gets moved
   auto db_query = db_query_mock.get();
 
-  std::vector<::stratum::hal::phal::Path> paths = {{
-    ::stratum::hal::phal::PathEntry("cards", 0),
-    ::stratum::hal::phal::PathEntry("ports", 0),
-    ::stratum::hal::phal::PathEntry("transceiver", -1, false, false, true)
-  }};
-
-  // Setup Mock DB calls
-  //EXPECT_CALL(*database, DoMakeQuery(_))
-  //    .WillOnce(Return(ByMove(std::move(db_query_mock))));
-
-  EXPECT_CALL(*auth_policy_checker_mock_, 
+  EXPECT_CALL(*auth_policy_checker_mock_,
       Authorize("PhalDBService", "Subscribe", _))
           .WillOnce(Return(::util::OkStatus()));
 

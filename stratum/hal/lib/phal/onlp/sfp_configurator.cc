@@ -88,11 +88,10 @@ OnlpSfpConfigurator::Make(
 //       attribute group.  Could be a bug, but for now the code below
 //       works around the problem.
 ::util::Status OnlpSfpConfigurator::AddSfp() {
-
     // Make sure we don't already have a datasource added to the DB
     absl::WriterMutexLock l(&config_lock_);
     if (initialized_) {
-        RETURN_ERROR() << "cards[" << card_id_ << "]/ports[" 
+        RETURN_ERROR() << "cards[" << card_id_ << "]/ports["
             << port_id_ << "]: sfp already added";
     }
 
@@ -171,11 +170,10 @@ OnlpSfpConfigurator::Make(
 }
 
 ::util::Status OnlpSfpConfigurator::RemoveSfp() {
-
     // Make sure we have a been initialized
     absl::WriterMutexLock l(&config_lock_);
     if (!initialized_) {
-        RETURN_ERROR() << "cards[" << card_id_ << "]/ports[" 
+        RETURN_ERROR() << "cards[" << card_id_ << "]/ports["
             << port_id_ << "]: sfp has not been added";
     }
 

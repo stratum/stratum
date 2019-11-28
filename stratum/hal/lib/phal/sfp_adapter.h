@@ -32,7 +32,7 @@ namespace phal {
 
 class SfpAdapter : public Adapter {
  public:
-  SfpAdapter(PhalInterface* phal_interface);
+  explicit SfpAdapter(PhalInterface* phal_interface);
 
   virtual ~SfpAdapter() = default;
 

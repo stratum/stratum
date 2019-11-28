@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <vector>
+#include <utility>
 
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "gmock/gmock.h"
@@ -57,14 +58,13 @@ class QueryMock : public Query {
         return std::move(DoGet());
   };
 
-  MOCK_METHOD1(DoSubscribe, 
+  MOCK_METHOD1(DoSubscribe,
                ::util::StatusOr<PhalDB*>(absl::Duration polling_interval));
 
   // We'll override the Subscribe with a function that grabs the
   // response from the Mock function and sends it on the channel.
   ::util::Status Subscribe(std::unique_ptr<ChannelWriter<PhalDB>> writer,
                            absl::Duration polling_interval) override {
-
       // Grab response from mock
       ASSIGN_OR_RETURN(auto resp, DoSubscribe(polling_interval));
 
@@ -77,7 +77,6 @@ class QueryMock : public Query {
 
       return ::util::OkStatus();
   }
-
 };
 
 }  // namespace phal

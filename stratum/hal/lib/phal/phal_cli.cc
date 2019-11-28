@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "gflags/gflags.h"
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include "absl/strings/str_split.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
@@ -36,8 +36,6 @@
 
 DEFINE_string(stratum_url, "localhost:50051", "URL to the stratum server.");
 
-using namespace std;
-
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -46,16 +44,15 @@ namespace phal {
 class PhalCli {
  public:
   // All CLI queries are run on the given attribute database.
-  PhalCli(std::shared_ptr<grpc::Channel> channel) 
+  explicit PhalCli(std::shared_ptr<grpc::Channel> channel)
     : phaldb_svc_(PhalDBSvc::NewStub(channel)) {
-
   }
 
   // Queries the given path into the PHAL attribute database and prints the
   // result to std::cout. Also prints timing stats for generating and executing
   // the query. Only returns failure if the given query path does not match the
   // database schema.
-  ::util::Status HandleGet(const string& query) {
+  ::util::Status HandleGet(const std::string& query) {
     GetRequest req;
     req.set_str(query);
     GetResponse resp;
@@ -86,11 +83,11 @@ class PhalCli {
     return ::util::OkStatus();
   }
 
-  // Subscribes to the given path into the PHAL attribute database and prints 
-  // the stream of results to std::cout. Also prints timing stats for 
-  // generating and executing the subscribe. Only returns failure if the 
+  // Subscribes to the given path into the PHAL attribute database and prints
+  // the stream of results to std::cout. Also prints timing stats for
+  // generating and executing the subscribe. Only returns failure if the
   // given query path does not match the database schema.
-  ::util::Status HandleSubscribe(const string& query) {
+  ::util::Status HandleSubscribe(const std::string& query) {
     SubscribeRequest req;
     SubscribeResponse resp;
     grpc::ClientContext context;
@@ -128,14 +125,13 @@ class PhalCli {
     // Read the stream of responses (Note: return after 10)
     int cnt = num_responses;
     while (reader->Read(&resp)) {
-
         auto result_str = resp.DebugString();
         if (result_str.size() <= 0) {
             std::cout << "No Results" << std::endl;
         } else {
             std::cout << result_str << std::endl;
         }
-        int resp_duration = (absl::Now() - start_time) / 
+        int resp_duration = (absl::Now() - start_time) /
                                 absl::Microseconds(1);
         std::cout << "Response in " << resp_duration << " us."
               << std::endl;
@@ -148,7 +144,7 @@ class PhalCli {
     }
 
     auto status = reader->Finish();
-            
+
     // RPC failed
     if (!status.ok()) {
       return MAKE_ERROR(ERR_INTERNAL)
@@ -162,7 +158,7 @@ class PhalCli {
   }
 
   // Sets an attribute given the path into the PHAL attribute database.
-  ::util::Status HandleSet(const string& query) {
+  ::util::Status HandleSet(const std::string& query) {
     SetRequest req;
     SetResponse resp;
     grpc::ClientContext context;
@@ -194,7 +190,7 @@ class PhalCli {
             }
             update->mutable_value()->set_int32_val(val);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "int64")) {
             ::google::protobuf::int64 val;
             if (sscanf(val_str.c_str(), "%ld", &val) != 1) {
@@ -203,7 +199,7 @@ class PhalCli {
             }
             update->mutable_value()->set_int64_val(val);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "uint32")) {
             ::google::protobuf::uint32 val;
             if (sscanf(val_str.c_str(), "%d", &val) != 1) {
@@ -212,7 +208,7 @@ class PhalCli {
             }
             update->mutable_value()->set_uint32_val(val);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "uint64")) {
             ::google::protobuf::uint64 val;
             if (sscanf(val_str.c_str(), "%ld", &val) != 1) {
@@ -221,7 +217,7 @@ class PhalCli {
             }
             update->mutable_value()->set_uint64_val(val);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "double")) {
             double val;
             if (sscanf(val_str.c_str(), "%lf", &val) != 1) {
@@ -230,7 +226,7 @@ class PhalCli {
             }
             update->mutable_value()->set_double_val(val);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "float")) {
             float val;
             if (sscanf(val_str.c_str(), "%f", &val) != 1) {
@@ -239,7 +235,7 @@ class PhalCli {
             }
             update->mutable_value()->set_float_val(val);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "bool")) {
             if (!strcmp(val_str.c_str(), "false")) {
                 update->mutable_value()->set_bool_val(false);
@@ -253,21 +249,20 @@ class PhalCli {
                 std::cout << "Invalid bool <false|true>" << std::endl;
                 continue;
             }
-            
+
         } else if (!strcmp(type.c_str(), "string")) {
             update->mutable_value()->set_string_val(val_str);
             break;
-            
+
         } else if (!strcmp(type.c_str(), "bytes")) {
             update->mutable_value()->set_bytes_val(val_str);
-            
+
         } else {
             std::cout << "Must specify a type: <int32, uint32, int64, "
                       << "uint64, double, float, bool, string, bytes"
                       << std::endl;
             continue;
         }
-
     }
 
     absl::Time start_time = absl::Now();
@@ -299,9 +294,7 @@ class PhalCli {
 
   // Runs the main CLI loop.
   ::util::Status  RunCli() {
-
     while (true) {
-
       cmd_type cmdtype = Get;
 
       // What type of cmd
@@ -385,7 +378,7 @@ class PhalCli {
   stratum::InitStratumLogging();
 
   PhalCli cli(
-    grpc::CreateChannel(FLAGS_stratum_url, 
+    grpc::CreateChannel(FLAGS_stratum_url,
                         grpc::InsecureChannelCredentials()));
 
   cli.RunCli();

@@ -307,7 +307,7 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
   // Make sure it's not already registered
   auto it = slot_port_to_configurator_.find(slot_port_pair);
   if (it != slot_port_to_configurator_.end()) {
-      RETURN_ERROR() << "slot: " << slot 
+      RETURN_ERROR() << "slot: " << slot
         << " port: " << port << " already registered";
   }
 

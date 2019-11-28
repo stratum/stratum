@@ -15,8 +15,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_COMMON_PHAL_DB_SERVICE_H_
-#define STRATUM_HAL_LIB_COMMON_PHAL_DB_SERVICE_H_
+#ifndef STRATUM_HAL_LIB_COMMON_PHALDB_SERVICE_H_
+#define STRATUM_HAL_LIB_COMMON_PHALDB_SERVICE_H_
 
 #include <grpcpp/grpcpp.h>
 #include <pthread.h>
@@ -24,6 +24,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <map>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -44,7 +45,7 @@ namespace hal {
 class PhalDBService final : public ::stratum::hal::phal::PhalDBSvc::Service {
  public:
   PhalDBService(OperationMode mode, PhalInterface* phal_interface,
-                AuthPolicyChecker* auth_policy_checker, 
+                AuthPolicyChecker* auth_policy_checker,
                 ErrorBuffer* error_buffer);
 
   virtual ~PhalDBService();
@@ -77,7 +78,6 @@ class PhalDBService final : public ::stratum::hal::phal::PhalDBSvc::Service {
   PhalDBService& operator=(const PhalDBService&) = delete;
 
  private:
-
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Hercules stack runs independently and
   // therefore needs to do all the SDK initialization itself.
@@ -98,7 +98,7 @@ class PhalDBService final : public ::stratum::hal::phal::PhalDBSvc::Service {
   // PhalDB Adapter
   PhalInterface* phal_interface_;
 
-  // Mutex which protects the creation and destruction of the 
+  // Mutex which protects the creation and destruction of the
   // subscriber channels map.
   mutable absl::Mutex subscriber_thread_lock_;
 
@@ -113,4 +113,4 @@ class PhalDBService final : public ::stratum::hal::phal::PhalDBSvc::Service {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_COMMON_PHAL_DB_SERVICE_H_
+#endif  // STRATUM_HAL_LIB_COMMON_PHALDB_SERVICE_H_

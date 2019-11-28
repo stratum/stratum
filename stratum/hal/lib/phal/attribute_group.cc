@@ -581,7 +581,7 @@ template <typename T>
   UpdateVersionId();
   absl::WriterMutexLock lock(&registered_query_lock_);
   for (auto& query_info : registered_queries_) {
-    RETURN_IF_ERROR(RegisterQueryChild(query_info.first, 
+    RETURN_IF_ERROR(RegisterQueryChild(query_info.first,
                                        query_info.second.get(),
                                        sub_group, name));
   }

@@ -95,7 +95,8 @@ using ::testing::PrintToString;
 // return false if the wrong type is passed in (integer conversions are not
 // performed).
 MATCHER_P(ContainsValue, value,
-          "ManagedAttribute* " + string(negation ? "doesn't store" : "stores") +
+          "ManagedAttribute* " 
+              + std::string(negation ? "doesn't store" : "stores") +
               " the value: " + PrintToString(value)) {
   Attribute attribute = arg->GetValue();
   const value_type* actual_value = absl::get_if<value_type>(&attribute);
@@ -109,7 +110,7 @@ MATCHER_P(ContainsValue, value,
 // are not performed).
 MATCHER_P(ContainsValueAfterUpdate, value,
           "ManagedAttribute* updates successfully and " +
-              string(negation ? "doesn't store" : "stores") +
+              std::string(negation ? "doesn't store" : "stores") +
               " the value: " + PrintToString(value)) {
   DataSource* datasource = arg->GetDataSource();
   if (!datasource->UpdateValuesUnsafelyWithoutCacheOrLock().ok()) return false;
@@ -122,7 +123,7 @@ MATCHER_P(ContainsValueAfterUpdate, value,
 // (integer conversions are not performed).
 MATCHER_P(IsOkAndContainsValue, value,
           "::util::StatusOr<ManagedAttribute*> " +
-              string(negation ? "isn't ok or doesn't store"
+              std::string(negation ? "isn't ok or doesn't store"
                               : "is ok and stores") +
               " the value: " + PrintToString(value)) {
   if (!arg.ok()) return false;

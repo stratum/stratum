@@ -19,6 +19,7 @@
 #define STRATUM_HAL_LIB_PHAL_ADAPTER_H_
 
 #include <memory>
+#include <vector>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
@@ -33,8 +34,8 @@ namespace phal {
 
 class Adapter {
  public:
-  Adapter(PhalInterface* phal_interface)
-    : phal_interface_(phal_interface) {};
+  explicit Adapter(PhalInterface* phal_interface)
+    : phal_interface_(phal_interface) {}
 
   virtual ~Adapter() = default;
 
@@ -46,8 +47,8 @@ class Adapter {
 
   ::util::Status Set(const AttributeValueMap& values);
 
-  PhalInterface* phal_interface_; // not owned by this class
-  std::unique_ptr<Query> db_query_; // used for subscribe requests
+  PhalInterface* phal_interface_;     // not owned by this class
+  std::unique_ptr<Query> db_query_;   // used for subscribe requests
 };
 
 

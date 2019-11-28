@@ -17,9 +17,9 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "stratum/hal/lib/phal/attribute_database.h"
-#include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/onlp/onlpphal_mock.h"
@@ -251,7 +251,7 @@ TEST_F(OnlpSfpConfiguratorTest, AddSfpTwice) {
 
   // second add should fail
   std::string error_message =
-      "cards[" + std::to_string(card_id_) + "]/ports[" + 
+      "cards[" + std::to_string(card_id_) + "]/ports[" +
               std::to_string(port_id_) + "]: sfp already added";
   EXPECT_THAT(configurator_->AddSfp(),
               StatusIs(_, _, HasSubstr(error_message)));
@@ -260,7 +260,7 @@ TEST_F(OnlpSfpConfiguratorTest, AddSfpTwice) {
 TEST_F(OnlpSfpConfiguratorTest, RemoveSfpError) {
   // second add should fail
   std::string error_message =
-      "cards[" + std::to_string(card_id_) + "]/ports[" + 
+      "cards[" + std::to_string(card_id_) + "]/ports[" +
               std::to_string(port_id_) + "]: sfp has not been added";
   EXPECT_THAT(configurator_->RemoveSfp(),
               StatusIs(_, _, HasSubstr(error_message)));
@@ -319,10 +319,10 @@ TEST_F(OnlpSfpConfiguratorTest, DBConcurrency) {
     std::shared_ptr<Channel<::stratum::hal::phal::PhalDB>> channel =
         Channel<::stratum::hal::phal::PhalDB>::Create(128);
 
-    auto writer = 
+    auto writer =
         ChannelWriter<::stratum::hal::phal::PhalDB>::Create(channel);
 
-    auto reader = 
+    auto reader =
         ChannelReader<::stratum::hal::phal::PhalDB>::Create(channel);
 
     // Now start a subscribe on the transceiver
@@ -389,7 +389,6 @@ TEST_F(OnlpSfpConfiguratorTest, DBConcurrency) {
     // Inspect msg
     LOG(INFO) << "sub_resp 3" << std::endl
               << sub_resp.DebugString();
-
 }
 
 }  // namespace

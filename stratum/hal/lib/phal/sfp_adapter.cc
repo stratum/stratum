@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
 
 #include "stratum/hal/lib/phal/sfp_adapter.h"
 
@@ -24,10 +25,9 @@ namespace phal {
 SfpAdapter::SfpAdapter(PhalInterface* phal_interface)
     : Adapter(phal_interface) {}
 
-::util::Status 
+::util::Status
 SfpAdapter::GetFrontPanelPortInfo(int card_id, int port_id,
                                   FrontPanelPortInfo* fp_port_info) {
-
     if (card_id < 0 || port_id < 0)
         RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
 
@@ -43,21 +43,21 @@ SfpAdapter::GetFrontPanelPortInfo(int card_id, int port_id,
 
     // Get card
     if (phaldb->cards_size() <= card_id) {
-        RETURN_ERROR() << "cards[" << card_id 
+        RETURN_ERROR() << "cards[" << card_id
             << "] greater than number of cards " << phaldb->cards_size();
     }
     auto card = phaldb->cards(card_id);
 
     // Get port
     if (card.ports_size() <= port_id) {
-        RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id 
+        RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
             << "] greater than number of ports " << card.ports_size();
     }
     auto phal_port = card.ports(port_id);
 
     // Get the SFP (transceiver)
     if (!phal_port.has_transceiver()) {
-        RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id 
+        RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
             << "] has no transceiver";
     }
     auto sfp = phal_port.transceiver();

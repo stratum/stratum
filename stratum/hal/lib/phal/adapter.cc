@@ -13,6 +13,9 @@
 // limitations under the License.
 
 
+#include <vector>
+#include <utility>
+
 #include "stratum/hal/lib/phal/adapter.h"
 
 #include "stratum/glue/status/status.h"
