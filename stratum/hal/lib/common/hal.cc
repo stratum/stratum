@@ -252,6 +252,8 @@ Hal::~Hal() {
 
   external_server_->Wait();  // blocking until external_server_->Shutdown()
                              // is called. We dont wait on internal_service.
+
+  return util::OkStatus();
 }
 
 void Hal::HandleSignal(int value) {
