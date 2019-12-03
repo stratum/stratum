@@ -267,6 +267,12 @@ message PortConfigParams {
     PORT_MODULATION_NRZ = 1;
     PORT_MODULATION_PAM4 = 2;
   }
+  enum LoopbackMode {
+    LOOPBACK_UNKNOWN = 0;
+    LOOPBACK_NONE = 1;
+    LOOPBACK_MAC = 2;
+    LOOPBACK_PHY = 3;
+  }
   // The configured admin state for this port.
   AdminState admin_state = 1;
   // The per port MTU (aka max frame size) for this port.
@@ -281,6 +287,8 @@ message PortConfigParams {
   FecMode fec_mode = 6;
   // The configured mac address for this port.
   uint64 mac_address = 7;
+  // The loopback mode for this port.
+  LoopbackMode loopback_mode = 8;
 }
 
 // Chassis uniquely identifies a switch with a single management interface,

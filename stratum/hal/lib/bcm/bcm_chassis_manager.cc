@@ -24,6 +24,7 @@
 
 #include "gflags/gflags.h"
 #include "google/protobuf/message.h"
+#include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
@@ -646,7 +647,27 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
               << "The (slot, port) pair for the non-flex SingletonPort "
               << PrintSingletonPort(singleton_port)
               << " is in flex_port_group_keys.";
-          *target_bcm_chassis_map->add_bcm_ports() = bcm_port;
+          auto new_bcm_port = target_bcm_chassis_map->add_bcm_ports();
+          *new_bcm_port = bcm_port;
+
+          // Set up loopback mode and enable the port by default
+          switch(singleton_port.config_params().loopback_mode()) {
+            case PortConfigParams::LOOPBACK_UNKNOWN:
+            case PortConfigParams::LOOPBACK_NONE:
+              new_bcm_port->mutable_port_options()->set_loopback_mode(BcmPortOptions::LOOPBACK_NONE);
+              break;
+            case PortConfigParams::LOOPBACK_MAC:
+              new_bcm_port->mutable_port_options()->set_loopback_mode(BcmPortOptions::LOOPBACK_MAC);
+              new_bcm_port->set_internal(true);
+              break;
+            case PortConfigParams::LOOPBACK_PHY:
+              new_bcm_port->mutable_port_options()->set_loopback_mode(BcmPortOptions::LOOPBACK_PHY);
+              new_bcm_port->set_internal(true);
+              break;
+            default:
+              RETURN_ERROR(ERR_INTERNAL) << "Unknown loopback mode: "
+                                            << singleton_port.config_params().loopback_mode();
+          }
         }
         if (node_id_to_unit[singleton_port.node()] == -1) {
           // First time we are recording unit for this node.
@@ -998,6 +1019,18 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
+
+  // Differencer for BcmPort which ignores "internal" and "port_optionas"
+  // fields
+  google::protobuf::util::MessageDifferencer md;
+  const google::protobuf::Descriptor* desc = BcmPort().GetDescriptor();
+  const google::protobuf::FieldDescriptor* internal_descriptor =
+      desc->FindFieldByName("internal");
+  const google::protobuf::FieldDescriptor* port_options_descriptor =
+      desc->FindFieldByName("port_options");
+  md.IgnoreField(internal_descriptor);
+  md.IgnoreField(port_options_descriptor);
+
   std::stringstream ss;
   ss << "Portmap:\nPanel, logical (PORT_ID), physical (PC_PHYS_PORT_ID)\n";
   for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
@@ -1010,8 +1043,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     CHECK_RETURN_IF_FALSE(std::any_of(
         base_bcm_chassis_map.bcm_ports().begin(),
         base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) {
-          return ProtoEqual(x, p); }))
+        [&p, &md](const BcmPort& x) {
+          return md.Compare(p, x);
+        }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
     ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "gflags/gflags.h"
+#include "google/protobuf/message.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_node_mock.h"
@@ -197,6 +198,13 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
 
   ::util::Status UnregisterEventNotifyWriter() {
     return bcm_chassis_manager_->UnregisterEventNotifyWriter();
+  }
+
+  ::util::Status GenerateBcmChassisMapFromConfig(
+      const ChassisConfig& config, BcmChassisMap* base_bcm_chassis_map,
+      BcmChassisMap* target_bcm_chassis_map) {
+    return bcm_chassis_manager_->GenerateBcmChassisMapFromConfig(
+        config, base_bcm_chassis_map, target_bcm_chassis_map);
   }
 
   ::util::StatusOr<BcmChip> GetBcmChip(int unit) const {
@@ -5253,6 +5261,94 @@ TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
   EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
 
   ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+
+TEST_P(BcmChassisManagerTest, ChassisConfigWithLoopback) {
+  const std::string kConfigText = R"(
+    description: "Sample Generic Tomahawk config 32x100G ports."
+    chassis {
+      platform: PLT_GENERIC_TOMAHAWK
+      name: "standalone"
+    }
+    nodes {
+      id: 1
+      slot: 1
+    }
+    singleton_ports {
+      id: 1
+      slot: 1
+      port: 1
+      speed_bps: 100000000000
+      node: 1
+      config_params {
+        loopback_mode: LOOPBACK_MAC
+      }
+    }
+  )";
+
+  // Simple base_bcm_chassis_map with one chip and one port.
+  const std::string kBaseBcmChassisMapText = R"(
+    bcm_chassis {
+      sdk_properties: "property1=1234"
+    }
+    bcm_chips {
+      type: TOMAHAWK
+      slot: 1
+      unit: 0
+      module: 0
+    }
+    bcm_ports {
+      type: CE
+      slot: 1
+      port: 1
+      unit: 0
+      speed_bps: 100000000000
+      logical_port: 34
+      serdes_lane: 0
+      num_serdes_lanes: 4
+    }
+  )";
+
+  const std::string kExpectedTargetBcmChassisMapText = R"(
+    bcm_chips {
+      type: TOMAHAWK
+      slot: 1
+      pci_bus: 7
+      pci_slot: 1
+      is_oversubscribed: true
+    }
+    bcm_ports {
+      type: CE
+      slot: 1
+      port: 1
+      speed_bps: 100000000000
+      logical_port: 34
+      physical_port: 33
+      num_serdes_lanes: 4
+      internal: true
+      port_options {
+        loopback_mode: LOOPBACK_MAC
+      }
+    }
+  )";
+
+  // Setup test chassis_config, base_bcm_chassis_map and target_bcm_chassis_map.
+  ChassisConfig config;
+  BcmChassisMap base_bcm_chassis_map, target_bcm_chassis_map,
+      expected_target_bcm_chassis_map;
+  ASSERT_OK(
+      ParseProtoFromString(kConfigText, &config));
+  ASSERT_OK(
+      ParseProtoFromString(kBaseBcmChassisMapText, &base_bcm_chassis_map));
+  ASSERT_OK(
+      ParseProtoFromString(kExpectedTargetBcmChassisMapText,
+                           &expected_target_bcm_chassis_map));
+
+  ASSERT_OK(GenerateBcmChassisMapFromConfig(config, &base_bcm_chassis_map,
+                                            &target_bcm_chassis_map));
+  ASSERT_TRUE(ProtoEqual(target_bcm_chassis_map,
+                         expected_target_bcm_chassis_map));
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmChassisManagerTestWithMode, BcmChassisManagerTest,

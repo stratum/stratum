@@ -39,6 +39,12 @@ message BcmPortOptions {
     LINKSCAN_MODE_HW = 2;
     LINKSCAN_MODE_NONE = 3;
   }
+  enum LoopbackMode {
+    LOOPBACK_UNKNOWN = 0;
+    LOOPBACK_NONE = 1;
+    LOOPBACK_MAC = 2;
+    LOOPBACK_PHY = 3;
+  }
   // Is the port enabled?
   TriState enabled = 1;
   // Is the port blocked?
@@ -56,6 +62,8 @@ message BcmPortOptions {
   int32 num_serdes_lanes = 7;
   // Linkscan mode.
   LinkscanMode linkscan_mode = 8;
+  // The loopback mode for this port.
+  LoopbackMode loopback_mode = 9;
 };
 
 // Encapsulates all chassis-level properties (common to all chips on the
@@ -156,6 +164,8 @@ message BcmPort {
   bool internal = 20;
   // Port-level SDK properties (optional).
   repeated string sdk_properties = 21;
+  // Port options
+  BcmPortOptions port_options = 22;
 }
 
 // Defines a chassis map for a BCM-based platform.
