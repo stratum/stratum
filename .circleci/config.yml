@@ -53,7 +53,7 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cp .circleci/bazelrc .bazelrc
+    command: cat .circleci/bazelrc >> .bazelrc
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.

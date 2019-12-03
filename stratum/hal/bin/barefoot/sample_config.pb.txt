@@ -10,49 +10,49 @@ nodes {
 }
 singleton_ports {
   id: 144
-  port: 144
+  port: 1
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
     autoneg: TRI_STATE_TRUE
   }
   node: 1
-  name: "144"
+  name: "1/0"
   slot: 1
 }
 singleton_ports {
   id: 128
-  port: 128
+  port: 2
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
     autoneg: TRI_STATE_TRUE
   }
   node: 1
-  name: "128"
+  name: "2/0"
   slot: 1
 }
 singleton_ports {
   id: 132
-  port: 132
+  port: 3
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
     autoneg: TRI_STATE_TRUE
   }
   node: 1
-  name: "132"
+  name: "3/0"
   slot: 1
 }
 singleton_ports {
   id: 148
-  port: 148
+  port: 4
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
     autoneg: TRI_STATE_TRUE
   }
   node: 1
-  name: "148"
+  name: "4/0"
   slot: 1
 }

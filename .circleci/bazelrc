@@ -25,5 +25,3 @@ build --profile=/tmp/bazel.profile
 # Coverage
 coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main
 
-# C options
-build --conlyopt='-std=gnu11' --cxxopt='-std=gnu++11'
