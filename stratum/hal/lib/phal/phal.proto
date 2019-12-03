@@ -58,7 +58,7 @@ message PhalCardConfig {
     repeated string tx_disable_paths = 7;
   }
 
-  int32 slot = 1;                 // (optional) 1-base index identifier
+  int32 slot = 1;                 // (optional) 1-base slot number
   repeated Port ports = 2;
   // Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 3;

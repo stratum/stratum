@@ -365,7 +365,7 @@ TEST_F(OnlpSfpConfiguratorTest, DBConcurrency) {
               << sub_resp.DebugString();
 
     // Add the sfp
-    LOG(INFO) << "Issue HandleEvent(HW_STATE_PRESENT";
+    LOG(INFO) << "Issue HandleEvent(HW_STATE_PRESENT)";
     ONLP_OID_STATUS_FLAG_SET(&mock_oid_info_, PRESENT);
     ONLP_OID_STATUS_FLAG_SET(&mock_sfp_info_, PRESENT);
     EXPECT_OK(sfp_configurator_->HandleEvent(HW_STATE_PRESENT));

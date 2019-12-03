@@ -233,10 +233,10 @@ def stratum_deps():
         )
 
     if "rules_cc" not in native.existing_rules():
-        http_archive(
+        remote_workspace(
             name = "rules_cc",
-	    strip_prefix = "rules_cc-master",
-	    urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
+            remote = "https://github.com/bazelbuild/rules_cc",
+            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
         )
 
 # -----------------------------------------------------------------------------
