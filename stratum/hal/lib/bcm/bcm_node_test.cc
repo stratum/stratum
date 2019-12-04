@@ -170,6 +170,7 @@ class BcmNodeTest : public ::testing::Test {
   static constexpr int kEgressIntfId = 10001;
   static constexpr int kLogicalPortId = 35;
   static constexpr uint32 kPortId = 941;
+  static constexpr uint32 kL2McastGroupId = 20;
 
   std::unique_ptr<BcmAclManagerMock> bcm_acl_manager_mock_;
   std::unique_ptr<BcmL2ManagerMock> bcm_l2_manager_mock_;
@@ -1554,6 +1555,8 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertCloneSessionEntry) {
   auto* entity = update->mutable_entity();
   auto* entry = entity->mutable_packet_replication_engine_entry();
   auto* clone = entry->mutable_clone_session_entry();
+  clone->set_session_id(kCloneSessionId);
+  clone->add_replicas()->set_egress_port(kCpuPortId);
   std::vector<::util::Status> results = {};
 
   // TODO(max): expect calls to bcm_*_managers here, once implemented
@@ -1572,9 +1575,13 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteCloneSessionEntry) {
   auto* entity = update->mutable_entity();
   auto* entry = entity->mutable_packet_replication_engine_entry();
   auto* clone = entry->mutable_clone_session_entry();
+  clone->set_session_id(kCloneSessionId);
+  clone->add_replicas()->set_egress_port(kCpuPortId);
   std::vector<::util::Status> results = {};
 
-  // TODO(max): expect calls to bcm_*_managers here, once implemented
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              DeleteCloneSession(EqualsProto(*clone)))
+      .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -1590,9 +1597,12 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_InsertMulticastGroupEntry) {
   auto* entity = update->mutable_entity();
   auto* entry = entity->mutable_packet_replication_engine_entry();
   auto* mcast = entry->mutable_multicast_group_entry();
+  mcast->set_multicast_group_id(kL2McastGroupId);
   std::vector<::util::Status> results = {};
 
-  // TODO(max): expect calls to bcm_*_managers here, once implemented
+  EXPECT_CALL(*bcm_packetio_manager_mock_,
+              InsertPacketReplicationEntry(_))
+      .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());
@@ -1608,9 +1618,15 @@ TEST_F(BcmNodeTest, WriteForwardingEntriesSuccess_DeleteMulticastGroupEntry) {
   auto* entity = update->mutable_entity();
   auto* entry = entity->mutable_packet_replication_engine_entry();
   auto* mcast = entry->mutable_multicast_group_entry();
+  mcast->set_multicast_group_id(kL2McastGroupId);
   std::vector<::util::Status> results = {};
 
-  // TODO(max): expect calls to bcm_*_managers here, once implemented
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              DeleteMulticastGroup(EqualsProto(*mcast)))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_packetio_manager_mock_,
+              DeletePacketReplicationEntry(_))
+      .WillOnce(Return(::util::OkStatus()));
 
   EXPECT_OK(WriteForwardingEntries(req, &results));
   EXPECT_EQ(1U, results.size());

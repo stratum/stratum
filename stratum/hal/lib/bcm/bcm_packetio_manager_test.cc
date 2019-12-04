@@ -13,19 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sys/socket.h>
-#include <sys/epoll.h>
+#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 
 #include <functional>
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/libcproxy/passthrough_proxy.h"
+#include "stratum/lib/libcproxy/libcwrapper.h"
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -58,48 +58,6 @@ MATCHER_P(EqualsStatus, status, "") {
 }
 
 namespace {
-
-// FIXME: Implement actual LibcProxy
-class PassthroughLibcProxy {
- public:
-    PassthroughLibcProxy() {}
-    virtual ~PassthroughLibcProxy() {}
-    virtual int close(int fd) { return ::close(fd); }
-    virtual int socket(int domain, int type, int protocol) {
-      return socket(domain, type, protocol);
-    }
-    virtual int setsockopt(int sockfd, int level, int optname,
-      const void* optval, socklen_t optlen) {
-      return setsockopt(sockfd, level, optname, optval, optlen);
-    }
-    virtual int ioctl(int fd, uint64 request, void* arg) {
-      return ioctl(fd, request, arg);
-    }
-    virtual int bind(int sockfd, const struct sockaddr* my_addr,
-      socklen_t addrlen) {
-      return bind(sockfd, my_addr, addrlen);
-    }
-    virtual ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags) {
-      return sendmsg(sockfd, msg, flags);
-    }
-    virtual ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags) {
-      return recvmsg(sockfd, msg, flags);
-    }
-    virtual int epoll_create1(int flags) { return epoll_create1(flags); }
-    virtual int epoll_ctl(int efd, int op, int fd, struct epoll_event* event) {
-      return epoll_ctl(efd, op, fd, event);
-    }
-    virtual int epoll_wait(int efd, struct epoll_event* events, int maxevents,
-      int timeout) {
-      return epoll_wait(efd, events, maxevents, timeout);
-    }
-    virtual bool ShouldProxyEpollCreate() { return false; }
-};
-
-class LibcWrapper {
- public:
-    static void SetLibcProxy(PassthroughLibcProxy* proxy) {}
-};
 
 class LibcProxyMock : public PassthroughLibcProxy {
  public:
@@ -215,11 +173,11 @@ class LibcProxyMock : public PassthroughLibcProxy {
 
 class BcmPacketioManagerTest : public ::testing::TestWithParam<OperationMode> {
  public:
-  static void SetUpTestCase() {
+  static void SetUpTestSuite() {
     LibcWrapper::SetLibcProxy(LibcProxyMock::Instance());
   }
 
-  static void TearDownTestCase() {
+  static void TearDownTestSuite() {
     LibcProxyMock* instance = LibcProxyMock::Instance();
     if (instance) {
       delete instance;
@@ -318,7 +276,7 @@ class BcmPacketioManagerTest : public ::testing::TestWithParam<OperationMode> {
       EXPECT_EQ(kSocket1, purpose_to_knet_intf.at(controller_purpose).rx_sock);
       EXPECT_EQ(1, purpose_to_knet_intf.at(controller_purpose).cpu_queue);
       EXPECT_EQ(10, purpose_to_knet_intf.at(controller_purpose).vlan);
-      EXPECT_EQ(std::set<int>({kNonSflowFilterId1}),
+      EXPECT_EQ(std::set<int>({kCatchAllFilterId1}),
                 purpose_to_knet_intf.at(controller_purpose).filter_ids);
       EXPECT_EQ(kSocket2, purpose_to_knet_intf.at(sflow_purpose).tx_sock);
       EXPECT_EQ(kSocket2, purpose_to_knet_intf.at(sflow_purpose).rx_sock);
@@ -338,7 +296,7 @@ class BcmPacketioManagerTest : public ::testing::TestWithParam<OperationMode> {
       EXPECT_EQ(kDefaultCpuQueue,
                 purpose_to_knet_intf.at(controller_purpose).cpu_queue);
       EXPECT_EQ(kDefaultVlan, purpose_to_knet_intf.at(controller_purpose).vlan);
-      EXPECT_EQ(std::set<int>({kNonSflowFilterId1}),
+      EXPECT_EQ(std::set<int>({kCatchAllFilterId1}),
                 purpose_to_knet_intf.at(controller_purpose).filter_ids);
       EXPECT_FALSE(purpose_to_knet_intf.count(sflow_purpose));
 
@@ -551,6 +509,8 @@ class BcmPacketioManagerTest : public ::testing::TestWithParam<OperationMode> {
   static constexpr int kLogicalPort2 = 34;
   static constexpr int kLogicalPort3 = 55;
   static constexpr int kUnknownLogicalPort = 66;
+  static constexpr BcmSdkInterface::KnetFilterType kFilterTypeCatchAll =
+      BcmSdkInterface::KnetFilterType::CATCH_ALL;
   static constexpr BcmSdkInterface::KnetFilterType kFilterTypeNonSflow =
       BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH;
   static constexpr BcmSdkInterface::KnetFilterType kFilterTypeSflowIngress =
@@ -562,6 +522,7 @@ class BcmPacketioManagerTest : public ::testing::TestWithParam<OperationMode> {
   static constexpr int kSocket3 = 321;
   static constexpr int kSocket4 = 123;
   static constexpr int kEfd = 159;
+  static constexpr int kCatchAllFilterId1 = 10000;
   static constexpr int kNonSflowFilterId1 = 10001;
   static constexpr int kNonSflowFilterId2 = 10002;
   static constexpr int kSflowIngressFilterId1 = 10004;
@@ -608,6 +569,8 @@ constexpr int BcmPacketioManagerTest::kUnknownLogicalPort;
 constexpr BcmSdkInterface::KnetFilterType
     BcmPacketioManagerTest::kFilterTypeNonSflow;
 constexpr BcmSdkInterface::KnetFilterType
+    BcmPacketioManagerTest::kFilterTypeCatchAll;
+constexpr BcmSdkInterface::KnetFilterType
     BcmPacketioManagerTest::kFilterTypeSflowIngress;
 constexpr BcmSdkInterface::KnetFilterType
     BcmPacketioManagerTest::kFilterTypeSflowEgress;
@@ -616,6 +579,7 @@ constexpr int BcmPacketioManagerTest::kSocket2;
 constexpr int BcmPacketioManagerTest::kSocket3;
 constexpr int BcmPacketioManagerTest::kSocket4;
 constexpr int BcmPacketioManagerTest::kEfd;
+constexpr int BcmPacketioManagerTest::kCatchAllFilterId1;
 constexpr int BcmPacketioManagerTest::kNonSflowFilterId1;
 constexpr int BcmPacketioManagerTest::kNonSflowFilterId2;
 constexpr int BcmPacketioManagerTest::kSflowIngressFilterId1;
@@ -702,8 +666,8 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode1) {
       .Times(2)
       .WillRepeatedly(
           DoAll(SetArgPointee<3>(kNetifId), Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeNonSflow))
-      .WillOnce(Return(kNonSflowFilterId1));
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeCatchAll))
+      .WillOnce(Return(kCatchAllFilterId1));
   EXPECT_CALL(*bcm_sdk_mock_,
               CreateKnetFilter(kUnit1, _, kFilterTypeSflowIngress))
       .WillOnce(Return(kSflowIngressFilterId1));
@@ -791,7 +755,7 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode1) {
   // Expected calls to BcmSdkInterface for shutdown.
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit1))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kNonSflowFilterId1))
+  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kCatchAllFilterId1))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kSflowIngressFilterId1))
       .WillOnce(Return(::util::OkStatus()));
@@ -885,8 +849,8 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode2) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, CreateKnetIntf(kUnit2, kDefaultVlan, _, _))
       .WillOnce(DoAll(SetArgPointee<3>(kNetifId), Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit2, _, kFilterTypeNonSflow))
-      .WillOnce(Return(kNonSflowFilterId1));
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit2, _, kFilterTypeCatchAll))
+      .WillOnce(Return(kCatchAllFilterId1));
   EXPECT_CALL(*bcm_sdk_mock_, SetRateLimit(kUnit2, _))
       .WillOnce(Return(::util::OkStatus()));
 
@@ -963,7 +927,7 @@ TEST_P(BcmPacketioManagerTest, PushChassisConfigThenVerifySuccessForNode2) {
   // Expected calls to BcmSdkInterface for shutdown.
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit2))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit2, kNonSflowFilterId1))
+  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit2, kCatchAllFilterId1))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetIntf(kUnit2, kNetifId))
       .WillOnce(Return(::util::OkStatus()));
@@ -1062,8 +1026,8 @@ TEST_P(BcmPacketioManagerTest,
       .Times(2)
       .WillRepeatedly(
           DoAll(SetArgPointee<3>(kNetifId), Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeNonSflow))
-      .WillOnce(Return(kNonSflowFilterId1));
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeCatchAll))
+      .WillOnce(Return(kCatchAllFilterId1));
   EXPECT_CALL(*bcm_sdk_mock_,
               CreateKnetFilter(kUnit1, _, kFilterTypeSflowIngress))
       .WillOnce(Return(kSflowIngressFilterId1));
@@ -1110,7 +1074,7 @@ TEST_P(BcmPacketioManagerTest,
   // Expected calls to BcmSdkInterface for shutdown.
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit1))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kNonSflowFilterId1))
+  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kCatchAllFilterId1))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kSflowIngressFilterId1))
       .WillOnce(Return(::util::OkStatus()));
@@ -1189,7 +1153,7 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, CreateKnetIntf(kUnit1, 10, _, _))
       .Times(1)
       .WillRepeatedly(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeNonSflow))
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeCatchAll))
       .WillOnce(Return(DefaultError()));
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit1))
       .WillOnce(Return(::util::OkStatus()));
@@ -1277,8 +1241,8 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, CreateKnetIntf(kUnit1, kDefaultVlan, _, _))
       .WillRepeatedly(
           DoAll(SetArgPointee<3>(kNetifId), Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeNonSflow))
-      .WillOnce(Return(kNonSflowFilterId1));
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeCatchAll))
+      .WillOnce(Return(kCatchAllFilterId1));
 
   // libc calls triggered by RX thread.
   EXPECT_CALL(*LibcProxyMock::Instance(), EpollCreate1(0))
@@ -1404,7 +1368,7 @@ TEST_P(BcmPacketioManagerTest,
   // Expected calls to BcmSdkInterface for shutdown.
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit1))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kNonSflowFilterId1))
+  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kCatchAllFilterId1))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetIntf(kUnit1, kNetifId))
       .WillOnce(Return(::util::OkStatus()));
@@ -1463,8 +1427,8 @@ TEST_P(BcmPacketioManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, CreateKnetIntf(kUnit1, kDefaultVlan, _, _))
       .WillRepeatedly(
           DoAll(SetArgPointee<3>(kNetifId), Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeNonSflow))
-      .WillOnce(Return(kNonSflowFilterId1));
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeCatchAll))
+      .WillOnce(Return(kCatchAllFilterId1));
 
   // libc calls triggered by RX thread.
   EXPECT_CALL(*LibcProxyMock::Instance(), EpollCreate1(0))
@@ -1597,7 +1561,7 @@ TEST_P(BcmPacketioManagerTest,
   // Expected calls to BcmSdkInterface for shutdown.
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit1))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kNonSflowFilterId1))
+  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kCatchAllFilterId1))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetIntf(kUnit1, kNetifId))
       .WillOnce(Return(::util::OkStatus()));
@@ -1674,8 +1638,8 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   EXPECT_CALL(*bcm_sdk_mock_, CreateKnetIntf(kUnit1, kDefaultVlan, _, _))
       .WillRepeatedly(
           DoAll(SetArgPointee<3>(kNetifId), Return(::util::OkStatus())));
-  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeNonSflow))
-      .WillOnce(Return(kNonSflowFilterId1));
+  EXPECT_CALL(*bcm_sdk_mock_, CreateKnetFilter(kUnit1, _, kFilterTypeCatchAll))
+      .WillOnce(Return(kCatchAllFilterId1));
 
   // Possible libc calls (triggered only if in the RX thread is spawned).
   EXPECT_CALL(*LibcProxyMock::Instance(), EpollCreate1(0))
@@ -1917,7 +1881,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
 
   // 6- A packet sent to ingress pipeline
   packet.clear_metadata();  // no metadata will send packet to ingress pipeline
-  EXPECT_CALL(*bcm_sdk_mock_, GetKnetHeaderForIngressPipelineTx(kUnit1, _, _))
+  EXPECT_CALL(*bcm_sdk_mock_, GetKnetHeaderForIngressPipelineTx(kUnit1, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*LibcProxyMock::Instance(), SendMsg(kSocket1, _, _))
       .WillOnce(Return(64));  // 64 is tot_len of the packet.
@@ -1960,7 +1924,7 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
   // Expected calls to BcmSdkInterface for shutdown.
   EXPECT_CALL(*bcm_sdk_mock_, StopRx(kUnit1))
       .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kNonSflowFilterId1))
+  EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetFilter(kUnit1, kCatchAllFilterId1))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, DestroyKnetIntf(kUnit1, kNetifId))
       .WillOnce(Return(::util::OkStatus()));

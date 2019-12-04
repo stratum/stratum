@@ -708,18 +708,18 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
           replication_entry.clone_session_entry().packet_length_bytes() == 0);
       // We simulate having one clone session with hard-coded Id
       CHECK_RETURN_IF_FALSE(replication_entry.clone_session_entry().session_id()
-          == kCloneSessionId) << "Bcm only allow a dummy clone session,"
-          << " with Id " << kCloneSessionId;
+          == kCloneSessionId) << "Bcm only allows one stub clone session "
+          << " with Id " << kCloneSessionId << ".";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().class_of_service() == 0)
-          << "CoS is not supported on cloned packets";
+          << "CoS is not supported on cloned packets.";
       // Only allow cloning to Cpu port
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().replicas_size() == 1)
-          << "Bcm only allows cloning to a single port";
+          << "Bcm only allows cloning to a single port.";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().replicas(0).egress_port() == kCpuPortId)
-          << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ")";
+          << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ").";
       break;
     case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
       auto mcast_grp = bcm_replication_entry->mutable_multicast_group_entry();
@@ -1851,7 +1851,14 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
              << ".";
     }
     // Port mask is ignored as it isn't possible to translate.
-    mapped_field.mutable_mask()->set_u32(~0);
+    // TODO(max): SDKLT and SDK6 work differently with port masks. We could
+    // either reject P4RT requests with masks (ternary) and let the sdk_wrapper
+    // do the right thing to make an exact match. Or we just accept whatever
+    // the controller sends.
+    // mapped_field.mutable_mask()->set_u32(~0);
+    if (common_field.has_mask()) {
+      *mapped_field.mutable_mask() = common_field.mask();
+    }
     FillBcmField(bcm_type, mapped_field, bcm_field);
     return ::util::OkStatus();
   }
