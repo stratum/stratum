@@ -19,11 +19,13 @@ again.
 
 ### General Information
 
- - One PR for one feature or change request. Prefer multiple smaller PRs to one gigantic one. Multiple commits during development are OK; see next point.
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/). Use this document as a guide when submitting code.
+
+Some additional points:
  
  - Stratum uses a [squash and rebase](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#squash-and-merge-your-pull-request-commits) model. You do **not** have to do this by hand! GitHub will guide you through it, if possible.
  
- - Describe what your PR solves and why. Consider opening a separate issue describing the technical details there and [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords). This keeps code review and design discussions clean.
+ - Consider opening a separate issue describing the technical details there and [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords). This keeps code review and design discussions clean.
 
 ### Steps to Follow
 
