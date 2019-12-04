@@ -2001,8 +2001,6 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // We first get the front panel port info from PHAL. Then using this info
     // (read and parsed from the transceiver module EEPROM) we configure serdes
     // for all BCM ports.
-    // TODO(max): Uncomment once serdes is supported by bcm_sdk_wrapper.
-    /*
     FrontPanelPortInfo fp_port_info;
     RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(
         port_group_key.slot, port_group_key.port, &fp_port_info));
@@ -2031,7 +2029,6 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
       VLOG(1) << "Serdes setting done for SingletonPort "
               << PrintBcmPort(*bcm_port) << ".";
     }
-    */
   }
   // The option applies to all the ports.
   for (const auto* bcm_port : bcm_ports) {

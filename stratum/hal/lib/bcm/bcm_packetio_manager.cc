@@ -409,6 +409,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
   return ::util::OkStatus();
 }
 
+// TODO(max): check if callers handle errors
 ::util::Status BcmPacketioManager::TransmitPacket(
     GoogleConfig::BcmKnetIntfPurpose purpose,
     const ::p4::v1::PacketOut& packet) {

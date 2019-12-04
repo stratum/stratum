@@ -333,15 +333,17 @@ std::string OffsetBuffer(const std::string& input, size_t input_offset,
     // In this case, we take part of the first byte of the input buffer.
     if (offset_from_input < 0) {
       output[byte_index] =
-          input.at(input_byte_index) >> -offset_from_input;
+          static_cast<uint8>(input.at(input_byte_index)) >> -offset_from_input;
       continue;
     }
 
     // Here, we take parts of the two overlapping bytes.
     uint16 bit_shift = offset_from_input & 7;
-    output[byte_index] = input.at(input_byte_index) << bit_shift;
+    output[byte_index] =
+        static_cast<uint8>(input.at(input_byte_index)) << bit_shift;
     if (input_byte_index + 1 < input.size()) {
-      output[byte_index] += input.at(input_byte_index + 1) >> (8 - bit_shift);
+      output[byte_index] +=
+        static_cast<uint8>(input.at(input_byte_index + 1)) >> (8 - bit_shift);
     }
   }
 
