@@ -167,7 +167,13 @@ jobs:
       - checkout
       - run:
           name: Run cpplint
-          command: cpplint --linelength=110 --recursive stratum
+          command: cpplint --recursive stratum
+      - run:
+          name: Run clang-format
+          command: >
+            find . -name "*.h" -o -name "*.cc" |
+            xargs clang-format --style=file --output-replacements-xml |
+            ! grep "<replacement "
 
 workflows:
   version: 2
