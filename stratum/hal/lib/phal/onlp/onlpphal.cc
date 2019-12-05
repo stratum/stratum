@@ -147,9 +147,7 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::StatusOr<AttributeDatabaseInterface*> OnlpPhal::GetPhalDB() {
-  if (database_ == nullptr) {
-    RETURN_ERROR() << "database_ is nullptr";
-  }
+  CHECK_RETURN_IF_FALSE(database_) << "no database";
   return(database_.get());
 }
 
