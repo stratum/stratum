@@ -76,7 +76,7 @@ message PhalFanTrayConfig {
     // Path to set the fan speed.
     string fan_control_path = 4;
   }
-  int32 slot = 1;                 // (optional) 1-base index identifier
+  int32 slot = 1;                 // (optional) 1-base slot number
   string tray_presence_path = 2;
   // Fan tray info EEPROM path.
   string tray_info_path = 3;
@@ -93,7 +93,7 @@ message PhalPsuTrayConfig {
     // Attribute DB Cache Policy 
     CachePolicyConfig cache_policy = 2;
   }
-  int32 slot = 1;                 // (optional) 1-base index identifier
+  int32 slot = 1;                 // (optional) 1-base slot number
   repeated Psu psus = 2;
   // Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 3;

@@ -1,4 +1,6 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
+// Copyright 2019 Dell EMC
+// Copyright 2019-present Open Networking Foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +41,7 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
+#include "stratum/hal/lib/common/utils.h"
 #include "re2/re2.h"
 
 namespace stratum {
@@ -77,48 +80,17 @@ PhalDBService::~PhalDBService() {}
 
 namespace {
 
-::grpc::Status ToGrpcStatus(const ::util::Status& status,
-                            const std::vector<::util::Status>& details) {
-  // We need to create a ::google::rpc::Status and populate it with all the
-  // details, then convert it to ::grpc::Status.
-  ::google::rpc::Status from;
-  if (!status.ok()) {
-    from.set_code(ToGoogleRpcCode(status.CanonicalCode()));
-    from.set_message(status.error_message());
-    // Add individual errors only when the top level error code is not OK.
-    for (const auto& detail : details) {
-      // Each individual detail is converted to another ::google::rpc::Status,
-      // which is then serialized as one proto any in 'from' message above.
-      ::stratum::hal::phal::Error error;
-      if (!detail.ok()) {
-        error.set_canonical_code(ToGoogleRpcCode(detail.CanonicalCode()));
-        error.set_code(detail.error_code());
-        error.set_message(detail.error_message());
-      } else {
-        error.set_code(::google::rpc::OK);
-      }
-      from.add_details()->PackFrom(error);
-    }
-  } else {
-    from.set_code(::google::rpc::OK);
-  }
-
-  return ::grpc::Status(ToGrpcCode(from.code()), from.message(),
-                        from.SerializeAsString());
-}
-
 // Parse PB Query string to Phal DB Path
-::util::StatusOr<::stratum::hal::phal::Path> ParseQuery(
+::util::StatusOr<phal::Path> ParseQuery(
     const std::string& query) {
 
-    ::stratum::hal::phal::Path path;
+    phal::Path path;
 
     std::vector<std::string> query_fields = absl::StrSplit(query, "/");
     bool use_terminal_group = false;
-    if (query_fields[query_fields.size() - 1] == "") {
+    if (query_fields.back() == "") {
       use_terminal_group = true;  // Query ends with a '/'
-      query_fields = {query_fields.begin(),
-                      query_fields.begin() + query_fields.size() - 1};
+      query_fields.pop_back();
     }
 
     for (const auto& query_field : query_fields) {
@@ -127,7 +99,7 @@ namespace {
       RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
       RE2 bracket_regex(R"#(\[(\d+)\])#");
 
-      ::stratum::hal::phal::PathEntry entry;
+      phal::PathEntry entry;
 
       std::string bracket_match;
       CHECK_RETURN_IF_FALSE(
@@ -147,10 +119,10 @@ namespace {
 }
 
 // Convert from ProtoBuf Path to PhalDB Path
-::util::StatusOr<::stratum::hal::phal::Path> ToPhalDBPath(
-    ::stratum::hal::phal::PathQuery req_path) {
+::util::StatusOr<phal::Path> ToPhalDBPath(
+    phal::PathQuery req_path) {
 
-    ::stratum::hal::phal::Path path;
+    phal::Path path;
 
     // If no path entries return error
     if (req_path.entries_size() == 0) {
@@ -158,7 +130,7 @@ namespace {
     }
 
     // Create Attribute DB Path
-    ::stratum::hal::phal::PathEntry entry;
+    phal::PathEntry entry;
     for (const auto& ent : req_path.entries()) {
         entry.name = ent.name();
         entry.index = ent.index();
@@ -180,7 +152,7 @@ namespace {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService, Get, context);
 
   ::util::Status status;
-  ::util::StatusOr<::stratum::hal::phal::Path> result;
+  ::util::StatusOr<phal::Path> result;
 
   // Convert to PhalDB Path
   switch (req->query_case()) {
@@ -229,7 +201,7 @@ namespace {
 
   // Spin thru each update
   for (int i=0; i < req->updates_size(); i++) {
-    ::util::StatusOr<::stratum::hal::phal::Path> attr_res;
+    ::util::StatusOr<phal::Path> attr_res;
 
     // Get the update
     const auto& update = req->updates(i);
@@ -336,7 +308,7 @@ namespace {
                            Subscribe, context);
 
   ::util::Status status;
-  ::util::StatusOr<::stratum::hal::phal::Path> result;
+  ::util::StatusOr<phal::Path> result;
 
   // Convert to PhalDB Path
   switch (req->query_case()) {

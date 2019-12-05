@@ -253,13 +253,11 @@ Hal::~Hal() {
   external_server_->Wait();  // blocking until external_server_->Shutdown()
                              // is called. We dont wait on internal_service.
 
-  return util::OkStatus();
+  return Teardown();
 }
 
 void Hal::HandleSignal(int value) {
   LOG(INFO) << "Received signal: " << strsignal(value);
-  // Need to do Teardown first to clear up any services first
-  Teardown();
   // Calling Shutdown() so the blocking call to Wait() returns.
   // NOTE: Seems like if there is an active stream Read(), calling Shutdown()
   // with no deadline will block forever, as it waits for all the active RPCs

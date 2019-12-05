@@ -69,7 +69,7 @@ class PhalCli {
         << status.error_message();
     }
 
-    int execute_duration =
+    int64_t execute_duration =
         (execute_time - start_time) / absl::Microseconds(1);
 
     auto result_str = resp.DebugString();
@@ -182,8 +182,8 @@ class PhalCli {
         std::cout << "Type: ";
         std::getline(std::cin, type);
 
-        if (!strcmp(type.c_str(), "int32")) {
-            ::google::protobuf::int32 val;
+        if (type.compare("int32") == 0) {
+            int32_t val;
             if (sscanf(val_str.c_str(), "%d", &val) != 1) {
                 std::cout << "Invalid int32" << std::endl;
                 continue;
@@ -191,8 +191,8 @@ class PhalCli {
             update->mutable_value()->set_int32_val(val);
             break;
 
-        } else if (!strcmp(type.c_str(), "int64")) {
-            ::google::protobuf::int64 val;
+        } else if (type.compare("int64") == 0) {
+            int64_t val;
             if (sscanf(val_str.c_str(), "%ld", &val) != 1) {
                 std::cout << "Invalid int64" << std::endl;
                 continue;
@@ -200,8 +200,8 @@ class PhalCli {
             update->mutable_value()->set_int64_val(val);
             break;
 
-        } else if (!strcmp(type.c_str(), "uint32")) {
-            ::google::protobuf::uint32 val;
+        } else if (type.compare("uint32") == 0) {
+            uint32_t val;
             if (sscanf(val_str.c_str(), "%d", &val) != 1) {
                 std::cout << "Invalid uint32" << std::endl;
                 continue;
@@ -209,8 +209,8 @@ class PhalCli {
             update->mutable_value()->set_uint32_val(val);
             break;
 
-        } else if (!strcmp(type.c_str(), "uint64")) {
-            ::google::protobuf::uint64 val;
+        } else if (type.compare("uint64") == 0) {
+            uint64_t val;
             if (sscanf(val_str.c_str(), "%ld", &val) != 1) {
                 std::cout << "Invalid uint64" << std::endl;
                 continue;
@@ -218,7 +218,7 @@ class PhalCli {
             update->mutable_value()->set_uint64_val(val);
             break;
 
-        } else if (!strcmp(type.c_str(), "double")) {
+        } else if (type.compare("double") == 0) {
             double val;
             if (sscanf(val_str.c_str(), "%lf", &val) != 1) {
                 std::cout << "Invalid double" << std::endl;
@@ -227,7 +227,7 @@ class PhalCli {
             update->mutable_value()->set_double_val(val);
             break;
 
-        } else if (!strcmp(type.c_str(), "float")) {
+        } else if (type.compare("float") == 0) {
             float val;
             if (sscanf(val_str.c_str(), "%f", &val) != 1) {
                 std::cout << "Invalid float" << std::endl;
@@ -236,12 +236,12 @@ class PhalCli {
             update->mutable_value()->set_float_val(val);
             break;
 
-        } else if (!strcmp(type.c_str(), "bool")) {
-            if (!strcmp(val_str.c_str(), "false")) {
+        } else if (type.compare("bool") == 0) {
+            if (val_str.compare("false") == 0) {
                 update->mutable_value()->set_bool_val(false);
                 break;
 
-            } else if (!strcmp(val_str.c_str(), "true")) {
+            } else if (val_str.compare("true") == 0) {
                 update->mutable_value()->set_bool_val(true);
                 break;
 
@@ -250,11 +250,11 @@ class PhalCli {
                 continue;
             }
 
-        } else if (!strcmp(type.c_str(), "string")) {
+        } else if (type.compare("string") == 0) {
             update->mutable_value()->set_string_val(val_str);
             break;
 
-        } else if (!strcmp(type.c_str(), "bytes")) {
+        } else if (type.compare("bytes") == 0) {
             update->mutable_value()->set_bytes_val(val_str);
 
         } else {
@@ -276,7 +276,7 @@ class PhalCli {
         << status.error_message();
     }
 
-    int execute_duration =
+    int64_t execute_duration =
         (execute_time - start_time) / absl::Microseconds(1);
 
     auto result_str = resp.DebugString();
@@ -293,7 +293,7 @@ class PhalCli {
   enum cmd_type {Get, Subscribe, Set};
 
   // Runs the main CLI loop.
-  ::util::Status  RunCli() {
+  ::util::Status RunCli() {
     while (true) {
       cmd_type cmdtype = Get;
 
@@ -311,13 +311,13 @@ class PhalCli {
       }
       std::string type = r[0];
 
-      if (!type.compare("get")) {
+      if (type.compare("get") == 0) {
           cmdtype = Get;
 
-      } else if (!type.compare("set")) {
+      } else if (type.compare("set") == 0) {
           cmdtype = Set;
 
-      } else if (!type.compare("sub")) {
+      } else if (type.compare("sub") == 0) {
           cmdtype = Subscribe;
 
       } else {
