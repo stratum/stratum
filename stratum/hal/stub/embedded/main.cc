@@ -20,7 +20,7 @@
 // this is intended to run on embedded switches, we still build a host version
 // of this binary as well for cases when we run this stub on local desktops.
 #include <arpa/inet.h>
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include <linux/filter.h>
 #include <linux/if_ether.h>
 #include <net/ethernet.h>

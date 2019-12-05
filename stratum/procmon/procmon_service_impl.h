@@ -17,7 +17,7 @@
 #ifndef STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
 #define STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
 
-#include <grpc++/grpc++.h>
+#include "grpcpp/grpcpp.h"
 
 #include "stratum/procmon/procmon.grpc.pb.h"
 

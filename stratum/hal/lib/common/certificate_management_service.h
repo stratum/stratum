@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_CERTIFICATE_MANAGEMENT_SERVICE_H_
 #define STRATUM_HAL_LIB_COMMON_CERTIFICATE_MANAGEMENT_SERVICE_H_
 
-#include <grpc++/grpc++.h>
+#include "grpcpp/grpcpp.h"
 
 #include <memory>
 

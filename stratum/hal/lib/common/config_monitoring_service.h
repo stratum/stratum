@@ -19,7 +19,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_
 #define STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 
 #include <memory>
 

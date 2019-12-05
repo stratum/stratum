@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/common/certificate_management_service.h"
 
-#include <grpc++/grpc++.h>
+#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <string>
 
