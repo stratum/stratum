@@ -16,7 +16,7 @@
 
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include <list>
 #include <string>
 #include <unordered_set>

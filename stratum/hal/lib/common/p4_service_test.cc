@@ -16,7 +16,7 @@
 
 #include "stratum/hal/lib/common/p4_service.h"
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include <memory>
 
 #include "gflags/gflags.h"

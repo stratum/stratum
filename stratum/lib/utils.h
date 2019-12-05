@@ -18,7 +18,7 @@
 #ifndef STRATUM_LIB_UTILS_H_
 #define STRATUM_LIB_UTILS_H_
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include <libgen.h>
 #include <stddef.h>
 #include <stdlib.h>

@@ -19,7 +19,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_P4_SERVICE_H_
 #define STRATUM_HAL_LIB_COMMON_P4_SERVICE_H_
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include <pthread.h>
 
 #include <memory>

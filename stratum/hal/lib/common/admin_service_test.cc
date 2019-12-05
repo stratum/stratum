@@ -15,7 +15,7 @@
 
 #include "stratum/hal/lib/common/admin_service.h"
 
-#include <grpc++/grpc++.h>
+#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <string>
 

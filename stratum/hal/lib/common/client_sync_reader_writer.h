@@ -19,7 +19,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_CLIENT_SYNC_READER_WRITER_H_
 #define STRATUM_HAL_LIB_COMMON_CLIENT_SYNC_READER_WRITER_H_
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <utility>
 

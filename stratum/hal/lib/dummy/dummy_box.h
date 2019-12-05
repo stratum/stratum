@@ -15,7 +15,7 @@
 #ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_
 #define STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 
 #include <functional>
 #include <memory>
