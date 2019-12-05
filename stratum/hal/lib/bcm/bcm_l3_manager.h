@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_L3_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_L3_MANAGER_H_
 
 #include <memory>
-#include <utility>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"

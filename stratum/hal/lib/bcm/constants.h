@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_CONSTANTS_H_
 #define STRATUM_HAL_LIB_BCM_CONSTANTS_H_
 
@@ -52,7 +51,8 @@ constexpr int kDefaultVlanStgId = 1;
 constexpr int kAclTablePriorityRange = 1 << 16;
 
 // KNET related constants.
-// TODO(max): 802.1Q says 0x8100 is used as TPID, switch Rx packets also use this value
+// TODO(max): 802.1Q says 0x8100 is used as TPID, switch Rx packets also use
+// this value
 // constexpr uint16 kRcpuVlanEthertype = 0x8101;
 constexpr uint16 kRcpuVlanEthertype = 0x8100;
 constexpr uint16 kRcpuVlanId = 1;  // fixed for all RCPU headers

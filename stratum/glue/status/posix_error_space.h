@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 // This package defines the POSIX error space (think 'errno'
 // values). Given a (stable) errno value, this class can be used to
 // translate that value to a string description by calling the
@@ -33,7 +32,6 @@
 // circuited by the implementation of Status to be equivalent to
 // Status::OK, ignoring this error space and the provided message.
 //
-
 
 #ifndef STRATUM_GLUE_STATUS_POSIX_ERROR_SPACE_H_
 #define STRATUM_GLUE_STATUS_POSIX_ERROR_SPACE_H_

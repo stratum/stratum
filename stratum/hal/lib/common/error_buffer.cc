@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/error_buffer.h"
 
 #include <string>
@@ -35,9 +34,9 @@ void ErrorBuffer::AddError(const ::util::Status& error,
                            const std::string& msg_to_prepend,
                            gtl::source_location location) {
   absl::WriterMutexLock l(&lock_);
-  std::string error_message = absl::StrCat(
-      "(", BaseName(location.file_name()), ":", location.line(),
-      "): ", msg_to_prepend, error.error_message());
+  std::string error_message =
+      absl::StrCat("(", BaseName(location.file_name()), ":", location.line(),
+                   "): ", msg_to_prepend, error.error_message());
   LOG(ERROR) << error_message;
   if (static_cast<int>(errors_.size()) > FLAGS_max_num_errors_to_track) return;
   ::util::Status status = APPEND_ERROR(error.StripMessage()).without_logging()

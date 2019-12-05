@@ -19,8 +19,8 @@
 
 #include <vector>
 
-#include "google/protobuf/util/message_differencer.h"
 #include "gmock/gmock.h"
+#include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"

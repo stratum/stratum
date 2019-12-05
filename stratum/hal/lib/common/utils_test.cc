@@ -13,17 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/utils.h"
 
 #include <string>
 
-#include "stratum/lib/constants.h"
-#include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
 #include "google/protobuf/util/message_differencer.h"
-
+#include "gtest/gtest.h"
+#include "stratum/lib/constants.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 

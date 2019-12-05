@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_SIM_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_SIM_H_
 
 #include <map>
 #include <string>
 
-#include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_wrapper.h"
 
 namespace stratum {
 namespace hal {

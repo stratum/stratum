@@ -15,14 +15,12 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_
 #define STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_
 
 #include <memory>
 
 #include "grpcpp/grpcpp.h"
-
 #include "stratum/glue/status/status.h"
 
 namespace stratum {

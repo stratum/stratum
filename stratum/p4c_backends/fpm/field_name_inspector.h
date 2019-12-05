@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "google/protobuf/map.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "google/protobuf/map.h"
 
 namespace stratum {
 namespace p4c_backends {

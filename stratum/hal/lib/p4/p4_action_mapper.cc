@@ -19,29 +19,26 @@
 
 #include <memory>
 
-#include "stratum/hal/lib/p4/utils.h"
-#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
+#include "stratum/hal/lib/p4/utils.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
 
 P4ActionMapper::P4ActionMapper(const P4PipelineConfig& p4_pipeline_config)
-    : p4_pipeline_config_(p4_pipeline_config) {
-}
+    : p4_pipeline_config_(p4_pipeline_config) {}
 
-P4ActionMapper::~P4ActionMapper() {
-  gtl::STLDeleteValues(&action_map_);
-}
+P4ActionMapper::~P4ActionMapper() { gtl::STLDeleteValues(&action_map_); }
 
 ::util::Status P4ActionMapper::AddP4Actions(
     const P4InfoManager& p4_info_manager) {
   if (!action_map_.empty()) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << __PRETTY_FUNCTION__
-        << " has already processed this P4PipelineConfig";
+           << __PRETTY_FUNCTION__
+           << " has already processed this P4PipelineConfig";
   }
 
   // This loop finds the p4_pipeline_config_ action descriptor for each
@@ -72,9 +69,9 @@ P4ActionMapper::~P4ActionMapper() {
           auto status = AddAction(internal_action, new_map_entry.get());
           APPEND_STATUS_IF_ERROR(action_add_status, status);
         } else {
-          auto status = AddAppliedTableAction(
-              p4_info_manager, internal_link,
-              internal_action, new_map_entry.get());
+          auto status =
+              AddAppliedTableAction(p4_info_manager, internal_link,
+                                    internal_action, new_map_entry.get());
           APPEND_STATUS_IF_ERROR(action_add_status, status);
         }
       }
@@ -87,8 +84,7 @@ P4ActionMapper::~P4ActionMapper() {
 }
 
 ::util::StatusOr<const P4ActionDescriptor*>
-P4ActionMapper::MapActionIDAndTableID(
-    uint32 action_id, uint32 table_id) const {
+P4ActionMapper::MapActionIDAndTableID(uint32 action_id, uint32 table_id) const {
   return nullptr;  // TODO(teverman): Add implementation.
 }
 
@@ -104,8 +100,8 @@ P4ActionMapper::MapActionIDAndTableID(
     const P4ActionDescriptor& internal_action, ActionMapEntry* map_entry) {
   if (map_entry->internal_action != nullptr) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Unexpected multiple links to internal actions - discarding "
-        << internal_action.ShortDebugString();
+           << "Unexpected multiple links to internal actions - discarding "
+           << internal_action.ShortDebugString();
   }
   map_entry->internal_action = &internal_action;
 
@@ -128,8 +124,8 @@ P4ActionMapper::MapActionIDAndTableID(
                                  table_status.ValueOrDie().preamble().id(),
                                  &internal_action)) {
       ::util::Status error = MAKE_ERROR(ERR_INTERNAL)
-          << "Unexpected duplicate appearance of table " << table_name
-          << " in internal action links";
+                             << "Unexpected duplicate appearance of table "
+                             << table_name << " in internal action links";
       APPEND_STATUS_IF_ERROR(table_action_status, error);
     }
   }

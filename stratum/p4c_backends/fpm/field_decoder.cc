@@ -78,8 +78,8 @@ void FieldDecoder::ConvertHeaderFields(
     VLOG(1) << "Converting header_type " << header_type_name;
     const std::string metadata_name = GetControllerHeaderAnnotation(*h_type);
     if (!metadata_name.empty()) {
-      auto insert_status = local_header_type_map.insert(std::make_pair(
-          metadata_name, header_type_name));
+      auto insert_status = local_header_type_map.insert(
+          std::make_pair(metadata_name, header_type_name));
       if (insert_status.second == false) {
         LOG(WARNING) << "Packet IO metadata name " << metadata_name
                      << " is defined multiple times";
@@ -218,8 +218,7 @@ bool FieldDecoder::DecodeP4Typedef(const IR::Type_Typedef& p4_typedef) {
 // Since enums have no specified size, they get assigned a width of 0
 // to distinguish them from typedefs in path_end_types_.
 bool FieldDecoder::DecodeP4Enum(const IR::Type_Enum& p4_enum) {
-  if (p4_enum.members.empty())
-    return false;
+  if (p4_enum.members.empty()) return false;
   path_end_types_[p4_enum.externalName()] = 0;
   return true;
 }
@@ -268,8 +267,8 @@ void FieldDecoder::UpdateFieldMapData(
   if (iter != annotated_types.end()) {
     field_type = iter->second;
   }
-  table_mapper_->SetFieldAttributes(
-      fq_field_name, field_type, P4_HEADER_UNKNOWN, bit_offset, bit_width);
+  table_mapper_->SetFieldAttributes(fq_field_name, field_type,
+                                    P4_HEADER_UNKNOWN, bit_offset, bit_width);
   if (header_type_name == GetP4ModelNames().local_metadata_type_name()) {
     table_mapper_->SetFieldLocalMetadataFlag(fq_field_name);
   }
@@ -281,8 +280,8 @@ void FieldDecoder::StoreFieldTypeAnnotation(
   P4Annotation p4_annotation;
   if (GetSwitchStackAnnotation(field, &p4_annotation) &&
       p4_annotation.field_type() != P4_FIELD_TYPE_UNKNOWN) {
-    AnnotatedFieldTypeMapKey key = std::make_pair(
-        header_type_name, std::string(field.externalName()));
+    AnnotatedFieldTypeMapKey key =
+        std::make_pair(header_type_name, std::string(field.externalName()));
     annotated_types->insert(std::make_pair(key, p4_annotation.field_type()));
   }
 }

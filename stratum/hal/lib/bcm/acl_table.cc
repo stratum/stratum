@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/acl_table.h"
+
 #include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
@@ -38,26 +38,25 @@ BcmAclStage AclTable::P4PipelineToBcmAclStage(
 }
 
 ::util::Status AclTable::MarkUdfMatchField(uint32 field, int udf_set_id) {
-    if (!HasField(field)) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "ACL Table " << Id()
-             << " does not contain match field: " << field
-             << ". Cannot mark field as UDF.";
-    }
-    if (udf_set_id < 0) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Invalid UDF set id: " << udf_set_id << ".";
-    }
-    if (udf_match_fields_.empty()) {
-      udf_set_id_ = udf_set_id;
-    } else if (udf_set_id_ != udf_set_id) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "ACL Table " << Id() << " already uses UDF set " << udf_set_id_
-             << ". Cannot designate a UDF match field from UDF set "
-             << udf_set_id << ".";
-    }
-    udf_match_fields_.insert(field);
-    return ::util::OkStatus();
+  if (!HasField(field)) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "ACL Table " << Id() << " does not contain match field: " << field
+           << ". Cannot mark field as UDF.";
+  }
+  if (udf_set_id < 0) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Invalid UDF set id: " << udf_set_id << ".";
+  }
+  if (udf_match_fields_.empty()) {
+    udf_set_id_ = udf_set_id;
+  } else if (udf_set_id_ != udf_set_id) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "ACL Table " << Id() << " already uses UDF set " << udf_set_id_
+           << ". Cannot designate a UDF match field from UDF set " << udf_set_id
+           << ".";
+  }
+  udf_match_fields_.insert(field);
+  return ::util::OkStatus();
 }
 
 ::util::StatusOr<int> AclTable::BcmAclId(

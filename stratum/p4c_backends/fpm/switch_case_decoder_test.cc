@@ -20,14 +20,14 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 using ::testing::_;
 using ::testing::AnyNumber;
@@ -40,9 +40,7 @@ namespace p4c_backends {
 // data for test use.
 class SwitchCaseDecoderTest : public testing::Test {
  public:
-  static void SetUpTestCase() {
-    SetUpTestP4ModelNames();
-  }
+  static void SetUpTestCase() { SetUpTestP4ModelNames(); }
 
  protected:
   void SetUp() override {
@@ -51,8 +49,7 @@ class SwitchCaseDecoderTest : public testing::Test {
     action_name_map_["case1_clone_green"] = "case1_clone_green";
     action_name_map_["case2_drop_not_green"] = "case2_drop_not_green";
     action_name_map_["case1_drop_not_green"] = "case1_drop_not_green";
-    action_name_map_["case2_clone_not_not_green"] =
-        "case2_clone_not_not_green";
+    action_name_map_["case2_clone_not_not_green"] = "case2_clone_not_not_green";
     action_name_map_["case1_nested_if"] = "case1_nested_if";
     action_name_map_["case2_action"] = "case2_action";
     action_name_map_["case1_assign"] = "case1_assign";
@@ -118,7 +115,7 @@ class SwitchCaseDecoderTest : public testing::Test {
   std::unique_ptr<SwitchCaseDecoder> switch_case_decoder_;
 
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
-  TableMapGeneratorMock mock_table_mapper_;  // Mock for testing output.
+  TableMapGeneratorMock mock_table_mapper_;      // Mock for testing output.
 
   // This string is the local metadata field name that tests choose to
   // represent the meter color in IRTestHelperJson::TransformP4Control.
@@ -141,8 +138,8 @@ MATCHER_P(MatchColorAction, expected_message, "") {
   google::protobuf::util::MessageDifferencer msg_differencer;
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
-  return msg_differencer.Compare(
-      expected_message, parsed_descriptor.color_actions(0));
+  return msg_differencer.Compare(expected_message,
+                                 parsed_descriptor.color_actions(0));
 }
 
 // Verifies behavior for clone-on-green, drop-on-non-green actions.
@@ -156,10 +153,14 @@ TEST_F(SwitchCaseDecoderTest, TestGreenCases) {
   // The mock expectations below verify that switch_case_decoder_->Decode calls
   // the mock_table_mapper_ with the correct AddMeterColorAction input.
   SetUpExpectedColorActions();
+  EXPECT_CALL(mock_table_mapper_,
+              AddMeterColorActionsFromString("case1_clone_green",
+                                             MatchColorAction(expected_green_)))
+      .Times(1);
   EXPECT_CALL(mock_table_mapper_, AddMeterColorActionsFromString(
-      "case1_clone_green", MatchColorAction(expected_green_))).Times(1);
-  EXPECT_CALL(mock_table_mapper_, AddMeterColorActionsFromString(
-      "case2_drop_not_green", MatchColorAction(expected_red_yellow_))).Times(1);
+                                      "case2_drop_not_green",
+                                      MatchColorAction(expected_red_yellow_)))
+      .Times(1);
 
   switch_case_decoder_->Decode(*test_statement);
   EXPECT_EQ(0, ::errorCount());
@@ -177,9 +178,12 @@ TEST_F(SwitchCaseDecoderTest, TestInvertedConditions) {
   // the mock_table_mapper_ with the correct AddMeterColorAction input.
   SetUpExpectedColorActions();
   EXPECT_CALL(mock_table_mapper_, AddMeterColorActionsFromString(
-      "case1_drop_not_green", MatchColorAction(expected_red_yellow_))).Times(1);
-  EXPECT_CALL(mock_table_mapper_, AddMeterColorActionsFromString(
-      "case2_clone_not_not_green", MatchColorAction(expected_green_)))
+                                      "case1_drop_not_green",
+                                      MatchColorAction(expected_red_yellow_)))
+      .Times(1);
+  EXPECT_CALL(mock_table_mapper_,
+              AddMeterColorActionsFromString("case2_clone_not_not_green",
+                                             MatchColorAction(expected_green_)))
       .Times(1);
 
   switch_case_decoder_->Decode(*test_statement);
@@ -256,8 +260,8 @@ TEST_F(SwitchCaseDecoderTest, TestUnexpectedDefaultCase) {
   IR::SwitchCase default_case(&default_label, &default_statement);
   IR::Vector<IR::SwitchCase> new_cases;
   new_cases.push_back(&default_case);
-  std::unique_ptr<IR::SwitchStatement> test_statement(new IR::SwitchStatement(
-      setup_statement->expression, new_cases));
+  std::unique_ptr<IR::SwitchStatement> test_statement(
+      new IR::SwitchStatement(setup_statement->expression, new_cases));
   EXPECT_CALL(mock_table_mapper_, AddMeterColorAction(_, _)).Times(0);
   switch_case_decoder_->Decode(*test_statement);
   EXPECT_NE(0, ::errorCount());
@@ -279,8 +283,8 @@ TEST_F(SwitchCaseDecoderTest, TestUnexpectedCaseExpressionType) {
   IR::SwitchCase test_case(test_label.get(), &case_block);
   IR::Vector<IR::SwitchCase> new_cases;
   new_cases.push_back(&test_case);
-  std::unique_ptr<IR::SwitchStatement> test_statement(new IR::SwitchStatement(
-      setup_statement->expression, new_cases));
+  std::unique_ptr<IR::SwitchStatement> test_statement(
+      new IR::SwitchStatement(setup_statement->expression, new_cases));
   EXPECT_CALL(mock_table_mapper_, AddMeterColorAction(_, _)).Times(0);
   switch_case_decoder_->Decode(*test_statement);
   EXPECT_NE(0, ::errorCount());

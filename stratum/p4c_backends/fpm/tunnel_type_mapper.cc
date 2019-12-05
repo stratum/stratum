@@ -16,9 +16,9 @@
 
 #include "stratum/p4c_backends/fpm/tunnel_type_mapper.h"
 
+#include "absl/strings/substitute.h"
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/strings/substitute.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -28,8 +28,7 @@ TunnelTypeMapper::TunnelTypeMapper(hal::P4PipelineConfig* p4_pipeline_config)
       processed_tunnels_(false),
       gre_header_op_(P4_HEADER_NOP),
       is_encap_(false),
-      is_decap_(false) {
-}
+      is_decap_(false) {}
 
 void TunnelTypeMapper::ProcessTunnels() {
   if (processed_tunnels_) {
@@ -100,10 +99,10 @@ void TunnelTypeMapper::ProcessActionTunnel(
     if (tunnel_error_message_.empty()) {
       UpdateActionTunnelProperties(action_descriptor);
     } else {
-      ::error("Backend: Action %s tunnel error - %s",
-              action_name_.c_str(), tunnel_error_message_.c_str());
-      VLOG(1) << "Action " << action_name_ << " tunnel error: "
-              << tunnel_error_message_
+      ::error("Backend: Action %s tunnel error - %s", action_name_.c_str(),
+              tunnel_error_message_.c_str());
+      VLOG(1) << "Action " << action_name_
+              << " tunnel error: " << tunnel_error_message_
               << p4_tunnel_properties_.ShortDebugString()
               << " descriptor: " << action_descriptor->ShortDebugString();
     }
@@ -132,7 +131,8 @@ bool TunnelTypeMapper::FindInnerEncapHeader(
         tunnel_error_message_ += absl::Substitute(
             "A P4 action cannot encap multiple inner headers, $0 and $1. ",
             P4HeaderType_Name(
-                p4_tunnel_properties_.encap().encap_inner_headers(0)).c_str(),
+                p4_tunnel_properties_.encap().encap_inner_headers(0))
+                .c_str(),
             P4HeaderType_Name(header_descriptor.type()).c_str());
         return true;
       }
@@ -216,9 +216,9 @@ bool TunnelTypeMapper::CheckInnerHeaderType(P4HeaderType header_type) {
       valid_type = false;
       break;
     default:
-      tunnel_error_message_ += absl::Substitute(
-          "$0 is not supported as an inner tunnel header. ",
-          P4HeaderType_Name(header_type).c_str());
+      tunnel_error_message_ +=
+          absl::Substitute("$0 is not supported as an inner tunnel header. ",
+                           P4HeaderType_Name(header_type).c_str());
       valid_type = false;
       break;
   }
@@ -239,8 +239,8 @@ void TunnelTypeMapper::ProcessTunnelAssignments(
     const auto& assignment = action_descriptor->assignments(i);
     DCHECK(!assignment.destination_field_name().empty());
     const auto& field_name = assignment.destination_field_name();
-    auto field_descriptor = FindFieldDescriptorOrNull(
-        field_name, *p4_pipeline_config_);
+    auto field_descriptor =
+        FindFieldDescriptorOrNull(field_name, *p4_pipeline_config_);
     if (field_descriptor == nullptr) continue;  // Header-to-header copy.
     if (field_descriptor->is_local_metadata()) continue;
     if (field_descriptor->header_type() != P4_HEADER_IPV4 &&
@@ -297,16 +297,16 @@ bool TunnelTypeMapper::ProcessDscpEcnTtlAssignment(
       // Setting TTL/ECN/DSCP to a constant is currently unsupported.
       tunnel_error_message_ += absl::Substitute(
           "Action $0 has unsupported assignment of constant to tunnel field $1 "
-          "in $2. ", action_name_.c_str(),
-          assignment.destination_field_name().c_str(),
+          "in $2. ",
+          action_name_.c_str(), assignment.destination_field_name().c_str(),
           assignment.ShortDebugString().c_str());
       break;
     case P4AssignSourceValue::kParameterName:
       // Setting TTL/ECN/DSCP to an action parameter is currently unsupported.
       tunnel_error_message_ += absl::Substitute(
           "Action $0 has unsupported assignment of action parameter to tunnel "
-          "field $1 in $2. ", action_name_.c_str(),
-          assignment.destination_field_name().c_str(),
+          "field $1 in $2. ",
+          action_name_.c_str(), assignment.destination_field_name().c_str(),
           assignment.ShortDebugString().c_str());
       break;
     case P4AssignSourceValue::kSourceHeaderName:
@@ -324,15 +324,15 @@ bool TunnelTypeMapper::ProcessDscpEcnTtlAssignment(
   if (field_to_field) {
     const std::string& source_field_name =
         assignment.assigned_value().source_field_name();
-    auto source_field = FindFieldDescriptorOrNull(
-        source_field_name, *p4_pipeline_config_);
+    auto source_field =
+        FindFieldDescriptorOrNull(source_field_name, *p4_pipeline_config_);
     DCHECK(source_field != nullptr);
     if (source_field->type() != dest_field.type() ||
         source_field->is_local_metadata()) {
       tunnel_error_message_ += absl::Substitute(
           "Action $0 has unexpected assignment of non-matching tunnel field "
-          "types in $1. ", action_name_.c_str(),
-          assignment.ShortDebugString().c_str());
+          "types in $1. ",
+          action_name_.c_str(), assignment.ShortDebugString().c_str());
       field_to_field = false;
     }
   }

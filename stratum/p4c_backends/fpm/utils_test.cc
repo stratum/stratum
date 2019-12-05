@@ -18,7 +18,13 @@
 #include <string>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "external/com_github_p4lang_p4c/lib/cstring.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
@@ -27,12 +33,6 @@
 #include "stratum/p4c_backends/fpm/target_info_mock.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/ir/ir.h"
-#include "external/com_github_p4lang_p4c/lib/compile_context.h"
-#include "external/com_github_p4lang_p4c/lib/cstring.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::_;
@@ -77,8 +77,8 @@ class P4cUtilsTest : public testing::Test {
   // The ir_node_ is constructed with any annotations that have been added
   // to ir_annotations_ before calling SetUpAnnotatedIRNode.
   void SetUpAnnotatedIRNode() {
-    ir_node_ = absl::make_unique<IR::Type_Struct>(
-        IR::ID("dummy-node"), &ir_annotations_);
+    ir_node_ = absl::make_unique<IR::Type_Struct>(IR::ID("dummy-node"),
+                                                  &ir_annotations_);
   }
 
   // For a few tests that specifically need a more complex IR::P4Table node,
@@ -87,8 +87,8 @@ class P4cUtilsTest : public testing::Test {
   // currently exist in ir_annotations_.
   void SetUpIRTable() {
     cstring tblName = IR::ID(test_p4_table_.preamble().name());
-    ir_table_ = absl::make_unique<IR::P4Table>(
-        tblName, &ir_annotations_, &empty_properties_);
+    ir_table_ = absl::make_unique<IR::P4Table>(tblName, &ir_annotations_,
+                                               &empty_properties_);
   }
 
   // Adds an IR::Annotation string to ir_annotations_.  In this P4 annotation:
@@ -97,8 +97,9 @@ class P4cUtilsTest : public testing::Test {
   // "pipeline_stage: L3_LPM".
   void AddStringAnnotation(const cstring& id_name,
                            const cstring& literal_value) {
-    ir_annotations_.add(new IR::Annotation(IR::ID(id_name), {
-        new IR::StringLiteral(new IR::Type_String, literal_value)}));
+    ir_annotations_.add(new IR::Annotation(
+        IR::ID(id_name),
+        {new IR::StringLiteral(new IR::Type_String, literal_value)}));
   }
 
   // Creates a new IR P4Control node for testing.  The new control's parameters
@@ -113,7 +114,7 @@ class P4cUtilsTest : public testing::Test {
     new_control_type_ = absl::make_unique<IR::Type_Control>(
         old_control.type->name, new_param_list_.get());
     return absl::make_unique<IR::P4Control>(
-            old_control.name, new_control_type_.get(), old_control.body);
+        old_control.name, new_control_type_.get(), old_control.body);
   }
 
   // This IR node is for common test use.
@@ -251,8 +252,8 @@ TEST_F(P4cUtilsTest, TestBogusFieldTypeAnnotation) {
 
 // Tests a "switchstack" annotation that is not an IR::StringLiteral.
 TEST_F(P4cUtilsTest, TestNonLiteralAnnotation) {
-  ir_annotations_.add(new IR::Annotation(IR::ID("switchstack"), {
-      new IR::BoolLiteral(true)}));
+  ir_annotations_.add(
+      new IR::Annotation(IR::ID("switchstack"), {new IR::BoolLiteral(true)}));
   SetUpAnnotatedIRNode();
   EXPECT_FALSE(GetSwitchStackAnnotation(*ir_node_, &annotation_out_));
   EXPECT_TRUE(MessageDifferencer::Equals(annotation_none_, annotation_out_));
@@ -338,8 +339,8 @@ TEST_F(P4cUtilsTest, TestGetControllerHeaderAnnotationNone) {
 
 // Tests a @controller_header annotation that is not an IR::StringLiteral.
 TEST_F(P4cUtilsTest, TestNonLiteralControllerHeaderAnnotation) {
-  ir_annotations_.add(new IR::Annotation(IR::ID("controller_header"), {
-      new IR::BoolLiteral(true)}));
+  ir_annotations_.add(new IR::Annotation(IR::ID("controller_header"),
+                                         {new IR::BoolLiteral(true)}));
   SetUpAnnotatedIRNode();
   const std::string expected_value = "";
   EXPECT_EQ(expected_value, GetControllerHeaderAnnotation(*ir_node_));
@@ -360,8 +361,8 @@ TEST_F(P4cUtilsTest, TestMultipleControllerHeaderAnnotations) {
 TEST_F(P4cUtilsTest, TestFillTableRefByName) {
   EXPECT_CALL(mock_p4_info_manager_, FindTableByName(_))
       .WillOnce(Return(test_p4_table_));
-  FillTableRefByName(test_p4_table_.preamble().name(),
-                     mock_p4_info_manager_, &table_ref_);
+  FillTableRefByName(test_p4_table_.preamble().name(), mock_p4_info_manager_,
+                     &table_ref_);
   EXPECT_EQ(test_p4_table_.preamble().name(), table_ref_.table_name());
   EXPECT_EQ(test_p4_table_.preamble().id(), table_ref_.table_id());
   EXPECT_EQ(P4Annotation::DEFAULT_STAGE, table_ref_.pipeline_stage());
@@ -423,8 +424,8 @@ TEST_F(P4cUtilsTest, TestFindLocalMetadataType) {
   P4ModelNames model_names;
   model_names.set_ingress_control_name("ingress");
   model_names.set_egress_control_name("egress");
-  FindLocalMetadataType(
-      ir_helper_->program_inspector().controls(), &model_names);
+  FindLocalMetadataType(ir_helper_->program_inspector().controls(),
+                        &model_names);
   EXPECT_EQ("local_metadata_t", model_names.local_metadata_type_name());
   EXPECT_EQ(0, ::errorCount());  // Errors from p4c's internal error reporter.
 }
@@ -437,8 +438,8 @@ TEST_F(P4cUtilsTest, TestFindLocalMetadataTypeWrongArgCount) {
   // to test a control with an unexpected number of arguments.
   model_names.set_ingress_control_name("ingress");
   model_names.set_egress_control_name("verify_checksum_stub");
-  FindLocalMetadataType(
-      ir_helper_->program_inspector().controls(), &model_names);
+  FindLocalMetadataType(ir_helper_->program_inspector().controls(),
+                        &model_names);
   EXPECT_TRUE(model_names.local_metadata_type_name().empty());
   EXPECT_NE(0, ::errorCount());  // Errors from p4c's internal error reporter.
 }
@@ -457,13 +458,12 @@ TEST_F(P4cUtilsTest, TestFindLocalMetadataDifferentTypes) {
   // This test creates a new egress control, which is a copy of the original,
   // except that the second and third parameters are reversed to generate
   // a local metadata type mismatch between the ingress and egress controls.
-  std::unique_ptr<IR::P4Control> test_egress_control =
-      CreateControlWithParams(*egress_control, {
-          egress_control->type->applyParams->parameters[0],
-          egress_control->type->applyParams->parameters[2],
-          egress_control->type->applyParams->parameters[1]});
-  std::vector<const IR::P4Control*> test_controls =
-      {ingress_control, test_egress_control.get()};
+  std::unique_ptr<IR::P4Control> test_egress_control = CreateControlWithParams(
+      *egress_control, {egress_control->type->applyParams->parameters[0],
+                        egress_control->type->applyParams->parameters[2],
+                        egress_control->type->applyParams->parameters[1]});
+  std::vector<const IR::P4Control*> test_controls = {ingress_control,
+                                                     test_egress_control.get()};
   FindLocalMetadataType(test_controls, &model_names);
   EXPECT_TRUE(model_names.local_metadata_type_name().empty());
   EXPECT_NE(0, ::errorCount());  // Errors from p4c's internal error reporter.
@@ -486,13 +486,12 @@ TEST_F(P4cUtilsTest, TestFindLocalMetadataWrongParamType) {
       *egress_control->type->applyParams->parameters[1];
   IR::Type_Void bad_type_param;
   IR::Parameter new_param(old_param.name, old_param.direction, &bad_type_param);
-  std::unique_ptr<IR::P4Control> test_egress_control =
-      CreateControlWithParams(*egress_control, {
-          egress_control->type->applyParams->parameters[0],
-          &new_param,
-          egress_control->type->applyParams->parameters[2]});
-  std::vector<const IR::P4Control*> test_controls =
-      {ingress_control, test_egress_control.get()};
+  std::unique_ptr<IR::P4Control> test_egress_control = CreateControlWithParams(
+      *egress_control,
+      {egress_control->type->applyParams->parameters[0], &new_param,
+       egress_control->type->applyParams->parameters[2]});
+  std::vector<const IR::P4Control*> test_controls = {ingress_control,
+                                                     test_egress_control.get()};
   FindLocalMetadataType(test_controls, &model_names);
   EXPECT_TRUE(model_names.local_metadata_type_name().empty());
   EXPECT_NE(0, ::errorCount());  // Errors from p4c's internal error reporter.
@@ -692,8 +691,9 @@ TEST_F(P4cUtilsTest, TestNoFieldDescriptor) {
 TEST_F(P4cUtilsTest, TestNotFieldDescriptor) {
   const std::string kTestDescriptor = "test-header";
   table_map_generator_.AddHeader(kTestDescriptor);  // Header descriptor.
-  EXPECT_EQ(nullptr, FindFieldDescriptorOrNull(
-      kTestDescriptor, table_map_generator_.generated_map()));
+  EXPECT_EQ(nullptr,
+            FindFieldDescriptorOrNull(kTestDescriptor,
+                                      table_map_generator_.generated_map()));
 }
 
 TEST_F(P4cUtilsTest, TestFindMutableFieldDescriptorOrNull) {
@@ -701,8 +701,8 @@ TEST_F(P4cUtilsTest, TestFindMutableFieldDescriptorOrNull) {
   table_map_generator_.AddField(kTestField);
   table_map_generator_.SetFieldType(kTestField, P4_FIELD_TYPE_ETH_SRC);
   hal::P4PipelineConfig mutable_map = table_map_generator_.generated_map();
-  auto field_descriptor = FindMutableFieldDescriptorOrNull(
-      kTestField, &mutable_map);
+  auto field_descriptor =
+      FindMutableFieldDescriptorOrNull(kTestField, &mutable_map);
   ASSERT_NE(nullptr, field_descriptor);
   EXPECT_EQ(P4_FIELD_TYPE_ETH_SRC, field_descriptor->type());
 }
@@ -716,8 +716,8 @@ TEST_F(P4cUtilsTest, TestNotMutableFieldDescriptor) {
   const std::string kTestDescriptor = "test-header";
   table_map_generator_.AddHeader(kTestDescriptor);  // Header descriptor.
   hal::P4PipelineConfig mutable_map = table_map_generator_.generated_map();
-  EXPECT_EQ(nullptr, FindMutableFieldDescriptorOrNull(
-      kTestDescriptor, &mutable_map));
+  EXPECT_EQ(nullptr,
+            FindMutableFieldDescriptorOrNull(kTestDescriptor, &mutable_map));
 }
 
 // Tests below exercise various combinations of repeated field deletion.
@@ -859,17 +859,17 @@ TEST_F(P4cUtilsDeathTest, TestNoMutableTableDescriptor) {
 TEST_F(P4cUtilsDeathTest, TestNotTableDescriptor) {
   const std::string kTestDescriptor = "test-header";
   table_map_generator_.AddHeader(kTestDescriptor);  // Header descriptor.
-  EXPECT_DEATH(FindTableDescriptorOrDie(
-      kTestDescriptor, table_map_generator_.generated_map()),
-      "not a table descriptor");
+  EXPECT_DEATH(FindTableDescriptorOrDie(kTestDescriptor,
+                                        table_map_generator_.generated_map()),
+               "not a table descriptor");
 }
 
 TEST_F(P4cUtilsDeathTest, TestNotMutableTableDescriptor) {
   const std::string kTestDescriptor = "test-header";
   table_map_generator_.AddHeader(kTestDescriptor);  // Header descriptor.
   hal::P4PipelineConfig mutable_map = table_map_generator_.generated_map();
-  EXPECT_DEATH(FindMutableTableDescriptorOrDie(
-      kTestDescriptor, &mutable_map), "not a table descriptor");
+  EXPECT_DEATH(FindMutableTableDescriptorOrDie(kTestDescriptor, &mutable_map),
+               "not a table descriptor");
 }
 
 TEST_F(P4cUtilsDeathTest, TestNoActionDescriptor) {
@@ -885,17 +885,17 @@ TEST_F(P4cUtilsDeathTest, TestNoMutableActionDescriptor) {
 TEST_F(P4cUtilsDeathTest, TestNotActionDescriptor) {
   const std::string kTestDescriptor = "test-header";
   table_map_generator_.AddHeader(kTestDescriptor);  // Header descriptor.
-  EXPECT_DEATH(FindActionDescriptorOrDie(
-      kTestDescriptor, table_map_generator_.generated_map()),
-      "not an action descriptor");
+  EXPECT_DEATH(FindActionDescriptorOrDie(kTestDescriptor,
+                                         table_map_generator_.generated_map()),
+               "not an action descriptor");
 }
 
 TEST_F(P4cUtilsDeathTest, TestNotMutableActionDescriptor) {
   const std::string kTestDescriptor = "test-header";
   table_map_generator_.AddHeader(kTestDescriptor);  // Header descriptor.
   hal::P4PipelineConfig mutable_map = table_map_generator_.generated_map();
-  EXPECT_DEATH(FindMutableActionDescriptorOrDie(
-      kTestDescriptor, &mutable_map), "not an action descriptor");
+  EXPECT_DEATH(FindMutableActionDescriptorOrDie(kTestDescriptor, &mutable_map),
+               "not an action descriptor");
 }
 
 TEST_F(P4cUtilsDeathTest, TestNoHeaderDescriptor) {
@@ -906,9 +906,9 @@ TEST_F(P4cUtilsDeathTest, TestNoHeaderDescriptor) {
 TEST_F(P4cUtilsDeathTest, TestNotHeaderDescriptor) {
   const std::string kTestDescriptor = "test-action";
   table_map_generator_.AddAction(kTestDescriptor);  // Action descriptor.
-  EXPECT_DEATH(FindHeaderDescriptorOrDie(
-      kTestDescriptor, table_map_generator_.generated_map()),
-      "not a header descriptor");
+  EXPECT_DEATH(FindHeaderDescriptorOrDie(kTestDescriptor,
+                                         table_map_generator_.generated_map()),
+               "not a header descriptor");
 }
 
 TEST_F(P4cUtilsDeathTest, TestNoHeaderDescriptorForField) {
@@ -917,8 +917,9 @@ TEST_F(P4cUtilsDeathTest, TestNoHeaderDescriptorForField) {
   table_map_generator_.AddField(kTestHeader);
   table_map_generator_.AddHeader(kTestHeader);
   table_map_generator_.SetHeaderAttributes(kTestHeader, P4_HEADER_IPV6, 0);
-  EXPECT_DEATH(FindHeaderDescriptorForFieldOrDie(
-      kTestFieldName, P4_HEADER_IPV4, table_map_generator_.generated_map()),
+  EXPECT_DEATH(
+      FindHeaderDescriptorForFieldOrDie(kTestFieldName, P4_HEADER_IPV4,
+                                        table_map_generator_.generated_map()),
       "No header descriptor with type");
 }
 

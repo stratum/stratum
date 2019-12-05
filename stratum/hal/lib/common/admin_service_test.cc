@@ -15,7 +15,6 @@
 
 #include "stratum/hal/lib/common/admin_service.h"
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <string>
 
@@ -25,16 +24,17 @@
 #include "absl/time/clock.h"
 #include "gflags/gflags.h"
 #include "gmock/gmock.h"
+#include "grpcpp/grpcpp.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/admin_utils_mock.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
-#include "stratum/hal/lib/common/admin_utils_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/timer_daemon.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -52,15 +52,13 @@ class AdminServiceTest : public ::testing::TestWithParam<OperationMode> {
     admin_service_ = absl::make_unique<AdminService>(
         mode_, switch_mock_.get(), auth_policy_checker_mock_.get(),
         error_buffer_.get(),
-        [this](int sigval) {
-          this->hal_reset_triggered_ = true;
-        });
+        [this](int sigval) { this->hal_reset_triggered_ = true; });
 
     admin_service_->helper_ =
         absl::make_unique<AdminServiceUtilsInterfaceMock>();
 
-    admin_utils_ = dynamic_cast<AdminServiceUtilsInterfaceMock*>
-                                (admin_service_->helper_.get());
+    admin_utils_ = dynamic_cast<AdminServiceUtilsInterfaceMock*>(
+        admin_service_->helper_.get());
 
     // Create FileSystemHelperMock object
     fs_helper_ = std::make_shared<FileSystemHelperMock>();
@@ -128,8 +126,7 @@ TEST_P(AdminServiceTest, TimeSuccess) {
   ASSERT_OK(admin_service_->Setup(false));
 
   // Invoke the RPC and validate the results.
-  EXPECT_CALL(*admin_utils_, GetTime())
-    .WillOnce(::testing::Return(0));
+  EXPECT_CALL(*admin_utils_, GetTime()).WillOnce(::testing::Return(0));
   ::grpc::Status status = stub_->Time(&context, req, &resp);
   EXPECT_TRUE(status.ok());
 
@@ -156,7 +153,7 @@ TEST_P(AdminServiceTest, RebootColdSuccess) {
 
   // we expected that reboot method invoked when admin service teardown
   EXPECT_CALL(*admin_utils_, Reboot())
-    .WillOnce(::testing::Return(::util::OkStatus()));
+      .WillOnce(::testing::Return(::util::OkStatus()));
   ASSERT_OK(admin_service_->Teardown());
 }
 
@@ -264,7 +261,7 @@ TEST_P(AdminServiceTest, SetPackageRemoteOptionSFTP) {
   auto hash_type = new ::gnoi::types::HashType();
 
   // Configure expected calls
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
       writer = stub_->SetPackage(&context, &resp);
 
   remoteDownload->set_protocol(::gnoi::common::RemoteDownload_Protocol_SFTP);
@@ -305,17 +302,14 @@ TEST_P(AdminServiceTest, SetPackageLastNotHash) {
   EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
       .WillOnce(::testing::Return("tmpfile"));
 
-  EXPECT_CALL(*(fs_helper_.get()),
-              StringToFile("Some data", "tmpfile", true))
+  EXPECT_CALL(*(fs_helper_.get()), StringToFile("Some data", "tmpfile", true))
       .Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir")).Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile")).Times(1);
 
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
       writer = stub_->SetPackage(&context, &resp);
 
   package->set_filename("/home/user/filename");
@@ -353,17 +347,14 @@ TEST_P(AdminServiceTest, SetPackageUNCPECIFIEDHash) {
   EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
       .WillOnce(::testing::Return("tmpfile"));
 
-  EXPECT_CALL(*(fs_helper_.get()),
-              StringToFile("Some data", "tmpfile", true))
+  EXPECT_CALL(*(fs_helper_.get()), StringToFile("Some data", "tmpfile", true))
       .Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir")).Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile")).Times(1);
 
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
       writer = stub_->SetPackage(&context, &resp);
 
   package->set_filename("/home/user/filename");
@@ -408,23 +399,19 @@ TEST_P(AdminServiceTest, SetPackageIncorrectHash) {
   EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
       .WillOnce(::testing::Return("tmpfile"));
 
-  EXPECT_CALL(*(fs_helper_.get()),
-              StringToFile("Some data", "tmpfile", true))
+  EXPECT_CALL(*(fs_helper_.get()), StringToFile("Some data", "tmpfile", true))
       .Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir")).Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile")).Times(1);
 
   EXPECT_CALL(*(fs_helper_.get()),
-              CheckHashSumFile("tmpfile",
-                               "Incorrect Hash",
+              CheckHashSumFile("tmpfile", "Incorrect Hash",
                                ::gnoi::types::HashType_HashMethod_SHA256))
       .WillOnce(::testing::Return(false));
 
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
       writer = stub_->SetPackage(&context, &resp);
 
   package->set_filename("/home/user/filename");
@@ -470,23 +457,19 @@ TEST_P(AdminServiceTest, SetPackageSHA256Success) {
   EXPECT_CALL(*(fs_helper_.get()), TempFileName("tmpdir"))
       .WillOnce(::testing::Return("tmpfile"));
 
-  EXPECT_CALL(*(fs_helper_.get()),
-              StringToFile("Some data", "tmpfile", true))
+  EXPECT_CALL(*(fs_helper_.get()), StringToFile("Some data", "tmpfile", true))
       .Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir("tmpdir")).Times(1);
 
-  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile"))
-      .Times(1);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile("tmpfile")).Times(1);
 
   EXPECT_CALL(*(fs_helper_.get()),
-              CheckHashSumFile("tmpfile",
-                               "correct hash",
+              CheckHashSumFile("tmpfile", "correct hash",
                                ::gnoi::types::HashType_HashMethod_SHA256))
       .WillOnce(::testing::Return(true));
 
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
       writer = stub_->SetPackage(&context, &resp);
 
   package->set_filename("/home/user/somefile");
@@ -522,8 +505,8 @@ TEST_P(AdminServiceTest, SetPackageEmptyFilename) {
   auto package = new ::gnoi::system::Package();
   ASSERT_OK(admin_service_->Setup(false));
 
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
-  writer = stub_->SetPackage(&context, &resp);
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
+      writer = stub_->SetPackage(&context, &resp);
 
   package->set_filename("");
   req.set_allocated_package(package);
@@ -547,26 +530,24 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
   ASSERT_OK(admin_service_->Setup(false));
 
   // Configure unexpected calls
-  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
-  .Times(0);
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir()).Times(0);
 
-  EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_))
-  .Times(0);
-
-  EXPECT_CALL(*(fs_helper_.get()), StringToFile(::testing::_, ::testing::_, ::testing::_))
-  .Times(0);
-
-  EXPECT_CALL(*(fs_helper_.get()), RemoveDir(::testing::_))
-  .Times(0);
-
-  EXPECT_CALL(*(fs_helper_.get()), RemoveFile(::testing::_))
-  .Times(0);
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_)).Times(0);
 
   EXPECT_CALL(*(fs_helper_.get()),
-  CheckHashSumFile(::testing::_, ::testing::_, ::testing::_)).Times(0);
+              StringToFile(::testing::_, ::testing::_, ::testing::_))
+      .Times(0);
 
-  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
-  writer = stub_->SetPackage(&context, &resp);
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir(::testing::_)).Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile(::testing::_)).Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              CheckHashSumFile(::testing::_, ::testing::_, ::testing::_))
+      .Times(0);
+
+  std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest>>
+      writer = stub_->SetPackage(&context, &resp);
 
   package->set_filename("tmpfile");
   package->set_activate(true);
@@ -585,9 +566,9 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
 }
 
 INSTANTIATE_TEST_SUITE_P(AdminServiceTestWithMode, AdminServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

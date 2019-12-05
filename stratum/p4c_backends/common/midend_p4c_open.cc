@@ -15,9 +15,10 @@
 // This file contains the MidEndP4cOpen implementation, which wraps the
 // p4c P4Test::MidEnd in a MidEndInterface.
 
+#include "stratum/p4c_backends/common/midend_p4c_open.h"
+
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
-#include "stratum/p4c_backends/common/midend_p4c_open.h"
 
 namespace stratum {
 namespace p4c_backends {

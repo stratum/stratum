@@ -16,11 +16,11 @@
 
 #include "stratum/p4c_backends/fpm/table_hit_inspector.h"
 
+#include "absl/debugging/leak_check.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
-#include "absl/debugging/leak_check.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -56,8 +56,10 @@ bool TableHitInspector::preorder(const IR::TableHitStatement* statement) {
   if (IsTableApplyValid()) {
     table_applied_ = true;
   } else {
-    ::error("Backend: Stratum FPM does not allow %s to be applied in the "
-            "scope of another table hit", statement->p4_table);
+    ::error(
+        "Backend: Stratum FPM does not allow %s to be applied in the "
+        "scope of another table hit",
+        statement->p4_table);
   }
   return false;  // TableHitStatement child nodes are not interesting.
 }
@@ -65,8 +67,8 @@ bool TableHitInspector::preorder(const IR::TableHitStatement* statement) {
 bool TableHitInspector::preorder(const IR::IfStatement* statement) {
   ++if_depth_;
   VLOG(3) << "TableHitInspector IfStatement depth is up to " << if_depth_;
-  auto table_hit = P4::TableApplySolver::isHit(
-      statement->condition, ref_map_, type_map_);
+  auto table_hit =
+      P4::TableApplySolver::isHit(statement->condition, ref_map_, type_map_);
   DCHECK(table_hit == nullptr)
       << "Unexpected table.apply().hit in IfStatement condition. "
       << "Check for incompatible frontend or midend transformations.";
@@ -87,8 +89,8 @@ bool TableHitInspector::preorder(const IR::IfStatement* statement) {
   // hit variable.
   bool visit_deeper = true;
   if (path_expression && path_expression->type->is<IR::Type_Boolean>()) {
-    const std::string tmp_var_name = std::string(
-        path_expression->path->name.toString());
+    const std::string tmp_var_name =
+        std::string(path_expression->path->name.toString());
     bool local_hit = !not_operator;
     if (tmp_var_name == active_hit_var_) {
       bool applied = RecurseInspect(*statement->ifTrue, local_hit);
@@ -103,9 +105,10 @@ bool TableHitInspector::preorder(const IR::IfStatement* statement) {
       table_applied_ = table_applied_ || applied;
       visit_deeper = false;
     } else if (stale_hit_vars_.find(tmp_var_name) != stale_hit_vars_.end()) {
-      ::error("Backend: P4 program evaluates temporary hit variable %s "
-              "in %s out of order with table apply sequence",
-              tmp_var_name.c_str(), statement);
+      ::error(
+          "Backend: P4 program evaluates temporary hit variable %s "
+          "in %s out of order with table apply sequence",
+          tmp_var_name.c_str(), statement);
     } else {
       // Unknown temporary variables are OK as long as they don't appear
       // while a hit variable is in scope.  One such situation occurs when
@@ -131,8 +134,10 @@ bool TableHitInspector::preorder(const IR::MeterColorStatement* statement) {
     ::error("Metering action %s must occur following a table hit",
             statement->condition);
   } else if (if_depth_) {
-    ::error("Metering action %s cannot depend on any condition except "
-            "a table hit", statement->condition);
+    ::error(
+        "Metering action %s cannot depend on any condition except "
+        "a table hit",
+        statement->condition);
   }
   return false;  // MeterColorStatement child nodes are not interesting.
 }
@@ -150,8 +155,10 @@ bool TableHitInspector::preorder(const IR::MethodCallExpression* expression) {
     if (IsTableApplyValid()) {
       table_applied_ = true;
     } else {
-      ::error("Backend: Stratum FPM does not allow %s to be conditional "
-              "on some other table hit", expression);
+      ::error(
+          "Backend: Stratum FPM does not allow %s to be conditional "
+          "on some other table hit",
+          expression);
     }
   }
   return false;
@@ -165,8 +172,10 @@ bool TableHitInspector::preorder(const IR::SwitchStatement* statement) {
   if (IsTableApplyValid()) {
     table_applied_ = true;
   } else {
-    ::error("Backend: Stratum FPM does not allow %s to be applied in the "
-            "scope of another table hit", statement->expression);
+    ::error(
+        "Backend: Stratum FPM does not allow %s to be applied in the "
+        "scope of another table hit",
+        statement->expression);
   }
   return false;
 }
@@ -176,10 +185,10 @@ void TableHitInspector::postorder(const IR::IfStatement* statement) {
   VLOG(3) << "TableHitInspector IfStatement depth is down to " << if_depth_;
 }
 
-bool TableHitInspector::RecurseInspect(
-    const IR::Statement& statement, bool table_hit) {
-  TableHitInspector recurse_inspector(
-      table_hit, !table_hit, ref_map_, type_map_);
+bool TableHitInspector::RecurseInspect(const IR::Statement& statement,
+                                       bool table_hit) {
+  TableHitInspector recurse_inspector(table_hit, !table_hit, ref_map_,
+                                      type_map_);
   return recurse_inspector.ApplyVisitor(statement);
 }
 
@@ -195,9 +204,7 @@ void TableHitInspector::UpdateHitVars(const std::string& new_hit_var) {
   active_hit_var_ = new_hit_var;
 }
 
-bool TableHitInspector::IsTableApplyValid() {
-  return !table_hit_;
-}
+bool TableHitInspector::IsTableApplyValid() { return !table_hit_; }
 
 }  // namespace p4c_backends
 }  // namespace stratum

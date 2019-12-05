@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_PUBLIC_LIB_ERROR_H_
 #define STRATUM_PUBLIC_LIB_ERROR_H_
 
@@ -36,8 +35,7 @@ namespace util {
 namespace status_macros {
 
 template <>
-class ErrorCodeOptions<::stratum::ErrorCode>
-    : public BaseErrorCodeOptions {
+class ErrorCodeOptions<::stratum::ErrorCode> : public BaseErrorCodeOptions {
  public:
   const ::util::ErrorSpace* GetErrorSpace() {
     return ::stratum::StratumErrorSpace();

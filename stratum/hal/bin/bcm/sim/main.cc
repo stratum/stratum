@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include <memory>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -34,13 +35,9 @@
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
-DEFINE_string(
-    bcm_sdk_sim_bin,
-    "stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8",
-    "Path to look for BCMSIM or PCID binary.");
+DEFINE_string(bcm_sdk_sim_bin, "stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8",
+              "Path to look for BCMSIM or PCID binary.");
 DEFINE_int32(max_units, 1,
              "Maximum number of units supported on the switch platform.");
 
@@ -145,6 +142,4 @@ int Main(int argc, char** argv) {
 }  // namespace hal
 }  // namespace stratum
 
-int main(int argc, char** argv) {
-  return stratum::hal::bcm::Main(argc, argv);
-}
+int main(int argc, char** argv) { return stratum::hal::bcm::Main(argc, argv); }

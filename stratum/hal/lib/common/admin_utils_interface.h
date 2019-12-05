@@ -16,14 +16,14 @@
 #ifndef STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_INTERFACE_H_
 
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "gnoi/types/types.pb.h"
-#include "stratum/glue/status/status.h"
 #include "gnoi/system/system.grpc.pb.h"
+#include "gnoi/types/types.pb.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
 
 namespace {  // NOLINT
 const int ERROR_RETURN_CODE = -1;
@@ -32,14 +32,11 @@ const int ERROR_RETURN_CODE = -1;
 namespace stratum {
 namespace hal {
 
-
 // Provides interface to call a shell command, and retrieve the results
 class AdminServiceShellHelper {
  public:
   explicit AdminServiceShellHelper(const std::string& command)
-      : command_(command),
-        cmd_return_code_(
-            ERROR_RETURN_CODE) {}
+      : command_(command), cmd_return_code_(ERROR_RETURN_CODE) {}
 
   // Runs the command provided in the constructor
   // @return true if cmd succeeded, false if failure
@@ -105,12 +102,12 @@ class FileSystemHelper {
   FileSystemHelper() = default;
   virtual ~FileSystemHelper() = default;
 
-  virtual bool CheckHashSumFile(const std::string& path,
-                              const std::string& old_hash,
-                              ::gnoi::types::HashType_HashMethod method) const;
+  virtual bool CheckHashSumFile(
+      const std::string& path, const std::string& old_hash,
+      ::gnoi::types::HashType_HashMethod method) const;
 
-  virtual std::string GetHashSum(std::istream& istream,
-                                 ::gnoi::types::HashType_HashMethod method) const;
+  virtual std::string GetHashSum(
+      std::istream& istream, ::gnoi::types::HashType_HashMethod method) const;
 
   // Create temporary directory and return it name
   // @return Temporary directory name in std:string
@@ -144,14 +141,13 @@ class AdminServiceUtilsInterface {
   AdminServiceUtilsInterface() : file_system_helper_(new FileSystemHelper) {}
   virtual ~AdminServiceUtilsInterface() = default;
 
-  virtual std::shared_ptr<AdminServiceShellHelper>
-  GetShellHelper(const std::string& command);
+  virtual std::shared_ptr<AdminServiceShellHelper> GetShellHelper(
+      const std::string& command);
 
   // Retrieves time since epoch in ns
   virtual uint64_t GetTime();
 
-  virtual std::shared_ptr<FileSystemHelper>
-  GetFileSystemHelper();
+  virtual std::shared_ptr<FileSystemHelper> GetFileSystemHelper();
 
   // Reboot the system
   virtual ::util::Status Reboot();

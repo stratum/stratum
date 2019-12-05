@@ -16,11 +16,11 @@
 
 #include "stratum/p4c_backends/fpm/parser_value_set_mapper.h"
 
+#include "absl/debugging/leak_check.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/debugging/leak_check.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -31,8 +31,7 @@ ParserValueSetMapper::ParserValueSetMapper(
     : p4_parser_map_(p4_parser_map),
       p4_info_manager_(p4_info_manager),
       table_mapper_(ABSL_DIE_IF_NULL(table_mapper)),
-      visiting_state_(nullptr) {
-}
+      visiting_state_(nullptr) {}
 
 bool ParserValueSetMapper::MapValueSets(const IR::P4Parser& p4_parser) {
   FindValueSetTransitions();
@@ -99,8 +98,7 @@ bool ParserValueSetMapper::ProcessAssignmentRight(const IR::Expression& right) {
   const hal::P4FieldDescriptor& rhs_descriptor =
       rhs_field_entry->field_descriptor();
   if (IsFieldTypeUnspecified(rhs_descriptor)) return false;
-  if (rhs_descriptor.header_type() == P4_HEADER_UNKNOWN)
-      return false;
+  if (rhs_descriptor.header_type() == P4_HEADER_UNKNOWN) return false;
   visiting_state_->header_type = rhs_descriptor.header_type();
   return true;
 }

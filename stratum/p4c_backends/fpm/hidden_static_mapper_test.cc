@@ -20,19 +20,19 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/substitute.h"
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/hidden_table_mapper.h"
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "gtest/gtest.h"
-#include "absl/strings/substitute.h"
-#include "external/com_github_p4lang_p4c/frontends/common/options.h"
-#include "external/com_github_p4lang_p4c/lib/compile_context.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "p4/v1/p4runtime.pb.h"
-#include "stratum/glue/gtl/map_util.h"
 
 using ::testing::AnyNumber;
 using ::testing::Return;
@@ -60,8 +60,7 @@ class HiddenStaticMapperTest : public testing::Test {
       : test_mapper_(absl::make_unique<HiddenStaticMapper>(
             mock_p4_info_manager_, &mock_tunnel_optimizer_)),
         next_p4_id_(1),
-        test_p4c_context_(new P4CContextWithOptions<CompilerOptions>) {
-  }
+        test_p4c_context_(new P4CContextWithOptions<CompilerOptions>) {}
 
   // These methods set up the necessary data for test use.  The minimum
   // required data for testing a HiddenStaticMapper is:
@@ -83,13 +82,13 @@ class HiddenStaticMapperTest : public testing::Test {
   // HiddenStaticMapper succeeded.  See additional comments in the method
   // implementations.
   void SetUpHiddenTables();
-  void AddHiddenTableWithActions(
-      const std::string& table_name, HiddenTableWithActions* hidden_table);
+  void AddHiddenTableWithActions(const std::string& table_name,
+                                 HiddenTableWithActions* hidden_table);
   void AddStaticEntry(uint32 table_id, uint32 action_id,
                       const std::string& key_value);
-  void SetUpActionRedirect(
-      const std::string& redirecting_action_name, const std::string& key_name,
-      int64 key_value, const std::string& hidden_table_name);
+  void SetUpActionRedirect(const std::string& redirecting_action_name,
+                           const std::string& key_name, int64 key_value,
+                           const std::string& hidden_table_name);
   void SetUpActionDescriptor(const std::string& action_name,
                              hal::P4ActionDescriptor* new_descriptor);
 
@@ -101,9 +100,9 @@ class HiddenStaticMapperTest : public testing::Test {
   // the hidden static table actions that HiddenStaticMapper combines into
   // an internal action.
   void VerifyLinkToInternalAction(
-    const hal::P4ActionDescriptor& original_descriptor,
-    const hal::P4ActionDescriptor& output_descriptor,
-    const std::vector<std::string>& expected_hidden_actions);
+      const hal::P4ActionDescriptor& original_descriptor,
+      const hal::P4ActionDescriptor& output_descriptor,
+      const std::vector<std::string>& expected_hidden_actions);
 
   // HiddenStaticMapper for common test use.
   std::unique_ptr<HiddenStaticMapper> test_mapper_;
@@ -169,13 +168,16 @@ void HiddenStaticMapperTest::AddHiddenTableWithActions(
   hidden_table->table_info.add_action_refs()->set_id(
       hidden_table->action_2_info.preamble().id());
   EXPECT_CALL(mock_p4_info_manager_, FindTableByName(table_name))
-      .Times(AnyNumber()).WillRepeatedly(Return(hidden_table->table_info));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(hidden_table->table_info));
   EXPECT_CALL(mock_p4_info_manager_,
               FindActionByID(hidden_table->action_1_info.preamble().id()))
-      .Times(AnyNumber()).WillRepeatedly(Return(hidden_table->action_1_info));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(hidden_table->action_1_info));
   EXPECT_CALL(mock_p4_info_manager_,
               FindActionByID(hidden_table->action_2_info.preamble().id()))
-      .Times(AnyNumber()).WillRepeatedly(Return(hidden_table->action_2_info));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(hidden_table->action_2_info));
 
   hal::P4TableMapValue table_map_value;
   SetUpActionDescriptor(hidden_table->action_1_info.preamble().name(),
@@ -194,8 +196,8 @@ void HiddenStaticMapperTest::AddHiddenTableWithActions(
 // Adds one static table entry to the test_pipeline_config_.  The table
 // entry refers to the input table_id and action_id, and it has one match
 // field with the input key_value.
-void HiddenStaticMapperTest::AddStaticEntry(
-    uint32 table_id, uint32 action_id, const std::string& key_value) {
+void HiddenStaticMapperTest::AddStaticEntry(uint32 table_id, uint32 action_id,
+                                            const std::string& key_value) {
   auto static_entries = test_pipeline_config_.mutable_static_table_entries();
   auto update = static_entries->add_updates();
   update->set_type(::p4::v1::Update::INSERT);
@@ -222,8 +224,8 @@ void HiddenStaticMapperTest::SetUpActionRedirect(
   // If the redirect_map entry already exists, its descriptor gets expanded
   // with an additional internal link, else a new entry is created.  Each new
   // entry also gets a dummy assignment for later content validation.
-  hal::P4ActionDescriptor* redirect_descriptor = gtl::FindOrNull(
-      test_redirect_map_, redirecting_action_name);
+  hal::P4ActionDescriptor* redirect_descriptor =
+      gtl::FindOrNull(test_redirect_map_, redirecting_action_name);
   if (redirect_descriptor != nullptr) {
     bool existing_redirect = false;
     for (auto& redirect : *redirect_descriptor->mutable_action_redirects()) {
@@ -240,8 +242,8 @@ void HiddenStaticMapperTest::SetUpActionRedirect(
     hal::P4ActionDescriptor new_descriptor;
     SetUpActionDescriptor(redirecting_action_name, &new_descriptor);
     *new_descriptor.add_action_redirects() = new_action_redirect;
-    gtl::InsertOrDie(
-        &test_redirect_map_, redirecting_action_name, new_descriptor);
+    gtl::InsertOrDie(&test_redirect_map_, redirecting_action_name,
+                     new_descriptor);
   }
 }
 
@@ -281,8 +283,8 @@ void HiddenStaticMapperTest::VerifyLinkToInternalAction(
                          internal_descriptor.assignments(0)));
   int assignment_i = 1;
   for (const auto& hidden_action : expected_hidden_actions) {
-    const auto& hidden_descriptor = FindActionDescriptorOrDie(
-        hidden_action, test_pipeline_config_);
+    const auto& hidden_descriptor =
+        FindActionDescriptorOrDie(hidden_action, test_pipeline_config_);
     EXPECT_TRUE(ProtoEqual(hidden_descriptor.assignments(0),
                            internal_descriptor.assignments(assignment_i++)));
   }
@@ -292,9 +294,9 @@ void HiddenStaticMapperTest::VerifyLinkToInternalAction(
   ASSERT_EQ(original_descriptor.action_redirects_size(),
             output_descriptor.action_redirects(0).input_redirects_size());
   for (int i = 0; i < original_descriptor.action_redirects_size(); ++i) {
-    EXPECT_TRUE(ProtoEqual(
-        original_descriptor.action_redirects(i),
-        output_descriptor.action_redirects(0).input_redirects(i)));
+    EXPECT_TRUE(
+        ProtoEqual(original_descriptor.action_redirects(i),
+                   output_descriptor.action_redirects(0).input_redirects(i)));
   }
 }
 
@@ -306,10 +308,10 @@ TEST_F(HiddenStaticMapperTest, TestOneActionToOneTable) {
   const int64 kHiddenKeyValue = 1;
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, kHiddenKeyValue,
                       hidden1_.table_info.preamble().name());
-  const hal::P4ActionDescriptor test_descriptor = gtl::FindOrDie(
-      test_redirect_map_, kRedirectingAction);
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  const hal::P4ActionDescriptor test_descriptor =
+      gtl::FindOrDie(test_redirect_map_, kRedirectingAction);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   // The "redirecting-action" should have one internal link to the first
   // action in the hidden1_ P4Info definitions.
@@ -332,10 +334,10 @@ TEST_F(HiddenStaticMapperTest, TestOneActionToMultipleTables) {
                       hidden1_.table_info.preamble().name());
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, kHiddenKeyValue,
                       hidden2_.table_info.preamble().name());
-  const hal::P4ActionDescriptor test_descriptor = gtl::FindOrDie(
-      test_redirect_map_, kRedirectingAction);
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  const hal::P4ActionDescriptor test_descriptor =
+      gtl::FindOrDie(test_redirect_map_, kRedirectingAction);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   // The "redirecting-action" should have two internal links, one to the first
   // action in the hidden1_ P4Info definitions and another to the first action
@@ -358,16 +360,15 @@ TEST_F(HiddenStaticMapperTest, TestMultipleActionsToOneTable) {
   const std::string kRedirectingAction2 = "redirecting-action-2";
   const int64 kHiddenKeyValue2 = 2;
   SetUpActionRedirect(kRedirectingAction1, kHiddenTableKeyName,
-                      kHiddenKeyValue1,
-                      hidden1_.table_info.preamble().name());
-  const hal::P4ActionDescriptor test_descriptor1 = gtl::FindOrDie(
-      test_redirect_map_, kRedirectingAction1);
+                      kHiddenKeyValue1, hidden1_.table_info.preamble().name());
+  const hal::P4ActionDescriptor test_descriptor1 =
+      gtl::FindOrDie(test_redirect_map_, kRedirectingAction1);
   SetUpActionRedirect(kRedirectingAction2, kHiddenTableKeyName,
                       kHiddenKeyValue2, hidden2_.table_info.preamble().name());
-  const hal::P4ActionDescriptor test_descriptor2 = gtl::FindOrDie(
-      test_redirect_map_, kRedirectingAction2);
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  const hal::P4ActionDescriptor test_descriptor2 =
+      gtl::FindOrDie(test_redirect_map_, kRedirectingAction2);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   // The "redirecting-action-1" should have one internal link to the first
   // action in the hidden1_ P4Info definitions.
@@ -395,8 +396,8 @@ TEST_F(HiddenStaticMapperTest, TestMultipleActionsToOneTable) {
 TEST_F(HiddenStaticMapperTest, TestEmptyRedirectMap) {
   SetUpHiddenTables();
   hal::P4PipelineConfig original_pipeline_config = test_pipeline_config_;
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
   EXPECT_EQ(0, ::errorCount());
   EXPECT_TRUE(ProtoEqual(original_pipeline_config, test_pipeline_config_));
 }
@@ -411,8 +412,8 @@ TEST_F(HiddenStaticMapperTest, TestNoStaticEntryForRedirectKey) {
                       kBadHiddenKeyValue,
                       hidden1_.table_info.preamble().name());
   hal::P4PipelineConfig original_pipeline_config = test_pipeline_config_;
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
   EXPECT_EQ(0, ::errorCount());
   EXPECT_TRUE(ProtoEqual(original_pipeline_config, test_pipeline_config_));
 }
@@ -430,8 +431,8 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryNotInsert) {
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -450,8 +451,8 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryNoTable) {
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -473,8 +474,8 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryMultiMatch) {
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -496,8 +497,8 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryNonExactMatch) {
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -520,8 +521,8 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryMatchTooBig) {
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -535,14 +536,16 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryNoAction) {
   AddStaticEntry(1, 2, "1");  // The non-hidden update entry goes first.
   auto static_entries = test_pipeline_config_.mutable_static_table_entries();
   auto first_update = static_entries->mutable_updates(0);
-  first_update->mutable_entity()->mutable_table_entry()->mutable_action()->
-      clear_action();
+  first_update->mutable_entity()
+      ->mutable_table_entry()
+      ->mutable_action()
+      ->clear_action();
   SetUpHiddenTables();
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -565,8 +568,8 @@ TEST_F(HiddenStaticMapperTest, TestStaticEntryActionWithParam) {
   const std::string kRedirectingAction = "redirecting-action";
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, 1,
                       hidden1_.table_info.preamble().name());
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_EQ(0, ::errorCount());
   const auto& redirecting_descriptor =
@@ -585,8 +588,8 @@ TEST_F(HiddenStaticMapperTest, TestAppliedTablesError) {
                       hidden1_.table_info.preamble().name());
   SetUpActionRedirect(kRedirectingAction, kHiddenTableKeyName, kHiddenKeyValue,
                       hidden2_.table_info.preamble().name());
-  hal::P4ActionDescriptor* test_descriptor = gtl::FindOrNull(
-      test_redirect_map_, kRedirectingAction);
+  hal::P4ActionDescriptor* test_descriptor =
+      gtl::FindOrNull(test_redirect_map_, kRedirectingAction);
   ASSERT_TRUE(test_descriptor != nullptr);
   ASSERT_EQ(1, test_descriptor->action_redirects_size());
   ASSERT_LE(1, test_descriptor->action_redirects(0).internal_links_size());
@@ -594,8 +597,8 @@ TEST_F(HiddenStaticMapperTest, TestAppliedTablesError) {
       test_descriptor->mutable_action_redirects(0)->mutable_internal_links(0);
   internal_link->add_applied_tables("any-table");
   hal::P4PipelineConfig original_pipeline_config = test_pipeline_config_;
-  test_mapper_->ProcessStaticEntries(
-      test_redirect_map_, &test_pipeline_config_);
+  test_mapper_->ProcessStaticEntries(test_redirect_map_,
+                                     &test_pipeline_config_);
 
   EXPECT_NE(0, ::errorCount());
   EXPECT_TRUE(ProtoEqual(original_pipeline_config, test_pipeline_config_));

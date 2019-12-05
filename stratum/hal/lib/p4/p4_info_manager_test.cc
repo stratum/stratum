@@ -13,26 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // P4InfoManager unit tests.
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 
 #include <memory>
 
-#include "gflags/gflags.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
+#include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 DECLARE_bool(skip_p4_min_objects_check);
 
-using ::testing::HasSubstr;
 using gflags::FlagSaver;
+using ::testing::HasSubstr;
 
 namespace stratum {
 namespace hal {
@@ -55,9 +54,7 @@ class P4InfoManagerTest : public testing::Test {
   // set of objects.  To keep tests simple and allow then to define only the
   // objects relevant for test use, the skip flag is enabled, and individual
   // tests can choose to disable it.
-  void SetUp() override {
-    FLAGS_skip_p4_min_objects_check = true;
-  }
+  void SetUp() override { FLAGS_skip_p4_min_objects_check = true; }
 
   // Replaces the existing p4_test_manager_ with one constructed from the
   // current data in p4_test_info_.
@@ -169,12 +166,12 @@ class P4InfoManagerTest : public testing::Test {
   // Populates p4_test_info_ with all resources from the tor.p4 spec.  This
   // data provides assurance that P4InfoManager can handle real P4 compiler
   // output.
-//  void SetUpTorP4Info() {
-//    const std::string kTorP4File =
-//        "stratum/hal/lib/p4/testdata/tor_p4_info.pb.txt";
-//    ASSERT_TRUE(ReadProtoFromTextFile(kTorP4File, &p4_test_info_).ok());
-//    SetUpNewP4Info();
-//  }
+  //  void SetUpTorP4Info() {
+  //    const std::string kTorP4File =
+  //        "stratum/hal/lib/p4/testdata/tor_p4_info.pb.txt";
+  //    ASSERT_TRUE(ReadProtoFromTextFile(kTorP4File, &p4_test_info_).ok());
+  //    SetUpNewP4Info();
+  //  }
 
   ::p4::config::v1::P4Info p4_test_info_;           // Sets up test P4Info.
   std::unique_ptr<P4InfoManager> p4_test_manager_;  // P4InfoManager for tests.
@@ -620,8 +617,8 @@ TEST_F(P4InfoManagerTest, TestFindValueSet) {
   SetUpTestP4ValueSets();
   ASSERT_TRUE(p4_test_manager_->InitializeAndVerify().ok());
   for (const auto& value_set : p4_test_info_.value_sets()) {
-    auto id_status = p4_test_manager_->FindValueSetByID(
-        value_set.preamble().id());
+    auto id_status =
+        p4_test_manager_->FindValueSetByID(value_set.preamble().id());
     EXPECT_TRUE(id_status.ok());
     EXPECT_TRUE(ProtoEqual(value_set, id_status.ValueOrDie()));
     auto name_status =

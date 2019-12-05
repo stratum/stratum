@@ -21,8 +21,8 @@
 #include <map>
 #include <set>
 
-#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 
 namespace stratum {
 

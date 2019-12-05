@@ -18,6 +18,10 @@
 #include <memory>
 #include <vector>
 
+#include "absl/debugging/leak_check.h"
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
@@ -39,10 +43,6 @@
 #include "stratum/p4c_backends/fpm/table_type_mapper.h"
 #include "stratum/p4c_backends/fpm/tunnel_type_mapper.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/debugging/leak_check.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 DEFINE_string(p4_pipeline_config_text_file, "",
               "Path to text file for P4PipelineConfig output");
@@ -128,8 +128,9 @@ void SwitchP4cBackend::Compile(
   // If the flags identifying the parser definition file for the target and/or
   // the sliced field map are available, read them here for future use.
   if (!FLAGS_target_parser_map_file.empty()) {
-    if (!ReadProtoFromTextFile(
-        FLAGS_target_parser_map_file, &target_parser_map_).ok()) {
+    if (!ReadProtoFromTextFile(FLAGS_target_parser_map_file,
+                               &target_parser_map_)
+             .ok()) {
       LOG(WARNING) << "Unable to read target parser spec from "
                    << FLAGS_target_parser_map_file;
     }
@@ -255,12 +256,11 @@ void SwitchP4cBackend::ConvertHeaderPaths(
 
 void SwitchP4cBackend::ConvertActions(
     const std::map<const IR::P4Action*, const IR::P4Control*>& ir_actions) {
-  std::unique_ptr<ActionDecoder> action_decoder(new ActionDecoder(
-      table_mapper_, ref_map_, type_map_));
+  std::unique_ptr<ActionDecoder> action_decoder(
+      new ActionDecoder(table_mapper_, ref_map_, type_map_));
   for (auto map_iter : ir_actions) {
     auto action = map_iter.first;
-    if (IsHidden(*action))
-      continue;
+    if (IsHidden(*action)) continue;
     // TODO(unknown): The control node pointer in map_iter.second doesn't seem
     //                 to add much value.  Remove it from the program_inspector.
     std::string action_name = StripNamePrefix(action->externalName());
@@ -292,8 +292,7 @@ void SwitchP4cBackend::ConvertParser(
 void SwitchP4cBackend::ConvertTables(
     const std::vector<const IR::P4Table*>& ir_tables) {
   for (auto table : ir_tables) {
-    if (IsHidden(*table))
-      continue;
+    if (IsHidden(*table)) continue;
     const std::string p4_table_name = std::string(table->externalName());
     VLOG(1) << "Processing table " << p4_table_name;
     table_mapper_->AddTable(p4_table_name);
@@ -324,16 +323,15 @@ void SwitchP4cBackend::ConvertControls(
     PipelineOptimizer optimizer(ref_map_, type_map_);
     auto optimized_control = optimizer.Optimize(*color_mapped_control);
     if (no_opt_error_count != front_mid_interface_->GetErrorCount()) {
-      LOG(WARNING)
-          << "Skipping remaining processing of P4Control "
-          << control->externalName()
-          << " due to errors in preliminary optimization passes";
+      LOG(WARNING) << "Skipping remaining processing of P4Control "
+                   << control->externalName()
+                   << " due to errors in preliminary optimization passes";
       continue;
     }
 
-    ControlInspector control_inspector(
-        p4_info_manager_.get(), ref_map_, type_map_,
-        switch_case_decoder_.get(), table_mapper_);
+    ControlInspector control_inspector(p4_info_manager_.get(), ref_map_,
+                                       type_map_, switch_case_decoder_.get(),
+                                       table_mapper_);
     control_inspector.Inspect(*optimized_control);
     *output_pipeline_cfg->add_p4_controls() = control_inspector.control();
 
@@ -349,8 +347,7 @@ bool SwitchP4cBackend::ProcessAnnotations(
     LOG(WARNING) << "Skipping annotation mapping - no AnnotationMapper";
     return true;
   }
-  if (!annotation_mapper_->Init())
-    return false;
+  if (!annotation_mapper_->Init()) return false;
   return annotation_mapper_->ProcessAnnotations(*p4_info_manager_,
                                                 output_pipeline_cfg);
 }

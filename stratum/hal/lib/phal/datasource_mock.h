@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_DATASOURCE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_DATASOURCE_MOCK_H_
 
 #include <memory>
 
+#include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/datasource.h"
-#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {
@@ -33,7 +32,7 @@ class DataSourceMock : public DataSource {
  public:
   DataSourceMock() : DataSource(new NoCache()) {}
   MOCK_METHOD0(UpdateValuesAndLock, ::util::Status());
-  MOCK_METHOD0(LockAndFlushWrites, :: util::Status());
+  MOCK_METHOD0(LockAndFlushWrites, ::util::Status());
   // We use DataSource's implementation of GetSharedPointer, which just calls
   // through to shared_from_this() (from std). If a mocked function returns a
   // shared_ptr to its parent mock object, adding an EXPECT_CALL will create

@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <memory>
@@ -23,7 +22,13 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_node_mock.h"
@@ -36,12 +41,6 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
 
 DECLARE_string(base_bcm_chassis_map_file);
 DECLARE_string(applied_bcm_chassis_map_file);
@@ -3112,7 +3111,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigFailure) {
   )";
   const std::string kChassisMapError12 = "is in flex_port_group_keys";
 
-  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip here
+  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip
+  // here
   // says TOMAHAWK.
   const std::string kBcmChassisMapListText13 = R"(
       bcm_chassis_maps {
@@ -5256,7 +5256,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmChassisManagerTestWithMode, BcmChassisManagerTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE));
+                         ::testing::Values(OPERATION_MODE_STANDALONE));
 
 }  // namespace bcm
 }  // namespace hal

@@ -15,20 +15,24 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_P4_SERVICE_H_
 #define STRATUM_HAL_LIB_COMMON_P4_SERVICE_H_
 
-#include "grpcpp/grpcpp.h"
 #include <pthread.h>
 
+#include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
-#include <set>
 #include <vector>
-#include <map>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/numeric/int128.h"
+#include "absl/synchronization/mutex.h"
+#include "grpcpp/grpcpp.h"
+#include "p4/v1/p4runtime.grpc.pb.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
@@ -37,11 +41,6 @@
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/p4/forwarding_pipeline_configs.pb.h"
 #include "stratum/lib/security/auth_policy_checker.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/numeric/int128.h"
-#include "absl/synchronization/mutex.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

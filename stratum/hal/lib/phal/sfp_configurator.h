@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SFP_CONFIGURATOR_H_
 #define STRATUM_HAL_LIB_PHAL_SFP_CONFIGURATOR_H_
 
@@ -28,11 +27,11 @@ namespace phal {
 
 class SfpConfigurator : public AttributeGroup::RuntimeConfiguratorInterface {
  public:
-    virtual ~SfpConfigurator() {}
-    virtual ::util::Status HandleEvent(HwState state) = 0;
+  virtual ~SfpConfigurator() {}
+  virtual ::util::Status HandleEvent(HwState state) = 0;
 
  protected:
-    SfpConfigurator() {}
+  SfpConfigurator() {}
 };
 
 }  // namespace phal

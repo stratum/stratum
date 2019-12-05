@@ -15,15 +15,12 @@
  * limitations under the License.
  */
 
-
 // The Hardware Abstraction Layer (HAL) of the stratum stack.
 
 #ifndef STRATUM_HAL_LIB_COMMON_HAL_H_
 #define STRATUM_HAL_LIB_COMMON_HAL_H_
 
 #include <signal.h>
-
-#include "grpcpp/grpcpp.h"
 
 #include <memory>
 #include <string>
@@ -32,6 +29,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "grpcpp/grpcpp.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
 // #include "stratum/hal/lib/common/cmal_service.h"
@@ -86,14 +84,10 @@ class Hal final {
   }
 
   // Clears the list of errors HAL and all it's services have encountered.
-  inline void ClearErrors() const {
-    return error_buffer_->ClearErrors();
-  }
+  inline void ClearErrors() const { return error_buffer_->ClearErrors(); }
 
   // Returns true if HAL or any of it's services have encountered an error.
-  inline bool ErrorExists() const {
-    return error_buffer_->ErrorExists();
-  }
+  inline bool ErrorExists() const { return error_buffer_->ErrorExists(); }
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.

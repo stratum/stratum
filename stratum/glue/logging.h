@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_GLUE_LOGGING_H_
 #define STRATUM_GLUE_LOGGING_H_
 
@@ -35,7 +34,6 @@ DECLARE_bool(logtostderr);
 #endif  // STRATUM_ARCH_PPC
 
 DECLARE_bool(logtosyslog);
-
 
 // These are exported in open source glog but not base/logging.h
 using ::google::ERROR;

@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_packetio_manager.h"
 
 #include <arpa/inet.h>
@@ -33,16 +32,16 @@
 #include <memory>
 #include <utility>
 
-#include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 DEFINE_int32(knet_rx_buf_size, 512 * 1024,
              "KNET RX socket buffer size (0 = kernel default).");
@@ -429,10 +428,12 @@ BcmPacketioManager::~BcmPacketioManager() {}
   if (!status.ok()) {
     INCREMENT_TX_COUNTER(purpose, tx_drops_metadata_parse_error);
   }
-  VLOG(1) << "PacketOutMetadata.egress_port_id: " << meta.egress_port_id
-      << "\n" << "PacketOutMetadata.egress_trunk_id: " << meta.egress_trunk_id
-      << "\n" << "PacketOutMetadata.cos: " << meta.cos
-      << "\n" << "PacketOutMetadata.use_ingress_pipeline: " << meta.use_ingress_pipeline;
+  VLOG(1) << "PacketOutMetadata.egress_port_id: " << meta.egress_port_id << "\n"
+          << "PacketOutMetadata.egress_trunk_id: " << meta.egress_trunk_id
+          << "\n"
+          << "PacketOutMetadata.cos: " << meta.cos << "\n"
+          << "PacketOutMetadata.use_ingress_pipeline: "
+          << meta.use_ingress_pipeline;
 
   // Now try to send the packet. There are several cases:
   // 1- Direct packet to physical port.
@@ -484,7 +485,8 @@ BcmPacketioManager::~BcmPacketioManager() {}
     }
     std::string header = "";
     RETURN_IF_ERROR(bcm_sdk_interface_->GetKnetHeaderForDirectTx(
-        unit_, *logical_port, meta.cos, intf->smac, packet.payload().size(), &header));
+        unit_, *logical_port, meta.cos, intf->smac, packet.payload().size(),
+        &header));
     RETURN_IF_ERROR(TxPacket(purpose, intf->tx_sock, intf->vlan,
                              intf->netif_index, true, header,
                              packet.payload()));
@@ -864,10 +866,9 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   std::vector<BcmSdkInterface::KnetFilterType> knet_filter_types = {};
   switch (purpose) {
     case GoogleConfig::BCM_KNET_INTF_PURPOSE_CONTROLLER:
-      knet_filter_types.push_back(
-          BcmSdkInterface::KnetFilterType::CATCH_ALL);
-          // TODO(max): enable later?
-          // BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH);
+      knet_filter_types.push_back(BcmSdkInterface::KnetFilterType::CATCH_ALL);
+      // TODO(max): enable later?
+      // BcmSdkInterface::KnetFilterType::CATCH_NON_SFLOW_FP_MATCH);
       break;
     case GoogleConfig::BCM_KNET_INTF_PURPOSE_SFLOW:
       knet_filter_types.push_back(
@@ -1035,7 +1036,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     struct epoll_event pevents[1];  // we care about one event at a time.
     int ret = epoll_wait(efd, pevents, 1, FLAGS_knet_rx_poll_timeout_ms);
     VLOG(2) << "RXThread " << GoogleConfig::BcmKnetIntfPurpose_Name(purpose)
-        << " epoll_wait() = " << ret;
+            << " epoll_wait() = " << ret;
     if (ret < 0) {
       VLOG(1) << "Error in epoll_wait(). errno: " << errno << ".";
       INCREMENT_RX_COUNTER(purpose, rx_errors_epoll_wait_failures);
@@ -1109,10 +1110,13 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
             }
             meta.egress_port_id = *egress_port_id;
           }
-          VLOG(1) << "PacketInMetadata.ingress_port_id: " << meta.ingress_port_id
-              << "\n" << "PacketInMetadata.ingress_trunk_id: " << meta.ingress_trunk_id
-              << "\n" << "PacketInMetadata.egress_port_id: " << meta.egress_port_id
-              << "\n" << "PacketInMetadata.cos: " << meta.cos;
+          VLOG(1) << "PacketInMetadata.ingress_port_id: "
+                  << meta.ingress_port_id << "\n"
+                  << "PacketInMetadata.ingress_trunk_id: "
+                  << meta.ingress_trunk_id << "\n"
+                  << "PacketInMetadata.egress_port_id: " << meta.egress_port_id
+                  << "\n"
+                  << "PacketInMetadata.cos: " << meta.cos;
           status = DeparsePacketInMetadata(meta, &packet);
           if (!status.ok()) {
             INCREMENT_RX_COUNTER(purpose, rx_drops_metadata_deparse_error);
@@ -1417,7 +1421,8 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   }
   // If the port/trunk is given we transmit the port directly to the port/trunk.
   // Otherwise, we transmit the packet to ingress pipeline of the given node.
-  // TODO(max): This implicit way is in conflict with the explicit flag in packet_out header
+  // TODO(max): This implicit way is in conflict with the explicit flag in
+  // packet_out header
   meta->use_ingress_pipeline =
       (meta->egress_port_id == 0 && meta->egress_trunk_id == 0);
 

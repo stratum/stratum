@@ -20,21 +20,21 @@
 #include <vector>
 
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/status/status.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 DECLARE_string(p4c_annotation_map_files);
 
 using ::google::protobuf::util::MessageDifferencer;
-using ::testing::Return;
 using ::testing::_;
+using ::testing::Return;
 
 namespace stratum {
 namespace p4c_backends {
@@ -49,13 +49,12 @@ class AnnotationMapperTest : public testing::Test {
   }
 
   void SetUpAnnotationFileList() {
-    const std::string kFilePath = "stratum/p4c_backends/"
+    const std::string kFilePath =
+        "stratum/p4c_backends/"
         "fpm/testdata/";
-    FLAGS_p4c_annotation_map_files =
-        kFilePath + "annotation_string_map.pb.txt";
+    FLAGS_p4c_annotation_map_files = kFilePath + "annotation_string_map.pb.txt";
     FLAGS_p4c_annotation_map_files += ",";
-    FLAGS_p4c_annotation_map_files +=
-        kFilePath + "object_name_map.pb.txt";
+    FLAGS_p4c_annotation_map_files += kFilePath + "object_name_map.pb.txt";
   }
 
   // Uses a separate AnnotationMapper to get a copy of the P4AnnotationMap
@@ -214,8 +213,8 @@ TEST_F(AnnotationMapperTest, TestProcessAnnotationsUnmappedField) {
   hal::P4PipelineConfig orig_pipeline_cfg = test_pipeline_cfg_;
   EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
   test_pipeline_cfg_.clear_idle_pipeline_stages();
-  EXPECT_TRUE(MessageDifferencer::Equals(
-      orig_pipeline_cfg, test_pipeline_cfg_));
+  EXPECT_TRUE(
+      MessageDifferencer::Equals(orig_pipeline_cfg, test_pipeline_cfg_));
 }
 
 // In this test, the field name has an annotation map entry, but an improperly
@@ -530,8 +529,8 @@ TEST_F(AnnotationMapperTest, TestProcessAnnotationsUnmappedTable) {
 
   EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
   test_pipeline_cfg_.clear_idle_pipeline_stages();
-  EXPECT_TRUE(MessageDifferencer::Equals(
-      orig_pipeline_cfg, test_pipeline_cfg_));
+  EXPECT_TRUE(
+      MessageDifferencer::Equals(orig_pipeline_cfg, test_pipeline_cfg_));
 }
 
 // In this test, the table name has an annotation map entry, but an improperly
@@ -633,8 +632,8 @@ TEST_F(AnnotationMapperTest, TestProcessAnnotationsUnimplementedFieldAddenda) {
   EXPECT_TRUE(mapper_.ProcessAnnotations(mock_p4_info_, &test_pipeline_cfg_));
   const auto iter = test_pipeline_cfg_.table_map().find(kFieldName);
   ASSERT_TRUE(iter != test_pipeline_cfg_.table_map().end());
-  EXPECT_TRUE(MessageDifferencer::Equals(
-      table_map_value.field_descriptor(), iter->second.field_descriptor()));
+  EXPECT_TRUE(MessageDifferencer::Equals(table_map_value.field_descriptor(),
+                                         iter->second.field_descriptor()));
 }
 
 // In this test, the pipeline config and mock_p4_info_ are set up as if every

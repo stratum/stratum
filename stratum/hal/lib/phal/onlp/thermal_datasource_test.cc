@@ -10,27 +10,28 @@
 #include "stratum/hal/lib/phal/onlp/thermal_datasource.h"
 
 #include <memory>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/glue/status/status_test_util.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-using ::stratum::test_utils::StatusIs;
 
 class ThermalDatasourceTest : public ::testing::Test {
  public:
@@ -39,8 +40,8 @@ class ThermalDatasourceTest : public ::testing::Test {
     oid_ = ONLP_THERMAL_ID_CREATE(id_);
   }
 
-  int id_;             // Id for this THERMAL
-  OnlpOid oid_;        // OID for this THERMAL (i.e. Type + Id)
+  int id_;       // Id for this THERMAL
+  OnlpOid oid_;  // OID for this THERMAL (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
   MockOnlpWrapper mock_onlp_interface_;
 };
@@ -76,8 +77,8 @@ TEST_F(ThermalDatasourceTest, GetThermalData) {
   mock_thermal_info.thresholds.warning = 2222;
   mock_thermal_info.thresholds.error = 3333;
   mock_thermal_info.thresholds.shutdown = 4444;
-  mock_thermal_info.caps = (ONLP_THERMAL_CAPS_GET_TEMPERATURE
-                            |ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
+  mock_thermal_info.caps = (ONLP_THERMAL_CAPS_GET_TEMPERATURE |
+                            ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
 
   EXPECT_CALL(mock_onlp_interface_, GetThermalInfo(oid_))
       .WillRepeatedly(Return(ThermalInfo(mock_thermal_info)));
@@ -101,8 +102,7 @@ TEST_F(ThermalDatasourceTest, GetThermalData) {
   EXPECT_THAT(thermal_datasource->GetCapErrThresh(), ContainsValue(false));
   EXPECT_THAT(thermal_datasource->GetCapShutdownThresh(), ContainsValue(false));
 
-  EXPECT_THAT(thermal_datasource->GetThermalId(),
-              ContainsValue<int>(id_));
+  EXPECT_THAT(thermal_datasource->GetThermalId(), ContainsValue<int>(id_));
 
   EXPECT_THAT(thermal_datasource->GetThermalCurTemp(),
               ContainsValue<double>(1111 / 1000.0));

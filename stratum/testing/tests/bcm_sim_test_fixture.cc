@@ -13,16 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <map>
-
 #include "stratum/testing/tests/bcm_sim_test_fixture.h"
 
-#include "gflags/gflags.h"
-#include "devtools/build/runtime/get_runfiles_dir.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/test_utils/matchers.h"
+#include <map>
+
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "devtools/build/runtime/get_runfiles_dir.h"
+#include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
 
 DECLARE_string(base_bcm_chassis_map_file);
 DECLARE_string(bcm_hardware_specs_file);
@@ -35,9 +35,9 @@ DECLARE_bool(blaze_test);
 // For simulator, we don't need the diag shell, so we overwrite the openpty with
 // empty function. Without the overwriting, compiler will generate undefined
 // referenece error.
-extern "C" int openpty(int *amaster, int *aslave, char *name,
-                       const struct termios *termp,
-                       const struct winsize *winp) {
+extern "C" int openpty(int* amaster, int* aslave, char* name,
+                       const struct termios* termp,
+                       const struct winsize* winp) {
   return 0;
 }
 
@@ -53,7 +53,8 @@ namespace {
 constexpr char kBcmSimBin[] =
     "google3/platforms/networking/stratum/hal/bin/bcm/sim/bcm_pcid_sim";
 
-// File path to the only chassis config used for testing. We use a test Generic Trident2
+// File path to the only chassis config used for testing. We use a test Generic
+// Trident2
 // chassis config.
 constexpr char kTestChassisConfigFile[] =
     "platforms/networking/stratum/testing/protos/"
@@ -146,7 +147,7 @@ void BcmSimTestFixture::SetUp() {
       bcm_acl_manager_.get(), bcm_l2_manager_.get(), bcm_l3_manager_.get(),
       bcm_packetio_manager_.get(), bcm_table_manager_.get(),
       bcm_tunnel_manager_.get(), p4_table_mapper_.get(), kUnit);
-  std::map<int, BcmNode *> unit_to_bcm_node;
+  std::map<int, BcmNode*> unit_to_bcm_node;
   unit_to_bcm_node[kUnit] = bcm_node_.get();
   bcm_switch_ = BcmSwitch::CreateInstance(
       phal_sim_.get(), bcm_chassis_manager_.get(), unit_to_bcm_node);

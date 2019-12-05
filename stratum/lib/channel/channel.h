@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_CHANNEL_CHANNEL_H_
 #define STRATUM_LIB_CHANNEL_CHANNEL_H_
 
@@ -23,15 +22,15 @@
 #include <list>
 #include <memory>
 #include <unordered_map>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "stratum/lib/channel/channel_internal.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
+#include "stratum/lib/channel/channel_internal.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 
@@ -364,7 +363,7 @@ class ChannelReader {
   // Channel.
   explicit ChannelReader(std::shared_ptr<Channel<T>> channel)
       // FIXME ABSL_DIE_IF_NULL not available in absl
-      : channel_(/*FIXME ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
+      : channel_(/*FIXME ABSL_DIE_IF_NULL(*/ std::move(channel) /*)*/) {}
 
   std::shared_ptr<Channel<T>> channel_;
 };
@@ -408,7 +407,7 @@ class ChannelWriter {
   // Private constructor which initializes a ChannelWriter to the given Channel.
   explicit ChannelWriter(std::shared_ptr<Channel<T>> channel)
       // FIXME ABSL_DIE_IF_NULL not available in absl
-      : channel_(/*ABSL_DIE_IF_NULL(*/std::move(channel)/*)*/) {}
+      : channel_(/*ABSL_DIE_IF_NULL(*/ std::move(channel) /*)*/) {}
 
   std::shared_ptr<Channel<T>> channel_;
 };
@@ -562,8 +561,9 @@ template <typename T>
   while (queue_.empty()) {
     bool expired = cond_not_empty_.WaitWithDeadline(&queue_lock_, deadline);
     // Could have been signalled because Channel is now closed.
-    if (closed_) return MAKE_ERROR(ERR_CANCELLED).without_logging()
-        << "Channel is closed.";
+    if (closed_)
+      return MAKE_ERROR(ERR_CANCELLED).without_logging()
+             << "Channel is closed.";
     // Could have been signalled even if timeout has expired.
     if (expired && queue_.empty()) {
       return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)

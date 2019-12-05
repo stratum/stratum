@@ -19,13 +19,13 @@
 #include <string>
 #include <tuple>
 
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "gtest/gtest.h"
-#include "external/com_github_p4lang_p4c/frontends/common/options.h"
-#include "external/com_github_p4lang_p4c/lib/compile_context.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -36,7 +36,7 @@ namespace p4c_backends {
 //  <P4_HEADER_IPV4, P4_HEADER_IPV6, true>
 // indicates a 4-in-6 test with a GRE wrapper.
 class TunnelTypeMapperTest : public testing::TestWithParam<
-    std::tuple<P4HeaderType, P4HeaderType, bool>> {
+                                 std::tuple<P4HeaderType, P4HeaderType, bool>> {
  protected:
   static constexpr const char* kTestAction = "test-tunnel-action";
   static constexpr const char* kTestAction2 = "test-tunnel-action-2";
@@ -58,9 +58,9 @@ class TunnelTypeMapperTest : public testing::TestWithParam<
 
   // Sets up a test P4 packet header for tunneling by creating a header
   // descriptor and a tunnel_actions entry in the action descriptor.
-  void SetUpTestHeader(const std::string& header_name,
-                       P4HeaderType header_type, int depth,
-                       const std::string& action_name, P4HeaderOp header_op) {
+  void SetUpTestHeader(const std::string& header_name, P4HeaderType header_type,
+                       int depth, const std::string& action_name,
+                       P4HeaderOp header_op) {
     table_map_generator_.AddHeader(header_name);
     table_map_generator_.SetHeaderAttributes(header_name, header_type, depth);
 
@@ -91,10 +91,10 @@ class TunnelTypeMapperTest : public testing::TestWithParam<
     // Both fields in the assignment need field descriptors.
     table_map_generator_.AddField(dest_field_name);
     table_map_generator_.AddField(source_field_name);
-    table_map_generator_.SetFieldAttributes(
-        dest_field_name, field_type, header_type_dest, 0, 0);
-    table_map_generator_.SetFieldAttributes(
-        source_field_name, field_type, header_type_source, 0, 0);
+    table_map_generator_.SetFieldAttributes(dest_field_name, field_type,
+                                            header_type_dest, 0, 0);
+    table_map_generator_.SetFieldAttributes(source_field_name, field_type,
+                                            header_type_source, 0, 0);
   }
 
   // Test parameter accessors.
@@ -104,9 +104,7 @@ class TunnelTypeMapperTest : public testing::TestWithParam<
   P4HeaderType outer_header_type_param() const {
     return ::testing::get<1>(GetParam());
   }
-  bool test_gre_param() const {
-    return ::testing::get<2>(GetParam());
-  }
+  bool test_gre_param() const { return ::testing::get<2>(GetParam()); }
 
   // The typical test populates a P4PipelineConfig via the table_map_generator_,
   // then copies the generated_map to this mutable copy.
@@ -139,15 +137,15 @@ TEST_F(TunnelTypeMapperTest, TestNoTunnelActions) {
 
 // Tests various encap types according to test parameter tuple.
 TEST_P(TunnelTypeMapperTest, TestAllEncaps) {
-  SetUpTestHeader(kTestEncapHeader, inner_header_type_param(), 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, inner_header_type_param(), 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   if (test_gre_param()) {
-    SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0,
-                    kTestAction, P4_HEADER_SET_VALID);
+    SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                    P4_HEADER_SET_VALID);
   }
   table_map_generator_.AddHeader(kTestOuterHeader);
-  table_map_generator_.SetHeaderAttributes(
-      kTestOuterHeader, outer_header_type_param(), 0);
+  table_map_generator_.SetHeaderAttributes(kTestOuterHeader,
+                                           outer_header_type_param(), 0);
   P4FieldType field_type = P4_FIELD_TYPE_IPV4_DST;
   if (outer_header_type_param() == P4_HEADER_IPV6)
     field_type = P4_FIELD_TYPE_IPV6_DST;
@@ -174,10 +172,10 @@ TEST_P(TunnelTypeMapperTest, TestAllEncaps) {
 
 // Verifies tunnel processing of IP-in-non-GRE decap.
 TEST_F(TunnelTypeMapperTest, TestIPNonGreDecap) {
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestDecapHeader2, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader2, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -197,12 +195,12 @@ TEST_F(TunnelTypeMapperTest, TestIPNonGreDecap) {
 
 // Verifies tunnel processing of IP-in-GRE decap.
 TEST_F(TunnelTypeMapperTest, TestIPGreDecap) {
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestDecapHeader2, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader2, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -223,8 +221,8 @@ TEST_F(TunnelTypeMapperTest, TestIPGreDecap) {
 
 // Verifies no encap of header with zero-depth set to valid.
 TEST_F(TunnelTypeMapperTest, TestNoEncapZeroDepth) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 0, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 0, kTestAction,
+                  P4_HEADER_SET_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
   hal::P4PipelineConfig expected_pipeline_config = test_p4_pipeline_config_;
 
@@ -242,8 +240,8 @@ TEST_F(TunnelTypeMapperTest, TestNoEncapZeroDepth) {
 
 // Verifies no decap of header with zero-depth set to invalid.
 TEST_F(TunnelTypeMapperTest, TestNoDecapZeroDepth) {
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV4, 0, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV4, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
   hal::P4PipelineConfig expected_pipeline_config = test_p4_pipeline_config_;
 
@@ -261,11 +259,10 @@ TEST_F(TunnelTypeMapperTest, TestNoDecapZeroDepth) {
 
 // Verifies tunnels in multiple actions.
 TEST_F(TunnelTypeMapperTest, TestMultipleTunnels) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_COPY_VALID);
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV4, 1,
-      kTestAction2, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV4, 1, kTestAction2,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
   hal::P4PipelineConfig expected_pipeline_config = test_p4_pipeline_config_;
 
@@ -295,10 +292,10 @@ TEST_F(TunnelTypeMapperTest, TestMultipleTunnels) {
 
 // Verifies error when one action does both encap and decap.
 TEST_F(TunnelTypeMapperTest, TestOneActionEncapAndDecap) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestDecapHeader2, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestDecapHeader2, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -311,15 +308,15 @@ TEST_F(TunnelTypeMapperTest, TestOneActionEncapAndDecap) {
 
 // Verifies error when one action updates multiple potential outer header types.
 TEST_F(TunnelTypeMapperTest, TestOuterHeaderTypeConflict) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV4, 0);
   const char* kTestOuterHeader2 = "test-outer-header2";
   const char* kTestOuterField2 = "test-outer-header2.field";
   table_map_generator_.AddHeader(kTestOuterHeader2);
-  table_map_generator_.SetHeaderAttributes(
-      kTestOuterHeader2, P4_HEADER_IPV6, 0);
+  table_map_generator_.SetHeaderAttributes(kTestOuterHeader2, P4_HEADER_IPV6,
+                                           0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "dont-care-source",
                            P4_FIELD_TYPE_IPV4_DST, P4_HEADER_IPV4,
                            P4_HEADER_IPV4);
@@ -338,10 +335,10 @@ TEST_F(TunnelTypeMapperTest, TestOuterHeaderTypeConflict) {
 
 // Verifies error for GRE tunnel without inner header encap.
 TEST_F(TunnelTypeMapperTest, TestGreNoInnerEncap) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 0, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 0, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -354,10 +351,10 @@ TEST_F(TunnelTypeMapperTest, TestGreNoInnerEncap) {
 
 // Verifies error for GRE tunnel without inner header decap.
 TEST_F(TunnelTypeMapperTest, TestGreNoInnerDecap) {
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV6, 0, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV6, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -370,10 +367,10 @@ TEST_F(TunnelTypeMapperTest, TestGreNoInnerDecap) {
 
 // Verifies error when the GRE header is invalidated during tunnel encap.
 TEST_F(TunnelTypeMapperTest, TestGreInvalidTunnelEncap) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -386,10 +383,10 @@ TEST_F(TunnelTypeMapperTest, TestGreInvalidTunnelEncap) {
 
 // Verifies error when the GRE header is marked valid during tunnel decap.
 TEST_F(TunnelTypeMapperTest, TestGreValidTunnelDecap) {
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -402,10 +399,10 @@ TEST_F(TunnelTypeMapperTest, TestGreValidTunnelDecap) {
 
 // Verifies error when the GRE header is an inner header.
 TEST_F(TunnelTypeMapperTest, TestGreInGre) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 1, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -418,12 +415,12 @@ TEST_F(TunnelTypeMapperTest, TestGreInGre) {
 
 // Verifies error for GRE header valid and invalid in one encap action.
 TEST_F(TunnelTypeMapperTest, TestGreValidAndInvalidEncap) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -436,12 +433,12 @@ TEST_F(TunnelTypeMapperTest, TestGreValidAndInvalidEncap) {
 
 // Verifies error for GRE header valid and invalid in one decap action.
 TEST_F(TunnelTypeMapperTest, TestGreValidAndInvalidDecap) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_SET_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -454,10 +451,10 @@ TEST_F(TunnelTypeMapperTest, TestGreValidAndInvalidDecap) {
 
 // Verifies error when GRE header is copied.
 TEST_F(TunnelTypeMapperTest, TestGreCopy) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_VALID);
-  SetUpTestHeader(
-      kTestGreHeader, P4_HEADER_GRE, 0, kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestGreHeader, P4_HEADER_GRE, 0, kTestAction,
+                  P4_HEADER_COPY_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -470,11 +467,11 @@ TEST_F(TunnelTypeMapperTest, TestGreCopy) {
 
 // Verifies error when an action tries to encap to multiple inner headers.
 TEST_F(TunnelTypeMapperTest, TestEncapMultipleInnerHeaders) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
   const std::string kEncapHeader2 = "test-encap-header-2";
-  SetUpTestHeader(
-      kEncapHeader2, P4_HEADER_IPV6, 1, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kEncapHeader2, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -487,8 +484,8 @@ TEST_F(TunnelTypeMapperTest, TestEncapMultipleInnerHeaders) {
 
 // Verifies error when an action attempts to encap an unsupported inner header.
 TEST_F(TunnelTypeMapperTest, TestEncapUnsupportedHeaderType) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_TCP, 1, kTestAction, P4_HEADER_SET_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_TCP, 1, kTestAction,
+                  P4_HEADER_SET_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -501,8 +498,8 @@ TEST_F(TunnelTypeMapperTest, TestEncapUnsupportedHeaderType) {
 
 // Verifies error when an action attempts to decap an unsupported inner header.
 TEST_F(TunnelTypeMapperTest, TestDecapUnsupportedHeaderType) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_UDP, 1, kTestAction, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_UDP, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -516,13 +513,12 @@ TEST_F(TunnelTypeMapperTest, TestDecapUnsupportedHeaderType) {
 // Verifies tunnels in multiple actions with error.
 TEST_F(TunnelTypeMapperTest, TestMultipleTunnelsError) {
   // The kTestAction erroneously does both encap and decap in this setup.
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_COPY_VALID);
-  SetUpTestHeader(
-      kTestDecapHeader2, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_SET_INVALID);
-  SetUpTestHeader(
-      kTestDecapHeader1, P4_HEADER_IPV4, 1,
-      kTestAction2, P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestDecapHeader2, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_SET_INVALID);
+  SetUpTestHeader(kTestDecapHeader1, P4_HEADER_IPV4, 1, kTestAction2,
+                  P4_HEADER_SET_INVALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
   hal::P4PipelineConfig expected_pipeline_config = test_p4_pipeline_config_;
 
@@ -547,8 +543,8 @@ TEST_F(TunnelTypeMapperTest, TestMultipleTunnelsError) {
 
 // Tests optimization of TTL assignment into tunnel properties.
 TEST_F(TunnelTypeMapperTest, TestOptimizeTTLCopy) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "ttl-source-field",
@@ -569,8 +565,8 @@ TEST_F(TunnelTypeMapperTest, TestOptimizeTTLCopy) {
 
 // Tests optimization of ECN assignment into tunnel properties.
 TEST_F(TunnelTypeMapperTest, TestOptimizeECNCopy) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV6, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV6, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV4, 0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "ecn-source-field",
@@ -590,8 +586,8 @@ TEST_F(TunnelTypeMapperTest, TestOptimizeECNCopy) {
 
 // Tests optimization of DSCP assignment into tunnel properties.
 TEST_F(TunnelTypeMapperTest, TestOptimizeDCSPCopy) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "dscp-source-field",
@@ -611,8 +607,8 @@ TEST_F(TunnelTypeMapperTest, TestOptimizeDCSPCopy) {
 
 // Tests unsupported assignment of constant to TTL.
 TEST_F(TunnelTypeMapperTest, TestUnsupportedAssignTTLConstant) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "ttl-source-field",
@@ -620,8 +616,8 @@ TEST_F(TunnelTypeMapperTest, TestUnsupportedAssignTTLConstant) {
                            P4_HEADER_IPV4);
   // This test converts the preceding assignment's source value to a constant.
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
-  hal::P4ActionDescriptor* mutable_action = FindMutableActionDescriptorOrDie(
-      kTestAction, &test_p4_pipeline_config_);
+  hal::P4ActionDescriptor* mutable_action =
+      FindMutableActionDescriptorOrDie(kTestAction, &test_p4_pipeline_config_);
   ASSERT_EQ(1, mutable_action->assignments_size());
   auto source_value =
       mutable_action->mutable_assignments(0)->mutable_assigned_value();
@@ -639,8 +635,8 @@ TEST_F(TunnelTypeMapperTest, TestUnsupportedAssignTTLConstant) {
 
 // Tests unsupported assignment of an action parameter to TTL.
 TEST_F(TunnelTypeMapperTest, TestUnsupportedAssignTTLParam) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "ttl-source-field",
@@ -648,8 +644,8 @@ TEST_F(TunnelTypeMapperTest, TestUnsupportedAssignTTLParam) {
                            P4_HEADER_IPV4);
   // This test converts the preceding assignment's source value to a parameter.
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
-  hal::P4ActionDescriptor* mutable_action = FindMutableActionDescriptorOrDie(
-      kTestAction, &test_p4_pipeline_config_);
+  hal::P4ActionDescriptor* mutable_action =
+      FindMutableActionDescriptorOrDie(kTestAction, &test_p4_pipeline_config_);
   ASSERT_EQ(1, mutable_action->assignments_size());
   auto source_value =
       mutable_action->mutable_assignments(0)->mutable_assigned_value();
@@ -667,8 +663,8 @@ TEST_F(TunnelTypeMapperTest, TestUnsupportedAssignTTLParam) {
 
 // Tests malformed TTL assignment error.
 TEST_F(TunnelTypeMapperTest, TestMalformedTTLAssignError) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   SetUpTestFieldAssignment(kTestAction, kTestOuterField, "ttl-source-field",
@@ -677,8 +673,8 @@ TEST_F(TunnelTypeMapperTest, TestMalformedTTLAssignError) {
   // This test converts the preceding assignment's source value to a header,
   // which can't be assigned to a field.
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
-  hal::P4ActionDescriptor* mutable_action = FindMutableActionDescriptorOrDie(
-      kTestAction, &test_p4_pipeline_config_);
+  hal::P4ActionDescriptor* mutable_action =
+      FindMutableActionDescriptorOrDie(kTestAction, &test_p4_pipeline_config_);
   ASSERT_EQ(1, mutable_action->assignments_size());
   auto source_value =
       mutable_action->mutable_assignments(0)->mutable_assigned_value();
@@ -696,8 +692,8 @@ TEST_F(TunnelTypeMapperTest, TestMalformedTTLAssignError) {
 
 // Tests TTL source field type error.
 TEST_F(TunnelTypeMapperTest, TestTTLSourceFieldTypeError) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   const std::string kSourceFieldName = "ttl-source-field";
@@ -723,8 +719,8 @@ TEST_F(TunnelTypeMapperTest, TestTTLSourceFieldTypeError) {
 
 // Tests TTL metadata source field error.
 TEST_F(TunnelTypeMapperTest, TestTTLMetadataSourceFieldError) {
-  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1,
-                  kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   table_map_generator_.AddHeader(kTestOuterHeader);
   table_map_generator_.SetHeaderAttributes(kTestOuterHeader, P4_HEADER_IPV6, 0);
   const std::string kSourceFieldName = "ttl-source-field";
@@ -750,8 +746,8 @@ TEST_F(TunnelTypeMapperTest, TestTTLMetadataSourceFieldError) {
 
 // Verifies behavior when ProcessTunnels is called twice.
 TEST_F(TunnelTypeMapperTest, TestIPv4ProcessTunnelsTwice) {
-  SetUpTestHeader(
-      kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction, P4_HEADER_COPY_VALID);
+  SetUpTestHeader(kTestEncapHeader, P4_HEADER_IPV4, 1, kTestAction,
+                  P4_HEADER_COPY_VALID);
   test_p4_pipeline_config_ = table_map_generator_.generated_map();
 
   TunnelTypeMapper test_tunnel_mapper(&test_p4_pipeline_config_);
@@ -766,17 +762,15 @@ TEST_F(TunnelTypeMapperTest, TestIPv4ProcessTunnelsTwice) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  TestedEncaps,
-  TunnelTypeMapperTest,
-  ::testing::Values(
-      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV4, false),
-      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV4, true),
-      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV6, false),
-      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV6, true),
-      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV4, false),
-      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV4, true),
-      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV6, false),
-      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV6, true)));
+    TestedEncaps, TunnelTypeMapperTest,
+    ::testing::Values(std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV4, false),
+                      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV4, true),
+                      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV6, false),
+                      std::make_tuple(P4_HEADER_IPV4, P4_HEADER_IPV6, true),
+                      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV4, false),
+                      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV4, true),
+                      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV6, false),
+                      std::make_tuple(P4_HEADER_IPV6, P4_HEADER_IPV6, true)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

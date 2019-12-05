@@ -13,14 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/bcm/bcm_flow_table.h"
+
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_flow_table.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 
 namespace stratum {
 namespace hal {
@@ -31,29 +32,21 @@ using test_utils::EqualsProto;
 using test_utils::IsOkAndHolds;
 
 constexpr char kMockTableEntry[] = R"PROTO(
-    table_id: 1
-    match {
-      field_id: 1
-      exact { value: "2" }
-    }
-    match {
-      field_id: 2
-      ternary {
-        value: "3"
-        mask: "4"
-      }
-    }
-    match {
-      field_id: 3
-      lpm {
-        value: "5"
-        prefix_len: 6
-      }
-    }
-    priority: 10
-    action {
-      action_profile_member_id: 11
-    })PROTO";
+  table_id: 1
+  match {
+    field_id: 1
+    exact { value: "2" }
+  }
+  match {
+    field_id: 2
+    ternary { value: "3" mask: "4" }
+  }
+  match {
+    field_id: 3
+    lpm { value: "5" prefix_len: 6 }
+  }
+  priority: 10
+  action { action_profile_member_id: 11 })PROTO";
 
 const ::p4::v1::TableEntry& MockTableEntry() {
   static const ::p4::v1::TableEntry* entry = []() {

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_GLUE_STATUS_CANONICAL_ERRORS_H_
 #define STRATUM_GLUE_STATUS_CANONICAL_ERRORS_H_
 

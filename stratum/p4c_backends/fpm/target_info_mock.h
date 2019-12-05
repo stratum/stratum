@@ -19,9 +19,8 @@
 #ifndef STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
 #define STRATUM_P4C_BACKENDS_FPM_TARGET_INFO_MOCK_H_
 
-#include "stratum/p4c_backends/fpm/target_info.h"
-
 #include "gmock/gmock.h"
+#include "stratum/p4c_backends/fpm/target_info.h"
 
 namespace stratum {
 namespace p4c_backends {

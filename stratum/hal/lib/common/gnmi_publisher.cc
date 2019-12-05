@@ -13,18 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 
 #include <list>
 #include <string>
 #include <utility>
 
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {

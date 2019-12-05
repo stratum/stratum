@@ -13,32 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 
-#include <vector>
 #include <functional>
-#include <utility>
-#include <string>
 #include <map>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "stratum/lib/test_utils/p4_proto_builders.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 
@@ -50,6 +49,8 @@ namespace hal {
 namespace bcm {
 namespace {
 
+using stratum::test_utils::IsOkAndHolds;
+using stratum::test_utils::StatusIs;
 using test_utils::EqualsProto;
 using test_utils::PartiallyUnorderedEqualsProto;
 using test_utils::p4_proto_builders::ApplyTable;
@@ -67,12 +68,9 @@ using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAreArray;
-using stratum::test_utils::IsOkAndHolds;
-using stratum::test_utils::StatusIs;
 
 using StageToTablesMap =
-    std::map<P4Annotation::PipelineStage,
-                        std::vector<::p4::config::v1::Table>>;
+    std::map<P4Annotation::PipelineStage, std::vector<::p4::config::v1::Table>>;
 using StageToControlBlockMap =
     std::map<P4Annotation::PipelineStage, P4ControlBlock>;
 
@@ -82,7 +80,8 @@ constexpr char kDefaultBcmHardwareSpecsText[] = R"PROTO(
     acl {
       field_processors {
         stage: VLAN
-        slices { count: 4 width: 200 size: 256 } }
+        slices { count: 4 width: 200 size: 256 }
+      }
       field_processors {
         stage: INGRESS
         slices { count: 8 width: 200 size: 256 }
@@ -317,69 +316,131 @@ const std::map<int, ::p4::config::v1::Table>& DefaultP4Tables() {
     auto* tables = new std::map<int, ::p4::config::v1::Table>();
     ::p4::config::v1::Table table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 1 name: "table_1" }
-      match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_SRC" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 1 name: "table_1" }
+                                    match_fields {
+                                      id: 1
+                                      name: "P4_FIELD_TYPE_ETH_SRC"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(1, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 2 name: "table_2" }
-      match_fields { id: 2 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 2 name: "table_2" }
+                                    match_fields {
+                                      id: 2
+                                      name: "P4_FIELD_TYPE_ETH_DST"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(2, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 3 name: "table_3" }
-      match_fields { id: 3 name: "P4_FIELD_TYPE_ETH_TYPE" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 3 name: "table_3" }
+                                    match_fields {
+                                      id: 3
+                                      name: "P4_FIELD_TYPE_ETH_TYPE"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(3, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 4 name: "table_4" }
-      match_fields { id: 4 name: "P4_FIELD_TYPE_IPV4_SRC" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 4 name: "table_4" }
+                                    match_fields {
+                                      id: 4
+                                      name: "P4_FIELD_TYPE_IPV4_SRC"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(4, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 5 name: "table_5" }
-      match_fields { id: 5 name: "P4_FIELD_TYPE_IPV4_DST" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 5 name: "table_5" }
+                                    match_fields {
+                                      id: 5
+                                      name: "P4_FIELD_TYPE_IPV4_DST"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(5, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 6 name: "table_6" }
-      match_fields { id: 6 name: "P4_FIELD_TYPE_IPV6_SRC" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 6 name: "table_6" }
+                                    match_fields {
+                                      id: 6
+                                      name: "P4_FIELD_TYPE_IPV6_SRC"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(6, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 7 name: "table_7" }
-      match_fields { id: 7 name: "P4_FIELD_TYPE_IPV6_DST" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 7 name: "table_7" }
+                                    match_fields {
+                                      id: 7
+                                      name: "P4_FIELD_TYPE_IPV6_DST"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(7, table));
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 8 name: "table_8" }
-      match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_SRC" match_type: TERNARY }
-      match_fields { id: 2 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 8 name: "table_8" }
+                                    match_fields {
+                                      id: 1
+                                      name: "P4_FIELD_TYPE_ETH_SRC"
+                                      match_type: TERNARY
+                                    }
+                                    match_fields {
+                                      id: 2
+                                      name: "P4_FIELD_TYPE_ETH_DST"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(8, table));
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 9 name: "table_9" }
-      match_fields { id: 4 name: "P4_FIELD_TYPE_IPV4_SRC" match_type: TERNARY }
-      match_fields { id: 5 name: "P4_FIELD_TYPE_IPV4_DST" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 9 name: "table_9" }
+                                    match_fields {
+                                      id: 4
+                                      name: "P4_FIELD_TYPE_IPV4_SRC"
+                                      match_type: TERNARY
+                                    }
+                                    match_fields {
+                                      id: 5
+                                      name: "P4_FIELD_TYPE_IPV4_DST"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(9, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      preamble { id: 10 name: "table_10" }
-      match_fields { id: 6 name: "P4_FIELD_TYPE_IPV6_SRC" match_type: TERNARY }
-      match_fields { id: 7 name: "P4_FIELD_TYPE_IPV6_DST" match_type: TERNARY }
-      size: 10
-    )PROTO", &table));
+                                    preamble { id: 10 name: "table_10" }
+                                    match_fields {
+                                      id: 6
+                                      name: "P4_FIELD_TYPE_IPV6_SRC"
+                                      match_type: TERNARY
+                                    }
+                                    match_fields {
+                                      id: 7
+                                      name: "P4_FIELD_TYPE_IPV6_DST"
+                                      match_type: TERNARY
+                                    }
+                                    size: 10
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(10, table));
     return tables;
   }();
@@ -406,41 +467,51 @@ const std::map<int, BcmAclTable>& DefaultBcmAclTables() {
     auto tables = new std::map<int, BcmAclTable>();
     BcmAclTable table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_SRC })PROTO", &table));
+                                    fields { type: ETH_SRC })PROTO",
+                                  &table));
     tables->insert(std::make_pair(1, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_DST })PROTO", &table));
+                                    fields { type: ETH_DST })PROTO",
+                                  &table));
     tables->insert(std::make_pair(2, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_TYPE })PROTO", &table));
+                                    fields { type: ETH_TYPE })PROTO",
+                                  &table));
     tables->insert(std::make_pair(3, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV4_SRC })PROTO", &table));
+                                    fields { type: IPV4_SRC })PROTO",
+                                  &table));
     tables->insert(std::make_pair(4, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV4_DST })PROTO", &table));
+                                    fields { type: IPV4_DST })PROTO",
+                                  &table));
     tables->insert(std::make_pair(5, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV6_SRC_UPPER_64 })PROTO", &table));
+                                    fields { type: IPV6_SRC_UPPER_64 })PROTO",
+                                  &table));
     tables->insert(std::make_pair(6, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV6_DST_UPPER_64 })PROTO", &table));
+                                    fields { type: IPV6_DST_UPPER_64 })PROTO",
+                                  &table));
     tables->insert(std::make_pair(7, table));
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: ETH_SRC }
-      fields { type: ETH_DST }
-    )PROTO", &table));
+                                    fields { type: ETH_SRC }
+                                    fields { type: ETH_DST }
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(8, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV4_SRC }
-      fields { type: IPV4_DST }
-    )PROTO", &table));
+                                    fields { type: IPV4_SRC }
+                                    fields { type: IPV4_DST }
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(9, table));
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      fields { type: IPV6_SRC_UPPER_64 }
-      fields { type: IPV6_DST_UPPER_64 }
-    )PROTO", &table));
+                                    fields { type: IPV6_SRC_UPPER_64 }
+                                    fields { type: IPV6_DST_UPPER_64 }
+                                  )PROTO",
+                                  &table));
     tables->insert(std::make_pair(10, table));
     return tables;
   }();
@@ -476,8 +547,7 @@ const P4ControlBlock& DefaultControlBlock() {
 
 // Sets the BcmAclStage for all tables within a map.
 const std::map<int, BcmAclTable> SetStage(
-    const std::map<int, BcmAclTable>& original_tables,
-    BcmAclStage stage) {
+    const std::map<int, BcmAclTable>& original_tables, BcmAclStage stage) {
   auto tables = original_tables;
   for (auto& pair : tables) {
     pair.second.set_stage(stage);
@@ -1437,9 +1507,9 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntryRejectionFailure) {
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InsertAclFlow(_, _, _, _)).Times(0);
   EXPECT_CALL(*bcm_table_manager_mock_, AddTableEntry(_)).Times(0);
-  EXPECT_THAT(bcm_acl_manager_->InsertTableEntry(entry),
-              StatusIs(StratumErrorSpace(), ERR_ENTRY_NOT_FOUND,
-                       HasSubstr("9999999")));
+  EXPECT_THAT(
+      bcm_acl_manager_->InsertTableEntry(entry),
+      StatusIs(StratumErrorSpace(), ERR_ENTRY_NOT_FOUND, HasSubstr("9999999")));
 }
 
 TEST_F(BcmAclManagerTest, TestModifyTableEntry) {
@@ -1865,8 +1935,10 @@ TEST_F(BcmAclManagerTest, TestInstallPhysicalTableWithConstConditions) {
 
   std::vector<std::string> bcm_table_strings = {
       R"PROTO(fields { type: ETH_SRC })PROTO",
-      R"PROTO(fields { type: ETH_DST } fields { type: IP_TYPE })PROTO",
-      R"PROTO(fields { type: IPV4_SRC } fields { type: IP_TYPE })PROTO",
+      R"PROTO(fields { type: ETH_DST }
+              fields { type: IP_TYPE })PROTO",
+      R"PROTO(fields { type: IPV4_SRC }
+              fields { type: IP_TYPE })PROTO",
   };
   std::vector<BcmAclTable> expected_bcm_tables;
   for (const std::string& table_string : bcm_table_strings) {
@@ -1893,11 +1965,13 @@ TEST_F(BcmAclManagerTest, TestInstallPhysicalTableWithConstConditions) {
 
 TEST_F(BcmAclManagerTest, TestInsertTableEntryWithConstConditions) {
   ::p4::config::v1::Table table;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
-    preamble { id: 2 name: "table_2" }
-    match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
-    size: 10
-  )PROTO", &table));
+  CHECK_OK(ParseProtoFromString(
+      R"PROTO(
+        preamble { id: 2 name: "table_2" }
+        match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_DST" match_type: TERNARY }
+        size: 10
+      )PROTO",
+      &table));
 
   P4ControlBlock control_block;
   *control_block.add_statements() =
@@ -1908,17 +1982,28 @@ TEST_F(BcmAclManagerTest, TestInsertTableEntryWithConstConditions) {
 
   ::p4::v1::TableEntry table_entry;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    table_id: 2
-    match { field_id: 1 ternary { value: "\00A" } }
-    priority: 15
-  )PROTO", &table_entry));
+                                  table_id: 2
+                                  match {
+                                    field_id: 1
+                                    ternary { value: "\00A" }
+                                  }
+                                  priority: 15
+                                )PROTO",
+                                &table_entry));
 
   BcmFlowEntry bcm_flow_entry;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    bcm_table_type: BCM_TABLE_ACL
-    fields { type: ETH_DST value { u32: 10 } }
-    fields { type: IP_TYPE value { u32: 0x800 } }
-  )PROTO", &bcm_flow_entry));
+                                  bcm_table_type: BCM_TABLE_ACL
+                                  fields {
+                                    type: ETH_DST
+                                    value { u32: 10 }
+                                  }
+                                  fields {
+                                    type: IP_TYPE
+                                    value { u32: 0x800 }
+                                  }
+                                )PROTO",
+                                &bcm_flow_entry));
 
   ASSERT_OK(SetUpTables({table}, control_block));
   EXPECT_CALL(*bcm_table_manager_mock_, FillBcmFlowEntry(_, _, _))

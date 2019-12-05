@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_UDEV_H_
 #define STRATUM_HAL_LIB_PHAL_UDEV_H_
 
@@ -25,11 +24,11 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/udev_interface.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

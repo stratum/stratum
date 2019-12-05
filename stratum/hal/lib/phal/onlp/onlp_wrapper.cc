@@ -15,11 +15,11 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -32,13 +32,12 @@ constexpr int kOnlpBitmapWordCount = 8;
 OidInfo::OidInfo(const onlp_oid_type_t type, OnlpPortNumber port,
                  HwState state) {
   oid_info_.id = ONLP_OID_TYPE_CREATE(type, port);
-  oid_info_.status = (state == HW_STATE_PRESENT ?
-      ONLP_OID_STATUS_FLAG_PRESENT : ONLP_OID_STATUS_FLAG_UNPLUGGED);
+  oid_info_.status =
+      (state == HW_STATE_PRESENT ? ONLP_OID_STATUS_FLAG_PRESENT
+                                 : ONLP_OID_STATUS_FLAG_UNPLUGGED);
 }
 
-bool OidInfo::Present() const {
-  return ONLP_OID_PRESENT(&oid_info_);
-}
+bool OidInfo::Present() const { return ONLP_OID_PRESENT(&oid_info_); }
 
 HwState OidInfo::GetHardwareState() const {
   if (Present()) {
@@ -85,7 +84,7 @@ OnlpWrapper::~OnlpWrapper() {
   onlp_sfp_info_t sfp_info = {{oid}};
   if (onlp_sfp_is_present(oid)) {
     CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_info_get(oid, &sfp_info)))
-          << "Failed to get SFP info for OID " << oid << ".";
+        << "Failed to get SFP info for OID " << oid << ".";
   }
   return SfpInfo(sfp_info);
 }
@@ -103,8 +102,7 @@ OnlpWrapper::~OnlpWrapper() {
   return &fan_info_;
 }
 
-::util::Status OnlpWrapper::
-  SetFanPercent(OnlpOid oid, int value) const {
+::util::Status OnlpWrapper::SetFanPercent(OnlpOid oid, int value) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_percentage_set(oid, value)))
@@ -112,8 +110,7 @@ OnlpWrapper::~OnlpWrapper() {
   return ::util::OkStatus();
 }
 
-::util::Status OnlpWrapper::
-  SetFanRpm(OnlpOid oid, int val) const {
+::util::Status OnlpWrapper::SetFanRpm(OnlpOid oid, int val) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot get FAN info: OID " << oid << " is not an FAN.";
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_fan_rpm_set(oid, val)))
@@ -121,8 +118,7 @@ OnlpWrapper::~OnlpWrapper() {
   return ::util::OkStatus();
 }
 
-::util::Status OnlpWrapper::
-  SetFanDir(OnlpOid oid, FanDir dir) const {
+::util::Status OnlpWrapper::SetFanDir(OnlpOid oid, FanDir dir) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_FAN(oid))
       << "Cannot set FAN info: OID " << oid << " is not an FAN.";
   CHECK_RETURN_IF_FALSE(
@@ -133,10 +129,10 @@ OnlpWrapper::~OnlpWrapper() {
 
 ::util::StatusOr<ThermalInfo> OnlpWrapper::GetThermalInfo(OnlpOid oid) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_THERMAL(oid))
-        << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
+      << "Cannot get THERMAL info: OID " << oid << " is not an THERMAL.";
   onlp_thermal_info_t thermal_info = {};
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_thermal_info_get(oid, &thermal_info)))
-        << "Failed to get THERMAL info for OID " << oid << ".";
+      << "Failed to get THERMAL info for OID " << oid << ".";
   return ThermalInfo(thermal_info);
 }
 
@@ -149,8 +145,7 @@ OnlpWrapper::~OnlpWrapper() {
   return LedInfo(led_info);
 }
 
-::util::Status OnlpWrapper::
-  SetLedMode(OnlpOid oid, LedMode mode) const {
+::util::Status OnlpWrapper::SetLedMode(OnlpOid oid, LedMode mode) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
       << "Cannot set LED info: OID " << oid << " is not an LED.";
   CHECK_RETURN_IF_FALSE(
@@ -159,8 +154,7 @@ OnlpWrapper::~OnlpWrapper() {
   return ::util::OkStatus();
 }
 
-::util::Status OnlpWrapper::
-  SetLedCharacter(OnlpOid oid, char val) const {
+::util::Status OnlpWrapper::SetLedCharacter(OnlpOid oid, char val) const {
   CHECK_RETURN_IF_FALSE(ONLP_OID_IS_LED(oid))
       << "Cannot get LED info: OID " << oid << " is not an LED.";
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_led_char_set(oid, val)))
@@ -177,7 +171,7 @@ OnlpWrapper::~OnlpWrapper() {
   SfpBitmap presence;
   onlp_sfp_bitmap_t_init(&presence);
   CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_presence_bitmap_get(&presence)))
-           << "Failed to get presence bitmap ONLP.";
+      << "Failed to get presence bitmap ONLP.";
   int k = 0;
   for (int i = 0; i < kOnlpBitmapWordCount; i++) {
     for (int j = 0; j < kOnlpBitmapBitsPerWord; j++) {
@@ -206,7 +200,7 @@ OnlpWrapper::~OnlpWrapper() {
 }
 
 ::util::StatusOr<std::vector<OnlpOid>> OnlpWrapper::GetOidList(
-      onlp_oid_type_flag_t type) const {
+    onlp_oid_type_flag_t type) const {
   std::vector<OnlpOid> oid_list;
   biglist_t* oid_hdr_list;
 
@@ -217,7 +211,7 @@ OnlpWrapper::~OnlpWrapper() {
   biglist_t* curr_node = oid_hdr_list;
   while (curr_node != nullptr) {
     onlp_oid_hdr_t* oid_hdr =
-                    reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
+        reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
     oid_list.emplace_back(oid_hdr->id);
     curr_node = curr_node->next;
   }
@@ -236,8 +230,8 @@ OnlpWrapper::~OnlpWrapper() {
 
   OnlpPortNumber port_num = ONLP_MAX_FRONT_PORT_NUM;
   int i, j;
-  for (i = 0; i < kOnlpBitmapWordCount; i ++) {
-    for (j = 0; j < kOnlpBitmapBitsPerWord; j ++) {
+  for (i = 0; i < kOnlpBitmapWordCount; i++) {
+    for (j = 0; j < kOnlpBitmapBitsPerWord; j++) {
       if (bitmap.words[i] & (1 << j)) {
         port_num = i * kOnlpBitmapBitsPerWord + j + 1;
         // Note: return here only if the valid port numbers start from
@@ -268,7 +262,7 @@ MediaType SfpInfo::GetMediaType() const {
     case SFF_MODULE_TYPE_40G_BASE_SR4:
       return MEDIA_TYPE_QSFP_SR4;
     case SFF_MODULE_TYPE_40G_BASE_LR4:
-      // TODO(unknown): Need connector type (LC or MPO) which is missing.
+    // TODO(unknown): Need connector type (LC or MPO) which is missing.
     default:
       return MEDIA_TYPE_UNKNOWN;
   }
@@ -276,29 +270,29 @@ MediaType SfpInfo::GetMediaType() const {
 
 SfpType SfpInfo::GetSfpType() const {
   switch (sfp_info_.sff.sfp_type) {
-  case SFF_SFP_TYPE_SFP:
-    return SFP_TYPE_SFP;
-  case SFF_SFP_TYPE_QSFP:
-    return SFP_TYPE_QSFP;
-  case SFF_SFP_TYPE_QSFP_PLUS:
-    return SFP_TYPE_QSFP_PLUS;
-  case SFF_SFP_TYPE_QSFP28:
-    return SFP_TYPE_QSFP28;
-  default:
-    return SFP_TYPE_UNKNOWN;
+    case SFF_SFP_TYPE_SFP:
+      return SFP_TYPE_SFP;
+    case SFF_SFP_TYPE_QSFP:
+      return SFP_TYPE_QSFP;
+    case SFF_SFP_TYPE_QSFP_PLUS:
+      return SFP_TYPE_QSFP_PLUS;
+    case SFF_SFP_TYPE_QSFP28:
+      return SFP_TYPE_QSFP28;
+    default:
+      return SFP_TYPE_UNKNOWN;
   }
 }
 
-SfpModuleType SfpInfo::GetSfpModuleType()const {
+SfpModuleType SfpInfo::GetSfpModuleType() const {
   switch (sfp_info_.sff.module_type) {
-  case SFF_MODULE_TYPE_100G_BASE_CR4:
-    return SFP_MODULE_TYPE_100G_BASE_CR4;
-  case SFF_MODULE_TYPE_10G_BASE_CR:
-    return SFP_MODULE_TYPE_10G_BASE_CR;
-  case SFF_MODULE_TYPE_1G_BASE_SX:
-    return SFP_MODULE_TYPE_1G_BASE_SX;
-  default:
-    return SFP_MODULE_TYPE_UNKNOWN;
+    case SFF_MODULE_TYPE_100G_BASE_CR4:
+      return SFP_MODULE_TYPE_100G_BASE_CR4;
+    case SFF_MODULE_TYPE_10G_BASE_CR:
+      return SFP_MODULE_TYPE_10G_BASE_CR;
+    case SFF_MODULE_TYPE_1G_BASE_SX:
+      return SFP_MODULE_TYPE_1G_BASE_SX;
+    default:
+      return SFP_MODULE_TYPE_UNKNOWN;
   }
 }
 
@@ -319,12 +313,12 @@ void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {
 
 FanDir FanInfo::GetFanDir() const {
   switch (fan_info_.dir) {
-  case ONLP_FAN_DIR_B2F:
-    return FAN_DIR_B2F;
-  case ONLP_FAN_DIR_F2B:
-    return FAN_DIR_F2B;
-  default:
-    return FAN_DIR_UNKNOWN;
+    case ONLP_FAN_DIR_B2F:
+      return FAN_DIR_B2F;
+    case ONLP_FAN_DIR_F2B:
+      return FAN_DIR_F2B;
+    default:
+      return FAN_DIR_UNKNOWN;
   }
 }
 
@@ -340,14 +334,14 @@ void FanInfo::GetCaps(FanCaps* caps) const {
 
 PsuType PsuInfo::GetPsuType() const {
   switch (psu_info_.type) {
-  case ONLP_PSU_TYPE_AC:
-    return PSU_TYPE_AC;
-  case ONLP_PSU_TYPE_DC12:
-    return PSU_TYPE_DC12;
-  case ONLP_PSU_TYPE_DC48:
-    return PSU_TYPE_DC48;
-  default:
-    return PSU_TYPE_UNKNOWN;
+    case ONLP_PSU_TYPE_AC:
+      return PSU_TYPE_AC;
+    case ONLP_PSU_TYPE_DC12:
+      return PSU_TYPE_DC12;
+    case ONLP_PSU_TYPE_DC48:
+      return PSU_TYPE_DC48;
+    default:
+      return PSU_TYPE_UNKNOWN;
   }
 }
 
@@ -362,9 +356,7 @@ void PsuInfo::GetCaps(PsuCaps* caps) const {
   caps->set_get_pout(psu_info_.caps & ONLP_PSU_CAPS_GET_POUT);
 }
 
-int ThermalInfo::GetThermalCurTemp() const {
-  return thermal_info_.mcelsius;
-}
+int ThermalInfo::GetThermalCurTemp() const { return thermal_info_.mcelsius; }
 
 int ThermalInfo::GetThermalWarnTemp() const {
   return thermal_info_.thresholds.warning;
@@ -380,56 +372,54 @@ int ThermalInfo::GetThermalShutDownTemp() const {
 
 void ThermalInfo::GetCaps(ThermalCaps* caps) const {
   // set all relevant capabilities flags
-  caps->set_get_temperature(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_TEMPERATURE);
-  caps->set_get_warning_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
-  caps->set_get_error_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_ERROR_THRESHOLD);
-  caps->set_get_shutdown_threshold(
-      thermal_info_.caps & ONLP_THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD);
+  caps->set_get_temperature(thermal_info_.caps &
+                            ONLP_THERMAL_CAPS_GET_TEMPERATURE);
+  caps->set_get_warning_threshold(thermal_info_.caps &
+                                  ONLP_THERMAL_CAPS_GET_WARNING_THRESHOLD);
+  caps->set_get_error_threshold(thermal_info_.caps &
+                                ONLP_THERMAL_CAPS_GET_ERROR_THRESHOLD);
+  caps->set_get_shutdown_threshold(thermal_info_.caps &
+                                   ONLP_THERMAL_CAPS_GET_SHUTDOWN_THRESHOLD);
 }
 
-char LedInfo::GetLedChar() const {
-  return led_info_.character;
-}
+char LedInfo::GetLedChar() const { return led_info_.character; }
 
 LedMode LedInfo::GetLedMode() const {
   switch (led_info_.mode) {
-  case ONLP_LED_MODE_OFF:
-    return LED_MODE_OFF;
-  case ONLP_LED_MODE_AUTO:
-    return LED_MODE_AUTO;
-  case ONLP_LED_MODE_AUTO_BLINKING:
-    return LED_MODE_AUTO_BLINKING;
-  case ONLP_LED_MODE_CHAR:
-    return LED_MODE_CHAR;
-  case ONLP_LED_MODE_RED:
-    return LED_MODE_RED;
-  case ONLP_LED_MODE_RED_BLINKING:
-    return LED_MODE_RED_BLINKING;
-  case ONLP_LED_MODE_ORANGE:
-    return LED_MODE_ORANGE;
-  case ONLP_LED_MODE_ORANGE_BLINKING:
-    return LED_MODE_ORANGE_BLINKING;
-  case ONLP_LED_MODE_YELLOW:
-    return LED_MODE_YELLOW;
-  case ONLP_LED_MODE_YELLOW_BLINKING:
-    return LED_MODE_YELLOW_BLINKING;
-  case ONLP_LED_MODE_GREEN:
-    return LED_MODE_GREEN;
-  case ONLP_LED_MODE_GREEN_BLINKING:
-    return LED_MODE_GREEN_BLINKING;
-  case ONLP_LED_MODE_BLUE:
-    return LED_MODE_BLUE;
-  case ONLP_LED_MODE_BLUE_BLINKING:
-    return LED_MODE_BLUE_BLINKING;
-  case ONLP_LED_MODE_PURPLE:
-    return LED_MODE_PURPLE;
-  case ONLP_LED_MODE_PURPLE_BLINKING:
-    return LED_MODE_PURPLE_BLINKING;
-  default:
-    return LED_MODE_UNKNOWN;
+    case ONLP_LED_MODE_OFF:
+      return LED_MODE_OFF;
+    case ONLP_LED_MODE_AUTO:
+      return LED_MODE_AUTO;
+    case ONLP_LED_MODE_AUTO_BLINKING:
+      return LED_MODE_AUTO_BLINKING;
+    case ONLP_LED_MODE_CHAR:
+      return LED_MODE_CHAR;
+    case ONLP_LED_MODE_RED:
+      return LED_MODE_RED;
+    case ONLP_LED_MODE_RED_BLINKING:
+      return LED_MODE_RED_BLINKING;
+    case ONLP_LED_MODE_ORANGE:
+      return LED_MODE_ORANGE;
+    case ONLP_LED_MODE_ORANGE_BLINKING:
+      return LED_MODE_ORANGE_BLINKING;
+    case ONLP_LED_MODE_YELLOW:
+      return LED_MODE_YELLOW;
+    case ONLP_LED_MODE_YELLOW_BLINKING:
+      return LED_MODE_YELLOW_BLINKING;
+    case ONLP_LED_MODE_GREEN:
+      return LED_MODE_GREEN;
+    case ONLP_LED_MODE_GREEN_BLINKING:
+      return LED_MODE_GREEN_BLINKING;
+    case ONLP_LED_MODE_BLUE:
+      return LED_MODE_BLUE;
+    case ONLP_LED_MODE_BLUE_BLINKING:
+      return LED_MODE_BLUE_BLINKING;
+    case ONLP_LED_MODE_PURPLE:
+      return LED_MODE_PURPLE;
+    case ONLP_LED_MODE_PURPLE_BLINKING:
+      return LED_MODE_PURPLE_BLINKING;
+    default:
+      return LED_MODE_UNKNOWN;
   }
 }
 

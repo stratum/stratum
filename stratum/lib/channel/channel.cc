@@ -16,6 +16,7 @@
  */
 
 #include "stratum/lib/channel/channel.h"
+
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

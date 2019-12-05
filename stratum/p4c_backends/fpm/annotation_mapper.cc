@@ -18,12 +18,13 @@
 
 #include <string>
 #include <vector>
+
+#include "absl/strings/str_split.h"
 #include "gflags/gflags.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/strings/str_split.h"
 
 DEFINE_string(p4c_annotation_map_files, "",
               "Specifies a comma-separated list of files for annotation "
@@ -98,8 +99,8 @@ bool AnnotationMapper::ProcessAnnotations(
         break;
       case hal::P4TableMapValue::kFieldDescriptor:
         if (!HandleFieldAnnotations(
-            table_map_iter.first,
-            table_map_iter.second.mutable_field_descriptor()))
+                table_map_iter.first,
+                table_map_iter.second.mutable_field_descriptor()))
           success = false;
         break;
       case hal::P4TableMapValue::kActionDescriptor:
@@ -131,7 +132,7 @@ bool AnnotationMapper::ProcessAnnotations(
   return success;
 }
 
-  // ProcessAnnotations will use the lookup maps created below.
+// ProcessAnnotations will use the lookup maps created below.
 bool AnnotationMapper::InitInternal() {
   bool field_ok = field_lookup_.BuildMap(annotation_map_.field_addenda());
   bool table_ok = table_lookup_.BuildMap(annotation_map_.table_addenda());
@@ -161,8 +162,8 @@ bool AnnotationMapper::MapFieldAnnotation(
   for (const auto& addenda_name : map_value.addenda_names()) {
     auto field_addendum = field_lookup_.FindAddenda(addenda_name);
     if (field_addendum == nullptr) {
-      LOG(ERROR) << "Unable to find field addenda named "
-                 << addenda_name << " for annotation " << annotation;
+      LOG(ERROR) << "Unable to find field addenda named " << addenda_name
+                 << " for annotation " << annotation;
       return false;
     }
     LOG(WARNING) << "P4FieldAddenda are not implemented for " << annotation;
@@ -203,8 +204,8 @@ bool AnnotationMapper::MapTableAnnotation(
   for (const auto& addenda_name : map_value.addenda_names()) {
     auto table_addendum = table_lookup_.FindAddenda(addenda_name);
     if (table_addendum == nullptr) {
-      LOG(ERROR) << "Unable to find table addenda named "
-                 << addenda_name << " for annotation " << annotation;
+      LOG(ERROR) << "Unable to find table addenda named " << addenda_name
+                 << " for annotation " << annotation;
       return false;
     }
 

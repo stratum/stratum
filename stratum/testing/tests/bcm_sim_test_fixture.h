@@ -19,6 +19,9 @@
 
 #include <memory>
 
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
@@ -34,9 +37,6 @@
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 

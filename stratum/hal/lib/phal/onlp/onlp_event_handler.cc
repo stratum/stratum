@@ -13,20 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 
 #include <algorithm>
 #include <utility>
 
-#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-#include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/lib/macros.h"
 
 // Note: We want to keep this polling interval relatively short. Unlike with
 // with udev, it's possible for us to miss state changes entirely if they occur
@@ -47,17 +47,14 @@ namespace onlp {
 
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
+OnlpEventCallback::OnlpEventCallback() : handler_(nullptr) {}
 
-OnlpEventCallback::OnlpEventCallback()
-    : handler_(nullptr) {}
-
-OnlpOidEventCallback::OnlpOidEventCallback(OnlpOid oid)
-    : oid_(oid) {}
+OnlpOidEventCallback::OnlpOidEventCallback(OnlpOid oid) : oid_(oid) {}
 
 OnlpOidEventCallback::~OnlpOidEventCallback() {
   if (handler_ != nullptr) {
     ::util::Status unregister_result =
-                                handler_->UnregisterOidEventCallback(this);
+        handler_->UnregisterOidEventCallback(this);
     if (!unregister_result.ok()) {
       LOG(ERROR)
           << "Encountered error while unregistering an ONLP Oid event callback:"
@@ -72,16 +69,15 @@ OnlpSfpEventCallback::~OnlpSfpEventCallback() {
   VLOG(3) << "Entering OnlpSfpEventCallback destructor...";
   if (handler_ != nullptr) {
     ::util::Status unregister_result =
-      handler_->UnregisterSfpEventCallback(this);
+        handler_->UnregisterSfpEventCallback(this);
     if (!unregister_result.ok()) {
-      LOG(ERROR)
-         << "Encountered error while unregistering an ONLP SFP event callback: "
-         << unregister_result;
+      LOG(ERROR) << "Encountered error while unregistering an ONLP SFP event "
+                    "callback: "
+                 << unregister_result;
     }
   }
   VLOG(3) << "Returning from OnlpSfpEventCallback destructor...";
 }
-
 
 ::util::StatusOr<std::unique_ptr<OnlpEventHandler>> OnlpEventHandler::Make(
     const OnlpInterface* onlp) {
@@ -141,7 +137,7 @@ OnlpEventHandler::~OnlpEventHandler() {
 }
 
 ::util::Status OnlpEventHandler::RegisterSfpEventCallback(
-                OnlpSfpEventCallback* callback) {
+    OnlpSfpEventCallback* callback) {
   absl::MutexLock lock(&monitor_lock_);
   CHECK_RETURN_IF_FALSE(callback->handler_ == nullptr)
       << "Cannot register a sfp callback that is already registered.";
@@ -155,7 +151,7 @@ OnlpEventHandler::~OnlpEventHandler() {
 }
 
 ::util::Status OnlpEventHandler::UnregisterSfpEventCallback(
-                OnlpSfpEventCallback* callback) {
+    OnlpSfpEventCallback* callback) {
   absl::MutexLock lock(&monitor_lock_);
   CHECK_RETURN_IF_FALSE(callback->handler_ == this)
       << "Cannot unregister a sfp callback that is not currently registered.";
@@ -200,10 +196,9 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
   absl::Time last_polling_time = absl::InfinitePast();
   while (true) {
     // We keep the polling time as consistent as possible.
-    absl::SleepFor(
-        last_polling_time +
-        absl::Milliseconds(FLAGS_onlp_polling_interval_ms) -
-        absl::Now());
+    absl::SleepFor(last_polling_time +
+                   absl::Milliseconds(FLAGS_onlp_polling_interval_ms) -
+                   absl::Now());
     last_polling_time = absl::Now();
     {
       absl::MutexLock lock(&handler->monitor_lock_);
@@ -295,8 +290,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
 
   // Get SFP present bitmap
   ASSIGN_OR_RETURN(OnlpPresentBitmap new_map, onlp_->GetSfpPresenceBitmap());
-  VLOG(1) << "OnlpEventHandler::PollSfpPresence, got sfp bitmap..."
-          << new_map;
+  VLOG(1) << "OnlpEventHandler::PollSfpPresence, got sfp bitmap..." << new_map;
   VLOG(1) << "OnlpEventHandler::PollSfpPresence, old sfp bitmap..."
           << sfp_status_monitor_.previous_map;
 
@@ -316,16 +310,16 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
 
     // for each bit in bitmap, check if it was changed
     for (OnlpPortNumber port = 1; port <= max_front_port_num_; port++) {
-      if (previous_map.test(port-1) == new_map.test(port-1)) {
+      if (previous_map.test(port - 1) == new_map.test(port - 1)) {
         continue;
       }
 
       // Handle status change
-      HwState state = new_map.test(port-1) ?
-                      HW_STATE_PRESENT : HW_STATE_NOT_PRESENT;
+      HwState state =
+          new_map.test(port - 1) ? HW_STATE_PRESENT : HW_STATE_NOT_PRESENT;
       OidInfo oid_info(ONLP_OID_TYPE_SFP, port, state);
-      LOG(INFO) << "OnlpEventHandler::PollSfpPresence, OidInfo, port="
-                      << port << ", state=" << oid_info.GetHardwareState();
+      LOG(INFO) << "OnlpEventHandler::PollSfpPresence, OidInfo, port=" << port
+                << ", state=" << oid_info.GetHardwareState();
       // add to the updated_ports list
       updated_ports.push_back(oid_info);
     }
@@ -349,7 +343,7 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
               << "info[oid, port, state]=" << info.GetHeader()->id << ","
               << info.GetId() << "," << info.GetHardwareState();
     APPEND_STATUS_IF_ERROR(result,
-              executing_callback_->HandleStatusChange(info));
+                           executing_callback_->HandleStatusChange(info));
     {
       absl::MutexLock lock(&monitor_lock_);
       executing_callback_ = nullptr;

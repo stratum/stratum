@@ -19,11 +19,11 @@
 #include <memory>
 #include <string>
 
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/frontends/common/options.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
 #include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "gtest/gtest.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -31,8 +31,7 @@ namespace p4c_backends {
 class ConditionInspectorTest : public testing::Test {
  protected:
   ConditionInspectorTest()
-      : test_p4c_context_(new P4CContextWithOptions<CompilerOptions>) {
-  }
+      : test_p4c_context_(new P4CContextWithOptions<CompilerOptions>) {}
 
   // Initializes compare_left_ and compare_right_ for comparison tests.
   void SetUpCompareTest() {
@@ -54,8 +53,8 @@ class ConditionInspectorTest : public testing::Test {
 
 TEST_F(ConditionInspectorTest, TestCompareEqu) {
   SetUpCompareTest();
-  std::unique_ptr<IR::Equ> equ_condition(new IR::Equ(
-      compare_left_.get(), compare_right_.get()));
+  std::unique_ptr<IR::Equ> equ_condition(
+      new IR::Equ(compare_left_.get(), compare_right_.get()));
   test_inspector_.Inspect(*equ_condition);
   EXPECT_EQ(0, ::errorCount());
   const std::string description = test_inspector_.description();
@@ -67,8 +66,8 @@ TEST_F(ConditionInspectorTest, TestCompareEqu) {
 
 TEST_F(ConditionInspectorTest, TestCompareNeq) {
   SetUpCompareTest();
-  std::unique_ptr<IR::Neq> neq_condition(new IR::Neq(
-      compare_left_.get(), compare_right_.get()));
+  std::unique_ptr<IR::Neq> neq_condition(
+      new IR::Neq(compare_left_.get(), compare_right_.get()));
   test_inspector_.Inspect(*neq_condition);
   EXPECT_EQ(0, ::errorCount());
   const std::string description = test_inspector_.description();
@@ -81,8 +80,8 @@ TEST_F(ConditionInspectorTest, TestCompareNeq) {
 // Uses an IR::Add operation to yield an unrecognized condition output.
 TEST_F(ConditionInspectorTest, TestCompareUnknown) {
   SetUpCompareTest();
-  std::unique_ptr<IR::Add> unknown_condition(new IR::Add(
-      compare_left_.get(), compare_right_.get()));
+  std::unique_ptr<IR::Add> unknown_condition(
+      new IR::Add(compare_left_.get(), compare_right_.get()));
   test_inspector_.Inspect(*unknown_condition);
   EXPECT_EQ(1, ::errorCount());
   const std::string description = test_inspector_.description();
@@ -98,14 +97,14 @@ TEST_F(ConditionInspectorTest, TestDescriptionNoInspect) {
 // Verifies that a second Inspect doesn't disturb the output of a prior Inspect.
 TEST_F(ConditionInspectorTest, TestInspectTwice) {
   SetUpCompareTest();
-  std::unique_ptr<IR::Neq> neq_condition(new IR::Neq(
-      compare_left_.get(), compare_right_.get()));
+  std::unique_ptr<IR::Neq> neq_condition(
+      new IR::Neq(compare_left_.get(), compare_right_.get()));
   test_inspector_.Inspect(*neq_condition);
   EXPECT_EQ(0, ::errorCount());
   const std::string first_description = test_inspector_.description();
   EXPECT_FALSE(first_description.empty());
-  std::unique_ptr<IR::Equ> equ_condition(new IR::Equ(
-      compare_left_.get(), compare_right_.get()));
+  std::unique_ptr<IR::Equ> equ_condition(
+      new IR::Equ(compare_left_.get(), compare_right_.get()));
   test_inspector_.Inspect(*equ_condition);
   EXPECT_EQ(first_description, test_inspector_.description());
 }

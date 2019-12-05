@@ -22,19 +22,19 @@
 #include <string>
 #include <tuple>
 
-#include "google/protobuf/util/message_differencer.h"
-#include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_info_manager_mock.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/macros.h"
+#include "stratum/p4c_backends/fpm/table_map_generator.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::AnyNumber;
@@ -222,8 +222,7 @@ class HiddenTableMapperTest
   // Returns a pointer to the test_p4_info_ table with the given name.
   p4::config::v1::Table* GetP4InfoTableOrDie(const std::string& table_name) {
     for (auto& p4_table : *test_p4_info_.mutable_tables()) {
-      if (p4_table.preamble().name() == table_name)
-        return &p4_table;
+      if (p4_table.preamble().name() == table_name) return &p4_table;
     }
     LOG(FATAL) << "Table " << table_name << " does not exist in test_p4_info_";
     return nullptr;
@@ -236,8 +235,8 @@ class HiddenTableMapperTest
     MessageDifferencer msg_differencer;
     msg_differencer.set_repeated_field_comparison(
         google::protobuf::util::MessageDifferencer::AS_SET);
-    if (!msg_differencer.Compare(
-        original_pipeline_config, test_pipeline_config_)) {
+    if (!msg_differencer.Compare(original_pipeline_config,
+                                 test_pipeline_config_)) {
       FAIL() << "Unexpected change in P4PipelineConfig";
     }
   }
@@ -298,8 +297,7 @@ class HiddenTableMapperTest
     for (const auto& map_entry : redirect_map) {
       for (const auto& assignment : map_entry.second.assignments()) {
         if (!assignment.destination_field_name().empty()) {
-          if (field_name == assignment.destination_field_name())
-            return true;
+          if (field_name == assignment.destination_field_name()) return true;
         }
       }
     }
@@ -432,9 +430,7 @@ class HiddenTableMapperTest
   const std::string& test_table_param() const {
     return ::testing::get<0>(GetParam());
   }
-  const int test_type_param() const {
-    return ::testing::get<1>(GetParam());
-  }
+  const int test_type_param() const { return ::testing::get<1>(GetParam()); }
 
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
 
@@ -464,8 +460,8 @@ TEST_F(HiddenTableMapperTest, TestNormalHiddenTables) {
   SetUpTestP4InfoAndPipeline();
 
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   ExpectUnchangedMetadataKeys();
   const HiddenTableMapper::ActionRedirectMap& redirect_map =
@@ -520,14 +516,14 @@ TEST_F(HiddenTableMapperTest, TestNormalHiddenTablesWithExtraKey) {
   const HiddenTableMapper::ActionRedirectMap& redirect_map =
       test_hidden_mapper.action_redirects();
   EXPECT_EQ(4, redirect_map.size());
-  ExpectActionRedirects(redirect_map, kDecapAction1,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
-  ExpectActionRedirects(redirect_map, kDecapAction2,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
-  ExpectActionRedirects(redirect_map, kEncapAction1,
-                        kMetaKeyEncap, expected_hidden_encap_tables_);
-  ExpectActionRedirects(redirect_map, kEncapAction2,
-                        kMetaKeyEncap, expected_hidden_encap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction1, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction2, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kEncapAction1, kMetaKeyEncap,
+                        expected_hidden_encap_tables_);
+  ExpectActionRedirects(redirect_map, kEncapAction2, kMetaKeyEncap,
+                        expected_hidden_encap_tables_);
   EXPECT_FALSE(ActionsHaveFieldAssignments(redirect_map, kMetaKeyDecap));
   EXPECT_FALSE(ActionsHaveFieldAssignments(redirect_map, kMetaKeyEncap));
   ExpectMetaDataKeyConsistency(redirect_map);
@@ -545,8 +541,8 @@ TEST_F(HiddenTableMapperTest, TestNonMetadataKeys) {
 
   original_pipeline_config_ = test_pipeline_config_;
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The HiddenTableMapper action_redirects output should be empty, and the
   // P4 pipeline config should be unchanged.
@@ -566,8 +562,8 @@ TEST_F(HiddenTableMapperTest, TestMetadataKeyKnownFieldType) {
 
   original_pipeline_config_ = test_pipeline_config_;
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The HiddenTableMapper action_redirects output should be empty, and the
   // P4 pipeline config should be unchanged.
@@ -591,8 +587,8 @@ TEST_F(HiddenTableMapperTest, TestMetadataKeyNoExactMatch) {
   }
 
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The HiddenTableMapper action_redirects output should be empty, and the
   // P4 pipeline config should be unchanged.
@@ -609,8 +605,8 @@ TEST_P(HiddenTableMapperTest, TestDisqualifiedTableVariations) {
   const std::string kTestTableName = test_table_param();
 
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The table under test should no longer be one of the expected hidden tables.
   expected_hidden_decap_tables_.erase(kTestTableName);
@@ -627,19 +623,19 @@ TEST_P(HiddenTableMapperTest, TestDisqualifiedTableVariations) {
   if (!expected_hidden_decap_tables_.empty()) {
     // Both decap actions should still redirect to at least one hidden table.
     expected_redirects += 2;
-    ExpectActionRedirects(redirect_map, kDecapAction1,
-                          kMetaKeyDecap, expected_hidden_decap_tables_);
-    ExpectActionRedirects(redirect_map, kDecapAction2,
-                          kMetaKeyDecap, expected_hidden_decap_tables_);
+    ExpectActionRedirects(redirect_map, kDecapAction1, kMetaKeyDecap,
+                          expected_hidden_decap_tables_);
+    ExpectActionRedirects(redirect_map, kDecapAction2, kMetaKeyDecap,
+                          expected_hidden_decap_tables_);
     EXPECT_FALSE(ActionsHaveFieldAssignments(redirect_map, kMetaKeyDecap));
   }
   if (!expected_hidden_encap_tables_.empty()) {
     // Both encap actions should still redirect to at least one hidden table.
     expected_redirects += 2;
-    ExpectActionRedirects(redirect_map, kEncapAction1,
-                          kMetaKeyEncap, expected_hidden_encap_tables_);
-    ExpectActionRedirects(redirect_map, kEncapAction2,
-                          kMetaKeyEncap, expected_hidden_encap_tables_);
+    ExpectActionRedirects(redirect_map, kEncapAction1, kMetaKeyEncap,
+                          expected_hidden_encap_tables_);
+    ExpectActionRedirects(redirect_map, kEncapAction2, kMetaKeyEncap,
+                          expected_hidden_encap_tables_);
     EXPECT_FALSE(ActionsHaveFieldAssignments(redirect_map, kMetaKeyEncap));
   }
   EXPECT_EQ(expected_redirects, redirect_map.size());
@@ -651,13 +647,14 @@ TEST_P(HiddenTableMapperTest, TestDisqualifiedTableVariations) {
 TEST_F(HiddenTableMapperTest, TestNoStaticEntries) {
   SetUpTestIR("hidden_table1.ir.json");
   SetUpTestP4InfoAndPipeline();
-  test_pipeline_config_.mutable_static_table_entries()->
-      mutable_updates()->Clear();
+  test_pipeline_config_.mutable_static_table_entries()
+      ->mutable_updates()
+      ->Clear();
 
   original_pipeline_config_ = test_pipeline_config_;
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The HiddenTableMapper action_redirects output should be empty, and the
   // P4 pipeline config should be unchanged.
@@ -681,8 +678,8 @@ TEST_F(HiddenTableMapperTest, TestNonConstKeyAssignment) {
   const auto old_encap_descriptor = *GetFieldDescriptorOrDie(kMetaKeyEncap);
 
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The outputs for field kMetaKeyDecap and associated actions and tables
   // should be present, but all outputs affected by kMetaKeyEncap should
@@ -691,10 +688,10 @@ TEST_F(HiddenTableMapperTest, TestNonConstKeyAssignment) {
   const HiddenTableMapper::ActionRedirectMap& redirect_map =
       test_hidden_mapper.action_redirects();
   EXPECT_EQ(2, redirect_map.size());
-  ExpectActionRedirects(redirect_map, kDecapAction1,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
-  ExpectActionRedirects(redirect_map, kDecapAction2,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction1, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction2, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
   const auto& field_descriptor = *GetFieldDescriptorOrDie(kMetaKeyEncap);
   EXPECT_TRUE(
       MessageDifferencer::Equals(old_encap_descriptor, field_descriptor));
@@ -718,8 +715,8 @@ TEST_F(HiddenTableMapperTest, TestDualKeyValuesInOneAction) {
   const auto old_encap_descriptor = *GetFieldDescriptorOrDie(kMetaKeyEncap);
 
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // The outputs for field kMetaKeyDecap and associated actions and tables
   // should be present, but all outputs affected by kMetaKeyEncap should
@@ -728,10 +725,10 @@ TEST_F(HiddenTableMapperTest, TestDualKeyValuesInOneAction) {
   const HiddenTableMapper::ActionRedirectMap& redirect_map =
       test_hidden_mapper.action_redirects();
   EXPECT_EQ(2, redirect_map.size());
-  ExpectActionRedirects(redirect_map, kDecapAction1,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
-  ExpectActionRedirects(redirect_map, kDecapAction2,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction1, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction2, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
   const auto& field_descriptor = *GetFieldDescriptorOrDie(kMetaKeyEncap);
   EXPECT_TRUE(
       MessageDifferencer::Equals(old_encap_descriptor, field_descriptor));
@@ -754,8 +751,8 @@ TEST_F(HiddenTableMapperTest, TestOneActionMultipleKeys) {
   new_assignment->set_destination_field_name(kMetaKeyDecap);
 
   HiddenTableMapper test_hidden_mapper;
-  test_hidden_mapper.ProcessTables(
-      mock_p4_info_manager_, &test_pipeline_config_);
+  test_hidden_mapper.ProcessTables(mock_p4_info_manager_,
+                                   &test_pipeline_config_);
 
   // Since kEncapAction2 assigns the keys for both the hidden encap and decap
   // tables, it should redirect to the decap tables in addition to all the
@@ -766,16 +763,16 @@ TEST_F(HiddenTableMapperTest, TestOneActionMultipleKeys) {
   EXPECT_FALSE(ActionsHaveFieldAssignments(redirect_map, kMetaKeyDecap));
   EXPECT_FALSE(ActionsHaveFieldAssignments(redirect_map, kMetaKeyEncap));
   EXPECT_EQ(4, redirect_map.size());
-  ExpectActionRedirects(redirect_map, kDecapAction1,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
-  ExpectActionRedirects(redirect_map, kDecapAction2,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
-  ExpectActionRedirects(redirect_map, kEncapAction1,
-                        kMetaKeyEncap, expected_hidden_encap_tables_);
-  ExpectActionRedirects(redirect_map, kEncapAction2,
-                        kMetaKeyEncap, expected_hidden_encap_tables_);
-  ExpectActionRedirects(redirect_map, kEncapAction2,
-                        kMetaKeyDecap, expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction1, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kDecapAction2, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
+  ExpectActionRedirects(redirect_map, kEncapAction1, kMetaKeyEncap,
+                        expected_hidden_encap_tables_);
+  ExpectActionRedirects(redirect_map, kEncapAction2, kMetaKeyEncap,
+                        expected_hidden_encap_tables_);
+  ExpectActionRedirects(redirect_map, kEncapAction2, kMetaKeyDecap,
+                        expected_hidden_decap_tables_);
   ExpectMetaDataKeyConsistency(redirect_map);
 }
 
@@ -783,33 +780,27 @@ TEST_F(HiddenTableMapperTest, TestOneActionMultipleKeys) {
 // identifies the table to test, and the integer constant describes how to
 // setup the table for the test.
 INSTANTIATE_TEST_SUITE_P(
-  TestedHiddenTables,
-  HiddenTableMapperTest,
-  ::testing::Values(
-      std::make_tuple(
-          "ingress.hidden_decap_table", kTableSetupNonExactMatch),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v4", kTableSetupNonExactMatch),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v6", kTableSetupNonExactMatch),
-      std::make_tuple(
-          "ingress.hidden_decap_table", kTableSetupTooManyMatch),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v4", kTableSetupTooManyMatch),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v6", kTableSetupTooManyMatch),
-      std::make_tuple(
-          "ingress.hidden_decap_table", kTableSetupNotHidden),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v4", kTableSetupNotHidden),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v6", kTableSetupNotHidden),
-      std::make_tuple(
-          "ingress.hidden_decap_table", kTableSetupNoStaticEntries),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v4", kTableSetupNoStaticEntries),
-      std::make_tuple(
-          "ingress.hidden_encap_table_v6", kTableSetupNoStaticEntries)));
+    TestedHiddenTables, HiddenTableMapperTest,
+    ::testing::Values(
+        std::make_tuple("ingress.hidden_decap_table", kTableSetupNonExactMatch),
+        std::make_tuple("ingress.hidden_encap_table_v4",
+                        kTableSetupNonExactMatch),
+        std::make_tuple("ingress.hidden_encap_table_v6",
+                        kTableSetupNonExactMatch),
+        std::make_tuple("ingress.hidden_decap_table", kTableSetupTooManyMatch),
+        std::make_tuple("ingress.hidden_encap_table_v4",
+                        kTableSetupTooManyMatch),
+        std::make_tuple("ingress.hidden_encap_table_v6",
+                        kTableSetupTooManyMatch),
+        std::make_tuple("ingress.hidden_decap_table", kTableSetupNotHidden),
+        std::make_tuple("ingress.hidden_encap_table_v4", kTableSetupNotHidden),
+        std::make_tuple("ingress.hidden_encap_table_v6", kTableSetupNotHidden),
+        std::make_tuple("ingress.hidden_decap_table",
+                        kTableSetupNoStaticEntries),
+        std::make_tuple("ingress.hidden_encap_table_v4",
+                        kTableSetupNoStaticEntries),
+        std::make_tuple("ingress.hidden_encap_table_v6",
+                        kTableSetupNoStaticEntries)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

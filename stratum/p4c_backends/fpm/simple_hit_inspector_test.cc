@@ -14,14 +14,14 @@
 
 // Contains unit tests for SimpleHitInspector.
 
+#include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
+
 #include <memory>
 #include <tuple>
 
-#include "stratum/p4c_backends/fpm/simple_hit_inspector.h"
-
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 using ::testing::Values;
 
@@ -51,16 +51,15 @@ class SimpleHitInspectorTest
   // body is returned.  Otherwise, statement_index refers to a specific
   // statement within the control body.  A HitAssignMapper transform is
   // applied for valid returned statements.
-  const IR::Statement* FindTestStatement(
-      const std::string& control, int statement_index) {
+  const IR::Statement* FindTestStatement(const std::string& control,
+                                         int statement_index) {
     const IR::P4Control* ir_control = ir_helper_->TransformP4Control(
         control, {IRTestHelperJson::kHitAssignMapper});
     if (ir_control == nullptr) return nullptr;
     if (statement_index >= 0) {
       if (statement_index >= ir_control->body->components.size())
         return nullptr;
-      return ir_control->body->components[statement_index]->
-          to<IR::Statement>();
+      return ir_control->body->components[statement_index]->to<IR::Statement>();
     }
     return ir_control->body;
   }
@@ -72,15 +71,9 @@ class SimpleHitInspectorTest
   const std::string& control_name() const {
     return ::testing::get<1>(GetParam());
   }
-  int statement_index() const {
-    return ::testing::get<2>(GetParam());
-  }
-  bool expect_simple() const {
-    return ::testing::get<3>(GetParam());
-  }
-  bool expect_error() const {
-    return ::testing::get<4>(GetParam());
-  }
+  int statement_index() const { return ::testing::get<2>(GetParam()); }
+  bool expect_simple() const { return ::testing::get<3>(GetParam()); }
+  bool expect_error() const { return ::testing::get<4>(GetParam()); }
 
   // SimpleHitInspector instance for test use; created by SetUpTestIR.
   std::unique_ptr<SimpleHitInspector> test_inspector_;
@@ -104,36 +97,34 @@ TEST_P(SimpleHitInspectorTest, TestInspect) {
 //  4) Flag indicating whether to expect control to have all simple table hits.
 //  5) Flag indicating whether to expect errors after Inspect.
 INSTANTIATE_TEST_SUITE_P(
-    VerifyFilesForOtherTestsWithSimpleHits,
-    SimpleHitInspectorTest,
+    VerifyFilesForOtherTestsWithSimpleHits, SimpleHitInspectorTest,
     Values(
-        std::make_tuple("control_apply_hit_miss_test.ir.json",
-                        "egress", -1, true, false),
-        std::make_tuple("control_apply_hit_miss_test.ir.json",
-                        "ingress", -1, true, false),
-        std::make_tuple("control_if_test.ir.json",
-                        "computeChecksum", -1, true, false),
+        std::make_tuple("control_apply_hit_miss_test.ir.json", "egress", -1,
+                        true, false),
+        std::make_tuple("control_apply_hit_miss_test.ir.json", "ingress", -1,
+                        true, false),
+        std::make_tuple("control_if_test.ir.json", "computeChecksum", -1, true,
+                        false),
         std::make_tuple("control_if_test.ir.json", "egress", -1, true, false),
         std::make_tuple("control_if_test.ir.json", "ingress", -1, true, false),
-        std::make_tuple("control_if_test.ir.json",
-                        "verifyChecksum", -1, true, false),
-        std::make_tuple("control_misc_test.ir.json",
-                        "computeChecksum", -1, true, false),
-        std::make_tuple("meter_color_nested_ifs.ir.json",
-                        "meter_if_in_if", -1, true, false),
+        std::make_tuple("control_if_test.ir.json", "verifyChecksum", -1, true,
+                        false),
+        std::make_tuple("control_misc_test.ir.json", "computeChecksum", -1,
+                        true, false),
+        std::make_tuple("meter_color_nested_ifs.ir.json", "meter_if_in_if", -1,
+                        true, false),
         std::make_tuple("no_table_tmp.ir.json", "ingress", -1, true, false),
-        std::make_tuple("switch_case.ir.json",
-                        "inverted_conditions", -1, true, false),
-        std::make_tuple("switch_case.ir.json",
-                        "normal_clone_drop", -1, true, false),
+        std::make_tuple("switch_case.ir.json", "inverted_conditions", -1, true,
+                        false),
+        std::make_tuple("switch_case.ir.json", "normal_clone_drop", -1, true,
+                        false),
         std::make_tuple("table_hit_tmp_valid.ir.json",
                         "hit_var_valid_statements", 0, true, false),
-        std::make_tuple("table_hit_tmp_valid.ir.json",
-                        "hit_var_scope_ok", -1, true, false)));
+        std::make_tuple("table_hit_tmp_valid.ir.json", "hit_var_scope_ok", -1,
+                        true, false)));
 
 INSTANTIATE_TEST_SUITE_P(
-    ComplexHitTests,
-    SimpleHitInspectorTest,
+    ComplexHitTests, SimpleHitInspectorTest,
     Values(
         std::make_tuple("complex_hits.ir.json", "complex_hits", 0, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 1, false, true),
@@ -142,8 +133,8 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("complex_hits.ir.json", "complex_hits", 5, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 6, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 7, true, false),
-        std::make_tuple("complex_hits.ir.json", "complex_hits", 8, false, true)
-    ));  // NOLINT
+        std::make_tuple("complex_hits.ir.json", "complex_hits", 8, false,
+                        true)));  // NOLINT
 
 }  // namespace p4c_backends
 }  // namespace stratum

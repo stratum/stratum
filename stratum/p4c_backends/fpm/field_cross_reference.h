@@ -36,9 +36,9 @@
 #include <set>
 #include <vector>
 
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 
 namespace stratum {
 namespace p4c_backends {

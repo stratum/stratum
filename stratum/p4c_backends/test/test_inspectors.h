@@ -19,8 +19,8 @@
 #ifndef STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
 #define STRATUM_P4C_BACKENDS_TEST_TEST_INSPECTORS_H_
 
-#include <string>
 #include <set>
+#include <string>
 
 #include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
 #include "external/com_github_p4lang_p4c/ir/visitor.h"
@@ -39,8 +39,7 @@ class StatementCounter : public Inspector {
       : pipeline_statement_count_(0),
         if_statement_count_(0),
         block_statement_count_(0),
-        hit_statement_count_(0) {
-  }
+        hit_statement_count_(0) {}
   ~StatementCounter() override {}
 
   // Visits nodes under p4_control and accumulates counts for interesting

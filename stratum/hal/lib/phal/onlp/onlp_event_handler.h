@@ -21,12 +21,12 @@
 #include <memory>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {
@@ -81,7 +81,6 @@ class OnlpSfpEventCallback : public OnlpEventCallback {
   virtual ~OnlpSfpEventCallback();
 };
 
-
 class OnlpEventHandler {
  public:
   static ::util::StatusOr<std::unique_ptr<OnlpEventHandler>> Make(
@@ -97,20 +96,20 @@ class OnlpEventHandler {
   // call, and it will automatically unregister itself. Only one callback may
   // exist per OID.
   virtual ::util::Status RegisterOidEventCallback(
-                                 OnlpOidEventCallback* callback);
+      OnlpOidEventCallback* callback);
   // Stops sending callbacks to the given OnlpEventCallback. This is called
   // automatically if a OnlpEventCallback is deleted.
   virtual ::util::Status UnregisterOidEventCallback(
-                                 OnlpOidEventCallback* callback);
+      OnlpOidEventCallback* callback);
 
   // Starts sending callbacks to the given OnlpSfpEventCallback.
   // Only one callback may exist for all of the SFPs.
   virtual ::util::Status RegisterSfpEventCallback(
-                                 OnlpSfpEventCallback* callback);
+      OnlpSfpEventCallback* callback);
   // Stops sending callbacks to the given OnlpSfpEventCallback. This is called
   // automatically if a OnlpSfpEventCallback is deleted.
   virtual ::util::Status UnregisterSfpEventCallback(
-                                 OnlpSfpEventCallback* callback);
+      OnlpSfpEventCallback* callback);
 
   // Adds a single callback that is called once after each time any other onlp
   // callback executes. If this callback already exists, it is overwritten. The
@@ -119,8 +118,8 @@ class OnlpEventHandler {
   virtual void AddUpdateCallback(std::function<void(::util::Status)> callback);
 
  protected:
-  explicit OnlpEventHandler(const OnlpInterface* onlp) :
-          onlp_(onlp), max_front_port_num_(ONLP_MAX_FRONT_PORT_NUM) {}
+  explicit OnlpEventHandler(const OnlpInterface* onlp)
+      : onlp_(onlp), max_front_port_num_(ONLP_MAX_FRONT_PORT_NUM) {}
 
  private:
   friend class OnlpEventHandlerTest;
@@ -151,10 +150,8 @@ class OnlpEventHandler {
       GUARDED_BY(monitor_lock_);
   std::function<void(::util::Status)> update_callback_
       GUARDED_BY(monitor_lock_);
-  SfpStatusMonitor sfp_status_monitor_
-      GUARDED_BY(monitor_lock_);
-  OnlpPortNumber max_front_port_num_
-      GUARDED_BY(monitor_lock_);
+  SfpStatusMonitor sfp_status_monitor_ GUARDED_BY(monitor_lock_);
+  OnlpPortNumber max_front_port_num_ GUARDED_BY(monitor_lock_);
   // This pointer is set whenever we are currently executing a callback. This
   // lets us freely call UnregisterEventCallback for any callback except the one
   // that is currently executing.
@@ -167,6 +164,5 @@ class OnlpEventHandler {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-
 
 #endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_H_

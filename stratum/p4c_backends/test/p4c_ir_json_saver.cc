@@ -28,8 +28,8 @@
 #include <fstream>
 #include <memory>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
@@ -66,8 +66,8 @@ class P4cFrontMidJson : public P4cFrontMidReal {
     IR::ToplevelBlock* top_level = P4cFrontMidReal::RunMidEndPass();
     std::ofstream json_file;
     json_file.open(FLAGS_p4_to_json_out);
-    CHECK(json_file.is_open()) << "Unable to open JSON output file "
-                               << FLAGS_p4_to_json_out;
+    CHECK(json_file.is_open())
+        << "Unable to open JSON output file " << FLAGS_p4_to_json_out;
     JSONGenerator gen(json_file);
     gen << top_level->getProgram() << std::endl;
     json_file.close();
@@ -84,7 +84,7 @@ namespace {
 // Runs the compiler with the P4cFrontMidJson midend for JSON output.
 void ConvertP4ToJson() {
   CHECK(!FLAGS_p4_to_json_in.empty()) << "Unspecified P4 program input file";
-  CHECK(!FLAGS_p4_to_json_out.empty()) << "Unspecified JSON IR output file";;
+  CHECK(!FLAGS_p4_to_json_out.empty()) << "Unspecified JSON IR output file";
 
   // These options tell the p4c frontend to process the input file as P4_16.
   FLAGS_p4c_fe_options += " ";
@@ -94,7 +94,7 @@ void ConvertP4ToJson() {
   // The JSON IR for test input needs to be generated with the same midend
   // that the Stratum backend uses for normal compiles.
   auto midend_callback = std::function<std::unique_ptr<MidEndInterface>(
-      CompilerOptions* p4c_options)>(&MidEnd::CreateInstance);
+      CompilerOptions * p4c_options)>(&MidEnd::CreateInstance);
   std::unique_ptr<P4cFrontMidJson> p4c_json_fe_me(
       new P4cFrontMidJson(midend_callback));
   std::vector<BackendExtensionInterface*> no_extensions = {};

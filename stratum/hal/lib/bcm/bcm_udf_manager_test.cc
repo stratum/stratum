@@ -20,18 +20,18 @@
 #include <algorithm>
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 
@@ -39,6 +39,7 @@ namespace hal {
 namespace bcm {
 namespace {
 
+using ::stratum::test_utils::StatusIs;
 using test_utils::PartiallyUnorderedEqualsProto;
 using ::testing::_;
 using ::testing::DoAll;
@@ -49,7 +50,6 @@ using ::testing::SaveArg;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
-using ::stratum::test_utils::StatusIs;
 using UdfSpec = BcmHardwareSpecs::ChipModelSpec::UdfSpec;
 
 // This matcher verifies that all chunks in a BcmUdfSet come from the same set
@@ -229,64 +229,72 @@ const MappedField& MappedFieldByType(P4FieldType type) {
                                               EnumHash<P4FieldType>>();
     MappedField mapped_field;
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ARP_TPA
-      bit_offset: 192
-      bit_width: 32
-      header_type: P4_HEADER_ARP
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_ARP_TPA
+                                    bit_offset: 192
+                                    bit_width: 32
+                                    header_type: P4_HEADER_ARP
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_DST
-      bit_offset: 0
-      bit_width: 48
-      header_type: P4_HEADER_ETHERNET
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_ETH_DST
+                                    bit_offset: 0
+                                    bit_width: 48
+                                    header_type: P4_HEADER_ETHERNET
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_SRC
-      bit_offset: 48
-      bit_width: 48
-      header_type: P4_HEADER_ETHERNET
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_ETH_SRC
+                                    bit_offset: 48
+                                    bit_width: 48
+                                    header_type: P4_HEADER_ETHERNET
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_TYPE
-      bit_offset: 96
-      bit_width: 16
-      header_type: P4_HEADER_ETHERNET
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_ETH_TYPE
+                                    bit_offset: 96
+                                    bit_width: 16
+                                    header_type: P4_HEADER_ETHERNET
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_GRE_CHECKSUM_BIT
-      bit_offset: 0
-      bit_width: 1
-      header_type: P4_HEADER_GRE
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_GRE_CHECKSUM_BIT
+                                    bit_offset: 0
+                                    bit_width: 1
+                                    header_type: P4_HEADER_GRE
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_GRE_FLAGS
-      bit_offset: 8
-      bit_width: 5
-      header_type: P4_HEADER_GRE
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_GRE_FLAGS
+                                    bit_offset: 8
+                                    bit_width: 5
+                                    header_type: P4_HEADER_GRE
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_GRE_RECURSION
-      bit_offset: 5
-      bit_width: 3
-      header_type: P4_HEADER_GRE
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_GRE_RECURSION
+                                    bit_offset: 5
+                                    bit_width: 3
+                                    header_type: P4_HEADER_GRE
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_COLOR
-    )PROTO", &mapped_field));
+                                    type: P4_FIELD_TYPE_COLOR
+                                  )PROTO",
+                                  &mapped_field));
     field_map->emplace(mapped_field.type(), mapped_field);
 
     return field_map;
@@ -307,35 +315,40 @@ const BcmUdfSet& UdfSetByType(P4FieldType type) {
                                             EnumHash<P4FieldType>>();
     BcmUdfSet udf_set;
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      chunks { layer: L3_HEADER offset: 24 }
-      chunks { layer: L3_HEADER offset: 26 }
-    )PROTO", &udf_set));
+                                    chunks { layer: L3_HEADER offset: 24 }
+                                    chunks { layer: L3_HEADER offset: 26 }
+                                  )PROTO",
+                                  &udf_set));
     udf_map->emplace(P4_FIELD_TYPE_ARP_TPA, udf_set);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      chunks { layer: L2_HEADER offset: 0 }
-      chunks { layer: L2_HEADER offset: 2 }
-      chunks { layer: L2_HEADER offset: 4 }
-    )PROTO", &udf_set));
+                                    chunks { layer: L2_HEADER offset: 0 }
+                                    chunks { layer: L2_HEADER offset: 2 }
+                                    chunks { layer: L2_HEADER offset: 4 }
+                                  )PROTO",
+                                  &udf_set));
     udf_map->emplace(P4_FIELD_TYPE_ETH_DST, udf_set);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      chunks { layer: L2_HEADER offset: 6 }
-      chunks { layer: L2_HEADER offset: 8 }
-      chunks { layer: L2_HEADER offset: 10 }
-    )PROTO", &udf_set));
+                                    chunks { layer: L2_HEADER offset: 6 }
+                                    chunks { layer: L2_HEADER offset: 8 }
+                                    chunks { layer: L2_HEADER offset: 10 }
+                                  )PROTO",
+                                  &udf_set));
     udf_map->emplace(P4_FIELD_TYPE_ETH_SRC, udf_set);
 
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      chunks { layer: L2_HEADER offset: 12 }
-    )PROTO", &udf_set));
+                                    chunks { layer: L2_HEADER offset: 12 }
+                                  )PROTO",
+                                  &udf_set));
     udf_map->emplace(P4_FIELD_TYPE_ETH_TYPE, udf_set);
 
     // GRE checksum, flags, and recursion are all within the first 16-bits of
     // the GRE header.
     CHECK_OK(ParseProtoFromString(R"PROTO(
-      chunks { layer: L4_HEADER offset: 0 }
-    )PROTO", &udf_set));
+                                    chunks { layer: L4_HEADER offset: 0 }
+                                  )PROTO",
+                                  &udf_set));
     udf_map->emplace(P4_FIELD_TYPE_GRE_CHECKSUM_BIT, udf_set);
     udf_map->emplace(P4_FIELD_TYPE_GRE_FLAGS, udf_set);
     udf_map->emplace(P4_FIELD_TYPE_GRE_RECURSION, udf_set);
@@ -594,11 +607,12 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_OffBoundaryChunks) {
   // is not on a chunk-boundary, it will need an extra chunk.
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 19
-    bit_width: 32
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 19
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables;
   acl_tables.push_back(
@@ -692,11 +706,12 @@ TEST_P(MappedFieldToBcmFieldsTest, U32) {
   // Set up the mapped field.
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 32
-    bit_width: 32
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 32
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
   mapped_field.set_bit_offset(mapped_field.bit_offset() - kShift);
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables({AclTableBuilder(&p4_table_mapper, 1)
@@ -706,10 +721,11 @@ TEST_P(MappedFieldToBcmFieldsTest, U32) {
   // Set up the static UDFs.
   UdfSpec udf_spec;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    chunk_bits: 16
-    chunks_per_set: 3
-    set_count: 1
-  )PROTO", &udf_spec));
+                                  chunk_bits: 16
+                                  chunks_per_set: 3
+                                  set_count: 1
+                                )PROTO",
+                                &udf_spec));
   BcmSdkMock bcm_sdk_interface;
   ASSERT_OK_AND_ASSIGN(
       auto bcm_udf_manager,
@@ -767,11 +783,12 @@ TEST_P(MappedFieldToBcmFieldsTest, U64) {
   // Set up the mapped field.
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 64
-    bit_width: 64
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 64
+                                  bit_width: 64
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
   mapped_field.set_bit_offset(mapped_field.bit_offset() - kShift);
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables({AclTableBuilder(&p4_table_mapper, 1)
@@ -781,10 +798,11 @@ TEST_P(MappedFieldToBcmFieldsTest, U64) {
   // Set up the static UDFs.
   UdfSpec udf_spec;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    chunk_bits: 16
-    chunks_per_set: 5
-    set_count: 1
-  )PROTO", &udf_spec));
+                                  chunk_bits: 16
+                                  chunks_per_set: 5
+                                  set_count: 1
+                                )PROTO",
+                                &udf_spec));
   BcmSdkMock bcm_sdk_interface;
   ASSERT_OK_AND_ASSIGN(
       auto bcm_udf_manager,
@@ -867,11 +885,12 @@ TEST_P(MappedFieldToBcmFieldsTest, U64Partial) {
   // Set up the mapped field.
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 64
-    bit_width: 52
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 64
+                                  bit_width: 52
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
   mapped_field.set_bit_offset(mapped_field.bit_offset() - kShift);
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables({AclTableBuilder(&p4_table_mapper, 1)
@@ -881,10 +900,11 @@ TEST_P(MappedFieldToBcmFieldsTest, U64Partial) {
   // Set up the static UDFs.
   UdfSpec udf_spec;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    chunk_bits: 16
-    chunks_per_set: 5
-    set_count: 1
-  )PROTO", &udf_spec));
+                                  chunk_bits: 16
+                                  chunks_per_set: 5
+                                  set_count: 1
+                                )PROTO",
+                                &udf_spec));
   BcmSdkMock bcm_sdk_interface;
   ASSERT_OK_AND_ASSIGN(
       auto bcm_udf_manager,
@@ -962,11 +982,12 @@ TEST_P(MappedFieldToBcmFieldsTest, B) {
   // Set up the mapped field.
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 32
-    bit_width: 32
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 32
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
   mapped_field.set_bit_offset(mapped_field.bit_offset() - kShift);
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables({AclTableBuilder(&p4_table_mapper, 1)
@@ -976,10 +997,11 @@ TEST_P(MappedFieldToBcmFieldsTest, B) {
   // Set up the static UDFs.
   UdfSpec udf_spec;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    chunk_bits: 16
-    chunks_per_set: 3
-    set_count: 1
-  )PROTO", &udf_spec));
+                                  chunk_bits: 16
+                                  chunks_per_set: 3
+                                  set_count: 1
+                                )PROTO",
+                                &udf_spec));
   BcmSdkMock bcm_sdk_interface;
   ASSERT_OK_AND_ASSIGN(
       auto bcm_udf_manager,
@@ -1028,7 +1050,7 @@ TEST_P(MappedFieldToBcmFieldsTest, B) {
 
 // Run the MappedFieldToBcmFieldsTests with bit-shifts of [0-33) (i.e. [0-32]).
 INSTANTIATE_TEST_SUITE_P(BcmUdfManagerTest, MappedFieldToBcmFieldsTest,
-                        ::testing::Range(0, 33));
+                         ::testing::Range(0, 33));
 
 // ****************************************************************************
 //   Error Tests
@@ -1040,11 +1062,12 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_NoStaticSets) {
   // This field requires 2 bytes (1 UDF chunks at 2-byte chunks).
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 192
-    bit_width: 16
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 192
+                                  bit_width: 16
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
 
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables;
@@ -1081,8 +1104,9 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_NoStaticSets) {
 TEST(BcmUdfManagerTest, SetUpStaticUdfs_NonConvertibleMatchField) {
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_COLOR
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_COLOR
+                                )PROTO",
+                                &mapped_field));
 
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables;
@@ -1112,11 +1136,12 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_MatchFieldIsTooBig) {
   // uses 3-chunk sets.
   MappedField mapped_field;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 192
-    bit_width: 64
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 192
+                                  bit_width: 64
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field));
 
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables;
@@ -1145,19 +1170,21 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_AclTableWithTooManyChunks) {
   // 3 chunks per set.
   MappedField mapped_field_1;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 192
-    bit_width: 32
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field_1));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 192
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field_1));
 
   MappedField mapped_field_2;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ETH_DST
-    bit_offset: 0
-    bit_width: 32
-    header_type: P4_HEADER_ETHERNET
-  )PROTO", &mapped_field_2));
+                                  type: P4_FIELD_TYPE_ETH_DST
+                                  bit_offset: 0
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ETHERNET
+                                )PROTO",
+                                &mapped_field_2));
 
   P4TableMapperMock p4_table_mapper;
   std::vector<AclTable> acl_tables;
@@ -1188,19 +1215,21 @@ TEST(BcmUdfManagerTest, SetUpStaticUdfs_MultipleAclTablesWithTooManyChunks) {
   // a single 3-chunk set.
   MappedField mapped_field_1;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ARP_TPA
-    bit_offset: 192
-    bit_width: 32
-    header_type: P4_HEADER_ARP
-  )PROTO", &mapped_field_1));
+                                  type: P4_FIELD_TYPE_ARP_TPA
+                                  bit_offset: 192
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ARP
+                                )PROTO",
+                                &mapped_field_1));
 
   MappedField mapped_field_2;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_ETH_DST
-    bit_offset: 0
-    bit_width: 32
-    header_type: P4_HEADER_ETHERNET
-  )PROTO", &mapped_field_2));
+                                  type: P4_FIELD_TYPE_ETH_DST
+                                  bit_offset: 0
+                                  bit_width: 32
+                                  header_type: P4_HEADER_ETHERNET
+                                )PROTO",
+                                &mapped_field_2));
 
   // The first table will fit. The second table will not fit on top of the first
   // table.

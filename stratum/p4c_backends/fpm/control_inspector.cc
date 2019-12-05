@@ -16,17 +16,17 @@
 
 #include "stratum/p4c_backends/fpm/control_inspector.h"
 
-#include "stratum/glue/logging.h"
-#include "absl/strings/str_format.h"
-#include "stratum/p4c_backends/fpm/condition_inspector.h"
-#include "stratum/p4c_backends/fpm/internal_action.h"
-#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
+#include "absl/strings/str_format.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/condition_inspector.h"
+#include "stratum/p4c_backends/fpm/internal_action.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -72,8 +72,8 @@ void ControlInspector::Inspect(const IR::P4Control& control) {
 
 bool ControlInspector::preorder(const IR::IfStatement* if_statement) {
   condition_.Clear();
-  auto table_hit = P4::TableApplySolver::isHit(
-      if_statement->condition, ref_map_, type_map_);
+  auto table_hit =
+      P4::TableApplySolver::isHit(if_statement->condition, ref_map_, type_map_);
   DCHECK(table_hit == nullptr)
       << "Unexpected table.apply().hit in IR::IfStatement condition. "
       << "Check for incompatible frontend or midend transformations.";
@@ -126,8 +126,9 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
     AddStatement();
     // TODO(unknown): Evaluate for additional support in Stratum use cases.
     const std::string pseudo_code = absl::StrFormat(
-        "extern method %s", instance->to<P4::ExternMethod>()->
-            originalExternType->name.toString().c_str());
+        "extern method %s", instance->to<P4::ExternMethod>()
+                                ->originalExternType->name.toString()
+                                .c_str());
     working_statement_->set_other(pseudo_code);
   } else if (instance->is<P4::BuiltInMethod>()) {
     auto built_in = instance->to<P4::BuiltInMethod>();
@@ -152,9 +153,9 @@ bool ControlInspector::preorder(const IR::MethodCallExpression* mce) {
         GetP4ModelNames().drop_extern_name()) {
       working_statement_->set_drop(true);
     } else {
-      const std::string pseudo_code = absl::StrFormat(
-          "MethodCallExpression extern function %s",
-          extern_func->method->name.toString().c_str());
+      const std::string pseudo_code =
+          absl::StrFormat("MethodCallExpression extern function %s",
+                          extern_func->method->name.toString().c_str());
       working_statement_->set_other(pseudo_code);
     }
   } else {
@@ -262,8 +263,8 @@ bool ControlInspector::DecodeCondition(const IR::Expression& condition) {
 
   // A PathExpression in a condition should refer to a temporary hit variable.
   if (path_expression) {
-    const std::string tmp_var_name = std::string(
-        path_expression->path->name.toString());
+    const std::string tmp_var_name =
+        std::string(path_expression->path->name.toString());
     const auto& iter = hit_vars_map_.find(tmp_var_name);
     if (iter != hit_vars_map_.end()) {
       const IR::P4Table& ir_table = *iter->second;
@@ -315,8 +316,8 @@ void ControlInspector::AddValidHeaderCondition(const std::string& header_name) {
       header_type = table_map_header->header_descriptor().type();
   }
   if (header_type == P4_HEADER_UNKNOWN) {
-    LOG(WARNING) << "Unable to find header type for header "
-                 << header_name << " in P4PipelineConfig";
+    LOG(WARNING) << "Unable to find header type for header " << header_name
+                 << " in P4PipelineConfig";
   }
   condition_.mutable_is_valid()->set_header_type(header_type);
 }
@@ -403,17 +404,17 @@ void ControlInspector::AppendMeterActions() {
       hal::P4ActionDescriptor original_descriptor_copy =
           FindActionDescriptorOrDie(p4_action.preamble().name(),
                                     table_map_generator_->generated_map());
-      InternalAction internal_action(
-          p4_action.preamble().name(), original_descriptor_copy,
-          table_map_generator_->generated_map());
+      InternalAction internal_action(p4_action.preamble().name(),
+                                     original_descriptor_copy,
+                                     table_map_generator_->generated_map());
       internal_action.MergeMeterCondition(
           meter_table.second->meter_color_actions.c_str());
       hal::P4ActionDescriptor::P4InternalActionLink* internal_link =
           original_descriptor_copy.add_action_redirects()->add_internal_links();
       internal_link->set_internal_action_name(internal_action.internal_name());
       internal_link->add_applied_tables(meter_table.first);
-      table_map_generator_->ReplaceActionDescriptor(
-          p4_action.preamble().name(), original_descriptor_copy);
+      table_map_generator_->ReplaceActionDescriptor(p4_action.preamble().name(),
+                                                    original_descriptor_copy);
       internal_action.Optimize();
       internal_action.WriteToTableMapGenerator(table_map_generator_);
     }
@@ -437,17 +438,16 @@ void ControlInspector::PipelineInspector::GetTableList(
 bool ControlInspector::PipelineInspector::preorder(
     const IR::PathExpression* path_expression) {
   if (path_expression->type->is<IR::Type_Table>()) {
-    FillTableRefFromIR(
-        *(path_expression->type->to<IR::Type_Table>()->table),
-        p4_info_manager_, fixed_pipeline_->add_tables());
+    FillTableRefFromIR(*(path_expression->type->to<IR::Type_Table>()->table),
+                       p4_info_manager_, fixed_pipeline_->add_tables());
   }
   return true;
 }
 
 bool ControlInspector::PipelineInspector::preorder(
     const IR::TableHitStatement* statement) {
-  FillTableRefFromIR(
-      *statement->p4_table, p4_info_manager_, fixed_pipeline_->add_tables());
+  FillTableRefFromIR(*statement->p4_table, p4_info_manager_,
+                     fixed_pipeline_->add_tables());
   return false;
 }
 

@@ -13,12 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 
 #include <set>
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/net_util/ipaddress.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -27,9 +29,6 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/gtl/map_util.h"
 
 // This is the bit width of an assigned constant for any case where the
 // compiler does not report a bit width in the action descriptor.

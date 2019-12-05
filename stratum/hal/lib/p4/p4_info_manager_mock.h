@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 // This is a mock implementation of P4InfoManager.
 
 #ifndef STRATUM_HAL_LIB_P4_P4_INFO_MANAGER_MOCK_H_
@@ -23,8 +22,8 @@
 
 #include <string>
 
-#include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
 
 namespace stratum {
 namespace hal {

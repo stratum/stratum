@@ -84,12 +84,8 @@ class ProgramInspector : public Inspector {
   const std::vector<const IR::PathExpression*>& struct_paths() const {
     return struct_paths_;
   }
-  const std::vector<const IR::P4Table*>& tables() const {
-    return tables_;
-  }
-  const std::vector<const IR::P4Parser*>& parsers() const {
-    return parsers_;
-  }
+  const std::vector<const IR::P4Table*>& tables() const { return tables_; }
+  const std::vector<const IR::P4Parser*>& parsers() const { return parsers_; }
   const std::vector<const IR::P4Control*>& controls() const {
     return controls_;
   }

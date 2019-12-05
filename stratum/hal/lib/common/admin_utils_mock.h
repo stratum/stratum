@@ -16,13 +16,13 @@
 #ifndef STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_ADMIN_UTILS_MOCK_H_
 
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "stratum/hal/lib/common/admin_utils_interface.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
@@ -44,49 +44,35 @@ class FileSystemHelperMock : public FileSystemHelper {
   }
 
   MOCK_CONST_METHOD3(CheckHashSumFile,
-                     bool(
-                         const std::string& path,
-                         const std::string& old_hash,
-                         ::gnoi::types::HashType_HashMethod method));
+                     bool(const std::string& path, const std::string& old_hash,
+                          ::gnoi::types::HashType_HashMethod method));
 
   MOCK_CONST_METHOD2(GetHashSum,
-                     std::string(
-                         std::istream & istream,
-                         ::gnoi::types::HashType_HashMethod method));
+                     std::string(std::istream& istream,
+                                 ::gnoi::types::HashType_HashMethod method));
 
   MOCK_CONST_METHOD0(CreateTempDir, std::string());
 
-  MOCK_CONST_METHOD1(TempFileName,
-                     std::string(
-                         std::string
-                         path));
+  MOCK_CONST_METHOD1(TempFileName, std::string(std::string path));
 
-  MOCK_CONST_METHOD1(RemoveDir,
-                     ::util::Status(
-                         const std::string& path));
+  MOCK_CONST_METHOD1(RemoveDir, ::util::Status(const std::string& path));
 
-  MOCK_CONST_METHOD1(RemoveFile,
-                     ::util::Status(
-                         const std::string& path));
+  MOCK_CONST_METHOD1(RemoveFile, ::util::Status(const std::string& path));
 
   MOCK_CONST_METHOD1(PathExists, bool(const std::string& path));
 
-  MOCK_CONST_METHOD2(CopyFile,
-                     ::util::Status(
-                         const std::string& src,
-                         const std::string& dst));
+  MOCK_CONST_METHOD2(CopyFile, ::util::Status(const std::string& src,
+                                              const std::string& dst));
 
   MOCK_CONST_METHOD3(StringToFile,
-                     ::util::Status(
-                         const std::string& data,
-                         const std::string& filename,
-                         bool append));
+                     ::util::Status(const std::string& data,
+                                    const std::string& filename, bool append));
 };
 
 class AdminServiceUtilsInterfaceMock : public AdminServiceUtilsInterface {
  public:
-  std::shared_ptr<AdminServiceShellHelper>
-  GetShellHelper(const std::string& s) override {
+  std::shared_ptr<AdminServiceShellHelper> GetShellHelper(
+      const std::string& s) override {
     return GetShellHelperProxy(s);
   }
 
@@ -94,7 +80,7 @@ class AdminServiceUtilsInterfaceMock : public AdminServiceUtilsInterface {
   // The test provides the object to be returned (and defines mock methods
   // on the object)
   MOCK_METHOD1(GetShellHelperProxy,
-               std::shared_ptr<AdminServiceShellHelper>(const std::string &));
+               std::shared_ptr<AdminServiceShellHelper>(const std::string&));
   MOCK_METHOD0(GetFileSystemHelper, std::shared_ptr<FileSystemHelper>());
   MOCK_METHOD0(GetTime, uint64_t());
   MOCK_METHOD0(Reboot, ::util::Status());

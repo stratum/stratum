@@ -16,32 +16,32 @@
 
 #include "stratum/p4c_backends/fpm/parser_value_set_mapper.h"
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
+#include "gtest/gtest.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/p4/p4_info_manager_mock.h"
 #include "stratum/p4c_backends/fpm/parser_decoder.h"
 #include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
 
-using ::testing::AnyNumber;
 using ::testing::_;
+using ::testing::AnyNumber;
 
 class ParserValueSetMapperTest : public ::testing::Test {
  protected:
   // Sets up TableMapGeneratorMock delegation to the real object.
   void SetUp() override {
     ON_CALL(mock_table_map_generator_, generated_map())
-        .WillByDefault(::testing::Invoke(
-            &real_table_map_generator_, &TableMapGenerator::generated_map));
+        .WillByDefault(::testing::Invoke(&real_table_map_generator_,
+                                         &TableMapGenerator::generated_map));
   }
 
   // Reads an IR JSON file via IRTestHelperJson to set up P4 parser data
@@ -80,8 +80,7 @@ class ParserValueSetMapperTest : public ::testing::Test {
 
 void ParserValueSetMapperTest::SetUpIRParser(const std::string& ir_input_file) {
   ir_helper_ = absl::make_unique<IRTestHelperJson>();
-  const std::string ir_path = "stratum/p4c_backends/" +
-      ir_input_file;
+  const std::string ir_path = "stratum/p4c_backends/" + ir_input_file;
   CHECK(ir_helper_->GenerateTestIRAndInspectProgram(ir_path));
   CHECK_EQ(1, ir_helper_->program_inspector().parsers().size());
   ir_parser_ = ir_helper_->program_inspector().parsers()[0];
@@ -89,22 +88,21 @@ void ParserValueSetMapperTest::SetUpIRParser(const std::string& ir_input_file) {
   // The ParserDecoder processes the ir_input_file's P4 parser to produce
   // the initial test_parser_map_ for ParserValueSetMapper input.
   ParserDecoder parser_decoder;
-  bool result = parser_decoder.DecodeParser(*ir_parser_,
-                                            ir_helper_->mid_end_refmap(),
-                                            ir_helper_->mid_end_typemap());
+  bool result = parser_decoder.DecodeParser(
+      *ir_parser_, ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
   ASSERT_TRUE(result);
   test_parser_map_ = parser_decoder.parser_states();
 
   // This setup also creates a header descriptor entry for each
   // extracted header in the tested parser state.
-  test_state_ = gtl::FindOrNull(
-      *test_parser_map_.mutable_parser_states(), "parse_udf_payload");
+  test_state_ = gtl::FindOrNull(*test_parser_map_.mutable_parser_states(),
+                                "parse_udf_payload");
   CHECK(test_state_ != nullptr);
   for (const auto& header_path :
-      test_state_->extracted_header().header_paths()) {
+       test_state_->extracted_header().header_paths()) {
     real_table_map_generator_.AddHeader(header_path);
-    real_table_map_generator_.SetHeaderAttributes(
-        header_path, P4_HEADER_UDP_PAYLOAD, 0);
+    real_table_map_generator_.SetHeaderAttributes(header_path,
+                                                  P4_HEADER_UDP_PAYLOAD, 0);
   }
 }
 
@@ -123,9 +121,9 @@ void ParserValueSetMapperTest::SetUpHeaderFields(
   CHECK_LE(1, field_names.size());
   if (!field_names[0].empty()) {
     real_table_map_generator_.AddField(field_names[0]);
-    real_table_map_generator_.SetFieldAttributes(
-        field_names[0], P4_FIELD_TYPE_UDP_PAYLOAD_DATA,
-        P4_HEADER_UDP_PAYLOAD, 0, 8);
+    real_table_map_generator_.SetFieldAttributes(field_names[0],
+                                                 P4_FIELD_TYPE_UDP_PAYLOAD_DATA,
+                                                 P4_HEADER_UDP_PAYLOAD, 0, 8);
   }
   for (const auto& meta_field : field_names) {
     if (meta_field == field_names[0]) continue;
@@ -147,10 +145,14 @@ TEST_F(ParserValueSetMapperTest, TestNormalValueSet) {
   test_value_set_mapper_ = absl::make_unique<ParserValueSetMapper>(
       test_parser_map_, mock_p4_info_manager_, &mock_table_map_generator_);
   EXPECT_CALL(mock_table_map_generator_, generated_map()).Times(AnyNumber());
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_1", "ParserImpl.udf_vs_1", P4_HEADER_UDP_PAYLOAD)).Times(1);
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_2", "ParserImpl.udf_vs_2", P4_HEADER_UDP_PAYLOAD)).Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_1", "ParserImpl.udf_vs_1",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_2", "ParserImpl.udf_vs_2",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 
@@ -185,10 +187,14 @@ TEST_F(ParserValueSetMapperTest, TestNoHeaderPaths) {
   test_value_set_mapper_ = absl::make_unique<ParserValueSetMapper>(
       test_parser_map_, mock_p4_info_manager_, &mock_table_map_generator_);
   EXPECT_CALL(mock_table_map_generator_, generated_map()).Times(AnyNumber());
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_1", "ParserImpl.udf_vs_1", P4_HEADER_UDP_PAYLOAD)).Times(1);
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_2", "ParserImpl.udf_vs_2", P4_HEADER_UDP_PAYLOAD)).Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_1", "ParserImpl.udf_vs_1",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_2", "ParserImpl.udf_vs_2",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 
@@ -214,8 +220,10 @@ TEST_F(ParserValueSetMapperTest, TestNoUDFMetadataFieldDescriptor) {
   EXPECT_CALL(mock_table_map_generator_, generated_map()).Times(AnyNumber());
   EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet("meta.udf_1", _, _))
       .Times(0);
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_2", "ParserImpl.udf_vs_2", P4_HEADER_UDP_PAYLOAD)).Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_2", "ParserImpl.udf_vs_2",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 
@@ -249,8 +257,10 @@ TEST_F(ParserValueSetMapperTest, TestWrongUDFMetadataDescriptorType) {
   EXPECT_CALL(mock_table_map_generator_, generated_map()).Times(AnyNumber());
   EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet("meta.udf_2", _, _))
       .Times(0);
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_1", "ParserImpl.udf_vs_1", P4_HEADER_UDP_PAYLOAD)).Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_1", "ParserImpl.udf_vs_1",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 
@@ -262,9 +272,9 @@ TEST_F(ParserValueSetMapperTest, TestUnknownPayloadFieldType) {
   // "hdr.udf_payload.last.udf_data" has P4_FIELD_TYPE_UNKNOWN.
   SetUpHeaderFields({"", "meta.udf_1", "meta.udf_2"});  // First entry is empty.
   real_table_map_generator_.AddField("hdr.udf_payload.last.udf_data");
-  real_table_map_generator_.SetFieldAttributes(
-      "hdr.udf_payload.last.udf_data", P4_FIELD_TYPE_UNKNOWN,
-      P4_HEADER_UDP_PAYLOAD, 0, 8);
+  real_table_map_generator_.SetFieldAttributes("hdr.udf_payload.last.udf_data",
+                                               P4_FIELD_TYPE_UNKNOWN,
+                                               P4_HEADER_UDP_PAYLOAD, 0, 8);
 
   test_value_set_mapper_ = absl::make_unique<ParserValueSetMapper>(
       test_parser_map_, mock_p4_info_manager_, &mock_table_map_generator_);
@@ -289,8 +299,10 @@ TEST_F(ParserValueSetMapperTest, TestUDFMetadataFieldPriorType) {
   EXPECT_CALL(mock_table_map_generator_, generated_map()).Times(AnyNumber());
   EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet("meta.udf_1", _, _))
       .Times(0);
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_2", "ParserImpl.udf_vs_2", P4_HEADER_UDP_PAYLOAD)).Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_2", "ParserImpl.udf_vs_2",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 
@@ -303,9 +315,9 @@ TEST_F(ParserValueSetMapperTest, TestUnknownPayloadHeaderType) {
   // P4_HEADER_UDP_PAYLOAD.
   SetUpHeaderFields({"", "meta.udf_1", "meta.udf_2"});  // First entry is empty.
   real_table_map_generator_.AddField("hdr.udf_payload.last.udf_data");
-  real_table_map_generator_.SetFieldAttributes(
-      "hdr.udf_payload.last.udf_data", P4_FIELD_TYPE_UDP_PAYLOAD_DATA,
-      P4_HEADER_UNKNOWN, 0, 8);
+  real_table_map_generator_.SetFieldAttributes("hdr.udf_payload.last.udf_data",
+                                               P4_FIELD_TYPE_UDP_PAYLOAD_DATA,
+                                               P4_HEADER_UNKNOWN, 0, 8);
 
   test_value_set_mapper_ = absl::make_unique<ParserValueSetMapper>(
       test_parser_map_, mock_p4_info_manager_, &mock_table_map_generator_);
@@ -327,8 +339,10 @@ TEST_F(ParserValueSetMapperTest, TestUDFFieldNotMetadata) {
   EXPECT_CALL(mock_table_map_generator_, generated_map()).Times(AnyNumber());
   EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet("meta.udf_1", _, _))
       .Times(0);
-  EXPECT_CALL(mock_table_map_generator_, SetFieldValueSet(
-      "meta.udf_2", "ParserImpl.udf_vs_2", P4_HEADER_UDP_PAYLOAD)).Times(1);
+  EXPECT_CALL(mock_table_map_generator_,
+              SetFieldValueSet("meta.udf_2", "ParserImpl.udf_vs_2",
+                               P4_HEADER_UDP_PAYLOAD))
+      .Times(1);
   EXPECT_TRUE(test_value_set_mapper_->MapValueSets(*ir_parser_));
 }
 

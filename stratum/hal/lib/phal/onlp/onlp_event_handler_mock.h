@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_MOCK_H_
 
-#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 
 namespace stratum {
 namespace hal {
@@ -54,4 +53,3 @@ class OnlpEventHandlerMock : public OnlpEventHandler {
 }  // namespace stratum
 
 #endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_MOCK_H_
-

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #include "stratum/glue/status/canonical_errors.h"
 
 namespace util {
@@ -84,9 +83,7 @@ Status UnknownError(const std::string& message) {
   return Status(error::UNKNOWN, message);
 }
 
-bool IsAborted(const Status& status) {
-  return status.Matches(error::ABORTED);
-}
+bool IsAborted(const Status& status) { return status.Matches(error::ABORTED); }
 
 bool IsAlreadyExists(const Status& status) {
   return status.Matches(error::ALREADY_EXISTS);
@@ -144,8 +141,6 @@ bool IsUnimplemented(const Status& status) {
   return status.Matches(error::UNIMPLEMENTED);
 }
 
-bool IsUnknown(const Status& status) {
-  return status.Matches(error::UNKNOWN);
-}
+bool IsUnknown(const Status& status) { return status.Matches(error::UNKNOWN); }
 
 }  // namespace util

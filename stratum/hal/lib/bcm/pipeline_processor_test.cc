@@ -15,15 +15,15 @@
 
 #include "stratum/hal/lib/bcm/pipeline_processor.h"
 
-#include "stratum/lib/test_utils/matchers.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/strings/str_cat.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "stratum/public/lib/error.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/str_cat.h"
 
 namespace stratum {
 
@@ -31,6 +31,7 @@ namespace hal {
 namespace bcm {
 namespace {
 
+using ::stratum::test_utils::StatusIs;
 using test_utils::EqualsProto;
 using test_utils::p4_proto_builders::ApplyTable;
 using test_utils::p4_proto_builders::HitBuilder;
@@ -38,7 +39,6 @@ using test_utils::p4_proto_builders::IsValidBuilder;
 using test_utils::p4_proto_builders::Table;
 using ::testing::HasSubstr;
 using ::testing::UnorderedElementsAre;
-using ::stratum::test_utils::StatusIs;
 
 // This case tests that an empty control pipeline produces an empty pipeline.
 TEST(PipelineProcessorTest, EmptyPipeline) {

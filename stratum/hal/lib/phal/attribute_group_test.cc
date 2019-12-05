@@ -13,11 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/attribute_group.h"
 
 #include <memory>
 
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/datasource_mock.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
@@ -26,19 +29,16 @@
 #include "stratum/hal/lib/phal/test/test.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 
+using stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::MockFunction;
 using ::testing::Return;
-using stratum::test_utils::StatusIs;
 
 namespace {
 
@@ -95,9 +95,7 @@ GetTestVal<const google::protobuf::EnumValueDescriptor*>() {
 
 class AttributeGroupTest : public ::testing::Test {
  public:
-  AttributeGroupTest() {
-    group_ = AttributeGroup::From(TestTop::descriptor());
-  }
+  AttributeGroupTest() { group_ = AttributeGroup::From(TestTop::descriptor()); }
 
  protected:
   template <typename T>
@@ -355,7 +353,7 @@ TEST_F(AttributeGroupTest, CanAccessAttrsInRepeatedChildGroups) {
     ASSERT_TRUE(found_child.ok());
     auto readable_child_group = found_child.ValueOrDie()->AcquireReadable();
     EXPECT_THAT(readable_child_group->GetAttribute("val1"),
-              IsOkAndContainsValue<int32>(kInt32TestVal));
+                IsOkAndContainsValue<int32>(kInt32TestVal));
     EXPECT_FALSE(readable_child_group->GetAttribute("val2").ok());
   }
   {
@@ -622,8 +620,7 @@ TEST_F(AttributeGroupQueryTest, CanRegisterAndUnregisterNewQuery) {
   DummyThreadpool threadpool;
   AttributeGroupQuery query(group_.get(), &threadpool);
   EXPECT_OK(group_->AcquireReadable()->RegisterQuery(
-      &query,
-      {{PathEntry("single_sub"), PathEntry("val1")}}));
+      &query, {{PathEntry("single_sub"), PathEntry("val1")}}));
   group_->AcquireReadable()->UnregisterQuery(&query);
 }
 
@@ -679,8 +676,7 @@ TEST_F(AttributeGroupQueryTest, CanTraverseQuery) {
   DummyThreadpool threadpool;
   AttributeGroupQuery query(group_.get(), &threadpool);
   ASSERT_OK(group_->AcquireReadable()->RegisterQuery(
-      &query,
-      {{PathEntry("single_sub"), PathEntry("val1")}}));
+      &query, {{PathEntry("single_sub"), PathEntry("val1")}}));
   MockFunction<::util::Status(std::unique_ptr<ReadableAttributeGroup>)>
       group_function;
   MockFunction<::util::Status(ManagedAttribute*, const Path& querying_path,
@@ -701,8 +697,7 @@ TEST_F(AttributeGroupQueryTest, CanTraverseQueryAfterModification) {
   DummyThreadpool threadpool;
   AttributeGroupQuery query(group_.get(), &threadpool);
   ASSERT_OK(group_->AcquireReadable()->RegisterQuery(
-      &query,
-      {{PathEntry("single_sub"), PathEntry("val1")}}));
+      &query, {{PathEntry("single_sub"), PathEntry("val1")}}));
   MockFunction<::util::Status(std::unique_ptr<ReadableAttributeGroup>)>
       group_function;
   MockFunction<::util::Status(ManagedAttribute*, const Path& querying_path,
@@ -795,8 +790,7 @@ TEST_F(AttributeGroupQueryTest, CanCallQueryGetAfterModification) {
   DummyThreadpool threadpool;
   AttributeGroupQuery query(group_.get(), &threadpool);
   ASSERT_OK(group_->AcquireReadable()->RegisterQuery(
-      &query,
-      {{PathEntry("single_sub"), PathEntry("val1")}}));
+      &query, {{PathEntry("single_sub"), PathEntry("val1")}}));
 
   TestTop result;
 

@@ -13,14 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/p4_service.h"
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 
+#include "absl/memory/memory.h"
+#include "absl/numeric/int128.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
 #include "google/rpc/code.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
@@ -29,13 +35,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "absl/numeric/int128.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
 
 DECLARE_int32(max_num_controllers_per_node);
 DECLARE_int32(max_num_controller_connections);
@@ -1276,10 +1275,8 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   setRequest.mutable_config()->mutable_cookie()->set_cookie(kCookie1);
 
   // Setting pipeline config
-  ::grpc::Status status =
-      p4_service_->SetForwardingPipelineConfig(&context,
-                                               &setRequest,
-                                               &setResponse);
+  ::grpc::Status status = p4_service_->SetForwardingPipelineConfig(
+      &context, &setRequest, &setResponse);
   EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
 
   // Retrieving the pipeline config
@@ -1287,26 +1284,25 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
   ::p4::v1::GetForwardingPipelineConfigResponse getResponse;
   getRequest.set_device_id(kNodeId1);
   getRequest.set_response_type(
-    ::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY);
-  status = p4_service_->GetForwardingPipelineConfig(&context,
-                                                    &getRequest,
+      ::p4::v1::GetForwardingPipelineConfigRequest::COOKIE_ONLY);
+  status = p4_service_->GetForwardingPipelineConfig(&context, &getRequest,
                                                     &getResponse);
 
   EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
 
   // Validating cookie value
   EXPECT_TRUE(getResponse.config().cookie().cookie() == kCookie1)
-            << "Error: Cookie 1 " << getResponse.config().cookie().cookie()
-            << " not equal " << kCookie1;
+      << "Error: Cookie 1 " << getResponse.config().cookie().cookie()
+      << " not equal " << kCookie1;
 
   ASSERT_OK(p4_service_->Teardown());
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
 }
 
 INSTANTIATE_TEST_SUITE_P(P4ServiceTestWithMode, P4ServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

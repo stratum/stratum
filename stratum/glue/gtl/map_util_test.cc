@@ -22,13 +22,13 @@ limitations under the License.
 #include <unordered_map>
 #include <unordered_set>
 
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/container/node_hash_set.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/container/node_hash_map.h"
-#include "stratum/glue/logging.h"
+#include "absl/container/node_hash_set.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
 
 using std::string;
 
@@ -84,9 +84,9 @@ class MapUtilSet : public ::testing::Test {
  public:
   T collection_;
 };
-using SetTypes = ::testing::Types<
-  std::set<int>, std::unordered_set<int>, ::absl::flat_hash_set<int>,
-  ::absl::node_hash_set<int>>;
+using SetTypes =
+    ::testing::Types<std::set<int>, std::unordered_set<int>,
+                     ::absl::flat_hash_set<int>, ::absl::node_hash_set<int>>;
 TYPED_TEST_SUITE(MapUtilSet, SetTypes);
 
 TYPED_TEST(MapUtilSet, ContainsKey) {
@@ -106,9 +106,10 @@ class MapUtilMap : public ::testing::Test {
  public:
   T collection_;
 };
-using MapTypes = ::testing::Types<
-  std::map<int, string>, std::unordered_map<int, string>,
-  ::absl::flat_hash_map<int, string>, ::absl::node_hash_map<int, string>>;
+using MapTypes =
+    ::testing::Types<std::map<int, string>, std::unordered_map<int, string>,
+                     ::absl::flat_hash_map<int, string>,
+                     ::absl::node_hash_map<int, string>>;
 TYPED_TEST_SUITE(MapUtilMap, MapTypes);
 
 TYPED_TEST(MapUtilMap, ContainsKey) {

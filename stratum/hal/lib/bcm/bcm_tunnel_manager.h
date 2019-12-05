@@ -23,12 +23,12 @@
 #include <memory>
 #include <utility>
 
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
-#include "stratum/glue/integral_types.h"
-#include "p4/v1/p4runtime.pb.h"
-#include "stratum/glue/status/status.h"
 
 namespace stratum {
 

@@ -15,33 +15,32 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_H_
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_H_
 
 #include <memory>
+#include <set>
 #include <string>
 #include <tuple>
-#include <vector>
-#include <set>
 #include <utility>
+#include <vector>
 
-#include "google/protobuf/message.h"
 #include "absl/container/flat_hash_set.h"
+#include "google/protobuf/message.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/db.pb.h"
 // #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/hal/lib/phal/switch_configurator.h"
+#include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "stratum/hal/lib/phal/udev_event_handler.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {

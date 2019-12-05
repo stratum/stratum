@@ -21,8 +21,7 @@
 namespace stratum {
 namespace p4c_backends {
 
-SimpleHitInspector::SimpleHitInspector() : simple_hits_(true) {
-}
+SimpleHitInspector::SimpleHitInspector() : simple_hits_(true) {}
 
 bool SimpleHitInspector::Inspect(const IR::Statement& statement) {
   DCHECK(temp_hit_vars_.empty())
@@ -38,9 +37,10 @@ bool SimpleHitInspector::preorder(const IR::AssignmentStatement* assignment) {
   HitVarEnforcer enforcer(temp_hit_vars_);
   if (!enforcer.Inspect(*assignment->right, true)) {
     simple_hits_ = false;
-    ::error("Backend: Stratum FPM does not allow temporary hit variables "
-            "in expressions on the right side of an assignment %s",
-            assignment);
+    ::error(
+        "Backend: Stratum FPM does not allow temporary hit variables "
+        "in expressions on the right side of an assignment %s",
+        assignment);
     return false;
   }
 
@@ -52,8 +52,7 @@ bool SimpleHitInspector::preorder(const IR::IfStatement* statement) {
   HitVarEnforcer enforcer(temp_hit_vars_);
   if (!enforcer.Inspect(*statement->condition, false)) {
     simple_hits_ = false;
-    ::error("Backend:  Unsupported hit expression in %s condition.",
-            statement);
+    ::error("Backend:  Unsupported hit expression in %s condition.", statement);
     return false;
   }
 
@@ -70,8 +69,7 @@ SimpleHitInspector::HitVarEnforcer::HitVarEnforcer(
     const std::set<std::string>& temp_hit_vars)
     : unsupported_hit_operators_(false),
       hit_vars_count_(0),
-      temp_hit_vars_(temp_hit_vars) {
-}
+      temp_hit_vars_(temp_hit_vars) {}
 
 bool SimpleHitInspector::HitVarEnforcer::Inspect(
     const IR::Expression& expression, bool assignment_right) {

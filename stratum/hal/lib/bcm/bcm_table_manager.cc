@@ -13,26 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 
 #include <string>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/repeated_field.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 
 namespace stratum {
 namespace hal {
@@ -432,8 +431,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       continue;
     }
     auto* bcm_field = bcm_flow_entry->add_fields();
-    RETURN_IF_ERROR_WITH_APPEND(MappedFieldToBcmField(bcm_table_type, field,
-      bcm_field))
+    RETURN_IF_ERROR_WITH_APPEND(
+        MappedFieldToBcmField(bcm_table_type, field, bcm_field))
         << common_flow_entry_string;
     if (field.type() == P4_FIELD_TYPE_VRF) {
       has_vrf_field = true;
@@ -486,7 +485,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   switch (common_flow_entry.action().type()) {
     case P4_ACTION_TYPE_PROFILE_MEMBER_ID: {
       uint32 member_id = common_flow_entry.action().profile_member_id();
-      ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+      ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                        GetBcmNonMultipathNexthopInfo(member_id));
       auto* bcm_action = bcm_flow_entry->add_actions();
       auto* param = bcm_action->add_params();
@@ -513,7 +512,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     }
     case P4_ACTION_TYPE_PROFILE_GROUP_ID: {
       uint32 group_id = common_flow_entry.action().profile_group_id();
-      ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
+      ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
                        GetBcmMultipathNexthopInfo(group_id));
       auto* bcm_action = bcm_flow_entry->add_actions();
       bcm_action->set_type(BcmAction::OUTPUT_L3);
@@ -541,9 +540,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
           BcmAction drop_action;
           drop_action.set_type(BcmAction::DROP);
           std::vector<BcmAction> bcm_actions;
-          RETURN_IF_ERROR_WITH_APPEND(
-             FillBcmActionColorParams(primitive.meter_colors(),
-                                                   drop_action, &bcm_actions))
+          RETURN_IF_ERROR_WITH_APPEND(FillBcmActionColorParams(
+              primitive.meter_colors(), drop_action, &bcm_actions))
               << " Failed to convert CommonFlowEntry to BCM flow entry on"
               << " unit " << unit_ << "." << common_flow_entry_string;
           for (const BcmAction& bcm_action : bcm_actions) {
@@ -555,8 +553,8 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
       // Convert the remaining action fields to bcm fields.
       for (const auto& field : function.modify_fields()) {
         BcmAction bcm_action;
-        RETURN_IF_ERROR_WITH_APPEND
-            (P4ActionFieldToBcmAction(field, &bcm_action))
+        RETURN_IF_ERROR_WITH_APPEND(
+            P4ActionFieldToBcmAction(field, &bcm_action))
             << "Failed to convert CommonFlowEntry to BCM flow entry in unit "
             << unit_ << "." << common_flow_entry_string;
         if (!ProtoEqual(bcm_action, BcmAction())) {
@@ -669,8 +667,8 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
              << "Metering is only supported for ACL flows." << error_message;
     }
-    RETURN_IF_ERROR_WITH_APPEND(FillBcmMeterConfig(table_entry.meter_config(),
-                                       bcm_flow_entry->mutable_meter()))
+    RETURN_IF_ERROR_WITH_APPEND(FillBcmMeterConfig(
+        table_entry.meter_config(), bcm_flow_entry->mutable_meter()))
         << error_message;
   }
 
@@ -697,8 +695,8 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
 }
 
 ::util::Status BcmTableManager::FillBcmReplicationConfig(
-      const ::p4::v1::PacketReplicationEngineEntry replication_entry,
-      BcmPacketReplicationEntry* bcm_replication_entry) const {
+    const ::p4::v1::PacketReplicationEngineEntry replication_entry,
+    BcmPacketReplicationEntry* bcm_replication_entry) const {
   bcm_replication_entry->set_unit(unit_);
   switch (replication_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
@@ -706,8 +704,10 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().packet_length_bytes() == 0);
       // We simulate having one clone session with hard-coded Id
-      CHECK_RETURN_IF_FALSE(replication_entry.clone_session_entry().session_id()
-          == kCloneSessionId) << "Bcm only allows one stub clone session "
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().session_id() ==
+          kCloneSessionId)
+          << "Bcm only allows one stub clone session "
           << " with Id " << kCloneSessionId << ".";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().class_of_service() == 0)
@@ -717,27 +717,32 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
           replication_entry.clone_session_entry().replicas_size() == 1)
           << "Bcm only allows cloning to a single port.";
       CHECK_RETURN_IF_FALSE(
-          replication_entry.clone_session_entry().replicas(0).egress_port() == kCpuPortId)
+          replication_entry.clone_session_entry().replicas(0).egress_port() ==
+          kCpuPortId)
           << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ").";
       break;
-    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+        kMulticastGroupEntry: {
       auto mcast_grp = bcm_replication_entry->mutable_multicast_group_entry();
       CHECK_RETURN_IF_FALSE(
           replication_entry.multicast_group_entry().multicast_group_id() != 0);
       CHECK_RETURN_IF_FALSE(
-          replication_entry.multicast_group_entry().multicast_group_id() <= kuint8max);
+          replication_entry.multicast_group_entry().multicast_group_id() <=
+          kuint8max);
       mcast_grp->set_multicast_group_id(
           replication_entry.multicast_group_entry().multicast_group_id());
-      for (auto const& replica : replication_entry.multicast_group_entry().replicas()) {
-        CHECK_RETURN_IF_FALSE(replica.instance() == 1) << "instances are not suppoted";
+      for (auto const& replica :
+           replication_entry.multicast_group_entry().replicas()) {
+        CHECK_RETURN_IF_FALSE(replica.instance() == 1)
+            << "instances are not suppoted";
         mcast_grp->add_ports(replica.egress_port());
       }
       break;
     }
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Unsupported PacketReplicationEngineEntry "
-          << replication_entry.ShortDebugString();
+             << "Unsupported PacketReplicationEngineEntry "
+             << replication_entry.ShortDebugString();
   }
   return ::util::OkStatus();
 }
@@ -923,7 +928,7 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     // If member points to singleton port, check state before adding member.
     // TODO(madhaviyengar): Add support for checking trunk state once this
@@ -985,9 +990,9 @@ namespace {
 ::util::Status BcmTableManager::UpdateTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
-  ASSIGN_OR_RETURN(
-      ::p4::v1::TableEntry old_entry, table->ModifyEntry(table_entry));
+  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(::p4::v1::TableEntry old_entry,
+                   table->ModifyEntry(table_entry));
 
   // Update the flow_ref_count for the old/new member or group.
   uint32 old_member_id = old_entry.action().action_profile_member_id();
@@ -1019,9 +1024,9 @@ namespace {
 ::util::Status BcmTableManager::DeleteTableEntry(
     const ::p4::v1::TableEntry& table_entry) {
   uint32 table_id = table_entry.table_id();
-  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
-  ASSIGN_OR_RETURN(
-      ::p4::v1::TableEntry old_entry, table->DeleteEntry(table_entry));
+  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(::p4::v1::TableEntry old_entry,
+                   table->DeleteEntry(table_entry));
 
   // Update the flow_ref_count for the member or group.
   uint32 member_id = old_entry.action().action_profile_member_id();
@@ -1053,9 +1058,9 @@ namespace {
            << table_entry.ShortDebugString() << ".";
   }
 
-  ASSIGN_OR_RETURN(BcmFlowTable* table, GetMutableFlowTable(table_id));
-  ASSIGN_OR_RETURN(
-      ::p4::v1::TableEntry modified_entry, table->Lookup(table_entry));
+  ASSIGN_OR_RETURN(BcmFlowTable * table, GetMutableFlowTable(table_id));
+  ASSIGN_OR_RETURN(::p4::v1::TableEntry modified_entry,
+                   table->Lookup(table_entry));
   *modified_entry.mutable_meter_config() = meter.config();
   RETURN_IF_ERROR_WITH_APPEND(table->ModifyEntry(modified_entry).status())
       << "Failed to insert entry with modified meter. Entry: "
@@ -1150,7 +1155,7 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     group_nexthop_info->member_id_to_weight[member_id] = weight;
     member_nexthop_info->group_ref_count++;
@@ -1184,16 +1189,17 @@ namespace {
   // Sanity checking.
   if (!multicast_group.multicast_group_id()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Need non-zero multicast_group_id: "
-        << multicast_group.ShortDebugString() << ".";
+           << "Need non-zero multicast_group_id: "
+           << multicast_group.ShortDebugString() << ".";
   }
   uint32 group_id = multicast_group.multicast_group_id();
 
   // Save a copy of P4 MulticastGroupEntry.
-  if (!gtl::InsertIfNotPresent(&multicast_groups_, {group_id, multicast_group})) {
+  if (!gtl::InsertIfNotPresent(&multicast_groups_,
+                               {group_id, multicast_group})) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Inconsistent state. Multicast group with ID " << group_id
-        << " already exists in multicast_groups_.";
+           << "Inconsistent state. Multicast group with ID " << group_id
+           << " already exists in multicast_groups_.";
   }
 
   return ::util::OkStatus();
@@ -1204,16 +1210,16 @@ namespace {
   // Sanity checking.
   if (!clone_session.session_id()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Need non-zero session_id: "
-        << clone_session.ShortDebugString() << ".";
+           << "Need non-zero session_id: " << clone_session.ShortDebugString()
+           << ".";
   }
   uint32 session_id = clone_session.session_id();
 
   // Save a copy of P4 CloneSessionEntry.
   if (!gtl::InsertIfNotPresent(&clone_sessions_, {session_id, clone_session})) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Inconsistent state. Multicast group with ID " << session_id
-        << " already exists in multicast_groups_.";
+           << "Inconsistent state. Multicast group with ID " << session_id
+           << " already exists in multicast_groups_.";
   }
 
   return ::util::OkStatus();
@@ -1227,7 +1233,7 @@ namespace {
   // Member must exist when calling this function. Find the corresponding
   // BcmNonMultipathNexthopInfo and update it. At the moment only type can
   // change.
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   member_nexthop_info->type = type;
   member_nexthop_info->bcm_port = bcm_port;
@@ -1249,7 +1255,7 @@ namespace {
   // The group and all the members to add and remove to the group must exist
   // when calling this function. Find the corresponding BcmMultipathNexthopInfo
   // for the group and update it.
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
 
   // Save a copy of old member_id_to_weight and then populate it with the new
@@ -1262,7 +1268,7 @@ namespace {
   for (const auto& member : action_profile_group.members()) {
     uint32 member_id = member.member_id();
     uint32 weight = std::max(member.weight(), 1);
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     group_nexthop_info->member_id_to_weight[member_id] = weight;
     // Keep track of the modified set of ports the group references.
@@ -1286,7 +1292,7 @@ namespace {
 
   for (const auto& e : old_member_id_to_weight) {
     uint32 member_id = e.first;
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(member_id));
     CHECK_RETURN_IF_FALSE(member_nexthop_info->group_ref_count > 0)
         << "Non-positive group_ref_count for following member_id: " << member_id
@@ -1327,7 +1333,7 @@ namespace {
 
   // Member must exist when calling this function. Find the corresponding
   // BcmNonMultipathNexthopInfo and remove it.
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   CHECK_RETURN_IF_FALSE(member_nexthop_info->flow_ref_count == 0);
   CHECK_RETURN_IF_FALSE(member_nexthop_info->group_ref_count == 0);
@@ -1348,10 +1354,10 @@ namespace {
 
   // group and all its members must exist when calling this function. Find the
   // corresponding BcmMultipathNexthopInfo and update it.
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   for (const auto& e : group_nexthop_info->member_id_to_weight) {
-    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+    ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                      GetBcmNonMultipathNexthopInfo(e.first));
     CHECK_RETURN_IF_FALSE(member_nexthop_info->group_ref_count > 0)
         << "Non-positive group_ref_count for following member_id: " << e.first
@@ -1445,7 +1451,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
     return MAKE_ERROR(ERR_INTERNAL) << "Null info.";
   }
 
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   info->egress_intf_id = member_nexthop_info->egress_intf_id;
   info->type = member_nexthop_info->type;
@@ -1462,7 +1468,7 @@ bool BcmTableManager::ActionProfileGroupExists(uint32 group_id) const {
     return MAKE_ERROR(ERR_INTERNAL) << "Null info.";
   }
 
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   info->egress_intf_id = group_nexthop_info->egress_intf_id;
   info->flow_ref_count = group_nexthop_info->flow_ref_count;
@@ -1520,8 +1526,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 }
 
 ::util::Status BcmTableManager::DeleteTable(uint32 table_id) {
-  ASSIGN_OR_RETURN(
-      const BcmFlowTable* table, GetConstantFlowTable(table_id));
+  ASSIGN_OR_RETURN(const BcmFlowTable* table, GetConstantFlowTable(table_id));
   std::vector<::p4::v1::TableEntry> entries;
   for (const auto& entry : *table) {
     entries.emplace_back(entry);
@@ -1607,8 +1612,8 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
 
 ::util::StatusOr<::p4::v1::TableEntry> BcmTableManager::LookupTableEntry(
     const ::p4::v1::TableEntry& entry) const {
-  ASSIGN_OR_RETURN(
-      const BcmFlowTable* table, GetConstantFlowTable(entry.table_id()));
+  ASSIGN_OR_RETURN(const BcmFlowTable* table,
+                   GetConstantFlowTable(entry.table_id()));
   ASSIGN_OR_RETURN(::p4::v1::TableEntry lookup, table->Lookup(entry));
   return lookup;
 }
@@ -1670,7 +1675,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
         multicast_group_ids.count(group.second.multicast_group_id())) {
       auto* entity = resp.add_entities();
       *entity->mutable_packet_replication_engine_entry()
-          ->mutable_multicast_group_entry() = group.second;
+           ->mutable_multicast_group_entry() = group.second;
     }
   }
   if (!writer->Write(resp)) {
@@ -1693,7 +1698,7 @@ std::set<uint32> BcmTableManager::GetAllAclTableIDs() const {
         clone_session_ids.count(session.second.session_id())) {
       auto* entity = resp.add_entities();
       *entity->mutable_packet_replication_engine_entry()
-          ->mutable_clone_session_entry() = session.second;
+           ->mutable_clone_session_entry() = session.second;
     }
   }
   if (!writer->Write(resp)) {
@@ -1718,7 +1723,7 @@ std::unique_ptr<BcmTableManager> BcmTableManager::CreateInstance(
 
 ::util::Status BcmTableManager::UpdateFlowRefCountForMember(uint32 member_id,
                                                             int delta) {
-  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo* member_nexthop_info,
+  ASSIGN_OR_RETURN(BcmNonMultipathNexthopInfo * member_nexthop_info,
                    GetBcmNonMultipathNexthopInfo(member_id));
   if (delta < 0) {
     CHECK_RETURN_IF_FALSE(member_nexthop_info->flow_ref_count + delta >= 0)
@@ -1734,7 +1739,7 @@ std::unique_ptr<BcmTableManager> BcmTableManager::CreateInstance(
 
 ::util::Status BcmTableManager::UpdateFlowRefCountForGroup(uint32 group_id,
                                                            int delta) {
-  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo* group_nexthop_info,
+  ASSIGN_OR_RETURN(BcmMultipathNexthopInfo * group_nexthop_info,
                    GetBcmMultipathNexthopInfo(group_id));
   if (delta < 0) {
     CHECK_RETURN_IF_FALSE(group_nexthop_info->flow_ref_count + delta >= 0)
@@ -2187,7 +2192,7 @@ BcmTableManager::GetBcmMultipathNexthopInfo(uint32 group_id) const {
     case P4_FIELD_TYPE_ETH_TYPE:
     case P4_FIELD_TYPE_IPV4_PROTO:
     case P4_FIELD_TYPE_IPV4_DIFFSERV:
-      // This translates to both SET_IP_DSCP & SET_IP_ECN.
+    // This translates to both SET_IP_DSCP & SET_IP_ECN.
     case P4_FIELD_TYPE_IPV6_NEXT_HDR:
     case P4_FIELD_TYPE_IPV6_TRAFFIC_CLASS:
     case P4_FIELD_TYPE_ICMP_TYPE:

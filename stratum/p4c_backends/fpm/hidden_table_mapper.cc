@@ -19,13 +19,13 @@
 #include <memory>
 #include <set>
 
-#include "stratum/glue/logging.h"
-#include "stratum/lib/utils.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/memory/memory.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/utils.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -34,9 +34,8 @@ HiddenTableMapper::~HiddenTableMapper() {
   gtl::STLDeleteValues(&meta_key_map_);
 }
 
-void HiddenTableMapper::ProcessTables(
-    const hal::P4InfoManager& p4_info_manager,
-    hal::P4PipelineConfig* p4_pipeline_cfg) {
+void HiddenTableMapper::ProcessTables(const hal::P4InfoManager& p4_info_manager,
+                                      hal::P4PipelineConfig* p4_pipeline_cfg) {
   // If p4_pipeline_cfg has no static table entries, there is no reason
   // to continue.
   if (p4_pipeline_cfg->static_table_entries().updates_size() == 0) {
@@ -126,8 +125,8 @@ void HiddenTableMapper::CreateOrUpdateQualifiedKey(
   // this far.  If the field passes further qualification, meta_key_map_ is
   // updated with this new key entry, or it is merged into an existing entry
   // for the same field.
-  auto new_meta_key = absl::make_unique<IndirectActionKey>(
-      match_field.name(), &action_redirects_);
+  auto new_meta_key = absl::make_unique<IndirectActionKey>(match_field.name(),
+                                                           &action_redirects_);
   if (!new_meta_key->QualifyKey(match_field, p4_table, p4_pipeline_cfg)) {
     return;
   }
@@ -270,8 +269,7 @@ void HiddenTableMapper::IndirectActionKey::HandleKeyAssignment(
 }
 
 void HiddenTableMapper::IndirectActionKey::FindAssignmentsToKey(
-    const std::string& action_name,
-    const hal::P4ActionDescriptor& descriptor,
+    const std::string& action_name, const hal::P4ActionDescriptor& descriptor,
     std::vector<int>* assignment_indexes) {
   for (int index = 0; index < descriptor.assignments_size(); ++index) {
     const auto& assignment = descriptor.assignments(index);
@@ -287,8 +285,8 @@ void HiddenTableMapper::IndirectActionKey::FindAssignmentsToKey(
 void HiddenTableMapper::IndirectActionKey::RemoveAssignmentsToKey() {
   if (disqualified_) return;
   for (const auto& action_iter : actions_assigns_) {
-    hal::P4ActionDescriptor* descriptor = gtl::FindOrNull(
-        *action_redirects_, action_iter.first);
+    hal::P4ActionDescriptor* descriptor =
+        gtl::FindOrNull(*action_redirects_, action_iter.first);
     if (descriptor == nullptr) continue;
     std::vector<int> assignment_indexes;
     FindAssignmentsToKey(action_iter.first, *descriptor, &assignment_indexes);

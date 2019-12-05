@@ -51,7 +51,7 @@ class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
   OnlpPhalSfpEventCallback(const OnlpPhalSfpEventCallback& other) = delete;
   OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) =
       delete;
-  ~OnlpPhalSfpEventCallback() override {};
+  ~OnlpPhalSfpEventCallback() override{};
 
   // Callback for handling SFP status changes - SFP plug/unplug events.
   ::util::Status HandleStatusChange(const OidInfo& oid_info) override;

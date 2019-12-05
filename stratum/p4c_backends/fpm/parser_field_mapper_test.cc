@@ -17,9 +17,11 @@
 #include "stratum/p4c_backends/fpm/parser_field_mapper.h"
 
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
+#include "absl/strings/substitute.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/parser_decoder.h"
@@ -27,8 +29,6 @@
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
-#include "absl/strings/substitute.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -153,7 +153,8 @@ void ParserFieldMapperTest::SetUpTestInputs(
   target_parser_field_map_.Clear();
 
   // The p4_parser_field_map_ comes from a test data file.
-  const std::string kFilePath = "stratum/p4c_backends/"
+  const std::string kFilePath =
+      "stratum/p4c_backends/"
       "fpm/testdata/parse_basic.pb.txt";
   CHECK(ReadProtoFromTextFile(kFilePath, &p4_parser_field_map_).ok())
       << "Unable to read and parse test data in " << kFilePath;
@@ -169,8 +170,7 @@ void ParserFieldMapperTest::SetUpTestInputs(
     // The first part of the loop creates a state in target_parser_field_map_
     // for each p4_parser_field_map_ state that extracts a header.
     const ParserState& parser_state = iter.second;
-    if (!parser_state.has_extracted_header())
-      continue;
+    if (!parser_state.has_extracted_header()) continue;
     int field_offset = 0;
     ParserState target_parser_state;
     target_parser_state.set_name(parser_state.name());
@@ -182,8 +182,9 @@ void ParserFieldMapperTest::SetUpTestInputs(
     }
     *target_parser_state.mutable_transition() = parser_state.transition();
     if (target_parser_state.transition().has_select()) {
-      target_parser_state.mutable_transition()->mutable_select()->
-          clear_selector_fields();
+      target_parser_state.mutable_transition()
+          ->mutable_select()
+          ->clear_selector_fields();
     }
 
     CHECK_EQ(1, parser_state.extracted_header().header_paths_size());
@@ -193,10 +194,9 @@ void ParserFieldMapperTest::SetUpTestInputs(
     target_header->set_name(header_name);
     target_header->set_header_type(
         static_cast<P4HeaderType>(header_type_index));
-    if (header_type_index < P4HeaderType_MAX)
-      ++header_type_index;
-    header_expectations_.emplace_back(
-        header_name, target_header->header_type());
+    if (header_type_index < P4HeaderType_MAX) ++header_type_index;
+    header_expectations_.emplace_back(header_name,
+                                      target_header->header_type());
 
     // The test setup creates at least two fields per header type,
     // assigning each field a different type from the P4FieldType enum.  If
@@ -216,8 +216,9 @@ void ParserFieldMapperTest::SetUpTestInputs(
       // now, but it could break if ParserFieldMapper does more in-depth
       // verification of selector field consistency between states.
       if (f == 1 && target_parser_state.transition().has_select()) {
-        target_parser_state.mutable_transition()->mutable_select()->
-            add_selector_types(f_type);
+        target_parser_state.mutable_transition()
+            ->mutable_select()
+            ->add_selector_types(f_type);
       }
 
       int param_index = f - kFixedFields;  // Negative if f is not a subfield.
@@ -302,13 +303,12 @@ void ParserFieldMapperTest::SetUpTestInputs(
 
       field_offset += bit_width;
       ++bit_width;
-      if (field_type_index < P4FieldType_MAX)
-        ++field_type_index;
+      if (field_type_index < P4FieldType_MAX) ++field_type_index;
     }
 
     decoded_field_map_[parser_state.extracted_header().name()] = field_list;
-    (*target_parser_field_map_.mutable_parser_states())[parser_state.name()]
-        = target_parser_state;
+    (*target_parser_field_map_.mutable_parser_states())[parser_state.name()] =
+        target_parser_state;
   }
 
   EXPECT_CALL(mock_table_mapper_, generated_map())
@@ -316,16 +316,17 @@ void ParserFieldMapperTest::SetUpTestInputs(
       .WillRepeatedly(ReturnRef(real_table_mapper_.generated_map()));
 }
 
-void ParserFieldMapperTest::SetUpTargetField(
-    P4FieldType type, int offset, int width, ParserExtractField* target_field) {
+void ParserFieldMapperTest::SetUpTargetField(P4FieldType type, int offset,
+                                             int width,
+                                             ParserExtractField* target_field) {
   target_field->set_type(type);
   target_field->set_bit_offset(offset);
   target_field->set_bit_width(width);
 }
 
 void ParserFieldMapperTest::SetUpFieldMapExpectations(
-    P4FieldType field_type, int offset, int width,
-    P4HeaderType header_type, const std::string& full_field_name) {
+    P4FieldType field_type, int offset, int width, P4HeaderType header_type,
+    const std::string& full_field_name) {
   hal::P4FieldDescriptor expected_descriptor;
   expected_descriptor.set_type(field_type);
   expected_descriptor.set_header_type(header_type);
@@ -408,7 +409,8 @@ void ParserFieldMapperTest::SetUpTestFromIRFile(const std::string& ir_file) {
   p4_parser_field_map_ = decoder->parser_states();
 
   // This target parser map text file is suitable for all IR-based tests.
-  const std::string kFilePath = "stratum/p4c_backends/"
+  const std::string kFilePath =
+      "stratum/p4c_backends/"
       "fpm/testdata/value_set_parser_map.pb.txt";
   CHECK(ReadProtoFromTextFile(kFilePath, &target_parser_field_map_).ok())
       << "Unable to read and parse test data in " << kFilePath;
@@ -456,8 +458,8 @@ TEST_F(ParserFieldMapperTest, TestPass1Only) {
   target_parser_field_map_.Clear();
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  ASSERT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-              decoded_field_map_, target_parser_field_map_));
+  ASSERT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 
   // Every parser state that extracts fields should have fields added that
   // match the header definition in decoded_field_map_.
@@ -486,8 +488,8 @@ TEST_F(ParserFieldMapperTest, TestMapFieldsNoParserInput) {
   p4_parser_field_map_.Clear();
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 TEST_F(ParserFieldMapperTest, TestMapFieldsMissingHeaderType) {
@@ -498,8 +500,8 @@ TEST_F(ParserFieldMapperTest, TestMapFieldsMissingHeaderType) {
   decoded_field_map_.erase("vlan_tag_t");
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // Confirms that MapFields returns an error when called multiple times.
@@ -509,29 +511,30 @@ TEST_F(ParserFieldMapperTest, TestMapFieldsTwice) {
       .Times(AnyNumber());
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _))
       .Times(AnyNumber());
-  EXPECT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-              decoded_field_map_, target_parser_field_map_));
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 TEST_F(ParserFieldMapperTest, TestNormalMapping) {
   SetUpBasicTestInputs();
   for (const auto& iter : map_expectations_) {
     const hal::P4FieldDescriptor& expected_descriptor = iter.second;
-    EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(
-        iter.first, expected_descriptor.type(),
-        expected_descriptor.header_type(),
-        expected_descriptor.bit_offset(), expected_descriptor.bit_width()))
+    EXPECT_CALL(mock_table_mapper_,
+                SetFieldAttributes(iter.first, expected_descriptor.type(),
+                                   expected_descriptor.header_type(),
+                                   expected_descriptor.bit_offset(),
+                                   expected_descriptor.bit_width()))
         .Times(1);
   }
   for (const auto& iter : header_expectations_) {
-    EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(
-        iter.first, iter.second, _))
+    EXPECT_CALL(mock_table_mapper_,
+                SetHeaderAttributes(iter.first, iter.second, _))
         .Times(1);
   }
-  EXPECT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-              decoded_field_map_, target_parser_field_map_));
+  EXPECT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // The next series of tests verifies that MapFields returns an error when the
@@ -548,8 +551,8 @@ TEST_F(ParserFieldMapperTest, TestMultipleTargetStartStates) {
       .Times(AnyNumber());
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _))
       .Times(AnyNumber());
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test clears all reserved states so there is no start.
@@ -560,8 +563,8 @@ TEST_F(ParserFieldMapperTest, TestNoTargetStartState) {
   }
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test clears all extracted header details in one state.
@@ -571,8 +574,8 @@ TEST_F(ParserFieldMapperTest, TestTargetStateExtractsNoHeader) {
   iter->second.clear_extracted_header();
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test clears all the fields in one state's header.
@@ -582,8 +585,8 @@ TEST_F(ParserFieldMapperTest, TestTargetStateExtractsNoHeaderFields) {
   iter->second.mutable_extracted_header()->clear_fields();
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test makes the first two fields in one state have the same offset.
@@ -595,8 +598,8 @@ TEST_F(ParserFieldMapperTest, TestTargetStateNonIncreasingFieldOffset) {
   header->mutable_fields(0)->set_bit_offset(header->fields(1).bit_offset());
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test adds a second select field type to one state's select expression.
@@ -612,8 +615,8 @@ TEST_F(ParserFieldMapperTest, TestTargetStateMultipleSelectFields) {
   }
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test adds an unknown next state to one state's select expression.
@@ -623,15 +626,17 @@ TEST_F(ParserFieldMapperTest, TestTargetStateUnknownNextState) {
     auto& target_state = iter.second;
     if (target_state.transition().has_select()) {
       ASSERT_LE(1, target_state.transition().select().cases_size());
-      target_state.mutable_transition()->mutable_select()->
-          mutable_cases(0)->set_next_state("unknown-state");
+      target_state.mutable_transition()
+          ->mutable_select()
+          ->mutable_cases(0)
+          ->set_next_state("unknown-state");
       break;
     }
   }
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test adds an extra case key to one state's select expression.
@@ -641,8 +646,10 @@ TEST_F(ParserFieldMapperTest, TestTargetStateMultipleCaseKeyValues) {
     auto& target_state = iter.second;
     if (target_state.transition().has_select()) {
       ASSERT_LE(1, target_state.transition().select().cases_size());
-      auto new_key = target_state.mutable_transition()->mutable_select()->
-          mutable_cases(0)->add_keyset_values();
+      auto new_key = target_state.mutable_transition()
+                         ->mutable_select()
+                         ->mutable_cases(0)
+                         ->add_keyset_values();
       new_key->mutable_constant()->set_value(123);
       new_key->mutable_constant()->set_mask(0x1ff);
       break;
@@ -650,8 +657,8 @@ TEST_F(ParserFieldMapperTest, TestTargetStateMultipleCaseKeyValues) {
   }
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test verifies failure with an empty field decoder map input.
@@ -660,8 +667,8 @@ TEST_F(ParserFieldMapperTest, TestTargetNoDecodedFields) {
   decoded_field_map_.clear();
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test verifies failure when the target start state doesn't match
@@ -682,8 +689,8 @@ TEST_F(ParserFieldMapperTest, TestNoStartStateMatch) {
   }
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // This test verifies failure when the target start state ambiguously matches
@@ -716,8 +723,8 @@ TEST_F(ParserFieldMapperTest, TestAmbiguousStartState) {
 
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _)).Times(0);
   EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(_, _, _)).Times(0);
-  EXPECT_FALSE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_FALSE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // Tests parser mapping of alternate subfields in various valid combinations,
@@ -726,19 +733,20 @@ TEST_P(ParserFieldMapperTest, TestSubFields) {
   SetUpTestInputs(GetParam());
   for (const auto& iter : map_expectations_) {
     const hal::P4FieldDescriptor& expected_descriptor = iter.second;
-    EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(
-        iter.first, expected_descriptor.type(),
-        expected_descriptor.header_type(),
-        expected_descriptor.bit_offset(), expected_descriptor.bit_width()))
+    EXPECT_CALL(mock_table_mapper_,
+                SetFieldAttributes(iter.first, expected_descriptor.type(),
+                                   expected_descriptor.header_type(),
+                                   expected_descriptor.bit_offset(),
+                                   expected_descriptor.bit_width()))
         .Times(1);
   }
   for (const auto& iter : header_expectations_) {
-    EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(
-        iter.first, iter.second, _))
+    EXPECT_CALL(mock_table_mapper_,
+                SetHeaderAttributes(iter.first, iter.second, _))
         .Times(1);
   }
-  EXPECT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-              decoded_field_map_, target_parser_field_map_));
+  EXPECT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // Tests parser mapping of alternate subfields when a subfield set is undefined.
@@ -766,8 +774,8 @@ TEST_F(ParserFieldMapperTest, TestMissingSubFieldSet) {
       .Times(AnyNumber());
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _))
       .Times(AnyNumber());
-  EXPECT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // Tests parser mapping of alternate subfields in various invalid combinations,
@@ -799,8 +807,9 @@ TEST_P(ParserFieldMapperSubfieldErrorTest, TestSubFieldErrors) {
       .Times(AnyNumber());
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _))
       .Times(AnyNumber());
-  EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(
-      state_iter->second.extracted_header().name(), _, _))
+  EXPECT_CALL(
+      mock_table_mapper_,
+      SetHeaderAttributes(state_iter->second.extracted_header().name(), _, _))
       .Times(0);
   EXPECT_CALL(mock_table_mapper_,
               SetFieldAttributes(error_field->full_field_names(0), _, _, _, _))
@@ -808,8 +817,8 @@ TEST_P(ParserFieldMapperSubfieldErrorTest, TestSubFieldErrors) {
 
   // The ParserFieldMapper returns true if it successfully processes at least
   // one header, and this test covers a partial failure, hence the EXPECT_TRUE.
-  EXPECT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // Verifies parsing of value sets.
@@ -824,21 +833,22 @@ TEST_F(ParserFieldMapperTest, TestValueSets) {
   EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(_, _, _, _, _))
       .Times(AnyNumber());
   for (const auto& iter : header_expectations_) {
-    EXPECT_CALL(mock_table_mapper_, SetHeaderAttributes(
-        iter.first, iter.second, _))
+    EXPECT_CALL(mock_table_mapper_,
+                SetHeaderAttributes(iter.first, iter.second, _))
         .Times(1);
   }
   for (const auto& iter : map_expectations_) {
     const hal::P4FieldDescriptor& expected_descriptor = iter.second;
-    EXPECT_CALL(mock_table_mapper_, SetFieldAttributes(
-        iter.first, expected_descriptor.type(),
-        expected_descriptor.header_type(),
-        expected_descriptor.bit_offset(), expected_descriptor.bit_width()))
+    EXPECT_CALL(mock_table_mapper_,
+                SetFieldAttributes(iter.first, expected_descriptor.type(),
+                                   expected_descriptor.header_type(),
+                                   expected_descriptor.bit_offset(),
+                                   expected_descriptor.bit_width()))
         .Times(1);
   }
 
-  EXPECT_TRUE(test_parser_mapper_.MapFields(p4_parser_field_map_,
-               decoded_field_map_, target_parser_field_map_));
+  EXPECT_TRUE(test_parser_mapper_.MapFields(
+      p4_parser_field_map_, decoded_field_map_, target_parser_field_map_));
 }
 
 // Tests basic field mapping for a non-extracted header.
@@ -914,8 +924,7 @@ TEST_F(ParserFieldMapperTest, TestNonExtractedHeaderOuterInner) {
 
 // This set of parameters tests some normal subfield combinations.
 INSTANTIATE_TEST_SUITE_P(
-    SubFields,
-    ParserFieldMapperTest,
+    SubFields, ParserFieldMapperTest,
     ::testing::Values(
         SubFieldTestParam{"parse_l3_protocol_2", -1, std::vector<int>{0, 0}},
         SubFieldTestParam{"parse_l3_protocol_2", -1, std::vector<int>{5, 3}},
@@ -928,8 +937,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 // This set of parameters tests various failures to match on subfields.
 INSTANTIATE_TEST_SUITE_P(
-    SubFieldErrors,
-    ParserFieldMapperSubfieldErrorTest,
+    SubFieldErrors, ParserFieldMapperSubfieldErrorTest,
     ::testing::Values(
         SubFieldTestParam{"parse_l3_protocol_2", 2, std::vector<int>{0, 0}},
         SubFieldTestParam{"parse_l3_protocol_2", 3, std::vector<int>{0, 0}},

@@ -18,8 +18,8 @@
 
 #include "stratum/hal/lib/p4/p4_write_request_differ.h"
 
-#include "stratum/glue/logging.h"
 #include "google/protobuf/generated_message_reflection.h"
+#include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
@@ -167,8 +167,9 @@ void P4WriteRequestReporter::ReportMatched(
 bool P4WriteRequestComparator::IsMatch(
     const google::protobuf::Message& message1,
     const google::protobuf::Message& message2,
-    const std::vector<google::protobuf::util::MessageDifferencer::SpecificField>&
-    parent_fields) const {
+    const std::vector<
+        google::protobuf::util::MessageDifferencer::SpecificField>&
+        parent_fields) const {
   const ::p4::v1::Update& update1 =
       *google::protobuf::DynamicCastToGenerated<const ::p4::v1::Update>(
           &message1);

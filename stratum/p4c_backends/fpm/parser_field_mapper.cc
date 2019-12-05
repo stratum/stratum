@@ -20,24 +20,23 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/strings/match.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 ParserFieldMapper::ParserFieldMapper(TableMapGenerator* table_mapper)
-    : table_mapper_(ABSL_DIE_IF_NULL(table_mapper)),
-      done_(false) {}
+    : table_mapper_(ABSL_DIE_IF_NULL(table_mapper)), done_(false) {}
 
 bool ParserFieldMapper::MapFields(
     const ParserMap& ir_parser_field_map,
     const FieldDecoder::DecodedHeaderFieldMap& header_field_map,
     const ParserMap& target_parser_field_map) {
   if (!VerifyInputs(ir_parser_field_map, header_field_map,
-      target_parser_field_map)) {
+                    target_parser_field_map)) {
     return false;
   }
 
@@ -109,7 +108,8 @@ bool ParserFieldMapper::VerifyTargetParserMap(
         continue;
       }
       if (!target_state.extracted_header().fields_size()) {
-        LOG(ERROR) << "Target state " << target_state.name() << " is invalid; "
+        LOG(ERROR) << "Target state " << target_state.name()
+                   << " is invalid; "
                       "its extracted header does not specify any fields";
         valid = false;
         continue;
@@ -139,10 +139,9 @@ bool ParserFieldMapper::VerifyTargetParserMap(
         // The next state for each select case must exist in the parser map,
         // and each case must have exactly one key value.
         for (const auto& select_case : select.cases()) {
-          if (select_case.is_default())
-            continue;
+          if (select_case.is_default()) continue;
           if (target_parser_field_map.parser_states().find(
-              select_case.next_state()) ==
+                  select_case.next_state()) ==
               target_parser_field_map.parser_states().end()) {
             LOG(ERROR) << "Target state " << target_state.name() << " next "
                        << "state " << select_case.next_state()
@@ -216,8 +215,7 @@ bool ParserFieldMapper::RunPass1(
 // It then expects to follow the select expression transitions in each state
 // machine and find the same header types extracted by each next state pair.
 bool ParserFieldMapper::RunPass2(const ParserMap& target_parser_field_map) {
-  if (!ProcessStartState(target_parser_field_map))
-    return false;
+  if (!ProcessStartState(target_parser_field_map)) return false;
 
   // The pass2_work_queue_ collects new pairs of states to process as
   // ProcessStartState and ProcessStatePair identify parser transitions.
@@ -285,8 +283,7 @@ bool ParserFieldMapper::ProcessStartState(
   int p4_header_matches = 0;
   for (const auto& p4_iter : working_field_map_.parser_states()) {
     const ParserState& p4_state = p4_iter.second;
-    if (!p4_state.has_extracted_header())
-      continue;
+    if (!p4_state.has_extracted_header()) continue;
 
     // It is possible for the target start state to match multiple P4 parser
     // states.  It is unlikely given that the Ethernet header is generally
@@ -316,9 +313,9 @@ bool ParserFieldMapper::ProcessStartState(
   return true;
 }
 
-bool ParserFieldMapper::ProcessStatePair(
-    const ParserState& target_state, const ParserState& p4_state,
-    bool in_tunnel) {
+bool ParserFieldMapper::ProcessStatePair(const ParserState& target_state,
+                                         const ParserState& p4_state,
+                                         bool in_tunnel) {
   // If a P4 state doesn't extract a header, it's probably one of the built
   // in states that terminates the sequence.  If the header has already been
   // processed in another transition sequence, no more work is needed.
@@ -336,8 +333,8 @@ bool ParserFieldMapper::ProcessStatePair(
 
   int match_status = MatchTargetAndP4Fields(target_state, p4_state, in_tunnel);
   if (match_status != 0) {
-    match_status = MatchP4FieldsAndTargetSubFields(
-        target_state, p4_state, in_tunnel, match_status - 1);
+    match_status = MatchP4FieldsAndTargetSubFields(target_state, p4_state,
+                                                   in_tunnel, match_status - 1);
   }
   if (match_status == 0) {
     // If MatchP4FieldsAndTargetSubFields aligned the headers by inserting
@@ -362,17 +359,17 @@ bool ParserFieldMapper::ProcessStatePair(
   return true;
 }
 
-int ParserFieldMapper::MatchTargetAndP4Fields(
-    const ParserState& target_state, const ParserState& p4_state,
-    bool in_tunnel) {
+int ParserFieldMapper::MatchTargetAndP4Fields(const ParserState& target_state,
+                                              const ParserState& p4_state,
+                                              bool in_tunnel) {
   DCHECK(target_state.has_extracted_header());
   const auto& target_header = target_state.extracted_header();
   DCHECK(target_header.fields_size());
   DCHECK(p4_state.has_extracted_header());
   const ParserExtractHeader& p4_header = p4_state.extracted_header();
-  DCHECK(p4_header.fields_size()) << "Compiler bug: P4 state "
-                                  << p4_state.name() << " extracts "
-                                  << "an empty set of fields";
+  DCHECK(p4_header.fields_size())
+      << "Compiler bug: P4 state " << p4_state.name() << " extracts "
+      << "an empty set of fields";
 
   // The header_visited flag means that the extracted header's field types
   // have already been mapped by another parser state, but the header still
@@ -392,8 +389,8 @@ int ParserFieldMapper::MatchTargetAndP4Fields(
   // to the caller.
   std::vector<MappedFieldData> mapped_fields;
   int p4_index = 0;
-  for (int target_index = 0;
-       target_index < target_header.fields_size(); ++target_index) {
+  for (int target_index = 0; target_index < target_header.fields_size();
+       ++target_index) {
     bool field_match = false;
 
     // The target does not need to specify a complete set of fields in a
@@ -402,9 +399,9 @@ int ParserFieldMapper::MatchTargetAndP4Fields(
     // non-contiguous target parser fields.
     while (p4_index < p4_header.fields_size()) {
       if (p4_header.fields(p4_index).bit_offset() ==
-          target_header.fields(target_index).bit_offset() &&
+              target_header.fields(target_index).bit_offset() &&
           p4_header.fields(p4_index).bit_width() ==
-          target_header.fields(target_index).bit_width()) {
+              target_header.fields(target_index).bit_width()) {
         field_match = true;
         if (!header_visited) {
           for (const auto& field_name :
@@ -436,8 +433,8 @@ int ParserFieldMapper::MatchTargetAndP4Fields(
   if (in_tunnel) header_depth = 1;
   if (!mapped_fields.empty() || header_visited) {
     for (const auto& header : p4_header.header_paths()) {
-      table_mapper_->SetHeaderAttributes(
-          header, target_header.header_type(), header_depth);
+      table_mapper_->SetHeaderAttributes(header, target_header.header_type(),
+                                         header_depth);
     }
   }
   for (const auto& mapped_field : mapped_fields) {
@@ -458,13 +455,10 @@ int ParserFieldMapper::MatchP4FieldsAndTargetSubFields(
     const ParserState& target_state, const ParserState& p4_state,
     bool in_tunnel, int mismatch_index) {
   const ParserExtractHeader& old_header = target_state.extracted_header();
-  if (mismatch_index >= old_header.fields_size())
-    return 1;
-  if (old_header.fields(mismatch_index).subfield_set_name().empty())
-    return 1;
+  if (mismatch_index >= old_header.fields_size()) return 1;
+  if (old_header.fields(mismatch_index).subfield_set_name().empty()) return 1;
   ParserState new_target_state = target_state;  // Mutable copy.
   ParserExtractHeader* new_header = new_target_state.mutable_extracted_header();
-
 
   // When the loop below begins, next_subfield_index refers to the first
   // field that may benefit from attempting to match against subfields.
@@ -492,11 +486,11 @@ int ParserFieldMapper::MatchP4FieldsAndTargetSubFields(
     for (int i = 1; i < subrange_size; ++i) {
       *new_header->add_fields() = new_header->fields(i + next_subfield_index);
     }
-    new_header->mutable_fields()->DeleteSubrange(
-        next_subfield_index, subrange_size);
+    new_header->mutable_fields()->DeleteSubrange(next_subfield_index,
+                                                 subrange_size);
     next_subfield_index += new_subfields;
-    int match_status = MatchTargetAndP4Fields(
-        new_target_state, p4_state, in_tunnel);
+    int match_status =
+        MatchTargetAndP4Fields(new_target_state, p4_state, in_tunnel);
 
     // Multiple outcomes can happen in MatchTargetAndP4Fields:
     //  1) The match succeeds after the most recent subfield insertion.
@@ -559,13 +553,11 @@ void ParserFieldMapper::SelectTransitions(const ParserState& target_state,
   // TODO(unknown): What can be done here to confirm that both input states
   // select on the same field?
   for (const auto& target_case : target_select.cases()) {
-    if (target_case.is_default())
-      continue;
+    if (target_case.is_default()) continue;
     DCHECK_EQ(1, target_case.keyset_values_size());
 
     for (const auto& p4_case : normalized_p4_select.cases()) {
-      if (p4_case.is_default())
-        continue;
+      if (p4_case.is_default()) continue;
       DCHECK_EQ(1, p4_case.keyset_values_size())
           << "Invalid keyset values in normalized P4 select expression";
       // The keyset mask is not important for this comparison.
@@ -574,9 +566,9 @@ void ParserFieldMapper::SelectTransitions(const ParserState& target_state,
           target_case.keyset_values(0).constant().value()) {
         VLOG(1) << "Adding field map work queue entry for "
                 << target_case.next_state() << ", " << p4_case.next_state();
-        pass2_work_queue_.emplace_back(
-            target_case.next_state(), p4_case.next_state(),
-            target_case.is_tunnel_entry());
+        pass2_work_queue_.emplace_back(target_case.next_state(),
+                                       p4_case.next_state(),
+                                       target_case.is_tunnel_entry());
         break;
       }
     }
@@ -586,7 +578,8 @@ void ParserFieldMapper::SelectTransitions(const ParserState& target_state,
 // Filters out unnecessary attributes for P4 Parser select expressions.
 ParserSelectExpression ParserFieldMapper::NormalizeSelect(
     const ParserSelectExpression& select) {
-  DCHECK_LE(1, select.selector_fields_size()) << "Fatal compiler bug: missing "
+  DCHECK_LE(1, select.selector_fields_size())
+      << "Fatal compiler bug: missing "
       << "fields in select expression " << select.ShortDebugString();
   if (select.selector_fields_size() == 1) {
     return select;  // No normalization required.
@@ -628,14 +621,14 @@ void ParserFieldMapper::ProcessUnconditionalTransition(
     return;
   }
   VLOG(1) << "Adding field map work queue entry for unconditional transition "
-          << "to " << target_state.transition().next_state()
-          << ", " << p4_state.transition().next_state();
+          << "to " << target_state.transition().next_state() << ", "
+          << p4_state.transition().next_state();
   pass2_work_queue_.emplace_back(target_state.transition().next_state(),
                                  p4_state.transition().next_state(), false);
 }
 
-int ParserFieldMapper::InsertSubFields(
-    int sub_index, ParserExtractHeader* new_header) {
+int ParserFieldMapper::InsertSubFields(int sub_index,
+                                       ParserExtractHeader* new_header) {
   const std::string& subfield_set_name =
       new_header->fields(sub_index).subfield_set_name();
   if (subfield_set_name.empty()) return 0;

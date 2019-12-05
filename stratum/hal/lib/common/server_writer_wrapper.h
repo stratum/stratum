@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 

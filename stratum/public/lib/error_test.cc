@@ -13,21 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "grpcpp/grpcpp.h"
+#include "stratum/public/lib/error.h"
 
 #include <string>
 #include <vector>
 
-#include "stratum/public/lib/error.h"
-
+#include "gmock/gmock.h"
+#include "google/rpc/code.pb.h"
+#include "google/rpc/status.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "google/rpc/code.pb.h"
-#include "google/rpc/status.pb.h"
 
 namespace stratum {
 
@@ -167,11 +166,11 @@ TEST(CommonUtilsTest, TestCanonicalCodes) {
                            ::google::rpc::UNIMPLEMENTED);
   TestCanonicalCodesHelper(ERR_DATA_LOSS, ::grpc::StatusCode::DATA_LOSS,
                            ::google::rpc::DATA_LOSS);
-// FIXME(boc)   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or
-// googleapi's code.proto
-//  TestCanonicalCodesHelper(ERR_UNAUTHENTICATED,
-//                           ::grpc::StatusCode::UNAUTHENTICATED,
-//                           ::google::rpc::UNAUTHENTICATED);
+  // FIXME(boc)   UNAUTHENTICATED is not defined in grpc's status_code_enum.h or
+  // googleapi's code.proto
+  //  TestCanonicalCodesHelper(ERR_UNAUTHENTICATED,
+  //                           ::grpc::StatusCode::UNAUTHENTICATED,
+  //                           ::google::rpc::UNAUTHENTICATED);
   TestCanonicalCodesHelper(ERR_INTERNAL, ::grpc::StatusCode::INTERNAL,
                            ::google::rpc::INTERNAL);
   TestCanonicalCodesHelper(ERR_HARDWARE_ERROR, ::grpc::StatusCode::INTERNAL,

@@ -17,7 +17,6 @@
 
 #include "stratum/p4c_backends/fpm/midend.h"
 
-#include "stratum/glue/logging.h"
 #include "absl/debugging/leak_check.h"
 #include "external/com_github_p4lang_p4c/frontends/common/constantFolding.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/resolveReferences.h"
@@ -42,6 +41,7 @@
 #include "external/com_github_p4lang_p4c/midend/simplifyKey.h"
 #include "external/com_github_p4lang_p4c/midend/simplifySelectCases.h"
 #include "external/com_github_p4lang_p4c/midend/simplifySelectList.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -58,35 +58,33 @@ MidEnd::MidEnd(const CompilerOptions& options) {
   auto evaluator = new P4::EvaluatorPass(&reference_map_, &type_map_);
   setName("MidEnd");
 
-  addPasses({
-    new P4::RemoveActionParameters(&reference_map_, &type_map_),
-    new P4::SimplifyKey(&reference_map_, &type_map_,
-                        new P4::OrPolicy(
-                            new P4::IsValid(&reference_map_, &type_map_),
-                            new P4::IsMask())),
-    new P4::ConstantFolding(&reference_map_, &type_map_),
-    new P4::SimplifySelectCases(&reference_map_, &type_map_, false),
-    new P4::ExpandLookahead(&reference_map_, &type_map_),
-    new P4::SimplifyParsers(&reference_map_),
-    new P4::StrengthReduction(&reference_map_, &type_map_),
-    new P4::EliminateTuples(&reference_map_, &type_map_),
-    new P4::CopyStructures(&reference_map_, &type_map_),
-    new P4::NestedStructs(&reference_map_, &type_map_),
-    new P4::SimplifySelectList(&reference_map_, &type_map_),
-    new P4::RemoveSelectBooleans(&reference_map_, &type_map_),
-    new P4::MoveDeclarations(),  // more may have been introduced
-    new P4::ConstantFolding(&reference_map_, &type_map_),
-    new P4::LocalCopyPropagation(&reference_map_, &type_map_),
-    new P4::ConstantFolding(&reference_map_, &type_map_),
-    new P4::MoveDeclarations(),  // more may have been introduced
-    new P4::SimplifyControlFlow(&reference_map_, &type_map_),
-    new P4::CompileTimeOperations(),
-    evaluator,
-    new VisitFunctor([this, evaluator]() {
-      top_level_ = evaluator->getToplevelBlock();
-    }),
-    new P4::MidEndLast()
-  });
+  addPasses({new P4::RemoveActionParameters(&reference_map_, &type_map_),
+             new P4::SimplifyKey(
+                 &reference_map_, &type_map_,
+                 new P4::OrPolicy(new P4::IsValid(&reference_map_, &type_map_),
+                                  new P4::IsMask())),
+             new P4::ConstantFolding(&reference_map_, &type_map_),
+             new P4::SimplifySelectCases(&reference_map_, &type_map_, false),
+             new P4::ExpandLookahead(&reference_map_, &type_map_),
+             new P4::SimplifyParsers(&reference_map_),
+             new P4::StrengthReduction(&reference_map_, &type_map_),
+             new P4::EliminateTuples(&reference_map_, &type_map_),
+             new P4::CopyStructures(&reference_map_, &type_map_),
+             new P4::NestedStructs(&reference_map_, &type_map_),
+             new P4::SimplifySelectList(&reference_map_, &type_map_),
+             new P4::RemoveSelectBooleans(&reference_map_, &type_map_),
+             new P4::MoveDeclarations(),  // more may have been introduced
+             new P4::ConstantFolding(&reference_map_, &type_map_),
+             new P4::LocalCopyPropagation(&reference_map_, &type_map_),
+             new P4::ConstantFolding(&reference_map_, &type_map_),
+             new P4::MoveDeclarations(),  // more may have been introduced
+             new P4::SimplifyControlFlow(&reference_map_, &type_map_),
+             new P4::CompileTimeOperations(),
+             evaluator,
+             new VisitFunctor([this, evaluator]() {
+               top_level_ = evaluator->getToplevelBlock();
+             }),
+             new P4::MidEndLast()});
 }
 
 IR::ToplevelBlock* MidEnd::RunMidEndPass(const IR::P4Program& program) {

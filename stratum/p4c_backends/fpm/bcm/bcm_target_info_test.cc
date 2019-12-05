@@ -36,11 +36,11 @@ TEST_F(BcmTargetInfoTest, TestFixedPipelineStages) {
 
 TEST_F(BcmTargetInfoTest, TestNonFixedPipelineStages) {
   EXPECT_FALSE(bcm_target_info_.IsPipelineStageFixed(P4Annotation::VLAN_ACL));
-  EXPECT_FALSE(bcm_target_info_.IsPipelineStageFixed(
-      P4Annotation::INGRESS_ACL));
+  EXPECT_FALSE(
+      bcm_target_info_.IsPipelineStageFixed(P4Annotation::INGRESS_ACL));
   EXPECT_FALSE(bcm_target_info_.IsPipelineStageFixed(P4Annotation::EGRESS_ACL));
-  EXPECT_FALSE(bcm_target_info_.IsPipelineStageFixed(
-      P4Annotation::DEFAULT_STAGE));
+  EXPECT_FALSE(
+      bcm_target_info_.IsPipelineStageFixed(P4Annotation::DEFAULT_STAGE));
 }
 
 }  // namespace p4c_backends

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 // Copyright 2002 and onwards Google Inc.
 // Author: Paul Haahr
 //
@@ -50,10 +49,10 @@
 
 #include <byteswap.h>
 
-#include "stratum/glue/logging.h"
 #include "absl/base/casts.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/numeric/int128.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 
@@ -62,11 +61,12 @@ class Bits {
   // A traits class template for unsigned integer type sizes. Primary
   // information contained herein is corresponding (unsigned) integer type.
   // E.g. UnsignedTypeBySize<32>::Type is uint32. Used by UnsignedType.
-  template<int size /* in bytes */>
+  template <int size /* in bytes */>
   struct UnsignedTypeBySize;
 
   // Auxiliary struct for figuring out an unsigned type for a given type.
-  template<typename T> struct UnsignedType {
+  template <typename T>
+  struct UnsignedType {
     typedef typename UnsignedTypeBySize<sizeof(T)>::Type Type;
   };
 
@@ -91,8 +91,8 @@ class Bits {
 #elif defined(_LP64)
     n -= (n >> 1) & 0x5555555555555555ULL;
     n = ((n >> 2) & 0x3333333333333333ULL) + (n & 0x3333333333333333ULL);
-    return (((n + (n >> 4)) & 0xF0F0F0F0F0F0F0FULL)
-            * 0x101010101010101ULL) >> 56;
+    return (((n + (n >> 4)) & 0xF0F0F0F0F0F0F0FULL) * 0x101010101010101ULL) >>
+           56;
 #else
     return CountOnes(n >> 32) + CountOnes(n & 0xffffffff);
 #endif
@@ -121,11 +121,11 @@ class Bits {
   // Count leading zeroes.  This is similar to wordsize - 1 - floor(log2(n)).
   // Returns number of bits if n is 0.
   static inline int CountLeadingZeros32(uint32 n) {
-    // Instead of using __builtin_clz(), we explicitly write target specific
-    // assembly because we want to handle n == 0.  If we used __builtin_clz(),
-    // we would need to use something like "n ? __builtin_clz(n) : 32".  The
-    // check is not necessary on POWER and aarch64 but we cannot depend on
-    // that becasue __builtin_clz(0) is documented to be undefined.
+// Instead of using __builtin_clz(), we explicitly write target specific
+// assembly because we want to handle n == 0.  If we used __builtin_clz(),
+// we would need to use something like "n ? __builtin_clz(n) : 32".  The
+// check is not necessary on POWER and aarch64 but we cannot depend on
+// that becasue __builtin_clz(0) is documented to be undefined.
 #if defined(__aarch64__) && defined(__GNUC__)
     int32 count;
     asm("clz %w0,%w1" : "=r"(count) : "r"(n));
@@ -135,9 +135,9 @@ class Bits {
     int32 idx, neg1 = -1;
     asm("bsr %1,%0\n\t"
         "cmovz %2,%0"
-        : "=&r"(idx)          // idx is early-clobbered
+        : "=&r"(idx)  // idx is early-clobbered
         : "ro"(n), "r"(neg1)
-        : "cc");              // bsr writes Z flag
+        : "cc");  // bsr writes Z flag
     return 31 - idx;
 #elif defined(__powerpc64__) && defined(__GNUC__)
     int32 count;
@@ -161,11 +161,11 @@ class Bits {
     return count;
 #elif defined(__x86_64__) && defined(__GNUC__)
     int64 idx, neg1 = -1;
-    asm ("bsr %1,%0\n"
-         "cmovz %2,%0\n"
-         : "=&r"(idx)          // idx is early-clobbered
-         : "ro"(n), "r"(neg1)
-         : "cc");              // bsr writes Z flag
+    asm("bsr %1,%0\n"
+        "cmovz %2,%0\n"
+        : "=&r"(idx)  // idx is early-clobbered
+        : "ro"(n), "r"(neg1)
+        : "cc");  // bsr writes Z flag
     return 63 - idx;
 #elif defined(__GNUC__)
     return CountLeadingZerosWithBuiltin<uint64>(n);
@@ -187,18 +187,18 @@ class Bits {
   static absl::uint128 ReverseBits128(absl::uint128 n);
 
   // Return the number of one bits in the byte sequence.
-  static int Count(const void *m, int num_bytes);
+  static int Count(const void* m, int num_bytes);
 
   // Return the number of different bits in the given byte sequences.
   // (i.e., the Hamming distance)
-  static int Difference(const void *m1, const void *m2, int num_bytes);
+  static int Difference(const void* m1, const void* m2, int num_bytes);
 
   // Return the number of different bits in the given byte sequences,
   // up to a maximum.  Values larger than the maximum may be returned
   // (because multiple bits are checked at a time), but the function
   // may exit early if the cap is exceeded.
-  static int CappedDifference(const void *m1, const void *m2,
-                              int num_bytes, int cap);
+  static int CappedDifference(const void* m1, const void* m2, int num_bytes,
+                              int cap);
 
   // Return floor(log2(n)) for positive integer n.  Returns -1 iff n == 0.
   static int Log2Floor(uint32 n);
@@ -231,23 +231,25 @@ class Bits {
 
   // Viewing bytes as a stream of unsigned bytes, does that stream
   // contain any byte equal to c?
-  template <class T> static bool BytesContainByte(T bytes, uint8 c);
+  template <class T>
+  static bool BytesContainByte(T bytes, uint8 c);
 
   // Viewing bytes as a stream of unsigned bytes, does that stream
   // contain any byte b < c?
-  template <class T> static bool BytesContainByteLessThan(T bytes, uint8 c);
+  template <class T>
+  static bool BytesContainByteLessThan(T bytes, uint8 c);
 
   // Viewing bytes as a stream of unsigned bytes, are all elements of that
   // stream in [lo, hi]?
-  template <class T> static bool BytesAllInRange(T bytes, uint8 lo, uint8 hi);
+  template <class T>
+  static bool BytesAllInRange(T bytes, uint8 lo, uint8 hi);
 
   // Extract 'nbits' consecutive bits from 'src'.  Position of bits are
   // specified by 'offset' from the LSB.  'T' is a scalar type (integral,
   // float or pointer) whose size is the same as one of the unsigned types.
   // The return type is an unsigned type having the same size as T.
-  template<typename T>
-  static typename UnsignedType<T>::Type GetBits(const T src,
-                                                const int offset,
+  template <typename T>
+  static typename UnsignedType<T>::Type GetBits(const T src, const int offset,
                                                 const int nbits) {
     typedef typename UnsignedType<T>::Type UnsignedT;
     const UnsignedT unsigned_src = absl::bit_cast<UnsignedT>(src);
@@ -261,11 +263,9 @@ class Bits {
   // Overwrite 'nbits' consecutive bits of 'dest.'.  Position of bits are
   // specified by an offset from the LSB.  'T' is a scalar type (integral,
   // float or pointer) whose size is the same as one of the unsigned types.
-  template<typename T>
+  template <typename T>
   static void SetBits(const typename UnsignedType<T>::Type value,
-                      const int offset,
-                      const int nbits,
-                      T* const dest) {
+                      const int offset, const int nbits, T* const dest) {
     typedef typename UnsignedType<T>::Type UnsignedT;
     const UnsignedT unsigned_dest = absl::bit_cast<UnsignedT>(*dest);
     DCHECK_GT(static_cast<int>(sizeof(UnsignedT) * 8), offset);
@@ -283,11 +283,9 @@ class Bits {
   //
   // uint32 a, b;
   // Bits::CopyBits(&a, 0, b, 12, 3);
-  template<typename DestType, typename SrcType>
-  static void CopyBits(DestType* const dest,
-                       const int dest_offset,
-                       const SrcType src,
-                       const int src_offset,
+  template <typename DestType, typename SrcType>
+  static void CopyBits(DestType* const dest, const int dest_offset,
+                       const SrcType src, const int src_offset,
                        const int nbits) {
     const typename UnsignedType<SrcType>::Type value =
         GetBits(src, src_offset, nbits);
@@ -296,16 +294,16 @@ class Bits {
 
  private:
   // We only use this for unsigned types and for 0 <= n <= sizeof(UnsignedT).
-  template<typename UnsignedT>
+  template <typename UnsignedT>
   static UnsignedT NBitsFromLSB(const int nbits) {
     const UnsignedT all_ones = ~static_cast<UnsignedT>(0);
     return nbits == 0 ? 0U : all_ones >> (sizeof(UnsignedT) * 8 - nbits);
   }
 
 #ifdef __GNUC__
-  template<typename UnsignedT>
+  template <typename UnsignedT>
   static inline int CountLeadingZerosWithBuiltin(UnsignedT n);
-  template<typename UnsignedT>
+  template <typename UnsignedT>
   static inline int PopcountWithBuiltin(UnsignedT n);
 #endif
 
@@ -328,10 +326,11 @@ class Bits {
 // A utility class for some handy bit patterns.  The names l and h
 // were chosen to match Knuth Volume 4: l is 0x010101... and h is 0x808080...;
 // half_ones is ones in the lower half only.  We assume sizeof(T) is 1 or even.
-template <class T> struct BitPattern {
-  static const T half_ones = (static_cast<T>(1) << (sizeof(T)*4)) - 1;
-  static const T l = (sizeof(T) == 1) ? 1 :
-                       (half_ones / 0xff * (half_ones + 2));
+template <class T>
+struct BitPattern {
+  static const T half_ones = (static_cast<T>(1) << (sizeof(T) * 4)) - 1;
+  static const T l =
+      (sizeof(T) == 1) ? 1 : (half_ones / 0xff * (half_ones + 2));
   static const T h = ~(l * 0x7f);
 };
 
@@ -345,13 +344,9 @@ inline int Bits::Log2Floor(uint32 n) {
   return n == 0 ? -1 : 31 ^ __builtin_clz(n);
 }
 
-inline int Bits::Log2FloorNonZero(uint32 n) {
-  return 31 ^ __builtin_clz(n);
-}
+inline int Bits::Log2FloorNonZero(uint32 n) { return 31 ^ __builtin_clz(n); }
 
-inline int Bits::FindLSBSetNonZero(uint32 n) {
-  return __builtin_ctz(n);
-}
+inline int Bits::FindLSBSetNonZero(uint32 n) { return __builtin_ctz(n); }
 
 inline int Bits::Log2Floor64(uint64 n) {
   return n == 0 ? -1 : 63 ^ __builtin_clzll(n);
@@ -361,9 +356,7 @@ inline int Bits::Log2FloorNonZero64(uint64 n) {
   return 63 ^ __builtin_clzll(n);
 }
 
-inline int Bits::FindLSBSetNonZero64(uint64 n) {
-  return __builtin_ctzll(n);
-}
+inline int Bits::FindLSBSetNonZero64(uint64 n) { return __builtin_ctzll(n); }
 #elif defined(COMPILER_MSVC)
 #include "util/bits/bits-internal-windows.h"
 #else
@@ -385,9 +378,7 @@ inline int Bits::FindLSBSetNonZero128(absl::uint128 n) {
   return 64 + Bits::FindLSBSetNonZero64(absl::Uint128High64(n));
 }
 
-inline int Bits::CountOnesInByte(unsigned char n) {
-  return num_bits[n];
-}
+inline int Bits::CountOnesInByte(unsigned char n) { return num_bits[n]; }
 
 inline uint8 Bits::ReverseBits8(unsigned char n) {
 #if defined(__aarch64__) && defined(__GNUC__)
@@ -399,7 +390,7 @@ inline uint8 Bits::ReverseBits8(unsigned char n) {
 #else
   n = ((n >> 1) & 0x55) | ((n & 0x55) << 1);
   n = ((n >> 2) & 0x33) | ((n & 0x33) << 2);
-  return ((n >> 4) & 0x0f)  | ((n & 0x0f) << 4);
+  return ((n >> 4) & 0x0f) | ((n & 0x0f) << 4);
 #endif
 }
 
@@ -427,8 +418,8 @@ inline uint64 Bits::ReverseBits64(uint64 n) {
   n = ((n >> 4) & 0x0F0F0F0F0F0F0F0FULL) | ((n & 0x0F0F0F0F0F0F0F0FULL) << 4);
   return bswap_64(n);
 #else
-  return ReverseBits32( n >> 32 ) |
-         (static_cast<uint64>(ReverseBits32(n &  0xffffffff)) << 32);
+  return ReverseBits32(n >> 32) |
+         (static_cast<uint64>(ReverseBits32(n & 0xffffffff)) << 32);
 #endif
 }
 
@@ -481,12 +472,12 @@ inline bool Bits::BytesContainByteLessThan(T bytes, uint8 c) {
   T h = BitPattern<T>::h;
   // The c <= 0x80 code is straight out of Knuth Volume 4.
   // Usually c will be manifestly constant.
-  return c <= 0x80 ?
-      ((h & (bytes - l * c) & ~bytes) != 0) :
-      ((((bytes - l * c) | (bytes ^ h)) & h) != 0);
+  return c <= 0x80 ? ((h & (bytes - l * c) & ~bytes) != 0)
+                   : ((((bytes - l * c) | (bytes ^ h)) & h) != 0);
 }
 
-template <class T> inline bool Bits::BytesContainByte(T bytes, uint8 c) {
+template <class T>
+inline bool Bits::BytesContainByte(T bytes, uint8 c) {
   // Usually c will be manifestly constant.
   return Bits::BytesContainByteLessThan<T>(bytes ^ (c * BitPattern<T>::l), 1);
 }
@@ -510,40 +501,41 @@ inline bool Bits::BytesAllInRange(T bytes, uint8 lo, uint8 hi) {
 
 // Specializations for Bits::UnsignedTypeBySize.  For unsupported type
 // sizes, a compile-time error will be generated.
-template<>
+template <>
 struct Bits::UnsignedTypeBySize<1> {
   typedef uint8 Type;
 };
 
-template<>
+template <>
 struct Bits::UnsignedTypeBySize<2> {
   typedef uint16 Type;
 };
 
-template<>
+template <>
 struct Bits::UnsignedTypeBySize<4> {
   typedef uint32 Type;
 };
 
-template<>
+template <>
 struct Bits::UnsignedTypeBySize<8> {
   typedef uint64 Type;
 };
 
 #ifdef __GNUC__
 // Select a correct gcc/llvm builtin for clz based on size.
-template<typename UnsignedT>
+template <typename UnsignedT>
 int Bits::CountLeadingZerosWithBuiltin(UnsignedT n) {
-  if (n == 0)   // __builtin_clz(0) is officially undefined.
+  if (n == 0)  // __builtin_clz(0) is officially undefined.
     return sizeof(n) * 8;
   constexpr size_t size = sizeof(n);
-  static_assert(size == sizeof(unsigned)
-                || size == sizeof(unsigned long)        // NOLINT(runtime/int)
-                || size == sizeof(unsigned long long),  // NOLINT(runtime/int)
+  static_assert(size == sizeof(unsigned) ||
+                    size == sizeof(unsigned long)  // NOLINT(runtime/int)
+                    ||
+                    size == sizeof(unsigned long long),  // NOLINT(runtime/int)
                 "No __builtin_clz for this size");
   if (size == sizeof(unsigned)) {
     return __builtin_clz(n);
-  } else if (size == sizeof(unsigned long)) {           // NOLINT(runtime/int)
+  } else if (size == sizeof(unsigned long)) {  // NOLINT(runtime/int)
     return __builtin_clzl(n);
   } else {
     return __builtin_clzll(n);
@@ -551,16 +543,17 @@ int Bits::CountLeadingZerosWithBuiltin(UnsignedT n) {
 }
 
 // Select a correct gcc/llvm builtin for popcount based on size.
-template<typename UnsignedT>
+template <typename UnsignedT>
 int Bits::PopcountWithBuiltin(UnsignedT n) {
   constexpr size_t size = sizeof(n);
-  static_assert(size == sizeof(unsigned)
-                || size == sizeof(unsigned long)        // NOLINT(runtime/int)
-                || size == sizeof(unsigned long long),  // NOLINT(runtime/int)
+  static_assert(size == sizeof(unsigned) ||
+                    size == sizeof(unsigned long)  // NOLINT(runtime/int)
+                    ||
+                    size == sizeof(unsigned long long),  // NOLINT(runtime/int)
                 "No __builtin_popcount for this size");
   if (size == sizeof(unsigned)) {
     return __builtin_popcount(n);
-  } else if (size == sizeof(unsigned long)) {           // NOLINT(runtime/int)
+  } else if (size == sizeof(unsigned long)) {  // NOLINT(runtime/int)
     return __builtin_popcountl(n);
   } else {
     return __builtin_popcountll(n);

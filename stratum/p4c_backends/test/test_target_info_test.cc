@@ -16,8 +16,8 @@
 
 #include "stratum/p4c_backends/test/test_target_info.h"
 
-#include "stratum/public/proto/p4_annotation.pb.h"
 #include "gtest/gtest.h"
+#include "stratum/public/proto/p4_annotation.pb.h"
 
 namespace stratum {
 namespace p4c_backends {

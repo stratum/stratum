@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_THREADPOOL_INTERFACE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_THREADPOOL_INTERFACE_MOCK_H_
 
 #include <vector>
 
-#include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/threadpool_interface.h"
 
 namespace stratum {
 namespace hal {

@@ -13,11 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/dummy_threadpool.h"
+
 #include <utility>
 
-#include "stratum/hal/lib/phal/dummy_threadpool.h"
-#include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/phal/threadpool_interface.h"
 
 namespace stratum {
 namespace hal {

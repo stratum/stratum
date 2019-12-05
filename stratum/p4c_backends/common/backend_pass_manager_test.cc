@@ -17,15 +17,16 @@
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 
 #include <memory>
-#include "gflags/gflags.h"
-#include "stratum/p4c_backends/common/backend_extension_mock.h"
-#include "stratum/p4c_backends/common/p4c_front_mid_mock.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/common/backend_extension_mock.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_mock.h"
 
 DECLARE_string(p4c_fe_options);
 
@@ -67,11 +68,14 @@ TEST_F(BackendPassManagerTest, TestNormal) {
   BackendPassManager backend(&p4c_fe_mock_, test_extensions_);
 
   EXPECT_CALL(p4c_fe_mock_, GetErrorCount())
-      .Times(AnyNumber()).WillRepeatedly(Return(0));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(0));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndReferenceMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_ref_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_ref_map_));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndTypeMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_type_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_type_map_));
   EXPECT_CALL(p4c_fe_mock_, Initialize()).Times(1);
   EXPECT_CALL(p4c_fe_mock_, ProcessCommandLineOptions(2, _))
       .WillOnce(Return(0));
@@ -105,12 +109,12 @@ TEST_F(BackendPassManagerTest, TestP4ParseErrorNullReturn) {
 
   // No further mock calls should occur after the parser error.
   EXPECT_CALL(p4c_fe_mock_, GetErrorCount())
-      .Times(AnyNumber()).WillRepeatedly(Return(0));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(0));
   EXPECT_CALL(p4c_fe_mock_, Initialize()).Times(1);
   EXPECT_CALL(p4c_fe_mock_, ProcessCommandLineOptions(2, _))
       .WillOnce(Return(0));
-  EXPECT_CALL(p4c_fe_mock_, ParseP4File())
-      .WillOnce(Return(nullptr));
+  EXPECT_CALL(p4c_fe_mock_, ParseP4File()).WillOnce(Return(nullptr));
   EXPECT_CALL(p4c_fe_mock_, RunFrontEndPass()).Times(0);
   EXPECT_CALL(p4c_fe_mock_, GenerateP4Runtime(_, _)).Times(0);
   EXPECT_CALL(p4c_fe_mock_, RunMidEndPass()).Times(0);
@@ -143,11 +147,14 @@ TEST_F(BackendPassManagerTest, TestFrontEndFail) {
   BackendPassManager backend(&p4c_fe_mock_, test_extensions_);
 
   EXPECT_CALL(p4c_fe_mock_, GetErrorCount())
-      .Times(AnyNumber()).WillRepeatedly(Return(0));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(0));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndReferenceMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_ref_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_ref_map_));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndTypeMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_type_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_type_map_));
   EXPECT_CALL(p4c_fe_mock_, Initialize()).Times(1);
   EXPECT_CALL(p4c_fe_mock_, ProcessCommandLineOptions(2, _))
       .WillOnce(Return(0));
@@ -166,11 +173,14 @@ TEST_F(BackendPassManagerTest, TestMidEndFail) {
   BackendPassManager backend(&p4c_fe_mock_, test_extensions_);
 
   EXPECT_CALL(p4c_fe_mock_, GetErrorCount())
-      .Times(AnyNumber()).WillRepeatedly(Return(0));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(0));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndReferenceMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_ref_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_ref_map_));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndTypeMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_type_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_type_map_));
   EXPECT_CALL(p4c_fe_mock_, Initialize()).Times(1);
   EXPECT_CALL(p4c_fe_mock_, ProcessCommandLineOptions(2, _))
       .WillOnce(Return(0));
@@ -218,11 +228,15 @@ TEST_F(BackendPassManagerTest, TestP4InfoFail) {
 
   // The first 2 calls to GetErrorCount succeed.
   EXPECT_CALL(p4c_fe_mock_, GetErrorCount())
-      .Times(2).WillRepeatedly(Return(0)).RetiresOnSaturation();
+      .Times(2)
+      .WillRepeatedly(Return(0))
+      .RetiresOnSaturation();
   EXPECT_CALL(p4c_fe_mock_, GetMidEndReferenceMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_ref_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_ref_map_));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndTypeMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_type_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_type_map_));
   EXPECT_CALL(p4c_fe_mock_, Initialize()).Times(1);
   EXPECT_CALL(p4c_fe_mock_, ProcessCommandLineOptions(2, _))
       .WillOnce(Return(0));
@@ -247,11 +261,15 @@ TEST_F(BackendPassManagerTest, TestExtensionCompile) {
 
   // The first 4 calls to GetErrorCount succeed.
   EXPECT_CALL(p4c_fe_mock_, GetErrorCount())
-      .Times(4).WillRepeatedly(Return(0)).RetiresOnSaturation();
+      .Times(4)
+      .WillRepeatedly(Return(0))
+      .RetiresOnSaturation();
   EXPECT_CALL(p4c_fe_mock_, GetMidEndReferenceMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_ref_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_ref_map_));
   EXPECT_CALL(p4c_fe_mock_, GetMidEndTypeMap())
-      .Times(AnyNumber()).WillRepeatedly(Return(&dummy_type_map_));
+      .Times(AnyNumber())
+      .WillRepeatedly(Return(&dummy_type_map_));
   EXPECT_CALL(p4c_fe_mock_, Initialize()).Times(1);
   EXPECT_CALL(p4c_fe_mock_, ProcessCommandLineOptions(2, _))
       .WillOnce(Return(0));
@@ -271,8 +289,6 @@ TEST_F(BackendPassManagerTest, TestExtensionCompile) {
   }
   EXPECT_NE(0, backend.Compile());
 }
-
-
 
 }  // namespace p4c_backends
 }  // namespace stratum

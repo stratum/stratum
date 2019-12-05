@@ -14,44 +14,41 @@
 
 // This file implements the Stratum p4c backend's HeaderValidInspector.
 
-#include <utility>
-
 #include "stratum/p4c_backends/fpm/header_valid_inspector.h"
 
+#include <utility>
+
+#include "absl/debugging/leak_check.h"
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/debugging/leak_check.h"
 
 namespace stratum {
 namespace p4c_backends {
 
-HeaderValidInspector::HeaderValidInspector(
-    P4::ReferenceMap* ref_map, P4::TypeMap* type_map)
+HeaderValidInspector::HeaderValidInspector(P4::ReferenceMap* ref_map,
+                                           P4::TypeMap* type_map)
     : ref_map_(ABSL_DIE_IF_NULL(ref_map)),
       type_map_(ABSL_DIE_IF_NULL(type_map)),
       reject_is_valid_(false),
       reject_table_apply_(false),
       valid_headers_in_scope_(nullptr),
-      table_header_map_(nullptr) {
-}
+      table_header_map_(nullptr) {}
 
 // Private constructor for recursing.
 HeaderValidInspector::HeaderValidInspector(
-    P4::ReferenceMap* ref_map, P4::TypeMap* type_map,
-    bool reject_is_valid, bool reject_table_apply,
-    ValidHeaderSet* valid_headers_in_scope,
+    P4::ReferenceMap* ref_map, P4::TypeMap* type_map, bool reject_is_valid,
+    bool reject_table_apply, ValidHeaderSet* valid_headers_in_scope,
     TableHeaderMap* table_header_map)
     : ref_map_(ABSL_DIE_IF_NULL(ref_map)),
       type_map_(ABSL_DIE_IF_NULL(type_map)),
       reject_is_valid_(reject_is_valid),
       reject_table_apply_(reject_table_apply),
       valid_headers_in_scope_(ABSL_DIE_IF_NULL(valid_headers_in_scope)),
-      table_header_map_(ABSL_DIE_IF_NULL(table_header_map)) {
-}
+      table_header_map_(ABSL_DIE_IF_NULL(table_header_map)) {}
 
-void HeaderValidInspector::Inspect(
-    const IR::Statement& statement, TableMapGenerator* table_mapper) {
+void HeaderValidInspector::Inspect(const IR::Statement& statement,
+                                   TableMapGenerator* table_mapper) {
   DCHECK(table_mapper != nullptr);
   DCHECK(valid_headers_in_scope_ == nullptr && table_header_map_ == nullptr)
       << "Unexpected HeaderValidInspector recursion via public Inspect";
@@ -86,8 +83,10 @@ bool HeaderValidInspector::preorder(const IR::IfStatement* statement) {
 
   auto set_ret = valid_headers_in_scope_->insert(valid_header_name);
   if (!set_ret.second) {
-    ::error("Backend: a valid header condition is already in effect for "
-            "%s in %s", valid_header_name.c_str(), statement);
+    ::error(
+        "Backend: a valid header condition is already in effect for "
+        "%s in %s",
+        valid_header_name.c_str(), statement);
     return false;
   }
 
@@ -147,8 +146,8 @@ bool HeaderValidInspector::preorder(const IR::TableHitStatement* statement) {
   return false;
 }
 
-void HeaderValidInspector::Recurse(
-    bool reject_table_apply, const IR::Statement* statement) {
+void HeaderValidInspector::Recurse(bool reject_table_apply,
+                                   const IR::Statement* statement) {
   if (statement == nullptr) return;
   HeaderValidInspector recurse_inspector(
       ref_map_, type_map_, reject_is_valid_, reject_table_apply,
@@ -161,8 +160,10 @@ void HeaderValidInspector::ProcessValidTableHeaders(
   const std::string table_name = p4_table.externalName().c_str();
 
   if (reject_table_apply_) {
-    ::error("Backend: Apply of table %s must follow a valid header "
-            "condition", p4_table);
+    ::error(
+        "Backend: Apply of table %s must follow a valid header "
+        "condition",
+        p4_table);
     return;
   }
 
@@ -184,8 +185,10 @@ void HeaderValidInspector::ProcessValidTableHeaders(
     //      t6.apply();
     //    }
     //  }
-    ::error("Backend: table %s is reused, possibly with different sets "
-            "of valid header conditions", table_name.c_str());
+    ::error(
+        "Backend: table %s is reused, possibly with different sets "
+        "of valid header conditions",
+        table_name.c_str());
     return;
   }
 }

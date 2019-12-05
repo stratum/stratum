@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_SECURITY_AUTH_POLICY_CHECKER_MOCK_H_
 #define STRATUM_LIB_SECURITY_AUTH_POLICY_CHECKER_MOCK_H_
 
 #include <string>
 
-#include "stratum/lib/security/auth_policy_checker.h"
 #include "gmock/gmock.h"
+#include "stratum/lib/security/auth_policy_checker.h"
 
 namespace stratum {
 

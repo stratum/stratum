@@ -13,17 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/p4_service.h"
 
 #include <functional>
 #include <sstream>  // IWYU pragma: keep
 #include <utility>
 
+#include "absl/memory/memory.h"
+#include "absl/numeric/int128.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
+#include "stratum/glue/gtl/cleanup.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/server_writer_wrapper.h"
@@ -31,13 +37,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/numeric/int128.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
-#include "stratum/glue/gtl/cleanup.h"
-#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(forwarding_pipeline_configs_file, "",
               "The latest set of verified ForwardingPipelineConfig protos "
@@ -326,8 +325,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   }
 
   // We need valid election ID for SetForwardingPipelineConfig RPC
-  absl::uint128 election_id = absl::MakeUint128(req->election_id().high(),
-                                                req->election_id().low());
+  absl::uint128 election_id =
+      absl::MakeUint128(req->election_id().high(), req->election_id().low());
   if (election_id == 0) {
     return ::grpc::Status(
         ::grpc::StatusCode::INVALID_ARGUMENT,
@@ -368,11 +367,11 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       ::util::Status error;
       if (req->action() ==
           ::p4::v1::SetForwardingPipelineConfigRequest::VERIFY_AND_COMMIT) {
-        error = switch_interface_->PushForwardingPipelineConfig(
-             node_id, req->config());
+        error = switch_interface_->PushForwardingPipelineConfig(node_id,
+                                                                req->config());
       } else {  // VERIFY_AND_SAVE
-        error = switch_interface_->SaveForwardingPipelineConfig(
-             node_id, req->config());
+        error = switch_interface_->SaveForwardingPipelineConfig(node_id,
+                                                                req->config());
       }
       APPEND_STATUS_IF_ERROR(status, error);
       // If the config push was successful or reported reboot required, save
@@ -395,15 +394,14 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
       break;
     }
     case ::p4::v1::SetForwardingPipelineConfigRequest::COMMIT: {
-      ::util::Status error = switch_interface_->CommitForwardingPipelineConfig(
-           node_id);
+      ::util::Status error =
+          switch_interface_->CommitForwardingPipelineConfig(node_id);
       APPEND_STATUS_IF_ERROR(status, error);
       break;
     }
     case ::p4::v1::SetForwardingPipelineConfigRequest::RECONCILE_AND_COMMIT:
-      return ::grpc::Status(
-          ::grpc::StatusCode::UNIMPLEMENTED,
-          "RECONCILE_AND_COMMIT action not supported yet");
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                            "RECONCILE_AND_COMMIT action not supported yet");
     default:
       return ::grpc::Status(
           ::grpc::StatusCode::INVALID_ARGUMENT,
@@ -478,7 +476,6 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
           ::grpc::StatusCode::INVALID_ARGUMENT,
           absl::StrCat("Invalid action passed for node ", node_id, "."));
   }
-
 
   return ::grpc::Status::OK;
 }

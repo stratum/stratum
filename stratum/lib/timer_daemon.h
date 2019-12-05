@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_TIMER_DAEMON_H_
 #define STRATUM_LIB_TIMER_DAEMON_H_
 
 #include <pthread.h>
+
 #include <algorithm>
 #include <functional>
-#include <vector>
 #include <memory>
+#include <vector>
 
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {

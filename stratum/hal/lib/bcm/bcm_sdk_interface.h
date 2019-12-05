@@ -20,10 +20,10 @@
 
 #include <functional>
 #include <map>
-#include <string>
-#include <vector>
 #include <memory>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"

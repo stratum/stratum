@@ -19,12 +19,12 @@
 #ifndef STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
 #define STRATUM_P4C_BACKENDS_FPM_SWITCH_CASE_DECODER_MOCK_H_
 
-#include <string>
-#include <set>
 #include <map>
+#include <set>
+#include <string>
 
-#include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 #include "gmock/gmock.h"
+#include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 
 namespace stratum {
 namespace p4c_backends {

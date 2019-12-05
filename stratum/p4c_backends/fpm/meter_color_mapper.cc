@@ -16,14 +16,14 @@
 
 #include "stratum/p4c_backends/fpm/meter_color_mapper.h"
 
+#include "absl/debugging/leak_check.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/debugging/leak_check.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -41,8 +41,7 @@ const IR::P4Control* MeterColorMapper::Apply(const IR::P4Control& control) {
   ClearControlState();
   absl::LeakCheckDisabler disable_ir_control_leak_checks;
   auto new_body = control.body->apply(*this);
-  if (new_body == control.body)
-    return &control;
+  if (new_body == control.body) return &control;
 
   // Since the control body has transformed and the input control is
   // immutable, the return value is a new P4Control with the transformed
@@ -60,8 +59,10 @@ const IR::Node* MeterColorMapper::preorder(IR::BlockStatement* statement) {
 
 const IR::Node* MeterColorMapper::preorder(IR::IfStatement* statement) {
   if (transforming_if_) {
-    ::error("Backend: Stratum FPM does not support nested %s "
-            "within a meter color condition", statement);
+    ::error(
+        "Backend: Stratum FPM does not support nested %s "
+        "within a meter color condition",
+        statement);
     transforming_if_ = false;
     prune();
     return statement;
@@ -91,9 +92,9 @@ const IR::Node* MeterColorMapper::preorder(IR::IfStatement* statement) {
   std::string color_actions_text;
   bool string_ok = PrintProtoToString(color_actions_, &color_actions_text).ok();
   DCHECK(string_ok) << "Color actions message did not convert to string";
-  return new IR::MeterColorStatement(
-      statement->srcInfo, statement->condition, statement->ifTrue,
-      statement->ifFalse, color_actions_text);
+  return new IR::MeterColorStatement(statement->srcInfo, statement->condition,
+                                     statement->ifTrue, statement->ifFalse,
+                                     color_actions_text);
 }
 
 const IR::Node* MeterColorMapper::preorder(IR::MethodCallStatement* statement) {
@@ -116,8 +117,10 @@ const IR::Node* MeterColorMapper::preorder(IR::MethodCallStatement* statement) {
       (method_op.primitives(0) != P4_ACTION_OP_CLONE &&
        method_op.primitives(0) != P4_ACTION_OP_DROP)) {
     transforming_if_ = false;
-    ::error("Backend: Stratum FPM only allows clone and drop externs "
-            "in meter actions %s", statement);
+    ::error(
+        "Backend: Stratum FPM only allows clone and drop externs "
+        "in meter actions %s",
+        statement);
     prune();
     return statement;
   }
@@ -127,12 +130,9 @@ const IR::Node* MeterColorMapper::preorder(IR::MethodCallStatement* statement) {
   hal::P4ActionDescriptor::P4MeterColorAction* color_action =
       color_actions_.add_color_actions();
   *(color_action->add_ops()) = method_op;
-  if (green_condition_)
-    color_action->add_colors(P4_METER_GREEN);
-  if (yellow_condition_)
-    color_action->add_colors(P4_METER_YELLOW);
-  if (red_condition_)
-    color_action->add_colors(P4_METER_RED);
+  if (green_condition_) color_action->add_colors(P4_METER_GREEN);
+  if (yellow_condition_) color_action->add_colors(P4_METER_YELLOW);
+  if (red_condition_) color_action->add_colors(P4_METER_RED);
 
   prune();
   return statement;
@@ -179,16 +179,19 @@ bool MeterColorMapper::DecodeCondition(const IR::IfStatement& statement) {
   auto iter = table_mapper_->generated_map().table_map().find(color_field);
   if (iter == table_mapper_->generated_map().table_map().end() ||
       !iter->second.has_field_descriptor()) {
-    ::error("Backend: Color field operand %s in meter color condition %s is "
-            "not a valid mapped field", color_field, statement.condition);
+    ::error(
+        "Backend: Color field operand %s in meter color condition %s is "
+        "not a valid mapped field",
+        color_field, statement.condition);
     return false;
   }
 
   if (iter->second.field_descriptor().type() != P4_FIELD_TYPE_COLOR) {
-    ::error("Backend: Color field operand %s in meter color condition %s is "
-            "type %s, expected P4_FIELD_TYPE_COLOR",
-            color_field, statement.condition,
-            P4FieldType_Name(iter->second.field_descriptor().type()));
+    ::error(
+        "Backend: Color field operand %s in meter color condition %s is "
+        "type %s, expected P4_FIELD_TYPE_COLOR",
+        color_field, statement.condition,
+        P4FieldType_Name(iter->second.field_descriptor().type()));
     return false;
   }
 
@@ -212,9 +215,9 @@ void MeterColorMapper::SetColorConditions(const std::string& color_value) {
     red_condition_ = true;
   if (!condition_equal_) InvertColorConditions();
 
-  VLOG(1) << "Color conditions " << (green_condition_ ? "G" : "-")
-          << "/" << (yellow_condition_ ? "Y" : "-")
-          << "/" << (red_condition_ ? "R" : "-");
+  VLOG(1) << "Color conditions " << (green_condition_ ? "G" : "-") << "/"
+          << (yellow_condition_ ? "Y" : "-") << "/"
+          << (red_condition_ ? "R" : "-");
 }
 
 void MeterColorMapper::InvertColorConditions() {
@@ -226,10 +229,7 @@ void MeterColorMapper::InvertColorConditions() {
 // IfStatementColorInspector helper implementation starts here.
 
 IfStatementColorInspector::IfStatementColorInspector()
-    : equ_found_(false),
-      negate_(false),
-      relational_operators_(0) {
-}
+    : equ_found_(false), negate_(false), relational_operators_(0) {}
 
 bool IfStatementColorInspector::CanTransform(const IR::IfStatement& statement) {
   equ_found_ = false;
@@ -257,7 +257,7 @@ bool IfStatementColorInspector::CanTransform(const IR::IfStatement& statement) {
   }
   if (condition_error) {
     ::error("Backend: Unsupported conditional expression %s for meter color",
-        statement.condition);
+            statement.condition);
   }
 
   return can_transform;
@@ -298,9 +298,10 @@ bool IfStatementColorInspector::preorder(const IR::Member* member) {
       field_inspector.ExtractName(*member);
       color_field_ = field_inspector.field_name();
       if (color_field_.empty()) {
-        ::error("Backend: Color field operand %s in meter color condition is "
-                "not a valid field path expression %s",
-                color_field_, member->expr);
+        ::error(
+            "Backend: Color field operand %s in meter color condition is "
+            "not a valid field path expression %s",
+            color_field_, member->expr);
         return false;
       }
     } else if (member->expr->is<IR::TypeNameExpression>()) {

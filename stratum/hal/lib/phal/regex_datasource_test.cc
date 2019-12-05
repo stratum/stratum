@@ -13,17 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/phal/regex_datasource.h"
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/fixed_stringsource.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {

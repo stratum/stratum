@@ -16,9 +16,9 @@
 
 #include "stratum/p4c_backends/fpm/target_info.h"
 
-#include "stratum/p4c_backends/fpm/target_info_mock.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "stratum/p4c_backends/fpm/target_info_mock.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -33,9 +33,7 @@ class TargetInfoTest : public testing::Test {
     TargetInfo::InjectSingleton(target_info_mock_);
   }
 
-  static void TearDownTestCase() {
-    delete target_info_mock_;
-  }
+  static void TearDownTestCase() { delete target_info_mock_; }
 
   static TargetInfoMock* target_info_mock_;
 };

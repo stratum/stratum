@@ -13,26 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
-
 #include "stratum/lib/utils.h"
 
+#include <algorithm>
+
 #include "gflags/gflags.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/public/lib/error.h"
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/public/lib/error.h"
 
 DECLARE_string(test_tmpdir);
 
 namespace stratum {
 
+using stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
-using stratum::test_utils::StatusIs;
 
 TEST(CommonUtilsTest, PrintArrayForEmptyArray) {
   int iarray[] = {};
@@ -157,7 +157,7 @@ TEST(CommonUtilsTest, CreateDirWhichAlreadyExistsAndNotADir) {
   ASSERT_OK(WriteStringToFile(some_string, filename));
 
   EXPECT_THAT(RecursivelyCreateDir(filename),
-    StatusIs(_, ERR_INVALID_PARAM, HasSubstr("is not a dir")));
+              StatusIs(_, ERR_INVALID_PARAM, HasSubstr("is not a dir")));
 }
 
 TEST(CommonUtilsTest, ProtoSerialize) {
@@ -217,7 +217,6 @@ TEST(CommonUtilsTest, ProtoSerialize) {
             });
   EXPECT_EQ(ProtoSerialize(e1), ProtoSerialize(e2));
 }
-
 
 TEST(CommonUtilsTest, ProtoEqual) {
   ::p4::v1::TableEntry e1, e2;

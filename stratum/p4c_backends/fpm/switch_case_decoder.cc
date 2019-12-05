@@ -16,11 +16,11 @@
 
 #include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 
+#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -55,25 +55,30 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
   applied_table_ = P4::TableApplySolver::isActionRun(
       switch_statement.expression, ref_map_, type_map_);
   if (!applied_table_) {
-    ::error("Backend: Unexpected switch statement expression %s. "
-            "Expession must be table.apply().action_run",
-            switch_statement.expression);
+    ::error(
+        "Backend: Unexpected switch statement expression %s. "
+        "Expession must be table.apply().action_run",
+        switch_statement.expression);
     return;
   }
 
   for (auto switch_case : switch_statement.cases) {
     ClearCaseState();
     if (switch_case->label->is<IR::DefaultExpression>()) {
-      ::error("Backend: Stratum FPM does not allow default cases in "
-              "P4 switch statement %s", switch_case);
+      ::error(
+          "Backend: Stratum FPM does not allow default cases in "
+          "P4 switch statement %s",
+          switch_case);
       continue;
     }
     auto case_label = switch_case->label->to<IR::PathExpression>();
     DCHECK(case_label != nullptr) << "Expected p4c frontend/midend to reject "
                                   << "invalid switch case label type";
     if (!case_label->type->is<IR::Type_Action>()) {
-      ::error("Backend: Expected IR::Type_Action for switch case label - "
-              "found %s", case_label->type);
+      ::error(
+          "Backend: Expected IR::Type_Action for switch case label - "
+          "found %s",
+          case_label->type);
       return;
     }
 
@@ -81,8 +86,10 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
     auto iter = action_name_map_.find(action_);
     if (iter == action_name_map_.end()) {
       // TODO(unknown): This might be a compiler bug.
-      ::error("Backend: Internal action name %s is not an externally "
-              "visible action", action_);
+      ::error(
+          "Backend: Internal action name %s is not an externally "
+          "visible action",
+          action_);
       return;
     }
     action_ = iter->second;  // The external name is now in action_.
@@ -102,8 +109,8 @@ void SwitchCaseDecoder::Decode(const IR::SwitchStatement& switch_statement) {
   // TODO(unknown): This should be converted to use IndirectActions.
   if (::errorCount() == 0) {
     for (const auto& mapper_pair : color_actions_) {
-      table_mapper_->AddMeterColorActionsFromString(
-          mapper_pair.first, mapper_pair.second);
+      table_mapper_->AddMeterColorActionsFromString(mapper_pair.first,
+                                                    mapper_pair.second);
     }
   }
 }
@@ -137,9 +144,7 @@ void SwitchCaseDecoder::ClearDecodeState() {
   ClearCaseState();
 }
 
-void SwitchCaseDecoder::ClearCaseState() {
-  action_.clear();
-}
+void SwitchCaseDecoder::ClearCaseState() { action_.clear(); }
 
 }  // namespace p4c_backends
 }  // namespace stratum

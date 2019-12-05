@@ -19,17 +19,18 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
+
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/backends/p4test/midend.h"
+#include "external/com_github_p4lang_p4c/control-plane/p4RuntimeSerializer.h"
+#include "external/com_github_p4lang_p4c/ir/json_loader.h"
 #include "gflags/gflags.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 #include "stratum/p4c_backends/fpm/hit_assign_mapper.h"
 #include "stratum/p4c_backends/fpm/meter_color_mapper.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/backends/p4test/midend.h"
-#include "external/com_github_p4lang_p4c/control-plane/p4RuntimeSerializer.h"
-#include "external/com_github_p4lang_p4c/ir/json_loader.h"
-#include "p4/config/v1/p4info.pb.h"
 
 DECLARE_string(p4c_fe_options);  // Specifies the p4 spec file.
 
@@ -38,8 +39,7 @@ namespace p4c_backends {
 
 IRTestHelperJson::IRTestHelperJson()
     : p4c_context_(new P4CContextWithOptions<CompilerOptions>),
-      ir_top_level_(nullptr) {
-}
+      ir_top_level_(nullptr) {}
 
 bool IRTestHelperJson::GenerateTestIR(const std::string& json_ir_file) {
   bool ir_valid = false;
@@ -70,8 +70,7 @@ bool IRTestHelperJson::GenerateTestIR(const std::string& json_ir_file) {
 
 bool IRTestHelperJson::GenerateTestIRAndInspectProgram(
     const std::string& json_ir_file) {
-  if (!GenerateTestIR(json_ir_file))
-    return false;
+  if (!GenerateTestIR(json_ir_file)) return false;
   ir_top_level_->getProgram()->apply(program_inspector_);
   for (auto control : program_inspector_.controls()) {
     control_name_to_ir_node_[std::string(control->externalName())] = control;
@@ -108,8 +107,8 @@ const IR::P4Control* IRTestHelperJson::TransformP4Control(
         // field type.
         CHECK(!color_field_name_.empty());
         ir_control = MeterColorMapper::RunPreTestTransform(
-            *ir_control, color_field_name_,
-            &mid_end_refmap_, &mid_end_typemap_);
+            *ir_control, color_field_name_, &mid_end_refmap_,
+            &mid_end_typemap_);
         break;
     }
     if (::errorCount() != 0) return nullptr;
@@ -126,9 +125,9 @@ bool IRTestHelperJson::RunMapPass() {
   // the P4Program.
   auto evaluator = new P4::EvaluatorPass(&mid_end_refmap_, &mid_end_typemap_);
   PassManager passes = {
-    new P4::ResolveReferences(&mid_end_refmap_),
-    new P4::TypeInference(&mid_end_refmap_, &mid_end_typemap_),
-    evaluator,
+      new P4::ResolveReferences(&mid_end_refmap_),
+      new P4::TypeInference(&mid_end_refmap_, &mid_end_typemap_),
+      evaluator,
   };
 
   const IR::P4Program* p4_program = program_->apply(passes);

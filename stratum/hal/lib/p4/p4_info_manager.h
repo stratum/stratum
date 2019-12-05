@@ -24,9 +24,9 @@
 #include <functional>
 #include <string>
 
-#include "google/protobuf/repeated_field.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "google/protobuf/repeated_field.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"

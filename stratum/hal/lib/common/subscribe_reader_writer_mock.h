@@ -18,8 +18,8 @@
 #ifndef STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_SUBSCRIBE_READER_WRITER_MOCK_H_
 
-#include "gnmi/gnmi.grpc.pb.h"
 #include "gmock/gmock.h"
+#include "gnmi/gnmi.grpc.pb.h"
 #include "gtest/gtest.h"
 
 // A mock class for ServerReaderWriter stream used for gNMI subscriptions. Used

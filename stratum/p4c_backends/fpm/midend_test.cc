@@ -19,12 +19,12 @@
 #include <memory>
 #include <string>
 
-#include "stratum/p4c_backends/common/program_inspector.h"
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/frontends/common/options.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/common/program_inspector.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -38,7 +38,8 @@ class MidEndTest : public testing::Test {
  public:
   void SetUp() override {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string kTestP4IRFile = "stratum/"
+    const std::string kTestP4IRFile =
+        "stratum/"
         "p4c_backends/fpm/testdata/no_table_tmp.ir.json";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestP4IRFile));
   }
@@ -88,12 +89,12 @@ TEST_F(MidEndTest, TestNoActionTableTmp) {
   // exactly one table and action.
   ProgramInspector prog_inspector;
   top_level->getProgram()->apply(prog_inspector);
-  EXPECT_EQ(1,  prog_inspector.actions().size());
+  EXPECT_EQ(1, prog_inspector.actions().size());
   for (const auto& action_iter : prog_inspector.actions()) {
     const std::string name = std::string(action_iter.first->name.toString());
     EXPECT_EQ(std::string::npos, name.find("tmp"));
   }
-  EXPECT_EQ(1,  prog_inspector.tables().size());
+  EXPECT_EQ(1, prog_inspector.tables().size());
   for (const auto& table_iter : prog_inspector.tables()) {
     const std::string name = std::string(table_iter->name.toString());
     EXPECT_EQ(std::string::npos, name.find("tmp"));

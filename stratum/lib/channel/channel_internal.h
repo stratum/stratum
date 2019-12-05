@@ -20,8 +20,8 @@
 
 #include <memory>
 
-#include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace channel_internal {

@@ -19,8 +19,8 @@
 #ifndef STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
 #define STRATUM_P4C_BACKENDS_COMMON_BACKEND_EXTENSION_MOCK_H_
 
-#include "stratum/p4c_backends/common/backend_extension_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/p4c_backends/common/backend_extension_interface.h"
 
 namespace stratum {
 namespace p4c_backends {

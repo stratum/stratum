@@ -16,9 +16,9 @@
 
 #include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
 
-#include "gtest/gtest.h"
 #include "external/com_github_p4lang_p4c/frontends/common/options.h"
 #include "external/com_github_p4lang_p4c/lib/compile_context.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
@@ -30,13 +30,12 @@ namespace p4c_backends {
 class BcmTunnelOptimizerTest : public testing::Test {
  public:
   BcmTunnelOptimizerTest()
-      : test_p4c_context_(new P4CContextWithOptions<CompilerOptions>) {
-  }
+      : test_p4c_context_(new P4CContextWithOptions<CompilerOptions>) {}
 
   // Initializes common encap/decap properties in descriptor.
-  void SetUpCommonTunnelProperties(
-      bool is_gre, bool ecn_copy, bool dscp_copy, bool ttl_copy,
-      hal::P4ActionDescriptor* descriptor) {
+  void SetUpCommonTunnelProperties(bool is_gre, bool ecn_copy, bool dscp_copy,
+                                   bool ttl_copy,
+                                   hal::P4ActionDescriptor* descriptor) {
     auto tunnel_properties = descriptor->mutable_tunnel_properties();
     tunnel_properties->set_is_gre_tunnel(is_gre);
     tunnel_properties->mutable_ecn_value()->set_copy(ecn_copy);
@@ -55,8 +54,9 @@ class BcmTunnelOptimizerTest : public testing::Test {
 // Verifies that Optimize accepts the minimum set of valid tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestOptimizeValidTunnel) {
   hal::P4ActionDescriptor input_action;
-  input_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
+  input_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
   EXPECT_TRUE(bcm_tunnel_optimizer_.Optimize(input_action, &optimized_action_));
   EXPECT_EQ(0, ::errorCount());
 }
@@ -64,10 +64,12 @@ TEST_F(BcmTunnelOptimizerTest, TestOptimizeValidTunnel) {
 // Verifies that Optimize removes encap header-to-header copy assignments.
 TEST_F(BcmTunnelOptimizerTest, TestOptimizeEncapHeader) {
   hal::P4ActionDescriptor input_action;
-  input_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
-  input_action.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV4);
+  input_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
+  input_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV4);
   auto header_copy = input_action.add_assignments();
   header_copy->mutable_assigned_value()->set_source_header_name(
       "hdr.ipv4_base");
@@ -88,10 +90,12 @@ TEST_F(BcmTunnelOptimizerTest, TestOptimizeEncapHeader) {
 // Verifies that Optimize removes decap header-to-header copy assignments.
 TEST_F(BcmTunnelOptimizerTest, TestOptimizeDecapHeader) {
   hal::P4ActionDescriptor input_action;
-  input_action.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV6);
-  input_action.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV4);
+  input_action.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV6);
+  input_action.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV4);
   auto header_copy = input_action.add_assignments();
   header_copy->mutable_assigned_value()->set_source_header_name(
       "hdr.inner.ipv4");
@@ -113,11 +117,13 @@ TEST_F(BcmTunnelOptimizerTest, TestOptimizeDecapHeader) {
 // tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeValidTunnel) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
   EXPECT_TRUE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_EQ(0, ::errorCount());
@@ -126,15 +132,19 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeValidTunnel) {
 // Verifies that MergeAndOptimize properly merges encap properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeEncapHeaders) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV4);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV4);
   EXPECT_TRUE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_EQ(0, ::errorCount());
@@ -148,11 +158,13 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeEncapHeaders) {
 // Verifies that MergeAndOptimize properly merges decap properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeDecapHeaders) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV6);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV6);
   EXPECT_TRUE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_EQ(0, ::errorCount());
@@ -166,15 +178,19 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeDecapHeaders) {
 // header from two actions.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeSameEncapInnerHeaders) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV4);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV4);
   EXPECT_TRUE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_EQ(0, ::errorCount());
@@ -188,11 +204,13 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeSameEncapInnerHeaders) {
 // header from two actions.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeSameDecapInnerHeaders) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV4);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV4);
   EXPECT_TRUE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_EQ(0, ::errorCount());
@@ -204,8 +222,8 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeSameDecapInnerHeaders) {
 // Verifies that Optimize fails with no tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestOptimizeNoTunnelError) {
   hal::P4ActionDescriptor input_action;
-  EXPECT_FALSE(bcm_tunnel_optimizer_.Optimize(
-      input_action, &optimized_action_));
+  EXPECT_FALSE(
+      bcm_tunnel_optimizer_.Optimize(input_action, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
 }
 
@@ -214,8 +232,9 @@ TEST_F(BcmTunnelOptimizerTest, TestOptimizeNoTunnelError) {
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeInvalidTunnelAction1) {
   hal::P4ActionDescriptor input_action1;
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
@@ -225,8 +244,9 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeInvalidTunnelAction1) {
 // tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeInvalidTunnelAction2) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
@@ -238,8 +258,8 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeInvalidTunnelAction2) {
 TEST_F(BcmTunnelOptimizerTest, TestOptimizeNoEncapDecap) {
   hal::P4ActionDescriptor input_action;
   input_action.mutable_tunnel_properties()->set_is_gre_tunnel(true);
-  EXPECT_FALSE(bcm_tunnel_optimizer_.Optimize(
-      input_action, &optimized_action_));
+  EXPECT_FALSE(
+      bcm_tunnel_optimizer_.Optimize(input_action, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
 }
 
@@ -247,11 +267,13 @@ TEST_F(BcmTunnelOptimizerTest, TestOptimizeNoEncapDecap) {
 // input decaps.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeEncapDecapConflict) {
   hal::P4ActionDescriptor input_action1;
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
-  input_action2.mutable_tunnel_properties()->mutable_decap()->
-      add_decap_inner_headers(P4_HEADER_IPV4);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_decap()
+      ->add_decap_inner_headers(P4_HEADER_IPV4);
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
@@ -261,17 +283,19 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeEncapDecapConflict) {
 // tunnel properties GRE flags.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictGRE) {
   hal::P4ActionDescriptor no_gre_action;
-  no_gre_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
+  no_gre_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
   SetUpCommonTunnelProperties(
       /*is_gre=*/false, false, false, false, &no_gre_action);
   hal::P4ActionDescriptor gre_action;
-  gre_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
+  gre_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
   SetUpCommonTunnelProperties(
       /*is_gre=*/true, false, false, false, &gre_action);
-  EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
-      no_gre_action, gre_action, &optimized_action_));
+  EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(no_gre_action, gre_action,
+                                                      &optimized_action_));
   EXPECT_NE(0, ::errorCount());
 }
 
@@ -279,15 +303,17 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictGRE) {
 // ECN treatment in tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictECN) {
   hal::P4ActionDescriptor no_ecn_action;
-  no_ecn_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  SetUpCommonTunnelProperties(
-      false, /*ecn_copy=*/false, false, false, &no_ecn_action);
+  no_ecn_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  SetUpCommonTunnelProperties(false, /*ecn_copy=*/false, false, false,
+                              &no_ecn_action);
   hal::P4ActionDescriptor copy_ecn_action;
-  copy_ecn_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
-  SetUpCommonTunnelProperties(
-      false, /*ecn_copy=*/true, false, false, &copy_ecn_action);
+  copy_ecn_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
+  SetUpCommonTunnelProperties(false, /*ecn_copy=*/true, false, false,
+                              &copy_ecn_action);
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       no_ecn_action, copy_ecn_action, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
@@ -297,15 +323,17 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictECN) {
 // DSCP treatment in tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictDSCP) {
   hal::P4ActionDescriptor no_dscp_action;
-  no_dscp_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  SetUpCommonTunnelProperties(
-      false, false, /*dscp_copy=*/false, false, &no_dscp_action);
+  no_dscp_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  SetUpCommonTunnelProperties(false, false, /*dscp_copy=*/false, false,
+                              &no_dscp_action);
   hal::P4ActionDescriptor copy_dscp_action;
-  copy_dscp_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
-  SetUpCommonTunnelProperties(
-      false, false, /*dscp_copy=*/true, false, &copy_dscp_action);
+  copy_dscp_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
+  SetUpCommonTunnelProperties(false, false, /*dscp_copy=*/true, false,
+                              &copy_dscp_action);
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       no_dscp_action, copy_dscp_action, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
@@ -315,15 +343,17 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictDSCP) {
 // TTL treatment in tunnel properties.
 TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictTTL) {
   hal::P4ActionDescriptor no_ttl_action;
-  no_ttl_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  SetUpCommonTunnelProperties(
-      false, false, false, /*ttl_copy=*/false, &no_ttl_action);
+  no_ttl_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  SetUpCommonTunnelProperties(false, false, false, /*ttl_copy=*/false,
+                              &no_ttl_action);
   hal::P4ActionDescriptor copy_ttl_action;
-  copy_ttl_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
-  SetUpCommonTunnelProperties(
-      false, false, false, /*ttl_copy=*/true, &copy_ttl_action);
+  copy_ttl_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
+  SetUpCommonTunnelProperties(false, false, false, /*ttl_copy=*/true,
+                              &copy_ttl_action);
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       no_ttl_action, copy_ttl_action, &optimized_action_));
   EXPECT_NE(0, ::errorCount());
@@ -335,17 +365,21 @@ TEST_F(BcmTunnelOptimizerTest, TestMergeAndOptimizeConflictOuterHeader) {
   hal::P4ActionDescriptor input_action1;
   SetUpCommonTunnelProperties(
       /*is_gre=*/true, false, false, false, &input_action1);
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
-  input_action1.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
+  input_action1.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV4);
   hal::P4ActionDescriptor input_action2;
   SetUpCommonTunnelProperties(
       /*is_gre=*/true, false, false, false, &input_action2);
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
-  input_action2.mutable_tunnel_properties()->mutable_encap()->
-      set_encap_outer_header(P4_HEADER_IPV6);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
+  input_action2.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->set_encap_outer_header(P4_HEADER_IPV6);
   EXPECT_FALSE(bcm_tunnel_optimizer_.MergeAndOptimize(
       input_action1, input_action2, &optimized_action_));
   EXPECT_NE(0, ::errorCount());

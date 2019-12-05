@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SWITCH_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SWITCH_H_
 
@@ -24,13 +23,13 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum//hal/lib/bcm/bcm_global_vars.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 #include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

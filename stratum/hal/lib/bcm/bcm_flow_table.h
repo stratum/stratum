@@ -15,25 +15,23 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_FLOW_TABLE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_FLOW_TABLE_H_
 
-#include <utility>
-#include <string>
 #include <algorithm>
+#include <string>
+#include <utility>
 
+#include "absl/container/node_hash_set.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/container/node_hash_set.h"
-#include "p4/v1/p4runtime.pb.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-
-#include "absl/strings/string_view.h"
-#include "absl/strings/str_cat.h"
 
 namespace stratum {
 namespace hal {

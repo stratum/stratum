@@ -15,10 +15,15 @@
 
 #include "stratum/hal/lib/common/certificate_management_service.h"
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
@@ -27,11 +32,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -177,10 +177,10 @@ TEST_P(CertificateManagementServiceTest, CanGenerateCSRSuccess) {
 }
 
 INSTANTIATE_TEST_SUITE_P(CertificateManagementServiceTestWithMode,
-                        CertificateManagementServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         CertificateManagementServiceTest,
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

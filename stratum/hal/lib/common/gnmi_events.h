@@ -15,23 +15,22 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 #define STRATUM_HAL_LIB_COMMON_GNMI_EVENTS_H_
 
-#include <memory>
-#include <string>
 #include <list>
+#include <memory>
 #include <set>
+#include <string>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/timer_daemon.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace hal {
@@ -252,7 +251,7 @@ class PortLacpRouterMacChangedEvent
     : public PerPortGnmiEvent<PortLacpRouterMacChangedEvent> {
  public:
   PortLacpRouterMacChangedEvent(uint64 node_id, uint32 port_id,
-                                  uint64 new_system_id_mac)
+                                uint64 new_system_id_mac)
       : PerPortGnmiEvent(node_id, port_id),
         new_system_id_mac_(new_system_id_mac) {}
   ~PortLacpRouterMacChangedEvent() override {}
@@ -357,7 +356,7 @@ class PortAutonegChangedEvent
     : public PerPortGnmiEvent<PortAutonegChangedEvent> {
  public:
   PortAutonegChangedEvent(uint64 node_id, uint32 port_id,
-                                const TriState& new_state)
+                          const TriState& new_state)
       : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
   ~PortAutonegChangedEvent() override {}
 
@@ -589,8 +588,8 @@ class EventHandlerListBase {
   mutable absl::Mutex access_lock_;
 
   // A set of event handlers that are interested in this ('E') type of events.
-  std::set<EventHandlerRecordPtr, std::owner_less<EventHandlerRecordPtr>> handlers_
-      GUARDED_BY(access_lock_);
+  std::set<EventHandlerRecordPtr, std::owner_less<EventHandlerRecordPtr>>
+      handlers_ GUARDED_BY(access_lock_);
 };
 
 // A class that keeps track of all event handlers that are interested in

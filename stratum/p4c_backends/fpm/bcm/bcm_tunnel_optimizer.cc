@@ -19,20 +19,20 @@
 #include <set>
 #include <vector>
 
-#include "stratum/glue/logging.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 BcmTunnelOptimizer::BcmTunnelOptimizer()
-    : encap_or_decap_(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
+    : encap_or_decap_(
+          hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
 }
 
-bool BcmTunnelOptimizer::Optimize(
-    const hal::P4ActionDescriptor& input_action,
-    hal::P4ActionDescriptor* optimized_action) {
+bool BcmTunnelOptimizer::Optimize(const hal::P4ActionDescriptor& input_action,
+                                  hal::P4ActionDescriptor* optimized_action) {
   DCHECK(optimized_action != nullptr);
   InitInternalState();
   if (!IsValidTunnelAction(input_action)) return false;
@@ -59,7 +59,8 @@ bool BcmTunnelOptimizer::MergeAndOptimize(
 
 void BcmTunnelOptimizer::InitInternalState() {
   internal_descriptor_.Clear();
-  encap_or_decap_ = hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
+  encap_or_decap_ =
+      hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
 }
 
 // If there is ever a non-BCM target, this might belong in a common base class.
@@ -68,11 +69,11 @@ bool BcmTunnelOptimizer::IsValidTunnelAction(
   bool valid = action.has_tunnel_properties();
   if (valid) {
     auto encap_or_decap = action.tunnel_properties().encap_or_decap_case();
-    if (encap_or_decap !=
-        hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET &&
+    if (encap_or_decap != hal::P4ActionDescriptor::P4TunnelProperties::
+                              ENCAP_OR_DECAP_NOT_SET &&
         (encap_or_decap == encap_or_decap_ ||
-         encap_or_decap_ ==
-         hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET)) {
+         encap_or_decap_ == hal::P4ActionDescriptor::P4TunnelProperties::
+                                ENCAP_OR_DECAP_NOT_SET)) {
       encap_or_decap_ = encap_or_decap;
     } else {
       valid = false;
@@ -90,7 +91,8 @@ bool BcmTunnelOptimizer::IsValidTunnelAction(
 bool BcmTunnelOptimizer::MergeTunnelActions(
     const hal::P4ActionDescriptor& input_action1,
     const hal::P4ActionDescriptor& input_action2) {
-  DCHECK_NE(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET, encap_or_decap_);
+  DCHECK_NE(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET,
+            encap_or_decap_);
 
   // The inner headers can be different in the merged actions.  Differences
   // will be handled during P4Runtime action processing. GRE, ECN, DSCP, and
@@ -99,9 +101,9 @@ bool BcmTunnelOptimizer::MergeTunnelActions(
   // headers, and then using a MessageDifferencer to compare the remaining
   // fields.
   hal::P4ActionDescriptor::P4TunnelProperties tunnel1 =
-                                            input_action1.tunnel_properties();
+      input_action1.tunnel_properties();
   hal::P4ActionDescriptor::P4TunnelProperties tunnel2 =
-                                            input_action2.tunnel_properties();
+      input_action2.tunnel_properties();
   if (encap_or_decap_ == hal::P4ActionDescriptor::P4TunnelProperties::kEncap) {
     tunnel1.mutable_encap()->clear_encap_inner_headers();
     tunnel2.mutable_encap()->clear_encap_inner_headers();
@@ -160,8 +162,7 @@ void BcmTunnelOptimizer::OptimizeEncap() {
   // pending P4Runtime switch implementation.
 }
 
-void BcmTunnelOptimizer::OptimizeDecap() {
-}
+void BcmTunnelOptimizer::OptimizeDecap() {}
 
 void BcmTunnelOptimizer::RemoveDuplicateHeaderTypes(
     ::google::protobuf::RepeatedField<int>* header_types) {

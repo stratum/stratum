@@ -17,8 +17,8 @@
 #include "stratum/p4c_backends/fpm/pipeline_optimizer.h"
 
 #include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
 #include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
 #include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
 #include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
@@ -43,8 +43,7 @@ const IR::P4Control* PipelineOptimizer::Optimize(const IR::P4Control& control) {
   // potential optimizations.
   FixedTableInspector fixed_table_inspector;
   if (!fixed_table_inspector.FindFixedTables(control)) {
-    VLOG(2) << "P4Control " << control.externalName()
-            << " has no fixed tables";
+    VLOG(2) << "P4Control " << control.externalName() << " has no fixed tables";
     return &control;
   }
 

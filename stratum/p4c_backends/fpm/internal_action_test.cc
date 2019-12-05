@@ -14,10 +14,13 @@
 
 // This file tests the InternalAction class.
 
-#include <memory>
-
 #include "stratum/p4c_backends/fpm/internal_action.h"
 
+#include <memory>
+
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
@@ -25,9 +28,6 @@
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/fpm/tunnel_optimizer_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -54,26 +54,24 @@ class InternalActionTest : public testing::Test {
   void SetUp() override {
     const std::string test_action_name = kOriginalAction;
     table_map_generator_.AddAction(test_action_name);
-    table_map_generator_.AssignActionParameterToField(
-        test_action_name, "param0", "field0");
+    table_map_generator_.AssignActionParameterToField(test_action_name,
+                                                      "param0", "field0");
     original_action_ = FindActionDescriptorOrDie(
         test_action_name, table_map_generator_.generated_map());
-    test_internal_action_ =
-        absl::make_unique<InternalAction>(test_action_name, original_action_,
-                                          table_map_generator_.generated_map(),
-                                          &tunnel_optimizer_mock_);
+    test_internal_action_ = absl::make_unique<InternalAction>(
+        test_action_name, original_action_,
+        table_map_generator_.generated_map(), &tunnel_optimizer_mock_);
   }
 
   // These functions add various types of assignments into kAssignmentAction.
   void AddParameterAssignment(const std::string& dest_field,
                               const std::string& action_param) {
     table_map_generator_.AddAction(kAssignmentAction);
-    table_map_generator_.AssignActionParameterToField(
-        kAssignmentAction, action_param, dest_field);
+    table_map_generator_.AssignActionParameterToField(kAssignmentAction,
+                                                      action_param, dest_field);
   }
 
-  void AddConstantAssignment(const std::string& dest_field,
-                             int64 constant_64) {
+  void AddConstantAssignment(const std::string& dest_field, int64 constant_64) {
     P4AssignSourceValue source_value;
     source_value.set_constant_param(constant_64);
     table_map_generator_.AddAction(kAssignmentAction);
@@ -119,8 +117,8 @@ class InternalActionTest : public testing::Test {
     hal::P4ActionDescriptor internal_action;
     internal_action.set_type(P4_ACTION_TYPE_FUNCTION);
     internal_action.add_primitive_ops(P4_ACTION_OP_DROP);
-    table_map_generator_.AddInternalAction(
-        kLinkedInternalActionName, internal_action);
+    table_map_generator_.AddInternalAction(kLinkedInternalActionName,
+                                           internal_action);
 
     // The regular P4 action descriptor contains a clone primitive and a
     // link to the internal action above.
@@ -131,8 +129,8 @@ class InternalActionTest : public testing::Test {
     auto redirect = action_to_internal.add_action_redirects();
     redirect->add_internal_links()->set_internal_action_name(
         kLinkedInternalActionName);
-    table_map_generator_.ReplaceActionDescriptor(
-        kActionToInternalName, action_to_internal);
+    table_map_generator_.ReplaceActionDescriptor(kActionToInternalName,
+                                                 action_to_internal);
   }
 
   // Counts the number of times that test_internal_action_ assigns param_name.
@@ -216,10 +214,10 @@ TEST_F(InternalActionTest, TestMergeAction) {
   // and a drop primitive.
   const std::string kMergeAction = "hidden-action";
   table_map_generator_.AddAction(kMergeAction);
-  table_map_generator_.AssignActionParameterToField(
-      kMergeAction, "param1", "field1");
-  table_map_generator_.AssignActionParameterToField(
-      kMergeAction, "param2", "field2");
+  table_map_generator_.AssignActionParameterToField(kMergeAction, "param1",
+                                                    "field1");
+  table_map_generator_.AssignActionParameterToField(kMergeAction, "param2",
+                                                    "field2");
   table_map_generator_.AddDropPrimitive(kMergeAction);
   const auto& hidden_action = FindActionDescriptorOrDie(
       kMergeAction, table_map_generator_.generated_map());
@@ -258,8 +256,8 @@ TEST_F(InternalActionTest, TestNoTunnelOptimizerEffect) {
   // and a drop primitive.
   const std::string kMergeAction = "hidden-action";
   table_map_generator_.AddAction(kMergeAction);
-  table_map_generator_.AssignActionParameterToField(
-      kMergeAction, "param1", "field1");
+  table_map_generator_.AssignActionParameterToField(kMergeAction, "param1",
+                                                    "field1");
   table_map_generator_.AddDropPrimitive(kMergeAction);
   EXPECT_CALL(tunnel_optimizer_mock_, Optimize(_, _)).Times(0);
   EXPECT_CALL(tunnel_optimizer_mock_, MergeAndOptimize(_, _, _)).Times(0);
@@ -277,31 +275,33 @@ TEST_F(InternalActionTest, TestMergeMultipleTunnelProperties) {
   // The "tunnel1-action" encaps an IPv6 inner header and assigns a field.
   const std::string kTunnel1Action = "tunnel1-action";
   table_map_generator_.AddAction(kTunnel1Action);
-  table_map_generator_.AssignActionParameterToField(
-      kTunnel1Action, "param1", "field1");
+  table_map_generator_.AssignActionParameterToField(kTunnel1Action, "param1",
+                                                    "field1");
   auto tunnel1_action = FindActionDescriptorOrDie(
       kTunnel1Action, table_map_generator_.generated_map());
-  tunnel1_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV6);
+  tunnel1_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV6);
   table_map_generator_.ReplaceActionDescriptor(kTunnel1Action, tunnel1_action);
 
   test_internal_action_->MergeAction(kTunnel1Action);
   EXPECT_TRUE(ProtoEqual(
       tunnel1_action.tunnel_properties(),
       test_internal_action_->internal_descriptor().tunnel_properties()));
-  EXPECT_EQ(original_action_.assignments_size() +
-            tunnel1_action.assignments_size(),
-            test_internal_action_->internal_descriptor().assignments_size());
+  EXPECT_EQ(
+      original_action_.assignments_size() + tunnel1_action.assignments_size(),
+      test_internal_action_->internal_descriptor().assignments_size());
 
   // The "tunnel2-action" encaps an IPv4 inner header and assigns a field.
   const std::string kTunnel2Action = "tunnel2-action";
   table_map_generator_.AddAction(kTunnel2Action);
-  table_map_generator_.AssignActionParameterToField(
-      kTunnel2Action, "param2", "field2");
+  table_map_generator_.AssignActionParameterToField(kTunnel2Action, "param2",
+                                                    "field2");
   auto tunnel2_action = FindActionDescriptorOrDie(
       kTunnel2Action, table_map_generator_.generated_map());
-  tunnel2_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
+  tunnel2_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
   table_map_generator_.ReplaceActionDescriptor(kTunnel2Action, tunnel2_action);
 
   // The mock tunnel optimizer output is a basic protobuf merge of the two
@@ -324,12 +324,13 @@ TEST_F(InternalActionTest, TestMergeOneTunnelProperties) {
   // The action below merges an encap tunnel.
   const std::string kEncapAction = "encap-action";
   table_map_generator_.AddAction(kEncapAction);
-  table_map_generator_.AssignActionParameterToField(
-      kEncapAction, "param2", "field2");
+  table_map_generator_.AssignActionParameterToField(kEncapAction, "param2",
+                                                    "field2");
   auto encap_action = FindActionDescriptorOrDie(
       kEncapAction, table_map_generator_.generated_map());
-  encap_action.mutable_tunnel_properties()->mutable_encap()->
-      add_encap_inner_headers(P4_HEADER_IPV4);
+  encap_action.mutable_tunnel_properties()
+      ->mutable_encap()
+      ->add_encap_inner_headers(P4_HEADER_IPV4);
   table_map_generator_.ReplaceActionDescriptor(kEncapAction, encap_action);
 
   // The mock tunnel optimizer should be used for optimizing only, not to
@@ -368,9 +369,9 @@ TEST_F(InternalActionTest, TestMergeMeterCondition) {
       color_action,
       test_internal_action_->internal_descriptor().color_actions(0)));
   ASSERT_EQ(1, test_internal_action_->internal_descriptor().assignments_size());
-  EXPECT_TRUE(ProtoEqual(
-      original_action_.assignments(0),
-      test_internal_action_->internal_descriptor().assignments(0)));
+  EXPECT_TRUE(
+      ProtoEqual(original_action_.assignments(0),
+                 test_internal_action_->internal_descriptor().assignments(0)));
 }
 
 // Verifies a merge of an original action with an internal action that links
@@ -409,9 +410,8 @@ TEST_F(InternalActionTest, TestMergeActionInternalToInternal) {
   // internal_descriptor should not redirect.
   EXPECT_NE(std::string::npos,
             test_internal_action_->internal_name().find(kOriginalAction));
-  EXPECT_NE(
-      std::string::npos,
-      test_internal_action_->internal_name().find(kLinkedInternalActionName));
+  EXPECT_NE(std::string::npos, test_internal_action_->internal_name().find(
+                                   kLinkedInternalActionName));
   EXPECT_EQ(0, internal_descriptor.action_redirects_size());
 }
 
@@ -423,14 +423,14 @@ TEST_F(InternalActionTest, TestMergeInternalToInternalMultipleRedirects) {
       kActionToInternalName, table_map_generator_.generated_map());
   auto redirect = action_to_internal.add_action_redirects();
   redirect->add_internal_links()->set_internal_action_name("dummy-action");
-  table_map_generator_.ReplaceActionDescriptor(
-      kActionToInternalName, action_to_internal);
+  table_map_generator_.ReplaceActionDescriptor(kActionToInternalName,
+                                               action_to_internal);
 
   // Since InternalAction does not merge multiple action_redirects, the
   // internal_descriptor should be unchanged.
   test_internal_action_->MergeAction(kActionToInternalName);
-  EXPECT_TRUE(ProtoEqual(
-      original_action_, test_internal_action_->internal_descriptor()));
+  EXPECT_TRUE(ProtoEqual(original_action_,
+                         test_internal_action_->internal_descriptor()));
 }
 
 // Verifies a merge of an original action with an internal action that has
@@ -442,14 +442,14 @@ TEST_F(InternalActionTest, TestMergeInternalToInternalMultipleLinks) {
   ASSERT_EQ(1, action_to_internal.action_redirects_size());
   auto redirect = action_to_internal.mutable_action_redirects(0);
   redirect->add_internal_links()->set_internal_action_name("dummy-action");
-  table_map_generator_.ReplaceActionDescriptor(
-      kActionToInternalName, action_to_internal);
+  table_map_generator_.ReplaceActionDescriptor(kActionToInternalName,
+                                               action_to_internal);
 
   // Since InternalAction does not merge multiple internal links, the
   // internal_descriptor should be unchanged.
   test_internal_action_->MergeAction(kActionToInternalName);
-  EXPECT_TRUE(ProtoEqual(
-      original_action_, test_internal_action_->internal_descriptor()));
+  EXPECT_TRUE(ProtoEqual(original_action_,
+                         test_internal_action_->internal_descriptor()));
 }
 
 // Tests removal of a single duplicate assignment:
@@ -559,8 +559,8 @@ TEST_F(InternalActionTest, TestOptimizeOneParam) {
   const auto unoptimized_action = test_internal_action_->internal_descriptor();
   test_internal_action_->Optimize();
 
-  EXPECT_FALSE(ProtoEqual(
-      unoptimized_action, test_internal_action_->internal_descriptor()));
+  EXPECT_FALSE(ProtoEqual(unoptimized_action,
+                          test_internal_action_->internal_descriptor()));
   EXPECT_EQ(2, CountParameterAssignments("opt_param"));
   EXPECT_EQ(0, CountFieldReferences("meta_field"));
 }
@@ -579,8 +579,8 @@ TEST_F(InternalActionTest, TestOptimizeMultiParam) {
   const auto unoptimized_action = test_internal_action_->internal_descriptor();
   test_internal_action_->Optimize();
 
-  EXPECT_FALSE(ProtoEqual(
-      unoptimized_action, test_internal_action_->internal_descriptor()));
+  EXPECT_FALSE(ProtoEqual(unoptimized_action,
+                          test_internal_action_->internal_descriptor()));
   EXPECT_EQ(1, CountParameterAssignments("opt_param1"));
   EXPECT_EQ(1, CountParameterAssignments("opt_param2"));
   EXPECT_EQ(0, CountFieldReferences("meta_field1"));
@@ -599,8 +599,8 @@ TEST_F(InternalActionTest, TestOptimizeParamSliceAssignments) {
   const auto unoptimized_action = test_internal_action_->internal_descriptor();
   test_internal_action_->Optimize();
 
-  EXPECT_FALSE(ProtoEqual(
-      unoptimized_action, test_internal_action_->internal_descriptor()));
+  EXPECT_FALSE(ProtoEqual(unoptimized_action,
+                          test_internal_action_->internal_descriptor()));
   EXPECT_EQ(3, CountParameterAssignments("opt_param"));
   EXPECT_EQ(1, CountFieldReferences("meta_field"));
 }
@@ -620,8 +620,8 @@ TEST_F(InternalActionTest, TestOptimizeParamSlicedAndUnslicedAssignments) {
   const auto unoptimized_action = test_internal_action_->internal_descriptor();
   test_internal_action_->Optimize();
 
-  EXPECT_FALSE(ProtoEqual(
-      unoptimized_action, test_internal_action_->internal_descriptor()));
+  EXPECT_FALSE(ProtoEqual(unoptimized_action,
+                          test_internal_action_->internal_descriptor()));
   EXPECT_EQ(3, CountParameterAssignments("opt_param"));
   EXPECT_EQ(0, CountFieldReferences("meta_field"));
 }
@@ -870,9 +870,10 @@ TEST_F(InternalActionTest, TestWriteToP4PipelineConfig) {
 
 TEST_F(InternalActionTest, TestWriteToTableMapGenerator) {
   TableMapGeneratorMock table_map_generator_mock;
-  EXPECT_CALL(table_map_generator_mock, AddInternalAction(
-      test_internal_action_->internal_name(),
-      EqualsProto(test_internal_action_->internal_descriptor())));
+  EXPECT_CALL(table_map_generator_mock,
+              AddInternalAction(
+                  test_internal_action_->internal_name(),
+                  EqualsProto(test_internal_action_->internal_descriptor())));
   test_internal_action_->WriteToTableMapGenerator(&table_map_generator_mock);
 }
 

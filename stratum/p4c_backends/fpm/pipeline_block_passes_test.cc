@@ -16,17 +16,17 @@
 
 #include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
 
+#include <memory>
 #include <set>
 #include <string>
-#include <memory>
 
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/ir/visitor.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/p4c_backends/test/test_inspectors.h"
 #include "stratum/p4c_backends/test/test_target_info.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/ir/visitor.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -41,9 +41,7 @@ class PipelinePassesTest : public testing::TestWithParam<bool> {
     TestTargetInfo::SetUpTestTargetInfo();
     SetUpTestP4ModelNames();
   }
-  static void TearDownTestCase() {
-    TestTargetInfo::TearDownTestTargetInfo();
-  }
+  static void TearDownTestCase() { TestTargetInfo::TearDownTestTargetInfo(); }
 
  protected:
   // The SetUpTestIR method loads an IR file in JSON format, then applies a
@@ -79,8 +77,8 @@ class PipelinePassesTest : public testing::TestWithParam<bool> {
   // Runs a PipelineBlockPass on the input control to set up testing
   // of subsequent transform passes; expects SetUpTestIR to run first.
   const IR::P4Control* RunPipelineBlockPass(const IR::P4Control& control) {
-    PipelineBlockPass block_pass(
-        ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+    PipelineBlockPass block_pass(ir_helper_->mid_end_refmap(),
+                                 ir_helper_->mid_end_typemap());
     return block_pass.OptimizeControl(control);
   }
 
@@ -151,8 +149,8 @@ TEST_P(PipelinePassesTest, TestBlockOptimization) {
 
   // The tested PipelineBlockPass forms PipelineStageStatements from
   // BlockStatements wherever an entire block refers to a fixed pipeline stage.
-  PipelineBlockPass block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineBlockPass block_pass(ir_helper_->mid_end_refmap(),
+                               ir_helper_->mid_end_typemap());
   const IR::P4Control* block_pass_control =
       block_pass.OptimizeControl(*ir_control_with_blocks);
   EXPECT_NE(ir_control_with_blocks, block_pass_control);
@@ -197,8 +195,8 @@ TEST_P(PipelinePassesTest, TestIfElseOptimization) {
 
   // The tested PipelineIfElsePass forms a PipelineStageStatement from the
   // original IfStatement.
-  PipelineIfElsePass ifelse_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIfElsePass ifelse_pass(ir_helper_->mid_end_refmap(),
+                                 ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       ifelse_pass.OptimizeControl(*pass2_control);
   EXPECT_NE(pass2_control, final_control);
@@ -234,8 +232,8 @@ TEST_P(PipelinePassesTest, TestIfElseNoOptimization) {
   ASSERT_EQ(pass1_control, pass2_control);
 
   // The tested PipelineIfElsePass should not transform the control.
-  PipelineIfElsePass ifelse_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIfElsePass ifelse_pass(ir_helper_->mid_end_refmap(),
+                                 ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       ifelse_pass.OptimizeControl(*pass2_control);
   EXPECT_EQ(pass2_control, final_control);
@@ -248,11 +246,8 @@ TEST_P(PipelinePassesTest, TestIfElseNoOptimization) {
 // - Test if { apply LPM1 } else if { apply LPM2 } else { apply LPM3 }
 // - Test as above, replacing LPM3 with ACL table.
 
-INSTANTIATE_TEST_SUITE_P(
-  WithAndWithoutTransforms,
-  PipelinePassesTest,
-  ::testing::Bool()
-);
+INSTANTIATE_TEST_SUITE_P(WithAndWithoutTransforms, PipelinePassesTest,
+                         ::testing::Bool());
 
 }  // namespace p4c_backends
 }  // namespace stratum

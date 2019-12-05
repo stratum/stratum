@@ -13,13 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/phal/phal_sim.h"
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -72,8 +71,7 @@ PhalSim::~PhalSim() {}
   // Find the next available ID for the Writer.
   int next_id = kInvalidWriterId;
   for (int id = 1;
-       id <= static_cast<int>(transceiver_event_writers_.size()) + 1;
-       ++id) {
+       id <= static_cast<int>(transceiver_event_writers_.size()) + 1; ++id) {
     auto it = std::find_if(
         transceiver_event_writers_.begin(), transceiver_event_writers_.end(),
         [id](const TransceiverEventWriter& w) { return w.id == id; });
@@ -124,12 +122,11 @@ PhalSim::~PhalSim() {}
 // Register the configurator so we can use later
 ::util::Status PhalSim::RegisterSfpConfigurator(
     int slot, int port, ::stratum::hal::phal::SfpConfigurator* configurator) {
+  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
 
-    const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
+  slot_port_to_configurator_[slot_port_pair] = configurator;
 
-    slot_port_to_configurator_[slot_port_pair] = configurator;
-
-    return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 PhalSim* PhalSim::CreateSingleton() {

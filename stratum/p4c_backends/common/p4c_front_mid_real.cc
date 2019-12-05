@@ -18,8 +18,6 @@
 
 #include <utility>
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/common/midend_p4c_open.h"
 #include "absl/debugging/leak_check.h"
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/control-plane/p4RuntimeSerializer.h"
@@ -29,6 +27,8 @@
 #include "external/com_github_p4lang_p4c/lib/crash.h"
 #include "external/com_github_p4lang_p4c/lib/error.h"
 #include "external/com_github_p4lang_p4c/lib/gc.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/common/midend_p4c_open.h"
 
 using StratumP4cContext = P4CContextWithOptions<CompilerOptions>;
 
@@ -40,7 +40,7 @@ P4cFrontMidReal::P4cFrontMidReal()
       p4c_options_(StratumP4cContext::get().options()),
       p4_program_(nullptr) {
   mid_end_callback_ = std::function<std::unique_ptr<MidEndInterface>(
-      CompilerOptions* p4c_options)>(&P4cFrontMidReal::CreateDefaultMidend);
+      CompilerOptions * p4c_options)>(&P4cFrontMidReal::CreateDefaultMidend);
 }
 
 P4cFrontMidReal::P4cFrontMidReal(MidEndCreateCallback callback)
@@ -60,8 +60,7 @@ int P4cFrontMidReal::ProcessCommandLineOptions(int argc, char* const argv[]) {
     p4c_options_.setInputFile();
   else
     return 1;
-  if (::errorCount() > 0)
-    return 1;
+  if (::errorCount() > 0) return 1;
   return 0;
 }
 
@@ -110,9 +109,7 @@ void P4cFrontMidReal::GenerateP4Runtime(
                                 P4::P4RuntimeFormat::BINARY);
 }
 
-unsigned P4cFrontMidReal::GetErrorCount() {
-  return ::errorCount();
-}
+unsigned P4cFrontMidReal::GetErrorCount() { return ::errorCount(); }
 
 P4::ReferenceMap* P4cFrontMidReal::GetMidEndReferenceMap() {
   CHECK(mid_end_ != nullptr) << "P4c midend pass has not run";

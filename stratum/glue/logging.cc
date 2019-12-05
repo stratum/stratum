@@ -16,6 +16,7 @@
 #include "stratum/glue/logging.h"
 
 #include <syslog.h>
+
 #include <memory>
 
 #include "gflags/gflags.h"
@@ -30,9 +31,9 @@ DEFINE_bool(logtostderr, false,
 DEFINE_bool(logtosyslog, false, "log messages also go to syslog.");
 
 using google::LogSeverity;
+using google::LogSink;
 using google::LogToStderr;
 using google::ProgramInvocationShortName;
-using google::LogSink;
 
 namespace stratum {
 namespace {
@@ -40,9 +41,8 @@ namespace {
 class SyslogSink : public LogSink {
  public:
   void send(LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct ::tm* tm_time,
-                    const char* message, size_t message_len) override {
+            const char* base_filename, int line, const struct ::tm* tm_time,
+            const char* message, size_t message_len) override {
     static const int kSeverityToLevel[] = {INFO, WARNING, ERROR, FATAL};
     static const char* const kSeverityToLabel[] = {"INFO", "WARNING", "ERROR",
                                                    "FATAL"};
@@ -79,7 +79,7 @@ void InitStratumLogging() {
 #include <iostream>
 namespace std {
 ::std::ostream& operator<<(::std::ostream& s, ::std::nullptr_t) {
-    return s << static_cast<void *>(nullptr);
+  return s << static_cast<void*>(nullptr);
 }
-}
+}  // namespace std
 #endif  // __cplusplus

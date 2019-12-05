@@ -15,26 +15,26 @@
  * limitations under the License.
  */
 
-
 // Unit tests for StatusOr
 
 #include "stratum/glue/status/statusor.h"
 
 #include <errno.h>
+
+#include <algorithm>
 #include <memory>
 #include <vector>
-#include <algorithm>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/posix_error_space.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/posix_error_space.h"
 
 namespace util {
 namespace {
 
-using ::util::Status;
 using util::PosixErrorToStatus;
+using ::util::Status;
 
 class Base1 {
  public:
@@ -131,14 +131,16 @@ TEST(StatusOr, TestStatusCtor) {
 }
 
 TEST(StatusOrDeathTest, TestStatusCtorStatusOk) {
-  EXPECT_DEBUG_DEATH({
-    // This will DCHECK
-    StatusOr<int> thing(Status::OK);
-    // In optimized mode, we are actually going to get EINVAL for
-    // status here, rather than crashing, so check that.
-    EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "Status::OK is not a valid constructor argument");
+  EXPECT_DEBUG_DEATH(
+      {
+        // This will DCHECK
+        StatusOr<int> thing(Status::OK);
+        // In optimized mode, we are actually going to get EINVAL for
+        // status here, rather than crashing, so check that.
+        EXPECT_FALSE(thing.ok());
+        EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+      },
+      "Status::OK is not a valid constructor argument");
 }
 
 TEST(StatusOr, TestValueCtor) {
@@ -270,13 +272,15 @@ TEST(StatusOr, TestPointerStatusCtor) {
 }
 
 TEST(StatusOrDeathTest, TestPointerStatusCtorStatusOk) {
-  EXPECT_DEBUG_DEATH({
-    StatusOr<int*> thing(Status::OK);
-    // In optimized mode, we are actually going to get EINVAL for
-    // status here, rather than crashing, so check that.
-    EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "Status::OK is not a valid constructor argument");
+  EXPECT_DEBUG_DEATH(
+      {
+        StatusOr<int*> thing(Status::OK);
+        // In optimized mode, we are actually going to get EINVAL for
+        // status here, rather than crashing, so check that.
+        EXPECT_FALSE(thing.ok());
+        EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+      },
+      "Status::OK is not a valid constructor argument");
 }
 
 TEST(StatusOr, TestPointerValueCtor) {
@@ -287,13 +291,15 @@ TEST(StatusOr, TestPointerValueCtor) {
 }
 
 TEST(StatusOrDeathTest, TestPointerValueCtorNullValue) {
-  EXPECT_DEBUG_DEATH({
-    StatusOr<int*> thing(NULL);
-    // In optimized mode, we are actually going to get EINVAL for
-    // status here, rather than DCHECKing, so verify that
-    EXPECT_FALSE(thing.ok());
-    EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
-  }, "NULL is not a valid constructor argument to StatusOr");
+  EXPECT_DEBUG_DEATH(
+      {
+        StatusOr<int*> thing(NULL);
+        // In optimized mode, we are actually going to get EINVAL for
+        // status here, rather than DCHECKing, so verify that
+        EXPECT_FALSE(thing.ok());
+        EXPECT_TRUE(thing.status().Matches(PosixErrorToStatus(EINVAL, "")));
+      },
+      "NULL is not a valid constructor argument to StatusOr");
 }
 
 TEST(StatusOr, TestPointerCopyCtorStatusOk) {

@@ -20,15 +20,15 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/hal/lib/common/utils.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
-#include "p4/v1/p4runtime.pb.h"
 
 // P4ConfigVerifier flags to override in test environment.
 DECLARE_string(match_field_error_level);
@@ -43,9 +43,8 @@ namespace hal {
 //  First element: P4 info text file.
 //  Second element: P4 pipeline config text file.
 //  Third element: P4 pipeline config binary file.
-class P4InfoFilesTest
-    : public testing::TestWithParam<std::tuple<
-        std::string, std::string, std::string>> {
+class P4InfoFilesTest : public testing::TestWithParam<
+                            std::tuple<std::string, std::string, std::string>> {
  protected:
   void SetUp() override {
     // All tests raise the P4ConfigVerifier error level to "warn" if it's
@@ -147,13 +146,15 @@ TEST_P(P4InfoFilesTest, TestP4PipelineStaticEntries) {
     ASSERT_TRUE(static_entry.entity().has_table_entry());
     CommonFlowEntry flow_entry;
     p4_table_mapper_->EnableStaticTableUpdates();
-    EXPECT_TRUE(p4_table_mapper_->MapFlowEntry(
-        static_entry.entity().table_entry(), static_entry.type(), &flow_entry)
-            .ok());
+    EXPECT_TRUE(p4_table_mapper_
+                    ->MapFlowEntry(static_entry.entity().table_entry(),
+                                   static_entry.type(), &flow_entry)
+                    .ok());
     p4_table_mapper_->DisableStaticTableUpdates();
-    EXPECT_FALSE(p4_table_mapper_->MapFlowEntry(
-        static_entry.entity().table_entry(), static_entry.type(), &flow_entry)
-            .ok());
+    EXPECT_FALSE(p4_table_mapper_
+                     ->MapFlowEntry(static_entry.entity().table_entry(),
+                                    static_entry.type(), &flow_entry)
+                     .ok());
   }
 }
 
@@ -204,17 +205,15 @@ TEST_P(P4InfoFilesTest, TestPipelineConfigTextEqualsBinary) {
   const std::string p4_pipeline_text_file =
       GetTestFilePath() + std::get<1>(GetParam());
   ASSERT_TRUE(
-      ReadProtoFromTextFile(p4_pipeline_text_file, &p4_pipeline_config_)
-          .ok());
+      ReadProtoFromTextFile(p4_pipeline_text_file, &p4_pipeline_config_).ok());
   const std::string p4_pipeline_bin_file =
       GetTestFilePath() + std::get<2>(GetParam());
   P4PipelineConfig p4_pipeline_config_bin;
   ASSERT_TRUE(
-      ReadProtoFromBinFile(p4_pipeline_bin_file, &p4_pipeline_config_bin)
-          .ok());
+      ReadProtoFromBinFile(p4_pipeline_bin_file, &p4_pipeline_config_bin).ok());
   google::protobuf::util::MessageDifferencer msg_differencer;
-  EXPECT_TRUE(msg_differencer.Equivalent(
-      p4_pipeline_config_, p4_pipeline_config_bin));
+  EXPECT_TRUE(
+      msg_differencer.Equivalent(p4_pipeline_config_, p4_pipeline_config_bin));
 }
 
 // P4InfoFilesTest expects the test files to be in this path:

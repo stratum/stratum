@@ -14,16 +14,16 @@
 
 // Contains ExpressionInspector unit tests.
 
+#include "stratum/p4c_backends/fpm/expression_inspector.h"
+
 #include <memory>
 #include <string>
 
-#include "stratum/p4c_backends/fpm/expression_inspector.h"
-
+#include "absl/memory/memory.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {

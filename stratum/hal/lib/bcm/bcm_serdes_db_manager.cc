@@ -13,16 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
 
 DEFINE_string(bcm_serdes_db_proto_file, "",
               "Path to the location of file containing BcmSerdesDb proto in "

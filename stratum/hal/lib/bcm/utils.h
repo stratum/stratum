@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_UTILS_H_
 #define STRATUM_HAL_LIB_BCM_UTILS_H_
 
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
 
 namespace stratum {
 namespace hal {

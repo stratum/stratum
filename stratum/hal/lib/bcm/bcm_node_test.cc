@@ -13,9 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/bcm/bcm_node.h"
+
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_node.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager_mock.h"
@@ -27,10 +32,6 @@
 #include "stratum/hal/lib/common/writer_mock.h"
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -606,8 +607,8 @@ TEST_F(BcmNodeTest, VerifyChassisConfigFailureWhenMultiManagerVerifyFails) {
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_packetio_manager_mock_,
               VerifyChassisConfig(EqualsProto(config), kNodeId))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   EXPECT_THAT(VerifyChassisConfig(config, kNodeId),
               DerivedFromStatus(DefaultError()));

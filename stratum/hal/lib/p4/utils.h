@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 // This file declares some utility functions for P4 objects.
 
 #ifndef STRATUM_HAL_LIB_P4_UTILS_H_
@@ -23,9 +22,9 @@
 
 #include <string>
 
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {

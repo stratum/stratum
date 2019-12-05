@@ -13,17 +13,17 @@
 // limitations under the License.
 
 // Contains unit tests for TableHitInspector.
+#include "stratum/p4c_backends/fpm/table_hit_inspector.h"
+
 #include <memory>
 #include <tuple>
 #include <vector>
 
-#include "stratum/p4c_backends/fpm/table_hit_inspector.h"
-
-#include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/memory/memory.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 using ::testing::Values;
 
@@ -38,9 +38,7 @@ class TableHitInspectorTest
       public testing::WithParamInterface<
           std::tuple<std::string, std::string, int, bool, bool>> {
  public:
-  static void SetUpTestCase() {
-    SetUpTestP4ModelNames();
-  }
+  static void SetUpTestCase() { SetUpTestP4ModelNames(); }
 
  protected:
   // The SetUpTestIR method uses an IRTestHelperJson to load an IR file in JSON
@@ -62,8 +60,8 @@ class TableHitInspectorTest
   // statement within the control body.  The test control is pre-processed
   // with a HitAssignMapper and a MeterColorMapper to do transforms where
   // applicable.
-  const IR::Statement* FindTestStatement(
-      const std::string& control, int statement_index) {
+  const IR::Statement* FindTestStatement(const std::string& control,
+                                         int statement_index) {
     std::vector<IRTestHelperJson::IRControlTransforms> transform_list(
         {IRTestHelperJson::kHitAssignMapper,
          IRTestHelperJson::kMeterColorMapper});
@@ -85,15 +83,9 @@ class TableHitInspectorTest
   const std::string& control_name() const {
     return ::testing::get<1>(GetParam());
   }
-  int statement_index() const {
-    return ::testing::get<2>(GetParam());
-  }
-  bool expect_apply() const {
-    return ::testing::get<3>(GetParam());
-  }
-  bool expect_error() const {
-    return ::testing::get<4>(GetParam());
-  }
+  int statement_index() const { return ::testing::get<2>(GetParam()); }
+  bool expect_apply() const { return ::testing::get<3>(GetParam()); }
+  bool expect_error() const { return ::testing::get<4>(GetParam()); }
 
   // TableHitInspector instance for test use; created by SetUpTestIR.
   std::unique_ptr<TableHitInspector> test_inspector_;
@@ -117,34 +109,32 @@ TEST_P(TableHitInspectorTest, TestInspect) {
 //  4) Flag indicating whether to expect control to apply tables.
 //  5) Flag indicating whether to expect errors after Inspect.
 INSTANTIATE_TEST_SUITE_P(
-    NoApplyNoErrorTests,
-    TableHitInspectorTest,
-    Values(
-        std::make_tuple("control_if_test.ir.json",
-                        "computeChecksum", -1, false, false),
-        std::make_tuple("control_if_test.ir.json", "egress", -1, false, false),
-        std::make_tuple("control_if_test.ir.json",
-                        "verifyChecksum", -1, false, false),
-        std::make_tuple("control_misc_test.ir.json",
-                        "computeChecksum", -1, false, false)));
+    NoApplyNoErrorTests, TableHitInspectorTest,
+    Values(std::make_tuple("control_if_test.ir.json", "computeChecksum", -1,
+                           false, false),
+           std::make_tuple("control_if_test.ir.json", "egress", -1, false,
+                           false),
+           std::make_tuple("control_if_test.ir.json", "verifyChecksum", -1,
+                           false, false),
+           std::make_tuple("control_misc_test.ir.json", "computeChecksum", -1,
+                           false, false)));
 
 INSTANTIATE_TEST_SUITE_P(
-    ApplyNoErrorTests,
-    TableHitInspectorTest,
+    ApplyNoErrorTests, TableHitInspectorTest,
     Values(
         std::make_tuple("complex_hits.ir.json", "complex_hits", 7, true, false),
-        std::make_tuple("control_apply_hit_miss_test.ir.json",
-                        "egress", -1, true, false),
-        std::make_tuple("control_apply_hit_miss_test.ir.json",
-                        "ingress", -1, true, false),
+        std::make_tuple("control_apply_hit_miss_test.ir.json", "egress", -1,
+                        true, false),
+        std::make_tuple("control_apply_hit_miss_test.ir.json", "ingress", -1,
+                        true, false),
         std::make_tuple("control_if_test.ir.json", "ingress", -1, true, false),
-        std::make_tuple("meter_color_nested_ifs.ir.json",
-                        "meter_if_in_if", -1, true, false),
+        std::make_tuple("meter_color_nested_ifs.ir.json", "meter_if_in_if", -1,
+                        true, false),
         std::make_tuple("no_table_tmp.ir.json", "ingress", -1, true, false),
-        std::make_tuple("switch_case.ir.json",
-                        "inverted_conditions", -1, true, false),
-        std::make_tuple("switch_case.ir.json",
-                        "normal_clone_drop", -1, true, false),
+        std::make_tuple("switch_case.ir.json", "inverted_conditions", -1, true,
+                        false),
+        std::make_tuple("switch_case.ir.json", "normal_clone_drop", -1, true,
+                        false),
         std::make_tuple("table_hit_tmp_valid.ir.json",
                         "hit_var_valid_statements", 0, true, false),
         std::make_tuple("table_hit_tmp_valid.ir.json",
@@ -171,49 +161,47 @@ INSTANTIATE_TEST_SUITE_P(
                         "hit_var_valid_statements", 11, true, false),
         std::make_tuple("table_hit_tmp_valid.ir.json",
                         "hit_var_valid_statements", -1, true, false),
-        std::make_tuple("control_return.ir.json",
-                        "early_return", -1, true, false),
-        std::make_tuple("control_return.ir.json",
-                        "control_nested_return", -1, true, false),
-        std::make_tuple("table_hit_tmp_valid.ir.json",
-                        "hit_var_scope_ok", -1, true, false)));
+        std::make_tuple("control_return.ir.json", "early_return", -1, true,
+                        false),
+        std::make_tuple("control_return.ir.json", "control_nested_return", -1,
+                        true, false),
+        std::make_tuple("table_hit_tmp_valid.ir.json", "hit_var_scope_ok", -1,
+                        true, false)));
 
 INSTANTIATE_TEST_SUITE_P(
-    ApplyWithErrorTests,
-    TableHitInspectorTest,
-    Values(
-        std::make_tuple("complex_hits.ir.json", "complex_hits", 2, true, true),
-        std::make_tuple("hidden_table1.ir.json", "ingress", -1, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 0, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 1, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 2, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 3, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 4, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 5, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 6, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 7, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 8, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 9, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 10, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 12, true, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", -1, true, true)));
+    ApplyWithErrorTests, TableHitInspectorTest,
+    Values(std::make_tuple("complex_hits.ir.json", "complex_hits", 2, true,
+                           true),
+           std::make_tuple("hidden_table1.ir.json", "ingress", -1, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           0, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           1, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           2, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           3, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           4, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           5, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           6, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           7, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           8, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           9, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           10, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           12, true, true),
+           std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid",
+                           -1, true, true)));
 
 INSTANTIATE_TEST_SUITE_P(
-    NoApplyWithErrorTests,
-    TableHitInspectorTest,
+    NoApplyWithErrorTests, TableHitInspectorTest,
     Values(
         std::make_tuple("complex_hits.ir.json", "complex_hits", 0, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 1, false, true),
@@ -222,16 +210,16 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple("complex_hits.ir.json", "complex_hits", 5, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 6, false, true),
         std::make_tuple("complex_hits.ir.json", "complex_hits", 8, false, true),
-        std::make_tuple("meter_color_if_else.ir.json",
-                        "meter_if_else", -1, false, true),
-        std::make_tuple("meter_colors.ir.json",
-                        "meter_if_green", -1, false, true),
-        std::make_tuple("meter_colors.ir.json",
-                        "meter_if_red", -1, false, true),
-        std::make_tuple("meter_colors.ir.json",
-                        "meter_if_yellow", -1, false, true),
-        std::make_tuple("table_hit_tmp_invalid.ir.json",
-                        "hit_var_invalid", 11, false, true)));
+        std::make_tuple("meter_color_if_else.ir.json", "meter_if_else", -1,
+                        false, true),
+        std::make_tuple("meter_colors.ir.json", "meter_if_green", -1, false,
+                        true),
+        std::make_tuple("meter_colors.ir.json", "meter_if_red", -1, false,
+                        true),
+        std::make_tuple("meter_colors.ir.json", "meter_if_yellow", -1, false,
+                        true),
+        std::make_tuple("table_hit_tmp_invalid.ir.json", "hit_var_invalid", 11,
+                        false, true)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

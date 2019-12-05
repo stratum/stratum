@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
 #define STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
 
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -36,7 +35,8 @@ class SwitchConfigurator {
 
   // Virtual function implemented by each derived class to
   // read the phal_init_config file and configure the Phal DB
-  virtual ::util::Status ConfigurePhalDB(const PhalInitConfig& config, AttributeGroup* root) = 0;
+  virtual ::util::Status ConfigurePhalDB(const PhalInitConfig& config,
+                                         AttributeGroup* root) = 0;
 };
 
 }  // namespace phal

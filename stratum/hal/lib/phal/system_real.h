@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SYSTEM_REAL_H_
 #define STRATUM_HAL_LIB_PHAL_SYSTEM_REAL_H_
 
 #include <libudev.h>
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"

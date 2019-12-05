@@ -16,16 +16,16 @@
 #include "stratum/p4c_backends/common/backend_pass_manager.h"
 
 #include <wordexp.h>
+
 #include <sstream>
 #include <string>
 
 #include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
-#include "stratum/lib/utils.h"
-#include "stratum/lib/macros.h"
-
 #include "p4/config/v1/p4info.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/logging.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 DEFINE_string(p4c_fe_options, "",
               "Options passed to p4c frontend with p4c-specified syntax. "
@@ -52,12 +52,12 @@ int BackendPassManager::Compile() {
   // within a single gflag.  The code below uses wordexp to parse
   // FLAGS_p4c_fe_options into an argc/argv pair for the p4c CompilerOptions.
   const std::string p4c_command =
-                          std::string(google::ProgramInvocationShortName()) +
-                          std::string(" ") + FLAGS_p4c_fe_options;
+      std::string(google::ProgramInvocationShortName()) + std::string(" ") +
+      FLAGS_p4c_fe_options;
   LOG(INFO) << "p4c compiler options: " << p4c_command;
   wordexp_t parsed_options = {0};
-  int ret = wordexp(p4c_command.c_str(), &parsed_options,
-                    WRDE_NOCMD | WRDE_SHOWERR);
+  int ret =
+      wordexp(p4c_command.c_str(), &parsed_options, WRDE_NOCMD | WRDE_SHOWERR);
   if (ret != 0) {
     LOG(ERROR) << "Unable to parse p4c frontend options to argc/argv";
     wordfree(&parsed_options);

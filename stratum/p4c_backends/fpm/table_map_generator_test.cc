@@ -19,15 +19,15 @@
 #include <string>
 #include <vector>
 
+#include "external/com_github_p4lang_p4c/frontends/common/options.h"
+#include "external/com_github_p4lang_p4c/lib/compile_context.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gtest/gtest.h"
-#include "external/com_github_p4lang_p4c/frontends/common/options.h"
-#include "external/com_github_p4lang_p4c/lib/compile_context.h"
-#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -54,8 +54,7 @@ class TableMapGeneratorTest : public testing::Test {
       const std::vector<P4MeterColor>& colors,
       const std::vector<P4ActionOp>& primitives,
       hal::P4ActionDescriptor::P4MeterColorAction* test_color_action) {
-    for (auto color : colors)
-      test_color_action->add_colors(color);
+    for (auto color : colors) test_color_action->add_colors(color);
     for (auto primitive : primitives)
       test_color_action->add_ops()->add_primitives(primitive);
   }
@@ -128,9 +127,9 @@ TEST_F(TableMapGeneratorTest, TestSetFieldAttributes) {
   const uint32_t kTestOffset = 96;
   const uint32_t kTestWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_TYPE, P4_HEADER_ETHERNET,
-       kTestOffset, kTestWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_TYPE,
+                                    P4_HEADER_ETHERNET, kTestOffset,
+                                    kTestWidth);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -142,8 +141,8 @@ TEST_F(TableMapGeneratorTest, TestSetFieldAttributes) {
 
 // Tests setting field type, offset, and width for an undefined field.
 TEST_F(TableMapGeneratorTest, TestSetFieldAttributesUndefined) {
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_SRC, P4_HEADER_ETHERNET, 48, 48);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_SRC,
+                                    P4_HEADER_ETHERNET, 48, 48);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
 }
@@ -153,14 +152,14 @@ TEST_F(TableMapGeneratorTest, TestReplaceOffsetWidth) {
   const uint32_t kTestOffset = 96;
   const uint32_t kTestWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_TYPE, P4_HEADER_ETHERNET,
-      kTestOffset, kTestWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_TYPE,
+                                    P4_HEADER_ETHERNET, kTestOffset,
+                                    kTestWidth);
   const uint32_t kNewTestOffset = 48;
   const uint32_t kNewTestWidth = 48;
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_TYPE, P4_HEADER_ETHERNET,
-      kNewTestOffset, kNewTestWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_TYPE,
+                                    P4_HEADER_ETHERNET, kNewTestOffset,
+                                    kNewTestWidth);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -173,10 +172,10 @@ TEST_F(TableMapGeneratorTest, TestReplaceOffsetWidth) {
 // Verifies that a known header type is not replaced by P4_HEADER_UNKNOWN.
 TEST_F(TableMapGeneratorTest, TestSetFieldHeaderTypeKnownToUnknown) {
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_DST, P4_HEADER_ETHERNET, 48, 48);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_DST, P4_HEADER_UNKNOWN, 48, 48);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_DST,
+                                    P4_HEADER_ETHERNET, 48, 48);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_DST,
+                                    P4_HEADER_UNKNOWN, 48, 48);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -187,10 +186,10 @@ TEST_F(TableMapGeneratorTest, TestSetFieldHeaderTypeKnownToUnknown) {
 // Verifies that a known header type replaces a previous known header type.
 TEST_F(TableMapGeneratorTest, TestSetFieldHeaderTypeKnownToKnown) {
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_DST, P4_HEADER_ARP, 48, 48);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_DST, P4_HEADER_ETHERNET, 48, 48);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_DST,
+                                    P4_HEADER_ARP, 48, 48);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_DST,
+                                    P4_HEADER_ETHERNET, 48, 48);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -219,8 +218,8 @@ TEST_F(TableMapGeneratorTest, TestSetFieldLocalMetaUndefined) {
 TEST_F(TableMapGeneratorTest, TestSetFieldValueSet) {
   map_generator_.AddField(kTestFieldName);
   const std::string kValueSetName = "test-value-set";
-  map_generator_.SetFieldValueSet(
-      kTestFieldName, kValueSetName, P4_HEADER_UDP_PAYLOAD);
+  map_generator_.SetFieldValueSet(kTestFieldName, kValueSetName,
+                                  P4_HEADER_UDP_PAYLOAD);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -235,11 +234,11 @@ TEST_F(TableMapGeneratorTest, TestSetFieldValueSet) {
 TEST_F(TableMapGeneratorTest, TestOverwriteFieldValueSet) {
   map_generator_.AddField(kTestFieldName);
   const std::string kValueSetName = "test-value-set";
-  map_generator_.SetFieldValueSet(
-      kTestFieldName, kValueSetName, P4_HEADER_UDP_PAYLOAD);
+  map_generator_.SetFieldValueSet(kTestFieldName, kValueSetName,
+                                  P4_HEADER_UDP_PAYLOAD);
   const std::string kValueSetNameUpdate = "test-value-set-2";
-  map_generator_.SetFieldValueSet(
-      kTestFieldName, kValueSetNameUpdate, P4_HEADER_TCP);
+  map_generator_.SetFieldValueSet(kTestFieldName, kValueSetNameUpdate,
+                                  P4_HEADER_TCP);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -255,12 +254,12 @@ TEST_F(TableMapGeneratorTest, TestSetValueSetSideEffects) {
   const uint32_t kTestOffset = 96;
   const uint32_t kTestWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_ETH_TYPE, P4_HEADER_ETHERNET,
-      kTestOffset, kTestWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_ETH_TYPE,
+                                    P4_HEADER_ETHERNET, kTestOffset,
+                                    kTestWidth);
   const std::string kValueSetName = "test-value-set";
-  map_generator_.SetFieldValueSet(
-      kTestFieldName, kValueSetName, P4_HEADER_UDP_PAYLOAD);
+  map_generator_.SetFieldValueSet(kTestFieldName, kValueSetName,
+                                  P4_HEADER_UDP_PAYLOAD);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   EXPECT_TRUE(iter->second.has_field_descriptor());
@@ -275,8 +274,8 @@ TEST_F(TableMapGeneratorTest, TestSetValueSetSideEffects) {
 
 // Tests setting value set for an undefined field.
 TEST_F(TableMapGeneratorTest, TestSetFieldValueSetUndefined) {
-  map_generator_.SetFieldValueSet(
-      kTestFieldName, "test-value-set", P4_HEADER_UDP_PAYLOAD);
+  map_generator_.SetFieldValueSet(kTestFieldName, "test-value-set",
+                                  P4_HEADER_UDP_PAYLOAD);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
 }
@@ -287,10 +286,10 @@ TEST_F(TableMapGeneratorTest, TestAddFieldMatchExact) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_UNKNOWN, P4_HEADER_UNKNOWN, 0, kMatchWidth);
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().exact_match(), kMatchWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_UNKNOWN,
+                                    P4_HEADER_UNKNOWN, 0, kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().exact_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
 
   const auto field_descriptor =
@@ -308,10 +307,10 @@ TEST_F(TableMapGeneratorTest, TestAddFieldMatchLpm) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_UNKNOWN, P4_HEADER_UNKNOWN, 0, kMatchWidth);
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().lpm_match(), kMatchWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_UNKNOWN,
+                                    P4_HEADER_UNKNOWN, 0, kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().lpm_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
   const auto field_descriptor =
       FindFieldDescriptorOrNull(kTestFieldName, map_generator_.generated_map());
@@ -344,8 +343,8 @@ TEST_F(TableMapGeneratorTest, TestAddFieldAgain) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().lpm_match(), kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().lpm_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
 
   // The line below adds the same field again.
@@ -366,13 +365,13 @@ TEST_F(TableMapGeneratorTest, TestAddFieldMultiMatch) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_UNKNOWN, P4_HEADER_UNKNOWN, 0, kMatchWidth);
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().lpm_match(), kMatchWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_UNKNOWN,
+                                    P4_HEADER_UNKNOWN, 0, kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().lpm_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().exact_match(), kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().exact_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
   const auto field_descriptor =
       FindFieldDescriptorOrNull(kTestFieldName, map_generator_.generated_map());
@@ -395,13 +394,13 @@ TEST_F(TableMapGeneratorTest, TestAddFieldSameMatchTypeMultiBitWidth) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_UNKNOWN, P4_HEADER_UNKNOWN, 0, kMatchWidth);
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().exact_match(), kMatchWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_UNKNOWN,
+                                    P4_HEADER_UNKNOWN, 0, kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().exact_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().exact_match(), kMatchWidth + 1);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().exact_match(),
+                               kMatchWidth + 1);
   EXPECT_EQ(0, ::errorCount());
   const auto field_descriptor =
       FindFieldDescriptorOrNull(kTestFieldName, map_generator_.generated_map());
@@ -422,13 +421,13 @@ TEST_F(TableMapGeneratorTest, TestAddFieldDifferentMatchTypeMultiBitWidth) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
   map_generator_.AddField(kTestFieldName);
-  map_generator_.SetFieldAttributes(
-      kTestFieldName, P4_FIELD_TYPE_UNKNOWN, P4_HEADER_UNKNOWN, 0, kMatchWidth);
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().lpm_match(), kMatchWidth);
+  map_generator_.SetFieldAttributes(kTestFieldName, P4_FIELD_TYPE_UNKNOWN,
+                                    P4_HEADER_UNKNOWN, 0, kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().lpm_match(),
+                               kMatchWidth);
   EXPECT_EQ(0, ::errorCount());
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().exact_match(), kMatchWidth + 1);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().exact_match(),
+                               kMatchWidth + 1);
   EXPECT_EQ(0, ::errorCount());
   const auto field_descriptor =
       FindFieldDescriptorOrNull(kTestFieldName, map_generator_.generated_map());
@@ -447,8 +446,8 @@ TEST_F(TableMapGeneratorTest, TestAddFieldDifferentMatchTypeMultiBitWidth) {
 TEST_F(TableMapGeneratorTest, TestAddFieldMatchUndefined) {
   SetUpTestP4ModelNames();
   const int kMatchWidth = 16;
-  map_generator_.AddFieldMatch(
-      kTestFieldName, GetP4ModelNames().exact_match(), kMatchWidth);
+  map_generator_.AddFieldMatch(kTestFieldName, GetP4ModelNames().exact_match(),
+                               kMatchWidth);
   auto iter = map_generator_.generated_map().table_map().find(kTestFieldName);
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
 }
@@ -466,8 +465,8 @@ TEST_F(TableMapGeneratorTest, TestReplaceFieldDescriptor) {
   const hal::P4FieldDescriptor* replaced_descriptor =
       FindFieldDescriptorOrNull(kTestFieldName, map_generator_.generated_map());
   ASSERT_TRUE(replaced_descriptor != nullptr);
-  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(new_descriptor,
-                                                         *replaced_descriptor));
+  EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
+      new_descriptor, *replaced_descriptor));
 }
 
 // Tests field descriptor replacement with undefined field.
@@ -523,8 +522,8 @@ TEST_F(TableMapGeneratorTest, TestActionAssignConstantField) {
   P4AssignSourceValue source_value;
   source_value.set_constant_param(kTestConstant);
   source_value.set_bit_width(48);
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value, kTestFieldName);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value,
+                                                kTestFieldName);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   const auto& action_descriptor = iter->second.action_descriptor();
@@ -545,8 +544,8 @@ TEST_F(TableMapGeneratorTest, TestActionAssignFieldToField) {
   map_generator_.AddAction(kTestActionName);
   P4AssignSourceValue source_value;
   source_value.set_source_field_name(kTestFieldName2);
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value, kTestFieldName);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value,
+                                                kTestFieldName);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   const auto& action_descriptor = iter->second.action_descriptor();
@@ -566,8 +565,8 @@ TEST_F(TableMapGeneratorTest, TestActionCopyHeaderToHeader) {
   map_generator_.AddAction(kTestActionName);
   P4AssignSourceValue source_value;
   source_value.set_source_header_name("source-header");
-  map_generator_.AssignHeaderToHeader(
-      kTestActionName, source_value, kTestFieldName);
+  map_generator_.AssignHeaderToHeader(kTestActionName, source_value,
+                                      kTestFieldName);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   const auto& action_descriptor = iter->second.action_descriptor();
@@ -587,10 +586,10 @@ TEST_F(TableMapGeneratorTest, TestActionCopyHeaderToMultipleHeaders) {
   map_generator_.AddAction(kTestActionName);
   P4AssignSourceValue source_value;
   source_value.set_source_header_name("source-header");
-  map_generator_.AssignHeaderToHeader(
-      kTestActionName, source_value, kTestFieldName);
-  map_generator_.AssignHeaderToHeader(
-      kTestActionName, source_value, kTestFieldName2);
+  map_generator_.AssignHeaderToHeader(kTestActionName, source_value,
+                                      kTestFieldName);
+  map_generator_.AssignHeaderToHeader(kTestActionName, source_value,
+                                      kTestFieldName2);
 
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
@@ -643,8 +642,8 @@ TEST_F(TableMapGeneratorTest, TestActionNop) {
 TEST_F(TableMapGeneratorTest, TestActionMeterColor) {
   map_generator_.AddAction(kTestActionName);
   hal::P4ActionDescriptor::P4MeterColorAction test_color_action;
-  SetUpTestColorAction(
-      {P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &test_color_action);
+  SetUpTestColorAction({P4_METER_GREEN}, {P4_ACTION_OP_CLONE},
+                       &test_color_action);
   map_generator_.AddMeterColorAction(kTestActionName, test_color_action);
 
   // The test_color_action should appear as the only color_actions entry
@@ -665,11 +664,10 @@ TEST_F(TableMapGeneratorTest, TestActionMeterColor) {
 TEST_F(TableMapGeneratorTest, TestActionMeterDisjointColors) {
   map_generator_.AddAction(kTestActionName);
   hal::P4ActionDescriptor::P4MeterColorAction test_green;
-  SetUpTestColorAction(
-      {P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &test_green);
+  SetUpTestColorAction({P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &test_green);
   hal::P4ActionDescriptor::P4MeterColorAction test_red_yellow;
-  SetUpTestColorAction(
-      {P4_METER_RED, P4_METER_YELLOW}, {P4_ACTION_OP_DROP}, &test_red_yellow);
+  SetUpTestColorAction({P4_METER_RED, P4_METER_YELLOW}, {P4_ACTION_OP_DROP},
+                       &test_red_yellow);
   map_generator_.AddMeterColorAction(kTestActionName, test_green);
   map_generator_.AddMeterColorAction(kTestActionName, test_red_yellow);
 
@@ -694,11 +692,11 @@ TEST_F(TableMapGeneratorTest, TestActionMeterDisjointColors) {
 TEST_F(TableMapGeneratorTest, TestActionMeterPartialColorsOverlap) {
   map_generator_.AddAction(kTestActionName);
   hal::P4ActionDescriptor::P4MeterColorAction test_green_yellow;
-  SetUpTestColorAction({P4_METER_GREEN, P4_METER_YELLOW},
-                       {P4_ACTION_OP_CLONE}, &test_green_yellow);
+  SetUpTestColorAction({P4_METER_GREEN, P4_METER_YELLOW}, {P4_ACTION_OP_CLONE},
+                       &test_green_yellow);
   hal::P4ActionDescriptor::P4MeterColorAction test_red_yellow;
-  SetUpTestColorAction(
-      {P4_METER_RED, P4_METER_YELLOW}, {P4_ACTION_OP_DROP}, &test_red_yellow);
+  SetUpTestColorAction({P4_METER_RED, P4_METER_YELLOW}, {P4_ACTION_OP_DROP},
+                       &test_red_yellow);
   map_generator_.AddMeterColorAction(kTestActionName, test_green_yellow);
   map_generator_.AddMeterColorAction(kTestActionName, test_red_yellow);
 
@@ -724,12 +722,12 @@ TEST_F(TableMapGeneratorTest, TestActionMeterPartialColorsOverlap) {
 TEST_F(TableMapGeneratorTest, TestActionMeterFullColorsOverlap) {
   map_generator_.AddAction(kTestActionName);
   hal::P4ActionDescriptor::P4MeterColorAction green_clone1;
-  SetUpTestColorAction({P4_METER_GREEN, P4_METER_YELLOW},
-                       {P4_ACTION_OP_CLONE}, &green_clone1);
+  SetUpTestColorAction({P4_METER_GREEN, P4_METER_YELLOW}, {P4_ACTION_OP_CLONE},
+                       &green_clone1);
   green_clone1.mutable_ops(0)->mutable_assigned_value()->set_constant_param(1);
   hal::P4ActionDescriptor::P4MeterColorAction green_clone2;
-  SetUpTestColorAction({P4_METER_YELLOW, P4_METER_GREEN},
-                       {P4_ACTION_OP_CLONE}, &green_clone2);
+  SetUpTestColorAction({P4_METER_YELLOW, P4_METER_GREEN}, {P4_ACTION_OP_CLONE},
+                       &green_clone2);
   green_clone2.mutable_ops(0)->mutable_assigned_value()->set_constant_param(3);
   map_generator_.AddMeterColorAction(kTestActionName, green_clone1);
   map_generator_.AddMeterColorAction(kTestActionName, green_clone2);
@@ -763,19 +761,18 @@ TEST_F(TableMapGeneratorTest, TestAddMeterColorActionsFromString) {
   // values are converted to text format before calling the tested method.
   map_generator_.AddAction(kTestActionName);
   hal::P4ActionDescriptor::P4MeterColorAction test_green;
-  SetUpTestColorAction(
-      {P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &test_green);
+  SetUpTestColorAction({P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &test_green);
   hal::P4ActionDescriptor::P4MeterColorAction test_red_yellow;
-  SetUpTestColorAction(
-      {P4_METER_RED, P4_METER_YELLOW}, {P4_ACTION_OP_DROP}, &test_red_yellow);
+  SetUpTestColorAction({P4_METER_RED, P4_METER_YELLOW}, {P4_ACTION_OP_DROP},
+                       &test_red_yellow);
   hal::P4ActionDescriptor color_actions_message;
   *(color_actions_message.add_color_actions()) = test_green;
   *(color_actions_message.add_color_actions()) = test_red_yellow;
   std::string color_actions_text;
   ASSERT_TRUE(
       PrintProtoToString(color_actions_message, &color_actions_text).ok());
-  map_generator_.AddMeterColorActionsFromString(
-      kTestActionName, color_actions_text);
+  map_generator_.AddMeterColorActionsFromString(kTestActionName,
+                                                color_actions_text);
 
   // The updated action descriptor should match the input color_actions_message
   // adjusted for the basic descriptor settings.
@@ -985,10 +982,10 @@ TEST_F(TableMapGeneratorTest, TestActionAssignMultiWidthConstant) {
   // The test assigns the same constant to two different fields with different
   // bit widths.  Each should appear as a distinct assignment in the
   // action descriptor.
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value1, kTestFieldName);
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value2, kTestFieldName2);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value1,
+                                                kTestFieldName);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value2,
+                                                kTestFieldName2);
 
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
@@ -1001,16 +998,14 @@ TEST_F(TableMapGeneratorTest, TestActionAssignMultiWidthConstant) {
   const auto& param1_descriptor = action_descriptor.assignments(0);
   EXPECT_EQ(P4AssignSourceValue::kConstantParam,
             param1_descriptor.assigned_value().source_value_case());
-  EXPECT_EQ(kTestConstant,
-            param1_descriptor.assigned_value().constant_param());
+  EXPECT_EQ(kTestConstant, param1_descriptor.assigned_value().constant_param());
   EXPECT_EQ(source_value1.bit_width(),
             param1_descriptor.assigned_value().bit_width());
   EXPECT_EQ(kTestFieldName, param1_descriptor.destination_field_name());
   const auto& param2_descriptor = action_descriptor.assignments(1);
   EXPECT_EQ(P4AssignSourceValue::kConstantParam,
             param2_descriptor.assigned_value().source_value_case());
-  EXPECT_EQ(kTestConstant,
-            param2_descriptor.assigned_value().constant_param());
+  EXPECT_EQ(kTestConstant, param2_descriptor.assigned_value().constant_param());
   EXPECT_EQ(source_value2.bit_width(),
             param2_descriptor.assigned_value().bit_width());
   EXPECT_EQ(kTestFieldName2, param2_descriptor.destination_field_name());
@@ -1020,8 +1015,8 @@ TEST_F(TableMapGeneratorTest, TestActionAssignMultiWidthConstant) {
 TEST_F(TableMapGeneratorTest, TestActionAssignNoSourceValue) {
   map_generator_.AddAction(kTestActionName);
   P4AssignSourceValue source_value;
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value, kTestFieldName);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value,
+                                                kTestFieldName);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   const auto& action_descriptor = iter->second.action_descriptor();
@@ -1035,10 +1030,10 @@ TEST_F(TableMapGeneratorTest, TestActionAssignFieldToMultipleFields) {
   map_generator_.AddAction(kTestActionName);
   P4AssignSourceValue source_value;
   source_value.set_source_field_name(kTestFieldName3);
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value, kTestFieldName);
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value, kTestFieldName2);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value,
+                                                kTestFieldName);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value,
+                                                kTestFieldName2);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   const auto& action_descriptor = iter->second.action_descriptor();
@@ -1075,8 +1070,8 @@ TEST_F(TableMapGeneratorTest, TestUndefinedActionAssignConstantField) {
   P4AssignSourceValue source_value;
   source_value.set_constant_param(kTestConstant);
   source_value.set_bit_width(48);
-  map_generator_.AssignActionSourceValueToField(
-      kTestActionName, source_value, kTestFieldName);
+  map_generator_.AssignActionSourceValueToField(kTestActionName, source_value,
+                                                kTestFieldName);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
 }
@@ -1098,8 +1093,7 @@ TEST_F(TableMapGeneratorTest, TestActionNopUndefined) {
 // Tests meter color update with undefined action.
 TEST_F(TableMapGeneratorTest, TestUndefinedActionMeterColor) {
   hal::P4ActionDescriptor::P4MeterColorAction color_dummy;
-  SetUpTestColorAction(
-      {P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &color_dummy);
+  SetUpTestColorAction({P4_METER_GREEN}, {P4_ACTION_OP_CLONE}, &color_dummy);
   map_generator_.AddMeterColorAction(kTestActionName, color_dummy);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   EXPECT_TRUE(iter == map_generator_.generated_map().table_map().end());
@@ -1109,8 +1103,8 @@ TEST_F(TableMapGeneratorTest, TestUndefinedActionMeterColor) {
 TEST_F(TableMapGeneratorTest, TestAddMeterColorActionsBogusString) {
   map_generator_.AddAction(kTestActionName);
   const std::string color_actions_text("Not a color actions message");
-  map_generator_.AddMeterColorActionsFromString(
-      kTestActionName, color_actions_text);
+  map_generator_.AddMeterColorActionsFromString(kTestActionName,
+                                                color_actions_text);
   auto iter = map_generator_.generated_map().table_map().find(kTestActionName);
   ASSERT_TRUE(iter != map_generator_.generated_map().table_map().end());
   const auto& action_descriptor = iter->second.action_descriptor();

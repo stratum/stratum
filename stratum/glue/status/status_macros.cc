@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-
 #include "stratum/glue/status/status_macros.h"
 
 #include <algorithm>
 
-#include "absl/strings/str_cat.h"
 #include "absl/base/optimization.h"
+#include "absl/strings/str_cat.h"
 #include "stratum/glue/logging.h"
 
 DEFINE_bool(status_macros_log_stack_trace, false,
@@ -31,12 +30,12 @@ DECLARE_bool(util_status_save_stack_trace);
 namespace util {
 namespace status_macros {
 
-using ::google::LogMessage;
-using ::google::LogSeverity;
-using ::google::NUM_SEVERITIES;
 using ::google::ERROR;
 using ::google::FATAL;
 using ::google::INFO;
+using ::google::LogMessage;
+using ::google::LogSeverity;
+using ::google::NUM_SEVERITIES;
 using ::google::WARNING;
 
 static ::util::Status MakeStatus(const util::ErrorSpace* error_space, int code,
@@ -63,8 +62,8 @@ static void LogError(const ::util::Status& status, const char* filename,
 // message (ignored if should_log is false).
 static ::util::Status MakeError(const char* filename, int line,
                                 const util::ErrorSpace* error_space, int code,
-                                const std::string& message,
-                                bool should_log, LogSeverity log_severity,
+                                const std::string& message, bool should_log,
+                                LogSeverity log_severity,
                                 bool should_log_stack_trace) {
   if (ABSL_PREDICT_FALSE(code == ::util::error::OK)) {
     LOG(DFATAL) << "Cannot create error with status OK";
@@ -80,8 +79,8 @@ static ::util::Status MakeError(const char* filename, int line,
 
 // Returns appropriate log severity based on suppression level, or
 // NUM_SEVERITIES to indicate that logging should be disabled.
-static LogSeverity GetSuppressedSeverity(
-    LogSeverity severity, int suppressed_level) {
+static LogSeverity GetSuppressedSeverity(LogSeverity severity,
+                                         int suppressed_level) {
   if (suppressed_level == -1) {
     return WARNING;
   } else if (suppressed_level >= 0) {
@@ -100,14 +99,16 @@ void LogErrorWithSuppression(const ::util::Status& status, const char* filename,
 
 // This method is written out-of-line rather than in the header to avoid
 // generating a lot of inline code for error cases in all callers.
-void MakeErrorStream::CheckNotDone() const {
-  impl_->CheckNotDone();
-}
+void MakeErrorStream::CheckNotDone() const { impl_->CheckNotDone(); }
 
-MakeErrorStream::Impl::Impl(
-    const char* file, int line, const util::ErrorSpace* error_space, int code,
-    MakeErrorStream* error_stream, bool is_logged_by_default)
-    : file_(file), line_(line), error_space_(error_space), code_(code),
+MakeErrorStream::Impl::Impl(const char* file, int line,
+                            const util::ErrorSpace* error_space, int code,
+                            MakeErrorStream* error_stream,
+                            bool is_logged_by_default)
+    : file_(file),
+      line_(line),
+      error_space_(error_space),
+      code_(code),
       is_done_(false),
       should_log_(is_logged_by_default),
       log_severity_(ERROR),
@@ -137,8 +138,8 @@ MakeErrorStream::Impl::~Impl() {
   // Note: error messages refer to the public MakeErrorStream class.
 
   LOG_IF(DFATAL, !is_done_)
-      << "MakeErrorStream destructed without getting Status: "
-      << file_ << ":" << line_ << " " << stream_.str();
+      << "MakeErrorStream destructed without getting Status: " << file_ << ":"
+      << line_ << " " << stream_.str();
 }
 
 ::util::Status MakeErrorStream::Impl::GetStatus() {
@@ -147,32 +148,30 @@ MakeErrorStream::Impl::~Impl() {
   // Getting a ::util::Status object out more than once is not harmful, but
   // it doesn't match the expected pattern, where the stream is constructed
   // as a temporary, loaded with a message, and then casted to Status.
-  LOG_IF(DFATAL, is_done_)
-      << "MakeErrorStream got Status more than once: "
-      << file_ << ":" << line_ << " " << stream_.str();
+  LOG_IF(DFATAL, is_done_) << "MakeErrorStream got Status more than once: "
+                           << file_ << ":" << line_ << " " << stream_.str();
 
   is_done_ = true;
 
   const std::string& stream_str = stream_.str();
   std::string str = absl::StrCat(prior_message_.c_str(), stream_str.c_str());
   if (ABSL_PREDICT_FALSE(str.empty())) {
-    return MakeError(
-        file_, line_, error_space_, code_,
-        absl::StrCat(str.c_str(), "Error without message at ", file_, ":",
-                     line_),
-        true /* should_log */, ERROR /* log_severity */,
-        should_log_stack_trace_);
+    return MakeError(file_, line_, error_space_, code_,
+                     absl::StrCat(str.c_str(), "Error without message at ",
+                                  file_, ":", line_),
+                     true /* should_log */, ERROR /* log_severity */,
+                     should_log_stack_trace_);
   } else {
     const LogSeverity actual_severity = ERROR;
-    return MakeError(file_, line_, error_space_, code_, str,
-                     should_log_, actual_severity, should_log_stack_trace_);
+    return MakeError(file_, line_, error_space_, code_, str, should_log_,
+                     actual_severity, should_log_stack_trace_);
   }
 }
 
 void MakeErrorStream::Impl::CheckNotDone() const {
   LOG_IF(DFATAL, is_done_)
-      << "MakeErrorStream shift called after getting Status: "
-      << file_ << ":" << line_ << " " << stream_.str();
+      << "MakeErrorStream shift called after getting Status: " << file_ << ":"
+      << line_ << " " << stream_.str();
 }
 
 }  // namespace status_macros

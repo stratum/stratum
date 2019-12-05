@@ -13,12 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/lib/security/credentials_manager.h"
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 

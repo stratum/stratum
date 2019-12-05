@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_UTILS_H_
 #define STRATUM_HAL_LIB_COMMON_UTILS_H_
 
@@ -24,10 +23,10 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/common/common.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -206,7 +205,8 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
 std::string MacAddressToYangString(
     const ::google::protobuf::uint64& mac_address);
 
-// A helper function that convert data received from the gNMI interface into a format
+// A helper function that convert data received from the gNMI interface into a
+// format
 // expected by the HAL (MAC addresses are expected to be
 // ::google::protobuf::uint64).
 ::google::protobuf::uint64 YangStringToMacAddress(

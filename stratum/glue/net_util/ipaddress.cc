@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // Definition of classes IPAddress and SocketAddress.
 
 #include "stratum/glue/net_util/ipaddress.h"
@@ -26,6 +25,7 @@
 #include <netdb.h>
 #include <stdio.h>  // for snprintf
 #include <sys/socket.h>
+
 #include <iosfwd>
 #include <limits>
 #include <string>
@@ -62,21 +62,15 @@ const int kMaxNetmaskIPv6 = 128;
 // ToCharBuf() (below) depends on this.
 static_assert(INET_ADDRSTRLEN <= INET6_ADDRSTRLEN, "ipv6 larger than ipv4");
 
-IPAddress IPAddress::Any4() {
-  return HostUInt32ToIPAddress(INADDR_ANY);
-}
+IPAddress IPAddress::Any4() { return HostUInt32ToIPAddress(INADDR_ANY); }
 
 IPAddress IPAddress::Loopback4() {
   return HostUInt32ToIPAddress(INADDR_LOOPBACK);
 }
 
-IPAddress IPAddress::Any6() {
-  return IPAddress(in6addr_any);
-}
+IPAddress IPAddress::Any6() { return IPAddress(in6addr_any); }
 
-IPAddress IPAddress::Loopback6() {
-  return IPAddress(in6addr_loopback);
-}
+IPAddress IPAddress::Loopback6() { return IPAddress(in6addr_loopback); }
 
 IPAddress UInt128ToIPAddress(const absl::uint128& bigint) {
   in6_addr addr6;
@@ -101,10 +95,8 @@ bool IsAnyIPAddress(const IPAddress& ip) {
       LOG(DFATAL) << "Calling IsAnyIPAddress() on an empty IPAddress";
       break;
     default:
-      LOG(DFATAL)
-          << "Calling IsAnyIPAddress() on an IPAddress "
-          << "with unknown address family "
-          << ip.address_family();
+      LOG(DFATAL) << "Calling IsAnyIPAddress() on an IPAddress "
+                  << "with unknown address family " << ip.address_family();
   }
   return false;
 }
@@ -116,8 +108,7 @@ enum class LoopbackMode {
   DO_NOT_INCLUDE_ENTIRE_IPV4_LOOPBACK_NETWORK,
 };
 
-bool IsLoopbackIPAddress(const IPAddress& ip,
-                         const LoopbackMode mode) {
+bool IsLoopbackIPAddress(const IPAddress& ip, const LoopbackMode mode) {
   switch (ip.address_family()) {
     case AF_INET:
       if (mode == LoopbackMode::INCLUDE_ENTIRE_IPV4_LOOPBACK_NETWORK) {
@@ -131,10 +122,8 @@ bool IsLoopbackIPAddress(const IPAddress& ip,
       LOG(DFATAL) << "Calling IsLoopbackIPAddress() on an empty IPAddress";
       break;
     default:
-      LOG(DFATAL)
-          << "Calling IsLoopbackIPAddress() on an IPAddress "
-          << "with unknown address family "
-          << ip.address_family();
+      LOG(DFATAL) << "Calling IsLoopbackIPAddress() on an IPAddress "
+                  << "with unknown address family " << ip.address_family();
   }
   return false;
 }
@@ -156,13 +145,12 @@ bool IsLoopbackIPAddress(const IPAddress& ip) {
 void IPAddress::ToCharBuf(char* buffer) const {
   switch (address_family_) {
     case AF_INET: {
-      CHECK(inet_ntop(AF_INET, &addr_.addr4, buffer, INET_ADDRSTRLEN)
-            != NULL);
+      CHECK(inet_ntop(AF_INET, &addr_.addr4, buffer, INET_ADDRSTRLEN) != NULL);
       break;
     }
     case AF_INET6:
-      CHECK(inet_ntop(AF_INET6, &addr_.addr6, buffer, INET6_ADDRSTRLEN)
-            != NULL);
+      CHECK(inet_ntop(AF_INET6, &addr_.addr6, buffer, INET6_ADDRSTRLEN) !=
+            NULL);
       break;
     case AF_UNSPEC:
       LOG(DFATAL) << "Calling ToCharBuf() on an empty IPAddress";
@@ -182,10 +170,10 @@ std::string IPAddress::ToString() const {
 std::string IPAddress::ToPackedString() const {
   switch (address_family_) {
     case AF_INET:
-      return std::string(reinterpret_cast<const char *>(&addr_.addr4),
+      return std::string(reinterpret_cast<const char*>(&addr_.addr4),
                          sizeof(addr_.addr4));
     case AF_INET6:
-      return std::string(reinterpret_cast<const char *>(&addr_.addr6),
+      return std::string(reinterpret_cast<const char*>(&addr_.addr6),
                          sizeof(addr_.addr6));
     case AF_UNSPEC:
       LOG(DFATAL) << "Calling ToPackedString() on an empty IPAddress";
@@ -300,8 +288,9 @@ std::string IPAddressToURIString(const IPAddress& ip) {
 }
 
 std::string IPAddressToPTRString(const IPAddress& ip) {
-  char ptr_name[sizeof("0.1.2.3.4.5.6.7.8.9.a.b.c.d.e.f."
-                       "0.1.2.3.4.5.6.7.8.9.a.b.c.d.e.f.ip6.arpa")];
+  char
+      ptr_name[sizeof("0.1.2.3.4.5.6.7.8.9.a.b.c.d.e.f."
+                      "0.1.2.3.4.5.6.7.8.9.a.b.c.d.e.f.ip6.arpa")];
   memset(ptr_name, 0, sizeof(ptr_name));
 
   switch (ip.address_family()) {
@@ -312,33 +301,25 @@ std::string IPAddressToPTRString(const IPAddress& ip) {
       a2 = static_cast<int>((addr >> 16) & 0xff);
       a3 = static_cast<int>((addr >> 8) & 0xff);
       a4 = static_cast<int>(addr & 0xff);
-      snprintf(ptr_name, sizeof(ptr_name), "%d.%d.%d.%d.in-addr.arpa",
-               a4, a3, a2, a1);
+      snprintf(ptr_name, sizeof(ptr_name), "%d.%d.%d.%d.in-addr.arpa", a4, a3,
+               a2, a1);
       return ptr_name;
     }
     case AF_INET6: {
       const struct in6_addr addr = ip.ipv6_address();
-      const unsigned char * bytes =
-          reinterpret_cast<const unsigned char *>(addr.s6_addr);
+      const unsigned char* bytes =
+          reinterpret_cast<const unsigned char*>(addr.s6_addr);
       snprintf(ptr_name, sizeof(ptr_name),
                "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x."
                "%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.%x.ip6.arpa",
-               bytes[15] & 0xf, bytes[15] >> 4,
-               bytes[14] & 0xf, bytes[14] >> 4,
-               bytes[13] & 0xf, bytes[13] >> 4,
-               bytes[12] & 0xf, bytes[12] >> 4,
-               bytes[11] & 0xf, bytes[11] >> 4,
-               bytes[10] & 0xf, bytes[10] >> 4,
-               bytes[9] & 0xf, bytes[9] >> 4,
-               bytes[8] & 0xf, bytes[8] >> 4,
-               bytes[7] & 0xf, bytes[7] >> 4,
-               bytes[6] & 0xf, bytes[6] >> 4,
-               bytes[5] & 0xf, bytes[5] >> 4,
-               bytes[4] & 0xf, bytes[4] >> 4,
-               bytes[3] & 0xf, bytes[3] >> 4,
-               bytes[2] & 0xf, bytes[2] >> 4,
-               bytes[1] & 0xf, bytes[1] >> 4,
-               bytes[0] & 0xf, bytes[0] >> 4);
+               bytes[15] & 0xf, bytes[15] >> 4, bytes[14] & 0xf, bytes[14] >> 4,
+               bytes[13] & 0xf, bytes[13] >> 4, bytes[12] & 0xf, bytes[12] >> 4,
+               bytes[11] & 0xf, bytes[11] >> 4, bytes[10] & 0xf, bytes[10] >> 4,
+               bytes[9] & 0xf, bytes[9] >> 4, bytes[8] & 0xf, bytes[8] >> 4,
+               bytes[7] & 0xf, bytes[7] >> 4, bytes[6] & 0xf, bytes[6] >> 4,
+               bytes[5] & 0xf, bytes[5] >> 4, bytes[4] & 0xf, bytes[4] >> 4,
+               bytes[3] & 0xf, bytes[3] >> 4, bytes[2] & 0xf, bytes[2] >> 4,
+               bytes[1] & 0xf, bytes[1] >> 4, bytes[0] & 0xf, bytes[0] >> 4);
       return ptr_name;
     }
     case AF_UNSPEC:
@@ -407,7 +388,7 @@ IPAddress ChooseRandomAddress(const struct hostent* hp) {
 }
 
 // Return a random IPAddress from the a vector of same.
-IPAddress ChooseRandomIPAddress(const std::vector<IPAddress> *ipvec) {
+IPAddress ChooseRandomIPAddress(const std::vector<IPAddress>* ipvec) {
   LOG(FATAL) << __FUNCTION__ << " not yet implemented in depot3";
 }
 
@@ -458,8 +439,7 @@ bool SocketAddressOrdering::operator()(const SocketAddress& lhs,
   return lhs.port() < rhs.port();
 }
 
-bool IPRangeOrdering::operator()(const IPRange& lhs,
-                                 const IPRange& rhs) const {
+bool IPRangeOrdering::operator()(const IPRange& lhs, const IPRange& rhs) const {
   if (!IsInitializedRange(rhs)) {
     return false;
   }
@@ -567,8 +547,8 @@ bool Get6to4IPv6Range(const IPRange& iprange4, IPRange* iprange6) {
     DCHECK_EQ(4u, sizeof(addr4));
     memcpy(&addr6.s6_addr16[1], &addr4, sizeof(addr4));
 
-    *iprange6 = IPRange::UnsafeConstruct(
-        IPAddress(addr6), iprange4.length() + 16);
+    *iprange6 =
+        IPRange::UnsafeConstruct(IPAddress(addr6), iprange4.length() + 16);
   }
   return true;
 }
@@ -590,8 +570,8 @@ bool GetIsatapIPv4Address(const IPAddress& ip6, IPAddress* ip4) {
   // prepended to the client's IPv4 address to form the 64bit
   // interface identifier.  The usual rules about U/L and G bits
   // apply as well, hence we mask those bits when testing for equality.
-  if (addr6.s6_addr16[5] != ghtons(0x5efe)
-      || (addr6.s6_addr16[4] | ghtons(0x0300)) !=  ghtons(0x0300)) {
+  if (addr6.s6_addr16[5] != ghtons(0x5efe) ||
+      (addr6.s6_addr16[4] | ghtons(0x0300)) != ghtons(0x0300)) {
     return false;
   }
 
@@ -635,14 +615,13 @@ bool GetTeredoInfo(const IPAddress& ip6, IPAddress* server, uint16* flags,
   return true;
 }
 
-bool GetEmbeddedIPv4ClientAddress(const IPAddress& ip6, IPAddress *ip4) {
+bool GetEmbeddedIPv4ClientAddress(const IPAddress& ip6, IPAddress* ip4) {
   // Return the IPv4 Compat, IPv4 Mapped, 6to4, or Teredo client address,
   // if applicable.  NOTE: ISATAP addresses are explicityly NOT returned:
   // the client addresses are not part of the routing information and
   // are, consequently, considerably more spoofable.
-  return (GetCompatIPv4Address(ip6, ip4) ||
-          GetMappedIPv4Address(ip6, ip4) ||
-          Get6to4IPv4Address(ip6, ip4)   ||
+  return (GetCompatIPv4Address(ip6, ip4) || GetMappedIPv4Address(ip6, ip4) ||
+          Get6to4IPv4Address(ip6, ip4) ||
           GetTeredoInfo(ip6, NULL, NULL, NULL, ip4));
 }
 
@@ -681,16 +660,16 @@ IPAddress DualstackIPAddress(const IPAddress& ip) {
 SocketAddress::SocketAddress(const struct sockaddr& saddr) {
   switch (saddr.sa_family) {
     case AF_INET: {
-      const struct sockaddr_in* sin
-          = reinterpret_cast<const struct sockaddr_in*>(&saddr);
+      const struct sockaddr_in* sin =
+          reinterpret_cast<const struct sockaddr_in*>(&saddr);
       CHECK_EQ(AF_INET, sin->sin_family);
       host_ = IPAddress(sin->sin_addr);
       port_ = ntohs(sin->sin_port);
       break;
     }
     case AF_INET6: {
-      const struct sockaddr_in6* sin6
-          = reinterpret_cast<const struct sockaddr_in6*>(&saddr);
+      const struct sockaddr_in6* sin6 =
+          reinterpret_cast<const struct sockaddr_in6*>(&saddr);
       CHECK_EQ(AF_INET6, sin6->sin6_family);
       host_ = IPAddress(sin6->sin6_addr);
       port_ = ntohs(sin6->sin6_port);
@@ -712,16 +691,16 @@ SocketAddress::SocketAddress(const struct sockaddr& saddr) {
 SocketAddress::SocketAddress(const struct sockaddr_storage& saddr) {
   switch (saddr.ss_family) {
     case AF_INET: {
-      const struct sockaddr_in* sin
-          = reinterpret_cast<const struct sockaddr_in*>(&saddr);
+      const struct sockaddr_in* sin =
+          reinterpret_cast<const struct sockaddr_in*>(&saddr);
       CHECK_EQ(AF_INET, sin->sin_family);
       host_ = IPAddress(sin->sin_addr);
       port_ = ntohs(sin->sin_port);
       break;
     }
     case AF_INET6: {
-      const struct sockaddr_in6* sin6
-          = reinterpret_cast<const struct sockaddr_in6*>(&saddr);
+      const struct sockaddr_in6* sin6 =
+          reinterpret_cast<const struct sockaddr_in6*>(&saddr);
       CHECK_EQ(AF_INET6, sin6->sin6_family);
       host_ = IPAddress(sin6->sin6_addr);
       port_ = ntohs(sin6->sin6_port);
@@ -858,8 +837,8 @@ bool SocketAddressToFamily(int output_family, const SocketAddress& sa,
     }
   }
   // Generate an invalid sockaddr, to prevent accidental use.
-  LOG(WARNING) << "Can't convert address family "
-               << host.address_family() << " to " << output_family;
+  LOG(WARNING) << "Can't convert address family " << host.address_family()
+               << " to " << output_family;
   memset(addr_out, 0, sizeof(sockaddr));
   addr_out->ss_family = 0xFFFF;
   if (size_out != NULL) {
@@ -868,8 +847,7 @@ bool SocketAddressToFamily(int output_family, const SocketAddress& sa,
   return false;
 }
 
-bool SocketAddressToFamilyForBind(int output_family,
-                                  const SocketAddress& sa,
+bool SocketAddressToFamilyForBind(int output_family, const SocketAddress& sa,
                                   sockaddr_storage* addr_out,
                                   socklen_t* size_out) {
   SocketAddress sa_copy(sa);
@@ -916,10 +894,8 @@ bool InternalStringToNetmaskLength(const char* str, int host_address_family,
     }
   }
 
-  if (parsed_length < 0
-          || parsed_length > kMaxNetmaskIPv6
-          || (host_address_family != AF_INET6 &&
-              parsed_length > kMaxNetmaskIPv4)) {
+  if (parsed_length < 0 || parsed_length > kMaxNetmaskIPv6 ||
+      (host_address_family != AF_INET6 && parsed_length > kMaxNetmaskIPv4)) {
     return false;
   }
 
@@ -954,9 +930,8 @@ bool InternalStringToIPRange(const std::string& str,
   // Try to parse everything after the slash as a prefix length.
   if (slash_pos != std::string::npos) {
     const std::string suffix(str.substr(slash_pos + 1));
-    return InternalStringToNetmaskLength(suffix.c_str(),
-                                         out->first.address_family(),
-                                         &out->second);
+    return InternalStringToNetmaskLength(
+        suffix.c_str(), out->first.address_family(), &out->second);
   }
 
   // There was no slash, so the range covers a single address.
@@ -1004,8 +979,7 @@ IPAddress TruncateIPAndLength(const IPAddress& addr, int* length_io) {
         return addr;
       }
       CHECK_GE(length, 0);
-      if (length == 0)
-        return IPAddress::Any4();
+      if (length == 0) return IPAddress::Any4();
       uint32 ip4 = IPAddressToHostUInt32(addr);
       ip4 &= ~0U << (32 - length);
       return HostUInt32ToIPAddress(ip4);
@@ -1016,8 +990,7 @@ IPAddress TruncateIPAndLength(const IPAddress& addr, int* length_io) {
         return addr;
       }
       CHECK_GE(length, 0);
-      if (length == 0)
-        return IPAddress::Any6();
+      if (length == 0) return IPAddress::Any6();
       absl::uint128 ip6 = IPAddressToUInt128(addr);
       ip6 &= ~absl::uint128(0) << (128 - length);
       return UInt128ToIPAddress(ip6);
@@ -1045,8 +1018,7 @@ const uint8 kPackedIPRangeIPv4LengthOffset = 200;
 }  // namespace
 
 std::string IPRange::ToPackedString() const {
-  CHECK(host_.address_family() == AF_INET ||
-        host_.address_family() == AF_INET6)
+  CHECK(host_.address_family() == AF_INET || host_.address_family() == AF_INET6)
       << "Uninitialized address in IPRange.";
   // Get the host part, with unwanted suffix bits zeroed.
   const std::string packed_host = host_.ToPackedString();
@@ -1069,7 +1041,7 @@ std::string IPRange::ToPackedString() const {
   return out;
 }
 
-bool PackedStringToIPRange(const std::string& str, IPRange *out) {
+bool PackedStringToIPRange(const std::string& str, IPRange* out) {
   if (str.empty()) {
     return false;
   }
@@ -1103,8 +1075,8 @@ bool PackedStringToIPRange(const std::string& str, IPRange *out) {
 
   // Drop the address into a zero-padded buffer, and convert to IPAddress.
   std::string packed_host(sizeof_addr, '\0');
-  packed_host.replace(0, available_host_bytes,
-                      str.data() + 1, available_host_bytes);
+  packed_host.replace(0, available_host_bytes, str.data() + 1,
+                      available_host_bytes);
   const IPAddress host = PackedStringToIPAddressOrDie(packed_host);
 
   // Verify that the input has no bits set beyond the prefix length.
@@ -1130,7 +1102,7 @@ bool IPAddressIntervalToSubnets(const IPAddress& first_addr,
   }
 
   IPAddressOrdering less;
-  for (IPAddress cur_addr = first_addr; !less(last_addr, cur_addr); ) {
+  for (IPAddress cur_addr = first_addr; !less(last_addr, cur_addr);) {
     // Find the least specific IP subnet of cur_addr whose endpoints are still
     // covered by the interval [cur_addr, last_addr].
     IPRange cur_subnet(cur_addr);
@@ -1175,9 +1147,8 @@ IPAddress NthAddressInRange(const IPRange& range, absl::uint128 index) {
       return UInt128ToIPAddress(addr + index);
     }
     default:
-      LOG(FATAL)
-          << __FUNCTION__ << " of IPRange with invalid address family: "
-          << range.host().address_family();
+      LOG(FATAL) << __FUNCTION__ << " of IPRange with invalid address family: "
+                 << range.host().address_family();
   }
 }
 
@@ -1281,8 +1252,7 @@ bool NetMaskToMaskLength(const IPAddress& address, int* result) {
       uint32 ipv4 = IPAddressToHostUInt32(address);
       length = ipv4 != 0 ? 32 - Bits::FindLSBSetNonZero(ipv4) : 0;
       // Verify this is a valid netmask.
-      if ((~ipv4 & (~ipv4 + 1)) != 0)
-        return false;
+      if ((~ipv4 & (~ipv4 + 1)) != 0) return false;
       break;
     }
 
@@ -1290,8 +1260,7 @@ bool NetMaskToMaskLength(const IPAddress& address, int* result) {
       absl::uint128 ipv6 = IPAddressToUInt128(address);
       length = ipv6 != 0 ? 128 - Bits::FindLSBSetNonZero128(ipv6) : 0;
       // Verify this is a valid netmask.
-      if ((~ipv6 & (~ipv6 + 1)) != 0)
-        return false;
+      if ((~ipv6 & (~ipv6 + 1)) != 0) return false;
       break;
     }
 
@@ -1299,33 +1268,28 @@ bool NetMaskToMaskLength(const IPAddress& address, int* result) {
       return false;
   }
 
-  if (result)
-    *result = length;
+  if (result) *result = length;
   return true;
 }
 
 bool MaskLengthToIPAddress(int family, int length, IPAddress* address) {
   switch (family) {
     case AF_INET: {
-      if (length < 0 || length > 32)
-        return false;
+      if (length < 0 || length > 32) return false;
 
       // <<32 on an uint32 is undefined, LL is important.
       uint32 mask = 0xffffffffLL << (32 - length);
-      if (address)
-        *address = HostUInt32ToIPAddress(mask);
+      if (address) *address = HostUInt32ToIPAddress(mask);
       return true;
     }
 
     case AF_INET6: {
-      if (length < 0 || length > 128)
-        return false;
+      if (length < 0 || length > 128) return false;
 
       // uint28 << 128 is undefined, so case on length.
       absl::uint128 mask =
-                  length == 0 ? 0 : absl::kuint128max << (128 - length);
-      if (address)
-        *address = UInt128ToIPAddress(mask);
+          length == 0 ? 0 : absl::kuint128max << (128 - length);
+      if (address) *address = UInt128ToIPAddress(mask);
       return true;
     }
   }

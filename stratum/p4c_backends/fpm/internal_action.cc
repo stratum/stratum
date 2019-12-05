@@ -20,20 +20,19 @@
 #include <set>
 #include <vector>
 
-#include "stratum/glue/logging.h"
+#include "absl/strings/substitute.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/strings/substitute.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
 
-InternalAction::InternalAction(
-    const std::string& original_name,
-    const hal::P4ActionDescriptor& original_action,
-    const hal::P4PipelineConfig& pipeline_config)
+InternalAction::InternalAction(const std::string& original_name,
+                               const hal::P4ActionDescriptor& original_action,
+                               const hal::P4PipelineConfig& pipeline_config)
     : internal_name_(""),
       internal_descriptor_(original_action),
       pipeline_config_(pipeline_config),
@@ -42,11 +41,10 @@ InternalAction::InternalAction(
   Init(original_name);
 }
 
-InternalAction::InternalAction(
-    const std::string& original_name,
-    const hal::P4ActionDescriptor& original_action,
-    const hal::P4PipelineConfig& pipeline_config,
-    TunnelOptimizerInterface* tunnel_optimizer)
+InternalAction::InternalAction(const std::string& original_name,
+                               const hal::P4ActionDescriptor& original_action,
+                               const hal::P4PipelineConfig& pipeline_config,
+                               TunnelOptimizerInterface* tunnel_optimizer)
     : internal_name_(""),
       internal_descriptor_(original_action),
       pipeline_config_(pipeline_config),
@@ -67,10 +65,10 @@ void InternalAction::MergeMeterCondition(const std::string& meter_condition) {
   AppendName(absl::Substitute("Meter$0", ++meter_count_));
   TableMapGenerator internal_generator;
   internal_generator.AddAction(internal_name_);
-  internal_generator.ReplaceActionDescriptor(
-      internal_name_, internal_descriptor_);
-  internal_generator.AddMeterColorActionsFromString(
-      internal_name_, meter_condition);
+  internal_generator.ReplaceActionDescriptor(internal_name_,
+                                             internal_descriptor_);
+  internal_generator.AddMeterColorActionsFromString(internal_name_,
+                                                    meter_condition);
   internal_descriptor_ = FindActionDescriptorOrDie(
       internal_name_, internal_generator.generated_map());
 }
@@ -151,20 +149,16 @@ void InternalAction::Optimize() {
   std::vector<int> redundant_assignments;
   for (int a = 0; a < optimized_assignments.assignments_size(); ++a) {
     auto assignment = optimized_assignments.mutable_assignments(a);
-    if (assignment->destination_field_name().empty())
-      continue;
+    if (assignment->destination_field_name().empty()) continue;
     if (assignment->assigned_value().source_value_case() !=
         P4AssignSourceValue::kParameterName) {
       continue;
     }
     const auto& param_name = assignment->assigned_value().parameter_name();
-    if (new_param_assigns.find(param_name) == new_param_assigns.end())
-      continue;
+    if (new_param_assigns.find(param_name) == new_param_assigns.end()) continue;
     const auto& dest_name = assignment->destination_field_name();
-    const std::string* field_param =
-        gtl::FindOrNull(field_to_param, dest_name);
-    if (field_param == nullptr || *field_param != param_name)
-        continue;
+    const std::string* field_param = gtl::FindOrNull(field_to_param, dest_name);
+    if (field_param == nullptr || *field_param != param_name) continue;
     redundant_assignments.push_back(a);
   }
 
@@ -311,8 +305,8 @@ void InternalAction::RemoveDuplicateAssignments() {
     //     so a new map entry is added to detect future duplicates of
     //     this assignment.
     if (assignment_pointer_value != nullptr) {
-      if (assignment_differencer.Compare(
-          assignment, **assignment_pointer_value)) {
+      if (assignment_differencer.Compare(assignment,
+                                         **assignment_pointer_value)) {
         duplicates.push_back(a);
       } else {
         VLOG(1) << "Potential assignment conflict in internal action "
@@ -322,8 +316,8 @@ void InternalAction::RemoveDuplicateAssignments() {
                             assignment.destination_field_name(), &assignment);
       }
     } else {
-      gtl::InsertOrDie(&assignment_targets,
-                       assignment.destination_field_name(), &assignment);
+      gtl::InsertOrDie(&assignment_targets, assignment.destination_field_name(),
+                       &assignment);
     }
   }
 

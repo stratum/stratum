@@ -28,14 +28,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <utility>
-#include <string>
-
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
+#include <string>
+#include <utility>
+
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "openconfig/openconfig.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -43,10 +47,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
-#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",
               "The latest verified ChassisConfig proto pushed to the switch. "
@@ -326,9 +326,9 @@ ConfigMonitoringService::~ConfigMonitoringService() {
       // `msg` PROTOBUF to the response that will be sent to the controller.
       InlineGnmiSubscribeStream stream(
           [resp](const ::gnmi::SubscribeResponse& msg) -> bool {
-            // If msg has empty update, it might be a sync_response for GetRequest
-            if (!msg.has_update())
-                return msg.sync_response();
+            // If msg has empty update, it might be a sync_response for
+            // GetRequest
+            if (!msg.has_update()) return msg.sync_response();
             *resp->add_notification() = msg.update();
             return true;
           });

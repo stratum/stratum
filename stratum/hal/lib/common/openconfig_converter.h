@@ -17,11 +17,11 @@
 #define STRATUM_HAL_LIB_COMMON_OPENCONFIG_CONVERTER_H_
 
 #include "openconfig/openconfig.pb.h"
-#include "stratum/public/proto/openconfig-goog-bcm.pb.h"
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/macros.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
+#include "stratum/public/proto/openconfig-goog-bcm.pb.h"
 
 namespace stratum {
 

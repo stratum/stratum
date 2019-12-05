@@ -19,11 +19,11 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
 #include "gflags/gflags.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/p4c_backends/test/test_target_info.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 DECLARE_bool(enable_pipeline_optimization);
 
@@ -35,12 +35,8 @@ namespace p4c_backends {
 // tests, so these tests focus on the overall decision to optimize or not.
 class PipelineOptimizerTest : public testing::Test {
  public:
-  static void SetUpTestCase() {
-    TestTargetInfo::SetUpTestTargetInfo();
-  }
-  static void TearDownTestCase() {
-    TestTargetInfo::TearDownTestTargetInfo();
-  }
+  static void SetUpTestCase() { TestTargetInfo::SetUpTestTargetInfo(); }
+  static void TearDownTestCase() { TestTargetInfo::TearDownTestTargetInfo(); }
 
  protected:
   // The SetUpTestIR method loads an IR file in JSON format, then applies a

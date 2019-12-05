@@ -17,11 +17,11 @@
 
 #include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -34,17 +34,15 @@ PipelineIntraBlockPass::PipelineIntraBlockPass(P4::ReferenceMap* ref_map,
 const IR::P4Control* PipelineIntraBlockPass::OptimizeControl(
     const IR::P4Control& control) {
   absl::LeakCheckDisabler disable_ir_control_leak_checks;
-  IntraBlockOptimizer statement_pass(
-      P4Annotation::DEFAULT_STAGE, ref_map_, type_map_);
+  IntraBlockOptimizer statement_pass(P4Annotation::DEFAULT_STAGE, ref_map_,
+                                     type_map_);
   const IR::BlockStatement* optimized_block =
       statement_pass.OptimizeBlock(*control.body);
-  if (optimized_block == control.body)
-    return &control;
+  if (optimized_block == control.body) return &control;
   return new IR::P4Control(control.srcInfo, control.name, control.type,
                            control.constructorParams, control.controlLocals,
                            optimized_block);
 }
-
 
 // The StatementStageInspector implementation starts here.
 StatementStageInspector::StatementStageInspector(
@@ -124,7 +122,6 @@ bool StatementStageInspector::preorder(const IR::SwitchStatement* statement) {
   return false;
 }
 
-
 // The implementation of the IntraBlockOptimizer starts here.
 IntraBlockOptimizer::IntraBlockOptimizer(
     P4Annotation::PipelineStage initial_stage, P4::ReferenceMap* ref_map,
@@ -161,8 +158,7 @@ const IR::BlockStatement* IntraBlockOptimizer::OptimizeBlock(
   // component statements of the input block have been collapsed into one
   // pipeline stage, they need to be incorporated into a new BlockStatement.
   JoinStageStatements();
-  if (!components_transformed_)
-    return &block_statement;
+  if (!components_transformed_) return &block_statement;
 
   return new IR::BlockStatement(block_statement.srcInfo,
                                 block_statement.annotations, new_components_);
@@ -246,8 +242,7 @@ void IntraBlockOptimizer::HandleBlockUpdate(const IR::StatOrDecl* statement) {
 // PipelineStageStatements are combined into a new PipelineStageStatement.
 // Subsequent P4Control processing handles this case properly.
 void IntraBlockOptimizer::JoinStageStatements() {
-  if (statements_in_stage_.empty())
-    return;
+  if (statements_in_stage_.empty()) return;
   VLOG(1) << "Combining " << statements_in_stage_.size() << " in "
           << P4Annotation::PipelineStage_Name(current_pipeline_stage_)
           << " stage";
@@ -267,8 +262,8 @@ void IntraBlockOptimizer::JoinStageStatements() {
 // taking care to pass the pipeline stage value through the recursion sequence.
 const IR::BlockStatement* IntraBlockOptimizer::RecurseBlock(
     const IR::BlockStatement& block) {
-  IntraBlockOptimizer recurse_pass(
-      current_pipeline_stage_, ref_map_, type_map_);
+  IntraBlockOptimizer recurse_pass(current_pipeline_stage_, ref_map_,
+                                   type_map_);
   const IR::BlockStatement* recurse_block = recurse_pass.OptimizeBlock(block);
   next_stage_ = recurse_pass.current_pipeline_stage_;
   return recurse_block;

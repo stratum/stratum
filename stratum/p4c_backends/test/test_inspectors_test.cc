@@ -16,16 +16,16 @@
 
 #include "stratum/p4c_backends/test/test_inspectors.h"
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/ir/visitor.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/ir/visitor.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -34,9 +34,7 @@ namespace p4c_backends {
 // data for test use.
 class TestInspectorTest : public testing::Test {
  public:
-  static void SetUpTestCase() {
-    SetUpTestP4ModelNames();
-  }
+  static void SetUpTestCase() { SetUpTestP4ModelNames(); }
 
  protected:
   // The SetUpTestIR method loads an IR file in JSON format, then applies a
@@ -44,8 +42,7 @@ class TestInspectorTest : public testing::Test {
   // to test.
   void SetUpTestIR(const std::string& ir_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string kTestP4File =
-        "stratum/p4c_backends/" + ir_file;
+    const std::string kTestP4File = "stratum/p4c_backends/" + ir_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(kTestP4File));
   }
 
@@ -80,10 +77,10 @@ class TestInspectorTest : public testing::Test {
   // record all the tables within the input control.
   void GetAllP4Tables(const IR::P4Control& control) {
     tables_in_control_.clear();
-    forAllMatching<IR::P4Table>(&control.controlLocals,
-                                [&](const IR::P4Table* table) {
-      tables_in_control_.push_back(std::string(table->externalName()));
-    });
+    forAllMatching<IR::P4Table>(
+        &control.controlLocals, [&](const IR::P4Table* table) {
+          tables_in_control_.push_back(std::string(table->externalName()));
+        });
   }
 
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.

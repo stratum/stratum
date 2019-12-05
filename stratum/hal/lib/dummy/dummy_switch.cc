@@ -17,11 +17,11 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/str_format.h"
 #include "absl/memory/memory.h"
-#include "stratum/hal/lib/common/gnmi_events.h"
-#include "stratum/hal/lib/common/common.pb.h"
+#include "absl/strings/str_format.h"
 #include "stratum/glue/logging.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 
 namespace stratum {
@@ -43,9 +43,9 @@ namespace dummy_switch {
   node_port_id_to_slot.clear();
   node_port_id_to_port.clear();
   for (auto& node : config.nodes()) {
-    LOG(INFO) <<
-      absl::StrFormat("Creating node \"%s\" (id: %d). Slot %d, Index: %d.",
-                      node.name(), node.id(), node.slot(), node.index());
+    LOG(INFO) << absl::StrFormat(
+        "Creating node \"%s\" (id: %d). Slot %d, Index: %d.", node.name(),
+        node.id(), node.slot(), node.index());
     auto new_node = DummyNode::CreateInstance(node.id(), node.name(),
                                               node.slot(), node.index());
 
@@ -77,8 +77,7 @@ namespace dummy_switch {
 }
 
 ::util::Status DummySwitch::PushForwardingPipelineConfig(
-    uint64 node_id,
-    const ::p4::v1::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&chassis_lock);
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
@@ -86,13 +85,12 @@ namespace dummy_switch {
 }
 
 ::util::Status DummySwitch::SaveForwardingPipelineConfig(
-    uint64 node_id,
-    const ::p4::v1::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&chassis_lock);
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "SaveForwardingPipelineConfig not implemented for this target";
+         << "SaveForwardingPipelineConfig not implemented for this target";
 }
 
 ::util::Status DummySwitch::CommitForwardingPipelineConfig(uint64 node_id) {
@@ -100,12 +98,11 @@ namespace dummy_switch {
   DummyNode* node = nullptr;
   ASSIGN_OR_RETURN(node, GetDummyNode(node_id));
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "CommitForwardingPipelineConfig not implemented for this target";
+         << "CommitForwardingPipelineConfig not implemented for this target";
 }
 
 ::util::Status DummySwitch::VerifyForwardingPipelineConfig(
-    uint64 node_id,
-    const ::p4::v1::ForwardingPipelineConfig& config) {
+    uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   DummyNode* node = nullptr;
@@ -120,7 +117,7 @@ namespace dummy_switch {
   bool successful = true;
   for (auto kv : dummy_nodes_) {
     auto node = kv.second;
-    auto node_status = node -> Shutdown();
+    auto node_status = node->Shutdown();
     if (!node_status.ok()) {
       LOG(ERROR) << "Got error while shutting down node " << node->Name()
                  << node_status.ToString();
@@ -129,9 +126,9 @@ namespace dummy_switch {
     }
   }
   shutdown = chassis_mgr_->Shutdown().ok() && successful;
-  return shutdown ? ::util::OkStatus() :
-      ::util::Status(::util::error::INTERNAL,
-                     "Got error while shutting down the switch");
+  return shutdown ? ::util::OkStatus()
+                  : ::util::Status(::util::error::INTERNAL,
+                                   "Got error while shutting down the switch");
 }
 ::util::Status DummySwitch::Freeze() {
   absl::WriterMutexLock l(&chassis_lock);
@@ -139,7 +136,7 @@ namespace dummy_switch {
   bool successful = true;
   for (auto kv : dummy_nodes_) {
     auto node = kv.second;
-    auto node_status = node -> Freeze();
+    auto node_status = node->Freeze();
     if (!node_status.ok()) {
       LOG(ERROR) << "Got error while freezing node " << node->Name()
                  << node_status.ToString();
@@ -147,9 +144,9 @@ namespace dummy_switch {
       // Continue freezing other nodes.
     }
   }
-  return successful ? chassis_mgr_->Freeze() :
-      ::util::Status(::util::error::INTERNAL,
-                     "Got error while freezing the switch");
+  return successful ? chassis_mgr_->Freeze()
+                    : ::util::Status(::util::error::INTERNAL,
+                                     "Got error while freezing the switch");
 }
 ::util::Status DummySwitch::Unfreeze() {
   absl::WriterMutexLock l(&chassis_lock);
@@ -157,7 +154,7 @@ namespace dummy_switch {
   bool successful = true;
   for (auto kv : dummy_nodes_) {
     auto node = kv.second;
-    auto node_status = node -> Unfreeze();
+    auto node_status = node->Unfreeze();
     if (!node_status.ok()) {
       LOG(ERROR) << "Got error while unfreezing node " << node->Name()
                  << node_status.ToString();
@@ -165,13 +162,12 @@ namespace dummy_switch {
       // Continue unfreezing other nodes.
     }
   }
-  return successful ? chassis_mgr_->Unfreeze() :
-      ::util::Status(::util::error::INTERNAL,
-                     "Got error while unfreezing the switch");
+  return successful ? chassis_mgr_->Unfreeze()
+                    : ::util::Status(::util::error::INTERNAL,
+                                     "Got error while unfreezing the switch");
 }
 ::util::Status DummySwitch::WriteForwardingEntries(
-    const ::p4::v1::WriteRequest& req,
-    std::vector<::util::Status>* results) {
+    const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   uint64 node_id = req.device_id();
@@ -211,7 +207,7 @@ namespace dummy_switch {
 }
 
 ::util::Status DummySwitch::TransmitPacket(uint64 node_id,
-                              const ::p4::v1::PacketOut& packet) {
+                                           const ::p4::v1::PacketOut& packet) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
   DummyNode* node = nullptr;
@@ -237,10 +233,10 @@ namespace dummy_switch {
   return chassis_mgr_->UnregisterEventNotifyWriter();
 }
 
-::util::Status DummySwitch::RetrieveValue(uint64 node_id,
-                             const DataRequest& requests,
-                             WriterInterface<DataResponse>* writer,
-                             std::vector<::util::Status>* details) {
+::util::Status DummySwitch::RetrieveValue(
+    uint64 node_id, const DataRequest& requests,
+    WriterInterface<DataResponse>* writer,
+    std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   LOG(INFO) << __FUNCTION__;
 
@@ -279,9 +275,8 @@ namespace dummy_switch {
                            request.front_panel_port_info().port_id());
         int slot = node_port_id_to_slot[node_port_pair];
         int port = node_port_id_to_port[node_port_pair];
-        ::util::Status status =
-            phal_interface_->GetFrontPanelPortInfo(slot, port,
-                                  resp_val.mutable_front_panel_port_info());
+        ::util::Status status = phal_interface_->GetFrontPanelPortInfo(
+            slot, port, resp_val.mutable_front_panel_port_info());
         if (status.ok()) {
           resp = resp_val;
         }
@@ -327,14 +322,13 @@ std::vector<DummyNode*> DummySwitch::GetDummyNodes() {
   auto node_element = dummy_nodes_.find(node_id);
   if (node_element == dummy_nodes_.end()) {
     return MAKE_ERROR(::util::error::NOT_FOUND)
-      << "DummyNode with id " << node_id << " not found.";
+           << "DummyNode with id " << node_id << " not found.";
   }
   return ::util::StatusOr<DummyNode*>(node_element->second);
 }
 
-std::unique_ptr<DummySwitch>
-  DummySwitch::CreateInstance(PhalInterface* phal_interface,
-                              DummyChassisManager* chassis_mgr) {
+std::unique_ptr<DummySwitch> DummySwitch::CreateInstance(
+    PhalInterface* phal_interface, DummyChassisManager* chassis_mgr) {
   return absl::WrapUnique(new DummySwitch(phal_interface, chassis_mgr));
 }
 
@@ -342,11 +336,10 @@ DummySwitch::~DummySwitch() {}
 
 DummySwitch::DummySwitch(PhalInterface* phal_interface,
                          DummyChassisManager* chassis_mgr)
-  : phal_interface_(phal_interface),
-    chassis_mgr_(chassis_mgr),
-    dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
-    gnmi_event_writer_(nullptr) {
-}
+    : phal_interface_(phal_interface),
+      chassis_mgr_(chassis_mgr),
+      dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
+      gnmi_event_writer_(nullptr) {}
 
 }  // namespace dummy_switch
 }  // namespace hal

@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/glue/net_util/ports.h"
 
 #include <errno.h>

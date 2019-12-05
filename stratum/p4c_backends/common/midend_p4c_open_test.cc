@@ -14,15 +14,15 @@
 
 // Contains unit tests for MidEndP4cOpen.
 
-#include <string>
-
 #include "stratum/p4c_backends/common/midend_p4c_open.h"
 
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
+#include <string>
+
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/frontends/common/options.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -33,14 +33,15 @@ class MidEndP4cOpenTest : public testing::Test {
  public:
   void SetUp() override {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string kTestP4IRFile = "stratum/"
+    const std::string kTestP4IRFile =
+        "stratum/"
         "p4c_backends/test/testdata/simple_vlan_stack_16.ir.json";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestP4IRFile));
   }
 
  protected:
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
-  CompilerOptions dummy_p4c_options_;  // Dummy options for test use.
+  CompilerOptions dummy_p4c_options_;            // Dummy options for test use.
 };
 
 // Tests a basic midend pass.

@@ -15,21 +15,20 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_SWITCH_INTERFACE_H_
 
-#include <vector>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

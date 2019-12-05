@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 // This is a mock implementation of P4TableMapper.
 
 #ifndef STRATUM_HAL_LIB_P4_P4_TABLE_MAPPER_MOCK_H_
 #define STRATUM_HAL_LIB_P4_P4_TABLE_MAPPER_MOCK_H_
 
-#include "stratum/hal/lib/p4/p4_table_mapper.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper.h"
 
 namespace stratum {
 namespace hal {

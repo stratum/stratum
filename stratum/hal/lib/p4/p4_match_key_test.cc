@@ -13,20 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // This file contains unit tests for P4MatchKey and its subclasses.
+
+#include "stratum/hal/lib/p4/p4_match_key.h"
 
 #include <string>
 #include <tuple>
 
-#include "stratum/hal/lib/p4/p4_match_key.h"
 #include "gflags/gflags.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/public/lib/error.h"
 
 DECLARE_bool(enforce_bytestring_length);
 
@@ -796,10 +796,8 @@ TEST_P(P4MatchKeyBitWidthTest, TestExactMatchBitEnforceMissingLeadingZeroes) {
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
 
   // The P4 bit width is adjustment by 8 bits to require a two-byte value.
-  ::util::Status status =
-      match_key->Convert(field_conversion_,
-                         max_width_param() + 8,
-                         &mapped_field_);
+  ::util::Status status = match_key->Convert(
+      field_conversion_, max_width_param() + 8, &mapped_field_);
 
   // Conversion always fails due to the missing leading zeroes in the field.
   EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
@@ -822,10 +820,8 @@ TEST_P(P4MatchKeyBitWidthTest, TestExactMatchBitMissingLeadingZeroesOK) {
   field_conversion_.set_conversion(P4FieldDescriptor::P4_CONVERT_TO_U32);
 
   // The P4 bit width is adjustment by 8 bits to require a two-byte value.
-  ::util::Status status =
-      match_key->Convert(field_conversion_,
-                         max_width_param() + 8,
-                         &mapped_field_);
+  ::util::Status status = match_key->Convert(
+      field_conversion_, max_width_param() + 8, &mapped_field_);
 
   // Conversion always succeeds since P4MatchKey doesn't require leading zeroes.
   EXPECT_TRUE(status.ok());

@@ -18,12 +18,12 @@
 
 #include <memory>
 
+#include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/p4/p4_match_key.h"
 #include "stratum/p4c_backends/fpm/internal_action.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "p4/v1/p4runtime.pb.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -32,8 +32,7 @@ HiddenStaticMapper::HiddenStaticMapper(
     const hal::P4InfoManager& p4_info_manager,
     TunnelOptimizerInterface* tunnel_optimizer)
     : p4_info_manager_(p4_info_manager),
-      tunnel_optimizer_(ABSL_DIE_IF_NULL(tunnel_optimizer)) {
-}
+      tunnel_optimizer_(ABSL_DIE_IF_NULL(tunnel_optimizer)) {}
 
 void HiddenStaticMapper::ProcessStaticEntries(
     const HiddenTableMapper::ActionRedirectMap& action_redirect_map,
@@ -54,10 +53,10 @@ void HiddenStaticMapper::ProcessStaticEntries(
         // redirects to hidden tables.  (They are only relevant when merging
         // P4 control logic into actions.)
         if (internal_link.applied_tables_size() > 0) {
-          ::error("Backend: Unexpected applied_tables constraint in action "
-                  "%s when mapping hidden table static entries: %s",
-                  iter.first.c_str(),
-                  internal_link.ShortDebugString().c_str());
+          ::error(
+              "Backend: Unexpected applied_tables constraint in action "
+              "%s when mapping hidden table static entries: %s",
+              iter.first.c_str(), internal_link.ShortDebugString().c_str());
           valid_internal_action = false;
           continue;
         }

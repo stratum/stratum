@@ -17,15 +17,15 @@
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 
 #include <memory>
-#include <string>
 #include <set>
+#include <string>
 
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -56,7 +56,7 @@ class FieldNameInspectorTest : public testing::Test {
   }
 
   std::unique_ptr<FieldNameInspector> inspector_;  // Tested FieldNameInspector.
-  std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
+  std::unique_ptr<IRTestHelperJson> ir_helper_;    // Provides an IR for tests.
 };
 
 // Tests extraction of the match key names in the P4 program.  The IR includes

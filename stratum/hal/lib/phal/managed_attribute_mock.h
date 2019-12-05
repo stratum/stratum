@@ -15,16 +15,15 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_MANAGED_ATTRIBUTE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_MANAGED_ATTRIBUTE_MOCK_H_
 
 #include <memory>
 
+#include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/datasource.h"
-#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {

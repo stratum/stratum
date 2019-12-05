@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/hal.h"
 
 #include <thread>
@@ -360,8 +359,8 @@ TEST_F(HalTest, ColdbootSetupFailureWhenChassisConfigPushFails) {
   FillTestForwardingPipelineConfigsAndSave(&forwarding_pipeline_configs);
 
   EXPECT_CALL(*switch_mock_, PushChassisConfig(EqualsProto(chassis_config)))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   FLAGS_warmboot = false;
@@ -389,8 +388,8 @@ TEST_F(HalTest, ColdbootSetupFailureWhenPipelineConfigPushFailsForSomeNodes) {
           kNodeId1,
           EqualsProto(
               forwarding_pipeline_configs.node_id_to_config().at(kNodeId1))))
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
   EXPECT_CALL(
       *switch_mock_,
       PushForwardingPipelineConfig(
@@ -451,8 +450,8 @@ TEST_F(HalTest, WarmbootSetupFailureWhenUnfreezeFails) {
   FillTestForwardingPipelineConfigsAndSave(&forwarding_pipeline_configs);
 
   EXPECT_CALL(*switch_mock_, Unfreeze())
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   FLAGS_warmboot = true;
@@ -481,8 +480,8 @@ TEST_F(HalTest, ColdbootTeardownSuccess) {
 
 TEST_F(HalTest, ColdbootTeardownFailureWhenSwitchInterfaceShutdownFails) {
   EXPECT_CALL(*switch_mock_, Shutdown())
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
   EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
       .WillOnce(Return(::util::OkStatus()));
 
@@ -500,8 +499,8 @@ TEST_F(HalTest, ColdbootTeardownFailureWhenSwitchInterfaceShutdownFails) {
 TEST_F(HalTest, ColdbootTeardownFailureWhenAuthPolicyCheckerShutdownFails) {
   EXPECT_CALL(*switch_mock_, Shutdown()).WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
 
   // Call and validate results.
   FLAGS_warmboot = false;
@@ -529,8 +528,8 @@ TEST_F(HalTest, WarmbootTeardownSuccess) {
 
 TEST_F(HalTest, WarmbootTeardownFailure) {
   EXPECT_CALL(*switch_mock_, Shutdown())
-      .WillOnce(Return(
-          ::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
+      .WillOnce(
+          Return(::util::Status(StratumErrorSpace(), ERR_INTERNAL, kErrorMsg)));
   EXPECT_CALL(*auth_policy_checker_mock_, Shutdown())
       .WillOnce(Return(::util::OkStatus()));
 

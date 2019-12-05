@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_P4_P4_TABLE_MAPPER_H_
 #define STRATUM_HAL_LIB_P4_P4_TABLE_MAPPER_H_
 
@@ -24,10 +23,11 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/common_flow_entry.pb.h"
@@ -37,7 +37,6 @@
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace hal {

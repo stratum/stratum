@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_ACL_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_ACL_MANAGER_H_
 
 #include <memory>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
@@ -31,9 +33,6 @@
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 
 DECLARE_string(bcm_hardware_specs_file);
 

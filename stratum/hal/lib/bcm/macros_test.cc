@@ -13,13 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/macros.h"
 
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/macros.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/macros.h"
 
 using ::testing::HasSubstr;
 
@@ -29,9 +28,7 @@ namespace bcm {
 
 class BcmMacrosTest : public ::testing::Test {
  protected:
-  int FakeBcmFunc(int error_code) {
-    return error_code;
-  }
+  int FakeBcmFunc(int error_code) { return error_code; }
 
   ::util::Status FuncWithReturnIfBcmError(int error_code) {
     RETURN_IF_BCM_ERROR(FakeBcmFunc(error_code));

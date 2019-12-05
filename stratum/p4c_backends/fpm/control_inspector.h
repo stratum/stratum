@@ -24,16 +24,16 @@
 
 #include <map>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
+#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/p4c_backends/fpm/switch_case_decoder.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
-#include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/typeChecking/typeChecker.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -50,11 +50,10 @@ class ControlInspector : public Inspector {
   // IR::SwitchStatements.  The caller retains ownership of all pointers.
   // ControlInspector expects the shared P4ModelNames instance to identify
   // control and extern functions from the P4 architecture model.
-  ControlInspector(
-      const hal::P4InfoManager* p4_info_manager,
-      P4::ReferenceMap* ref_map, P4::TypeMap* type_map,
-      SwitchCaseDecoder* switch_case_decoder,
-      TableMapGenerator* table_map_generator);
+  ControlInspector(const hal::P4InfoManager* p4_info_manager,
+                   P4::ReferenceMap* ref_map, P4::TypeMap* type_map,
+                   SwitchCaseDecoder* switch_case_decoder,
+                   TableMapGenerator* table_map_generator);
   ~ControlInspector() override {}
 
   // The Inspect method visits the IR node hierarchy underneath the input

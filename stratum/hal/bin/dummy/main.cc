@@ -16,10 +16,10 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/dummy/dummy_switch.h"
+#include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_phal.h"
-#include "stratum/hal/lib/dummy/dummy_box.h"
+#include "stratum/hal/lib/dummy/dummy_switch.h"
 
 namespace stratum {
 namespace hal {
@@ -37,14 +37,13 @@ int DummySwitchMain(int argc, char* argv[]) {
   DummyChassisManager* chassis_mgr = DummyChassisManager::GetSingleton();
 
   std::unique_ptr<DummySwitch> dummy_switch =
-    DummySwitch::CreateInstance(dummy_phal, chassis_mgr);
+      DummySwitch::CreateInstance(dummy_phal, chassis_mgr);
 
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   auto credentials_manager = CredentialsManager::CreateInstance();
-  auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_SIM,
-                                   dummy_switch.get(),
-                                   auth_policy_checker.get(),
-                                   credentials_manager.get());
+  auto* hal = Hal::CreateSingleton(
+      stratum::hal::OPERATION_MODE_SIM, dummy_switch.get(),
+      auth_policy_checker.get(), credentials_manager.get());
 
   if (!hal) {
     LOG(ERROR) << "Failed to create the Hal instance.";
@@ -53,9 +52,8 @@ int DummySwitchMain(int argc, char* argv[]) {
 
   ::util::Status status = hal->Setup();
   if (!status.ok()) {
-    LOG(ERROR)
-        << "Error when setting up HAL (but we will continue running): "
-        << status.error_message();
+    LOG(ERROR) << "Error when setting up HAL (but we will continue running): "
+               << status.error_message();
   }
   status = hal->Run();  // blocking
   if (!status.ok()) {

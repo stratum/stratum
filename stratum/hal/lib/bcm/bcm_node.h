@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 #define STRATUM_HAL_LIB_BCM_BCM_NODE_H_
 
 #include <memory>
 #include <vector>
 
+#include "absl/synchronization/mutex.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/bcm/bcm_acl_manager.h"
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
 #include "stratum/hal/lib/bcm/bcm_l2_manager.h"
@@ -31,8 +32,6 @@
 #include "stratum/hal/lib/bcm/bcm_tunnel_manager.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

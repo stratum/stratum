@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_GLUE_INIT_GOOGLE_H_
 #define STRATUM_GLUE_INIT_GOOGLE_H_
 
@@ -32,7 +31,7 @@
 // Google's side
 using gflags::ParseCommandLineFlags;
 
-inline void InitGoogle(const char *usage, int *argc, char ***argv,
+inline void InitGoogle(const char* usage, int* argc, char*** argv,
                        bool remove_flags) {
   ParseCommandLineFlags(argc, argv, remove_flags);
 }

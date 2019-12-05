@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/dummy/dummy_phal.h"
 
 #include <memory>
 #include <utility>
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -32,9 +31,9 @@ namespace dummy_switch {
 // Instances
 DummyPhal* phal_singleton_ = nullptr;
 
-DummyPhal::DummyPhal():
-  xcvr_event_writer_id_(kInvalidWriterId),
-  dummy_box_(DummyBox::GetSingleton()) {}
+DummyPhal::DummyPhal()
+    : xcvr_event_writer_id_(kInvalidWriterId),
+      dummy_box_(DummyBox::GetSingleton()) {}
 DummyPhal::~DummyPhal() {}
 
 ::util::Status DummyPhal::PushChassisConfig(const ChassisConfig& config) {
@@ -62,7 +61,8 @@ DummyPhal::~DummyPhal() {}
     std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority) {
   absl::ReaderMutexLock l(&phal_lock_);
   LOG(INFO) << __FUNCTION__;
-  ASSIGN_OR_RETURN(xcvr_event_writer_id_,
+  ASSIGN_OR_RETURN(
+      xcvr_event_writer_id_,
       dummy_box_->RegisterTransceiverEventWriter(std::move(writer), priority));
   return ::util::OkStatus();
 }
@@ -90,7 +90,7 @@ DummyPhal::~DummyPhal() {}
 }
 
 ::util::Status DummyPhal::SetPortLedState(int slot, int port, int channel,
-                                         LedColor color, LedState state) {
+                                          LedColor color, LedState state) {
   absl::ReaderMutexLock l(&phal_lock_);
   // TODO(Yi Tseng): Implement this function
   LOG(INFO) << __FUNCTION__;
@@ -100,7 +100,6 @@ DummyPhal::~DummyPhal() {}
 // Register the configurator so we can use later
 ::util::Status DummyPhal::RegisterSfpConfigurator(
     int slot, int port, ::stratum::hal::phal::SfpConfigurator* configurator) {
-
   LOG(INFO) << __FUNCTION__;
 
   const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
@@ -121,4 +120,3 @@ DummyPhal* DummyPhal::CreateSingleton() {
 }  // namespace dummy_switch
 }  // namespace hal
 }  // namespace stratum
-

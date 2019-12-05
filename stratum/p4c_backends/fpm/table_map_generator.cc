@@ -16,22 +16,20 @@
 
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 
-#include "stratum/glue/logging.h"
 #include "google/protobuf/util/message_differencer.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "p4/config/v1/p4info.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 TableMapGenerator::TableMapGenerator()
-    : generated_map_(new hal::P4PipelineConfig) {
-}
+    : generated_map_(new hal::P4PipelineConfig) {}
 
-TableMapGenerator::~TableMapGenerator() {
-}
+TableMapGenerator::~TableMapGenerator() {}
 
 // AddField allows the same field to be added repeatedly.  This behavior
 // supports simpler backend behavior in cases where processing one type of
@@ -55,9 +53,11 @@ void TableMapGenerator::SetFieldType(const std::string& field_name,
   SetFieldAttributes(field_name, type, P4_HEADER_UNKNOWN, 0, 0);
 }
 
-void TableMapGenerator::SetFieldAttributes(
-    const std::string& field_name, P4FieldType field_type,
-    P4HeaderType header_type, uint32_t bit_offset, uint32_t bit_width) {
+void TableMapGenerator::SetFieldAttributes(const std::string& field_name,
+                                           P4FieldType field_type,
+                                           P4HeaderType header_type,
+                                           uint32_t bit_offset,
+                                           uint32_t bit_width) {
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
@@ -104,9 +104,9 @@ void TableMapGenerator::SetFieldLocalMetadataFlag(
   field_descriptor->set_is_local_metadata(true);
 }
 
-void TableMapGenerator::SetFieldValueSet(
-    const std::string& field_name, const std::string& value_set_name,
-    P4HeaderType header_type) {
+void TableMapGenerator::SetFieldValueSet(const std::string& field_name,
+                                         const std::string& value_set_name,
+                                         P4HeaderType header_type) {
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
@@ -121,9 +121,9 @@ void TableMapGenerator::SetFieldValueSet(
   field_descriptor->set_header_type(header_type);
 }
 
-void TableMapGenerator::AddFieldMatch(
-    const std::string& field_name,
-    const std::string& match_type, int bit_width) {
+void TableMapGenerator::AddFieldMatch(const std::string& field_name,
+                                      const std::string& match_type,
+                                      int bit_width) {
   hal::P4FieldDescriptor* field_descriptor =
       FindMutableFieldDescriptorOrNull(field_name, generated_map_.get());
   if (field_descriptor == nullptr) {
@@ -225,8 +225,7 @@ void TableMapGenerator::AddAction(const std::string& action_name) {
 }
 
 void TableMapGenerator::AssignActionSourceValueToField(
-    const std::string& action_name,
-    const P4AssignSourceValue& source_value,
+    const std::string& action_name, const P4AssignSourceValue& source_value,
     const std::string& field_name) {
   if (source_value.source_value_case() ==
       P4AssignSourceValue::SOURCE_VALUE_NOT_SET) {
@@ -236,8 +235,7 @@ void TableMapGenerator::AssignActionSourceValueToField(
   }
 
   auto action_descriptor = FindActionDescriptor(action_name);
-  if (action_descriptor == nullptr)
-    return;
+  if (action_descriptor == nullptr) return;
   hal::P4ActionDescriptor::P4ActionInstructions* assign_param =
       action_descriptor->add_assignments();
   *assign_param->mutable_assigned_value() = source_value;
@@ -253,23 +251,21 @@ void TableMapGenerator::AssignActionParameterToField(
 }
 
 void TableMapGenerator::AssignHeaderToHeader(
-      const std::string& action_name, const P4AssignSourceValue& source_header,
-      const std::string& destination_header) {
-  AssignActionSourceValueToField(
-      action_name, source_header, destination_header);
+    const std::string& action_name, const P4AssignSourceValue& source_header,
+    const std::string& destination_header) {
+  AssignActionSourceValueToField(action_name, source_header,
+                                 destination_header);
 }
 
 void TableMapGenerator::AddDropPrimitive(const std::string& action_name) {
   auto action_descriptor = FindActionDescriptor(action_name);
-  if (action_descriptor == nullptr)
-    return;
+  if (action_descriptor == nullptr) return;
   action_descriptor->add_primitive_ops(P4_ACTION_OP_DROP);
 }
 
 void TableMapGenerator::AddNopPrimitive(const std::string& action_name) {
   auto action_descriptor = FindActionDescriptor(action_name);
-  if (action_descriptor == nullptr)
-    return;
+  if (action_descriptor == nullptr) return;
   action_descriptor->add_primitive_ops(P4_ACTION_OP_NOP);
 }
 
@@ -277,8 +273,7 @@ void TableMapGenerator::AddMeterColorAction(
     const std::string& action_name,
     const hal::P4ActionDescriptor::P4MeterColorAction& color_action) {
   auto action_descriptor = FindActionDescriptor(action_name);
-  if (action_descriptor == nullptr)
-    return;
+  if (action_descriptor == nullptr) return;
   int color_action_index = FindColorAction(*action_descriptor, color_action);
 
   if (color_action_index >= 0) {
@@ -312,8 +307,7 @@ void TableMapGenerator::AddTunnelAction(
     const std::string& action_name,
     const hal::P4ActionDescriptor::P4TunnelAction& tunnel_action) {
   auto action_descriptor = FindActionDescriptor(action_name);
-  if (action_descriptor == nullptr)
-    return;
+  if (action_descriptor == nullptr) return;
   *(action_descriptor->add_tunnel_actions()) = tunnel_action;
 }
 
@@ -321,8 +315,7 @@ void TableMapGenerator::ReplaceActionDescriptor(
     const std::string& action_name,
     const hal::P4ActionDescriptor& new_descriptor) {
   auto action_descriptor = FindActionDescriptor(action_name);
-  if (action_descriptor == nullptr)
-    return;
+  if (action_descriptor == nullptr) return;
   *action_descriptor = new_descriptor;
 }
 
@@ -402,8 +395,8 @@ void TableMapGenerator::AddHeader(const std::string& header_name) {
   }
 }
 
-void TableMapGenerator::SetHeaderAttributes(
-    const std::string& header_name, P4HeaderType type, int32 depth) {
+void TableMapGenerator::SetHeaderAttributes(const std::string& header_name,
+                                            P4HeaderType type, int32 depth) {
   auto iter = generated_map_->mutable_table_map()->find(header_name);
   if (iter == generated_map_->mutable_table_map()->end()) {
     // TODO(unknown): Treat as internal compiler BUG exception?
@@ -435,7 +428,7 @@ void TableMapGenerator::AddInternalAction(
 }
 
 hal::P4ActionDescriptor* TableMapGenerator::FindActionDescriptor(
-      const std::string& action_name) {
+    const std::string& action_name) {
   auto iter = generated_map_->mutable_table_map()->find(action_name);
   if (iter == generated_map_->mutable_table_map()->end()) {
     LOG(ERROR) << "Unable to find action " << action_name
@@ -460,13 +453,13 @@ int TableMapGenerator::FindColorAction(
   msg_differencer.set_repeated_field_comparison(
       ::google::protobuf::util::MessageDifferencer::AS_SET);
   const ::google::protobuf::Descriptor* proto_descriptor =
-        hal::P4ActionDescriptor::
-                      P4MeterColorAction::default_instance().GetDescriptor();
+      hal::P4ActionDescriptor::P4MeterColorAction::default_instance()
+          .GetDescriptor();
   msg_differencer.IgnoreField(proto_descriptor->FindFieldByName("ops"));
 
   for (int i = 0; i < action_descriptor.color_actions_size(); ++i) {
     if (msg_differencer.Compare(action_descriptor.color_actions(i),
-        color_action))
+                                color_action))
       return i;
   }
   return -1;

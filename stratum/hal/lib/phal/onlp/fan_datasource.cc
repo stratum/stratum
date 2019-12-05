@@ -15,22 +15,22 @@
 
 #include "stratum/hal/lib/phal/onlp/fan_datasource.h"
 
-#include <cmath>
 #include <climits>
+#include <cmath>
+
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
-
 
 ::util::StatusOr<std::shared_ptr<OnlpFanDataSource>> OnlpFanDataSource::Make(
     int fan_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy) {
@@ -48,8 +48,7 @@ namespace onlp {
   return fan_data_source;
 }
 
-OnlpFanDataSource::OnlpFanDataSource(int fan_id,
-                                     OnlpInterface* onlp_interface,
+OnlpFanDataSource::OnlpFanDataSource(int fan_id, OnlpInterface* onlp_interface,
                                      CachePolicy* cache_policy,
                                      const FanInfo& fan_info)
     : DataSource(cache_policy), onlp_stub_(onlp_interface) {
@@ -79,15 +78,14 @@ OnlpFanDataSource::OnlpFanDataSource(int fan_id,
 
   // Add setters here
   fan_dir_.AddSetter(
-          [&](const google::protobuf::EnumValueDescriptor* dir)
-      -> ::util::Status {
-      return this->SetFanDirection(static_cast<FanDir>(dir->index())); });
-  fan_percentage_.AddSetter(
-          [this](int value)
-      -> ::util::Status { return this->SetFanPercentage(value); });
+      [&](const google::protobuf::EnumValueDescriptor* dir) -> ::util::Status {
+        return this->SetFanDirection(static_cast<FanDir>(dir->index()));
+      });
+  fan_percentage_.AddSetter([this](int value) -> ::util::Status {
+    return this->SetFanPercentage(value);
+  });
   fan_speed_rpm_.AddSetter(
-          [this](double val)
-      -> ::util::Status { return this->SetFanRpm(val); });
+      [this](double val) -> ::util::Status { return this->SetFanRpm(val); });
 }
 
 ::util::Status OnlpFanDataSource::UpdateValues() {
@@ -100,7 +98,7 @@ OnlpFanDataSource::OnlpFanDataSource(int fan_id,
   // present.
   if (!fan_info.Present()) return ::util::OkStatus();
 
-  ASSIGN_OR_RETURN(const onlp_fan_info_t *fan_onlp_info, fan_info.GetOnlpFan());
+  ASSIGN_OR_RETURN(const onlp_fan_info_t* fan_onlp_info, fan_info.GetOnlpFan());
 
   fan_model_name_.AssignValue(std::string(fan_onlp_info->model));
   fan_serial_number_.AssignValue(std::string(fan_onlp_info->serial));

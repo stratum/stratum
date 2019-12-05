@@ -13,17 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_table_manager.h"
 
 #include <memory>
-#include <vector>
 #include <string>
 #include <tuple>
+#include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/strip.h"
+#include "absl/strings/substitute.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/source_location.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/glue/gtl/source_location.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_mock.h"
 #include "stratum/hal/lib/bcm/constants.h"
 #include "stratum/hal/lib/common/constants.h"
@@ -32,18 +41,10 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "stratum/glue/gtl/map_util.h"
 
 using ::stratum::test_utils::EqualsProto;
+using stratum::test_utils::IsOkAndHolds;
+using stratum::test_utils::StatusIs;
 using ::stratum::test_utils::UnorderedEqualsProto;
 using ::testing::_;
 using ::testing::DoAll;
@@ -52,8 +53,6 @@ using ::testing::Pair;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::UnorderedElementsAre;
-using stratum::test_utils::IsOkAndHolds;
-using stratum::test_utils::StatusIs;
 
 namespace stratum {
 namespace hal {
@@ -134,9 +133,9 @@ class BcmTableManagerTest : public ::testing::Test {
         bcm_table_manager_->LookupTableEntry(entry);
     ::util::Status status = result.status();
     if (!table_id_exists) {
-      CHECK_RETURN_IF_FALSE(
-          !status.ok() && status.error_code() == ERR_ENTRY_NOT_FOUND &&
-          absl::StrContains(status.error_message(), "Table"))
+      CHECK_RETURN_IF_FALSE(!status.ok() &&
+                            status.error_code() == ERR_ENTRY_NOT_FOUND &&
+                            absl::StrContains(status.error_message(), "Table"))
           << "Did not expect table id to exist. Status: " << status;
       return ::util::OkStatus();
     }
@@ -359,16 +358,17 @@ namespace {
 
 // Returns a BcmField containing the const condition for a P4HeaderType.
 ::util::StatusOr<BcmField> ConstCondition(P4HeaderType p4_header_type) {
-  static const auto* field_map = new absl::flat_hash_map<P4HeaderType, std::string>({
-      {P4_HEADER_ARP, "type: IP_TYPE value { u32: 0x0806 }"},
-      {P4_HEADER_IPV4, "type: IP_TYPE value { u32: 0x0800 }"},
-      {P4_HEADER_IPV6, "type: IP_TYPE value { u32: 0x86dd }"},
-      {P4_HEADER_TCP, "type: IP_PROTO_NEXT_HDR value { u32: 6 }"},
-      {P4_HEADER_UDP, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
-      {P4_HEADER_UDP_PAYLOAD, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
-      {P4_HEADER_GRE, "type: IP_PROTO_NEXT_HDR value { u32: 47 }"},
-      {P4_HEADER_ICMP, "type: IP_PROTO_NEXT_HDR value { u32: 1 }"},
-  });
+  static const auto* field_map =
+      new absl::flat_hash_map<P4HeaderType, std::string>({
+          {P4_HEADER_ARP, "type: IP_TYPE value { u32: 0x0806 }"},
+          {P4_HEADER_IPV4, "type: IP_TYPE value { u32: 0x0800 }"},
+          {P4_HEADER_IPV6, "type: IP_TYPE value { u32: 0x86dd }"},
+          {P4_HEADER_TCP, "type: IP_PROTO_NEXT_HDR value { u32: 6 }"},
+          {P4_HEADER_UDP, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
+          {P4_HEADER_UDP_PAYLOAD, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
+          {P4_HEADER_GRE, "type: IP_PROTO_NEXT_HDR value { u32: 47 }"},
+          {P4_HEADER_ICMP, "type: IP_PROTO_NEXT_HDR value { u32: 1 }"},
+      });
 
   BcmField bcm_field;
   std::string bcm_field_proto_string =
@@ -438,18 +438,20 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_ANNOTATED: No conversion.
     //
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_SRC
-      value { u64: 11111111111111 }
-      mask { u64: 99999999999999 }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_ETH_SRC
+                                     value { u64: 11111111111111 }
+                                     mask { u64: 99999999999999 }
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_DST
-      value { u64: 22222222222222 }
-      mask { u64: 99999999999999 }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_ETH_DST
+                                     value { u64: 22222222222222 }
+                                     mask { u64: 99999999999999 }
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
     // P4_FIELD_TYPE_ETH_TYPE: No currentf conversion.
@@ -457,18 +459,20 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_VLAN_PCP: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV4_SRC
-      value { u32: 11111111 }
-      mask { u32: 99999999 }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV4_SRC
+                                     value { u32: 11111111 }
+                                     mask { u32: 99999999 }
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV4_DST
-      value { u32: 22222222 }
-      mask { u32: 99999999 }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV4_DST
+                                     value { u32: 22222222 }
+                                     mask { u32: 99999999 }
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -477,29 +481,33 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_NW_TTL: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV6_SRC
-      value { b: "\x00\x01\x02\x03\x04\x05" }
-      mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV6_SRC
+                                     value { b: "\x00\x01\x02\x03\x04\x05" }
+                                     mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
+                                   )PROTO",
+                                   &p4_field));
     // IPV6_SRC translated to IPV6_SRC_UPPER_64.
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: IPV6_SRC_UPPER_64
-      value { b: "\x00\x01\x02\x03\x04\x05" }
-      mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
-    )PROTO", &bcm_field));
+                                     type: IPV6_SRC_UPPER_64
+                                     value { b: "\x00\x01\x02\x03\x04\x05" }
+                                     mask { b: "\xaf\xaf\xaf\xaf\xaf\xaf" }
+                                   )PROTO",
+                                   &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV6_DST
-      value { b: "\x10\x11\x12\x13\x14\x15" }
-      mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV6_DST
+                                     value { b: "\x10\x11\x12\x13\x14\x15" }
+                                     mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
+                                   )PROTO",
+                                   &p4_field));
     // IPV6_DST translated to IPV6_SRC_UPPER_64.
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: IPV6_DST_UPPER_64
-      value { b: "\x10\x11\x12\x13\x14\x15" }
-      mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
-    )PROTO", &bcm_field));
+                                     type: IPV6_DST_UPPER_64
+                                     value { b: "\x10\x11\x12\x13\x14\x15" }
+                                     mask { b: "\xcf\xcf\xcf\xcf\xcf\xcf" }
+                                   )PROTO",
+                                   &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
     // P4_FIELD_TYPE_IPV6_NEXT_HDR: No current conversion.
@@ -510,9 +518,10 @@ const std::vector<std::pair<MappedField, BcmField>>& P4ToBcmFields() {
     // P4_FIELD_TYPE_ARP_TPA: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_VRF
-      value { u32: 1234 }
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_VRF
+                                     value { u32: 1234 }
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_field));
     field_map->push_back(std::make_pair(p4_field, bcm_field));
 
@@ -585,43 +594,49 @@ P4ToBcmActions() {
     // P4_FIELD_TYPE_ANNOTATED: No conversion.
     //
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_SRC
-      u64: 11111111111111
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_ETH_SRC
+                                     u64: 11111111111111
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_ETH_DST
-      u64: 22222222222222
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_ETH_DST
+                                     u64: 22222222222222
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
     // P4_FIELD_TYPE_ETH_TYPE: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_VLAN_VID u32: 22
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_VLAN_VID u32: 22
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_VLAN_PCP u32: 22
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_VLAN_PCP u32: 22
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV4_SRC
-      u32: 11111111
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV4_SRC
+                                     u32: 11111111
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV4_DST
-      u32: 22222222
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV4_DST
+                                     u32: 22222222
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
@@ -630,16 +645,18 @@ P4ToBcmActions() {
     // P4_FIELD_TYPE_NW_TTL: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV6_SRC
-      b: "\x00\x01\x02\x03\x04\x05"
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV6_SRC
+                                     b: "\x00\x01\x02\x03\x04\x05"
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_IPV6_DST
-      b: "\x10\x11\x12\x13\x14\x15"
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_IPV6_DST
+                                     b: "\x10\x11\x12\x13\x14\x15"
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
@@ -651,15 +668,17 @@ P4ToBcmActions() {
     // P4_FIELD_TYPE_ARP_TPA: No current conversion.
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_VRF u32: 1234
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_VRF u32: 1234
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
 
     EXPECT_OK(ParseProtoFromString(R"PROTO(
-      type: P4_FIELD_TYPE_CLASS_ID
-      u32: 1234
-    )PROTO", &p4_field));
+                                     type: P4_FIELD_TYPE_CLASS_ID
+                                     u32: 1234
+                                   )PROTO",
+                                   &p4_field));
     EXPECT_TRUE(StripFieldTypeAndCopyToBcm(p4_field, &bcm_action));
     field_map->push_back(std::make_pair(p4_field, bcm_action));
     // P4_FIELD_TYPE_COLOR: No current conversion.
@@ -1668,10 +1687,11 @@ TEST_F(BcmTableManagerTest,
   // Setup the DST IP field.
   MappedField* ip_field = source.add_fields();
   ASSERT_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_IPV4_DST
-    value { u32: 1 }
-    mask { u32: 0xffffffff }
-  )PROTO", ip_field));
+                                   type: P4_FIELD_TYPE_IPV4_DST
+                                   value { u32: 1 }
+                                   mask { u32: 0xffffffff }
+                                 )PROTO",
+                                 ip_field));
 
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
@@ -1680,10 +1700,11 @@ TEST_F(BcmTableManagerTest,
   // VRF fields cannot have a mask.
   MappedField* vrf_field = source.add_fields();
   ASSERT_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_VRF
-    value { u32: 1 }
-    mask { u32: 1 }
-  )PROTO", vrf_field));
+                                   type: P4_FIELD_TYPE_VRF
+                                   value { u32: 1 }
+                                   mask { u32: 1 }
+                                 )PROTO",
+                                 vrf_field));
   ::util::Status status = bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
       source, ::p4::v1::Update::INSERT, &actual);
   EXPECT_FALSE(status.ok());
@@ -1692,9 +1713,10 @@ TEST_F(BcmTableManagerTest,
 
   // VRF fields cannot have an out-of-range value.
   ASSERT_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_VRF
-    value { u32: 99999999 }
-  )PROTO", vrf_field));
+                                   type: P4_FIELD_TYPE_VRF
+                                   value { u32: 99999999 }
+                                 )PROTO",
+                                 vrf_field));
   status = bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
       source, ::p4::v1::Update::INSERT, &actual);
   EXPECT_FALSE(status.ok());
@@ -1707,10 +1729,11 @@ TEST_F(BcmTableManagerTest,
   CommonFlowEntry source;
 
   ASSERT_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_IPV4_DST
-    value { u32: 22 }
-    mask { u32: 99 }
-  )PROTO", source.add_fields()));
+                                   type: P4_FIELD_TYPE_IPV4_DST
+                                   value { u32: 22 }
+                                   mask { u32: 99 }
+                                 )PROTO",
+                                 source.add_fields()));
 
   // Setup table type and stage.
   source.mutable_table_info()->set_type(P4_TABLE_L3_IP);
@@ -1736,10 +1759,11 @@ TEST_F(BcmTableManagerTest,
   CommonFlowEntry source;
 
   ASSERT_OK(ParseProtoFromString(R"PROTO(
-    type: P4_FIELD_TYPE_IPV6_DST
-    value { b: "\x22\x23" }
-    mask { b: "\xff\xff" }
-  )PROTO", source.add_fields()));
+                                   type: P4_FIELD_TYPE_IPV6_DST
+                                   value { b: "\x22\x23" }
+                                   mask { b: "\xff\xff" }
+                                 )PROTO",
+                                 source.add_fields()));
 
   // Setup table type and stage.
   source.mutable_table_info()->set_type(P4_TABLE_L3_IP);
@@ -2691,8 +2715,7 @@ TEST_F(BcmTableManagerTest,
   }
 }
 
-TEST_F(BcmTableManagerTest,
-       CommonFlowEntryToBcmFlowEntry_Insert_ValidDecap) {
+TEST_F(BcmTableManagerTest, CommonFlowEntryToBcmFlowEntry_Insert_ValidDecap) {
   CommonFlowEntry source;
   BcmFlowEntry expected;
 
@@ -4433,20 +4456,29 @@ TEST_F(BcmTableManagerTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
-    table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
-    fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
-    action { type: P4_ACTION_TYPE_FUNCTION }
-    priority: 10
-  )PROTO", &source));
+  CHECK_OK(ParseProtoFromString(
+      R"PROTO(
+        table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
+        fields {
+          type: P4_FIELD_TYPE_ETH_TYPE
+          value { u32: 10 }
+        }
+        action { type: P4_ACTION_TYPE_FUNCTION }
+        priority: 10
+      )PROTO",
+      &source));
 
   BcmFlowEntry expected;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    bcm_table_type: BCM_TABLE_ACL
-    bcm_acl_table_id: 1
-    fields { type: ETH_TYPE value { u32: 10 } }
-    acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO", &expected));
+                                  bcm_table_type: BCM_TABLE_ACL
+                                  bcm_acl_table_id: 1
+                                  fields {
+                                    type: ETH_TYPE
+                                    value { u32: 10 }
+                                  }
+                                  acl_stage: BCM_ACL_STAGE_IFP
+                                )PROTO",
+                                &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4474,22 +4506,37 @@ TEST_F(BcmTableManagerTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
-    table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
-    fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
-    action { type: P4_ACTION_TYPE_FUNCTION }
-    priority: 10
-  )PROTO", &source));
+  CHECK_OK(ParseProtoFromString(
+      R"PROTO(
+        table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
+        fields {
+          type: P4_FIELD_TYPE_ETH_TYPE
+          value { u32: 10 }
+        }
+        action { type: P4_ACTION_TYPE_FUNCTION }
+        priority: 10
+      )PROTO",
+      &source));
 
   BcmFlowEntry expected;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    bcm_table_type: BCM_TABLE_ACL
-    bcm_acl_table_id: 1
-    fields { type: ETH_TYPE value { u32: 10 } }
-    fields { type: IP_TYPE value { u32: 0x86dd } }
-    fields { type: IP_PROTO_NEXT_HDR value { u32: 58 } }
-    acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO", &expected));
+                                  bcm_table_type: BCM_TABLE_ACL
+                                  bcm_acl_table_id: 1
+                                  fields {
+                                    type: ETH_TYPE
+                                    value { u32: 10 }
+                                  }
+                                  fields {
+                                    type: IP_TYPE
+                                    value { u32: 0x86dd }
+                                  }
+                                  fields {
+                                    type: IP_PROTO_NEXT_HDR
+                                    value { u32: 58 }
+                                  }
+                                  acl_stage: BCM_ACL_STAGE_IFP
+                                )PROTO",
+                                &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4515,12 +4562,17 @@ TEST_F(BcmTableManagerTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
-    table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
-    fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
-    action { type: P4_ACTION_TYPE_FUNCTION }
-    priority: 10
-  )PROTO", &source));
+  CHECK_OK(ParseProtoFromString(
+      R"PROTO(
+        table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
+        fields {
+          type: P4_FIELD_TYPE_ETH_TYPE
+          value { u32: 10 }
+        }
+        action { type: P4_ACTION_TYPE_FUNCTION }
+        priority: 10
+      )PROTO",
+      &source));
 
   BcmFlowEntry actual;
   EXPECT_THAT(bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
@@ -4548,20 +4600,29 @@ TEST_P(ConstConditionTest,
 
   // Set up the input CommonFlowEntry. This does not have const condition data.
   CommonFlowEntry source;
-  CHECK_OK(ParseProtoFromString(R"PROTO(
-    table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
-    fields { type: P4_FIELD_TYPE_ETH_TYPE value { u32: 10 } }
-    action { type: P4_ACTION_TYPE_FUNCTION }
-    priority: 10
-  )PROTO", &source));
+  CHECK_OK(ParseProtoFromString(
+      R"PROTO(
+        table_info { id: 100 name: "test_table" pipeline_stage: INGRESS_ACL }
+        fields {
+          type: P4_FIELD_TYPE_ETH_TYPE
+          value { u32: 10 }
+        }
+        action { type: P4_ACTION_TYPE_FUNCTION }
+        priority: 10
+      )PROTO",
+      &source));
 
   BcmFlowEntry expected;
   CHECK_OK(ParseProtoFromString(R"PROTO(
-    bcm_table_type: BCM_TABLE_ACL
-    bcm_acl_table_id: 1
-    fields { type: ETH_TYPE value { u32: 10 } }
-    acl_stage: BCM_ACL_STAGE_IFP
-  )PROTO", &expected));
+                                  bcm_table_type: BCM_TABLE_ACL
+                                  bcm_acl_table_id: 1
+                                  fields {
+                                    type: ETH_TYPE
+                                    value { u32: 10 }
+                                  }
+                                  acl_stage: BCM_ACL_STAGE_IFP
+                                )PROTO",
+                                &expected));
   // FIXME: No priority shift in SDKLT
   // expected.set_priority((20 << 16) + 10);
   expected.set_priority(10);
@@ -4574,11 +4635,11 @@ TEST_P(ConstConditionTest,
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmTableManagerTest, ConstConditionTest,
-                        ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
-                                          P4_HEADER_IPV6, P4_HEADER_TCP,
-                                          P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,
-                                          P4_HEADER_GRE, P4_HEADER_ICMP),
-                        ParamName);
+                         ::testing::Values(P4_HEADER_ARP, P4_HEADER_IPV4,
+                                           P4_HEADER_IPV6, P4_HEADER_TCP,
+                                           P4_HEADER_UDP, P4_HEADER_UDP_PAYLOAD,
+                                           P4_HEADER_GRE, P4_HEADER_ICMP),
+                         ParamName);
 
 }  // namespace bcm
 }  // namespace hal

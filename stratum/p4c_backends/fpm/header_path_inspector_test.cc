@@ -18,13 +18,14 @@
 
 #include <memory>
 #include <string>
-#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
-#include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
+
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
+#include "stratum/p4c_backends/fpm/utils.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -33,9 +34,7 @@ namespace p4c_backends {
 // data for test use.
 class HeaderPathInspectorTest : public testing::Test {
  protected:
-  void SetUp() override {
-    SetUpTestP4ModelNames();
-  }
+  void SetUp() override { SetUpTestP4ModelNames(); }
 
   // The SetUpTestIR method loads an IR file in JSON format, then applies a
   // ProgramInspector to record IR nodes that contain some PathExpressions

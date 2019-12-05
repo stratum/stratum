@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-
 #include "stratum/glue/status/posix_error_space.h"
 
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
+
 #include <string>
 
 #include "stratum/glue/logging.h"

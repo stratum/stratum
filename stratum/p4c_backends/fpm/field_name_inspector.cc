@@ -16,18 +16,17 @@
 
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 
+#include "absl/debugging/leak_check.h"
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/debugging/leak_check.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 FieldNameInspector::FieldNameInspector()
     : ignored_path_prefixes_(GetP4ModelNames().strip_path_prefixes()),
-      field_name_("") {
-}
+      field_name_("") {}
 
 void FieldNameInspector::ExtractName(const IR::Expression& expression) {
   if (!field_name_.empty()) {
@@ -54,8 +53,7 @@ void FieldNameInspector::postorder(const IR::Member* member) {
     AppendStackedHeaderPathNames();
   } else {
     auto stack = member->type->to<IR::Type_Stack>();
-    if (stack != nullptr)
-      stack_size_ = stack->getSize();
+    if (stack != nullptr) stack_size_ = stack->getSize();
   }
   AppendName(std::string(member->member.name));
 }

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_GLUE_NET_UTIL_PORTS_H_
 #define STRATUM_GLUE_NET_UTIL_PORTS_H_
 

@@ -185,7 +185,7 @@ class HiddenTableMapper {
     const std::string field_name_;
 
     // This member is injected by the constructor.
-    ActionRedirectMap *action_redirects_;
+    ActionRedirectMap* action_redirects_;
 
     // This P4FieldDescriptor stores table map updates relative to a local
     // metadata field's role as an indirect table lookup key.  If this

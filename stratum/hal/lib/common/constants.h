@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_CONSTANTS_H_
 #define STRATUM_HAL_LIB_COMMON_CONSTANTS_H_
 

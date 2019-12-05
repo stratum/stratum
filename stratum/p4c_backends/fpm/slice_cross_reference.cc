@@ -18,10 +18,10 @@
 
 #include <string>
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/memory/memory.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -46,7 +46,8 @@ void SliceCrossReference::ProcessAssignments(
     if (!assign->right->is<IR::Slice>()) continue;
     if (!slice_decoder_->Inspect(*assign->right)) continue;
     if (slice_decoder_->value().source_value_case() !=
-        P4AssignSourceValue::kSourceFieldName) continue;
+        P4AssignSourceValue::kSourceFieldName)
+      continue;
     const std::string& source_key = slice_decoder_->value().source_field_name();
     hal::P4TableMapValue* source_field =
         gtl::FindOrNull(*p4_pipeline_config->mutable_table_map(), source_key);

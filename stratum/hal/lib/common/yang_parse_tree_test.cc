@@ -13,26 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/common/yang_parse_tree_mock.h"
-
-#include "google/protobuf/text_format.h"
+#include "absl/synchronization/mutex.h"
+#include "gmock/gmock.h"
 #include "gnmi/gnmi.pb.h"
+#include "google/protobuf/text_format.h"
+#include "gtest/gtest.h"
 #include "openconfig/openconfig.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/subscribe_reader_writer_mock.h"
 #include "stratum/hal/lib/common/switch_mock.h"
 #include "stratum/hal/lib/common/writer_mock.h"
-#include "stratum/lib/utils.h"
+#include "stratum/hal/lib/common/yang_parse_tree_mock.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::ContainsRegex;
 using ::testing::DoAll;
@@ -42,7 +42,6 @@ using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::WithArg;
 using ::testing::WithArgs;
-using ::stratum::test_utils::StatusIs;
 
 class YangParseTreeTest : public ::testing::Test {
  protected:
@@ -340,8 +339,7 @@ class YangParseTreeTest : public ::testing::Test {
 
     ChassisConfig chassis_config;
     // The test requires one interface branch to be added.
-    AddSubtreeInterface("interface-1",
-                        chassis_config.add_singleton_ports());
+    AddSubtreeInterface("interface-1", chassis_config.add_singleton_ports());
     // The test requires one node branch to be added.
     AddSubtreeNode("node-1", kInterface1NodeId);
     // Make a copy-on-write pointer to current chassis configuration.
@@ -1041,7 +1039,8 @@ TEST_F(YangParseTreeTest,
   EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressYangString);
 }
 
-// Check if the 'config/mac-address' OnUpdate action rejects malformed mac string.
+// Check if the 'config/mac-address' OnUpdate action rejects malformed mac
+// string.
 TEST_F(YangParseTreeTest,
        InterfacesInterfaceEthernetConfigMacAddressOnUpdateFailure) {
   auto path = GetPath("interfaces")(
@@ -1063,7 +1062,7 @@ TEST_F(YangParseTreeTest,
       "11:22:3:44:55:66",      // Too few hex digits
       "",                      // empty mac string
       "st:ra:tu:mr:oc:ks"      // None hex digits
-    };
+  };
 
   // Set new value.
   ::gnmi::TypedValue invalid_val;
@@ -1077,18 +1076,18 @@ TEST_F(YangParseTreeTest,
               StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 
   for (auto mac_string : kMacStrings) {
-      // Check reaction to wrong value.
-      invalid_val.set_string_val(mac_string);
-      EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
-                                  /* SetValue will not be called */ nullptr,
-                                  /* Notification will not be called */ nullptr),
-                  StatusIs(_, _, ContainsRegex("wrong value")));
+    // Check reaction to wrong value.
+    invalid_val.set_string_val(mac_string);
+    EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
+                                /* SetValue will not be called */ nullptr,
+                                /* Notification will not be called */ nullptr),
+                StatusIs(_, _, ContainsRegex("wrong value")));
 
-      // Check if mac_address remains unchanged.
-      ASSERT_OK(ExecuteOnPoll(path, &resp));
+    // Check if mac_address remains unchanged.
+    ASSERT_OK(ExecuteOnPoll(path, &resp));
 
-      ASSERT_THAT(resp.update().update(), SizeIs(1));
-      EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
+    ASSERT_THAT(resp.update().update(), SizeIs(1));
+    EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
   }
 }
 

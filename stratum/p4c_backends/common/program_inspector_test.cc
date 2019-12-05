@@ -18,10 +18,10 @@
 
 #include <memory>
 
-#include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
+#include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -33,12 +33,12 @@ class ProgramInspectorTest : public testing::Test {
   void SetUp() override {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
     const std::string kTestP4IRFile =
-              "stratum/p4c_backends/fpm/testdata/field_inspect_test.ir.json";
+        "stratum/p4c_backends/fpm/testdata/field_inspect_test.ir.json";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestP4IRFile));
   }
 
  protected:
-  ProgramInspector inspector_;        // The tested ProgramInspector.
+  ProgramInspector inspector_;                   // The tested ProgramInspector.
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
 };
 

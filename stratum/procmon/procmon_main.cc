@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 
 #include "gflags/gflags.h"
+#include "grpcpp/grpcpp.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/status/status.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/procmon/procmon.h"
 #include "stratum/procmon/procmon.pb.h"
 #include "stratum/procmon/procmon_service_impl.h"
-#include "stratum/glue/status/status.h"
 
 DEFINE_string(procmon_config_file, "",
               "Path to Procmon configuration proto file.");
@@ -35,7 +35,7 @@ namespace stratum {
 
 namespace procmon {
 
-::util::Status Main(int argc, char**argv) {
+::util::Status Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 

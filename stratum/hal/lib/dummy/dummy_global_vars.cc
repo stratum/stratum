@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
+
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {

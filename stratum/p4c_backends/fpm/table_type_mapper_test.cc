@@ -19,12 +19,12 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -46,8 +46,7 @@ class ParserFieldMapperTest : public testing::Test {
   // then creates the test_p4_info_manager_ with the P4Info.
   void SetUpTestInputs(const std::string& p4_info_file,
                        const std::string& p4_pipeline_config_file) {
-    const std::string kBasePath =
-        "stratum/p4c_backends/fpm/testdata/";
+    const std::string kBasePath = "stratum/p4c_backends/fpm/testdata/";
     std::string full_path = kBasePath + p4_info_file;
     CHECK_OK(ReadProtoFromTextFile(full_path, &test_p4_info_));
     full_path = kBasePath + p4_pipeline_config_file;
@@ -68,14 +67,14 @@ TEST_F(ParserFieldMapperTest, TestL2TableTypes) {
   SetUpTestInputs("table_type_mapper_p4info.pb.txt",
                   "table_type_mapper_p4pipeline.pb.txt");
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
-  const hal::P4TableDescriptor& table1_descriptor = FindTableDescriptorOrDie(
-      kL2McastTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table1_descriptor =
+      FindTableDescriptorOrDie(kL2McastTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MULTICAST, table1_descriptor.type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
@@ -88,12 +87,12 @@ TEST_F(ParserFieldMapperTest, TestTableTypeAlreadyKnown) {
       kL2McastTableName, &test_p4_pipeline_config_);
   table1_descriptor->set_type(P4_TABLE_L3_IP);
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
   EXPECT_EQ(P4_TABLE_L3_IP, table1_descriptor->type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
@@ -104,14 +103,14 @@ TEST_F(ParserFieldMapperTest, TestTableTypeMissingFieldDescriptor) {
                   "table_type_mapper_p4pipeline.pb.txt");
   test_p4_pipeline_config_.mutable_table_map()->erase(kL2McastFieldName);
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
-  const hal::P4TableDescriptor& table1_descriptor = FindTableDescriptorOrDie(
-      kL2McastTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table1_descriptor =
+      FindTableDescriptorOrDie(kL2McastTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_UNKNOWN, table1_descriptor.type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
@@ -124,14 +123,14 @@ TEST_F(ParserFieldMapperTest, TestTableTypeNonMcastFieldType) {
       kL2McastFieldName, &test_p4_pipeline_config_);
   field_descriptor->set_type(P4_FIELD_TYPE_VRF);
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
-  const hal::P4TableDescriptor& table1_descriptor = FindTableDescriptorOrDie(
-      kL2McastTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table1_descriptor =
+      FindTableDescriptorOrDie(kL2McastTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_UNKNOWN, table1_descriptor.type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
@@ -150,14 +149,14 @@ TEST_F(ParserFieldMapperTest, TestTableTypeConflictInSameAction) {
   ASSERT_LE(1, action2.assignments_size());
   *action1->add_assignments() = action2.assignments(0);
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
-  const hal::P4TableDescriptor& table1_descriptor = FindTableDescriptorOrDie(
-      kL2McastTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table1_descriptor =
+      FindTableDescriptorOrDie(kL2McastTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_UNKNOWN, table1_descriptor.type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
@@ -177,14 +176,14 @@ TEST_F(ParserFieldMapperTest, TestTableTypeConflictInSameAction2) {
   *action1->add_assignments() = action2.assignments(0);
   *action1->add_assignments() = action1->assignments(0);
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
-  const hal::P4TableDescriptor& table1_descriptor = FindTableDescriptorOrDie(
-      kL2McastTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table1_descriptor =
+      FindTableDescriptorOrDie(kL2McastTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_UNKNOWN, table1_descriptor.type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 
@@ -195,21 +194,21 @@ TEST_F(ParserFieldMapperTest, TestTableTypeConflictInSameAction2) {
 TEST_F(ParserFieldMapperTest, TestTableTypeConflictInDifferentActions) {
   SetUpTestInputs("table_type_mapper_p4info.pb.txt",
                   "table_type_mapper_p4pipeline.pb.txt");
-  hal::P4ActionDescriptor* action1 = FindMutableActionDescriptorOrDie(
-      "TestAction", &test_p4_pipeline_config_);
+  hal::P4ActionDescriptor* action1 =
+      FindMutableActionDescriptorOrDie("TestAction", &test_p4_pipeline_config_);
   const hal::P4ActionDescriptor& action2 = FindActionDescriptorOrDie(
       kL2MyStationActionName, test_p4_pipeline_config_);
   ASSERT_LE(1, action2.assignments_size());
   *action1->add_assignments() = action2.assignments(0);
   TableTypeMapper test_table_type_mapper;
-  test_table_type_mapper.ProcessTables(
-      *test_p4_info_manager_, &test_p4_pipeline_config_);
+  test_table_type_mapper.ProcessTables(*test_p4_info_manager_,
+                                       &test_p4_pipeline_config_);
 
-  const hal::P4TableDescriptor& table1_descriptor = FindTableDescriptorOrDie(
-      kL2McastTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table1_descriptor =
+      FindTableDescriptorOrDie(kL2McastTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_UNKNOWN, table1_descriptor.type());
-  const hal::P4TableDescriptor& table2_descriptor = FindTableDescriptorOrDie(
-      kL2MyStationTableName, test_p4_pipeline_config_);
+  const hal::P4TableDescriptor& table2_descriptor =
+      FindTableDescriptorOrDie(kL2MyStationTableName, test_p4_pipeline_config_);
   EXPECT_EQ(P4_TABLE_L2_MY_STATION, table2_descriptor.type());
 }
 

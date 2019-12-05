@@ -14,8 +14,9 @@
 
 // This file implements ProgramInspector.
 
-#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/common/program_inspector.h"
+
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -64,11 +65,9 @@ void ProgramInspector::postorder(const IR::Type_Enum* p4_enum) {
 // Only paths to Type_Struct are interesting to the backend, and only one
 // instance of each path needs to be recorded.
 void ProgramInspector::postorder(const IR::PathExpression* path) {
-  if (!path->type->is<IR::Type_Struct>())
-    return;
+  if (!path->type->is<IR::Type_Struct>()) return;
   const std::string path_key = std::string(path->path->toString());
-  if (struct_path_filter_.find(path_key) != struct_path_filter_.end())
-    return;
+  if (struct_path_filter_.find(path_key) != struct_path_filter_.end()) return;
   struct_paths_.push_back(path);
   struct_path_filter_.insert(path_key);
 }

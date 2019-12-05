@@ -13,23 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/lib/security/auth_policy_checker.h"
 
 #include <stdio.h>
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
-#include "stratum/lib/security/auth_policy_checker.h"
-#include "gflags/gflags.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/public/proto/error.pb.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/proto/error.pb.h"
 
 DECLARE_bool(enable_authorization);
 DECLARE_string(membership_info_file_path);

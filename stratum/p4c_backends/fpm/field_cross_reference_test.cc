@@ -21,21 +21,21 @@
 #include <utility>
 #include <vector>
 
-#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.pb.h"
-#include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/substitute.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
+#include "stratum/public/proto/p4_table_defs.pb.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 // The test parameter is a pair with the P4FieldType to be assigned to one
 // of the test fields created by SetUpFieldAssignments.
-class FieldCrossReferenceTest : public testing::TestWithParam<
-    std::pair<const std::string, P4FieldType>> {
+class FieldCrossReferenceTest
+    : public testing::TestWithParam<std::pair<const std::string, P4FieldType>> {
  protected:
   // Sets up three field-to-field assignment statements for test use:
   //  field_0 = field_1;
@@ -148,8 +148,7 @@ TEST_P(FieldCrossReferenceTest, TestNoFieldDescriptor) {
 
   // The first remaining field gets the known field type P4_FIELD_TYPE_IPV6_DST.
   std::string remove_field = "field_0";
-  if (remove_field == GetParam().first)
-    remove_field = "field_1";
+  if (remove_field == GetParam().first) remove_field = "field_1";
   auto first_iter = p4_pipeline_config_.mutable_table_map()->find(remove_field);
   ASSERT_TRUE(first_iter != p4_pipeline_config_.mutable_table_map()->end());
   const P4FieldType kTestFieldType = P4_FIELD_TYPE_IPV6_DST;
@@ -161,33 +160,33 @@ TEST_P(FieldCrossReferenceTest, TestNoFieldDescriptor) {
   // expected output types according to the removed descriptor.  The set of
   // maps named no_fieldN_types indicates the expected values for the remaining
   // fields after removing fieldN.
-  const std::map<std::string, P4FieldType> no_field0_types {
-    {"field_1", kTestFieldType},
-    {"field_2", kTestFieldType},
-    {"field_3", kTestFieldType},
+  const std::map<std::string, P4FieldType> no_field0_types{
+      {"field_1", kTestFieldType},
+      {"field_2", kTestFieldType},
+      {"field_3", kTestFieldType},
   };
-  const std::map<std::string, P4FieldType> no_field1_types {
-    {"field_0", kTestFieldType},
-    {"field_2", P4_FIELD_TYPE_ANNOTATED},
-    {"field_3", P4_FIELD_TYPE_ANNOTATED},
+  const std::map<std::string, P4FieldType> no_field1_types{
+      {"field_0", kTestFieldType},
+      {"field_2", P4_FIELD_TYPE_ANNOTATED},
+      {"field_3", P4_FIELD_TYPE_ANNOTATED},
   };
-  const std::map<std::string, P4FieldType> no_field2_types {
-    {"field_0", kTestFieldType},
-    {"field_1", kTestFieldType},
-    {"field_3", P4_FIELD_TYPE_ANNOTATED},
+  const std::map<std::string, P4FieldType> no_field2_types{
+      {"field_0", kTestFieldType},
+      {"field_1", kTestFieldType},
+      {"field_3", P4_FIELD_TYPE_ANNOTATED},
   };
-  const std::map<std::string, P4FieldType> no_field3_types {
-    {"field_0", kTestFieldType},
-    {"field_1", kTestFieldType},
-    {"field_2", kTestFieldType},
+  const std::map<std::string, P4FieldType> no_field3_types{
+      {"field_0", kTestFieldType},
+      {"field_1", kTestFieldType},
+      {"field_2", kTestFieldType},
   };
   const std::map<std::string, const std::map<std::string, P4FieldType>*>
-      no_field_map {
-    {"field_0", &no_field0_types},
-    {"field_1", &no_field1_types},
-    {"field_2", &no_field2_types},
-    {"field_3", &no_field3_types},
-  };
+      no_field_map{
+          {"field_0", &no_field0_types},
+          {"field_1", &no_field1_types},
+          {"field_2", &no_field2_types},
+          {"field_3", &no_field3_types},
+      };
 
   const auto& type_iter = no_field_map.find(GetParam().first);
   ASSERT_TRUE(type_iter != no_field_map.end());
@@ -225,13 +224,11 @@ TEST_P(FieldCrossReferenceTest, TestOtherDescriptors) {
 // The test parameter values assure that each test runs for every field
 // in the three-assignment test statement sequence.
 INSTANTIATE_TEST_SUITE_P(
-    FieldWithType,
-    FieldCrossReferenceTest,
-    ::testing::Values(
-        std::make_pair("field_0", P4_FIELD_TYPE_ETH_SRC),
-        std::make_pair("field_1", P4_FIELD_TYPE_VRF),
-        std::make_pair("field_2", P4_FIELD_TYPE_COLOR),
-        std::make_pair("field_3", P4_FIELD_TYPE_ETH_DST)));
+    FieldWithType, FieldCrossReferenceTest,
+    ::testing::Values(std::make_pair("field_0", P4_FIELD_TYPE_ETH_SRC),
+                      std::make_pair("field_1", P4_FIELD_TYPE_VRF),
+                      std::make_pair("field_2", P4_FIELD_TYPE_COLOR),
+                      std::make_pair("field_3", P4_FIELD_TYPE_ETH_DST)));
 
 }  // namespace p4c_backends
 }  // namespace stratum

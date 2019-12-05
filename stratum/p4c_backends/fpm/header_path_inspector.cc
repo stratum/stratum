@@ -16,10 +16,10 @@
 
 #include "stratum/p4c_backends/fpm/header_path_inspector.h"
 
+#include "absl/debugging/leak_check.h"
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "absl/debugging/leak_check.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -45,8 +45,7 @@ bool HeaderPathInspector::Inspect(const IR::PathExpression& expression) {
   // preorder methods.
   absl::LeakCheckDisabler disable_ir_expression_leak_checks;
   expression.apply(*this);
-  if (path_context_stack_.empty())
-    return false;
+  if (path_context_stack_.empty()) return false;
   return true;
 }
 
@@ -149,8 +148,8 @@ void HeaderPathInspector::MapPathsToHeaderType() {
   DCHECK(!path_context_stack_.empty());
   PopPathContexts();
   const std::string header_type = path_context_stack_.back().header_type;
-  VLOG(2) << "Defining path " << GetPathString()
-          << " to header type " << header_type;
+  VLOG(2) << "Defining path " << GetPathString() << " to header type "
+          << header_type;
   if (header_stack_size_ == 0) {
     path_to_header_type_map_[GetPathString()] = header_type;
   } else {
@@ -188,7 +187,7 @@ void HeaderPathInspector::PopPathContexts() {
 void HeaderPathInspector::UpdatePathHeaderType(const std::string& header_type) {
   DCHECK(!path_context_stack_.empty());
   PathContextEntry* entry = &path_context_stack_.back();
-  DCHECK(entry->header_type.empty()) << "Unexpected header type "<< header_type
+  DCHECK(entry->header_type.empty()) << "Unexpected header type " << header_type
                                      << " name " << entry->header_name;
   entry->header_type = header_type;
 }
@@ -198,8 +197,7 @@ void HeaderPathInspector::UpdatePathHeaderType(const std::string& header_type) {
 std::string HeaderPathInspector::GetPathString() {
   std::string path;
   for (const auto& iter : path_context_stack_) {
-    if (!path.empty())
-      path += ".";
+    if (!path.empty()) path += ".";
     path += iter.header_name;
   }
   return path;

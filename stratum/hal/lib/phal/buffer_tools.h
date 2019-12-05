@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_BUFFER_TOOLS_H_
 #define STRATUM_HAL_LIB_PHAL_BUFFER_TOOLS_H_
 

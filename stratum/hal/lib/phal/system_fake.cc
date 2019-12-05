@@ -13,12 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/phal/system_fake.h"
 
-#include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

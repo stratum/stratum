@@ -49,29 +49,29 @@ class StateMachine {
   // based on the recommended course of action. However, the recovery_event is
   // not automatically executed; it is merely a suggestion that may be used to
   // recover the state machine.
-  using CallbackType = std::function< ::util::Status(
-    Event event, State next_state, Event* recovery_event) >;
+  using CallbackType = std::function<::util::Status(
+      Event event, State next_state, Event* recovery_event)>;
   // A TransitionTable stores the valid transitions, indexed by the outgoing
   // state and the incoming event; table_[current_state_][incoming_event] yields
   // the next state, if it exists.
   using TransitionTable =
-    absl::flat_hash_map<State, absl::flat_hash_map<Event, State>>;
+      absl::flat_hash_map<State, absl::flat_hash_map<Event, State>>;
 
   // It is the client's responsibility to ensure that the initial state is safe
   // to enter before calling this constructor.
   explicit StateMachine(State initial_state, TransitionTable table)
-    : current_state_(initial_state), table_(table) {}
+      : current_state_(initial_state), table_(table) {}
 
   // Entry actions are executed in the order they are added.
   void AddEntryAction(State state, CallbackType callback)
-    LOCKS_EXCLUDED(state_machine_mutex_) {
+      LOCKS_EXCLUDED(state_machine_mutex_) {
     absl::MutexLock lock(&state_machine_mutex_);
     entry_actions_[state].push_back(callback);
   }
 
   // Exit actions are executed in the order they are added.
   void AddExitAction(State state, CallbackType callback)
-    LOCKS_EXCLUDED(state_machine_mutex_) {
+      LOCKS_EXCLUDED(state_machine_mutex_) {
     absl::MutexLock lock(&state_machine_mutex_);
     exit_actions_[state].push_back(callback);
   }
@@ -80,7 +80,8 @@ class StateMachine {
   // performs any entry and exit actions. The reason parameter describes why the
   // event was added to the StateMachine.
   ::util::Status ProcessEvent(Event event, absl::string_view reason,
-    Event* recovery_event) LOCKS_EXCLUDED(state_machine_mutex_) {
+                              Event* recovery_event)
+      LOCKS_EXCLUDED(state_machine_mutex_) {
     absl::MutexLock lock(&state_machine_mutex_);
     return ProcessEventUnlocked(event, reason, recovery_event);
   }
@@ -90,27 +91,28 @@ class StateMachine {
  private:
   // Performs the actions of ProcessEvent.
   ::util::Status ProcessEventUnlocked(Event event, absl::string_view reason,
-    Event* recovery_event) EXCLUSIVE_LOCKS_REQUIRED(state_machine_mutex_) {
+                                      Event* recovery_event)
+      EXCLUSIVE_LOCKS_REQUIRED(state_machine_mutex_) {
     // Do not change states if the transition is invalid.
     ASSIGN_OR_RETURN(State next_state, NextState(current_state_, event));
     // FIXME: Wait for ASSIGN_OR_RETURN impl with error message
-      // _.LogWarning() << "Event " << event << " [" << reason <<
-      //"] was discarded in State " << current_state_);
+    // _.LogWarning() << "Event " << event << " [" << reason <<
+    //"] was discarded in State " << current_state_);
 
     // Perform exit actions for the current state.
     for (const auto& exit_action : exit_actions_[current_state_]) {
-      RETURN_IF_ERROR_WITH_APPEND(exit_action(event, next_state,
-        recovery_event)) <<
-        "Failed to perform exit action of state " << current_state_ <<
-        " in transition to " << next_state << ".";
+      RETURN_IF_ERROR_WITH_APPEND(
+          exit_action(event, next_state, recovery_event))
+          << "Failed to perform exit action of state " << current_state_
+          << " in transition to " << next_state << ".";
     }
 
     // Perform entry actions for the next state.
     for (const auto& entry_action : entry_actions_[next_state]) {
-      RETURN_IF_ERROR_WITH_APPEND(entry_action(event, next_state,
-        recovery_event)) <<
-        "Failed to perform entry action of state " << next_state <<
-        " in transition from " << current_state_ << ".";
+      RETURN_IF_ERROR_WITH_APPEND(
+          entry_action(event, next_state, recovery_event))
+          << "Failed to perform entry action of state " << next_state
+          << " in transition from " << current_state_ << ".";
     }
 
     // Update only if the entry and exit actions were successful.
@@ -144,10 +146,10 @@ class StateMachine {
   absl::Mutex state_machine_mutex_;
   // A vector of actions that are executed upon entry to any given state.
   absl::flat_hash_map<State, std::vector<CallbackType>> entry_actions_
-    GUARDED_BY(state_machine_mutex_);
+      GUARDED_BY(state_machine_mutex_);
   // A vector of actions that are executed upon exit from any given state.
   absl::flat_hash_map<State, std::vector<CallbackType>> exit_actions_
-    GUARDED_BY(state_machine_mutex_);
+      GUARDED_BY(state_machine_mutex_);
 };
 
 }  // namespace state_machine

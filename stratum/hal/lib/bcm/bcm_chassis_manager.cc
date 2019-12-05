@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <pthread.h>
@@ -22,12 +21,14 @@
 #include <set>
 #include <sstream>  // IWYU pragma: keep
 
-#include "gflags/gflags.h"
-#include "google/protobuf/message.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "google/protobuf/message.h"
+#include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/gtl/stl_util.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/bcm/utils.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -37,8 +38,6 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");
@@ -283,7 +282,7 @@ void BcmChassisManager::SetUnitToBcmNodeMap(
     const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED).without_logging()
-        << "Not initialized!";
+           << "Not initialized!";
   }
 
   return node_id_to_unit_;
@@ -415,9 +414,9 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   // We can't use CHECK_RETURN_IF_FALSE here, because we want without_logging()
   if (membership_info == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM).without_logging()
-      << "Port " << port_id
-      << " is not known or does not belong to any trunk on node " << node_id
-      << ".";
+           << "Port " << port_id
+           << " is not known or does not belong to any trunk on node "
+           << node_id << ".";
   }
 
   return membership_info->parent_trunk_id;
@@ -990,11 +989,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
         << "not match.";
   }
   for (const auto& bcm_chip : target_bcm_chassis_map.bcm_chips()) {
-    CHECK_RETURN_IF_FALSE(std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
-                          base_bcm_chassis_map.bcm_chips().end(),
-                          [&bcm_chip](const ::google::protobuf::Message& x) {
-                                        return ProtoEqual(x, bcm_chip);
-                                      }))
+    CHECK_RETURN_IF_FALSE(
+        std::any_of(base_bcm_chassis_map.bcm_chips().begin(),
+                    base_bcm_chassis_map.bcm_chips().end(),
+                    [&bcm_chip](const ::google::protobuf::Message& x) {
+                      return ProtoEqual(x, bcm_chip);
+                    }))
         << "BcmChip " << bcm_chip.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
   }
@@ -1007,11 +1007,12 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       // The base comes with no logical_port assigned.
       p.clear_logical_port();
     }
-    CHECK_RETURN_IF_FALSE(std::any_of(
-        base_bcm_chassis_map.bcm_ports().begin(),
-        base_bcm_chassis_map.bcm_ports().end(),
-        [&p](const ::google::protobuf::Message& x) {
-          return ProtoEqual(x, p); }))
+    CHECK_RETURN_IF_FALSE(
+        std::any_of(base_bcm_chassis_map.bcm_ports().begin(),
+                    base_bcm_chassis_map.bcm_ports().end(),
+                    [&p](const ::google::protobuf::Message& x) {
+                      return ProtoEqual(x, p);
+                    }))
         << "BcmPort " << p.ShortDebugString() << " was not found in "
         << "base_bcm_chassis_map.";
     ss << absl::StrFormat("%3i, %3i, %3i\n", bcm_port.port(),
@@ -1635,9 +1636,10 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
-    // TODO(unknown): Implement this function.
-    // std::stringstream buffer;
-    // RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
+  // TODO(unknown): Implement this function.
+  // std::stringstream buffer;
+  // RETURN_IF_ERROR(WriteStringToFile(buffer.str(),
+  // FLAGS_bcm_sdk_config_file));
 
   return ::util::OkStatus();
 }
@@ -2069,7 +2071,7 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
   BcmPortOptions options;
   options.set_enabled(enable ? TRI_STATE_TRUE : TRI_STATE_FALSE);
   RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
-        sdk_port.unit, sdk_port.logical_port, options));
+      sdk_port.unit, sdk_port.logical_port, options));
 
   return ::util::OkStatus();
 }

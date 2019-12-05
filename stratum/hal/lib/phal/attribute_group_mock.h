@@ -15,20 +15,18 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ATTRIBUTE_GROUP_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_GROUP_MOCK_H_
 
-#include "stratum/hal/lib/phal/attribute_group.h"
-
 #include <memory>
-#include <utility>
-#include <string>
-#include <vector>
 #include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
 
 namespace stratum {
 namespace hal {

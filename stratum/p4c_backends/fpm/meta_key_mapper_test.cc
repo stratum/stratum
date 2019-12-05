@@ -19,11 +19,11 @@
 #include <string>
 #include <vector>
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
+#include "absl/strings/match.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/match.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 
 using ::testing::_;
 using ::testing::AnyNumber;

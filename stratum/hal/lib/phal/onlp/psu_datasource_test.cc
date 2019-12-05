@@ -16,28 +16,29 @@
 #include "stratum/hal/lib/phal/onlp/psu_datasource.h"
 
 #include <memory>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 // FIXME #include "absl/strings/util.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-using ::stratum::test_utils::StatusIs;
 
 class PsuDatasourceTest : public ::testing::Test {
  public:
@@ -46,8 +47,8 @@ class PsuDatasourceTest : public ::testing::Test {
     oid_ = ONLP_PSU_ID_CREATE(id_);
   }
 
-  int id_;             // Id for this PSU
-  OnlpOid oid_;        // OID for this PSU (i.e. Type + Id)
+  int id_;       // Id for this PSU
+  OnlpOid oid_;  // OID for this PSU (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
   MockOnlpWrapper mock_onlp_interface_;
 };
@@ -79,10 +80,9 @@ TEST_F(PsuDatasourceTest, GetPsuData) {
 
   onlp_psu_info_t mock_psu_info = {};
   mock_psu_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  strncpy(mock_psu_info.model, "test_psu_model",
-              sizeof(mock_psu_info.model));
+  strncpy(mock_psu_info.model, "test_psu_model", sizeof(mock_psu_info.model));
   strncpy(mock_psu_info.serial, "test_psu_serial",
-              sizeof(mock_psu_info.serial));
+          sizeof(mock_psu_info.serial));
 
   mock_psu_info.mvin = 1111;
   mock_psu_info.mvout = 2222;

@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_PHAL_MOCK_H_
 
 #include <memory>
 
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/common/phal_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -43,9 +42,10 @@ class PhalMock : public PhalInterface {
                               FrontPanelPortInfo* fp_port_info));
   MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
                                                LedColor color, LedState state));
-  MOCK_METHOD3(RegisterSfpConfigurator,
-    ::util::Status(int slot, int port,
-      ::stratum::hal::phal::SfpConfigurator* configurator));
+  MOCK_METHOD3(
+      RegisterSfpConfigurator,
+      ::util::Status(int slot, int port,
+                     ::stratum::hal::phal::SfpConfigurator* configurator));
 };
 
 }  // namespace hal

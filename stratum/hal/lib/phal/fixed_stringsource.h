@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_FIXED_STRINGSOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_FIXED_STRINGSOURCE_H_
 
@@ -24,8 +23,8 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/stringsource_interface.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/lib/timer_daemon.h"
+
 #include "absl/synchronization/mutex.h"
 
 namespace stratum {
@@ -122,23 +122,23 @@ bool TimerDaemon::Execute() {
 }
 
 ::util::Status TimerDaemon::RequestOneShotTimer(uint64 delay_ms,
-                                                 const Action& action,
-                                                 DescriptorPtr* desc) {
+                                                const Action& action,
+                                                DescriptorPtr* desc) {
   return GetInstance()->RequestTimer(false, delay_ms,
                                      /* period_ms (ignored)= */ 0, action,
                                      desc);
 }
 
 ::util::Status TimerDaemon::RequestPeriodicTimer(uint64 delay_ms,
-                                                  uint64 period_ms,
-                                                  const Action& action,
-                                                  DescriptorPtr* desc) {
+                                                 uint64 period_ms,
+                                                 const Action& action,
+                                                 DescriptorPtr* desc) {
   return GetInstance()->RequestTimer(true, delay_ms, period_ms, action, desc);
 }
 
 ::util::Status TimerDaemon::RequestTimer(bool repeat, uint64 delay_ms,
-                                          uint64 period_ms, Action action,
-                                          DescriptorPtr* desc) {
+                                         uint64 period_ms, Action action,
+                                         DescriptorPtr* desc) {
   absl::WriterMutexLock l(&access_lock_);
 
   LOG(INFO) << "Registered timer.";

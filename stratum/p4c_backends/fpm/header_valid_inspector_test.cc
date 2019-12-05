@@ -16,17 +16,17 @@
 
 #include "stratum/p4c_backends/fpm/header_valid_inspector.h"
 
+#include <memory>
 #include <set>
 #include <string>
-#include <memory>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/table_map_generator_mock.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -40,9 +40,7 @@ using ::testing::Range;
 // specific statement for testing.
 class HeaderValidInspectorTest : public testing::TestWithParam<int> {
  public:
-  static void SetUpTestCase() {
-    SetUpTestP4ModelNames();
-  }
+  static void SetUpTestCase() { SetUpTestP4ModelNames(); }
 
  protected:
   HeaderValidInspectorTest() {
@@ -68,8 +66,8 @@ class HeaderValidInspectorTest : public testing::TestWithParam<int> {
   // statement within the control body.  The test control is pre-processed
   // with a HitAssignMapper and a MeterColorMapper to do transforms where
   // applicable.
-  const IR::Statement* FindTestStatement(
-      const std::string& control, int statement_index) {
+  const IR::Statement* FindTestStatement(const std::string& control,
+                                         int statement_index) {
     std::vector<IRTestHelperJson::IRControlTransforms> transform_list(
         {IRTestHelperJson::kHitAssignMapper,
          IRTestHelperJson::kMeterColorMapper});
@@ -182,30 +180,18 @@ TEST_P(HeaderValidInspectorTestErrors, TestErrorStatements) {
   EXPECT_NE(0, ::errorCount());
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    NoTableUpdates,
-    HeaderValidInspectorTest,
-    Range(0, 5));
+INSTANTIATE_TEST_SUITE_P(NoTableUpdates, HeaderValidInspectorTest, Range(0, 5));
 
-INSTANTIATE_TEST_SUITE_P(
-    Table1Updates,
-    HeaderValidInspectorTestTable1,
-    Range(5, 11));
+INSTANTIATE_TEST_SUITE_P(Table1Updates, HeaderValidInspectorTestTable1,
+                         Range(5, 11));
 
-INSTANTIATE_TEST_SUITE_P(
-    Table1And2Updates,
-    HeaderValidInspectorTestTable1And2,
-    Range(11, 15));
+INSTANTIATE_TEST_SUITE_P(Table1And2Updates, HeaderValidInspectorTestTable1And2,
+                         Range(11, 15));
 
-INSTANTIATE_TEST_SUITE_P(
-    MultiHeader,
-    HeaderValidInspectorTestMultiHeader,
-    Range(15, 19));
+INSTANTIATE_TEST_SUITE_P(MultiHeader, HeaderValidInspectorTestMultiHeader,
+                         Range(15, 19));
 
-INSTANTIATE_TEST_SUITE_P(
-    Errors,
-    HeaderValidInspectorTestErrors,
-    Range(0, 9));
+INSTANTIATE_TEST_SUITE_P(Errors, HeaderValidInspectorTestErrors, Range(0, 9));
 
 }  // namespace p4c_backends
 }  // namespace stratum

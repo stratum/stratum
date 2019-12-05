@@ -24,9 +24,7 @@ namespace stratum {
 namespace p4c_backends {
 
 TableTypeMapper::TableTypeMapper()
-    : new_table_type_(P4_TABLE_UNKNOWN),
-      found_table_type_(P4_TABLE_UNKNOWN) {
-}
+    : new_table_type_(P4_TABLE_UNKNOWN), found_table_type_(P4_TABLE_UNKNOWN) {}
 
 // TODO(unknown): ProcessTables is currently hard-coded to decide table type
 // based on certain table attributes.  A potentially more general and longer
@@ -36,8 +34,8 @@ void TableTypeMapper::ProcessTables(const hal::P4InfoManager& p4_info_manager,
                                     hal::P4PipelineConfig* p4_pipeline_config) {
   for (const auto& p4_info_table : p4_info_manager.p4_info().tables()) {
     current_table_name_ = p4_info_table.preamble().name();
-    auto table_descriptor = FindMutableTableDescriptorOrDie(
-        current_table_name_, p4_pipeline_config);
+    auto table_descriptor = FindMutableTableDescriptorOrDie(current_table_name_,
+                                                            p4_pipeline_config);
 
     if (table_descriptor->pipeline_stage() != P4Annotation::L2) continue;
     if (table_descriptor->type() != P4_TABLE_UNKNOWN) continue;

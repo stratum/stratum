@@ -17,13 +17,13 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/substitute.h"
+#include "external/com_github_p4lang_p4c/lib/error.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/target_info.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "absl/strings/substitute.h"
-#include "external/com_github_p4lang_p4c/lib/error.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -38,8 +38,8 @@ namespace p4c_backends {
 // a single expression of type IR::StringLiteral.
 namespace {
 
-std::vector<std::string> GetValidAnnotations(
-    const IR::Node& node, const std::string& id_name) {
+std::vector<std::string> GetValidAnnotations(const IR::Node& node,
+                                             const std::string& id_name) {
   std::vector<std::string> values;  // Initially empty.
 
   // IR nodes with annotations should be an IR::IAnnotated subclass.
@@ -52,8 +52,7 @@ std::vector<std::string> GetValidAnnotations(
   // matching id_name to the returned vector.
   for (auto p4c_annotation :
        node.to<IR::IAnnotated>()->getAnnotations()->annotations) {
-    if (p4c_annotation->name != id_name)
-      continue;
+    if (p4c_annotation->name != id_name) continue;
     if (p4c_annotation->needsParsing) {
       if (p4c_annotation->expr.size() != 0) {
         LOG(ERROR) << "Expected to find zero expressions";
@@ -78,7 +77,7 @@ std::vector<std::string> GetValidAnnotations(
         continue;
       }
       values.push_back(
-        std::string(p4c_annotation->expr[0]->to<IR::StringLiteral>()->value));
+          std::string(p4c_annotation->expr[0]->to<IR::StringLiteral>()->value));
     }
   }
 
@@ -94,16 +93,15 @@ bool GetSwitchStackAnnotation(const IR::Node& node,
   // If the input node has "switchstack" annotations, each value string is
   // parsed and merged into the overall output.
   std::vector<std::string> values = GetValidAnnotations(node, "switchstack");
-  if (values.empty())
-    return false;
+  if (values.empty()) return false;
   for (const auto& value : values) {
     P4Annotation temp_annotation;
     if (ParseProtoFromString(value, &temp_annotation).ok()) {
       switch_stack_annotation->MergeFrom(temp_annotation);
     } else {
       switch_stack_annotation->Clear();
-      LOG(ERROR) << "Unable to parse switchstack annotation " << value
-                 << " in " << node.node_type_name();
+      LOG(ERROR) << "Unable to parse switchstack annotation " << value << " in "
+                 << node.node_type_name();
       return false;
     }
   }
@@ -133,8 +131,7 @@ std::string GetControllerHeaderAnnotation(const IR::Node& node) {
 
   // If the "controller_header" annotation is present for the input node, it
   // should have a single string value.
-  if (values.empty())
-    return "";
+  if (values.empty()) return "";
   if (values.size() > 1) {
     LOG(ERROR) << node.node_type_name()
                << " has multiple controller_header annotations";
@@ -156,8 +153,8 @@ void FillTableRefByName(const std::string& table_name,
 void FillTableRefFromIR(const IR::P4Table& ir_table,
                         const hal::P4InfoManager& p4_info_manager,
                         hal::P4ControlTableRef* table_ref) {
-  FillTableRefByName(std::string(
-      ir_table.externalName()), p4_info_manager, table_ref);
+  FillTableRefByName(std::string(ir_table.externalName()), p4_info_manager,
+                     table_ref);
   table_ref->set_pipeline_stage(GetAnnotatedPipelineStage(ir_table));
 }
 
@@ -168,11 +165,9 @@ bool IsPipelineStageFixed(P4Annotation::PipelineStage stage) {
 bool IsTableApplyInstance(const P4::MethodInstance& instance,
                           P4Annotation::PipelineStage* applied_stage) {
   *applied_stage = P4Annotation::DEFAULT_STAGE;
-  if (!instance.isApply())
-    return false;
+  if (!instance.isApply()) return false;
   auto apply_method = instance.to<P4::ApplyMethod>();
-  if (!apply_method->isTableApply())
-    return false;
+  if (!apply_method->isTableApply()) return false;
   auto table = apply_method->object->to<IR::P4Table>();
   P4Annotation::PipelineStage stage =
       GetAnnotatedPipelineStageOrP4Error(*table);
@@ -203,8 +198,9 @@ void FindLocalMetadataType(const std::vector<const IR::P4Control*>& controls,
               kIngressEgressParamSize);
       return;
     }
-    auto param_type = control->type->applyParams->
-        parameters[kLocalMetaParamIndex]->type->to<IR::Type_Name>();
+    auto param_type =
+        control->type->applyParams->parameters[kLocalMetaParamIndex]
+            ->type->to<IR::Type_Name>();
     if (param_type == nullptr) {
       ::error("Expected %s parameter to be a type name",
               control->externalName());
@@ -213,8 +209,9 @@ void FindLocalMetadataType(const std::vector<const IR::P4Control*>& controls,
     if (local_meta_type_name.empty()) {
       local_meta_type_name = param_type->path->name.name;
     } else if (local_meta_type_name != param_type->path->name.name) {
-      ::error("Ingress and egress controls have different "
-              "local metadata types");
+      ::error(
+          "Ingress and egress controls have different "
+          "local metadata types");
       return;
     }
   }
@@ -228,7 +225,7 @@ void FindLocalMetadataType(const std::vector<const IR::P4Control*>& controls,
 // has not yet been specified.
 bool IsFieldTypeUnspecified(const hal::P4FieldDescriptor& descriptor) {
   return descriptor.type() == P4_FIELD_TYPE_UNKNOWN ||
-      descriptor.type() == P4_FIELD_TYPE_ANNOTATED;
+         descriptor.type() == P4_FIELD_TYPE_ANNOTATED;
 }
 
 // This unnamed namespace hides the p4c backend's global P4ModelNames instance.
@@ -245,9 +242,7 @@ void SetP4ModelNames(const P4ModelNames& p4_model_names) {
   *GlobalP4ModelNames() = p4_model_names;
 }
 
-const P4ModelNames& GetP4ModelNames() {
-  return *GlobalP4ModelNames();
-}
+const P4ModelNames& GetP4ModelNames() { return *GlobalP4ModelNames(); }
 
 void SetUpTestP4ModelNames() {
   // The "ingress" and "egress" names don't match some test files, but it
@@ -287,15 +282,13 @@ std::string AddHeaderArrayIndex(const std::string& header_name, int64 index) {
 }
 
 std::string AddHeaderArrayLast(const std::string& header_name) {
-  return absl::Substitute(
-      "$0.$1", header_name.c_str(), IR::Type_Stack::last.c_str());
+  return absl::Substitute("$0.$1", header_name.c_str(),
+                          IR::Type_Stack::last.c_str());
 }
 
 bool IsParserEndState(const ParserState& state) {
-  if (state.transition().next_state() == IR::ParserState::accept)
-    return true;
-  if (state.transition().next_state() == IR::ParserState::reject)
-    return true;
+  if (state.transition().next_state() == IR::ParserState::accept) return true;
+  if (state.transition().next_state() == IR::ParserState::reject) return true;
   return false;
 }
 
@@ -357,17 +350,14 @@ const hal::P4HeaderDescriptor& FindHeaderDescriptorOrDie(
 // The typical use case is finding a header descriptor that corresponds to
 // a field descriptor's header_type value.
 const hal::P4HeaderDescriptor& FindHeaderDescriptorForFieldOrDie(
-    const std::string& field_name,
-    P4HeaderType header_type,
+    const std::string& field_name, P4HeaderType header_type,
     const hal::P4PipelineConfig& p4_pipeline_config) {
   const hal::P4HeaderDescriptor* header_descriptor = nullptr;
   for (const auto& table_map_iter : p4_pipeline_config.table_map()) {
-    if (!table_map_iter.second.has_header_descriptor())
-      continue;
+    if (!table_map_iter.second.has_header_descriptor()) continue;
     if (table_map_iter.second.header_descriptor().type() != header_type)
       continue;
-    if (field_name.find(table_map_iter.first) != 0)
-      continue;
+    if (field_name.find(table_map_iter.first) != 0) continue;
     header_descriptor = &table_map_iter.second.header_descriptor();
     break;
   }

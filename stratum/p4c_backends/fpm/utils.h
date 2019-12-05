@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/p4/p4_control.pb.h"
 #include "stratum/hal/lib/p4/p4_info_manager.h"
@@ -29,8 +31,6 @@
 #include "stratum/p4c_backends/fpm/parser_map.pb.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -145,8 +145,7 @@ const hal::P4HeaderDescriptor& FindHeaderDescriptorOrDie(
     const std::string& header_name,
     const hal::P4PipelineConfig& p4_pipeline_config);
 const hal::P4HeaderDescriptor& FindHeaderDescriptorForFieldOrDie(
-    const std::string& field_name,
-    P4HeaderType header_type,
+    const std::string& field_name, P4HeaderType header_type,
     const hal::P4PipelineConfig& p4_pipeline_config);
 
 // These utility functions provide common support for field descriptor lookup.
@@ -171,8 +170,8 @@ void DeleteRepeatedFields(
     const std::vector<int>& delete_indexes,
     ::google::protobuf::RepeatedPtrField<ELEMENT>* repeated_fields) {
   int prior_index = repeated_fields->size();
-  for (auto r_iter = delete_indexes.rbegin();
-       r_iter !=  delete_indexes.rend(); ++r_iter) {
+  for (auto r_iter = delete_indexes.rbegin(); r_iter != delete_indexes.rend();
+       ++r_iter) {
     DCHECK(0 <= *r_iter && *r_iter < prior_index)
         << "Invalid deleted field index " << *r_iter
         << " must be non-negative in ascending order";

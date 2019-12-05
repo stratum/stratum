@@ -14,21 +14,21 @@
 
 // This file contains unit tests of the pipeline intra-block optimizing classes.
 
+#include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "stratum/p4c_backends/fpm/pipeline_intra_block_passes.h"
-
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/ir/visitor.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/p4c_backends/test/test_inspectors.h"
 #include "stratum/p4c_backends/test/test_target_info.h"
 #include "stratum/public/proto/p4_annotation.pb.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/ir/visitor.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -43,9 +43,7 @@ class PipelineIntraBlockPassesTest : public testing::TestWithParam<bool> {
     TestTargetInfo::SetUpTestTargetInfo();
     SetUpTestP4ModelNames();
   }
-  static void TearDownTestCase() {
-    TestTargetInfo::TearDownTestTargetInfo();
-  }
+  static void TearDownTestCase() { TestTargetInfo::TearDownTestTargetInfo(); }
 
  protected:
   // The SetUpTestIR method loads an IR file in JSON format, then applies a
@@ -76,11 +74,11 @@ class PipelineIntraBlockPassesTest : public testing::TestWithParam<bool> {
   const IR::P4Control* RunBlockPasses(const IR::P4Control& control) {
     PipelineIfBlockInsertPass block_insert_pass;
     const IR::P4Control* control1 = block_insert_pass.InsertBlocks(control);
-    PipelineBlockPass block_pass(
-        ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+    PipelineBlockPass block_pass(ir_helper_->mid_end_refmap(),
+                                 ir_helper_->mid_end_typemap());
     const IR::P4Control* control2 = block_pass.OptimizeControl(*control1);
-    PipelineIfElsePass ifelse_pass(
-        ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+    PipelineIfElsePass ifelse_pass(ir_helper_->mid_end_refmap(),
+                                   ir_helper_->mid_end_typemap());
     return ifelse_pass.OptimizeControl(*control2);
   }
 
@@ -99,8 +97,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestACLMultiL2Sequence) {
   ASSERT_TRUE(ir_control != nullptr);
   const IR::P4Control* test_control = RunBlockPasses(*ir_control);
 
-  PipelineIntraBlockPass intra_block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIntraBlockPass intra_block_pass(ir_helper_->mid_end_refmap(),
+                                          ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       intra_block_pass.OptimizeControl(*test_control);
   EXPECT_EQ(0, ::errorCount());
@@ -133,8 +131,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestACLStageL2StageL3StageSequence) {
   ASSERT_TRUE(ir_control != nullptr);
   const IR::P4Control* test_control = RunBlockPasses(*ir_control);
 
-  PipelineIntraBlockPass intra_block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIntraBlockPass intra_block_pass(ir_helper_->mid_end_refmap(),
+                                          ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       intra_block_pass.OptimizeControl(*test_control);
   EXPECT_EQ(0, ::errorCount());
@@ -170,8 +168,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestInterleavedAssignments) {
   ASSERT_TRUE(ir_control != nullptr);
   const IR::P4Control* test_control = RunBlockPasses(*ir_control);
 
-  PipelineIntraBlockPass intra_block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIntraBlockPass intra_block_pass(ir_helper_->mid_end_refmap(),
+                                          ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       intra_block_pass.OptimizeControl(*test_control);
   EXPECT_EQ(0, ::errorCount());
@@ -207,8 +205,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestNestedNonStageBlock) {
   ASSERT_TRUE(ir_control != nullptr);
   const IR::P4Control* test_control = RunBlockPasses(*ir_control);
 
-  PipelineIntraBlockPass intra_block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIntraBlockPass intra_block_pass(ir_helper_->mid_end_refmap(),
+                                          ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       intra_block_pass.OptimizeControl(*test_control);
   EXPECT_EQ(0, ::errorCount());
@@ -245,8 +243,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestNestedBlocks) {
   ASSERT_TRUE(ir_control != nullptr);
   const IR::P4Control* test_control = RunBlockPasses(*ir_control);
 
-  PipelineIntraBlockPass intra_block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIntraBlockPass intra_block_pass(ir_helper_->mid_end_refmap(),
+                                          ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       intra_block_pass.OptimizeControl(*test_control);
   EXPECT_EQ(0, ::errorCount());
@@ -279,8 +277,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestNoSwitchStatementTransform) {
   ASSERT_TRUE(ir_control != nullptr);
   const IR::P4Control* test_control = RunBlockPasses(*ir_control);
 
-  PipelineIntraBlockPass intra_block_pass(
-      ir_helper_->mid_end_refmap(), ir_helper_->mid_end_typemap());
+  PipelineIntraBlockPass intra_block_pass(ir_helper_->mid_end_refmap(),
+                                          ir_helper_->mid_end_typemap());
   const IR::P4Control* final_control =
       intra_block_pass.OptimizeControl(*test_control);
   EXPECT_EQ(test_control, final_control);  // Expects no transformation.
@@ -297,8 +295,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestSwitchStatementStageInspect) {
   StatementStageInspector stage_inspector(P4Annotation::L2,
                                           ir_helper_->mid_end_refmap(),
                                           ir_helper_->mid_end_typemap());
-  P4Annotation::PipelineStage stage = stage_inspector.Inspect(
-      *ir_control->body->components[0]);
+  P4Annotation::PipelineStage stage =
+      stage_inspector.Inspect(*ir_control->body->components[0]);
   EXPECT_EQ(P4Annotation::DEFAULT_STAGE, stage);
   EXPECT_NE(0, ::errorCount());
 }
@@ -313,8 +311,8 @@ TEST_P(PipelineIntraBlockPassesTest, TestBlockStatementStageInspect) {
   StatementStageInspector stage_inspector(P4Annotation::L2,
                                           ir_helper_->mid_end_refmap(),
                                           ir_helper_->mid_end_typemap());
-  P4Annotation::PipelineStage stage = stage_inspector.Inspect(
-      *ir_control->body);
+  P4Annotation::PipelineStage stage =
+      stage_inspector.Inspect(*ir_control->body);
   EXPECT_EQ(P4Annotation::DEFAULT_STAGE, stage);
   EXPECT_NE(0, ::errorCount());
 }
@@ -329,17 +327,14 @@ TEST_P(PipelineIntraBlockPassesTest, TestIfStatementStageInspect) {
   StatementStageInspector stage_inspector(P4Annotation::L2,
                                           ir_helper_->mid_end_refmap(),
                                           ir_helper_->mid_end_typemap());
-  P4Annotation::PipelineStage stage = stage_inspector.Inspect(
-      *ir_control->body->components[2]);
+  P4Annotation::PipelineStage stage =
+      stage_inspector.Inspect(*ir_control->body->components[2]);
   EXPECT_EQ(P4Annotation::DEFAULT_STAGE, stage);
   EXPECT_NE(0, ::errorCount());
 }
 
-INSTANTIATE_TEST_SUITE_P(
-  WithAndWithoutTransforms,
-  PipelineIntraBlockPassesTest,
-  ::testing::Bool()
-);
+INSTANTIATE_TEST_SUITE_P(WithAndWithoutTransforms, PipelineIntraBlockPassesTest,
+                         ::testing::Bool());
 
 }  // namespace p4c_backends
 }  // namespace stratum

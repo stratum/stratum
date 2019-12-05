@@ -16,27 +16,28 @@
 #include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
 
 #include <memory>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/glue/status/status_test_util.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-using ::stratum::test_utils::StatusIs;
 
 class SfpDatasourceTest : public ::testing::Test {
  public:
@@ -45,8 +46,8 @@ class SfpDatasourceTest : public ::testing::Test {
     oid_ = ONLP_SFP_ID_CREATE(id_);
   }
 
-  int id_;             // Id for this SFP
-  OnlpOid oid_;        // OID for this SFP (i.e. Type + Id)
+  int id_;       // Id for this SFP
+  OnlpOid oid_;  // OID for this SFP (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
   MockOnlpWrapper mock_onlp_interface_;
 };
@@ -82,8 +83,8 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
   mock_sfp_info.type = ONLP_SFP_TYPE_SFP;
   mock_sfp_info.sff.sfp_type = SFF_SFP_TYPE_SFP;
   mock_sfp_info.sff.module_type = SFF_MODULE_TYPE_1G_BASE_SX;
-  mock_sfp_info.sff.caps =
-    static_cast<sff_module_caps_t>(SFF_MODULE_CAPS_F_1G|SFF_MODULE_CAPS_F_100G);
+  mock_sfp_info.sff.caps = static_cast<sff_module_caps_t>(
+      SFF_MODULE_CAPS_F_1G | SFF_MODULE_CAPS_F_100G);
   mock_sfp_info.sff.length = 100;
 
   // FIXME
@@ -98,16 +99,16 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
               sizeof(mock_sfp_info.sff.serial));
   */
   strncpy(mock_sfp_info.sff.length_desc, "test_cable_len",
-              sizeof(mock_sfp_info.sff.length_desc));
+          sizeof(mock_sfp_info.sff.length_desc));
   strncpy(mock_sfp_info.sff.vendor, "test_sfp_vendor",
-              sizeof(mock_sfp_info.sff.vendor));
+          sizeof(mock_sfp_info.sff.vendor));
   strncpy(mock_sfp_info.sff.model, "test_sfp_model",
-              sizeof(mock_sfp_info.sff.model));
+          sizeof(mock_sfp_info.sff.model));
   strncpy(mock_sfp_info.sff.serial, "test_sfp_serial",
-              sizeof(mock_sfp_info.sff.serial));
+          sizeof(mock_sfp_info.sff.serial));
 
   // Mock sfp_dom info response.
-  SffDomInfo *mock_sfp_dom_info = &mock_sfp_info.dom;
+  SffDomInfo* mock_sfp_dom_info = &mock_sfp_info.dom;
   mock_sfp_dom_info->temp = 123;
   mock_sfp_dom_info->nchannels = 2;
   mock_sfp_dom_info->voltage = 234;
@@ -162,9 +163,9 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
   EXPECT_THAT(
       sfp_datasource->GetSfpType(),
       ContainsValue(SfpType_descriptor()->FindValueByName("SFP_TYPE_SFP")));
-  EXPECT_THAT(
-      sfp_datasource->GetSfpModuleType(),
-      ContainsValue(SfpModuleType_descriptor()->FindValueByName("SFP_MODULE_TYPE_1G_BASE_SX")));
+  EXPECT_THAT(sfp_datasource->GetSfpModuleType(),
+              ContainsValue(SfpModuleType_descriptor()->FindValueByName(
+                  "SFP_MODULE_TYPE_1G_BASE_SX")));
 
   // Check Module Caps
   EXPECT_THAT(sfp_datasource->GetModCapF100(), ContainsValue(false));
@@ -173,8 +174,7 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
   EXPECT_THAT(sfp_datasource->GetModCapF40G(), ContainsValue(false));
   EXPECT_THAT(sfp_datasource->GetModCapF100G(), ContainsValue(true));
 
-  EXPECT_THAT(sfp_datasource->GetSfpCableLength(),
-              ContainsValue<int>(100));
+  EXPECT_THAT(sfp_datasource->GetSfpCableLength(), ContainsValue<int>(100));
   EXPECT_THAT(sfp_datasource->GetSfpCableLengthDesc(),
               ContainsValue<std::string>("test_cable_len"));
 }

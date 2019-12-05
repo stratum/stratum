@@ -17,16 +17,16 @@
 #include "stratum/p4c_backends/fpm/slice_cross_reference.h"
 
 #include <string>
-#include <vector>
 #include <tuple>
+#include <vector>
 
+#include "absl/memory/memory.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/sliced_field_map.pb.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -132,10 +132,10 @@ class SliceCrossReferenceTest
 TEST_F(SliceCrossReferenceTest, TestMetadataSliced) {
   SetUpTestIR("slice_assignments.ir.json");
   GetTestAssignment("ingress.assign_metadata_slice");
-  auto slice_descriptor = SetUpTestFieldDescriptor(
-      "meta.other_metadata", P4_FIELD_TYPE_UNKNOWN);
-  auto left_descriptor = SetUpTestFieldDescriptor(
-      "meta.smaller_metadata", P4_FIELD_TYPE_ETH_TYPE);
+  auto slice_descriptor =
+      SetUpTestFieldDescriptor("meta.other_metadata", P4_FIELD_TYPE_UNKNOWN);
+  auto left_descriptor =
+      SetUpTestFieldDescriptor("meta.smaller_metadata", P4_FIELD_TYPE_ETH_TYPE);
   hal::P4PipelineConfig original_pipeline_config = p4_pipeline_config_;
   hal::P4FieldDescriptor original_left = *left_descriptor;
   SliceCrossReference test_slicer(sliced_field_map_,

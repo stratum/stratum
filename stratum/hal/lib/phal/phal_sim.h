@@ -15,20 +15,19 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_PHAL_SIM_H_
 #define STRATUM_HAL_LIB_PHAL_PHAL_SIM_H_
 
 #include <functional>
-#include <set>
 #include <map>
 #include <memory>
+#include <set>
 #include <utility>
 
+#include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/sfp_configurator.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -56,7 +55,8 @@ class PhalSim : public PhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status RegisterSfpConfigurator(int slot, int port,
+  ::util::Status RegisterSfpConfigurator(
+      int slot, int port,
       ::stratum::hal::phal::SfpConfigurator* configurator) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
@@ -94,8 +94,8 @@ class PhalSim : public PhalInterface {
 
   // Map from std::pair<int, int> representing (slot, port) of singleton port
   // to the vector of sfp datasource id
-  std::map<std::pair<int, int>,
-    ::stratum::hal::phal::SfpConfigurator*> slot_port_to_configurator_;
+  std::map<std::pair<int, int>, ::stratum::hal::phal::SfpConfigurator*>
+      slot_port_to_configurator_;
 
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_);

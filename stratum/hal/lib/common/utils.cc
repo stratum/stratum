@@ -13,11 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/utils.h"
 
+#include <regex>    // NOLINT
 #include <sstream>  // IWYU pragma: keep
-#include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -338,7 +337,8 @@ std::string MacAddressToYangString(
     const std::string& yang_string) {
   std::string tmp_str = yang_string;
   // Remove colons
-  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'), tmp_str.end());
+  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
+                tmp_str.end());
   return strtoull(tmp_str.c_str(), NULL, 16);
 }
 
@@ -348,11 +348,11 @@ bool IsMacAddressValid(const std::string& mac_address) {
 }
 
 bool IsPortAutonegEnabled(const TriState& state) {
-    return state == TriState::TRI_STATE_TRUE;
+  return state == TriState::TRI_STATE_TRUE;
 }
 
 bool IsAdminStateEnabled(const AdminState& admin_state) {
-    return admin_state == AdminState::ADMIN_STATE_ENABLED;
+  return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
 std::string ConvertMediaTypeToString(const MediaType& type) {

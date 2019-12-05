@@ -23,13 +23,12 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/meta/type_traits.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/public/proto/error.pb.h"
-
-#include "absl/meta/type_traits.h"
 
 namespace stratum {
 namespace test_utils {
@@ -369,13 +368,13 @@ inline matchers_internal::StatusIsMatcher StatusIs(
   ASSERT_THAT(statement, ::stratum::test_utils::IsOk())
 
 // Macros for testing the results of functions that return ::util::StatusOr.
-#define ASSERT_CONCAT1(prefix, postfix) prefix ## postfix
+#define ASSERT_CONCAT1(prefix, postfix) prefix##postfix
 #define ASSERT_CONCAT(prefix, postfix) ASSERT_CONCAT1(prefix, postfix)
 #define ASSERT_UNIQUE(prefix) ASSERT_CONCAT(prefix, __LINE__)
 
 #define ASSERT_OK_AND_ASSIGN(lhs, statement) \
-  auto ASSERT_UNIQUE(result) = statement; \
-  ASSERT_OK(ASSERT_UNIQUE(result)); \
+  auto ASSERT_UNIQUE(result) = statement;    \
+  ASSERT_OK(ASSERT_UNIQUE(result));          \
   lhs = ASSERT_UNIQUE(result).ConsumeValueOrDie();
 
 // There are no EXPECT_NOT_OK/ASSERT_NOT_OK macros since they would not

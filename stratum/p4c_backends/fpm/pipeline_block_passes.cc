@@ -16,18 +16,17 @@
 
 #include "stratum/p4c_backends/fpm/pipeline_block_passes.h"
 
-#include "stratum/glue/logging.h"
-#include "stratum/p4c_backends/fpm/utils.h"
 #include "absl/debugging/leak_check.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/tableApply.h"
+#include "stratum/glue/logging.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 // The implementation of the FixedTableInspector starts here.
-FixedTableInspector::FixedTableInspector() : has_fixed_table_(false) {
-}
+FixedTableInspector::FixedTableInspector() : has_fixed_table_(false) {}
 
 bool FixedTableInspector::FindFixedTables(const IR::P4Control& p4_control) {
   absl::LeakCheckDisabler disable_ir_control_leak_checks;
@@ -45,8 +44,7 @@ const IR::P4Control* PipelineIfBlockInsertPass::InsertBlocks(
     const IR::P4Control& control) {
   absl::LeakCheckDisabler disable_ir_control_leak_checks;
   auto transformed_body = control.body->apply(*this);
-  if (transformed_body == control.body)
-    return &control;
+  if (transformed_body == control.body) return &control;
 
   auto transformed_block = transformed_body->to<IR::BlockStatement>();
   DCHECK(transformed_block != nullptr)
@@ -70,18 +68,15 @@ const IR::IfStatement* PipelineIfBlockInsertPass::postorder(
 
 const IR::Statement* PipelineIfBlockInsertPass::ReplaceSingleStatementWithBlock(
     const IR::Statement* statement) {
-  if (statement == nullptr)
-    return statement;
-  if (statement->is<IR::BlockStatement>())
-    return statement;
+  if (statement == nullptr) return statement;
+  if (statement->is<IR::BlockStatement>()) return statement;
 
   // Any statement type except MethodCallStatement is OK for subsequent passes
   // without a BlockStatement wrapper.  MethodCallStatements are interesting
   // because the called method may be an apply().  Additional qualifiers
   // could be added to explicitly limit this to applies at the expense of
   // additional complexity below.
-  if (!statement->is<IR::MethodCallStatement>())
-    return statement;
+  if (!statement->is<IR::MethodCallStatement>()) return statement;
 
   auto new_block = new IR::BlockStatement;
   new_block->push_back(statement);
@@ -148,8 +143,8 @@ const IR::BlockStatement* PipelineBlockPass::postorder(
   }
 
   optimized_ = true;
-  return new IR::PipelineStageStatement(
-      statement->annotations, statement->components, optimize_stage);
+  return new IR::PipelineStageStatement(statement->annotations,
+                                        statement->components, optimize_stage);
 }
 
 // A TableHitStatement refers to an IR::P4Table which should be annotated
@@ -179,8 +174,7 @@ const IR::BlockStatement* PipelineBlockPass::OptimizeBlock(
   optimized_ = false;
   absl::LeakCheckDisabler disable_ir_block_leak_checks;
   auto optimized_node = block_statement.apply(*this);
-  if (!optimized_)
-    return &block_statement;
+  if (!optimized_) return &block_statement;
 
   // The apply function for the IR transform returns an IR::Node pointer,
   // which should represent an IR::BlockStatement for the optimized block.
@@ -190,9 +184,7 @@ const IR::BlockStatement* PipelineBlockPass::OptimizeBlock(
   return optimized_block;
 }
 
-void PipelineBlockPass::PushControlBlock() {
-  block_stage_stack_.push_back({});
-}
+void PipelineBlockPass::PushControlBlock() { block_stage_stack_.push_back({}); }
 
 // Determines whether the entire popped block can be optimized into a
 // fixed-function pipeline stage.
@@ -290,8 +282,7 @@ const IR::P4Control* PipelineIfElsePass::OptimizeControl(
   stage_stack_.push_back({});
   absl::LeakCheckDisabler disable_ir_control_leak_checks;
   auto optimized_body = control.body->apply(*this);
-  if (optimized_body == control.body)
-    return &control;
+  if (optimized_body == control.body) return &control;
 
   auto optimized_block = optimized_body->to<IR::BlockStatement>();
   DCHECK(optimized_block != nullptr)
@@ -323,13 +314,12 @@ const IR::Node* PipelineIfElsePass::postorder(IR::IfStatement* statement) {
   // false block refer to different pipeline stages, or b) at least one of the
   // blocks refers to multiple stages and can't form a PipelineStageStatement.
   stage_stack_.back().insert(popped_stage_set.begin(), popped_stage_set.end());
-  if (popped_stage_set.size() != 1)
-    return statement;
+  if (popped_stage_set.size() != 1) return statement;
 
   // Non-fixed (ACL) stages can't be optimized.
   auto popped_stage = *popped_stage_set.begin();
   if (!IsPipelineStageFixed(
-      static_cast<P4Annotation::PipelineStage>(popped_stage)))
+          static_cast<P4Annotation::PipelineStage>(popped_stage)))
     return statement;
 
   // At this point, the statement can be optimized, so it is wrapped

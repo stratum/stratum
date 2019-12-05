@@ -22,8 +22,8 @@
 #include <string>
 #include <type_traits>
 
-#include "google/protobuf/util/message_differencer.h"
 #include "gmock/gmock.h"
+#include "google/protobuf/util/message_differencer.h"
 // FIXME(boc) already included
 #include "gmock/gmock-matchers.h"  // NOLINT
 #include "gtest/gtest.h"

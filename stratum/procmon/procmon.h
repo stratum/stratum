@@ -18,14 +18,15 @@
 #define STRATUM_PROCMON_PROCMON_H_
 
 #include <pthread.h>
+
+#include <map>
 #include <memory>
 #include <queue>
 #include <utility>
-#include <map>
 
-#include "stratum/procmon/procmon.pb.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/procmon/procmon.pb.h"
 
 namespace stratum {
 

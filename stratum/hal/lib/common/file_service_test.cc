@@ -15,11 +15,16 @@
 
 #include "stratum/hal/lib/common/file_service.h"
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
@@ -28,11 +33,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
 
 using ::testing::IsEmpty;
 
@@ -154,9 +154,9 @@ TEST_P(FileServiceTest, RemoveSuccess) {
 }
 
 INSTANTIATE_TEST_SUITE_P(FileServiceTestWithMode, FileServiceTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE,
-                                          OPERATION_MODE_COUPLED,
-                                          OPERATION_MODE_SIM));
+                         ::testing::Values(OPERATION_MODE_STANDALONE,
+                                           OPERATION_MODE_COUPLED,
+                                           OPERATION_MODE_SIM));
 
 }  // namespace hal
 }  // namespace stratum

@@ -20,16 +20,16 @@
 #ifndef STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
 #define STRATUM_P4C_BACKENDS_TEST_IR_TEST_HELPERS_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
 
-#include "stratum/p4c_backends/common/p4c_front_mid_real.h"
-#include "stratum/p4c_backends/common/program_inspector.h"
 #include "external/com_github_p4lang_p4c/ir/ir.h"
 #include "external/com_github_p4lang_p4c/lib/compile_context.h"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/p4c_backends/common/p4c_front_mid_real.h"
+#include "stratum/p4c_backends/common/program_inspector.h"
 
 namespace stratum {
 namespace p4c_backends {

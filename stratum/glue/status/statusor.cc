@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-
 #include "stratum/glue/status/statusor.h"
 
 #include <errno.h>
+
 #include <algorithm>
 
 #include "stratum/glue/logging.h"

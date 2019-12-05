@@ -21,15 +21,15 @@
 #include <memory>
 #include <string>
 
+#include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
@@ -92,7 +92,6 @@ class OnlpLedDataSource : public DataSource {
   // We do not own ONLP stub object. ONLP stub is created on PHAL creation and
   // destroyed when PHAL deconstruct. Do not delete onlp_stub_.
   OnlpInterface* onlp_stub_;
-
 
   // A list of managed attributes.
   // Hardware Info.

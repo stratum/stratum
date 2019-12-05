@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
+#include "stratum/hal/lib/bmv2/bmv2_switch.h"
 
 #include <algorithm>
 #include <map>
-#include <vector>
 #include <set>
+#include <vector>
 
-#include "stratum/hal/lib/bmv2/bmv2_switch.h"
-#include "stratum/hal/lib/pi/pi_node.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/pi/pi_node.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 using ::stratum::hal::pi::PINode;
 
@@ -53,7 +53,7 @@ Bmv2Switch::~Bmv2Switch() {}
   for (auto& node : config.nodes()) new_node_ids.insert(node.id());
   if (known_node_ids != new_node_ids) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "The Bmv2Switch expects constant node ids";
+           << "The Bmv2Switch expects constant node ids";
   }
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bmv2_chassis_manager_->PushChassisConfig(config));
@@ -122,13 +122,9 @@ Bmv2Switch::~Bmv2Switch() {}
   return status;
 }
 
-::util::Status Bmv2Switch::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status Bmv2Switch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status Bmv2Switch::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status Bmv2Switch::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status Bmv2Switch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
@@ -166,7 +162,7 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 ::util::Status Bmv2Switch::TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) {
+                                          const ::p4::v1::PacketOut& packet) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->TransmitPacket(packet);
 }
@@ -211,7 +207,7 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 ::util::Status Bmv2Switch::SetValue(uint64 node_id, const SetRequest& request,
-                        std::vector<::util::Status>* details) {
+                                    std::vector<::util::Status>* details) {
   VLOG(1) << "Bmv2Switch::SetValue\n";
   LOG(INFO) << "Bmv2Switch::SetValue is not implemented yet, but changes will "
             << "be peformed when ChassisConfig is pushed again.";
@@ -224,11 +220,10 @@ Bmv2Switch::~Bmv2Switch() {}
 }
 
 std::unique_ptr<Bmv2Switch> Bmv2Switch::CreateInstance(
-    PhalInterface* phal_interface,
-    Bmv2ChassisManager* bmv2_chassis_manager,
+    PhalInterface* phal_interface, Bmv2ChassisManager* bmv2_chassis_manager,
     const std::map<uint64, PINode*>& node_id_to_pi_node) {
-  return absl::WrapUnique(new Bmv2Switch(
-      phal_interface, bmv2_chassis_manager, node_id_to_pi_node));
+  return absl::WrapUnique(
+      new Bmv2Switch(phal_interface, bmv2_chassis_manager, node_id_to_pi_node));
 }
 
 ::util::StatusOr<PINode*> Bmv2Switch::GetPINodeFromNodeId(

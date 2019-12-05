@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -26,12 +27,11 @@
 
 #include <string>
 
+#include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
-#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
-#include "absl/base/macros.h"
 
 DEFINE_int32(bcm_diag_shell_port, 5020,
              "Port to listen to for user telnet sessions.");
@@ -41,11 +41,9 @@ namespace hal {
 namespace bcm {
 
 BcmDiagShell::BcmDiagShell()
-    : server_started_(false), server_thread_id_(0), shell_thread_id_(0) {
-}
+    : server_started_(false), server_thread_id_(0), shell_thread_id_(0) {}
 
-BcmDiagShell::~BcmDiagShell() {
-}
+BcmDiagShell::~BcmDiagShell() {}
 
 // Initialization of the static vars.
 constexpr unsigned char BcmDiagShell::kTelnetWillSGA[];
@@ -73,13 +71,13 @@ BcmDiagShell* BcmDiagShell::CreateSingleton() {
   return singleton_;
 }
 
-void* BcmDiagShell::ServerThreadFunc(void *arg) {
+void* BcmDiagShell::ServerThreadFunc(void* arg) {
   BcmDiagShell* bcm_diag_shell = static_cast<BcmDiagShell*>(arg);
   bcm_diag_shell->RunServer();
   return nullptr;
 }
 
-void* BcmDiagShell::ShellThreadFunc(void *arg) {
+void* BcmDiagShell::ShellThreadFunc(void* arg) {
   BcmDiagShell* bcm_diag_shell = static_cast<BcmDiagShell*>(arg);
   bcm_diag_shell->RunDiagShell();
   return nullptr;
@@ -99,8 +97,8 @@ void BcmDiagShell::RunDiagShell() {
 
 void BcmDiagShell::ForwardTelnetSession() {
   fd_set read_fds;
-  int max_fd1 = (client_socket_ > pty_master_fd_ ?
-                 client_socket_ : pty_master_fd_) + 1;
+  int max_fd1 =
+      (client_socket_ > pty_master_fd_ ? client_socket_ : pty_master_fd_) + 1;
   unsigned char pty_buffer[kNumberOfBytesRead + 1];
   int bytes;
 
@@ -133,7 +131,7 @@ void BcmDiagShell::ForwardTelnetSession() {
 }
 
 void BcmDiagShell::ProcessTelnetCommand() {
-  unsigned char command[3] = { kTelnetCmd, 0, 0 };
+  unsigned char command[3] = {kTelnetCmd, 0, 0};
   std::string info = "BcmDiagShell: received TelnetCmd ";
 
   if (ReadNextTelnetCommandByte(&command[1]) != 1) {
@@ -214,7 +212,7 @@ int BcmDiagShell::ProcessTelnetInput() {
 
 // either read from telnet buffer or from telnet session.  Reading from telnet
 // session should not be blocked, assuming integrity of telnet client.
-int BcmDiagShell::ReadNextTelnetCommandByte(unsigned char *data) {
+int BcmDiagShell::ReadNextTelnetCommandByte(unsigned char* data) {
   if (net_buffer_offset_ < net_buffer_count_) {
     *data = net_buffer_[net_buffer_offset_++];
     return 1;
@@ -231,14 +229,14 @@ void BcmDiagShell::SendTelnetDataToPty() {
   }
 }
 
-void BcmDiagShell::WriteToTelnetClient(const void *data, size_t size) {
+void BcmDiagShell::WriteToTelnetClient(const void* data, size_t size) {
   // Set MSG_NOSIGNAL flag to igonre SIGPIPE. b/6362602
   if (send(client_socket_, data, size, MSG_NOSIGNAL) < 0) {
     VLOG(1) << "Failed to send data to the telnet client: " << strerror(errno);
   }
 }
 
-void BcmDiagShell::WriteToPtyMaster(const void *data, size_t size) {
+void BcmDiagShell::WriteToPtyMaster(const void* data, size_t size) {
   if (write(pty_master_fd_, data, size) < 0) {
     VLOG(1) << "Failed to send data to the pty master: " << strerror(errno);
   }

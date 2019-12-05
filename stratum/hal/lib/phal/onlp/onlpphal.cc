@@ -21,10 +21,10 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/constants.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+#include "stratum/lib/macros.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
              "Maximum number of channel writers for transceiver events.");

@@ -13,24 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 
 #include <algorithm>
 #include <map>
 #include <set>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -110,7 +109,7 @@ BcmSwitch::~BcmSwitch() {}
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "SaveForwardingPipelineConfig not implemented for this target";
+         << "SaveForwardingPipelineConfig not implemented for this target";
 }
 
 ::util::Status BcmSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
@@ -119,7 +118,7 @@ BcmSwitch::~BcmSwitch() {}
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "CommitForwardingPipelineConfig not implemented for this target";
+         << "CommitForwardingPipelineConfig not implemented for this target";
 }
 
 ::util::Status BcmSwitch::VerifyForwardingPipelineConfig(

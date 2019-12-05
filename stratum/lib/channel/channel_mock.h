@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_CHANNEL_CHANNEL_MOCK_H_
 #define STRATUM_LIB_CHANNEL_CHANNEL_MOCK_H_
 
 #include <memory>
 #include <vector>
 
-#include "stratum/lib/channel/channel.h"
 #include "gmock/gmock.h"
+#include "stratum/lib/channel/channel.h"
 
 namespace stratum {
 

@@ -16,15 +16,13 @@
 
 #include "stratum/p4c_backends/fpm/condition_inspector.h"
 
-#include "stratum/glue/logging.h"
 #include "absl/strings/str_format.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 namespace p4c_backends {
 
-ConditionInspector::ConditionInspector() {
-  description_ = "";
-}
+ConditionInspector::ConditionInspector() { description_ = ""; }
 
 void ConditionInspector::Inspect(const IR::Expression& condition) {
   if (!description_.empty()) {
@@ -55,10 +53,9 @@ bool ConditionInspector::preorder(const IR::Operation_Binary* expression) {
 bool ConditionInspector::Compare(const IR::Operation_Relation& compare_op) {
   DCHECK_NE(nullptr, compare_op.left) << "Compare operation is missing LHS";
   DCHECK_NE(nullptr, compare_op.right) << "Compare operation is missing RHS";
-  description_ = absl::StrFormat("%s %s %s",
-                              compare_op.left->toString().c_str(),
-                              compare_op.getStringOp().c_str(),
-                              compare_op.right->toString().c_str());
+  description_ = absl::StrFormat(
+      "%s %s %s", compare_op.left->toString().c_str(),
+      compare_op.getStringOp().c_str(), compare_op.right->toString().c_str());
 
   // Deeper node visits are needed to make sure LHS and RHS aren't complex
   // expressions such as (field1 == (field2 + field3)).

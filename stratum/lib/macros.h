@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_MACROS_H_
 #define STRATUM_LIB_MACROS_H_
 
@@ -24,8 +23,8 @@
 /* START GOOGLE ONLY
 #include "stratum/glue/status/status_builder.h"
    END GOOGLE ONLY */
-#include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -34,7 +33,7 @@ namespace stratum {
 // return here is the one that matches the most of the uses.
 #define CHECK_RETURN_IF_FALSE(cond) \
   if (ABSL_PREDICT_TRUE(cond)) {    \
-  } else /* NOLINT */ \
+  } else /* NOLINT */               \
     return MAKE_ERROR(ERR_INVALID_PARAM) << "'" << #cond << "' is false. "
 
 // A simple class to explicitly cast the return value of an ::util::Status
@@ -45,6 +44,7 @@ class BooleanStatus {
   // Implicitly cast to bool.
   operator bool() const { return status_.ok(); }
   inline ::util::Status status() const { return status_; }
+
  private:
   ::util::Status status_;
 };

@@ -13,17 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+
 #include <functional>
 #include <vector>
 
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/lib/macros.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 // #include "absl/synchronization/mutex.h"
 // #include "absl/time/time.h"
 #include "absl/memory/memory.h"
@@ -35,12 +36,12 @@ namespace onlp {
 
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
+using stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::Return;
-using stratum::test_utils::StatusIs;
 
 static constexpr int kMaxXcvrEventDepth = 256;
 
@@ -51,14 +52,11 @@ class OnlpPhalTest : public ::testing::Test {
     onlpphal_ = OnlpPhal::CreateSingleton();
   }
 
-  void TearDown() override {
-    onlpphal_->Shutdown();
-  }
+  void TearDown() override { onlpphal_->Shutdown(); }
 
  protected:
   OnlpPhal* onlpphal_;
 };
-
 
 TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
   std::shared_ptr<Channel<TransceiverEvent>> channel =
@@ -70,14 +68,14 @@ TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
 
   // Register writer1
   ::util::StatusOr<int> result = onlpphal_->RegisterTransceiverEventWriter(
-        std::move(writer1) , PhalInterface::kTransceiverEventWriterPriorityMed);
+      std::move(writer1), PhalInterface::kTransceiverEventWriterPriorityMed);
   EXPECT_TRUE(result.ok());
   int id1 = result.ValueOrDie();
   EXPECT_EQ(id1, 1);
 
   // Register writer2
-  result = onlpphal_->RegisterTransceiverEventWriter(std::move(writer2) ,
-                    PhalInterface::kTransceiverEventWriterPriorityHigh);
+  result = onlpphal_->RegisterTransceiverEventWriter(
+      std::move(writer2), PhalInterface::kTransceiverEventWriterPriorityHigh);
   EXPECT_TRUE(result.ok());
   int id2 = result.ValueOrDie();
   EXPECT_EQ(id2, 2);
@@ -101,14 +99,14 @@ TEST_F(OnlpPhalTest, OnlpPhalWriteTransceiverEvent) {
 
   // Register writer1
   ::util::StatusOr<int> result = onlpphal_->RegisterTransceiverEventWriter(
-        std::move(writer1) , PhalInterface::kTransceiverEventWriterPriorityMed);
+      std::move(writer1), PhalInterface::kTransceiverEventWriterPriorityMed);
   EXPECT_TRUE(result.ok());
   int id1 = result.ValueOrDie();
   EXPECT_EQ(id1, 1);
 
   // Register writer2
   result = onlpphal_->RegisterTransceiverEventWriter(
-      std::move(writer2) , PhalInterface::kTransceiverEventWriterPriorityHigh);
+      std::move(writer2), PhalInterface::kTransceiverEventWriterPriorityHigh);
   EXPECT_TRUE(result.ok());
   int id2 = result.ValueOrDie();
   EXPECT_EQ(id2, 2);
@@ -147,7 +145,6 @@ TEST_F(OnlpPhalTest, DISABLED_OnlpPhalGetFrontPanelPortInfo) {
   // EXPECT_EQ(fp_port_info2.get_part_number(), 6);
   EXPECT_EQ(fp_port_info2.serial_number(), "sfp_serial_222");
 }
-
 
 }  // namespace onlp
 }  // namespace phal

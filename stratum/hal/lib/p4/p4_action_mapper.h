@@ -26,14 +26,14 @@
 #ifndef STRATUM_HAL_LIB_P4_P4_ACTION_MAPPER_H_
 #define STRATUM_HAL_LIB_P4_P4_ACTION_MAPPER_H_
 
-#include "stratum/hal/lib/p4/p4_info_manager.h"
-#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
-#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 #include "absl/container/flat_hash_map.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
+#include "stratum/hal/lib/p4/p4_table_map.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -108,8 +108,7 @@ class P4ActionMapper {
   // P4PipelineConfig; hence they are not owned by this class.
   struct ActionMapEntry {
     explicit ActionMapEntry(const P4ActionDescriptor* action)
-        : original_action(action),
-          internal_action(nullptr) {}
+        : original_action(action), internal_action(nullptr) {}
 
     const P4ActionDescriptor* original_action;
     const P4ActionDescriptor* internal_action;
@@ -121,8 +120,8 @@ class P4ActionMapper {
   // complex case where internal_action is only used by the applied_tables
   // in internal_link.  Both methods update map_entry with data about when
   // internal_action replaces the original_action.
-  ::util::Status AddAction(
-      const P4ActionDescriptor& internal_action, ActionMapEntry* map_entry);
+  ::util::Status AddAction(const P4ActionDescriptor& internal_action,
+                           ActionMapEntry* map_entry);
   ::util::Status AddAppliedTableAction(
       const P4InfoManager& p4_info_manager,
       const P4ActionDescriptor::P4InternalActionLink& internal_link,

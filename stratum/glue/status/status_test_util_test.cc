@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-
 #include "stratum/glue/status/status_test_util.h"
 
-#include "stratum/glue/logging.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/logging.h"
 
 TEST(StatusTestUtil, ExpectOkSuccess) { EXPECT_OK(::util::Status::OK); }
 

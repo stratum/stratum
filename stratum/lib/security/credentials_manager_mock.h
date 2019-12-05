@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_MOCK_H_
 #define STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_MOCK_H_
 
 #include <memory>
 
-#include "stratum/lib/security/credentials_manager.h"
 #include "gmock/gmock.h"
+#include "stratum/lib/security/credentials_manager.h"
 
 namespace stratum {
 

@@ -17,9 +17,9 @@
 #include <memory>
 #include <string>
 
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/glue/status/status.h"
 #include "stratum/glue/logging.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 
 namespace stratum {
@@ -31,18 +31,18 @@ using Request = stratum::hal::DataRequest::Request;
 DummyChassisManager* chassis_mgr_singleton_ = nullptr;
 
 DummyChassisManager::DummyChassisManager()
-: dummy_box_(DummyBox::GetSingleton()) { }
+    : dummy_box_(DummyBox::GetSingleton()) {}
 
 DummyChassisManager::~DummyChassisManager() {}
 
-::util::Status
-DummyChassisManager::PushChassisConfig(const ChassisConfig& config) {
+::util::Status DummyChassisManager::PushChassisConfig(
+    const ChassisConfig& config) {
   LOG(INFO) << __FUNCTION__;
   return ::util::OkStatus();
 }
 
-::util::Status
-DummyChassisManager::VerifyChassisConfig(const ChassisConfig& config) {
+::util::Status DummyChassisManager::VerifyChassisConfig(
+    const ChassisConfig& config) {
   LOG(INFO) << __FUNCTION__;
   // TODO(Yi Tseng) Verify the chassis config.
   return ::util::OkStatus();
@@ -71,7 +71,7 @@ DummyChassisManager* DummyChassisManager::GetSingleton() {
 }
 
 ::util::Status DummyChassisManager::RegisterEventNotifyWriter(
-      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
+    std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   if (chassis_event_writer_) {
     return MAKE_ERROR(ERR_INTERNAL) << "Event notify writer already exists";
   }
@@ -85,8 +85,8 @@ DummyChassisManager* DummyChassisManager::GetSingleton() {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<DataResponse>
-DummyChassisManager::RetrieveChassisData(const Request request) {
+::util::StatusOr<DataResponse> DummyChassisManager::RetrieveChassisData(
+    const Request request) {
   // TODO(Yi Tseng): Implement this method.
   return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
 }
@@ -94,4 +94,3 @@ DummyChassisManager::RetrieveChassisData(const Request request) {
 }  // namespace dummy_switch
 }  // namespace hal
 }  // namespace stratum
-

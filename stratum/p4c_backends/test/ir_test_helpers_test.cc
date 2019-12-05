@@ -15,17 +15,16 @@
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 
 #include <string>
-#include "stratum/p4c_backends/fpm/utils.h"
+
 #include "gtest/gtest.h"
+#include "stratum/p4c_backends/fpm/utils.h"
 
 namespace stratum {
 namespace p4c_backends {
 
 class IRTestHelperJsonTest : public testing::Test {
  public:
-  static void SetUpTestCase() {
-    SetUpTestP4ModelNames();
-  }
+  static void SetUpTestCase() { SetUpTestP4ModelNames(); }
 
  protected:
   IRTestHelperJson helper_;  // Common IRTestHelperJson for testing.
@@ -139,7 +138,8 @@ TEST_F(IRTestHelperJsonTest, TestTransformNop) {
 
 // Tests TransformP4Control with MeterColorMapper doing a transform.
 TEST_F(IRTestHelperJsonTest, TestTransformMeterColor) {
-  const std::string kTestFile = "stratum/p4c_backends/"
+  const std::string kTestFile =
+      "stratum/p4c_backends/"
       "fpm/testdata/meter_colors.ir.json";
   ASSERT_TRUE(helper_.GenerateTestIRAndInspectProgram(kTestFile));
   helper_.set_color_field_name("meta.enum_color");
@@ -151,7 +151,8 @@ TEST_F(IRTestHelperJsonTest, TestTransformMeterColor) {
 
 // Tests TransformP4Control with MeterColorMapper finding a transform error.
 TEST_F(IRTestHelperJsonTest, TestTransformMeterColorError) {
-  const std::string kTestFile = "stratum/p4c_backends/"
+  const std::string kTestFile =
+      "stratum/p4c_backends/"
       "fpm/testdata/meter_color_errors1.ir.json";
   ASSERT_TRUE(helper_.GenerateTestIRAndInspectProgram(kTestFile));
   helper_.set_color_field_name("meta.enum_color");
@@ -162,7 +163,8 @@ TEST_F(IRTestHelperJsonTest, TestTransformMeterColorError) {
 
 // Tests TransformP4Control with HitAssignMapper doing a transform.
 TEST_F(IRTestHelperJsonTest, TestTransformHitAssign) {
-  const std::string kTestFile = "stratum/p4c_backends/"
+  const std::string kTestFile =
+      "stratum/p4c_backends/"
       "fpm/testdata/hit_assign.ir.json";
   ASSERT_TRUE(helper_.GenerateTestIRAndInspectProgram(kTestFile));
   const IR::P4Control* transformed_control = helper_.TransformP4Control(

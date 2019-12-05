@@ -17,21 +17,20 @@ extern "C" {
 
 #include "bf_switchd/bf_switchd.h"
 
-int switch_pci_sysfs_str_get(char *name, size_t name_size);
-
+int switch_pci_sysfs_str_get(char* name, size_t name_size);
 }
 
-#include "gflags/gflags.h"
 #include "PI/frontends/proto/device_mgr.h"
 #include "PI/frontends/proto/logging.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
-#include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_switch.h"
+#include "stratum/hal/lib/common/hal.h"
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+#include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
@@ -52,10 +51,10 @@ namespace barefoot {
 namespace {
 
 void registerDeviceMgrLogger() {
-  using ::pi::fe::proto::LogWriterIface;
   using ::pi::fe::proto::LoggerConfig;
+  using ::pi::fe::proto::LogWriterIface;
   class P4RuntimeLogger : public LogWriterIface {
-    void write(Severity severity, const char *msg) override {
+    void write(Severity severity, const char* msg) override {
       ::google::LogSeverity new_severity = INFO;
       switch (severity) {
         case Severity::TRACE:
@@ -94,15 +93,14 @@ void registerDeviceMgrLogger() {
 
 }  // namespace
 
-int
-Main(int argc, char* argv[]) {
+int Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
   char bf_sysfs_fname[128];
-  FILE *fd;
+  FILE* fd;
 
-  bf_switchd_context_t *switchd_main_ctx = new bf_switchd_context_t;
+  bf_switchd_context_t* switchd_main_ctx = new bf_switchd_context_t;
   memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
 
   /* Parse bf_switchd arguments */
@@ -159,19 +157,18 @@ Main(int argc, char* argv[]) {
     phal_impl = phal::onlp::OnlpPhal::CreateSingleton();
   }
   std::map<int, pi::PINode*> unit_to_pi_node = {
-    {unit, pi_node.get()},
+      {unit, pi_node.get()},
   };
-  auto bf_chassis_manager = BFChassisManager::CreateInstance(
-      phal_impl, BFPalWrapper::GetSingleton());
-  auto bf_switch = BFSwitch::CreateInstance(
-      phal_impl, bf_chassis_manager.get(), unit_to_pi_node);
+  auto bf_chassis_manager =
+      BFChassisManager::CreateInstance(phal_impl, BFPalWrapper::GetSingleton());
+  auto bf_switch = BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
+                                            unit_to_pi_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   auto credentials_manager = CredentialsManager::CreateInstance();
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
-                                   bf_switch.get(),
-                                   auth_policy_checker.get(),
+                                   bf_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
   if (!hal) {
     LOG(ERROR) << "Failed to create the Stratum Hal instance.";
@@ -200,7 +197,6 @@ Main(int argc, char* argv[]) {
 }  // namespace hal
 }  // namespace stratum
 
-int
-main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
   return stratum::hal::barefoot::Main(argc, argv);
 }

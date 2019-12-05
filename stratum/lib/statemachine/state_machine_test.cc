@@ -13,21 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/lib/statemachine/example_state_machine.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/glue/status/status_macros.h"
-
 #include "gmock/gmock.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/statemachine/example_state_machine.h"
 
 namespace stratum {
 
 namespace state_machine {
 namespace {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::HasSubstr;
 using ::testing::Return;
 using ::testing::Sequence;
-using ::stratum::test_utils::StatusIs;
 
 class StateMachineTest : public ::testing::Test {
  protected:
@@ -42,30 +41,35 @@ TEST_F(StateMachineTest, BasicExecution) {
   // Test a transition from the initial state, ensuring that exit actions of
   // STATE0 are performed before the entry actions of STATE1.
   Sequence ExitBeforeEntry;
-  EXPECT_CALL(example_sm_, ExitState0(ExampleStateMachine::Event::FROM0,
-    ExampleStateMachine::State::STATE1, nullptr))
-    .InSequence(ExitBeforeEntry);
-  EXPECT_CALL(example_sm_, EnterState1(ExampleStateMachine::Event::FROM0,
-    ExampleStateMachine::State::STATE1, nullptr))
-    .InSequence(ExitBeforeEntry);
+  EXPECT_CALL(example_sm_,
+              ExitState0(ExampleStateMachine::Event::FROM0,
+                         ExampleStateMachine::State::STATE1, nullptr))
+      .InSequence(ExitBeforeEntry);
+  EXPECT_CALL(example_sm_,
+              EnterState1(ExampleStateMachine::Event::FROM0,
+                          ExampleStateMachine::State::STATE1, nullptr))
+      .InSequence(ExitBeforeEntry);
   EXPECT_OK(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM0,
-    "Add FROM0 event", nullptr));
+                                     "Add FROM0 event", nullptr));
   EXPECT_EQ(example_sm_.CurrentState(), ExampleStateMachine::State::STATE1);
 
   // Test a transition from a subsequent state. Notice there is no ExitState1
   // step, which is OK since entry and exit actions are optional for each state.
-  EXPECT_CALL(example_sm_, EnterFailed(ExampleStateMachine::Event::FAULT,
-    ExampleStateMachine::State::FAILED, nullptr));
+  EXPECT_CALL(example_sm_,
+              EnterFailed(ExampleStateMachine::Event::FAULT,
+                          ExampleStateMachine::State::FAILED, nullptr));
   EXPECT_OK(example_sm_.ProcessEvent(ExampleStateMachine::Event::FAULT,
-    "Add FAULT event", nullptr));
+                                     "Add FAULT event", nullptr));
   EXPECT_EQ(example_sm_.CurrentState(), ExampleStateMachine::State::FAILED);
 }
 
 TEST_F(StateMachineTest, InvalidTransitionShouldNotChangeState) {
   // Check that current state is maintained when an invalid event is added.
-  EXPECT_THAT(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM1,
-    "Check processing of invalid transitions", nullptr),
-    StatusIs(util::error::INTERNAL, HasSubstr("Invalid transition.")));
+  EXPECT_THAT(
+      example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM1,
+                               "Check processing of invalid transitions",
+                               nullptr),
+      StatusIs(util::error::INTERNAL, HasSubstr("Invalid transition.")));
   EXPECT_EQ(example_sm_.CurrentState(), ExampleStateMachine::State::STATE0);
 }
 
@@ -79,35 +83,37 @@ TEST(ResumeStateMachineTest, CallbackFailureShouldNotChangeState) {
 
   // Check that the transition to STATE2 fails.
   auto fail = ::util::Status(util::error::INTERNAL, "Failures are fun!");
-  EXPECT_CALL(example_sm, EnterState2(ExampleStateMachine::Event::FROM1,
-    ExampleStateMachine::State::STATE2, &error_event))
-    .WillOnce(Return(fail));
+  EXPECT_CALL(example_sm,
+              EnterState2(ExampleStateMachine::Event::FROM1,
+                          ExampleStateMachine::State::STATE2, &error_event))
+      .WillOnce(Return(fail));
   EXPECT_THAT(example_sm.ProcessEvent(ExampleStateMachine::Event::FROM1,
-    "Check processing of failed callbacks", &error_event),
-    StatusIs(util::error::INTERNAL, HasSubstr("Failures are fun!")));
+                                      "Check processing of failed callbacks",
+                                      &error_event),
+              StatusIs(util::error::INTERNAL, HasSubstr("Failures are fun!")));
   EXPECT_EQ(example_sm.CurrentState(), ExampleStateMachine::State::STATE1);
 }
 
 TEST_F(StateMachineTest, AddEventsAfterCallbackFailure) {
   auto fail = ::util::Status(util::error::INTERNAL, "Fail on first try!");
   EXPECT_CALL(example_sm_, ExitState0)
-    .WillOnce(Return(fail))
-    .WillOnce(Return(::util::OkStatus()));
+      .WillOnce(Return(fail))
+      .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(example_sm_, EnterState1);
 
   EXPECT_THAT(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM0,
-    "Add specified event", nullptr),
-    StatusIs(util::error::INTERNAL, HasSubstr("Fail on first try!")));
+                                       "Add specified event", nullptr),
+              StatusIs(util::error::INTERNAL, HasSubstr("Fail on first try!")));
   EXPECT_OK(example_sm_.ProcessEvent(ExampleStateMachine::Event::FROM0,
-    "Add FROM0 event", nullptr));
+                                     "Add FROM0 event", nullptr));
   EXPECT_EQ(example_sm_.CurrentState(), ExampleStateMachine::State::STATE1);
 }
 
 // Stores information required by a thread when calling ProcessEventCallback.
 struct ThreadData {
-  ThreadData(ExampleStateMachine* example_sm,
-    ExampleStateMachine::Event event, ::util::Status* status)
-    : example_sm(example_sm), event(event), status(status) {}
+  ThreadData(ExampleStateMachine* example_sm, ExampleStateMachine::Event event,
+             ::util::Status* status)
+      : example_sm(example_sm), event(event), status(status) {}
   ExampleStateMachine* example_sm;
   ExampleStateMachine::Event event;
   ::util::Status* status;
@@ -117,7 +123,7 @@ struct ThreadData {
 void* ProcessEventCallback(void* in_data) {
   auto thread_data = static_cast<ThreadData*>(in_data);
   *(thread_data->status) = thread_data->example_sm->ProcessEvent(
-    thread_data->event, "Add specified event", nullptr);
+      thread_data->event, "Add specified event", nullptr);
   return nullptr;
 }
 

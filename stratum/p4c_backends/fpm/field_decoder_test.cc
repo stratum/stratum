@@ -19,14 +19,15 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "absl/memory/memory.h"
+#include "external/com_github_p4lang_p4c/ir/ir.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "external/com_github_p4lang_p4c/ir/ir.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -53,15 +54,14 @@ class FieldDecoderTest : public testing::Test {
   // keys for test use.
   void SetUpIR(const std::string& ir_input_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string ir_path = "stratum/p4c_backends/" +
-        ir_input_file;
+    const std::string ir_path = "stratum/p4c_backends/" + ir_input_file;
     ASSERT_TRUE(ir_helper_->GenerateTestIRAndInspectProgram(ir_path));
   }
 
   std::unique_ptr<FieldDecoder> field_decoder_;  // Common instance for tests.
   std::unique_ptr<IRTestHelperJson> ir_helper_;  // Provides an IR for tests.
-  TableMapGenerator table_mapper_;    // Injected to field_decoder_.
-  P4ModelNames p4_model_names_;       // Copy of defaults for test customizing.
+  TableMapGenerator table_mapper_;               // Injected to field_decoder_.
+  P4ModelNames p4_model_names_;  // Copy of defaults for test customizing.
 
   // Provides a map to setup the input that FieldDecoder::ConvertHeaderFields
   // normally receives from a HeaderPathInspector.
@@ -78,8 +78,7 @@ TEST_F(FieldDecoderTest, TestSimpleHeaderConversion) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_FALSE(table_map.table_map().empty());
 
@@ -125,8 +124,7 @@ TEST_F(FieldDecoderTest, TestExtractedFields) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
 
   // The expected number of generated header types should be at least as
   // many as the header_types vector defines.  The struct_likes size is
@@ -134,8 +132,8 @@ TEST_F(FieldDecoderTest, TestExtractedFields) {
   // bit it does act as an upper bound.
   const size_t kMinHeaderTypes =
       ir_helper_->program_inspector().header_types().size();
-  const size_t kMaxHeaderTypes = kMinHeaderTypes +
-      ir_helper_->program_inspector().struct_likes().size();
+  const size_t kMaxHeaderTypes =
+      kMinHeaderTypes + ir_helper_->program_inspector().struct_likes().size();
   const auto& fields_per_type = field_decoder_->extracted_fields_per_type();
   EXPECT_LE(kMinHeaderTypes, fields_per_type.size());
   EXPECT_GE(kMaxHeaderTypes, fields_per_type.size());
@@ -148,8 +146,7 @@ TEST_F(FieldDecoderTest, TestExtractedFields) {
     for (const auto& field_iter : field_list) {
       // TODO(unknown): Metadata types are a problem for this test, although
       // they don't seem to cause any problems in tor.p4 compilations.
-      if (iter.first == "routing_metadata_t")
-        continue;
+      if (iter.first == "routing_metadata_t") continue;
       EXPECT_FALSE(field_iter.name().empty());
       EXPECT_NE(0, field_iter.bit_width());
       ASSERT_LT(0, field_iter.full_field_names_size());
@@ -184,8 +181,7 @@ TEST_F(FieldDecoderTest, TestSimpleMatchKeyConversion) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   field_decoder_->ConvertMatchKeys(
       ir_helper_->program_inspector().match_keys());
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
@@ -258,8 +254,7 @@ TEST_F(FieldDecoderTest, TestConvertHeaderStack) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_FALSE(table_map.table_map().empty());
 
@@ -290,8 +285,7 @@ TEST_F(FieldDecoderTest, TestConvertTypedefField) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_FALSE(table_map.table_map().empty());
 
@@ -313,8 +307,7 @@ TEST_F(FieldDecoderTest, TestConvertControllerHeaders) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_FALSE(table_map.table_map().empty());
 
@@ -354,8 +347,7 @@ TEST_F(FieldDecoderTest, TestConvertEnums) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_FALSE(table_map.table_map().empty());
   auto iter = table_map.table_map().find("meta.enum_color");
@@ -374,8 +366,7 @@ TEST_F(FieldDecoderTest, TestLocalMetadataConversion) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_FALSE(table_map.table_map().empty());
 
@@ -408,8 +399,8 @@ TEST_F(FieldDecoderTest, TestConvertHeadersTwice) {
   std::vector<const IR::Type_Header*> empty_header_types;
   HeaderPathInspector::PathToHeaderTypeMap empty_header_map;
   field_decoder_->ConvertHeaderFields(empty_p4_typedefs, empty_p4_enums,
-                                      empty_struct_likes,
-                                      empty_header_types, empty_header_map);
+                                      empty_struct_likes, empty_header_types,
+                                      empty_header_map);
   const hal::P4PipelineConfig& table_map = table_mapper_.generated_map();
   EXPECT_TRUE(table_map.table_map().empty());
 
@@ -425,8 +416,7 @@ TEST_F(FieldDecoderTest, TestConvertHeadersTwice) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
   EXPECT_TRUE(table_map.table_map().empty());
 }
 
@@ -446,8 +436,7 @@ TEST_F(FieldDecoderTest, TestConvertMatchKeysTwice) {
       ir_helper_->program_inspector().p4_typedefs(),
       ir_helper_->program_inspector().p4_enums(),
       ir_helper_->program_inspector().struct_likes(),
-      ir_helper_->program_inspector().header_types(),
-      header_type_map_);
+      ir_helper_->program_inspector().header_types(), header_type_map_);
 
   // The first match key conversion occurs with empty headers just to
   // establish that the function was called.

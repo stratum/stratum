@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_SWITCH_MOCK_H_
 
@@ -23,8 +22,8 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/common/switch_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/common/switch_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -43,9 +42,7 @@ class SwitchMock : public SwitchInterface {
       SaveForwardingPipelineConfig,
       ::util::Status(uint64 node_id,
                      const ::p4::v1::ForwardingPipelineConfig& config));
-  MOCK_METHOD1(
-      CommitForwardingPipelineConfig,
-      ::util::Status(uint64 node_id));
+  MOCK_METHOD1(CommitForwardingPipelineConfig, ::util::Status(uint64 node_id));
   MOCK_METHOD2(
       VerifyForwardingPipelineConfig,
       ::util::Status(uint64 node_id,

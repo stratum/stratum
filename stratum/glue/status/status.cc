@@ -19,16 +19,17 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
 #include <functional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 
-#include "gflags/gflags.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 
 namespace util {
@@ -337,9 +338,9 @@ std::string Status::ToString() const {
     status = "OK";
   } else {
     const ErrorSpace* const space = error_space();
-    absl::SubstituteAndAppend(
-        &status, "$0::$1: $2", space->SpaceName().c_str(),
-        space->String(code).c_str(), error_message().c_str());
+    absl::SubstituteAndAppend(&status, "$0::$1: $2", space->SpaceName().c_str(),
+                              space->String(code).c_str(),
+                              error_message().c_str());
   }
   return status;
 }

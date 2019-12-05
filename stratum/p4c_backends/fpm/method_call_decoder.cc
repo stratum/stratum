@@ -16,14 +16,14 @@
 
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
 
+#include "absl/debugging/leak_check.h"
+#include "absl/strings/substitute.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
+#include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/p4_model_names.pb.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "stratum/glue/logging.h"
-#include "absl/debugging/leak_check.h"
-#include "absl/strings/substitute.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -42,8 +42,9 @@ bool MethodCallDecoder::DecodeStatement(
 bool MethodCallDecoder::DecodeExpression(
     const IR::MethodCallExpression& method_call) {
   if (decode_done_) {
-    error_message_ = "This MethodCallDecoder instance has already processed "
-                     "a MethodCallStatement";
+    error_message_ =
+        "This MethodCallDecoder instance has already processed "
+        "a MethodCallStatement";
     LOG(ERROR) << error_message_;
     return false;
   }
@@ -77,8 +78,8 @@ bool MethodCallDecoder::DecodeExpression(
       decode_ok = DecodeMeter(*extern_method);
     }
     if (!decode_ok) {
-      error_message_ = absl::Substitute(
-          "Ignoring extern method: $0", extern_name.c_str());
+      error_message_ =
+          absl::Substitute("Ignoring extern method: $0", extern_name.c_str());
     }
   } else if (method_i->is<P4::ExternFunction>()) {
     auto extern_function = method_i->to<P4::ExternFunction>();
@@ -93,8 +94,8 @@ bool MethodCallDecoder::DecodeExpression(
     } else {
       // TODO(unknown): Other extern function implementations needed may
       // include hash, resubmit, recirculate, random, and truncate.
-      error_message_ = absl::Substitute(
-          "Ignoring extern function: $0", function_name.c_str());
+      error_message_ = absl::Substitute("Ignoring extern function: $0",
+                                        function_name.c_str());
       LOG(WARNING) << error_message_;
     }
   }

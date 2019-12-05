@@ -13,20 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // P4InfoManager implementation.
-
-#include <utility>
 
 #include "stratum/hal/lib/p4/p4_info_manager.h"
 
-#include "gflags/gflags.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
+#include <utility>
+
 #include "absl/strings/ascii.h"
 #include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 // This flag allows unit tests to simplify their P4Info setup.  For example,
 // a test that only wants to verify something about a Counter can enable this

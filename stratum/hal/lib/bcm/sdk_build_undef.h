@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 // This file is used to undefine preprocessor definitions specific to
 // Broadcom SDK that conflict with definitions in depot3/google3.
 // It should be included at the start and at the end of a list of

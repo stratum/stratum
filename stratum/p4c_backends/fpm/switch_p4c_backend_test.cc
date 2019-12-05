@@ -17,22 +17,23 @@
 #include "stratum/p4c_backends/fpm/switch_p4c_backend.h"
 
 #include <stdlib.h>
+
 #include <memory>
 #include <string>
 
-#include "gflags/gflags.h"
-#include "google/protobuf/util/message_differencer.h"
-#include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "external/com_github_p4lang_p4c/frontends/common/resolveReferences/referenceMap.h"
 #include "external/com_github_p4lang_p4c/frontends/p4/typeMap.h"
 #include "external/com_github_p4lang_p4c/lib/error.h"
+#include "gflags/gflags.h"
+#include "google/protobuf/util/message_differencer.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/lib/utils.h"
-#include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
 #include "stratum/p4c_backends/common/p4c_front_mid_mock.h"
+#include "stratum/p4c_backends/fpm/bcm/bcm_tunnel_optimizer.h"
 #include "stratum/p4c_backends/fpm/table_map_generator.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/p4c_backends/test/test_target_info.h"
@@ -51,12 +52,8 @@ using testing::Return;
 // The test Param string is a file name with JSON IR input.
 class SwitchP4cBackendTest : public testing::TestWithParam<std::string> {
  public:
-  static void SetUpTestCase() {
-    TestTargetInfo::SetUpTestTargetInfo();
-  }
-  static void TearDownTestCase() {
-    TestTargetInfo::TearDownTestTargetInfo();
-  }
+  static void SetUpTestCase() { TestTargetInfo::SetUpTestTargetInfo(); }
+  static void TearDownTestCase() { TestTargetInfo::TearDownTestTargetInfo(); }
 
   // Called from testing::Invoke to return a non-zero p4c error count after
   // a certain count of error-free cycles.
@@ -69,8 +66,8 @@ class SwitchP4cBackendTest : public testing::TestWithParam<std::string> {
 
  protected:
   void SetUp() override {
-    const std::string kParserMapFile = "stratum/"
-        "p4c_backends/fpm/map_data/standard_parser_map.pb.txt";
+    const std::string kParserMapFile =
+        "stratum/p4c_backends/fpm/map_data/standard_parser_map.pb.txt";
     FLAGS_target_parser_map_file = kParserMapFile;
     tunnel_optimizer_ = absl::make_unique<BcmTunnelOptimizer>();
     // TODO(unknown): Make NULL AnnotationMapper a mock instead.
@@ -83,14 +80,11 @@ class SwitchP4cBackendTest : public testing::TestWithParam<std::string> {
   // p4c_backends base directory.
   void SetUpTestIR(const std::string& test_ir_file) {
     ir_helper_ = absl::make_unique<IRTestHelperJson>();
-    const std::string kTestIRBaseDir =
-        "stratum/p4c_backends/";
+    const std::string kTestIRBaseDir = "stratum/p4c_backends/";
     ASSERT_TRUE(ir_helper_->GenerateTestIR(kTestIRBaseDir + test_ir_file));
   }
 
-  unsigned GetP4cInternalErrorCount() {
-    return ::errorCount();
-  }
+  unsigned GetP4cInternalErrorCount() { return ::errorCount(); }
 
   std::unique_ptr<SwitchP4cBackend> backend_;  // Common for all tests.
   TableMapGenerator table_mapper_;
@@ -164,8 +158,8 @@ TEST_F(SwitchP4cBackendTest, TestInvalidP4Control) {
   // third control.
   no_error_cycles_ = 5;
   EXPECT_CALL(front_mid_mock_, GetErrorCount())
-      .WillRepeatedly(Invoke(this,
-                             &SwitchP4cBackendTest::ReturnErrorAfterCount));
+      .WillRepeatedly(
+          Invoke(this, &SwitchP4cBackendTest::ReturnErrorAfterCount));
   EXPECT_CALL(front_mid_mock_, IsV1Program()).WillOnce(Return(true));
   backend_->Compile(*ir_helper_->ir_top_level(), dummy_const_entries_, p4_info,
                     ir_helper_->mid_end_refmap(),
@@ -209,29 +203,26 @@ TEST_P(SwitchP4cBackendTest, TestValidIR) {
   google::protobuf::util::MessageDifferencer msg_differencer;
   msg_differencer.set_repeated_field_comparison(
       google::protobuf::util::MessageDifferencer::AS_SET);
-  EXPECT_TRUE(msg_differencer.Compare(
-      pipeline_config_from_text, pipeline_config_from_bin));
+  EXPECT_TRUE(msg_differencer.Compare(pipeline_config_from_text,
+                                      pipeline_config_from_bin));
 
   const std::string cleanup("rm -rf " + outdir);
   system(cleanup.c_str());
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  ValidIRInputFiles,
-  SwitchP4cBackendTest,
-  ::testing::Values(
-    "fpm/testdata/design_doc_sample1.ir.json",
-    "fpm/testdata/parse_annotated_state.ir.json"
-    // FIXME: add real-world full P4 program here
-    // Google only
-    // "fpm/testdata/middleblock_p4.ir.json",
-    // "fpm/testdata/spine_p4.ir.json",
-    // "fpm/testdata/tor_p4.ir.json",
-    // "fpm/testdata/b4_p4.ir.json",
-    // "fpm/testdata/fbr_s2_p4.ir.json",
-    // "fpm/testdata/fbr_s3_p4.ir.json"
-    )
-);
+    ValidIRInputFiles, SwitchP4cBackendTest,
+    ::testing::Values("fpm/testdata/design_doc_sample1.ir.json",
+                      "fpm/testdata/parse_annotated_state.ir.json"
+                      // FIXME: add real-world full P4 program here
+                      // Google only
+                      // "fpm/testdata/middleblock_p4.ir.json",
+                      // "fpm/testdata/spine_p4.ir.json",
+                      // "fpm/testdata/tor_p4.ir.json",
+                      // "fpm/testdata/b4_p4.ir.json",
+                      // "fpm/testdata/fbr_s2_p4.ir.json",
+                      // "fpm/testdata/fbr_s3_p4.ir.json"
+                      ));  // NOLINT
 
 }  // namespace p4c_backends
 }  // namespace stratum

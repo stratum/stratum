@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
-#include "gflags/gflags.h"
 #include "absl/strings/str_split.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/lib/macros.h"
-#include "absl/time/clock.h"
-#include "absl/time/time.h"
 
 using namespace std;  // NOLINT
 
@@ -40,48 +39,45 @@ namespace onlp {
 class OnlpCli {
  public:
   // All CLI queries are run on the given attribute database.
-  OnlpCli()
-      : onlp_interface_(nullptr) {}
+  OnlpCli() : onlp_interface_(nullptr) {}
 
   // Print OID List
-  ::util::Status  PrintOidList(string use_wrapper,
-    std::string stype, onlp_oid_type_flag_t type) {
-
+  ::util::Status PrintOidList(string use_wrapper, std::string stype,
+                              onlp_oid_type_flag_t type) {
     // call onlp directly
     if (use_wrapper == "n") {
-        biglist_t* oid_hdr_list;
+      biglist_t* oid_hdr_list;
 
-        onlp_oid_hdr_get_all(ONLP_OID_CHASSIS, type, 0, &oid_hdr_list);
+      onlp_oid_hdr_get_all(ONLP_OID_CHASSIS, type, 0, &oid_hdr_list);
 
-        biglist_t* curr_node = oid_hdr_list;
-        // std::cout << stype << " OID List:" << std::endl;
-        while (curr_node != nullptr) {
-            onlp_oid_hdr_t* oid_hdr =
-                          reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
-            std::cout << "  oid: " << oid_hdr->id << std::endl;
-            curr_node = curr_node->next;
-        }
-        onlp_oid_get_all_free(oid_hdr_list);
+      biglist_t* curr_node = oid_hdr_list;
+      // std::cout << stype << " OID List:" << std::endl;
+      while (curr_node != nullptr) {
+        onlp_oid_hdr_t* oid_hdr =
+            reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
+        std::cout << "  oid: " << oid_hdr->id << std::endl;
+        curr_node = curr_node->next;
+      }
+      onlp_oid_get_all_free(oid_hdr_list);
 
-    // using onlp_wrapper
+      // using onlp_wrapper
     } else {
-        ASSIGN_OR_RETURN(
-            std::vector <OnlpOid> OnlpOids,
-            onlp_interface_->GetOidList(type));
-        if (OnlpOids.size() == 0) {
-            std::cout << "no " << stype << " OIDs" << std::endl;
-            return ::util::OkStatus();
-        }
-        std::cout << stype << " OID List:" << std::endl;
-        for (unsigned int i = 0; i < OnlpOids.size(); i++) {
-            std::cout << "  " << i << ": oid: " << OnlpOids[i] << std::endl;
-        }
+      ASSIGN_OR_RETURN(std::vector<OnlpOid> OnlpOids,
+                       onlp_interface_->GetOidList(type));
+      if (OnlpOids.size() == 0) {
+        std::cout << "no " << stype << " OIDs" << std::endl;
+        return ::util::OkStatus();
+      }
+      std::cout << stype << " OID List:" << std::endl;
+      for (unsigned int i = 0; i < OnlpOids.size(); i++) {
+        std::cout << "  " << i << ": oid: " << OnlpOids[i] << std::endl;
+      }
     }
     return ::util::OkStatus();
   }
 
   // Runs the main CLI loop.
-  ::util::Status  RunCli() {
+  ::util::Status RunCli() {
     // Create the OnlpInterface object
     ASSIGN_OR_RETURN(onlp_interface_, OnlpWrapper::Make());
 

@@ -13,16 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // This is the main entry for public library tests.
 #include <stdlib.h>
 
-#include "stratum/glue/init_google.h"
 #include "gtest/gtest.h"
+#include "stratum/glue/init_google.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   InitGoogle(argv[0], &argc, &argv, true);
   return RUN_ALL_TESTS();
 }
-

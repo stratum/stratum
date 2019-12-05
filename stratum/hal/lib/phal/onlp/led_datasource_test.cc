@@ -16,28 +16,29 @@
 #include "stratum/hal/lib/phal/onlp/led_datasource.h"
 
 #include <memory>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 // FIXME #include "absl/strings/util.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-using ::stratum::test_utils::StatusIs;
 
 class LedDatasourceTest : public ::testing::Test {
  public:
@@ -45,8 +46,8 @@ class LedDatasourceTest : public ::testing::Test {
     id_ = 12345;
     oid_ = ONLP_LED_ID_CREATE(id_);
   }
-  int id_;             // Id for this LED
-  OnlpOid oid_;        // OID for this LED (i.e. Type + Id)
+  int id_;       // Id for this LED
+  OnlpOid oid_;  // OID for this LED (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
   MockOnlpWrapper mock_onlp_interface_;
 };
@@ -116,11 +117,9 @@ TEST_F(LedDatasourceTest, GetLedData) {
   EXPECT_THAT(led_datasource->GetCapPurple(), ContainsValue(false));
   EXPECT_THAT(led_datasource->GetCapPurpleBlinking(), ContainsValue(false));
 
-  EXPECT_THAT(led_datasource->GetLedId(),
-              ContainsValue<int>(id_));
+  EXPECT_THAT(led_datasource->GetLedId(), ContainsValue<int>(id_));
 
-  EXPECT_THAT(led_datasource->GetLedChar(),
-              ContainsValue<int>(11));
+  EXPECT_THAT(led_datasource->GetLedChar(), ContainsValue<int>(11));
 
   EXPECT_THAT(
       led_datasource->GetLedMode(),
@@ -177,12 +176,9 @@ TEST_F(LedDatasourceTest, SetLedData) {
   EXPECT_THAT(led_datasource->GetCapPurple(), ContainsValue(false));
   EXPECT_THAT(led_datasource->GetCapPurpleBlinking(), ContainsValue(false));
 
+  EXPECT_THAT(led_datasource->GetLedId(), ContainsValue<int>(id_));
 
-  EXPECT_THAT(led_datasource->GetLedId(),
-              ContainsValue<int>(id_));
-
-  EXPECT_THAT(led_datasource->GetLedChar(),
-              ContainsValue<int>(11));
+  EXPECT_THAT(led_datasource->GetLedChar(), ContainsValue<int>(11));
 
   EXPECT_THAT(
       led_datasource->GetLedMode(),
@@ -194,9 +190,8 @@ TEST_F(LedDatasourceTest, SetLedData) {
   EXPECT_CALL(mock_onlp_interface_, SetLedMode(oid_, LedMode::LED_MODE_GREEN))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(
-      led_datasource->GetLedMode()
-      ->Set(LedMode_descriptor()->FindValueByName("LED_MODE_GREEN")));
+  EXPECT_OK(led_datasource->GetLedMode()->Set(
+      LedMode_descriptor()->FindValueByName("LED_MODE_GREEN")));
 
   EXPECT_TRUE(led_datasource->GetLedChar()->CanSet());
 

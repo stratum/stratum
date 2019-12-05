@@ -16,14 +16,14 @@
 
 #include "stratum/p4c_backends/fpm/action_decoder.h"
 
+#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
+#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
 #include "stratum/p4c_backends/fpm/expression_inspector.h"
 #include "stratum/p4c_backends/fpm/field_name_inspector.h"
 #include "stratum/p4c_backends/fpm/method_call_decoder.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/coreLibrary.h"
-#include "external/com_github_p4lang_p4c/frontends/p4/methodInstance.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -134,22 +134,21 @@ void ActionDecoder::ConvertActionBlock(
       if (VLOG_IS_ON(2)) ::dump(assignment);
       continue;
     } else if (statement->is<IR::EmptyStatement>()) {
-      VLOG(1) << "Empty statement in "  << p4_action_name;
+      VLOG(1) << "Empty statement in " << p4_action_name;
       continue;
     } else if (statement->is<IR::MethodCallStatement>()) {
-      VLOG(1) << "Method statement in "  << p4_action_name;
-      ConvertMethodCall(
-          *statement->to<IR::MethodCallStatement>(), p4_action_name);
+      VLOG(1) << "Method statement in " << p4_action_name;
+      ConvertMethodCall(*statement->to<IR::MethodCallStatement>(),
+                        p4_action_name);
       continue;
     } else {
       LOG(WARNING) << "Unsupported statement type "
-                   << statement->node_type_name()
-                   << " in action " << p4_action_name;
+                   << statement->node_type_name() << " in action "
+                   << p4_action_name;
     }
   }
 
-  if (!has_body_statements)
-    table_mapper_->AddNopPrimitive(p4_action_name);
+  if (!has_body_statements) table_mapper_->AddNopPrimitive(p4_action_name);
 }
 
 void ActionDecoder::ConvertMethodCall(
@@ -163,8 +162,8 @@ void ActionDecoder::ConvertMethodCall(
     // benefit from expanding table_mapper_'s public API to take the raw
     // method_op() output as an action descriptor update parameter.
     if (method_call_decoder.tunnel_op().header_op() != P4_HEADER_NOP) {
-      table_mapper_->AddTunnelAction(
-          p4_action_name, method_call_decoder.tunnel_op());
+      table_mapper_->AddTunnelAction(p4_action_name,
+                                     method_call_decoder.tunnel_op());
     } else {
       const hal::P4ActionDescriptor::P4ActionInstructions& method_op =
           method_call_decoder.method_op();
@@ -183,8 +182,8 @@ void ActionDecoder::ConvertMethodCall(
       }
     }
   } else {
-    LOG(WARNING) << method_call_decoder.error_message()
-                 << " in action " << p4_action_name;
+    LOG(WARNING) << method_call_decoder.error_message() << " in action "
+                 << p4_action_name;
   }
 }
 

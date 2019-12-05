@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
 #define STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
 
 #include <string>
 
+#include "gmock/gmock.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
-#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {
@@ -38,12 +37,12 @@ inline bool CompareValues(T expected, T actual) {
   return expected == actual;
 }
 
-template<>
+template <>
 inline bool CompareValues<float>(float expected, float actual) {
   return ::testing::Value(actual, ::testing::FloatEq(expected));
 }
 
-template<>
+template <>
 inline bool CompareValues<double>(double expected, double actual) {
   return ::testing::Value(actual, ::testing::DoubleEq(expected));
 }
@@ -143,6 +142,5 @@ template <typename T>
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-
 
 #endif  // STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_

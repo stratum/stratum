@@ -18,11 +18,11 @@
 
 #include <memory>
 
+#include "absl/memory/memory.h"
+#include "gtest/gtest.h"
 #include "stratum/p4c_backends/fpm/utils.h"
 #include "stratum/p4c_backends/test/ir_test_helpers.h"
 #include "stratum/public/proto/p4_table_defs.pb.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -56,14 +56,13 @@ class MethodCallDecoderTest : public testing::Test {
       // search all the actions within ir_control.
       forAllMatching<IR::P4Action>(&ir_control->controlLocals,
                                    [&](const IR::P4Action* action) {
-        if (action->externalName() == action_name)
-          method_action = action;
-      });
+                                     if (action->externalName() == action_name)
+                                       method_action = action;
+                                   });
 
       if (method_action == nullptr || method_action->body == nullptr)
         return nullptr;
-      if (method_action->body->components.size() != 1)
-        return nullptr;
+      if (method_action->body->components.size() != 1) return nullptr;
       return method_action->body->components[0]->to<IR::MethodCallStatement>();
     }
     return nullptr;

@@ -54,7 +54,7 @@ class OnlpPhalMock : public PhalInterface {
 
   // Need this function to grab onlp_interface
   MockOnlpWrapper* GetOnlpInterface() {
-    return (MockOnlpWrapper*)onlp_interface_.get(); // NOLINT
+    return (MockOnlpWrapper*)onlp_interface_.get();  // NOLINT
   }
 
   // Creates the singleton instance. Expected to be called once to initialize

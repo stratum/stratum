@@ -13,12 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/lib/macros.h"
 
-#include "stratum/lib/test_utils/matchers.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "stratum/lib/test_utils/matchers.h"
 
 using ::testing::HasSubstr;
 
@@ -43,17 +42,15 @@ class CommonMacrosTest : public ::testing::Test {
 
 TEST_F(CommonMacrosTest, AppendStatusIfError) {
   ::util::Status status = ::util::OkStatus();
-  APPEND_STATUS_IF_ERROR(
-      status, FuncWithReturnIfError(false, "Message One!     \n"));
+  APPEND_STATUS_IF_ERROR(status,
+                         FuncWithReturnIfError(false, "Message One!     \n"));
   APPEND_STATUS_IF_ERROR(
       status, FuncWithReturnIfError(true, "Message ignored!     \n"));
-  APPEND_STATUS_IF_ERROR(
-      status, FuncWithMakeError("Message Two     "));
+  APPEND_STATUS_IF_ERROR(status, FuncWithMakeError("Message Two     "));
   EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
   EXPECT_EQ(StratumErrorSpace(), status.error_space());
-  EXPECT_THAT(
-      status.error_message(),
-      HasSubstr("'cond' is false. Message One! Message Two. "));
+  EXPECT_THAT(status.error_message(),
+              HasSubstr("'cond' is false. Message One! Message Two. "));
 }
 
 }  // namespace stratum

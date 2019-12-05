@@ -15,17 +15,17 @@
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
+#include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_pal_mock.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
-#include "absl/time/time.h"
 
 using ::testing::_;
 using ::testing::AtMost;
@@ -53,8 +53,7 @@ constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
  public:
-  explicit ChassisConfigBuilder(uint64 node_id = kNodeId)
-      : node_id(node_id) {
+  explicit ChassisConfigBuilder(uint64 node_id = kNodeId) : node_id(node_id) {
     config_.set_description("Test config for BFChassisManager");
     auto* chassis = config_.mutable_chassis();
     chassis->set_platform(PLT_BAREFOOT_TOFINO);
@@ -65,8 +64,7 @@ class ChassisConfigBuilder {
     node->set_slot(kSlot);
   }
 
-  SingletonPort* AddPort(uint32 port_id, int32 port,
-                         AdminState admin_state,
+  SingletonPort* AddPort(uint32 port_id, int32 port, AdminState admin_state,
                          uint64 speed_bps = kDefaultSpeedBps,
                          FecMode fec_mode = kDefaultFecMode) {
     auto* sport = config_.add_singleton_ports();
@@ -88,9 +86,7 @@ class ChassisConfigBuilder {
     return nullptr;
   }
 
-  void RemoveLastPort() {
-    config_.mutable_singleton_ports()->RemoveLast();
-  }
+  void RemoveLastPort() { config_.mutable_singleton_ports()->RemoveLast(); }
 
   const ChassisConfig& Get() const { return config_; }
 
@@ -103,13 +99,13 @@ class ChassisConfigBuilder {
 
 class BFChassisManagerTest : public ::testing::Test {
  protected:
-  BFChassisManagerTest() { }
+  BFChassisManagerTest() {}
 
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
     bf_pal_mock_ = absl::make_unique<BFPalMock>();
-    bf_chassis_manager_ = BFChassisManager::CreateInstance(
-        phal_mock_.get(), bf_pal_mock_.get());
+    bf_chassis_manager_ =
+        BFChassisManager::CreateInstance(phal_mock_.get(), bf_pal_mock_.get());
     ON_CALL(*bf_pal_mock_, PortIsValid(_, _)).WillByDefault(Return(true));
   }
 
@@ -151,8 +147,8 @@ class BFChassisManagerTest : public ::testing::Test {
     // PortStatusChangeRegisterEventWriter called because this is the first call
     // to PushChassisConfig
     EXPECT_CALL(*bf_pal_mock_, PortStatusChangeRegisterEventWriter(_));
-    EXPECT_CALL(*bf_pal_mock_, PortAdd(
-        kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
+    EXPECT_CALL(*bf_pal_mock_,
+                PortAdd(kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
     EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
     EXPECT_CALL(*phal_mock_,
@@ -166,8 +162,7 @@ class BFChassisManagerTest : public ::testing::Test {
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
     auto unit = GetUnitFromNodeId(kNodeId);
     CHECK_RETURN_IF_FALSE(unit.ok());
-    CHECK_RETURN_IF_FALSE(unit.ValueOrDie() == kUnit)
-        << "Invalid unit number!";
+    CHECK_RETURN_IF_FALSE(unit.ValueOrDie() == kUnit) << "Invalid unit number!";
     CHECK_RETURN_IF_FALSE(Initialized())
         << "Class is not initialized after push!";
     return ::util::OkStatus();
@@ -188,13 +183,10 @@ class BFChassisManagerTest : public ::testing::Test {
     return bf_chassis_manager_->GetUnitFromNodeId(node_id);
   }
 
-  ::util::Status Shutdown() {
-    return bf_chassis_manager_->Shutdown();
-  }
+  ::util::Status Shutdown() { return bf_chassis_manager_->Shutdown(); }
 
   ::util::Status ShutdownAndTestCleanState() {
-    EXPECT_CALL(*bf_pal_mock_,
-                PortStatusChangeUnregisterEventWriter())
+    EXPECT_CALL(*bf_pal_mock_, PortStatusChangeUnregisterEventWriter())
         .WillOnce(Return(::util::OkStatus()));
     RETURN_IF_ERROR(Shutdown());
     RETURN_IF_ERROR(CheckCleanInternalState());
@@ -246,10 +238,10 @@ TEST_F(BFChassisManagerTest, AddPortFec) {
   auto portId = kPortId + 1;
   auto port = kPort + 1;
 
-  builder.AddPort(
-      portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON);
-  EXPECT_CALL(*bf_pal_mock_, PortAdd(
-      kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
+                  FEC_MODE_ON);
+  EXPECT_CALL(*bf_pal_mock_,
+              PortAdd(kUnit, portId, kHundredGigBps, FEC_MODE_ON));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
   ASSERT_OK(PushChassisConfig(builder));
 
@@ -259,8 +251,8 @@ TEST_F(BFChassisManagerTest, AddPortFec) {
 TEST_F(BFChassisManagerTest, ReplayPorts) {
   ASSERT_OK(PushBaseChassisConfig());
 
-  EXPECT_CALL(*bf_pal_mock_, PortAdd(
-      kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
+  EXPECT_CALL(*bf_pal_mock_,
+              PortAdd(kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
   // For now, when replaying the port configuration, we set the mtu and autoneg
@@ -282,9 +274,9 @@ TEST_F(BFChassisManagerTest, TransceiverEvent) {
 
   EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
 
-  EXPECT_OK(xcvr_event_writer->Write(
-      TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
-      absl::InfiniteDuration()));
+  EXPECT_OK(
+      xcvr_event_writer->Write(TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
+                               absl::InfiniteDuration()));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

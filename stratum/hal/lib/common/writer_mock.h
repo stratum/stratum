@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_WRITER_MOCK_H_
 #define STRATUM_HAL_LIB_COMMON_WRITER_MOCK_H_
 
-#include "stratum/hal/lib/common/writer_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 
 namespace stratum {
 namespace hal {

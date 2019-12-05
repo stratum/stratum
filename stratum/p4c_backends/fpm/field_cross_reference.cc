@@ -18,9 +18,9 @@
 
 #include <string>
 
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/p4c_backends/fpm/utils.h"
-#include "stratum/glue/gtl/map_util.h"
 
 namespace stratum {
 namespace p4c_backends {
@@ -103,8 +103,7 @@ bool FieldCrossReference::ProcessXrefEntry(
   for (const auto source_field : source_field_set) {
     bool destination_unknown = IsFieldTypeUnspecified(*destination_field);
     bool source_unknown = IsFieldTypeUnspecified(*source_field);
-    if (destination_unknown == source_unknown)
-      continue;
+    if (destination_unknown == source_unknown) continue;
     if (destination_unknown) {
       destination_field->set_type(source_field->type());
     } else {
