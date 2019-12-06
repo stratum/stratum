@@ -221,7 +221,7 @@ namespace {
     }
 
     if (!attr_res.ok()) {
-        LOG(ERROR) << "Set update " << std::to_string(i) << " failed: "
+        LOG(ERROR) << "Set update " << update.ShortDebugString() << " failed: "
                    << attr_res.status().error_message();
         // If we got an error set the top level status
         status = attr_res.status();
@@ -307,7 +307,6 @@ namespace {
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService,
                            Subscribe, context);
 
-  ::util::Status status;
   ::util::StatusOr<phal::Path> result;
 
   // Convert to PhalDB Path
@@ -327,7 +326,7 @@ namespace {
   }
 
   // Save status
-  status = result.status();
+  ::util::Status status = result.status();
 
   // If conversion worked
   if (result.ok()) {
