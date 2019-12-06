@@ -105,8 +105,8 @@ bool AnnotationMapper::ProcessAnnotations(
         break;
       case hal::P4TableMapValue::kActionDescriptor:
         if (!HandleActionAnnotations(
-            table_map_iter.first, p4_info_manager,
-            table_map_iter.second.mutable_action_descriptor()))
+                table_map_iter.first, p4_info_manager,
+                table_map_iter.second.mutable_action_descriptor()))
           success = false;
         break;
       case hal::P4TableMapValue::kHeaderDescriptor:
@@ -222,16 +222,16 @@ bool AnnotationMapper::MapTableAnnotation(
   return true;
 }
 
-bool AnnotationMapper::HandleActionAnnotations(const std::string& action_name,
-                            const hal::P4InfoManager& p4_info_manager,
-                            hal::P4ActionDescriptor* action_descriptor) {
+bool AnnotationMapper::HandleActionAnnotations(
+    const std::string& action_name, const hal::P4InfoManager& p4_info_manager,
+    hal::P4ActionDescriptor* action_descriptor) {
   // The name is always the first annotation lookup.
   bool name_ok = MapActionAnnotation(action_name, action_descriptor);
   return name_ok;
 }
 
-bool AnnotationMapper::MapActionAnnotation(const std::string& annotation,
-                          hal::P4ActionDescriptor* action_descriptor) {
+bool AnnotationMapper::MapActionAnnotation(
+    const std::string& annotation, hal::P4ActionDescriptor* action_descriptor) {
   const auto& iter = annotation_map_.action_addenda_map().find(annotation);
   if (iter == annotation_map_.action_addenda_map().end())
     return true;  // It is OK not to have a matching annotation.
@@ -243,8 +243,8 @@ bool AnnotationMapper::MapActionAnnotation(const std::string& annotation,
   for (const auto& addenda_name : map_value.addenda_names()) {
     auto action_addendum = action_lookup_.FindAddenda(addenda_name);
     if (action_addendum == nullptr) {
-      LOG(ERROR) << "Unable to find action addenda named "
-                 << addenda_name << " for annotation " << annotation;
+      LOG(ERROR) << "Unable to find action addenda named " << addenda_name
+                 << " for annotation " << annotation;
       return false;
     }
 
@@ -260,10 +260,12 @@ bool AnnotationMapper::MapActionAnnotation(const std::string& annotation,
     }
 
     if (action_addendum->has_assignments_addenda()) {
-      *action_descriptor->add_assignments() = action_addendum->assignments_addenda();
+      *action_descriptor->add_assignments() =
+          action_addendum->assignments_addenda();
     }
     if (action_addendum->primitive_ops_addenda() != P4_ACTION_TYPE_UNKNOWN) {
-      action_descriptor->add_primitive_ops(action_addendum->primitive_ops_addenda());
+      action_descriptor->add_primitive_ops(
+          action_addendum->primitive_ops_addenda());
     }
   }
 

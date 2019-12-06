@@ -18,6 +18,7 @@
 #include <endian.h>
 
 #include <algorithm>
+#include <set>
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
