@@ -132,8 +132,8 @@ class ABSL_MUST_USE_RESULT StatusOr {
   template <typename U>
   StatusOr& operator=(const StatusOr<U>& other);
 
-  explicit StatusOr(const StatusBuilder& status_builder)
-      : status_(status_builder) {
+  // NOLINTNEXTLINE(runtime/explicit)
+  StatusOr(const StatusBuilder& status_builder) : status_(status_builder) {
     EnsureNotOk();
   }
 
