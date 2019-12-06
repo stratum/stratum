@@ -171,9 +171,9 @@ jobs:
       - run:
           name: Run clang-format
           command: >
-            find . -name "*.h" -o -name "*.cc" |
+            ! find . -name "*.h" -o -name "*.cc" |
             xargs clang-format --style=file --output-replacements-xml |
-            ! grep "<replacement "
+            grep "<replacement "
 
 workflows:
   version: 2
