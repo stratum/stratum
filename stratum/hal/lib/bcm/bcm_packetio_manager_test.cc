@@ -27,6 +27,11 @@
 #include "stratum/lib/libcproxy/passthrough_proxy.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
 
 // #include "util/libcproxy/libcproxy.h"
 // #include "util/libcproxy/libcwrapper.h"
