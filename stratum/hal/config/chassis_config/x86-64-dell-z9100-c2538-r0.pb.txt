@@ -1,0 +1,67 @@
+description: "Default chassis config for Z9100"
+chassis {
+  platform: PLT_GENERIC_TOMAHAWK
+  name: "Dell Z9100"
+}
+nodes {
+  id: 1
+  name: "Z9100"
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 50
+  name: "1/0"
+  slot: 1
+  port: 1
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 54
+  name: "2/0"
+  slot: 1
+  port: 2
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 58
+  name: "3/0"
+  slot: 1
+  port: 3
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 62
+  name: "4/0"
+  slot: 1
+  port: 4
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 68
+  name: "5/0"
+  slot: 1
+  port: 5
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 13
+  name: "31/0"
+  slot: 1
+  port: 31
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 9
+  name: "32/0"
+  slot: 1
+  port: 32
+  speed_bps: 100000000000
+    node: 1
+}
