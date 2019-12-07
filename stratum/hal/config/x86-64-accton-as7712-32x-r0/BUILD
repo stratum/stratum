@@ -1,6 +1,5 @@
 #
-# Copyright 2018 Google LLC
-# Copyright 2018-present Open Networking Foundation
+# Copyright 2019-present Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,20 +18,17 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
-    "STRATUM_INTERNAL",
     "stratum_package",
 )
 
-package(
-    #default_hdrs_check = "strict",
-    default_visibility = STRATUM_INTERNAL,
-)
+package(default_visibility = ["//visibility:public"])
+
 
 licenses(["notice"])  # Apache v2
 
 filegroup(
-    name = "bcm_hardware_specs",
-    srcs = [
-        "bcm_hardware_specs.pb.txt"
-    ]
+    name = "configs",
+    srcs = glob([
+        "*"
+    ]),
 )

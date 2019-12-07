@@ -1,0 +1,266 @@
+description: "Default chassis config for QCT IX1 Rangeley"
+chassis {
+  platform: PLT_GENERIC_TOMAHAWK
+  name: "QCT IX1 Rangeley"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 68
+  name: "1/0"
+  slot: 1
+  port: 1
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 69
+  name: "2/0"
+  slot: 1
+  port: 2
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 70
+  name: "3/0"
+  slot: 1
+  port: 3
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 71
+  name: "4/0"
+  slot: 1
+  port: 4
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 37
+  name: "5/0"
+  slot: 1
+  port: 5
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 36
+  name: "6/0"
+  slot: 1
+  port: 6
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 39
+  name: "7/0"
+  slot: 1
+  port: 7
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 38
+  name: "8/0"
+  slot: 1
+  port: 8
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 41
+  name: "9/0"
+  slot: 1
+  port: 9
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 40
+  name: "10/0"
+  slot: 1
+  port: 10
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 35
+  name: "11/0"
+  slot: 1
+  port: 11
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 34
+  name: "12/0"
+  slot: 1
+  port: 12
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 72
+  name: "13/0"
+  slot: 1
+  port: 13
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 73
+  name: "14/0"
+  slot: 1
+  port: 14
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 74
+  name: "15/0"
+  slot: 1
+  port: 15
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 75
+  name: "16/0"
+  slot: 1
+  port: 16
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 102
+  name: "17/0"
+  slot: 1
+  port: 17
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 103
+  name: "18/0"
+  slot: 1
+  port: 18
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 104
+  name: "19/0"
+  slot: 1
+  port: 19
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 105
+  name: "20/0"
+  slot: 1
+  port: 20
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 8
+  name: "21/0"
+  slot: 1
+  port: 21
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 7
+  name: "22/0"
+  slot: 1
+  port: 22
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 2
+  name: "23/0"
+  slot: 1
+  port: 23
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 1
+  name: "24/0"
+  slot: 1
+  port: 24
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 4
+  name: "25/0"
+  slot: 1
+  port: 25
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 3
+  name: "26/0"
+  slot: 1
+  port: 26
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 6
+  name: "27/0"
+  slot: 1
+  port: 27
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 5
+  name: "28/0"
+  slot: 1
+  port: 28
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 106
+  name: "29/0"
+  slot: 1
+  port: 29
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 107
+  name: "30/0"
+  slot: 1
+  port: 30
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 108
+  name: "31/0"
+  slot: 1
+  port: 31
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 109
+  name: "32/0"
+  slot: 1
+  port: 32
+  speed_bps: 100000000000
+    node: 1
+}
