@@ -12,3 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+licenses(["notice"])  # Apache v2
+
+# Build the main P4 pipeline for Broadcom switches.
+
+load(
+    "//stratum/p4c_backends/common:build_defs.bzl",
+    "p4_fpm_compile",
+)
+
+filegroup(
+    name = "annotation_map_files",
+    srcs = [
+        "field_map.pb.txt",
+        "table_map.pb.txt",
+    ],
+)
+
+p4_fpm_compile(
+    name = "main",
+    src = "main.p4",
+    hdrs = [],
+    annotation_maps = [":annotation_map_files"],
+    out_p4_info = "main.p4info",
+    out_p4_pipeline_binary = "main.pb.bin",
+    out_p4_pipeline_text = "main.pb.txt",
+)

@@ -25,7 +25,7 @@ load(
 )
 load(
     "//stratum/p4c_backend/common:build_defs.bzl",
-    "p4_hercules_config",
+    "p4_fpm_compile",
 )
 
 stratum_package(
@@ -142,7 +142,7 @@ cc_test(
     ],
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_tor",
     src = "//platforms/networking/orion/p4/spec:tor.p4",
     hdrs = [
@@ -157,7 +157,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_spine",
     src = "//platforms/networking/orion/p4/spec:spine.p4",
     hdrs = [
@@ -172,7 +172,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_middleblock",
     src = "//platforms/networking/orion/p4/spec:middleblock.p4",
     hdrs = [
@@ -187,7 +187,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_fbr_s2",
     src = "//platforms/networking/orion/p4/spec:fbr_s2.p4",
     hdrs = [
@@ -202,7 +202,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_fbr_s3",
     src = "//platforms/networking/orion/p4/spec:fbr_s3.p4",
     hdrs = [
@@ -217,7 +217,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_b4",
     src = "//platforms/networking/orion/p4/spec:b4.p4",
     hdrs = [
@@ -232,7 +232,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_minicluster_s2",
     src = "//platforms/networking/orion/p4/spec:minicluster_s2.p4",
     hdrs = [
@@ -247,7 +247,7 @@ p4_hercules_config(
     parser_map = "//stratum/p4c_backend/switch:parser_map_files",
 )
 
-p4_hercules_config(
+p4_fpm_compile(
     name = "hercules_minicluster_s3",
     src = "//platforms/networking/orion/p4/spec:minicluster_s3.p4",
     hdrs = [
