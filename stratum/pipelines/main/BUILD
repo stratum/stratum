@@ -33,7 +33,7 @@ p4_fpm_compile(
     src = "main.p4",
     hdrs = [],
     annotation_maps = [":annotation_map_files"],
-    out_p4_info = "main.p4info",
+    out_p4_info = "fpm/main.p4info",
     out_p4_pipeline_binary = "fpm/main.pb.bin",
     out_p4_pipeline_text = "fpm/main.pb.txt",
 )
