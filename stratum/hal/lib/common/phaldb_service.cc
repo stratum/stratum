@@ -146,8 +146,8 @@ namespace {
 }  // namespace
 
 ::grpc::Status PhalDBService::Get(::grpc::ServerContext* context,
-    const ::stratum::hal::phal::GetRequest* req,
-    ::stratum::hal::phal::GetResponse* resp) {
+    const phal::GetRequest* req,
+    phal::GetResponse* resp) {
 
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService, Get, context);
 
@@ -156,11 +156,11 @@ namespace {
 
   // Convert to PhalDB Path
   switch (req->query_case()) {
-    case ::stratum::hal::phal::GetRequest::kStr: {
+    case phal::GetRequest::kStr: {
         result = ParseQuery(req->str());
         break;
     }
-    case ::stratum::hal::phal::GetRequest::kPath: {
+    case phal::GetRequest::kPath: {
         result = ToPhalDBPath(req->path());
         break;
     }
@@ -176,7 +176,7 @@ namespace {
 
   // Issue the get
   auto adapter =
-    absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
+    absl::make_unique<phal::Adapter>(phal_interface_);
   auto phaldb_res = adapter->Get({path});
   if (phaldb_res.ok()) {
       auto phaldb_resp = std::move(phaldb_res.ConsumeValueOrDie());
@@ -188,8 +188,8 @@ namespace {
 }
 
 ::grpc::Status PhalDBService::Set(::grpc::ServerContext* context,
-    const ::stratum::hal::phal::SetRequest* req,
-    ::stratum::hal::phal::SetResponse* resp) {
+    const phal::SetRequest* req,
+    phal::SetResponse* resp) {
 
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService, Set, context);
 
@@ -197,7 +197,7 @@ namespace {
 
   ::util::Status status = ::util::OkStatus();
   std::vector<::util::Status> results = {};
-  stratum::hal::phal::AttributeValueMap attrs;
+  phal::AttributeValueMap attrs;
 
   // Spin thru each update
   for (int i=0; i < req->updates_size(); i++) {
@@ -208,11 +208,11 @@ namespace {
 
     // Convert to PhalDB Path
     switch (update.query_case()) {
-      case ::stratum::hal::phal::Update::kStr: {
+      case phal::Update::kStr: {
         attr_res = ParseQuery(update.str());
         break;
       }
-      case ::stratum::hal::phal::Update::kPath: {
+      case phal::Update::kPath: {
         attr_res = ToPhalDBPath(update.path());
         break;
       }
@@ -233,39 +233,39 @@ namespace {
 
     // Create attribute path:val pair base on value type
     switch (update.value().value_case()) {
-      case ::stratum::hal::phal::UpdateValue::kDoubleVal: {
+      case phal::UpdateValue::kDoubleVal: {
         attrs[path] = update.value().double_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kFloatVal: {
+      case phal::UpdateValue::kFloatVal: {
         attrs[path] = update.value().float_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kInt32Val: {
+      case phal::UpdateValue::kInt32Val: {
         attrs[path] = update.value().int32_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kInt64Val: {
+      case phal::UpdateValue::kInt64Val: {
         attrs[path] = update.value().int64_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kUint32Val: {
+      case phal::UpdateValue::kUint32Val: {
         attrs[path] = update.value().uint32_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kUint64Val: {
+      case phal::UpdateValue::kUint64Val: {
         attrs[path] = update.value().uint64_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kBoolVal: {
+      case phal::UpdateValue::kBoolVal: {
         attrs[path] = update.value().bool_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kStringVal: {
+      case phal::UpdateValue::kStringVal: {
         attrs[path] = update.value().string_val();
         break;
       }
-      case ::stratum::hal::phal::UpdateValue::kBytesVal: {
+      case phal::UpdateValue::kBytesVal: {
         attrs[path] = update.value().bytes_val();
         break;
       }
@@ -293,7 +293,7 @@ namespace {
 
     // Do set for all attribute pairs
     auto adapter =
-        absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
+        absl::make_unique<phal::Adapter>(phal_interface_);
     status = adapter->Set(attrs);
   }
 
@@ -301,8 +301,8 @@ namespace {
 }
 
 ::grpc::Status PhalDBService::Subscribe(::grpc::ServerContext* context,
-    const ::stratum::hal::phal::SubscribeRequest* req,
-    ::grpc::ServerWriter<::stratum::hal::phal::SubscribeResponse>* stream) {
+    const phal::SubscribeRequest* req,
+    ::grpc::ServerWriter<phal::SubscribeResponse>* stream) {
 
   RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDBService,
                            Subscribe, context);
@@ -311,11 +311,11 @@ namespace {
 
   // Convert to PhalDB Path
   switch (req->query_case()) {
-    case ::stratum::hal::phal::SubscribeRequest::kStr: {
+    case phal::SubscribeRequest::kStr: {
         result = ParseQuery(req->str());
         break;
     }
-    case ::stratum::hal::phal::SubscribeRequest::kPath: {
+    case phal::SubscribeRequest::kPath: {
         result = ToPhalDBPath(req->path());
         break;
     }
@@ -333,8 +333,8 @@ namespace {
     auto path = result.ConsumeValueOrDie();
 
     // Create writer and reader channels
-    std::shared_ptr<Channel<::stratum::hal::phal::PhalDB>> channel =
-        Channel<::stratum::hal::phal::PhalDB>::Create(128);
+    std::shared_ptr<Channel<phal::PhalDB>> channel =
+        Channel<phal::PhalDB>::Create(128);
 
     {
         // Lock subscriber channels
@@ -345,14 +345,14 @@ namespace {
     }
 
     auto writer =
-            ChannelWriter<::stratum::hal::phal::PhalDB>::Create(channel);
+            ChannelWriter<phal::PhalDB>::Create(channel);
 
     auto reader =
-        ChannelReader<::stratum::hal::phal::PhalDB>::Create(channel);
+        ChannelReader<phal::PhalDB>::Create(channel);
 
     // Issue the subscribe
     auto adapter =
-        absl::make_unique<::stratum::hal::phal::Adapter>(phal_interface_);
+        absl::make_unique<phal::Adapter>(phal_interface_);
     status = adapter->Subscribe({path}, std::move(writer),
                                  absl::Seconds(req->polling_interval()));
 
@@ -367,7 +367,7 @@ namespace {
         //       the stream and channel for changes but for now this
         //       will do.
         do {
-            ::stratum::hal::phal::PhalDB phaldb_resp;
+            phal::PhalDB phaldb_resp;
             int code = reader->Read(&phaldb_resp,
                                     absl::InfiniteDuration()).error_code();
 
@@ -394,7 +394,7 @@ namespace {
             }
 
             // Send message to client
-            ::stratum::hal::phal::SubscribeResponse resp;
+            phal::SubscribeResponse resp;
             *resp.mutable_phal_db() = phaldb_resp;
 
             // If Write fails then break out of the loop
