@@ -114,6 +114,7 @@ bool TimerDaemon::Execute() {
   } else {
     absl::WriterMutexLock l(&GetInstance()->access_lock_);
     GetInstance()->timers_.clear();
+    GetInstance()->tid_ = 0;
 
     LOG(INFO) << "The timer daemon has been stopped.";
     return ::util::OkStatus();

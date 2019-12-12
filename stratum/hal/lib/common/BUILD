@@ -530,10 +530,10 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
+        "//stratum/procmon:procmon_cc_grpc",
     ],
 )
 
-'''FIXME(boc) needs refactoring
 stratum_cc_test(
     name = "hal_test",
     srcs = [
@@ -553,9 +553,9 @@ stratum_cc_test(
         "//stratum/lib/security:credentials_manager_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "//stratum/procmon:procmon_cc_grpc",
     ],
 )
-'''
 
 stratum_cc_library(
     name = "p4_service",
