@@ -18,6 +18,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/lib/macros.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/strip.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 
@@ -302,6 +303,26 @@ SfpModuleType SfpInfo::GetSfpModuleType()const {
   }
 }
 
+namespace {
+absl::string_view TrimSuffix(absl::string_view str, absl::string_view suffix) {
+  while (absl::ConsumeSuffix(&str, suffix)) {
+  }
+  return str;
+}
+}  // namespace
+
+std::string SfpInfo::GetSfpVendor() const {
+  return std::string(TrimSuffix(sfp_info_.sff.vendor, " "));
+}
+
+std::string SfpInfo::GetSfpModel() const {
+  return std::string(TrimSuffix(sfp_info_.sff.model, " "));
+}
+
+std::string SfpInfo::GetSfpSerialNumber() const {
+  return std::string(TrimSuffix(sfp_info_.sff.serial, " "));
+}
+
 void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {
   // set all relevant capabilities flags
   caps->set_f_100(sfp_info_.sff.caps & SFF_MODULE_CAPS_F_100);
@@ -313,7 +334,7 @@ void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {
 
 ::util::StatusOr<const SffInfo*> SfpInfo::GetSffInfo() const {
   CHECK_RETURN_IF_FALSE(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
-      << "Cannot get SFF info: Invalid SFP type.";
+      << "Cannot get SFF info: Invalid SFP type: " << sfp_info_.sff.sfp_type;
   return &sfp_info_.sff;
 }
 
