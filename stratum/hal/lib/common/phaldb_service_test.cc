@@ -25,9 +25,6 @@
 #include "gflags/gflags.h"
 #include "google/rpc/code.pb.h"
 #include "stratum/glue/net_util/ports.h"
-// Note: EXPECT_OK already defined in google protobuf status.h
-#undef EXPECT_OK
-#include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/hal/lib/phal/attribute_database_mock.h"
@@ -156,8 +153,7 @@ TEST_P(PhalDBServiceTest, GetRequestStrSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Get(&context, req, &resp);
-  ASSERT_TRUE(status.ok());
+  EXPECT_OK(stub_->Get(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, GetRequestPathSuccess) {
