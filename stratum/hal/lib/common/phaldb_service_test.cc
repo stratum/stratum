@@ -98,8 +98,7 @@ class PhalDBServiceTest : public ::testing::TestWithParam<OperationMode> {
 };
 
 TEST_P(PhalDBServiceTest, SetupWarm) {
-  auto status = phaldb_service_->Setup(true);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(phaldb_service_->Setup(true));
 }
 
 TEST_P(PhalDBServiceTest, GetRequestStrSuccess) {
@@ -217,8 +216,7 @@ TEST_P(PhalDBServiceTest, GetRequestPathSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Get(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Get(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestStrSuccess) {
@@ -258,8 +256,7 @@ TEST_P(PhalDBServiceTest, SetRequestStrSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestInvalidStrFail) {
@@ -340,8 +337,7 @@ TEST_P(PhalDBServiceTest, SetRequestPathSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestStringSuccess) {
@@ -381,8 +377,7 @@ TEST_P(PhalDBServiceTest, SetRequestStringSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestBoolSuccess) {
@@ -423,8 +418,7 @@ TEST_P(PhalDBServiceTest, SetRequestBoolSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestFloatSuccess) {
@@ -465,8 +459,7 @@ TEST_P(PhalDBServiceTest, SetRequestFloatSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestInt64Success) {
@@ -507,8 +500,7 @@ TEST_P(PhalDBServiceTest, SetRequestInt64Success) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestUInt32Success) {
@@ -549,8 +541,7 @@ TEST_P(PhalDBServiceTest, SetRequestUInt32Success) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestUInt64Success) {
@@ -591,8 +582,7 @@ TEST_P(PhalDBServiceTest, SetRequestUInt64Success) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SetRequestBytesSuccess) {
@@ -633,8 +623,7 @@ TEST_P(PhalDBServiceTest, SetRequestBytesSuccess) {
 
   // Invoke the RPC and validate the results.
   // Call and validate results.
-  auto status = stub_->Set(&context, req, &resp);
-  EXPECT_TRUE(status.ok());
+  EXPECT_OK(stub_->Set(&context, req, &resp));
 }
 
 TEST_P(PhalDBServiceTest, SubscribeRequestSuccess) {
