@@ -334,7 +334,7 @@ void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {
 
 ::util::StatusOr<const SffInfo*> SfpInfo::GetSffInfo() const {
   CHECK_RETURN_IF_FALSE(sfp_info_.sff.sfp_type != SFF_SFP_TYPE_INVALID)
-      << "Cannot get SFF info: Invalid SFP type: " << sfp_info_.sff.sfp_type;
+      << "Cannot get SFF info: Invalid SFP type.";
   return &sfp_info_.sff;
 }
 
