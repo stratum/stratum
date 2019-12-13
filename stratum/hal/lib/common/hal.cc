@@ -29,7 +29,6 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
 #include "absl/synchronization/mutex.h"
-#include "stratum/lib/utils.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
 DEFINE_string(
