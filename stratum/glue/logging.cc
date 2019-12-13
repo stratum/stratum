@@ -27,7 +27,7 @@ DEFINE_bool(logtostderr, false,
 
 #endif  // STRATUM_ARCH_PPC
 
-DEFINE_bool(logtosyslog, true, "log messages also go to syslog.");
+DEFINE_bool(logtosyslog, false, "log messages also go to syslog.");
 
 using google::LogSeverity;
 using google::LogToStderr;

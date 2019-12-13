@@ -101,6 +101,12 @@ class BcmTableManagerMock : public BcmTableManager {
   MOCK_METHOD1(
       DeleteActionProfileGroup,
       ::util::Status(const ::p4::v1::ActionProfileGroup& action_profile_group));
+  MOCK_METHOD1(
+      DeleteCloneSession,
+      ::util::Status(const ::p4::v1::CloneSessionEntry& clone_session));
+  MOCK_METHOD1(
+      DeleteMulticastGroup,
+      ::util::Status(const ::p4::v1::MulticastGroupEntry& multicast_group));
   MOCK_CONST_METHOD1(GetGroupsForMember,
                      ::util::StatusOr<std::set<uint32>>(uint32 member_id));
   MOCK_CONST_METHOD1(ActionProfileMemberExists, bool(uint32 member_id));

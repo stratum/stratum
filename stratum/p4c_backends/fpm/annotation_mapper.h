@@ -152,6 +152,15 @@ class AnnotationMapper {
   bool MapTableAnnotation(const std::string& annotation,
                           hal::P4TableDescriptor* table_descriptor);
 
+  // These two methods process any annotations in the given action descriptor,
+  // adjusting the action_descriptor as specified by any annotation mappings
+  // found.
+  bool HandleActionAnnotations(const std::string& action_name,
+                              const hal::P4InfoManager& p4_info_manager,
+                              hal::P4ActionDescriptor* action_descriptor);
+  bool MapActionAnnotation(const std::string& annotation,
+                           hal::P4ActionDescriptor* action_descriptor);
+
   bool initialized_;  // Becomes true after one of the init methods runs.
 
   // This P4AnnotationMap contains the initialized annotations mapping data
