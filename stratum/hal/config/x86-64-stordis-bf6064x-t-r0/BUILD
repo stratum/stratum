@@ -19,6 +19,7 @@ licenses(["notice"])  # Apache v2
 load(
     "//bazel:rules.bzl",
     "stratum_package",
+    "stratum_cc_test",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -31,4 +32,29 @@ filegroup(
     srcs = glob([
         "*"
     ]),
+)
+
+stratum_cc_test(
+    name = "validate_configs",
+    srcs = [
+        "//stratum/hal/config/config_validator:main_src"
+    ],
+    deps = [
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/bcm:bcm_cc_proto",
+        "//stratum/hal/lib/phal:phal_cc_proto",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_github_google_glog//:glog",
+        "@com_google_googletest//:gtest",
+        "@com_github_grpc_grpc//:grpc++",
+    ],
+    data = [
+        ":configs"
+    ],
+    defines = [
+        "PLATFORM=x86-64-stordis-bf6064x-t-r0",
+    ]
 )

@@ -55,6 +55,7 @@ stratum_cc_test(
         ":configs"
     ],
     defines = [
-        "PLATFORM=x86-64-accton-wedge100bf-32x-r0",
+        "PLATFORM=x86-64-inventec-d7032q28b-r0",
+        "BCM_TARGET",
     ]
 )

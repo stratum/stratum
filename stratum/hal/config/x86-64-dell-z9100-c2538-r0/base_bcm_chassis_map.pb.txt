@@ -34,7 +34,6 @@ bcm_chassis_maps {
     serdes_core: 12
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0xe
@@ -53,7 +52,6 @@ bcm_chassis_maps {
     serdes_core: 12
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0x1
@@ -72,7 +70,6 @@ bcm_chassis_maps {
     serdes_core: 12
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0x3
@@ -91,7 +88,6 @@ bcm_chassis_maps {
     serdes_core: 12
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0x1
@@ -110,7 +106,6 @@ bcm_chassis_maps {
     serdes_core: 13
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x2
@@ -129,7 +124,6 @@ bcm_chassis_maps {
     serdes_core: 13
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x1
@@ -148,7 +142,6 @@ bcm_chassis_maps {
     serdes_core: 13
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x0
@@ -167,7 +160,6 @@ bcm_chassis_maps {
     serdes_core: 13
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x0
@@ -186,7 +178,6 @@ bcm_chassis_maps {
     serdes_core: 14
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0xa
@@ -205,7 +196,6 @@ bcm_chassis_maps {
     serdes_core: 14
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x1
@@ -224,7 +214,6 @@ bcm_chassis_maps {
     serdes_core: 14
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x2
@@ -243,7 +232,6 @@ bcm_chassis_maps {
     serdes_core: 14
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x1
@@ -262,7 +250,6 @@ bcm_chassis_maps {
     serdes_core: 15
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x3201
     rx_lane_map: 0x1302
     tx_polarity_flip: 0xb
@@ -281,7 +268,6 @@ bcm_chassis_maps {
     serdes_core: 15
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x3201
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x1
@@ -300,7 +286,6 @@ bcm_chassis_maps {
     serdes_core: 15
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x3201
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x2
@@ -319,7 +304,6 @@ bcm_chassis_maps {
     serdes_core: 15
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x3201
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x1
@@ -338,7 +322,6 @@ bcm_chassis_maps {
     serdes_core: 16
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x3210
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x2
@@ -357,7 +340,6 @@ bcm_chassis_maps {
     serdes_core: 16
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x3210
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x1
@@ -376,7 +358,6 @@ bcm_chassis_maps {
     serdes_core: 16
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x3210
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x0
@@ -395,7 +376,6 @@ bcm_chassis_maps {
     serdes_core: 16
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x3210
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x0
@@ -414,7 +394,6 @@ bcm_chassis_maps {
     serdes_core: 17
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x0
@@ -433,7 +412,6 @@ bcm_chassis_maps {
     serdes_core: 17
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x0
@@ -452,7 +430,6 @@ bcm_chassis_maps {
     serdes_core: 17
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x0
@@ -471,7 +448,6 @@ bcm_chassis_maps {
     serdes_core: 17
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2301
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x0
@@ -490,7 +466,6 @@ bcm_chassis_maps {
     serdes_core: 18
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x0
@@ -509,7 +484,6 @@ bcm_chassis_maps {
     serdes_core: 18
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x0
@@ -528,7 +502,6 @@ bcm_chassis_maps {
     serdes_core: 18
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x0
@@ -547,7 +520,6 @@ bcm_chassis_maps {
     serdes_core: 18
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x0
@@ -566,7 +538,6 @@ bcm_chassis_maps {
     serdes_core: 19
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x1320
     rx_lane_map: 0x2301
     tx_polarity_flip: 0xa
@@ -585,7 +556,6 @@ bcm_chassis_maps {
     serdes_core: 19
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x1320
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x1
@@ -604,7 +574,6 @@ bcm_chassis_maps {
     serdes_core: 19
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x1320
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x2
@@ -623,7 +592,6 @@ bcm_chassis_maps {
     serdes_core: 19
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x1320
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x1
@@ -642,7 +610,6 @@ bcm_chassis_maps {
     serdes_core: 9
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x1032
     rx_lane_map: 0x312
     tx_polarity_flip: 0x0
@@ -661,7 +628,6 @@ bcm_chassis_maps {
     serdes_core: 9
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x1032
     rx_lane_map: 0x312
     tx_polarity_flip: 0x0
@@ -680,7 +646,6 @@ bcm_chassis_maps {
     serdes_core: 9
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x1032
     rx_lane_map: 0x312
     tx_polarity_flip: 0x0
@@ -699,7 +664,6 @@ bcm_chassis_maps {
     serdes_core: 9
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x1032
     rx_lane_map: 0x312
     tx_polarity_flip: 0x0
@@ -718,7 +682,6 @@ bcm_chassis_maps {
     serdes_core: 8
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2031
     rx_lane_map: 0x1302
     tx_polarity_flip: 0xb
@@ -737,7 +700,6 @@ bcm_chassis_maps {
     serdes_core: 8
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2031
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x1
@@ -756,7 +718,6 @@ bcm_chassis_maps {
     serdes_core: 8
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2031
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x2
@@ -775,7 +736,6 @@ bcm_chassis_maps {
     serdes_core: 8
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2031
     rx_lane_map: 0x1302
     tx_polarity_flip: 0x1
@@ -794,7 +754,6 @@ bcm_chassis_maps {
     serdes_core: 11
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x1023
     rx_lane_map: 0x2103
     tx_polarity_flip: 0xe
@@ -813,7 +772,6 @@ bcm_chassis_maps {
     serdes_core: 11
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x1023
     rx_lane_map: 0x2103
     tx_polarity_flip: 0x1
@@ -832,7 +790,6 @@ bcm_chassis_maps {
     serdes_core: 11
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x1023
     rx_lane_map: 0x2103
     tx_polarity_flip: 0x3
@@ -851,7 +808,6 @@ bcm_chassis_maps {
     serdes_core: 11
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x1023
     rx_lane_map: 0x2103
     tx_polarity_flip: 0x1
@@ -870,7 +826,6 @@ bcm_chassis_maps {
     serdes_core: 10
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x6
@@ -889,7 +844,6 @@ bcm_chassis_maps {
     serdes_core: 10
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -908,7 +862,6 @@ bcm_chassis_maps {
     serdes_core: 10
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -927,7 +880,6 @@ bcm_chassis_maps {
     serdes_core: 10
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x0
@@ -946,7 +898,6 @@ bcm_chassis_maps {
     serdes_core: 20
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x213
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x6
@@ -965,7 +916,6 @@ bcm_chassis_maps {
     serdes_core: 20
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x213
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x1
@@ -984,7 +934,6 @@ bcm_chassis_maps {
     serdes_core: 20
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x213
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x1
@@ -1003,7 +952,6 @@ bcm_chassis_maps {
     serdes_core: 20
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x213
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x0
@@ -1022,7 +970,6 @@ bcm_chassis_maps {
     serdes_core: 21
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x1032
     rx_lane_map: 0x213
     tx_polarity_flip: 0xf
@@ -1041,7 +988,6 @@ bcm_chassis_maps {
     serdes_core: 21
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x1032
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -1060,7 +1006,6 @@ bcm_chassis_maps {
     serdes_core: 21
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x1032
     rx_lane_map: 0x213
     tx_polarity_flip: 0x3
@@ -1079,7 +1024,6 @@ bcm_chassis_maps {
     serdes_core: 21
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x1032
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -1098,7 +1042,6 @@ bcm_chassis_maps {
     serdes_core: 22
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x5
@@ -1117,7 +1060,6 @@ bcm_chassis_maps {
     serdes_core: 22
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x0
@@ -1136,7 +1078,6 @@ bcm_chassis_maps {
     serdes_core: 22
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -1155,7 +1096,6 @@ bcm_chassis_maps {
     serdes_core: 22
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x0
@@ -1174,7 +1114,6 @@ bcm_chassis_maps {
     serdes_core: 23
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x8
@@ -1193,7 +1132,6 @@ bcm_chassis_maps {
     serdes_core: 23
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x0
@@ -1212,7 +1150,6 @@ bcm_chassis_maps {
     serdes_core: 23
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x2
@@ -1231,7 +1168,6 @@ bcm_chassis_maps {
     serdes_core: 23
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -1250,7 +1186,6 @@ bcm_chassis_maps {
     serdes_core: 24
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x3201
     tx_polarity_flip: 0xf
@@ -1269,7 +1204,6 @@ bcm_chassis_maps {
     serdes_core: 24
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x1
@@ -1288,7 +1222,6 @@ bcm_chassis_maps {
     serdes_core: 24
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x3
@@ -1307,7 +1240,6 @@ bcm_chassis_maps {
     serdes_core: 24
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x1
@@ -1326,7 +1258,6 @@ bcm_chassis_maps {
     serdes_core: 25
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0xf
@@ -1345,7 +1276,6 @@ bcm_chassis_maps {
     serdes_core: 25
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -1364,7 +1294,6 @@ bcm_chassis_maps {
     serdes_core: 25
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x3
@@ -1383,7 +1312,6 @@ bcm_chassis_maps {
     serdes_core: 25
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -1402,7 +1330,6 @@ bcm_chassis_maps {
     serdes_core: 26
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x1032
     rx_lane_map: 0x3210
     tx_polarity_flip: 0xf
@@ -1421,7 +1348,6 @@ bcm_chassis_maps {
     serdes_core: 26
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x1032
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -1440,7 +1366,6 @@ bcm_chassis_maps {
     serdes_core: 26
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x1032
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x3
@@ -1459,7 +1384,6 @@ bcm_chassis_maps {
     serdes_core: 26
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x1032
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -1478,7 +1402,6 @@ bcm_chassis_maps {
     serdes_core: 27
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0xf
@@ -1497,7 +1420,6 @@ bcm_chassis_maps {
     serdes_core: 27
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -1516,7 +1438,6 @@ bcm_chassis_maps {
     serdes_core: 27
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x3
@@ -1535,7 +1456,6 @@ bcm_chassis_maps {
     serdes_core: 27
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -1554,7 +1474,6 @@ bcm_chassis_maps {
     serdes_core: 5
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2301
     rx_lane_map: 0x3102
     tx_polarity_flip: 0xf
@@ -1573,7 +1492,6 @@ bcm_chassis_maps {
     serdes_core: 5
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2301
     rx_lane_map: 0x3102
     tx_polarity_flip: 0x1
@@ -1592,7 +1510,6 @@ bcm_chassis_maps {
     serdes_core: 5
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2301
     rx_lane_map: 0x3102
     tx_polarity_flip: 0x3
@@ -1611,7 +1528,6 @@ bcm_chassis_maps {
     serdes_core: 5
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2301
     rx_lane_map: 0x3102
     tx_polarity_flip: 0x1
@@ -1630,7 +1546,6 @@ bcm_chassis_maps {
     serdes_core: 4
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x3102
     rx_lane_map: 0x2103
     tx_polarity_flip: 0xf
@@ -1649,7 +1564,6 @@ bcm_chassis_maps {
     serdes_core: 4
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x3102
     rx_lane_map: 0x2103
     tx_polarity_flip: 0x1
@@ -1668,7 +1582,6 @@ bcm_chassis_maps {
     serdes_core: 4
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x3102
     rx_lane_map: 0x2103
     tx_polarity_flip: 0x3
@@ -1687,7 +1600,6 @@ bcm_chassis_maps {
     serdes_core: 4
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x3102
     rx_lane_map: 0x2103
     tx_polarity_flip: 0x1
@@ -1706,7 +1618,6 @@ bcm_chassis_maps {
     serdes_core: 7
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x1023
     rx_lane_map: 0x2301
     tx_polarity_flip: 0xb
@@ -1725,7 +1636,6 @@ bcm_chassis_maps {
     serdes_core: 7
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x1023
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x1
@@ -1744,7 +1654,6 @@ bcm_chassis_maps {
     serdes_core: 7
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x1023
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x2
@@ -1763,7 +1672,6 @@ bcm_chassis_maps {
     serdes_core: 7
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x1023
     rx_lane_map: 0x2301
     tx_polarity_flip: 0x1
@@ -1782,7 +1690,6 @@ bcm_chassis_maps {
     serdes_core: 6
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2130
     rx_lane_map: 0x2310
     tx_polarity_flip: 0xa
@@ -1801,7 +1708,6 @@ bcm_chassis_maps {
     serdes_core: 6
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2130
     rx_lane_map: 0x2310
     tx_polarity_flip: 0x1
@@ -1820,7 +1726,6 @@ bcm_chassis_maps {
     serdes_core: 6
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2130
     rx_lane_map: 0x2310
     tx_polarity_flip: 0x2
@@ -1839,7 +1744,6 @@ bcm_chassis_maps {
     serdes_core: 6
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2130
     rx_lane_map: 0x2310
     tx_polarity_flip: 0x1
@@ -1858,7 +1762,6 @@ bcm_chassis_maps {
     serdes_core: 29
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2310
     rx_lane_map: 0x3201
     tx_polarity_flip: 0xf
@@ -1877,7 +1780,6 @@ bcm_chassis_maps {
     serdes_core: 29
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2310
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x1
@@ -1896,7 +1798,6 @@ bcm_chassis_maps {
     serdes_core: 29
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2310
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x3
@@ -1915,7 +1816,6 @@ bcm_chassis_maps {
     serdes_core: 29
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2310
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x1
@@ -1934,7 +1834,6 @@ bcm_chassis_maps {
     serdes_core: 28
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2013
     rx_lane_map: 0x123
     tx_polarity_flip: 0x0
@@ -1953,7 +1852,6 @@ bcm_chassis_maps {
     serdes_core: 28
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2013
     rx_lane_map: 0x123
     tx_polarity_flip: 0x0
@@ -1972,7 +1870,6 @@ bcm_chassis_maps {
     serdes_core: 28
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2013
     rx_lane_map: 0x123
     tx_polarity_flip: 0x0
@@ -1991,7 +1888,6 @@ bcm_chassis_maps {
     serdes_core: 28
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2013
     rx_lane_map: 0x1023
     tx_polarity_flip: 0x0
@@ -2010,7 +1906,6 @@ bcm_chassis_maps {
     serdes_core: 31
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0xb
@@ -2029,7 +1924,6 @@ bcm_chassis_maps {
     serdes_core: 31
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0x1
@@ -2048,7 +1942,6 @@ bcm_chassis_maps {
     serdes_core: 31
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x132
     rx_lane_map: 0x1023
     tx_polarity_flip: 0x2
@@ -2067,7 +1960,6 @@ bcm_chassis_maps {
     serdes_core: 31
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x132
     rx_lane_map: 0x3210
     tx_polarity_flip: 0x1
@@ -2086,7 +1978,6 @@ bcm_chassis_maps {
     serdes_core: 30
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x7
@@ -2105,7 +1996,6 @@ bcm_chassis_maps {
     serdes_core: 30
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -2124,7 +2014,6 @@ bcm_chassis_maps {
     serdes_core: 30
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -2143,7 +2032,6 @@ bcm_chassis_maps {
     serdes_core: 30
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x0
@@ -2162,7 +2050,6 @@ bcm_chassis_maps {
     serdes_core: 1
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x213
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x8
@@ -2181,7 +2068,6 @@ bcm_chassis_maps {
     serdes_core: 1
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x213
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x0
@@ -2200,7 +2086,6 @@ bcm_chassis_maps {
     serdes_core: 1
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x213
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x2
@@ -2219,7 +2104,6 @@ bcm_chassis_maps {
     serdes_core: 1
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x213
     rx_lane_map: 0x1203
     tx_polarity_flip: 0x1
@@ -2238,7 +2122,6 @@ bcm_chassis_maps {
     serdes_core: 0
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x3
@@ -2257,7 +2140,6 @@ bcm_chassis_maps {
     serdes_core: 0
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -2276,7 +2158,6 @@ bcm_chassis_maps {
     serdes_core: 0
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x0
@@ -2295,7 +2176,6 @@ bcm_chassis_maps {
     serdes_core: 0
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x0
@@ -2314,7 +2194,6 @@ bcm_chassis_maps {
     serdes_core: 3
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x2301
     rx_lane_map: 0x3201
     tx_polarity_flip: 0xc
@@ -2333,7 +2212,6 @@ bcm_chassis_maps {
     serdes_core: 3
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x2301
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x0
@@ -2352,7 +2230,6 @@ bcm_chassis_maps {
     serdes_core: 3
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x2301
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x3
@@ -2371,7 +2248,6 @@ bcm_chassis_maps {
     serdes_core: 3
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x2301
     rx_lane_map: 0x3201
     tx_polarity_flip: 0x1
@@ -2390,7 +2266,6 @@ bcm_chassis_maps {
     serdes_core: 2
     serdes_lane: 0
     num_serdes_lanes: 4
-    lane_map: 0xf
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x3
@@ -2409,7 +2284,6 @@ bcm_chassis_maps {
     serdes_core: 2
     serdes_lane: 1
     num_serdes_lanes: 1
-    lane_map: 0x2
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x1
@@ -2428,7 +2302,6 @@ bcm_chassis_maps {
     serdes_core: 2
     serdes_lane: 2
     num_serdes_lanes: 1
-    lane_map: 0x4
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x0
@@ -2447,7 +2320,6 @@ bcm_chassis_maps {
     serdes_core: 2
     serdes_lane: 3
     num_serdes_lanes: 1
-    lane_map: 0x8
     tx_lane_map: 0x123
     rx_lane_map: 0x213
     tx_polarity_flip: 0x0
@@ -2466,7 +2338,6 @@ bcm_chassis_maps {
     serdes_core: 0
     serdes_lane: 0
     num_serdes_lanes: 1
-    lane_map: 0xf
     tx_lane_map: 0x0
     rx_lane_map: 0x0
     tx_polarity_flip: 0x0
@@ -2485,7 +2356,6 @@ bcm_chassis_maps {
     serdes_core: 0
     serdes_lane: 0
     num_serdes_lanes: 1
-    lane_map: 0xf
     tx_lane_map: 0x0
     rx_lane_map: 0x0
     tx_polarity_flip: 0x0
