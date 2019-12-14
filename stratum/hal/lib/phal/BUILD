@@ -27,7 +27,6 @@ load(
     "EMBEDDED_ARCHES",
     "HOST_ARCHES",
 )
-load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
 package(
     #default_hdrs_check = "strict",
@@ -158,20 +157,20 @@ stratum_cc_library(
     srcs = ["adapter.cc"],
     hdrs = ["adapter.h"],
     deps = [
-        ":attribute_database",
         ":attribute_database_interface",
+        ":attribute_database",
         ":db_cc_proto",
         ":managed_attribute",
-        "//stratum/hal/lib/common:phal_interface",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
-        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
@@ -188,29 +187,12 @@ stratum_cc_library(
         ":db_cc_proto",
         ":managed_attribute",
         "@com_google_protobuf//:protobuf",
-        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
-    ],
-)
-
-stratum_cc_binary(
-    name = "phal_cli",
-    srcs = ["phal_cli.cc"],
-    arches = EMBEDDED_ARCHES,
-    deps = [
-        ":db_cc_proto",
-        ":db_cc_grpc",
-        "@com_google_protobuf//:protobuf",
-        "@com_github_grpc_grpc//:grpc++",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/lib:utils",
     ],
 )
 
@@ -224,6 +206,7 @@ stratum_cc_library(
         ":managed_attribute",
         ":threadpool_interface",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:node_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
@@ -309,13 +292,6 @@ proto_library(
 cc_proto_library(
     name = "db_cc_proto",
     deps = [":db_proto"]
-)
-
-cc_grpc_library(
-    name = "db_cc_grpc",
-    srcs = [":db_proto"],
-    deps = [":db_cc_proto"],
-    grpc_only = True,
 )
 
 stratum_cc_library(

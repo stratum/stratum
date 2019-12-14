@@ -23,11 +23,9 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <grpcpp/grpcpp.h>
 
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/glue/integral_types.h"
-#include "stratum/glue/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 
@@ -229,10 +227,6 @@ std::string ConvertMediaTypeToString(const MediaType& type);
 // A helper function taht convert Stratum HwState to OpenConfig present
 // state string (PRESENT, NOT_PRESENT)
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
-
-// A helper function to convert status to gRPC status
-::grpc::Status ToGrpcStatus(const ::util::Status& status,
-                            const std::vector<::util::Status>& details);
 }  // namespace hal
 }  // namespace stratum
 

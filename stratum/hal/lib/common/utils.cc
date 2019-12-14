@@ -19,14 +19,9 @@
 #include <sstream>  // IWYU pragma: keep
 #include <regex>
 
-#include "stratum/lib/utils.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
-#include "google/protobuf/any.pb.h"
-#include "google/rpc/code.pb.h"
-#include "google/rpc/status.pb.h"
-#include "p4/v1/p4runtime.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -398,38 +393,6 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
     default:
       return "UNKNOWN";
   }
-}
-
-// TODO(unknown): This needs to be changed later per p4 runtime error
-// reporting scheme.
-::grpc::Status ToGrpcStatus(const ::util::Status& status,
-                            const std::vector<::util::Status>& details) {
-  // We need to create a ::google::rpc::Status and populate it with all the
-  // details, then convert it to ::grpc::Status.
-  ::google::rpc::Status from;
-  if (!status.ok()) {
-    from.set_code(ToGoogleRpcCode(status.CanonicalCode()));
-    from.set_message(status.error_message());
-    // Add individual errors only when the top level error code is not OK.
-    for (const auto& detail : details) {
-      // Each individual detail is converted to another ::google::rpc::Status,
-      // which is then serialized as one proto any in 'from' message above.
-      ::p4::v1::Error error;
-      if (!detail.ok()) {
-        error.set_canonical_code(ToGoogleRpcCode(detail.CanonicalCode()));
-        error.set_code(detail.error_code());
-        error.set_message(detail.error_message());
-      } else {
-        error.set_code(::google::rpc::OK);
-      }
-      from.add_details()->PackFrom(error);
-    }
-  } else {
-    from.set_code(::google::rpc::OK);
-  }
-
-  return ::grpc::Status(ToGrpcCode(from.code()), from.message(),
-                        from.SerializeAsString());
 }
 
 }  // namespace hal

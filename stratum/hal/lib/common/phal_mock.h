@@ -44,11 +44,8 @@ class PhalMock : public PhalInterface {
   MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
                                                LedColor color, LedState state));
   MOCK_METHOD3(RegisterSfpConfigurator,
-               ::util::Status(int slot, int port,
-                   ::stratum::hal::phal::SfpConfigurator* configurator));
-  MOCK_METHOD0(GetPhalDB,
-               ::util::StatusOr<
-                   ::stratum::hal::phal::AttributeDatabaseInterface*>());
+    ::util::Status(int slot, int port,
+      ::stratum::hal::phal::SfpConfigurator* configurator));
 };
 
 }  // namespace hal

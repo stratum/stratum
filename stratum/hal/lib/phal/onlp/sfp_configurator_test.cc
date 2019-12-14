@@ -20,21 +20,18 @@
 #include <vector>
 
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/onlp/onlpphal_mock.h"
 #include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
 #include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 #include "stratum/hal/lib/phal/adapter.h"
-#include "stratum/hal/lib/phal/db.pb.h"
-#include "stratum/hal/lib/phal/db.grpc.pb.h"
 
 // Testing header files
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/init_google.h"
-// Note: EXPECT_OK already defined in google protobuf status.h
-#undef EXPECT_OK
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -103,7 +100,7 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
 
     // Setup OidList for Default switch configurator
     std::vector<OnlpOid> sfp_oids = {
-        { ONLP_SFP_ID_CREATE(port_) }
+      ONLP_SFP_ID_CREATE(static_cast<unsigned int>(port_))
     };
     EXPECT_CALL(*onlp_interface_, GetOidList(ONLP_OID_TYPE_FLAG_SFP))
           .WillOnce(Return(::util::StatusOr<std::vector<OnlpOid>>(sfp_oids)));
@@ -139,7 +136,7 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
 
     // Create Datasourcec cache policy
     ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
-                                     ::stratum::hal::TIMED_CACHE, 2));
+                                     CachePolicyConfig::TIMED_CACHE, 2));
 
     // Create a new data source
     ASSIGN_OR_RETURN(auto datasource,
@@ -148,7 +145,7 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
     // Create new sfp configurator instance
     ASSIGN_OR_RETURN(
         auto configurator,
-        OnlpSfpConfigurator::Make(card_id_, port_id_, slot_, port_,
+        OnlpSfpConfigurator::Make(card_id_, port_id_,
                                   datasource, sfp_, onlp_interface_));
 
     // Save a pointer to the configurator so we can access it
@@ -281,27 +278,22 @@ TEST_F(OnlpSfpConfiguratorTest, HandlEventNotPresent) {
 
 TEST_F(OnlpSfpConfiguratorTest, DBConcurrency) {
     // Path
-    std::vector<::stratum::hal::phal::Path> paths = {{
-        ::stratum::hal::phal::PathEntry("cards", 0),
-        ::stratum::hal::phal::PathEntry("ports", 0),
-        ::stratum::hal::phal::PathEntry("transceiver", -1, false, false, true)
+    std::vector<phal::Path> paths = {{
+        phal::PathEntry("cards", 0),
+        phal::PathEntry("ports", 0),
+        phal::PathEntry("transceiver", -1, false, false, true)
     }};
 
     // Create the attribute database
     ASSERT_OK(SetupAttributeDatabase());
 
-    // GetPhalDB call
-    EXPECT_CALL(onlpphal_, GetPhalDB())
-        .Times(4)
-        .WillRepeatedly(Return(::util::StatusOr<AttributeDatabaseInterface*>
-            (database_.get())));
 
     // initial AddSfp
     EXPECT_OK(sfp_configurator_->HandleEvent(HW_STATE_PRESENT));
 
     // create adaptor
     auto adapter =
-        absl::make_unique<::stratum::hal::phal::Adapter>(&onlpphal_);
+        absl::make_unique<phal::Adapter>(database_.get());
 
     // Issue a Get (same as GetFrontPanelPortInfo would do)
     LOG(INFO) << "Issue Get 1";
@@ -316,14 +308,14 @@ TEST_F(OnlpSfpConfiguratorTest, DBConcurrency) {
     }
 
     // Create writer and reader channels
-    std::shared_ptr<Channel<::stratum::hal::phal::PhalDB>> channel =
-        Channel<::stratum::hal::phal::PhalDB>::Create(128);
+    std::shared_ptr<Channel<phal::PhalDB>> channel =
+        Channel<phal::PhalDB>::Create(128);
 
     auto writer =
-        ChannelWriter<::stratum::hal::phal::PhalDB>::Create(channel);
+        ChannelWriter<phal::PhalDB>::Create(channel);
 
     auto reader =
-        ChannelReader<::stratum::hal::phal::PhalDB>::Create(channel);
+        ChannelReader<phal::PhalDB>::Create(channel);
 
     // Now start a subscribe on the transceiver
     LOG(INFO) << "Issue Subscribe";

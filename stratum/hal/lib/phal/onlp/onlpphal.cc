@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
@@ -130,25 +131,19 @@ OnlpPhal::~OnlpPhal() {}
   // Send event to Sfp configurator first to ensure
   // attribute database is in order before and calls are
   // made from the upper layer components.
-  const std::pair<int, int>& slot_port_pair =
-      std::make_pair(event.slot, event.port);
+  const auto slot_port_pair = std::make_pair(event.slot, event.port);
+  auto configurator =
+      gtl::FindPtrOrNull(slot_port_to_configurator_, slot_port_pair);
 
   // Check to make sure we've got a configurator for this slot/port
-  auto it = slot_port_to_configurator_.find(slot_port_pair);
-  if (it == slot_port_to_configurator_.end()) {
-    RETURN_ERROR() << "card[" << event.slot << "]/port[" << event.port << "]: "
-                   << "no configurator for this transceiver";
-  }
+  CHECK_RETURN_IF_FALSE(configurator != nullptr)
+      << "card[" << event.slot << "]/port[" << event.port << "]: "
+      << "no configurator for this transceiver";
 
-  RETURN_IF_ERROR(it->second->HandleEvent(event.state));
+  RETURN_IF_ERROR(configurator->HandleEvent(event.state));
 
   // Write the event to each writer
   return WriteTransceiverEvent(event);
-}
-
-::util::StatusOr<AttributeDatabaseInterface*> OnlpPhal::GetPhalDB() {
-  CHECK_RETURN_IF_FALSE(database_) << "no database";
-  return(database_.get());
 }
 
 ::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
@@ -229,26 +224,25 @@ OnlpPhal::~OnlpPhal() {}
 
 ::util::Status OnlpPhal::GetFrontPanelPortInfo(
     int slot, int port, FrontPanelPortInfo* fp_port_info) {
-
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
   // translate slot/port to card_id/port_id for the PhalDB
-  const std::pair<int, int>& slot_port_pair =
-      std::make_pair(slot, port);
+  const auto slot_port_pair = std::make_pair(slot, port);
   // Check to make sure we've got a configurator for this slot/port
-  auto it = slot_port_to_configurator_.find(slot_port_pair);
-  if (it == slot_port_to_configurator_.end()) {
-    RETURN_ERROR() << "slot " << slot << " port " << port << ": "
-                   << "no configurator for this GetFrontPanelPortInfo";
-  }
-  auto card_id = it->second->GetCardId();
-  auto port_id = it->second->GetPortId();
+  auto configurator =
+      gtl::FindPtrOrNull(slot_port_to_configurator_, slot_port_pair);
+  CHECK_RETURN_IF_FALSE(configurator != nullptr)
+      << "slot " << slot << " port " << port << ": "
+      << "no configurator for this GetFrontPanelPortInfo";
+
+  auto card_id = configurator->GetCardId();
+  auto port_id = configurator->GetPortId();
 
   // Call the SfpAdapter to query the Phal Attribute DB
-  SfpAdapter adapter(this);
+  SfpAdapter adapter(database_.get());
   return adapter.GetFrontPanelPortInfo(card_id, port_id, fp_port_info);
 }
 
@@ -299,19 +293,16 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 // Register the configurator so we can use later
 ::util::Status OnlpPhal::RegisterSfpConfigurator(
     int slot, int port, SfpConfigurator* configurator) {
+  const auto slot_port_pair = std::make_pair(slot, port);
 
-  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
+  auto onlp_configurator = dynamic_cast<OnlpSfpConfigurator*>(configurator);
+  CHECK_RETURN_IF_FALSE(onlp_configurator)
+      << "Can't register configurator for slot " << slot << " port " << port
+      << " because it is not of OnlpSfpConfigurator class";
 
-  // Make sure it's not already registered
-  auto it = slot_port_to_configurator_.find(slot_port_pair);
-  if (it != slot_port_to_configurator_.end()) {
-      RETURN_ERROR() << "slot: " << slot
-        << " port: " << port << " already registered";
-  }
-
-  // Register the configurator
-  slot_port_to_configurator_[slot_port_pair] =
-      static_cast<OnlpSfpConfigurator*>(configurator);
+  CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
+      &slot_port_to_configurator_, slot_port_pair, onlp_configurator))
+      << "slot: " << slot << " port: " << port << " already registered";
 
   return ::util::OkStatus();
 }

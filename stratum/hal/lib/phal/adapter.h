@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ADAPTER_H_
 #define STRATUM_HAL_LIB_PHAL_ADAPTER_H_
 
@@ -23,11 +22,11 @@
 #include <vector>
 
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/hal/lib/phal/managed_attribute.h"
 #include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/hal/lib/phal/managed_attribute.h"
 
 namespace stratum {
 namespace hal {
@@ -35,8 +34,8 @@ namespace phal {
 
 class Adapter {
  public:
-  explicit Adapter(PhalInterface* phal_interface)
-    : phal_interface_(phal_interface) {}
+  explicit Adapter(AttributeDatabaseInterface* attribute_db_interface)
+      : attribute_db_interface_(attribute_db_interface) {}
 
   virtual ~Adapter() = default;
 
@@ -48,10 +47,10 @@ class Adapter {
 
   ::util::Status Set(const AttributeValueMap& values);
 
-  PhalInterface* phal_interface_;     // not owned by this class
-  std::unique_ptr<Query> db_query_;   // used for subscribe requests
+  AttributeDatabaseInterface*
+      attribute_db_interface_;       // not owned by this class
+  std::unique_ptr<Query> db_query_;  // used for subscribe requests
 };
-
 
 }  // namespace phal
 }  // namespace hal

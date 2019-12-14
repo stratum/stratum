@@ -58,9 +58,6 @@ class PhalSim : public PhalInterface {
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status RegisterSfpConfigurator(int slot, int port,
       ::stratum::hal::phal::SfpConfigurator* configurator) override;
-  ::util::StatusOr<
-      ::stratum::hal::phal::AttributeDatabaseInterface*> GetPhalDB()
-      override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.

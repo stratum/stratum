@@ -29,7 +29,6 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/sfp_configurator.h"
 
 namespace stratum {
@@ -149,12 +148,8 @@ class PhalInterface {
 
   // Register a Sfp configurator with the phal for use with transceiver
   // state change events.
-  virtual ::util::Status RegisterSfpConfigurator(int slot, int port,
-        ::stratum::hal::phal::SfpConfigurator* configurator) = 0;
-
-  // Return the Phal Attribute DB pointer
-  virtual ::util::StatusOr<::stratum::hal::phal::AttributeDatabaseInterface*>
-        GetPhalDB() = 0;
+  virtual ::util::Status RegisterSfpConfigurator(
+      int slot, int port, phal::SfpConfigurator* configurator) = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance or any

@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_SFP_ADAPTER_H_
 #define STRATUM_HAL_LIB_PHAL_SFP_ADAPTER_H_
 
 #include <memory>
 
 #include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "stratum/hal/lib/phal/managed_attribute.h"
-#include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/adapter.h"
+#include "stratum/hal/lib/phal/attribute_database_interface.h"
+#include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/hal/lib/phal/managed_attribute.h"
 
 namespace stratum {
 namespace hal {
@@ -33,14 +32,15 @@ namespace phal {
 
 class SfpAdapter : public Adapter {
  public:
-  explicit SfpAdapter(PhalInterface* phal_interface);
+  explicit SfpAdapter(AttributeDatabaseInterface* attribute_db_interface);
+
+  SfpAdapter() = default;
 
   virtual ~SfpAdapter() = default;
 
-  ::util::Status
-  GetFrontPanelPortInfo(int slot, int port, FrontPanelPortInfo* fp_port_info);
+  ::util::Status GetFrontPanelPortInfo(int slot, int port,
+                                       FrontPanelPortInfo* fp_port_info);
 };
-
 
 }  // namespace phal
 }  // namespace hal

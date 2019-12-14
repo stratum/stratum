@@ -14,9 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <vector>
-
 #include "stratum/hal/lib/phal/sfp_adapter.h"
+
+#include <vector>
 
 #include "stratum/glue/status/status.h"
 
@@ -24,77 +24,74 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-SfpAdapter::SfpAdapter(PhalInterface* phal_interface)
-    : Adapter(phal_interface) {}
+SfpAdapter::SfpAdapter(AttributeDatabaseInterface* attribute_db_interface)
+    : Adapter(attribute_db_interface) {}
 
-::util::Status
-SfpAdapter::GetFrontPanelPortInfo(int card_id, int port_id,
-                                  FrontPanelPortInfo* fp_port_info) {
-    if (card_id < 0 || port_id < 0)
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+::util::Status SfpAdapter::GetFrontPanelPortInfo(
+    int card_id, int port_id, FrontPanelPortInfo* fp_port_info) {
+  if (card_id < 0 || port_id < 0)
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
 
-    // Create Path
-    std::vector<Path> paths = {{
-        PathEntry("cards", card_id),
-        PathEntry("ports", port_id),
-        PathEntry("transceiver", -1, false, false, true)
-    }};
+  // Create Path
+  std::vector<Path> paths = {
+      {PathEntry("cards", card_id), PathEntry("ports", port_id),
+       PathEntry("transceiver", -1, false, false, true)}};
 
-    // Get PhalDB entry for this port
-    ASSIGN_OR_RETURN(auto phaldb, Get(paths));
+  // Get PhalDB entry for this port
+  ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
-    // Get card
-    if (phaldb->cards_size() <= card_id) {
-        RETURN_ERROR() << "cards[" << card_id
-            << "] greater than number of cards " << phaldb->cards_size();
-    }
-    auto card = phaldb->cards(card_id);
+  // Get card
+  if (phaldb->cards_size() <= card_id) {
+    RETURN_ERROR() << "cards[" << card_id << "] greater than number of cards "
+                   << phaldb->cards_size();
+  }
+  auto card = phaldb->cards(card_id);
 
-    // Get port
-    if (card.ports_size() <= port_id) {
-        RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
-            << "] greater than number of ports " << card.ports_size();
-    }
-    auto phal_port = card.ports(port_id);
+  // Get port
+  if (card.ports_size() <= port_id) {
+    RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
+                   << "] greater than number of ports " << card.ports_size();
+  }
+  auto phal_port = card.ports(port_id);
 
-    // Get the SFP (transceiver)
-    if (!phal_port.has_transceiver()) {
-        RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
-            << "] has no transceiver";
-    }
-    auto sfp = phal_port.transceiver();
+  // Get the SFP (transceiver)
+  if (!phal_port.has_transceiver()) {
+    RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
+                   << "] has no transceiver";
+  }
+  auto sfp = phal_port.transceiver();
 
-    // Convert HW state and don't continue if not present
-    fp_port_info->set_hw_state(sfp.hardware_state());
-    if (fp_port_info->hw_state() == HW_STATE_NOT_PRESENT) {
-        return ::util::OkStatus();
-    }
+  // Convert HW state and don't continue if not present
+  fp_port_info->set_hw_state(sfp.hardware_state());
+  if (fp_port_info->hw_state() == HW_STATE_NOT_PRESENT) {
+    return ::util::OkStatus();
+  }
 
-    // Need to map connector_type to PhysicalPortType
-    PhysicalPortType actual_val;
-    switch (sfp.connector_type()) {
+  // Need to map connector_type to PhysicalPortType
+  PhysicalPortType actual_val;
+  switch (sfp.connector_type()) {
     case SFP_TYPE_SFP:
-        actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
-        break;
+      actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
+      break;
     case SFP_TYPE_QSFP_PLUS:
     case SFP_TYPE_QSFP:
     case SFP_TYPE_QSFP28:
-        actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
-        break;
+      actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
+      break;
     default:
-        RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
-    }
-    fp_port_info->set_physical_port_type(actual_val);
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
+  }
+  fp_port_info->set_physical_port_type(actual_val);
 
-    fp_port_info->set_media_type(sfp.media_type());
+  fp_port_info->set_media_type(sfp.media_type());
 
-    if (sfp.has_info()) {
-        fp_port_info->set_vendor_name(sfp.info().mfg_name());
-        fp_port_info->set_part_number(sfp.info().part_no());
-        fp_port_info->set_serial_number(sfp.info().serial_no());
-    }
+  if (sfp.has_info()) {
+    fp_port_info->set_vendor_name(sfp.info().mfg_name());
+    fp_port_info->set_part_number(sfp.info().part_no());
+    fp_port_info->set_serial_number(sfp.info().serial_no());
+  }
 
-    return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 }  // namespace phal
