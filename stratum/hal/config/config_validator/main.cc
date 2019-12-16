@@ -13,20 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-// This is the main entry for HAL common modules tests.
 #include <string>
 
 #include "absl/strings/str_format.h"
-#include "glog/logging.h"
 #include "gflags/gflags.h"
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/bcm/bcm.pb.h"
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/glue/logging.h"
+#include "glog/logging.h"
 #include "gtest/gtest.h"
-#include "stratum/lib/utils.h"
+#include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/bcm/bcm.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/lib/utils.h"
 
 #define TO_STR2(x) #x
 #define TO_STR(x) TO_STR2(x)
@@ -40,40 +38,35 @@ const char* kPlatformName = "DUMMY";
 namespace stratum {
 namespace hal {
 
-class ConfigValidator {
-
-
-
-};
+class ConfigValidator {};
 
 TEST(ConfigValidator, TestChassisConfig) {
-  std::string filename = absl::StrFormat("stratum/hal/config/%s/chassis_config.pb.txt", kPlatformName);
+  std::string filename = absl::StrFormat(
+      "stratum/hal/config/%s/chassis_config.pb.txt", kPlatformName);
   ChassisConfig chassis_config;
   EXPECT_OK(ReadProtoFromTextFile(filename, &chassis_config));
 }
 
 TEST(ConfigValidator, TestPhalConfig) {
-  std::string filename = absl::StrFormat("stratum/hal/config/%s/phal_config.pb.txt", kPlatformName);
+  std::string filename = absl::StrFormat(
+      "stratum/hal/config/%s/phal_config.pb.txt", kPlatformName);
   PhalInitConfig phal_config;
   EXPECT_OK(ReadProtoFromTextFile(filename, &phal_config));
 }
 
 #ifdef BCM_TARGET
 TEST(ConfigValidator, TestBcmConfig) {
-std::string filename = absl::StrFormat("stratum/hal/config/%s/base_bcm_chassis_map.pb.txt", kPlatformName);
-BcmChassisMapList bcm_chassis_map_list;
-EXPECT_OK(ReadProtoFromTextFile(filename, &bcm_chassis_map_list));
+  std::string filename = absl::StrFormat(
+      "stratum/hal/config/%s/base_bcm_chassis_map.pb.txt", kPlatformName);
+  BcmChassisMapList bcm_chassis_map_list;
+  EXPECT_OK(ReadProtoFromTextFile(filename, &bcm_chassis_map_list));
 }
 #endif
 
 }  // namespace hal
 }  // namespace stratum
 
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  ::google::InitGoogleLogging(argv[0]);
-
-
   return RUN_ALL_TESTS();
 }
