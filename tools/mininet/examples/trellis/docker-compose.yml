@@ -14,7 +14,7 @@ services:
       - "50004:50004"
     entrypoint: "/topo/entrypoint.sh"
   onos:
-    image: onosproject/onos:2.1.0
+    image: onosproject/onos:2.2.0
     ports:
       - "8181:8181" # HTTP
       - "8101:8101" # SSH (CLI)
