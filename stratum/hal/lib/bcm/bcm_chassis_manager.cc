@@ -47,6 +47,7 @@ DEFINE_string(applied_bcm_chassis_map_file,
               "/tmp/stratum/applied_bcm_chassis_map.pb.txt",
               "The file to write the applied_bcm_chassis_map proto created as "
               "part of initial config push, for debugging purposes.");
+DEFINE_bool(gen_bcm_sdk_config, false, "Generate BCM SDK config automatically");
 DEFINE_string(bcm_sdk_config_file, "/tmp/stratum/config.bcm",
               "The BCM config file loaded by SDK while initializing.");
 DEFINE_string(bcm_sdk_config_flush_file, "/tmp/stratum/config.bcm.tmp",
@@ -1636,6 +1637,10 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
+  // Use BCM SDK config directly instead of generate it.
+  if (!FLAGS_gen_bcm_sdk_config) {
+    return ::util::OkStatus();
+  }
   ASSIGN_OR_RETURN(auto bcm_sdk_config,
       GenerateBcmSdkltConfig(base_bcm_chassis_map, target_bcm_chassis_map));
   return WriteStringToFile(bcm_sdk_config, FLAGS_bcm_sdk_config_file);
