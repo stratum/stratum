@@ -1713,4 +1713,3 @@ device:
                 OPMODE: PC_PORT_OPMODE_10G_XFI
                 MAX_FRAME_SIZE: 0x3fe8
 ...
-

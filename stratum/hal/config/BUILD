@@ -15,18 +15,15 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_package",
+    "stratum_cc_test",
 )
+load(":platform_config_test.bzl", "platform_config_test")
 
-package(
-    #default_hdrs_check = "strict",
-    default_visibility = STRATUM_INTERNAL,
-)
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache v2
 
@@ -36,3 +33,15 @@ filegroup(
         "bcm_hardware_specs.pb.txt"
     ]
 )
+
+platform_config_test("x86-64-accton-as7712-32x-r0", bcm_target=True)
+platform_config_test("x86-64-dell-z9100-c2538-r0", bcm_target=True)
+platform_config_test("x86-64-inventec-d7032q28b-r0", bcm_target=True)
+platform_config_test("x86-64-quanta-ix1-rangeley-r0", bcm_target=True)
+
+platform_config_test("x86-64-accton-wedge100bf-32x-r0")
+platform_config_test("x86-64-accton-wedge100bf-65x-r0")
+platform_config_test("x86-64-delta-ag9064v1-r0")
+platform_config_test("x86-64-inventec-d5254-r0")
+platform_config_test("x86-64-stordis-bf2556x-1t-r0")
+platform_config_test("x86-64-stordis-bf6064x-t-r0")

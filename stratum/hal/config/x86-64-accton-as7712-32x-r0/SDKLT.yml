@@ -1535,5 +1535,3 @@ device:
                 OPMODE: PC_PORT_OPMODE_40G
                 MAX_FRAME_SIZE: 0x3fe8
 ...
-
-
