@@ -235,8 +235,8 @@ OnlpPhal::~OnlpPhal() {}
   auto configurator =
       gtl::FindPtrOrNull(slot_port_to_configurator_, slot_port_pair);
   CHECK_RETURN_IF_FALSE(configurator != nullptr)
-      << "slot " << slot << " port " << port << ": "
-      << "no configurator for this GetFrontPanelPortInfo";
+      << "No configurator for "
+      << "slot " << slot << " port " << port << ".";
 
   auto card_id = configurator->GetCardId();
   auto port_id = configurator->GetPortId();
