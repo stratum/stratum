@@ -121,6 +121,14 @@ _error_impl
 // Replaced by glog CHECK_NOTNULL until it is added to Abseil
 #define ABSL_DIE_IF_NULL CHECK_NOTNULL
 
+// Stringify the result of expansion of a macro to a string
+// e.g:
+// #define A text
+// STRINGIFY(A) => "text"
+// Ref: https://gcc.gnu.org/onlinedocs/gcc-4.8.5/cpp/Stringification.html
+#define STRINGIFY_INNER(s) #s
+#define STRINGIFY(s) STRINGIFY_INNER(s)
+
 }  // namespace stratum
 
 #endif  // STRATUM_LIB_MACROS_H_
