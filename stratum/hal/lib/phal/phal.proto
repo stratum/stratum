@@ -22,7 +22,8 @@ package stratum.hal;
 
 import "stratum/hal/lib/common/common.proto";
 
-enum CachePolicyType {
+message CachePolicyConfig {
+  enum CachePolicyType {
     // There is no cache, values retrieved every time they are read
     NO_CACHE = 0;
     // Never updated, all attrributes are set in the constructor
@@ -31,9 +32,7 @@ enum CachePolicyType {
     FETCH_ONCE = 2;
     // Values remain cacehd for the given duration
     TIMED_CACHE = 3;
-}
-
-message CachePolicyConfig {
+  }
   // Cache Policy Type
   CachePolicyType type = 1;
   // Timed Cache value (if type TIMED_CACHE)
@@ -42,13 +41,15 @@ message CachePolicyConfig {
 
 // This message encapsulates all the data needed to specify a line card.
 message PhalCardConfig {
-  // This message encapsulates all the data needed to specify a physical 
-  //port on a switch chassis.
+  // This message encapsulates all the data needed to specify a physical
+  // port on a switch chassis.
   message Port {
-    int32 id = 1;                 // (optional) 1-base index identifier
+    // The 1-base index of the port corresponding the transceiver
+    // module.
+    int32 port = 1;
     // Physical Port type
     PhysicalPortType physical_port_type = 2;
-    // Attribute DB Cache Policy 
+    // Attribute DB Cache Policy
     CachePolicyConfig cache_policy = 3;
     // Transceiver module presence path.
     string transceiver_presence_path = 5;
@@ -57,8 +58,8 @@ message PhalCardConfig {
     // Transceiver module TX disable path for all the 4 channels.
     repeated string tx_disable_paths = 7;
   }
-
-  int32 id = 1;                 // (optional) 1-base index identifier
+  // The 1-base index of the slot (aka linecard).
+  int32 slot = 1;
   repeated Port ports = 2;
   // Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 3;
@@ -67,16 +68,16 @@ message PhalCardConfig {
 // This message encapsulates all of the data needed to specify a fan tray.
 message PhalFanTrayConfig {
   message Fan {
-    // (optional) identifier
-    int32 id = 1;
-    // Attribute DB Cache Policy 
+    // The 1-base index of the fan within its tray.
+    int32 slot = 1;
+    // Attribute DB Cache Policy
     CachePolicyConfig cache_policy = 2;
     // Path to read the current fan speed.
     string fan_tachometer_path = 3;
     // Path to set the fan speed.
     string fan_control_path = 4;
   }
-  int32 id = 1;                 // (optional) 1-base index identifier
+  int32 slot = 1; // 1-base slot number
   string tray_presence_path = 2;
   // Fan tray info EEPROM path.
   string tray_info_path = 3;
@@ -88,24 +89,23 @@ message PhalFanTrayConfig {
 // This message encapsulates all of the data needed to specify a psu tray.
 message PhalPsuTrayConfig {
   message Psu {
-    // (optional) identifier
-    int32 id = 1;
-    // Attribute DB Cache Policy 
+    // The 1-base index of the Psu within its chassis.
+    int32 slot = 1;
+    // Attribute DB Cache Policy
     CachePolicyConfig cache_policy = 2;
   }
-  int32 id = 1;                 // (optional) 1-base index identifier
   repeated Psu psus = 2;
   // Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 3;
 }
 
-// This message encapsulates the data required by PHAL to be able to find, 
+// This message encapsulates the data required by PHAL to be able to find,
 // write and read LEDs that a platform supports.
 message PhalLedGroupConfig {
   message Led {
-    // (optional) identifier
-    int32 id = 1;
-    // Attribute DB Cache Policy 
+    // The 1-base Led index
+    int32 led_index = 1;
+    // Attribute DB Cache Policy
     CachePolicyConfig cache_policy = 2;
     LedType led_type = 3;
     // Different type of LED has different size of control path. Some of them
@@ -114,7 +114,6 @@ message PhalLedGroupConfig {
     // critical.
     repeated string led_control_path = 4;
   }
-  int32 id = 1;                 // (optional) 1-base index identifier
   repeated Led leds = 2;
   // Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 3;
@@ -124,12 +123,11 @@ message PhalLedGroupConfig {
 // and read Thermal information that a platform supports.
 message PhalThermalGroupConfig {
   message Thermal {
-    // (optional) identifier
-    int32 id = 1;
-    // Attribute DB Cache Policy 
+    // The 1-base Thermal index
+    int32 thermal_index = 1;
+    // Attribute DB Cache Policy
     CachePolicyConfig cache_policy = 2;
   }
-  int32 id = 1;                 // (optional) 1-base index identifier
   repeated Thermal thermals = 2;
   // Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 3;
@@ -151,4 +149,3 @@ message PhalInitConfig {
   // Default Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 7;
 }
-

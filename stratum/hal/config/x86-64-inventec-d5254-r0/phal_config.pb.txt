@@ -1,284 +1,284 @@
 cards {
-  id: 1
+  slot: 1
   ports {
-    id: 1
+    port: 1
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 2
+    port: 2
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 3
+    port: 3
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 4
+    port: 4
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 5
+    port: 5
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 6
+    port: 6
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 7
+    port: 7
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 8
+    port: 8
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 9
+    port: 9
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 10
+    port: 10
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 11
+    port: 11
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 12
+    port: 12
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 13
+    port: 13
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 14
+    port: 14
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 15
+    port: 15
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 16
+    port: 16
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 17
+    port: 17
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 18
+    port: 18
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 19
+    port: 19
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 20
+    port: 20
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 21
+    port: 21
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 22
+    port: 22
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 23
+    port: 23
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 24
+    port: 24
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 25
+    port: 25
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 26
+    port: 26
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 27
+    port: 27
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 28
+    port: 28
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 29
+    port: 29
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 30
+    port: 30
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 31
+    port: 31
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 32
+    port: 32
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 33
+    port: 33
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 34
+    port: 34
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 35
+    port: 35
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 36
+    port: 36
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 37
+    port: 37
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 38
+    port: 38
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 39
+    port: 39
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 40
+    port: 40
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 41
+    port: 41
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 42
+    port: 42
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 43
+    port: 43
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 44
+    port: 44
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 45
+    port: 45
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 46
+    port: 46
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 47
+    port: 47
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 48
+    port: 48
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 49
+    port: 49
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 50
+    port: 50
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 51
+    port: 51
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 52
+    port: 52
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 53
+    port: 53
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
   ports {
-    id: 54
+    port: 54
     physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
   }
 }
 fan_trays {
   fans {
-    id: 1
+    slot: 1
   }
   fans {
-    id: 2
+    slot: 2
   }
   fans {
-    id: 3
+    slot: 3
   }
   fans {
-    id: 4
+    slot: 4
   }
   fans {
-    id: 5
+    slot: 5
   }
 }
 psu_trays {
   psus {
-    id: 1
+    slot: 1
   }
   psus {
-    id: 2
+    slot: 2
   }
 }
 led_groups {
   leds {
-    id: 1
+    led_index: 1
   }
   leds {
-    id: 2
+    led_index: 2
   }
 }
 thermal_groups {
   thermals {
-    id: 1
+    thermal_index: 1
   }
   thermals {
-    id: 2
+    thermal_index: 2
   }
   thermals {
-    id: 3
+    thermal_index: 3
   }
   thermals {
-    id: 4
+    thermal_index: 4
   }
   thermals {
-    id: 5
+    thermal_index: 5
   }
   thermals {
-    id: 6
+    thermal_index: 6
   }
   thermals {
-    id: 7
+    thermal_index: 7
   }
   thermals {
-    id: 8
+    thermal_index: 8
   }
   thermals {
-    id: 9
+    thermal_index: 9
   }
   thermals {
-    id: 10
+    thermal_index: 10
   }
 }
