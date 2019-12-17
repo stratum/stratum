@@ -40,7 +40,7 @@ namespace phal {
 }
 
 ::util::Status Adapter::Set(const AttributeValueMap& attrs) {
-  return (attribute_db_interface_->Set(attrs));
+  return attribute_db_interface_->Set(attrs);
 }
 
 }  // namespace phal

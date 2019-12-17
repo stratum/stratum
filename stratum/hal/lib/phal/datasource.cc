@@ -73,16 +73,16 @@ void FetchOnce::CacheUpdated() { should_update_ = false; }
 
     switch (cache_type) {
     case ::stratum::hal::CachePolicyConfig::NEVER_UPDATE:
-        return(new NeverUpdate());
+        return new NeverUpdate();
 
     case ::stratum::hal::CachePolicyConfig::FETCH_ONCE:
-        return(new FetchOnce());
+        return new FetchOnce();
 
     case ::stratum::hal::CachePolicyConfig::TIMED_CACHE:
-        return(new TimedCache(absl::Seconds(timed_cache_value)));
+        return new TimedCache(absl::Seconds(timed_cache_value));
 
     case ::stratum::hal::CachePolicyConfig::NO_CACHE:
-        return(new NoCache());
+        return new NoCache();
 
     default:
         RETURN_ERROR(ERR_INVALID_PARAM) << "invalid cache type";
