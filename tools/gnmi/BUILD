@@ -27,7 +27,8 @@ cc_binary(
     deps = [
         "@com_github_gflags_gflags//:gflags",
         "@com_google_protobuf//:protobuf",
-        "@com_google_grpc//:grpc++",
-        "@com_github_openconfig_gnmi//:gnmi_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
     ]
 )
