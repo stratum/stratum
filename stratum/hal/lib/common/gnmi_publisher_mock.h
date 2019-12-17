@@ -39,7 +39,7 @@ class GnmiPublisherMock : public GnmiPublisher {
                ::util::Status(const ::gnmi::Path &, GnmiSubscribeStream *,
                               SubscriptionHandle *));
 
-  MOCK_METHOD1(UnSubscribe, ::util::Status(EventHandlerRecord* h));
+  MOCK_METHOD1(UnSubscribe, ::util::Status(const SubscriptionHandle& h));
 
   MOCK_METHOD1(HandlePoll, ::util::Status(const SubscriptionHandle &));
 

@@ -83,6 +83,9 @@ class SfpInfo : public OidInfo {
   MediaType GetMediaType() const;
   SfpType GetSfpType() const;
   SfpModuleType GetSfpModuleType() const;
+  std::string GetSfpVendor() const;
+  std::string GetSfpModel() const;
+  std::string GetSfpSerialNumber() const;
   void GetModuleCaps(SfpModuleCaps* caps) const;
 
   // The lifetimes of pointers returned by these functions are managed by this

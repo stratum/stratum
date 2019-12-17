@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
 #define STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
 
 #include <string>
 
+#include "gmock/gmock.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"
-#include "gmock/gmock.h"
 
 namespace stratum {
 namespace hal {
@@ -38,12 +37,12 @@ inline bool CompareValues(T expected, T actual) {
   return expected == actual;
 }
 
-template<>
+template <>
 inline bool CompareValues<float>(float expected, float actual) {
   return ::testing::Value(actual, ::testing::FloatEq(expected));
 }
 
-template<>
+template <>
 inline bool CompareValues<double>(double expected, double actual) {
   return ::testing::Value(actual, ::testing::DoubleEq(expected));
 }
@@ -95,8 +94,8 @@ using ::testing::PrintToString;
 // return false if the wrong type is passed in (integer conversions are not
 // performed).
 MATCHER_P(ContainsValue, value,
-          "ManagedAttribute* " 
-              + std::string(negation ? "doesn't store" : "stores") +
+          "ManagedAttribute* " +
+              std::string(negation ? "doesn't store" : "stores") +
               " the value: " + PrintToString(value)) {
   Attribute attribute = arg->GetValue();
   const value_type* actual_value = absl::get_if<value_type>(&attribute);
@@ -124,7 +123,7 @@ MATCHER_P(ContainsValueAfterUpdate, value,
 MATCHER_P(IsOkAndContainsValue, value,
           "::util::StatusOr<ManagedAttribute*> " +
               std::string(negation ? "isn't ok or doesn't store"
-                              : "is ok and stores") +
+                                   : "is ok and stores") +
               " the value: " + PrintToString(value)) {
   if (!arg.ok()) return false;
   ManagedAttribute* managed_attribute = arg.ValueOrDie();
@@ -144,6 +143,5 @@ template <typename T>
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-
 
 #endif  // STRATUM_HAL_LIB_PHAL_TEST_UTIL_H_
