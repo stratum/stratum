@@ -24,6 +24,10 @@ def proto_gen_deps():
             importpath = "github.com/openconfig/gnmi",
             remote = "https://github.com/bocon13/gnmi",
             commit = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a",
+            # A command line interface for gNMI client from this repo requires
+            # disabling TLS authentication.
+            patches = ["@//bazel/patches:gnmi_client.patch"],
+            patch_args = ["-p1"],
             patch_cmds = [
                 "sed -i 's#//gnmi_ext#//proto/gnmi_ext#g' proto/gnmi/BUILD.bazel",
                 "sed -i 's#import \"gnmi_ext#import \"proto/gnmi_ext#g' proto/gnmi/gnmi.proto",
