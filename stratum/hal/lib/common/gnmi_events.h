@@ -367,6 +367,21 @@ class PortAutonegChangedEvent
   const TriState new_state_;
 };
 
+// Port frequency changed event.
+class PortFrequencyChangedEvent
+    : public PerPortGnmiEvent<PortFrequencyChangedEvent> {
+ public:
+  PortFrequencyChangedEvent(uint64 node_id, uint32 port_id,
+                            uint64 new_frequency)
+      : PerPortGnmiEvent(node_id, port_id), new_frequency_(new_frequency) {}
+  ~PortFrequencyChangedEvent() override {}
+
+  uint64 GetFrequency() const { return new_frequency_; }
+
+ private:
+  const uint64 new_frequency_;
+};
+
 // Configuration Has Been Pushed event.
 class ConfigHasBeenPushedEvent
     : public GnmiEventProcess<ConfigHasBeenPushedEvent> {

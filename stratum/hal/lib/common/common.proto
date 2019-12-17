@@ -21,6 +21,8 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
+import "github.com/openconfig/ygot/proto/ywrapper/ywrapper.proto";
+
 //------------------------------------------------------------------------------
 // Misc enum types used throughout the stack.
 //------------------------------------------------------------------------------
@@ -248,6 +250,59 @@ enum FecMode {
   FEC_MODE_ON = 1;
   FEC_MODE_OFF = 2;
   FEC_MODE_AUTO = 3;
+}
+
+// The input optical power of this port in units of 0.01 decibel-milliwatt.
+// If the port is an aggregate of multiple physical channels, this attribute
+// is the total power or sum of all channels.
+//
+// The time-based values are the timestamps in nanoseconds relative to the
+// Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
+message InputPower {
+  // The instantaneous value of the statistic.
+  ywrapper.Decimal64Value instant = 1;
+  // The arithmetic mean value of the statistic over the time interval.
+  ywrapper.Decimal64Value avg = 2;
+  // The time interval over which the statistics are computed.
+  uint64 interval = 3;
+  // The maximum value of the statistic over the time interval.
+  ywrapper.Decimal64Value max = 4;
+  // The absolute time at which the maximum value occurred.
+  uint64 max_time = 5;
+  // The minimum value of the statistic over the time interval.
+  ywrapper.Decimal64Value min = 6;
+  // The absolute time at which the minimum value occurred.
+  uint64 min_time = 7;
+}
+
+// Target output optical power level of the optical channel, expressed in
+// increments of 0.01 decibel-milliwats.
+//
+// The time-based values are the timestamps in nanoseconds relative to the
+// Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
+message OutputPower {
+  // The instantaneous value of the statistic.
+  ywrapper.Decimal64Value instant = 1;
+  // The arithmetic mean value of the statistic over the time interval.
+  ywrapper.Decimal64Value avg = 2;
+  // The time interval over which the statistics are computed.
+  uint64 interval = 3;
+  // The maximum value of the statistic over the time interval.
+  ywrapper.Decimal64Value max = 4;
+  // The absolute time at which the maximum value occurred.
+  uint64 max_time = 5;
+  // The minimum value of the statistic over the time interval.
+  ywrapper.Decimal64Value min = 6;
+  // The absolute time at which the minimum value occurred.
+  uint64 min_time = 7;
+}
+
+// NOTE. The name 'LazerFrequency' was chosen to avoid the conflict with
+// 'gnmi_publisher.cc:Frequency'.
+//
+// Optical channel frequency in MHz.
+message LazerFrequency {
+  uint64 value = 1;
 }
 
 // Config-related parameters for the ports (singleton and trunk ports).
@@ -1140,6 +1195,9 @@ message DataRequest {
       Port front_panel_port_info = 16;
       Port hardware_port = 17;
       Port fec_status = 18;
+      Port frequency = 19;
+      Port input_power = 20;
+      Port output_power = 21;
     }
   }
   repeated Request requests = 1;
@@ -1169,6 +1227,9 @@ message DataResponse {
     FrontPanelPortInfo front_panel_port_info = 16;
     HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
+    LazerFrequency frequency = 19;
+    InputPower input_power = 20;
+    OutputPower output_power = 21;
   }
 }
 
@@ -1196,6 +1257,10 @@ message SetRequest {
         AutonegotiationStatus autoneg_status = 9;
         // The new forwarding viability of the port.
         ForwardingViability forwarding_viability = 10;
+        // The new optical channel frequency.
+        LazerFrequency frequency = 11;
+        // The new optical channel output power.
+        OutputPower output_power = 12;
       }
     }
     // Data required to set info for a specific node.

@@ -195,6 +195,9 @@ stratum_cc_library(
 proto_library(
     name = "common_proto",
     srcs = ["common.proto"],
+    deps = [
+        "@com_github_openconfig_ygot_proto//:ywrapper_proto",
+    ]
 )
 
 cc_proto_library(
@@ -232,6 +235,7 @@ stratum_cc_library(
         ":switch_interface",
         ":writer_interface",
         ":utils",
+        ":decimal_types_utils",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -748,6 +752,27 @@ stratum_cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_protobuf//:protobuf",
         "//stratum/lib:constants",
+    ],
+)
+
+stratum_cc_library(
+    name = "decimal_types_utils",
+    hdrs = [
+        "decimal_types_utils.h",
+    ],
+    deps = [
+        "@com_github_openconfig_hercules//:openconfig_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+    ],
+)
+
+stratum_cc_test(
+    name = "decimal_types_utils_test",
+    srcs = ["decimal_types_utils_test.cc"],
+    deps = [
+        ":decimal_types_utils",
+        "@com_google_googletest//:gtest",
+        ":test_main",
     ],
 )
 
