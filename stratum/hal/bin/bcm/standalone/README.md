@@ -37,19 +37,19 @@ SDKLT requires two Kernel modules to be installed for Packet IO and interfacing 
 Running `stratum_bcm` requires five configuration files, passed as CLI flags:
 
 - base_bcm_chassis_map_file: Protobuf defining chip capabilities and all possible port configurations of a chassis.
-    Example found under: `/stratum/hal/config/accton7710_bcm_chassis_map_minimal.pb.txt`
+    Example found under: `/stratum/hal/config/**platform name**/base_bcm_chassis_map.pb.txt`
 - chassis_config_file: Protobuf setting the config of a specific node.
     Selects a subset of the available port configurations from the chassis map. Determines
     which ports will be available.
-    Example found under: `/stratum/hal/config/accton7710_bcm_chassis_config_minimal.pb.txt`
+    Example found under: `/stratum/hal/config/**platform name**/chassis_config.pb.txt`
 - bcm_sdk_config_file: Yaml config passed to the SDKLT. Must match the chassis map.
-    Example found under: `/stratum/hal/config/AS7712-stratum.config.yml`
+    Example found under: `/stratum/hal/config/**platform name**/SDKLT.yml`
 - bcm_hardware_specs_file: ACL and UDF properties of chips. Found under: `/stratum/hal/config/bcm_hardware_specs.pb.txt`
 - bcm_serdes_db_proto_file: Contains SerDes configuration. Not implemented yet, can be an empty file.
 
 Depending on your actual cabling, you'll have to adjust the config files. Panel ports 31 & 32 are in loopback mode and should work without cables.
 
-The config flags are best stored in a flagfile `stratum.flags`:
+The config flags are best stored in a flag file `stratum.flags`:
 
 ```bash
 -external_stratum_urls=0.0.0.0:28000
