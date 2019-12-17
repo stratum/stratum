@@ -36,13 +36,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 
-int main(int argc, char** argv) {
-  ::google::InitGoogleLogging(argv[0]);
-  ::testing::InitGoogleTest(&argc, argv);
-  InitGoogle(argv[0], &argc, &argv, true);
-  return RUN_ALL_TESTS();
-}
-
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -217,7 +210,6 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
   std::unique_ptr<SwitchConfigurator> switch_configurator_;
   SfpConfigurator *sfp_configurator_{nullptr};
   AttributeGroup* sfp_;
-  std::string phal_config_path_ = "phal_init_config.pb.txt";
 };
 
 namespace {

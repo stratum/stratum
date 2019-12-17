@@ -296,7 +296,7 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
   const auto slot_port_pair = std::make_pair(slot, port);
 
   auto onlp_configurator = dynamic_cast<OnlpSfpConfigurator*>(configurator);
-  CHECK_RETURN_IF_FALSE(onlp_configurator)
+  CHECK_RETURN_IF_FALSE(onlp_configurator != nullptr)
       << "Can't register configurator for slot " << slot << " port " << port
       << " because it is not of OnlpSfpConfigurator class";
 
