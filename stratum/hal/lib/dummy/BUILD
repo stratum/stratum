@@ -96,6 +96,7 @@ stratum_cc_library(
             "//stratum/hal/lib/common:phal_interface",
             ":dummy_chassis_mgr",
             ":dummy_global_vars",
+	    ":dummy_tai",
     ],
 )
 
@@ -142,3 +143,14 @@ stratum_cc_library(
         ":dummy_test_cc_grpc",
     ]
 )
+
+stratum_cc_library(
+    name = "dummy_tai",
+    deps = [
+        "@com_github_oopt_tai//:tai_hdrs",
+        "@com_github_oopt_tai//:meta_lib",
+        "@com_github_oopt_tai//:stub_lib",
+        "//stratum/lib:utils",
+    ],
+)
+

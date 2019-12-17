@@ -298,3 +298,15 @@ def stratum_deps():
             commit = "ac2b0bf26c4fb91d883492cb85394304cde392c6",
         )
 
+# -----------------------------------------------------------------------------
+#        TAI library
+# -----------------------------------------------------------------------------
+    if "com_github_oopt_tai" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_oopt_tai",
+            remote = "https://github.com/Telecominfraproject/oopt-tai.git",
+            commit = "a4e6d90f77adabd9476da1cdbc62eb030499301a",
+            build_file = "@//bazel:external/tai.BUILD",
+        )
+
+
