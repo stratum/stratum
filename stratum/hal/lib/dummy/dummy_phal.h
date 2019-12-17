@@ -26,7 +26,6 @@
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
-#include "stratum/hal/lib/dummy/dummy_phal.h"
 
 namespace stratum {
 namespace hal {

@@ -319,6 +319,17 @@ cc_library(
     ],
 )
 
+stratum_cc_library(
+    name = "gnmi_events_lib",
+    hdrs = ["gnmi_events.h"],
+    deps = [
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/lib:timer_daemon",
+    ],
+)
+
 cc_library(
     name = "gnmi_publisher_mock",
     testonly = 1,

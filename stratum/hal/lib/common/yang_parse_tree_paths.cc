@@ -2201,7 +2201,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortFrequencyChangedEvent::GetFrequency);
 
-  // TODO: Update the chassis config in on_set functor.
+  // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
         CopyOnWriteChassisConfig* /*config*/) -> ::util::Status {
@@ -2415,7 +2415,7 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
 void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     const ywrapper::Decimal64Value& initial_value,
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
-  // TODO: Update the chassis config in on_set functor.
+  // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
         CopyOnWriteChassisConfig* /*config*/) -> ::util::Status {
@@ -2943,7 +2943,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("frequency")());
-  // TODO: replace default initial_frequency with the retried one
+  // TODO(RNDST-557): replace default initial_frequency with the retried one
   // from the chassis config.
   uint64 initial_frequency{ 0 };
   SetUpComponentsComponentOpticalChannelConfigFrequency(
@@ -3021,7 +3021,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("target-output-power")());
-  // TODO: replace default initial_output_power with the retried one
+  // TODO(RNDST-557): replace default initial_output_power with the retried one
   // from the chassis config.
   ywrapper::Decimal64Value initial_output_power;
   initial_output_power.set_digits(0);

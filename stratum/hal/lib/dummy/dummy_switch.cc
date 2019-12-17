@@ -24,6 +24,10 @@
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 
+#include "stratum/hal/lib/tai/module.h"
+#include "stratum/hal/lib/tai/networkinterface.h"
+#include "stratum/hal/lib/tai/hostinterface.h"
+
 namespace stratum {
 namespace hal {
 namespace dummy_switch {
@@ -43,9 +47,9 @@ namespace dummy_switch {
   node_port_id_to_slot.clear();
   node_port_id_to_port.clear();
   for (auto& node : config.nodes()) {
-    LOG(INFO) <<
-      absl::StrFormat("Creating node \"%s\" (id: %d). Slot %d, Index: %d.",
-                      node.name(), node.id(), node.slot(), node.index());
+    LOG(INFO) << absl::StrFormat(
+        "Creating node \"%s\" (id: %d). Slot %d, Index: %d.", node.name(),
+        node.id(), node.slot(), node.index());
     auto new_node = DummyNode::CreateInstance(node.id(), node.name(),
                                               node.slot(), node.index());
 
@@ -61,7 +65,33 @@ namespace dummy_switch {
     uint32 port_id = singleton_port.id();
     int32 slot = singleton_port.slot();
     int32 port = singleton_port.port();
-    std::pair<uint64, uint32> node_port_pair = std::make_pair(node_id, port_id);
+    std::pair<uint64, uint32> node_port_pair{node_id, port_id};
+    node_port_id_to_slot.emplace(node_port_pair, slot);
+    node_port_id_to_port.emplace(node_port_pair, port);
+  }
+
+  for (const auto& opticalPort : config.optical_ports()) {
+    if (!tai::TAIManager::Instance()->IsObjectValid(
+            tai::TAIPathValidator::NetworkPath({
+                opticalPort.module_location(), opticalPort.netif_location()}))) {
+      LOG(WARNING) << "Chassis config for optical port with module location: "
+                   << opticalPort.module_location() << " and netif location "
+                   << opticalPort.netif_location() << " doesn't match "
+                   << "with libtai.so vendor definition";
+      continue;
+    }
+
+    const auto singleton_port = opticalPort.singleton_port();
+    uint64 node_id = singleton_port.node();
+    uint32 port_id = singleton_port.id();
+    std::pair<uint64, uint32> node_port_pair{node_id, port_id};
+
+    std::pair<uint32, uint32> module_netif_pair = {
+        opticalPort.module_location(), opticalPort.netif_location()};
+    node_port_id_to_module_netif.emplace(node_port_pair, module_netif_pair);
+
+    int32 slot = singleton_port.slot();
+    int32 port = singleton_port.port();
     node_port_id_to_slot.emplace(node_port_pair, slot);
     node_port_id_to_port.emplace(node_port_pair, port);
   }
@@ -287,6 +317,22 @@ namespace dummy_switch {
         }
         break;
       }
+      case Request::kFrequency:
+      case Request::kInputPower:
+      case Request::kOutputPower: {
+        const std::pair<uint64, uint32> node_port_id =
+            GetNodePortIdByRequestCase(request);
+        if (IsNodePortIdRelatedWithTAI(node_port_id)) {
+          resp = tai::TAIManager::Instance()->GetValue(
+              request, node_port_id_to_module_netif.at(node_port_id));
+        } else {
+          resp = MAKE_ERROR(ERR_INTERNAL)
+                 << "No related TAI module with current node/port ids";
+        }
+
+        break;
+      }
+
       default:
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;
@@ -300,11 +346,31 @@ namespace dummy_switch {
   return ::util::OkStatus();
 }
 
-::util::Status DummySwitch::SetValue(uint64 node_id, const SetRequest& request,
+::util::Status DummySwitch::SetValue(uint64 /*node_id*/,
+                                     const SetRequest& request,
                                      std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
-  // TODO(Yi Tseng): Implement this method.
   LOG(INFO) << __FUNCTION__;
+
+  for (const auto& req : request.requests()) {
+    if (tai::TAIManager::Instance()->IsRequestSupported(req)) {
+      if (!IsNodePortIdRelatedWithTAI(
+              {req.port().node_id(), req.port().port_id()})) {
+        if (details) {
+          details->push_back(
+              MAKE_ERROR(ERR_INTERNAL)
+              << "No related TAI module with current node/port ids");
+        }
+        continue;
+      }
+
+      ::util::Status status = tai::TAIManager::Instance()->SetValue(
+          req, node_port_id_to_module_netif[{req.port().node_id(),
+                                             req.port().port_id()}]);
+      if (!status.ok() && details) details->push_back(status);
+    }
+  }
+
   return ::util::OkStatus();
 }
 
@@ -332,20 +398,45 @@ std::vector<DummyNode*> DummySwitch::GetDummyNodes() {
   return ::util::StatusOr<DummyNode*>(node_element->second);
 }
 
+/*!
+ * \brief DummySwitch::GetNodePortIdByRequestCase method extracts from \param
+ * request correct node_id/port_id and \return them
+ */
+std::pair<uint64, uint32> DummySwitch::GetNodePortIdByRequestCase(
+    const DataRequest_Request& request) {
+  switch (request.request_case()) {
+    case Request::kFrequency:
+      return {request.frequency().node_id(), request.frequency().port_id()};
+    case Request::kInputPower:
+      return {request.input_power().node_id(), request.input_power().port_id()};
+    case Request::kOutputPower:
+      return {request.output_power().node_id(),
+              request.output_power().port_id()};
+    default:
+      return {};
+  }
+  return {};
+}
+
 std::unique_ptr<DummySwitch>
   DummySwitch::CreateInstance(PhalInterface* phal_interface,
                               DummyChassisManager* chassis_mgr) {
   return absl::WrapUnique(new DummySwitch(phal_interface, chassis_mgr));
 }
 
-DummySwitch::~DummySwitch() {}
+DummySwitch::~DummySwitch() { tai::TAIManager::Delete(); }
 
 DummySwitch::DummySwitch(PhalInterface* phal_interface,
                          DummyChassisManager* chassis_mgr)
-  : phal_interface_(phal_interface),
-    chassis_mgr_(chassis_mgr),
-    dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
-    gnmi_event_writer_(nullptr) {
+    : phal_interface_(phal_interface),
+      chassis_mgr_(chassis_mgr),
+      dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
+      gnmi_event_writer_(nullptr) {}
+
+bool DummySwitch::IsNodePortIdRelatedWithTAI(
+    const std::pair<uint64, uint32>& node_port_id) {
+  const auto kIterator = node_port_id_to_module_netif.find(node_port_id);
+  return kIterator != node_port_id_to_module_netif.end();
 }
 
 }  // namespace dummy_switch

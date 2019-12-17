@@ -160,7 +160,21 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   // Translation from port ID to node ID.
   absl::flat_hash_map<uint32, uint64> port_id_to_node_id;
   std::unordered_set<std::string> singleton_names;
+
   for (const auto& singleton : change.new_config_.singleton_ports()) {
+    if (singleton_names.count(singleton.name())) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate singleton port name: " << singleton.name();
+    }
+    const NodeConfigParams& node_config =
+        node_id_to_node[singleton.node()]
+            ? node_id_to_node[singleton.node()]->config_params()
+            : empty_node_config;
+    AddSubtreeInterfaceFromSingleton(singleton, node_config);
+    port_id_to_node_id[singleton.id()] = singleton.node();
+    singleton_names.insert(singleton.name());
+  }
+  for (const auto& optical : change.new_config_.optical_ports()) {
+    SingletonPort singleton = optical.singleton_port();
     if (singleton_names.count(singleton.name())) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate singleton port name: " << singleton.name();
     }

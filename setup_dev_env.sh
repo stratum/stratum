@@ -119,6 +119,7 @@ if [ $ERR -ne 0 ]; then
 fi
 
 DOCKER_RUN_OPTIONS="--rm -v $THIS_DIR:/stratum"
+DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS --expose 28000 --publish 28000:28000"
 if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi

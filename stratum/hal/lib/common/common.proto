@@ -419,6 +419,19 @@ message SingletonPort {
   PortConfigParams config_params = 8;
 }
 
+// OpticalPort uniquely identifies a single physical optical port on a single
+// chassis and all its flow-related and config-related parameters (As
+// SingletonPort)
+message OpticalPort {
+  SingletonPort singleton_port = 1;
+
+  // module location corresponding to module that the port belongs to.
+  uint32 module_location = 2; // required
+
+  // unique netif location that represents the optical port on the module
+  uint32 netif_location = 3; // required
+}
+
 // TrunkPort uniquely identifies a single trunk port on a single chassis and
 // all its flow-related and config-related parameters. This message is the
 // only message we will use to specify trunk ports in the HAL and avoid
@@ -717,6 +730,7 @@ message ChassisConfig {
   Chassis chassis = 2;
   repeated Node nodes = 3;
   repeated SingletonPort singleton_ports = 4;
+  repeated OpticalPort optical_ports = 8;
   repeated TrunkPort trunk_ports = 5;
   repeated PortGroup port_groups = 6;
   VendorConfig vendor_config = 7;
