@@ -28,6 +28,7 @@
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -1301,6 +1302,16 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
 
   ASSERT_OK(p4_service_->Teardown());
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
+}
+
+TEST_P(P4ServiceTest, GetCapabilities) {
+  ::grpc::ServerContext context;
+  ::p4::v1::CapabilitiesRequest request;
+  ::p4::v1::CapabilitiesResponse response;
+  ::grpc::Status status =
+    p4_service_->Capabilities(&context, &request, &response);
+  EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
+  ASSERT_EQ(response.p4runtime_api_version(), STRINGIFY(P4RUNTIME_VER));
 }
 
 INSTANTIATE_TEST_SUITE_P(P4ServiceTestWithMode, P4ServiceTest,
