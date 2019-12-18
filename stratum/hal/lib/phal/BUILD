@@ -28,6 +28,8 @@ load(
     "HOST_ARCHES",
 )
 
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+
 package(
     #default_hdrs_check = "strict",
     default_visibility = STRATUM_INTERNAL,
@@ -294,6 +296,13 @@ cc_proto_library(
     deps = [":db_proto"]
 )
 
+cc_grpc_library(
+    name = "db_cc_grpc",
+    srcs = [":db_proto"],
+    deps = [":db_cc_proto"],
+    grpc_only = True,
+)
+
 stratum_cc_library(
     name = "dummy_threadpool",
     srcs = ["dummy_threadpool.cc"],
@@ -360,6 +369,75 @@ stratum_cc_library(
         "//stratum/lib:macros",
     ],
 )
+
+stratum_cc_library(
+    name = "phaldb_service",
+    srcs = ["phaldb_service.cc"],
+    hdrs = ["phaldb_service.h"],
+    deps = [
+        ":adapter",
+        ":attribute_database_interface",
+        ":db_cc_grpc",
+        ":db_cc_proto",
+        ":managed_attribute",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@com_google_protobuf//:protobuf",
+        "@com_googlesource_code_re2//:re2",
+        "//stratum/glue:logging",
+        "//stratum/glue/gtl:cleanup",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:channel_writer_wrapper",
+        "//stratum/hal/lib/common:error_buffer",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/common:switch_interface",
+        "//stratum/hal/lib/common:utils",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/channel",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/public/lib:error",
+    ],
+)
+
+# stratum_cc_test(
+#     name = "phaldb_service_test",
+#     srcs = [
+#         "phaldb_service_test.cc",
+#     ],
+#     deps = [
+#         ":phaldb_service",
+#         "//stratum/hal/lib/phal:attribute_database_mock",
+#         "//stratum/hal/lib/common:error_buffer",
+#         "//stratum/hal/lib/common:phal_mock",
+#         "@com_github_google_glog//:glog",
+#         "@com_google_googletest//:gtest",
+#         "@com_google_absl//absl/base:core_headers",
+#         "@com_google_absl//absl/memory",
+#         "@com_google_absl//absl/numeric:int128",
+#         "@com_google_absl//absl/strings",
+#         "@com_github_grpc_grpc//:grpc++",
+#         "@com_google_googleapis//google/rpc:code_cc_proto",
+#         "//stratum/glue/net_util:ports",
+#         "//stratum/glue/status:status_test_util",
+#         "//stratum/lib:utils",
+#         "//stratum/lib/security:auth_policy_checker_mock",
+#         "//stratum/lib/test_utils:matchers",
+#         "//stratum/public/lib:error",
+#         "@com_google_googletest//:gtest_main",
+#     ],
+# )
 
 ''' FIXME(boc) google only
 stratum_cc_library(
