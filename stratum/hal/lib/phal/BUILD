@@ -411,6 +411,24 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_binary(
+    name = "phal_cli",
+    srcs = ["phal_cli.cc"],
+    arches = EMBEDDED_ARCHES,
+    deps = [
+        ":db_cc_grpc",
+        ":db_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_protobuf//:protobuf",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+    ],
+)
+
 # stratum_cc_test(
 #     name = "phaldb_service_test",
 #     srcs = [

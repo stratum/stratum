@@ -39,12 +39,13 @@
 
 namespace stratum {
 namespace hal {
+namespace phal {
 
 // The "PhalDbService" class implements PhalDbService::Service. It handles all
 // the RPCs that are part of the Phal DB API API.
-class PhalDbService final : public phal::PhalDb::Service {
+class PhalDbService final : public PhalDb::Service {
  public:
-  PhalDbService(phal::AttributeDatabaseInterface* attribute_db_interface);
+  PhalDbService(AttributeDatabaseInterface* attribute_db_interface);
 
   virtual ~PhalDbService();
 
@@ -62,18 +63,18 @@ class PhalDbService final : public phal::PhalDb::Service {
 
   // Get a database entry
   ::grpc::Status Get(::grpc::ServerContext* context,
-                     const phal::GetRequest* req,
-                     phal::GetResponse* resp) override;
+                     const GetRequest* req,
+                     GetResponse* resp) override;
 
   // Subscribe to a database entry
   ::grpc::Status Subscribe(
-      ::grpc::ServerContext* context, const phal::SubscribeRequest* req,
-      ::grpc::ServerWriter<phal::SubscribeResponse>* resp) override;
+      ::grpc::ServerContext* context, const SubscribeRequest* req,
+      ::grpc::ServerWriter<SubscribeResponse>* resp) override;
 
   // Set a database entry
   ::grpc::Status Set(::grpc::ServerContext* context,
-                     const phal::SetRequest* req,
-                     phal::SetResponse* resp) override;
+                     const SetRequest* req,
+                     SetResponse* resp) override;
 
   // PhalDbService is neither copyable nor movable.
   PhalDbService(const PhalDbService&) = delete;
@@ -81,8 +82,19 @@ class PhalDbService final : public phal::PhalDb::Service {
   PhalDbService& operator=(PhalDbService&&) = default;
 
  private:
+  // Actual implementations of the calls. To be moved into an impl.
+  ::util::Status DoGet(::grpc::ServerContext* context,
+                       const GetRequest* req, GetResponse* resp);
+
+  ::util::Status DoSet(::grpc::ServerContext* context,
+                       const SetRequest* req, SetResponse* resp);
+
+  ::util::Status DoSubscribe(
+      ::grpc::ServerContext* context, const SubscribeRequest* req,
+      ::grpc::ServerWriter<SubscribeResponse>* stream);
+
   // AttributeDB Interface
-  phal::AttributeDatabaseInterface* attribute_db_interface_;
+  AttributeDatabaseInterface* attribute_db_interface_;
 
   // Mutex which protects the creation and destruction of the
   // subscriber channels map.
@@ -90,7 +102,7 @@ class PhalDbService final : public phal::PhalDb::Service {
 
   // Map of subscriber channels (key is thread id, given that
   // each grpc request will have a different tid.
-  std::map<pthread_t, std::shared_ptr<Channel<phal::PhalDB>>>
+  std::map<pthread_t, std::shared_ptr<Channel<PhalDB>>>
       subscriber_channels_ GUARDED_BY(subscriber_thread_lock_);
 
   // Unique pointer to the gRPC server serving the external RPC connections
@@ -100,6 +112,7 @@ class PhalDbService final : public phal::PhalDb::Service {
   friend class PhalDbServiceTest;
 };
 
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 

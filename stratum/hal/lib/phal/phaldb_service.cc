@@ -58,9 +58,10 @@ DECLARE_uint32(grpc_max_send_msg_size);
 
 namespace stratum {
 namespace hal {
+namespace phal {
 
 PhalDbService::PhalDbService(
-    phal::AttributeDatabaseInterface* attribute_db_interface)
+    AttributeDatabaseInterface* attribute_db_interface)
     : attribute_db_interface_(ABSL_DIE_IF_NULL(attribute_db_interface)) {}
 
 PhalDbService::~PhalDbService() {}
@@ -134,8 +135,8 @@ PhalDbService::~PhalDbService() {}
 namespace {
 
 // Parse PB Query string to Phal DB Path
-::util::StatusOr<phal::Path> ParseQuery(const std::string& query) {
-  phal::Path path;
+::util::StatusOr<Path> ParseQuery(const std::string& query) {
+  Path path;
 
   std::vector<std::string> query_fields = absl::StrSplit(query, "/");
   bool use_terminal_group = false;
@@ -150,7 +151,7 @@ namespace {
     RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
     RE2 bracket_regex(R"#(\[(\d+)\])#");
 
-    phal::PathEntry entry;
+    PathEntry entry;
 
     std::string bracket_match;
     CHECK_RETURN_IF_FALSE(
@@ -170,16 +171,16 @@ namespace {
 }
 
 // Convert from ProtoBuf Path to PhalDB Path
-::util::StatusOr<phal::Path> ToPhalDBPath(phal::PathQuery req_path) {
+::util::StatusOr<Path> ToPhalDBPath(PathQuery req_path) {
   // If no path entries return error
   if (req_path.entries_size() == 0) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "No Path";
   }
 
   // Create Attribute DB Path
-  phal::Path path;
+  Path path;
   for (const auto& ent : req_path.entries()) {
-    phal::PathEntry entry;
+    PathEntry entry;
     entry.name = ent.name();
     entry.index = ent.index();
     entry.indexed = ent.indexed();
@@ -203,7 +204,7 @@ namespace {
     for (const auto& detail : details) {
       // Each individual detail is converted to another ::google::rpc::Status,
       // which is then serialized as one proto any in 'from' message above.
-      phal::Error error;
+      Error error;
       if (!detail.ok()) {
         error.set_canonical_code(ToGoogleRpcCode(detail.CanonicalCode()));
         error.set_code(detail.error_code());
@@ -223,49 +224,34 @@ namespace {
 
 }  // namespace
 
+::util::Status PhalDbService::DoGet(::grpc::ServerContext* context,
+                                    const GetRequest* req,
+                                    GetResponse* resp) {
+  ASSIGN_OR_RETURN(auto path, ToPhalDBPath(req->path()));
+  std::vector<Path> paths = {path};
+  auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
+  ASSIGN_OR_RETURN(auto result, adapter->Get(paths));
+  LOG(INFO) << "Phal Get result:" << result->ShortDebugString();
+  *resp->mutable_phal_db() = *result;
+
+  return ::util::OkStatus();
+}
+
 ::grpc::Status PhalDbService::Get(::grpc::ServerContext* context,
-                                  const phal::GetRequest* req,
-                                  phal::GetResponse* resp) {
-  // RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDbService, Get,
-  // context);
+                                  const GetRequest* req,
+                                  GetResponse* resp) {
+  return ToPhalGrpcStatus(DoGet(context, req, resp), {});
+}
 
-  ::util::Status status;
-  ::util::StatusOr<phal::Path> result;
-
-  // Convert to PhalDB Path
-  switch (req->query_case()) {
-    case phal::GetRequest::kStr: {
-      result = ParseQuery(req->str());
-      break;
-    }
-    case phal::GetRequest::kPath: {
-      result = ToPhalDBPath(req->path());
-      break;
-    }
-    default:
-      return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                            "Invalid query in Get request.");
-  }
-
-  if (!result.ok()) return ToPhalGrpcStatus(result.status(), {});
-
-  auto path = result.ConsumeValueOrDie();
-
-  // Issue the get
-  auto adapter = absl::make_unique<phal::Adapter>(attribute_db_interface_);
-  auto phaldb_res = adapter->Get({path});
-  if (phaldb_res.ok()) {
-    auto phaldb_resp = phaldb_res.ConsumeValueOrDie();
-    *resp->mutable_phal_db() = *phaldb_resp;
-  }
-
-  // Convert to grpc status and return
-  return ToPhalGrpcStatus(phaldb_res.status(), {});
+::util::Status PhalDbService::DoSet(::grpc::ServerContext* context,
+                                    const SetRequest* req,
+                                    SetResponse* resp) {
+  return ::util::OkStatus();
 }
 
 ::grpc::Status PhalDbService::Set(::grpc::ServerContext* context,
-                                  const phal::SetRequest* req,
-                                  phal::SetResponse* resp) {
+                                  const SetRequest* req,
+                                  SetResponse* resp) {
   // RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDbService, Set,
   // context);
 
@@ -273,22 +259,22 @@ namespace {
 
   ::util::Status status = ::util::OkStatus();
   std::vector<::util::Status> results = {};
-  phal::AttributeValueMap attrs;
+  AttributeValueMap attrs;
 
   // Spin thru each update
   for (int i = 0; i < req->updates_size(); i++) {
-    ::util::StatusOr<phal::Path> attr_res;
+    ::util::StatusOr<Path> attr_res;
 
     // Get the update
     const auto& update = req->updates(i);
 
     // Convert to PhalDB Path
     switch (update.query_case()) {
-      case phal::Update::kStr: {
+      case Update::kStr: {
         attr_res = ParseQuery(update.str());
         break;
       }
-      case phal::Update::kPath: {
+      case Update::kPath: {
         attr_res = ToPhalDBPath(update.path());
         break;
       }
@@ -309,39 +295,39 @@ namespace {
 
     // Create attribute path:val pair base on value type
     switch (update.value().value_case()) {
-      case phal::UpdateValue::kDoubleVal: {
+      case UpdateValue::kDoubleVal: {
         attrs[path] = update.value().double_val();
         break;
       }
-      case phal::UpdateValue::kFloatVal: {
+      case UpdateValue::kFloatVal: {
         attrs[path] = update.value().float_val();
         break;
       }
-      case phal::UpdateValue::kInt32Val: {
+      case UpdateValue::kInt32Val: {
         attrs[path] = update.value().int32_val();
         break;
       }
-      case phal::UpdateValue::kInt64Val: {
+      case UpdateValue::kInt64Val: {
         attrs[path] = update.value().int64_val();
         break;
       }
-      case phal::UpdateValue::kUint32Val: {
+      case UpdateValue::kUint32Val: {
         attrs[path] = update.value().uint32_val();
         break;
       }
-      case phal::UpdateValue::kUint64Val: {
+      case UpdateValue::kUint64Val: {
         attrs[path] = update.value().uint64_val();
         break;
       }
-      case phal::UpdateValue::kBoolVal: {
+      case UpdateValue::kBoolVal: {
         attrs[path] = update.value().bool_val();
         break;
       }
-      case phal::UpdateValue::kStringVal: {
+      case UpdateValue::kStringVal: {
         attrs[path] = update.value().string_val();
         break;
       }
-      case phal::UpdateValue::kBytesVal: {
+      case UpdateValue::kBytesVal: {
         attrs[path] = update.value().bytes_val();
         break;
       }
@@ -368,7 +354,7 @@ namespace {
     results = {};
 
     // Do set for all attribute pairs
-    auto adapter = absl::make_unique<phal::Adapter>(attribute_db_interface_);
+    auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
     status = adapter->Set(attrs);
   }
 
@@ -376,119 +362,125 @@ namespace {
 }
 
 ::grpc::Status PhalDbService::Subscribe(
-    ::grpc::ServerContext* context, const phal::SubscribeRequest* req,
-    ::grpc::ServerWriter<phal::SubscribeResponse>* stream) {
+    ::grpc::ServerContext* context, const SubscribeRequest* req,
+    ::grpc::ServerWriter<SubscribeResponse>* stream) {
   // RETURN_IF_NOT_AUTHORIZED(auth_policy_checker_, PhalDbService, Subscribe,
   //  context);
 
-  ::util::StatusOr<phal::Path> result;
+#if 0
 
-  // Convert to PhalDB Path
-  switch (req->query_case()) {
-    case phal::SubscribeRequest::kStr: {
-      result = ParseQuery(req->str());
-      break;
-    }
-    case phal::SubscribeRequest::kPath: {
-      result = ToPhalDBPath(req->path());
-      break;
-    }
-    default:
-      return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
-                            "Invalid query in Subscribe request.");
-  }
+  // ::util::StatusOr<Path> result;
 
-  // Save status
-  ::util::Status status = result.status();
+  // // Convert to PhalDB Path
+  // switch (req->query_case()) {
+  //   case SubscribeRequest::kStr: {
+  //     result = ParseQuery(req->str());
+  //     break;
+  //   }
+  //   case SubscribeRequest::kPath: {
+  //     result = ToPhalDBPath(req->path());
+  //     break;
+  //   }
+  //   default:
+  //     return ::grpc::Status(::grpc::StatusCode::INVALID_ARGUMENT,
+  //                           "Invalid query in Subscribe request.");
+  // }
+
+  // // Save status
+  // ::util::Status status = result.status();
+
+  ASSIGN_OR_RETURN(auto path, ToPhalDBPath(req->path()));
 
   // If conversion worked
-  if (result.ok()) {
-    auto path = result.ConsumeValueOrDie();
+  // if (result.ok()) {
+  // auto path = result.ConsumeValueOrDie();
 
-    // Create writer and reader channels
-    std::shared_ptr<Channel<phal::PhalDB>> channel =
-        Channel<phal::PhalDB>::Create(128);
+  // Create writer and reader channels
+  std::shared_ptr<Channel<PhalDB>> channel =
+      Channel<PhalDB>::Create(128);
 
-    {
-      // Lock subscriber channels
-      absl::MutexLock l(&subscriber_thread_lock_);
+  {
+    // Lock subscriber channels
+    absl::MutexLock l(&subscriber_thread_lock_);
 
-      // Save channel to subscriber channel map
-      subscriber_channels_[pthread_self()] = channel;
-    }
+    // Save channel to subscriber channel map
+    subscriber_channels_[pthread_self()] = channel;
+  }
 
-    auto writer = ChannelWriter<phal::PhalDB>::Create(channel);
+  auto writer = ChannelWriter<PhalDB>::Create(channel);
 
-    auto reader = ChannelReader<phal::PhalDB>::Create(channel);
+  auto reader = ChannelReader<PhalDB>::Create(channel);
 
-    // Issue the subscribe
-    auto adapter = absl::make_unique<phal::Adapter>(attribute_db_interface_);
-    status = adapter->Subscribe({path}, std::move(writer),
-                                absl::Seconds(req->polling_interval()));
+  // Issue the subscribe
+  auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
+  status = adapter->Subscribe({path}, std::move(writer),
+                              absl::Seconds(req->polling_interval()));
 
-    // If Subscribe ok
-    if (status.ok()) {
-      // Loop around processing messages from the PhalDB writer
-      // Note: if the client dies we'll only close the channel
-      //       and thus cancel the PhalDB subscription once we
-      //       get something from the PhalDB subscription (i.e.
-      //       if the poll timer expires and something has changed).
-      //       We could potentially put something in here to check
-      //       the stream and channel for changes but for now this
-      //       will do.
-      while (true) {
-        phal::PhalDB phaldb_resp;
-        int code =
-            reader->Read(&phaldb_resp, absl::InfiniteDuration()).error_code();
+  // If Subscribe ok
+  if (status.ok()) {
+    // Loop around processing messages from the PhalDB writer
+    // Note: if the client dies we'll only close the channel
+    //       and thus cancel the PhalDB subscription once we
+    //       get something from the PhalDB subscription (i.e.
+    //       if the poll timer expires and something has changed).
+    //       We could potentially put something in here to check
+    //       the stream and channel for changes but for now this
+    //       will do.
+    while (true) {
+      PhalDB phaldb_resp;
+      int code =
+          reader->Read(&phaldb_resp, absl::InfiniteDuration()).error_code();
 
-        // Exit if the channel is closed
-        if (code == ERR_CANCELLED) {
-          status = MAKE_ERROR(ERR_INTERNAL)
-                   << "PhalDB Subscribe closed the channel";
-          break;
-        }
+      // Exit if the channel is closed
+      if (code == ERR_CANCELLED) {
+        status = MAKE_ERROR(ERR_INTERNAL)
+                 << "PhalDB Subscribe closed the channel";
+        break;
+      }
 
-        // Error if read timesout
-        if (code == ERR_ENTRY_NOT_FOUND) {
-          LOG(ERROR) << "Subscribe read with infinite timeout "
-                     << "failed with ENTRY_NOT_FOUND.";
-          continue;
-        }
+      // Error if read timesout
+      if (code == ERR_ENTRY_NOT_FOUND) {
+        LOG(ERROR) << "Subscribe read with infinite timeout "
+                   << "failed with ENTRY_NOT_FOUND.";
+        continue;
+      }
 
-        // If we get nothing in message then close the channel
-        // - this is also used to mock the PhalDB Subscribe
-        if (phaldb_resp.ByteSizeLong() == 0) {
-          status = MAKE_ERROR(ERR_INTERNAL)
-                   << "Subscribe read returned zero bytes.";
-          break;
-        }
+      // If we get nothing in message then close the channel
+      // - this is also used to mock the PhalDB Subscribe
+      if (phaldb_resp.ByteSizeLong() == 0) {
+        status = MAKE_ERROR(ERR_INTERNAL)
+                 << "Subscribe read returned zero bytes.";
+        break;
+      }
 
-        // Send message to client
-        phal::SubscribeResponse resp;
-        *resp.mutable_phal_db() = phaldb_resp;
+      // Send message to client
+      SubscribeResponse resp;
+      *resp.mutable_phal_db() = phaldb_resp;
 
-        // If Write fails then break out of the loop
-        if (!stream->Write(resp)) {
-          status = MAKE_ERROR(ERR_INTERNAL) << "Subscribe stream write failed";
-          break;
-        }
+      // If Write fails then break out of the loop
+      if (!stream->Write(resp)) {
+        status = MAKE_ERROR(ERR_INTERNAL) << "Subscribe stream write failed";
+        break;
       }
     }
-
-    {
-      // Lock subscriber channels
-      absl::MutexLock l(&subscriber_thread_lock_);
-
-      // Close the channel which will then cause the PhalDB writer
-      // to close and exit
-      channel->Close();
-      subscriber_channels_.erase(pthread_self());
-    }
   }
+
+  {
+    // Lock subscriber channels
+    absl::MutexLock l(&subscriber_thread_lock_);
+
+    // Close the channel which will then cause the PhalDB writer
+    // to close and exit
+    channel->Close();
+    subscriber_channels_.erase(pthread_self());
+  }
+  // }
 
   // Convert to grpc status and return
   return ToPhalGrpcStatus(status, {});
+#endif
 }
 
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

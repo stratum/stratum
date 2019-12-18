@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 syntax = "proto3";
 
 option cc_generic_services = false;
@@ -157,7 +156,7 @@ message Transceiver {
   int32 cable_length = 11;
   string cable_length_desc = 12;
   double temperature = 13;  // Measured in degrees Celsius.
-  double vcc = 14;         // Measured in volts.
+  double vcc = 14;          // Measured in volts.
   AlarmStatus temperature_alarm = 15;
   AlarmStatus vcc_alarm = 16;
   int32 channel_count = 17;
@@ -195,19 +194,17 @@ message TemperatureData {
 // Attribute DB (i.e. Phal DB) services
 service PhalDb {
   // Get one or more attributes
-  rpc Get(GetRequest) returns(GetResponse) {
-  }
+  rpc Get(GetRequest) returns (GetResponse) {}
 
   // Subscribe to one or more attributes
-  rpc Subscribe(SubscribeRequest) returns(stream SubscribeResponse) {
-  }
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {}
 
   // Set one or more attributes
-  rpc Set(SetRequest) returns(SetResponse) {
-  }
+  rpc Set(SetRequest) returns (SetResponse) {}
 }
 
 message PathQuery {
+  // TODO: add some doc strings
   message PathEntry {
     string name = 1;
     int32 index = 2;
@@ -219,10 +216,7 @@ message PathQuery {
 }
 
 message GetRequest {
-  oneof query {
-    string str = 1;
-    PathQuery path = 2;
-  }
+  PathQuery path = 2;
 }
 
 message GetResponse {
@@ -230,11 +224,8 @@ message GetResponse {
 }
 
 message SubscribeRequest {
-  oneof query {
-    string str = 1;
-    PathQuery path = 2;
-  }
-  int32 polling_interval = 3; //seconds
+  PathQuery path = 2;
+  int32 polling_interval = 3;  // seconds
 }
 
 message SubscribeResponse {
@@ -268,8 +259,7 @@ message SetRequest {
   repeated Update updates = 1;
 }
 
-message SetResponse {
-}
+message SetResponse {}
 
 // Error message used to report a single update error for a Set RPC.
 message Error {
