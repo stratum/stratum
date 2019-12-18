@@ -203,7 +203,8 @@ int Main(int argc, char** argv) {
     status = stub->Set(&ctx, req, &resp);
     CHECK_AND_PRINT_RESP(status, resp)
   } else if (cmd == "sub-onchange") {
-    stream_reader_writer = stub->Subscribe(&ctx).get();
+    auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
+    stream_reader_writer = stream_reader_writer_ptr.get();
     ::gnmi::SubscribeRequest req = build_gnmi_sub_onchange_req(path);
     PRINT_MSG(req, "REQUEST")
     if (!stream_reader_writer->Write(req)) {
@@ -216,7 +217,8 @@ int Main(int argc, char** argv) {
     status = stream_reader_writer->Finish();
     LOG_IF_NOT_OK(status);
   } else if (cmd == "sub-sample") {
-    stream_reader_writer = stub->Subscribe(&ctx).get();
+    auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
+    stream_reader_writer = stream_reader_writer_ptr.get();
     ::gnmi::SubscribeRequest req =
         build_gnmi_sub_sample_req(path, FLAGS_interval);
     PRINT_MSG(req, "REQUEST")
@@ -242,10 +244,10 @@ int Main(int argc, char** argv) {
 }
 
 void HandleSignal(int signal) {
-  // Send empty subscribe request to close the stream.
-  ::gnmi::SubscribeRequest req;
-  if (!stream_reader_writer->Write(req)) {
-    std::cout << "Can not write request" << std::endl;
+  (void)signal;
+  // Terminate the stream
+  if (stream_reader_writer != nullptr) {
+    stream_reader_writer->WritesDone();
   }
 }
 
