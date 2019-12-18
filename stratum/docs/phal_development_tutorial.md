@@ -47,6 +47,7 @@ many environments, the PHAL is broken into several layers:
     of adapters can run in parallel.
 
 <center>
+
 ![drawing](images/attrib_db_layout_simple.png)
 
 *Anatomy of a PHAL* </center>

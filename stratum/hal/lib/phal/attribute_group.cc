@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/container/node_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
@@ -285,7 +286,7 @@ class AttributeGroupInternal : public AttributeGroup,
   AttributeGroupVersionId version_id_ = 0;
 
   absl::Mutex registered_query_lock_;
-  absl::flat_hash_map<AttributeGroupQuery*, RegisteredQuery> registered_queries_
+  absl::node_hash_map<AttributeGroupQuery*, RegisteredQuery> registered_queries_
       GUARDED_BY(registered_query_lock_);
 };
 }  // namespace
