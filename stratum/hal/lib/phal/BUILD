@@ -153,6 +153,50 @@ stratum_cc_test(
 )
 
 stratum_cc_library(
+    name = "adapter",
+    srcs = ["adapter.cc"],
+    hdrs = ["adapter.h"],
+    deps = [
+        ":attribute_database_interface",
+        ":attribute_database",
+        ":db_cc_proto",
+        ":managed_attribute",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_protobuf//:protobuf",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/channel",
+    ],
+)
+
+stratum_cc_library(
+    name = "sfp_adapter",
+    srcs = ["sfp_adapter.cc"],
+    hdrs = ["sfp_adapter.h"],
+    deps = [
+        ":adapter",
+        ":attribute_database_interface",
+        ":db_cc_proto",
+        ":managed_attribute",
+        "@com_google_protobuf//:protobuf",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/lib/channel",
+    ],
+)
+
+stratum_cc_library(
     name = "attribute_group",
     srcs = ["attribute_group.cc"],
     hdrs = ["attribute_group.h"],
@@ -162,6 +206,7 @@ stratum_cc_library(
         ":managed_attribute",
         ":threadpool_interface",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:node_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",

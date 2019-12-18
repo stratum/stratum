@@ -13,14 +13,14 @@
 // limitations under the License.
 
 
+#include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>
 
-#include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
 #include "stratum/hal/lib/common/common.pb.h"
 
-using namespace std;  // NOLINT
 using namespace google::protobuf::util;  // NOLINT
 
 namespace stratum {
@@ -28,31 +28,32 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-OnlpSfpConfigurator::OnlpSfpConfigurator(int id,
-    std::shared_ptr<OnlpSfpDataSource>datasource,
+OnlpSfpConfigurator::OnlpSfpConfigurator(
+    int card_id, int port_id, std::shared_ptr<OnlpSfpDataSource> datasource,
     AttributeGroup* sfp_group, OnlpInterface* onlp_interface)
-      : id_(id),
-        datasource_(ABSL_DIE_IF_NULL(datasource)),
-        sfp_group_(ABSL_DIE_IF_NULL(sfp_group)),
-        onlp_interface_(ABSL_DIE_IF_NULL(onlp_interface)) {
-    // lock us so we can modify
-    auto mutable_sfp = sfp_group_->AcquireMutable();
+    : card_id_(card_id),
+      port_id_(port_id),
+      datasource_(ABSL_DIE_IF_NULL(datasource)),
+      sfp_group_(ABSL_DIE_IF_NULL(sfp_group)),
+      onlp_interface_(ABSL_DIE_IF_NULL(onlp_interface)) {
+  // lock us so we can modify
+  auto mutable_sfp = sfp_group_->AcquireMutable();
 
-    // Ok, now go add the sfp attributes
-    mutable_sfp->AddAttribute("id", datasource_->GetSfpId());
-    mutable_sfp->AddAttribute("description", datasource_->GetSfpDesc());
-    mutable_sfp->AddAttribute("hardware_state",
-        datasource_->GetSfpHardwareState());
+  // Ok, now go add the sfp attributes
+  mutable_sfp->AddAttribute("id", datasource_->GetSfpId());
+  mutable_sfp->AddAttribute("description", datasource_->GetSfpDesc());
+  mutable_sfp->AddAttribute("hardware_state",
+                            datasource_->GetSfpHardwareState());
 }
 
 ::util::StatusOr<std::unique_ptr<OnlpSfpConfigurator>>
-OnlpSfpConfigurator::Make(int id,
+OnlpSfpConfigurator::Make(
+    int card_id, int port_id,
     std::shared_ptr<OnlpSfpDataSource>datasource,
     AttributeGroup* sfp_group,
     OnlpInterface* onlp_interface) {
-
-    return absl::WrapUnique(
-            new OnlpSfpConfigurator(id, datasource, sfp_group, onlp_interface));
+  return absl::WrapUnique(new OnlpSfpConfigurator(card_id, port_id, datasource,
+                                                  sfp_group, onlp_interface));
 }
 
 ::util::Status OnlpSfpConfigurator::HandleEvent(HwState state) {
@@ -85,7 +86,8 @@ OnlpSfpConfigurator::Make(int id,
     // Make sure we don't already have a datasource added to the DB
     absl::WriterMutexLock l(&config_lock_);
     if (initialized_) {
-        RETURN_ERROR() << "sfp id " << id_ << " already added";
+        RETURN_ERROR() << "cards[" << card_id_ << "]/ports["
+            << port_id_ << "]: sfp already added";
     }
 
     // lock us so we can modify
@@ -166,7 +168,8 @@ OnlpSfpConfigurator::Make(int id,
     // Make sure we have a been initialized
     absl::WriterMutexLock l(&config_lock_);
     if (!initialized_) {
-        RETURN_ERROR() << "sfp id " << id_ << " has not been added";
+        RETURN_ERROR() << "cards[" << card_id_ << "]/ports["
+            << port_id_ << "]: sfp has not been added";
     }
 
     // lock us so we can modify
