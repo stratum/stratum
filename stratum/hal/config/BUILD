@@ -15,57 +15,33 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_package",
+    "stratum_cc_test",
 )
+load(":platform_config_test.bzl", "platform_config_test")
 
-package(
-    #default_hdrs_check = "strict",
-    default_visibility = STRATUM_INTERNAL,
-)
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache v2
 
-genrule(
-    name = "phal_config_generic_trident2",
-    outs = ["legacy_phal_init_config_generic_trident2_hercules.pb.txt"],
-    cmd = (
-        "$(location //stratum/hal/config/tools:google_config_generator) " +
-        "--platform=generic_trident2 --config_type=phal --output=$@"
-    ),
-    tools = ["//stratum/hal/config/tools:google_config_generator"],
-)
-
-genrule(
-    name = "phal_config_generic_trident2",
-    outs = ["legacy_phal_init_config_generic_trident2_hercules.pb.txt"],
-    cmd = (
-        "$(location //stratum/hal/config/tools:google_config_generator) " +
-        "--platform=generic_trident2 --config_type=phal --output=$@"
-    ),
-    tools = ["//stratum/hal/config/tools:google_config_generator"],
-)
-
-stratum_package(
-    name = "hercules_config_files",
-    data = glob(["*.txt"]) + glob(["*.bin"]) + [
-        "legacy_phal_init_config_generic_trident2_hercules.pb.txt",
-        "legacy_phal_init_config_generic_trident2_hercules.pb.txt",
-    ],
-)
-
 filegroup(
-    name = "bcm_sim_config_files",
+    name = "bcm_hardware_specs",
     srcs = [
-        "base_bcm_chassis_map_generic_tomahawk_hercules.pb.txt",
-        "base_bcm_chassis_map_generic_trident2_hercules.pb.txt",
-        "base_bcm_chassis_map_generic_trident2_hercules.pb.txt",
-        "bcm_hardware_specs.pb.txt",
-        "generic_trident2_bcm_serdes_db_hercules.pb.bin",
-        "generic_trident2_bcm_serdes_db_hercules.pb.bin",
-    ],
+        "bcm_hardware_specs.pb.txt"
+    ]
 )
+
+platform_config_test("x86-64-accton-as7712-32x-r0", bcm_target=True)
+platform_config_test("x86-64-dell-z9100-c2538-r0", bcm_target=True)
+platform_config_test("x86-64-inventec-d7032q28b-r0", bcm_target=True)
+platform_config_test("x86-64-quanta-ix1-rangeley-r0", bcm_target=True)
+
+platform_config_test("x86-64-accton-wedge100bf-32x-r0")
+platform_config_test("x86-64-accton-wedge100bf-65x-r0")
+platform_config_test("x86-64-delta-ag9064v1-r0")
+platform_config_test("x86-64-inventec-d5254-r0")
+platform_config_test("x86-64-stordis-bf2556x-1t-r0")
+platform_config_test("x86-64-stordis-bf6064x-t-r0")
