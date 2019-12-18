@@ -35,7 +35,7 @@ again.
 
 4. Wait for [CI checks](https://circleci.com/gh/stratum/stratum) to pass. You can check the [coverage report](https://codecov.io/gh/stratum/stratum) after they ran. Repeat steps 1. and 2. as necessary. **Passing CI is mandatory.**
 
-5. Request review. You can add anyone you think is helpful, but only Collaborators and above can give final approval. **All changes must get at least one approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page) to bring additional attention to your PR.
+5. Await review. Everyone can comment on code changes, but only Collaborators and above can give final review approval. **All changes must get at least one approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page) to request a review or to bring additional attention to your PR.
 
 ## Community Guidelines
 
