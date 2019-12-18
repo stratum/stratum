@@ -101,10 +101,6 @@ OnlpPhal::~OnlpPhal() {}
   ASSIGN_OR_RETURN(std::move(database_),
                    AttributeDatabase::MakePhalDB(std::move(configurator)));
 
-  // Create and run PhalDb service
-  phal_db_service_ = absl::make_unique<PhalDbService>(database_.get());
-  phal_db_service_->Run();
-
   return ::util::OkStatus();
 }
 
@@ -125,12 +121,10 @@ OnlpPhal::~OnlpPhal() {}
   absl::WriterMutexLock l(&config_lock_);
 
   // TODO(unknown): add clean up code
-  ::util::Status status;
-  APPEND_STATUS_IF_ERROR(status, phal_db_service_->Teardown());
 
   initialized_ = false;
 
-  return status;
+  return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhal::HandleTransceiverEvent(const TransceiverEvent& event) {

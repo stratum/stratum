@@ -115,9 +115,7 @@ PhalDbService::~PhalDbService() {}
 }
 
 ::util::Status PhalDbService::Teardown() {
-  LOG(INFO) << "PhalDbService::Teardown";
-
-  external_server_->Shutdown();
+  external_server_->Shutdown(std::chrono::system_clock::now());
   external_server_->Wait();  // blocking until external_server_->Shutdown()
                              // is called. We dont wait on internal_service.
   {
@@ -129,6 +127,7 @@ PhalDbService::~PhalDbService() {}
     subscriber_channels_.clear();
   }
 
+  LOG(INFO) << "PhalDbService shutdown completed successfully.";
   return ::util::OkStatus();
 }
 

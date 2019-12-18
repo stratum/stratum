@@ -23,7 +23,6 @@
 
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/managed_attribute.h"

@@ -21,15 +21,15 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
 // #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 DEFINE_string(phal_config_path, "",
               "The path to read the PhalInitConfig proto file from.");
@@ -162,6 +162,7 @@ absl::Time DatabaseQuery::GetNextPollingTime() {
 
 AttributeDatabase::~AttributeDatabase() {
   TeardownPolling();
+  ShutdownService();
   // We delete the database first, since we might otherwise make broken calls
   // into the configurator.
   root_ = nullptr;
@@ -228,6 +229,11 @@ AttributeDatabase::MakePhalDB(
       Make(std::move(root_group), absl::make_unique<DummyThreadpool>()));
 
   database->switch_configurator_ = std::move(configurator);
+
+  // Create and run PhalDb service
+  database->phal_db_service_ = absl::make_unique<PhalDbService>(database.get());
+  RETURN_IF_ERROR(database->phal_db_service_->Run());
+
   return std::move(database);
 }
 
@@ -274,6 +280,13 @@ void AttributeDatabase::TeardownPolling() {
     polling_condvar_.Signal();
   }
   if (running) pthread_join(polling_thread_id_, nullptr);
+}
+
+void AttributeDatabase::ShutdownService() {
+  ::util::Status status = phal_db_service_->Teardown();
+  if (!status.ok()) {
+    LOG(ERROR) << status;
+  }
 }
 
 void* AttributeDatabase::RunPollingThread(void* attribute_database_ptr) {

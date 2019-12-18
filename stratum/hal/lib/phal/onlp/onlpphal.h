@@ -27,7 +27,6 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
-#include "stratum/hal/lib/phal/phaldb_service.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 #include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
 #include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
@@ -164,8 +163,6 @@ class OnlpPhal : public PhalInterface {
   // to the vector of sfp datasource id
   std::map<std::pair<int, int>, OnlpSfpConfigurator*>
       slot_port_to_configurator_;
-
-  std::unique_ptr<PhalDbService> phal_db_service_;
 };
 
 }  // namespace onlp

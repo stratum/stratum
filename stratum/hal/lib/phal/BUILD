@@ -106,6 +106,7 @@ stratum_cc_library(
         ":dummy_threadpool",
         ":managed_attribute",
         ":phal_cc_proto",
+        ":phaldb_service",
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
@@ -160,7 +161,6 @@ stratum_cc_library(
     hdrs = ["adapter.h"],
     deps = [
         ":attribute_database_interface",
-        ":attribute_database",
         ":db_cc_proto",
         ":managed_attribute",
         "@com_google_absl//absl/container:flat_hash_map",
