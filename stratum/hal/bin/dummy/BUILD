@@ -15,7 +15,11 @@
 # limitations under the License.
 #
 load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
-load("@grpc_py_deps//:requirements.bzl", grpc_all_requirements = "all_requirements", grpc_requirement = "requirement")
+load(
+    "@grpc_py_deps//:requirements.bzl",
+    grpc_all_requirements = "all_requirements",
+    grpc_requirement = "requirement"
+)
 
 licenses(["notice"])  # Apache v2
 
