@@ -4,7 +4,7 @@ gNMI tool
 ### Usage
 
 ```
-usage: bazel run //tools/gnmi:gnmi-cli -- [-h] [--grpc-addr GRPC_ADDR]
+usage: bazel run //tools/gnmi:gnmi-cli -- [--grpc-addr GRPC_ADDR]
                     [--bool-val BOOL_VAL] [--int-val INT_VAL] [--uint-val UINT_VAL]
                     [--string-val STRING_VAL] [--float-val FLOAT_VAL]
                     [--bytes-val BYTES_VAL] [--interval INTERVAL] [--replace]
@@ -27,8 +27,6 @@ optional arguments:
                         [SetRequest only] Set string value
   --float-val FLOAT_VAL
                         [SetRequest only] Set float value
-  --bytes-val BYTES_VAL
-                        [SetRequest only] Set bytes value
   --interval INTERVAL   [Sample subscribe only] Sample subscribe poll interval in ms
   --replace             [SetRequest only] Use replace instead of update
 ```
