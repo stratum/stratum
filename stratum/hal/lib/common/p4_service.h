@@ -154,6 +154,13 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
       ::grpc::ServerContext* context,
       ServerStreamChannelReaderWriter* stream) override;
 
+  // Offers a mechanism through which a P4Runtime client can discover the
+  // capabilities of the P4Runtime server implementation.
+  ::grpc::Status Capabilities(
+      ::grpc::ServerContext* context,
+      const ::p4::v1::CapabilitiesRequest* request,
+      ::p4::v1::CapabilitiesResponse* response) override;
+
   // P4Service is neither copyable nor movable.
   P4Service(const P4Service&) = delete;
   P4Service& operator=(const P4Service&) = delete;
