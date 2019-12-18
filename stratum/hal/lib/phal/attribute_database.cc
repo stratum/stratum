@@ -283,9 +283,11 @@ void AttributeDatabase::TeardownPolling() {
 }
 
 void AttributeDatabase::ShutdownService() {
-  ::util::Status status = phal_db_service_->Teardown();
-  if (!status.ok()) {
-    LOG(ERROR) << status;
+  if (phal_db_service_) {
+    ::util::Status status = phal_db_service_->Teardown();
+    if (!status.ok()) {
+      LOG(ERROR) << status;
+    }
   }
 }
 

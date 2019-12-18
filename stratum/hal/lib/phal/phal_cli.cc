@@ -223,7 +223,8 @@ class PhalCli {
 
     // Create Set request
     auto update = req.add_updates();
-    update->set_str(query);
+    ASSIGN_OR_RETURN(auto path, ParseQuery(query));
+    *update->mutable_path() = path;
 
     // Grab value and set it based on type
     while (true) {

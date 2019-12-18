@@ -196,11 +196,11 @@ service PhalDb {
   // Get one or more attributes
   rpc Get(GetRequest) returns (GetResponse) {}
 
-  // Subscribe to one or more attributes
-  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {}
-
   // Set one or more attributes
   rpc Set(SetRequest) returns (SetResponse) {}
+
+  // Subscribe to one or more attributes
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {}
 }
 
 message PathQuery {
@@ -216,7 +216,7 @@ message PathQuery {
 }
 
 message GetRequest {
-  PathQuery path = 2;
+  PathQuery path = 1;
 }
 
 message GetResponse {
@@ -224,8 +224,8 @@ message GetResponse {
 }
 
 message SubscribeRequest {
-  PathQuery path = 2;
-  int32 polling_interval = 3;  // seconds
+  PathQuery path = 1;
+  uint64 polling_interval = 2;  // nanoseconds
 }
 
 message SubscribeResponse {
@@ -248,11 +248,8 @@ message UpdateValue {
 
 // Update one or more values in a leaf node
 message Update {
-  oneof query {
-    string str = 1;
-    PathQuery path = 2;
-  }
-  UpdateValue value = 3;
+  PathQuery path = 1;
+  UpdateValue value = 2;
 }
 
 message SetRequest {

@@ -399,7 +399,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/phal:attribute_database",
-        "//stratum/hal/lib/phal:phaldb_service",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
     ],
