@@ -101,8 +101,9 @@ OnlpPhal::~OnlpPhal() {}
   ASSIGN_OR_RETURN(std::move(database_),
                    AttributeDatabase::MakePhalDB(std::move(configurator)));
 
-  // Create PhalDb service
+  // Create and run PhalDb service
   phal_db_service_ = absl::make_unique<PhalDbService>(database_.get());
+  phal_db_service_->Run();
 
   return ::util::OkStatus();
 }
