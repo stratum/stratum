@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
+load("@grpc_py_deps//:requirements.bzl", grpc_all_requirements = "all_requirements", grpc_requirement = "requirement")
+
 licenses(["notice"])  # Apache v2
 
 package(
@@ -28,7 +30,7 @@ py_binary(
     deps = [
         "//stratum/hal/lib/dummy:dummy_test_py_grpc",
         "//stratum/hal/lib/common:common_py_proto",
-    ]
+    ] + depset(grpc_all_requirements).to_list()
 )
 
 py_binary(
