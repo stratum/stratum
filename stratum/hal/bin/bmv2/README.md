@@ -33,8 +33,9 @@ make [-j4]
 [sudo] make install
 [sudo ldconfig]
 ```
-The *master* branch should work for this repo, but you can also used the commit
-we used for testing: ca0291420b5b47fa2596a00877d1713aab61dc7a.
+The *master* branch should work for this repo. Otherwise, you can use the
+commit we use for testing, which is specified in the `Dockerfile.build` file in
+the root of this repo (look for `ARG PI_COMMIT=...` at the top of the file).
 
 ### Install bmv2
 ```
@@ -46,8 +47,9 @@ make [-j4]
 [sudo] make install
 [sudo ldconfig]
 ```
-The *master* branch should work for this repo, but you can also used the commit
-we used for testing: 6f700badd1c5040d04dec24f446982ad63fa64c9.
+The *master* branch should work for this repo. Otherwise, you can use the
+commit we use for testing, which is specified in the `Dockerfile.build` file in
+the root of this repo (look for `ARG BMV2_COMMIT=...` at the top of the file).
 
 ## Building the `stratum_bmv2` binary
 

@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <memory>
+#include <map>
 #include <vector>
 #include <string>
 
@@ -328,8 +329,7 @@ class BcmUdfManager {
   // ***************************************************************************
   BcmSdkInterface* bcm_sdk_interface_;   // Interface to the Bcm SDK. Not owned
                                          // by this class.
-  absl::flat_hash_map<int, UdfSet> udf_sets_;  // UDF sets managed by
-                                               // this object.
+  std::map<int, UdfSet> udf_sets_;       // UDF sets managed by this object.
   int chunk_size_;                       // The size of each chunk in bits.
   int chunks_per_set_;                   // Number of chunks available per set.
 

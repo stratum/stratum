@@ -469,10 +469,10 @@ stratum_cc_test(
         "//stratum/hal/lib/common:writer_mock",
         "//stratum/hal/lib/p4:p4_table_mapper_mock",
         "//stratum/lib:utils",
+        "//stratum/lib/libcproxy:passthrough_proxy",
+        "//stratum/lib/libcproxy:libcwrapper",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
-        #"//util/libcproxy:libcwrapper",
-        #"//util/libcproxy:passthrough_proxy",
     ],
 )
 
@@ -872,7 +872,8 @@ stratum_cc_test(
         ":macros",
         ":test_main",
         "@com_google_googletest//:gtest",
-        "@com_github_bcm_sdklt//:error",
+        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
+        "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",

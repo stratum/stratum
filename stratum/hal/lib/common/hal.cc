@@ -23,7 +23,7 @@
 #include "stratum/glue/logging.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
-// include "stratum/lib/sandcastle/procmon_service.grpc.pb.h"
+#include "stratum/procmon/procmon.grpc.pb.h"
 #include "stratum/lib/utils.h"
 #include "absl/base/macros.h"
 #include "absl/memory/memory.h"
@@ -109,7 +109,7 @@ Hal::~Hal() {
 
 ::util::Status Hal::SanityCheck() {
   const std::vector<std::string> external_stratum_urls =
-          absl::StrSplit(FLAGS_external_stratum_urls, ',');
+      absl::StrSplit(FLAGS_external_stratum_urls, ',', absl::SkipEmpty());
   CHECK_RETURN_IF_FALSE(!external_stratum_urls.empty())
       << "No external URL was given. This is invalid.";
 
@@ -358,24 +358,24 @@ Hal* Hal::GetSingleton() {
 }
 
 ::util::Status Hal::ProcmonCheckin() {
-// FIXME replace Procmon with gNOI
-//  std::unique_ptr<procmon::ProcmonService::Stub> stub =
-//      procmon::ProcmonService::NewStub(::grpc::CreateChannel(
-//          FLAGS_procmon_service_addr, ::grpc::InsecureChannelCredentials()));
-//  if (stub == nullptr) {
-//    return MAKE_ERROR(ERR_INTERNAL)
-//           << "Could not create stub for procmon gRPC service.";
-//  }
-//
-//  procmon::CheckinRequest req;
-//  procmon::CheckinResponse resp;
-//  ::grpc::ClientContext context;
-//  req.set_checkin_key(getpid());
-//  ::grpc::Status status = stub->Checkin(&context, req, &resp);
-//  if (!status.ok()) {
-//    return MAKE_ERROR(ERR_INTERNAL)
-//           << "Failed to check in with procmon: " << status.error_message();
-//  }
+  // FIXME replace Procmon with gNOI
+  std::unique_ptr<procmon::ProcmonService::Stub> stub =
+      procmon::ProcmonService::NewStub(::grpc::CreateChannel(
+          FLAGS_procmon_service_addr, ::grpc::InsecureChannelCredentials()));
+  if (stub == nullptr) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Could not create stub for procmon gRPC service.";
+  }
+
+  procmon::CheckinRequest req;
+  procmon::CheckinResponse resp;
+  ::grpc::ClientContext context;
+  req.set_checkin_key(getpid());
+  ::grpc::Status status = stub->Checkin(&context, req, &resp);
+  if (!status.ok()) {
+    return MAKE_ERROR(ERR_INTERNAL)
+           << "Failed to check in with procmon: " << status.error_message();
+  }
 
   return ::util::OkStatus();
 }

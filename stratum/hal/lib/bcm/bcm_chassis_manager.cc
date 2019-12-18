@@ -2001,37 +2001,40 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // We first get the front panel port info from PHAL. Then using this info
     // (read and parsed from the transceiver module EEPROM) we configure serdes
     // for all BCM ports.
-    // TODO(max): Uncomment once serdes is supported by bcm_sdk_wrapper.
-    /*
     FrontPanelPortInfo fp_port_info;
     RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(
         port_group_key.slot, port_group_key.port, &fp_port_info));
     for (const auto* bcm_port : bcm_ports) {
       // Get the serdes config from serdes db for the given BCM port.
       BcmSerdesLaneConfig bcm_serdes_lane_config;
-      RETURN_IF_ERROR(bcm_serdes_db_manager_->LookupSerdesConfigForPort(
-          *bcm_port, fp_port_info, &bcm_serdes_lane_config));
-      // Find the map from serdes register names to their values for this BCM
-      // port.
-      std::map<uint32, uint32> serdes_register_configs(
-          bcm_serdes_lane_config.bcm_serdes_register_configs().begin(),
-          bcm_serdes_lane_config.bcm_serdes_register_configs().end());
-      std::map<std::string, uint32> serdes_attr_configs(
-          bcm_serdes_lane_config.bcm_serdes_attribute_configs().begin(),
-          bcm_serdes_lane_config.bcm_serdes_attribute_configs().end());
-      // Config serdes for this BCM port.
-      RETURN_IF_ERROR(bcm_sdk_interface_->ConfigSerdesForPort(
-          bcm_port->unit(), bcm_port->logical_port(), bcm_port->speed_bps(),
-          bcm_port->serdes_core(), bcm_port->serdes_lane(),
-          bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
-          serdes_register_configs, serdes_attr_configs));
-      // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
-      // need to write some control values to the QSFP module control registers.
-      // Take care of that part too.
-      VLOG(1) << "Serdes setting done for SingletonPort "
-              << PrintBcmPort(*bcm_port) << ".";
+      if (bcm_serdes_db_manager_
+              ->LookupSerdesConfigForPort(*bcm_port, fp_port_info,
+                                          &bcm_serdes_lane_config)
+              .ok()) {
+        // Find the map from serdes register names to their values for this BCM
+        // port.
+        std::map<uint32, uint32> serdes_register_configs(
+            bcm_serdes_lane_config.bcm_serdes_register_configs().begin(),
+            bcm_serdes_lane_config.bcm_serdes_register_configs().end());
+        std::map<std::string, uint32> serdes_attr_configs(
+            bcm_serdes_lane_config.bcm_serdes_attribute_configs().begin(),
+            bcm_serdes_lane_config.bcm_serdes_attribute_configs().end());
+        // Config serdes for this BCM port.
+        RETURN_IF_ERROR(bcm_sdk_interface_->ConfigSerdesForPort(
+            bcm_port->unit(), bcm_port->logical_port(), bcm_port->speed_bps(),
+            bcm_port->serdes_core(), bcm_port->serdes_lane(),
+            bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
+            serdes_register_configs, serdes_attr_configs));
+        // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
+        // need to write some control values to the QSFP module control
+        // registers. Take care of that part too.
+        VLOG(1) << "Serdes setting done for SingletonPort "
+                << PrintBcmPort(*bcm_port) << ".";
+      } else {
+        LOG(WARNING) << "No SerDes setting found for SingletonPort "
+                     << PrintBcmPort(*bcm_port) << ".";
+      }
     }
-    */
   }
   // The option applies to all the ports.
   for (const auto* bcm_port : bcm_ports) {

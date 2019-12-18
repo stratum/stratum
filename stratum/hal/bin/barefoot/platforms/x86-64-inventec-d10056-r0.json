@@ -1112,7 +1112,7 @@
         "mac_ch": 2,
         "tx_lane": 3,
         "tx_pn_swap": 1,
-        "rx_lane": 2,
+        "rx_lane": 3,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 4,
