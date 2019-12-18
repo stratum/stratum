@@ -23,7 +23,7 @@ Stratum follows [Google's Engineering Practices](https://google.github.io/eng-pr
 
 Some additional points:
  
- - Submit you changes early and often. GitHub has (Draft PRs)[https://github.blog/2019-02-14-introducing-draft-pull-requests/] that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
+ - Submit your changes early and often. GitHub has (Draft PRs)[https://github.blog/2019-02-14-introducing-draft-pull-requests/] that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
  
  - Stratum uses a [squash and rebase](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#squash-and-merge-your-pull-request-commits) model. You do **not** have to do this by hand! GitHub will guide you through it, if possible.
  
@@ -31,15 +31,15 @@ Some additional points:
 
 ### Steps to Follow
 
-1. Fork Stratum into your namespace via the fork button on GitHub.
+1. Fork Stratum into your personal or organization account via the fork button on GitHub.
 
 2. Make your code changes.
 
-3. Pass all unit tests locally. Create new tests for new code and **add the targets to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! To run all currently enabled tests execute this in the Stratum root directory: `xargs -a .circleci/test-targets.txt bazel test`
+3. Pass all unit tests locally. Create new tests for new code and **add the targets to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! Execute the following command in the Stratum root directory to run all currently enabled tests: `xargs -a .circleci/test-targets.txt bazel test`
 
 4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container).
 
-5. Create a [PR on Github](https://github.com/stratum/stratum/compare). Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes if you want direct assistance from maintainers.
+5. Create a [Pull Request](https://github.com/stratum/stratum/compare). Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes if you want direct assistance from maintainers.
 
 6. Wait for [CI checks](https://circleci.com/gh/stratum/stratum) to pass. You can check the [coverage report](https://codecov.io/gh/stratum/stratum) after they ran. Repeat steps 3. and 4. as necessary. **Passing CI is mandatory.** If the CI check does not run automatically, make sure you [unfollow your fork](https://support.circleci.com/hc/en-us/articles/360008097173) on CircleCI.
 
