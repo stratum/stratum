@@ -122,13 +122,29 @@ BFChassisManager::~BFChassisManager() = default;
   }
 
   const auto& config_params = singleton_port.config_params();
-
-  // we do not support changing the speed (even for channel 0), ask the client
-  // to remove the port and add it again
   if (singleton_port.speed_bps() != config_old.speed_bps) {
-    RETURN_ERROR(ERR_UNIMPLEMENTED)
-        << "The speed for port " << port_id << " in node " << node_id
-        << " has changed; you need to delete the port and add it again.";
+    RETURN_IF_ERROR(bf_pal_interface_->PortDisable(unit, port_id));
+    RETURN_IF_ERROR(bf_pal_interface_->PortDelete(unit, port_id));
+
+    ::util::Status status = AddPortHelper(node_id, unit, port_id, singleton_port, config);
+    if (status.ok()) {
+      return ::util::OkStatus();
+    } else {
+      // Revert to the old port configuration
+      //   -- make a singleton_port from config_old
+      //   -- call AddPortHelper with "old" singleton_port
+      SingletonPort port_old = BuildSingletonPort(singleton_port.slot(),
+          singleton_port.port(), singleton_port.channel(), *config_old.speed_bps);
+      port_old.mutable_config_params()->set_admin_state(config_old.admin_state);
+      if (config_old.autoneg) port_old.mutable_config_params()->set_autoneg(*config_old.autoneg);
+      if (config_old.mtu) port_old.mutable_config_params()->set_mtu(*config_old.mtu);
+      if (config_old.fec_mode) port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
+      AddPortHelper(node_id, unit, port_id, port_old, config);
+      RETURN_ERROR(ERR_INVALID_PARAM)
+          << "Could not add port " << port_id
+          << " with new speed " << singleton_port.speed_bps()
+          << " to BF SDE.";
+    }
   }
   // same for FEC mode
   if (config_params.fec_mode() != config_old.fec_mode) {
