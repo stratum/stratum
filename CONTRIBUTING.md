@@ -19,23 +19,31 @@ again.
 
 ### General Information
 
- - One PR for one feature or change request. Prefer multiple smaller PRs to one gigantic one. Multiple commits during development are OK; see next point.
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/). Use this document as a guide when submitting code.
+
+Some additional points:
+ 
+ - Submit your changes early and often. GitHub has (Draft PRs)[https://github.blog/2019-02-14-introducing-draft-pull-requests/] that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
  
  - Stratum uses a [squash and rebase](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#squash-and-merge-your-pull-request-commits) model. You do **not** have to do this by hand! GitHub will guide you through it, if possible.
  
- - Describe what your PR solves and why. Consider opening a separate issue describing the technical details there and [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords). This keeps code review and design discussions clean.
+ - Consider opening a separate issue describing the technical details there and [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords). This keeps code review and design discussions clean.
 
 ### Steps to Follow
 
-1. Make sure your code passes unit tests. Create new ones for new code and **add them to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! You can also run them locally with bazel: `xargs -a .circleci/test-targets.txt bazel test`
+1. Fork Stratum into your personal or organization account via the fork button on GitHub.
 
-2. Check code style with `cpplint` and `clang-format` (pre-installed in dev docker image).
+2. Make your code changes.
 
-3. Create a [PR on Github](https://github.com/stratum/stratum/compare). Either directly on the stratum repo or in your own fork. (Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes)
+3. Pass all unit tests locally. Create new tests for new code and **add the targets to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! Execute the following command in the Stratum root directory to run all currently enabled tests: `xargs -a .circleci/test-targets.txt bazel test`
 
-4. Wait for [CI checks](https://circleci.com/gh/stratum/stratum) to pass. You can check the [coverage report](https://codecov.io/gh/stratum/stratum) after they ran. Repeat steps 1. and 2. as necessary. **Passing CI is mandatory.**
+4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container).
 
-5. Await review. Everyone can comment on code changes, but only Collaborators and above can give final review approval. **All changes must get at least one approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page) to request a review or to bring additional attention to your PR.
+5. Create a [Pull Request](https://github.com/stratum/stratum/compare). Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes if you want direct assistance from maintainers.
+
+6. Wait for [CI checks](https://circleci.com/gh/stratum/stratum) to pass. You can check the [coverage report](https://codecov.io/gh/stratum/stratum) after they ran. Repeat steps 3. and 4. as necessary. **Passing CI is mandatory.** If the CI check does not run automatically, make sure you [unfollow your fork](https://support.circleci.com/hc/en-us/articles/360008097173) on CircleCI.
+
+7. Await review. Everyone can comment on code changes, but only Collaborators and above can give final review approval. **All changes must get at least one approval**. Join one of the [communication channels](https://wiki.opennetworking.org/display/COM/Stratum+Wiki+Home+Page) to request a review or to bring additional attention to your PR.
 
 ## Community Guidelines
 
