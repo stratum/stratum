@@ -1,0 +1,86 @@
+# Copyright 2019 Google LLC
+# Copyright 2019-present Open Networking Foundation
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This file contains annotation map data for match fields and packet IO metadata
+# fields that the p4c backend expects to find when compiling the P4 program.
+
+field_addenda_map {
+  key: "standard_metadata.egress_port"
+  value {
+    type: P4_FIELD_TYPE_EGRESS_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.egress_spec"
+  value {
+    type: P4_FIELD_TYPE_EGRESS_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.clone_spec"
+  value {
+    type: P4_FIELD_TYPE_CLONE_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.ingress_port"
+  value {
+    type: P4_FIELD_TYPE_INGRESS_PORT
+  }
+}
+field_addenda_map {
+  key: "standard_metadata.mcast_grp"
+  value {
+    type: P4_FIELD_TYPE_MCAST_GROUP_ID
+  }
+}
+
+# TODO: Convert these to @switchstack annotations in P4 programs.
+field_addenda_map {
+  key: "local_metadata.class_id"
+  value {
+    type: P4_FIELD_TYPE_CLASS_ID
+  }
+}
+field_addenda_map {
+  key: "local_metadata.l3_class_id"
+  value {
+    type: P4_FIELD_TYPE_L3_CLASS_ID
+  }
+}
+field_addenda_map {
+  key: "local_metadata.ingress_meter_index"
+  value {
+    type: P4_FIELD_TYPE_IN_METER
+  }
+}
+field_addenda_map {
+  key: "local_metadata.cpu_cos_queue_id"
+  value {
+    type: P4_FIELD_TYPE_CPU_QUEUE_ID
+  }
+}
+field_addenda_map {
+  key: "local_metadata.l3_admit"
+  value {
+    type: P4_FIELD_TYPE_L3_ADMIT
+  }
+}
+field_addenda_map {
+  key: "local_metadata.encap_id"
+  value {
+    type: P4_FIELD_TYPE_ENCAP_TUNNEL_ID
+  }
+}
