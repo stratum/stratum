@@ -428,33 +428,31 @@ stratum_cc_binary(
     ],
 )
 
-# stratum_cc_test(
-#     name = "phaldb_service_test",
-#     srcs = [
-#         "phaldb_service_test.cc",
-#     ],
-#     deps = [
-#         ":phaldb_service",
-#         "//stratum/hal/lib/phal:attribute_database_mock",
-#         "//stratum/hal/lib/common:error_buffer",
-#         "//stratum/hal/lib/common:phal_mock",
-#         "@com_github_google_glog//:glog",
-#         "@com_google_googletest//:gtest",
-#         "@com_google_absl//absl/base:core_headers",
-#         "@com_google_absl//absl/memory",
-#         "@com_google_absl//absl/numeric:int128",
-#         "@com_google_absl//absl/strings",
-#         "@com_github_grpc_grpc//:grpc++",
-#         "@com_google_googleapis//google/rpc:code_cc_proto",
-#         "//stratum/glue/net_util:ports",
-#         "//stratum/glue/status:status_test_util",
-#         "//stratum/lib:utils",
-#         "//stratum/lib/security:auth_policy_checker_mock",
-#         "//stratum/lib/test_utils:matchers",
-#         "//stratum/public/lib:error",
-#         "@com_google_googletest//:gtest_main",
-#     ],
-# )
+stratum_cc_test(
+    name = "phaldb_service_test",
+    srcs = ["phaldb_service_test.cc"],
+    deps = [
+        ":attribute_database_mock",
+        ":phaldb_service",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/strings",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_googletest//:gtest",
+        "//stratum/glue/net_util:ports",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/common:error_buffer",
+        "//stratum/hal/lib/common:phal_mock",
+        "//stratum/lib:utils",
+        "//stratum/lib/security:auth_policy_checker_mock",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/public/lib:error",
+    ],
+)
 
 ''' FIXME(boc) google only
 stratum_cc_library(
