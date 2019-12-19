@@ -566,6 +566,14 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   return ::grpc::Status::OK;
 }
 
+::grpc::Status P4Service::Capabilities(
+    ::grpc::ServerContext* context,
+    const ::p4::v1::CapabilitiesRequest* request,
+    ::p4::v1::CapabilitiesResponse* response) {
+  response->set_p4runtime_api_version(STRINGIFY(P4RUNTIME_VER));
+  return ::grpc::Status::OK;
+}
+
 ::util::StatusOr<uint64> P4Service::FindNewConnectionId() {
   absl::WriterMutexLock l(&controller_lock_);
   if (static_cast<int>(connection_ids_.size()) >=
