@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-As far as I can see, no BUILD file actually loads this build definition, as proven by this comment.
 
 """P4c configuration generation rules."""
 
@@ -26,31 +25,34 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 def _generate_p4c_stratum_config(ctx):
     """Preprocesses P4 sources and runs Stratum p4c on pre-processed P4 file."""
 
-    # Preprocess all files and create 'p4_preprocessed_file'
+    # Preprocess all files and create 'p4_preprocessed_file'. This is necessary
+    # because p4c invokes the GCC (cc1) binary, which is not available in an
+    # isolated bazel build sandbox.
     p4_preprocessed_file = ctx.new_file(
         ctx.configuration.genfiles_dir,
         ctx.label.name + ".pp.p4",
     )
-    hdr_include_str = ""
-    for hdr in ctx.files.hdrs:
-        hdr_include_str += "-I " + hdr.dirname
     cpp_toolchain = find_cpp_toolchain(ctx)
 
+    # Construct GCC CLI arguments
+    gcc_args = ctx.actions.args()
+    gcc_args.add("-E")
+    gcc_args.add("-x")
+    gcc_args.add("c")
+    gcc_args.add(ctx.file.src.path)
+    gcc_args.add("-I.")
+    gcc_args.add("-I")
+    gcc_args.add(ctx.file._model.dirname)
+    gcc_args.add("-I")
+    gcc_args.add(ctx.file._core.dirname)
+    for hdr in ctx.files.hdrs:
+        gcc_args.add("-I " + hdr.dirname)
+    gcc_args.add(ctx.attr.copts)
+    gcc_args.add("-o")
+    gcc_args.add(p4_preprocessed_file.path)
+
     ctx.action(
-        arguments = [
-            "-E",
-            "-x",
-            "c",
-            ctx.file.src.path,
-            "-I.",
-            "-I",
-            ctx.file._model.dirname,
-            "-I",
-            ctx.file._core.dirname,
-            hdr_include_str,
-            "-o",
-            p4_preprocessed_file.path,
-        ] + ctx.attr.copts,
+        arguments = [gcc_args],
         inputs = ([ctx.file.src] + ctx.files.hdrs + [ctx.file._model] +
                   [ctx.file._core] + ctx.files.cpp),
         outputs = [p4_preprocessed_file],
@@ -68,7 +70,7 @@ def _generate_p4c_stratum_config(ctx):
 
     # This string specifies the open source p4c frontend and midend options,
     # which go into the Stratum p4c --p4c_fe_options flag.
-    p4c_native_options = "--nocpp " + p4_preprocessed_file.path
+    p4c_native_options = "--nocpp --Wwarn=all " + p4_preprocessed_file.path
 
     annotation_map_files = ""
     for map_file in ctx.files.annotation_maps:
@@ -85,6 +87,10 @@ def _generate_p4c_stratum_config(ctx):
             "--p4c_annotation_map_files=" + annotation_map_files,
             "--slice_map_file=" + ctx.file.slice_map.path,
             "--target_parser_map_file=" + ctx.file.parser_map.path,
+            "--colorlogtostderr",
+            "--stderrthreshold=1",
+            "--logtostderr",
+            "--v=0",
         ],
         inputs = ([p4_preprocessed_file] + [ctx.file.parser_map] +
                   [ctx.file.slice_map] + ctx.files.annotation_maps),
@@ -97,10 +103,10 @@ def _generate_p4c_stratum_config(ctx):
 
     return struct(files = depset(gen_files))
 
-# Compiles P4_16 source into P4 info and P4 pipeline config files.  The
+# Compiles P4_16 source into P4 info and P4 pipeline config files. The
 # output file names are <name>_p4_info.pb.txt and <name>_p4_pipeline.pb.txt
 # in the appropriate path under the genfiles directory.
-p4_stratum_config = rule(
+p4_fpm_compile = rule(
     implementation = _generate_p4c_stratum_config,
     fragments = ["cpp"],
     attrs = {
@@ -143,11 +149,11 @@ p4_stratum_config = rule(
         "_p4c_stratum_fpm_binary": attr.label(
             cfg = "host",
             executable = True,
-            default = Label("//stratum/p4c_backends/fpm:p4c_stratum_fpm"),
+            default = Label("//stratum/p4c_backends/fpm:p4c-fpm"),
         ),
-        "cpp": attr.label_list(default = [Label("@bazel_tools//tools/cpp:crosstool")]), # FIXME
+        "cpp": attr.label_list(default = [Label("@bazel_tools//tools/cpp:current_cc_toolchain")]),
         "_cc_toolchain": attr.label(
-            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"), # FIXME
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
         ),
     },
 )
