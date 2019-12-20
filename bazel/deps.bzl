@@ -268,14 +268,6 @@ def stratum_deps():
             remote = "https://github.com/bazelbuild/bazel-gazelle",
             commit = "e443c54b396a236e0d3823f46c6a931e1c9939f2",
         )
-    if "org_golang_x_crypto" not in native.existing_rules():
-        go_repository(
-            name = "org_golang_x_crypto",
-            importpath = "golang.org/x/crypto",
-            remote = "https://github.com/golang/crypto",
-            commit = "e1110fd1c708ef015366ea01799a23c459593c47",
-            vcs = "git",
-        )
 # -----------------------------------------------------------------------------
 #        Chipset and Platform specific C/C++ libraries
 # -----------------------------------------------------------------------------
