@@ -43,17 +43,7 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 
-DEFINE_string(local_phaldb_url, stratum::kPhalDbServiceUrl,
-              "URL for server to listen to for external calls from CLIs, etc.");
-
 DECLARE_bool(warmboot);
-// DECLARE_string(persistent_config_dir);
-DECLARE_int32(grpc_keepalive_time_ms);
-DECLARE_int32(grpc_keepalive_timeout_ms);
-DECLARE_int32(grpc_keepalive_min_ping_interval);
-DECLARE_int32(grpc_keepalive_permit);
-DECLARE_uint32(grpc_max_recv_msg_size);
-DECLARE_uint32(grpc_max_send_msg_size);
 
 namespace stratum {
 namespace hal {

@@ -28,6 +28,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
 // #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+#include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
@@ -204,18 +205,17 @@ AttributeDatabase::~AttributeDatabase() {
 ::util::StatusOr<std::unique_ptr<AttributeDatabase>>
 AttributeDatabase::MakePhalDB(
     std::unique_ptr<SwitchConfigurator> configurator) {
-
   PhalInitConfig phal_config;
 
   // If no phal_config_path given try and build a default config
   if (FLAGS_phal_config_path.empty()) {
     RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
 
-  // use the phal_init_config file if it's been passed in
+    // use the phal_init_config file if it's been passed in
   } else {
     // Read Phal initial config
-    RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_phal_config_path,
-                                          &phal_config));
+    RETURN_IF_ERROR(
+        ReadProtoFromTextFile(FLAGS_phal_config_path, &phal_config));
   }
 
   std::unique_ptr<AttributeGroup> root_group =
@@ -233,17 +233,18 @@ AttributeDatabase::MakePhalDB(
   // Create and run PhalDb service
   {
     ::grpc::ServerBuilder builder;
-    builder.AddListeningPort(FLAGS_local_phaldb_url,
+    builder.AddListeningPort(kPhalDbServiceUrl,
                              ::grpc::InsecureServerCredentials());
-    builder.RegisterService(absl::make_unique<PhalDbService>(database.get()));
-    external_server_ = builder.BuildAndStart();
-    if (external_server_ == nullptr) {
+    database->phal_db_service_ =
+        absl::make_unique<PhalDbService>(database.get());
+    builder.RegisterService(database->phal_db_service_.get());
+    database->external_server_ = builder.BuildAndStart();
+    if (database->external_server_ == nullptr) {
       return MAKE_ERROR(ERR_INTERNAL)
              << "Failed to start PhalDb service. This is an "
              << "internal error.";
     }
-    RETURN_IF_ERROR(database->phal_db_service_->Run());
-    LOG(INFO) << "PhalDB service is listening to " << FLAGS_local_phaldb_url
+    LOG(INFO) << "PhalDB service is listening to " << kPhalDbServiceUrl
               << "...";
   }
 

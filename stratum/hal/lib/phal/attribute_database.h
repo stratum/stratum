@@ -140,7 +140,11 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   // A lock to serialize all calls to Set(...).
   absl::Mutex set_lock_;
   // The PhalDb service exposing the database, mainly for debugging.
+  // Owned by the class.
   std::unique_ptr<::grpc::Server> external_server_;
+  // Unique pointer to the gRPC server serving the internal RPC connections
+  // serviced by PhalDbService. Owned by the class.
+  std::unique_ptr<PhalDbService> phal_db_service_;
 };
 
 // DatabaseQuery is a wrapper for AttributeGroupQuery that transforms query
