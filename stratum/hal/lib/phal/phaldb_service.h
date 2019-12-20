@@ -52,11 +52,6 @@ class PhalDbService final : public PhalDb::Service {
   // Sets up the service in coldboot and warmboot mode.
   ::util::Status Setup(bool warmboot);
 
-  // Blocking call to start listening on the setup url for RPC calls. Blocks
-  // until the server is shutdown, in which case calls Teardown() before exit.
-  // Run() is to be called after Setup().
-  ::util::Status Run();
-
   // Tears down the class. Called in both warmboot or coldboot mode. It will
   // not alter any state on the hardware when called.
   ::util::Status Teardown();
@@ -104,10 +99,6 @@ class PhalDbService final : public PhalDb::Service {
   // each grpc request will have a different tid.
   std::map<pthread_t, std::shared_ptr<Channel<PhalDB>>>
       subscriber_channels_ GUARDED_BY(subscriber_thread_lock_);
-
-  // Unique pointer to the gRPC server serving the external RPC connections
-  // serviced by ConfigMonitoringService and P4Service. Owned by the class.
-  std::unique_ptr<::grpc::Server> external_server_;
 
   friend class PhalDbServiceTest;
 };

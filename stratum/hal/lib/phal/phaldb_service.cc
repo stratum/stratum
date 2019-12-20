@@ -68,54 +68,7 @@ PhalDbService::~PhalDbService() {}
   return ::util::OkStatus();
 }
 
-::util::Status PhalDbService::Run() {
-  // TODO(max)
-  // All HAL external facing services listen to a list of secure external URLs
-  // given by external_stratum_urls flag, as well as a local insecure URLs for
-  // given by local_stratum_url flag. The insecure URLs is used by any local
-  // stratum_stub binary running on the switch, since local connections cannot
-  // support auth.
-  {
-    ::grpc::ServerBuilder builder;
-    // builder.AddChannelArgument(GRPC_ARG_KEEPALIVE_TIME_MS,
-    //                             FLAGS_grpc_keepalive_time_ms);
-    // builder.AddChannelArgument(GRPC_ARG_KEEPALIVE_TIMEOUT_MS,
-    //                             FLAGS_grpc_keepalive_timeout_ms);
-    // builder.AddChannelArgument(
-    //     GRPC_ARG_HTTP2_MIN_RECV_PING_INTERVAL_WITHOUT_DATA_MS,
-    //     FLAGS_grpc_keepalive_min_ping_interval);
-    // builder.AddChannelArgument(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS,
-    //                             FLAGS_grpc_keepalive_permit);
-    builder.AddListeningPort(FLAGS_local_phaldb_url,
-                             ::grpc::InsecureServerCredentials());
-    // if (FLAGS_grpc_max_recv_msg_size > 0) {
-    //   builder.SetMaxReceiveMessageSize(FLAGS_grpc_max_recv_msg_size * 1024 *
-    //                                    1024);
-    //   builder.AddChannelArgument<int>(
-    //       GRPC_ARG_MAX_METADATA_SIZE,
-    //       FLAGS_grpc_max_recv_msg_size * 1024 * 1024);
-    // }
-    // if (FLAGS_grpc_max_send_msg_size) {
-    //   builder.SetMaxSendMessageSize(FLAGS_grpc_max_send_msg_size * 1024 *
-    //   1024);
-    // }
-    builder.RegisterService(this);
-    external_server_ = builder.BuildAndStart();
-    if (external_server_ == nullptr) {
-      return MAKE_ERROR(ERR_INTERNAL)
-             << "Failed to start PhalDb service. This is an "
-             << "internal error.";
-    }
-    LOG(INFO) << "PhalDB service is listening to " << FLAGS_local_phaldb_url
-              << "...";
-  }
-  return ::util::OkStatus();
-}
-
 ::util::Status PhalDbService::Teardown() {
-  external_server_->Shutdown(std::chrono::system_clock::now());
-  external_server_->Wait();  // blocking until external_server_->Shutdown()
-                             // is called. We dont wait on internal_service.
   {
     absl::MutexLock l(&subscriber_thread_lock_);
     // Close Subscriber Channels.
@@ -191,7 +144,6 @@ namespace {
   std::vector<Path> paths = {path};
   auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
   ASSIGN_OR_RETURN(auto result, adapter->Get(paths));
-  LOG(INFO) << "Phal Get result:" << result->ShortDebugString();
   *resp->mutable_phal_db() = *result;
 
   return ::util::OkStatus();
@@ -295,8 +247,8 @@ namespace {
 
   // Issue the subscribe
   auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
-  RETURN_IF_ERROR(adapter->Subscribe({path}, std::move(writer),
-                                     absl::Seconds(req->polling_interval())));
+  RETURN_IF_ERROR(adapter->Subscribe(
+      {path}, std::move(writer), absl::Nanoseconds(req->polling_interval())));
 
   // Loop around processing messages from the PhalDB writer
   // Note: if the client dies we'll only close the channel

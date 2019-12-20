@@ -44,6 +44,8 @@ class QueryMock : public Query {
   MOCK_METHOD2(Subscribe,
                ::util::Status(std::unique_ptr<ChannelWriter<PhalDB>> subscriber,
                               absl::Duration polling_interval));
+
+  // Send back fake values to subscriptions somehow?
 };
 
 }  // namespace phal

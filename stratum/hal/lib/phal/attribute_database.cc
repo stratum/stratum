@@ -231,8 +231,21 @@ AttributeDatabase::MakePhalDB(
   database->switch_configurator_ = std::move(configurator);
 
   // Create and run PhalDb service
-  database->phal_db_service_ = absl::make_unique<PhalDbService>(database.get());
-  RETURN_IF_ERROR(database->phal_db_service_->Run());
+  {
+    ::grpc::ServerBuilder builder;
+    builder.AddListeningPort(FLAGS_local_phaldb_url,
+                             ::grpc::InsecureServerCredentials());
+    builder.RegisterService(absl::make_unique<PhalDbService>(database.get()));
+    external_server_ = builder.BuildAndStart();
+    if (external_server_ == nullptr) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to start PhalDb service. This is an "
+             << "internal error.";
+    }
+    RETURN_IF_ERROR(database->phal_db_service_->Run());
+    LOG(INFO) << "PhalDB service is listening to " << FLAGS_local_phaldb_url
+              << "...";
+  }
 
   return std::move(database);
 }
