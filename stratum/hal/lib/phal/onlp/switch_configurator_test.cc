@@ -43,14 +43,15 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
  public:
   void SetUp() override {
     root_group_ = AttributeGroup::From(PhalDB::descriptor());
-    onlpphal_.InitializeOnlpInterface();
+    auto onlp_wrapper_mock = OnlpWrapperMock::Make().ConsumeValueOrDie();
+    onlpphal_.InitializeOnlpInterface(onlp_wrapper_mock.get());
     onlp_interface_ = onlpphal_.GetOnlpInterface();
     ASSERT_OK_AND_ASSIGN(configurator_, OnlpSwitchConfigurator::Make(
                                             &onlpphal_, onlp_interface_));
   }
   std::unique_ptr<AttributeGroup> root_group_;
   OnlpPhalMock onlpphal_;
-  MockOnlpWrapper* onlp_interface_;
+  OnlpWrapperMock* onlp_interface_;
   PhalInitConfig config_;
   std::unique_ptr<OnlpSwitchConfigurator> configurator_;
 

@@ -42,7 +42,7 @@ class ThermalDatasourceTest : public ::testing::Test {
   int id_;             // Id for this THERMAL
   OnlpOid oid_;        // OID for this THERMAL (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
-  MockOnlpWrapper mock_onlp_interface_;
+  OnlpWrapperMock mock_onlp_interface_;
 };
 
 TEST_F(ThermalDatasourceTest, InitializeThermalWithEmptyInfo) {

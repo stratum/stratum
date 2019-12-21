@@ -48,7 +48,15 @@ class OnlpPhalTest : public ::testing::Test {
  public:
   void SetUp() override {
     // CreateSingleton calls Initialize()
-    onlpphal_ = OnlpPhal::CreateSingleton();
+    mock_onlp_interface_ = OnlpWrapperMock::Make().ConsumeValueOrDie();
+    std::vector<OnlpOid> oids = {};
+    EXPECT_CALL(*mock_onlp_interface_.get(), GetOidList(_))
+      .WillRepeatedly(Return(::util::StatusOr<std::vector<OnlpOid>>(oids)));
+    EXPECT_CALL(*mock_onlp_interface_.get(), GetSfpInfo(_))
+      .WillRepeatedly(Return(SfpInfo{}));
+    EXPECT_CALL(*mock_onlp_interface_.get(), GetSfpMaxPortNumber())
+      .WillRepeatedly(Return(0));
+    onlpphal_ = OnlpPhal::CreateSingleton(mock_onlp_interface_.get());
   }
 
   void TearDown() override {
@@ -57,6 +65,7 @@ class OnlpPhalTest : public ::testing::Test {
 
  protected:
   OnlpPhal* onlpphal_;
+  std::unique_ptr<OnlpWrapperMock> mock_onlp_interface_;
 };
 
 
@@ -87,8 +96,6 @@ TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
 
   // Unregister writer2
   EXPECT_OK(onlpphal_->UnregisterTransceiverEventWriter(id2));
-
-  onlpphal_->Shutdown();
 }
 
 TEST_F(OnlpPhalTest, OnlpPhalWriteTransceiverEvent) {

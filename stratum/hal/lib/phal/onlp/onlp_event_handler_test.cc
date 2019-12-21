@@ -53,7 +53,7 @@ class OnlpEventHandlerTest : public ::testing::Test {
   ::util::Status RunPolling() { return handler_.InitializePollingThread(); }
 
  protected:
-  StrictMock<MockOnlpWrapper> onlp_;
+  StrictMock<OnlpWrapperMock> onlp_;
   OnlpEventHandler handler_{&onlp_};
 };
 

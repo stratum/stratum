@@ -48,7 +48,7 @@ class LedDatasourceTest : public ::testing::Test {
   int id_;             // Id for this LED
   OnlpOid oid_;        // OID for this LED (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
-  MockOnlpWrapper mock_onlp_interface_;
+  OnlpWrapperMock mock_onlp_interface_;
 };
 
 TEST_F(LedDatasourceTest, InitializeLEDWithEmptyInfo) {

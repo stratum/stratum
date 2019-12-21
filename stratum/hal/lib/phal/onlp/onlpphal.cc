@@ -74,12 +74,12 @@ OnlpPhal::OnlpPhal()
 OnlpPhal::~OnlpPhal() {}
 
 // Initialize the onlp interface and phal DB
-::util::Status OnlpPhal::Initialize() {
+::util::Status OnlpPhal::Initialize(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
     // Create the OnlpWrapper object
-    RETURN_IF_ERROR(InitializeOnlpInterface());
+    RETURN_IF_ERROR(InitializeOnlpInterface(onlp_interface));
 
     // Create attribute database and load initial phal DB
     RETURN_IF_ERROR(InitializePhalDB());
@@ -95,7 +95,7 @@ OnlpPhal::~OnlpPhal() {}
 ::util::Status OnlpPhal::InitializePhalDB() {
   // Create onlp switch configurator instance
   ASSIGN_OR_RETURN(auto configurator,
-                   OnlpSwitchConfigurator::Make(this, onlp_interface_.get()));
+                   OnlpSwitchConfigurator::Make(this, onlp_interface_));
 
   // Create attribute database and load initial phal DB
   ASSIGN_OR_RETURN(std::move(database_),
@@ -118,11 +118,18 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::Status OnlpPhal::Shutdown() {
-  absl::WriterMutexLock l(&config_lock_);
-
   // TODO(unknown): add clean up code
 
-  initialized_ = false;
+  {
+    absl::WriterMutexLock l(&init_lock_);
+    if (this == singleton_) {
+      singleton_ = nullptr;
+    }
+  }
+  {
+    absl::WriterMutexLock l(&config_lock_);
+    initialized_ = false;
+  }
 
   return ::util::OkStatus();
 }
@@ -246,12 +253,17 @@ OnlpPhal::~OnlpPhal() {}
   return adapter.GetFrontPanelPortInfo(card_id, port_id, fp_port_info);
 }
 
-OnlpPhal* OnlpPhal::CreateSingleton() {
+OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&init_lock_);
 
   if (!singleton_) {
     singleton_ = new OnlpPhal();
-    singleton_->Initialize();
+    auto status = singleton_->Initialize(onlp_interface);
+    if (!status.ok()) {
+      LOG(ERROR) << "OnlpPhal failed to initialize: " << status;
+      delete singleton_;
+      singleton_ = nullptr;
+    }
   }
 
   return singleton_;
@@ -277,16 +289,18 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
   return ::util::OkStatus();
 }
 
-::util::Status OnlpPhal::InitializeOnlpInterface() {
-  // Create the OnlpInterface object
-  ASSIGN_OR_RETURN(onlp_interface_, OnlpWrapper::Make());
+::util::Status OnlpPhal::InitializeOnlpInterface(
+    OnlpInterface* onlp_interface) {
+  CHECK_RETURN_IF_FALSE(onlp_interface != nullptr);
+  onlp_interface_ = onlp_interface;
+
   return ::util::OkStatus();
 }
 
 ::util::Status OnlpPhal::InitializeOnlpEventHandler() {
   // Create the OnlpEventHandler object
   ASSIGN_OR_RETURN(onlp_event_handler_,
-                   OnlpEventHandler::Make(onlp_interface_.get()));
+                   OnlpEventHandler::Make(onlp_interface_));
   return ::util::OkStatus();
 }
 

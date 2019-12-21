@@ -49,7 +49,7 @@ class PsuDatasourceTest : public ::testing::Test {
   int id_;             // Id for this PSU
   OnlpOid oid_;        // OID for this PSU (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
-  MockOnlpWrapper mock_onlp_interface_;
+  OnlpWrapperMock mock_onlp_interface_;
 };
 
 TEST_F(PsuDatasourceTest, InitializePSUWithEmptyInfo) {

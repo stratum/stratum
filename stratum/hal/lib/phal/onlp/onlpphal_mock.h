@@ -30,7 +30,8 @@ class OnlpPhalMock : public PhalInterface {
   ~OnlpPhalMock() override;
 
   ::util::Status Initialize();
-  ::util::Status InitializeOnlpInterface() LOCKS_EXCLUDED(config_lock_);
+  ::util::Status InitializeOnlpInterface(OnlpInterface* onlp_interface)
+      LOCKS_EXCLUDED(config_lock_);
 
   // PhalInterface public methods
   // ::util::Status PushChassisConfig(const ChassisConfig& config) override {};
@@ -53,8 +54,8 @@ class OnlpPhalMock : public PhalInterface {
                               SfpConfigurator* configurator));
 
   // Need this function to grab onlp_interface
-  MockOnlpWrapper* GetOnlpInterface() {
-    return (MockOnlpWrapper*)onlp_interface_.get(); // NOLINT
+  OnlpWrapperMock* GetOnlpInterface() {
+    return dynamic_cast<OnlpWrapperMock*>(onlp_interface_);
   }
 
   // Creates the singleton instance. Expected to be called once to initialize
@@ -80,7 +81,7 @@ class OnlpPhalMock : public PhalInterface {
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
 
-  std::unique_ptr<OnlpInterface> onlp_interface_;
+  OnlpInterface* onlp_interface_;
 };
 
 }  // namespace onlp

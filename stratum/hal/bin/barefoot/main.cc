@@ -152,11 +152,12 @@ Main(int argc, char* argv[]) {
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(unit));
 
   auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
+  auto onlp_wrapper = OnlpWrapper::Make().ConsumeValueOrDie();
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
   } else {
-    phal_impl = phal::onlp::OnlpPhal::CreateSingleton();
+    phal_impl = phal::onlp::OnlpPhal::CreateSingleton(onlp_wrapper.get());
   }
   std::map<int, pi::PINode*> unit_to_pi_node = {
     {unit, pi_node.get()},

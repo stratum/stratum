@@ -72,7 +72,7 @@ class OnlpPhal : public PhalInterface {
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
+  ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_, init_lock_);
   ::util::StatusOr<int> RegisterTransceiverEventWriter(
       std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
       int priority) override LOCKS_EXCLUDED(config_lock_);
@@ -89,7 +89,8 @@ class OnlpPhal : public PhalInterface {
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static OnlpPhal* CreateSingleton() LOCKS_EXCLUDED(config_lock_);
+  static OnlpPhal* CreateSingleton(OnlpInterface* onlp_interface)
+      LOCKS_EXCLUDED(config_lock_);
 
   // OnlpPhal is neither copyable nor movable.
   OnlpPhal(const OnlpPhal&) = delete;
@@ -111,10 +112,11 @@ class OnlpPhal : public PhalInterface {
   OnlpPhal();
 
   // Calls all the one time start initialisations
-  virtual ::util::Status Initialize() LOCKS_EXCLUDED(config_lock_);
+  virtual ::util::Status Initialize(OnlpInterface* onlp_interface)
+      LOCKS_EXCLUDED(config_lock_);
 
   // One time initialization of the OnlpWrapper
-  virtual ::util::Status InitializeOnlpInterface()
+  virtual ::util::Status InitializeOnlpInterface(OnlpInterface* onlp_interface)
       EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // Inialize the PhalDB on start up
@@ -152,9 +154,13 @@ class OnlpPhal : public PhalInterface {
   std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>
       transceiver_event_writers_ GUARDED_BY(config_lock_);
 
-  std::unique_ptr<OnlpInterface> onlp_interface_;
-  std::unique_ptr<OnlpEventHandler> onlp_event_handler_;
-  std::unique_ptr<AttributeDatabase> database_;
+  // Not owned by this class.
+  OnlpInterface* onlp_interface_ GUARDED_BY(config_lock_);
+  // Owned by the class.
+  std::unique_ptr<OnlpEventHandler> onlp_event_handler_
+      GUARDED_BY(config_lock_);
+  // Owned by the class.
+  std::unique_ptr<AttributeDatabase> database_ GUARDED_BY(config_lock_);
 
   // SFP Event Callback
   std::unique_ptr<OnlpPhalSfpEventCallback> sfp_event_callback_;

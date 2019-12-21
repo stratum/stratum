@@ -48,7 +48,7 @@ class FanDatasourceTest : public ::testing::Test {
   int id_;             // Id for this FAN
   OnlpOid oid_;        // OID for this FAN (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
-  MockOnlpWrapper mock_onlp_interface_;
+  OnlpWrapperMock mock_onlp_interface_;
 };
 
 TEST_F(FanDatasourceTest, InitializeFANWithEmptyInfo) {

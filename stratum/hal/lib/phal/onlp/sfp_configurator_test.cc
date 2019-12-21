@@ -79,7 +79,8 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
     ASSIGN_OR_RETURN(sfp_, mutable_port->AddChildGroup("transceiver"));
 
     // Create switch configurator
-    onlpphal_.InitializeOnlpInterface();
+    onlp_wrappper_ = OnlpWrapperMock::Make().ConsumeValueOrDie();
+    onlpphal_.InitializeOnlpInterface(onlp_wrappper_.get());
     onlp_interface_ = onlpphal_.GetOnlpInterface();
     ASSIGN_OR_RETURN(switch_configurator_,
                      OnlpSwitchConfigurator::Make(&onlpphal_, onlp_interface_));
@@ -201,7 +202,8 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
   int slot_ = 1;
   int port_ = 1;
   OnlpPhalMock onlpphal_;
-  MockOnlpWrapper* onlp_interface_;
+  OnlpWrapperMock* onlp_interface_;
+  std::unique_ptr<OnlpWrapperMock> onlp_wrappper_;
   OnlpSfpConfigurator* configurator_;
   onlp_oid_hdr_t mock_oid_info_;
   onlp_sfp_info_t mock_sfp_info_;

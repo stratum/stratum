@@ -34,7 +34,8 @@ OnlpPhalMock::~OnlpPhalMock() {}
   return ::util::OkStatus();
 }
 
-::util::Status OnlpPhalMock::InitializeOnlpInterface() {
+::util::Status OnlpPhalMock::InitializeOnlpInterface(
+    OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (initialized_) {
@@ -44,7 +45,7 @@ OnlpPhalMock::~OnlpPhalMock() {}
   }
 
   // Create the OnlpInterface object
-  ASSIGN_OR_RETURN(onlp_interface_, MockOnlpWrapper::Make());
+  onlp_interface_ = onlp_interface;
 
   return ::util::OkStatus();
 }
