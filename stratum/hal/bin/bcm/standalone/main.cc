@@ -30,6 +30,7 @@
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 #include "stratum/hal/lib/common/hal.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 // #include "stratum/hal/lib/phal/legacy_phal.h"
 // #include "stratum/hal/lib/phal/udev.h"
@@ -92,8 +93,8 @@ int Main(int argc, char** argv) {
   // Create chassis-wide and per-node class instances.
   auto* bcm_diag_shell = BcmDiagShell::CreateSingleton();
   auto* bcm_sdk_wrapper = BcmSdkWrapper::CreateSingleton(bcm_diag_shell);
-  auto onlp_wrapper = OnlpWrapper::Make().ConsumeValueOrDie();
-  auto* onlpphal = stratum::hal::phal::onlp::OnlpPhal::CreateSingleton(onlp_wrapper.get());
+  auto onlp_wrapper = phal::onlp::OnlpWrapper::Make().ConsumeValueOrDie();
+  auto* onlpphal = phal::onlp::OnlpPhal::CreateSingleton(onlp_wrapper.get());
   auto bcm_serdes_db_manager = BcmSerdesDbManager::CreateInstance();
   auto bcm_chassis_manager = BcmChassisManager::CreateInstance(
       OPERATION_MODE_STANDALONE, onlpphal, bcm_sdk_wrapper,

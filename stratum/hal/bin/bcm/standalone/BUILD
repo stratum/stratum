@@ -72,6 +72,7 @@ stratum_cc_binary(
         # "//stratum/hal/lib/phal:udev",
         # "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/phal/onlp:onlpphal",
+        "//stratum/hal/lib/phal/onlp:onlp_wrapper",
         "//stratum/hal/lib/phal/onlp:switch_configurator",
         "//stratum/hal/lib/phal/onlp:sfp_configurator",
         "//stratum/lib/security:auth_policy_checker",

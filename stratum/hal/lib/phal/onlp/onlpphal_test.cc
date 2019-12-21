@@ -47,7 +47,6 @@ static constexpr int kMaxXcvrEventDepth = 256;
 class OnlpPhalTest : public ::testing::Test {
  public:
   void SetUp() override {
-    // CreateSingleton calls Initialize()
     mock_onlp_interface_ = OnlpWrapperMock::Make().ConsumeValueOrDie();
     std::vector<OnlpOid> oids = {};
     EXPECT_CALL(*mock_onlp_interface_.get(), GetOidList(_))
@@ -56,6 +55,7 @@ class OnlpPhalTest : public ::testing::Test {
       .WillRepeatedly(Return(SfpInfo{}));
     EXPECT_CALL(*mock_onlp_interface_.get(), GetSfpMaxPortNumber())
       .WillRepeatedly(Return(0));
+    // CreateSingleton calls Initialize()
     onlpphal_ = OnlpPhal::CreateSingleton(mock_onlp_interface_.get());
   }
 
