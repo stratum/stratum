@@ -297,11 +297,11 @@ message OutputPower {
   uint64 min_time = 7;
 }
 
-// NOTE. The name 'LazerFrequency' was chosen to avoid the conflict with
+// NOTE. The name 'LaserFrequency' was chosen to avoid the conflict with
 // 'gnmi_publisher.cc:Frequency'.
 //
 // Optical channel frequency in MHz.
-message LazerFrequency {
+message LaserFrequency {
   uint64 value = 1;
 }
 
@@ -1241,7 +1241,7 @@ message DataResponse {
     FrontPanelPortInfo front_panel_port_info = 16;
     HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
-    LazerFrequency frequency = 19;
+    LaserFrequency frequency = 19;
     InputPower input_power = 20;
     OutputPower output_power = 21;
   }
@@ -1272,7 +1272,7 @@ message SetRequest {
         // The new forwarding viability of the port.
         ForwardingViability forwarding_viability = 10;
         // The new optical channel frequency.
-        LazerFrequency frequency = 11;
+        LaserFrequency frequency = 11;
         // The new optical channel output power.
         OutputPower output_power = 12;
       }

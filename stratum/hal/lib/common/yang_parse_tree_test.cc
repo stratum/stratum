@@ -3426,7 +3426,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteRetrieveValue(&DataResponse::mutable_frequency,
-                          &LazerFrequency::set_value,
+                          &LaserFrequency::set_value,
                           expected_value);
 
   // Retrieve the value that has been mocked.
@@ -3450,7 +3450,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteRetrieveValue(&DataResponse::mutable_frequency,
-                          &LazerFrequency::set_value,
+                          &LaserFrequency::set_value,
                           expected_value);
 
   // Retrieve the value that has been mocked.

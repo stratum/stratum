@@ -2175,7 +2175,7 @@ void SetUpComponentsComponentOpticalChannelStateFrequency(
   auto poll_functor = GetOnPollFunctor(
       node_id, port_id, tree, &DataResponse::frequency,
       &DataResponse::has_frequency, &DataRequest::Request::mutable_frequency,
-      &LazerFrequency::value);
+      &LaserFrequency::value);
 
   auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2216,7 +2216,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
     ::google::protobuf::uint64 uint_val = typed_value->uint_val();
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_frequency,
-                           &LazerFrequency::set_value, uint_val);
+                           &LaserFrequency::set_value, uint_val);
     if (status != ::util::OkStatus()) {
       return status;
     }
