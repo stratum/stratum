@@ -48,8 +48,7 @@ stratum_cc_library(
             "typesconverter.h",
             "taiattribute.h"],
     deps = [
-        "@com_github_oopt_tai//:tai_hdrs",
-        "@com_github_oopt_tai//:meta_lib",
+        "@com_github_oopt_tai//:metatai",
         # taimanager.h/.cc dependencies
         "//stratum/lib:utils",
         "//stratum/hal/lib/common:gnmi_events_lib",

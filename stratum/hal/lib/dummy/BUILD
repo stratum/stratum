@@ -148,6 +148,6 @@ stratum_cc_library(
     name = "dummy_tai",
     deps = [
         "//stratum/hal/lib/tai:tai",
-        "@com_github_oopt_tai//:stub_lib"
+        "@com_github_oopt_tai//stub:stub_tai"
     ]
 )

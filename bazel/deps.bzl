@@ -296,9 +296,8 @@ def stratum_deps():
     if "com_github_oopt_tai" not in native.existing_rules():
         remote_workspace(
             name = "com_github_oopt_tai",
-            remote = "https://github.com/Telecominfraproject/oopt-tai.git",
-            commit = "a4e6d90f77adabd9476da1cdbc62eb030499301a",
-            build_file = "@//bazel:external/tai.BUILD",
+            remote = "https://github.com/bohdan-oheruk-plvision/oopt-tai.git",
+            commit = "b70d94ad5a2e686dbca6bc813f3767ecc0fa22d4",
         )
 
 
