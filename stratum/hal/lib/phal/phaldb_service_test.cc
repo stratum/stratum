@@ -250,8 +250,6 @@ TEST_P(PhalDbServiceTest, SetRequestEmptyPathFail) {
 
 TEST_P(PhalDbServiceTest, SubscribeRequestSuccess) {
   ::grpc::ClientContext context;
-  context.set_deadline(std::chrono::system_clock::now() +
-                       std::chrono::milliseconds(500));
   SubscribeRequest req;
   SubscribeResponse resp;
 
@@ -278,8 +276,12 @@ TEST_P(PhalDbServiceTest, SubscribeRequestSuccess) {
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<Query>>(std::move(db_query_mock)))));
 
-  EXPECT_CALL(*db_query, Subscribe(_, poll_interval))
-      .WillRepeatedly(Return(::util::OkStatus()));
+  EXPECT_CALL(*db_query, Subscribe(_ /*writer*/, poll_interval))
+      .WillRepeatedly(Invoke([&](std::unique_ptr<ChannelWriter<PhalDB>> writer,
+                                 absl::Duration polling_interval) {
+        RETURN_IF_ERROR(writer->TryWrite(phaldb_resp));
+        return ::util::OkStatus();
+      }));
 
   // Prepare request
   ASSERT_OK(ParseProtoFromString(valid_request_path_proto, req.mutable_path()));
@@ -288,18 +290,18 @@ TEST_P(PhalDbServiceTest, SubscribeRequestSuccess) {
   // invoke the RPC
   auto reader = stub_->Subscribe(&context, req);
 
-  // TODO: figure out a way to trigger updates on the Mock database.
-  /*
   // Read PhalDB response from Mock above
   ASSERT_TRUE(reader->Read(&resp));
   EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(
-        phaldb_resp, resp.phal_db()));
+      phaldb_resp, resp.phal_db()));
 
-  // Finish off the reader so the server shuts down
+  // Finish off the reader so the server shuts down.
+  // The only way to shut down an unary stream is to cancel the ClientContext.
+  // See: https://stackoverflow.com/q/53468002
+  context.TryCancel();
+  ASSERT_FALSE(reader->Read(&resp));
   ::grpc::Status status = reader->Finish();
-  EXPECT_TRUE(status.ok()) << status.error_message();
-  */
-  reader->Finish();
+  EXPECT_EQ(status.error_code(), ERR_CANCELLED);
 }
 
 TEST_P(PhalDbServiceTest, SubscribeRequestFail) {

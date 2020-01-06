@@ -248,8 +248,8 @@ namespace {
   //       will do.
   while (true) {
     PhalDB phaldb_resp;
-    int code =
-        reader->Read(&phaldb_resp, absl::InfiniteDuration()).error_code();
+    auto status = reader->Read(&phaldb_resp, absl::InfiniteDuration());
+    int code = status.error_code();
 
     // Exit if the channel is closed
     if (code == ERR_CANCELLED) {
@@ -261,12 +261,6 @@ namespace {
       LOG(ERROR) << "Subscribe read with infinite timeout "
                  << "failed with ENTRY_NOT_FOUND.";
       continue;
-    }
-
-    // If we get nothing in message then close the channel
-    // - this is also used to mock the PhalDB Subscribe
-    if (phaldb_resp.ByteSizeLong() == 0) {
-      return MAKE_ERROR(ERR_INTERNAL) << "Subscribe read returned zero bytes.";
     }
 
     // Send message to client
