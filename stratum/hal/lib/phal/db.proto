@@ -204,12 +204,23 @@ service PhalDb {
 }
 
 message PathQuery {
-  // TODO: add some doc strings
   message PathEntry {
+    // The name of the next attribute group in the path. If this is the last
+    // entry in the path, this is the name of an attribute instead. In the
+    // simplest case, this is the only field of PathEntry which needs to be set.
     string name = 1;
+    // Ignored if indexed == false.
     int32 index = 2;
+    // If indexed == true, this PathEntry refers to a repeated attribute group.
+    // If all == true as well, we should query every index in this group.
+    // Otherwise, query only the specified index.
     bool indexed = 3;
+    // Ignored if indexed == false.
     bool all = 4;
+    // If terminal_group == true, this PathEntry is the last entry in our path,
+    // but still refers to an attribute group. Instead of querying a single
+    // attribute, we will query every attribute contained in this group and its
+    // children.
     bool terminal_group = 5;
   }
   repeated PathEntry entries = 1;

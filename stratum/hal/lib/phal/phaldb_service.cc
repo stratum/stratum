@@ -223,13 +223,11 @@ namespace {
     subscriber_channels_[pthread_self()] = channel;
   }
   auto _ = gtl::MakeCleanup([this, &channel] {
-    {
-      absl::MutexLock l(&subscriber_thread_lock_);
-      // Close the channel which will then cause the PhalDB writer
-      // to close and exit
-      channel->Close();
-      subscriber_channels_.erase(pthread_self());
-    }
+    absl::MutexLock l(&subscriber_thread_lock_);
+    // Close the channel which will then cause the PhalDB writer
+    // to close and exit
+    channel->Close();
+    subscriber_channels_.erase(pthread_self());
   });
 
   auto writer = ChannelWriter<PhalDB>::Create(channel);

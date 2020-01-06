@@ -41,7 +41,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-// The "PhalDbService" class implements PhalDbService::Service. It handles all
+// The "PhalDbService" class implements PhalDb::Service. It handles all
 // the RPCs that are part of the Phal DB API API.
 class PhalDbService final : public PhalDb::Service {
  public:
