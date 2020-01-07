@@ -80,13 +80,15 @@ TEST_P(OpenconfigConverterSimpleTest, OcToChassis) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    ConvertConfig,
-    OpenconfigConverterSimpleTest,
+    ConvertConfig, OpenconfigConverterSimpleTest,
     testing::Values(
-        std::make_tuple("stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
-                        "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt"),
-        std::make_tuple("stratum/hal/lib/common/testdata/port_config_params_chassis.pb.txt",
-                        "stratum/hal/lib/common/testdata/port_config_params_oc_device.pb.txt")));
+        std::make_tuple(
+            "stratum/hal/lib/common/testdata/simple_chassis.pb.txt",
+            "stratum/hal/lib/common/testdata/simple_oc_device.pb.txt"),
+        std::make_tuple(
+            "stratum/hal/lib/common/testdata/port_config_params_chassis.pb.txt",
+            "stratum/hal/lib/common/testdata/"
+            "port_config_params_oc_device.pb.txt")));
 
 TEST(OpenconfigConverterTest, ChassisConfigToOcDevice_VendorConfig) {
   ChassisConfig chassis_config;

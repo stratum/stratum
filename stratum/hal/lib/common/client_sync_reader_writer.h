@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_CLIENT_SYNC_READER_WRITER_H_
 #define STRATUM_HAL_LIB_COMMON_CLIENT_SYNC_READER_WRITER_H_
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <utility>
 
-#include "stratum/glue/logging.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
+#include "grpcpp/grpcpp.h"
+#include "stratum/glue/logging.h"
 
 namespace stratum {
 namespace hal {

@@ -3112,8 +3112,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigFailure) {
   )";
   const std::string kChassisMapError12 = "is in flex_port_group_keys";
 
-  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip here
-  // says TOMAHAWK.
+  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip
+  // here says TOMAHAWK.
   const std::string kBcmChassisMapListText13 = R"(
       bcm_chassis_maps {
         auto_add_logical_ports: true

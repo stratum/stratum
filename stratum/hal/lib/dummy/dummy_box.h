@@ -15,22 +15,21 @@
 #ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_
 #define STRATUM_HAL_LIB_DUMMY_DUMMY_BOX_H_
 
-#include "grpcpp/grpcpp.h"
-
 #include <functional>
 #include <memory>
 #include <vector>
 
-#include "absl/time/time.h"
-#include "absl/synchronization/mutex.h"
-#include "stratum/glue/integral_types.h"
-#include "stratum/hal/lib/common/gnmi_events.h"
-#include "stratum/glue/status/status.h"
 #include "absl/container/flat_hash_map.h"
-#include "stratum/hal/lib/dummy/dummy_test.pb.h"
-#include "stratum/hal/lib/dummy/dummy_test.grpc.pb.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
+#include "grpcpp/grpcpp.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/dummy/dummy_test.grpc.pb.h"
+#include "stratum/hal/lib/dummy/dummy_test.pb.h"
 
 namespace stratum {
 namespace hal {

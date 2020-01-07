@@ -1881,7 +1881,8 @@ TEST_P(BcmPacketioManagerTest, TransmitPacketAfterChassisConfigPush) {
 
   // 6- A packet sent to ingress pipeline
   packet.clear_metadata();  // no metadata will send packet to ingress pipeline
-  EXPECT_CALL(*bcm_sdk_mock_, GetKnetHeaderForIngressPipelineTx(kUnit1, _, _, _))
+  EXPECT_CALL(*bcm_sdk_mock_,
+              GetKnetHeaderForIngressPipelineTx(kUnit1, _, _, _))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*LibcProxyMock::Instance(), SendMsg(kSocket1, _, _))
       .WillOnce(Return(64));  // 64 is tot_len of the packet.

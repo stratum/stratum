@@ -436,10 +436,6 @@ class BcmSdkWrapper : public BcmSdkInterface {
                           ", dst_mac:", absl::Hex(dst_mac),
                           ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
     }
-    template <typename H>
-    friend H AbslHashValue(H h, const MyStationEntry& e) {
-      return H::combine(std::move(h), e.vlan, e.vlan_mask, e.dst_mac, e.dst_mac_mask);
-    }
   };
 
   // Map from unit number to mystation maximum entries

@@ -15,24 +15,22 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_
 #define STRATUM_HAL_LIB_COMMON_CONFIG_MONITORING_SERVICE_H_
 
-#include "grpcpp/grpcpp.h"
-
 #include <memory>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/lib/security/auth_policy_checker.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

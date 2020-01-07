@@ -1063,12 +1063,12 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
     for (int i = 0; i < new_config->singleton_ports_size(); i++) {
-        auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id &&
-            singleton_port->id() == port_id) {
-            singleton_port->mutable_config_params()->set_mac_address(mac_address);
-            break;
-        }
+      auto* singleton_port = new_config->mutable_singleton_ports(i);
+      if (singleton_port->node() == node_id &&
+          singleton_port->id() == port_id) {
+        singleton_port->mutable_config_params()->set_mac_address(mac_address);
+        break;
+      }
     }
 
     // Update the YANG parse tree.
@@ -1077,8 +1077,8 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
                                       GnmiSubscribeStream* stream) {
       // This leaf represents configuration data. Return what was known when it
       // was configured!
-      return SendResponse(GetResponse(path, MacAddressToYangString(mac_address)),
-                          stream);
+      return SendResponse(
+          GetResponse(path, MacAddressToYangString(mac_address)), stream);
     };
     node->SetOnTimerHandler(poll_functor)
         ->SetOnPollHandler(poll_functor);
@@ -2262,9 +2262,8 @@ void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name-of-component>]/integrated-circuit/config/node-id
-void SetUpComponentsComponentIntegratedCircuitConfigNodeId(uint64 node_id,
-                                                           TreeNode* node,
-                                                           YangParseTree* tree) {
+void SetUpComponentsComponentIntegratedCircuitConfigNodeId(
+    uint64 node_id, TreeNode* node, YangParseTree* tree) {
   auto poll_functor = [node_id](const GnmiEvent& event,
                                 const ::gnmi::Path& path,
                                 GnmiSubscribeStream* stream) {
@@ -2528,22 +2527,25 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   bool port_enabled = false;
   uint64 mac_address = 0;
   if (singleton.has_config_params()) {
-    port_auto_neg_enabled = IsPortAutonegEnabled(singleton.config_params().autoneg());
+    port_auto_neg_enabled =
+        IsPortAutonegEnabled(singleton.config_params().autoneg());
     port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
     mac_address = singleton.config_params().mac_address();
   }
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("auto-negotiate")());
-  SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(node_id, port_id,
-                                                      port_auto_neg_enabled, node, tree);
+  SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(
+      node_id, port_id, port_auto_neg_enabled, node, tree);
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("config")("enabled")());
-  SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node,
+                                        tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("mac-address")());
-  SetUpInterfacesInterfaceEthernetConfigMacAddress(node_id, port_id, mac_address, node, tree);
+  SetUpInterfacesInterfaceEthernetConfigMacAddress(node_id, port_id,
+                                                   mac_address, node, tree);
 
   // Paths for transceiver
   node = tree->AddNode(GetPath("components")(
@@ -2706,9 +2708,10 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
           return node.DoOnChangeRegistration(record);
         });
     return status;
-  };
+  };  // NOLINT(readability/braces)
 
-  auto interfaces_on_poll = [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+  auto interfaces_on_poll = [tree](const GnmiEvent& event,
+                                   const ::gnmi::Path& path,
                                    GnmiSubscribeStream* stream)
   EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
     // Polling a wildcard node means that all matching nodes have to
@@ -2722,7 +2725,7 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
     APPEND_STATUS_IF_ERROR(
         status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
     return status;
-  };
+  };  // NOLINT(readability/braces)
 
   // Add support for "/interfaces/interface/...".
   tree->AddNode(GetPath("interfaces")("interface")("...")())

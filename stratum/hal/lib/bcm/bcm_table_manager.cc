@@ -697,8 +697,8 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
 }
 
 ::util::Status BcmTableManager::FillBcmReplicationConfig(
-      const ::p4::v1::PacketReplicationEngineEntry replication_entry,
-      BcmPacketReplicationEntry* bcm_replication_entry) const {
+    const ::p4::v1::PacketReplicationEngineEntry replication_entry,
+    BcmPacketReplicationEntry* bcm_replication_entry) const {
   bcm_replication_entry->set_unit(unit_);
   switch (replication_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
@@ -706,8 +706,10 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().packet_length_bytes() == 0);
       // We simulate having one clone session with hard-coded Id
-      CHECK_RETURN_IF_FALSE(replication_entry.clone_session_entry().session_id()
-          == kCloneSessionId) << "Bcm only allows one stub clone session "
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().session_id() ==
+          kCloneSessionId)
+          << "Bcm only allows one stub clone session "
           << " with Id " << kCloneSessionId << ".";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().class_of_service() == 0)
@@ -717,27 +719,32 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
           replication_entry.clone_session_entry().replicas_size() == 1)
           << "Bcm only allows cloning to a single port.";
       CHECK_RETURN_IF_FALSE(
-          replication_entry.clone_session_entry().replicas(0).egress_port() == kCpuPortId)
+          replication_entry.clone_session_entry().replicas(0).egress_port() ==
+          kCpuPortId)
           << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ").";
       break;
-    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+        kMulticastGroupEntry: {
       auto mcast_grp = bcm_replication_entry->mutable_multicast_group_entry();
       CHECK_RETURN_IF_FALSE(
           replication_entry.multicast_group_entry().multicast_group_id() != 0);
       CHECK_RETURN_IF_FALSE(
-          replication_entry.multicast_group_entry().multicast_group_id() <= kuint8max);
+          replication_entry.multicast_group_entry().multicast_group_id() <=
+          kuint8max);
       mcast_grp->set_multicast_group_id(
           replication_entry.multicast_group_entry().multicast_group_id());
-      for (auto const& replica : replication_entry.multicast_group_entry().replicas()) {
-        CHECK_RETURN_IF_FALSE(replica.instance() == 1) << "instances are not suppoted";
+      for (auto const& replica :
+           replication_entry.multicast_group_entry().replicas()) {
+        CHECK_RETURN_IF_FALSE(replica.instance() == 1)
+            << "instances are not suppoted";
         mcast_grp->add_ports(replica.egress_port());
       }
       break;
     }
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Unsupported PacketReplicationEngineEntry "
-          << replication_entry.ShortDebugString();
+             << "Unsupported PacketReplicationEngineEntry "
+             << replication_entry.ShortDebugString();
   }
   return ::util::OkStatus();
 }
@@ -1184,16 +1191,17 @@ namespace {
   // Sanity checking.
   if (!multicast_group.multicast_group_id()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Need non-zero multicast_group_id: "
-        << multicast_group.ShortDebugString() << ".";
+           << "Need non-zero multicast_group_id: "
+           << multicast_group.ShortDebugString() << ".";
   }
   uint32 group_id = multicast_group.multicast_group_id();
 
   // Save a copy of P4 MulticastGroupEntry.
-  if (!gtl::InsertIfNotPresent(&multicast_groups_, {group_id, multicast_group})) {
+  if (!gtl::InsertIfNotPresent(&multicast_groups_,
+                               {group_id, multicast_group})) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Inconsistent state. Multicast group with ID " << group_id
-        << " already exists in multicast_groups_.";
+           << "Inconsistent state. Multicast group with ID " << group_id
+           << " already exists in multicast_groups_.";
   }
 
   return ::util::OkStatus();

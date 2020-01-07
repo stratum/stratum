@@ -410,14 +410,13 @@ class UtilStatusConvertibleToBool {
  public:
   // Implicity conversion from a status to wrap.
   // Need implicit conversion to allow in if-statement.
-  UtilStatusConvertibleToBool(::util::Status status)  // NOLINT(runtime/explicit)
-      : status_(status) { }
+  // NOLINTNEXTLINE(runtime/explicit)
+  UtilStatusConvertibleToBool(::util::Status status) : status_(status) {}
   // Implicity cast to bool. True on ok() and false on error.
   operator bool() const { return ABSL_PREDICT_TRUE(status_.ok()); }
   // Returns the wrapped status.
-  ::util::Status status() const {
-    return status_;
-  }
+  ::util::Status status() const { return status_; }
+
  private:
   ::util::Status status_;
 };

@@ -16,8 +16,6 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include <thread>
-
 #include "gflags/gflags.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
@@ -127,7 +125,8 @@ class HalTest : public ::testing::Test {
     FLAGS_forwarding_pipeline_configs_file =
         FLAGS_test_tmpdir + "/forwarding_pipeline_configs_file.pb.txt";
     FLAGS_persistent_config_dir = FLAGS_test_tmpdir + "/config_dir";
-    FLAGS_external_stratum_urls = absl::StrJoin({RandomURL(), RandomURL()}, ",");
+    FLAGS_external_stratum_urls =
+        absl::StrJoin({RandomURL(), RandomURL()}, ",");
     FLAGS_local_stratum_url = RandomURL();
     // FLAGS_cmal_service_url = RandomURL();  // google only
     ASSERT_OK(hal_->SanityCheck());

@@ -212,7 +212,8 @@ SingletonPortToComponents(const SingletonPort &in) {
       transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_ENABLED);
       break;
     case FEC_MODE_OFF:
-      transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_DISABLED);
+      transceiver->set_fec_mode(
+          OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_DISABLED);
       break;
     case FEC_MODE_AUTO:
       transceiver->set_fec_mode(OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_AUTO);

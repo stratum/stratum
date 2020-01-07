@@ -338,7 +338,8 @@ std::string MacAddressToYangString(
     const std::string& yang_string) {
   std::string tmp_str = yang_string;
   // Remove colons
-  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'), tmp_str.end());
+  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
+                tmp_str.end());
   return strtoull(tmp_str.c_str(), NULL, 16);
 }
 

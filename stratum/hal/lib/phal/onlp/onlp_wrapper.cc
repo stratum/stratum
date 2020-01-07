@@ -15,12 +15,14 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/macros.h"
+#include <string>
+
 #include "absl/memory/memory.h"
 #include "absl/strings/strip.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

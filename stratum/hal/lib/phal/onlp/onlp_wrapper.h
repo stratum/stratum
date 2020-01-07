@@ -19,24 +19,25 @@
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
 
 extern "C" {
-#include <onlp/onlp.h>
-#include <onlp/oids.h>
-#include <onlp/sfp.h>
 #include <onlp/fan.h>
-#include <onlp/psu.h>
-#include <onlp/thermal.h>
 #include <onlp/led.h>
+#include <onlp/oids.h>
+#include <onlp/onlp.h>
+#include <onlp/psu.h>
+#include <onlp/sfp.h>
+#include <onlp/thermal.h>
 }
 
 #include <bitset>
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {

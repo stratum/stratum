@@ -15,7 +15,6 @@
 
 #include "stratum/hal/lib/common/admin_service.h"
 
-#include "grpcpp/grpcpp.h"
 #include <memory>
 #include <string>
 
@@ -25,16 +24,17 @@
 #include "absl/time/clock.h"
 #include "gflags/gflags.h"
 #include "gmock/gmock.h"
+#include "grpcpp/grpcpp.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/net_util/ports.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/admin_utils_mock.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_mock.h"
-#include "stratum/hal/lib/common/admin_utils_mock.h"
 #include "stratum/lib/security/auth_policy_checker_mock.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
 #include "stratum/lib/timer_daemon.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -547,23 +547,21 @@ TEST_P(AdminServiceTest, SetPackageUnsupportedOptions) {
   ASSERT_OK(admin_service_->Setup(false));
 
   // Configure unexpected calls
-  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir())
-  .Times(0);
+  EXPECT_CALL(*(fs_helper_.get()), CreateTempDir()).Times(0);
 
-  EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_))
-  .Times(0);
-
-  EXPECT_CALL(*(fs_helper_.get()), StringToFile(::testing::_, ::testing::_, ::testing::_))
-  .Times(0);
-
-  EXPECT_CALL(*(fs_helper_.get()), RemoveDir(::testing::_))
-  .Times(0);
-
-  EXPECT_CALL(*(fs_helper_.get()), RemoveFile(::testing::_))
-  .Times(0);
+  EXPECT_CALL(*(fs_helper_.get()), TempFileName(::testing::_)).Times(0);
 
   EXPECT_CALL(*(fs_helper_.get()),
-  CheckHashSumFile(::testing::_, ::testing::_, ::testing::_)).Times(0);
+              StringToFile(::testing::_, ::testing::_, ::testing::_))
+      .Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveDir(::testing::_)).Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()), RemoveFile(::testing::_)).Times(0);
+
+  EXPECT_CALL(*(fs_helper_.get()),
+              CheckHashSumFile(::testing::_, ::testing::_, ::testing::_))
+      .Times(0);
 
   std::unique_ptr<::grpc::ClientWriter<::gnoi::system::SetPackageRequest> >
   writer = stub_->SetPackage(&context, &resp);

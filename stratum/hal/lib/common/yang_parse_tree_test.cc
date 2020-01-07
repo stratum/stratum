@@ -1041,7 +1041,8 @@ TEST_F(YangParseTreeTest,
   EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressYangString);
 }
 
-// Check if the 'config/mac-address' OnUpdate action rejects malformed mac string.
+// Check if the 'config/mac-address' OnUpdate action rejects malformed mac
+// string.
 TEST_F(YangParseTreeTest,
        InterfacesInterfaceEthernetConfigMacAddressOnUpdateFailure) {
   auto path = GetPath("interfaces")(
@@ -1077,18 +1078,18 @@ TEST_F(YangParseTreeTest,
               StatusIs(_, _, ContainsRegex("not a TypedValue message")));
 
   for (auto mac_string : kMacStrings) {
-      // Check reaction to wrong value.
-      invalid_val.set_string_val(mac_string);
-      EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
-                                  /* SetValue will not be called */ nullptr,
-                                  /* Notification will not be called */ nullptr),
-                  StatusIs(_, _, ContainsRegex("wrong value")));
+    // Check reaction to wrong value.
+    invalid_val.set_string_val(mac_string);
+    EXPECT_THAT(ExecuteOnUpdate(path, invalid_val,
+                                /* SetValue will not be called */ nullptr,
+                                /* Notification will not be called */ nullptr),
+                StatusIs(_, _, ContainsRegex("wrong value")));
 
-      // Check if mac_address remains unchanged.
-      ASSERT_OK(ExecuteOnPoll(path, &resp));
+    // Check if mac_address remains unchanged.
+    ASSERT_OK(ExecuteOnPoll(path, &resp));
 
-      ASSERT_THAT(resp.update().update(), SizeIs(1));
-      EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
+    ASSERT_THAT(resp.update().update(), SizeIs(1));
+    EXPECT_EQ(resp.update().update(0).val().string_val(), kMacAddressAsString);
   }
 }
 

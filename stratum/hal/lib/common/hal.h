@@ -15,15 +15,12 @@
  * limitations under the License.
  */
 
-
 // The Hardware Abstraction Layer (HAL) of the stratum stack.
 
 #ifndef STRATUM_HAL_LIB_COMMON_HAL_H_
 #define STRATUM_HAL_LIB_COMMON_HAL_H_
 
 #include <signal.h>
-
-#include "grpcpp/grpcpp.h"
 
 #include <memory>
 #include <string>
@@ -32,6 +29,7 @@
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
+#include "grpcpp/grpcpp.h"
 #include "stratum/hal/lib/common/admin_service.h"
 #include "stratum/hal/lib/common/certificate_management_service.h"
 // #include "stratum/hal/lib/common/cmal_service.h"
