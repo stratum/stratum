@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
 #include "gflags/gflags.h"
 #include "gmock/gmock.h"
 #include "google/rpc/code.pb.h"
@@ -155,7 +154,7 @@ TEST_P(PhalDbServiceTest, GetRequestSuccess) {
   auto db_query = db_query_mock.get();
 
   // Setup Mock DB calls
-  // TODO: check correct pb PathQuery to phal::Path translation
+  // TODO(max): check correct pb PathQuery to phal::Path translation
   EXPECT_CALL(*database_mock_.get(), MakeQuery(_))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<Query>>(std::move(db_query_mock)))));
@@ -179,7 +178,7 @@ TEST_P(PhalDbServiceTest, GetRequestFail) {
   auto db_query = db_query_mock.get();
 
   // Setup Mock DB calls
-  // TODO: check correct pb PathQuery to phal::Path translation
+  // TODO(max): check correct pb PathQuery to phal::Path translation
   EXPECT_CALL(*database_mock_.get(), MakeQuery(_))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<Query>>(std::move(db_query_mock)))));
@@ -211,7 +210,7 @@ TEST_P(PhalDbServiceTest, SetRequestSuccess) {
                                  PathEntry("rpm", -1, false, false, true)};
   attrs[path] = 1000.0;
 
-  // TODO: check correct pb PathQuery to phal::Path translation
+  // TODO(max): check correct pb PathQuery to phal::Path translation
   EXPECT_CALL(*database, Set(_))
       .WillOnce(DoAll(SaveArg<0>(&attrs), Return(::util::OkStatus())));
 
@@ -271,7 +270,7 @@ TEST_P(PhalDbServiceTest, SubscribeRequestSuccess) {
   auto poll_interval = absl::Milliseconds(500);
 
   // Setup Mock DB calls
-  // TODO: check correct pb PathQuery to phal::Path translation
+  // TODO(max): check correct pb PathQuery to phal::Path translation
   EXPECT_CALL(*database, MakeQuery(_))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<Query>>(std::move(db_query_mock)))));
@@ -329,7 +328,7 @@ TEST_P(PhalDbServiceTest, SubscribeRequestFail) {
   auto poll_interval = absl::Milliseconds(500);
 
   // Setup Mock DB calls
-  // TODO: check correct pb PathQuery to phal::Path translation
+  // TODO(max): check correct pb PathQuery to phal::Path translation
   EXPECT_CALL(*database, MakeQuery(_))
       .WillOnce(Return(ByMove(
           ::util::StatusOr<std::unique_ptr<Query>>(std::move(db_query_mock)))));

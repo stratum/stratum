@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_COMMON_PHALDB_SERVICE_H_
-#define STRATUM_HAL_LIB_COMMON_PHALDB_SERVICE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_PHALDB_SERVICE_H_
+#define STRATUM_HAL_LIB_PHAL_PHALDB_SERVICE_H_
 
-#include <grpcpp/grpcpp.h>
 #include <pthread.h>
 
 #include <map>
@@ -27,15 +26,14 @@
 #include <sstream>
 #include <string>
 
+#include "grpcpp/grpcpp.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/channel_writer_wrapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/hal/lib/phal/adapter.h"
 #include "stratum/hal/lib/phal/db.grpc.pb.h"
-#include "stratum/hal/lib/phal/db.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -45,7 +43,7 @@ namespace phal {
 // the RPCs that are part of the Phal DB API API.
 class PhalDbService final : public PhalDb::Service {
  public:
-  PhalDbService(AttributeDatabaseInterface* attribute_db_interface);
+  explicit PhalDbService(AttributeDatabaseInterface* attribute_db_interface);
 
   virtual ~PhalDbService();
 
@@ -57,8 +55,7 @@ class PhalDbService final : public PhalDb::Service {
   ::util::Status Teardown();
 
   // Get a database entry
-  ::grpc::Status Get(::grpc::ServerContext* context,
-                     const GetRequest* req,
+  ::grpc::Status Get(::grpc::ServerContext* context, const GetRequest* req,
                      GetResponse* resp) override;
 
   // Subscribe to a database entry
@@ -67,8 +64,7 @@ class PhalDbService final : public PhalDb::Service {
       ::grpc::ServerWriter<SubscribeResponse>* resp) override;
 
   // Set a database entry
-  ::grpc::Status Set(::grpc::ServerContext* context,
-                     const SetRequest* req,
+  ::grpc::Status Set(::grpc::ServerContext* context, const SetRequest* req,
                      SetResponse* resp) override;
 
   // PhalDbService is neither copyable nor movable.
@@ -78,15 +74,15 @@ class PhalDbService final : public PhalDb::Service {
 
  private:
   // Actual implementations of the calls. To be moved into an impl.
-  ::util::Status DoGet(::grpc::ServerContext* context,
-                       const GetRequest* req, GetResponse* resp);
+  ::util::Status DoGet(::grpc::ServerContext* context, const GetRequest* req,
+                       GetResponse* resp);
 
-  ::util::Status DoSet(::grpc::ServerContext* context,
-                       const SetRequest* req, SetResponse* resp);
+  ::util::Status DoSet(::grpc::ServerContext* context, const SetRequest* req,
+                       SetResponse* resp);
 
-  ::util::Status DoSubscribe(
-      ::grpc::ServerContext* context, const SubscribeRequest* req,
-      ::grpc::ServerWriter<SubscribeResponse>* stream);
+  ::util::Status DoSubscribe(::grpc::ServerContext* context,
+                             const SubscribeRequest* req,
+                             ::grpc::ServerWriter<SubscribeResponse>* stream);
 
   // AttributeDB Interface
   AttributeDatabaseInterface* attribute_db_interface_;
@@ -97,8 +93,8 @@ class PhalDbService final : public PhalDb::Service {
 
   // Map of subscriber channels (key is thread id, given that
   // each grpc request will have a different tid.
-  std::map<pthread_t, std::shared_ptr<Channel<PhalDB>>>
-      subscriber_channels_ GUARDED_BY(subscriber_thread_lock_);
+  std::map<pthread_t, std::shared_ptr<Channel<PhalDB>>> subscriber_channels_
+      GUARDED_BY(subscriber_thread_lock_);
 
   friend class PhalDbServiceTest;
 };
@@ -107,4 +103,4 @@ class PhalDbService final : public PhalDb::Service {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_COMMON_PHALDB_SERVICE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_PHALDB_SERVICE_H_

@@ -22,14 +22,10 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/str_split.h"
 #include "gflags/gflags.h"
-#include "google/protobuf/any.pb.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
 #include "stratum/glue/gtl/cleanup.h"
-#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
