@@ -118,18 +118,10 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::Status OnlpPhal::Shutdown() {
-  // TODO(unknown): add clean up code
+  absl::WriterMutexLock l(&config_lock_);
 
-  {
-    absl::WriterMutexLock l(&init_lock_);
-    if (this == singleton_) {
-      singleton_ = nullptr;
-    }
-  }
-  {
-    absl::WriterMutexLock l(&config_lock_);
-    initialized_ = false;
-  }
+  // TODO(unknown): add clean up code
+  initialized_ = false;
 
   return ::util::OkStatus();
 }

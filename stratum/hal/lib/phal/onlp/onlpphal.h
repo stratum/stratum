@@ -72,7 +72,7 @@ class OnlpPhal : public PhalInterface {
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_, init_lock_);
+  ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
   ::util::StatusOr<int> RegisterTransceiverEventWriter(
       std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
       int priority) override LOCKS_EXCLUDED(config_lock_);
