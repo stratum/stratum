@@ -93,8 +93,8 @@ int Main(int argc, char** argv) {
   // Create chassis-wide and per-node class instances.
   auto* bcm_diag_shell = BcmDiagShell::CreateSingleton();
   auto* bcm_sdk_wrapper = BcmSdkWrapper::CreateSingleton(bcm_diag_shell);
-  auto onlp_wrapper = phal::onlp::OnlpWrapper::Make().ConsumeValueOrDie();
-  auto* onlpphal = phal::onlp::OnlpPhal::CreateSingleton(onlp_wrapper.get());
+  auto* onlp_wrapper = phal::onlp::OnlpWrapper::CreateSingleton();
+  auto* onlpphal = phal::onlp::OnlpPhal::CreateSingleton(onlp_wrapper);
   auto bcm_serdes_db_manager = BcmSerdesDbManager::CreateInstance();
   auto bcm_chassis_manager = BcmChassisManager::CreateInstance(
       OPERATION_MODE_STANDALONE, onlpphal, bcm_sdk_wrapper,

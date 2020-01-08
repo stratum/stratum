@@ -29,6 +29,9 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
+OnlpWrapper* OnlpWrapper::singleton_ = nullptr;
+ABSL_CONST_INIT absl::Mutex OnlpWrapper::init_lock_(absl::kConstInit);
+
 constexpr int kOnlpBitmapBitsPerWord = 32;
 constexpr int kOnlpBitmapWordCount = 8;
 
@@ -60,11 +63,20 @@ HwState OidInfo::GetHardwareState() const {
   return HW_STATE_NOT_PRESENT;
 }
 
-::util::StatusOr<std::unique_ptr<OnlpWrapper>> OnlpWrapper::Make() {
+OnlpWrapper* OnlpWrapper::CreateSingleton() {
+  absl::WriterMutexLock l(&init_lock_);
+  if (!singleton_) {
+    singleton_ = new OnlpWrapper();
+  }
+
+  return singleton_;
+}
+
+OnlpWrapper::OnlpWrapper() {
   LOG(INFO) << "Initializing ONLP.";
-  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sw_init(nullptr)))
-      << "Failed to initialize ONLP.";
-  return absl::WrapUnique(new OnlpWrapper());
+  if (ONLP_SUCCESS(onlp_sw_init(nullptr))) {
+    LOG(FATAL) << "Failed to initialize ONLP.";
+  }
 }
 
 OnlpWrapper::~OnlpWrapper() {

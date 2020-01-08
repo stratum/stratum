@@ -220,7 +220,7 @@ class OnlpInterface {
 // allocated at any given time.
 class OnlpWrapper : public OnlpInterface {
  public:
-  static ::util::StatusOr<std::unique_ptr<OnlpWrapper>> Make();
+  static OnlpWrapper* CreateSingleton();
   OnlpWrapper(const OnlpWrapper& other) = delete;
   OnlpWrapper& operator=(const OnlpWrapper& other) = delete;
   ~OnlpWrapper() override;
@@ -243,7 +243,9 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override;
 
  private:
-  OnlpWrapper() {}
+  OnlpWrapper();
+  static OnlpWrapper* singleton_ GUARDED_BY(init_lock_);
+  static absl::Mutex init_lock_;
 };
 
 }  // namespace onlp

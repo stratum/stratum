@@ -168,8 +168,8 @@ class OnlpPhalCli {
   stratum::InitStratumLogging();
 
   // Need to init Onlp Interface
-  auto onlp_wrapper = OnlpWrapper::Make().ConsumeValueOrDie();
-  auto onlpphal = OnlpPhal::CreateSingleton(onlp_wrapper.get());
+  auto onlp_wrapper = OnlpWrapper::CreateSingleton();
+  auto onlpphal = OnlpPhal::CreateSingleton(onlp_wrapper);
 
   OnlpPhalCli cli(onlpphal);
   cli.RunCli();

@@ -73,6 +73,23 @@ OnlpPhal::OnlpPhal()
 
 OnlpPhal::~OnlpPhal() {}
 
+OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
+  absl::WriterMutexLock l(&init_lock_);
+
+  if (!singleton_) {
+    singleton_ = new OnlpPhal();
+  }
+
+  auto status = singleton_->Initialize(onlp_interface);
+  if (!status.ok()) {
+    LOG(ERROR) << "OnlpPhal failed to initialize: " << status;
+    delete singleton_;
+    singleton_ = nullptr;
+  }
+
+  return singleton_;
+}
+
 // Initialize the onlp interface and phal DB
 ::util::Status OnlpPhal::Initialize(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
@@ -243,22 +260,6 @@ OnlpPhal::~OnlpPhal() {}
   // Call the SfpAdapter to query the Phal Attribute DB
   SfpAdapter adapter(database_.get());
   return adapter.GetFrontPanelPortInfo(card_id, port_id, fp_port_info);
-}
-
-OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
-  absl::WriterMutexLock l(&init_lock_);
-
-  if (!singleton_) {
-    singleton_ = new OnlpPhal();
-    auto status = singleton_->Initialize(onlp_interface);
-    if (!status.ok()) {
-      LOG(ERROR) << "OnlpPhal failed to initialize: " << status;
-      delete singleton_;
-      singleton_ = nullptr;
-    }
-  }
-
-  return singleton_;
 }
 
 ::util::Status OnlpPhal::WriteTransceiverEvent(const TransceiverEvent& event) {
