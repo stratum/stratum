@@ -167,7 +167,7 @@ jobs:
       - checkout
       - run:
           name: Run cpplint
-          command: cpplint --linelength=110 --recursive stratum
+          command: cpplint --recursive stratum
 
 workflows:
   version: 2
