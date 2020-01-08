@@ -23,6 +23,9 @@ load(
     "STRATUM_INTERNAL",
 )
 
+load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
+load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+
 package(
 #    default_copts = [
 #        "-DDISABLE_GOOGLE_GLOBAL_USING_DECLARATIONS",

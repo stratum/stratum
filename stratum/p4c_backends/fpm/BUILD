@@ -18,11 +18,8 @@
 licenses(["notice"])  # Apache v2
 
 # This file builds the switch-specific p4c_backends components.
-load(
-    "//bazel:rules.bzl",
-    "stratum_cc_library",
-    "STRATUM_INTERNAL",
-)
+load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
 load(
     "//stratum/p4c_backends/test:build_defs.bzl",
     "p4c_save_ir",

@@ -17,11 +17,8 @@
 
 licenses(["notice"])  # Apache v2
 
-load(
-    "//bazel:rules.bzl",
-    "stratum_cc_library",
-    "STRATUM_INTERNAL",
-)
+load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
 
 package(
     #default_hdrs_check = "strict",

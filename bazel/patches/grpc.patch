@@ -1,124 +1,24 @@
-From 76c126b8f7d35134be88165c63bec872c88e58f2 Mon Sep 17 00:00:00 2001
+From 8a0b9f75724bba599374e5f10acef77064439e17 Mon Sep 17 00:00:00 2001
 From: Yi Tseng <yi@opennetworking.org>
-Date: Wed, 29 May 2019 14:06:06 -0700
-Subject: [PATCH] patch
+Date: Tue, 7 Jan 2020 16:51:18 +0800
+Subject: [PATCH 2/2] patch
 
 ---
- bazel/generate_cc.bzl  | 11 ++++++++---
- bazel/protobuf.bzl     | 27 +++++++++++++++++----------
- bazel/python_rules.bzl |  4 ++--
- 3 files changed, 27 insertions(+), 15 deletions(-)
+ bazel/generate_cc.bzl | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/bazel/generate_cc.bzl b/bazel/generate_cc.bzl
-index 29a888f608..1270a5a7a3 100644
+index 484959e..6c0cd51 100644
 --- a/bazel/generate_cc.bzl
 +++ b/bazel/generate_cc.bzl
-@@ -10,6 +10,8 @@ load(
-     "get_plugin_args",
-     "get_proto_root",
-     "proto_path_to_generated_filename",
-+    "get_include_paths",
-+    "get_include_protoc_args2",
- )
- 
- _GRPC_PROTO_HEADER_FMT = "{}.grpc.pb.h"
-@@ -32,6 +34,8 @@ def _strip_package_from_path(label_package, file):
- 
+@@ -32,6 +32,8 @@ def _strip_package_from_path(label_package, file):
+
  def _get_srcs_file_path(file):
      if not file.is_source and file.path.startswith(file.root.path):
 +        if file.owner.workspace_root:
 +            return file.path[len(file.root.path) + 1 + len(file.owner.workspace_root) + 1:]
          return file.path[len(file.root.path) + 1:]
      return file.path
- 
-@@ -107,11 +111,12 @@ def generate_cc_impl(ctx):
-         arguments += ["--cpp_out=" + ",".join(ctx.attr.flags) + ":" + dir_out]
-         tools = []
- 
--    arguments += get_include_protoc_args(includes)
--
-+    include_paths = get_include_paths(includes)
-     # Include the output directory so that protoc puts the generated code in the
-     # right directory.
--    arguments += ["--proto_path={0}{1}".format(dir_out, proto_root)]
-+    include_paths.append(dir_out)
-+    arguments += get_include_protoc_args2(include_paths)
-+
-     arguments += [_get_srcs_file_path(proto) for proto in protos]
- 
-     # create a list of well known proto files if the argument is non-None
-diff --git a/bazel/protobuf.bzl b/bazel/protobuf.bzl
-index f2df7bd87b..c53ca97c46 100644
---- a/bazel/protobuf.bzl
-+++ b/bazel/protobuf.bzl
-@@ -57,17 +57,24 @@ def proto_path_to_generated_filename(proto_path, fmt_str):
-     return fmt_str.format(_strip_proto_extension(proto_path))
- 
- def _get_include_directory(include):
--    directory = include.path
-     prefix_len = 0
--    if not include.is_source and directory.startswith(include.root.path):
-+    if not include.is_source:
-         prefix_len = len(include.root.path) + 1
- 
--    if directory.startswith("external", prefix_len):
--        external_separator = directory.find("/", prefix_len)
--        repository_separator = directory.find("/", external_separator + 1)
--        return directory[:repository_separator]
--    else:
--        return include.root.path if include.root.path else "."
-+    if include.owner.workspace_root:
-+        prefix_len += len(include.owner.workspace_root) + 1
-+
-+    # Strip the trailing slash
-+    if prefix_len:
-+        prefix_len -= 1
-+
-+    return include.path[:prefix_len] if prefix_len else "."
-+
-+def get_include_paths(includes):
-+    return [_get_include_directory(include) for include in includes]
-+
-+def get_include_protoc_args2(paths):
-+    return ["--proto_path=" + path for path in depset(paths)]
- 
- def get_include_protoc_args(includes):
-     """Returns protoc args that imports protos relative to their import root.
-@@ -78,10 +85,10 @@ def get_include_protoc_args(includes):
-     Returns:
-       A list of arguments to be passed to protoc. For example, ["--proto_path=."].
-     """
--    return [
-+    return depset([
-         "--proto_path={}".format(_get_include_directory(include))
-         for include in includes
--    ]
-+    ]).to_list()
- 
- def get_plugin_args(plugin, flags, dir_out, generate_mocks):
-     """Returns arguments configuring protoc to use a plugin for a language.
-diff --git a/bazel/python_rules.bzl b/bazel/python_rules.bzl
-index 2f3b38af00..50b12af06b 100644
---- a/bazel/python_rules.bzl
-+++ b/bazel/python_rules.bzl
-@@ -2,7 +2,7 @@
- 
- load("@grpc_python_dependencies//:requirements.bzl", "requirement")
- load(
--    "//bazel:protobuf.bzl",
-+    "@com_github_grpc_grpc//bazel:protobuf.bzl",
-     "get_include_protoc_args",
-     "get_plugin_args",
-     "get_proto_root",
-@@ -163,7 +163,7 @@ def py_proto_library(
-         _generate_py(
-             name = codegen_grpc_target,
-             deps = deps,
--            plugin = "//:grpc_python_plugin",
-+            plugin = "@com_github_grpc_grpc//:grpc_python_plugin",
-             well_known_protos = well_known_protos,
-             **kwargs
-         )
--- 
-2.19.0
 
+--
+2.24.1

@@ -15,31 +15,32 @@
 # limitations under the License.
 #
 
+load("//bazel:defs.bzl", "HOST_ARCHES")
+load("//bazel/rules:binary_rule.bzl", "stratum_cc_binary")
+
 licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = ["//visibility:public"],
 )
 
-load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
-
 # TODO(Yi) Move to CC
-py_binary(
-    name = "cli",
-    srcs = ["cli.py"],
-    deps = [
-        "//stratum/hal/lib/dummy:dummy_test_py_grpc",
-        "//stratum/hal/lib/common:common_py_proto",
-    ]
-)
-
-py_binary(
-    name = "port_counter_sim",
-    srcs = ["port_counter_sim.py"],
-    deps = ["//stratum/hal/bin/dummy:cli",
-            "//stratum/hal/lib/dummy:dummy_test_py_grpc",
-            "//stratum/hal/lib/common:common_py_proto"]
-)
+#py_binary(
+#    name = "cli",
+#    srcs = ["cli.py"],
+#    deps = [
+#        "//stratum/hal/lib/dummy:dummy_test_py_grpc",
+#        "//stratum/hal/lib/common:common_py_proto",
+#    ]
+#)
+#
+#py_binary(
+#    name = "port_counter_sim",
+#    srcs = ["port_counter_sim.py"],
+#    deps = ["//stratum/hal/bin/dummy:cli",
+#            "//stratum/hal/lib/dummy:dummy_test_py_grpc",
+#            "//stratum/hal/lib/common:common_py_proto"]
+#)
 
 stratum_cc_binary(
     name = "stratum_dummy",

@@ -17,7 +17,7 @@
 licenses(["notice"])  # Apache v2
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
-load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
+#load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -90,8 +90,8 @@ cc_grpc_library(
     ],
     grpc_only = True
 )
-
-python_grpc_library(
-    name = "p4runtime_py_grpc",
-    deps = [":p4runtime_proto"],
-)
+#
+#python_grpc_library(
+#    name = "p4runtime_py_grpc",
+#    deps = [":p4runtime_proto"],
+#)

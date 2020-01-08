@@ -16,15 +16,10 @@
 
 licenses(["notice"])  # Apache v2
 
-load(
-    "//bazel:rules.bzl",
-    "STRATUM_INTERNAL",
-    "stratum_cc_library",
-    "stratum_cc_test",
-    "HOST_ARCHES",
-)
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
-load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
+load("//bazel:defs.bzl", "HOST_ARCHES", "STRATUM_INTERNAL")
+load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
+#load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -117,13 +112,13 @@ cc_grpc_library(
     grpc_only = True,
 )
 
-py_proto_library(
-    name = "dummy_test_py_grpc",
-    deps = [
-        ":dummy_test_proto"
-    ],
-    well_known_protos = False,
-)
+#py_proto_library(
+#    name = "dummy_test_py_grpc",
+#    deps = [
+#        ":dummy_test_proto"
+#    ],
+#    well_known_protos = False,
+#)
 
 stratum_cc_library(
     name = "dummy_box",

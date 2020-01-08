@@ -19,12 +19,9 @@ licenses(["notice"])  # Apache v2
 
 # This package contains testing libraries for Hercules.
 
-load(
-    "//bazel:rules.bzl",
-    "stratum_cc_library",
-    "stratum_cc_test",
-    "STRATUM_INTERNAL",
-)
+load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
+load("//bazel/rules:test_rule.bzl", "stratum_cc_test")
 
 package(
     #default_hdrs_check = "strict",

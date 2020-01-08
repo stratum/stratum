@@ -17,16 +17,13 @@
 
 licenses(["notice"])  # Apache v2
 
-load(
-    "//bazel:rules.bzl",
-    "STRATUM_INTERNAL",
-    "stratum_cc_library",
-    "stratum_cc_test",
-)
+load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
+load("//bazel/rules:test_rule.bzl", "stratum_cc_test")
+load("//bazel:defs.bzl", "STRATUM_INTERNAL")
 
 load("//bazel:deps.bzl", "P4RUNTIME_VER")
 
-load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
+#load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(
     #default_hdrs_check = "strict",
@@ -205,13 +202,13 @@ cc_proto_library(
     deps = [":common_proto"]
 )
 
-py_proto_library(
-    name = "common_py_proto",
-    deps = [
-        ":common_proto"
-    ],
-    well_known_protos = False,
-)
+#py_proto_library(
+#    name = "common_py_proto",
+#    deps = [
+#        ":common_proto"
+#    ],
+#    well_known_protos = False,
+#)
 
 stratum_cc_library(
     name = "config_monitoring_service",

@@ -22,7 +22,7 @@
 
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
-#include "gnoi/file/file.grpc.pb.h"
+#include "file/file.grpc.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"

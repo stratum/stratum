@@ -20,9 +20,9 @@
 #include <memory>
 #include <vector>
 
-#include "gnoi/types/types.pb.h"
+#include "types/types.pb.h"
 #include "stratum/glue/status/status.h"
-#include "gnoi/system/system.grpc.pb.h"
+#include "system/system.grpc.pb.h"
 #include "stratum/glue/integral_types.h"
 
 namespace {  // NOLINT

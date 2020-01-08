@@ -16,30 +16,20 @@
 
 licenses(["notice"])  # Apache v2
 
-load(
-    "@com_github_stratum_stratum//bazel/rules:proto_rule.bzl",
-    "wrapped_proto_library",
-)
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
-
-NEW_PROTO_DIR = "gnoi/"
-IMPORT_REWRITE_MAP = {
-    "github.com/openconfig/gnoi/": "gnoi/"
-}
 
 package(
     default_visibility = [ "//visibility:public" ],
 )
 
-wrapped_proto_library(
+proto_library(
     name = "types_proto",
     srcs = ["types/types.proto"],
     deps = [
         "@com_google_protobuf//:descriptor_proto",
         "@com_google_protobuf//:any_proto",
     ],
-    new_proto_dir = NEW_PROTO_DIR,
-    rewrite_proto_imports = IMPORT_REWRITE_MAP,
 )
 
 cc_proto_library(
@@ -47,12 +37,10 @@ cc_proto_library(
     deps = [":types_proto"]
 )
 
-wrapped_proto_library(
+proto_library(
     name = "common_proto",
     srcs = ["common/common.proto"],
     deps = [":types_proto"],
-    new_proto_dir = NEW_PROTO_DIR,
-    rewrite_proto_imports = IMPORT_REWRITE_MAP,
 )
 
 cc_proto_library(
@@ -60,12 +48,10 @@ cc_proto_library(
     deps = [":common_proto"],
 )
 
-wrapped_proto_library(
+proto_library(
     name = "diag_proto",
     srcs = ["diag/diag.proto"],
     deps = [":types_proto"],
-    new_proto_dir = NEW_PROTO_DIR,
-    rewrite_proto_imports = IMPORT_REWRITE_MAP,
 )
 
 cc_proto_library(
@@ -80,15 +66,13 @@ cc_grpc_library(
     grpc_only = True,
 )
 
-wrapped_proto_library(
+proto_library(
     name = "system_proto",
     srcs = ["system/system.proto"],
     deps = [
       ":types_proto",
       ":common_proto"
     ],
-    new_proto_dir = NEW_PROTO_DIR,
-    rewrite_proto_imports = IMPORT_REWRITE_MAP,
 )
 
 cc_proto_library(
@@ -103,15 +87,13 @@ cc_grpc_library(
     grpc_only = True,
 )
 
-wrapped_proto_library(
+proto_library(
     name = "file_proto",
     srcs = ["file/file.proto"],
     deps = [
       ":types_proto",
       ":common_proto"
     ],
-    new_proto_dir = NEW_PROTO_DIR,
-    rewrite_proto_imports = IMPORT_REWRITE_MAP,
 )
 
 cc_proto_library(
@@ -126,15 +108,13 @@ cc_grpc_library(
     grpc_only = True,
 )
 
-wrapped_proto_library(
+proto_library(
     name = "cert_proto",
     srcs = ["cert/cert.proto"],
     deps = [
       ":types_proto",
       ":common_proto",
     ],
-    new_proto_dir = NEW_PROTO_DIR,
-    rewrite_proto_imports = IMPORT_REWRITE_MAP,
 )
 
 cc_proto_library(

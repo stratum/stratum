@@ -34,25 +34,22 @@ BF_SDE_PI_VER = {
     "9_0_0": "ca0291420b5b47fa2596a00877d1713aab61dc7a",
     "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
 }
+GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
+GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
 
 def stratum_deps():
 # -----------------------------------------------------------------------------
 #        Protobuf + gRPC compiler and external models
 # -----------------------------------------------------------------------------
-    if "com_google_protobuf" not in native.existing_rules():
-        remote_workspace(
-            name = "com_google_protobuf",
-            remote = "https://github.com/google/protobuf",
-            tag = "3.7.1",
-        )
 
     if "com_github_grpc_grpc" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_grpc_grpc",
-            remote = "https://github.com/grpc/grpc",
-            tag = "1.21.3",
-            patches = ["@//bazel/patches:grpc.patch"],
-            patch_args = ["-p1"],
+            urls = [
+                "https://github.com/grpc/grpc/archive/de893acb6aef88484a427e64b96727e4926fdcfd.tar.gz",
+            ],
+            strip_prefix = "grpc-de893acb6aef88484a427e64b96727e4926fdcfd",
+            sha256 = "61272ea6d541f60bdc3752ddef9fd4ca87ff5ab18dd21afc30270faad90c8a34",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
@@ -89,12 +86,12 @@ def stratum_deps():
             build_file = "@//bazel:external/p4runtime.BUILD",
         )
 
-    if "build_stack_rules_proto" not in native.existing_rules():
-        remote_workspace(
-            name = "build_stack_rules_proto",
-            remote = "https://github.com/stackb/rules_proto",
-            commit = "2f4e4f62a3d7a43654d69533faa0652e1c4f5082",
-        )
+#    if "build_stack_rules_proto" not in native.existing_rules():
+#        remote_workspace(
+#            name = "build_stack_rules_proto",
+#            remote = "https://github.com/stackb/rules_proto",
+#            commit = "2f4e4f62a3d7a43654d69533faa0652e1c4f5082",
+#        )
 
     if "com_github_p4lang_PI" not in native.existing_rules():
         # ----- PI -----
@@ -125,19 +122,24 @@ def stratum_deps():
         )
 
     if "com_github_openconfig_gnoi" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_openconfig_gnoi",
-            remote = "https://github.com/openconfig/gnoi",
-            commit = "437c62e630389aa4547b4f0521d0bca3fb2bf811",
+            urls = ["https://github.com/openconfig/gnoi/archive/%s.zip" % GNOI_COMMIT],
+            strip_prefix = "gnoi-%s" % GNOI_COMMIT,
             build_file = "@//bazel:external/gnoi.BUILD",
+            sha256 = GNOI_SHA,
+            patch_cmds = [
+                "find . -name *.proto | xargs sed -i 's#github.com/openconfig/gnoi/##g'",
+            ],
         )
 
-    if "io_bazel_rules_python" not in native.existing_rules():
-        remote_workspace(
-            name = "io_bazel_rules_python",
-            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
-            remote = "https://github.com/bazelbuild/rules_python.git",
-        )
+#    if "io_bazel_rules_python" not in native.existing_rules():
+#        remote_workspace(
+#            name = "io_bazel_rules_python",
+#            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
+#            remote = "https://github.com/bazelbuild/rules_python.git",
+#        )
+
     if "cython" not in native.existing_rules():
         http_archive(
             name = "cython",
@@ -238,15 +240,16 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_nelhage_rules_boost",
             remote = "https://github.com/nelhage/rules_boost",
-            commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
+            commit = "9f9fb8b2f0213989247c9d5c0e814a8451d18d7f",
         )
+        # sha256 = "bd3155d1f13792a798e116034322dbe2ee2904253396573ab64ab10dc8c27d96"
 
-    if "rules_cc" not in native.existing_rules():
-        remote_workspace(
-            name = "rules_cc",
-            remote = "https://github.com/bazelbuild/rules_cc",
-            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
-        )
+#    if "rules_cc" not in native.existing_rules():
+#        remote_workspace(
+#            name = "rules_cc",
+#            remote = "https://github.com/bazelbuild/rules_cc",
+#            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
+#        )
 
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
@@ -259,18 +262,15 @@ def stratum_deps():
             url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
         )
 
-    if "net_zlib" not in native.existing_rules():
-        native.bind(
-            name = "zlib",
-            actual = "@net_zlib//:zlib",
-        )
-        http_archive(
-            name = "net_zlib",
-            build_file = "@com_google_protobuf//:third_party/zlib.BUILD",
-            sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
-            strip_prefix = "zlib-1.2.11",
-            urls = ["https://zlib.net/zlib-1.2.11.tar.gz"],
-        )
+#    if "zlib" not in native.existing_rules():
+#        http_archive(
+#            name = "zlib",
+#            build_file = "@com_github_grpc_grpc//third_party:zlib.BUILD",
+#            sha256 = "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
+#            strip_prefix = "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f",
+#            url = "https://github.com/madler/zlib/archive/cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
+#        )
+
     if "io_bazel_rules_go" not in native.existing_rules():
         remote_workspace(
             name = "io_bazel_rules_go",
