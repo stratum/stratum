@@ -33,13 +33,6 @@ namespace onlp {
 
 class OnlpWrapperMock : public OnlpInterface {
  public:
-  ~OnlpWrapperMock() override{};
-
-  static ::util::StatusOr<std::unique_ptr<OnlpWrapperMock>> Make() {
-    LOG(INFO) << "Initializing Mock ONLP.";
-    return absl::make_unique<OnlpWrapperMock>();
-  }
-
   MOCK_CONST_METHOD1(GetOidInfo, ::util::StatusOr<OidInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetSfpInfo, ::util::StatusOr<SfpInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetFanInfo, ::util::StatusOr<FanInfo>(OnlpOid oid));

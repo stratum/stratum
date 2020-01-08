@@ -51,7 +51,6 @@ class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
   OnlpPhalSfpEventCallback(const OnlpPhalSfpEventCallback& other) = delete;
   OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) =
       delete;
-  ~OnlpPhalSfpEventCallback() override {};
 
   // Callback for handling SFP status changes - SFP plug/unplug events.
   ::util::Status HandleStatusChange(const OidInfo& oid_info) override;
@@ -90,7 +89,7 @@ class OnlpPhal : public PhalInterface {
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
   static OnlpPhal* CreateSingleton(OnlpInterface* onlp_interface)
-      LOCKS_EXCLUDED(config_lock_);
+      LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // OnlpPhal is neither copyable nor movable.
   OnlpPhal(const OnlpPhal&) = delete;
@@ -112,14 +111,10 @@ class OnlpPhal : public PhalInterface {
   OnlpPhal();
 
   // Calls all the one time start initialisations
-  virtual ::util::Status Initialize(OnlpInterface* onlp_interface)
+  ::util::Status Initialize(OnlpInterface* onlp_interface)
       LOCKS_EXCLUDED(config_lock_);
 
-  // One time initialization of the OnlpWrapper
-  virtual ::util::Status InitializeOnlpInterface(OnlpInterface* onlp_interface)
-      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
-
-  // Inialize the PhalDB on start up
+  // Initialize the PhalDB on start up
   ::util::Status InitializePhalDB() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the OnlpEventHandler. Need to be called after

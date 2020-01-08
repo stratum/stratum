@@ -16,56 +16,56 @@
 #include "stratum/hal/lib/phal/onlp/psu_datasource.h"
 
 #include <memory>
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/test_util.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-// FIXME #include "absl/strings/util.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
-#include "stratum/glue/status/status_test_util.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::HasSubstr;
 using ::testing::Return;
-using ::stratum::test_utils::StatusIs;
 
 class PsuDatasourceTest : public ::testing::Test {
- public:
+ protected:
   void SetUp() override {
     id_ = 12345;
     oid_ = ONLP_PSU_ID_CREATE(id_);
+    onlp_wrapper_mock_ = absl::make_unique<OnlpWrapperMock>();
   }
 
-  int id_;             // Id for this PSU
-  OnlpOid oid_;        // OID for this PSU (i.e. Type + Id)
+  int id_;       // Id for this PSU
+  OnlpOid oid_;  // OID for this PSU (i.e. Type + Id)
   onlp_oid_hdr_t mock_oid_info_;
-  OnlpWrapperMock mock_onlp_interface_;
+  std::unique_ptr<OnlpWrapperMock> onlp_wrapper_mock_;
 };
 
 TEST_F(PsuDatasourceTest, InitializePSUWithEmptyInfo) {
   mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+  EXPECT_CALL(*onlp_wrapper_mock_, GetOidInfo(oid_))
       .WillOnce(Return(OidInfo(mock_oid_info_)));
 
   onlp_psu_info_t mock_psu_info = {};
   mock_psu_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
 
-  EXPECT_CALL(mock_onlp_interface_, GetPsuInfo(oid_))
+  EXPECT_CALL(*onlp_wrapper_mock_, GetPsuInfo(oid_))
       .Times(2)
       .WillRepeatedly(Return(PsuInfo(mock_psu_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpPsuDataSource>> result =
-      OnlpPsuDataSource::Make(id_, &mock_onlp_interface_, nullptr);
+      OnlpPsuDataSource::Make(id_, onlp_wrapper_mock_.get(), nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpPsuDataSource> psu_datasource =
       result.ConsumeValueOrDie();
@@ -74,15 +74,14 @@ TEST_F(PsuDatasourceTest, InitializePSUWithEmptyInfo) {
 
 TEST_F(PsuDatasourceTest, GetPsuData) {
   mock_oid_info_.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  EXPECT_CALL(mock_onlp_interface_, GetOidInfo(oid_))
+  EXPECT_CALL(*onlp_wrapper_mock_, GetOidInfo(oid_))
       .WillRepeatedly(Return(OidInfo(mock_oid_info_)));
 
   onlp_psu_info_t mock_psu_info = {};
   mock_psu_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
-  strncpy(mock_psu_info.model, "test_psu_model",
-              sizeof(mock_psu_info.model));
+  strncpy(mock_psu_info.model, "test_psu_model", sizeof(mock_psu_info.model));
   strncpy(mock_psu_info.serial, "test_psu_serial",
-              sizeof(mock_psu_info.serial));
+          sizeof(mock_psu_info.serial));
 
   mock_psu_info.mvin = 1111;
   mock_psu_info.mvout = 2222;
@@ -93,11 +92,11 @@ TEST_F(PsuDatasourceTest, GetPsuData) {
   mock_psu_info.type = ONLP_PSU_TYPE_AC;
   mock_psu_info.caps = (ONLP_PSU_CAPS_GET_VIN | ONLP_PSU_CAPS_GET_IIN);
 
-  EXPECT_CALL(mock_onlp_interface_, GetPsuInfo(oid_))
+  EXPECT_CALL(*onlp_wrapper_mock_, GetPsuInfo(oid_))
       .WillRepeatedly(Return(PsuInfo(mock_psu_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpPsuDataSource>> result =
-      OnlpPsuDataSource::Make(id_, &mock_onlp_interface_, nullptr);
+      OnlpPsuDataSource::Make(id_, onlp_wrapper_mock_.get(), nullptr);
   ASSERT_OK(result);
   std::shared_ptr<OnlpPsuDataSource> psu_datasource =
       result.ConsumeValueOrDie();

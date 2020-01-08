@@ -18,23 +18,24 @@
 #include <functional>
 #include <vector>
 
-#include "stratum/hal/lib/phal/onlp/onlp_event_handler_mock.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler_mock.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
+using ::stratum::test_utils::StatusIs;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::HasSubstr;
@@ -42,17 +43,13 @@ using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::Return;
 using ::testing::StrictMock;
-using ::stratum::test_utils::StatusIs;
 
 class OnlpEventHandlerTest : public ::testing::Test {
- public:
-  void SetUp() override {}
-
+ protected:
   ::util::Status PollOids() { return handler_.PollOids(); }
   ::util::Status PollSfps() { return handler_.PollSfpPresence(); }
   ::util::Status RunPolling() { return handler_.InitializePollingThread(); }
 
- protected:
   StrictMock<OnlpWrapperMock> onlp_;
   OnlpEventHandler handler_{&onlp_};
 };
@@ -201,9 +198,9 @@ TEST_F(OnlpEventHandlerTest, ExecutesAllOidCallbacksDespiteFailures) {
   EXPECT_CALL(onlp_, GetOidInfo(1234)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(onlp_, GetOidInfo(1235)).WillOnce(Return(OidInfo(fake_oid)));
   EXPECT_CALL(callback1, HandleStatusChange(_))
-      .WillOnce(Return(::util::Status { MAKE_ERROR() << "callback1 failure" }));
+      .WillOnce(Return(::util::Status{MAKE_ERROR() << "callback1 failure"}));
   EXPECT_CALL(callback2, HandleStatusChange(_))
-      .WillOnce(Return(::util::Status { MAKE_ERROR() << "callback2 failure" }));
+      .WillOnce(Return(::util::Status{MAKE_ERROR() << "callback2 failure"}));
   EXPECT_THAT(PollOids(), StatusIs(_, _,
                                    AllOf(HasSubstr("callback1 failure"),
                                          HasSubstr("callback2 failure"))));

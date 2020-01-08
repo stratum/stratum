@@ -16,6 +16,7 @@
 #include <iostream>
 #include <string>
 
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/init_google.h"
@@ -40,22 +41,22 @@ using ::testing::Return;
 using ::testing::StrictMock;
 
 class OnlpSwitchConfiguratorTest : public ::testing::Test {
- public:
+ protected:
   void SetUp() override {
     root_group_ = AttributeGroup::From(PhalDB::descriptor());
-    auto onlp_wrapper_mock = OnlpWrapperMock::Make().ConsumeValueOrDie();
-    onlpphal_.InitializeOnlpInterface(onlp_wrapper_mock.get());
-    onlp_interface_ = onlpphal_.GetOnlpInterface();
-    ASSERT_OK_AND_ASSIGN(configurator_, OnlpSwitchConfigurator::Make(
-                                            &onlpphal_, onlp_interface_));
+    onlp_wrapper_mock_ = absl::make_unique<OnlpWrapperMock>();
+    onlpphal_mock_ = absl::make_unique<OnlpPhalMock>();
+    ASSERT_OK_AND_ASSIGN(
+        configurator_, OnlpSwitchConfigurator::Make(onlpphal_mock_.get(),
+                                                    onlp_wrapper_mock_.get()));
   }
-  std::unique_ptr<AttributeGroup> root_group_;
-  OnlpPhalMock onlpphal_;
-  OnlpWrapperMock* onlp_interface_;
-  PhalInitConfig config_;
-  std::unique_ptr<OnlpSwitchConfigurator> configurator_;
 
- protected:
+  std::unique_ptr<AttributeGroup> root_group_;
+  std::unique_ptr<OnlpWrapperMock> onlp_wrapper_mock_;
+  std::unique_ptr<OnlpPhalMock> onlpphal_mock_;
+  std::unique_ptr<OnlpSwitchConfigurator> configurator_;
+  PhalInitConfig config_;
+
   ::util::Status PopulatePhalInitConfig(PhalInitConfig* config) {
     RETURN_IF_ERROR(ParseProtoFromString(kPhalInitConfig, config));
     return ::util::OkStatus();
@@ -134,10 +135,12 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
       switch (card.ports(i).physical_port_type()) {
         case PHYSICAL_PORT_TYPE_SFP_CAGE:
         case PHYSICAL_PORT_TYPE_QSFP_CAGE:
-          EXPECT_CALL(*onlp_interface_, GetOidInfo(ONLP_SFP_ID_CREATE(i + 1)))
+          EXPECT_CALL(*onlp_wrapper_mock_,
+                      GetOidInfo(ONLP_SFP_ID_CREATE(i + 1)))
               .Times(2)
               .WillRepeatedly(Return(OidInfo(mock_oid_info)));
-          EXPECT_CALL(*onlp_interface_, GetSfpInfo(ONLP_SFP_ID_CREATE(i + 1)))
+          EXPECT_CALL(*onlp_wrapper_mock_,
+                      GetSfpInfo(ONLP_SFP_ID_CREATE(i + 1)))
               .Times(2)
               .WillRepeatedly(Return(SfpInfo(mock_sfp_info)));
           break;
@@ -154,10 +157,10 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
   mock_fan_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
   for (const PhalFanTrayConfig& fan_tray : config_.fan_trays()) {
     for (int i = 0; i < fan_tray.fans_size(); i++) {
-      EXPECT_CALL(*onlp_interface_, GetOidInfo(ONLP_FAN_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_, GetOidInfo(ONLP_FAN_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(OidInfo(mock_oid_info)));
-      EXPECT_CALL(*onlp_interface_, GetFanInfo(ONLP_FAN_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_, GetFanInfo(ONLP_FAN_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(FanInfo(mock_fan_info)));
     }
@@ -168,10 +171,10 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
   mock_psu_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
   for (const PhalPsuTrayConfig& psu_tray : config_.psu_trays()) {
     for (int i = 0; i < psu_tray.psus_size(); i++) {
-      EXPECT_CALL(*onlp_interface_, GetOidInfo(ONLP_PSU_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_, GetOidInfo(ONLP_PSU_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(OidInfo(mock_oid_info)));
-      EXPECT_CALL(*onlp_interface_, GetPsuInfo(ONLP_PSU_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_, GetPsuInfo(ONLP_PSU_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(PsuInfo(mock_psu_info)));
     }
@@ -182,10 +185,10 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
   mock_led_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
   for (const PhalLedGroupConfig& led_group : config_.led_groups()) {
     for (int i = 0; i < led_group.leds_size(); i++) {
-      EXPECT_CALL(*onlp_interface_, GetOidInfo(ONLP_LED_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_, GetOidInfo(ONLP_LED_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(OidInfo(mock_oid_info)));
-      EXPECT_CALL(*onlp_interface_, GetLedInfo(ONLP_LED_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_, GetLedInfo(ONLP_LED_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(LedInfo(mock_led_info)));
     }
@@ -196,10 +199,11 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
   mock_thermal_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
   for (const PhalThermalGroupConfig& thermal_group : config_.thermal_groups()) {
     for (int i = 0; i < thermal_group.thermals_size(); i++) {
-      EXPECT_CALL(*onlp_interface_, GetOidInfo(ONLP_THERMAL_ID_CREATE(i + 1)))
+      EXPECT_CALL(*onlp_wrapper_mock_,
+                  GetOidInfo(ONLP_THERMAL_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(OidInfo(mock_oid_info)));
-      EXPECT_CALL(*onlp_interface_,
+      EXPECT_CALL(*onlp_wrapper_mock_,
                   GetThermalInfo(ONLP_THERMAL_ID_CREATE(i + 1)))
           .Times(2)
           .WillRepeatedly(Return(ThermalInfo(mock_thermal_info)));

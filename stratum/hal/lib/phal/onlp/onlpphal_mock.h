@@ -27,14 +27,6 @@ namespace onlp {
 
 class OnlpPhalMock : public PhalInterface {
  public:
-  ~OnlpPhalMock() override;
-
-  ::util::Status Initialize();
-  ::util::Status InitializeOnlpInterface(OnlpInterface* onlp_interface)
-      LOCKS_EXCLUDED(config_lock_);
-
-  // PhalInterface public methods
-  // ::util::Status PushChassisConfig(const ChassisConfig& config) override {};
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
   MOCK_METHOD1(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config));
@@ -52,36 +44,6 @@ class OnlpPhalMock : public PhalInterface {
   MOCK_METHOD3(RegisterSfpConfigurator,
                ::util::Status(int slot, int port,
                               SfpConfigurator* configurator));
-
-  // Need this function to grab onlp_interface
-  OnlpWrapperMock* GetOnlpInterface() {
-    return dynamic_cast<OnlpWrapperMock*>(onlp_interface_);
-  }
-
-  // Creates the singleton instance. Expected to be called once to initialize
-  // the instance.
-  static OnlpPhalMock* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
-
- private:
-  friend class OnlpSwitchConfiguratorTest;
-  friend class OnlpSfpConfiguratorTest;
-
-  OnlpPhalMock();
-
-  // Internal mutex lock for protecting the internal maps and initializing the
-  // singleton instance.
-  static absl::Mutex init_lock_;
-
-  // The singleton instance.
-  static OnlpPhalMock* singleton_ GUARDED_BY(init_lock_);
-
-  // Mutex lock for protecting the internal state
-  mutable absl::Mutex config_lock_;
-
-  // Determines if PHAL is fully initialized.
-  bool initialized_ GUARDED_BY(config_lock_) = false;
-
-  OnlpInterface* onlp_interface_;
 };
 
 }  // namespace onlp
