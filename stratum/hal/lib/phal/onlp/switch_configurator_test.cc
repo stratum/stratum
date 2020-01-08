@@ -206,7 +206,7 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
   }
 
   ASSERT_OK(configurator_->ConfigurePhalDB(
-      config_,
+      &config_,
       (AttributeGroup*)root_group_.get()));  // NOLINT
 }
 

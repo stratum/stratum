@@ -36,7 +36,7 @@ class SwitchConfigurator {
 
   // Virtual function implemented by each derived class to
   // read the phal_init_config file and configure the Phal DB
-  virtual ::util::Status ConfigurePhalDB(const PhalInitConfig& config,
+  virtual ::util::Status ConfigurePhalDB(PhalInitConfig* config,
                                          AttributeGroup* root) = 0;
 };
 

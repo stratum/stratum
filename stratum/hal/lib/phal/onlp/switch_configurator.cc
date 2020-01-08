@@ -117,12 +117,12 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
 // Configure the switch's attribute database with the given
 // PhalInitConfig config.
 ::util::Status OnlpSwitchConfigurator::ConfigurePhalDB(
-    PhalInitConfig& phal_config, AttributeGroup* root) {
+    PhalInitConfig* phal_config, AttributeGroup* root) {
   // Lock the root group
   auto mutable_root = root->AcquireMutable();
 
   // Add cards
-  for (auto& card_config : *phal_config.mutable_cards()) {
+  for (auto& card_config : *phal_config->mutable_cards()) {
     ASSIGN_OR_RETURN(auto card, mutable_root->AddRepeatedChildGroup("cards"));
     std::unique_ptr<MutableAttributeGroup> mutable_card =
         card->AcquireMutable();
@@ -130,7 +130,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
     // Use chassis cache policy if we have no card policy
     if (!card_config.has_cache_policy()) {
       card_config.set_allocated_cache_policy(
-          new CachePolicyConfig(phal_config.cache_policy()));
+          new CachePolicyConfig(phal_config->cache_policy()));
     }
 
     // Add ports per card
@@ -148,7 +148,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
   }
 
   // Add Fans
-  for (auto& fan_tray_config : *phal_config.mutable_fan_trays()) {
+  for (auto& fan_tray_config : *phal_config->mutable_fan_trays()) {
     // Add Fan Tray to attribute DB
     ASSIGN_OR_RETURN(auto fan_tray,
                      mutable_root->AddRepeatedChildGroup("fan_trays"));
@@ -157,7 +157,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
     // Use chassis cache policy if we have no fan tray policy
     if (!fan_tray_config.has_cache_policy()) {
       fan_tray_config.set_allocated_cache_policy(
-          new CachePolicyConfig(phal_config.cache_policy()));
+          new CachePolicyConfig(phal_config->cache_policy()));
     }
 
     // Add Fans per tray
@@ -174,7 +174,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
   }
 
   // Add PSUs
-  for (auto& psu_tray_config : *phal_config.mutable_psu_trays()) {
+  for (auto& psu_tray_config : *phal_config->mutable_psu_trays()) {
     // Add PSU Tray to attribute DB
     ASSIGN_OR_RETURN(auto psu_tray,
                      mutable_root->AddRepeatedChildGroup("psu_trays"));
@@ -183,7 +183,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
     // Use chassis cache policy if we have no psu tray policy
     if (!psu_tray_config.has_cache_policy()) {
       psu_tray_config.set_allocated_cache_policy(
-          new CachePolicyConfig(phal_config.cache_policy()));
+          new CachePolicyConfig(phal_config->cache_policy()));
     }
 
     // Add PSUs per tray
@@ -200,7 +200,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
   }
 
   // Add LEDs
-  for (auto led_group_config : *phal_config.mutable_led_groups()) {
+  for (auto led_group_config : *phal_config->mutable_led_groups()) {
     // Add LED Group to attribute DB
     ASSIGN_OR_RETURN(auto group,
                      mutable_root->AddRepeatedChildGroup("led_groups"));
@@ -209,7 +209,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
     // Use chassis cache policy if we have no led group policy
     if (!led_group_config.has_cache_policy()) {
       led_group_config.set_allocated_cache_policy(
-          new CachePolicyConfig(phal_config.cache_policy()));
+          new CachePolicyConfig(phal_config->cache_policy()));
     }
 
     // Add LEDs
@@ -226,7 +226,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
   }
 
   // Add Thermals
-  for (auto thermal_group_config : *phal_config.mutable_thermal_groups()) {
+  for (auto thermal_group_config : *phal_config->mutable_thermal_groups()) {
     // Add Thermal Group to attribute DB
     ASSIGN_OR_RETURN(auto group,
                      mutable_root->AddRepeatedChildGroup("thermal_groups"));
@@ -235,7 +235,7 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
     // Use chassis cache policy if we have no thermal group policy
     if (!thermal_group_config.has_cache_policy()) {
       thermal_group_config.set_allocated_cache_policy(
-          new CachePolicyConfig(phal_config.cache_policy()));
+          new CachePolicyConfig(phal_config->cache_policy()));
     }
 
     // Add Thermals
