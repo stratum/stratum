@@ -1636,9 +1636,10 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
   // TODO(unknown): Implement this function.
-  // std::stringstream buffer;
-  // RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
-
+  /*
+  std::stringstream buffer;
+  RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
+  */
   return ::util::OkStatus();
 }
 
