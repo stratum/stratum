@@ -589,8 +589,8 @@ class EventHandlerListBase {
   mutable absl::Mutex access_lock_;
 
   // A set of event handlers that are interested in this ('E') type of events.
-  std::set<EventHandlerRecordPtr, std::owner_less<EventHandlerRecordPtr>> handlers_
-      GUARDED_BY(access_lock_);
+  std::set<EventHandlerRecordPtr, std::owner_less<EventHandlerRecordPtr>>
+      handlers_ GUARDED_BY(access_lock_);
 };
 
 // A class that keeps track of all event handlers that are interested in

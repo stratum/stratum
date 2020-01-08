@@ -17,7 +17,7 @@
 #include "stratum/hal/lib/common/utils.h"
 
 #include <sstream>  // IWYU pragma: keep
-#include <regex>
+#include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -338,7 +338,8 @@ std::string MacAddressToYangString(
     const std::string& yang_string) {
   std::string tmp_str = yang_string;
   // Remove colons
-  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'), tmp_str.end());
+  tmp_str.erase(std::remove(tmp_str.begin(), tmp_str.end(), ':'),
+                tmp_str.end());
   return strtoull(tmp_str.c_str(), NULL, 16);
 }
 

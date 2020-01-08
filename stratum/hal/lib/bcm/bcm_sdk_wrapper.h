@@ -23,6 +23,11 @@
 
 #include <functional>
 #include <string>
+#include <set>
+#include <map>
+#include <vector>
+#include <utility>
+#include <memory>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -430,10 +435,6 @@ class BcmSdkWrapper : public BcmSdkInterface {
                           ", vlan_mask:", absl::Hex(vlan_mask),
                           ", dst_mac:", absl::Hex(dst_mac),
                           ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
-    }
-    template <typename H>
-    friend H AbslHashValue(H h, const MyStationEntry& e) {
-      return H::combine(std::move(h), e.vlan, e.vlan_mask, e.dst_mac, e.dst_mac_mask);
     }
   };
 

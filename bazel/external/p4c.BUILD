@@ -46,7 +46,7 @@ package(
 
 # Instead of using cmake to generate the config.h, this genrule produces
 # a config.h from p4c's template in cmake/config.h.cmake.
-# TODO: Import libgc garbage collector to enable HAVE_LIBGC.
+# TODO(unknown): Import libgc garbage collector to enable HAVE_LIBGC.
 # This is OK compiling our P4 programs, but you wouldn't want to base a "P4 compile service" off of this.
 genrule(
     name = "sed_config_h",
@@ -396,7 +396,7 @@ cc_library(
     ],
 )
 
-# TODO: This genrule hack turns the version.h.cmake file into version.h
+# TODO(unknown): This genrule hack turns the version.h.cmake file into version.h
 # with the string "0.0.0.0".  Improve version numbering.
 genrule(
     name = "p4c_bmv2_version",
@@ -430,7 +430,7 @@ cc_binary(
 
 # This builds the p4test backend
 
-# TODO: This genrule hack turns the version.h.cmake file into version.h
+# TODO(unknown): This genrule hack turns the version.h.cmake file into version.h
 # with the string "0.0.0.0".  Improve version numbering.
 genrule(
     name = "p4c_p4test_version",

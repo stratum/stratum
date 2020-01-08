@@ -43,7 +43,7 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
 
   // Configure the Phal DB
-  ::util::Status ConfigurePhalDB(PhalInitConfig& config,
+  ::util::Status ConfigurePhalDB(PhalInitConfig* config,
                                  AttributeGroup* root) override;
 
  private:

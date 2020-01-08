@@ -13,35 +13,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // This file contains the code for a version of Stratum stub intended to be
 // used on the embedded switches. Therefore the code here does not use any
 // non-portable google3 code (e.g. no use of //net/grpc). Note that although
 // this is intended to run on embedded switches, we still build a host version
 // of this binary as well for cases when we run this stub on local desktops.
+
 #include <arpa/inet.h>
-#include <grpcpp/grpcpp.h>
 #include <linux/filter.h>
 #include <linux/if_ether.h>
 #include <net/ethernet.h>
 #include <sstream>
 #include <string>
 
-#include "gflags/gflags.h"
-#include "google/protobuf/any.pb.h"
-#include "google/rpc/code.pb.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "google/protobuf/any.pb.h"
+#include "google/rpc/code.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "openconfig/openconfig.pb.h"
 #include "p4/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/init_google.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
-#include "openconfig/openconfig.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
@@ -49,7 +50,6 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(url, stratum::kLocalStratumUrl,
               "URL for Stratum server to connect to.");

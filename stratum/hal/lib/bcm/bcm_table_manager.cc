@@ -468,7 +468,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
     // Add the table priority. This allows us to separate logical tables within
     // the same physical table. The priority in the CommonFlowEntry is the
     // relative priority within the table.
-    // TODO: Not needed in SDKLT
+    // TODO(unknown): Not needed in SDKLT
     // priority += acl_table->Priority() * kAclTablePriorityRange;
   }
   bcm_flow_entry->set_priority(priority);
@@ -480,7 +480,7 @@ BcmField::Type BcmTableManager::P4FieldTypeToBcmFieldType(
   // and nothing else. Note that there is no need for mapping actions in case of
   // table entry delete. No logic that consumes BcmFlowEntry should rely on
   // actions when deleting a table entry. Otherwise we have a bug.
-  // TODO: Per b/77525702, we still need to clarify what the expected
+  // TODO(unknown): Per b/77525702, we still need to clarify what the expected
   // behavior is in case we have actions populated when deleting a table entry.
   if (type == ::p4::v1::Update::DELETE) return ::util::OkStatus();
   switch (common_flow_entry.action().type()) {
@@ -697,9 +697,8 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
 }
 
 ::util::Status BcmTableManager::FillBcmReplicationConfig(
-      const ::p4::v1::PacketReplicationEngineEntry replication_entry,
-      BcmPacketReplicationEntry* bcm_replication_entry) const {
-
+    const ::p4::v1::PacketReplicationEngineEntry replication_entry,
+    BcmPacketReplicationEntry* bcm_replication_entry) const {
   bcm_replication_entry->set_unit(unit_);
   switch (replication_entry.type_case()) {
     case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry:
@@ -707,8 +706,10 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().packet_length_bytes() == 0);
       // We simulate having one clone session with hard-coded Id
-      CHECK_RETURN_IF_FALSE(replication_entry.clone_session_entry().session_id()
-          == kCloneSessionId) << "Bcm only allows one stub clone session "
+      CHECK_RETURN_IF_FALSE(
+          replication_entry.clone_session_entry().session_id() ==
+          kCloneSessionId)
+          << "Bcm only allows one stub clone session "
           << " with Id " << kCloneSessionId << ".";
       CHECK_RETURN_IF_FALSE(
           replication_entry.clone_session_entry().class_of_service() == 0)
@@ -718,27 +719,32 @@ BcmTableManager::ConstConditionsToBcmFields(const AclTable& table) {
           replication_entry.clone_session_entry().replicas_size() == 1)
           << "Bcm only allows cloning to a single port.";
       CHECK_RETURN_IF_FALSE(
-          replication_entry.clone_session_entry().replicas(0).egress_port() == kCpuPortId)
+          replication_entry.clone_session_entry().replicas(0).egress_port() ==
+          kCpuPortId)
           << "Bcm only allows cloning to the CPU port (" << kCpuPortId << ").";
       break;
-    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+    case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+        kMulticastGroupEntry: {
       auto mcast_grp = bcm_replication_entry->mutable_multicast_group_entry();
       CHECK_RETURN_IF_FALSE(
           replication_entry.multicast_group_entry().multicast_group_id() != 0);
       CHECK_RETURN_IF_FALSE(
-          replication_entry.multicast_group_entry().multicast_group_id() <= kuint8max);
+          replication_entry.multicast_group_entry().multicast_group_id() <=
+          kuint8max);
       mcast_grp->set_multicast_group_id(
           replication_entry.multicast_group_entry().multicast_group_id());
-      for (auto const& replica : replication_entry.multicast_group_entry().replicas()) {
-        CHECK_RETURN_IF_FALSE(replica.instance() == 1) << "instances are not suppoted";
+      for (auto const& replica :
+           replication_entry.multicast_group_entry().replicas()) {
+        CHECK_RETURN_IF_FALSE(replica.instance() == 1)
+            << "instances are not suppoted";
         mcast_grp->add_ports(replica.egress_port());
       }
       break;
     }
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Unsupported PacketReplicationEngineEntry "
-          << replication_entry.ShortDebugString();
+             << "Unsupported PacketReplicationEngineEntry "
+             << replication_entry.ShortDebugString();
   }
   return ::util::OkStatus();
 }
@@ -868,7 +874,7 @@ namespace {
               bcm_non_multipath_nexthop->set_vlan(field.u32());
               break;
             case P4_FIELD_TYPE_L3_CLASS_ID:
-              // TODO: Ignore class_id for now till we have a
+              // TODO(unknown): Ignore class_id for now till we have a
               // resolution for b/73264766.
               break;
             default:
@@ -1185,16 +1191,17 @@ namespace {
   // Sanity checking.
   if (!multicast_group.multicast_group_id()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Need non-zero multicast_group_id: "
-        << multicast_group.ShortDebugString() << ".";
+           << "Need non-zero multicast_group_id: "
+           << multicast_group.ShortDebugString() << ".";
   }
   uint32 group_id = multicast_group.multicast_group_id();
 
   // Save a copy of P4 MulticastGroupEntry.
-  if (!gtl::InsertIfNotPresent(&multicast_groups_, {group_id, multicast_group})) {
+  if (!gtl::InsertIfNotPresent(&multicast_groups_,
+                               {group_id, multicast_group})) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Inconsistent state. Multicast group with ID " << group_id
-        << " already exists in multicast_groups_.";
+           << "Inconsistent state. Multicast group with ID " << group_id
+           << " already exists in multicast_groups_.";
   }
 
   return ::util::OkStatus();

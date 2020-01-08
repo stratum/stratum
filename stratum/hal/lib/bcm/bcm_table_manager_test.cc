@@ -359,16 +359,17 @@ namespace {
 
 // Returns a BcmField containing the const condition for a P4HeaderType.
 ::util::StatusOr<BcmField> ConstCondition(P4HeaderType p4_header_type) {
-  static const auto* field_map = new absl::flat_hash_map<P4HeaderType, std::string>({
-      {P4_HEADER_ARP, "type: IP_TYPE value { u32: 0x0806 }"},
-      {P4_HEADER_IPV4, "type: IP_TYPE value { u32: 0x0800 }"},
-      {P4_HEADER_IPV6, "type: IP_TYPE value { u32: 0x86dd }"},
-      {P4_HEADER_TCP, "type: IP_PROTO_NEXT_HDR value { u32: 6 }"},
-      {P4_HEADER_UDP, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
-      {P4_HEADER_UDP_PAYLOAD, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
-      {P4_HEADER_GRE, "type: IP_PROTO_NEXT_HDR value { u32: 47 }"},
-      {P4_HEADER_ICMP, "type: IP_PROTO_NEXT_HDR value { u32: 1 }"},
-  });
+  static const auto* field_map =
+      new absl::flat_hash_map<P4HeaderType, std::string>({
+          {P4_HEADER_ARP, "type: IP_TYPE value { u32: 0x0806 }"},
+          {P4_HEADER_IPV4, "type: IP_TYPE value { u32: 0x0800 }"},
+          {P4_HEADER_IPV6, "type: IP_TYPE value { u32: 0x86dd }"},
+          {P4_HEADER_TCP, "type: IP_PROTO_NEXT_HDR value { u32: 6 }"},
+          {P4_HEADER_UDP, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
+          {P4_HEADER_UDP_PAYLOAD, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
+          {P4_HEADER_GRE, "type: IP_PROTO_NEXT_HDR value { u32: 47 }"},
+          {P4_HEADER_ICMP, "type: IP_PROTO_NEXT_HDR value { u32: 1 }"},
+      });
 
   BcmField bcm_field;
   std::string bcm_field_proto_string =

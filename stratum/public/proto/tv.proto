@@ -15,8 +15,8 @@
 
 // This file includes the proto definitions for test vectors used for blackbox
 // testing. For more details see go/blackbox-sw-qual.
-// TODO: This is still WIP. Expect changes etc.
-// TODO: The location of this file is not fixed yet. We need to find
+// TODO(unknown): This is still WIP. Expect changes etc.
+// TODO(unknown): The location of this file is not fixed yet. We need to find
 // a better more permanent location for this proto file.
 syntax = "proto3";
 
@@ -209,7 +209,7 @@ message PortStimulus {
 // Signal to a possibly external device to simulate an alarm situation.
 message AlarmStimulus {
   gnmi.Path alarm = 1;
-  // TODO: Complete the proto.
+  // TODO(unknown): Complete the proto.
 }
 
 message ConfigExpectation {
@@ -245,7 +245,7 @@ message TelemetryExpectation {
   //    passes. Otherwise it fails.
   message Requirement {
     // timing requirements, etc for actions.
-    // TODO: add
+    // TODO(unknown): add
   }
   Requirement requirement = 1;
   // The single gNMI write request to send over the stream.
@@ -303,7 +303,7 @@ message ManagementOperation {
 message Action {
   message Requirement {
     // timing requirements, etc for actions.
-    // TODO: add
+    // TODO(unknown): add
   }
   Requirement requirement = 1;
   oneof actions {
@@ -337,7 +337,7 @@ message SequentialActionGroup {
 message ParallelActionGroup {
   message Options {
     // defines the parallelism options.
-    // TODO: Add this
+    // TODO(unknown): Add this
   }
   Options options = 1;
   repeated Action actions = 2;
@@ -347,7 +347,7 @@ message ParallelActionGroup {
 message RandomizedActionGroup {
   message Options {
     // defines the randomization options.
-    // TODO: Add this
+    // TODO(unknown): Add this
   }
   Options options = 1;
   repeated Action actions = 2;

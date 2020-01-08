@@ -39,7 +39,7 @@ def generateChassisConfig(deviceId, deviceCfg):
     return None
   chassisConfig = common_pb2.ChassisConfig()
   chassisConfig.description = "Stratum device %s" % deviceId
-  # TODO: Sets correct platform based on device config
+  # TODO(unknown): Sets correct platform based on device config
   chassisConfig.chassis.platform = common_pb2.PLT_P4_SOFT_SWITCH
   chassisConfig.chassis.name = deviceId
   node = chassisConfig.nodes.add()

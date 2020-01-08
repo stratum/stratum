@@ -50,7 +50,7 @@ enum Platform {
   PLT_P4_SOFT_SWITCH = 10;
   PLT_BAREFOOT_TOFINO = 11;
   PLT_BAREFOOT_TOFINO2 = 12;
-  // TODO: Add all the BCM and MLNX based platforms.
+  // TODO(unknown): Add all the BCM and MLNX based platforms.
 }
 
 // List of traffic classes (aka class of services).
@@ -85,11 +85,11 @@ message ChassisConfigParams {
     uint32 lacp_system_priority = 2;
   }
   message NtpConfig {
-    // TODO: See if there is anything in YANG models which can ne
+    // TODO(unknown): See if there is anything in YANG models which can ne
     // used here.
   }
   message PowerConfig {
-    // TODO: See if there is anything in YANG models which can ne
+    // TODO(unknown): See if there is anything in YANG models which can ne
     // used here.
   }
   message FanConfig {
@@ -136,7 +136,7 @@ message ChassisConfigParams {
 
 // Flow-related parameters for for switching nodes (aka chips).
 message NodeFlowParams {
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // Config-related parameters for switching nodes (aka chips).
@@ -239,7 +239,7 @@ message NodeConfigParams {
 
 // Flow-related parameters for the ports (singleton and trunk ports).
 message PortFlowParams {
-  // TODO: Complete this.
+  // TODO(unknown): Complete this.
 }
 
 // FEC operational mode for a singleton port.
@@ -256,7 +256,7 @@ message PortConfigParams {
   // These are the only hash config we need to provide per node, for ports that
   // are part of a trunk/lag or ECMP group.
   message HashConfig {
-    // TODO: Instead of hash_select, we need a better way. this is
+    // TODO(unknown): Instead of hash_select, we need a better way. this is
     // RTAG7 specific. Maybe based on the port type?
     int32 rtag7_ecmp_hash_select = 1;
     int32 rtag7_lag_hash_select = 2;
@@ -442,7 +442,7 @@ message GoogleConfig {
       int32 cpu_queue = 2;
       int32 vlan = 3;
       BcmKnetIntfPurpose purpose = 4;
-      // TODO: Anything else?
+      // TODO(unknown): Anything else?
     }
     repeated BcmKnetIntfConfig knet_intf_configs = 1;
   }
@@ -512,8 +512,8 @@ message GoogleConfig {
   }
 
   // BcmBufferConfig defines the buffer carving config for a BCM unit.
-  // TODO: This still needs modification. Not ready yet.
-  // TODO: Add documentation.
+  // TODO(unknown): This still needs modification. Not ready yet.
+  // TODO(unknown): Add documentation.
   message BcmBufferConfig {
     message ServicePoolConfig {
       uint32 sp_num = 1;
@@ -541,7 +541,7 @@ message GoogleConfig {
   }
 
   // BcmRtag7HashConfig defines RTAG7 hash config for a unit.
-  // TODO: Add documentation.
+  // TODO(unknown): Add documentation.
   message BcmRtag7HashConfig {
     enum HashField {
       UNKNOWN_FIELD = 0;
@@ -740,7 +740,7 @@ enum AdminState {
   // HW component is being used by a diagnostics SW underneath and should not be
   // used like a normal component. Setting a HW component to diag mode will
   // eventually change the HW state of the component.
-  // TODO: This mode is not supported at the moment.
+  // TODO(unknown): This mode is not supported at the moment.
   ADMIN_STATE_DIAG = 3;
 }
 
@@ -1200,11 +1200,11 @@ message SetRequest {
     }
     // Data required to set info for a specific node.
     message Node {
-      // TODO: Add this.
+      // TODO(unknown): Add this.
     }
     // Data required to set info for a specific chassis.
     message Chassis {
-      // TODO: Add this.
+      // TODO(unknown): Add this.
     }
     oneof request {
       Port port = 1;

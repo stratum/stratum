@@ -17,7 +17,7 @@
 #ifndef STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
 #define STRATUM_PROCMON_PROCMON_SERVICE_IMPL_H_
 
-#include <grpc++/grpc++.h>
+#include "grpcpp/grpcpp.h"
 
 #include "stratum/procmon/procmon.grpc.pb.h"
 
@@ -29,7 +29,7 @@ namespace procmon {
 // checkin) from the rest of the processes.
 class ProcmonServiceImpl final : public ProcmonService::Service {
  public:
-  // TODO: Pass a pointer to Procmon class instance to this class.
+  // TODO(unknown): Pass a pointer to Procmon class instance to this class.
   ProcmonServiceImpl();
   ~ProcmonServiceImpl() override;
 

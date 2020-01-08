@@ -13,10 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 
-#include <grpcpp/grpcpp.h>
 #include <list>
 #include <string>
 #include <unordered_set>
@@ -25,6 +23,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
+#include "grpcpp/grpcpp.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
@@ -162,7 +161,8 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   std::unordered_set<std::string> singleton_names;
   for (const auto& singleton : change.new_config_.singleton_ports()) {
     if (singleton_names.count(singleton.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate singleton port name: " << singleton.name();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Duplicate singleton port name: " << singleton.name();
     }
     const NodeConfigParams& node_config =
         node_id_to_node[singleton.node()]
@@ -178,7 +178,8 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
     // TODO(b/70300190): Once TrunkPort message in common.proto is extended to
     // include node_id remove 3 following lines.
     if (trunk_names.count(trunk.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate trunk name: " << trunk.name();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Duplicate trunk name: " << trunk.name();
     }
     constexpr uint64 kNodeIdUnknown = 0xFFFF;
     uint64 node_id = trunk.members_size() ? port_id_to_node_id[trunk.members(0)]
@@ -196,7 +197,8 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   std::unordered_set<std::string> node_names;
   for (const auto& node : change.new_config_.nodes()) {
     if (node_names.count(node.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate node name: " << node.name();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Duplicate node name: " << node.name();
     }
     AddSubtreeNode(node);
     node_names.insert(node.name());
