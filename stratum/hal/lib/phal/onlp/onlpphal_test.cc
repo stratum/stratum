@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+
 #include <functional>
 #include <vector>
 
@@ -23,7 +25,6 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
 #include "stratum/lib/macros.h"
 
 namespace stratum {

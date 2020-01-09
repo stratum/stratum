@@ -16,6 +16,7 @@
 #include "stratum/hal/lib/phal/onlp/psu_datasource.h"
 
 #include <memory>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/status/status.h"
