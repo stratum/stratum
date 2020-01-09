@@ -41,6 +41,8 @@ class AdminServiceShellHelper {
         cmd_return_code_(
             ERROR_RETURN_CODE) {}
 
+  virtual ~AdminServiceShellHelper() = default;
+
   // Runs the command provided in the constructor
   // @return true if cmd succeeded, false if failure
   virtual bool Execute();
