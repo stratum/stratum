@@ -324,7 +324,7 @@ I0404 04:07:17.650348 12329 onlp_wrapper_mock.h:37] Initializing Mock ONLP.
 
 ### OnlpSfpConfigurator tests <a name="sfp_configurator_test"></a>
 
-The OnlpSfpConfigurator class uses the //stratum/hal/lib/phal/onlp:sfp_configurator_test target to run some sanity tests on the Sfp Configurator.  It should be noted that you will need to run your stratum dev environment with the "privileged" flag in order to run the test program (i.e. run "./setup_dev_env.sh -- --privileged").
+The OnlpSfpConfigurator class uses the //stratum/hal/lib/phal/onlp:sfp_configurator_test target to run some sanity tests on the Sfp Configurator.
 
 To run these tests you can use the following command from the stratum dev environment to build the test program:
 ```

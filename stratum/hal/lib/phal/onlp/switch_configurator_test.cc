@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -24,7 +26,6 @@
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/onlp/onlpphal_mock.h"
-#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
