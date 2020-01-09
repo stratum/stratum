@@ -47,8 +47,6 @@ workspace(name = "com_github_stratum_stratum")
 load("//bazel/rules:build_tools.bzl", "build_tools_deps")
 build_tools_deps()
 
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
-gazelle_dependencies()
 
 load("//bazel/rules:proto_gen.bzl", "proto_gen_deps")
 proto_gen_deps()
@@ -105,6 +103,12 @@ switched_rules_by_language(
 load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
 go_rules_dependencies()
 go_register_toolchains()
+
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+gazelle_dependencies(go_sdk = "go_sdk")
+
+load("@io_bazel_rules_go//tests:grpc_repos.bzl", "grpc_dependencies")
+grpc_dependencies()
 
 # ---------------------------------------------------------------------------
 #       Load CDLang dependencies.
