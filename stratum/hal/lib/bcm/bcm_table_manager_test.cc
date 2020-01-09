@@ -135,8 +135,8 @@ class BcmTableManagerTest : public ::testing::Test {
     ::util::Status status = result.status();
     if (!table_id_exists) {
       CHECK_RETURN_IF_FALSE(
-          !status.ok() &&
-          absl::StrContains(status.error_message(), "Could not find table"))
+          !status.ok() && status.error_code() == ERR_ENTRY_NOT_FOUND &&
+          absl::StrContains(status.error_message(), "Table"))
           << "Did not expect table id to exist. Status: " << status;
       return ::util::OkStatus();
     }
@@ -359,19 +359,20 @@ namespace {
 
 // Returns a BcmField containing the const condition for a P4HeaderType.
 ::util::StatusOr<BcmField> ConstCondition(P4HeaderType p4_header_type) {
-  static const auto* field_map = new absl::flat_hash_map<P4HeaderType, string>({
-      {P4_HEADER_ARP, "type: IP_TYPE value { u32: 0x0806 }"},
-      {P4_HEADER_IPV4, "type: IP_TYPE value { u32: 0x0800 }"},
-      {P4_HEADER_IPV6, "type: IP_TYPE value { u32: 0x86dd }"},
-      {P4_HEADER_TCP, "type: IP_PROTO_NEXT_HDR value { u32: 6 }"},
-      {P4_HEADER_UDP, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
-      {P4_HEADER_UDP_PAYLOAD, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
-      {P4_HEADER_GRE, "type: IP_PROTO_NEXT_HDR value { u32: 47 }"},
-      {P4_HEADER_ICMP, "type: IP_PROTO_NEXT_HDR value { u32: 1 }"},
-  });
+  static const auto* field_map =
+      new absl::flat_hash_map<P4HeaderType, std::string>({
+          {P4_HEADER_ARP, "type: IP_TYPE value { u32: 0x0806 }"},
+          {P4_HEADER_IPV4, "type: IP_TYPE value { u32: 0x0800 }"},
+          {P4_HEADER_IPV6, "type: IP_TYPE value { u32: 0x86dd }"},
+          {P4_HEADER_TCP, "type: IP_PROTO_NEXT_HDR value { u32: 6 }"},
+          {P4_HEADER_UDP, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
+          {P4_HEADER_UDP_PAYLOAD, "type: IP_PROTO_NEXT_HDR value { u32: 17 }"},
+          {P4_HEADER_GRE, "type: IP_PROTO_NEXT_HDR value { u32: 47 }"},
+          {P4_HEADER_ICMP, "type: IP_PROTO_NEXT_HDR value { u32: 1 }"},
+      });
 
   BcmField bcm_field;
-  string bcm_field_proto_string =
+  std::string bcm_field_proto_string =
       gtl::FindWithDefault(*field_map, p4_header_type, "");
   if (bcm_field_proto_string.empty()) {
     return util::NotFoundErrorBuilder(GTL_LOC)
@@ -383,7 +384,7 @@ namespace {
 }
 
 // Returns the name of a P4HeaderType parameter.
-string ParamName(testing::TestParamInfo<P4HeaderType> param_info) {
+std::string ParamName(testing::TestParamInfo<P4HeaderType> param_info) {
   return P4HeaderType_Name(param_info.param);
 }
 
@@ -1595,7 +1596,7 @@ TEST_F(BcmTableManagerTest,
   // Setup the fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv6 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV6") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV6") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -1626,7 +1627,7 @@ TEST_F(BcmTableManagerTest,
   // Setup the fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -1767,7 +1768,7 @@ TEST_F(BcmTableManagerTest,
   // Setup the fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
     }
   }
@@ -1810,7 +1811,7 @@ TEST_F(
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -1869,7 +1870,7 @@ TEST_F(
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -1927,7 +1928,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -1984,7 +1985,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2022,7 +2023,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2060,7 +2061,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2107,7 +2108,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2159,7 +2160,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2198,7 +2199,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2272,7 +2273,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
       *expected.add_fields() = pair.second;
     }
@@ -2326,7 +2327,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
     }
   }
@@ -2368,7 +2369,7 @@ TEST_F(BcmTableManagerTest,
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
     }
   }
@@ -2403,7 +2404,7 @@ TEST_F(
   // Setup fields.
   for (const auto& pair : P4ToBcmFields()) {
     // Skip IPv4 fields.
-    if (P4FieldType_Name(pair.first.type()).find("IPV4") == string::npos) {
+    if (P4FieldType_Name(pair.first.type()).find("IPV4") == std::string::npos) {
       *source.add_fields() = pair.first;
     }
   }
@@ -2456,7 +2457,9 @@ TEST_F(BcmTableManagerTest, CommonFlowEntryToBcmFlowEntryAclSuccess) {
 
   // Set up priority.
   source.set_priority(2000);
-  expected.set_priority(2000 + (20 << 16));
+  // FIXME: No priority shift in SDKLT
+  // expected.set_priority(2000 + (20 << 16));
+  expected.set_priority(2000);
 
   ASSERT_NO_FATAL_FAILURE(PushTestConfig());
 
@@ -2741,16 +2744,16 @@ TEST_F(BcmTableManagerTest,
 
   expected.add_fields()->set_type(BcmField::IN_PORT);
   expected.mutable_fields(0)->mutable_value()->set_u32(kLogicalPort1);
-  expected.mutable_fields(0)->mutable_mask()->set_u32(0xFFFFFFFF);
+  expected.mutable_fields(0)->mutable_mask()->set_u32(511);
   expected.add_fields()->set_type(BcmField::CLONE_PORT);
   expected.mutable_fields(1)->mutable_value()->set_u32(kLogicalPort2);
-  expected.mutable_fields(1)->mutable_mask()->set_u32(0xFFFFFFFF);
+  expected.mutable_fields(1)->mutable_mask()->set_u32(511);
   expected.add_fields()->set_type(BcmField::OUT_PORT);
   expected.mutable_fields(2)->mutable_value()->set_u32(kTrunkPort1);
-  expected.mutable_fields(2)->mutable_mask()->set_u32(0xFFFFFFFF);
+  expected.mutable_fields(2)->mutable_mask()->set_u32(511);
   expected.add_fields()->set_type(BcmField::IN_PORT);
   expected.mutable_fields(3)->mutable_value()->set_u32(kCpuLogicalPort);
-  expected.mutable_fields(3)->mutable_mask()->set_u32(0xFFFFFFFF);
+  expected.mutable_fields(3)->mutable_mask()->set_u32(511);
 
   ASSERT_FALSE(HasFailure());  // Stop if P4ToBcmFields failed.
 
@@ -4445,7 +4448,9 @@ TEST_F(BcmTableManagerTest,
     fields { type: ETH_TYPE value { u32: 10 } }
     acl_stage: BCM_ACL_STAGE_IFP
   )PROTO", &expected));
-  expected.set_priority((20 << 16) + 10);
+  // FIXME: No priority shift in SDKLT
+  // expected.set_priority((20 << 16) + 10);
+  expected.set_priority(10);
   ASSERT_OK_AND_ASSIGN(*expected.add_fields(), ConstCondition(P4_HEADER_IPV4));
   ASSERT_OK_AND_ASSIGN(*expected.add_fields(), ConstCondition(P4_HEADER_TCP));
 
@@ -4486,7 +4491,9 @@ TEST_F(BcmTableManagerTest,
     fields { type: IP_PROTO_NEXT_HDR value { u32: 58 } }
     acl_stage: BCM_ACL_STAGE_IFP
   )PROTO", &expected));
-  expected.set_priority((20 << 16) + 10);
+  // FIXME: No priority shift in SDKLT
+  // expected.set_priority((20 << 16) + 10);
+  expected.set_priority(10);
 
   BcmFlowEntry actual;
   ASSERT_OK(bcm_table_manager_->CommonFlowEntryToBcmFlowEntry(
@@ -4556,7 +4563,9 @@ TEST_P(ConstConditionTest,
     fields { type: ETH_TYPE value { u32: 10 } }
     acl_stage: BCM_ACL_STAGE_IFP
   )PROTO", &expected));
-  expected.set_priority((20 << 16) + 10);
+  // FIXME: No priority shift in SDKLT
+  // expected.set_priority((20 << 16) + 10);
+  expected.set_priority(10);
   ASSERT_OK_AND_ASSIGN(*expected.add_fields(), ConstCondition(header_type));
 
   BcmFlowEntry actual;

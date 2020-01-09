@@ -177,10 +177,10 @@ class LockedAttributeGroupMock : public MutableAttributeGroup {
     return group_->GetVersionId();
   }
   ::util::Status RegisterQuery(AttributeGroupQuery* query,
-                               std::vector<Path> paths) {
+                               std::vector<Path> paths) override {
     return group_->RegisterQuery(query, std::move(paths));
   }
-  void UnregisterQuery(AttributeGroupQuery* query) {
+  void UnregisterQuery(AttributeGroupQuery* query) override {
     group_->UnregisterQuery(query);
   }
 

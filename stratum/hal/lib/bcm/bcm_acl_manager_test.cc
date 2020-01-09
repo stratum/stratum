@@ -20,6 +20,8 @@
 #include <functional>
 #include <utility>
 #include <string>
+#include <map>
+#include <set>
 
 #include "stratum/lib/test_utils/p4_proto_builders.h"
 #include "gmock/gmock.h"
@@ -57,6 +59,7 @@ using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::AtLeast;
 using ::testing::Contains;
+using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
 using ::testing::IsEmpty;
@@ -68,10 +71,10 @@ using stratum::test_utils::IsOkAndHolds;
 using stratum::test_utils::StatusIs;
 
 using StageToTablesMap =
-    absl::flat_hash_map<P4Annotation::PipelineStage,
+    std::map<P4Annotation::PipelineStage,
                         std::vector<::p4::config::v1::Table>>;
 using StageToControlBlockMap =
-    absl::flat_hash_map<P4Annotation::PipelineStage, P4ControlBlock>;
+    std::map<P4Annotation::PipelineStage, P4ControlBlock>;
 
 constexpr char kDefaultBcmHardwareSpecsText[] = R"PROTO(
   chip_specs {
@@ -309,9 +312,9 @@ constexpr uint64 kNodeId = 123456;
 constexpr int kTableSize = 10;
 
 // Map of default P4 tables indexed by table id.
-const absl::flat_hash_map<int, ::p4::config::v1::Table>& DefaultP4Tables() {
+const std::map<int, ::p4::config::v1::Table>& DefaultP4Tables() {
   static const auto* tables = []() {
-    auto* tables = new absl::flat_hash_map<int, ::p4::config::v1::Table>();
+    auto* tables = new std::map<int, ::p4::config::v1::Table>();
     ::p4::config::v1::Table table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
       preamble { id: 1 name: "table_1" }
@@ -398,9 +401,9 @@ const std::vector<::p4::config::v1::Table> DefaultP4TablesVector() {
 // Map of BcmAClTables corresponding to the default P4 tables, indexed by table
 // id. These tables do not have a stage since that is not specified by the P4
 // tables.
-const absl::flat_hash_map<int, BcmAclTable>& DefaultBcmAclTables() {
+const std::map<int, BcmAclTable>& DefaultBcmAclTables() {
   static const auto* tables = []() {
-    auto tables = new absl::flat_hash_map<int, BcmAclTable>();
+    auto tables = new std::map<int, BcmAclTable>();
     BcmAclTable table;
     CHECK_OK(ParseProtoFromString(R"PROTO(
       fields { type: ETH_SRC })PROTO", &table));
@@ -472,8 +475,8 @@ const P4ControlBlock& DefaultControlBlock() {
 }
 
 // Sets the BcmAclStage for all tables within a map.
-const absl::flat_hash_map<int, BcmAclTable> SetStage(
-    const absl::flat_hash_map<int, BcmAclTable>& original_tables,
+const std::map<int, BcmAclTable> SetStage(
+    const std::map<int, BcmAclTable>& original_tables,
     BcmAclStage stage) {
   auto tables = original_tables;
   for (auto& pair : tables) {
@@ -557,7 +560,7 @@ class BcmAclManagerTest : public ::testing::Test {
                                MappedField* mapped_field);
 
   // Mock config state. Map of table ID to table.
-  absl::flat_hash_map<int, ::p4::config::v1::Table> mock_tables_;
+  std::map<int, ::p4::config::v1::Table> mock_tables_;
 
   // Class instances used for testing (real and mocked). Note that in addition
   // to a mocked version of BcmTableManager passed to BcmAclManager, we use a
@@ -662,7 +665,7 @@ void BcmAclManagerTest::SetUpBcmSdkMock() {
       return ::util::OkStatus();
     }
   }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND)  // .SetNoLogging() // FIXME
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND).without_logging()
          << "No field_type found for table " << table_id << ", match "
          << match_id << ".";
 }
@@ -901,20 +904,7 @@ TEST_F(BcmAclManagerTest, TestPushForwardingPipelineConfig_OneComplexStage) {
       return lhs.priority() < rhs.priority();
     }
   };
-
-  // FIXME: protobuf message classes should not be used as hashmap keys.
-  // see: https://github.com/protocolbuffers/protobuf/issues/2066#issuecomment-245035441
-  // and: https://github.com/protocolbuffers/protobuf/pull/2304
-  struct BcmAclTableHasher {
-    size_t operator()(const BcmAclTable& x) const {
-      std::string serialized;
-      x.SerializeToString(&serialized);
-      return std::hash<std::string>{}(serialized);
-    }
-  };
-
-  absl::flat_hash_set<BcmAclTable, BcmAclTableHasher,
-                    PriorityCompare> bcm_tables;  // FIXME: See comment above
+  std::set<BcmAclTable, PriorityCompare> bcm_tables;
   EXPECT_CALL(*bcm_sdk_mock_, CreateAclTable(kUnit, _))
       .Times(4)
       .WillRepeatedly(
@@ -1835,7 +1825,7 @@ TEST_F(BcmAclManagerTest, TestUpdateTableEntryMeterBcmFailure) {
 }
 
 TEST_F(BcmAclManagerTest, TestInstallPhysicalTableWithConstConditions) {
-  std::vector<string> table_strings = {
+  std::vector<std::string> table_strings = {
       R"PROTO(
         preamble { id: 1 name: "table_1" }
         match_fields { id: 1 name: "P4_FIELD_TYPE_ETH_SRC" match_type: TERNARY }
@@ -1857,7 +1847,7 @@ TEST_F(BcmAclManagerTest, TestInstallPhysicalTableWithConstConditions) {
       )PROTO"};
 
   std::vector<::p4::config::v1::Table> tables;
-  for (const string& table_string : table_strings) {
+  for (const std::string& table_string : table_strings) {
     ::p4::config::v1::Table table;
     CHECK_OK(ParseProtoFromString(table_string, &table));
     tables.push_back(table);
@@ -1873,13 +1863,13 @@ TEST_F(BcmAclManagerTest, TestInstallPhysicalTableWithConstConditions) {
           .DoIfValid(ApplyTable(tables[2], P4Annotation::INGRESS_ACL))
           .Build();
 
-  std::vector<string> bcm_table_strings = {
+  std::vector<std::string> bcm_table_strings = {
       R"PROTO(fields { type: ETH_SRC })PROTO",
       R"PROTO(fields { type: ETH_DST } fields { type: IP_TYPE })PROTO",
       R"PROTO(fields { type: IPV4_SRC } fields { type: IP_TYPE })PROTO",
   };
   std::vector<BcmAclTable> expected_bcm_tables;
-  for (const string& table_string : bcm_table_strings) {
+  for (const std::string& table_string : bcm_table_strings) {
     BcmAclTable table;
     CHECK_OK(ParseProtoFromString(table_string, &table));
     expected_bcm_tables.push_back(table);

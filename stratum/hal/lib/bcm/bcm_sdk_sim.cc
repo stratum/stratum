@@ -171,7 +171,8 @@ BcmSdkSim::~BcmSdkSim() { ShutdownAllUnits().IgnoreError(); }
 }
 
 ::util::Status BcmSdkSim::GetKnetHeaderForDirectTx(int unit, int port, int cos,
-                                                   uint64 smac, size_t packet_len,
+                                                   uint64 smac,
+                                                   size_t packet_len,
                                                    std::string *header) {
   *header = "";
   return MAKE_ERROR(ERR_FEATURE_UNAVAILABLE) << "Not supported in sim mode.";

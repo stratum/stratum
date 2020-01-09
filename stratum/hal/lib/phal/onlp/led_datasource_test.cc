@@ -201,11 +201,10 @@ TEST_F(LedDatasourceTest, SetLedData) {
   EXPECT_TRUE(led_datasource->GetLedChar()->CanSet());
 
   EXPECT_CALL(mock_onlp_interface_, SetLedCharacter(oid_,
-    static_cast<int>('2'))
+    static_cast<int>('2')))
       .WillOnce(Return(::util::OkStatus()));
 
-  EXPECT_OK(
-      led_datasource->GetLedChar()->Set(static_cast<int>('2'));
+  EXPECT_OK(led_datasource->GetLedChar()->Set(static_cast<int>('2')));
 }
 
 }  // namespace onlp

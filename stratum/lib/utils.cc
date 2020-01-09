@@ -222,7 +222,7 @@ std::string BaseName(const std::string& path) {
 }
    END GOOGLE ONLY */
 
-// TODO: At the moment this function will not work well for
+// TODO(unknown): At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
 bool ProtoLess(const google::protobuf::Message& m1,
                const google::protobuf::Message& m2) {
@@ -238,7 +238,7 @@ bool ProtoEqual(const google::protobuf::Message& m1, const google::protobuf::Mes
 }
    END GOOGLE ONLY */
 
-// TODO: At the moment this function will not work well for
+// TODO(unknown): At the moment this function will not work well for
 // complex messages with repeated fields or maps. Find a better way.
 size_t ProtoHash(const google::protobuf::Message& m) {
   std::hash<std::string> string_hasher;

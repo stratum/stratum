@@ -125,27 +125,27 @@ onos> apps -a -s
 Make sure you see the following list of apps displayed:
 
 ```
-*   5 org.onosproject.protocols.grpc        2.1.0    gRPC Protocol Subsystem
-*   6 org.onosproject.protocols.gnmi        2.1.0    gNMI Protocol Subsystem
-*   7 org.onosproject.route-service         2.1.0    Route Service Server
-*  20 org.onosproject.drivers               2.1.0    Default Drivers
-*  24 org.onosproject.generaldeviceprovider 2.1.0    General Device Provider
-*  25 org.onosproject.protocols.p4runtime   2.1.0    P4Runtime Protocol Subsystem
-*  26 org.onosproject.p4runtime             2.1.0    P4Runtime Provider
-*  27 org.onosproject.drivers.p4runtime     2.1.0    P4Runtime Drivers
-*  34 org.onosproject.protocols.gnoi        2.1.0    gNOI Protocol Subsystem
-*  45 org.onosproject.hostprovider          2.1.0    Host Location Provider
-*  46 org.onosproject.lldpprovider          2.1.0    LLDP Link Provider
-*  59 org.onosproject.drivers.gnoi          2.1.0    gNOI Drivers
-*  63 org.onosproject.drivers.gnmi          2.1.0    gNMI Drivers
-*  64 org.onosproject.pipelines.basic       2.1.0    Basic Pipelines
-*  65 org.onosproject.drivers.stratum       2.1.0    Stratum Drivers
-*  94 org.onosproject.portloadbalancer      2.1.0    Port Load Balance Service
-* 109 org.onosproject.mcast                 2.1.0    Multicast traffic control
-* 110 org.onosproject.segmentrouting        2.1.0    Segment Routing
-* 156 org.onosproject.pipelines.fabric      2.1.0    Fabric Pipeline
-* 161 org.onosproject.gui                   2.1.0    ONOS Legacy GUI
-* 181 org.onosproject.drivers.bmv2          2.1.0    BMv2 Drivers
+* ... org.onosproject.protocols.grpc        2.2.0    gRPC Protocol Subsystem
+* ... org.onosproject.protocols.gnmi        2.2.0    gNMI Protocol Subsystem
+* ... org.onosproject.route-service         2.2.0    Route Service Server
+* ... org.onosproject.drivers               2.2.0    Default Drivers
+* ... org.onosproject.generaldeviceprovider 2.2.0    General Device Provider
+* ... org.onosproject.protocols.p4runtime   2.2.0    P4Runtime Protocol Subsystem
+* ... org.onosproject.p4runtime             2.2.0    P4Runtime Provider
+* ... org.onosproject.drivers.p4runtime     2.2.0    P4Runtime Drivers
+* ... org.onosproject.protocols.gnoi        2.2.0    gNOI Protocol Subsystem
+* ... org.onosproject.hostprovider          2.2.0    Host Location Provider
+* ... org.onosproject.lldpprovider          2.2.0    LLDP Link Provider
+* ... org.onosproject.drivers.gnoi          2.2.0    gNOI Drivers
+* ... org.onosproject.drivers.gnmi          2.2.0    gNMI Drivers
+* ... org.onosproject.pipelines.basic       2.2.0    Basic Pipelines
+* ... org.onosproject.drivers.stratum       2.2.0    Stratum Drivers
+* ... org.onosproject.portloadbalancer      2.2.0    Port Load Balance Service
+* ... org.onosproject.mcast                 2.2.0    Multicast traffic control
+* ... org.onosproject.segmentrouting        2.2.0    Segment Routing
+* ... org.onosproject.pipelines.fabric      2.2.0    Fabric Pipeline
+* ... org.onosproject.gui                   2.2.0    ONOS Legacy GUI
+* ... org.onosproject.drivers.bmv2          2.2.0    BMv2 Drivers
 ```
 
 #### Check topology

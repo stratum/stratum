@@ -157,11 +157,11 @@ TEST(AclTableTest, InsertEntry) {
   //   1. The protobufs are simple enough for the strings to be stable.
   //   2. Strings show up better than ::google::protobuf::Message in the error
   //      output of *ElementsAre*.
-  std::vector<string> inserted_entries;
+  std::vector<std::string> inserted_entries;
   for (const auto& entry : entries) {
     ASSERT_OK(table.InsertEntry(entry));
     inserted_entries.push_back(entry.ShortDebugString());
-    std::vector<string> table_entries;
+    std::vector<std::string> table_entries;
     for (const ::p4::v1::TableEntry& entry : table) {
       table_entries.push_back(entry.ShortDebugString());
     }

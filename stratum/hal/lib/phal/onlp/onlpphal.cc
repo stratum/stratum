@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
@@ -25,6 +26,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+#include "stratum/hal/lib/phal/sfp_adapter.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
              "Maximum number of channel writers for transceiver events.");
@@ -129,15 +131,14 @@ OnlpPhal::~OnlpPhal() {}
   // Send event to Sfp configurator first to ensure
   // attribute database is in order before and calls are
   // made from the upper layer components.
-  const std::pair<int, int>& slot_port_pair =
-      std::make_pair(event.slot, event.port);
-  auto configurator = slot_port_to_configurator_[slot_port_pair];
+  const auto slot_port_pair = std::make_pair(event.slot, event.port);
+  auto configurator =
+      gtl::FindPtrOrNull(slot_port_to_configurator_, slot_port_pair);
 
   // Check to make sure we've got a configurator for this slot/port
-  if (configurator == nullptr) {
-    RETURN_ERROR() << "card[" << event.slot << "]/port[" << event.port << "]: "
-                   << "no configurator for this transceiver";
-  }
+  CHECK_RETURN_IF_FALSE(configurator != nullptr)
+      << "card[" << event.slot << "]/port[" << event.port << "]: "
+      << "no configurator for this transceiver";
 
   RETURN_IF_ERROR(configurator->HandleEvent(event.state));
 
@@ -228,84 +229,21 @@ OnlpPhal::~OnlpPhal() {}
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  if (slot < 0 || port < 0)
-    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
-
-  // Get slot port pair to lookup sfpdatasource.
-  const std::pair<int, int>& slot_port_pair = std::make_pair(slot, port);
-  auto configurator = slot_port_to_configurator_[slot_port_pair];
+  // translate slot/port to card_id/port_id for the PhalDB
+  const auto slot_port_pair = std::make_pair(slot, port);
   // Check to make sure we've got a configurator for this slot/port
-  if (configurator == nullptr) {
-    RETURN_ERROR() << "card[" << slot << "]/port[" << port << "]: "
-                   << "no configurator for this transceiver";
-  }
-  auto sfp_src = configurator->GetSfpDataSource();
+  auto configurator =
+      gtl::FindPtrOrNull(slot_port_to_configurator_, slot_port_pair);
+  CHECK_RETURN_IF_FALSE(configurator != nullptr)
+      << "No configurator for "
+      << "slot " << slot << " port " << port << ".";
 
-  // Check if Sfp inserted
-  if (sfp_src == nullptr)
-    RETURN_ERROR() << "card[" << slot << "]/port[" << port
-                   << "]: Sfp not inserted";
+  auto card_id = configurator->GetCardId();
+  auto port_id = configurator->GetPortId();
 
-  // Update sfp datasource values.
-  sfp_src->UpdateValuesUnsafelyWithoutCacheOrLock();
-
-  ManagedAttribute* sfptype_attrib = sfp_src->GetSfpType();
-
-  ManagedAttribute* hw_state_attrib = sfp_src->GetSfpHardwareState();
-  ASSIGN_OR_RETURN(
-      auto hw_state_val,
-      hw_state_attrib
-          ->ReadValue<const google::protobuf::EnumValueDescriptor*>());
-  fp_port_info->set_hw_state(static_cast<HwState>(hw_state_val->index()));
-
-  if (fp_port_info->hw_state() == HW_STATE_NOT_PRESENT) {
-    return ::util::OkStatus();
-  }
-
-  ASSIGN_OR_RETURN(
-      auto sfptype_value,
-      sfptype_attrib
-          ->ReadValue<const google::protobuf::EnumValueDescriptor*>());
-
-  SfpType sfval = static_cast<SfpType>(sfptype_value->index());
-  // Need to map SfpType to PhysicalPortType
-  PhysicalPortType actual_val;
-  switch (sfval) {
-    case SFP_TYPE_SFP:
-      actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
-      break;
-    case SFP_TYPE_QSFP_PLUS:
-    case SFP_TYPE_QSFP:
-    case SFP_TYPE_QSFP28:
-      actual_val = PHYSICAL_PORT_TYPE_QSFP_CAGE;
-      break;
-    default:
-      RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid sfptype. ";
-  }
-  fp_port_info->set_physical_port_type(actual_val);
-
-  ManagedAttribute* mediatype_attrib = sfp_src->GetSfpMediaType();
-  ASSIGN_OR_RETURN(
-      auto mediatype_value,
-      mediatype_attrib
-          ->ReadValue<const google::protobuf::EnumValueDescriptor*>());
-
-  MediaType mediat_val = static_cast<MediaType>(mediatype_value->index());
-  fp_port_info->set_media_type(mediat_val);
-
-  ManagedAttribute* vendor_attrib = sfp_src->GetSfpVendor();
-  ASSIGN_OR_RETURN(auto vendor_value, vendor_attrib->ReadValue<std::string>());
-  fp_port_info->set_vendor_name(vendor_value);
-
-  ManagedAttribute* model_attrib = sfp_src->GetSfpModel();
-  ASSIGN_OR_RETURN(auto model_value, model_attrib->ReadValue<std::string>());
-  fp_port_info->set_part_number(model_value);
-
-  ManagedAttribute* serial_attrib = sfp_src->GetSfpSerialNumber();
-  ASSIGN_OR_RETURN(auto serial_value, serial_attrib->ReadValue<std::string>());
-  fp_port_info->set_serial_number(serial_value);
-
-  return ::util::OkStatus();
+  // Call the SfpAdapter to query the Phal Attribute DB
+  SfpAdapter adapter(database_.get());
+  return adapter.GetFrontPanelPortInfo(card_id, port_id, fp_port_info);
 }
 
 OnlpPhal* OnlpPhal::CreateSingleton() {
@@ -355,10 +293,16 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 // Register the configurator so we can use later
 ::util::Status OnlpPhal::RegisterSfpConfigurator(
     int slot, int port, SfpConfigurator* configurator) {
-  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
+  const auto slot_port_pair = std::make_pair(slot, port);
 
-  slot_port_to_configurator_[slot_port_pair] =
-      static_cast<OnlpSfpConfigurator*>(configurator);
+  auto onlp_configurator = dynamic_cast<OnlpSfpConfigurator*>(configurator);
+  CHECK_RETURN_IF_FALSE(onlp_configurator != nullptr)
+      << "Can't register configurator for slot " << slot << " port " << port
+      << " because it is not of OnlpSfpConfigurator class";
+
+  CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
+      &slot_port_to_configurator_, slot_port_pair, onlp_configurator))
+      << "slot: " << slot << " port: " << port << " already registered";
 
   return ::util::OkStatus();
 }

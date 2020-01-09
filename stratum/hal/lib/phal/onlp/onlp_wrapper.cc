@@ -15,11 +15,14 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/macros.h"
+#include <string>
+
 #include "absl/memory/memory.h"
+#include "absl/strings/strip.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -300,6 +303,26 @@ SfpModuleType SfpInfo::GetSfpModuleType()const {
   default:
     return SFP_MODULE_TYPE_UNKNOWN;
   }
+}
+
+namespace {
+absl::string_view TrimSuffix(absl::string_view str, absl::string_view suffix) {
+  while (absl::ConsumeSuffix(&str, suffix)) {
+  }
+  return str;
+}
+}  // namespace
+
+std::string SfpInfo::GetSfpVendor() const {
+  return std::string(TrimSuffix(sfp_info_.sff.vendor, " "));
+}
+
+std::string SfpInfo::GetSfpModel() const {
+  return std::string(TrimSuffix(sfp_info_.sff.model, " "));
+}
+
+std::string SfpInfo::GetSfpSerialNumber() const {
+  return std::string(TrimSuffix(sfp_info_.sff.serial, " "));
 }
 
 void SfpInfo::GetModuleCaps(SfpModuleCaps* caps) const {

@@ -53,7 +53,7 @@ store_bazel_profile: &store_bazel_profile
 set_bazelrc: &set_bazelrc
   run:
     name: Set bazelrc
-    command: cp .circleci/bazelrc .bazelrc
+    command: cat .circleci/bazelrc >> .bazelrc
 
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
@@ -160,12 +160,22 @@ jobs:
             docker run $DOCKER_IMG -version
       - *docker_push
 
+  cpp-style-check:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - run:
+          name: Run cpplint
+          command: cpplint --recursive --exclude=stratum/hal/lib/bcm/bcm_sdk_wrapper.cc stratum
+
 workflows:
   version: 2
   build_and_test:
     jobs:
       - unit_tests
       - coverage
+      - cpp-style-check
   docker-publish:
     jobs:
       - publish-docker-build:
