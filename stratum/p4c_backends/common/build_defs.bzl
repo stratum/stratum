@@ -29,8 +29,7 @@ def _generate_p4c_stratum_config(ctx):
     # because p4c invokes the GCC (cc1) binary, which is not available in an
     # isolated bazel build sandbox.
     p4_preprocessed_file = ctx.new_file(
-        ctx.configuration.genfiles_dir,
-        ctx.label.name + ".pp.p4",
+        ctx.genfiles_dir.path + ctx.label.name + ".pp.p4",
     )
     cpp_toolchain = find_cpp_toolchain(ctx)
 

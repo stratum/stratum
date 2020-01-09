@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+
 P4C_BUILD_DEFAULT_COPTS = [
     "-DCONFIG_PKGDATADIR=\\\"external/com_github_p4lang_p4c\\\"",
     # This is a bit of a hack, but will work if the binary is executed by Bazel
@@ -38,15 +40,12 @@ P4C_COMMON_DEPS = [
 #       out_p4_pipeline_json = "p4c_bmv2_test_p4_pipeline.pb.json",
 #   )
 
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-
 def _generate_bmv2_config(ctx):
     """Preprocesses P4 sources and runs p4c on pre-processed P4 file."""
 
     # Preprocess all files and create 'p4_preprocessed_file'.
     p4_preprocessed_file = ctx.new_file(
-        ctx.configuration.genfiles_dir,
-        ctx.label.name + ".pp.p4",
+        ctx.genfiles_dir.path + ctx.label.name + ".pp.p4",
     )
     cpp_toolchain = find_cpp_toolchain(ctx)
     gcc_args = ctx.actions.args()
