@@ -83,7 +83,7 @@ class OnlpCli {
   // Runs the main CLI loop.
   ::util::Status  RunCli() {
     // Create the OnlpInterface object
-    ASSIGN_OR_RETURN(onlp_interface_, OnlpWrapper::Make());
+    onlp_interface_ = OnlpWrapper::CreateSingleton();
 
     while (true) {  // Grap input from std::cin and pass it to a OnlpCli.
       std::string use_wrapper;
@@ -122,7 +122,7 @@ class OnlpCli {
   }
 
  private:
-  std::unique_ptr<OnlpInterface> onlp_interface_;
+  OnlpInterface* onlp_interface_;
 };
 
 ::util::Status Main(int argc, char** argv) {

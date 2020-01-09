@@ -22,11 +22,11 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/constants.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #include "stratum/hal/lib/phal/onlp/switch_configurator.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
+#include "stratum/lib/macros.h"
 
 DEFINE_int32(max_num_transceiver_writers, 2,
              "Maximum number of channel writers for transceiver events.");
@@ -73,13 +73,29 @@ OnlpPhal::OnlpPhal()
 
 OnlpPhal::~OnlpPhal() {}
 
+OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
+  absl::WriterMutexLock l(&init_lock_);
+
+  if (!singleton_) {
+    singleton_ = new OnlpPhal();
+  }
+
+  auto status = singleton_->Initialize(onlp_interface);
+  if (!status.ok()) {
+    LOG(ERROR) << "OnlpPhal failed to initialize: " << status;
+    delete singleton_;
+    singleton_ = nullptr;
+  }
+
+  return singleton_;
+}
+
 // Initialize the onlp interface and phal DB
-::util::Status OnlpPhal::Initialize() {
+::util::Status OnlpPhal::Initialize(OnlpInterface* onlp_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
-    // Create the OnlpWrapper object
-    RETURN_IF_ERROR(InitializeOnlpInterface());
+    onlp_interface_ = onlp_interface;
 
     // Create attribute database and load initial phal DB
     RETURN_IF_ERROR(InitializePhalDB());
@@ -93,14 +109,23 @@ OnlpPhal::~OnlpPhal() {}
 }
 
 ::util::Status OnlpPhal::InitializePhalDB() {
+  CHECK_RETURN_IF_FALSE(onlp_interface_ != nullptr);
   // Create onlp switch configurator instance
   ASSIGN_OR_RETURN(auto configurator,
-                   OnlpSwitchConfigurator::Make(this, onlp_interface_.get()));
+                   OnlpSwitchConfigurator::Make(this, onlp_interface_));
 
   // Create attribute database and load initial phal DB
   ASSIGN_OR_RETURN(std::move(database_),
                    AttributeDatabase::MakePhalDB(std::move(configurator)));
 
+  return ::util::OkStatus();
+}
+
+::util::Status OnlpPhal::InitializeOnlpEventHandler() {
+  CHECK_RETURN_IF_FALSE(onlp_interface_ != nullptr);
+  // Create the OnlpEventHandler object
+  ASSIGN_OR_RETURN(onlp_event_handler_,
+                   OnlpEventHandler::Make(onlp_interface_));
   return ::util::OkStatus();
 }
 
@@ -120,8 +145,11 @@ OnlpPhal::~OnlpPhal() {}
 ::util::Status OnlpPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
-  // TODO(unknown): add clean up code
-
+  transceiver_event_writers_.clear();
+  onlp_interface_ = nullptr;
+  onlp_event_handler_.reset();
+  database_.reset();
+  sfp_event_callback_.reset();
   initialized_ = false;
 
   return ::util::OkStatus();
@@ -246,17 +274,6 @@ OnlpPhal::~OnlpPhal() {}
   return adapter.GetFrontPanelPortInfo(card_id, port_id, fp_port_info);
 }
 
-OnlpPhal* OnlpPhal::CreateSingleton() {
-  absl::WriterMutexLock l(&init_lock_);
-
-  if (!singleton_) {
-    singleton_ = new OnlpPhal();
-    singleton_->Initialize();
-  }
-
-  return singleton_;
-}
-
 ::util::Status OnlpPhal::WriteTransceiverEvent(const TransceiverEvent& event) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
@@ -274,19 +291,6 @@ OnlpPhal* OnlpPhal::CreateSingleton() {
 ::util::Status OnlpPhal::SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state) {
   // TODO(unknown): Implement this.
-  return ::util::OkStatus();
-}
-
-::util::Status OnlpPhal::InitializeOnlpInterface() {
-  // Create the OnlpInterface object
-  ASSIGN_OR_RETURN(onlp_interface_, OnlpWrapper::Make());
-  return ::util::OkStatus();
-}
-
-::util::Status OnlpPhal::InitializeOnlpEventHandler() {
-  // Create the OnlpEventHandler object
-  ASSIGN_OR_RETURN(onlp_event_handler_,
-                   OnlpEventHandler::Make(onlp_interface_.get()));
   return ::util::OkStatus();
 }
 
