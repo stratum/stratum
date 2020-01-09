@@ -17,11 +17,14 @@
 
 licenses(["notice"])  # Apache v2
 
-load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
-load("//bazel/rules:binary_rule.bzl", "stratum_cc_binary")
-load("//bazel/rules:test_rule.bzl", "stratum_cc_test")
-load("//bazel/rules:package_rule.bzl", "stratum_package")
-load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+load(
+    "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
+    "stratum_cc_binary",
+    "stratum_cc_library",
+    "stratum_cc_test",
+    "stratum_package",
+)
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 

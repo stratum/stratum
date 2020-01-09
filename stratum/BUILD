@@ -17,10 +17,12 @@
 
 licenses(["notice"])  # Apache v2
 
-load("//bazel/rules:platform_rules.bzl",
-     "stratum_platform_select", "stratum_platform_filter", "stratum_platform_alias")
-load("//bazel/rules:package_rule.bzl", "stratum_package")
-load("//bazel:defs.bzl", "EMBEDDED_ARCHES", "HOST_ARCHES", "STRATUM_INTERNAL")
+load(
+    "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
+    "stratum_package",
+    "stratum_platform_select",
+)
 
 package(
     #default_hdrs_check = "strict",

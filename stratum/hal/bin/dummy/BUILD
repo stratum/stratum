@@ -15,8 +15,11 @@
 # limitations under the License.
 #
 
-load("//bazel:defs.bzl", "HOST_ARCHES")
-load("//bazel/rules:binary_rule.bzl", "stratum_cc_binary")
+load(
+    "//bazel:rules.bzl",
+    "stratum_cc_binary",
+    "HOST_ARCHES",
+)
 
 licenses(["notice"])  # Apache v2
 

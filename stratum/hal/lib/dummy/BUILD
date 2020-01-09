@@ -17,8 +17,12 @@
 licenses(["notice"])  # Apache v2
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
-load("//bazel:defs.bzl", "HOST_ARCHES", "STRATUM_INTERNAL")
-load("//bazel/rules:library_rule.bzl", "stratum_cc_library")
+load(
+    "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
+    "stratum_cc_library",
+    "HOST_ARCHES",
+)
 #load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(

@@ -15,9 +15,12 @@
 # limitations under the License.
 #
 
-load("//bazel/rules:test_rule.bzl", "stratum_cc_test")
-load("//bazel/rules:package_rule.bzl", "stratum_package")
-load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+load(
+    "//bazel:rules.bzl",
+    "STRATUM_INTERNAL",
+    "stratum_package",
+    "stratum_cc_test",
+)
 
 load(":platform_config_test.bzl", "platform_config_test")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
