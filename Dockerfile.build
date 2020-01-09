@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-ARG BAZEL_VERSION=1.0.0
+ARG BAZEL_VERSION=2.0.0
 ARG PI_COMMIT=1539ecd8a50c159b011d9c5a9c0eba99f122a845
 ARG BMV2_COMMIT=9ef324838b29419040b4f677a3ff65bc72405c44
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
