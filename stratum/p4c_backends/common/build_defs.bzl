@@ -28,7 +28,7 @@ def _generate_p4c_stratum_config(ctx):
     # Preprocess all files and create 'p4_preprocessed_file'. This is necessary
     # because p4c invokes the GCC (cc1) binary, which is not available in an
     # isolated bazel build sandbox.
-    p4_preprocessed_file = ctx.new_file(
+    p4_preprocessed_file = ctx.actions.declare_file(
         ctx.genfiles_dir.path + ctx.label.name + ".pp.p4",
     )
     cpp_toolchain = find_cpp_toolchain(ctx)
@@ -46,11 +46,11 @@ def _generate_p4c_stratum_config(ctx):
     gcc_args.add(ctx.file._core.dirname)
     for hdr in ctx.files.hdrs:
         gcc_args.add("-I " + hdr.dirname)
-    gcc_args.add(ctx.attr.copts)
+    gcc_args.add_all(ctx.attr.copts)
     gcc_args.add("-o")
     gcc_args.add(p4_preprocessed_file.path)
 
-    ctx.action(
+    ctx.actions.run(
         arguments = [gcc_args],
         inputs = ([ctx.file.src] + ctx.files.hdrs + [ctx.file._model] +
                   [ctx.file._core] + ctx.files.cpp),
@@ -77,7 +77,7 @@ def _generate_p4c_stratum_config(ctx):
             annotation_map_files += ","
         annotation_map_files += map_file.path
 
-    ctx.action(
+    ctx.actions.run(
         arguments = [
             "--p4c_fe_options=" + p4c_native_options,
             "--p4_info_file=" + gen_files[2].path,

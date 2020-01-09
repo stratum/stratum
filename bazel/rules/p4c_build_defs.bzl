@@ -44,7 +44,7 @@ def _generate_bmv2_config(ctx):
     """Preprocesses P4 sources and runs p4c on pre-processed P4 file."""
 
     # Preprocess all files and create 'p4_preprocessed_file'.
-    p4_preprocessed_file = ctx.new_file(
+    p4_preprocessed_file = ctx.actions.declare_file(
         ctx.genfiles_dir.path + ctx.label.name + ".pp.p4",
     )
     cpp_toolchain = find_cpp_toolchain(ctx)
@@ -62,9 +62,9 @@ def _generate_bmv2_config(ctx):
         gcc_args.add("-I " + hdr.dirname)
     gcc_args.add("-o")
     gcc_args.add(p4_preprocessed_file.path)
-    gcc_args.add(ctx.attr.copts)
+    gcc_args.add_all(ctx.attr.copts)
 
-    ctx.action(
+    ctx.actions.run(
         arguments = [gcc_args],
         inputs = ([ctx.file.src] + ctx.files.hdrs + [ctx.file._model] +
                   [ctx.file._core]),
@@ -79,7 +79,7 @@ def _generate_bmv2_config(ctx):
         ctx.outputs.out_p4_pipeline_json,
     ]
 
-    ctx.action(
+    ctx.actions.run(
         arguments = [
             "--nocpp",
             "--p4v",
