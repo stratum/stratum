@@ -66,6 +66,9 @@ grpc_deps()
 load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
 grpc_extra_deps()
 
+load("@com_github_p4lang_PI//bazel:deps.bzl", "PI_deps")
+PI_deps()
+
 #load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip_import")
 #pip_import(
 #    name = "grpc_python_dependencies",
