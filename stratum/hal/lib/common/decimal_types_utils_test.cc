@@ -4,11 +4,11 @@
 
 namespace stratum {
 
-TEST(TypedDecimalInitializerTest, InitializeYangDecimal_Success) {
+TEST(TypedDecimalInitializerTest, InitializeStratumDecimal_Success) {
   const DecimalDigits digits = 101;
   const DecimalPrecision precision = 2;
 
-  YangDecimal value = TypedDecimalInitializer<YangDecimal>(
+  StratumDecimal value = TypedDecimalInitializer<StratumDecimal>(
       digits, precision).Init();
 
   EXPECT_EQ(value.digits(), digits);
@@ -19,7 +19,7 @@ TEST(TypedDecimalInitializerTest, InitializeYangAllocatedDecimal_Success) {
   const DecimalDigits digits = 3901;
   const DecimalPrecision precision = 1;
 
-  YangDecimal* value = TypedDecimalInitializer<YangDecimal>(
+  StratumDecimal* value = TypedDecimalInitializer<StratumDecimal>(
       digits, precision).InitAllocated();
 
   EXPECT_EQ(value->digits(), digits);
@@ -85,37 +85,39 @@ TEST(TypedDecimalComparatorTest, EqualGnmiEqualDigitsAndPrecision_True) {
 }
 
 TEST(TypedDecimalComparatorTest, EqualYangDifferentPrecision_False) {
-  YangDecimal left = TypedDecimalInitializer<YangDecimal>(100, 2).Init();
-  YangDecimal right = TypedDecimalInitializer<YangDecimal>(100, 1).Init();
+  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(100, 2).Init();
+  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(100, 1).Init();
 
-  auto equal = TypedDecimalComparator::Equal<YangDecimal, YangDecimal>(
+  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
       left, right);
   EXPECT_FALSE(equal);
 }
 
 TEST(TypedDecimalComparatorTest, EqualYangDifferentDigits_False) {
-  YangDecimal left = TypedDecimalInitializer<YangDecimal>(100, 3).Init();
-  YangDecimal right = TypedDecimalInitializer<YangDecimal>(1000, 3).Init();
+  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(100, 3).Init();
+  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(
+      1000, 3).Init();
 
-  auto equal = TypedDecimalComparator::Equal<YangDecimal, YangDecimal>(
+  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
       left, right);
   EXPECT_FALSE(equal);
 }
 
 TEST(TypedDecimalComparatorTest, EqualYangDifferentDigitsAndPrecision_False) {
-  YangDecimal left = TypedDecimalInitializer<YangDecimal>(109, 4).Init();
-  YangDecimal right = TypedDecimalInitializer<YangDecimal>(9321, 3).Init();
+  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(109, 4).Init();
+  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(
+      9321, 3).Init();
 
-  auto equal = TypedDecimalComparator::Equal<YangDecimal, YangDecimal>(
+  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
       left, right);
   EXPECT_FALSE(equal);
 }
 
 TEST(TypedDecimalComparatorTest, EqualYangEqualDigitsAndPrecision_True) {
-  YangDecimal left = TypedDecimalInitializer<YangDecimal>(65, 2).Init();
-  YangDecimal right = TypedDecimalInitializer<YangDecimal>(65, 2).Init();
+  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(65, 2).Init();
+  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(65, 2).Init();
 
-  auto equal = TypedDecimalComparator::Equal<YangDecimal, YangDecimal>(
+  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
       left, right);
   EXPECT_TRUE(equal);
 }
