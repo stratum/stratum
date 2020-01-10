@@ -1,8 +1,10 @@
-# Running Stratum on a Broadcom SDKLT based switch
+# Stratum on a Broadcom SDKLT based switch
 
 The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. like Tomahawk) using the Broadcom SDKLT.
 
-## Dependencies
+## Build Dependencies
+
+Stratum comes with a development Docker container for build purposes.
 
 Reasonable new GCC or Clang (preferred). [SDKLT](https://github.com/opennetworkinglab/SDKLT) is fetched by bazel automatically during the build process. At runtime two Kernel modules are required, which can be downloaded on [GitHub](https://github.com/opennetworkinglab/SDKLT/releases).
 
