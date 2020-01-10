@@ -74,7 +74,7 @@ OnlpWrapper* OnlpWrapper::CreateSingleton() {
 
 OnlpWrapper::OnlpWrapper() {
   LOG(INFO) << "Initializing ONLP.";
-  if (ONLP_SUCCESS(onlp_sw_init(nullptr))) {
+  if (ONLP_FAILURE(onlp_sw_init(nullptr))) {
     LOG(FATAL) << "Failed to initialize ONLP.";
   }
 }
