@@ -51,7 +51,6 @@ class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
   OnlpPhalSfpEventCallback(const OnlpPhalSfpEventCallback& other) = delete;
   OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) =
       delete;
-  ~OnlpPhalSfpEventCallback() override {};
 
   // Callback for handling SFP status changes - SFP plug/unplug events.
   ::util::Status HandleStatusChange(const OidInfo& oid_info) override;
@@ -89,7 +88,8 @@ class OnlpPhal : public PhalInterface {
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static OnlpPhal* CreateSingleton() LOCKS_EXCLUDED(config_lock_);
+  static OnlpPhal* CreateSingleton(OnlpInterface* onlp_interface)
+      LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // OnlpPhal is neither copyable nor movable.
   OnlpPhal(const OnlpPhal&) = delete;
@@ -111,13 +111,10 @@ class OnlpPhal : public PhalInterface {
   OnlpPhal();
 
   // Calls all the one time start initialisations
-  virtual ::util::Status Initialize() LOCKS_EXCLUDED(config_lock_);
+  ::util::Status Initialize(OnlpInterface* onlp_interface)
+      LOCKS_EXCLUDED(config_lock_);
 
-  // One time initialization of the OnlpWrapper
-  virtual ::util::Status InitializeOnlpInterface()
-      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
-
-  // Inialize the PhalDB on start up
+  // Initialize the PhalDB on start up
   ::util::Status InitializePhalDB() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the OnlpEventHandler. Need to be called after
@@ -152,9 +149,13 @@ class OnlpPhal : public PhalInterface {
   std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>
       transceiver_event_writers_ GUARDED_BY(config_lock_);
 
-  std::unique_ptr<OnlpInterface> onlp_interface_;
-  std::unique_ptr<OnlpEventHandler> onlp_event_handler_;
-  std::unique_ptr<AttributeDatabase> database_;
+  // Not owned by this class.
+  OnlpInterface* onlp_interface_ GUARDED_BY(config_lock_);
+  // Owned by the class.
+  std::unique_ptr<OnlpEventHandler> onlp_event_handler_
+      GUARDED_BY(config_lock_);
+  // Owned by the class.
+  std::unique_ptr<AttributeDatabase> database_ GUARDED_BY(config_lock_);
 
   // SFP Event Callback
   std::unique_ptr<OnlpPhalSfpEventCallback> sfp_event_callback_;
