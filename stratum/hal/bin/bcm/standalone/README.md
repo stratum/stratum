@@ -65,8 +65,25 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 ```
 
 ### SDKLT
-SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the release [tarball]((https://github.com/opennetworkinglab/SDKLT/releases)). Install them before running stratum:
-`insmod linux_ngbde.ko && insmod linux_ngknet.ko`
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the release [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+
+```bash
+wget https://github.com/opennetworkinglab/SDKLT/releases/...
+tar xf sdklt-4.14.49.tgz
+insmod linux_ngbde.ko && insmod linux_ngknet.ko
+```
+
+Check for correct install:
+
+```bash
+# lsmod
+Module                  Size  Used by
+linux_ngknet          352256  0
+linux_ngbde            32768  1 linux_ngknet
+# dmesg -H
+[Jan10 10:53] linux-kernel-bde (6960): MSI not used
+[  +2.611898] Broadcom NGBDE loaded successfully
+```
 
 ## Running the `stratum_bcm` binary
 
