@@ -42,8 +42,7 @@ tai_uint64_t TypesConverter::MegahertzToHertz(
   return megahertz * kMegahertzInHertz;
 }
 
-tai_float_t TypesConverter::Decimal64ValueToFloat(
-    const ywrapper::Decimal64Value &value) {
+tai_float_t TypesConverter::Decimal64ValueToFloat(const Decimal64 &value) {
   tai_float_t ret = value.digits();
   if (value.precision() != 0) ret /= powf(10, value.precision());
 
@@ -52,13 +51,13 @@ tai_float_t TypesConverter::Decimal64ValueToFloat(
 
 /*!
  * \brief TypesConverter::FloatToDecimal64Value method converts \param value
- * that TAI float value to ywrapper::Decimal64Value with given in
+ * that TAI float value to Decimal64 with given in
  * \param precision precision
  * \note The caller takes ownership of the returned object.
  */
-ywrapper::Decimal64Value *TypesConverter::FloatToDecimal64Value(
+Decimal64 *TypesConverter::FloatToDecimal64Value(
     tai_float_t value, ::google::protobuf::uint32 precision) {
-  ywrapper::Decimal64Value *decimalValue = new ywrapper::Decimal64Value();
+  Decimal64 *decimalValue = new Decimal64();
 
   decimalValue->set_digits(static_cast<::google::protobuf::int64>(
       value * powf(10, precision)));

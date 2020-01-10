@@ -21,8 +21,6 @@ option cc_generic_services = false;
 
 package stratum.hal;
 
-import "github.com/openconfig/ygot/proto/ywrapper/ywrapper.proto";
-
 //------------------------------------------------------------------------------
 // Misc enum types used throughout the stack.
 //------------------------------------------------------------------------------
@@ -252,6 +250,16 @@ enum FecMode {
   FEC_MODE_AUTO = 3;
 }
 
+// Decimal64 is used to encode a fixed precision decimal number. The value is
+// expressed as a set of digits with the precision specifying the number of
+// digits following the decimal point in the digit set.
+//
+// This is a copy-pasted gNMI Decimal64 proto type.
+message Decimal64 {
+  int64 digits = 1;         // Set of digits.
+  uint32 precision = 2;     // Number of digits following the decimal point.
+};
+
 // The input optical power of this port in units of 0.01 decibel-milliwatt.
 // If the port is an aggregate of multiple physical channels, this attribute
 // is the total power or sum of all channels.
@@ -260,17 +268,17 @@ enum FecMode {
 // Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
 message InputPower {
   // The instantaneous value of the statistic.
-  ywrapper.Decimal64Value instant = 1;
+  Decimal64 instant = 1;
   // The arithmetic mean value of the statistic over the time interval.
-  ywrapper.Decimal64Value avg = 2;
+  Decimal64 avg = 2;
   // The time interval over which the statistics are computed.
   uint64 interval = 3;
   // The maximum value of the statistic over the time interval.
-  ywrapper.Decimal64Value max = 4;
+  Decimal64 max = 4;
   // The absolute time at which the maximum value occurred.
   uint64 max_time = 5;
   // The minimum value of the statistic over the time interval.
-  ywrapper.Decimal64Value min = 6;
+  Decimal64 min = 6;
   // The absolute time at which the minimum value occurred.
   uint64 min_time = 7;
 }
@@ -282,17 +290,17 @@ message InputPower {
 // Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
 message OutputPower {
   // The instantaneous value of the statistic.
-  ywrapper.Decimal64Value instant = 1;
+  Decimal64 instant = 1;
   // The arithmetic mean value of the statistic over the time interval.
-  ywrapper.Decimal64Value avg = 2;
+  Decimal64 avg = 2;
   // The time interval over which the statistics are computed.
   uint64 interval = 3;
   // The maximum value of the statistic over the time interval.
-  ywrapper.Decimal64Value max = 4;
+  Decimal64 max = 4;
   // The absolute time at which the maximum value occurred.
   uint64 max_time = 5;
   // The minimum value of the statistic over the time interval.
-  ywrapper.Decimal64Value min = 6;
+  Decimal64 min = 6;
   // The absolute time at which the minimum value occurred.
   uint64 min_time = 7;
 }

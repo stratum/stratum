@@ -1,25 +1,25 @@
-#ifndef STRATUM_HAL_LIB_COMMON_YANG_DECIMAL_CONVERTER_H
-#define STRATUM_HAL_LIB_COMMON_YANG_DECIMAL_CONVERTER_H
+#ifndef STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
+#define STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
 
 #include "gnmi/gnmi.pb.h"
-#include "openconfig/openconfig.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 
 namespace stratum {
 
-// Compiled YANG model protobuf decimal type.
-using YangDecimal = ::ywrapper::Decimal64Value;
+// Stratum internal decimal type.
+using StratumDecimal = ::stratum::hal::Decimal64;
 
 // Compiled gNMI library protobuf decimal type.
 using GnmiDecimal = ::gnmi::Decimal64;
 
-// YANG and gNMI decimal type is a pair of two components: digits and precision.
+// Stratum and gNMI decimal type is a pair of two components: digits and precision.
 // Both have the protobuf types.
 using DecimalDigits = ::google::protobuf::int64;
 using DecimalPrecision = ::google::protobuf::uint32;
 
 // Decimal types matcher.
 //
-// This class family supports only gNMI and YANG protobuf decimal values
+// This class family supports only gNMI and Stratum protobuf decimal values
 // implementation.
 //
 // In case you want to extend the supported types set, please check the desired
@@ -31,7 +31,7 @@ using DecimalPrecision = ::google::protobuf::uint32;
 template <typename DecimalType>
 class DecimalTypesMatcher {
   static constexpr bool supported_types_match
-      = std::is_same<DecimalType, YangDecimal>()
+      = std::is_same<DecimalType, StratumDecimal>()
       | std::is_same<DecimalType, GnmiDecimal>();
   static_assert(supported_types_match, "The decimal type is not supported!");
 };
@@ -169,4 +169,4 @@ class TypedDecimalComparator final {
 
 } // namespace stratum
 
-#endif // STRATUM_HAL_LIB_COMMON_YANG_DECIMAL_CONVERTER_H
+#endif // STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H

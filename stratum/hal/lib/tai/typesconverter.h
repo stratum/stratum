@@ -21,7 +21,7 @@
 
 #include <string>
 
-#include "github.com/openconfig/ygot/proto/ywrapper/ywrapper.pb.h"
+#include "stratum/hal/lib/common/common.pb.h"
 #include "inc/taitypes.h"
 
 namespace stratum {
@@ -42,8 +42,8 @@ class TypesConverter final {
   static tai_uint64_t MegahertzToHertz(google::protobuf::uint64 megahertz);
 
   static tai_float_t Decimal64ValueToFloat(
-      const ::ywrapper::Decimal64Value &value);
-  static ::ywrapper::Decimal64Value *FloatToDecimal64Value(
+      const Decimal64 &value);
+  static Decimal64 *FloatToDecimal64Value(
       tai_float_t value, ::google::protobuf::uint32 precision = 2);
 
  private:

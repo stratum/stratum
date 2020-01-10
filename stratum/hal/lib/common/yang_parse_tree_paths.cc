@@ -88,9 +88,9 @@ template <class T>
   return resp;
 }
 
-// Specialization for '::ywrapper::Decimal64Value'.
-::gnmi::SubscribeResponse GetResponse(
-    const ::gnmi::Path& path, const ::ywrapper::Decimal64Value& contents) {
+// Specialization for 'Decimal64'.
+::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path,
+                                      const Decimal64& contents) {
   ::gnmi::Decimal64* value = TypedDecimalInitializer<::gnmi::Decimal64>(
       contents.digits(), contents.precision()).InitAllocated();
 
@@ -2413,8 +2413,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/config/target-output-power
 void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
-    const ywrapper::Decimal64Value& initial_value,
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    const Decimal64& initial_value, TreeNode* node, YangParseTree* tree,
+    uint64 node_id, uint32 port_id) {
   // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
@@ -2429,9 +2429,8 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     }
     ::gnmi::Decimal64 decimal_val = typed_value->decimal_val();
 
-    ywrapper::Decimal64Value* value
-        = TypedDecimalInitializer<ywrapper::Decimal64Value>(
-            decimal_val.digits(), decimal_val.precision()).InitAllocated();
+    Decimal64* value = TypedDecimalInitializer<Decimal64>(
+        decimal_val.digits(), decimal_val.precision()).InitAllocated();
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_output_power,
                            &OutputPower::set_allocated_instant, value);
@@ -2439,9 +2438,8 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
       return status;
     }
 
-    ::ywrapper::Decimal64Value value_copy
-        = TypedDecimalInitializer<::ywrapper::Decimal64Value>(
-            decimal_val.digits(), decimal_val.precision()).Init();
+    Decimal64 value_copy = TypedDecimalInitializer<Decimal64>(
+        decimal_val.digits(), decimal_val.precision()).Init();
     auto poll_functor = [value_copy](const GnmiEvent& /*event*/,
                                      const ::gnmi::Path& path,
                                      GnmiSubscribeStream* stream) {
@@ -3023,7 +3021,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "optical-channel")("config")("target-output-power")());
   // TODO(RNDST-557): replace default initial_output_power with the retried one
   // from the chassis config.
-  ywrapper::Decimal64Value initial_output_power;
+  Decimal64 initial_output_power;
   initial_output_power.set_digits(0);
   initial_output_power.set_precision(0);
   SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(

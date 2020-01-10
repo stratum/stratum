@@ -195,9 +195,6 @@ stratum_cc_library(
 proto_library(
     name = "common_proto",
     srcs = ["common.proto"],
-    deps = [
-        "@com_github_openconfig_ygot_proto//:ywrapper_proto",
-    ]
 )
 
 cc_proto_library(
@@ -772,7 +769,7 @@ stratum_cc_library(
         "decimal_types_utils.h",
     ],
     deps = [
-        "@com_github_openconfig_hercules//:openconfig_cc_proto",
+        ":common_cc_proto",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
     ],
 )
