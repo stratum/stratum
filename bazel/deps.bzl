@@ -87,13 +87,6 @@ def stratum_deps():
             build_file = "@//bazel:external/p4runtime.BUILD",
         )
 
-#    if "build_stack_rules_proto" not in native.existing_rules():
-#        remote_workspace(
-#            name = "build_stack_rules_proto",
-#            remote = "https://github.com/stackb/rules_proto",
-#            commit = "2f4e4f62a3d7a43654d69533faa0652e1c4f5082",
-#        )
-
     if "com_github_p4lang_PI" not in native.existing_rules():
         # ----- PI -----
         remote_workspace(
@@ -134,12 +127,12 @@ def stratum_deps():
             ],
         )
 
-#    if "io_bazel_rules_python" not in native.existing_rules():
-#        remote_workspace(
-#            name = "io_bazel_rules_python",
-#            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
-#            remote = "https://github.com/bazelbuild/rules_python.git",
-#        )
+    if "rules_python" not in native.existing_rules():
+        http_archive(
+            name = "rules_python",
+            url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
+            sha256 = "aa96a691d3a8177f3215b14b0edc9641787abaaa30363a080165d06ab65e1161",
+        )
 
     if "cython" not in native.existing_rules():
         http_archive(
@@ -229,20 +222,7 @@ def stratum_deps():
             build_file = "@//bazel:external/systemd.BUILD",
         )
 
-    if "boringssl" not in native.existing_rules():
-        remote_workspace(
-            name = "boringssl",
-            remote = "https://github.com/google/boringssl",
-            branch = "chromium-stable-with-bazel",
-            #commit = "90bd81032325ba659e538556e64977c29df32a3c", or afc30d43eef92979b05776ec0963c9cede5fb80f
-        )
-
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
-        # remote_workspace(
-        #     name = "com_github_nelhage_rules_boost",
-        #     remote = "https://github.com/nelhage/rules_boost",
-        #     commit = "9f9fb8b2f0213989247c9d5c0e814a8451d18d7f",
-        # )
         git_repository(
             name = "com_github_nelhage_rules_boost",
             commit = "ed844db5990d21b75dc3553c057069f324b3916b",
@@ -250,13 +230,6 @@ def stratum_deps():
             shallow_since = "1570056263 -0700",
         )
         # sha256 = "bd3155d1f13792a798e116034322dbe2ee2904253396573ab64ab10dc8c27d96"
-
-#    if "rules_cc" not in native.existing_rules():
-#        remote_workspace(
-#            name = "rules_cc",
-#            remote = "https://github.com/bazelbuild/rules_cc",
-#            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
-#        )
 
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
@@ -268,34 +241,6 @@ def stratum_deps():
             strip_prefix = "bazel-latex-0.17",
             url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
         )
-
-#    if "zlib" not in native.existing_rules():
-#        http_archive(
-#            name = "zlib",
-#            build_file = "@com_github_grpc_grpc//third_party:zlib.BUILD",
-#            sha256 = "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
-#            strip_prefix = "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f",
-#            url = "https://github.com/madler/zlib/archive/cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
-#        )
-    # Already loaded in build_tools.bzl?
-    # if "io_bazel_rules_go" not in native.existing_rules():
-    #     http_archive(
-    #         name = "io_bazel_rules_go",
-    #         urls = [
-    #             "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
-    #             "https://github.com/bazelbuild/rules_go/releases/download/v0.20.3/rules_go-v0.20.3.tar.gz",
-    #         ],
-    #         sha256 = "e88471aea3a3a4f19ec1310a55ba94772d087e9ce46e41ae38ecebe17935de7b",
-    #     )
-    # if "bazel_gazelle" not in native.existing_rules():
-    #     http_archive(
-    #         name = "bazel_gazelle",
-    #         urls = [
-    #             "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
-    #             "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.19.1/bazel-gazelle-v0.19.1.tar.gz",
-    #         ],
-    #         sha256 = "86c6d481b3f7aedc1d60c1c211c6f76da282ae197c3b3160f54bd3a8f847896f",
-    #     )
 # -----------------------------------------------------------------------------
 #        Chipset and Platform specific C/C++ libraries
 # -----------------------------------------------------------------------------
