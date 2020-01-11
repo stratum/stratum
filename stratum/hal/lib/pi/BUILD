@@ -48,7 +48,7 @@ stratum_cc_library(
     hdrs = ["pi_node.h"],
     deps = pi_node_common_deps + select({
         ":sde_8_9_2": ["@com_github_p4lang_PI_bf_8_9//proto/frontend:pifeproto"],
-        "//conditions:default": ["@com_github_p4lang_PI//proto/frontend:pifeproto"],
+        "//conditions:default": ["@com_github_p4lang_PI_bf_9_0//proto/frontend:pifeproto"],
     })
 )
 
