@@ -18,7 +18,6 @@
 #ifndef STRATUM_LIB_UTILS_H_
 #define STRATUM_LIB_UTILS_H_
 
-#include <grpcpp/grpcpp.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -38,8 +37,9 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "google/rpc/code.pb.h"
 #include "google/rpc/status.pb.h"
-#include "stratum/glue/status/status.h"
+#include "grpcpp/grpcpp.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
 
 namespace stratum {
 

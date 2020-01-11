@@ -126,19 +126,24 @@ BFChassisManager::~BFChassisManager() = default;
     RETURN_IF_ERROR(bf_pal_interface_->PortDisable(unit, port_id));
     RETURN_IF_ERROR(bf_pal_interface_->PortDelete(unit, port_id));
 
-    ::util::Status status = AddPortHelper(node_id, unit, port_id, singleton_port, config);
+    ::util::Status status =
+        AddPortHelper(node_id, unit, port_id, singleton_port, config);
     if (status.ok()) {
       return ::util::OkStatus();
     } else {
       // Revert to the old port configuration
       //   -- make a singleton_port from config_old
       //   -- call AddPortHelper with "old" singleton_port
-      SingletonPort port_old = BuildSingletonPort(singleton_port.slot(),
-          singleton_port.port(), singleton_port.channel(), *config_old.speed_bps);
+      SingletonPort port_old =
+          BuildSingletonPort(singleton_port.slot(), singleton_port.port(),
+                             singleton_port.channel(), *config_old.speed_bps);
       port_old.mutable_config_params()->set_admin_state(config_old.admin_state);
-      if (config_old.autoneg) port_old.mutable_config_params()->set_autoneg(*config_old.autoneg);
-      if (config_old.mtu) port_old.mutable_config_params()->set_mtu(*config_old.mtu);
-      if (config_old.fec_mode) port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
+      if (config_old.autoneg)
+        port_old.mutable_config_params()->set_autoneg(*config_old.autoneg);
+      if (config_old.mtu)
+        port_old.mutable_config_params()->set_mtu(*config_old.mtu);
+      if (config_old.fec_mode)
+        port_old.mutable_config_params()->set_fec_mode(*config_old.fec_mode);
       AddPortHelper(node_id, unit, port_id, port_old, config);
       RETURN_ERROR(ERR_INVALID_PARAM)
           << "Could not add port " << port_id

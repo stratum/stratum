@@ -13,30 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/p4_service.h"
 
-#include <grpcpp/grpcpp.h>
 #include <memory>
 
-#include "gflags/gflags.h"
-#include "google/rpc/code.pb.h"
-#include "stratum/glue/net_util/ports.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/error_buffer.h"
-#include "stratum/hal/lib/common/switch_mock.h"
-#include "stratum/lib/security/auth_policy_checker_mock.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
-#include "stratum/lib/macros.h"
-#include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "google/rpc/code.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/net_util/ports.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 
 DECLARE_int32(max_num_controllers_per_node);
 DECLARE_int32(max_num_controller_connections);

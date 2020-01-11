@@ -85,7 +85,7 @@ P4TableMapper::~P4TableMapper() { Shutdown().IgnoreError(); }
     return ::util::OkStatus();
   }
 
-  // TODO: If the old pushed forwarding pipeline config needs to be
+  // TODO(unknown): If the old pushed forwarding pipeline config needs to be
   // examined to handle the diff, do this here. At the moment, there is no
   // need to do this though. We recreate the state from scratch as part of any
   // new config push.
@@ -429,7 +429,7 @@ std::string Uint32ToByteStream(uint32 val) {
   return bytes;
 }
 
-// TODO: If needed, add extra validation of the unsigned int values to
+// TODO(unknown): If needed, add extra validation of the unsigned int values to
 // to be in range [1, 2^bitwidth -1].
 ::util::Status DeparseMetadataHelper(
     const MetadataTypeToIdBitwidthMap& metadata_type_to_id_bitwidth_pair,

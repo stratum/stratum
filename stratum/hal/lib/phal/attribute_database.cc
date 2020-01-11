@@ -222,7 +222,8 @@ AttributeDatabase::MakePhalDB(
       AttributeGroup::From(PhalDB::descriptor());
 
   // Now load the config into the attribute database
-  RETURN_IF_ERROR(configurator->ConfigurePhalDB(phal_config, root_group.get()));
+  RETURN_IF_ERROR(
+      configurator->ConfigurePhalDB(&phal_config, root_group.get()));
 
   ASSIGN_OR_RETURN(
       std::unique_ptr<AttributeDatabase> database,

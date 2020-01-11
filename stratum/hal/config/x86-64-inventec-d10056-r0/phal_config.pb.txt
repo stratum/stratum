@@ -241,15 +241,6 @@ fan_trays {
   fans {
     slot: 5
   }
-  fans {
-    slot: 6
-  }
-  fans {
-    slot: 7
-  }
-  fans {
-    slot: 8
-  }
 }
 psu_trays {
   psus {
@@ -279,5 +270,23 @@ thermal_groups {
   }
   thermals {
     thermal_index: 4
+  }
+  thermals {
+    thermal_index: 5
+  }
+  thermals {
+    thermal_index: 6
+  }
+  thermals {
+    thermal_index: 7
+  }
+  thermals {
+    thermal_index: 8
+  }
+  thermals {
+    thermal_index: 9
+  }
+  thermals {
+    thermal_index: 10
   }
 }

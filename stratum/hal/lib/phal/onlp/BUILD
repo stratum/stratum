@@ -406,7 +406,6 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "onlpphal_mock",
-    srcs = ["onlpphal_mock.cc"],
     hdrs = ["onlpphal_mock.h"],
     deps = [
         ":onlpphal_header",

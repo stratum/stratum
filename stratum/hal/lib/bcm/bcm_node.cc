@@ -225,16 +225,18 @@ BcmNode::~BcmNode() {}
         action_profile_groups_requested = true;
         break;
       case ::p4::v1::Entity::kPacketReplicationEngineEntry:
-        if (entity.packet_replication_engine_entry().has_multicast_group_entry()) {
-          multicast_group_ids.insert(
-              entity.packet_replication_engine_entry().multicast_group_entry()
-                  .multicast_group_id());
+        if (entity.packet_replication_engine_entry()
+                .has_multicast_group_entry()) {
+          multicast_group_ids.insert(entity.packet_replication_engine_entry()
+                                         .multicast_group_entry()
+                                         .multicast_group_id());
           multicast_groups_requested = true;
         }
-        if (entity.packet_replication_engine_entry().has_clone_session_entry()) {
-            clone_session_ids.insert(
-              entity.packet_replication_engine_entry().clone_session_entry()
-                  .session_id());
+        if (entity.packet_replication_engine_entry()
+                .has_clone_session_entry()) {
+          clone_session_ids.insert(entity.packet_replication_engine_entry()
+                                       .clone_session_entry()
+                                       .session_id());
           clone_sessions_requested = true;
         }
         break;
@@ -747,28 +749,33 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
 ::util::Status BcmNode::PacketReplicationEngineEntryWrite(
     const ::p4::v1::PacketReplicationEngineEntry& entry,
     ::p4::v1::Update::Type type) {
-
   auto replicationType = entry.type_case();
 
   bool consumed = false;
   switch (type) {
     case ::p4::v1::Update::INSERT: {
       switch (replicationType) {
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry: {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+            kCloneSessionEntry: {
           BcmPacketReplicationEntry bcm_entry;
-          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
-          RETURN_IF_ERROR(bcm_table_manager_->AddCloneSession(entry.clone_session_entry()));
+          RETURN_IF_ERROR(
+              bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(
+              bcm_table_manager_->AddCloneSession(entry.clone_session_entry()));
           // There is nothing to be done here. All packets cloned by COPY_TO_CPU
           // are sent to the CPU and then controller on bcm.
           consumed = true;
           break;
         }
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+            kMulticastGroupEntry: {
           BcmPacketReplicationEntry bcm_entry;
-          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
-          RETURN_IF_ERROR(bcm_packetio_manager_->InsertPacketReplicationEntry(
-              bcm_entry));
-          RETURN_IF_ERROR(bcm_table_manager_->AddMulticastGroup(entry.multicast_group_entry()));
+          RETURN_IF_ERROR(
+              bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(
+              bcm_packetio_manager_->InsertPacketReplicationEntry(bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->AddMulticastGroup(
+              entry.multicast_group_entry()));
           consumed = true;
           break;
         }
@@ -778,21 +785,26 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
       break;
     }
     case ::p4::v1::Update::DELETE: {
-
       switch (replicationType) {
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kCloneSessionEntry: {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+            kCloneSessionEntry: {
           BcmPacketReplicationEntry bcm_entry;
-          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
-          RETURN_IF_ERROR(bcm_table_manager_->DeleteCloneSession(entry.clone_session_entry()));
+          RETURN_IF_ERROR(
+              bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->DeleteCloneSession(
+              entry.clone_session_entry()));
           consumed = true;
           break;
         }
-        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::kMulticastGroupEntry: {
+        case ::p4::v1::PacketReplicationEngineEntry::TypeCase::
+            kMulticastGroupEntry: {
           BcmPacketReplicationEntry bcm_entry;
-          RETURN_IF_ERROR(bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
-          RETURN_IF_ERROR(bcm_packetio_manager_->DeletePacketReplicationEntry(
-              bcm_entry));
-          RETURN_IF_ERROR(bcm_table_manager_->DeleteMulticastGroup(entry.multicast_group_entry()));
+          RETURN_IF_ERROR(
+              bcm_table_manager_->FillBcmReplicationConfig(entry, &bcm_entry));
+          RETURN_IF_ERROR(
+              bcm_packetio_manager_->DeletePacketReplicationEntry(bcm_entry));
+          RETURN_IF_ERROR(bcm_table_manager_->DeleteMulticastGroup(
+              entry.multicast_group_entry()));
           consumed = true;
           break;
         }
@@ -805,8 +817,9 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
   }
 
   CHECK_RETURN_IF_FALSE(consumed)
-    << "Do not know what to do with this " << ::p4::v1::Update::Type_Name(type)
-    << " PacketReplicationEngineEntry: " << entry.ShortDebugString() << ".";
+      << "Do not know what to do with this "
+      << ::p4::v1::Update::Type_Name(type)
+      << " PacketReplicationEngineEntry: " << entry.ShortDebugString() << ".";
   return ::util::OkStatus();
 }
 

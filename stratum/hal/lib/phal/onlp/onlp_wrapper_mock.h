@@ -21,25 +21,18 @@
 #include <memory>
 #include <vector>
 
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "stratum/glue/status/status.h"
-#include "absl/memory/memory.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
-class MockOnlpWrapper : public OnlpInterface {
+class OnlpWrapperMock : public OnlpInterface {
  public:
-  ~MockOnlpWrapper() override{};
-
-  static ::util::StatusOr<std::unique_ptr<MockOnlpWrapper>> Make() {
-    LOG(INFO) << "Initializing Mock ONLP.";
-    return absl::WrapUnique(new MockOnlpWrapper());
-  }
-
   MOCK_CONST_METHOD1(GetOidInfo, ::util::StatusOr<OidInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetSfpInfo, ::util::StatusOr<SfpInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetFanInfo, ::util::StatusOr<FanInfo>(OnlpOid oid));
@@ -51,13 +44,13 @@ class MockOnlpWrapper : public OnlpInterface {
   MOCK_CONST_METHOD2(SetFanDir, ::util::Status(OnlpOid oid, FanDir dir));
   MOCK_CONST_METHOD1(GetPsuInfo, ::util::StatusOr<PsuInfo>(OnlpOid oid));
   MOCK_CONST_METHOD1(GetThermalInfo,
-    ::util::StatusOr<ThermalInfo>(OnlpOid oid));
+                     ::util::StatusOr<ThermalInfo>(OnlpOid oid));
   MOCK_CONST_METHOD0(GetSfpPresenceBitmap,
-    ::util::StatusOr<OnlpPresentBitmap>());
+                     ::util::StatusOr<OnlpPresentBitmap>());
   MOCK_CONST_METHOD1(GetSfpPresent, ::util::StatusOr<bool>(OnlpOid port));
   MOCK_CONST_METHOD0(GetSfpMaxPortNumber, ::util::StatusOr<OnlpPortNumber>());
   MOCK_CONST_METHOD1(GetOidList, ::util::StatusOr<std::vector<OnlpOid>>(
-        onlp_oid_type_flag_t type));
+                                     onlp_oid_type_flag_t type));
 };
 
 }  // namespace onlp

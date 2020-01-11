@@ -13,15 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#include <grpcpp/grpcpp.h>
 #include <memory>
 #include <string>
 
-#include "stratum/hal/lib/common/config_monitoring_service.h"
+#include "absl/memory/memory.h"
+#include "absl/strings/substitute.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
+#include "openconfig/openconfig.pb.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/config_monitoring_service.h"
 #include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -32,12 +37,6 @@
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/substitute.h"
-#include "absl/synchronization/mutex.h"
-#include "openconfig/openconfig.pb.h"
 
 DECLARE_string(chassis_config_file);
 DECLARE_string(test_tmpdir);
@@ -1183,8 +1182,9 @@ TEST_P(ConfigMonitoringServiceTest,
 }
 
 TEST_P(ConfigMonitoringServiceTest, CapabilitiesTest) {
-  ::gnmi::CapabilityResponse expected_resp;  // NOLINTNEXTLINE
-  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt", &expected_resp);
+  ::gnmi::CapabilityResponse expected_resp;
+  ReadProtoFromTextFile("stratum/hal/lib/common/gnmi_caps.pb.txt",
+                        &expected_resp);
 
   ::grpc::ServerContext context;
   ::gnmi::CapabilityRequest req;

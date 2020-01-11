@@ -79,7 +79,7 @@ MATCHER_P(GnmiEventEq, event, "") {
 }
 
 // TODO(unknown): Investigate moving the test protos into a testdata folder.
-// TODO: Use constants for the config args used in tests.
+// TODO(unknown): Use constants for the config args used in tests.
 class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
  protected:
   BcmChassisManagerTest() {
@@ -3112,8 +3112,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigFailure) {
   )";
   const std::string kChassisMapError12 = "is in flex_port_group_keys";
 
-  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip here
-  // says TOMAHAWK.
+  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip
+  // here says TOMAHAWK.
   const std::string kBcmChassisMapListText13 = R"(
       bcm_chassis_maps {
         auto_add_logical_ports: true
@@ -5195,7 +5195,7 @@ TEST_P(BcmChassisManagerTest, TestSetTrunkMemberBlockStateByController) {
   // static: (node_id: 7654321, trunk_id: 222, port_id: 12345)
   // LACP: (node_id: 7654321, trunk_id: 333, port_id: NONE)
 
-  // TODO: Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 222, kPortId,
                                      TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
   EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 0, kPortId,
@@ -5238,7 +5238,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
 TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO: Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
   EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
 
@@ -5248,7 +5248,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
 TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO: Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_BAD));
   EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
 

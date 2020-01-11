@@ -47,7 +47,8 @@ class BcmSdkMock : public BcmSdkInterface {
                                               const BcmPortOptions& options));
   MOCK_METHOD3(GetPortOptions,
                ::util::Status(int unit, int port, BcmPortOptions* options));
-  MOCK_METHOD3(GetPortCounters, ::util::Status(int unit, int port, PortCounters* pc));
+  MOCK_METHOD3(GetPortCounters,
+               ::util::Status(int unit, int port, PortCounters* pc));
   MOCK_METHOD0(StartDiagShellServer, ::util::Status());
   MOCK_METHOD1(StartLinkscan, ::util::Status(int unit));
   MOCK_METHOD1(StopLinkscan, ::util::Status(int unit));
@@ -188,7 +189,8 @@ class BcmSdkMock : public BcmSdkInterface {
                ::util::Status(int unit, int port, int cos, uint64 smac,
                               size_t packet_len, std::string* header));
   MOCK_METHOD4(GetKnetHeaderForIngressPipelineTx,
-               ::util::Status(int unit, uint64 smac, size_t packet_len, std::string* header));
+               ::util::Status(int unit, uint64 smac, size_t packet_len,
+                              std::string* header));
   MOCK_METHOD1(GetKnetHeaderSizeForRx, size_t(int unit));
   MOCK_METHOD5(ParseKnetHeaderForRx,
                ::util::Status(int unit, const std::string& header,
