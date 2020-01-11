@@ -78,7 +78,7 @@ jobs:
   # Build targets and run unit tests.
   unit_tests:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:bazel-2.0.0
     steps:
       - checkout
       - *restore_bazel_cache
@@ -96,7 +96,7 @@ jobs:
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:bazel-2.0.0
     steps:
       - checkout
       - *restore_bazel_cache
