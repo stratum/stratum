@@ -153,7 +153,7 @@ Main(int argc, char* argv[]) {
   std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(unit));
 
   auto pi_node = pi::PINode::CreateInstance(device_mgr.get(), unit);
-  auto* onlp_wrapper = OnlpWrapper::CreateSingleton();
+  auto* onlp_wrapper = phal::onlp::OnlpWrapper::CreateSingleton();
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
