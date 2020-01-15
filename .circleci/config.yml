@@ -183,7 +183,7 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             go get -u github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete r${CIRCLE_BUILD_NUM} ./artifacts/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete r1104 ./artifacts/
 
 workflows:
   version: 2
@@ -195,9 +195,9 @@ workflows:
       - publish-github-stratum-bcm:
           requires:
             - unit_tests
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
   docker-publish:
     jobs:
       - publish-docker-build:
