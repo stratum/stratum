@@ -65,5 +65,6 @@ pkg_tar(
     srcs = [
         ":bcm_hardware_specs",
         ":all_configs",
-    ]
+    ],
+    mode = "0644",
 )
