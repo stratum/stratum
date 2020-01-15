@@ -195,6 +195,9 @@ workflows:
       - publish-github-stratum-bcm:
           requires:
             - unit_tests
+          filters:
+            branches:
+              only: master
   docker-publish:
     jobs:
       - publish-docker-build:
