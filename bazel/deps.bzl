@@ -297,3 +297,8 @@ def stratum_deps():
             commit = "ac2b0bf26c4fb91d883492cb85394304cde392c6",
         )
 
+    http_archive(
+        name = "rules_pkg",
+        url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.4/rules_pkg-0.2.4.tar.gz",
+        sha256 = "4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a",
+    )
