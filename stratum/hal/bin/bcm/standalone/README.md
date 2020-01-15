@@ -2,7 +2,15 @@
 
 The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. like Tomahawk) using the Broadcom SDKLT.
 
-## Build dependencies
+## Prebuild releases
+
+We release Stratum [packages](https://github.com/stratum/stratum/releases) with a pre-compiled binary and a set of default configuration files. Download it to the switch and extract its contents.
+
+## Building from source
+
+Sometimes you have to build Stratum from source, e.g. because you develop some feature or want to try a fix that is not on master yet.
+
+### Build dependencies
 
 Stratum comes with a [development Docker container](https://github.com/stratum/stratum#development-environment) for build purposes. This is the preferred and supported way of building Stratum, as it has all dependencies installed.
 
@@ -14,17 +22,16 @@ If you for some reason want to build natively, here are some pointers to an envi
 
 - Ubuntu 16.04.6 LTS
 
-## Building the `stratum_bcm` binary
+### Building the `stratum_bcm` package
 
-The `stratum_bcm` binary is a standalone, static executable and is build by the following steps:
+You can build the same package that we publish manually with the following steps:
 
 ```
 git clone https://github.com/stratum/stratum.git
 cd stratum
 ./setup_dev_env.sh  # You're now inside the docker container
-bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm
-scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm root@<your_switch_ip>:stratum_bcm
-scp stratum/hal/config root@<your_switch_ip>:stratum_configs
+bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
+scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz root@<your_switch_ip>:stratum_bcm_package.tar.gz
 ```
 
 If you're not building inside the docker container, skip the `./setup_dev_env.sh` step.
@@ -65,9 +72,11 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 ```
 
 ### SDKLT
-SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the release [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the Stratum [package](https://github.com/stratum/stratum/releases) and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
 
 ```bash
+tar xf stratum_bcm_package.tar.gz
+# or
 wget https://github.com/opennetworkinglab/SDKLT/releases/...
 tar xf sdklt-4.14.49.tgz
 insmod linux_ngbde.ko && insmod linux_ngknet.ko
