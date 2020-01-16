@@ -94,10 +94,10 @@ jobs:
       - run:
           name: Move Stratum package
           command: |
-            mkdir /tmp/stratum_package
-            mv bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz /tmp/stratum_package/
+            mkdir -p /tmp/artifacts/${CIRCLE_BRANCH}
+            mv bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz /tmp/artifacts/${CIRCLE_BRANCH}
       - store_artifacts:
-          path: /tmp/stratum_package
+          path: /tmp/artifacts
       - *save_bazel_cache
 
   # Generate coverage report and upload to codecov.io.
