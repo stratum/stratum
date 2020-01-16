@@ -4,11 +4,11 @@ The following guide details how to compile the Stratum binary to run on a Broadc
 
 ## Prebuild releases
 
-We release Stratum [packages](https://github.com/stratum/stratum/releases) with a pre-compiled binary and a set of default configuration files. Download it to the switch and extract its contents.
+As part of CI, we publish Stratum [packages](https://circleci.com/gh/stratum/stratum/tree/master) with a pre-compiled binary and a set of default configuration files. Open a `unit_tests` job and click on the `Artifacts` tab. Download the `stratum_bcm_package.tar.gz` tarball to the switch and extract its contents.
 
 ## Building from source
 
-Sometimes you have to build Stratum from source, e.g. because you develop some feature or want to try a fix that is not on master yet.
+Sometimes you have to build Stratum from source, e.g. because you develop some private feature or want to try a fix not yet pushed to GitHub.
 
 ### Build dependencies
 
@@ -72,7 +72,7 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 ```
 
 ### SDKLT
-SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the Stratum [package](https://github.com/stratum/stratum/releases) and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the `stratum_bcm_package.tar.gz` package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
 
 ```bash
 tar xf stratum_bcm_package.tar.gz
