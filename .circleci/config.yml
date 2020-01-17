@@ -23,16 +23,16 @@ version: 2.1
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
     keys:
-      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
-      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
-      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
     # jobs where the bazel process was killed because it took too long or OOM.
     # Restart the job if you see the bazel server being terminated abruptly.
     when: always
-    key: v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+    key: v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
     paths:
       - /tmp/bazel-cache
 
