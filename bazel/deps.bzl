@@ -229,7 +229,6 @@ def stratum_deps():
             remote = "https://github.com/nelhage/rules_boost",
             shallow_since = "1570056263 -0700",
         )
-        # sha256 = "bd3155d1f13792a798e116034322dbe2ee2904253396573ab64ab10dc8c27d96"
 
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
