@@ -67,7 +67,7 @@ docker_build: &docker_build
     command: |
       docker pull $DOCKER_IMG || true
       cd $DOCKER_SCOPE
-      docker build -f $DOCKER_FILE -t $DOCKER_IMG --cache-from $DOCKER_IMG .
+      docker build -f $DOCKER_FILE -t $DOCKER_IMG --cache-from $DOCKER_IMG --label vcs-ref=$CIRCLE_SHA1 .
 docker_push: &docker_push
   run:
     name: Push Docker image
@@ -160,6 +160,36 @@ jobs:
             docker run $DOCKER_IMG -version
       - *docker_push
 
+  publish-docker-stratum-bcm:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bcm
+    steps:
+      - run:
+          name: Install docker
+          command: |
+            curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+            sudo sh /tmp/get-docker.sh
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bcm
+          command: |
+            export CC='clang' CXX='clang++'
+            clang++ --version
+            bazel build --config=asan //stratum/hal/bin/bcm/standalone:stratum_bcm_package
+            tar xf bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz -C $DOCKER_SCOPE
+            ls -l $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
+
   cpp-style-check:
     docker:
       - image: stratumproject/build:build
@@ -188,3 +218,6 @@ workflows:
       - publish-docker-p4c-fpm:
           requires:
             - publish-docker-build
+      - publish-docker-stratum-bcm
+          # requires:
+          #   - setup_remote_docker

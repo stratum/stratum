@@ -28,13 +28,6 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache v2
 
-filegroup(
-    name = "bcm_hardware_specs",
-    srcs = [
-        "bcm_hardware_specs.pb.txt"
-    ]
-)
-
 platform_config_test("x86-64-accton-as7712-32x-r0", bcm_target=True)
 platform_config_test("x86-64-dell-z9100-c2538-r0", bcm_target=True)
 platform_config_test("x86-64-inventec-d7032q28b-r0", bcm_target=True)
@@ -55,17 +48,16 @@ filegroup(
         "*/chassis_config.pb.txt",
         "*/phal_config.pb.txt",
         "*/SDKLT.yml",
-    ]),
+    ]) + [
+        "bcm_hardware_specs.pb.txt",
+    ],
 )
 
 pkg_tar(
-    name = "configs",
+    name = "all_configs_tar",
     extension = "tar.gz",
     strip_prefix = ".",  # needed to preserve sub-directory structure: https://github.com/bazelbuild/rules_pkg/issues/82
     package_dir = "stratum_configs",
-    srcs = [
-        ":bcm_hardware_specs",
-        ":all_configs",
-    ],
+    srcs = [ ":all_configs" ],
     mode = "0644",
 )

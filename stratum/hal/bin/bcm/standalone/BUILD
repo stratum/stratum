@@ -98,9 +98,10 @@ pkg_tar(
         ":stratum_bcm",
         "@com_github_opennetworkinglab_sdklt//:kernel_modules",
         "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
+        "start-stratum.sh",
     ],
     deps = [
-        "//stratum/hal/config:configs",
+        "//stratum/hal/config:all_configs_tar",
     ],
     mode = "0755",
 )
