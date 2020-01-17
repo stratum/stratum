@@ -21,7 +21,6 @@ load(
     "stratum_package",
     "stratum_cc_test",
 )
-
 load(":platform_config_test.bzl", "platform_config_test")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
 

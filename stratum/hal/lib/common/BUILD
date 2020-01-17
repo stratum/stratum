@@ -26,7 +26,7 @@ load(
 
 load("//bazel:deps.bzl", "P4RUNTIME_VER")
 
-#load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(
     #default_hdrs_check = "strict",
@@ -205,13 +205,12 @@ cc_proto_library(
     deps = [":common_proto"]
 )
 
-#py_proto_library(
-#    name = "common_py_proto",
-#    deps = [
-#        ":common_proto"
-#    ],
-#    well_known_protos = False,
-#)
+py_proto_library(
+    name = "common_py_proto",
+    deps = [
+        ":common_proto"
+    ],
+)
 
 stratum_cc_library(
     name = "config_monitoring_service",
