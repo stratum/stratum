@@ -99,6 +99,9 @@ jobs:
       - image: stratumproject/build:bazel-2.0.0
     steps:
       - checkout
+      - run:
+          name: add gcov wrapper
+          command: cp .circleci/gcov-wrapper.sh /usr/bin/gcov
       - *restore_bazel_cache
       - *set_bazelrc
       - run:
