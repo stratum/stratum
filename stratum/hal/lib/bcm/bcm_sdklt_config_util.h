@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_CONFIG_UTIL_H_
-#define STRATUM_HAL_LIB_BCM_BCM_SDK_CONFIG_UTIL_H_
+#ifndef STRATUM_HAL_LIB_BCM_BCM_SDKLT_CONFIG_UTIL_H_
+#define STRATUM_HAL_LIB_BCM_BCM_SDKLT_CONFIG_UTIL_H_
 
 #include <string>
 
@@ -46,9 +46,9 @@ struct SerdesLaneSetting {
   BcmPort_OpMode op_mode[4];
 };
 
-const std::string kSdkltOpModeDefault = "PC_PM_OPMODE_DEFAULT";
-const std::string kSdkltOpModeQsgmii = "PC_PM_OPMODE_QSGMII";
-const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
+const char kSdkltOpModeDefault[] = "PC_PM_OPMODE_DEFAULT";
+const char kSdkltOpModeQsgmii[] = "PC_PM_OPMODE_QSGMII";
+const char kSdkltOpModeGphy[] = "PC_PM_OPMODE_GPHY";
 
 ::util::StatusOr<std::string> toBcmSdkltOpModeStr(BcmPort_OpMode op_mode) {
   switch (op_mode) {
@@ -76,7 +76,8 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
       serdes_lane_settings.emplace(serdes_core_id, new SerdesLaneSetting());
     }
 
-    SerdesLaneSetting* serdes_lane_setting = serdes_lane_settings[serdes_core_id];
+    SerdesLaneSetting* serdes_lane_setting =
+        serdes_lane_settings[serdes_core_id];
 
     if (!serdes_lane_setting) {
       // This should not happened
@@ -89,10 +90,11 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
     serdes_lane_setting->tx_polarity_flip = bcm_port.tx_polarity_flip();
 
     int serdes_lane = bcm_port.serdes_lane();
-    CHECK_RETURN_IF_FALSE(serdes_lane >= 0 && serdes_lane < kMaxSerdesLaneNumber)
-        << "Invalid serdes lane number";
+    CHECK_RETURN_IF_FALSE(serdes_lane >= 0 &&
+        serdes_lane < kMaxSerdesLaneNumber) << "Invalid serdes lane number";
 
-    serdes_lane_setting->speed_mbps[serdes_lane] = bcm_port.speed_bps() / kBitsPerMegabit;
+    serdes_lane_setting->speed_mbps[serdes_lane] =
+        bcm_port.speed_bps() / kBitsPerMegabit;
     serdes_lane_setting->lane_map[serdes_lane] = bcm_port.lane_map();
     serdes_lane_setting->op_mode[serdes_lane] = bcm_port.op_mode();
   }
@@ -123,7 +125,8 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
     pc_pm << YAML::Value << YAML::Flow << YAML::BeginSeq;
 
     for (int i = 0; i < bcm_port.num_serdes_lanes(); i++) {
-      ASSIGN_OR_RETURN(auto op_mode_str, toBcmSdkltOpModeStr(serdes_lane_setting->op_mode[i]))
+      ASSIGN_OR_RETURN(auto op_mode_str,
+        toBcmSdkltOpModeStr(serdes_lane_setting->op_mode[i]))
       pc_pm << op_mode_str;
     }
     pc_pm << YAML::EndSeq;
@@ -191,8 +194,8 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
   pc_pm_core << YAML::EndDoc;
   buffer << pc_pm_core.c_str() << "\n";
 
-  // TODO(Yi): PC_PM_TX_LANE_PROFILE from serdes db or something else.
-  // TODO(Yi) PC_PM_LANE, this depends on PC_PM_TX_LANE_PROFILE
+// TODO(Yi): PC_PM_TX_LANE_PROFILE from serdes db or something else.
+// TODO(Yi) PC_PM_LANE, this depends on PC_PM_TX_LANE_PROFILE
 //  YAML::Emitter pc_pm_lane;
 //  pc_pm_lane << YAML::BeginDoc;
 //  pc_pm_lane << YAML::BeginMap;
@@ -211,16 +214,19 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
 //      // Key is a map (PC_PM_ID: xx, CORE_INDEX: unit, CORE_LANE: xx)
 //      pc_pm_lane << YAML::Key << YAML::BeginMap
 //                 << YAML::Key << "PC_PM_ID" << YAML::Value << pc_pm_id
-//                 << YAML::Key << "CORE_INDEX" << YAML::Value << bcm_port.unit()
+//                 << YAML::Key << "CORE_INDEX"
+//                 << YAML::Value << bcm_port.unit()
 //                 << YAML::Key << "CORE_LANE" << YAML::Value << lane_id
 //                 << YAML::EndMap;
 //
 //      // TODO(Yi): Support multiple op mode and profile
 //      pc_pm_lane << YAML::Value << YAML::BeginMap;
 //      pc_pm_lane << YAML::Key << "PORT_OPMODE";
-//      pc_pm_lane << YAML::Value << YAML::Flow << YAML::BeginSeq << "PC_PORT_OPMODE_ANY" << YAML::EndSeq;
-////      pc_pm_lane << YAML::Key << "PC_PM_TX_LANE_PROFILE_ID";
-////      pc_pm_lane << YAML::Value << YAML::Flow << YAML::BeginSeq << tx_lane_profile_id << YAML::EndSeq;
+//      pc_pm_lane << YAML::Value << YAML::Flow
+//                 << YAML::BeginSeq << "PC_PORT_OPMODE_ANY" << YAML::EndSeq;
+//      pc_pm_lane << YAML::Key << "PC_PM_TX_LANE_PROFILE_ID";
+//      pc_pm_lane << YAML::Value << YAML::Flow
+//                 << YAML::BeginSeq << tx_lane_profile_id << YAML::EndSeq;
 //      pc_pm_lane << YAML::EndMap;  // PORT_OPMODE
 //    }
 //  }
@@ -270,4 +276,4 @@ const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BCM_BCM_SDK_CONFIG_UTIL_H_
+#endif  // STRATUM_HAL_LIB_BCM_BCM_SDKLT_CONFIG_UTIL_H_

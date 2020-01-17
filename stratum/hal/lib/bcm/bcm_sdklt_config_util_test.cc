@@ -30,15 +30,18 @@ namespace bcm {
 
 DECLARE_string(test_tmpdir);
 
-const std::string kBaseConfigPath = "stratum/hal/lib/bcm/testdata/base_chassis_map.pb.txt";
-const std::string kTargetConfigPath = "stratum/hal/lib/bcm/testdata/target_chassis_map.pb.txt";
+const char kBaseConfigPath[] =
+    "stratum/hal/lib/bcm/testdata/base_chassis_map.pb.txt";
+const char kTargetConfigPath[] =
+    "stratum/hal/lib/bcm/testdata/target_chassis_map.pb.txt";
 
-// TODO(Yi): Should compare entire output yaml string, however, we cannot guarantee
-//           that the order of port config for each table.
+// TODO(Yi): Should compare entire output yaml string, however,
+//           we cannot guarantee that the order of port config for each table.
 const std::vector<std::string> kExpectedStrings = {
     "PC_PM_ID: 12",
     "PC_PM_ID: 13",
-    "PM_OPMODE: [PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT]",
+    "PM_OPMODE: [PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT, \
+        PC_PM_OPMODE_DEFAULT, PC_PM_OPMODE_DEFAULT]",
     "SPEED_MAX: [100000, 0, 0, 0]",
     "LANE_MAP: [15, 0, 0, 0]",
     "RX_LANE_MAP: 4131",
@@ -69,7 +72,8 @@ TEST(BcmSdkConfigUtilTest, GenerateYamlTest) {
   ASSERT_OK(ReadProtoFromTextFile(kBaseConfigPath, &base_chassis_map));
   ASSERT_OK(ReadProtoFromTextFile(kTargetConfigPath, &target_chassis_map));
 
-  auto sdklt_config = GenerateBcmSdkltConfig(base_chassis_map, target_chassis_map);
+  auto sdklt_config =
+    GenerateBcmSdkltConfig(base_chassis_map, target_chassis_map);
   ASSERT_OK(sdklt_config);
 
   auto sdklt_config_string = sdklt_config.ValueOrDie();

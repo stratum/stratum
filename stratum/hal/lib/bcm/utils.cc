@@ -82,7 +82,7 @@ std::string PrintBcmPortOptions(const BcmPortOptions& options) {
 }
 
 std::string SpeedBpsToBcmPortSpeedStr(const uint64 speed_bps) {
-  switch(speed_bps) {
+  switch (speed_bps) {
     case 10000000000: return "PC_PORT_OPMODE_10G";
     case 12000000000: return "PC_PORT_OPMODE_12G";
     case 13000000000: return "PC_PORT_OPMODE_13G";
