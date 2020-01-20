@@ -18,8 +18,6 @@
 
 #include "stratum/hal/lib/tai/typesconverter.h"
 
-#include <cmath>
-
 namespace stratum {
 namespace hal {
 namespace tai {
@@ -40,30 +38,6 @@ namespace tai {
 tai_uint64_t TypesConverter::MegahertzToHertz(
     ::google::protobuf::uint64 megahertz) {
   return megahertz * kMegahertzInHertz;
-}
-
-tai_float_t TypesConverter::Decimal64ValueToFloat(const Decimal64 &value) {
-  tai_float_t ret = value.digits();
-  if (value.precision() != 0) ret /= powf(10, value.precision());
-
-  return ret;
-}
-
-/*!
- * \brief TypesConverter::FloatToDecimal64Value method converts \param value
- * that TAI float value to Decimal64 with given in
- * \param precision precision
- * \note The caller takes ownership of the returned object.
- */
-Decimal64 *TypesConverter::FloatToDecimal64Value(
-    tai_float_t value, ::google::protobuf::uint32 precision) {
-  Decimal64 *decimalValue = new Decimal64();
-
-  decimalValue->set_digits(static_cast<::google::protobuf::int64>(
-      value * powf(10, precision)));
-  decimalValue->set_precision(precision);
-
-  return decimalValue;
 }
 
 }  // namespace tai

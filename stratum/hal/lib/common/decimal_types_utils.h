@@ -1,26 +1,39 @@
+/*
+ * Copyright 2018 Google LLC
+ * Copyright 2018-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
 #define STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
 
 #include "gnmi/gnmi.pb.h"
-#include "stratum/hal/lib/common/common.pb.h"
 
 namespace stratum {
 
-// Stratum internal decimal type.
-using StratumDecimal = ::stratum::hal::Decimal64;
 
 // Compiled gNMI library protobuf decimal type.
 using GnmiDecimal = ::gnmi::Decimal64;
 
-// Stratum and gNMI decimal type is a pair of two components: digits and precision.
-// Both have the protobuf types.
+// The decimal type is a pair of two components: digits and precision.
+// Both having the protobuf types.
 using DecimalDigits = ::google::protobuf::int64;
 using DecimalPrecision = ::google::protobuf::uint32;
 
 // Decimal types matcher.
 //
-// This class family supports only gNMI and Stratum protobuf decimal values
-// implementation.
+// Now, this class family supports only gNMI protobuf decimal implementation.
 //
 // In case you want to extend the supported types set, please check the desired
 // type copy and heap-allocation specifications first.
@@ -31,8 +44,7 @@ using DecimalPrecision = ::google::protobuf::uint32;
 template <typename DecimalType>
 class DecimalTypesMatcher {
   static constexpr bool supported_types_match
-      = std::is_same<DecimalType, StratumDecimal>()
-      | std::is_same<DecimalType, GnmiDecimal>();
+      = std::is_same<DecimalType, GnmiDecimal>();
   static_assert(supported_types_match, "The decimal type is not supported!");
 };
 

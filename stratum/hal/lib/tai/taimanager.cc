@@ -162,13 +162,8 @@ TAIAttribute TAIManager::SetRequestToTAIAttribute(
     return tai_attribute;
   }
   if (kAttrId == TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER) {
-    const auto outputPower = request.port().output_power();
-    if (outputPower.has_instant()) {
-      tai_attribute.attr.value.flt =
-          TypesConverter::Decimal64ValueToFloat(
-                  request.port().output_power().instant());
-      return tai_attribute;
-    }
+    tai_attribute.attr.value.flt = request.port().output_power().instant();
+    return tai_attribute;
   }
 
   return TAIAttribute::InvalidAttributeObject();
@@ -186,10 +181,7 @@ tai_attr_id_t TAIManager::SetRequestToTAIAttributeId(
       return TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ;
 
     case SetRequest::Request::Port::ValueCase::kOutputPower: {
-      const auto outputPower = request.port().output_power();
-      if (outputPower.has_instant()) {
-        return TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER;
-      }
+      return TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER;
     }
     default:
       return TAI_INVALID_ATTRIBUTE_ID;
@@ -243,13 +235,11 @@ DataResponse TAIManager::TaiAttributeToResponse(const TAIAttribute& attribute) {
         break;
 
       case TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER:
-        resp.mutable_output_power()->set_allocated_instant(
-            TypesConverter::FloatToDecimal64Value(attribute.attr.value.flt));
+        resp.mutable_output_power()->set_instant(attribute.attr.value.flt);
         break;
 
       case TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER:
-        resp.mutable_input_power()->set_allocated_instant(
-            TypesConverter::FloatToDecimal64Value(attribute.attr.value.flt));
+        resp.mutable_input_power()->set_instant(attribute.attr.value.flt);
         break;
 
       default:

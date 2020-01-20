@@ -382,6 +382,87 @@ class PortFrequencyChangedEvent
   const uint64 new_frequency_;
 };
 
+// Port input power changed event.
+class PortInputPowerChangedEvent
+    : public PerPortGnmiEvent<PortInputPowerChangedEvent> {
+ public:
+  PortInputPowerChangedEvent(uint64 node_id, uint32 port_id,
+                             const InputPower new_input_power)
+      : PerPortGnmiEvent(node_id, port_id), new_input_power_(new_input_power) {}
+  ~PortInputPowerChangedEvent() override {}
+
+  // Actual power values.
+  float GetInstant() const {
+    return new_input_power_.instant();
+  }
+  float GetAvg() const {
+    return new_input_power_.avg();
+  }
+  float GetMin() const {
+    return new_input_power_.min();
+  }
+  float GetMax() const {
+    return new_input_power_.max();
+  }
+
+  // Time values.
+  uint64 GetInterval() const { return new_input_power_.interval(); }
+  uint64 GetMinTime() const { return new_input_power_.min_time(); }
+  uint64 GetMaxTime() const { return new_input_power_.max_time(); }
+
+ private:
+  const InputPower new_input_power_;
+};
+
+// Port target output power changed event.
+class PortTargetOutputPowerChangedEvent
+    : public PerPortGnmiEvent<PortTargetOutputPowerChangedEvent> {
+ public:
+  PortTargetOutputPowerChangedEvent(uint64 node_id, uint32 port_id,
+                                    float new_target_output_power)
+      : PerPortGnmiEvent(node_id, port_id),
+        new_target_output_power_(new_target_output_power) {}
+  ~PortTargetOutputPowerChangedEvent() override {}
+
+  float GetPower() const { return new_target_output_power_; }
+
+ private:
+  const float new_target_output_power_;
+};
+
+// Port output power changed event.
+class PortOutputPowerChangedEvent
+    : public PerPortGnmiEvent<PortOutputPowerChangedEvent> {
+ public:
+  PortOutputPowerChangedEvent(uint64 node_id, uint32 port_id,
+                             const OutputPower new_output_power)
+      : PerPortGnmiEvent(node_id, port_id),
+        new_output_power_(new_output_power) {}
+  ~PortOutputPowerChangedEvent() override {}
+
+  // Actual power values.
+  float GetInstant() const {
+    return new_output_power_.instant();
+  }
+  float GetAvg() const {
+    return new_output_power_.avg();
+  }
+  float GetMin() const {
+    return new_output_power_.min();
+  }
+  float GetMax() const {
+    return new_output_power_.max();
+  }
+
+  // Time values.
+  uint64 GetInterval() const { return new_output_power_.interval(); }
+  uint64 GetMinTime() const { return new_output_power_.min_time(); }
+  uint64 GetMaxTime() const { return new_output_power_.max_time(); }
+
+ private:
+  const OutputPower new_output_power_;
+};
+
 // Configuration Has Been Pushed event.
 class ConfigHasBeenPushedEvent
     : public GnmiEventProcess<ConfigHasBeenPushedEvent> {

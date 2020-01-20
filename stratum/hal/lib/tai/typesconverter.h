@@ -21,7 +21,7 @@
 
 #include <string>
 
-#include "stratum/hal/lib/common/common.pb.h"
+#include "gnmi/gnmi.pb.h"
 #include "inc/taitypes.h"
 
 namespace stratum {
@@ -40,11 +40,6 @@ class TypesConverter final {
 
   static ::google::protobuf::uint64 HertzToMegahertz(tai_uint64_t hertz);
   static tai_uint64_t MegahertzToHertz(google::protobuf::uint64 megahertz);
-
-  static tai_float_t Decimal64ValueToFloat(
-      const Decimal64 &value);
-  static Decimal64 *FloatToDecimal64Value(
-      tai_float_t value, ::google::protobuf::uint32 precision = 2);
 
  private:
   static constexpr uint kMegahertzInHertz = 1000000;

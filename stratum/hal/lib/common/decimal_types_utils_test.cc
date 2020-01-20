@@ -1,30 +1,25 @@
+/*
+ * Copyright 2018 Google LLC
+ * Copyright 2018-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "stratum/hal/lib/common/decimal_types_utils.h"
 
 #include "gtest/gtest.h"
 
 namespace stratum {
-
-TEST(TypedDecimalInitializerTest, InitializeStratumDecimal_Success) {
-  const DecimalDigits digits = 101;
-  const DecimalPrecision precision = 2;
-
-  StratumDecimal value = TypedDecimalInitializer<StratumDecimal>(
-      digits, precision).Init();
-
-  EXPECT_EQ(value.digits(), digits);
-  EXPECT_EQ(value.precision(), precision);
-}
-
-TEST(TypedDecimalInitializerTest, InitializeYangAllocatedDecimal_Success) {
-  const DecimalDigits digits = 3901;
-  const DecimalPrecision precision = 1;
-
-  StratumDecimal* value = TypedDecimalInitializer<StratumDecimal>(
-      digits, precision).InitAllocated();
-
-  EXPECT_EQ(value->digits(), digits);
-  EXPECT_EQ(value->precision(), precision);
-}
 
 TEST(TypedDecimalInitializerTest, InitializeGnmiDecimal_Success) {
   const DecimalDigits digits = 19;
@@ -80,44 +75,6 @@ TEST(TypedDecimalComparatorTest, EqualGnmiEqualDigitsAndPrecision_True) {
   GnmiDecimal right = TypedDecimalInitializer<GnmiDecimal>(778, 1).Init();
 
   auto equal = TypedDecimalComparator::Equal<GnmiDecimal, GnmiDecimal>(
-      left, right);
-  EXPECT_TRUE(equal);
-}
-
-TEST(TypedDecimalComparatorTest, EqualYangDifferentPrecision_False) {
-  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(100, 2).Init();
-  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(100, 1).Init();
-
-  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
-      left, right);
-  EXPECT_FALSE(equal);
-}
-
-TEST(TypedDecimalComparatorTest, EqualYangDifferentDigits_False) {
-  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(100, 3).Init();
-  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(
-      1000, 3).Init();
-
-  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
-      left, right);
-  EXPECT_FALSE(equal);
-}
-
-TEST(TypedDecimalComparatorTest, EqualYangDifferentDigitsAndPrecision_False) {
-  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(109, 4).Init();
-  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(
-      9321, 3).Init();
-
-  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
-      left, right);
-  EXPECT_FALSE(equal);
-}
-
-TEST(TypedDecimalComparatorTest, EqualYangEqualDigitsAndPrecision_True) {
-  StratumDecimal left = TypedDecimalInitializer<StratumDecimal>(65, 2).Init();
-  StratumDecimal right = TypedDecimalInitializer<StratumDecimal>(65, 2).Init();
-
-  auto equal = TypedDecimalComparator::Equal<StratumDecimal, StratumDecimal>(
       left, right);
   EXPECT_TRUE(equal);
 }
