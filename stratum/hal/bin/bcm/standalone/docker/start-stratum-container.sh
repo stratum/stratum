@@ -25,6 +25,9 @@ KERNEL_VERSION=$(uname -r)
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bcm}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-latest}
 
+# --shm-size: https://bugs.freedesktop.org/show_bug.cgi?id=100432
+# --cap-add: to create the packetIO interface (bcm-0-0)
+# --network host: to have access to the packetIO interface
 docker run -it --privileged --cap-add ALL --shm-size=512m --network host \
     -v /dev:/dev -v /sys:/sys  \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
