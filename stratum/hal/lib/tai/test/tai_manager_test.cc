@@ -99,17 +99,11 @@ TEST_F(TAIManagerTest, get_set_frequency_value_test) {
 
 TEST_F(TAIManagerTest, get_set_output_power_value_test) {
   SetRequest_Request set_request;
-  const int64 kDigits = 1234;
-  const uint32 kPrecision = 2;
+  const float kValue = 12.34;
   set_request.clear_port();
   set_request.mutable_port()
       ->mutable_output_power()
-      ->mutable_instant()
-      ->set_digits(kDigits);
-  set_request.mutable_port()
-      ->mutable_output_power()
-      ->mutable_instant()
-      ->set_precision(kPrecision);
+      ->set_instant(kValue);
 
   EXPECT_TRUE(TAIManager::IsRequestSupported(set_request));
 
