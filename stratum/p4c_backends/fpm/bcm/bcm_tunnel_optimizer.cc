@@ -26,8 +26,9 @@
 namespace stratum {
 namespace p4c_backends {
 
-BcmTunnelOptimizer::BcmTunnelOptimizer()  // NOLINTNEXTLINE
-    : encap_or_decap_(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
+BcmTunnelOptimizer::BcmTunnelOptimizer()
+    : encap_or_decap_(
+          hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET) {
 }
 
 bool BcmTunnelOptimizer::Optimize(
@@ -58,8 +59,9 @@ bool BcmTunnelOptimizer::MergeAndOptimize(
 }
 
 void BcmTunnelOptimizer::InitInternalState() {
-  internal_descriptor_.Clear();  // NOLINTNEXTLINE
-  encap_or_decap_ = hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
+  internal_descriptor_.Clear();
+  encap_or_decap_ =
+      hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET;
 }
 
 // If there is ever a non-BCM target, this might belong in a common base class.
@@ -89,8 +91,9 @@ bool BcmTunnelOptimizer::IsValidTunnelAction(
 
 bool BcmTunnelOptimizer::MergeTunnelActions(
     const hal::P4ActionDescriptor& input_action1,
-    const hal::P4ActionDescriptor& input_action2) {  // NOLINTNEXTLINE
-  DCHECK_NE(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET, encap_or_decap_);
+    const hal::P4ActionDescriptor& input_action2) {
+  DCHECK_NE(hal::P4ActionDescriptor::P4TunnelProperties::ENCAP_OR_DECAP_NOT_SET,
+            encap_or_decap_);
 
   // The inner headers can be different in the merged actions.  Differences
   // will be handled during P4Runtime action processing. GRE, ECN, DSCP, and

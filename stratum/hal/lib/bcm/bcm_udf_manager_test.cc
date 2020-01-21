@@ -13,23 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stratum/hal/lib/bcm/bcm_udf_manager.h"
+
 #include <endian.h>
 
 #include <algorithm>
+#include <set>
+#include <string>
 
-#include "stratum/hal/lib/bcm/bcm_udf_manager.h"
-#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 
@@ -124,7 +127,7 @@ MATCHER_P2(UsesUdfSets, udf_spec, expected_sets, "") {
   } udf_chunk_less;
 
   // Use the debug string as a hash for arg physical UDF sets.
-  absl::flat_hash_set<string> arg_set_strings;
+  std::set<std::string> arg_set_strings;
   for (BcmUdfSet& udf_set : divided_sets) {
     std::sort(udf_set.mutable_chunks()->begin(),
               udf_set.mutable_chunks()->end(), udf_chunk_less);
@@ -132,7 +135,7 @@ MATCHER_P2(UsesUdfSets, udf_spec, expected_sets, "") {
   }
 
   // Use the debug string as a hash for expected physical UDF sets.
-  absl::flat_hash_set<string> expected_set_strings;
+  std::set<std::string> expected_set_strings;
   for (BcmUdfSet udf_set : expected_sets) {
     auto& chunks = *udf_set.mutable_chunks();
     for (auto& chunk : chunks) {
@@ -143,13 +146,13 @@ MATCHER_P2(UsesUdfSets, udf_spec, expected_sets, "") {
   }
 
   // Calculate the set differences.
-  std::vector<string> expected_only(expected_set_strings.size());
+  std::vector<std::string> expected_only(expected_set_strings.size());
   auto it = std::set_difference(
       expected_set_strings.begin(), expected_set_strings.end(),
       arg_set_strings.begin(), arg_set_strings.end(), expected_only.begin());
   expected_only.resize(it - expected_only.begin());
 
-  std::vector<string> arg_only(arg_set_strings.size());
+  std::vector<std::string> arg_only(arg_set_strings.size());
   it = std::set_difference(arg_set_strings.begin(), arg_set_strings.end(),
                            expected_set_strings.begin(),
                            expected_set_strings.end(), arg_only.begin());
@@ -214,7 +217,7 @@ class AclTableBuilder {
   P4TableMapperMock* p4_table_mapper_;  // Pointer to the mapper object for
                                         // match field lookup mocking.
   int id_;                              // Table ID.
-  absl::flat_hash_map<int, MappedField>
+  std::map<int, MappedField>
       mapped_fields_;  // Map of this table's P4 MatchField IDs to MappedFields.
   BcmAclStage stage_;  // This table's stage.
 };
@@ -649,7 +652,7 @@ class MappedFieldToBcmFieldsTest : public testing::TestWithParam<int> {
     void set_u64(uint64 value) { buffer_ = value; }
 
     // Write bytes to the buffer.
-    void set_b(size_t pos, const string& value) {
+    void set_b(size_t pos, const std::string& value) {
       CHECK_LE(pos + value.size(), sizeof(buffer_));
       uint8* byte = reinterpret_cast<uint8*>(&buffer_);
       std::memcpy(byte + pos, value.c_str(), value.size());
@@ -659,8 +662,8 @@ class MappedFieldToBcmFieldsTest : public testing::TestWithParam<int> {
     uint64 u64() const { return buffer_; }
 
     // Return a string with the real byte ordering of the buffer.
-    string ToString() const {
-      string s;
+    std::string ToString() const {
+      std::string s;
       for (int i = 0; i < sizeof(buffer_); ++i) {
         const uint8* byte = reinterpret_cast<const uint8*>(&buffer_);
         absl::StrAppendFormat(&s, "%02x.", *(byte + i));
@@ -676,7 +679,7 @@ class MappedFieldToBcmFieldsTest : public testing::TestWithParam<int> {
 // MappedFieldToBcmFieldsTest::Buffer matcher.
 MATCHER_P(EqualsBuffer, expected, "") {
   *result_listener << "\nExpected Buffer: " << expected.ToString()
-                   << "\nActual Buffer: " << arg.ToString();
+                   << "\nActual Buffer:   " << arg.ToString();
   return arg.u64() == expected.u64();
 }
 
@@ -953,9 +956,9 @@ TEST_P(MappedFieldToBcmFieldsTest, U64Partial) {
 TEST_P(MappedFieldToBcmFieldsTest, B) {
   const uint32 kShift = GetParam();
   constexpr uint32 kValue = 0xf1234567;
-  const string kValueString = "\xf1\x23\x45\x67";
+  const std::string kValueString = "\xf1\x23\x45\x67";
   constexpr uint32 kMask = 0xfedcba98;
-  const string kMaskString = "\xfe\xdc\xba\x98";
+  const std::string kMaskString = "\xfe\xdc\xba\x98";
 
   // Set up the mapped field.
   MappedField mapped_field;

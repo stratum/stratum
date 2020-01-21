@@ -48,25 +48,25 @@ def _generate_bmv2_config(ctx):
         ctx.configuration.genfiles_dir,
         ctx.label.name + ".pp.p4",
     )
-    hdr_include_str = ""
-    for hdr in ctx.files.hdrs:
-        hdr_include_str += "-I " + hdr.dirname
     cpp_toolchain = find_cpp_toolchain(ctx)
+    gcc_args = ctx.actions.args()
+    gcc_args.add("-E")
+    gcc_args.add("-x")
+    gcc_args.add("c")
+    gcc_args.add(ctx.file.src.path)
+    gcc_args.add("-I.")
+    gcc_args.add("-I")
+    gcc_args.add(ctx.file._model.dirname)
+    gcc_args.add("-I")
+    gcc_args.add(ctx.file._core.dirname)
+    for hdr in ctx.files.hdrs:
+        gcc_args.add("-I " + hdr.dirname)
+    gcc_args.add("-o")
+    gcc_args.add(p4_preprocessed_file.path)
+    gcc_args.add(ctx.attr.copts)
+
     ctx.action(
-        arguments = [
-            "-E",
-            "-x",
-            "c",
-            ctx.file.src.path,
-            "-I.",
-            "-I",
-            ctx.file._model.dirname,
-            "-I",
-            ctx.file._core.dirname,
-            hdr_include_str,
-            "-o",
-            p4_preprocessed_file.path,
-        ] + ctx.attr.copts,
+        arguments = [gcc_args],
         inputs = ([ctx.file.src] + ctx.files.hdrs + [ctx.file._model] +
                   [ctx.file._core]),
         outputs = [p4_preprocessed_file],

@@ -53,8 +53,8 @@ namespace {
 constexpr char kBcmSimBin[] =
     "google3/platforms/networking/stratum/hal/bin/bcm/sim/bcm_pcid_sim";
 
-// File path to the only chassis config used for testing. We use a test Generic Trident2
-// chassis config.
+// File path to the only chassis config used for testing. We use a test Generic
+// Trident2 chassis config.
 constexpr char kTestChassisConfigFile[] =
     "platforms/networking/stratum/testing/protos/"
     "test_chassis_config_generic_trident2_40g_stratum.pb.txt";

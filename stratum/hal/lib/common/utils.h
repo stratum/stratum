@@ -206,8 +206,8 @@ bool ConvertTrunkMemberBlockStateToBool(const TrunkMemberBlockState& state);
 std::string MacAddressToYangString(
     const ::google::protobuf::uint64& mac_address);
 
-// A helper function that convert data received from the gNMI interface into a format
-// expected by the HAL (MAC addresses are expected to be
+// A helper function that convert data received from the gNMI interface into a
+// format expected by the HAL (MAC addresses are expected to be
 // ::google::protobuf::uint64).
 ::google::protobuf::uint64 YangStringToMacAddress(
     const std::string& yang_string);

@@ -5,7 +5,8 @@ startup --output_user_root=/tmp/bazel-cache/output-root
 
 # Bazel doesn't calculate resource ceiling correctly when running under Docker.
 # Memory, CPU cores, disk I/O
-build --local_resources=3072,2.0,1.0
+build --local_resources=3072,1.0,1.0
+build --jobs=1
 
 # Also limit memory allocated to the JVM
 startup --host_jvm_args=-Xmx3g --host_jvm_args=-Xms2g

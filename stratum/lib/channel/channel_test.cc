@@ -232,8 +232,9 @@ TEST(ChannelTest, TestBlockingWrite) {
 
 namespace {
 
-ABSL_CONST_INIT absl::Mutex arr_dst_lock(absl::kConstInit);  // NOLINTNEXTLINE
- // Opensource version of absl::CondVar has takes no arguments: https://github.com/abseil/abseil-cpp/blob/master/absl/synchronization/mutex.h#L777
+ABSL_CONST_INIT absl::Mutex arr_dst_lock(absl::kConstInit);
+// Opensource version of absl::CondVar has takes no arguments:
+// https://github.com/abseil/abseil-cpp/blob/master/absl/synchronization/mutex.h#L777
 absl::CondVar arr_dst_done /*(base::LINKER_INITIALIZED)*/;
 constexpr size_t kArrTestSize = 5;
 int test_arr_src[kArrTestSize];

@@ -105,9 +105,9 @@ OnlpSfpDataSource::OnlpSfpDataSource(int sfp_id,
   sfp_desc_.AssignValue(std::string(oid_info->description));
 
   ASSIGN_OR_RETURN(const SffInfo* sff_info, sfp_info.GetSffInfo());
-  sfp_vendor_.AssignValue(std::string(sff_info->vendor));
-  sfp_serial_number_.AssignValue(std::string(sff_info->serial));
-  sfp_model_name_.AssignValue(std::string(sff_info->model));
+  sfp_vendor_.AssignValue(sfp_info.GetSfpVendor());
+  sfp_serial_number_.AssignValue(sfp_info.GetSfpSerialNumber());
+  sfp_model_name_.AssignValue(sfp_info.GetSfpModel());
   media_type_ = sfp_info.GetMediaType();
   sfp_connector_type_ = sfp_info.GetSfpType();
   sfp_module_type_ = sfp_info.GetSfpModuleType();

@@ -19,24 +19,25 @@
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_WRAPPER_H_
 
 extern "C" {
-#include <onlp/onlp.h>
-#include <onlp/oids.h>
-#include <onlp/sfp.h>
 #include <onlp/fan.h>
-#include <onlp/psu.h>
-#include <onlp/thermal.h>
 #include <onlp/led.h>
+#include <onlp/oids.h>
+#include <onlp/onlp.h>
+#include <onlp/psu.h>
+#include <onlp/sfp.h>
+#include <onlp/thermal.h>
 }
 
 #include <bitset>
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/lib/macros.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -83,6 +84,9 @@ class SfpInfo : public OidInfo {
   MediaType GetMediaType() const;
   SfpType GetSfpType() const;
   SfpModuleType GetSfpModuleType() const;
+  std::string GetSfpVendor() const;
+  std::string GetSfpModel() const;
+  std::string GetSfpSerialNumber() const;
   void GetModuleCaps(SfpModuleCaps* caps) const;
 
   // The lifetimes of pointers returned by these functions are managed by this
@@ -130,6 +134,7 @@ class ThermalInfo : public OidInfo {
   int GetThermalErrorTemp() const;
   int GetThermalShutDownTemp() const;
   void GetCaps(ThermalCaps* caps) const;
+
  private:
   onlp_thermal_info_t thermal_info_;
 };
@@ -162,18 +167,15 @@ class OnlpInterface {
 
   // Given a OID object id, sets FAN percentage,
   // if FAN supports percentage capability.
-  virtual ::util::Status
-  SetFanPercent(OnlpOid oid, int value) const = 0;
+  virtual ::util::Status SetFanPercent(OnlpOid oid, int value) const = 0;
 
   // Given a OID object id, sets FAN RPM,
   // if FAN supports RPM capability.
-  virtual ::util::Status
-  SetFanRpm(OnlpOid oid, int val) const = 0;
+  virtual ::util::Status SetFanRpm(OnlpOid oid, int val) const = 0;
 
   // Given a OID object id, sets FAN Direction,
   // if FAN supports Direction capability.
-  virtual ::util::Status
-  SetFanDir(OnlpOid oid, FanDir dir) const = 0;
+  virtual ::util::Status SetFanDir(OnlpOid oid, FanDir dir) const = 0;
 
   // Given a OID object id, returns PSU info or failure.
   virtual ::util::StatusOr<PsuInfo> GetPsuInfo(OnlpOid oid) const = 0;
@@ -185,20 +187,18 @@ class OnlpInterface {
   virtual ::util::StatusOr<ThermalInfo> GetThermalInfo(OnlpOid oid) const = 0;
   // Given a OID object id, sets LED mode,
   // if LED supports color capability.
-  virtual ::util::Status
-  SetLedMode(OnlpOid oid, LedMode mode) const = 0;
+  virtual ::util::Status SetLedMode(OnlpOid oid, LedMode mode) const = 0;
 
   // Given a OID object id, sets LED character,
   // if LED supports character capability.
-  virtual ::util::Status
-  SetLedCharacter(OnlpOid oid, char val) const = 0;
+  virtual ::util::Status SetLedCharacter(OnlpOid oid, char val) const = 0;
 
   // Given an OID, returns the OidInfo for that object (or an error if it
   // doesn't exist
   virtual ::util::StatusOr<OidInfo> GetOidInfo(OnlpOid oid) const = 0;
 
   // Return list of onlp oids in the system based on the type.
-  virtual ::util::StatusOr<std::vector <OnlpOid>> GetOidList(
+  virtual ::util::StatusOr<std::vector<OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const = 0;
 
   // Return whether a SFP with the given OID is present.
@@ -216,7 +216,7 @@ class OnlpInterface {
 // allocated at any given time.
 class OnlpWrapper : public OnlpInterface {
  public:
-  static ::util::StatusOr<std::unique_ptr<OnlpWrapper>> Make();
+  static OnlpWrapper* CreateSingleton();
   OnlpWrapper(const OnlpWrapper& other) = delete;
   OnlpWrapper& operator=(const OnlpWrapper& other) = delete;
   ~OnlpWrapper() override;
@@ -232,14 +232,16 @@ class OnlpWrapper : public OnlpInterface {
   ::util::StatusOr<LedInfo> GetLedInfo(OnlpOid oid) const override;
   ::util::Status SetLedMode(OnlpOid oid, LedMode mode) const override;
   ::util::Status SetLedCharacter(OnlpOid oid, char val) const override;
-  ::util::StatusOr<std::vector <OnlpOid>> GetOidList(
+  ::util::StatusOr<std::vector<OnlpOid>> GetOidList(
       onlp_oid_type_flag_t type) const override;
   ::util::StatusOr<bool> GetSfpPresent(OnlpOid port) const override;
   ::util::StatusOr<OnlpPresentBitmap> GetSfpPresenceBitmap() const override;
   ::util::StatusOr<OnlpPortNumber> GetSfpMaxPortNumber() const override;
 
  private:
-  OnlpWrapper() {}
+  OnlpWrapper();
+  static OnlpWrapper* singleton_ GUARDED_BY(init_lock_);
+  static absl::Mutex init_lock_;
 };
 
 }  // namespace onlp

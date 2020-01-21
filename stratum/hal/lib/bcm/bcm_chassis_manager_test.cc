@@ -79,7 +79,7 @@ MATCHER_P(GnmiEventEq, event, "") {
 }
 
 // TODO(unknown): Investigate moving the test protos into a testdata folder.
-// TODO: Use constants for the config args used in tests.
+// TODO(unknown): Use constants for the config args used in tests.
 class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
  protected:
   BcmChassisManagerTest() {
@@ -429,7 +429,8 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
     EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
         .WillOnce(Return(::util::OkStatus()));
     EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-        .WillOnce(Return(::util::OkStatus()));
+        .Times(2)
+        .WillRepeatedly(Return(::util::OkStatus()));
     EXPECT_CALL(*bcm_sdk_mock_,
                 RegisterLinkscanEventWriter(
                     _, BcmSdkInterface::kLinkscanEventWriterPriorityHigh))
@@ -728,7 +729,7 @@ TEST_P(BcmChassisManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-      .Times(3)
+      .Times(4)
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               RegisterLinkscanEventWriter(
@@ -1480,7 +1481,7 @@ TEST_P(BcmChassisManagerTest,
   EXPECT_CALL(*bcm_sdk_mock_, StartDiagShellServer())
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 1, _))
-      .Times(3)
+      .Times(4)
       .WillRepeatedly(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_,
               RegisterLinkscanEventWriter(
@@ -1563,11 +1564,13 @@ TEST_P(BcmChassisManagerTest,
   }
   // Verify config.bcm in this case. Logical ports start from 1 and go and up.
   std::string bcm_sdk_config;
+  /* SDK6 Only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.0=0x2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_oversubscribe.0=0x2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("portmap_1.0=33:100"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_1.0=0"));
+  */
 
   EXPECT_FALSE(IsInternalPort({1, 1}));
 
@@ -1873,6 +1876,7 @@ TEST_P(BcmChassisManagerTest,
   }
   // Verify config.bcm in this case. Logical ports start from 1 and go and up.
   std::string bcm_sdk_config;
+  /* SDK6 only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.0=0x1E"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_oversubscribe.0=0x1E"));
@@ -1884,6 +1888,7 @@ TEST_P(BcmChassisManagerTest,
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_3.0=2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("portmap_4.0=36:25"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_4.0=3"));
+  */
 
   // Now call PushChassisConfig() and push config2 multiple times.
   ASSERT_TRUE(Initialized());  // already initialized
@@ -1944,6 +1949,7 @@ TEST_P(BcmChassisManagerTest,
     EXPECT_EQ(PORT_STATE_UNKNOWN, ret.ValueOrDie());
   }
   bcm_sdk_config.clear();
+  /* SDK6 only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   // This is the same as the previous case.
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.0=0x1E"));
@@ -1956,6 +1962,7 @@ TEST_P(BcmChassisManagerTest,
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_3.0=2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("portmap_4.0=36:25"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_4.0=3"));
+  */
 
   EXPECT_FALSE(IsInternalPort({1, 1}));
 
@@ -2174,11 +2181,13 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithAutoAddSlot) {
 
   // Verify config.bcm in this case. Logical ports start from 1 and go and up.
   std::string bcm_sdk_config;
+  /* SDK6 only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_xport_xe.2=0x2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("pbmp_oversubscribe.2=0x2"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("portmap_1.2=61:40"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_1.2=64"));
+  */
 
   EXPECT_TRUE(IsInternalPort({9, 80}));
 
@@ -3103,8 +3112,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigFailure) {
   )";
   const std::string kChassisMapError12 = "is in flex_port_group_keys";
 
-  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip here
-  // says TOMAHAWK.
+  // Unsupported chip type. Generic Trident2 supports TRIDENT2 while BcmChip
+  // here says TOMAHAWK.
   const std::string kBcmChassisMapListText13 = R"(
       bcm_chassis_maps {
         auto_add_logical_ports: true
@@ -3291,7 +3300,7 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigFailure) {
         slot: 9
       }
       singleton_ports {
-        id: 0xFFFFFFFD
+        id: 0xFD
         slot: 9
         port: 80
         speed_bps: 40000000000
@@ -3608,7 +3617,7 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigFailure) {
         node: 7654321
       }
       trunk_ports {
-        id: 0xFFFFFFFD
+        id: 0xFD
         node: 7654321
         type: STATIC_TRUNK
         members: 12345
@@ -4941,6 +4950,7 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsSuccess) {
   ASSERT_OK(InitializeBcmChips(base_bcm_chassis_map, target_bcm_chassis_map));
   ASSERT_FALSE(Initialized());
   std::string bcm_sdk_config;
+  /* SDK6 only
   ASSERT_OK(ReadFileToString(FLAGS_bcm_sdk_config_file, &bcm_sdk_config));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("property1=1234"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("property2=5678"));
@@ -4977,6 +4987,7 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsSuccess) {
               HasSubstr("phy_xaui_rx_polarity_flip_xe92.0=0xF"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("portmap_66.0=129:10"));
   EXPECT_THAT(bcm_sdk_config, HasSubstr("dport_map_port_66.0=128"));
+  */
 }
 
 TEST_P(BcmChassisManagerTest, InitializeBcmChipsFailure) {
@@ -5184,7 +5195,7 @@ TEST_P(BcmChassisManagerTest, TestSetTrunkMemberBlockStateByController) {
   // static: (node_id: 7654321, trunk_id: 222, port_id: 12345)
   // LACP: (node_id: 7654321, trunk_id: 333, port_id: NONE)
 
-  // TODO: Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 222, kPortId,
                                      TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
   EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 0, kPortId,
@@ -5211,7 +5222,8 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
   }
 
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-      .WillOnce(Return(::util::OkStatus()));
+      .Times(2)
+      .WillRepeatedly(Return(::util::OkStatus()));
 
   ASSERT_OK(VerifyChassisConfig(config));
   ASSERT_OK(PushChassisConfig(config));
@@ -5226,7 +5238,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
 TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO: Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
   EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
 
@@ -5236,7 +5248,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
 TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO: Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_BAD));
   EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
 

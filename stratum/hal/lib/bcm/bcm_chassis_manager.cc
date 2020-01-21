@@ -452,20 +452,20 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
 ::util::Status BcmChassisManager::SetTrunkMemberBlockState(
     uint64 node_id, uint32 trunk_id, uint32 port_id,
     TrunkMemberBlockState state) {
-  // TODO: Implement this method.
+  // TODO(unknown): Implement this method.
   return ::util::OkStatus();
 }
 
 ::util::Status BcmChassisManager::SetPortAdminState(uint64 node_id,
                                                     uint32 port_id,
                                                     AdminState state) {
-  // TODO: Implement this method.
+  // TODO(unknown): Implement this method.
   return ::util::OkStatus();
 }
 ::util::Status BcmChassisManager::SetPortHealthState(uint64 node_id,
                                                      uint32 port_id,
                                                      HealthState state) {
-  // TODO: Implement this method.
+  // TODO(unknown): Implement this method.
   return ::util::OkStatus();
 }
 
@@ -495,7 +495,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
 
 }  // namespace
 
-// TODO: Include MGMT ports in the config if needed.
+// TODO(unknown): Include MGMT ports in the config if needed.
 ::util::Status BcmChassisManager::GenerateBcmChassisMapFromConfig(
     const ChassisConfig& config, BcmChassisMap* base_bcm_chassis_map,
     BcmChassisMap* target_bcm_chassis_map) const {
@@ -1279,7 +1279,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     uint64 node_id = trunk_port.node();    // already verified as known
     uint32 trunk_id = trunk_port.id();     // already verified as known
     int unit = node_id_to_unit_[node_id];  // already verified as known
-    // TODO: Populate the rest of trunk related maps. Also add support
+    // TODO(unknown): Populate the rest of trunk related maps. Also add support
     // for restoring trunk state/members. At the moment, we populate the maps
     // with invalid data.
     node_id_to_trunk_ids_[node_id].insert(trunk_id);
@@ -1291,7 +1291,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     node_id_to_trunk_id_to_members_[node_id][trunk_id] = {};
   }
 
-  // TODO: Update the LED of all the ports.
+  // TODO(unknown): Update the LED of all the ports.
 
   return ::util::OkStatus();
 }
@@ -1635,10 +1635,11 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
 ::util::Status BcmChassisManager::WriteBcmConfigFile(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
-    // TODO: Implement this function.
-    // std::stringstream buffer;
-    // RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
-
+  // TODO(unknown): Implement this function.
+  /*
+  std::stringstream buffer;
+  RETURN_IF_ERROR(WriteStringToFile(buffer.str(), FLAGS_bcm_sdk_config_file));
+  */
   return ::util::OkStatus();
 }
 
@@ -1726,7 +1727,7 @@ void BcmChassisManager::LinkscanEventHandler(int unit, int logical_port,
   SendPortOperStateGnmiEvent(*node_id, *port_id, new_state);
 
   // Log details about the port state change for debugging purposes.
-  // TODO: The extra map lookups here are only for debugging and
+  // TODO(unknown): The extra map lookups here are only for debugging and
   // pretty printing the ports. We may not need them. If not, simplify the
   // state reporting.
   const std::map<uint32, PortKey>* port_id_to_singleton_port_key =
@@ -2001,37 +2002,40 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
     // We first get the front panel port info from PHAL. Then using this info
     // (read and parsed from the transceiver module EEPROM) we configure serdes
     // for all BCM ports.
-    // TODO(max): Uncomment once serdes is supported by bcm_sdk_wrapper.
-    /*
     FrontPanelPortInfo fp_port_info;
     RETURN_IF_ERROR(phal_interface_->GetFrontPanelPortInfo(
         port_group_key.slot, port_group_key.port, &fp_port_info));
     for (const auto* bcm_port : bcm_ports) {
       // Get the serdes config from serdes db for the given BCM port.
       BcmSerdesLaneConfig bcm_serdes_lane_config;
-      RETURN_IF_ERROR(bcm_serdes_db_manager_->LookupSerdesConfigForPort(
-          *bcm_port, fp_port_info, &bcm_serdes_lane_config));
-      // Find the map from serdes register names to their values for this BCM
-      // port.
-      std::map<uint32, uint32> serdes_register_configs(
-          bcm_serdes_lane_config.bcm_serdes_register_configs().begin(),
-          bcm_serdes_lane_config.bcm_serdes_register_configs().end());
-      std::map<std::string, uint32> serdes_attr_configs(
-          bcm_serdes_lane_config.bcm_serdes_attribute_configs().begin(),
-          bcm_serdes_lane_config.bcm_serdes_attribute_configs().end());
-      // Config serdes for this BCM port.
-      RETURN_IF_ERROR(bcm_sdk_interface_->ConfigSerdesForPort(
-          bcm_port->unit(), bcm_port->logical_port(), bcm_port->speed_bps(),
-          bcm_port->serdes_core(), bcm_port->serdes_lane(),
-          bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
-          serdes_register_configs, serdes_attr_configs));
-      // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
-      // need to write some control values to the QSFP module control registers.
-      // Take care of that part too.
-      VLOG(1) << "Serdes setting done for SingletonPort "
-              << PrintBcmPort(*bcm_port) << ".";
+      if (bcm_serdes_db_manager_
+              ->LookupSerdesConfigForPort(*bcm_port, fp_port_info,
+                                          &bcm_serdes_lane_config)
+              .ok()) {
+        // Find the map from serdes register names to their values for this BCM
+        // port.
+        std::map<uint32, uint32> serdes_register_configs(
+            bcm_serdes_lane_config.bcm_serdes_register_configs().begin(),
+            bcm_serdes_lane_config.bcm_serdes_register_configs().end());
+        std::map<std::string, uint32> serdes_attr_configs(
+            bcm_serdes_lane_config.bcm_serdes_attribute_configs().begin(),
+            bcm_serdes_lane_config.bcm_serdes_attribute_configs().end());
+        // Config serdes for this BCM port.
+        RETURN_IF_ERROR(bcm_sdk_interface_->ConfigSerdesForPort(
+            bcm_port->unit(), bcm_port->logical_port(), bcm_port->speed_bps(),
+            bcm_port->serdes_core(), bcm_port->serdes_lane(),
+            bcm_port->num_serdes_lanes(), bcm_serdes_lane_config.intf_type(),
+            serdes_register_configs, serdes_attr_configs));
+        // TODO(unknown): For some transceivers (e.g. 100G cSR4 QSFPs) we also
+        // need to write some control values to the QSFP module control
+        // registers. Take care of that part too.
+        VLOG(1) << "Serdes setting done for SingletonPort "
+                << PrintBcmPort(*bcm_port) << ".";
+      } else {
+        LOG(WARNING) << "No SerDes setting found for SingletonPort "
+                     << PrintBcmPort(*bcm_port) << ".";
+      }
     }
-    */
   }
   // The option applies to all the ports.
   for (const auto* bcm_port : bcm_ports) {

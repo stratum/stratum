@@ -19,7 +19,7 @@
 #ifndef STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 
-#include <grpcpp/grpcpp.h>
+#include "grpcpp/grpcpp.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 
 namespace stratum {

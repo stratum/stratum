@@ -23,8 +23,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl",
      "new_git_repository")
 load("@bazel_gazelle//:deps.bzl", "go_repository")
 
-P4RUNTIME_VER = "1.0.0"
-P4RUNTIME_SHA = "667464bd369b40b58dc9552be2c84e190a160b6e77137b735bd86e5b81c6adc0"
+P4RUNTIME_VER = "1.1.0-rc.1"
+P4RUNTIME_SHA = "fb4eb0767ea9e9697b2359be6979942c54abf64187a2d0f5ff61f227500ec195"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a";
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
@@ -95,13 +95,21 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "ca0291420b5b47fa2596a00877d1713aab61dc7a",
+            commit = "1539ecd8a50c159b011d9c5a9c0eba99f122a845",
         )
 
-    if "com_github_p4lang_PI_bf" not in native.existing_rules():
-        # ----- PI for Barefoot targets -----
+    if "com_github_p4lang_PI_bf_9_0" not in native.existing_rules():
+            # ----- PI for Barefoot SDE 9.x.x targets -----
+            remote_workspace(
+                name = "com_github_p4lang_PI_bf_9_0",
+                remote = "https://github.com/p4lang/PI.git",
+                commit = "ca0291420b5b47fa2596a00877d1713aab61dc7a",
+            )
+
+    if "com_github_p4lang_PI_bf_8_9" not in native.existing_rules():
+        # ----- PI for Barefoot SDE 8.9.x targets -----
         remote_workspace(
-            name = "com_github_p4lang_PI_bf",
+            name = "com_github_p4lang_PI_bf_8_9",
             remote = "https://github.com/p4lang/PI.git",
             commit = "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
         )
@@ -232,6 +240,13 @@ def stratum_deps():
             commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
         )
 
+    if "rules_cc" not in native.existing_rules():
+        remote_workspace(
+            name = "rules_cc",
+            remote = "https://github.com/bazelbuild/rules_cc",
+            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
+        )
+
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
 # -----------------------------------------------------------------------------
@@ -290,3 +305,12 @@ def stratum_deps():
             commit = "ac2b0bf26c4fb91d883492cb85394304cde392c6",
         )
 
+# -----------------------------------------------------------------------------
+#        Packaging tools
+# -----------------------------------------------------------------------------
+    if "rules_pkg" not in native.existing_rules():
+        http_archive(
+            name = "rules_pkg",
+            url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.4/rules_pkg-0.2.4.tar.gz",
+            sha256 = "4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a",
+        )

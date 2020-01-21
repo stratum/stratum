@@ -40,6 +40,10 @@ class BcmPacketioManagerMock : public BcmPacketioManager {
       ::util::Status(
           GoogleConfig::BcmKnetIntfPurpose purpose,
           const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer));
+  MOCK_METHOD1(InsertPacketReplicationEntry,
+               ::util::Status(const BcmPacketReplicationEntry& entry));
+  MOCK_METHOD1(DeletePacketReplicationEntry,
+               ::util::Status(const BcmPacketReplicationEntry& entry));
   MOCK_METHOD1(UnregisterPacketReceiveWriter,
                ::util::Status(GoogleConfig::BcmKnetIntfPurpose purpose));
   MOCK_METHOD2(TransmitPacket,

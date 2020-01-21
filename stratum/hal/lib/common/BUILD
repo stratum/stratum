@@ -23,6 +23,9 @@ load(
     "stratum_cc_library",
     "stratum_cc_test",
 )
+
+load("//bazel:deps.bzl", "P4RUNTIME_VER")
+
 load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
 
 package(
@@ -529,10 +532,10 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
+        "//stratum/procmon:procmon_cc_grpc",
     ],
 )
 
-'''FIXME(boc) needs refactoring
 stratum_cc_test(
     name = "hal_test",
     srcs = [
@@ -552,9 +555,9 @@ stratum_cc_test(
         "//stratum/lib/security:credentials_manager_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "//stratum/procmon:procmon_cc_grpc",
     ],
 )
-'''
 
 stratum_cc_library(
     name = "p4_service",
@@ -592,6 +595,9 @@ stratum_cc_library(
         "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
     ],
+    defines = [
+        "P4RUNTIME_VER=" + P4RUNTIME_VER,
+    ]
 )
 
 stratum_cc_test(
@@ -620,6 +626,9 @@ stratum_cc_test(
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
     ],
+    defines = [
+        "P4RUNTIME_VER=" + P4RUNTIME_VER,
+    ]
 )
 
 stratum_cc_library(

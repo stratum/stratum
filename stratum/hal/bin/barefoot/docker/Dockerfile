@@ -35,7 +35,7 @@ RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
 WORKDIR $SDE/p4studio_build
 
 ARG JOBS=4
-# Remove Thrift dependency from the profile (for SDE <= 8.9.1)
+# Remove Thrift dependency from the profile (for SDE <= 8.9.x)
 RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
@@ -47,7 +47,7 @@ RUN mkdir -p /usr/src/kernel-headers && \
 
 # Build kernel modules for BF kdrv
 ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
-RUN mkdir -p $SDE_INSTALL/lib/modules 
+RUN mkdir -p $SDE_INSTALL/lib/modules
 RUN make -C /usr/src/kernel-headers M=$KDRV_DIR src=$KDRV_DIR modules && \
     mv $KDRV_DIR/bf_kdrv.ko $SDE_INSTALL/lib/modules/bf_kdrv.ko
 
@@ -67,7 +67,8 @@ RUN strip --strip-all $OUTPUT_BASE/lib/*.so*
 # Prepare the stratum_bf
 ENV BF_SDE_INSTALL $SDE_INSTALL
 WORKDIR /stratum
-RUN bazel build //stratum/hal/bin/barefoot:stratum_bf
+RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
+    --define sde_ver=$(cat $SDE_INSTALL/share/VERSION)
 
 ENV STRATUM_BF_BASE stratum/hal/bin/barefoot
 RUN mkdir -p $OUTPUT_BASE/bin && \

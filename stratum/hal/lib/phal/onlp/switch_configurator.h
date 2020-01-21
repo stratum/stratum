@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_SWITCH_CONFIGURATOR_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_SWITCH_CONFIGURATOR_H_
 
 #include <map>
 #include <memory>
 
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/hal/lib/phal/attribute_group.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
-#include "stratum/hal/lib/phal/switch_configurator.h"
-#include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/attribute_group.h"
+#include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/switch_configurator.h"
 
 namespace stratum {
 namespace hal {
@@ -38,50 +37,44 @@ namespace onlp {
 class OnlpSwitchConfigurator : public SwitchConfigurator {
  public:
   static ::util::StatusOr<std::unique_ptr<OnlpSwitchConfigurator>> Make(
-    PhalInterface* phal_interface,
-    OnlpInterface* onlp_interface);
+      PhalInterface* phal_interface, OnlpInterface* onlp_interface);
 
-    // Create a default config
+  // Create a default config
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
 
   // Configure the Phal DB
-  ::util::Status ConfigurePhalDB(
-        PhalInitConfig& config, AttributeGroup* root) override;
+  ::util::Status ConfigurePhalDB(PhalInitConfig* config,
+                                 AttributeGroup* root) override;
 
  private:
-  ::util::StatusOr<OidInfo> GetOidInfo(
-        AttributeGroup *group, OnlpOid oid) const;
+  ::util::StatusOr<OidInfo> GetOidInfo(AttributeGroup* group,
+                                       OnlpOid oid) const;
 
   // Add a Port to the Phal DB
-  ::util::Status AddPort(int card_id, int port_id,
-        MutableAttributeGroup* mutable_card,
-        const PhalCardConfig::Port& config);
+  ::util::Status AddPort(int slot, int port,
+                         MutableAttributeGroup* mutable_card,
+                         const PhalCardConfig::Port& config);
 
   // Add a Fan to the Phal DB
-  ::util::Status AddFan(int id,
-        MutableAttributeGroup* mutable_fan_tray,
-        const PhalFanTrayConfig::Fan& config);
+  ::util::Status AddFan(int id, MutableAttributeGroup* mutable_fan_tray,
+                        const PhalFanTrayConfig::Fan& config);
 
   // Add a Psu to the Phal DB
-  ::util::Status AddPsu(int id,
-        MutableAttributeGroup* mutable_psu_tray,
-        const PhalPsuTrayConfig::Psu& config);
+  ::util::Status AddPsu(int id, MutableAttributeGroup* mutable_psu_tray,
+                        const PhalPsuTrayConfig::Psu& config);
 
   // Add a Led to the Phal DB
-  ::util::Status AddLed(int id,
-        MutableAttributeGroup* mutable_group,
-        const PhalLedGroupConfig_Led& config);
+  ::util::Status AddLed(int id, MutableAttributeGroup* mutable_group,
+                        const PhalLedGroupConfig_Led& config);
 
   // Add a Thermal to the Phal DB
-  ::util::Status AddThermal(int id,
-        MutableAttributeGroup* mutable_group,
-        const PhalThermalGroupConfig_Thermal& config);
+  ::util::Status AddThermal(int id, MutableAttributeGroup* mutable_group,
+                            const PhalThermalGroupConfig_Thermal& config);
 
   OnlpSwitchConfigurator() = delete;
   OnlpSwitchConfigurator(PhalInterface* phal_interface,
-        OnlpInterface* onlp_interface)
-        : phal_interface_(phal_interface),
-          onlp_interface_(onlp_interface) {}
+                         OnlpInterface* onlp_interface)
+      : phal_interface_(phal_interface), onlp_interface_(onlp_interface) {}
 
   PhalInterface* phal_interface_;
   OnlpInterface* onlp_interface_;
@@ -89,7 +82,6 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
   CachePolicyConfig cache_policy_config_;
 
   // Need to make sure we don't add the same onlp id twice
-  std::map<int, bool> sfp_id_map_;
   std::map<int, bool> fan_id_map_;
   std::map<int, bool> psu_id_map_;
   std::map<int, bool> led_id_map_;
