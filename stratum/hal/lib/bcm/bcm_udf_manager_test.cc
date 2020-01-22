@@ -18,20 +18,21 @@
 #include <endian.h>
 
 #include <algorithm>
+#include <set>
 #include <string>
 
-#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
-#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/bcm/bcm_sdk_mock.h"
+#include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 

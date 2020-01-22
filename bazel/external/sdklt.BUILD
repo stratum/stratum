@@ -32,3 +32,18 @@ cc_import(
   hdrs = [],  # see cc_library rule above
   static_library = "lib/libsdklt.a",
 )
+
+filegroup(
+  name = "kernel_modules",
+  srcs = [
+    "linux_ngbde.ko",
+    "linux_ngknet.ko",
+  ],
+)
+
+filegroup(
+  name = "sdklt_cli",
+  srcs = [
+    "sdklt",
+  ],
+)

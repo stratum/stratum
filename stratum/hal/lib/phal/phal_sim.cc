@@ -117,19 +117,18 @@ PhalSim::~PhalSim() {}
 
 ::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
                                         LedColor color, LedState state) {
-  // TODO: Implement this.
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 
 // Register the configurator so we can use later
 ::util::Status PhalSim::RegisterSfpConfigurator(
-    int slot, int port, ::stratum::hal::phal::SfpConfigurator* configurator) {
+    int slot, int port, phal::SfpConfigurator* configurator) {
+  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
 
-    const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
+  slot_port_to_configurator_[slot_port_pair] = configurator;
 
-    slot_port_to_configurator_[slot_port_pair] = configurator;
-
-    return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 PhalSim* PhalSim::CreateSingleton() {

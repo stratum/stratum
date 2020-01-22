@@ -98,10 +98,18 @@ def stratum_deps():
             commit = "1539ecd8a50c159b011d9c5a9c0eba99f122a845",
         )
 
-    if "com_github_p4lang_PI_bf" not in native.existing_rules():
-        # ----- PI for Barefoot targets -----
+    if "com_github_p4lang_PI_bf_9_0" not in native.existing_rules():
+            # ----- PI for Barefoot SDE 9.x.x targets -----
+            remote_workspace(
+                name = "com_github_p4lang_PI_bf_9_0",
+                remote = "https://github.com/p4lang/PI.git",
+                commit = "ca0291420b5b47fa2596a00877d1713aab61dc7a",
+            )
+
+    if "com_github_p4lang_PI_bf_8_9" not in native.existing_rules():
+        # ----- PI for Barefoot SDE 8.9.x targets -----
         remote_workspace(
-            name = "com_github_p4lang_PI_bf",
+            name = "com_github_p4lang_PI_bf_8_9",
             remote = "https://github.com/p4lang/PI.git",
             commit = "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
         )
@@ -232,6 +240,13 @@ def stratum_deps():
             commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
         )
 
+    if "rules_cc" not in native.existing_rules():
+        remote_workspace(
+            name = "rules_cc",
+            remote = "https://github.com/bazelbuild/rules_cc",
+            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
+        )
+
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
 # -----------------------------------------------------------------------------
@@ -291,6 +306,16 @@ def stratum_deps():
         )
 
 # -----------------------------------------------------------------------------
+#        Packaging tools
+# -----------------------------------------------------------------------------
+    if "rules_pkg" not in native.existing_rules():
+        http_archive(
+            name = "rules_pkg",
+            url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.4/rules_pkg-0.2.4.tar.gz",
+            sha256 = "4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a",
+        )
+
+# -----------------------------------------------------------------------------
 #        TAI library
 # -----------------------------------------------------------------------------
     if "com_github_oopt_tai" not in native.existing_rules():
@@ -299,5 +324,3 @@ def stratum_deps():
             remote = "https://github.com/bohdan-oheruk-plvision/oopt-tai.git",
             commit = "b70d94ad5a2e686dbca6bc813f3767ecc0fa22d4",
         )
-
-

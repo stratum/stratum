@@ -22,7 +22,6 @@
 #include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
-#include "stratum/hal/lib/common/error_buffer.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
@@ -41,8 +40,7 @@ void ErrorBuffer::AddError(const ::util::Status& error,
       "): ", msg_to_prepend, error.error_message());
   LOG(ERROR) << error_message;
   if (static_cast<int>(errors_.size()) > FLAGS_max_num_errors_to_track) return;
-  // NOLINTNEXTLINE
-  ::util::Status status = APPEND_ERROR(error.StripMessage())//.SetNoLogging() FIXME
+  ::util::Status status = APPEND_ERROR(error.StripMessage()).without_logging()
                           << error_message;
   errors_.push_back(status);
 }

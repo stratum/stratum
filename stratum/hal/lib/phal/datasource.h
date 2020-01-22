@@ -162,9 +162,10 @@ class NeverUpdate : public CachePolicy {
 // Simple helper class to create different types of CachePolicy
 class CachePolicyFactory {
  public:
-    // Static helper function to create CachePolicy instances
-    static ::util::StatusOr<CachePolicy*> CreateInstance(
-        CachePolicyType cache_type, int32 timed_cache_value = 0);
+  // Static helper function to create CachePolicy instances
+  static ::util::StatusOr<CachePolicy*> CreateInstance(
+      CachePolicyConfig::CachePolicyType cache_type,
+      int32 timed_cache_value = 0);
 };
 
 // The following two datasources are complete implementations, provided for the

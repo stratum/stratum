@@ -71,7 +71,7 @@ OnlpSfpEventCallback::OnlpSfpEventCallback() {}
 OnlpSfpEventCallback::~OnlpSfpEventCallback() {
   VLOG(3) << "Entering OnlpSfpEventCallback destructor...";
   if (handler_ != nullptr) {
-    ::util::Status unregister_result = 
+    ::util::Status unregister_result =
       handler_->UnregisterSfpEventCallback(this);
     if (!unregister_result.ok()) {
       LOG(ERROR)
@@ -295,14 +295,14 @@ void* OnlpEventHandler::RunPollingThread(void* onlp_event_handler_ptr) {
 
   // Get SFP present bitmap
   ASSIGN_OR_RETURN(OnlpPresentBitmap new_map, onlp_->GetSfpPresenceBitmap());
-  VLOG(1) << "OnlpEventHandler::PollSfpPresence, got sfp bitmap..."
-          << new_map;
-  VLOG(1) << "OnlpEventHandler::PollSfpPresence, old sfp bitmap..."
-          << sfp_status_monitor_.previous_map;
 
   // Check if there are any status changes
   {
     absl::MutexLock lock(&monitor_lock_);
+    VLOG(1) << "OnlpEventHandler::PollSfpPresence, got sfp bitmap..."
+            << new_map;
+    VLOG(1) << "OnlpEventHandler::PollSfpPresence, old sfp bitmap..."
+            << sfp_status_monitor_.previous_map;
     if (sfp_status_monitor_.previous_map == new_map) {
       return ::util::OkStatus();
     }

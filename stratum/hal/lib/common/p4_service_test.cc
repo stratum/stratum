@@ -13,29 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/common/p4_service.h"
 
-#include <grpcpp/grpcpp.h>
 #include <memory>
 
-#include "gflags/gflags.h"
-#include "google/rpc/code.pb.h"
-#include "stratum/glue/net_util/ports.h"
-#include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/common/error_buffer.h"
-#include "stratum/hal/lib/common/switch_mock.h"
-#include "stratum/lib/security/auth_policy_checker_mock.h"
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
-#include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/numeric/int128.h"
 #include "absl/strings/substitute.h"
 #include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "google/rpc/code.pb.h"
+#include "grpcpp/grpcpp.h"
+#include "gtest/gtest.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/net_util/ports.h"
+#include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/common/error_buffer.h"
+#include "stratum/hal/lib/common/switch_mock.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/security/auth_policy_checker_mock.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
+#include "stratum/public/lib/error.h"
 
 DECLARE_int32(max_num_controllers_per_node);
 DECLARE_int32(max_num_controller_connections);
@@ -1301,6 +1301,16 @@ TEST_P(P4ServiceTest, PushForwardingPipelineConfigWithCookieSuccess) {
 
   ASSERT_OK(p4_service_->Teardown());
   CheckForwardingPipelineConfigs(nullptr, 0 /*ignored*/);
+}
+
+TEST_P(P4ServiceTest, GetCapabilities) {
+  ::grpc::ServerContext context;
+  ::p4::v1::CapabilitiesRequest request;
+  ::p4::v1::CapabilitiesResponse response;
+  ::grpc::Status status =
+    p4_service_->Capabilities(&context, &request, &response);
+  EXPECT_TRUE(status.ok()) << "Error: " << status.error_message();
+  ASSERT_EQ(response.p4runtime_api_version(), STRINGIFY(P4RUNTIME_VER));
 }
 
 INSTANTIATE_TEST_SUITE_P(P4ServiceTestWithMode, P4ServiceTest,

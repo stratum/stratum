@@ -375,6 +375,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:sfp_adapter",
         "@com_google_absl//absl/synchronization",
     ],
 )
@@ -405,7 +406,6 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "onlpphal_mock",
-    srcs = ["onlpphal_mock.cc"],
     hdrs = ["onlpphal_mock.h"],
     deps = [
         ":onlpphal_header",
@@ -429,20 +429,21 @@ stratum_cc_library(
     srcs = ["switch_configurator.cc"],
     hdrs = ["switch_configurator.h"],
     deps = [
-        ":sfp_datasource",
-        ":psu_datasource",
         ":fan_datasource",
         ":led_datasource",
-        ":thermal_datasource",
         ":onlp_event_handler",
-        ":sfp_configurator",
-        "//stratum/hal/lib/common:common_cc_proto",
-        "//stratum/hal/lib/phal:phal_cc_proto",
         ":onlp_wrapper",
-        "//stratum/hal/lib/phal:attribute_group",
-        "//stratum/hal/lib/phal:attribute_database",
-        "//stratum/hal/lib/common:phal_interface",
+        ":psu_datasource",
+        ":sfp_configurator",
+        ":sfp_datasource",
+        ":thermal_datasource",
         "@com_google_protobuf//:protobuf",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:attribute_group",
+        "//stratum/hal/lib/phal:phal_cc_proto",
     ],
 )
 
@@ -466,7 +467,7 @@ stratum_cc_binary(
     name = "onlpphal_cli",
     srcs = ["onlpphal_cli.cc"],
     arches = EMBEDDED_ARCHES,
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
         "-lrt",
@@ -493,7 +494,7 @@ stratum_cc_binary(
     name = "onlp_cli",
     srcs = ["onlp_cli.cc"],
     arches = EMBEDDED_ARCHES,
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
         "-lrt",
@@ -554,6 +555,7 @@ stratum_cc_test(
         "//stratum/hal/lib/phal:datasource",
         "//stratum/hal/lib/phal:dummy_threadpool",
         "//stratum/hal/lib/phal:db_cc_proto",
+        "//stratum/hal/lib/phal:adapter",
         "//stratum/hal/lib/phal:test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",

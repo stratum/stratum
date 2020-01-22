@@ -284,7 +284,7 @@ BcmPacketioManager::~BcmPacketioManager() {}
 
 ::util::Status BcmPacketioManager::Shutdown() {
   // Simulation mode does not support KNET.
-  // TODO: Find a way to do packet I/O in sim mode.
+  // TODO(unknown): Find a way to do packet I/O in sim mode.
   if (mode_ == OPERATION_MODE_SIM) {
     LOG(WARNING) << "Skipped shutting down BcmPacketioManager for node "
                  << node_id_ << " in sim mode.";
@@ -429,10 +429,12 @@ BcmPacketioManager::~BcmPacketioManager() {}
   if (!status.ok()) {
     INCREMENT_TX_COUNTER(purpose, tx_drops_metadata_parse_error);
   }
-  VLOG(1) << "PacketOutMetadata.egress_port_id: " << meta.egress_port_id
-      << "\n" << "PacketOutMetadata.egress_trunk_id: " << meta.egress_trunk_id
-      << "\n" << "PacketOutMetadata.cos: " << meta.cos
-      << "\n" << "PacketOutMetadata.use_ingress_pipeline: " << meta.use_ingress_pipeline;
+  VLOG(1) << "PacketOutMetadata.egress_port_id: " << meta.egress_port_id << "\n"
+          << "PacketOutMetadata.egress_trunk_id: " << meta.egress_trunk_id
+          << "\n"
+          << "PacketOutMetadata.cos: " << meta.cos << "\n"
+          << "PacketOutMetadata.use_ingress_pipeline: "
+          << meta.use_ingress_pipeline;
 
   // Now try to send the packet. There are several cases:
   // 1- Direct packet to physical port.
@@ -484,7 +486,8 @@ BcmPacketioManager::~BcmPacketioManager() {}
     }
     std::string header = "";
     RETURN_IF_ERROR(bcm_sdk_interface_->GetKnetHeaderForDirectTx(
-        unit_, *logical_port, meta.cos, intf->smac, packet.payload().size(), &header));
+        unit_, *logical_port, meta.cos, intf->smac, packet.payload().size(),
+        &header));
     RETURN_IF_ERROR(TxPacket(purpose, intf->tx_sock, intf->vlan,
                              intf->netif_index, true, header,
                              packet.payload()));
@@ -1096,7 +1099,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
           } else if (egress_logical_port == 1) {
             // SDKLT sets egress port to 1 for packets that do not match
             // MY_STATION table or got dropped by the ASIC?
-            // TODO: check this and decide what to report upwards
+            // TODO(unknown): check this and decide what to report upwards
             meta.egress_port_id = 1;
           } else {
             uint32* egress_port_id =
@@ -1109,10 +1112,13 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
             }
             meta.egress_port_id = *egress_port_id;
           }
-          VLOG(1) << "PacketInMetadata.ingress_port_id: " << meta.ingress_port_id
-              << "\n" << "PacketInMetadata.ingress_trunk_id: " << meta.ingress_trunk_id
-              << "\n" << "PacketInMetadata.egress_port_id: " << meta.egress_port_id
-              << "\n" << "PacketInMetadata.cos: " << meta.cos;
+          VLOG(1) << "PacketInMetadata.ingress_port_id: "
+                  << meta.ingress_port_id << "\n"
+                  << "PacketInMetadata.ingress_trunk_id: "
+                  << meta.ingress_trunk_id << "\n"
+                  << "PacketInMetadata.egress_port_id: " << meta.egress_port_id
+                  << "\n"
+                  << "PacketInMetadata.cos: " << meta.cos;
           status = DeparsePacketInMetadata(meta, &packet);
           if (!status.ok()) {
             INCREMENT_RX_COUNTER(purpose, rx_drops_metadata_deparse_error);
@@ -1312,7 +1318,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     RETURN_IF_ERROR(p4_table_mapper_->DeparsePacketOutMetadata(
         mapped_packet_metadata, packet->add_metadata()));
   }
-  // TODO: Controller has not defined any metadata for CoS yet. Enable
+  // TODO(unknown): Controller has not defined any metadata for CoS yet. Enable
   // this after this is done.
   /*
   if (meta.cos > 0) {
@@ -1417,7 +1423,8 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   }
   // If the port/trunk is given we transmit the port directly to the port/trunk.
   // Otherwise, we transmit the packet to ingress pipeline of the given node.
-  // TODO(max): This implicit way is in conflict with the explicit flag in packet_out header
+  // TODO(max): This implicit way is in conflict with the explicit flag in
+  // packet_out header
   meta->use_ingress_pipeline =
       (meta->egress_port_id == 0 && meta->egress_trunk_id == 0);
 

@@ -53,7 +53,7 @@ std::unordered_map<std::string, bm::Logger::LogLevel> log_level_map = {
     {"error", bm::Logger::LogLevel::ERROR},
     {"off", bm::Logger::LogLevel::OFF}};
 
-// NOLINTNEXTLINE
+// NOLINTNEXTLINE(runtime/references)
 void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   for (int i = 1; i < argc; i++) {
     char* intf;
