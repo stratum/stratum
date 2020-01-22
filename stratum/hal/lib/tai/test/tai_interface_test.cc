@@ -26,10 +26,10 @@
 
 #include "tai.h"
 
-#include "stratum/hal/lib/tai/hostinterface.h"
+#include "stratum/hal/lib/tai/host_interface.h"
 #include "stratum/hal/lib/tai/module.h"
-#include "stratum/hal/lib/tai/networkinterface.h"
-#include "stratum/hal/lib/tai/taiadapterhost.h"
+#include "stratum/hal/lib/tai/network_interface.h"
+#include "stratum/hal/lib/tai/tai_wrapper.h"
 
 namespace stratum {
 namespace hal {
@@ -59,7 +59,7 @@ std::ostream& operator<<(std::ostream& os, const tai_param& dt) {
 /************************** TAIAdapterHostTest ********************************/
 class TAIAdapterHostTest : public ::testing::Test {
  protected:
-  TAIAdapterHost adapter_host_;
+  TAIWrapper adapter_host_;
 };
 
 TEST_F(TAIAdapterHostTest, TaiAdapterHostValidPath_Test) {
@@ -175,7 +175,7 @@ TEST_F(TAIAdapterHostTest, TaiGetObjectByPath_Test) {
 /**************************** TAIModuleTest ***********************************/
 class TAIModuleTest : public ::testing::Test {
  protected:
-  TAIAdapterHost adapter_host_;
+  TAIWrapper adapter_host_;
 };
 
 TEST_F(TAIModuleTest, TaiModuleSetReadWriteAttributes_Test) {
@@ -227,7 +227,7 @@ class TAIHostInterfaceTest : public ::testing::TestWithParam<tai_param> {
              "\"deep\""}};
   }
 
-  TAIAdapterHost adapter_host_;
+  TAIWrapper adapter_host_;
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -310,7 +310,7 @@ class TAINetworkInterfaceTest : public ::testing::TestWithParam<tai_param> {
   }
 
  protected:
-  TAIAdapterHost adapter_host_;
+  TAIWrapper adapter_host_;
 };
 
 INSTANTIATE_TEST_CASE_P(

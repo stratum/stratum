@@ -25,8 +25,8 @@
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 
 #include "stratum/hal/lib/tai/module.h"
-#include "stratum/hal/lib/tai/networkinterface.h"
-#include "stratum/hal/lib/tai/hostinterface.h"
+#include "stratum/hal/lib/tai/network_interface.h"
+#include "stratum/hal/lib/tai/host_interface.h"
 
 namespace stratum {
 namespace hal {

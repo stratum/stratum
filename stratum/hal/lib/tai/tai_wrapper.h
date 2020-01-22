@@ -23,7 +23,7 @@
 #include <vector>
 #include <utility>
 
-#include "stratum/hal/lib/tai/taiobject.h"
+#include "stratum/hal/lib/tai/tai_object.h"
 
 namespace stratum {
 namespace hal {
@@ -78,14 +78,14 @@ class TAIPathValidator {
 };
 
 /*!
- * \brief The TAIAdapterHost class wrap c TAI lib with c++ layer and give access
+ * \brief The TAIWrapper class wrap c TAI lib with c++ layer and give access
  * for TAI attributes through TAI interface objects (like Module, HostInterface
  * or NetworkInterface)
  */
-class TAIAdapterHost {
+class TAIWrapper {
  public:
-  TAIAdapterHost();
-  ~TAIAdapterHost();
+  TAIWrapper();
+  ~TAIWrapper();
 
   std::weak_ptr<Module> GetModule(std::size_t index) const;
 
@@ -104,7 +104,7 @@ class TAIAdapterHost {
   std::vector<std::shared_ptr<Module>> modules_;
   tai_api_method_table_t api_;
   TAIPathValidator path_rule_;
-}; /* class TAIAdapterHost */
+}; /* class TAIWrapper */
 
 }  // namespace tai
 }  // namespace hal

@@ -16,7 +16,7 @@
  */
 
 
-#include "stratum/hal/lib/tai/taiattribute.h"
+#include "stratum/hal/lib/tai/tai_attribute.h"
 
 #include "stratum/glue/logging.h"
 

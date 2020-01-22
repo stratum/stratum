@@ -16,7 +16,7 @@
  */
 
 
-#include "stratum/hal/lib/tai/typesconverter.h"
+#include "stratum/hal/lib/tai/types_converter.h"
 
 namespace stratum {
 namespace hal {

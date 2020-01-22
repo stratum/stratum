@@ -28,7 +28,7 @@
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/dummy/dummy_node.h"
-#include "stratum/hal/lib/tai/taimanager.h"
+#include "stratum/hal/lib/tai/tai_manager.h"
 
 namespace stratum {
 namespace hal {

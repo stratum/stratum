@@ -22,7 +22,7 @@
 #include <string>
 
 #include "stratum/lib/utils.h"
-#include "stratum/hal/lib/tai/taiattribute.h"
+#include "stratum/hal/lib/tai/tai_attribute.h"
 
 namespace stratum {
 namespace hal {

@@ -21,7 +21,7 @@
 
 #include <utility>
 
-#include "stratum/hal/lib/tai/taiadapterhost.h"
+#include "stratum/hal/lib/tai/tai_wrapper.h"
 
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -72,7 +72,7 @@ class TAIManager {
   // singleton implementation
   static TAIManager* tai_manager_;
 
-  TAIAdapterHost tai_adapter_;
+  TAIWrapper tai_adapter_;
 };
 
 }  // namespace tai

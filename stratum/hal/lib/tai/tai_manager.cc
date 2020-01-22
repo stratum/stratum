@@ -16,12 +16,12 @@
  */
 
 
-#include "stratum/hal/lib/tai/taimanager.h"
+#include "stratum/hal/lib/tai/tai_manager.h"
 
 #include <utility>
 
 #include "stratum/hal/lib/common/gnmi_events.h"
-#include "stratum/hal/lib/tai/typesconverter.h"
+#include "stratum/hal/lib/tai/types_converter.h"
 
 namespace stratum {
 namespace hal {
