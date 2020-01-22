@@ -38,6 +38,7 @@ class SfpAdapter : public Adapter {
 
   virtual ~SfpAdapter() = default;
 
+  // Slot and port are 1-based.
   ::util::Status GetFrontPanelPortInfo(int slot, int port,
                                        FrontPanelPortInfo* fp_port_info);
 };
