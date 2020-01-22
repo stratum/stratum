@@ -151,3 +151,7 @@ pip_import(
 load("@ptf_deps//:requirements.bzl", ptf_pip_install = "pip_install")
 
 ptf_pip_install()
+
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()

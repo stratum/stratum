@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
+
 licenses(["notice"])  # Apache v2
 
 exports_files(["LICENSE"])
@@ -87,4 +89,18 @@ stratum_package(
     bins = [
         ":stratum_hal",
     ],
+)
+
+pkg_tar(
+    name = "stratum_bcm_package",
+    extension = "tar.gz",
+    srcs = [
+        ":stratum_bcm",
+        "@com_github_opennetworkinglab_sdklt//:kernel_modules",
+        "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
+    ],
+    deps = [
+        "//stratum/hal/config:configs",
+    ],
+    mode = "0755",
 )

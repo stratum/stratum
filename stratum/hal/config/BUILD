@@ -22,6 +22,7 @@ load(
     "stratum_cc_test",
 )
 load(":platform_config_test.bzl", "platform_config_test")
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -45,3 +46,25 @@ platform_config_test("x86-64-delta-ag9064v1-r0")
 platform_config_test("x86-64-inventec-d5254-r0")
 platform_config_test("x86-64-stordis-bf2556x-1t-r0")
 platform_config_test("x86-64-stordis-bf6064x-t-r0")
+
+filegroup(
+    name="all_configs",
+    srcs = glob([
+        "*/base_bcm_chassis_map.pb.txt",
+        "*/chassis_config.pb.txt",
+        "*/phal_config.pb.txt",
+        "*/SDKLT.yml",
+    ]),
+)
+
+pkg_tar(
+    name = "configs",
+    extension = "tar.gz",
+    strip_prefix = ".",  # needed to preserve sub-directory structure: https://github.com/bazelbuild/rules_pkg/issues/82
+    package_dir = "stratum_configs",
+    srcs = [
+        ":bcm_hardware_specs",
+        ":all_configs",
+    ],
+    mode = "0644",
+)
