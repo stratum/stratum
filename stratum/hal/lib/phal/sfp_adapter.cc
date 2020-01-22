@@ -25,34 +25,34 @@ namespace hal {
 namespace phal {
 
 SfpAdapter::SfpAdapter(AttributeDatabaseInterface* attribute_db_interface)
-    : Adapter(attribute_db_interface) {}
+    : Adapter(ABSL_DIE_IF_NULL(attribute_db_interface)) {}
 
 ::util::Status SfpAdapter::GetFrontPanelPortInfo(
     int card_id, int port_id, FrontPanelPortInfo* fp_port_info) {
-  if (card_id < 0 || port_id < 0)
+  if (card_id <= 0 || port_id <= 0) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+  }
 
-  // Create Path
   std::vector<Path> paths = {
-      {PathEntry("cards", card_id), PathEntry("ports", port_id),
+      // PhalDb uses 0-based index, while BcmPort::slot is 1-based.
+      {PathEntry("cards", card_id - 1), PathEntry("ports", port_id - 1),
        PathEntry("transceiver", -1, false, false, true)}};
 
   // Get PhalDB entry for this port
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
   // Get card
-  if (phaldb->cards_size() <= card_id) {
-    RETURN_ERROR() << "cards[" << card_id << "] greater than number of cards "
-                   << phaldb->cards_size();
-  }
-  auto card = phaldb->cards(card_id);
+  CHECK_RETURN_IF_FALSE(phaldb->cards_size() > card_id - 1)
+    << "cards[" << card_id << "]" << " not found!";
+
+  auto card = phaldb->cards(card_id - 1);
 
   // Get port
-  if (card.ports_size() <= port_id) {
-    RETURN_ERROR() << "cards[" << card_id << "]/ports[" << port_id
-                   << "] greater than number of ports " << card.ports_size();
-  }
-  auto phal_port = card.ports(port_id);
+  CHECK_RETURN_IF_FALSE(card.ports_size() > port_id - 1)
+      << "cards[" << card_id << "]/ports[" << port_id << "]"
+      << " not found!";
+
+  auto phal_port = card.ports(port_id - 1);
 
   // Get the SFP (transceiver)
   if (!phal_port.has_transceiver()) {
