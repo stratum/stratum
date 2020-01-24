@@ -69,35 +69,6 @@ namespace {
       use_terminal_group);
 
   return path_query;
-
-  // phal::Path path;
-
-  // std::vector<std::string> query_fields = absl::StrSplit(query, "/");
-
-  // for (const auto& query_field : query_fields) {
-  //   CHECK_RETURN_IF_FALSE(query_field != "")
-  //       << "Encountered unexpected empty query field.";
-  //   RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
-  //   RE2 bracket_regex(R"#(\[(\d+)\])#");
-
-  //   phal::PathEntry entry;
-
-  //   std::string bracket_match;
-  //   CHECK_RETURN_IF_FALSE(
-  //       RE2::FullMatch(query_field, field_regex, &entry.name,
-  //       &bracket_match))
-  //       << "Could not parse query field: " << query_field;
-  //   if (!bracket_match.empty()) {
-  //     entry.indexed = true;
-  //     if (!RE2::FullMatch(bracket_match, bracket_regex, &entry.index))
-  //       entry.all = true;
-  //   }
-  //   path.push_back(entry);
-  // }
-
-  // path[path.size() - 1].terminal_group = use_terminal_group;
-
-  // return path;
 }
 }  // namespace
 
@@ -315,6 +286,7 @@ class PhalCli {
 
       } else if (type.compare("bytes") == 0) {
         update->mutable_value()->set_bytes_val(val_str);
+        break;
 
       } else {
         std::cout << "Must specify a type: <int32, uint32, int64, "
@@ -347,12 +319,12 @@ class PhalCli {
     return ::util::OkStatus();
   }
 
-  enum cmd_type { Get, Subscribe, Set };
+  enum cmd_type { CMD_GET, CMD_SUBSCRIBE, CMD_SET };
 
   // Runs the main CLI loop.
   ::util::Status RunCli() {
     while (true) {
-      cmd_type cmdtype = Get;
+      cmd_type cmdtype = CMD_GET;
 
       // What type of cmd
       std::string resp;
@@ -369,13 +341,13 @@ class PhalCli {
       std::string type = r[0];
 
       if (type.compare("get") == 0) {
-        cmdtype = Get;
+        cmdtype = CMD_GET;
 
       } else if (type.compare("set") == 0) {
-        cmdtype = Set;
+        cmdtype = CMD_SET;
 
       } else if (type.compare("sub") == 0) {
-        cmdtype = Subscribe;
+        cmdtype = CMD_SUBSCRIBE;
 
       } else {
         std::cout << "Invalid cmd type " << type << std::endl;
@@ -403,15 +375,15 @@ class PhalCli {
 
       ::util::Status result;
       switch (cmdtype) {
-        case Get:
+        case CMD_GET:
           result = HandleGet(query);
           break;
 
-        case Set:
+        case CMD_SET:
           result = HandleSet(query);
           break;
 
-        case Subscribe:
+        case CMD_SUBSCRIBE:
           result = HandleSubscribe(query);
           break;
       }
