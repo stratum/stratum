@@ -22,6 +22,7 @@ RUN install_packages \
     kmod \
     vim \
     wget \
+    llvm \
     iproute2 \
     libssl1.1 \
     libedit2 \
@@ -31,6 +32,9 @@ RUN install_packages \
     ldconfig && \
     mkdir /stratum_configs && \
     mkdir /stratum_logs
+
+ENV ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
+ENV ASAN_OPTIONS=symbolize=1
 
 RUN wget http://http.us.debian.org/debian/pool/main/g/gcc-6/libasan3_6.3.0-18+deb9u1_amd64.deb
 RUN dpkg -i libasan3_6.3.0-18+deb9u1_amd64.deb
