@@ -291,7 +291,7 @@ def stratum_deps():
         http_archive(
             name = "com_github_opennetworkinglab_sdklt",
             sha256 = "38a59fe2db5122dd76fcbed234c68c59ccfdb68890199b4b891aeb86817713f4",
-            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/r69/sdklt-debug-4.14.49.tgz"],
+            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/r69/sdklt-4.14.49.tgz"],
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
