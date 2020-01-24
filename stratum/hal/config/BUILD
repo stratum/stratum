@@ -50,6 +50,7 @@ filegroup(
         "*/SDKLT.yml",
     ]) + [
         "bcm_hardware_specs.pb.txt",
+        "dummy_serdes_db.pb.txt",
     ],
 )
 

@@ -36,5 +36,5 @@ docker run -it --privileged --cap-add ALL --shm-size=512m --network host \
     -v /etc/onl:/etc/onl \
     -v $CONFIG_DIR:/stratum_configs \
     -v $LOG_DIR:/stratum_logs \
-    --entrypoint start-stratum.sh \
+    --entrypoint /start-stratum.sh \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
