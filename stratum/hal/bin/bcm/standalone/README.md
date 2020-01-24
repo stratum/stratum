@@ -2,45 +2,7 @@
 
 The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. like Tomahawk) using the Broadcom SDKLT.
 
-## Prebuild releases
-
-As part of CI, we publish Stratum [packages](https://circleci.com/gh/stratum/stratum/tree/master) with a pre-compiled binary and a set of default configuration files. Open a `unit_tests` job and click on the `Artifacts` tab. Download the `stratum_bcm_package.tar.gz` tarball to the switch and extract its contents.
-
-## Building from source
-
-Sometimes you have to build Stratum from source, e.g. because you develop some private feature or want to try a fix not yet pushed to GitHub.
-
-### Build dependencies
-
-Stratum comes with a [development Docker container](https://github.com/stratum/stratum#development-environment) for build purposes. This is the preferred and supported way of building Stratum, as it has all dependencies installed.
-
-If you for some reason want to build natively, here are some pointers to an enviroment that worked for us:
-
-- clang-6.0 or newer
-
-- Linux 4.4.0-161-generic
-
-- Ubuntu 16.04.6 LTS
-
-### Building the `stratum_bcm` package
-
-You can build the same package that we publish manually with the following steps:
-
-```
-git clone https://github.com/stratum/stratum.git
-cd stratum
-./setup_dev_env.sh  # You're now inside the docker container
-bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
-scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz root@<your_switch_ip>:stratum_bcm_package.tar.gz
-```
-
-If you're not building inside the docker container, skip the `./setup_dev_env.sh` step.
-
-## Runtime dependencies
-
-Currently only a non-virtualized, bare-metal setup is supported. But we're working on a Docker-based solution.
-
-### ONLPv2
+## ONLPv2 operating system on the switch
 Stratum requires an ONLPv2 operating system on the switch. ONF maintains a [fork](https://github.com/opennetworkinglab/OpenNetworkLinux) with additional platforms. Follow the [ONL](https://opennetlinux.org/doc-building.html) instructions to setup your device. Here is what your switch should look like:
 
 ```bash
@@ -71,7 +33,49 @@ Note the **ONLPv2**!
 x86-64-<vendor-name>-<box-name>-32x-r0
 ```
 
+## Pre-build Docker image
+
+Stratum for Broadcom switches can be run inside Docker on the switch itself.
+As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
+
+ - `cd stratum/hal/bin/bcm/standalone`
+ - `docker pull stratumproject/stratum-bcm:latest`
+ - `start-stratum.sh`
+
+## From source
+
+Sometimes you have to build Stratum from source, e.g. because you develop some private feature or want to try a fix not yet pushed to GitHub.
+
+### Build dependencies
+
+Stratum comes with a [development Docker container](https://github.com/stratum/stratum#development-environment) for build purposes. This is the preferred and supported way of building Stratum, as it has all dependencies installed.
+
+If you for some reason want to build natively, here are some pointers to an enviroment that worked for us:
+
+- clang-6.0 or newer
+
+- Linux 4.4.0-161-generic
+
+- Ubuntu 16.04.6 LTS
+
+### Building the `stratum_bcm` package
+
+You can build the same package that we publish manually with the following steps:
+
+```
+git clone https://github.com/stratum/stratum.git
+cd stratum
+./setup_dev_env.sh  # You're now inside the docker container
+bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
+scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz root@<your_switch_ip>:stratum_bcm_package.tar.gz
+```
+
+If you're not building inside the docker container, skip the `./setup_dev_env.sh` step.
+
 ### SDKLT
+
+**ONLY needed when not using Docker!**
+
 SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the `stratum_bcm_package.tar.gz` package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
 
 ```bash
@@ -94,9 +98,9 @@ linux_ngbde            32768  1 linux_ngknet
 [  +2.611898] Broadcom NGBDE loaded successfully
 ```
 
-## Running the `stratum_bcm` binary
+### Running the `stratum_bcm` binary
 
-Running `stratum_bcm` requires five configuration files, passed as CLI flags:
+Running `stratum_bcm` requires some configuration files, passed as CLI flags:
 
 - base_bcm_chassis_map_file: Protobuf defining chip capabilities and all possible port configurations of a chassis.
     Example found under: `/stratum/hal/config/**platform name**/base_bcm_chassis_map.pb.txt`
@@ -112,30 +116,11 @@ Running `stratum_bcm` requires five configuration files, passed as CLI flags:
 We provide defaults for most platforms under `stratum/hal/config`. If you followed the build instructions, these should be on the switch under `stratum_configs`.
 Depending on your actual cabling, you'll have to adjust the config files. Panel ports 31 & 32 are in loopback mode and should work without cables.
 
-The config flags are best stored in a flag file `stratum.flags`:
+To start Stratum, you can use the convenience script we package in:
 
 ```bash
--external_stratum_urls=0.0.0.0:28000
--persistent_config_dir=/etc/stratum
--base_bcm_chassis_map_file=/etc/stratum/chassis_map.pb.txt
--chassis_config_file=/etc/stratum/chassis_config.pb.txt
--bcm_sdk_config_file=/etc/stratum/sdk_config.yml
--bcm_hardware_specs_file=/etc/stratum/bcm_hardware_specs.pb.txt
--forwarding_pipeline_configs_file=/tmp/stratum/pipeline_cfg.pb.txt
--write_req_log_file=/tmp/stratum/p4_writes.pb.txt
--bcm_serdes_db_proto_file=/etc/stratum/dummy_serdes_db.pb.txt
--bcm_sdk_checkpoint_dir=/tmp/stratum/bcm_chkpt
--colorlogtostderr
--alsologtostderr
--logtosyslog=false
--v=0
-```
-
-(You can also use a bash script, passing the flags individually. Prevents [Issue 61](https://github.com/gflags/gflags/issues/61)).
-
-Start stratum:
-```bash
-./stratum_bcm -flagfile=stratum.flags
+cd <extracted package>
+./start-stratum.sh
 ```
 
 You should see the ports coming up and have a SDKLT shell prompt:
