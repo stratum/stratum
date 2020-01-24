@@ -216,6 +216,6 @@ workflows:
       - publish-docker-p4c-fpm:
           requires:
             - publish-docker-build
-      - publish-docker-stratum-bcm:
-          requires:
-            - setup_remote_docker
+      - publish-docker-stratum-bcm
+          # requires:
+          #   - publish-docker-build
