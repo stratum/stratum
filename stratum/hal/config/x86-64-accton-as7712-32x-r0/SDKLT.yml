@@ -621,8 +621,7 @@ device:
                 CORE_LANE: 0
             :   # v
                 PORT_OPMODE: [PC_PORT_OPMODE_ANY]
-                PC_PM_TX_LANE_PROFILE_ID: [21
-]
+                PC_PM_TX_LANE_PROFILE_ID: [21]
             ?
                 PC_PM_ID: 2
                 CORE_INDEX: 0
@@ -1493,14 +1492,14 @@ device:
             ?
                 PORT_ID: 1
             :
-                PC_PHYS_PORT_ID: 49
+                PC_PHYS_PORT_ID: 1
                 ENABLE: 1
                 OPMODE: PC_PORT_OPMODE_100G
                 MAX_FRAME_SIZE: 0x3fe8
             ?
-                PORT_ID: 2
+                PORT_ID: 5
             :
-                PC_PHYS_PORT_ID: 53
+                PC_PHYS_PORT_ID: 5
                 ENABLE: 1
                 OPMODE: PC_PORT_OPMODE_100G
                 MAX_FRAME_SIZE: 0x3fe8
@@ -1509,7 +1508,7 @@ device:
             :
                 PC_PHYS_PORT_ID: 9
                 ENABLE: 1
-                OPMODE: PC_PORT_OPMODE_40G
+                OPMODE: PC_PORT_OPMODE_100G
                 LOOPBACK_MODE: PC_LPBK_MAC
                 MAX_FRAME_SIZE: 0x3fe8
             ?
@@ -1517,21 +1516,217 @@ device:
             :
                 PC_PHYS_PORT_ID: 13
                 ENABLE: 1
-                OPMODE: PC_PORT_OPMODE_40G
+                OPMODE: PC_PORT_OPMODE_100G
                 LOOPBACK_MODE: PC_LPBK_MAC
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 17
+            :
+                PC_PHYS_PORT_ID: 17
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 21
+            :
+                PC_PHYS_PORT_ID: 21
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 25
+            :
+                PC_PHYS_PORT_ID: 25
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 29
+            :
+                PC_PHYS_PORT_ID: 29
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
                 MAX_FRAME_SIZE: 0x3fe8
             ?
                 PORT_ID: 34
             :
-                PC_PHYS_PORT_ID: 57
+                PC_PHYS_PORT_ID: 33
                 ENABLE: 1
-                OPMODE: PC_PORT_OPMODE_40G
+                OPMODE: PC_PORT_OPMODE_100G
                 MAX_FRAME_SIZE: 0x3fe8
             ?
-                PORT_ID: 35
+                PORT_ID: 38
+            :
+                PC_PHYS_PORT_ID: 37
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 42
+            :
+                PC_PHYS_PORT_ID: 41
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 46
+            :
+                PC_PHYS_PORT_ID: 45
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 50
+            :
+                PC_PHYS_PORT_ID: 49
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 54
+            :
+                PC_PHYS_PORT_ID: 53
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 58
+            :
+                PC_PHYS_PORT_ID: 57
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 62
             :
                 PC_PHYS_PORT_ID: 61
                 ENABLE: 1
-                OPMODE: PC_PORT_OPMODE_40G
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 68
+            :
+                PC_PHYS_PORT_ID: 65
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 72
+            :
+                PC_PHYS_PORT_ID: 69
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 76
+            :
+                PC_PHYS_PORT_ID: 73
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 80
+            :
+                PC_PHYS_PORT_ID: 77
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 84
+            :
+                PC_PHYS_PORT_ID: 81
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 88
+            :
+                PC_PHYS_PORT_ID: 85
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 92
+            :
+                PC_PHYS_PORT_ID: 89
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 96
+            :
+                PC_PHYS_PORT_ID: 93
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 102
+            :
+                PC_PHYS_PORT_ID: 97
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 106
+            :
+                PC_PHYS_PORT_ID: 101
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 110
+            :
+                PC_PHYS_PORT_ID: 105
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 114
+            :
+                PC_PHYS_PORT_ID: 109
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 118
+            :
+                PC_PHYS_PORT_ID: 113
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 122
+            :
+                PC_PHYS_PORT_ID: 117
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 126
+            :
+                PC_PHYS_PORT_ID: 121
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 130
+            :
+                PC_PHYS_PORT_ID: 125
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_100G
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 66
+            :
+                PC_PHYS_PORT_ID: 129
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_10G_XFI
+                MAX_FRAME_SIZE: 0x3fe8
+            ?
+                PORT_ID: 100
+            :
+                PC_PHYS_PORT_ID: 131
+                ENABLE: 1
+                OPMODE: PC_PORT_OPMODE_10G_XFI
                 MAX_FRAME_SIZE: 0x3fe8
 ...
