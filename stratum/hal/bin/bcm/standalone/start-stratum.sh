@@ -28,5 +28,5 @@ PLATFORM=$(cat /etc/onl/platform)
     -bcm_sdk_checkpoint_dir=/tmp/bcm_chkpt \
     -colorlogtostderr \
     -logtosyslog=false \
-    -stderrthreshold=1 \
+    -stderrthreshold=0 \
     -v=0
