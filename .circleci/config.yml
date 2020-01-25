@@ -148,7 +148,7 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: stratum/p4c_backends/fpm/Dockerfile
-      - DOCKER_IMG: opennetworking/p4c-fpm
+      - DOCKER_IMG: stratumproject/p4c-fpm
     steps:
       - checkout
       - *docker_login
