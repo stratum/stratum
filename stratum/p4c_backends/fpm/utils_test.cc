@@ -393,6 +393,23 @@ TEST_F(P4cUtilsTest, TestFillTableRefFromIRAnnotated) {
   EXPECT_EQ(0, ::errorCount());  // Errors from p4c's internal error reporter.
 }
 
+// Tests FillTableRefFromIR with table @name annotation.
+// See P4 Spec 18.2.3 Control-plane API annotations
+TEST_F(P4cUtilsTest, TestFillTableRefFromIRNameAnnotated) {
+  const std::string kOverrideTableName = "tableName";
+  // Override with fully-qualified name (starts with ".").
+  AddStringAnnotation("name", "." + kOverrideTableName);
+  SetUpIRTable();
+  EXPECT_CALL(mock_p4_info_manager_, FindTableByName(_))
+      .WillOnce(Return(test_p4_table_));
+  FillTableRefFromIR(*ir_table_, mock_p4_info_manager_, &table_ref_);
+  // Make sure the leading dot is stripped.
+  EXPECT_EQ(kOverrideTableName, table_ref_.table_name());
+  EXPECT_EQ(test_p4_table_.preamble().id(), table_ref_.table_id());
+  EXPECT_EQ(P4Annotation::DEFAULT_STAGE, table_ref_.pipeline_stage());
+  EXPECT_EQ(0, ::errorCount());  // Errors from p4c's internal error reporter.
+}
+
 // Tests a node that doesn't support annotations.
 TEST_F(P4cUtilsTest, TestUnannotatedNode) {
   // IR::BoolLiteral is not an IAnnotated subclass.
