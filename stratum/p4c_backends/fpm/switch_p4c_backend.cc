@@ -294,7 +294,7 @@ void SwitchP4cBackend::ConvertTables(
   for (auto table : ir_tables) {
     if (IsHidden(*table))
       continue;
-    const std::string p4_table_name = std::string(table->externalName());
+    const std::string p4_table_name = std::string(table->controlPlaneName());
     VLOG(1) << "Processing table " << p4_table_name;
     table_mapper_->AddTable(p4_table_name);
     if (table->getEntries() != nullptr) {
