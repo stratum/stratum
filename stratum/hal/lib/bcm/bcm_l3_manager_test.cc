@@ -68,6 +68,14 @@ class BcmL3ManagerTest : public ::testing::Test {
     port_nexthop_.set_src_mac(kSrcMac);
     port_nexthop_.set_dst_mac(kDstMac);
 
+    // TODO
+    port_mpls_nexthop_.set_type(BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT);
+    port_mpls_nexthop_.set_unit(kUnit);
+    port_mpls_nexthop_.set_logical_port(kLogicalPort);
+    port_mpls_nexthop_.set_vlan(kVlan);
+    port_mpls_nexthop_.set_src_mac(kSrcMac);
+    port_mpls_nexthop_.set_dst_mac(kDstMac);
+
     trunk_nexthop_.set_type(BcmNonMultipathNexthop::NEXTHOP_TYPE_TRUNK);
     trunk_nexthop_.set_unit(kUnit);
     trunk_nexthop_.set_trunk_port(kTrunkPort);
@@ -147,6 +155,7 @@ class BcmL3ManagerTest : public ::testing::Test {
   BcmNonMultipathNexthop cpu_l2_copy_nexthop_;
   BcmNonMultipathNexthop cpu_normal_l3_nexthop_;
   BcmNonMultipathNexthop port_nexthop_;
+  BcmNonMultipathNexthop port_mpls_nexthop_;
   BcmNonMultipathNexthop trunk_nexthop_;
   BcmNonMultipathNexthop drop_nexthop_;
   BcmMultipathNexthop wcmp_nexthop1_;
@@ -266,6 +275,21 @@ TEST_F(BcmL3ManagerTest, FindOrCreateNonMultipathNexthopSuccessForRegularPort) {
       .WillOnce(Return(kEgressIntfId1));
 
   auto ret = bcm_l3_manager_->FindOrCreateNonMultipathNexthop(port_nexthop_);
+  ASSERT_TRUE(ret.ok());
+  EXPECT_EQ(kEgressIntfId1, ret.ValueOrDie());
+}
+
+// TODO
+TEST_F(BcmL3ManagerTest, FindOrCreateNonMultipathNexthopSuccessForMplsPort) {
+  // Expectations for the mock objects.
+  EXPECT_CALL(*bcm_sdk_mock_, FindOrCreateL3RouterIntf(kUnit, kSrcMac, kVlan))
+      .WillOnce(Return(kNewRouterIntfId));
+  EXPECT_CALL(*bcm_sdk_mock_,
+              FindOrCreateL3PortEgressIntf(kUnit, kDstMac, kLogicalPort, kVlan,
+                                           kNewRouterIntfId))
+      .WillOnce(Return(kEgressIntfId1));
+
+  auto ret = bcm_l3_manager_->FindOrCreateNonMultipathNexthop(port_mpls_nexthop_);
   ASSERT_TRUE(ret.ok());
   EXPECT_EQ(kEgressIntfId1, ret.ValueOrDie());
 }

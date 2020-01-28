@@ -106,6 +106,20 @@ inline std::string PrintVector(const std::vector<T>& vec,
   return PrintArray<T>(vec.data(), vec.size(), sep);
 }
 
+template <typename T>
+inline std::string PrintIterable(const T& iterable, const std::string& sep) {
+  std::stringstream buffer;
+  std::string s = "";
+  buffer << "(";
+  for (auto const& elem : iterable) {
+    buffer << s << elem;
+    s = sep;
+  }
+  buffer << ")";
+
+  return buffer.str();
+}
+
 // Writes a proto message in binary format to the given file path.
 ::util::Status WriteProtoToBinFile(const ::google::protobuf::Message& message,
                                    const std::string& filename);
