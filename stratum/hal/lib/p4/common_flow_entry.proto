@@ -120,8 +120,15 @@ message P4ActionFunction {
     repeated P4MeterColor meter_colors = 2;
   }
 
+  // TODO(max)
+  message P4ActionHeaders {
+    P4HeaderOp op_code = 1;
+    P4HeaderType header_type = 2;
+  }
+
   repeated P4ActionFields modify_fields = 1;
   repeated P4ActionPrimitive primitives = 2;
+  repeated P4ActionHeaders modify_headers = 3;
 }
 
 // A MappedAction represents the output of TableAction mapping from

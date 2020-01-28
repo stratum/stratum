@@ -29,6 +29,7 @@ const bit<16> ETHERTYPE_IPV6 = 0x86dd;
 const bit<16> ETHERTYPE_ARP = 0x806;
 const bit<16> ETHERTYPE_ND = 0x6007;
 const bit<16> ETHERTYPE_LLDP = 0x88cc;
+const bit<16> ETHERTYPE_MPLS = 0x8847;
 
 const bit<8> IP_PROTOCOLS_TCP = 6;
 const bit<8> IP_PROTOCOLS_UDP = 17;
@@ -44,6 +45,13 @@ header ethernet_t {
     EthernetAddress dst_addr;
     EthernetAddress src_addr;
     bit<16>         ether_type;
+}
+
+header mpls_t {
+    bit<20> label;
+    bit<3> tc;
+    bit<1> bos;
+    bit<8> ttl;
 }
 
 header ipv4_base_t {
@@ -158,6 +166,8 @@ struct local_metadata_t {
 
 struct parsed_packet_t {
     ethernet_t          ethernet;
+    mpls_t              mpls;
+    mpls_t              inner_mpls;
     ipv4_base_t         ipv4_base;
     ipv6_base_t         ipv6_base;
     icmp_header_t       icmp_header;
@@ -196,6 +206,18 @@ parser pkt_parser(packet_in pk,
             ETHERTYPE_IPV4: parse_ipv4;
             ETHERTYPE_IPV6: parse_ipv6;
             ETHERTYPE_ARP: parse_arp;
+            ETHERTYPE_MPLS: parse_mpls;
+            default: accept;
+        }
+    }
+
+    state parse_mpls {
+        pk.extract(hdr.mpls);
+        // This is a hack to prevent the bf compiler from mapping the mpls ttl
+        // field onto the IP protocol field, which results in corrupted packets.
+        transition select(pk.lookahead<bit<4>>()) {
+            4: parse_ipv4;
+            6: parse_ipv6;
             default: accept;
         }
     }
@@ -263,6 +285,8 @@ control pkt_deparser(packet_out b, in parsed_packet_t hdr) {
         b.emit(hdr.packet_in);
         b.emit(hdr.ethernet);
         b.emit(hdr.vlan_tag);
+        b.emit(hdr.mpls);
+        b.emit(hdr.inner_mpls);
         b.emit(hdr.ipv4_base);
         b.emit(hdr.ipv6_base);
         b.emit(hdr.arp);
@@ -403,6 +427,25 @@ control l3_fwd(inout parsed_packet_t hdr,
         hdr.ipv4_base.ttl = hdr.ipv4_base.ttl - 1;
     }
 
+    action encap_mpls(PortNum port, EthernetAddress smac, EthernetAddress dmac,
+                      bit<20> mpls_label, bit<8> mpls_ttl) {
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.src_addr = smac;
+        hdr.ethernet.dst_addr = dmac;
+        hdr.ethernet.ether_type = ETHERTYPE_MPLS;
+        hdr.mpls.setValid();
+        hdr.mpls.label = mpls_label;
+        hdr.mpls.ttl = mpls_ttl;
+        hdr.mpls.bos = 1;
+        hdr.mpls.tc = 0;
+        hdr.inner_mpls.setValid();
+        hdr.inner_mpls.label = 333;
+        hdr.inner_mpls.ttl = 66;
+        hdr.inner_mpls.bos = 0;
+        hdr.inner_mpls.tc = 1;
+        hdr.ipv4_base.ttl = hdr.ipv4_base.ttl - 1;
+    }
+
     @max_group_size(8)
     action_selector(HashAlgorithm.crc16, 32w1024, 32w14) wcmp_action_profile;
 
@@ -418,6 +461,7 @@ control l3_fwd(inout parsed_packet_t hdr,
         }
         actions = {
             set_nexthop;
+            encap_mpls;
             NoAction;
             drop;
         }
@@ -425,8 +469,48 @@ control l3_fwd(inout parsed_packet_t hdr,
         implementation = wcmp_action_profile;
     }
 
+    @max_group_size(8)
+    action_selector(HashAlgorithm.crc16, 32w1024, 32w14) mpls_ecmp_action_profile;
+
+    action swap_mpls(PortNum port, EthernetAddress smac, EthernetAddress dmac,
+                     bit<20> mpls_label) {
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.src_addr = smac;
+        hdr.ethernet.dst_addr = dmac;
+        hdr.mpls.label = mpls_label;
+        hdr.mpls.ttl = hdr.mpls.ttl - 1;
+    }
+
+    action decap_mpls(PortNum port, EthernetAddress smac, EthernetAddress dmac) {
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.src_addr = smac;
+        hdr.ethernet.dst_addr = dmac;
+        hdr.ethernet.ether_type = ETHERTYPE_IPV4;
+        hdr.mpls.setInvalid();
+    }
+
+    @switchstack("pipeline_stage: L3_MPLS")
+    table l3_mpls_table {
+        key = {
+            standard_metadata.ingress_port : exact;
+            hdr.mpls.label                 : exact;
+            standard_metadata.ingress_port : selector;
+            hdr.mpls.label                 : selector;
+        }
+        actions = {
+            swap_mpls;
+            decap_mpls;
+        }
+        implementation = mpls_ecmp_action_profile;
+        // implementation = wcmp_action_profile;
+    }
+
     apply {
-        l3_fwd_table.apply();
+        if (hdr.mpls.isValid()) {
+            l3_mpls_table.apply();
+        } else if (hdr.ipv4_base.isValid()) {
+            l3_fwd_table.apply();
+        }
     }
 }
 

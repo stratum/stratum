@@ -28,6 +28,24 @@ table_addenda_map {
     #addenda_names: "l3-vrf-fallback"
   }
 }
+table_addenda_map {
+  key: "ingress.l3_fwd.l3_mpls_table"
+  value {
+    type: P4_TABLE_MPLS
+  }
+}
+action_addenda_map {
+  key: "ingress.l3_fwd.decap_mpls"
+  value {
+    addenda_names: "default-vlan-action-fallback"
+  }
+}
+action_addenda_map {
+  key: "ingress.l3_fwd.swap_mpls"
+  value {
+    addenda_names: "default-vlan-action-fallback"
+  }
+}
 
 # Defines an internal match on the default VLAN ID
 table_addenda {

@@ -179,6 +179,7 @@ DEFINE_int64(port_counters_interval_in_usec, 100 * 1000,
 DEFINE_int32(max_num_linkscan_writers, 10,
              "Max number of linkscan event Writers supported.");
 DECLARE_string(bcm_sdk_checkpoint_dir);
+DEFINE_string(bcm_sdk_rc_file, "rc.soc", "Path to SDK6 rc file.");
 
 // TODO(unknown): There are many CHECK_RETURN_IF_FALSE in this file which will
 // need to be changed to return ERR_INTERNAL as opposed to ERR_INVALID_PARAM.
@@ -442,6 +443,21 @@ extern "C" int sdk_checkpoint_file_write(int unit, uint8* buf, int offset,
 // SDK callback to log to console a BSL message.
 extern "C" int bsl_out_hook(bsl_meta_t* meta, const char* format,
                             va_list args) {
+#if 0
+  const char* file = (meta->file == nullptr ? "<unknown>" : meta->file);
+  const int line = (meta->file == nullptr ? -1 : meta->line);
+  const char* func = (meta->func == nullptr ? "<unknown>" : meta->func);
+  char msg[1024];
+  int rc = vsnprintf(msg, sizeof(msg), format, args);
+  if (meta->severity == BSL_WARN) {
+    LOG(WARNING) << "BSL error (" << file << ":" << line << ":" << func
+              << "): " << msg;
+  } else if (meta->severity == BSL_ERROR) {
+    LOG(ERROR) << "BSL error (" << file << ":" << line << ":" << func
+              << "): " << msg;
+  }
+  return rc;
+#else
   BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
   if (!bcm_sdk_wrapper) {
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
@@ -470,10 +486,15 @@ extern "C" int bsl_out_hook(bsl_meta_t* meta, const char* format,
   }
 
   return rc;
+#endif
 }
 
 // SDK callback to check if a debug message is to be logged.
 extern "C" int bsl_check_hook(bsl_packed_meta_t meta_pack) {
+#if 0
+  bsl_source_t source = static_cast<bsl_source_t>(BSL_SOURCE_GET(meta_pack));
+  return BSL_SEVERITY_GET(meta_pack) <= bslSeverityWarn || source == bslSourceShell;
+#else
   bsl_layer_t layer = static_cast<bsl_layer_t>(BSL_LAYER_GET(meta_pack));
   bsl_source_t source = static_cast<bsl_source_t>(BSL_SOURCE_GET(meta_pack));
   bsl_severity_t severity =
@@ -567,7 +588,8 @@ std::string PrintL3RouterIntf(const bcm_l3_intf_t& l3_intf) {
   buffer << "ttl: " << l3_intf.l3a_ttl << ", ";
   buffer << "mtu: " << l3_intf.l3a_mtu << ", ";
   buffer << "src_mac: " << BcmMacToStr(l3_intf.l3a_mac_addr) << ", ";
-  buffer << "router_intf_id: " << l3_intf.l3a_intf_id << ")";
+  buffer << "router_intf_id: " << l3_intf.l3a_intf_id << ", ";
+  buffer << "tunnel_idx: " << l3_intf.l3a_tunnel_idx << ")";
 
   return buffer.str();
 }
@@ -584,6 +606,12 @@ std::string PrintL3EgressIntf(const bcm_l3_egress_t& l3_egress,
   buffer << "vlan: " << l3_egress.vlan << ", ";
   buffer << "router_intf_id: " << l3_egress.intf << ", ";
   buffer << "dst_mac: " << BcmMacToStr(l3_egress.mac_addr) << ", ";
+  if (l3_egress.mpls_label) {
+    buffer << "mpls_label: " << l3_egress.mpls_label << ", ";
+    buffer << "mpls_action: " << l3_egress.mpls_action << ", ";
+    buffer << "mpls_ttl: " << l3_egress.mpls_ttl << ", ";
+    buffer << "mpls_flags: " << l3_egress.mpls_flags << ", ";
+  }
   buffer << "egress_intf_id: " << egress_intf_id << ")";
 
   return buffer.str();
@@ -625,10 +653,59 @@ std::string PrintL3Host(const bcm_l3_host_t& host) {
   return buffer.str();
 }
 
+// Pretty prints an L3 Mpls route.
+std::string PrintL3MplsRoute(const bcm_mpls_tunnel_switch_t& tunnel_switch) {
+  std::stringstream buffer;
+  buffer << "L3 Mpls route (";
+  buffer << "label: " << tunnel_switch.label << ", ";
+  buffer << "egress interface: " << tunnel_switch.egress_if << ", ";
+  switch (tunnel_switch.action) {
+    case BCM_MPLS_SWITCH_ACTION_SWAP:
+      buffer << "action: SWAP";
+      break;
+    case BCM_MPLS_SWITCH_ACTION_PHP:
+      buffer << "action: PHP";
+      break;
+    case BCM_MPLS_SWITCH_ACTION_POP:
+      buffer << "action: POP";
+      break;
+    case BCM_MPLS_SWITCH_ACTION_POP_DIRECT:
+      buffer << "action: POP DIRECT";
+      break;
+    case BCM_MPLS_SWITCH_ACTION_NOP:
+      buffer << "action: NOP";
+      break;
+    default:
+      buffer << "action: Unknown (" << tunnel_switch.action << ")";
+      break;
+  }
+  buffer << ")";
+
+  return buffer.str();
+}
+
+std::string PrintL3MplsTunnelInit(const std::vector<bcm_mpls_egress_label_t>& egress_labels) {
+  std::stringstream buffer;
+  buffer << "L3 Mpls tunnel initiator (";
+  for (const auto& label : egress_labels) {
+    buffer << "[ label: " << label.label << ", ";
+    buffer << "ttl: " << static_cast<uint16>(label.ttl) << ", ";
+    buffer << "flags: " << absl::StrFormat("%#x", label.flags) << " ]";
+  }
+
+  buffer << ")";
+
+  return buffer.str();
+}
+
 // Wrapper around SDK calls to see if the L3 intf object exists. If not, try to
 // create it.
+// TODO(max): try to integrate with L3_IIFs that want a MPLS tunnel initiator attached.
+//    This includes checking the tunnel init for MPLS label and ttl and potentially reusing the IFF.
+//    With ECMP groups there should be no need for IIF reuse, since they're shared at EGR intf level.
 int FindOrCreateL3RouterIntfHelper(int unit, bcm_l3_intf_t* l3_intf) {
-  int rv = bcm_l3_intf_find(unit, l3_intf);
+  // int rv = bcm_l3_intf_find(unit, l3_intf);
+  int rv = BCM_E_NOT_FOUND;
   if (BCM_SUCCESS(rv)) {
     VLOG(1) << "L3 intf " << PrintL3RouterIntf(*l3_intf)
             << " already exists on unit " << unit << ".";
@@ -1330,6 +1407,10 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   RETURN_IF_BCM_ERROR(bcm_port_frame_max_set(unit, port, kDefaultMaxFrameSize));
   RETURN_IF_BCM_ERROR(bcm_port_l3_enable_set(unit, port, true));
 
+  // RETURN_IF_BCM_ERROR(bcm_port_interface_set)
+  // FIXME: Max testing
+  // RETURN_IF_BCM_ERROR(bcm_port_interface_set(unit, port, BCM_PORT_IF_CR4));
+
   return ::util::OkStatus();
 }
 
@@ -1583,6 +1664,49 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   return l3_intf.l3a_intf_id;
 }
 
+::util::Status BcmSdkWrapper::AttachMplsEncapTunnel(
+    int unit, int router_intf_id, const BcmTunnelInit& tunnel_init) {
+  switch (tunnel_init.type_case()) {
+    case BcmTunnelInit::TypeCase::kMplsTunnelInit: {
+      std::vector<bcm_mpls_egress_label_t> egress_labels;
+      CHECK_RETURN_IF_FALSE(tunnel_init.mpls_tunnel_init().labels_size() > 0)
+          << "Expected at least one Mpls label in "
+          << tunnel_init.ShortDebugString();
+      for (auto const& label : tunnel_init.mpls_tunnel_init().labels()) {
+        bcm_mpls_egress_label_t egress_label;
+        bcm_mpls_egress_label_t_init(&egress_label);
+        egress_label.label = label.mpls_label();
+        egress_label.ttl = label.mpls_ttl();
+        egress_label.flags = BCM_MPLS_EGRESS_LABEL_TTL_SET;
+        egress_labels.push_back(egress_label);
+      }
+
+      // SDK6 semantics: front = innermost, back = outermost
+      std::reverse(egress_labels.begin(), egress_labels.end());
+      RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_initiator_set(
+          unit, router_intf_id, egress_labels.size(), egress_labels.data()));
+
+      VLOG(1) << "Attached " << PrintL3MplsTunnelInit(egress_labels)
+              << " to L3 router interface " << router_intf_id << " on unit "
+              << unit << ".";
+      break;
+    }
+    default:
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Unknown tunnel type in " << tunnel_init.ShortDebugString()
+             << " on unit " << unit << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmSdkWrapper::DetachMplsEncapTunnel(
+    int unit, int router_intf_id) {
+  RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_initiator_clear(unit, router_intf_id));
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmSdkWrapper::DeleteL3RouterIntf(int unit, int router_intf_id) {
   bcm_l3_intf_t l3_intf;
   bcm_l3_intf_t_init(&l3_intf);
@@ -1612,7 +1736,8 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
 }
 
 ::util::StatusOr<int> BcmSdkWrapper::FindOrCreateL3PortEgressIntf(
-    int unit, uint64 nexthop_mac, int port, int vlan, int router_intf_id) {
+    int unit, uint64 nexthop_mac, int port, int vlan, int router_intf_id,
+    int mpls_label) {
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
   bcm_l3_egress_t l3_egress;
@@ -1622,6 +1747,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_egress.module = 0;
   l3_egress.vlan = vlan > 0 ? vlan : BCM_VLAN_DEFAULT;
   l3_egress.intf = router_intf_id;
+  if (mpls_label > 0) {
+    l3_egress.mpls_label = mpls_label;
+    l3_egress.mpls_action = BCM_MPLS_EGRESS_ACTION_SWAP;
+  }
   l3_egress.flags |= BCM_L3_KEEP_VLAN;  // VLAN hashing enabled by default.
   int egress_intf_id = 0;
   RETURN_IF_BCM_ERROR(
@@ -1685,6 +1814,7 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
                                                      int egress_intf_id,
                                                      uint64 nexthop_mac,
                                                      int port, int vlan,
+                                                     int mpls_label,
                                                      int router_intf_id) {
   CHECK_RETURN_IF_FALSE(nexthop_mac);
   CHECK_RETURN_IF_FALSE(router_intf_id > 0);
@@ -1695,6 +1825,10 @@ BcmSdkWrapper::GetPortLinkscanMode(int unit, int port) {
   l3_egress.module = 0;
   l3_egress.vlan = vlan > 0 ? vlan : BCM_VLAN_DEFAULT;
   l3_egress.intf = router_intf_id;
+  if (mpls_label > 0) {
+    l3_egress.mpls_label = mpls_label;
+    l3_egress.mpls_action = BCM_MPLS_EGRESS_ACTION_SWAP;
+  }
   l3_egress.flags |= BCM_L3_KEEP_VLAN;  // VLAN hashing enabled by default.
   RETURN_IF_BCM_ERROR(
       ModifyL3EgressIntfHelper(unit, egress_intf_id, &l3_egress));
@@ -1901,6 +2035,60 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::AddMplsRoute(int unit, int port,
+                                           uint32 mpls_label,
+                                           int egress_intf_id,
+                                           bool is_intf_multipath) {
+  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+
+  // We don't know if the wanted action is swap or pop from the match alone.
+  // Therefore we look at the nexthop and decide the action based on it.
+  bcm_mpls_switch_action_t action = BCM_MPLS_SWITCH_ACTION_INVALID;
+
+  if (is_intf_multipath) {
+    bcm_l3_egress_ecmp_t egress_intf;
+    egress_intf.ecmp_intf = egress_intf_id;
+    int ecmp_entries;
+    bcm_if_t entries[10];
+    RETURN_IF_BCM_ERROR(
+        bcm_l3_egress_ecmp_get(unit, &egress_intf, 10, entries, &ecmp_entries));
+    LOG(WARNING) << "Found ECMP group with " << ecmp_entries << " entries";
+    for (int i = 0; i < ecmp_entries; ++i) {
+      bcm_l3_egress_t egress;
+      RETURN_IF_BCM_ERROR(bcm_l3_egress_get(unit, entries[i], &egress));
+      LOG(WARNING) << "Entry: " << PrintL3EgressIntf(egress, entries[i]);
+      if (egress.mpls_label != BCM_MPLS_LABEL_INVALID) {
+        action = BCM_MPLS_SWITCH_ACTION_SWAP;
+      } else {
+        action = BCM_MPLS_SWITCH_ACTION_PHP;  // FIXME: Should be
+                                              // BCM_MPLS_SWITCH_ACTION_POP_DIRECT.
+                                              // Bug in SDK6?
+      }
+    }
+  } else {
+    return MAKE_ERROR(ERR_UNIMPLEMENTED)
+           << "Non-multipath Mpls nexthops are not supported";
+  }
+
+  bcm_mpls_tunnel_switch_t tunnel_switch;
+  bcm_mpls_tunnel_switch_t_init(&tunnel_switch);
+  tunnel_switch.flags |= BCM_MPLS_SWITCH_TTL_DECREMENT;
+  // ingress match
+  tunnel_switch.label = mpls_label;
+  tunnel_switch.port = BCM_GPORT_INVALID;  // FIXME: should be port, but causes error
+  // egress options
+  tunnel_switch.action = action;
+  tunnel_switch.egress_if = egress_intf_id;
+
+  RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_add(unit, &tunnel_switch));
+
+  VLOG(1) << "Added MPLS L3 route "
+          << PrintL3MplsRoute(tunnel_switch)
+          << " on unit " << unit << ".";
+
+  return ::util::OkStatus();
+}
+
 ::util::Status BcmSdkWrapper::AddL3HostIpv4(int unit, int vrf, uint32 ipv4,
                                             int class_id, int egress_intf_id) {
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
@@ -2016,6 +2204,12 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::ModifyMplsRoute(int unit, int port,
+    uint32 mpls_label, int egress_intf_id, bool is_intf_multipath) {
+  // TODO(max): implement
+  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+}
+
 ::util::Status BcmSdkWrapper::DeleteL3RouteIpv4(int unit, int vrf,
                                                 uint32 subnet, uint32 mask) {
   bcm_l3_route_t route;
@@ -2072,13 +2266,26 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
+::util::Status BcmSdkWrapper::DeleteMplsRoute(int unit, int port,
+    uint32 mpls_label) {
+  bcm_mpls_tunnel_switch_t tunnel_switch;
+  bcm_mpls_tunnel_switch_t_init(&tunnel_switch);
+  tunnel_switch.label = mpls_label;
+  RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_delete(unit, &tunnel_switch));
+
+  VLOG(1) << "Deleted MPLS L3 host route " << "TODO" << " on unit "
+      << unit << ".";
+
+  return ::util::OkStatus();
+};
+
 ::util::StatusOr<int> BcmSdkWrapper::AddMyStationEntry(int unit, int priority,
                                                        int vlan, int vlan_mask,
                                                        uint64 dst_mac,
                                                        uint64 dst_mac_mask) {
   bcm_l2_station_t l2_station;
   bcm_l2_station_t_init(&l2_station);
-  l2_station.flags = BCM_L2_STATION_IPV4 | BCM_L2_STATION_IPV6;
+  l2_station.flags = BCM_L2_STATION_IPV4 | BCM_L2_STATION_IPV6 | BCM_L2_STATION_MPLS;
   l2_station.priority = priority;
   if (vlan > 0) {
     // A specific VLAN is specified.
@@ -2105,6 +2312,8 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   VLOG(1) << "Added dst MAC " << BcmMacToStr(l2_station.dst_mac) << " & VLAN "
           << vlan << " to my station TCAM with priority " << priority
           << " on unit " << unit << ".";
+
+  // Add MPLS tunnel l2 here?
 
   return station_id;
 }

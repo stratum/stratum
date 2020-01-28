@@ -867,6 +867,34 @@ std::string P4TableMapper::GetMapperNameKey(
     }
   }
 
+  // Handle tunnel_properties
+  if (action_descriptor.has_tunnel_properties()) {
+    LOG(WARNING) << "Found tunnel properties: "
+                 << action_descriptor.tunnel_properties().ShortDebugString();
+    auto header = P4HeaderType::P4_HEADER_UNKNOWN;
+    auto op = P4HeaderOp::P4_HEADER_NOP;
+    auto tunnel_properties = action_descriptor.tunnel_properties();
+
+    if (tunnel_properties.has_encap()) {
+      op = P4HeaderOp::P4_HEADER_SET_VALID;
+    } else if (tunnel_properties.has_decap()) {
+      op = P4HeaderOp::P4_HEADER_SET_INVALID;
+    }
+
+    if (tunnel_properties.is_mpls_tunnel()) {
+      header = P4HeaderType::P4_HEADER_MPLS;
+    } else if (tunnel_properties.is_gre_tunnel()) {
+      header = P4HeaderType::P4_HEADER_GRE;
+    }
+
+    if (op && header) {
+      P4ActionFunction::P4ActionHeaders* modify_header =
+          mapped_action->mutable_function()->add_modify_headers();
+      modify_header->set_op_code(op);
+      modify_header->set_header_type(header);
+    }
+  }
+
   return status;
 }
 
