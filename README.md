@@ -68,6 +68,8 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 - Stordis BF6064X
 
+- Stordis BF2556X
+
 ## Broadcom
 
 - Edgecore AS7712-32X

@@ -15,16 +15,15 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_MOCK_H_
 #define STRATUM_HAL_LIB_PHAL_ATTRIBUTE_DATABASE_MOCK_H_
 
 #include <memory>
 #include <vector>
 
-#include "stratum/hal/lib/phal/attribute_database_interface.h"
-#include "gmock/gmock.h"
 #include "absl/container/flat_hash_map.h"
+#include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/attribute_database_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -32,8 +31,7 @@ namespace phal {
 
 class AttributeDatabaseMock : public AttributeDatabaseInterface {
  public:
-  MOCK_METHOD1(
-      Set, ::util::Status(const AttributeValueMap& values));
+  MOCK_METHOD1(Set, ::util::Status(const AttributeValueMap& values));
   MOCK_METHOD1(MakeQuery, ::util::StatusOr<std::unique_ptr<Query>>(
                               const std::vector<Path>& query_paths));
 };

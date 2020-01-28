@@ -35,6 +35,7 @@
 #include "stratum/hal/lib/phal/db.pb.h"
 // #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/phaldb_service.h"
 #include "stratum/hal/lib/phal/system_interface.h"
 #include "stratum/hal/lib/phal/switch_configurator.h"
 #include "stratum/hal/lib/phal/threadpool_interface.h"
@@ -96,6 +97,8 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   ::util::Status SetupPolling();
   // If the polling thread is running, safely shuts it down.
   void TeardownPolling();
+  // Shut down the PhalDB service.
+  void ShutdownService();
   // Repeatedly polls queries until polling_thread_running_ is set to false.
   // Called directly by pthread_create.
   static void* RunPollingThread(void* attribute_database_ptr);
@@ -136,6 +139,12 @@ class AttributeDatabase : public AttributeDatabaseInterface {
       GUARDED_BY(polling_lock_);
   // A lock to serialize all calls to Set(...).
   absl::Mutex set_lock_;
+  // The PhalDb service exposing the database, mainly for debugging.
+  // Owned by the class.
+  std::unique_ptr<::grpc::Server> external_server_;
+  // Unique pointer to the gRPC server serving the internal RPC connections
+  // serviced by PhalDbService. Owned by the class.
+  std::unique_ptr<PhalDbService> phal_db_service_;
 };
 
 // DatabaseQuery is a wrapper for AttributeGroupQuery that transforms query
