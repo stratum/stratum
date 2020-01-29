@@ -1,0 +1,275 @@
+description: "16x100G+8x200G chassis config for AS7716"
+chassis {
+  platform: PLT_GENERIC_TOMAHAWK
+  name: "as7716"
+}
+nodes {
+  id: 1
+  name: "as7716"
+  slot: 1
+  index: 1
+  config_params {
+    vlan_configs {
+      vlan_id: 1
+      disable_l2_learning: true
+      block_unknown_multicast: true
+      block_unknown_unicast: true
+    }
+  }
+}
+singleton_ports {
+  id: 50
+  name: "1/0"
+  slot: 1
+  port: 1
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 54
+  name: "2/0"
+  slot: 1
+  port: 2
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 58
+  name: "3/0"
+  slot: 1
+  port: 3
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 62
+  name: "4/0"
+  slot: 1
+  port: 4
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 68
+  name: "5/0"
+  slot: 1
+  port: 5
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 72
+  name: "6/0"
+  slot: 1
+  port: 6
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 76
+  name: "7/0"
+  slot: 1
+  port: 7
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 80
+  name: "8/0"
+  slot: 1
+  port: 8
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 34
+  name: "9/0"
+  slot: 1
+  port: 9
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 38
+  name: "10/0"
+  slot: 1
+  port: 10
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 42
+  name: "11/0"
+  slot: 1
+  port: 11
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 46
+  name: "12/0"
+  slot: 1
+  port: 12
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 84
+  name: "13/0"
+  slot: 1
+  port: 13
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 88
+  name: "14/0"
+  slot: 1
+  port: 14
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 92
+  name: "15/0"
+  slot: 1
+  port: 15
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 96
+  name: "16/0"
+  slot: 1
+  port: 16
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 102
+  name: "17/0"
+  slot: 1
+  port: 17
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 106
+  name: "18/0"
+  slot: 1
+  port: 18
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 110
+  name: "19/0"
+  slot: 1
+  port: 19
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 114
+  name: "20/0"
+  slot: 1
+  port: 20
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 17
+  name: "21/0"
+  slot: 1
+  port: 21
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 21
+  name: "22/0"
+  slot: 1
+  port: 22
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 25
+  name: "23/0"
+  slot: 1
+  port: 23
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 29
+  name: "24/0"
+  slot: 1
+  port: 24
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 118
+  name: "25/0"
+  slot: 1
+  port: 25
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 122
+  name: "26/0"
+  slot: 1
+  port: 26
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 126
+  name: "27/0"
+  slot: 1
+  port: 27
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 130
+  name: "28/0"
+  slot: 1
+  port: 28
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 1
+  name: "29/0"
+  slot: 1
+  port: 29
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 5
+  name: "30/0"
+  slot: 1
+  port: 30
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 9
+  name: "31/0"
+  slot: 1
+  port: 31
+  speed_bps: 100000000000
+  node: 1
+}
+singleton_ports {
+  id: 13
+  name: "32/0"
+  slot: 1
+  port: 32
+  speed_bps: 100000000000
+  node: 1
+}
