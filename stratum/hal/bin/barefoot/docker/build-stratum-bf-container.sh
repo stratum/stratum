@@ -32,6 +32,7 @@ if [ -z $TM ]; then
                  --build-arg KERNEL_HEADERS_TAR=$2 \
                  -f $STRATUM_ROOT/stratum/hal/bin/barefoot/docker/Dockerfile $STRATUM_ROOT
 else
+  # For Tofino Model, no kernel module and ONLP support
   if [ "$#" -ne 1 ]; then
       echo "Usage: $0 SDE_TAR"
       exit 1

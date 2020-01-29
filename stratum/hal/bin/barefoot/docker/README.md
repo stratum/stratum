@@ -90,8 +90,11 @@ You can place config files such as chassis config, flag file, phal config to the
 If you would like to build the Docker image yourself, run `build-stratum-bf-container.sh` script with SDE and Linux header tarball, for example:
 
 ```bash
-$ ./build-stratum-bf-container.sh
+$ ./build-stratum-bf-container.sh bf-sde-9.0.0.tgz linux-4.14.49-ONL.tar.gz
 ```
 
-The expected format of container image name will be `stratumproject/stratum-bf:[SDE Version]-[Linux Kernel Version]`  
+If you want to build a Docker image for Barefoot Tofino model, add `TM=1` before the build script:
 
+```bash
+$ TM=1 ./build-stratum-bf-container.sh bf-sde-9.0.0.tgz
+```
