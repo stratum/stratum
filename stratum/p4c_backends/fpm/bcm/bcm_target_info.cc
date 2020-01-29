@@ -27,6 +27,7 @@ bool BcmTargetInfo::IsPipelineStageFixed(
   switch (stage) {
     case P4Annotation::L2:
     case P4Annotation::L3_LPM:
+    case P4Annotation::L3_MPLS:
     case P4Annotation::ENCAP:
     case P4Annotation::DECAP:
       is_fixed = true;
