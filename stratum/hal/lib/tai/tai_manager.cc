@@ -33,6 +33,7 @@ TAIManager* TAIManager::tai_manager_ = nullptr;
 TAIManager* TAIManager::Instance() {
   if (!tai_manager_) {
     tai_manager_ = new TAIManager();
+    tai_manager_->SetTaiWrapper(absl::make_unique<TAIWrapper>());
   }
 
   return tai_manager_;
@@ -58,7 +59,7 @@ void TAIManager::Delete() {
   LOG(INFO) << __FUNCTION__;
 
   const std::shared_ptr<TAIObject> kObject =
-      tai_adapter_.GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
+      tai_wrapper_->GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
           .lock();
   if (!kObject) {
     LOG(ERROR) << "Location of module id: " << module_netif_pair.first
@@ -98,7 +99,7 @@ util::Status TAIManager::SetValue(
   LOG(INFO) << __FUNCTION__;
 
   const std::shared_ptr<TAIObject> kObject =
-      tai_adapter_.GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
+      tai_wrapper_->GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
           .lock();
   if (!kObject) {
     LOG(ERROR) << "Location of module id: " << module_netif_pair.first
@@ -132,7 +133,7 @@ util::Status TAIManager::SetValue(
  * \return true if valid
  */
 bool TAIManager::IsObjectValid(const TAIPath& path) const {
-  return tai_adapter_.IsObjectValid(path);
+  return tai_wrapper_->IsObjectValid(path);
 }
 
 bool TAIManager::IsRequestSupported(const SetRequest_Request& request) {
@@ -249,6 +250,10 @@ DataResponse TAIManager::TaiAttributeToResponse(const TAIAttribute& attribute) {
   }
 
   return resp;
+}
+
+void TAIManager::SetTaiWrapper(std::unique_ptr<TAIWrapperInterface> wrapper) {
+  tai_wrapper_ = std::move(wrapper);
 }
 
 }  // namespace tai

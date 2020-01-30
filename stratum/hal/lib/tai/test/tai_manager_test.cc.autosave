@@ -24,7 +24,7 @@
 #include "stratum/hal/lib/tai/tai_manager.h"
 #include "stratum/hal/lib/tai/tai_wrapper.h"
 #include "stratum/hal/lib/tai/test/tai_object_mock.h"
-#include "stratum/hal/lib/tai/test/tai_test_wrappers.h"
+#include "stratum/hal/lib/tai/test/tai_test_manager_wrappers.h"
 #include "stratum/hal/lib/tai/types_converter.h"
 
 namespace stratum {

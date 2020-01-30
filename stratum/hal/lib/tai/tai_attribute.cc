@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #include "stratum/hal/lib/tai/tai_attribute.h"
 
 #include "stratum/glue/logging.h"
@@ -58,7 +57,7 @@ bool TAIAttribute::IsValid() const {
  *    attr.value.s32 = TAI_NETWORK_INTERFACE_LOOPBACK_TYPE_SHALLOW
  */
 bool TAIAttribute::DeserializeAttribute(const std::string& buff,
-                                    const tai_serialize_option_t& option) {
+                                        const tai_serialize_option_t& option) {
   int ret = tai_deserialize_attribute_value(buff.c_str(), kMeta, &attr.value,
                                             &option);
 
@@ -78,6 +77,22 @@ tai_serialize_option_t TAIAttribute::DefaultDeserializeOption() {
 
 TAIAttribute TAIAttribute::InvalidAttributeObject() {
   return {TAI_INVALID_ATTRIBUTE_ID, nullptr};
+}
+
+TAIAttribute::TAIAttribute(const TAIAttribute& src) {
+  if (!src.kMeta) return;
+
+  tai_metadata_deepcopy_attr_value(src.kMeta, &src.attr, &attr);
+  kMeta = src.kMeta;
+}
+
+TAIAttribute& TAIAttribute::operator=(const TAIAttribute& src) {
+  if (!src.kMeta) return *this;
+
+  tai_metadata_deepcopy_attr_value(src.kMeta, &src.attr, &attr);
+  kMeta = src.kMeta;
+
+  return *this;
 }
 
 /*!

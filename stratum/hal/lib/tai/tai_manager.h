@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_
 #define STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_
 
-#include <utility>
 #include <memory>
+#include <utility>
 
 #include "stratum/hal/lib/tai/tai_wrapper.h"
 
@@ -58,8 +57,6 @@ class TAIManager {
   TAIManager& operator=(const TAIManager&&) = delete;
 
  private:
-  TAIManager() = default;
-
   static TAIAttribute SetRequestToTAIAttribute(
       const SetRequest_Request& request,
       const std::shared_ptr<TAIObject>& kObject);
@@ -69,11 +66,15 @@ class TAIManager {
       const DataRequest::Request& request);
   static DataResponse TaiAttributeToResponse(const TAIAttribute& attr);
 
+ protected:
+  void SetTaiWrapper(std::unique_ptr<TAIWrapperInterface> wrapper);
+  TAIManager() = default;
+
  private:
   // singleton implementation
   static TAIManager* tai_manager_;
 
-  TAIWrapper tai_adapter_;
+  std::unique_ptr<TAIWrapperInterface> tai_wrapper_;
 };
 
 }  // namespace tai

@@ -15,14 +15,13 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
 #define STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
 
 #include <string>
 
-#include "stratum/lib/utils.h"
 #include "stratum/hal/lib/tai/tai_attribute.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -69,14 +68,15 @@ class TAIObject {
   explicit TAIObject(const tai_api_method_table_t& api);
   virtual ~TAIObject() = default;
 
-  TAIAttribute GetAttribute(tai_attr_id_t attr_id,
+  virtual TAIAttribute GetAttribute(tai_attr_id_t attr_id,
                                     tai_status_t* return_status) const;
-  tai_status_t SetAttribute(const tai_attribute_t *attr) const;
+  virtual tai_status_t SetAttribute(const tai_attribute_t* attr) const;
 
   tai_object_id_t GetId() const;
 
-  TAIAttribute GetAlocatedAttributeObject(tai_attr_id_t attr_id) const;
-  TAIAttribute GetAlocatedAttributeObject(const std::string attr_id) const;
+  virtual TAIAttribute GetAlocatedAttributeObject(tai_attr_id_t attr_id) const;
+  virtual TAIAttribute GetAlocatedAttributeObject(
+      const std::string attr_id) const;
 
   // deleted copy/move functionality
   TAIObject(const TAIObject&) = delete;

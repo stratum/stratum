@@ -31,22 +31,28 @@ load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
 stratum_cc_library(
     name = "tai",
-    srcs = ["tai_manager.cc",
-            "tai_wrapper.cc",
-            "tai_object.cc",
-            "network_interface.cc",
-            "host_interface.cc",
-            "module.cc",
-            "types_converter.cc",
-            "tai_attribute.cc"],
-    hdrs = ["tai_manager.h",
-            "tai_wrapper.h",
-            "tai_object.h",
-            "network_interface.h",
-            "host_interface.h",
-            "module.h",
-            "types_converter.h",
-            "tai_attribute.h"],
+    srcs = [
+        "tai_manager.cc",
+        "tai_wrapper.cc",
+        "tai_object.cc",
+        "network_interface.cc",
+        "host_interface.cc",
+        "module.cc",
+        "types_converter.cc",
+        "tai_attribute.cc",
+        "tai_wrapper_interface.cc",
+    ],
+    hdrs = [
+        "tai_manager.h",
+        "tai_wrapper.h",
+        "tai_object.h",
+        "network_interface.h",
+        "host_interface.h",
+        "module.h",
+        "types_converter.h",
+        "tai_attribute.h",
+        "tai_wrapper_interface.h",
+    ],
     deps = [
         "@com_github_oopt_tai//:metatai",
         # taimanager.h/.cc dependencies
@@ -60,7 +66,10 @@ stratum_cc_test(
     name = "tai_tests",
     srcs = [
         "test/tai_interface_test.cc",
-        "test/tai_manager_test.cc"
+        "test/tai_manager_test.cc",
+        "test/tai_wrapper_mock.h",
+        "test/tai_test_wrappers.h",
+        "test/tai_object_mock.h",
     ],
 
     deps = [
