@@ -21,15 +21,16 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/time.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
 // #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
+#include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/time.h"
 
 DEFINE_string(phal_config_path, "",
               "The path to read the PhalInitConfig proto file from.");
@@ -162,6 +163,7 @@ absl::Time DatabaseQuery::GetNextPollingTime() {
 
 AttributeDatabase::~AttributeDatabase() {
   TeardownPolling();
+  ShutdownService();
   // We delete the database first, since we might otherwise make broken calls
   // into the configurator.
   root_ = nullptr;
@@ -203,18 +205,17 @@ AttributeDatabase::~AttributeDatabase() {
 ::util::StatusOr<std::unique_ptr<AttributeDatabase>>
 AttributeDatabase::MakePhalDB(
     std::unique_ptr<SwitchConfigurator> configurator) {
-
   PhalInitConfig phal_config;
 
   // If no phal_config_path given try and build a default config
   if (FLAGS_phal_config_path.empty()) {
     RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
 
-  // use the phal_init_config file if it's been passed in
+    // use the phal_init_config file if it's been passed in
   } else {
     // Read Phal initial config
-    RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_phal_config_path,
-                                          &phal_config));
+    RETURN_IF_ERROR(
+        ReadProtoFromTextFile(FLAGS_phal_config_path, &phal_config));
   }
 
   std::unique_ptr<AttributeGroup> root_group =
@@ -229,6 +230,25 @@ AttributeDatabase::MakePhalDB(
       Make(std::move(root_group), absl::make_unique<DummyThreadpool>()));
 
   database->switch_configurator_ = std::move(configurator);
+
+  // Create and run PhalDb service
+  {
+    ::grpc::ServerBuilder builder;
+    builder.AddListeningPort(kPhalDbServiceUrl,
+                             ::grpc::InsecureServerCredentials());
+    database->phal_db_service_ =
+        absl::make_unique<PhalDbService>(database.get());
+    builder.RegisterService(database->phal_db_service_.get());
+    database->external_server_ = builder.BuildAndStart();
+    if (database->external_server_ == nullptr) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to start PhalDb service. This is an "
+             << "internal error.";
+    }
+    LOG(INFO) << "PhalDB service is listening to " << kPhalDbServiceUrl
+              << "...";
+  }
+
   return std::move(database);
 }
 
@@ -275,6 +295,15 @@ void AttributeDatabase::TeardownPolling() {
     polling_condvar_.Signal();
   }
   if (running) pthread_join(polling_thread_id_, nullptr);
+}
+
+void AttributeDatabase::ShutdownService() {
+  if (phal_db_service_) {
+    ::util::Status status = phal_db_service_->Teardown();
+    if (!status.ok()) {
+      LOG(ERROR) << status;
+    }
+  }
 }
 
 void* AttributeDatabase::RunPollingThread(void* attribute_database_ptr) {

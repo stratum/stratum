@@ -1,7 +1,7 @@
 # Compiling main.p4
 
 `main.p4` represents the reference pipeline for Broadcom's fixed-function switches,
-but can also be Tofino or software switches.
+but can also be used on Tofino or software switches.
 
 ## Inside Bazel
 
@@ -10,15 +10,20 @@ To compile `main.p4` for all supported platforms, including Broadcom's fixed-fun
 only a single command is needed:
 
 ```bash
-bazel build //stratum/pipelines/main/...
+bazel build //stratum/pipelines/main:main_pipelines
 ```
 
-The output files can be located by running: `bazel aquery //stratum/pipelines/main/... | grep Outputs`.
+The output tarball can be located by running: `bazel aquery //stratum/pipelines/main:main_pipelines | grep Outputs`, but the intermediate files are also available in `bazel-bin`.
 
-## External p4c Compiler
+## Docker `p4c-fpm`
 
-TODO
+We also publish the `p4c-fpm` compiler as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/p4c-fpm).
 
+## Pushing the pipeline to a switch
+
+In a production setup this is the job of a SDN controller like [ONOS](https://github.com/opennetworkinglab/onos/).
+
+For testing and exploration purposes a tool like [p4runtime-shell](https://github.com/p4lang/p4runtime-shell) is useful.
 
 ## More information on the p4c-fpm compiler
 
