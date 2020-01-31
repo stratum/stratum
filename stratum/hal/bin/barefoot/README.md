@@ -95,6 +95,7 @@ on your vendor's instructions.
 
  - 8.9.2
  - 9.0.0
+ - 9.1.0
 
 ## Building the binary
 
@@ -108,7 +109,7 @@ switch (in this case just make sure the correct ONLP library for your platform
 is loaded at runtime).
 
 The `stratum_bf` bazel target is designed for the latest Barefoot SDE. You can set up
-the SDE version by using `--define` flag if you need to build with oldder version (e.g. 8.9.2).
+the SDE version by using `--define` flag if you need to build with older version (e.g. 8.9.2).
 
 ```
 bazel build //stratum/hal/bin/barefoot:stratum_bf [--define sde_ver=8.9.2]
