@@ -15,6 +15,29 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+#define STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+
+#include "stratum/hal/lib/tai/tai_manager.h"
+
+#include <memory>
+#include <utility>
+
+#include "absl/memory/memory.h"
 #include "stratum/hal/lib/tai/test/tai_wrapper_mock.h"
 
-tai_wrapper_mock::tai_wrapper_mock() { }
+namespace stratum {
+namespace hal {
+namespace tai {
+
+class TAIManagerTestWrapper : public TAIManager {
+ public:
+  explicit TAIManagerTestWrapper(std::unique_ptr<tai_wrapper_mock> wrapper_mock)
+      : TAIManager(std::move(wrapper_mock)) {}
+};
+
+}  // namespace tai
+}  // namespace hal
+}  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_

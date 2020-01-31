@@ -176,7 +176,8 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   for (const auto& optical : change.new_config_.optical_ports()) {
     SingletonPort singleton = optical.singleton_port();
     if (singleton_names.count(singleton.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate singleton port name: " << singleton.name();
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Duplicate singleton port name: " << singleton.name();
     }
     const NodeConfigParams& node_config =
         node_id_to_node[singleton.node()]

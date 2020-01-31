@@ -36,8 +36,6 @@ namespace dummy_switch {
 
 class DummySwitch : public SwitchInterface {
  public:
-  ~DummySwitch() override;
-
   // Switch Interface methods
   ::util::Status PushChassisConfig(const ChassisConfig& config)
   LOCKS_EXCLUDED(chassis_lock) override;

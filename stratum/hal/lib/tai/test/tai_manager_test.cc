@@ -24,7 +24,7 @@
 #include "stratum/hal/lib/tai/tai_manager.h"
 #include "stratum/hal/lib/tai/tai_wrapper.h"
 #include "stratum/hal/lib/tai/test/tai_object_mock.h"
-#include "stratum/hal/lib/tai/test/tai_test_wrappers.h"
+#include "stratum/hal/lib/tai/test/tai_test_manager_wrapper.h"
 #include "stratum/hal/lib/tai/types_converter.h"
 
 namespace stratum {
@@ -32,16 +32,9 @@ namespace hal {
 namespace tai {
 
 using ::testing::_;
-using ::testing::AnyNumber;
 using ::testing::DoAll;
-using ::testing::HasSubstr;
-using ::testing::InSequence;
 using ::testing::Invoke;
-using ::testing::Pointee;
 using ::testing::Return;
-using ::testing::Sequence;
-using ::testing::WithArg;
-using ::testing::WithArgs;
 
 MATCHER(IsObjectSuported, "") {
   std::vector<TAIPath> supportedPathes{

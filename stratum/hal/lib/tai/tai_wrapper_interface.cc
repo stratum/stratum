@@ -33,13 +33,11 @@ TAIPath TAIPathValidator::NetworkPath(
 
 TAIPath TAIPathValidator::HostPath(
     const std::pair<uint64, uint32>& module_hostif_pair) {
-  LOG(INFO) << __FUNCTION__;
   return {ModulePath(module_hostif_pair.first),
           {TAI_OBJECT_TYPE_HOSTIF, module_hostif_pair.second}};
 }
 
 bool TAIPathValidator::IsModule(const TAIPath& path) {
-  LOG(INFO) << __FUNCTION__;
   if (path.empty()) return false;
 
   if (path.size() == 1) return path.at(0).object_type == TAI_OBJECT_TYPE_MODULE;
@@ -48,7 +46,6 @@ bool TAIPathValidator::IsModule(const TAIPath& path) {
 }
 
 bool TAIPathValidator::IsNetwork(const TAIPath& path) {
-  LOG(INFO) << __FUNCTION__;
   if (path.empty()) return false;
 
   if (path.size() == 2) {
@@ -60,7 +57,6 @@ bool TAIPathValidator::IsNetwork(const TAIPath& path) {
 }
 
 bool TAIPathValidator::IsHost(const TAIPath& path) {
-  LOG(INFO) << __FUNCTION__;
   if (path.empty()) return false;
 
   if (path.size() == 2) {
@@ -77,7 +73,6 @@ bool TAIPathValidator::IsHost(const TAIPath& path) {
  * if \param path is valid
  */
 bool TAIPathValidator::CheckPath(const TAIPath& path) const {
-  LOG(INFO) << __FUNCTION__;
   if (path.empty()) return false;
 
   if (std::any_of(path.cbegin(), path.cend(), [](const TAIPathItem& tiObject) {

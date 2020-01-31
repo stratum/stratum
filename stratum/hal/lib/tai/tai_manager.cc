@@ -28,20 +28,10 @@ namespace stratum {
 namespace hal {
 namespace tai {
 
-TAIManager* TAIManager::tai_manager_ = nullptr;
-
-TAIManager* TAIManager::Instance() {
-  if (!tai_manager_) {
-    tai_manager_ = new TAIManager();
-    tai_manager_->SetTaiWrapper(absl::make_unique<TAIWrapper>());
-  }
+TAIManager& TAIManager::Instance() {
+  static TAIManager tai_manager_(absl::make_unique<TAIWrapper>());
 
   return tai_manager_;
-}
-
-void TAIManager::Delete() {
-  delete tai_manager_;
-  tai_manager_ = nullptr;
 }
 
 /*!
@@ -56,7 +46,6 @@ void TAIManager::Delete() {
 ::util::StatusOr<DataResponse> TAIManager::GetValue(
     const DataRequest::Request& request,
     const std::pair<uint64, uint32>& module_netif_pair) const {
-  LOG(INFO) << __FUNCTION__;
 
   const std::shared_ptr<TAIObject> kObject =
       tai_wrapper_->GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
@@ -79,7 +68,6 @@ void TAIManager::Delete() {
            << return_code;
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return ::util::StatusOr<DataResponse>(TaiAttributeToResponse(kAttr));
 }
 
@@ -96,7 +84,6 @@ void TAIManager::Delete() {
 util::Status TAIManager::SetValue(
     const SetRequest_Request& request,
     const std::pair<uint64, uint32>& module_netif_pair) const {
-  LOG(INFO) << __FUNCTION__;
 
   const std::shared_ptr<TAIObject> kObject =
       tai_wrapper_->GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
@@ -124,7 +111,6 @@ util::Status TAIManager::SetValue(
     return ::util::Status(::util::error::INTERNAL, "Can't set request data");
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return ::util::OkStatus();
 }
 
@@ -149,7 +135,6 @@ bool TAIManager::IsRequestSupported(const SetRequest_Request& request) {
 TAIAttribute TAIManager::SetRequestToTAIAttribute(
     const SetRequest_Request& request,
     const std::shared_ptr<TAIObject>& kObject) {
-  LOG(INFO) << __FUNCTION__;
   const tai_attr_id_t kAttrId = SetRequestToTAIAttributeId(request);
 
   if (kObject == nullptr || kAttrId == TAI_INVALID_ATTRIBUTE_ID) {
@@ -173,7 +158,6 @@ TAIAttribute TAIManager::SetRequestToTAIAttribute(
 
 tai_attr_id_t TAIManager::SetRequestToTAIAttributeId(
     const SetRequest_Request& request) {
-  LOG(INFO) << __FUNCTION__;
   if (!request.has_port()) {
     return TAI_INVALID_ATTRIBUTE_ID;
   }
@@ -200,7 +184,6 @@ tai_attr_id_t TAIManager::SetRequestToTAIAttributeId(
  */
 tai_attr_id_t TAIManager::GetRequestToTAIAttributeId(
     const DataRequest::Request& request) {
-  LOG(INFO) << __FUNCTION__;
   switch (request.request_case()) {
     case DataRequest::Request::kFrequency:
       return TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ;
@@ -225,7 +208,6 @@ tai_attr_id_t TAIManager::GetRequestToTAIAttributeId(
  * \return DataResponse with valid value if success, otherwise uninitialized obj
  */
 DataResponse TAIManager::TaiAttributeToResponse(const TAIAttribute& attribute) {
-  LOG(INFO) << __FUNCTION__;
   DataResponse resp;
   if (!attribute.IsValid()) return {};
 
@@ -252,9 +234,8 @@ DataResponse TAIManager::TaiAttributeToResponse(const TAIAttribute& attribute) {
   return resp;
 }
 
-void TAIManager::SetTaiWrapper(std::unique_ptr<TAIWrapperInterface> wrapper) {
-  tai_wrapper_ = std::move(wrapper);
-}
+TAIManager::TAIManager(std::unique_ptr<TAIWrapperInterface> wrapper)
+    : tai_wrapper_(std::move(wrapper)) {}
 
 }  // namespace tai
 }  // namespace hal

@@ -96,8 +96,8 @@ TAIWrapper::TAIWrapper()
 }
 
 TAIWrapper::~TAIWrapper() {
-  LOG(INFO) << "Uninitialize TAIWrapper";
-  LOG(INFO) << "TAI API uninitialize status: " << tai_api_uninitialize();
+  LOG(INFO) << "Uninitialize TAIWrapper "
+            << "TAI API uninitialize status: " << tai_api_uninitialize();
   // need to clear cause of static variable
   modules_location.clear();
 }
@@ -110,7 +110,6 @@ tai_status_t TAIWrapper::CreateModule(const std::string& location) {
   }
 
   modules_.push_back(module);
-  LOG(INFO) << __FUNCTION__ << " end";
   return TAI_STATUS_SUCCESS;
 }
 
@@ -119,19 +118,16 @@ tai_status_t TAIWrapper::CreateModule(const std::string& location) {
  * \param index otherwise expired std::weak_ptr
  */
 std::weak_ptr<Module> TAIWrapper::GetModule(std::size_t index) const {
-  LOG(INFO) << __FUNCTION__;
   if (index >= modules_.size()) {
     LOG(WARNING) << "Invalid input parameter";
     return {};
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return modules_[index];
 }
 
 std::weak_ptr<TAIObject> TAIWrapper::GetObject(
     const TAIPath& objectPath) const {
-  LOG(INFO) << __FUNCTION__;
   if (!path_rule_.CheckPath(objectPath)) {
     LOG(WARNING)
         << "Can't find required module! Please check is object path is valid";
@@ -155,7 +151,6 @@ std::weak_ptr<TAIObject> TAIWrapper::GetObject(
     return module->GetNetworkInterface(indexObj.object_index);
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return module;
 }
 

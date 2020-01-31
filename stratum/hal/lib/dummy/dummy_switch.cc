@@ -71,7 +71,7 @@ namespace dummy_switch {
   }
 
   for (const auto& opticalPort : config.optical_ports()) {
-    if (!tai::TAIManager::Instance()->IsObjectValid(
+    if (!tai::TAIManager::Instance().IsObjectValid(
             tai::TAIPathValidator::NetworkPath(
                 { opticalPort.module_location(),
                   opticalPort.netif_location()}))) {
@@ -324,7 +324,7 @@ namespace dummy_switch {
         const std::pair<uint64, uint32> node_port_id =
             GetNodePortIdByRequestCase(request);
         if (IsNodePortIdRelatedWithTAI(node_port_id)) {
-          resp = tai::TAIManager::Instance()->GetValue(
+          resp = tai::TAIManager::Instance().GetValue(
               request, node_port_id_to_module_netif.at(node_port_id));
         } else {
           resp = MAKE_ERROR(ERR_INTERNAL)
@@ -354,7 +354,7 @@ namespace dummy_switch {
   LOG(INFO) << __FUNCTION__;
 
   for (const auto& req : request.requests()) {
-    if (tai::TAIManager::Instance()->IsRequestSupported(req)) {
+    if (tai::TAIManager::Instance().IsRequestSupported(req)) {
       if (!IsNodePortIdRelatedWithTAI(
               {req.port().node_id(), req.port().port_id()})) {
         if (details) {
@@ -365,7 +365,7 @@ namespace dummy_switch {
         continue;
       }
 
-      ::util::Status status = tai::TAIManager::Instance()->SetValue(
+      ::util::Status status = tai::TAIManager::Instance().SetValue(
           req, node_port_id_to_module_netif[{req.port().node_id(),
                                              req.port().port_id()}]);
       if (!status.ok() && details) details->push_back(status);
@@ -425,14 +425,14 @@ std::unique_ptr<DummySwitch>
   return absl::WrapUnique(new DummySwitch(phal_interface, chassis_mgr));
 }
 
-DummySwitch::~DummySwitch() { tai::TAIManager::Delete(); }
-
 DummySwitch::DummySwitch(PhalInterface* phal_interface,
                          DummyChassisManager* chassis_mgr)
     : phal_interface_(phal_interface),
       chassis_mgr_(chassis_mgr),
       dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
-      gnmi_event_writer_(nullptr) {}
+      gnmi_event_writer_(nullptr) {
+        tai::TAIManager::Instance();
+      }
 
 bool DummySwitch::IsNodePortIdRelatedWithTAI(
     const std::pair<uint64, uint32>& node_port_id) {

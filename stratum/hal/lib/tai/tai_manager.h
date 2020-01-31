@@ -31,13 +31,12 @@ namespace hal {
 namespace tai {
 
 /*!
- * \brief The TAIManager class provide single access point for user<->TAIAdapter
+ * \brief The TAIManager class provide single access point for user<->TAIWrapper
  * host interaction.
  */
 class TAIManager {
  public:
-  static TAIManager* Instance();
-  static void Delete();
+  static TAIManager& Instance();
 
   ::util::StatusOr<DataResponse> GetValue(
       const DataRequest::Request& request,
@@ -67,13 +66,9 @@ class TAIManager {
   static DataResponse TaiAttributeToResponse(const TAIAttribute& attr);
 
  protected:
-  void SetTaiWrapper(std::unique_ptr<TAIWrapperInterface> wrapper);
-  TAIManager() = default;
+  explicit TAIManager(std::unique_ptr<TAIWrapperInterface> wrapper);
 
  private:
-  // singleton implementation
-  static TAIManager* tai_manager_;
-
   std::unique_ptr<TAIWrapperInterface> tai_wrapper_;
 };
 
