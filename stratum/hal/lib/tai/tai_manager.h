@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_
+#define STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIMANAGER_H_
-#define STRATUM_HAL_LIB_TAI_TAIMANAGER_H_
-
+#include <memory>
 #include <utility>
 
-#include "stratum/hal/lib/tai/taiadapterhost.h"
+#include "stratum/hal/lib/tai/tai_wrapper.h"
 
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -31,13 +31,12 @@ namespace hal {
 namespace tai {
 
 /*!
- * \brief The TAIManager class provide single access point for user<->TAIAdapter
+ * \brief The TAIManager class provide single access point for user<->TAIWrapper
  * host interaction.
  */
 class TAIManager {
  public:
-  static TAIManager* Instance();
-  static void Delete();
+  static TAIManager& Instance();
 
   ::util::StatusOr<DataResponse> GetValue(
       const DataRequest::Request& request,
@@ -57,8 +56,6 @@ class TAIManager {
   TAIManager& operator=(const TAIManager&&) = delete;
 
  private:
-  TAIManager() = default;
-
   static TAIAttribute SetRequestToTAIAttribute(
       const SetRequest_Request& request,
       const std::shared_ptr<TAIObject>& kObject);
@@ -68,15 +65,15 @@ class TAIManager {
       const DataRequest::Request& request);
   static DataResponse TaiAttributeToResponse(const TAIAttribute& attr);
 
- private:
-  // singleton implementation
-  static TAIManager* tai_manager_;
+ protected:
+  explicit TAIManager(std::unique_ptr<TAIWrapperInterface> wrapper);
 
-  TAIAdapterHost tai_adapter_;
+ private:
+  std::unique_ptr<TAIWrapperInterface> tai_wrapper_;
 };
 
 }  // namespace tai
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIMANAGER_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_

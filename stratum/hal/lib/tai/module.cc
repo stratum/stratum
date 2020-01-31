@@ -20,9 +20,10 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
-#include "stratum/hal/lib/tai/hostinterface.h"
-#include "stratum/hal/lib/tai/networkinterface.h"
+#include "stratum/hal/lib/tai/host_interface.h"
+#include "stratum/hal/lib/tai/network_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -39,12 +40,6 @@ Module::Module(const tai_api_method_table_t& api, const std::string& location)
   attr.id = TAI_MODULE_ATTR_LOCATION;
   attr.value.charlist.count = static_cast<uint>(location.size());
   attr.value.charlist.list = const_cast<char*>(location_.c_str());
-  list.push_back(attr);
-
-  char str[] = "my vendor";
-  attr.id = TAI_MODULE_ATTR_VENDOR_NAME;
-  attr.value.charlist.count = static_cast<uint>(std::strlen(str));
-  attr.value.charlist.list = str;
   list.push_back(attr);
 
   status = api_.module_api->create_module(

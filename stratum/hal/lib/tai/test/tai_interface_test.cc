@@ -17,19 +17,17 @@
 
 
 /*
-  TAIInterfaceTest testing all TAI related classes like TAIAdapterHost, Module,
+  TAIInterfaceTest testing all TAI related classes like TAIWrapper, Module,
   HostInterface and NetworkInterface tests is based on TAI stub
 */
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "tai.h"
-
-#include "stratum/hal/lib/tai/hostinterface.h"
+#include "stratum/hal/lib/tai/host_interface.h"
 #include "stratum/hal/lib/tai/module.h"
-#include "stratum/hal/lib/tai/networkinterface.h"
-#include "stratum/hal/lib/tai/taiadapterhost.h"
+#include "stratum/hal/lib/tai/network_interface.h"
+#include "stratum/hal/lib/tai/tai_wrapper.h"
 
 namespace stratum {
 namespace hal {
@@ -56,117 +54,117 @@ std::ostream& operator<<(std::ostream& os, const tai_param& dt) {
   return os;
 }
 
-/************************** TAIAdapterHostTest ********************************/
-class TAIAdapterHostTest : public ::testing::Test {
+/************************** TAIWrapperTest ********************************/
+class TAIWrapperTest : public ::testing::Test {
  protected:
-  TAIAdapterHost adapter_host_;
+  TAIWrapper wrapper_;
 };
 
-TEST_F(TAIAdapterHostTest, TaiAdapterHostValidPath_Test) {
-  EXPECT_TRUE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 0}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+TEST_F(TAIWrapperTest, TAIWrapperValidPath_Test) {
+  EXPECT_TRUE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 0}}));
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 0}, {TAI_OBJECT_TYPE_HOSTIF, 0}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 0}, {TAI_OBJECT_TYPE_HOSTIF, 1}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 0}, {TAI_OBJECT_TYPE_NETWORKIF, 0}}));
 
-  EXPECT_TRUE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 1}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 1}}));
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 1}, {TAI_OBJECT_TYPE_HOSTIF, 0}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 1}, {TAI_OBJECT_TYPE_HOSTIF, 1}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 1}, {TAI_OBJECT_TYPE_NETWORKIF, 0}}));
 
-  EXPECT_TRUE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 2}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 2}}));
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 2}, {TAI_OBJECT_TYPE_HOSTIF, 0}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 2}, {TAI_OBJECT_TYPE_HOSTIF, 1}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 2}, {TAI_OBJECT_TYPE_NETWORKIF, 0}}));
 
-  EXPECT_TRUE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 3}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 3}}));
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_HOSTIF, 0}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_HOSTIF, 1}}));
-  EXPECT_TRUE(adapter_host_.IsObjectValid(
+  EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_NETWORKIF, 0}}));
 }
 
-TEST_F(TAIAdapterHostTest, TaiAdapterHostInvalidPath_Test) {
-  EXPECT_FALSE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_NULL, 0}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 5}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_HOSTIF, 0}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid(
+TEST_F(TAIWrapperTest, TAIWrapperInvalidPath_Test) {
+  EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_NULL, 0}}));
+  EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 5}}));
+  EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_HOSTIF, 0}}));
+  EXPECT_FALSE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_HOSTIF, 0}, {TAI_OBJECT_TYPE_HOSTIF, 1}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid({{TAI_OBJECT_TYPE_NETWORKIF, 3}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid(
+  EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_NETWORKIF, 3}}));
+  EXPECT_FALSE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_NETWORKIF, 0}, {TAI_OBJECT_TYPE_MODULE, 0}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid(
+  EXPECT_FALSE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_NETWORKIF, 1}}));
-  EXPECT_FALSE(adapter_host_.IsObjectValid(
+  EXPECT_FALSE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_HOSTIF, 2}}));
 }
 
-TEST_F(TAIAdapterHostTest, TaiAdapterHostInitialization_Test) {
-  EXPECT_TRUE(adapter_host_.IsModuleIdValid(0));
-  EXPECT_TRUE(adapter_host_.IsModuleIdValid(1));
-  EXPECT_TRUE(adapter_host_.IsModuleIdValid(2));
-  EXPECT_TRUE(adapter_host_.IsModuleIdValid(3));
+TEST_F(TAIWrapperTest, TAIWrapperInitialization_Test) {
+  EXPECT_TRUE(wrapper_.IsModuleIdValid(0));
+  EXPECT_TRUE(wrapper_.IsModuleIdValid(1));
+  EXPECT_TRUE(wrapper_.IsModuleIdValid(2));
+  EXPECT_TRUE(wrapper_.IsModuleIdValid(3));
 
   // module id 0
-  std::shared_ptr<Module> module = adapter_host_.GetModule(0).lock();
+  std::shared_ptr<Module> module = wrapper_.GetModule(0).lock();
   EXPECT_TRUE(module->IsHostInterfaceValid(0));
   EXPECT_TRUE(module->IsHostInterfaceValid(1));
   EXPECT_TRUE(module->IsNetworkInterfaceValid(0));
 
   // module id 1
-  module = adapter_host_.GetModule(1).lock();
+  module = wrapper_.GetModule(1).lock();
   EXPECT_TRUE(module->IsHostInterfaceValid(0));
   EXPECT_TRUE(module->IsHostInterfaceValid(1));
   EXPECT_TRUE(module->IsNetworkInterfaceValid(0));
 
   // module id 2
-  module = adapter_host_.GetModule(2).lock();
+  module = wrapper_.GetModule(2).lock();
   EXPECT_TRUE(module->IsHostInterfaceValid(0));
   EXPECT_TRUE(module->IsHostInterfaceValid(1));
   EXPECT_TRUE(module->IsNetworkInterfaceValid(0));
 
   // module id 3
-  module = adapter_host_.GetModule(3).lock();
+  module = wrapper_.GetModule(3).lock();
   EXPECT_TRUE(module->IsHostInterfaceValid(0));
   EXPECT_TRUE(module->IsHostInterfaceValid(1));
   EXPECT_TRUE(module->IsNetworkInterfaceValid(0));
 }
 
-TEST_F(TAIAdapterHostTest, TaiGetObjectByPath_Test) {
+TEST_F(TAIWrapperTest, TaiGetObjectByPath_Test) {
   std::shared_ptr<TAIObject> object =
-      adapter_host_.GetObject({TAI_OBJECT_TYPE_MODULE, 0}).lock();
+      wrapper_.GetObject({TAI_OBJECT_TYPE_MODULE, 0}).lock();
   EXPECT_NE(object, nullptr);
 
-  object = adapter_host_
+  object = wrapper_
                .GetObject({{TAI_OBJECT_TYPE_MODULE, 0},
                            {TAI_OBJECT_TYPE_NETWORKIF, 0}})
                .lock();
   EXPECT_NE(object, nullptr);
 
-  object = adapter_host_
+  object = wrapper_
                .GetObject({{TAI_OBJECT_TYPE_MODULE, 1},
                            {TAI_OBJECT_TYPE_NETWORKIF, 0}})
                .lock();
   EXPECT_NE(object, nullptr);
 
   object =
-      adapter_host_
+      wrapper_
           .GetObject({{TAI_OBJECT_TYPE_MODULE, 2}, {TAI_OBJECT_TYPE_HOSTIF, 0}})
           .lock();
   EXPECT_NE(object, nullptr);
 
   object =
-      adapter_host_
+      wrapper_
           .GetObject({{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_HOSTIF, 1}})
           .lock();
   EXPECT_NE(object, nullptr);
@@ -175,11 +173,11 @@ TEST_F(TAIAdapterHostTest, TaiGetObjectByPath_Test) {
 /**************************** TAIModuleTest ***********************************/
 class TAIModuleTest : public ::testing::Test {
  protected:
-  TAIAdapterHost adapter_host_;
+  TAIWrapper wrapper_;
 };
 
 TEST_F(TAIModuleTest, TaiModuleSetReadWriteAttributes_Test) {
-  const std::shared_ptr<Module> module = adapter_host_.GetModule(0).lock();
+  const std::shared_ptr<Module> module = wrapper_.GetModule(0).lock();
 
   std::string result{"unknown"};
   tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
@@ -198,7 +196,7 @@ TEST_F(TAIModuleTest, TaiModuleSetReadWriteAttributes_Test) {
 }
 
 TEST_F(TAIModuleTest, TaiModuleSetAttributeByName_Test) {
-  const std::shared_ptr<Module> module = adapter_host_.GetModule(0).lock();
+  const std::shared_ptr<Module> module = wrapper_.GetModule(0).lock();
 
   std::string result{"down"};
   tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
@@ -227,7 +225,7 @@ class TAIHostInterfaceTest : public ::testing::TestWithParam<tai_param> {
              "\"deep\""}};
   }
 
-  TAIAdapterHost adapter_host_;
+  TAIWrapper wrapper_;
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -239,7 +237,7 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributes_Test) {
   std::shared_ptr<HostInterface> hostif =
-      adapter_host_.GetModule(0).lock()->GetHostInterface(0).lock();
+      wrapper_.GetModule(0).lock()->GetHostInterface(0).lock();
 
   auto param = GetParam();
   TAIAttribute tai_attr = hostif->GetAlocatedAttributeObject(param.attr_id);
@@ -258,7 +256,7 @@ TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributes_Test) {
 
 TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributeByName_Test) {
   std::shared_ptr<HostInterface> hostif =
-      adapter_host_.GetModule(0).lock()->GetHostInterface(0).lock();
+      wrapper_.GetModule(0).lock()->GetHostInterface(0).lock();
 
   auto param = GetParam();
   TAIAttribute tai_attr = hostif->GetAlocatedAttributeObject(param.attr_name);
@@ -310,7 +308,7 @@ class TAINetworkInterfaceTest : public ::testing::TestWithParam<tai_param> {
   }
 
  protected:
-  TAIAdapterHost adapter_host_;
+  TAIWrapper wrapper_;
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -322,7 +320,7 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(TAINetworkInterfaceTest, TaiNetworkInterfaceSetAttributes_Test) {
   std::shared_ptr<NetworkInterface> netif =
-      adapter_host_.GetModule(0).lock()->GetNetworkInterface(0).lock();
+      wrapper_.GetModule(0).lock()->GetNetworkInterface(0).lock();
 
   auto param = GetParam();
   TAIAttribute tai_attr = netif->GetAlocatedAttributeObject(param.attr_id);
@@ -341,7 +339,7 @@ TEST_P(TAINetworkInterfaceTest, TaiNetworkInterfaceSetAttributes_Test) {
 
 TEST_P(TAINetworkInterfaceTest, TaiNetworkInterfaceSetAttributeByName_Test) {
   std::shared_ptr<NetworkInterface> netif =
-      adapter_host_.GetModule(0).lock()->GetNetworkInterface(0).lock();
+      wrapper_.GetModule(0).lock()->GetNetworkInterface(0).lock();
 
   auto param = GetParam();
   TAIAttribute tai_attr = netif->GetAlocatedAttributeObject(param.attr_name);

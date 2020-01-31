@@ -28,7 +28,7 @@
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/dummy/dummy_node.h"
-#include "stratum/hal/lib/tai/taimanager.h"
+#include "stratum/hal/lib/tai/tai_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -36,8 +36,6 @@ namespace dummy_switch {
 
 class DummySwitch : public SwitchInterface {
  public:
-  ~DummySwitch() override;
-
   // Switch Interface methods
   ::util::Status PushChassisConfig(const ChassisConfig& config)
   LOCKS_EXCLUDED(chassis_lock) override;

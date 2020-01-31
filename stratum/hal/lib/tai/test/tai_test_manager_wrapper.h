@@ -15,31 +15,29 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+#define STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
 
-#include "stratum/hal/lib/tai/typesconverter.h"
+#include "stratum/hal/lib/tai/tai_manager.h"
+
+#include <memory>
+#include <utility>
+
+#include "absl/memory/memory.h"
+#include "stratum/hal/lib/tai/test/tai_wrapper_mock.h"
 
 namespace stratum {
 namespace hal {
 namespace tai {
 
-/*!
- * \brief TypesConverter::HertzToMegahertz method converts \param hertz to
- * megahertz
- */
-::google::protobuf::uint64 TypesConverter::HertzToMegahertz(
-    tai_uint64_t hertz) {
-  return hertz / kMegahertzInHertz;
-}
-
-/*!
- * \brief TypesConverter::MegahertzToHertz method converts \param megahertz to
- * hertz
- */
-tai_uint64_t TypesConverter::MegahertzToHertz(
-    ::google::protobuf::uint64 megahertz) {
-  return megahertz * kMegahertzInHertz;
-}
+class TAIManagerTestWrapper : public TAIManager {
+ public:
+  explicit TAIManagerTestWrapper(std::unique_ptr<tai_wrapper_mock> wrapper_mock)
+      : TAIManager(std::move(wrapper_mock)) {}
+};
 
 }  // namespace tai
 }  // namespace hal
 }  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_

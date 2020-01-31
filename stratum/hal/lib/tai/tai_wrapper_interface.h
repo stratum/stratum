@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_TAI_TAI_WRAPPER_INTERFACE_H_
+#define STRATUM_HAL_LIB_TAI_TAI_WRAPPER_INTERFACE_H_
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIADAPTERHOST_H_
-#define STRATUM_HAL_LIB_TAI_TAIADAPTERHOST_H_
-
+#include <memory>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "stratum/hal/lib/tai/taiobject.h"
+#include "stratum/hal/lib/tai/tai_object.h"
 
 namespace stratum {
 namespace hal {
@@ -43,6 +43,11 @@ struct TAIPathItem {
   std::size_t object_index{0};
 
   bool isValid() const;
+
+  bool operator==(const TAIPathItem& path_item) const {
+    return (object_type == path_item.object_type) &&
+           (object_index == path_item.object_index);
+  }
 };
 
 using TAIPath = std::vector<TAIPathItem>;
@@ -78,36 +83,26 @@ class TAIPathValidator {
 };
 
 /*!
- * \brief The TAIAdapterHost class wrap c TAI lib with c++ layer and give access
- * for TAI attributes through TAI interface objects (like Module, HostInterface
- * or NetworkInterface)
+ * \brief The TAIWrapperInterface exists to provide an interface to TAI  layer
+ * and all classes which rely on that layer.
  */
-class TAIAdapterHost {
+class TAIWrapperInterface {
  public:
-  TAIAdapterHost();
-  ~TAIAdapterHost();
+  virtual ~TAIWrapperInterface() = default;
 
-  std::weak_ptr<Module> GetModule(std::size_t index) const;
+  virtual std::weak_ptr<Module> GetModule(std::size_t index) const = 0;
 
-  std::weak_ptr<TAIObject> GetObject(const TAIPath& objectPath) const;
-  std::weak_ptr<TAIObject> GetObject(const TAIPathItem& pathItem) const;
+  virtual std::weak_ptr<TAIObject> GetObject(
+      const TAIPath& objectPath) const = 0;
+  virtual std::weak_ptr<TAIObject> GetObject(
+      const TAIPathItem& pathItem) const = 0;
 
-  bool IsObjectValid(const TAIPath& path) const {
-    return !GetObject(path).expired();
-  }
-  bool IsModuleIdValid(std::size_t id) const { return modules_.size() > id; }
-
- private:
-  tai_status_t CreateModule(const std::string& location);
-
- private:
-  std::vector<std::shared_ptr<Module>> modules_;
-  tai_api_method_table_t api_;
-  TAIPathValidator path_rule_;
-}; /* class TAIAdapterHost */
+  virtual bool IsObjectValid(const TAIPath& path) const = 0;
+  virtual bool IsModuleIdValid(std::size_t id) const = 0;
+};
 
 }  // namespace tai
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIADAPTERHOST_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_WRAPPER_INTERFACE_H_

@@ -16,12 +16,12 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIATTRIBUTE_H_
-#define STRATUM_HAL_LIB_TAI_TAIATTRIBUTE_H_
+#ifndef STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
+#define STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
 
 #include <string>
 
-#include "taimetadata.h"
+#include "external/com_github_oopt_tai/taimetadata.h"
 
 namespace stratum {
 namespace hal {
@@ -35,7 +35,6 @@ namespace tai {
  * and how to create this data. So in the constructor, we make correct data
  * creation using tai_metadata_alloc_attr_value and in destructor, we make
  * correct data deleting with tai_metadata_free_attr_value.
- * \note copy constructor can be supported with tai_metadata_deepcopy_attr_value
  */
 class TAIAttribute {
  public:
@@ -52,11 +51,9 @@ class TAIAttribute {
   static tai_serialize_option_t DefaultDeserializeOption();
   static TAIAttribute InvalidAttributeObject();
 
-  // delete copy (can be supported but no need for now)
-  TAIAttribute(const TAIAttribute&) = delete;
-  TAIAttribute& operator=(const TAIAttribute&) = delete;
+  TAIAttribute(const TAIAttribute& src);
+  TAIAttribute& operator=(const TAIAttribute& src);
 
-  // only move
   TAIAttribute(TAIAttribute&&) = default;
   TAIAttribute& operator=(TAIAttribute&&) = default;
 
@@ -69,4 +66,4 @@ class TAIAttribute {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIATTRIBUTE_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_

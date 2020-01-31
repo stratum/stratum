@@ -2613,7 +2613,6 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     auto poll_functor = [decimal_val](const GnmiEvent& /*event*/,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
-
       return SendResponse(GetResponse(path, decimal_val), stream);
     };
     node->SetOnPollHandler(poll_functor)

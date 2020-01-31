@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/tai/networkinterface.h"
+#include "stratum/hal/lib/tai/network_interface.h"
 
 namespace stratum {
 namespace hal {

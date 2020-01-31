@@ -15,38 +15,35 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_TAI_TEST_TAI_WRAPPER_MOCK_H_
+#define STRATUM_HAL_LIB_TAI_TEST_TAI_WRAPPER_MOCK_H_
 
-#ifndef STRATUM_HAL_LIB_TAI_TYPESCONVERTER_H_
-#define STRATUM_HAL_LIB_TAI_TYPESCONVERTER_H_
+#include <memory>
 
-#include <string>
+#include "stratum/hal/lib/tai/tai_wrapper_interface.h"
 
-#include "gnmi/gnmi.pb.h"
-#include "inc/taitypes.h"
+#include "gmock/gmock.h"
+
 
 namespace stratum {
 namespace hal {
 namespace tai {
 
-/*!
- * \brief The TypesConverter class should take responsibility for the
- * transformation of gNMI values to TAI and vice-versa
- * \note class is designed to be just a methods/constants container and can't be
- * inherited
- */
-class TypesConverter final {
+class tai_wrapper_mock : public TAIWrapperInterface {
  public:
-  TypesConverter() = delete;
+  MOCK_CONST_METHOD1(GetModule, std::weak_ptr<Module>(std::size_t index));
 
-  static ::google::protobuf::uint64 HertzToMegahertz(tai_uint64_t hertz);
-  static tai_uint64_t MegahertzToHertz(google::protobuf::uint64 megahertz);
+  MOCK_CONST_METHOD1(GetObject,
+                     std::weak_ptr<TAIObject>(const TAIPath& objectPath));
+  MOCK_CONST_METHOD1(GetObject,
+                     std::weak_ptr<TAIObject>(const TAIPathItem& pathItem));
 
- private:
-  static constexpr uint kMegahertzInHertz = 1000000;
+  MOCK_CONST_METHOD1(IsObjectValid, bool(const TAIPath& path));
+  MOCK_CONST_METHOD1(IsModuleIdValid, bool(std::size_t id));
 };
 
 }  // namespace tai
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TYPESCONVERTER_H_
+#endif  // STRATUM_HAL_LIB_TAI_TEST_TAI_WRAPPER_MOCK_H_

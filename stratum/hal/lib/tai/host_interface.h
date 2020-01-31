@@ -16,12 +16,12 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_HOSTINTERFACE_H_
-#define STRATUM_HAL_LIB_TAI_HOSTINTERFACE_H_
+#ifndef STRATUM_HAL_LIB_TAI_HOST_INTERFACE_H_
+#define STRATUM_HAL_LIB_TAI_HOST_INTERFACE_H_
 
 #include <string>
 
-#include "stratum/hal/lib/tai/taiobject.h"
+#include "stratum/hal/lib/tai/tai_object.h"
 
 namespace stratum {
 namespace hal {
@@ -31,7 +31,7 @@ namespace tai {
  * \brief The HostInterface class represent TAI host interface that connects to
  * ASIC chip. A host interface object represents an interface between an optical
  * module(the hardware) and the host system, sometimes called client interfaces
- * (in our case this is TAIAdapterHost).
+ * (in our case this is TAIWrapper).
  * \note the HostInterface object should be created only in Module class
  */
 class HostInterface final : public TAIObject {
@@ -54,4 +54,4 @@ class HostInterface final : public TAIObject {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_HOSTINTERFACE_H_
+#endif  // STRATUM_HAL_LIB_TAI_HOST_INTERFACE_H_

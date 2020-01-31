@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
-#define STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
+#ifndef STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H_
+#define STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H_
 
 #include "gnmi/gnmi.pb.h"
 
@@ -74,7 +74,7 @@ class DecimalTypesMatcher {
 template <typename DecimalType>
 class TypedDecimalInitializer final : public DecimalTypesMatcher<DecimalType> {
  public:
-   // Create from the supported decimal type.
+  // Create from the supported decimal type.
   TypedDecimalInitializer(const DecimalDigits& digits,
                           const DecimalPrecision& precision)
     : digits_{ digits }, precision_{ precision } {}
@@ -84,28 +84,30 @@ class TypedDecimalInitializer final : public DecimalTypesMatcher<DecimalType> {
   TypedDecimalInitializer(TypedDecimalInitializer&&) = default;
 
   // Default move construction.
-  TypedDecimalInitializer& operator = (const TypedDecimalInitializer&) = default;
+  TypedDecimalInitializer& operator = (const TypedDecimalInitializer&)
+      = default;
   TypedDecimalInitializer& operator = (TypedDecimalInitializer&&) = default;
 
-   // Default destruction.
+  // Default destruction.
   ~TypedDecimalInitializer() = default;
   // Get a value copy of stack-allocated DecimalType value with given params.
   DecimalType Init() const {
     DecimalType result;
-    SetFields(result);
+    SetFields(&result);
     return result;
   }
   // Get heap-allocated DecimalType value with given params.
   DecimalType* InitAllocated() const {
     DecimalType* result = new DecimalType;
-    SetFields(*result);
+    SetFields(result);
     return result;
   }
 
  private:
-  void SetFields(DecimalType& out) const {
-    out.set_digits(digits_);
-    out.set_precision(precision_);
+  void SetFields(DecimalType* out) const {
+    assert(out != nullptr);
+    out->set_digits(digits_);
+    out->set_precision(precision_);
   }
 
  private:
@@ -125,6 +127,9 @@ template <typename DecimalType>
 class TypedDecimalComparable final : public DecimalTypesMatcher<DecimalType> {
  public:
   // Create from the supported decimal type.
+  // This class instantiation should work implicitly. See
+  // \class TypedDecimalComparator usage examples.
+  // NOLINTNEXTLINE(runtime/explicit)
   TypedDecimalComparable(const DecimalType& value)
     : digits_{ value.digits() }, precision_{ value.precision() } {}
 
@@ -136,7 +141,7 @@ class TypedDecimalComparable final : public DecimalTypesMatcher<DecimalType> {
   TypedDecimalComparable& operator = (const TypedDecimalComparable&) = default;
   TypedDecimalComparable& operator = (TypedDecimalComparable&&) = default;
 
-   // Default destruction.
+  // Default destruction.
   ~TypedDecimalComparable() = default;
 
   // Get digits.
@@ -179,6 +184,6 @@ class TypedDecimalComparator final {
   }
 };
 
-} // namespace stratum
+}  // namespace stratum
 
-#endif // STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H
+#endif  // STRATUM_HAL_LIB_COMMON_DECIMAL_TYPES_UTILS_H_

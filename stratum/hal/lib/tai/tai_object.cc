@@ -16,7 +16,7 @@
  */
 
 
-#include "stratum/hal/lib/tai/taiobject.h"
+#include "stratum/hal/lib/tai/tai_object.h"
 
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
@@ -30,7 +30,6 @@ namespace tai {
 TAIObject::TAIObject(const tai_api_method_table_t& api) : api_(api) {}
 
 const tai_attr_metadata_t* TAIObject::GetMetadata(tai_attr_id_t attr_id) const {
-  LOG(INFO) << __FUNCTION__;
   const tai_object_type_t kObjectType = GetObjectType();
   if (kObjectType == TAI_OBJECT_TYPE_NULL) return nullptr;
 
@@ -38,7 +37,6 @@ const tai_attr_metadata_t* TAIObject::GetMetadata(tai_attr_id_t attr_id) const {
       tai_metadata_get_attr_metadata(kObjectType, attr_id);
   if (!meta) LOG(ERROR) << "Metadata not found";
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return meta;
 }
 
@@ -47,12 +45,10 @@ const tai_attr_metadata_t* TAIObject::GetMetadata(tai_attr_id_t attr_id) const {
  */
 tai_object_type_t TAIObject::GetObjectType() const {
   const tai_object_type_t kObjectType = tai_object_type_query(id_);
-  LOG(INFO) << __FUNCTION__;
   if (kObjectType == TAI_OBJECT_TYPE_NULL) {
     LOG(ERROR) << "TAIObject type isn't valid.";
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return kObjectType;
 }
 
@@ -65,7 +61,6 @@ tai_object_id_t TAIObject::GetId() const { return id_; }
  */
 TAIAttribute TAIObject::GetAlocatedAttributeObject(
     tai_attr_id_t attr_id) const {
-  LOG(INFO) << __FUNCTION__;
   if (attr_id == TAI_INVALID_ATTRIBUTE_ID) {
     return TAIAttribute::InvalidAttributeObject();
   }
@@ -75,7 +70,6 @@ TAIAttribute TAIObject::GetAlocatedAttributeObject(
     return TAIAttribute::InvalidAttributeObject();
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return {attr_id, kMeta};
 }
 
@@ -85,7 +79,6 @@ TAIAttribute TAIObject::GetAlocatedAttributeObject(
  */
 TAIAttribute TAIObject::GetAlocatedAttributeObject(
     const std::string attr_name) const {
-  LOG(INFO) << __FUNCTION__;
   if (attr_name.empty()) {
     LOG(WARNING) << "Parameter \"attr_name\" is empty";
     TAIAttribute::InvalidAttributeObject();
@@ -97,7 +90,6 @@ TAIAttribute TAIObject::GetAlocatedAttributeObject(
     TAIAttribute::InvalidAttributeObject();
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return GetAlocatedAttributeObject(static_cast<tai_attr_id_t>(attr_id));
 }
 
@@ -108,7 +100,6 @@ TAIAttribute TAIObject::GetAlocatedAttributeObject(
  */
 TAIAttribute TAIObject::GetAttribute(
     tai_attr_id_t attr_id, tai_status_t* return_status) const {
-  LOG(INFO) << __FUNCTION__;
   TAIAttribute attr = GetAlocatedAttributeObject(attr_id);
   if (!attr.IsValid()) {
     LOG(ERROR) << "Failed to allocate attr value";
@@ -134,7 +125,6 @@ TAIAttribute TAIObject::GetAttribute(
 
   if (return_status) *return_status = ret;
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return attr;
 }
 
@@ -144,7 +134,6 @@ TAIAttribute TAIObject::GetAttribute(
  * \return TAI_STATUS_SUCCESS if success else return some of TAI_STATUS_CODE
  */
 tai_status_t TAIObject::SetAttribute(const tai_attribute_t *attr) const {
-  LOG(INFO) << __FUNCTION__;
   if (!attr) {
     LOG(ERROR) << "Failed to set attribute";
     return TAI_STATUS_FAILURE;
@@ -154,7 +143,6 @@ tai_status_t TAIObject::SetAttribute(const tai_attribute_t *attr) const {
 
   if (ret < 0) LOG(ERROR) << "Failed to set attribute. error code: " << ret;
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return ret;
 }
 
@@ -163,7 +151,6 @@ tai_status_t TAIObject::SetAttribute(const tai_attribute_t *attr) const {
  * string to concrete attribute id or \return -1
  */
 int64_t TAIObject::DeserializeAttrName(const std::string& attr_name) const {
-  LOG(INFO) << __FUNCTION__;
   if (attr_name.empty()) {
     LOG(ERROR) << "Invalid input parameter";
     return -1;
@@ -184,7 +171,6 @@ int64_t TAIObject::DeserializeAttrName(const std::string& attr_name) const {
     return -1;
   }
 
-  LOG(INFO) << __FUNCTION__ << " end";
   return kMeta->attrid;
 }
 

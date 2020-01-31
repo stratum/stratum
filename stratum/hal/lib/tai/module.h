@@ -21,8 +21,9 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
-#include "stratum/hal/lib/tai/taiobject.h"
+#include "stratum/hal/lib/tai/tai_object.h"
 
 namespace stratum {
 namespace hal {
@@ -34,7 +35,7 @@ class NetworkInterface;
 /*!
  * \brief The Module class represents TAI module object (an optical module
  * itself) that contains TAI host and network interfaces
- * \note the Module object should be created only in TAIAdapterHost class
+ * \note the Module object should be created only in TAIWrapper class
  */
 class Module final : public TAIObject {
  public:

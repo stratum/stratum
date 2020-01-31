@@ -16,12 +16,12 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_NETWORKINTERFACE_H_
-#define STRATUM_HAL_LIB_TAI_NETWORKINTERFACE_H_
+#ifndef STRATUM_HAL_LIB_TAI_NETWORK_INTERFACE_H_
+#define STRATUM_HAL_LIB_TAI_NETWORK_INTERFACE_H_
 
 #include <string>
 
-#include "stratum/hal/lib/tai/taiobject.h"
+#include "stratum/hal/lib/tai/tai_object.h"
 
 namespace stratum {
 namespace hal {
@@ -53,4 +53,4 @@ class NetworkInterface final : public TAIObject {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_NETWORKINTERFACE_H_
+#endif  // STRATUM_HAL_LIB_TAI_NETWORK_INTERFACE_H_
