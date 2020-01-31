@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "stratum/hal/lib/tai/tai_object.h"
 

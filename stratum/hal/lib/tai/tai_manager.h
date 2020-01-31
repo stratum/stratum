@@ -16,10 +16,11 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIMANAGER_H_
-#define STRATUM_HAL_LIB_TAI_TAIMANAGER_H_
+#ifndef STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_
+#define STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_
 
 #include <utility>
+#include <memory>
 
 #include "stratum/hal/lib/tai/tai_wrapper.h"
 
@@ -79,4 +80,4 @@ class TAIManager {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIMANAGER_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_MANAGER_H_

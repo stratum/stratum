@@ -72,8 +72,9 @@ namespace dummy_switch {
 
   for (const auto& opticalPort : config.optical_ports()) {
     if (!tai::TAIManager::Instance()->IsObjectValid(
-            tai::TAIPathValidator::NetworkPath({
-                opticalPort.module_location(), opticalPort.netif_location()}))) {
+            tai::TAIPathValidator::NetworkPath(
+                { opticalPort.module_location(),
+                  opticalPort.netif_location()}))) {
       LOG(WARNING) << "Chassis config for optical port with module location: "
                    << opticalPort.module_location() << " and netif location "
                    << opticalPort.netif_location() << " doesn't match "

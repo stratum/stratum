@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "stratum/hal/lib/tai/host_interface.h"
 #include "stratum/hal/lib/tai/network_interface.h"

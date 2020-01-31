@@ -18,8 +18,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "tai.h"
-
 #include "stratum/hal/lib/tai/host_interface.h"
 #include "stratum/hal/lib/tai/module.h"
 #include "stratum/hal/lib/tai/network_interface.h"

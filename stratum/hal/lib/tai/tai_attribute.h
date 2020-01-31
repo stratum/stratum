@@ -16,12 +16,12 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIATTRIBUTE_H_
-#define STRATUM_HAL_LIB_TAI_TAIATTRIBUTE_H_
+#ifndef STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
+#define STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
 
 #include <string>
 
-#include "taimetadata.h"
+#include "external/com_github_oopt_tai/taimetadata.h"
 
 namespace stratum {
 namespace hal {
@@ -69,4 +69,4 @@ class TAIAttribute {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIATTRIBUTE_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_

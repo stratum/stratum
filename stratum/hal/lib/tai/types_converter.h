@@ -16,8 +16,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TYPESCONVERTER_H_
-#define STRATUM_HAL_LIB_TAI_TYPESCONVERTER_H_
+#ifndef STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_
+#define STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_
 
 #include <string>
 
@@ -49,4 +49,4 @@ class TypesConverter final {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TYPESCONVERTER_H_
+#endif  // STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_

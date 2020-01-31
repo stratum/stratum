@@ -16,8 +16,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_HOSTINTERFACE_H_
-#define STRATUM_HAL_LIB_TAI_HOSTINTERFACE_H_
+#ifndef STRATUM_HAL_LIB_TAI_HOST_INTERFACE_H_
+#define STRATUM_HAL_LIB_TAI_HOST_INTERFACE_H_
 
 #include <string>
 
@@ -54,4 +54,4 @@ class HostInterface final : public TAIObject {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_HOSTINTERFACE_H_
+#endif  // STRATUM_HAL_LIB_TAI_HOST_INTERFACE_H_

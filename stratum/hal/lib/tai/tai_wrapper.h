@@ -16,12 +16,13 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIADAPTERHOST_H_
-#define STRATUM_HAL_LIB_TAI_TAIADAPTERHOST_H_
+#ifndef STRATUM_HAL_LIB_TAI_TAI_WRAPPER_H_
+#define STRATUM_HAL_LIB_TAI_TAI_WRAPPER_H_
 
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
 
 #include "stratum/hal/lib/tai/tai_object.h"
 
@@ -110,4 +111,4 @@ class TAIWrapper {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIADAPTERHOST_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_WRAPPER_H_

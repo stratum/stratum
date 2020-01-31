@@ -16,8 +16,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TAIOBJECT_H_
-#define STRATUM_HAL_LIB_TAI_TAIOBJECT_H_
+#ifndef STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
+#define STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
 
 #include <string>
 
@@ -128,4 +128,4 @@ class TAIObject {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAIOBJECT_H_
+#endif  // STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_

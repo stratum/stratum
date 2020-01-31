@@ -465,8 +465,7 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
 
     EXPECT_CALL(switch_, RetrieveValue(_, _, _, _)).WillOnce(DoAll(
         WithArg<2>(Invoke(mockedRetrieve)),
-        Return(::util::OkStatus())
-    ));
+        Return(::util::OkStatus())));
   }
 };
 
@@ -3308,7 +3307,7 @@ TEST_F(YangParseTreeTest, DebugNodesNodePacketIoDebugStringOnPollSuccess) {
 
 // Check if the '/components/component/optical-channel/config/frequency'
 // OnChange action works correctly.
-TEST_F(YangParseTreeTest,
+TEST_F(YangParseTreeOpticalChannelTest,
        ComponentsComponentOpticalChannelConfigFrequencyOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component",
@@ -3329,7 +3328,7 @@ TEST_F(YangParseTreeTest,
 
 // Check if the '/components/component/optical-channel/state/frequency'
 // OnChange action works correctly.
-TEST_F(YangParseTreeTest,
+TEST_F(YangParseTreeOpticalChannelTest,
        ComponentsComponentOpticalChannelStateFrequencyOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component",
@@ -3484,6 +3483,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /instant' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerInstantOnPollSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3508,6 +3508,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /instant' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerInstantOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3532,6 +3533,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /instant' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerInstantOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3607,6 +3609,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /avg' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerAvgOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3654,6 +3657,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /interval' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerIntervalOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3674,6 +3678,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /interval' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerIntervalOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3745,6 +3750,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /max' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerMaxOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3792,6 +3798,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/input-power
 // /max-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerMaxTimeOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3812,6 +3819,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /max-time' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerMaxTimeOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3883,6 +3891,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /min' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerMinOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3930,6 +3939,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /min-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerMinTimeOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3950,6 +3960,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /min-time' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateInputPowerMinTimeOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -3993,6 +4004,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/output-power'
 // OnReplace action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelConfigOutputPowerOnReplaceSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4047,6 +4059,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config
 // /target-output-power' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelConfigTargetOutputPowerOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4080,7 +4093,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/config
 // /target-output-power' OnChange action works correctly.
-TEST_F(YangParseTreeTest,
+TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelConfigTargetOutputPowerOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component",
@@ -4129,6 +4143,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /instant' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerInstantOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4153,6 +4168,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /instant' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerInstantOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4204,6 +4220,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /avg' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerAvgOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4228,6 +4245,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /avg' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerAvgOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4275,6 +4293,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /interval' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerIntervalOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4295,6 +4314,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /interval' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerIntervalOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4342,6 +4362,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /max' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMaxOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4366,6 +4387,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /max' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMaxOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4413,6 +4435,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /max-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMaxTimeOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4433,6 +4456,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /max-time' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMaxTimeOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4480,6 +4504,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /min' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMinOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4504,6 +4529,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /min' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMinOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4551,6 +4577,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /min-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMinTimeOnTimerSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
@@ -4571,6 +4598,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /min-time' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
+       // NOLINTNEXTLINE(whitespace/line_length)
        ComponentsComponentOpticalChannelStateOutputPowerMinTimeOnChangeSuccess_Test) {
   AddSubtreeInterface("dummy-switch-1");
   auto path = GetPath("components")("component", "dummy-switch-1")(
