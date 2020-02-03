@@ -457,7 +457,7 @@ BcmSwitch::~BcmSwitch() {}
             break;
 
           case SetRequest::Request::Port::ValueCase::kFrequency:
-          case SetRequest::Request::Port::ValueCase::kOutputPower:
+          case SetRequest::Request::Port::ValueCase::kTargetOutputPower:
           case SetRequest::Request::Port::ValueCase::kOperationalMode: {
             if (!bcm_chassis_manager_->IsNodePortIdRelatedToTAI(
                     {req.port().node_id(), req.port().port_id()})) {
