@@ -2264,10 +2264,9 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortFrequencyChangedEvent::GetFrequency);
 
-  // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
-        CopyOnWriteChassisConfig* /*config*/) -> ::util::Status {
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
     auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
     if (!typed_value) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
@@ -2282,6 +2281,16 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
                            &LaserFrequency::set_value, uint_val);
     if (status != ::util::OkStatus()) {
       return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_frequency(uint_val);
+            break;
+        }
     }
 
     auto poll_functor = [uint_val](const GnmiEvent& /*event*/,
@@ -2614,10 +2623,9 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
   auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
       node_id, port_id, &PortTargetOutputPowerChangedEvent::GetPower);
 
-  // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
-        CopyOnWriteChassisConfig* /*config*/) -> ::util::Status {
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
     const ::gnmi::TypedValue* typed_value
         = static_cast<const ::gnmi::TypedValue*>(&val);
     if (!typed_value) {
@@ -2634,6 +2642,16 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
                            &OutputPower::set_instant, float_val);
     if (status != ::util::OkStatus()) {
       return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_target_output_power(float_val);
+            break;
+        }
     }
 
     auto poll_functor = [decimal_val](const GnmiEvent& /*event*/,
@@ -2689,10 +2707,9 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortOperationalModeChangedEvent::GetOperationalMode);
 
-  // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
-        CopyOnWriteChassisConfig* /*config*/) -> ::util::Status {
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
     auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
     if (!typed_value) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
@@ -2707,6 +2724,16 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
                            &OperationalMode::set_value, uint_val);
     if (status != ::util::OkStatus()) {
       return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_operational_mode(uint_val);
+            break;
+        }
     }
 
     auto poll_functor = [uint_val](const GnmiEvent& /*event*/,
@@ -2762,10 +2789,9 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortLinePortChangedEvent::GetLinePort);
 
-  // TODO(RNDST-557): Update the chassis config in on_set functor.
   auto on_set_functor = [node_id, port_id, node, tree](
         const ::gnmi::Path& path, const ::google::protobuf::Message& val,
-        CopyOnWriteChassisConfig* /*config*/) -> ::util::Status {
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
     auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
     if (!typed_value) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
@@ -2780,6 +2806,16 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
                            &LinePort::set_value, string_val);
     if (status != ::util::OkStatus()) {
       return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_line_port(string_val);
+            break;
+        }
     }
 
     auto poll_functor = [string_val](const GnmiEvent& /*event*/,
@@ -3277,6 +3313,16 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "component", name)("transceiver")("state")("form-factor")());
   SetUpComponentsComponentTransceiverStateFormFactor(node, tree, node_id,
                                                      port_id);
+}
+
+void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
+    const OpticalPort& optical_port, const NodeConfigParams& node_config,
+    YangParseTree* tree) {
+  const std::string& name = optical_port.name();
+  uint64 node_id = optical_port.node();
+  uint32 port_id = optical_port.id();
+  TreeNode* node =
+      AddSubtreeInterface(name, node_id, port_id, node_config, tree);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("frequency")());
@@ -3285,9 +3331,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("frequency")());
-  // TODO(RNDST-557): replace default initial_frequency with the retried one
-  // from the chassis config.
-  uint64 initial_frequency{ 0 };
+  uint64 initial_frequency{ optical_port.frequency() };
   SetUpComponentsComponentOpticalChannelConfigFrequency(
       initial_frequency, node, tree, node_id, port_id);
 
@@ -3363,9 +3407,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("target-output-power")());
-  // TODO(RNDST-557): replace default initial_output_power with the retried one
-  // from the chassis config.
-  float initial_output_power{ 0 };
+  float initial_output_power{ optical_port.target_output_power() };
   SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
       initial_output_power, node, tree, node_id, port_id);
 
@@ -3382,9 +3424,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("operational-mode")());
-  // TODO(RNDST-557): replace default initial_operational_mode with the
-  // retrieved one from the chassis config.
-  uint64 initial_operational_mode{ 0 };
+  uint64 initial_operational_mode{ optical_port.operational_mode() };
   SetUpComponentsComponentOpticalChannelConfigOperationalMode(
       initial_operational_mode, node, tree, node_id, port_id);
 
@@ -3395,9 +3435,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("line-port")());
-  // TODO(RNDST-557): replace default initial_operational_mode with the
-  // retrieved one from the chassis config.
-  std::string initial_line_port{ "" };
+  const std::string& initial_line_port = optical_port.line_port();
   SetUpComponentsComponentOpticalChannelConfigLinePort(
       initial_line_port, node, tree, node_id, port_id);
 }

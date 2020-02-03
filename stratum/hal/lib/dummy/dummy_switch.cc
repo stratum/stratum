@@ -82,19 +82,15 @@ namespace dummy_switch {
       continue;
     }
 
-    const auto singleton_port = opticalPort.singleton_port();
-    uint64 node_id = singleton_port.node();
-    uint32 port_id = singleton_port.id();
-    std::pair<uint64, uint32> node_port_pair{node_id, port_id};
+    std::pair<uint64, uint32> node_port_pair{ opticalPort.node(),
+                                              opticalPort.id() };
 
     std::pair<uint32, uint32> module_netif_pair = {
         opticalPort.module_location(), opticalPort.netif_location()};
     node_port_id_to_module_netif.emplace(node_port_pair, module_netif_pair);
 
-    int32 slot = singleton_port.slot();
-    int32 port = singleton_port.port();
-    node_port_id_to_slot.emplace(node_port_pair, slot);
-    node_port_id_to_port.emplace(node_port_pair, port);
+    node_port_id_to_slot.emplace(node_port_pair, opticalPort.slot());
+    node_port_id_to_port.emplace(node_port_pair, opticalPort.port());
   }
 
   return ::util::OkStatus();
