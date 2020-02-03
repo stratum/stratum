@@ -316,7 +316,8 @@ namespace dummy_switch {
       }
       case Request::kFrequency:
       case Request::kInputPower:
-      case Request::kOutputPower: {
+      case Request::kOutputPower:
+      case Request::kOperationalMode: {
         const std::pair<uint64, uint32> node_port_id =
             GetNodePortIdByRequestCase(request);
         if (IsNodePortIdRelatedWithTAI(node_port_id)) {
@@ -409,6 +410,9 @@ std::pair<uint64, uint32> DummySwitch::GetNodePortIdByRequestCase(
     case Request::kOutputPower:
       return {request.output_power().node_id(),
               request.output_power().port_id()};
+    case Request::kOperationalMode:
+      return {request.operational_mode().node_id(),
+              request.operational_mode().port_id()};
     default:
       return {};
   }

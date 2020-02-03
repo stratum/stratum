@@ -160,6 +160,83 @@ TEST(TAIManagerTest, GetFrequencyValueWithSuccess_Test) {
             TypesConverter::HertzToMegahertz(kFrequency));
 }
 
+TEST(TAIManagerTest, SetModulationValueWithSuccess_Test) {
+  const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
+  // Set modulation using operational mode field.
+  SetRequest_Request set_request;
+  set_request.mutable_port()->mutable_operational_mode()->set_value(
+      TypesConverter::ModulationToOperationalMode(kModulation));
+  EXPECT_TRUE(TAIManager::IsRequestSupported(set_request));
+
+  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::shared_ptr<TAIObjectMock> object_mock =
+      std::make_shared<TAIObjectMock>();
+
+  tai_attr_metadata_t dummy_tai_metadata = {};
+
+  EXPECT_CALL(*object_mock.get(), SetAttribute(_))
+      .Times(1)
+      .WillOnce(Return(TAI_STATUS_SUCCESS));
+
+  EXPECT_CALL(*object_mock.get(), GetAlocatedAttributeObject(
+      TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT)).Times(1)
+          .WillOnce(Return(TAIAttribute(
+              TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT,
+              &dummy_tai_metadata)));
+
+  EXPECT_CALL(*wrapper.get(),
+              GetObject(TAIPath({{TAI_OBJECT_TYPE_MODULE, 0},
+                                 {TAI_OBJECT_TYPE_NETWORKIF, 1}})))
+      .Times(1)
+      .WillOnce(Return(object_mock));
+
+  std::unique_ptr<TAIManagerTestWrapper> manager =
+      absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
+
+  auto kStatus = manager->SetValue(set_request, {0, 1});
+  EXPECT_TRUE(kStatus.ok());
+}
+
+TEST(TAIManagerTest, GetModulationValueWithSuccess_Test) {
+  tai_attr_metadata_t dummy_tai_metadata = {.objecttype =
+                                                TAI_OBJECT_TYPE_NETWORKIF};
+  dummy_tai_metadata.attrvaluetype = TAI_ATTR_VALUE_TYPE_S32;
+  TAIAttribute dummy_tai_attribute(TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT,
+                                   &dummy_tai_metadata);
+
+  const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
+  dummy_tai_attribute.attr.value.s32 = kModulation;
+
+  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::shared_ptr<TAIObjectMock> object_mock =
+      std::make_shared<TAIObjectMock>();
+
+  EXPECT_CALL(*object_mock.get(), GetAttribute(dummy_tai_attribute.attr.id, _))
+      .WillOnce(DoAll(Invoke([](tai_attr_id_t, tai_status_t* return_status) {
+                        *return_status = TAI_STATUS_SUCCESS;
+                      }),
+                      Return(dummy_tai_attribute)));
+
+  EXPECT_CALL(*wrapper.get(),
+              GetObject(TAIPath({{TAI_OBJECT_TYPE_MODULE, 0},
+                                 {TAI_OBJECT_TYPE_NETWORKIF, 1}})))
+      .Times(1)
+      .WillOnce(Return(object_mock));
+
+  std::unique_ptr<TAIManagerTestWrapper> manager =
+      absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
+
+  DataRequest::Request request(DataRequest::Request::default_instance());
+
+  // Get modulation using operational mode request.
+  request.mutable_operational_mode();
+  auto valueOrStatus = manager->GetValue(request, {0, 1});
+  EXPECT_TRUE(valueOrStatus.ok());
+
+  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie().operational_mode().value(),
+            TypesConverter::ModulationToOperationalMode(kModulation));
+}
+
 TEST(TAIManagerTest, SetOutputPowerValueWithSuccess_Test) {
   SetRequest_Request set_request;
   const float kValue = 12.34f;
