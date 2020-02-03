@@ -32,6 +32,8 @@
 #include "absl/time/clock.h"
 #include "stratum/glue/gtl/map_util.h"
 
+#include "stratum/hal/lib/tai/tai_manager.h"
+
 namespace stratum {
 namespace hal {
 namespace bcm {
@@ -401,6 +403,25 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
+      case DataRequest::Request::kFrequency:
+      case DataRequest::Request::kInputPower:
+      case DataRequest::Request::kOutputPower:
+      case DataRequest::Request::kOperationalMode: {
+        const std::pair<uint64, uint32> node_port_id =
+            bcm_chassis_manager_->GetNodePortIdByRequestCase(req);
+        if (bcm_chassis_manager_->IsNodePortIdRelatedToTAI(node_port_id)) {
+          auto valueOrStatus = tai::TAIManager::Instance().GetValue(
+              req, bcm_chassis_manager_->GetModuleNetworkIds(
+                       node_port_id.first, node_port_id.second));
+          if (valueOrStatus.ok())
+            resp = valueOrStatus.ValueOrDie();
+        } else {
+          status = MAKE_ERROR(ERR_INTERNAL)
+                 << "No related TAI module with current node/port ids";
+        }
+        break;
+      }
+
       default:
         status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
     }
@@ -434,6 +455,27 @@ BcmSwitch::~BcmSwitch() {}
           case SetRequest::Request::Port::ValueCase::kLacpSystemPriority:
           case SetRequest::Request::Port::ValueCase::kHealthIndicator:
             break;
+
+          case SetRequest::Request::Port::ValueCase::kFrequency:
+          case SetRequest::Request::Port::ValueCase::kOutputPower:
+          case SetRequest::Request::Port::ValueCase::kOperationalMode: {
+            if (!bcm_chassis_manager_->IsNodePortIdRelatedToTAI(
+                    {req.port().node_id(), req.port().port_id()})) {
+              if (details) {
+                details->push_back(
+                    MAKE_ERROR(ERR_INTERNAL)
+                    << "No related TAI module with current node/port ids");
+              }
+              break;
+            }
+
+            ::util::Status status = tai::TAIManager::Instance().SetValue(
+                req, bcm_chassis_manager_->GetModuleNetworkIds(
+                         req.port().node_id(), req.port().port_id()));
+            if (!status.ok() && details) details->push_back(status);
+
+            break;
+          }
           default:
             status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
         }

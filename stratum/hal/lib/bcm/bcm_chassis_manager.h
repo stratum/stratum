@@ -155,6 +155,17 @@ class BcmChassisManager : public BcmChassisRoInterface {
                                  PortCounters* pc) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
+  std::pair<uint32, uint32> GetModuleNetworkIds(uint64 node_id,
+                                                uint32 port_id) const;
+
+  std::pair<uint64, uint32> GetNodePortIdByRequestCase(
+      const DataRequest_Request& request) const;
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
+  bool IsNodePortIdRelatedToTAI(
+      const std::pair<uint64, uint32>& node_port_id) const;
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
   // Sets the block state of a trunk member on a node specified by node_id. The
   // id of the member is given by port_id. The ID of the trunk which the port is
   // part of is also given by trunk_id. Note that trunk_id input arg is
@@ -559,6 +570,12 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // later.
   std::map<uint64, std::map<uint32, HealthState>>
       node_id_to_port_id_to_health_state_;
+
+  // Map from Stratum port configs (node_id, port_id) to TAI identifiers
+  // (module_id, netif_id) for the related optical transceiver plugged into that
+  // port.
+  std::map<std::pair<uint64, uint32>, std::pair<uint32, uint32>>
+      node_port_id_to_module_netif;
 
   // Channel for receiving transceiver events from the Phal.
   std::shared_ptr<Channel<PhalInterface::TransceiverEvent>> xcvr_event_channel_;
