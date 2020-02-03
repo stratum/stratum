@@ -3667,9 +3667,18 @@ void YangParseTreePaths::AddAllComponentsName(YangParseTree* tree) {
     return status;
   };  // NOLINT(readability/braces)
 
+  // YANG tree requires all tree nodes to have on-change handler.
+  auto on_change = [tree](const GnmiEvent& event,
+                          const ::gnmi::Path& path,
+                          GnmiSubscribeStream* stream) {
+    // Do nothing be default.
+    return ::util::OkStatus();
+  };
+
   // Add support for all "/components/component/name" paths.
   tree->AddNode(GetPath("components")("component", "*")("name")())
-      ->SetOnPollHandler(on_poll);
+      ->SetOnPollHandler(on_poll)
+      ->SetOnChangeHandler(on_change);
 }
 
 void YangParseTreePaths::AddRoot(YangParseTree* tree) {
