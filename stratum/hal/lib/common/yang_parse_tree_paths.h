@@ -65,6 +65,10 @@ class YangParseTreePaths {
   static void AddSubtreeAllInterfaces(YangParseTree* tree)
       EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
 
+  // Enable /components/component[name=*]/name paths discovering.
+  static void AddAllComponentsName(YangParseTree* tree)
+      EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
+
   // Configure the root element.
   static void AddRoot(YangParseTree* tree)
       EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);

@@ -5032,5 +5032,69 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_EQ(resp.update().update(0).val().string_val(), expected_value);
 }
 
+// Check if the '/components/component/name' OnPoll action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentNameOnPollSuccess_Test) {
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")("name")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that we retrieve the component name.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+}
+
+// Check if the '/components/component/name' OnTimer action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentNameOnTimerSuccess_Test) {
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")("name")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnTimer(path, &resp));
+
+  // Check that we retrieve the component name.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+}
+
+// Check if the '/components/component/config/name'
+// OnPoll action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentConfigNameOnPollSuccess_Test) {
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")("config")(
+      "name")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that we retrieve the component name.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+}
+
+// Check if the '/components/component/config/name'
+// OnTimer action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentConfigNameOnTimerSuccess_Test) {
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")("config")(
+      "name")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnTimer(path, &resp));
+
+  // Check that we retrieve the component name.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+}
+
 }  // namespace hal
 }  // namespace stratum

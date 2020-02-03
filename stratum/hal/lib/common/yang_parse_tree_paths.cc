@@ -2819,8 +2819,8 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
     }
 
     auto poll_functor = [string_val](const GnmiEvent& /*event*/,
-                                   const ::gnmi::Path& path,
-                                   GnmiSubscribeStream* stream) {
+                                     const ::gnmi::Path& path,
+                                     GnmiSubscribeStream* stream) {
       return SendResponse(GetResponse(path, string_val), stream);
     };
     node->SetOnPollHandler(poll_functor)
@@ -2835,6 +2835,33 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
       ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/config/name
+void SetUpComponentsComponentConfigName(
+    const std::string& name, TreeNode* node) {
+  auto poll_functor = [name](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, name), stream);
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/name
+void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
+  auto poll_functor = [name](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, name), stream);
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3321,8 +3348,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
   const std::string& name = optical_port.name();
   uint64 node_id = optical_port.node();
   uint32 port_id = optical_port.id();
-  TreeNode* node =
-      AddSubtreeInterface(name, node_id, port_id, node_config, tree);
+  TreeNode* node{ nullptr };
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("frequency")());
@@ -3438,6 +3464,13 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
   const std::string& initial_line_port = optical_port.line_port();
   SetUpComponentsComponentOpticalChannelConfigLinePort(
       initial_line_port, node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)("config")(
+      "name")());
+  SetUpComponentsComponentConfigName(name, node);
+
+  node = tree->AddNode(GetPath("components")("component", name)("name")());
+  SetUpComponentsComponentName(name, node);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
@@ -3611,6 +3644,32 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
           [tree](const GnmiEvent& event, const ::gnmi::Path& path,
                  GnmiSubscribeStream* stream) { return ::util::OkStatus(); })
       ->SetOnPollHandler(interfaces_on_poll);
+}
+
+void YangParseTreePaths::AddAllComponentsName(YangParseTree* tree) {
+  auto on_poll = [tree](const GnmiEvent& event,
+                        const ::gnmi::Path& path,
+                        GnmiSubscribeStream* stream)
+  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+    // Execute OnPollHandler and send to the stream.
+    auto execute_poll = [&event, &stream](const TreeNode& leaf) {
+      return (leaf.GetOnPollHandler())(event, stream);
+    };
+
+    // Recursively process on-poll.
+    auto status = tree->PerformActionForAllNonWildcardNodes(
+        GetPath("components")("component")(), GetPath("name")(), execute_poll);
+
+    // Notify the client that all nodes have been processed.
+    APPEND_STATUS_IF_ERROR(
+        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+
+    return status;
+  };  // NOLINT(readability/braces)
+
+  // Add support for all "/components/component/name" paths.
+  tree->AddNode(GetPath("components")("component", "*")("name")())
+      ->SetOnPollHandler(on_poll);
 }
 
 void YangParseTreePaths::AddRoot(YangParseTree* tree) {
