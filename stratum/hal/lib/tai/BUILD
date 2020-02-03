@@ -54,7 +54,7 @@ stratum_cc_library(
         "tai_wrapper_interface.h",
     ],
     deps = [
-        "@com_github_oopt_tai//:metatai",
+        "@com_github_tai_implementations//tai_mux:tai-mux",
         # tai_manager.h/.cc dependencies
         "//stratum/lib:utils",
         "//stratum/hal/lib/common:gnmi_events_lib",
@@ -70,14 +70,41 @@ stratum_cc_test(
         "test/tai_wrapper_mock.h",
         "test/tai_test_manager_wrapper.h",
         "test/tai_object_mock.h",
+
+        "tai_manager.cc",
+        "tai_wrapper.cc",
+        "tai_object.cc",
+        "network_interface.cc",
+        "host_interface.cc",
+        "module.cc",
+        "types_converter.cc",
+        "tai_attribute.cc",
+        "tai_wrapper_interface.cc",
+
+        "tai_manager.h",
+        "tai_wrapper.h",
+        "tai_object.h",
+        "network_interface.h",
+        "host_interface.h",
+        "module.h",
+        "types_converter.h",
+        "tai_attribute.h",
+        "tai_wrapper_interface.h",
     ],
 
     deps = [
-        ":tai",
         "//stratum/hal/lib/common:test_main",
-        "//stratum/hal/lib/dummy:dummy_tai",
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
+        
+        "@com_github_oopt_tai//:libmetatai",
+        "@com_github_oopt_tai//:libtai-stub",
+        "@com_github_oopt_tai//:tai_hdrs",
+        "@com_github_oopt_tai//:meta_hdrs",
+        # tai_manager.h/.cc dependencies
+        "//stratum/lib:utils",
+        "//stratum/hal/lib/common:gnmi_events_lib",
+        "//stratum/hal/lib/common:common_cc_proto",
     ]
 )
 
