@@ -282,8 +282,8 @@ TEST(TAIManagerTest, GetOutputPowerValueWithSuccess_Test) {
   tai_attr_metadata_t dummy_tai_metadata = {.objecttype =
                                                 TAI_OBJECT_TYPE_NETWORKIF};
   dummy_tai_metadata.attrvaluetype = TAI_ATTR_VALUE_TYPE_FLT;
-  TAIAttribute dummy_tai_attribute(TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER,
-                                   &dummy_tai_metadata);
+  TAIAttribute dummy_tai_attribute(
+      TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER, &dummy_tai_metadata);
 
   const float kOutputValue = 5.5f;
   dummy_tai_attribute.attr.value.flt = kOutputValue;
