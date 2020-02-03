@@ -4050,7 +4050,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).port().output_power().instant();
+  float result = req.requests(0).port().target_output_power().value();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -4071,7 +4071,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).port().output_power().instant();
+  float result = req.requests(0).port().target_output_power().value();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 

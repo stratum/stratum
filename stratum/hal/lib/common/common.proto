@@ -273,7 +273,7 @@ message InputPower {
   uint64 min_time = 7;
 }
 
-// Target output optical power level of the optical channel, expressed in
+// Current output optical power level of the optical channel, expressed in
 // increments of 0.01 decibel-milliwats.
 //
 // The time-based values are the timestamps in nanoseconds relative to the
@@ -293,6 +293,12 @@ message OutputPower {
   float min = 6;
   // The absolute time at which the minimum value occurred.
   uint64 min_time = 7;
+}
+
+// Target output optical power level of the optical channel, expressed in
+// increments of 0.01 decibel-milliwats.
+message TargetOutputPower {
+  float value = 1;
 }
 
 // NOTE. The name 'LaserFrequency' was chosen to avoid the conflict with
@@ -1305,7 +1311,7 @@ message SetRequest {
         // The new optical channel frequency.
         LaserFrequency frequency = 11;
         // The new optical channel output power.
-        OutputPower output_power = 12;
+        TargetOutputPower target_output_power = 12;
         // The new optical channel operational mode.
         OperationalMode operational_mode = 13;
         // The new optical channel "line port" value.

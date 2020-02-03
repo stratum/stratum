@@ -2638,8 +2638,8 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     float float_val = Decimal64ValueToFloat(decimal_val);
 
     auto status = SetValue(node_id, port_id, tree,
-                           &SetRequest::Request::Port::mutable_output_power,
-                           &OutputPower::set_instant, float_val);
+        &SetRequest::Request::Port::mutable_target_output_power,
+        &TargetOutputPower::set_value, float_val);
     if (status != ::util::OkStatus()) {
       return status;
     }
