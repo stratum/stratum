@@ -84,3 +84,28 @@ field_addenda_map {
     type: P4_FIELD_TYPE_ENCAP_TUNNEL_ID
   }
 }
+field_addenda_map {
+  key: "hdr.mpls.label"
+  value {
+    type: P4_FIELD_TYPE_MPLS_LABEL
+  }
+}
+field_addenda_map {
+  key: "hdr.mpls.tc"
+  value {
+    type: P4_FIELD_TYPE_MPLS_TRAFFIC_CLASS
+  }
+}
+field_addenda_map {
+  key: "hdr.mpls.bos"
+  value {
+    type: P4_FIELD_TYPE_MPLS_BOS
+  }
+}
+field_addenda_map {
+  key: "hdr.mpls.ttl"
+  value {
+    type: P4_FIELD_TYPE_MPLS_TTL
+  }
+}
+
