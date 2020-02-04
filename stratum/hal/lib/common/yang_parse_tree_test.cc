@@ -147,6 +147,7 @@ class YangParseTreeTest : public ::testing::Test {
 
     OpticalPort optical_port;
     optical_port.set_name(name);
+    optical_port.set_line_port("line-port-1");
     optical_port.set_node(kInterface1NodeId);
     optical_port.set_id(kInterface1PortId);
 
@@ -4857,179 +4858,76 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
 }
 
-// Check if the '/components/component/optical-channel/config/line_port'
-// OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("line-port")();
-
-  const std::string line_port = "some-value";
-  ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortLinePortChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, line_port),
-                      &resp));
-
-  // Check that the result of the call is what is expected.
-  ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().string_val(), line_port);
-}
-
-// Check if the '/components/component/optical-channel/state/line_port'
-// OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateLinePortOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("line-port")();
-
-  const std::string line_port = "some-value";
-  ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortLinePortChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, line_port),
-                      &resp));
-
-  // Check that the result of the call is what is expected.
-  ASSERT_EQ(resp.update().update_size(), 1);
-  EXPECT_EQ(resp.update().update(0).val().string_val(), line_port);
-}
-
-// Check if the '/components/component/optical-channel/config/line_port'
-// OnUpdate action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnUpdateSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("line-port")();
-
-  const std::string expected_value = "some-value";
-  ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
-
-  SetRequest req;
-  ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
-
-  ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().line_port().value(), expected_value);
-}
-
-// Check if the '/components/component/optical-channel/config/line_port'
-// OnReplace action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnReplaceSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("line-port")();
-
-  const std::string expected_value = "some-value";
-  ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
-
-  SetRequest req;
-  ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
-
-  ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().line_port().value(), expected_value);
-}
-
-// Check if the '/components/component/optical-channel/config/line_port'
-// OnPoll action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("line-port")();
-
-  // Set some value to config/ node.
-
-  const std::string expected_value = "some-value";
-  ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
-
-  SetRequest req;
-  ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
-
-  // Retrieve value from config/ node.
-
-  ::gnmi::SubscribeResponse resp;
-  ASSERT_OK(ExecuteOnPoll(path, &resp));
-
-  ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), expected_value);
-}
-
-// Check if the '/components/component/optical-channel/config/line_port'
-// OnTimer action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("line-port")();
-
-  const std::string expected_value = "some-value";
-  ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
-
-  // Set value to node.
-  SetRequest req;
-  ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
-
-  // Retrieve the value that has been set.
-  ::gnmi::SubscribeResponse resp;
-  ASSERT_OK(ExecuteOnTimer(path, &resp));
-
-  // Check that we retrieve what we set.
-  ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), expected_value);
-}
-
-// Check if the '/components/component/optical-channel/state/line_port'
+// Check if the '/components/component/optical-channel/state/line-port'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        ComponentsComponentOpticalChannelStateLinePortOnPollSuccess_Test) {
+  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
   AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("line-port")();
+  auto path = GetPath("components")("component", "dummy-switch-1")(
+      "optical-channel")("state")("line-port")();
 
-  const std::string expected_value = "some-value";
-
-  // Mock switch->RetrieveValue() call.
-  SubstituteRetrieveValue(&DataResponse::mutable_line_port,
-                          &LinePort::set_value,
-                          expected_value);
-
-  // Retrieve the value that has been mocked.
+  // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
 
-  // Check that we retrieve what we mocked.
+  // Check that we retrieve the component line-port.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), expected_value);
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "line-port-1");
 }
 
-// Check if the '/components/component/optical-channel/state/line_port'
+// Check if the '/components/component/optical-channel/state/line-port'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        ComponentsComponentOpticalChannelStateLinePortOnTimerSuccess_Test) {
+  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
   AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("line-port")();
+  auto path = GetPath("components")("component", "dummy-switch-1")(
+      "optical-channel")("state")("line-port")();
 
-  const std::string expected_value = "some-value";
-
-  // Mock switch->RetrieveValue() call.
-  SubstituteRetrieveValue(&DataResponse::mutable_line_port,
-                          &LinePort::set_value,
-                          expected_value);
-
-  // Retrieve the value that has been mocked.
+  // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
 
-  // Check that we retrieve what we mocked.
+  // Check that we retrieve the component line-port.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), expected_value);
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "line-port-1");
+}
+
+// Check if the '/components/component/optical-channel/config/line-port'
+// OnPoll action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentOpticalChannelConfigLinePortOnPollSuccess_Test) {
+  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")(
+      "optical-channel")("config")("line-port")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that we retrieve the component line-port.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "line-port-1");
+}
+
+// Check if the '/components/component/optical-channel/config/line-port'
+// OnTimer action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentOpticalChannelConfigLinePortOnTimerSuccess_Test) {
+  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")(
+      "optical-channel")("config")("line-port")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnTimer(path, &resp));
+
+  // Check that we retrieve the component line-port.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "line-port-1");
 }
 
 // Check if the '/components/component/name' OnPoll action works correctly.

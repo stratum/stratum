@@ -314,11 +314,6 @@ message OperationalMode {
   uint64 value = 1;
 }
 
-// Optical channel line port value.
-message LinePort {
-  string value = 1;
-}
-
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
   // Per port hash config. Most of the hash configuration is given per node.
@@ -1246,7 +1241,6 @@ message DataRequest {
       Port input_power = 20;
       Port output_power = 21;
       Port operational_mode = 22;
-      Port line_port = 23;
     }
   }
   repeated Request requests = 1;
@@ -1280,7 +1274,6 @@ message DataResponse {
     InputPower input_power = 20;
     OutputPower output_power = 21;
     OperationalMode operational_mode = 22;
-    LinePort line_port = 23;
   }
 }
 
@@ -1314,8 +1307,6 @@ message SetRequest {
         TargetOutputPower target_output_power = 12;
         // The new optical channel operational mode.
         OperationalMode operational_mode = 13;
-        // The new optical channel "line port" value.
-        LinePort line_port = 14;
       }
     }
     // Data required to set info for a specific node.
