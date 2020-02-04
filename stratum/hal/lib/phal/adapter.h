@@ -31,7 +31,7 @@ namespace hal {
 namespace phal {
 
 // This is the basic interface for attribute database adapters.
-// TODO: extend if necessary.
+// TODO(max): extend if necessary.
 class Adapter {
  public:
   // Construct a new Adapter to the database given.

@@ -16,7 +16,6 @@
 #include "stratum/hal/lib/phal/onlp/onlp_phal.h"
 
 #include <string>
-#include <thread>
 
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"

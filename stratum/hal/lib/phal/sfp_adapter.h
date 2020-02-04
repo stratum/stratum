@@ -19,7 +19,8 @@
 #define STRATUM_HAL_LIB_PHAL_SFP_ADAPTER_H_
 
 #include <memory>
-#include <thread>
+#include <thread>  // NOLINT
+#include <vector>
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"

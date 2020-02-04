@@ -27,6 +27,8 @@
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/lib/macros.h"
 
+DECLARE_int32(onlp_polling_interval_ms);
+
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -54,7 +56,8 @@ class OnlpPhalTest : public ::testing::Test {
     onlp_sfp_info.hdr.status = ONLP_OID_STATUS_FLAG_PRESENT;
     onlp_sfp_info.sff.module_type = SFF_MODULE_TYPE_40G_BASE_CR4;
     onlp_sfp_info.sff.sfp_type = SFF_SFP_TYPE_QSFP;
-    strcpy(onlp_sfp_info.sff.vendor, "sfp-vendor-name");
+    snprintf(onlp_sfp_info.sff.vendor, sizeof(onlp_sfp_info.sff.vendor),
+             "sfp-vendor-name");
     SfpInfo sfp1_info(onlp_sfp_info);
     onlp_sfp_info.hdr.id = ONLP_SFP_ID_CREATE(2);
     SfpInfo sfp2_info(onlp_sfp_info);
@@ -84,7 +87,8 @@ class OnlpPhalTest : public ::testing::Test {
     // CreateSingleton calls Initialize()
     onlp_phal_ = OnlpPhal::CreateSingleton(onlp_wrapper_mock_.get());
 
-    absl::SleepFor(absl::Milliseconds(500));
+    // Wait a bit so that the Onlp event handler can pick up the present state.
+    absl::SleepFor(absl::Milliseconds(FLAGS_onlp_polling_interval_ms + 100));
   }
 
   void TearDown() override { onlp_phal_->Shutdown(); }

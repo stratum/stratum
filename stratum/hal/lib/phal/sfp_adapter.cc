@@ -17,6 +17,7 @@
 #include "stratum/hal/lib/phal/sfp_adapter.h"
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "stratum/glue/status/status.h"
@@ -175,9 +176,10 @@ SfpAdapter::~SfpAdapter() {
       }
       absl::WriterMutexLock l(&subscribers_lock_);
       // Notify all subscribers.
-      VLOG(2) << "One shot Transceiver_event { slot: " << slot
-              << ", port: " << port_idx << ", state: " << HwState_Name(state)
-              << " } to " << subscribers_.size() << " subscribers";
+      VLOG(2) << "One shot Transceiver_event { slot: " << slot + 1
+              << ", port: " << port_idx + 1
+              << ", state: " << HwState_Name(state) << " } to "
+              << subscribers_.size() << " subscribers";
       PhalInterface::TransceiverEvent event{slot + 1, port_idx + 1, state};
       for (auto& subscriber : subscribers_) {
         // Short timeout and no error handling.
@@ -197,12 +199,12 @@ SfpAdapter::~SfpAdapter() {
   CHECK(reader->Read(&last_phal_db_update, absl::InfiniteDuration()).ok());
   PhalDB phal_db_update;
   while (true) {
+    // Read until channel is closed on shutdown.
     auto status = reader->Read(&phal_db_update, absl::InfiniteDuration());
     if (status.error_code() == ERR_CANCELLED) {
       return ::util::OkStatus();
-    } else {
-      return status;
-    };
+    }
+    RETURN_IF_ERROR(status);
 
     VLOG(2) << "SfpAdapter: attribute Db transceiver update: "
             << phal_db_update.ShortDebugString();
@@ -222,9 +224,10 @@ SfpAdapter::~SfpAdapter() {
         }
         absl::WriterMutexLock l(&subscribers_lock_);
         // Notify all subscribers.
-        VLOG(2) << "Sending transceiver_event { slot: " << slot
-                << ", port: " << port_idx << ", state: " << HwState_Name(state)
-                << " } to " << subscribers_.size() << " subscribers";
+        VLOG(2) << "Sending transceiver_event { slot: " << slot + 1
+                << ", port: " << port_idx + 1
+                << ", state: " << HwState_Name(state) << " } to "
+                << subscribers_.size() << " subscribers";
         PhalInterface::TransceiverEvent event{slot + 1, port_idx + 1, state};
         for (auto& subscriber : subscribers_) {
           // Short timeout and no error handling.

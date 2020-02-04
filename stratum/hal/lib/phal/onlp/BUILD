@@ -367,7 +367,6 @@ stratum_cc_library(
     deps = [
         ":onlp_event_handler",
         ":onlp_sfp_configurator",
-        # ":onlp_sfp_datasource",
         "//stratum/lib:macros",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",

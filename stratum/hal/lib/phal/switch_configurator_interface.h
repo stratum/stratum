@@ -15,8 +15,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
-#define STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
+#ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
+#define STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
 
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
@@ -44,4 +44,4 @@ class SwitchConfiguratorInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
+#endif  // STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_

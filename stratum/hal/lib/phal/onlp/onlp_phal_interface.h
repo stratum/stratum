@@ -21,7 +21,6 @@
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-// #include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
 
 namespace stratum {
