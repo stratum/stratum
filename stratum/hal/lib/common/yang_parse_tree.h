@@ -415,6 +415,10 @@ class YangParseTree {
                                         const NodeConfigParams& node_config)
       EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
   // Add supported leaf handles for one particular interface like xe-1/1/1.
+  void AddSubtreeInterfaceFromOptical(const OpticalPort& optical,
+                                      const NodeConfigParams& node_config)
+      EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+  // Add supported leaf handles for one particular interface like xe-1/1/1.
   void AddSubtreeInterfaceFromTrunk(const std::string& name, uint64 node_id,
                                     uint32 port_id,
                                     const NodeConfigParams& node_config)
@@ -422,6 +426,8 @@ class YangParseTree {
   // Add supported leaf handles for the case of interfaces[name=*] (all known
   // interfaces).
   void AddSubtreeAllInterfaces() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+  // Enable /components/component[name=*]/name paths discovering.
+  void AddAllComponentsName() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
   // Add supported leaf handles for a node.
   void AddSubtreeNode(const Node& node)

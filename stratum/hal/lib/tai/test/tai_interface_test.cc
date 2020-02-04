@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 
-
 /*
   TAIInterfaceTest testing all TAI related classes like TAIWrapper, Module,
   HostInterface and NetworkInterface tests is based on TAI stub
+
+  Each test should wait for some time(in our case this is 200 milliseconds) for
+  modules initialization in a different thread
 */
 
 #include "gmock/gmock.h"
@@ -57,6 +59,10 @@ std::ostream& operator<<(std::ostream& os, const tai_param& dt) {
 /************************** TAIWrapperTest ********************************/
 class TAIWrapperTest : public ::testing::Test {
  protected:
+  void SetUp() override {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  }
+
   TAIWrapper wrapper_;
 };
 
@@ -173,6 +179,10 @@ TEST_F(TAIWrapperTest, TaiGetObjectByPath_Test) {
 /**************************** TAIModuleTest ***********************************/
 class TAIModuleTest : public ::testing::Test {
  protected:
+  void SetUp() override {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  }
+
   TAIWrapper wrapper_;
 };
 
@@ -201,8 +211,7 @@ TEST_F(TAIModuleTest, TaiModuleSetAttributeByName_Test) {
   std::string result{"down"};
   tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
   TAIAttribute attribute = module->GetAlocatedAttributeObject("admin-status");
-  int ret = tai_deserialize_attribute_value(result.c_str(),
-                                            attribute.kMeta,
+  int ret = tai_deserialize_attribute_value(result.c_str(), attribute.kMeta,
                                             &attribute.attr.value, &option);
   EXPECT_GE(ret, 0);
   int stat = module->SetAttribute(&attribute.attr);
@@ -216,6 +225,11 @@ TEST_F(TAIModuleTest, TaiModuleSetAttributeByName_Test) {
 
 /************************** TAIHostInterfaceTest ******************************/
 class TAIHostInterfaceTest : public ::testing::TestWithParam<tai_param> {
+ protected:
+  void SetUp() override {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  }
+
  public:
   static std::vector<tai_param> host_parameters() {
     return {{TAI_HOST_INTERFACE_ATTR_SIGNAL_RATE, "signal-rate", "100-gbe",
@@ -276,6 +290,11 @@ TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributeByName_Test) {
 
 /************************** TAINetworkInterfaceTest ***************************/
 class TAINetworkInterfaceTest : public ::testing::TestWithParam<tai_param> {
+ protected:
+  void SetUp() override {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  }
+
  public:
   static std::vector<tai_param> network_parameters() {
     return {

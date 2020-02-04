@@ -156,6 +156,7 @@ stratum_cc_library(
         ":bcm_sdk_interface",
         ":bcm_serdes_db_manager",
         ":utils",
+        "//stratum/hal/lib/tai:tai",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",

@@ -273,7 +273,7 @@ message InputPower {
   uint64 min_time = 7;
 }
 
-// Target output optical power level of the optical channel, expressed in
+// Current output optical power level of the optical channel, expressed in
 // increments of 0.01 decibel-milliwats.
 //
 // The time-based values are the timestamps in nanoseconds relative to the
@@ -295,11 +295,22 @@ message OutputPower {
   uint64 min_time = 7;
 }
 
+// Target output optical power level of the optical channel, expressed in
+// increments of 0.01 decibel-milliwats.
+message TargetOutputPower {
+  float value = 1;
+}
+
 // NOTE. The name 'LaserFrequency' was chosen to avoid the conflict with
 // 'gnmi_publisher.cc:Frequency'.
 //
 // Optical channel frequency in MHz.
 message LaserFrequency {
+  uint64 value = 1;
+}
+
+// Optical channel operational mode.
+message OperationalMode {
   uint64 value = 1;
 }
 
@@ -419,15 +430,34 @@ message SingletonPort {
 
 // OpticalPort uniquely identifies a single physical optical port on a single
 // chassis and all its flow-related and config-related parameters (As
-// SingletonPort)
+// SingletonPort).
 message OpticalPort {
-  SingletonPort singleton_port = 1;
-
-  // module location corresponding to module that the port belongs to.
-  uint32 module_location = 2; // required
-
-  // unique netif location that represents the optical port on the module
-  uint32 netif_location = 3; // required
+  // The unique optical port ID.
+  uint32 id = 1;
+  // An optional arbitrary name for the singleton port. WILL NOT BE PARSED.
+  string name = 2;
+  // The 1-base index of the slot (aka linecard) of the port.
+  int32 slot = 3;
+  // The 1-base index of the optical port on the slot.
+  int32 port = 4;
+  // The 1-base channel index (only if the port is channelized). Absence or zero
+  // means non-channelized.
+  int32 channel = 5;
+  // The id of the corresponding node that the port belongs to.
+  uint64 node = 6;
+  // The module location corresponding to module that the port belongs to.
+  uint32 module_location = 7; // required
+  // The unique netif location that represents the optical port on the module.
+  uint32 netif_location = 8; // required
+  // Optical channel frequency in MHz.
+  uint64 frequency = 9;
+  // Target output optical power level of the optical channel, expressed in
+  // increments of 0.01 decibel-milliwats.
+  float target_output_power = 10;
+  // Optical channel operational mode.
+  uint64 operational_mode = 11;
+  // Optical channel line port value.
+  string line_port = 12;
 }
 
 // TrunkPort uniquely identifies a single trunk port on a single chassis and
@@ -1210,6 +1240,7 @@ message DataRequest {
       Port frequency = 19;
       Port input_power = 20;
       Port output_power = 21;
+      Port operational_mode = 22;
     }
   }
   repeated Request requests = 1;
@@ -1242,6 +1273,7 @@ message DataResponse {
     LaserFrequency frequency = 19;
     InputPower input_power = 20;
     OutputPower output_power = 21;
+    OperationalMode operational_mode = 22;
   }
 }
 
@@ -1272,7 +1304,9 @@ message SetRequest {
         // The new optical channel frequency.
         LaserFrequency frequency = 11;
         // The new optical channel output power.
-        OutputPower output_power = 12;
+        TargetOutputPower target_output_power = 12;
+        // The new optical channel operational mode.
+        OperationalMode operational_mode = 13;
       }
     }
     // Data required to set info for a specific node.

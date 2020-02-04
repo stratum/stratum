@@ -41,6 +41,11 @@ class YangParseTreePaths {
       const SingletonPort& singleton, const NodeConfigParams& node_config,
       YangParseTree* tree) EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
 
+  // Adds all supported paths for the specified singleton interface.
+  static void AddSubtreeInterfaceFromOptical(
+      const OpticalPort& optical_port, const NodeConfigParams& node_config,
+      YangParseTree* tree) EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
+
   // Adds all supported paths for the specified trunk interface.
   static void AddSubtreeInterfaceFromTrunk(const std::string& name,
                                            uint64 node_id, uint32 port_id,
@@ -58,6 +63,10 @@ class YangParseTreePaths {
 
   // Adds all supported wildcard interface-related paths.
   static void AddSubtreeAllInterfaces(YangParseTree* tree)
+      EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
+
+  // Enable /components/component[name=*]/name paths discovering.
+  static void AddAllComponentsName(YangParseTree* tree)
       EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
 
   // Configure the root element.

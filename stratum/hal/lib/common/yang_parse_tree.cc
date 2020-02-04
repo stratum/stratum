@@ -173,20 +173,22 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
     port_id_to_node_id[singleton.id()] = singleton.node();
     singleton_names.insert(singleton.name());
   }
+
+  std::unordered_set<std::string> optical_names;
   for (const auto& optical : change.new_config_.optical_ports()) {
-    SingletonPort singleton = optical.singleton_port();
-    if (singleton_names.count(singleton.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Duplicate singleton port name: " << singleton.name();
+    if (optical_names.count(optical.name())) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate optical port name: "
+          << optical.name();
     }
     const NodeConfigParams& node_config =
-        node_id_to_node[singleton.node()]
-            ? node_id_to_node[singleton.node()]->config_params()
+        node_id_to_node[optical.node()]
+            ? node_id_to_node[optical.node()]->config_params()
             : empty_node_config;
-    AddSubtreeInterfaceFromSingleton(singleton, node_config);
-    port_id_to_node_id[singleton.id()] = singleton.node();
-    singleton_names.insert(singleton.name());
+    AddSubtreeInterfaceFromOptical(optical, node_config);
+    port_id_to_node_id[optical.id()] = optical.node();
+    optical_names.insert(optical.name());
   }
+
   std::unordered_set<std::string> trunk_names;
   for (const auto& trunk : change.new_config_.trunk_ports()) {
     // Find out on which node the trunk is created.
@@ -263,6 +265,7 @@ YangParseTree::YangParseTree(SwitchInterface* switch_interface)
   // The rest of nodes will be added once the config is pushed.
   absl::WriterMutexLock l(&root_access_lock_);
   AddSubtreeAllInterfaces();
+  AddAllComponentsName();
   AddRoot();
 }
 
@@ -346,6 +349,12 @@ void YangParseTree::AddSubtreeInterfaceFromSingleton(
                                                        this);
 }
 
+void YangParseTree::AddSubtreeInterfaceFromOptical(
+    const OpticalPort& optical, const NodeConfigParams& node_config) {
+  YangParseTreePaths::AddSubtreeInterfaceFromOptical(optical, node_config,
+                                                     this);
+}
+
 void YangParseTree::AddSubtreeNode(const Node& node) {
   YangParseTreePaths::AddSubtreeNode(node, this);
 }
@@ -359,6 +368,14 @@ void YangParseTree::AddSubtreeAllInterfaces() {
 
   // Add all nodes defined in YangParseTreePaths class.
   YangParseTreePaths::AddSubtreeAllInterfaces(this);
+}
+
+void YangParseTree::AddAllComponentsName() {
+  // No need to lock the mutex - it is locked by method calling this one.
+
+  // Setup the /components/component[name="*"]/name path to make possible all
+  // components' names retrieval.
+  YangParseTreePaths::AddAllComponentsName(this);
 }
 
 void YangParseTree::AddRoot() {

@@ -82,19 +82,15 @@ namespace dummy_switch {
       continue;
     }
 
-    const auto singleton_port = opticalPort.singleton_port();
-    uint64 node_id = singleton_port.node();
-    uint32 port_id = singleton_port.id();
-    std::pair<uint64, uint32> node_port_pair{node_id, port_id};
+    std::pair<uint64, uint32> node_port_pair{ opticalPort.node(),
+                                              opticalPort.id() };
 
     std::pair<uint32, uint32> module_netif_pair = {
         opticalPort.module_location(), opticalPort.netif_location()};
     node_port_id_to_module_netif.emplace(node_port_pair, module_netif_pair);
 
-    int32 slot = singleton_port.slot();
-    int32 port = singleton_port.port();
-    node_port_id_to_slot.emplace(node_port_pair, slot);
-    node_port_id_to_port.emplace(node_port_pair, port);
+    node_port_id_to_slot.emplace(node_port_pair, opticalPort.slot());
+    node_port_id_to_port.emplace(node_port_pair, opticalPort.port());
   }
 
   return ::util::OkStatus();
@@ -320,7 +316,8 @@ namespace dummy_switch {
       }
       case Request::kFrequency:
       case Request::kInputPower:
-      case Request::kOutputPower: {
+      case Request::kOutputPower:
+      case Request::kOperationalMode: {
         const std::pair<uint64, uint32> node_port_id =
             GetNodePortIdByRequestCase(request);
         if (IsNodePortIdRelatedWithTAI(node_port_id)) {
@@ -413,6 +410,9 @@ std::pair<uint64, uint32> DummySwitch::GetNodePortIdByRequestCase(
     case Request::kOutputPower:
       return {request.output_power().node_id(),
               request.output_power().port_id()};
+    case Request::kOperationalMode:
+      return {request.operational_mode().node_id(),
+              request.operational_mode().port_id()};
     default:
       return {};
   }
@@ -431,8 +431,11 @@ DummySwitch::DummySwitch(PhalInterface* phal_interface,
       chassis_mgr_(chassis_mgr),
       dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
       gnmi_event_writer_(nullptr) {
-        tai::TAIManager::Instance();
-      }
+    // Ensure TAI initialization is as fast as possible because TAI needs some
+    // time to initialize all required modules and objects. This initialization
+    // will be processed in separate thread so the current thread will not wait
+    tai::TAIManager::Instance();
+  }
 
 bool DummySwitch::IsNodePortIdRelatedWithTAI(
     const std::pair<uint64, uint32>& node_port_id) {

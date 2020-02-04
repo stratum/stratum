@@ -20,9 +20,12 @@
 #define STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_
 
 #include <string>
+#include <vector>
+#include <utility>
 
 #include "gnmi/gnmi.pb.h"
 #include "inc/taitypes.h"
+#include "inc/tainetworkif.h"
 
 namespace stratum {
 namespace hal {
@@ -40,9 +43,15 @@ class TypesConverter final {
 
   static ::google::protobuf::uint64 HertzToMegahertz(tai_uint64_t hertz);
   static tai_uint64_t MegahertzToHertz(google::protobuf::uint64 megahertz);
+  static tai_int32_t OperationalModeToModulation(
+      ::google::protobuf::uint64 operational_mode);
+  static ::google::protobuf::uint64 ModulationToOperationalMode(
+      tai_int32_t modulation);
 
  private:
   static constexpr uint kMegahertzInHertz = 1000000;
+  static const std::vector<std::pair<::google::protobuf::uint64, tai_int32_t>>
+      kOperationalModeToModulation;
 };
 
 }  // namespace tai

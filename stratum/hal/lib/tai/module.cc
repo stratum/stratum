@@ -145,6 +145,8 @@ tai_status_t Module::DeserializeAttribute(
   return tai_deserialize_module_attr(attr.c_str(), attr_id, option);
 }
 
+std::string Module::GetLocation() const { return location_; }
+
 }  // namespace tai
 }  // namespace hal
 }  // namespace stratum

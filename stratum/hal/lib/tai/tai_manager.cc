@@ -149,7 +149,12 @@ TAIAttribute TAIManager::SetRequestToTAIAttribute(
     return tai_attribute;
   }
   if (kAttrId == TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER) {
-    tai_attribute.attr.value.flt = request.port().output_power().instant();
+    tai_attribute.attr.value.flt = request.port().target_output_power().value();
+    return tai_attribute;
+  }
+  if (kAttrId == TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT) {
+    tai_attribute.attr.value.s32 = TypesConverter::OperationalModeToModulation(
+        request.port().operational_mode().value());
     return tai_attribute;
   }
 
@@ -166,8 +171,11 @@ tai_attr_id_t TAIManager::SetRequestToTAIAttributeId(
     case SetRequest::Request::Port::ValueCase::kFrequency:
       return TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ;
 
-    case SetRequest::Request::Port::ValueCase::kOutputPower: {
+    case SetRequest::Request::Port::ValueCase::kTargetOutputPower: {
       return TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER;
+    }
+    case SetRequest::Request::Port::ValueCase::kOperationalMode: {
+      return TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT;
     }
     default:
       return TAI_INVALID_ATTRIBUTE_ID;
@@ -189,10 +197,13 @@ tai_attr_id_t TAIManager::GetRequestToTAIAttributeId(
       return TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ;
 
     case DataRequest::Request::kOutputPower:
-      return TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER;
+      return TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER;
 
     case DataRequest::Request::kInputPower:
       return TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER;
+
+    case DataRequest::Request::kOperationalMode:
+      return TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT;
 
     default:
       return TAI_INVALID_ATTRIBUTE_ID;
@@ -218,12 +229,18 @@ DataResponse TAIManager::TaiAttributeToResponse(const TAIAttribute& attribute) {
             TypesConverter::HertzToMegahertz(attribute.attr.value.u64));
         break;
 
-      case TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER:
+      case TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER:
         resp.mutable_output_power()->set_instant(attribute.attr.value.flt);
         break;
 
       case TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER:
         resp.mutable_input_power()->set_instant(attribute.attr.value.flt);
+        break;
+
+      case TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT:
+        resp.mutable_operational_mode()->set_value(
+            TypesConverter::ModulationToOperationalMode(
+                attribute.attr.value.s32));
         break;
 
       default:

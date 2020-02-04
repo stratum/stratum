@@ -32,9 +32,9 @@ namespace tai {
  * with tai_api_query()
  */
 struct tai_api_method_table_t {
-  tai_module_api_t* module_api;
-  tai_host_interface_api_t* hostif_api;
-  tai_network_interface_api_t* netif_api;
+  tai_module_api_t* module_api{nullptr};
+  tai_host_interface_api_t* hostif_api{nullptr};
+  tai_network_interface_api_t* netif_api{nullptr};
 };
 
 /*!

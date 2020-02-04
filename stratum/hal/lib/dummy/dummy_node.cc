@@ -27,24 +27,16 @@ namespace dummy_switch {
 
 ::util::Status DummyNode::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&node_lock_);
-  auto process = [this](const stratum::hal::SingletonPort& singleton_port) {
+  for (auto singleton_port : config.singleton_ports()) {
     uint64 port_id = singleton_port.id();
     uint64 node_id = singleton_port.node();
     if (node_id != id_) {
-      return;
+      continue;
     }
     SingletonPortStatus status;
     status.port_speed.set_speed_bps(singleton_port.speed_bps());
     ports_state_.emplace(port_id, status);
-  };
-
-  std::for_each(config.singleton_ports().cbegin(),
-                config.singleton_ports().cend(), process);
-  std::for_each(config.optical_ports().cbegin(), config.optical_ports().cend(),
-                [process](const stratum::hal::OpticalPort& optical_port) {
-                  process(optical_port.singleton_port());
-                });
-
+  }
   return ::util::OkStatus();
 }
 
