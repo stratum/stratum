@@ -431,8 +431,11 @@ DummySwitch::DummySwitch(PhalInterface* phal_interface,
       chassis_mgr_(chassis_mgr),
       dummy_nodes_(::absl::flat_hash_map<uint64, DummyNode*>()),
       gnmi_event_writer_(nullptr) {
-        tai::TAIManager::Instance();
-      }
+    // Ensure TAI initialization is as fast as possible because TAI needs some
+    // time to initialize all required modules and objects. This initialization
+    // will be processed in separate thread so the current thread will not wait
+    tai::TAIManager::Instance();
+  }
 
 bool DummySwitch::IsNodePortIdRelatedWithTAI(
     const std::pair<uint64, uint32>& node_port_id) {

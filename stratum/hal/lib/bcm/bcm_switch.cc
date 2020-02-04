@@ -45,6 +45,10 @@ BcmSwitch::BcmSwitch(PhalInterface* phal_interface,
       bcm_chassis_manager_(ABSL_DIE_IF_NULL(bcm_chassis_manager)),
       unit_to_bcm_node_(unit_to_bcm_node),
       node_id_to_bcm_node_() {
+  // Ensure TAI initialization is as fast as possible because TAI needs some
+  // time to initialize all required modules and objects. This initialization
+  // will be processed in a separate thread so the current thread will not wait
+  tai::TAIManager::Instance();
   for (auto entry : unit_to_bcm_node_) {
     CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
     CHECK_NE(entry.second, nullptr)

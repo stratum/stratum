@@ -329,7 +329,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_tai_implementations",
             remote = "https://github.com/bohdan-oheruk-plvision/oopt-tai-implementations.git",
-            commit = "9a83a088063279e0e1648787fc562abb0f8e688a",
+            commit = "b9b8aa49484bb118cc63897445eff8ad9bc030d3",
         )
 
 

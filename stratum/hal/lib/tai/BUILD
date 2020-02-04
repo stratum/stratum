@@ -54,7 +54,10 @@ stratum_cc_library(
         "tai_wrapper_interface.h",
     ],
     deps = [
-        "@com_github_tai_implementations//tai_mux:tai-mux",
+        "@com_github_tai_implementations//tai_mux:libtai-mux",
+        "@com_github_oopt_tai//:libmetatai",
+        "@com_github_oopt_tai//:tai_hdrs",
+        "@com_github_oopt_tai//:meta_hdrs",
         # tai_manager.h/.cc dependencies
         "//stratum/lib:utils",
         "//stratum/hal/lib/common:gnmi_events_lib",

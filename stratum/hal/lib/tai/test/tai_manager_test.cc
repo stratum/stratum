@@ -241,7 +241,7 @@ TEST(TAIManagerTest, SetOutputPowerValueWithSuccess_Test) {
   SetRequest_Request set_request;
   const float kValue = 12.34f;
   set_request.clear_port();
-  set_request.mutable_port()->mutable_output_power()->set_instant(kValue);
+  set_request.mutable_port()->mutable_target_output_power()->set_value(kValue);
 
   std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
   std::shared_ptr<TAIObjectMock> object_mock =

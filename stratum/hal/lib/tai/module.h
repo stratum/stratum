@@ -48,6 +48,8 @@ class Module final : public TAIObject {
   std::weak_ptr<HostInterface> GetHostInterface(std::size_t index) const;
   std::weak_ptr<NetworkInterface> GetNetworkInterface(std::size_t index) const;
 
+  std::string GetLocation() const;
+
  private:
   tai_status_t CreateNetif(uint32_t index);
   tai_status_t CreateHostif(uint32_t index);

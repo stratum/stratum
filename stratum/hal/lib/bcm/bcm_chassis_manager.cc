@@ -1337,19 +1337,6 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   }
 
   for (const auto& optical_port : config.optical_ports()) {
-    // check if optical_port with a given module and netif location parameters
-    // is present in TAI adapter
-    if (!tai::TAIManager::Instance().IsObjectValid(
-            tai::TAIPathValidator::NetworkPath(
-                {optical_port.module_location(),
-                 optical_port.netif_location()}))) {
-      LOG(WARNING) << "Chassis config for optical port with module location: "
-                   << optical_port.module_location() << " and netif location "
-                   << optical_port.netif_location() << " doesn't match "
-                   << "with libtai.so vendor definition";
-      continue;
-    }
-
     uint64 node_id = optical_port.node();
     uint32 port_id = optical_port.id();
     std::pair<uint64, uint32> node_port_pair{node_id, port_id};

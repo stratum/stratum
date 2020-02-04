@@ -23,6 +23,7 @@
 #include <vector>
 #include <utility>
 #include <memory>
+#include <thread>  // NOLINT(build/c++11)
 
 #include "stratum/hal/lib/tai/tai_object.h"
 #include "stratum/hal/lib/tai/tai_wrapper_interface.h"
@@ -46,6 +47,7 @@ class TAIWrapper : public TAIWrapperInterface {
   std::weak_ptr<TAIObject> GetObject(const TAIPath& objectPath) const override;
   std::weak_ptr<TAIObject> GetObject(
       const TAIPathItem& pathItem) const override;
+  std::weak_ptr<Module> GetModuleByLocation(const std::string& location) const;
 
   bool IsObjectValid(const TAIPath& path) const override {
     return !GetObject(path).expired();
@@ -53,6 +55,7 @@ class TAIWrapper : public TAIWrapperInterface {
   bool IsModuleIdValid(std::size_t id) const override {
     return modules_.size() > id;
   }
+  void ModulePresenceHandler();
 
  private:
   tai_status_t CreateModule(const std::string& location);
@@ -61,6 +64,14 @@ class TAIWrapper : public TAIWrapperInterface {
   std::vector<std::shared_ptr<Module>> modules_;
   tai_api_method_table_t api_;
   TAIPathValidator path_rule_;
+
+  // thread stops if this value will be set to false.
+  std::atomic<bool> thread_running_{true};
+  // identify is TAI API initilized.
+  std::atomic<bool> api_initialized_{false};
+  // TAI module presence monitoring thread for plug/unplug processing.
+  std::thread presence_monitoring_thread_;
+  mutable std::mutex data_mux_;
 }; /* class TAIWrapper */
 
 }  // namespace tai
