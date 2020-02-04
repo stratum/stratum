@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_H_
 
 #include <functional>
 #include <map>
@@ -28,41 +28,19 @@
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-#include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
-#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_phal_interface.h"
+#include "stratum/hal/lib/phal/onlp/onlp_sfp_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlp_sfp_datasource.h"
+#include "stratum/hal/lib/phal/sfp_adapter.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
-class OnlpPhal;
-
-// TODO(Yi-Tseng): We don't support multiple slot for now,
-// use slot 1 as default slot.
-constexpr int kDefaultSlot = 1;
-
-// Implements a callback for status changes on ONLP SFPs.
-class OnlpPhalSfpEventCallback : public OnlpSfpEventCallback {
- public:
-  // Creates a new OnlpPhalSfpEventCallback that receives callbacks for status
-  // changes that occur for any SFPs.
-  OnlpPhalSfpEventCallback() : onlpphal_(nullptr) {}
-  OnlpPhalSfpEventCallback(const OnlpPhalSfpEventCallback& other) = delete;
-  OnlpPhalSfpEventCallback& operator=(const OnlpPhalSfpEventCallback& other) =
-      delete;
-
-  // Callback for handling SFP status changes - SFP plug/unplug events.
-  ::util::Status HandleStatusChange(const OidInfo& oid_info) override;
-
- private:
-  friend class OnlpPhal;
-  OnlpPhal* onlpphal_;
-};
-
 // Class "OnlpPhal" is an implementation of PhalInterface which is used to
 // send the OnlpPhal events to Stratum.
-class OnlpPhal : public PhalInterface {
+class OnlpPhal final : public OnlpPhalInterface {
  public:
   ~OnlpPhal() override;
 
@@ -83,8 +61,8 @@ class OnlpPhal : public PhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status RegisterSfpConfigurator(
-      int slot, int port, SfpConfigurator* configurator) override;
+  ::util::Status RegisterOnlpEventCallback(OnlpEventCallback* callback)
+      EXCLUSIVE_LOCKS_REQUIRED(config_lock_) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -94,12 +72,6 @@ class OnlpPhal : public PhalInterface {
   // OnlpPhal is neither copyable nor movable.
   OnlpPhal(const OnlpPhal&) = delete;
   OnlpPhal& operator=(const OnlpPhal&) = delete;
-
-  // Write Transceiver Events
-  ::util::Status WriteTransceiverEvent(const TransceiverEvent& event);
-
-  // Handle a sfp status change event
-  ::util::Status HandleTransceiverEvent(const TransceiverEvent& event);
 
  private:
   friend class OnlpPhalCli;
@@ -113,14 +85,6 @@ class OnlpPhal : public PhalInterface {
   // Calls all the one time start initialisations
   ::util::Status Initialize(OnlpInterface* onlp_interface)
       LOCKS_EXCLUDED(config_lock_);
-
-  // Initialize the PhalDB on start up
-  ::util::Status InitializePhalDB() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
-
-  // One time initialization of the OnlpEventHandler. Need to be called after
-  // InitializeOnlpWrapper() completes successfully.
-  ::util::Status InitializeOnlpEventHandler()
-      EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
 
   // One time initialization of the data sources. Need to be called after
   // InitializeOnlpWrapper() completes successfully.
@@ -142,32 +106,22 @@ class OnlpPhal : public PhalInterface {
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
 
-  // Writers to forward the Transceiver events to. They are registered by
-  // external manager classes to receive the SFP Transceiver events. The
-  // managers can be running in different threads. The is sorted based on the
-  // the priority of the TrasnceiverEventWriter intances.
-  std::multiset<TransceiverEventWriter, TransceiverEventWriterComp>
-      transceiver_event_writers_ GUARDED_BY(config_lock_);
-
   // Not owned by this class.
   OnlpInterface* onlp_interface_ GUARDED_BY(config_lock_);
+
   // Owned by the class.
   std::unique_ptr<OnlpEventHandler> onlp_event_handler_
       GUARDED_BY(config_lock_);
+
   // Owned by the class.
   std::unique_ptr<AttributeDatabase> database_ GUARDED_BY(config_lock_);
 
-  // SFP Event Callback
-  std::unique_ptr<OnlpPhalSfpEventCallback> sfp_event_callback_;
-
-  // Map from std::pair<int, int> representing (slot, port) of singleton port
-  // to the vector of sfp datasource id
-  std::map<std::pair<int, int>, OnlpSfpConfigurator*>
-      slot_port_to_configurator_;
+  // Owned by this class.
+  std::unique_ptr<SfpAdapter> sfp_adapter_ GUARDED_BY(config_lock_);
 };
 
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_H_

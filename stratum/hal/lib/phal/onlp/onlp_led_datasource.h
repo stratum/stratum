@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_LED_DATASOURCE_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_LED_DATASOURCE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_LED_DATASOURCE_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_LED_DATASOURCE_H_
 
 #include <memory>
 #include <string>
@@ -128,4 +128,4 @@ class OnlpLedDataSource : public DataSource {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_LED_DATASOURCE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_LED_DATASOURCE_H_

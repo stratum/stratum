@@ -7,7 +7,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/thermal_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_thermal_datasource.h"
 
 #include <cmath>
 #include "stratum/hal/lib/common/common.pb.h"

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
 
 #include <string>
 #include <utility>
@@ -20,12 +20,12 @@
 
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/phal/onlp/fan_datasource.h"
-#include "stratum/hal/lib/phal/onlp/led_datasource.h"
-#include "stratum/hal/lib/phal/onlp/psu_datasource.h"
-#include "stratum/hal/lib/phal/onlp/sfp_configurator.h"
-#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
-#include "stratum/hal/lib/phal/onlp/thermal_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_fan_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_led_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_psu_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_sfp_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlp_sfp_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_thermal_datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 
 namespace stratum {
@@ -35,7 +35,7 @@ namespace onlp {
 
 // Make an instance of OnlpSwitchConfigurator
 ::util::StatusOr<std::unique_ptr<OnlpSwitchConfigurator>>
-OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
+OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
                              OnlpInterface* onlp_interface) {
   // Make sure we've got a valid Onlp Interface
   CHECK_RETURN_IF_FALSE(onlp_interface != nullptr);
@@ -58,24 +58,26 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
   ASSIGN_OR_RETURN(auto oids,
                    onlp_interface_->GetOidList(ONLP_OID_TYPE_FLAG_SFP));
   for (const auto& oid : oids) {
-    auto port = card->add_ports();
-    port->set_port(ONLP_OID_ID_GET(oid));
     ASSIGN_OR_RETURN(const auto sfp_info, onlp_interface_->GetSfpInfo(oid));
+    // Don't add to card yet, because init could fail.
+    PhalCardConfig::Port port;
+    port.set_port(ONLP_OID_ID_GET(oid));
     // See if we've got an sfp type and set the physical port type
     switch (sfp_info.GetSfpType()) {
       case SFP_TYPE_SFP:
-        port->set_physical_port_type(PHYSICAL_PORT_TYPE_SFP_CAGE);
+        port.set_physical_port_type(PHYSICAL_PORT_TYPE_SFP_CAGE);
         break;
       case SFP_TYPE_QSFP:
       case SFP_TYPE_QSFP_PLUS:
       case SFP_TYPE_QSFP28:
-        port->set_physical_port_type(PHYSICAL_PORT_TYPE_QSFP_CAGE);
+        port.set_physical_port_type(PHYSICAL_PORT_TYPE_QSFP_CAGE);
         break;
       default:
-        return MAKE_ERROR(ERR_INTERNAL)
-               << "Unknown SFP type: " << sfp_info.GetSfpType() << ".";
+        LOG(ERROR) << "Unknown SFP type: " << sfp_info.GetSfpType()
+                   << " on port with OID " << oid << ".";
         break;
     }
+    *card->add_ports() = port;
   }
 
   // Handle fans
@@ -312,15 +314,12 @@ OnlpSwitchConfigurator::Make(PhalInterface* phal_interface,
 
       // Create an SFP Configurator
       ASSIGN_OR_RETURN(auto configurator,
-                       OnlpSfpConfigurator::Make(slot, port, datasource, sfp,
-                                                 onlp_interface_));
+                       OnlpSfpConfigurator::Make(datasource, sfp,
+                                                ONLP_SFP_ID_CREATE(port)));
 
-      // Store a reference in onlpphal
-      // Danger: Attribute Database should hold onto this pointer
-      //         until the transceiver group is deleted.... which
-      //         should be never.
-      RETURN_IF_ERROR(phal_interface_->RegisterSfpConfigurator(
-          slot, port, configurator.get()));
+      // Register configurator as callback to ONLP
+      RETURN_IF_ERROR(
+          onlp_phal_interface_->RegisterOnlpEventCallback(configurator.get()));
 
       // Save it in the database
       auto mutable_sfp = sfp->AcquireMutable();

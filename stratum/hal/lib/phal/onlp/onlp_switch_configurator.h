@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_SWITCH_CONFIGURATOR_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_SWITCH_CONFIGURATOR_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SWITCH_CONFIGURATOR_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SWITCH_CONFIGURATOR_H_
 
 #include <map>
 #include <memory>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
+#include "stratum/hal/lib/phal/onlp/onlp_phal_interface.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/switch_configurator.h"
+#include "stratum/hal/lib/phal/switch_configurator_interface.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
-class OnlpSwitchConfigurator : public SwitchConfigurator {
+class OnlpSwitchConfigurator : public SwitchConfiguratorInterface {
  public:
   static ::util::StatusOr<std::unique_ptr<OnlpSwitchConfigurator>> Make(
-      PhalInterface* phal_interface, OnlpInterface* onlp_interface);
+      OnlpPhalInterface* phal_interface, OnlpInterface* onlp_interface);
 
   // Create a default config
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
@@ -72,11 +72,11 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
                             const PhalThermalGroupConfig_Thermal& config);
 
   OnlpSwitchConfigurator() = delete;
-  OnlpSwitchConfigurator(PhalInterface* phal_interface,
+  OnlpSwitchConfigurator(OnlpPhalInterface* phal_interface,
                          OnlpInterface* onlp_interface)
-      : phal_interface_(phal_interface), onlp_interface_(onlp_interface) {}
+      : onlp_phal_interface_(phal_interface), onlp_interface_(onlp_interface) {}
 
-  PhalInterface* phal_interface_;
+  OnlpPhalInterface* onlp_phal_interface_;
   OnlpInterface* onlp_interface_;
   // Default cache policy config
   CachePolicyConfig cache_policy_config_;
@@ -93,4 +93,4 @@ class OnlpSwitchConfigurator : public SwitchConfigurator {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_SWITCH_CONFIGURATOR_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SWITCH_CONFIGURATOR_H_

@@ -26,9 +26,9 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-class SwitchConfigurator {
+class SwitchConfiguratorInterface {
  public:
-  virtual ~SwitchConfigurator() = default;
+  virtual ~SwitchConfiguratorInterface() = default;
 
   // Virtual function to create a default config should the
   // phal_config_path flag not be set.

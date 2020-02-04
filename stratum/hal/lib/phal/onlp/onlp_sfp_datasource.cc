@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_sfp_datasource.h"
 
 #include <cmath>
 #include "stratum/hal/lib/common/common.pb.h"
@@ -93,12 +93,16 @@ OnlpSfpDataSource::OnlpSfpDataSource(int sfp_id,
 }
 
 ::util::Status OnlpSfpDataSource::UpdateValues() {
+  // LOG(ERROR) << "OnlpSfpDataSource::UpdateValues";
+  // return ::util::OkStatus();
+
   ASSIGN_OR_RETURN(SfpInfo sfp_info, onlp_stub_->GetSfpInfo(sfp_oid_));
   // Onlp hw_state always populated.
   sfp_hw_state_ = sfp_info.GetHardwareState();
   // Other attributes are only valid if SFP is present. Return if sfp not
   // present.
   if (!sfp_info.Present()) return ::util::OkStatus();
+  // CHECK_RETURN_IF_FALSE(sfp_info.Present()) << "SFP is not present.";
 
   // Grab the OID header for the description
   auto oid_info = sfp_info.GetHeader();

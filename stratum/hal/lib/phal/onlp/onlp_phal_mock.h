@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_MOCK_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_MOCK_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_MOCK_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_MOCK_H_
 
 #include <memory>
 
-#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/onlp/onlp_phal_interface.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 
 namespace stratum {
@@ -25,7 +25,7 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-class OnlpPhalMock : public PhalInterface {
+class OnlpPhalMock : public OnlpPhalInterface {
  public:
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
   MOCK_METHOD1(VerifyChassisConfig,
@@ -44,10 +44,12 @@ class OnlpPhalMock : public PhalInterface {
   MOCK_METHOD3(RegisterSfpConfigurator,
                ::util::Status(int slot, int port,
                               SfpConfigurator* configurator));
+  MOCK_METHOD1(RegisterOnlpEventCallback,
+               ::util::Status(OnlpEventCallback* callback));
 };
 
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLPPHAL_MOCK_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_MOCK_H_

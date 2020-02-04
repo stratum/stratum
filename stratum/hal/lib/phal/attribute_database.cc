@@ -27,7 +27,6 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
-// #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -204,7 +203,7 @@ AttributeDatabase::~AttributeDatabase() {
 
 ::util::StatusOr<std::unique_ptr<AttributeDatabase>>
 AttributeDatabase::MakePhalDB(
-    std::unique_ptr<SwitchConfigurator> configurator) {
+    std::unique_ptr<SwitchConfiguratorInterface> configurator) {
   PhalInitConfig phal_config;
 
   // If no phal_config_path given try and build a default config

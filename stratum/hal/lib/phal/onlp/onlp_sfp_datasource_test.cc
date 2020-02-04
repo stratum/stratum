@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/sfp_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_sfp_datasource.h"
 
 #include <memory>
 
@@ -63,7 +63,6 @@ TEST_F(SfpDatasourceTest, InitializeSFPWithEmptyInfo) {
   mock_sfp_info.dom.nchannels = 0;
   mock_sfp_info.sff.sfp_type = SFF_SFP_TYPE_SFP;
   EXPECT_CALL(*onlp_wrapper_mock_, GetSfpInfo(oid_))
-      .Times(2)
       .WillRepeatedly(Return(SfpInfo(mock_sfp_info)));
 
   ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> result =

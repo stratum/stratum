@@ -231,7 +231,7 @@ namespace {
 
   // Issue the subscribe
   auto adapter = absl::make_unique<Adapter>(attribute_db_interface_);
-  RETURN_IF_ERROR(adapter->Subscribe(
+  ASSIGN_OR_RETURN(auto query, adapter->Subscribe(
       {path}, std::move(writer), absl::Nanoseconds(req->polling_interval())));
 
   // Loop around processing messages from the PhalDB writer

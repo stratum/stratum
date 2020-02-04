@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/switch_configurator.h"
+#include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
 
 #include <fstream>
 #include <iostream>
@@ -25,7 +25,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/db.pb.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal_mock.h"
+#include "stratum/hal/lib/phal/onlp/onlp_phal_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -46,15 +46,15 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
   void SetUp() override {
     root_group_ = AttributeGroup::From(PhalDB::descriptor());
     onlp_wrapper_mock_ = absl::make_unique<OnlpWrapperMock>();
-    onlpphal_mock_ = absl::make_unique<OnlpPhalMock>();
+    onlp_phal_mock_ = absl::make_unique<OnlpPhalMock>();
     ASSERT_OK_AND_ASSIGN(
-        configurator_, OnlpSwitchConfigurator::Make(onlpphal_mock_.get(),
+        configurator_, OnlpSwitchConfigurator::Make(onlp_phal_mock_.get(),
                                                     onlp_wrapper_mock_.get()));
   }
 
   std::unique_ptr<AttributeGroup> root_group_;
   std::unique_ptr<OnlpWrapperMock> onlp_wrapper_mock_;
-  std::unique_ptr<OnlpPhalMock> onlpphal_mock_;
+  std::unique_ptr<OnlpPhalMock> onlp_phal_mock_;
   std::unique_ptr<OnlpSwitchConfigurator> configurator_;
   PhalInitConfig config_;
 
