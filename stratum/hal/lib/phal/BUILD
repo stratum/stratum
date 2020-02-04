@@ -35,6 +35,73 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+# The following config settings allow to specify which PHAL backends to use.
+# Each can theoretically enable independently, as long as they configure
+# different parts of the attribute database.
+
+config_setting(
+    name = "with_onlp",
+    define_values = {
+        "phal_with_onlp": "true",
+    },
+)
+
+config_setting(
+    name = "without_onlp",
+    define_values = {
+        "phal_with_onlp": "false",
+    },
+)
+
+config_setting(
+    name = "with_tai",
+    define_values = {
+        "phal_with_tai": "true",
+    },
+)
+config_setting(
+    name = "without_tai",
+    define_values = {
+        "phal_with_tai": "false",
+    },
+)
+
+onlp_defines = [
+    "WITH_ONLP=1",
+]
+
+onlp_deps = [
+    "//stratum/hal/lib/phal/onlp:onlp_phal",
+]
+
+tai_defines = [
+    "WITH_TAI=1",
+]
+
+tai_deps = [
+    # TODO(plvision)
+]
+
+phal_defines = select({
+    ":with_onlp": onlp_defines,
+    ":without_onlp": [],
+    "//conditions:default": onlp_defines,
+}) + select({
+    ":with_tai": tai_defines,
+    ":without_tai": [],
+    "//conditions:default": [],
+})
+
+phal_deps = select({
+    ":with_onlp": onlp_deps,
+    ":without_onlp": [],
+    "//conditions:default": onlp_deps,
+}) + select({
+    ":with_tai": tai_deps,
+    ":without_tai": [],
+    "//conditions:default": [],
+})
+
 stratum_cc_library(
     name = "attribute_database_interface",
     hdrs = ["attribute_database_interface.h"],
@@ -744,6 +811,25 @@ stratum_cc_library(
     ],
 )
 '''
+
+stratum_cc_library(
+    name = "phal",
+    srcs = ["phal.cc"],
+    hdrs = ["phal.h"],
+    defines = phal_defines,
+    deps = [
+        ":phal_cc_proto",
+        ":sfp_configurator",
+        ":sfp_adapter",
+        ":switch_configurator_interface",
+        ":attribute_database",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/synchronization",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/lib:macros",
+    ] + phal_deps,
+)
 
 stratum_cc_library(
     name = "phal_sim",

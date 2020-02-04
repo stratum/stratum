@@ -461,32 +461,33 @@ stratum_cc_library(
     ],
 )
 
-stratum_cc_binary(
-    name = "onlp_phal_cli",
-    srcs = ["onlp_phal_cli.cc"],
-    arches = EMBEDDED_ARCHES,
-    linkopts = [
-        "-lpthread",
-        "-ldl",
-        "-lrt",
-    ],
-    deps = [
-        ":onlp_phal",
-        ":onlp_switch_configurator",
-        ":onlp_sfp_configurator",
-        "//stratum/hal/lib/phal:attribute_database",
-        "//stratum/hal/lib/phal:attribute_database_interface",
-        "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/time",
-        "//stratum/glue:init_google",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "@com_googlesource_code_re2//:re2",
-    ],
-)
+# TODO(max): fix and enable
+# stratum_cc_binary(
+#     name = "onlp_phal_cli",
+#     srcs = ["onlp_phal_cli.cc"],
+#     arches = EMBEDDED_ARCHES,
+#     linkopts = [
+#         "-lpthread",
+#         "-ldl",
+#         "-lrt",
+#     ],
+#     deps = [
+#         ":onlp_phal",
+#         ":onlp_switch_configurator",
+#         ":onlp_sfp_configurator",
+#         "//stratum/hal/lib/phal:attribute_database",
+#         "//stratum/hal/lib/phal:attribute_database_interface",
+#         "@com_github_google_glog//:glog",
+#         "@com_google_absl//absl/strings",
+#         "@com_google_absl//absl/time",
+#         "//stratum/glue:init_google",
+#         "//stratum/glue/status",
+#         "//stratum/glue/status:status_macros",
+#         "//stratum/glue/status:statusor",
+#         "//stratum/lib:macros",
+#         "@com_googlesource_code_re2//:re2",
+#     ],
+# )
 
 stratum_cc_binary(
     name = "onlp_cli",

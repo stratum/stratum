@@ -251,6 +251,34 @@ AttributeDatabase::MakePhalDB(
   return std::move(database);
 }
 
+// TODO(max): cleanup / replace MakePhalDb()
+::util::StatusOr<std::unique_ptr<AttributeDatabase>>
+AttributeDatabase::MakePhalDb2(std::unique_ptr<AttributeGroup> root_group) {
+  ASSIGN_OR_RETURN(
+      std::unique_ptr<AttributeDatabase> database,
+      Make(std::move(root_group), absl::make_unique<DummyThreadpool>()));
+
+  // Create and run PhalDb service
+  {
+    ::grpc::ServerBuilder builder;
+    builder.AddListeningPort(kPhalDbServiceUrl,
+                             ::grpc::InsecureServerCredentials());
+    database->phal_db_service_ =
+        absl::make_unique<PhalDbService>(database.get());
+    builder.RegisterService(database->phal_db_service_.get());
+    database->external_server_ = builder.BuildAndStart();
+    if (database->external_server_ == nullptr) {
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Failed to start PhalDb service. This is an "
+             << "internal error.";
+    }
+    LOG(INFO) << "PhalDB service is listening to " << kPhalDbServiceUrl
+              << "...";
+  }
+
+  return std::move(database);
+}
+
 ::util::Status AttributeDatabase::Set(const AttributeValueMap& values) {
   absl::MutexLock lock(&set_lock_);
   return root_->Set(values, threadpool_.get());

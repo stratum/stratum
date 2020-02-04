@@ -1,6 +1,5 @@
 /*
- * Copyright 2018 Google LLC
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020 Open Networking Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_H_
+#ifndef STRATUM_HAL_LIB_PHAL_PHAL_H_
+#define STRATUM_HAL_LIB_PHAL_PHAL_H_
 
 #include <functional>
 #include <map>
@@ -27,22 +26,25 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
-#include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-#include "stratum/hal/lib/phal/onlp/onlp_phal_interface.h"
-#include "stratum/hal/lib/phal/onlp/onlp_sfp_configurator.h"
-#include "stratum/hal/lib/phal/onlp/onlp_sfp_datasource.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
+
+#if defined(WITH_ONLP)
+#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+#endif  // defined(WITH_ONLP)
+
+#if defined(WITH_TAI)
+// TODO(plvision): add tai includes here
+#endif  // defined(WITH_TAI)
 
 namespace stratum {
 namespace hal {
 namespace phal {
-namespace onlp {
 
-// Class "OnlpPhal" is an implementation of PhalInterface which is used to
-// send the OnlpPhal events to Stratum.
-class OnlpPhal final : public OnlpPhalInterface {
+// Class "Phal" is an implementation of PhalInterface. It provides an interface
+// to the system hardware. It delegates calls to the specific implementations.
+class Phal : public PhalInterface {
  public:
-  ~OnlpPhal() override;
+  ~Phal() override;
 
   // PhalInterface public methods.
   ::util::Status PushChassisConfig(const ChassisConfig& config) override
@@ -61,61 +63,44 @@ class OnlpPhal final : public OnlpPhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status RegisterOnlpEventCallback(OnlpEventCallback* callback)
-      EXCLUSIVE_LOCKS_REQUIRED(config_lock_) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static OnlpPhal* CreateSingleton(OnlpInterface* onlp_interface)
-      LOCKS_EXCLUDED(config_lock_, init_lock_);
+  static Phal* CreateSingleton() LOCKS_EXCLUDED(config_lock_, init_lock_);
 
-  // OnlpPhal is neither copyable nor movable.
-  OnlpPhal(const OnlpPhal&) = delete;
-  OnlpPhal& operator=(const OnlpPhal&) = delete;
+  // Phal is neither copyable nor movable.
+  Phal(const Phal&) = delete;
+  Phal& operator=(const Phal&) = delete;
 
  private:
-  friend class OnlpPhalCli;
-  friend class OnlpPhalTest;
-  friend class OnlpPhalMock;
-  friend class OnlpSwitchConfiguratorTest;
-
   // Private constructor.
-  OnlpPhal();
+  Phal();
 
-  // Calls all the one time start initialisations
-  ::util::Status Initialize(OnlpInterface* onlp_interface)
-      LOCKS_EXCLUDED(config_lock_);
-
-  // One time initialization of the data sources. Need to be called after
-  // InitializeOnlpWrapper() completes successfully.
-  // TODO(unknown): move it to OnlpConfigurator
-  ::util::Status InitializeOnlpOids() EXCLUSIVE_LOCKS_REQUIRED(config_lock_);
-
-  // Internal mutex lock for protecting the internal maps and initializing the
-  // singleton instance.
+  // Internal mutex lock for initializing the singleton instance.
   static absl::Mutex init_lock_;
 
   // The singleton instance.
-  static OnlpPhal* singleton_ GUARDED_BY(init_lock_);
+  static Phal* singleton_ GUARDED_BY(init_lock_);
 
   // Mutex lock for protecting the internal state when config is pushed or the
   // class is initialized so that other threads do not access the state while
   // the are being changed.
   mutable absl::Mutex config_lock_;
 
-  // Determines if PHAL is fully initialized.
+  // Determines if Phal is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
 
-  // Not owned by this class.
-  OnlpInterface* onlp_interface_ GUARDED_BY(config_lock_);
+  // Owned by this class.
+  std::unique_ptr<AttributeDatabase> database_ GUARDED_BY(config_lock_);
 
-  // Owned by the class.
-  std::unique_ptr<OnlpEventHandler> onlp_event_handler_
-      GUARDED_BY(config_lock_);
+  // Owned by this class.
+  std::unique_ptr<SfpAdapter> sfp_adapter_ GUARDED_BY(config_lock_);
+
+  // Not owned by this class.
+  PhalInterface* onlp_interface_ GUARDED_BY(config_lock_) = nullptr;
 };
 
-}  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_H_
+#endif  // STRATUM_HAL_LIB_PHAL_PHAL_H_

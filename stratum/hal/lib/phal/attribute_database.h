@@ -68,6 +68,9 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDB(
       std::unique_ptr<SwitchConfiguratorInterface> configurator);
 
+  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDb2(
+      std::unique_ptr<AttributeGroup> configurators);
+
   ::util::Status Set(const AttributeValueMap& values) override
       LOCKS_EXCLUDED(set_lock_);
   ::util::StatusOr<std::unique_ptr<Query>> MakeQuery(

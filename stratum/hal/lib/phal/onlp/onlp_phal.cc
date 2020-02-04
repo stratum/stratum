@@ -69,17 +69,6 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
     ASSIGN_OR_RETURN(onlp_event_handler_,
                      OnlpEventHandler::Make(onlp_interface_));
 
-    // Create attribute database and load initial phal DB
-    ASSIGN_OR_RETURN(auto configurator,
-                     OnlpSwitchConfigurator::Make(this, onlp_interface_));
-
-    // Create attribute database and load initial phal DB
-    ASSIGN_OR_RETURN(std::move(database_),
-                     AttributeDatabase::MakePhalDB(std::move(configurator)));
-
-    // Create SfpAdapter
-    sfp_adapter_ = absl::make_unique<SfpAdapter>(database_.get());
-
     initialized_ = true;
   }
   return ::util::OkStatus();
@@ -104,9 +93,6 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   onlp_interface_ = nullptr;
   onlp_event_handler_.reset();
   initialized_ = false;
-  // Cancel subscriptions before deleting the database.
-  sfp_adapter_.reset();
-  database_.reset();
 
   return ::util::OkStatus();
 }
@@ -114,31 +100,19 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
 ::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
     std::unique_ptr<ChannelWriter<PhalInterface::TransceiverEvent>> writer,
     int priority) {
-  absl::WriterMutexLock l(&config_lock_);
-  if (!initialized_) {
-    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
-  }
-
-  return sfp_adapter_->RegisterSfpEventSubscriber(std::move(writer), priority);
+  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+         << "RegisterTransceiverEventWriter is not supported.";
 }
 
 ::util::Status OnlpPhal::UnregisterTransceiverEventWriter(int id) {
-  absl::WriterMutexLock l(&config_lock_);
-  if (!initialized_) {
-    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
-  }
-
-  return sfp_adapter_->UnregisterSfpEventSubscriber(id);
+  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+         << "RegisterTransceiverEventWriter is not supported.";
 }
 
 ::util::Status OnlpPhal::GetFrontPanelPortInfo(
     int slot, int port, FrontPanelPortInfo* fp_port_info) {
-  absl::WriterMutexLock l(&config_lock_);
-  if (!initialized_) {
-    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
-  }
-
-  return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
+  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
+         << "RegisterTransceiverEventWriter is not supported.";
 }
 
 ::util::Status OnlpPhal::SetPortLedState(int slot, int port, int channel,
