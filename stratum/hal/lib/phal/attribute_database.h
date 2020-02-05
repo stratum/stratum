@@ -69,7 +69,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
       std::unique_ptr<SwitchConfiguratorInterface> configurator);
 
   static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDb2(
-      std::unique_ptr<AttributeGroup> configurators);
+      std::unique_ptr<AttributeGroup> root_group);
 
   ::util::Status Set(const AttributeValueMap& values) override
       LOCKS_EXCLUDED(set_lock_);

@@ -67,7 +67,7 @@ config_setting(
 )
 
 onlp_defines = [
-    "WITH_ONLP=1",
+    "WITH_ONLP",
 ]
 
 onlp_deps = [
@@ -75,7 +75,7 @@ onlp_deps = [
 ]
 
 tai_defines = [
-    "WITH_TAI=1",
+    "WITH_TAI",
 ]
 
 tai_deps = [
