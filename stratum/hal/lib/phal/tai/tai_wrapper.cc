@@ -53,6 +53,10 @@ int HelperFunction(int a) { return a + TaiWrapper::kSomeConstant; }
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not implemented.";
 }
 
+::util::StatusOr<int> TaiWrapper::GetLinkState(int port) const {
+  return 1;
+}
+
 }  // namespace tai
 }  // namespace phal
 }  // namespace hal

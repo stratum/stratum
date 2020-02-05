@@ -36,6 +36,9 @@
 
 #if defined(WITH_TAI)
 // TODO(plvision): add tai includes here
+#include "stratum/hal/lib/phal/tai/tai_phal.h"
+#include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper.h"
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_path);
@@ -83,7 +86,18 @@ Phal* Phal::CreateSingleton() {
                                               onlp_phal, onlp_wrapper));
       configurators.push_back(std::move(configurator));
     }
-#endif
+#endif  // defined(WITH_ONLP)
+
+#if defined(WITH_TAI)
+    {
+      auto* tai_wrapper = tai::TaiWrapper::CreateSingleton();
+      auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_wrapper);
+      phal_interfaces_.push_back(tai_phal);
+      ASSIGN_OR_RETURN(auto configurator,
+                       tai::TaiSwitchConfigurator::Make(tai_wrapper));
+      configurators.push_back(std::move(configurator));
+    }
+#endif  // defined(WITH_TAI)
 
     // TODO(max): figure out how to have multiple configurators creating a
     // default config.
@@ -94,8 +108,9 @@ Phal* Phal::CreateSingleton() {
             << "No phal_config_path specified and no switch configurator "
                "found! This is probably not what you want. Did you forget to "
                "specify any '--define phal_with_*=true' Bazel flags?";
-      } else {
-        RETURN_IF_ERROR(configurators.at(0)->CreateDefaultConfig(&phal_config));
+      }
+      for (const auto& configurator : configurators) {
+        RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
       }
     } else {
       RETURN_IF_ERROR(
@@ -173,6 +188,11 @@ Phal* Phal::CreateSingleton() {
   }
 
   return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
+}
+
+::util::Status Phal::GetOpticalTransceiverInfo(int slot, bool some_state) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,

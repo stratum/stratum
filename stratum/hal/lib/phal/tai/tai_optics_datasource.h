@@ -43,7 +43,9 @@ class TaiOpticsDataSource : public DataSource {
       int id, TaiInterface* Tai_interface, CachePolicy* cache_policy);
 
   // Accessors for managed attributes.
-  ManagedAttribute* GetOpticsId() { return id_attribute_.get(); }
+  ManagedAttribute* GetModuleSlot() { return &module_slot_; }
+  ManagedAttribute* GetModuleHardwareState() { return &module_hw_state_; }
+  ManagedAttribute* GetModuleVendor() { return &card_vendor_; }
 
  protected:
   // Protected constructor.
@@ -57,8 +59,9 @@ class TaiOpticsDataSource : public DataSource {
   TaiInterface* tai_interface_;
 
   // Managed attributes.
-  std::unique_ptr<TypedAttribute<int>> id_attribute_;
-  std::unique_ptr<TypedAttribute<bool>> present_attribute_;
+  TypedAttribute<int> module_slot_{this};
+  EnumAttribute module_hw_state_{HwState_descriptor(), this};
+  TypedAttribute<std::string> card_vendor_{this};
 };
 
 }  // namespace tai

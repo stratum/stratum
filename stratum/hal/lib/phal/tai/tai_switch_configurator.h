@@ -54,7 +54,6 @@ class TaiSwitchConfigurator : public SwitchConfiguratorInterface {
   ::util::Status AddOpticalCard(int slot, MutableAttributeGroup* mutable_card,
                                 const PhalOpticalCardConfig& config);
 
-  TaiInterface* tai_wrapper_interface_;
   TaiInterface* tai_interface_;
   // Default cache policy config
   CachePolicyConfig cache_policy_config_;

@@ -29,6 +29,7 @@ message PhalDB {
   repeated PsuTray psu_trays = 3;
   repeated LedGroup led_groups = 4;
   repeated ThermalGroup thermal_groups = 5;
+  repeated OpticalTransceiver optical_cards = 6;
 }
 
 message Card {
@@ -109,6 +110,14 @@ message ThermalGroup {
     ThermalCaps capabilities = 10;
   }
   repeated Thermal thermals = 1;
+}
+
+// TODO(plvision): Extend with needed values
+message OpticalTransceiver {
+  int32 id = 1;
+  string vendor_name = 2;
+  HwState hardware_state = 3;
+  double tx_power = 4;
 }
 
 message Port {

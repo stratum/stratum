@@ -41,6 +41,9 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
 ::util::Status TaiSwitchConfigurator::CreateDefaultConfig(
     PhalInitConfig* phal_config) const {
   // TODO(plvision)
+  auto optical_card = phal_config->add_optical_cards();
+  optical_card->set_slot(1);
+
   return ::util::OkStatus();
 }
 
@@ -51,12 +54,18 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
   auto mutable_root = root->AcquireMutable();
 
   // Add cards
-  for (const auto& card : phal_config->optical_cards()) {
-    // FIXME
-    ASSIGN_OR_RETURN(auto card_group,
-                     mutable_root->AddRepeatedChildGroup("cards"));
-    auto mutable_card_group = card_group->AcquireMutable();
-    RETURN_IF_ERROR(AddOpticalCard(0, mutable_card_group.get(), card));
+  // TODO(plvision)
+  ASSIGN_OR_RETURN(auto card_group,
+                   mutable_root->AddRepeatedChildGroup("optical_cards"));
+
+  auto mutable_card_group = card_group->AcquireMutable();
+  for (auto& card : *phal_config->mutable_optical_cards()) {
+    if (!card.has_cache_policy()) {
+      card.set_allocated_cache_policy(
+          new CachePolicyConfig(phal_config->cache_policy()));
+    }
+    RETURN_IF_ERROR(
+        AddOpticalCard(card.slot(), mutable_card_group.get(), card));
   }
 
   return ::util::OkStatus();
@@ -65,10 +74,19 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
 ::util::Status TaiSwitchConfigurator::AddOpticalCard(
     int slot, MutableAttributeGroup* mutable_card,
     const PhalOpticalCardConfig& config) {
-  // Add port to attribute DB
-  ASSIGN_OR_RETURN(auto port_group,
-                   mutable_card->AddRepeatedChildGroup("ports"));
-  auto mutable_port = port_group->AcquireMutable();
+  ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
+                                   config.cache_policy().type(),
+                                   config.cache_policy().timed_value()));
+
+  ASSIGN_OR_RETURN(auto datasource,
+                   TaiOpticsDataSource::Make(slot, tai_interface_, cache));
+
+  RETURN_IF_ERROR(
+      mutable_card->AddAttribute("id", datasource->GetModuleSlot()));
+  RETURN_IF_ERROR(
+      mutable_card->AddAttribute("vendor_name", datasource->GetModuleVendor()));
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "hardware_state", datasource->GetModuleHardwareState()));
 
   return ::util::OkStatus();
 }

@@ -60,7 +60,7 @@ class TaiWrapper : public TaiInterface {
 
   // Creates a singleton instance.
   static TaiWrapper* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
-  ~TaiWrapper() override;
+  ~TaiWrapper() = default;
 
   // Return the singleton instance to be used in the SDK callbacks.
   static TaiWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
@@ -71,7 +71,7 @@ class TaiWrapper : public TaiInterface {
 
  private:
   // Private constructor.
-  TaiWrapper();
+  TaiWrapper() = default;
 
   // Some private variable.
   static constexpr absl::Duration kWriteTimeout = absl::InfiniteDuration();

@@ -15,21 +15,20 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_PHAL_INTERFACE_H_
 #define STRATUM_HAL_LIB_COMMON_PHAL_INTERFACE_H_
 
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/lib/channel/channel.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/sfp_configurator.h"
+#include "stratum/lib/channel/channel.h"
 
 namespace stratum {
 namespace hal {
@@ -123,6 +122,13 @@ class PhalInterface {
   // given (slot, port) yet.
   virtual ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info) = 0;
+
+  // TODO(plvision)
+  // Gets the information about a optical transceiver module by querying TAI
+  // for the given slot.  This method is expected to return error if there is no
+  // module is inserted in the given slot yet.
+  virtual ::util::Status GetOpticalTransceiverInfo(int slot,
+                                                  bool some_state) = 0;
 
   // Set the color/state of a frontpanel port LED, corresponding to the physical
   // port specified by (slot, port, channel). The caller assumes each physical

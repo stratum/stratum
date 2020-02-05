@@ -44,16 +44,18 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, TaiInterface* tai_interface,
                                          CachePolicy* cache_policy)
     : DataSource(cache_policy),
       tai_interface_(ABSL_DIE_IF_NULL(tai_interface)) {
-  id_attribute_->AssignValue(id);
-  present_attribute_->AssignValue(false);
+  // These values do not change during the lifetime of the data source.
+  module_slot_.AssignValue(id);
+
   // Some tai init stuff for port
 }
 
 ::util::Status TaiOpticsDataSource::UpdateValues() {
   // Update attributes with fresh values from Tai.
-  int id = id_attribute_->ReadValue<int>().ValueOrDie();
+  int id = module_slot_.ReadValue<int>().ValueOrDie();
   ASSIGN_OR_RETURN(auto present, tai_interface_->GetLinkState(id));
-  present_attribute_->AssignValue(present);
+  module_hw_state_= present ? HwState::HW_STATE_PRESENT : HwState::HW_STATE_NOT_PRESENT;
+  card_vendor_.AssignValue("some-vendor");
 
   return ::util::OkStatus();
 }
