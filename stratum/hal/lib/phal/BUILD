@@ -261,6 +261,7 @@ stratum_cc_test(
     name = "sfp_adapter_test",
     srcs = ["sfp_adapter_test.cc"],
     deps = [
+        ":attribute_database_mock",
         ":sfp_adapter",
         "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/base:core_headers",
