@@ -24,6 +24,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/hal/lib/phal/onlp/onlp_event_handler_mock.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/lib/macros.h"
 
@@ -33,6 +34,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
@@ -99,55 +101,22 @@ class OnlpPhalTest : public ::testing::Test {
   std::unique_ptr<StrictMock<OnlpWrapperMock>> onlp_wrapper_mock_;
 };
 
-// TODO(max): I think remove?
-// TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
-//   std::shared_ptr<Channel<TransceiverEvent>> channel =
-//       Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
+TEST_F(OnlpPhalTest, PushChassisConfigSuccess) {
+  ChassisConfig config;
+  EXPECT_OK(onlp_phal_->PushChassisConfig(config));
+}
 
-//   // Create and hand-off ChannelWriter to the PhalInterface.
-//   auto writer1 = ChannelWriter<TransceiverEvent>::Create(channel);
-//   auto writer2 = ChannelWriter<TransceiverEvent>::Create(channel);
+TEST_F(OnlpPhalTest, RegisterOnlpEventCallbackSuccess) {
+  OnlpOid oid;
+  auto event_callback = absl::make_unique<OnlpEventCallbackMock>(oid);
 
-//   // Register writer1
-//   ::util::StatusOr<int> result = onlp_phal_->RegisterTransceiverEventWriter(
-//       std::move(writer1), PhalInterface::kTransceiverEventWriterPriorityMed);
-//   EXPECT_TRUE(result.ok());
-//   int id1 = result.ValueOrDie();
-//   EXPECT_EQ(id1, 1);
+  EXPECT_OK(onlp_phal_->RegisterOnlpEventCallback(event_callback.get()));
+  // TODO(max): add expectations
+}
 
-//   // Register writer2
-//   result = onlp_phal_->RegisterTransceiverEventWriter(
-//       std::move(writer2), PhalInterface::kTransceiverEventWriterPriorityHigh);
-//   EXPECT_TRUE(result.ok());
-//   int id2 = result.ValueOrDie();
-//   EXPECT_EQ(id2, 2);
+// TODO(max): add more tests
 
-//   // Unregister writer1
-//   EXPECT_OK(onlp_phal_->UnregisterTransceiverEventWriter(id1));
-
-//   // Unregister writer2
-//   EXPECT_OK(onlp_phal_->UnregisterTransceiverEventWriter(id2));
-// }
-
-// TEST_F(OnlpPhalTest, OnlpPhalGetFrontPanelPortInfo) {
-//   // SFP 1
-//   FrontPanelPortInfo fp_port_info1{};
-//   EXPECT_OK(onlp_phal_->GetFrontPanelPortInfo(card_, 1, &fp_port_info1));
-//   EXPECT_EQ(fp_port_info1.physical_port_type(), PHYSICAL_PORT_TYPE_QSFP_CAGE);
-//   EXPECT_EQ(fp_port_info1.media_type(), MEDIA_TYPE_QSFP_COPPER);
-//   EXPECT_EQ(fp_port_info1.vendor_name(), "sfp-vendor-name");
-//   // EXPECT_EQ(fp_port_info1.get_part_number(), 6);
-//   // EXPECT_EQ(fp_port_info1.serial_number(), "test_sfp_serial");
-
-//   // SFP 2
-//   FrontPanelPortInfo fp_port_info2{};
-//   EXPECT_OK(onlp_phal_->GetFrontPanelPortInfo(card_, 2, &fp_port_info2));
-//   EXPECT_EQ(fp_port_info2.physical_port_type(), PHYSICAL_PORT_TYPE_QSFP_CAGE);
-//   EXPECT_EQ(fp_port_info2.media_type(), MEDIA_TYPE_QSFP_COPPER);
-//   EXPECT_EQ(fp_port_info2.vendor_name(), "sfp-vendor-name");
-//   // EXPECT_EQ(fp_port_info2.get_part_number(), 6);
-//   // EXPECT_EQ(fp_port_info2.serial_number(), "sfp_serial_222");
-// }
+}  // namespace
 
 }  // namespace onlp
 }  // namespace phal

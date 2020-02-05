@@ -24,8 +24,8 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/phal/db.pb.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/onlp/onlp_phal_mock.h"
+#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
@@ -34,6 +34,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using test_utils::EqualsProto;
 using ::testing::_;
@@ -66,10 +67,7 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
   static constexpr char kPhalInitConfig[] = R"PROTO(
     cards {
       slot: 1
-      ports {
-        port: 1
-        physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE
-      }
+      ports { port: 1 physical_port_type: PHYSICAL_PORT_TYPE_SFP_CAGE }
     }
     fan_trays {
       slot: 1
@@ -93,10 +91,7 @@ class OnlpSwitchConfiguratorTest : public ::testing::Test {
     thermal_groups {
       thermals {
         thermal_index: 1
-        cache_policy {
-          type: TIMED_CACHE
-          timed_value: 2
-        }
+        cache_policy { type: TIMED_CACHE timed_value: 2 }
       }
     }
   )PROTO";
@@ -215,7 +210,7 @@ TEST_F(OnlpSwitchConfiguratorTest, CanConfigurePhalDB) {
       &config_,
       (AttributeGroup*)root_group_.get()));  // NOLINT
 }
-
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

@@ -33,6 +33,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -201,7 +202,7 @@ TEST_F(LedDatasourceTest, SetLedData) {
 
   EXPECT_OK(led_datasource->GetLedChar()->Set(static_cast<int>('2')));
 }
-
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

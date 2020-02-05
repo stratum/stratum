@@ -60,7 +60,6 @@ class CallbackMock : public OnlpEventCallback {
   explicit CallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
   MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
 };
-}  // namespace
 
 TEST_F(OnlpEventHandlerTest, OnlpEventCallbackRegistersAndUnregisters) {
   CallbackMock callback(1234);
@@ -237,7 +236,7 @@ TEST_F(OnlpEventHandlerTest, PollingThreadSendsMultipleCallbacks) {
   ASSERT_OK(handler_.UnregisterEventCallback(&callback));
   EXPECT_EQ(callback_counter, 3);
 }
-
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

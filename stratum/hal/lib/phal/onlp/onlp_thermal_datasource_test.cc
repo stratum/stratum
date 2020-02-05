@@ -27,6 +27,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -122,6 +123,7 @@ TEST_F(ThermalDatasourceTest, GetThermalData) {
 // TODO(phani-karanam): Add implementation.
 // TEST_F(ThermalDatasourceTest, SetThermalData) {}
 
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

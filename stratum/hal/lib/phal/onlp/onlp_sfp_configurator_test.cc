@@ -37,6 +37,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using test_utils::EqualsProto;
@@ -100,8 +101,6 @@ class OnlpSfpConfiguratorTest : public ::testing::Test {
   std::unique_ptr<StrictMock<OnlpWrapperMock>> onlp_wrapper_mock_;
   AttributeGroup* sfp_;
 };
-
-namespace {
 
 TEST_F(OnlpSfpConfiguratorTest, HandlesOidStatusChangePresent) {
   onlp_oid_hdr_t fake_oid = {};

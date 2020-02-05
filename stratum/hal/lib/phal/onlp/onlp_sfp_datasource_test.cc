@@ -33,6 +33,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -178,7 +179,7 @@ TEST_F(SfpDatasourceTest, GetSfpData) {
   EXPECT_THAT(sfp_datasource->GetSfpCableLengthDesc(),
               ContainsValue<std::string>("test_cable_len"));
 }
-
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

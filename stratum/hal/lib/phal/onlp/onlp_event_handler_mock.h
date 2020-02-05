@@ -31,6 +31,7 @@ class OnlpEventCallbackMock : public OnlpEventCallback {
  public:
   explicit OnlpEventCallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
   MOCK_METHOD1(HandleStatusChange, ::util::Status(const OidInfo&));
+  MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
 };
 
 class OnlpEventHandlerMock : public OnlpEventHandler {

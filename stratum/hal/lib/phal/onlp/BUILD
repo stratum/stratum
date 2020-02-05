@@ -401,6 +401,20 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "onlp_phal_test",
+    srcs = ["onlp_phal_test.cc"],
+    deps = [
+        ":onlp_phal",
+        ":onlp_wrapper_mock",
+        ":onlp_event_handler_mock",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:macros",
+    ],
+)
+
 stratum_cc_library(
     name = "onlp_phal_mock",
     hdrs = ["onlp_phal_mock.h"],
@@ -564,15 +578,3 @@ stratum_cc_test(
     ],
 )
 
-stratum_cc_test(
-    name = "onlp_phal_test",
-    srcs = ["onlp_phal_test.cc"],
-    deps = [
-        ":onlp_phal",
-        ":onlp_wrapper_mock",
-        "@com_google_googletest//:gtest_main",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_test_util",
-        "//stratum/lib:macros",
-    ],
-)
