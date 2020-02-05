@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
+#include "stratum/hal/lib/phal/sfp_adapter.h"
 
 #include <functional>
 #include <vector>
@@ -24,7 +24,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
+// #include "stratum/hal/lib/phal/onlp/onlp_wrapper_mock.h"
 #include "stratum/lib/macros.h"
 
 DECLARE_int32(onlp_polling_interval_ms);
@@ -32,7 +32,9 @@ DECLARE_int32(onlp_polling_interval_ms);
 namespace stratum {
 namespace hal {
 namespace phal {
-namespace onlp {
+
+// TODO(max)
+#if 0
 
 using TransceiverEvent = PhalInterface::TransceiverEvent;
 
@@ -45,6 +47,7 @@ using ::testing::Return;
 using ::testing::StrictMock;
 
 static constexpr int kMaxXcvrEventDepth = 256;
+
 
 class OnlpPhalTest : public ::testing::Test {
  protected:
@@ -99,7 +102,6 @@ class OnlpPhalTest : public ::testing::Test {
   std::unique_ptr<StrictMock<OnlpWrapperMock>> onlp_wrapper_mock_;
 };
 
-// TODO(max): I think remove?
 // TEST_F(OnlpPhalTest, OnlpPhalRegisterAndUnregisterTransceiverEventWriter) {
 //   std::shared_ptr<Channel<TransceiverEvent>> channel =
 //       Channel<TransceiverEvent>::Create(kMaxXcvrEventDepth);
@@ -129,27 +131,28 @@ class OnlpPhalTest : public ::testing::Test {
 //   EXPECT_OK(onlp_phal_->UnregisterTransceiverEventWriter(id2));
 // }
 
-// TEST_F(OnlpPhalTest, OnlpPhalGetFrontPanelPortInfo) {
-//   // SFP 1
-//   FrontPanelPortInfo fp_port_info1{};
-//   EXPECT_OK(onlp_phal_->GetFrontPanelPortInfo(card_, 1, &fp_port_info1));
-//   EXPECT_EQ(fp_port_info1.physical_port_type(), PHYSICAL_PORT_TYPE_QSFP_CAGE);
-//   EXPECT_EQ(fp_port_info1.media_type(), MEDIA_TYPE_QSFP_COPPER);
-//   EXPECT_EQ(fp_port_info1.vendor_name(), "sfp-vendor-name");
-//   // EXPECT_EQ(fp_port_info1.get_part_number(), 6);
-//   // EXPECT_EQ(fp_port_info1.serial_number(), "test_sfp_serial");
+TEST_F(OnlpPhalTest, OnlpPhalGetFrontPanelPortInfo) {
+  // SFP 1
+  FrontPanelPortInfo fp_port_info1{};
+  EXPECT_OK(onlp_phal_->GetFrontPanelPortInfo(card_, 1, &fp_port_info1));
+  EXPECT_EQ(fp_port_info1.physical_port_type(), PHYSICAL_PORT_TYPE_QSFP_CAGE);
+  EXPECT_EQ(fp_port_info1.media_type(), MEDIA_TYPE_QSFP_COPPER);
+  EXPECT_EQ(fp_port_info1.vendor_name(), "sfp-vendor-name");
+  // EXPECT_EQ(fp_port_info1.get_part_number(), 6);
+  // EXPECT_EQ(fp_port_info1.serial_number(), "test_sfp_serial");
 
-//   // SFP 2
-//   FrontPanelPortInfo fp_port_info2{};
-//   EXPECT_OK(onlp_phal_->GetFrontPanelPortInfo(card_, 2, &fp_port_info2));
-//   EXPECT_EQ(fp_port_info2.physical_port_type(), PHYSICAL_PORT_TYPE_QSFP_CAGE);
-//   EXPECT_EQ(fp_port_info2.media_type(), MEDIA_TYPE_QSFP_COPPER);
-//   EXPECT_EQ(fp_port_info2.vendor_name(), "sfp-vendor-name");
-//   // EXPECT_EQ(fp_port_info2.get_part_number(), 6);
-//   // EXPECT_EQ(fp_port_info2.serial_number(), "sfp_serial_222");
-// }
+  // SFP 2
+  FrontPanelPortInfo fp_port_info2{};
+  EXPECT_OK(onlp_phal_->GetFrontPanelPortInfo(card_, 2, &fp_port_info2));
+  EXPECT_EQ(fp_port_info2.physical_port_type(), PHYSICAL_PORT_TYPE_QSFP_CAGE);
+  EXPECT_EQ(fp_port_info2.media_type(), MEDIA_TYPE_QSFP_COPPER);
+  EXPECT_EQ(fp_port_info2.vendor_name(), "sfp-vendor-name");
+  // EXPECT_EQ(fp_port_info2.get_part_number(), 6);
+  // EXPECT_EQ(fp_port_info2.serial_number(), "sfp_serial_222");
+}
 
-}  // namespace onlp
+#endif
+
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum

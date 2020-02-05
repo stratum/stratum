@@ -367,12 +367,13 @@ stratum_cc_library(
     deps = [
         ":onlp_event_handler",
         ":onlp_sfp_configurator",
-        "//stratum/lib:macros",
-        "//stratum/glue/status",
         "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:phal_backend_interface",
         "//stratum/hal/lib/phal:sfp_adapter",
+        "//stratum/lib:macros",
     ],
 )
 

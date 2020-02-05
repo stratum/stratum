@@ -22,19 +22,13 @@
 #include <memory>
 #include <set>
 #include <utility>
+#include <vector>
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/phal_backend_interface.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
-
-#if defined(WITH_ONLP)
-#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
-#endif  // defined(WITH_ONLP)
-
-#if defined(WITH_TAI)
-// TODO(plvision): add tai includes here
-#endif  // defined(WITH_TAI)
 
 namespace stratum {
 namespace hal {
@@ -96,8 +90,8 @@ class Phal : public PhalInterface {
   // Owned by this class.
   std::unique_ptr<SfpAdapter> sfp_adapter_ GUARDED_BY(config_lock_);
 
-  // Not owned by this class.
-  PhalInterface* onlp_interface_ GUARDED_BY(config_lock_) = nullptr;
+  // Store backend interfaces for later Shutdown. Not owned by this class.
+  std::vector<PhalBackendInterface*> phal_interfaces_ GUARDED_BY(config_lock_);
 };
 
 }  // namespace phal

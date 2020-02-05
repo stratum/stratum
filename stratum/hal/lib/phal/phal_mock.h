@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_MOCK_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_MOCK_H_
+#ifndef STRATUM_HAL_LIB_PHAL_PHAL_MOCK_H_
+#define STRATUM_HAL_LIB_PHAL_PHAL_MOCK_H_
 
 #include <memory>
 
@@ -23,20 +23,26 @@
 namespace stratum {
 namespace hal {
 namespace phal {
-namespace onlp {
 
-class OnlpPhalMock : public OnlpPhalInterface {
+class PhalMock : public PhalInterface {
  public:
   MOCK_METHOD1(PushChassisConfig, ::util::Status(const ChassisConfig& config));
   MOCK_METHOD1(VerifyChassisConfig,
                ::util::Status(const ChassisConfig& config));
   MOCK_METHOD0(Shutdown, ::util::Status());
-  MOCK_METHOD1(RegisterOnlpEventCallback,
-               ::util::Status(OnlpEventCallback* callback));
+  MOCK_METHOD2(RegisterTransceiverEventWriter,
+               ::util::StatusOr<int>(
+                   std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
+                   int priority));
+  MOCK_METHOD1(UnregisterTransceiverEventWriter, ::util::Status(int id));
+  MOCK_METHOD3(GetFrontPanelPortInfo,
+               ::util::Status(int slot, int port,
+                              FrontPanelPortInfo* fp_port_info));
+  MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
+                                               LedColor color, LedState state));
 };
 
-}  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_MOCK_H_
+#endif  // STRATUM_HAL_LIB_PHAL_PHAL_MOCK_H_

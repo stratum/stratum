@@ -97,30 +97,6 @@ OnlpPhal* OnlpPhal::CreateSingleton(OnlpInterface* onlp_interface) {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<int> OnlpPhal::RegisterTransceiverEventWriter(
-    std::unique_ptr<ChannelWriter<PhalInterface::TransceiverEvent>> writer,
-    int priority) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "RegisterTransceiverEventWriter is not supported.";
-}
-
-::util::Status OnlpPhal::UnregisterTransceiverEventWriter(int id) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "RegisterTransceiverEventWriter is not supported.";
-}
-
-::util::Status OnlpPhal::GetFrontPanelPortInfo(
-    int slot, int port, FrontPanelPortInfo* fp_port_info) {
-  return MAKE_ERROR(ERR_OPER_NOT_SUPPORTED)
-         << "RegisterTransceiverEventWriter is not supported.";
-}
-
-::util::Status OnlpPhal::SetPortLedState(int slot, int port, int channel,
-                                         LedColor color, LedState state) {
-  // TODO(unknown): Implement this.
-  return ::util::OkStatus();
-}
-
 ::util::Status OnlpPhal::RegisterOnlpEventCallback(
     OnlpEventCallback* callback) {
   CHECK_RETURN_IF_FALSE(onlp_event_handler_ != nullptr);

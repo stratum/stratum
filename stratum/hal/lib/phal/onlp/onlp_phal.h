@@ -50,17 +50,6 @@ class OnlpPhal final : public OnlpPhalInterface {
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
-  ::util::StatusOr<int> RegisterTransceiverEventWriter(
-      std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
-      int priority) override LOCKS_EXCLUDED(config_lock_);
-  ::util::Status UnregisterTransceiverEventWriter(int id) override
-      LOCKS_EXCLUDED(config_lock_);
-  ::util::Status GetFrontPanelPortInfo(
-      int slot, int port, FrontPanelPortInfo* fp_port_info) override
-      LOCKS_EXCLUDED(config_lock_);
-  ::util::Status SetPortLedState(int slot, int port, int channel,
-                                 LedColor color, LedState state) override
-      LOCKS_EXCLUDED(config_lock_);
   ::util::Status RegisterOnlpEventCallback(OnlpEventCallback* callback)
       EXCLUSIVE_LOCKS_REQUIRED(config_lock_) override;
 

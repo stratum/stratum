@@ -257,6 +257,19 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "sfp_adapter_test",
+    srcs = ["sfp_adapter_test.cc"],
+    deps = [
+        ":sfp_adapter",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/phal/test:test_cc_proto",
+        "//stratum/lib/test_utils:matchers",
+    ],
+)
+
 stratum_cc_library(
     name = "attribute_group",
     srcs = ["attribute_group.cc"],
@@ -813,6 +826,15 @@ stratum_cc_library(
 '''
 
 stratum_cc_library(
+    name = "phal_backend_interface",
+    hdrs = ["phal_backend_interface.h"],
+    deps = [
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/glue/status",
+    ],
+)
+
+stratum_cc_library(
     name = "phal",
     srcs = ["phal.cc"],
     hdrs = ["phal.h"],
@@ -823,12 +845,25 @@ stratum_cc_library(
         ":sfp_adapter",
         ":switch_configurator_interface",
         ":attribute_database",
+        ":phal_backend_interface",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
     ] + phal_deps,
+)
+
+stratum_cc_test(
+    name = "phal_test",
+    srcs = ["phal_test.cc"],
+    deps = [
+        ":phal",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:macros",
+    ],
 )
 
 stratum_cc_library(

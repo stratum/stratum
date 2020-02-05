@@ -18,7 +18,7 @@
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_INTERFACE_H_
 #define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_INTERFACE_H_
 
-#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/phal/phal_backend_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
@@ -32,9 +32,10 @@ namespace onlp {
 // use slot 1 as default slot.
 constexpr int kDefaultSlot = 1;
 
+// TODO
 // Class "OnlpPhal" is an implementation of PhalInterface which is used to
 // send the OnlpPhal events to Stratum.
-class OnlpPhalInterface : public PhalInterface {
+class OnlpPhalInterface : public PhalBackendInterface {
  public:
   // Register a OnlpEventCallback
   virtual ::util::Status RegisterOnlpEventCallback(

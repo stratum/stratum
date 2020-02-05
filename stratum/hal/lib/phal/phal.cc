@@ -29,9 +29,14 @@
 #include "stratum/lib/utils.h"
 
 #if defined(WITH_ONLP)
+#include "stratum/hal/lib/phal/onlp/onlp_phal.h"
 #include "stratum/hal/lib/phal/onlp/onlp_switch_configurator.h"
 #include "stratum/hal/lib/phal/onlp/onlp_wrapper.h"
 #endif  // defined(WITH_ONLP)
+
+#if defined(WITH_TAI)
+// TODO(plvision): add tai includes here
+#endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_path);
 
@@ -45,7 +50,7 @@ using TransceiverEventWriter = PhalInterface::TransceiverEventWriter;
 Phal* Phal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex Phal::init_lock_(absl::kConstInit);
 
-Phal::Phal() : database_(nullptr), onlp_interface_(nullptr) {}
+Phal::Phal() : database_(nullptr) {}
 
 Phal::~Phal() {}
 
@@ -73,7 +78,7 @@ Phal* Phal::CreateSingleton() {
     {
       auto* onlp_wrapper = onlp::OnlpWrapper::CreateSingleton();
       auto* onlp_phal = onlp::OnlpPhal::CreateSingleton(onlp_wrapper);
-      onlp_interface_ = onlp_phal;
+      phal_interfaces_.push_back(onlp_phal);
       ASSIGN_OR_RETURN(auto configurator, onlp::OnlpSwitchConfigurator::Make(
                                               onlp_phal, onlp_wrapper));
       configurators.push_back(std::move(configurator));
@@ -131,10 +136,10 @@ Phal* Phal::CreateSingleton() {
 
   sfp_adapter_.reset();
 
-  if (onlp_interface_) {
-    onlp_interface_->Shutdown();
-    onlp_interface_ = nullptr;
+  for (const auto& phal_interface : phal_interfaces_) {
+    phal_interface->Shutdown();
   }
+  phal_interfaces_.clear();
 
   // Delete database last.
   database_.reset();
