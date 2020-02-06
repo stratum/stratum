@@ -1455,7 +1455,6 @@ device:
             :   # v
                 PORT_OPMODE: [PC_PORT_OPMODE_ANY]
                 PC_PM_TX_LANE_PROFILE_ID: [25]
-
             ?
                 PC_PM_ID: 36
                 CORE_INDEX: 0
@@ -1509,7 +1508,6 @@ device:
                 PC_PHYS_PORT_ID: 9
                 ENABLE: 1
                 OPMODE: PC_PORT_OPMODE_100G
-                LOOPBACK_MODE: PC_LPBK_MAC
                 MAX_FRAME_SIZE: 0x3fe8
             ?
                 PORT_ID: 13
@@ -1517,7 +1515,6 @@ device:
                 PC_PHYS_PORT_ID: 13
                 ENABLE: 1
                 OPMODE: PC_PORT_OPMODE_100G
-                LOOPBACK_MODE: PC_LPBK_MAC
                 MAX_FRAME_SIZE: 0x3fe8
             ?
                 PORT_ID: 17

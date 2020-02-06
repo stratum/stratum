@@ -29,7 +29,7 @@ DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-latest}
 # --cap-add: to create the packetIO interface (bcm-0-0)
 # --network host: to have access to the packetIO interface
 docker run -it --privileged --cap-add ALL --shm-size=512m --network host \
-    -v /dev:/dev -v /sys:/sys  \
+    -v /dev:/dev -v /sys:/sys -v /run:/run \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     $ONLP_MOUNT \
     -v /lib/platform-config:/lib/platform-config \
