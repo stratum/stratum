@@ -24,6 +24,7 @@
 #include "absl/time/time.h"
 #include "gflags/gflags.h"
 #include "grpcpp/grpcpp.h"
+#include "re2/re2.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -57,11 +58,26 @@ namespace {
     query_fields.pop_back();
   }
 
-  for (const auto& field : query_fields) {
-    CHECK_RETURN_IF_FALSE(field != "")
+  for (const auto& query_field : query_fields) {
+    CHECK_RETURN_IF_FALSE(query_field != "")
         << "Encountered unexpected empty query field.";
-    PathQuery::PathEntry entry;
-    entry.set_name(field);
+
+    PathQuery::PathEntry entry;  // Protobuf type
+    RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
+    RE2 bracket_regex(R"#(\[(\d+)\])#");
+    std::string bracket_match;
+    std::string name_match;
+    CHECK_RETURN_IF_FALSE(
+        RE2::FullMatch(query_field, field_regex, &name_match, &bracket_match))
+        << "Could not parse query field: " << query_field;
+    entry.set_name(name_match);
+    if (!bracket_match.empty()) {
+      entry.set_indexed(true);
+      int index;
+      if (!RE2::FullMatch(bracket_match, bracket_regex, &index))
+        entry.set_all(true);
+      entry.set_index(index);
+    }
     *path_query.add_entries() = entry;
   }
 

@@ -414,6 +414,7 @@ stratum_cc_binary(
         ":db_cc_proto",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_protobuf//:protobuf",
+        "@com_googlesource_code_re2//:re2",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/glue/status",
