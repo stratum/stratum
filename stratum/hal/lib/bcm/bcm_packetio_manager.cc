@@ -1241,7 +1241,7 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
     auto* pid = reinterpret_cast<uint16*>(payload_buffer.get() +
                                           sizeof(struct ether_header));
     uint16 vlan = ntohs(*pid) & kVlanIdMask;
-    if (vlan == kDefaultVlan || vlan == kArpVlan) {
+    if (vlan == kDefaultVlan || vlan == kArpVlan || vlan == 0) {
       tagged = true;
     }
   }
