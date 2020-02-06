@@ -84,6 +84,8 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
   RETURN_IF_ERROR(
       mutable_card->AddAttribute("id", datasource->GetModuleSlot()));
   RETURN_IF_ERROR(
+      mutable_card->AddAttribute("tx_power", datasource->GetTxPowerAttr()));
+  RETURN_IF_ERROR(
       mutable_card->AddAttribute("vendor_name", datasource->GetModuleVendor()));
   RETURN_IF_ERROR(mutable_card->AddAttribute(
       "hardware_state", datasource->GetModuleHardwareState()));

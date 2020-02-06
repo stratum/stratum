@@ -34,7 +34,8 @@ namespace tai {
 TaiPhal* TaiPhal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex TaiPhal::init_lock_(absl::kConstInit);
 
-TaiPhal::TaiPhal() : tai_interface_(nullptr) /*, tai_event_handler_(nullptr)*/ {}
+TaiPhal::TaiPhal()
+    : tai_interface_(nullptr) /*, tai_event_handler_(nullptr)*/ {}
 
 TaiPhal::~TaiPhal() {}
 

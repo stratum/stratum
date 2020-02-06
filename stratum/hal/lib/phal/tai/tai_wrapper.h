@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -45,6 +46,12 @@ class TaiInterface {
 
   // Get the link state of an optics module.
   virtual ::util::StatusOr<int> GetLinkState(int port) const = 0;
+
+  // Get the current Tx power of an optics module.
+  virtual ::util::StatusOr<double> GetTxPower(int slot) const = 0;
+
+  // Set the Tx power of an optics module.
+  virtual ::util::Status SetTxPower(int slot, double tx_power) = 0;
 };
 
 // An TaiInterface implementation that makes real calls into TAI.
@@ -57,6 +64,8 @@ class TaiWrapper : public TaiInterface {
 
   ::util::StatusOr<int> GetFooInfo(int port) const override;
   ::util::StatusOr<int> GetLinkState(int port) const override;
+  ::util::StatusOr<double> GetTxPower(int slot) const override;
+  ::util::Status SetTxPower(int slot, double tx_power) override;
 
   // Creates a singleton instance.
   static TaiWrapper* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
@@ -81,6 +90,9 @@ class TaiWrapper : public TaiInterface {
 
   // The singleton instance.
   static TaiWrapper* singleton_ GUARDED_BY(init_lock_);
+
+  // Fake module to Tx power mapping.
+  absl::flat_hash_map<int, double> fake_tx_powers GUARDED_BY(tai_lock_);
 
   // RW mutex lock for protecting the singleton instance initialization and
   // reading it back from other threads. Unlike other singleton classes, we

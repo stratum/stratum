@@ -55,6 +55,7 @@ stratum_cc_library(
     name = "tai_phal",
     srcs = ["tai_phal.cc"],
     hdrs = ["tai_phal.h"],
+    copts = DEFAULT_COPTS,
     deps = [
         ":tai_wrapper",
         ":tai_switch_configurator",
@@ -75,6 +76,7 @@ stratum_cc_library(
 # stratum_cc_test(
 #     name = "onlp_event_handler_test",
 #     srcs = ["onlp_event_handler_test.cc"],
+#     copts = DEFAULT_COPTS,
 #     deps = [
 #         ":onlp_event_handler",
 #         ":onlp_event_handler_mock",

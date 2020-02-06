@@ -18,6 +18,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/strip.h"
+#include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -53,8 +54,23 @@ int HelperFunction(int a) { return a + TaiWrapper::kSomeConstant; }
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "Not implemented.";
 }
 
-::util::StatusOr<int> TaiWrapper::GetLinkState(int port) const {
-  return 1;
+::util::StatusOr<int> TaiWrapper::GetLinkState(int port) const { return 1; }
+
+::util::StatusOr<double> TaiWrapper::GetTxPower(int slot) const {
+  LOG(ERROR) << "TaiWrapper::GetTxPower " << slot;
+  absl::ReaderMutexLock l(&tai_lock_);
+  auto tx_power = gtl::FindOrNull(fake_tx_powers, slot);
+  CHECK_RETURN_IF_FALSE(tx_power)
+      << "Not Tx power for slot " << slot << " found.";
+
+  return *tx_power;
+};
+
+::util::Status TaiWrapper::SetTxPower(int slot, double tx_power) {
+  LOG(ERROR) << "TaiWrapper::SetTxPower " << slot;
+  absl::WriterMutexLock l(&tai_lock_);
+  fake_tx_powers[slot] = tx_power;
+  return ::util::OkStatus();
 }
 
 }  // namespace tai

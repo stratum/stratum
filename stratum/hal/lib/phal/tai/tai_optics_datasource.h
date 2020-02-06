@@ -17,19 +17,19 @@
 #ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_OPTICS_DATASOURCE_H_
 #define STRATUM_HAL_LIB_PHAL_TAI_TAI_OPTICS_DATASOURCE_H_
 
-#include <vector>
 #include <memory>
 #include <string>
+#include <vector>
 
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/phal/datasource.h"
-#include "stratum/hal/lib/phal/tai/tai_wrapper.h"
-#include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/phal/datasource.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -40,19 +40,22 @@ class TaiOpticsDataSource : public DataSource {
  public:
   // TODO(plvision): Add doc string
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>> Make(
-      int id, TaiInterface* Tai_interface, CachePolicy* cache_policy);
+      int id, TaiInterface* tai_interface, CachePolicy* cache_policy);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetModuleSlot() { return &module_slot_; }
   ManagedAttribute* GetModuleHardwareState() { return &module_hw_state_; }
   ManagedAttribute* GetModuleVendor() { return &card_vendor_; }
+  ManagedAttribute* GetTxPowerAttr() { return &tx_power_attr_; }
 
- protected:
-  // Protected constructor.
-  TaiOpticsDataSource(int id, TaiInterface* Tai_interface,
-                    CachePolicy* cache_policy);
+  // Setter functions.
+  ::util::Status SetTxPower(double tx_power);
 
  private:
+  // Private constructor.
+  TaiOpticsDataSource(int id, TaiInterface* Tai_interface,
+                      CachePolicy* cache_policy);
+
   ::util::Status UpdateValues() override;
 
   // Pointer to the Tai interface. Not created or owned by this class.
@@ -62,6 +65,7 @@ class TaiOpticsDataSource : public DataSource {
   TypedAttribute<int> module_slot_{this};
   EnumAttribute module_hw_state_{HwState_descriptor(), this};
   TypedAttribute<std::string> card_vendor_{this};
+  TypedAttribute<double> tx_power_attr_{this};
 };
 
 }  // namespace tai
