@@ -397,12 +397,12 @@ ongoing read operations, delete all of the info about individual fans, then
 populate the necessary fields to indicate a missing fan tray.
 
 Special care has to be taken with attributes indicating a presence status when
-used in conjunction with with runtime configurators. To prevent race conditions
+used in conjunction with runtime configurators. Do not introduce race conditions
 where the presence attribute already indicates a ready device, but the detail
 attributes, like fan speed, have not yet been inserted by the runtime configurator.
-Therefore, it is important not to expose a dynamic presence attribute updated
-by a hardware data source, but use a static value and only update in response
-to the hardware callback as part of the the runtime configurator.
+One approach is to not expose a dynamic presence attribute updated by a hardware
+data source, but use a static value and only update in response to the hardware
+callback as part of the the runtime configurator.
 
 #### Example Runtime Configurator
 

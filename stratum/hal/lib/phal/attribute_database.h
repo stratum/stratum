@@ -65,10 +65,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   //    const SystemInterface* system_interface);
 
   // Creates a new Phal attribute database
-  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDB(
-      std::unique_ptr<SwitchConfiguratorInterface> configurator);
-
-  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDb2(
+  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDb(
       std::unique_ptr<AttributeGroup> root_group);
 
   ::util::Status Set(const AttributeValueMap& values) override

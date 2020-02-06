@@ -108,12 +108,9 @@ Phal* Phal::CreateSingleton() {
           configurator->ConfigurePhalDB(&phal_config, root_group.get()));
     }
 
-    // Set up TAI
-    // ...
-
     // Create attribute database
     ASSIGN_OR_RETURN(std::move(database_),
-                     AttributeDatabase::MakePhalDb2(std::move(root_group)));
+                     AttributeDatabase::MakePhalDb(std::move(root_group)));
 
     // Create SfpAdapter
     sfp_adapter_ = absl::make_unique<SfpAdapter>(database_.get());

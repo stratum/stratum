@@ -82,6 +82,8 @@ tai_deps = [
     # TODO(plvision)
 ]
 
+# Default Phal selection (the absence of both with_* and without_*) is done by
+# filling the //conditions:default" or leaving it empty.
 phal_defines = select({
     ":with_onlp": onlp_defines,
     ":without_onlp": [],

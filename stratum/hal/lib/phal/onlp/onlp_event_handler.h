@@ -98,7 +98,6 @@ class OnlpEventHandler {
   // Helper function for pthread_create.
   static void* RunPollingThread(void* onlp_event_handler_ptr);
   ::util::Status PollOids();
-  ::util::Status PollSfpPresence();
 
   const OnlpInterface* onlp_ = nullptr;
   absl::Mutex monitor_lock_;

@@ -15,8 +15,6 @@
 
 #include "stratum/hal/lib/phal/onlp/onlp_sfp_configurator.h"
 
-// #include <fstream>
-// #include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
