@@ -1,5 +1,6 @@
 // Copyright 2019 Edgecore Networks Corporation
 // Phani Karanam <phani_karanam@edge-core.com>
+// Copyright 2020 Open Networking Foundation
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -7,7 +8,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/thermal_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_thermal_datasource.h"
 
 #include <memory>
 
@@ -27,6 +28,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -122,6 +124,7 @@ TEST_F(ThermalDatasourceTest, GetThermalData) {
 // TODO(phani-karanam): Add implementation.
 // TEST_F(ThermalDatasourceTest, SetThermalData) {}
 
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

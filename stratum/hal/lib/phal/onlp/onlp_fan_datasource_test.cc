@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/fan_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_fan_datasource.h"
 
 #include <memory>
 
@@ -33,6 +33,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -212,6 +213,7 @@ TEST_F(FanDatasourceTest, SetFanData) {
   EXPECT_OK(fan_datasource->GetFanDirection()->Set(
       FanDir_descriptor()->FindValueByName("FAN_DIR_B2F")));
 }
+}  // namespace
 
 }  // namespace onlp
 }  // namespace phal

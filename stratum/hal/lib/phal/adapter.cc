@@ -13,12 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <utility>
-#include <vector>
-
 #include "stratum/hal/lib/phal/adapter.h"
 
-#include "stratum/glue/status/status.h"
+#include <utility>
+#include <vector>
 
 namespace stratum {
 namespace hal {
@@ -26,21 +24,21 @@ namespace phal {
 
 ::util::StatusOr<std::unique_ptr<PhalDB>> Adapter::Get(
     const std::vector<Path>& paths) {
-  ASSIGN_OR_RETURN(auto db_query, attribute_db_interface_->MakeQuery(paths));
+  ASSIGN_OR_RETURN(auto db_query, database_->MakeQuery(paths));
   ASSIGN_OR_RETURN(auto phaldb_resp, db_query->Get());
-
   return std::move(phaldb_resp);
 }
 
-::util::Status Adapter::Subscribe(const std::vector<Path>& paths,
-                                  std::unique_ptr<ChannelWriter<PhalDB>> writer,
-                                  absl::Duration poll_time) {
-  ASSIGN_OR_RETURN(db_query_, attribute_db_interface_->MakeQuery(paths));
-  return db_query_->Subscribe(std::move(writer), poll_time);
+::util::StatusOr<std::unique_ptr<Query>> Adapter::Subscribe(
+    const std::vector<Path>& paths,
+    std::unique_ptr<ChannelWriter<PhalDB>> writer, absl::Duration poll_time) {
+  ASSIGN_OR_RETURN(auto db_query, database_->MakeQuery(paths));
+  RETURN_IF_ERROR(db_query->Subscribe(std::move(writer), poll_time));
+  return db_query;
 }
 
 ::util::Status Adapter::Set(const AttributeValueMap& attrs) {
-  return attribute_db_interface_->Set(attrs);
+  return database_->Set(attrs);
 }
 
 }  // namespace phal

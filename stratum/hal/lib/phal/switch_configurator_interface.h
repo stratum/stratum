@@ -15,8 +15,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
-#define STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
+#ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
+#define STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
 
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
@@ -26,9 +26,9 @@ namespace stratum {
 namespace hal {
 namespace phal {
 
-class SwitchConfigurator {
+class SwitchConfiguratorInterface {
  public:
-  virtual ~SwitchConfigurator() = default;
+  virtual ~SwitchConfiguratorInterface() = default;
 
   // Virtual function to create a default config should the
   // phal_config_path flag not be set.
@@ -44,4 +44,4 @@ class SwitchConfigurator {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_H_
+#endif  // STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_

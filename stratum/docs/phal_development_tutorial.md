@@ -112,7 +112,7 @@ ManagedAttributes.
 Suppose we frequently need to check if a file exists. To support this case in
 general, we could define a new data source:
 
-```
+```c++
 class FileExistsDataSource : public DataSource {
  public:
   // Every DataSource implementation must expose a shared_ptr factory function.
@@ -194,7 +194,7 @@ vector of
 PathEntry is mostly self explanatory, but also includes a few fields that allow
 wildcard queries.
 
-```
+```c++
 // A simplified definition of PathEntry. The actual definition includes some
 // constructors to simplify the process of specifying a path.
 struct PathEntry {
@@ -240,7 +240,7 @@ the path entries. Subsequent calls to `Get` and `Subscribe` on the returned
 As an example, suppose we want to query the speed of a fan once every second. We
 might write something like this:
 
-```
+```c++
 ::util::Status SubscribeToFanSpeed(
       int tray, int fan, std::shared_ptr<Channel<PhalDB>> channel) {
   // This path points to to fan_trays[0]/fans[2]/rpm.
@@ -322,7 +322,7 @@ message RemovableDevice {
 We want to first populate our PhalDB with a RemovableDevice, then populate the
 RemovableDevice with the is_present attribute. This might look something like:
 
-```
+```c++
 ::util::Status ConfigurePhalDB(const std::string& presence_path,
                                AttributeGroup* root_group) {
   // First acquire a writer lock on root_group.
@@ -396,13 +396,21 @@ acquire a writer lock on the fan tray group so that we won't interfere with any
 ongoing read operations, delete all of the info about individual fans, then
 populate the necessary fields to indicate a missing fan tray.
 
+Special care has to be taken with attributes indicating a presence status when
+used in conjunction with runtime configurators. Do not introduce race conditions
+where the presence attribute already indicates a ready device, but the detail
+attributes, like fan speed, have not yet been inserted by the runtime configurator.
+One approach is to not expose a dynamic presence attribute updated by a hardware
+data source, but use a static value and only update in response to the hardware
+callback as part of the the runtime configurator.
+
 #### Example Runtime Configurator
 
 We'll write a runtime configurator for a `RemovableWidget`. The format of
 runtime configurators is slightly different depending on how we receive hardware
 events, so for this example we'll assume that udev is the source of all events.
 
-```
+```c++
 // This class is the runtime configurator, and registers itself as a callback.
 // It derives from UdevEventCallback so that it can receive udev events via
 // HandleUdevEvent(...). It also implements RuntimeConfiguratorInterface, an empty

@@ -27,7 +27,6 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/phal/dummy_threadpool.h"
-// #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -203,33 +202,10 @@ AttributeDatabase::~AttributeDatabase() {
 //}
 
 ::util::StatusOr<std::unique_ptr<AttributeDatabase>>
-AttributeDatabase::MakePhalDB(
-    std::unique_ptr<SwitchConfigurator> configurator) {
-  PhalInitConfig phal_config;
-
-  // If no phal_config_path given try and build a default config
-  if (FLAGS_phal_config_path.empty()) {
-    RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
-
-    // use the phal_init_config file if it's been passed in
-  } else {
-    // Read Phal initial config
-    RETURN_IF_ERROR(
-        ReadProtoFromTextFile(FLAGS_phal_config_path, &phal_config));
-  }
-
-  std::unique_ptr<AttributeGroup> root_group =
-      AttributeGroup::From(PhalDB::descriptor());
-
-  // Now load the config into the attribute database
-  RETURN_IF_ERROR(
-      configurator->ConfigurePhalDB(&phal_config, root_group.get()));
-
+AttributeDatabase::MakePhalDb(std::unique_ptr<AttributeGroup> root_group) {
   ASSIGN_OR_RETURN(
       std::unique_ptr<AttributeDatabase> database,
       Make(std::move(root_group), absl::make_unique<DummyThreadpool>()));
-
-  database->switch_configurator_ = std::move(configurator);
 
   // Create and run PhalDb service
   {

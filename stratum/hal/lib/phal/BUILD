@@ -35,6 +35,75 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+# The following config settings allow to specify which PHAL backends to use.
+# Each can theoretically enable independently, as long as they configure
+# different parts of the attribute database.
+
+config_setting(
+    name = "with_onlp",
+    define_values = {
+        "phal_with_onlp": "true",
+    },
+)
+
+config_setting(
+    name = "without_onlp",
+    define_values = {
+        "phal_with_onlp": "false",
+    },
+)
+
+config_setting(
+    name = "with_tai",
+    define_values = {
+        "phal_with_tai": "true",
+    },
+)
+config_setting(
+    name = "without_tai",
+    define_values = {
+        "phal_with_tai": "false",
+    },
+)
+
+onlp_defines = [
+    "WITH_ONLP",
+]
+
+onlp_deps = [
+    "//stratum/hal/lib/phal/onlp:onlp_phal",
+]
+
+tai_defines = [
+    "WITH_TAI",
+]
+
+tai_deps = [
+    # TODO(plvision)
+]
+
+# Default Phal selection (the absence of both with_* and without_*) is done by
+# filling the //conditions:default" or leaving it empty.
+phal_defines = select({
+    ":with_onlp": onlp_defines,
+    ":without_onlp": [],
+    "//conditions:default": onlp_defines,
+}) + select({
+    ":with_tai": tai_defines,
+    ":without_tai": [],
+    "//conditions:default": [],
+})
+
+phal_deps = select({
+    ":with_onlp": onlp_deps,
+    ":without_onlp": [],
+    "//conditions:default": onlp_deps,
+}) + select({
+    ":with_tai": tai_deps,
+    ":without_tai": [],
+    "//conditions:default": [],
+})
+
 stratum_cc_library(
     name = "attribute_database_interface",
     hdrs = ["attribute_database_interface.h"],
@@ -110,7 +179,7 @@ stratum_cc_library(
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
-        ":switch_configurator",
+        ":switch_configurator_interface",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
@@ -162,18 +231,7 @@ stratum_cc_library(
     deps = [
         ":attribute_database_interface",
         ":db_cc_proto",
-        ":managed_attribute",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
-        "@com_google_protobuf//:protobuf",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
         "//stratum/glue/status",
-        "//stratum/hal/lib/common:phal_interface",
-        "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
     ],
@@ -189,12 +247,29 @@ stratum_cc_library(
         ":db_cc_proto",
         ":managed_attribute",
         "@com_google_protobuf//:protobuf",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:phal_interface",
         "//stratum/glue/status",
+        "//stratum/hal/lib/common:utils",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
+    ],
+)
+
+stratum_cc_test(
+    name = "sfp_adapter_test",
+    srcs = ["sfp_adapter_test.cc"],
+    deps = [
+        ":attribute_database_mock",
+        ":sfp_adapter",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/base:core_headers",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/phal/test:test_cc_proto",
+        "//stratum/lib/test_utils:matchers",
     ],
 )
 
@@ -754,6 +829,47 @@ stratum_cc_library(
 '''
 
 stratum_cc_library(
+    name = "phal_backend_interface",
+    hdrs = ["phal_backend_interface.h"],
+    deps = [
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/glue/status",
+    ],
+)
+
+stratum_cc_library(
+    name = "phal",
+    srcs = ["phal.cc"],
+    hdrs = ["phal.h"],
+    defines = phal_defines,
+    deps = [
+        ":phal_cc_proto",
+        ":sfp_configurator",
+        ":sfp_adapter",
+        ":switch_configurator_interface",
+        ":attribute_database",
+        ":phal_backend_interface",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/synchronization",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/lib:macros",
+    ] + phal_deps,
+)
+
+stratum_cc_test(
+    name = "phal_test",
+    srcs = ["phal_test.cc"],
+    deps = [
+        ":phal",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:macros",
+    ],
+)
+
+stratum_cc_library(
     name = "phal_sim",
     srcs = ["phal_sim.cc"],
     hdrs = ["phal_sim.h"],
@@ -806,8 +922,8 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "switch_configurator",
-    hdrs = ["switch_configurator.h"],
+    name = "switch_configurator_interface",
+    hdrs = ["switch_configurator_interface.h"],
     deps = [
         ":attribute_group",
         "//stratum/hal/lib/phal:phal_cc_proto",
