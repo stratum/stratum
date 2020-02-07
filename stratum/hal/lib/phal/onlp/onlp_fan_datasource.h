@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_FAN_DATASOURCE_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_FAN_DATASOURCE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_FAN_DATASOURCE_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_FAN_DATASOURCE_H_
 
 #include <string>
 #include <memory>
@@ -114,4 +114,4 @@ class OnlpFanDataSource : public DataSource {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_FAN_DATASOURCE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_FAN_DATASOURCE_H_

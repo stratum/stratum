@@ -81,7 +81,7 @@ namespace stratum {
 //   // ALTERNATIVE: There may be conditions where it is known that the Channel
 //   // will no longer be required, such as shutdown scenarios. In such cases,
 //   // the original reference can be retained, and the following may be done:
-//   channel->close();
+//   channel->Close();
 //   // This notifies all blocked ChannelReaders or ChannelWriters that the
 //   // Channel is closed. Subsequent Read() or Write() calls immediately
 //   // return.

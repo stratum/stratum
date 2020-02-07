@@ -33,11 +33,10 @@
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/db.pb.h"
-// #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/phaldb_service.h"
 #include "stratum/hal/lib/phal/system_interface.h"
-#include "stratum/hal/lib/phal/switch_configurator.h"
+#include "stratum/hal/lib/phal/switch_configurator_interface.h"
 #include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "stratum/hal/lib/phal/udev_event_handler.h"
 #include "stratum/lib/channel/channel.h"
@@ -66,8 +65,8 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   //    const SystemInterface* system_interface);
 
   // Creates a new Phal attribute database
-  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDB(
-      std::unique_ptr<SwitchConfigurator> configurator);
+  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDb(
+      std::unique_ptr<AttributeGroup> root_group);
 
   ::util::Status Set(const AttributeValueMap& values) override
       LOCKS_EXCLUDED(set_lock_);
@@ -120,7 +119,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   // database structure.
   std::unique_ptr<UdevEventHandler> udev_;
   // The configurator used for switches.
-  std::unique_ptr<SwitchConfigurator> switch_configurator_;
+  std::unique_ptr<SwitchConfiguratorInterface> switch_configurator_;
 
   // The thread to handle polling for streaming queries.
   pthread_t polling_thread_id_;
