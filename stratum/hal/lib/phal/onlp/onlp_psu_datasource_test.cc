@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/psu_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_psu_datasource.h"
 
 #include <memory>
 
@@ -33,6 +33,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -141,7 +142,7 @@ TEST_F(PsuDatasourceTest, GetPsuData) {
       psu_datasource->GetPsuHardwareState(),
       ContainsValue(HwState_descriptor()->FindValueByName("HW_STATE_PRESENT")));
 }
-
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

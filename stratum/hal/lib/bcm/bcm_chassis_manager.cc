@@ -1833,7 +1833,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   HwState old_state = *mutable_state;
 
   // This handler is supposed to return present or non present for the state of
-  // the transceiver modules. Other values do no make sense.
+  // the transceiver modules. Other values do not make sense.
   if (new_state != HW_STATE_PRESENT && new_state != HW_STATE_NOT_PRESENT) {
     LOG(ERROR) << "Invalid state for transceiver " << xcvr_port_key.ToString()
                << " in TransceiverEventHandler: " << HwState_Name(new_state)

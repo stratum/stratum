@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_PSU_DATASOURCE_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_PSU_DATASOURCE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PSU_DATASOURCE_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PSU_DATASOURCE_H_
 
 #include <memory>
 #include <string>
@@ -113,4 +113,4 @@ class OnlpPsuDataSource : public DataSource {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_PSU_DATASOURCE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PSU_DATASOURCE_H_

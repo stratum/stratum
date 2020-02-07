@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_SFP_DATASOURCE_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_SFP_DATASOURCE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SFP_DATASOURCE_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SFP_DATASOURCE_H_
 
 #include <vector>
 #include <memory>
@@ -44,7 +44,7 @@ class OnlpSfpDataSource : public DataSource {
   // OnlpSfpDataSource does not take ownership of onlp_interface. We expect
   // onlp_interface remains valid during OnlpSfpDataSource's lifetime.
   static ::util::StatusOr<std::shared_ptr<OnlpSfpDataSource>> Make(
-      int id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
+      int sfp_id, OnlpInterface* onlp_interface, CachePolicy* cache_policy);
 
 
   // Accessors for managed attributes.
@@ -144,4 +144,4 @@ class OnlpSfpDataSource : public DataSource {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_SFP_DATASOURCE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_SFP_DATASOURCE_H_

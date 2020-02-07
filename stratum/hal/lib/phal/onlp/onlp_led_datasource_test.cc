@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/onlp/led_datasource.h"
+#include "stratum/hal/lib/phal/onlp/onlp_led_datasource.h"
 
 #include <memory>
 
@@ -33,6 +33,7 @@ namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
+namespace {
 
 using ::stratum::test_utils::StatusIs;
 using ::testing::_;
@@ -201,7 +202,7 @@ TEST_F(LedDatasourceTest, SetLedData) {
 
   EXPECT_OK(led_datasource->GetLedChar()->Set(static_cast<int>('2')));
 }
-
+}  // namespace
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal

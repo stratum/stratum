@@ -97,19 +97,6 @@ DummyPhal::~DummyPhal() {}
   return ::util::OkStatus();
 }
 
-// Register the configurator so we can use later
-::util::Status DummyPhal::RegisterSfpConfigurator(
-    int slot, int port, ::stratum::hal::phal::SfpConfigurator* configurator) {
-
-  LOG(INFO) << __FUNCTION__;
-
-  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
-
-  slot_port_to_configurator_[slot_port_pair] = configurator;
-
-  return ::util::OkStatus();
-}
-
 DummyPhal* DummyPhal::CreateSingleton() {
   LOG(INFO) << __FUNCTION__;
   if (phal_singleton_ == nullptr) {

@@ -15,40 +15,33 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_INTERFACE_H_
+#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_INTERFACE_H_
 
-#ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_MOCK_H_
-#define STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_MOCK_H_
-
+#include "stratum/hal/lib/phal/phal_backend_interface.h"
+#include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/onlp/onlp_event_handler.h"
-#include "gmock/gmock.h"
+#include "stratum/hal/lib/phal/sfp_adapter.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace onlp {
 
-class OnlpEventCallbackMock : public OnlpEventCallback {
- public:
-  explicit OnlpEventCallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
-  MOCK_METHOD1(HandleStatusChange, ::util::Status(const OidInfo&));
-  MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
-};
+// TODO(Yi-Tseng): We don't support multiple slot for now,
+// use slot 1 as default slot.
+constexpr int kDefaultSlot = 1;
 
-class OnlpEventHandlerMock : public OnlpEventHandler {
+// Class "OnlpPhalInterface" defines the Onlp Phal backend interface.
+class OnlpPhalInterface : public PhalBackendInterface {
  public:
-  explicit OnlpEventHandlerMock(const OnlpInterface* onlp)
-      : OnlpEventHandler(onlp) {}
-
-  MOCK_METHOD1(RegisterEventCallback,
-               ::util::Status(OnlpEventCallback* callback));
-  MOCK_METHOD1(UnregisterEventCallback,
-               ::util::Status(OnlpEventCallback* callback));
+  // Register a OnlpEventCallback
+  virtual ::util::Status RegisterOnlpEventCallback(
+      OnlpEventCallback* callback) = 0;
 };
 
 }  // namespace onlp
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-
-#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_EVENT_HANDLER_MOCK_H_
-
+#endif  // STRATUM_HAL_LIB_PHAL_ONLP_ONLP_PHAL_INTERFACE_H_

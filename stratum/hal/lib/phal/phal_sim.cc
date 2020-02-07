@@ -121,16 +121,6 @@ PhalSim::~PhalSim() {}
   return ::util::OkStatus();
 }
 
-// Register the configurator so we can use later
-::util::Status PhalSim::RegisterSfpConfigurator(
-    int slot, int port, phal::SfpConfigurator* configurator) {
-  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
-
-  slot_port_to_configurator_[slot_port_pair] = configurator;
-
-  return ::util::OkStatus();
-}
-
 PhalSim* PhalSim::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {

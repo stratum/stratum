@@ -67,9 +67,6 @@ class DummyPhal : public PhalInterface {
   EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 
-  ::util::Status RegisterSfpConfigurator(int slot, int port,
-        ::stratum::hal::phal::SfpConfigurator* configurator) override;
-
   // Factory function for creating the instance of the DummyPhal.
   static DummyPhal* CreateSingleton() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
@@ -82,11 +79,6 @@ class DummyPhal : public PhalInterface {
   int xcvr_event_writer_id_;
   DummyBox* dummy_box_;
   ::absl::Mutex phal_lock_;
-
-  // Map from std::pair<int, int> representing (slot, port) of singleton port
-  // to the vector of sfp datasource id
-  std::map<std::pair<int, int>, ::stratum::hal::phal::SfpConfigurator*>
-      slot_port_to_configurator_;
 };
 
 }  // namespace dummy_switch
