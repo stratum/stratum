@@ -188,6 +188,34 @@ jobs:
       - *docker_push
       - *save_bazel_cache
 
+  publish-docker-stratum-bcm-sdklt-3-16-56:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bcm:3.16.56
+    steps:
+      - run:
+          name: Install docker
+          command: |
+            curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+            sudo sh /tmp/get-docker.sh
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bcm
+          command: |
+            export CC='clang' CXX='clang++'
+            bazel build --define bcm_sdk=lt-3.16.56 //stratum/hal/bin/bcm/standalone:stratum_bcm_package
+            tar xf bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz -C $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
+
   cpp-style-check:
     docker:
       - image: stratumproject/build:build
@@ -217,5 +245,8 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-stratum-bcm
+          # requires:
+          #   - publish-docker-build
+      - publish-docker-stratum-bcm-sdklt-3-16-56
           # requires:
           #   - publish-docker-build

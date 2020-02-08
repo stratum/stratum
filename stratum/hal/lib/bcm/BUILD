@@ -30,6 +30,35 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+config_setting(
+    name = "bcm_sdklt",
+    define_values = {
+        "bcm_sdk": "lt",
+    },
+)
+
+config_setting(
+    name = "bcm_sdklt_3_16_56",
+    define_values = {
+        "bcm_sdk": "lt-3.16.56",
+    },
+)
+
+sdk_deps = select({
+    ":bcm_sdklt_3_16_56": [
+        "@com_github_opennetworkinglab_sdklt_3_16_56//:bcm_headers",
+        "@com_github_opennetworkinglab_sdklt_3_16_56//:bcm_sdklt",
+    ],
+    ":bcm_sdklt": [
+        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
+        "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
+    ],
+    "//conditions:default": [
+        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
+        "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
+    ],
+})
+
 proto_library(
     name = "bcm_proto",
     srcs = ["bcm.proto"],
@@ -593,7 +622,6 @@ stratum_cc_library(
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:protobuf",
-        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
         "//stratum/glue:logging",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -608,7 +636,7 @@ stratum_cc_library(
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/gtl:cleanup",
-    ],
+    ] + sdk_deps,
 )
 
 stratum_cc_library(
@@ -872,12 +900,10 @@ stratum_cc_test(
         ":macros",
         ":test_main",
         "@com_google_googletest//:gtest",
-        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
-        "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
-    ],
+    ] + sdk_deps,
 )
 
 stratum_cc_library(
