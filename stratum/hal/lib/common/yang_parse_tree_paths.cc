@@ -2819,6 +2819,20 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/state/type
+void SetUpComponentsComponentStateType(
+    const std::string& name, TreeNode* node) {
+  auto poll_functor = [name](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, "OPTICAL_CHANNEL"), stream);
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /qos/interfaces/interface[name=<name>]
 //                    /output/queues/queue[name=<name>]/state/name
 void SetUpQosInterfacesInterfaceOutputQueuesQueueStateName(
@@ -3423,6 +3437,10 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(GetPath("components")("component", name)("name")());
   SetUpComponentsComponentName(name, node);
+
+  node = tree->AddNode(GetPath("components")("component", name)("state")(
+      "type")());
+  SetUpComponentsComponentStateType(name, node);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
@@ -3598,10 +3616,10 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
       ->SetOnPollHandler(interfaces_on_poll);
 }
 
-void YangParseTreePaths::AddAllComponentsName(YangParseTree* tree) {
-  auto on_poll = [tree](const GnmiEvent& event,
-                        const ::gnmi::Path& path,
-                        GnmiSubscribeStream* stream)
+void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
+  auto on_poll_names = [tree](const GnmiEvent& event,
+                              const ::gnmi::Path& path,
+                              GnmiSubscribeStream* stream)
   EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
     // Execute OnPollHandler and send to the stream.
     auto execute_poll = [&event, &stream](const TreeNode& leaf) {
@@ -3627,9 +3645,34 @@ void YangParseTreePaths::AddAllComponentsName(YangParseTree* tree) {
     return ::util::OkStatus();
   };
 
-  // Add support for all "/components/component/name" paths.
+  // Add support for all "/components/component[name]/name" paths.
   tree->AddNode(GetPath("components")("component", "*")("name")())
-      ->SetOnPollHandler(on_poll)
+      ->SetOnPollHandler(on_poll_names)
+      ->SetOnChangeHandler(on_change);
+
+  auto on_poll_all_components = [tree](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream)
+  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+    // Execute OnPollHandler and send to the stream.
+    auto execute_poll = [&event, &stream](const TreeNode& leaf) {
+      return (leaf.GetOnPollHandler())(event, stream);
+    };
+
+    // Recursively process on-poll.
+    auto status = tree->PerformActionForAllNonWildcardNodes(
+        GetPath("components")("component")(), gnmi::Path(), execute_poll);
+
+    // Notify the client that all nodes have been processed.
+    APPEND_STATUS_IF_ERROR(
+        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+
+    return status;
+  };  // NOLINT(readability/braces)
+
+  // Add support for the "/components/component/*" path.
+  tree->AddNode(GetPath("components")("component")("*")())
+      ->SetOnPollHandler(on_poll_all_components)
       ->SetOnChangeHandler(on_change);
 }
 
