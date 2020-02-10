@@ -265,7 +265,7 @@ YangParseTree::YangParseTree(SwitchInterface* switch_interface)
   // The rest of nodes will be added once the config is pushed.
   absl::WriterMutexLock l(&root_access_lock_);
   AddSubtreeAllInterfaces();
-  AddAllComponentsName();
+  AddSubtreeAllComponents();
   AddRoot();
 }
 
@@ -370,12 +370,15 @@ void YangParseTree::AddSubtreeAllInterfaces() {
   YangParseTreePaths::AddSubtreeAllInterfaces(this);
 }
 
-void YangParseTree::AddAllComponentsName() {
+void YangParseTree::AddSubtreeAllComponents() {
   // No need to lock the mutex - it is locked by method calling this one.
 
-  // Setup the /components/component[name="*"]/name path to make possible all
-  // components' names retrieval.
-  YangParseTreePaths::AddAllComponentsName(this);
+  // Setup
+  // * the /components/component[name="*"]/name path to make possible all
+  //   components' names retrieval.
+  // * the /components/component/* path to retrieve all the nodes for the
+  //   specific component.
+  YangParseTreePaths::AddSubtreeAllComponents(this);
 }
 
 void YangParseTree::AddRoot() {

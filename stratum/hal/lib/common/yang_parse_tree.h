@@ -426,8 +426,11 @@ class YangParseTree {
   // Add supported leaf handles for the case of interfaces[name=*] (all known
   // interfaces).
   void AddSubtreeAllInterfaces() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
-  // Enable /components/component[name=*]/name paths discovering.
-  void AddAllComponentsName() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
+  // Enable
+  // * /components/component[name=*]/name
+  // * /components/component/*
+  // paths discovering.
+  void AddSubtreeAllComponents() EXCLUSIVE_LOCKS_REQUIRED(root_access_lock_);
 
   // Add supported leaf handles for a node.
   void AddSubtreeNode(const Node& node)

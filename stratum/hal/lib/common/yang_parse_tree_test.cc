@@ -4994,5 +4994,39 @@ TEST_F(YangParseTreeOpticalChannelTest,
   EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
 }
 
+// Check if the '/components/component/state/type'
+// OnPoll action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentStateTypeOnPollSuccess_Test) {
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")("state")(
+      "type")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnPoll(path, &resp));
+
+  // Check that we retrieve the component name.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "OPTICAL_CHANNEL");
+}
+
+// Check if the '/components/component/state/type'
+// OnTimer action works correctly.
+TEST_F(YangParseTreeOpticalChannelTest,
+       ComponentsComponentStateTypeOnTimerSuccess_Test) {
+  AddOpticalInterface("dummy-switch-1");
+  auto path = GetPath("components")("component", "dummy-switch-1")("state")(
+      "type")();
+
+  // Retrieve the value from the tree.
+  ::gnmi::SubscribeResponse resp;
+  ASSERT_OK(ExecuteOnTimer(path, &resp));
+
+  // Check that we retrieve the component name.
+  ASSERT_THAT(resp.update().update(), SizeIs(1));
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "OPTICAL_CHANNEL");
+}
+
 }  // namespace hal
 }  // namespace stratum
