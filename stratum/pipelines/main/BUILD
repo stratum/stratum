@@ -20,6 +20,8 @@ load("//stratum/p4c_backends/common:build_defs.bzl", "p4_fpm_compile")
 
 load("//bazel/rules:p4c_build_defs.bzl", "p4_bmv2_compile")
 
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+
 filegroup(
     name = "annotation_map_files",
     srcs = [
@@ -44,4 +46,18 @@ p4_bmv2_compile(
     hdrs = [],
     out_p4_info = "bmv2/main.p4info",
     out_p4_pipeline_json = "bmv2/main.json",
+)
+
+pkg_tar(
+    name = "main_pipelines",
+    extension = "tar.gz",
+    strip_prefix = ".",
+    srcs = [
+        "fpm/main.p4info",
+        "fpm/main.pb.bin",
+        "fpm/main.pb.txt",
+        "bmv2/main.p4info",
+        "bmv2/main.json",
+    ],
+    mode = "0644",
 )

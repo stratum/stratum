@@ -72,16 +72,16 @@ void FetchOnce::CacheUpdated() { should_update_ = false; }
     int32 timed_cache_value) {
 
     switch (cache_type) {
-    case ::stratum::hal::CachePolicyConfig::NEVER_UPDATE:
+    case CachePolicyConfig::NEVER_UPDATE:
         return new NeverUpdate();
 
-    case ::stratum::hal::CachePolicyConfig::FETCH_ONCE:
+    case CachePolicyConfig::FETCH_ONCE:
         return new FetchOnce();
 
-    case ::stratum::hal::CachePolicyConfig::TIMED_CACHE:
+    case CachePolicyConfig::TIMED_CACHE:
         return new TimedCache(absl::Seconds(timed_cache_value));
 
-    case ::stratum::hal::CachePolicyConfig::NO_CACHE:
+    case CachePolicyConfig::NO_CACHE:
         return new NoCache();
 
     default:

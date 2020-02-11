@@ -96,7 +96,7 @@ void FillBcmTableEntryValue(const P4ActionFunction::P4ActionFields& source,
     case P4ActionFunction::P4ActionFields::kB:
       destination->set_b(source.b());
       break;
-    case MappedField::Value::DATA_NOT_SET:
+    case P4ActionFunction::P4ActionFields::VALUE_NOT_SET:
       // Don't do anything if there is no value.
       break;
   }

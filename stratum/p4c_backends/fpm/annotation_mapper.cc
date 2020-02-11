@@ -262,7 +262,7 @@ bool AnnotationMapper::MapActionAnnotation(
       *action_descriptor->add_assignments() =
           action_addendum->assignments_addenda();
     }
-    if (action_addendum->primitive_ops_addenda() != P4_ACTION_TYPE_UNKNOWN) {
+    if (action_addendum->primitive_ops_addenda() != P4_ACTION_OP_UNKNOWN) {
       action_descriptor->add_primitive_ops(
           action_addendum->primitive_ops_addenda());
     }

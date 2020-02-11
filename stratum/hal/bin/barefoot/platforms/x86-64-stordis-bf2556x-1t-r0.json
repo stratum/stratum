@@ -1,0 +1,1356 @@
+{
+  "_comment": "Auto-generated configuration file for bspless support (pltfm_bd_map_mavericks_P0C.h)",
+  "board_lane_map_entry": [
+    {
+      "connector": 1,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 8,
+      "media_type": "optical"
+    },
+    {
+      "connector": 2,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 8,
+      "media_type": "optical"
+    },
+    {
+      "connector": 3,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 8,
+      "media_type": "optical"
+    },
+    {
+      "connector": 4,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 8,
+      "media_type": "optical"
+    },
+    {
+      "connector": 5,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 7,
+      "media_type": "optical"
+    },
+    {
+      "connector": 6,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 7,
+      "media_type": "optical"
+    },
+    {
+      "connector": 7,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 7,
+      "media_type": "optical"
+    },
+    {
+      "connector": 8,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 7,
+      "media_type": "optical"
+    },
+    {
+      "connector": 9,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 6,
+      "media_type": "optical"
+    },
+    {
+      "connector": 10,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 6,
+      "media_type": "optical"
+    },
+    {
+      "connector": 11,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 6,
+      "media_type": "optical"
+    },
+    {
+      "connector": 12,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 6,
+      "media_type": "optical"
+    },
+    {
+      "connector": 13,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 4,
+      "media_type": "optical"
+    },
+    {
+      "connector": 14,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 4,
+      "media_type": "optical"
+    },
+    {
+      "connector": 15,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 4,
+      "media_type": "optical"
+    },
+    {
+      "connector": 16,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 4,
+      "media_type": "optical"
+    },
+    {
+      "connector": 17,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 2,
+      "media_type": "optical"
+    },
+    {
+      "connector": 18,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 2,
+      "media_type": "optical"
+    },
+    {
+      "connector": 19,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 2,
+      "media_type": "optical"
+    },
+    {
+      "connector": 20,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 2,
+      "media_type": "optical"
+    },
+    {
+      "connector": 21,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 0,
+      "media_type": "optical"
+    },
+    {
+      "connector": 22,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 0,
+      "media_type": "optical"
+    },
+    {
+      "connector": 23,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 0,
+      "media_type": "optical"
+    },
+    {
+      "connector": 24,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 0,
+      "media_type": "optical"
+    },
+    {
+      "connector": 25,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 13,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 30,
+      "media_type": "optical"
+    },
+    {
+      "connector": 26,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 12,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 30,
+      "media_type": "optical"
+    },
+    {
+      "connector": 27,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 12,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 30,
+      "media_type": "optical"
+    },
+    {
+      "connector": 28,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 11,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 30,
+      "media_type": "optical"
+    },
+    {
+      "connector": 29,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 12,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 28,
+      "media_type": "optical"
+    },
+    {
+      "connector": 30,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 28,
+      "media_type": "optical"
+    },
+    {
+      "connector": 31,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 11,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 28,
+      "media_type": "optical"
+    },
+    {
+      "connector": 32,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 11,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 28,
+      "media_type": "optical"
+    },
+    {
+      "connector": 33,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 26,
+      "media_type": "optical"
+    },
+    {
+      "connector": 34,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 12,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 26,
+      "media_type": "optical"
+    },
+    {
+      "connector": 35,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 26,
+      "media_type": "optical"
+    },
+    {
+      "connector": 36,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 26,
+      "media_type": "optical"
+    },
+    {
+      "connector": 37,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 25,
+      "media_type": "optical"
+    },
+    {
+      "connector": 38,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 25,
+      "media_type": "optical"
+    },
+    {
+      "connector": 39,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 25,
+      "media_type": "optical"
+    },
+    {
+      "connector": 40,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 25,
+      "media_type": "optical"
+    },
+    {
+      "connector": 41,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 24,
+      "media_type": "optical"
+    },
+    {
+      "connector": 42,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 24,
+      "media_type": "optical"
+    },
+    {
+      "connector": 43,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 24,
+      "media_type": "optical"
+    },
+    {
+      "connector": 44,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 24,
+      "media_type": "optical"
+    },
+    {
+      "connector": 45,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 23,
+      "media_type": "optical"
+    },
+    {
+      "connector": 46,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 23,
+      "media_type": "optical"
+    },
+    {
+      "connector": 47,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 2,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 23,
+      "media_type": "optical"
+    },
+    {
+      "connector": 48,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 3,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 10,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 23,
+      "media_type": "optical"
+    },
+    {
+      "connector": 49,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 20,
+      "media_type": "optical"
+    },
+    {
+      "connector": 50,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 17,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 22,
+      "media_type": "optical"
+    },
+    {
+      "connector": 51,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 16,
+      "media_type": "optical"
+    },
+    {
+      "connector": 52,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 14,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 18,
+      "media_type": "optical"
+    },
+    {
+      "connector": 53,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 17,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 12,
+      "media_type": "optical"
+    },
+    {
+      "connector": 54,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 15,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 14,
+      "media_type": "optical"
+    },
+    {
+      "connector": 55,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 19,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 19,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 19,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 19,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 9,
+      "media_type": "optical"
+    },
+    {
+      "connector": 56,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 17,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 17,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 19,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 19,
+          "tx_eq_pre": 2
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 10,
+      "media_type": "optical"
+    },
+    {
+      "connector": 57,
+      "device_id": 0,
+      "lane0": {
+        "mac_ch": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 0,
+        "tx_pn_swap": 0
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 1,
+        "tx_pn_swap": 0
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 2,
+        "tx_pn_swap": 0
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+          "tx_eq_attn": 0,
+          "tx_eq_post": 16,
+          "tx_eq_pre": 3
+        },
+        "tx_lane": 3,
+        "tx_pn_swap": 0
+      },
+      "mac_block": 32,
+      "media_type": "optical"
+    }
+  ],
+  "enable_debug_log": 1
+}

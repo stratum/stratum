@@ -33,10 +33,10 @@
 #include "stratum/hal/lib/phal/attribute_database_interface.h"
 #include "stratum/hal/lib/phal/attribute_group.h"
 #include "stratum/hal/lib/phal/db.pb.h"
-// #include "stratum/hal/lib/phal/google_platform/google_switch_configurator.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/phaldb_service.h"
 #include "stratum/hal/lib/phal/system_interface.h"
-#include "stratum/hal/lib/phal/switch_configurator.h"
+#include "stratum/hal/lib/phal/switch_configurator_interface.h"
 #include "stratum/hal/lib/phal/threadpool_interface.h"
 #include "stratum/hal/lib/phal/udev_event_handler.h"
 #include "stratum/lib/channel/channel.h"
@@ -65,8 +65,8 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   //    const SystemInterface* system_interface);
 
   // Creates a new Phal attribute database
-  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDB(
-      std::unique_ptr<SwitchConfigurator> configurator);
+  static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakePhalDb(
+      std::unique_ptr<AttributeGroup> root_group);
 
   ::util::Status Set(const AttributeValueMap& values) override
       LOCKS_EXCLUDED(set_lock_);
@@ -96,6 +96,8 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   ::util::Status SetupPolling();
   // If the polling thread is running, safely shuts it down.
   void TeardownPolling();
+  // Shut down the PhalDB service.
+  void ShutdownService();
   // Repeatedly polls queries until polling_thread_running_ is set to false.
   // Called directly by pthread_create.
   static void* RunPollingThread(void* attribute_database_ptr);
@@ -117,7 +119,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   // database structure.
   std::unique_ptr<UdevEventHandler> udev_;
   // The configurator used for switches.
-  std::unique_ptr<SwitchConfigurator> switch_configurator_;
+  std::unique_ptr<SwitchConfiguratorInterface> switch_configurator_;
 
   // The thread to handle polling for streaming queries.
   pthread_t polling_thread_id_;
@@ -136,6 +138,12 @@ class AttributeDatabase : public AttributeDatabaseInterface {
       GUARDED_BY(polling_lock_);
   // A lock to serialize all calls to Set(...).
   absl::Mutex set_lock_;
+  // The PhalDb service exposing the database, mainly for debugging.
+  // Owned by the class.
+  std::unique_ptr<::grpc::Server> external_server_;
+  // Unique pointer to the gRPC server serving the internal RPC connections
+  // serviced by PhalDbService. Owned by the class.
+  std::unique_ptr<PhalDbService> phal_db_service_;
 };
 
 // DatabaseQuery is a wrapper for AttributeGroupQuery that transforms query

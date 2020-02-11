@@ -27,10 +27,11 @@ namespace hal {
 namespace phal {
 namespace onlp {
 
-class OnlpSfpEventCallbackMock : public OnlpSfpEventCallback {
+class OnlpEventCallbackMock : public OnlpEventCallback {
  public:
-  OnlpSfpEventCallbackMock() {}
+  explicit OnlpEventCallbackMock(OnlpOid oid) : OnlpEventCallback(oid) {}
   MOCK_METHOD1(HandleStatusChange, ::util::Status(const OidInfo&));
+  MOCK_METHOD1(HandleOidStatusChange, ::util::Status(const OidInfo&));
 };
 
 class OnlpEventHandlerMock : public OnlpEventHandler {
@@ -38,14 +39,10 @@ class OnlpEventHandlerMock : public OnlpEventHandler {
   explicit OnlpEventHandlerMock(const OnlpInterface* onlp)
       : OnlpEventHandler(onlp) {}
 
-  MOCK_METHOD1(RegisterOidEventCallback,
-               ::util::Status(OnlpOidEventCallback* callback));
-  MOCK_METHOD1(UnregisterOidEventCallback,
-               ::util::Status(OnlpOidEventCallback* callback));
-  MOCK_METHOD1(RegisterSfpEventCallback,
-               ::util::Status(OnlpSfpEventCallback* callback));
-  MOCK_METHOD1(UnregisterSfpEventCallback,
-               ::util::Status(OnlpSfpEventCallback* callback));
+  MOCK_METHOD1(RegisterEventCallback,
+               ::util::Status(OnlpEventCallback* callback));
+  MOCK_METHOD1(UnregisterEventCallback,
+               ::util::Status(OnlpEventCallback* callback));
 };
 
 }  // namespace onlp

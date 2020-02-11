@@ -56,8 +56,6 @@ class PhalSim : public PhalInterface {
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status RegisterSfpConfigurator(int slot, int port,
-      ::stratum::hal::phal::SfpConfigurator* configurator) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.

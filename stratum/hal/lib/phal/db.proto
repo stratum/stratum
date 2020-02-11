@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 syntax = "proto3";
 
 option cc_generic_services = false;
@@ -157,7 +156,7 @@ message Transceiver {
   int32 cable_length = 11;
   string cable_length_desc = 12;
   double temperature = 13;  // Measured in degrees Celsius.
-  double vcc = 14;         // Measured in volts.
+  double vcc = 14;          // Measured in volts.
   AlarmStatus temperature_alarm = 15;
   AlarmStatus vcc_alarm = 16;
   int32 channel_count = 17;
@@ -190,4 +189,93 @@ message TemperatureData {
   Location location = 1;
   double celsius = 2;
   string details = 3;
+}
+
+// Attribute DB (i.e. Phal DB) services
+service PhalDb {
+  // Get one or more attributes
+  rpc Get(GetRequest) returns (GetResponse) {}
+
+  // Set one or more attributes
+  rpc Set(SetRequest) returns (SetResponse) {}
+
+  // Subscribe to one or more attributes
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {}
+}
+
+message PathQuery {
+  message PathEntry {
+    // The name of the next attribute group in the path. If this is the last
+    // entry in the path, this is the name of an attribute instead. In the
+    // simplest case, this is the only field of PathEntry which needs to be set.
+    string name = 1;
+    // Ignored if indexed == false.
+    int32 index = 2;
+    // If indexed == true, this PathEntry refers to a repeated attribute group.
+    // If all == true as well, we should query every index in this group.
+    // Otherwise, query only the specified index.
+    bool indexed = 3;
+    // Ignored if indexed == false.
+    bool all = 4;
+    // If terminal_group == true, this PathEntry is the last entry in our path,
+    // but still refers to an attribute group. Instead of querying a single
+    // attribute, we will query every attribute contained in this group and its
+    // children.
+    bool terminal_group = 5;
+  }
+  repeated PathEntry entries = 1;
+}
+
+message GetRequest {
+  PathQuery path = 1;
+}
+
+message GetResponse {
+  PhalDB phal_db = 1;
+}
+
+message SubscribeRequest {
+  PathQuery path = 1;
+  uint64 polling_interval = 2;  // nanoseconds
+}
+
+message SubscribeResponse {
+  PhalDB phal_db = 1;
+}
+
+message UpdateValue {
+  oneof value {
+    double double_val = 1;
+    float float_val = 2;
+    int32 int32_val = 3;
+    int64 int64_val = 4;
+    uint32 uint32_val = 5;
+    uint64 uint64_val = 6;
+    bool bool_val = 7;
+    string string_val = 8;
+    bytes bytes_val = 9;
+  }
+}
+
+// Update one or more values in a leaf node
+message Update {
+  PathQuery path = 1;
+  UpdateValue value = 2;
+}
+
+message SetRequest {
+  repeated Update updates = 1;
+}
+
+message SetResponse {}
+
+// Error message used to report a single update error for a Set RPC.
+message Error {
+  // gRPC canonical error code (see
+  // github.com/grpc/grpc-go/blob/master/codes/codes.go)
+  int32 canonical_code = 1;
+  // Detailed error message.
+  string message = 2;
+  // Detailed numeric error code
+  int32 code = 3;
 }
