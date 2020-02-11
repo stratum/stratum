@@ -56,7 +56,7 @@ ENV BF_SDE_INSTALL $SDE_INSTALL
 WORKDIR /stratum
 RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
-    --define profile=phal_sim
+    --define phal_with_onlp=false
 
 ENV STRATUM_BF_BASE stratum/hal/bin/barefoot
 RUN mkdir -p $OUTPUT_BASE/bin && \
