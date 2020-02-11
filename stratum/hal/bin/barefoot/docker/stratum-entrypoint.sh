@@ -18,6 +18,7 @@
 KDRV_PATH=$BF_SDE_INSTALL/lib/modules/bf_kdrv.ko
 PORT_MAP=$BF_SDE_INSTALL/share/stratum/$(cat /etc/onl/platform).json
 FLAG_FILE=/stratum_configs/stratum.flags
+WITH_ONLP=${WITH_ONLP:-true}
 
 if [ ! -f "$FLAG_FILE" ]; then
     echo "Use default flag file"
@@ -46,5 +47,8 @@ fi
 echo "loading bf_kdrv_mod..."
 insmod $KDRV_PATH intr_mode="msi"
 
-/usr/local/bin/stratum_bf -flagfile=$FLAG_FILE
-
+if [ "$WITH_ONLP" = true ]; then
+    /usr/local/bin/stratum_bf -flagfile=$FLAG_FILE
+else
+    /usr/local/bin/stratum_bf_no_onlp -flagfile=$FLAG_FILE
+fi
