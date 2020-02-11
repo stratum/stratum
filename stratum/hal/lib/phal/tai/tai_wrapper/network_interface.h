@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-
-#ifndef STRATUM_HAL_LIB_TAI_NETWORK_INTERFACE_H_
-#define STRATUM_HAL_LIB_TAI_NETWORK_INTERFACE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_NETWORK_INTERFACE_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_NETWORK_INTERFACE_H_
 
 #include <string>
 
-#include "stratum/hal/lib/tai/tai_object.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_object.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 /*!
@@ -50,7 +50,8 @@ class NetworkInterface final : public TAIObject {
 }; /* class HostInterface */
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_NETWORK_INTERFACE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_NETWORK_INTERFACE_H_

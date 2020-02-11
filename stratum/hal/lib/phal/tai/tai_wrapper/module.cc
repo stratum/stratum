@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
+#include "stratum/hal/lib/phal/tai/tai_wrapper/module.h"
 
-#include "stratum/hal/lib/tai/module.h"
-
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
-#include "stratum/hal/lib/tai/host_interface.h"
-#include "stratum/hal/lib/tai/network_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/host_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/network_interface.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 Module::Module(const tai_api_method_table_t& api, const std::string& location)
@@ -148,5 +148,6 @@ tai_status_t Module::DeserializeAttribute(
 std::string Module::GetLocation() const { return location_; }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

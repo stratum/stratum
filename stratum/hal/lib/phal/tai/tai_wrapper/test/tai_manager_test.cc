@@ -18,17 +18,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "stratum/hal/lib/tai/host_interface.h"
-#include "stratum/hal/lib/tai/module.h"
-#include "stratum/hal/lib/tai/network_interface.h"
-#include "stratum/hal/lib/tai/tai_manager.h"
-#include "stratum/hal/lib/tai/tai_wrapper.h"
-#include "stratum/hal/lib/tai/test/tai_object_mock.h"
-#include "stratum/hal/lib/tai/test/tai_test_manager_wrapper.h"
-#include "stratum/hal/lib/tai/types_converter.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/host_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/module.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/network_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/test/tai_object_mock.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/test/tai_test_manager_wrapper.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/types_converter.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 using ::testing::_;
@@ -88,9 +89,6 @@ TEST(TAIManagerTest, CorrectObjectCreation_Test) {
 
 TEST(TAIManagerTest, SetFrequencyValueWithSuccess_Test) {
   const uint64 kFrequency = 45;
-  SetRequest_Request set_request;
-  set_request.mutable_port()->mutable_frequency()->set_value(kFrequency);
-  EXPECT_TRUE(TAIManager::IsRequestSupported(set_request));
 
   std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
   std::shared_ptr<TAIObjectMock> object_mock =
@@ -117,8 +115,41 @@ TEST(TAIManagerTest, SetFrequencyValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  auto kStatus = manager->SetValue(set_request, {0, 1});
+  auto kStatus = manager->SetValue<uint64>(
+      kFrequency, TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ, {0, 1});
   EXPECT_TRUE(kStatus.ok());
+}
+
+TEST(TAIManagerTest, SetFrequencyValueWithInvalidAttributeValue_Test) {
+  const uint64 kFrequency = 45;
+
+  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::shared_ptr<TAIObjectMock> object_mock =
+      std::make_shared<TAIObjectMock>();
+
+  tai_attr_metadata_t dummy_tai_metadata = {};
+
+  EXPECT_CALL(*object_mock.get(), SetAttribute(_))
+      .Times(0);
+
+  EXPECT_CALL(*object_mock.get(), GetAlocatedAttributeObject(
+                                      TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ))
+      .Times(1)
+      .WillOnce(Return(TAIAttribute(TAI_NETWORK_INTERFACE_ATTR_START,
+                                    &dummy_tai_metadata)));
+
+  EXPECT_CALL(*wrapper.get(),
+              GetObject(TAIPath({{TAI_OBJECT_TYPE_MODULE, 0},
+                                 {TAI_OBJECT_TYPE_NETWORKIF, 1}})))
+      .Times(1)
+      .WillOnce(Return(object_mock));
+
+  std::unique_ptr<TAIManagerTestWrapper> manager =
+      absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
+
+  auto kStatus = manager->SetValue<uint64>(
+      kFrequency, TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ, {0, 1});
+  EXPECT_FALSE(kStatus.ok());
 }
 
 TEST(TAIManagerTest, GetFrequencyValueWithSuccess_Test) {
@@ -150,23 +181,15 @@ TEST(TAIManagerTest, GetFrequencyValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  DataRequest::Request request(DataRequest::Request::default_instance());
-
-  request.mutable_frequency();
-  auto valueOrStatus = manager->GetValue(request, {0, 1});
+  auto valueOrStatus = manager->GetValue<uint64>(
+      TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ, {0, 1});
   EXPECT_TRUE(valueOrStatus.ok());
 
-  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie().frequency().value(),
-            TypesConverter::HertzToMegahertz(kFrequency));
+  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie(), kFrequency);
 }
 
 TEST(TAIManagerTest, SetModulationValueWithSuccess_Test) {
   const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
-  // Set modulation using operational mode field.
-  SetRequest_Request set_request;
-  set_request.mutable_port()->mutable_operational_mode()->set_value(
-      TypesConverter::ModulationToOperationalMode(kModulation));
-  EXPECT_TRUE(TAIManager::IsRequestSupported(set_request));
 
   std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
   std::shared_ptr<TAIObjectMock> object_mock =
@@ -178,11 +201,12 @@ TEST(TAIManagerTest, SetModulationValueWithSuccess_Test) {
       .Times(1)
       .WillOnce(Return(TAI_STATUS_SUCCESS));
 
-  EXPECT_CALL(*object_mock.get(), GetAlocatedAttributeObject(
-      TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT)).Times(1)
-          .WillOnce(Return(TAIAttribute(
-              TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT,
-              &dummy_tai_metadata)));
+  EXPECT_CALL(
+      *object_mock.get(),
+      GetAlocatedAttributeObject(TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT))
+      .Times(1)
+      .WillOnce(Return(TAIAttribute(
+          TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT, &dummy_tai_metadata)));
 
   EXPECT_CALL(*wrapper.get(),
               GetObject(TAIPath({{TAI_OBJECT_TYPE_MODULE, 0},
@@ -193,8 +217,29 @@ TEST(TAIManagerTest, SetModulationValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  auto kStatus = manager->SetValue(set_request, {0, 1});
+  auto kStatus = manager->SetValue<int32>(
+      kModulation, TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT, {0, 1});
   EXPECT_TRUE(kStatus.ok());
+}
+
+TEST(TAIManagerTest, TryToSetModulationValueWithInvalidObjectId_Test) {
+  const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
+
+  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+
+  std::weak_ptr<TAIObjectMock> dummy_weak_ptr;
+  EXPECT_CALL(*wrapper.get(),
+              GetObject(TAIPath({{TAI_OBJECT_TYPE_MODULE, 6},
+                                 {TAI_OBJECT_TYPE_NETWORKIF, 1}})))
+      .Times(1)
+      .WillOnce(Return(dummy_weak_ptr));
+
+  std::unique_ptr<TAIManagerTestWrapper> manager =
+      absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
+
+  auto kStatus = manager->SetValue<int32>(
+      kModulation, TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT, {6, 1});
+  EXPECT_FALSE(kStatus.ok());
 }
 
 TEST(TAIManagerTest, GetModulationValueWithSuccess_Test) {
@@ -226,23 +271,15 @@ TEST(TAIManagerTest, GetModulationValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  DataRequest::Request request(DataRequest::Request::default_instance());
-
-  // Get modulation using operational mode request.
-  request.mutable_operational_mode();
-  auto valueOrStatus = manager->GetValue(request, {0, 1});
+  auto valueOrStatus = manager->GetValue<int32>(
+      TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT, {0, 1});
   EXPECT_TRUE(valueOrStatus.ok());
 
-  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie().operational_mode().value(),
+  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie(),
             TypesConverter::ModulationToOperationalMode(kModulation));
 }
 
 TEST(TAIManagerTest, SetOutputPowerValueWithSuccess_Test) {
-  SetRequest_Request set_request;
-  const float kValue = 12.34f;
-  set_request.clear_port();
-  set_request.mutable_port()->mutable_target_output_power()->set_value(kValue);
-
   std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
@@ -268,10 +305,40 @@ TEST(TAIManagerTest, SetOutputPowerValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  EXPECT_TRUE(TAIManager::IsRequestSupported(set_request));
-
-  auto kStatus = manager->SetValue(set_request, {0, 1});
+  auto kStatus = manager->SetValue<float>(
+      12.34f, TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER, {0, 1});
   EXPECT_TRUE(kStatus.ok());
+}
+
+TEST(TAIManagerTest, SetOutputPowerValueWithErrorFromTai_Test) {
+  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::shared_ptr<TAIObjectMock> object_mock =
+      std::make_shared<TAIObjectMock>();
+
+  tai_attr_metadata_t dummy_tai_metadata = {};
+
+  EXPECT_CALL(*object_mock.get(), SetAttribute(_))
+      .Times(1)
+      .WillOnce(Return(TAI_STATUS_FAILURE));  // error code from tai
+
+  EXPECT_CALL(*object_mock.get(), GetAlocatedAttributeObject(
+                                      TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER))
+      .Times(1)
+      .WillOnce(Return(TAIAttribute(TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER,
+                                    &dummy_tai_metadata)));
+
+  EXPECT_CALL(*wrapper.get(),
+              GetObject(TAIPath({{TAI_OBJECT_TYPE_MODULE, 0},
+                                 {TAI_OBJECT_TYPE_NETWORKIF, 1}})))
+      .Times(1)
+      .WillOnce(Return(object_mock));
+
+  std::unique_ptr<TAIManagerTestWrapper> manager =
+      absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
+
+  auto kStatus = manager->SetValue<float>(
+      12.34f, TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER, {0, 1});
+  EXPECT_FALSE(kStatus.ok());
 }
 
 TEST(TAIManagerTest, GetOutputPowerValueWithSuccess_Test) {
@@ -282,8 +349,8 @@ TEST(TAIManagerTest, GetOutputPowerValueWithSuccess_Test) {
   tai_attr_metadata_t dummy_tai_metadata = {.objecttype =
                                                 TAI_OBJECT_TYPE_NETWORKIF};
   dummy_tai_metadata.attrvaluetype = TAI_ATTR_VALUE_TYPE_FLT;
-  TAIAttribute dummy_tai_attribute(
-      TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER, &dummy_tai_metadata);
+  TAIAttribute dummy_tai_attribute(TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER,
+                                   &dummy_tai_metadata);
 
   const float kOutputValue = 5.5f;
   dummy_tai_attribute.attr.value.flt = kOutputValue;
@@ -303,15 +370,11 @@ TEST(TAIManagerTest, GetOutputPowerValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  // set get the value that was previously setted
-  DataRequest::Request request(DataRequest::Request::default_instance());
-
-  request.mutable_output_power();
-  auto valueOrStatus = manager->GetValue(request, {0, 1});
+  auto valueOrStatus = manager->GetValue<float>(
+      TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER, {0, 1});
   ASSERT_TRUE(valueOrStatus.ok());
 
-  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie().output_power().instant(),
-            kOutputValue);
+  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie(), kOutputValue);
 }
 
 TEST(TAIManagerTest, GetInputPowerValueWithSuccess_Test) {
@@ -343,17 +406,15 @@ TEST(TAIManagerTest, GetInputPowerValueWithSuccess_Test) {
   std::unique_ptr<TAIManagerTestWrapper> manager =
       absl::make_unique<TAIManagerTestWrapper>(std::move(wrapper));
 
-  DataRequest::Request request(DataRequest::Request::default_instance());
-
-  request.mutable_input_power();
-  auto valueOrStatus = manager->GetValue(request, {0, 1});
+  auto valueOrStatus = manager->GetValue<float>(
+      TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER, {0, 1});
   // in stub realization there is no default value for input power
   ASSERT_TRUE(valueOrStatus.ok());
 
-  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie().input_power().instant(),
-            kInputValue);
+  EXPECT_EQ(valueOrStatus.ConsumeValueOrDie(), kInputValue);
 }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

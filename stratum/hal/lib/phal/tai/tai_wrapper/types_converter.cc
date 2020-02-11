@@ -16,10 +16,11 @@
  */
 
 
-#include "stratum/hal/lib/tai/types_converter.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/types_converter.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 const std::vector<std::pair<::google::protobuf::uint64, tai_int32_t>>
@@ -80,5 +81,6 @@ tai_int32_t TypesConverter::OperationalModeToModulation(
 
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

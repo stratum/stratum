@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 
-#include "stratum/hal/lib/tai/tai_attribute.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_attribute.h"
 
 #include "stratum/glue/logging.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 TAIAttribute::TAIAttribute(tai_attr_id_t attr_id,
@@ -123,5 +124,6 @@ std::string TAIAttribute::SerializeAttribute() const {
 }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

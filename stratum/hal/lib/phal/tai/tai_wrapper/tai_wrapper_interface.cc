@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-#include "stratum/hal/lib/tai/tai_wrapper_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper_interface.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 TAIPathItem TAIPathValidator::ModulePath(uint64 moduleId) {
@@ -99,5 +100,6 @@ bool TAIPathItem::isValid() const {
 }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

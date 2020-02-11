@@ -20,12 +20,18 @@
 #include <functional>
 #include <utility>
 #include <map>
+#include <vector>
 
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
+
+#include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/phal_backend_interface.h"
+#include "stratum/hal/lib/phal/switch_configurator_interface.h"
+#include "stratum/hal/lib/phal/optics_adapter.h"
 
 namespace stratum {
 namespace hal {
@@ -61,6 +67,16 @@ class DummyPhal : public PhalInterface {
   SHARED_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 
+  ::util::Status GetOpticalTransceiverInfo(uint64 module_id, uint32 netif_id,
+                                           TaiOpticalChannelInfo* tai_info)
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
+
+  ::util::Status SetOpticalTransceiverInfo(
+    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info)
+  SHARED_LOCKS_REQUIRED(chassis_lock)
+  LOCKS_EXCLUDED(phal_lock_) override;
+
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state)
   EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
@@ -78,6 +94,21 @@ class DummyPhal : public PhalInterface {
   int xcvr_event_writer_id_;
   DummyBox* dummy_box_;
   ::absl::Mutex phal_lock_;
+
+    // Determines if Phal is fully initialized.
+  bool initialized_ GUARDED_BY(config_lock_) = false;
+
+  // Owned by this class.
+  std::unique_ptr<stratum::hal::phal::AttributeDatabase> database_
+      GUARDED_BY(config_lock_);
+
+  // Owned by this class.
+  std::unique_ptr<stratum::hal::phal::OpticsAdapter> optics_adapter_
+      GUARDED_BY(config_lock_);
+
+  // Store backend interfaces for later Shutdown. Not owned by this class.
+  std::vector<stratum::hal::phal::PhalBackendInterface*> phal_interfaces_
+      GUARDED_BY(config_lock_);
 };
 
 }  // namespace dummy_switch

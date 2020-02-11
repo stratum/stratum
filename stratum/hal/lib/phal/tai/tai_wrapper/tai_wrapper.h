@@ -16,8 +16,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TAI_WRAPPER_H_
-#define STRATUM_HAL_LIB_TAI_TAI_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_WRAPPER_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_WRAPPER_H_
 
 #include <string>
 #include <vector>
@@ -25,11 +25,12 @@
 #include <memory>
 #include <thread>  // NOLINT(build/c++11)
 
-#include "stratum/hal/lib/tai/tai_object.h"
-#include "stratum/hal/lib/tai/tai_wrapper_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_object.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper_interface.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 /*!
@@ -75,7 +76,8 @@ class TAIWrapper : public TAIWrapperInterface {
 }; /* class TAIWrapper */
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAI_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_WRAPPER_H_

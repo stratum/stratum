@@ -158,10 +158,6 @@ class BcmChassisManager : public BcmChassisRoInterface {
   std::pair<uint32, uint32> GetModuleNetworkIds(uint64 node_id,
                                                 uint32 port_id) const;
 
-  std::pair<uint64, uint32> GetNodePortIdByRequestCase(
-      const DataRequest_Request& request) const;
-      SHARED_LOCKS_REQUIRED(chassis_lock);
-
   bool IsNodePortIdRelatedToTAI(
       const std::pair<uint64, uint32>& node_port_id) const;
       SHARED_LOCKS_REQUIRED(chassis_lock);

@@ -15,19 +15,20 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
-#define STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_TEST_MANAGER_WRAPPER_H_
 
-#include "stratum/hal/lib/tai/tai_manager.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 
 #include <memory>
 #include <utility>
 
 #include "absl/memory/memory.h"
-#include "stratum/hal/lib/tai/test/tai_wrapper_mock.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/test/tai_wrapper_mock.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 class TAIManagerTestWrapper : public TAIManager {
@@ -37,7 +38,8 @@ class TAIManagerTestWrapper : public TAIManager {
 };
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_TEST_MANAGER_WRAPPER_H_

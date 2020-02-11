@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_TAI_TEST_TAI_WRAPPER_MOCK_H_
-#define STRATUM_HAL_LIB_TAI_TEST_TAI_WRAPPER_MOCK_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_WRAPPER_MOCK_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_WRAPPER_MOCK_H_
 
 #include <memory>
 
-#include "stratum/hal/lib/tai/tai_wrapper_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper_interface.h"
 
 #include "gmock/gmock.h"
 
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 class tai_wrapper_mock : public TAIWrapperInterface {
@@ -43,7 +44,8 @@ class tai_wrapper_mock : public TAIWrapperInterface {
 };
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TEST_TAI_WRAPPER_MOCK_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_WRAPPER_MOCK_H_
