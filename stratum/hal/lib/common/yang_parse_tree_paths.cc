@@ -2821,11 +2821,11 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/type
 void SetUpComponentsComponentStateType(
-    const std::string& name, TreeNode* node) {
-  auto poll_functor = [name](const GnmiEvent& /*event*/,
-                             const ::gnmi::Path& path,
-                             GnmiSubscribeStream* stream) {
-    return SendResponse(GetResponse(path, "OPTICAL_CHANNEL"), stream);
+    const std::string& name, const std::string& type, TreeNode* node) {
+  auto poll_functor = [name, type](const GnmiEvent& /*event*/,
+                                   const ::gnmi::Path& path,
+                                   GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, type), stream);
   };
 
   node->SetOnPollHandler(poll_functor)
@@ -3440,7 +3440,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(GetPath("components")("component", name)("state")(
       "type")());
-  SetUpComponentsComponentStateType(name, node);
+  const std::string component_type = "OPTICAL_CHANNEL";
+  SetUpComponentsComponentStateType(name, component_type, node);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
