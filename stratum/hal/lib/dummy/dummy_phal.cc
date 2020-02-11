@@ -12,34 +12,101 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/dummy/dummy_phal.h"
 
 #include <memory>
 #include <utility>
 
-#include "stratum/hal/lib/common/constants.h"
-#include "stratum/lib/macros.h"
 #include "absl/base/macros.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/common/constants.h"
+#include "stratum/lib/macros.h"
+
+#if defined(WITH_TAI)
+#include "stratum/hal/lib/phal/tai/tai_phal.h"
+#include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
+#include "stratum/lib/utils.h"
+#endif  // defined(WITH_TAI)
 
 namespace stratum {
 namespace hal {
 namespace dummy_switch {
 
+DEFINE_string(phal_config_path1, "",
+              "The path to read the PhalInitConfig proto file from.");
+
 // Instances
 DummyPhal* phal_singleton_ = nullptr;
 
-DummyPhal::DummyPhal():
-  xcvr_event_writer_id_(kInvalidWriterId),
-  dummy_box_(DummyBox::GetSingleton()) {}
+DummyPhal::DummyPhal()
+    : xcvr_event_writer_id_(kInvalidWriterId),
+      dummy_box_(DummyBox::GetSingleton()) {}
 DummyPhal::~DummyPhal() {}
 
 ::util::Status DummyPhal::PushChassisConfig(const ChassisConfig& config) {
   // TODO(Yi Tseng): Implement this function
   absl::WriterMutexLock l(&phal_lock_);
+
+  if (!initialized_) {
+    // Do init stuff here
+    std::unique_ptr<stratum::hal::phal::AttributeGroup> root_group =
+        stratum::hal::phal::AttributeGroup::From(
+            stratum::hal::phal::PhalDB::descriptor());
+    std::vector<
+        std::unique_ptr<stratum::hal::phal::SwitchConfiguratorInterface>>
+        configurators;
+
+#if defined(WITH_TAI)
+    {
+      auto* tai_manager =
+          stratum::hal::phal::tai::TAIManager::CreateSingleton();
+      auto* tai_phal =
+          stratum::hal::phal::tai::TaiPhal::CreateSingleton(tai_manager);
+      phal_interfaces_.push_back(tai_phal);
+      ASSIGN_OR_RETURN(
+          auto configurator,
+          stratum::hal::phal::tai::TaiSwitchConfigurator::Make(tai_manager));
+      configurators.push_back(std::move(configurator));
+    }
+#endif  // defined(WITH_TAI)
+
+    PhalInitConfig phal_config;
+    if (FLAGS_phal_config_path1.empty()) {
+      if (configurators.empty()) {
+        LOG(ERROR)
+            << "No phal_config_path specified and no switch configurator "
+               "found! This is probably not what you want. Did you forget to "
+               "specify any '--define phal_with_*=true' Bazel flags?";
+      }
+      for (const auto& configurator : configurators) {
+        RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
+      }
+    } else {
+      RETURN_IF_ERROR(
+          ReadProtoFromTextFile(FLAGS_phal_config_path1, &phal_config));
+    }
+
+    // Now load the config into the attribute database
+    for (const auto& configurator : configurators) {
+      RETURN_IF_ERROR(
+          configurator->ConfigurePhalDB(&phal_config, root_group.get()));
+    }
+
+    // Create attribute database
+    ASSIGN_OR_RETURN(std::move(database_),
+                     stratum::hal::phal::AttributeDatabase::MakePhalDb(
+                         std::move(root_group)));
+
+    // Create OpticAdapter
+    optics_adapter_ =
+        absl::make_unique<stratum::hal::phal::OpticsAdapter>(database_.get());
+
+    initialized_ = true;
+  }
+
   LOG(INFO) << __FUNCTION__;
   return ::util::OkStatus();
 }
@@ -62,7 +129,8 @@ DummyPhal::~DummyPhal() {}
     std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority) {
   absl::ReaderMutexLock l(&phal_lock_);
   LOG(INFO) << __FUNCTION__;
-  ASSIGN_OR_RETURN(xcvr_event_writer_id_,
+  ASSIGN_OR_RETURN(
+      xcvr_event_writer_id_,
       dummy_box_->RegisterTransceiverEventWriter(std::move(writer), priority));
   return ::util::OkStatus();
 }
@@ -89,8 +157,29 @@ DummyPhal::~DummyPhal() {}
   return ::util::OkStatus();
 }
 
+::util::Status DummyPhal::GetOpticalTransceiverInfo(
+    uint64 module_id, uint32 netif_id, TaiOpticalChannelInfo* tai_info) {
+  // TODO(unknown): implement this method
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return optics_adapter_->GetOpticalTransceiverInfo(module_id, netif_id,
+                                                    tai_info);
+}
+
+::util::Status DummyPhal::SetOpticalTransceiverInfo(
+    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return optics_adapter_->SetOpticalTransceiverInfo(module_id, netif_id,
+                                                    tai_info);
+}
+
 ::util::Status DummyPhal::SetPortLedState(int slot, int port, int channel,
-                                         LedColor color, LedState state) {
+                                          LedColor color, LedState state) {
   absl::ReaderMutexLock l(&phal_lock_);
   // TODO(Yi Tseng): Implement this function
   LOG(INFO) << __FUNCTION__;
@@ -108,4 +197,3 @@ DummyPhal* DummyPhal::CreateSingleton() {
 }  // namespace dummy_switch
 }  // namespace hal
 }  // namespace stratum
-

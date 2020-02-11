@@ -33,7 +33,6 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/utils.h"
-#include "stratum/hal/lib/tai/tai_manager.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -161,30 +160,6 @@ BcmChassisManager::~BcmChassisManager() {
 std::pair<uint32, uint32> BcmChassisManager::GetModuleNetworkIds(
     uint64 node_id, uint32 port_id) const {
     return node_port_id_to_module_netif.at({node_id, port_id});
-}
-
-/*!
- * \brief BcmChassisManager::GetNodePortIdByRequestCase method extract and
- * \return from \param request correct (node_id, port_id) values based on
- * DataRequest_Request::request_case()
- */
-std::pair<uint64, uint32> BcmChassisManager::GetNodePortIdByRequestCase(
-    const DataRequest_Request& request) const {
-  switch (request.request_case()) {
-    case DataRequest::Request::kFrequency:
-      return {request.frequency().node_id(), request.frequency().port_id()};
-    case DataRequest::Request::kInputPower:
-      return {request.input_power().node_id(), request.input_power().port_id()};
-    case DataRequest::Request::kOutputPower:
-      return {request.output_power().node_id(),
-              request.output_power().port_id()};
-    case DataRequest::Request::kOperationalMode:
-      return {request.operational_mode().node_id(),
-              request.operational_mode().port_id()};
-    default:
-      return {};
-  }
-  return {};
 }
 
 /*!

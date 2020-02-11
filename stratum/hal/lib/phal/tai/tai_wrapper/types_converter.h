@@ -16,8 +16,8 @@
  */
 
 
-#ifndef STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_
-#define STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TYPES_CONVERTER_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TYPES_CONVERTER_H_
 
 #include <string>
 #include <vector>
@@ -29,6 +29,7 @@
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 /*!
@@ -55,7 +56,8 @@ class TypesConverter final {
 };
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TYPES_CONVERTER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TYPES_CONVERTER_H_

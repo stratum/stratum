@@ -115,6 +115,18 @@ PhalSim::~PhalSim() {}
   return ::util::OkStatus();
 }
 
+::util::Status PhalSim::GetOpticalTransceiverInfo(
+    uint64 module_id, uint32 netif_id, TaiOpticalChannelInfo* tai_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
+::util::Status PhalSim::SetOpticalTransceiverInfo(
+    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
 ::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
                                         LedColor color, LedState state) {
   // TODO(unknown): Implement this.

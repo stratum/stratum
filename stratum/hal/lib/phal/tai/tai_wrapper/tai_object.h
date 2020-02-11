@@ -15,16 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
-#define STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_OBJECT_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_OBJECT_H_
 
 #include <string>
 
-#include "stratum/hal/lib/tai/tai_attribute.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_attribute.h"
 #include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 /*!
@@ -125,7 +126,8 @@ class TAIObject {
 };
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAI_OBJECT_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_OBJECT_H_

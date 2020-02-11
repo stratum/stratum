@@ -1092,6 +1092,15 @@ message FrontPanelPortInfo {
   HwState hw_state = 6;
 }
 
+// Optical channel configuration for TAI module.
+message TaiOpticalChannelInfo {
+  LaserFrequency frequency = 1;
+  InputPower input_power = 2;
+  OutputPower output_power = 3;
+  TargetOutputPower target_output_power = 4;
+  OperationalMode operational_mode = 5;
+}
+
 //------------------------------------------------------------------------------
 // Monitoring related messages.
 //------------------------------------------------------------------------------
@@ -1237,10 +1246,7 @@ message DataRequest {
       Port front_panel_port_info = 16;
       Port hardware_port = 17;
       Port fec_status = 18;
-      Port frequency = 19;
-      Port input_power = 20;
-      Port output_power = 21;
-      Port operational_mode = 22;
+      Port tai_optical_channel_info = 19;
     }
   }
   repeated Request requests = 1;
@@ -1270,10 +1276,7 @@ message DataResponse {
     FrontPanelPortInfo front_panel_port_info = 16;
     HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
-    LaserFrequency frequency = 19;
-    InputPower input_power = 20;
-    OutputPower output_power = 21;
-    OperationalMode operational_mode = 22;
+    TaiOpticalChannelInfo tai_optical_channel_info = 19;
   }
 }
 
@@ -1301,12 +1304,8 @@ message SetRequest {
         AutonegotiationStatus autoneg_status = 9;
         // The new forwarding viability of the port.
         ForwardingViability forwarding_viability = 10;
-        // The new optical channel frequency.
-        LaserFrequency frequency = 11;
-        // The new optical channel output power.
-        TargetOutputPower target_output_power = 12;
-        // The new optical channel operational mode.
-        OperationalMode operational_mode = 13;
+        // The new tai optical channel configurable values.
+        TaiOpticalChannelInfo tai_optical_channel_info = 11;
       }
     }
     // Data required to set info for a specific node.

@@ -65,6 +65,14 @@ message PhalCardConfig {
   CachePolicyConfig cache_policy = 3;
 }
 
+message PhalOpticalCardConfig {
+  int32 slot = 1;
+  CachePolicyConfig cache_policy = 2;
+  uint64 frequency = 3;
+  float target_output_power = 4;
+  uint64 operational_mode = 5;
+}
+
 // This message encapsulates all of the data needed to specify a fan tray.
 message PhalFanTrayConfig {
   message Fan {
@@ -146,6 +154,7 @@ message PhalInitConfig {
   repeated PhalPsuTrayConfig psu_trays = 4;
   repeated PhalLedGroupConfig led_groups = 5;
   repeated PhalThermalGroupConfig thermal_groups = 6;
+  repeated PhalOpticalCardConfig optical_cards = 7;
   // Default Attribute DB Cache Policy
-  CachePolicyConfig cache_policy = 7;
+  CachePolicyConfig cache_policy = 8;
 }

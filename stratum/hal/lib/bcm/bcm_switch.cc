@@ -32,7 +32,7 @@
 #include "absl/time/clock.h"
 #include "stratum/glue/gtl/map_util.h"
 
-#include "stratum/hal/lib/tai/tai_manager.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -45,10 +45,6 @@ BcmSwitch::BcmSwitch(PhalInterface* phal_interface,
       bcm_chassis_manager_(ABSL_DIE_IF_NULL(bcm_chassis_manager)),
       unit_to_bcm_node_(unit_to_bcm_node),
       node_id_to_bcm_node_() {
-  // Ensure TAI initialization is as fast as possible because TAI needs some
-  // time to initialize all required modules and objects. This initialization
-  // will be processed in a separate thread so the current thread will not wait
-  tai::TAIManager::Instance();
   for (auto entry : unit_to_bcm_node_) {
     CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
     CHECK_NE(entry.second, nullptr)
@@ -267,6 +263,7 @@ BcmSwitch::~BcmSwitch() {}
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
+  DataResponse resp_val;
   // TODO(b/69920763): Implement this. The code below is just a placeholder.
   for (const auto& req : request.requests()) {
     DataResponse resp;
@@ -407,21 +404,26 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
-      case DataRequest::Request::kFrequency:
-      case DataRequest::Request::kInputPower:
-      case DataRequest::Request::kOutputPower:
-      case DataRequest::Request::kOperationalMode: {
-        const std::pair<uint64, uint32> node_port_id =
-            bcm_chassis_manager_->GetNodePortIdByRequestCase(req);
-        if (bcm_chassis_manager_->IsNodePortIdRelatedToTAI(node_port_id)) {
-          auto valueOrStatus = tai::TAIManager::Instance().GetValue(
-              req, bcm_chassis_manager_->GetModuleNetworkIds(
-                       node_port_id.first, node_port_id.second));
-          if (valueOrStatus.ok())
-            resp = valueOrStatus.ValueOrDie();
-        } else {
+
+      case DataRequest::Request::kTaiOpticalChannelInfo: {
+        const std::pair<uint64, uint32> node_port_id = {
+            req.tai_optical_channel_info().node_id(),
+            req.tai_optical_channel_info().port_id()};
+        if (!bcm_chassis_manager_->IsNodePortIdRelatedToTAI(node_port_id)) {
           status = MAKE_ERROR(ERR_INTERNAL)
                  << "No related TAI module with current node/port ids";
+          break;
+        }
+
+        const std::pair<uint64, uint32> module_network_id =
+            bcm_chassis_manager_->GetModuleNetworkIds(
+                node_port_id.first, node_port_id.second);
+
+        ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
+            module_network_id.first, module_network_id.second,
+            resp_val.mutable_tai_optical_channel_info());
+        if (status.ok()) {
+          resp = resp_val;
         }
         break;
       }
@@ -459,25 +461,22 @@ BcmSwitch::~BcmSwitch() {}
           case SetRequest::Request::Port::ValueCase::kLacpSystemPriority:
           case SetRequest::Request::Port::ValueCase::kHealthIndicator:
             break;
+          case SetRequest::Request::Port::ValueCase::kTaiOpticalChannelInfo: {
+            const std::pair<uint64, uint32> node_port_id = {
+                req.port().node_id(), req.port().port_id()};
 
-          case SetRequest::Request::Port::ValueCase::kFrequency:
-          case SetRequest::Request::Port::ValueCase::kTargetOutputPower:
-          case SetRequest::Request::Port::ValueCase::kOperationalMode: {
-            if (!bcm_chassis_manager_->IsNodePortIdRelatedToTAI(
-                    {req.port().node_id(), req.port().port_id()})) {
-              if (details) {
-                details->push_back(
-                    MAKE_ERROR(ERR_INTERNAL)
-                    << "No related TAI module with current node/port ids");
-              }
+            if (!bcm_chassis_manager_->IsNodePortIdRelatedToTAI(node_port_id)) {
+              status = MAKE_ERROR(ERR_INTERNAL)
+                       << "No related TAI module with current node/port ids";
               break;
             }
+            const std::pair<uint64, uint32> module_netif_id =
+                bcm_chassis_manager_->GetModuleNetworkIds(node_port_id.first,
+                                                          node_port_id.second);
 
-            ::util::Status status = tai::TAIManager::Instance().SetValue(
-                req, bcm_chassis_manager_->GetModuleNetworkIds(
-                         req.port().node_id(), req.port().port_id()));
-            if (!status.ok() && details) details->push_back(status);
-
+            status = phal_interface_->SetOpticalTransceiverInfo(
+                module_netif_id.first, module_netif_id.second,
+                req.port().tai_optical_channel_info());
             break;
           }
           default:

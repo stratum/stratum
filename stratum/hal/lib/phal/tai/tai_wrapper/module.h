@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_MODULE_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_MODULE_H_
 
-#ifndef STRATUM_HAL_LIB_TAI_MODULE_H_
-#define STRATUM_HAL_LIB_TAI_MODULE_H_
-
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
-#include "stratum/hal/lib/tai/tai_object.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_object.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 class HostInterface;
@@ -69,6 +69,8 @@ class Module final : public TAIObject {
 }; /* class Module */
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-#endif  // STRATUM_HAL_LIB_TAI_MODULE_H_
+
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_MODULE_H_

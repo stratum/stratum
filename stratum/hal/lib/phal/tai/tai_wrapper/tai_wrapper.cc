@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "stratum/hal/lib/tai/tai_wrapper.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper.h"
 
 #include <queue>
 #include <string>
@@ -27,12 +27,13 @@
 
 #include "absl/memory/memory.h"
 
-#include "stratum/hal/lib/tai/host_interface.h"
-#include "stratum/hal/lib/tai/module.h"
-#include "stratum/hal/lib/tai/network_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/host_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/module.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/network_interface.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 /*!
@@ -267,5 +268,6 @@ void TAIWrapper::ModulePresenceHandler() {
 }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-
-#ifndef STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
-#define STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_ATTRIBUTE_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_ATTRIBUTE_H_
 
 #include <string>
 
@@ -25,6 +24,7 @@
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 /*!
@@ -63,7 +63,8 @@ class TAIAttribute {
 };
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_TAI_TAI_ATTRIBUTE_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_ATTRIBUTE_H_

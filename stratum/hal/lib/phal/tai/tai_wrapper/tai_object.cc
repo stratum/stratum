@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-
-#include "stratum/hal/lib/tai/tai_object.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_object.h"
 
 #include "stratum/glue/logging.h"
 #include "stratum/lib/utils.h"
@@ -25,6 +24,7 @@
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 TAIObject::TAIObject(const tai_api_method_table_t& api) : api_(api) {}
@@ -98,8 +98,8 @@ TAIAttribute TAIObject::GetAlocatedAttributeObject(
  * specific TAIObject and sets to \param attr_value
  * \return TAI_STATUS_SUCCESS if success else return some of TAI_STATUS_CODE
  */
-TAIAttribute TAIObject::GetAttribute(
-    tai_attr_id_t attr_id, tai_status_t* return_status) const {
+TAIAttribute TAIObject::GetAttribute(tai_attr_id_t attr_id,
+                                     tai_status_t* return_status) const {
   TAIAttribute attr = GetAlocatedAttributeObject(attr_id);
   if (!attr.IsValid()) {
     LOG(ERROR) << "Failed to allocate attr value";
@@ -133,7 +133,7 @@ TAIAttribute TAIObject::GetAttribute(
  * \param attr_id attribute
  * \return TAI_STATUS_SUCCESS if success else return some of TAI_STATUS_CODE
  */
-tai_status_t TAIObject::SetAttribute(const tai_attribute_t *attr) const {
+tai_status_t TAIObject::SetAttribute(const tai_attribute_t* attr) const {
   if (!attr) {
     LOG(ERROR) << "Failed to set attribute";
     return TAI_STATUS_FAILURE;
@@ -175,5 +175,6 @@ int64_t TAIObject::DeserializeAttrName(const std::string& attr_name) const {
 }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum

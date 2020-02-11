@@ -28,7 +28,6 @@
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/dummy/dummy_node.h"
-#include "stratum/hal/lib/tai/tai_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -118,10 +117,7 @@ class DummySwitch : public SwitchInterface {
   std::vector<DummyNode*> GetDummyNodes()
   SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  std::pair<uint64, uint32> GetNodePortIdByRequestCase(
-      const DataRequest_Request& request)
-  SHARED_LOCKS_REQUIRED(chassis_lock);
-  bool IsNodePortIdRelatedWithTAI(
+  bool IsNodePortIdRelatedToTAI(
       const std::pair<uint64, uint32>& node_port_id);
 
   PhalInterface* phal_interface_;

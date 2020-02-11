@@ -18,10 +18,11 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/tai/network_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/network_interface.h"
 
 namespace stratum {
 namespace hal {
+namespace phal {
 namespace tai {
 
 NetworkInterface::NetworkInterface(const tai_api_method_table_t& api,
@@ -65,5 +66,6 @@ tai_status_t NetworkInterface::DeserializeAttribute(
 }
 
 }  // namespace tai
+}  // namespace phal
 }  // namespace hal
 }  // namespace stratum
