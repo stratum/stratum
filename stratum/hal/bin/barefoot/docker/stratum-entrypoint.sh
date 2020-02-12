@@ -15,10 +15,16 @@
 # limitations under the License.
 #
 
-KDRV_PATH=$BF_SDE_INSTALL/lib/modules/bf_kdrv.ko
-PORT_MAP=$BF_SDE_INSTALL/share/stratum/$(cat /etc/onl/platform).json
-FLAG_FILE=/stratum_configs/stratum.flags
 WITH_ONLP=${WITH_ONLP:-true}
+KDRV_PATH=$BF_SDE_INSTALL/lib/modules/bf_kdrv.ko
+FLAG_FILE=/stratum_configs/stratum.flags
+PLATFORM=${PLATFORM:-x86-64-accton-wedge100bf-32x-r0}
+
+if [ "$WITH_ONLP" = true ]; then
+    PORT_MAP=$BF_SDE_INSTALL/share/stratum/$(cat /etc/onl/platform).json
+else
+    PORT_MAP="$BF_SDE_INSTALL/share/stratum/$PLATFORM.json"
+fi
 
 if [ ! -f "$FLAG_FILE" ]; then
     echo "Use default flag file"
@@ -45,7 +51,12 @@ if [ ! -f "$KDRV_PATH" ]; then
 fi
 
 echo "loading bf_kdrv_mod..."
-insmod $KDRV_PATH intr_mode="msi"
+insmod $KDRV_PATH intr_mode="msi" || true
+
+if [[ $? != 0 ]];then
+    echo "Cannot load kernel module, wrong kernel version?"
+    echo "(You can ignore this message if you are using the Tofino Model)"
+fi
 
 if [ "$WITH_ONLP" = true ]; then
     /usr/local/bin/stratum_bf -flagfile=$FLAG_FILE

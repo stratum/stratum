@@ -17,8 +17,11 @@
 set -e
 set -x
 
-if [ -d "/etc/onl" ]; then
+if [ ! -d "/etc/onl" ]; then
     ONLP_ARG=$(ls /lib/**/libonlp* | awk '{print "-v " $1 ":" $1 " " }')
+    ONLP_ARG="$ONLP_ARG \
+              -v /lib/platform-config:/lib/platform-config \
+              -v /etc/onl:/etc/onl"
 else
     ONLP_ARG="--env WITH_ONLP=false"
 fi
@@ -34,8 +37,6 @@ docker run -it --privileged \
     -v /dev:/dev -v /sys:/sys  \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     $ONLP_ARG \
-    -v /lib/platform-config:/lib/platform-config \
-    -v /etc/onl:/etc/onl \
     -p 28000:28000 \
     -v $CONFIG_DIR:/stratum_configs \
     -v $LOG_DIR:/stratum_logs \
