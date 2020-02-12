@@ -494,8 +494,8 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
       void (TOption::*value_setter)(TSetterValue), const TValue& value) {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
-      OpticalChannelInfo* tai_info = resp.mutable_optical_channel_info();
-      ((tai_info->*option_getter)()->*value_setter)(value);
+      OpticalChannelInfo* oc_info = resp.mutable_optical_channel_info();
+      ((oc_info->*option_getter)()->*value_setter)(value);
       w->Write(resp);
     };
 

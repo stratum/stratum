@@ -194,15 +194,15 @@ Phal* Phal::CreateSingleton() {
 }
 
 ::util::Status Phal::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) {
+    uint64 module_id, uint32 netif_id, OpticalChannelInfo* oc_info) {
   return optics_adapter_->GetOpticalTransceiverInfo(
-      module_id, netif_id, tai_info);
+      module_id, netif_id, oc_info);
 }
 
 ::util::Status Phal::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info) {
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info) {
   return optics_adapter_->SetOpticalTransceiverInfo(
-      module_id, netif_id, tai_info);
+      module_id, netif_id, oc_info);
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,

@@ -435,11 +435,11 @@ U GetOpticalChannelValue(
       if (!in.has_optical_channel_info())
       return false;
 
-      const OpticalChannelInfo& tai_info = in.optical_channel_info();
-      if (!(tai_info.*has_instance_getter)())
+      const OpticalChannelInfo& oc_info = in.optical_channel_info();
+      if (!(oc_info.*has_instance_getter)())
       return false;
 
-      const T& instance = (tai_info.*instance_getter)();
+      const T& instance = (oc_info.*instance_getter)();
       value = (instance.*inner_message_get_field_func)();
 
       return true;

@@ -158,24 +158,24 @@ DummyPhal::~DummyPhal() {}
 }
 
 ::util::Status DummyPhal::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) {
+    uint64 module_id, uint32 netif_id, OpticalChannelInfo* oc_info) {
   // TODO(unknown): implement this method
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
   return optics_adapter_->GetOpticalTransceiverInfo(module_id, netif_id,
-                                                    tai_info);
+                                                    oc_info);
 }
 
 ::util::Status DummyPhal::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info) {
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
   return optics_adapter_->SetOpticalTransceiverInfo(module_id, netif_id,
-                                                    tai_info);
+                                                    oc_info);
 }
 
 ::util::Status DummyPhal::SetPortLedState(int slot, int port, int channel,

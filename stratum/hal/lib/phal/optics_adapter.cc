@@ -37,7 +37,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
  * inserted in the given module_id yet.
  */
 ::util::Status OpticsAdapter::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) {
+    uint64 module_id, uint32 netif_id, OpticalChannelInfo* oc_info) {
 
   std::vector<Path> paths = {
     {PathEntry("optical_cards", module_id, false, false, true)}
@@ -46,49 +46,49 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
   const uint64 frequency = phaldb->optical_cards(module_id).frequency();
-  tai_info->mutable_frequency()->set_value(frequency);
+  oc_info->mutable_frequency()->set_value(frequency);
 
   const float input_power = phaldb->optical_cards(module_id).input_power();
-  tai_info->mutable_input_power()->set_instant(input_power);
+  oc_info->mutable_input_power()->set_instant(input_power);
 
   const float output_power = phaldb->optical_cards(module_id).output_power();
-  tai_info->mutable_output_power()->set_instant(output_power);
+  oc_info->mutable_output_power()->set_instant(output_power);
 
   const float target_output_power
       = phaldb->optical_cards(module_id).target_output_power();
-  tai_info->mutable_target_output_power()->set_value(target_output_power);
+  oc_info->mutable_target_output_power()->set_value(target_output_power);
 
   uint64 operational_mode = phaldb->optical_cards(module_id).operational_mode();
-  tai_info->mutable_operational_mode()->set_value(operational_mode);
+  oc_info->mutable_operational_mode()->set_value(operational_mode);
 
   return ::util::OkStatus();
 }
 
 /*!
- * \brief OpticsAdapter::SetOpticalTransceiverInfo sets the data from tai_info
+ * \brief OpticsAdapter::SetOpticalTransceiverInfo sets the data from oc_info
  * into a optical transceiver module by querying TAI for the given module_id
  * and netif_id. This method is expected to return error if there is no module
  * is inserted in the given module_id yet.
  */
 ::util::Status OpticsAdapter::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info) {
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info) {
   AttributeValueMap attrs;
   std::vector<PathEntry> path;
 
   path = {PathEntry("optical_cards", module_id),
                                  PathEntry("frequency")};
-  if (tai_info.has_frequency())
-    attrs[path] = tai_info.frequency().value();
+  if (oc_info.has_frequency())
+    attrs[path] = oc_info.frequency().value();
 
   path = {PathEntry("optical_cards", module_id),
                                  PathEntry("target_output_power")};
-  if (tai_info.has_target_output_power())
-    attrs[path] = tai_info.target_output_power().value();
+  if (oc_info.has_target_output_power())
+    attrs[path] = oc_info.target_output_power().value();
 
   path = {PathEntry("optical_cards", module_id),
                                  PathEntry("operational_mode")};
-  if (tai_info.has_operational_mode())
-    attrs[path] = tai_info.operational_mode().value();
+  if (oc_info.has_operational_mode())
+    attrs[path] = oc_info.operational_mode().value();
 
   return Set(attrs);
 }

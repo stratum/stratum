@@ -41,10 +41,10 @@ class OpticsAdapter final : public Adapter {
   ~OpticsAdapter() = default;
 
   ::util::Status GetOpticalTransceiverInfo(uint64 module_id, uint32 netif_id,
-                                           OpticalChannelInfo* tai_info);
+                                           OpticalChannelInfo* oc_info);
 
   ::util::Status SetOpticalTransceiverInfo(
-      uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info);
+      uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info);
 
  private:
   // Attribute Db path to get the hardware state of all sfp transceivers.

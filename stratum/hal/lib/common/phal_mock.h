@@ -42,10 +42,10 @@ class PhalMock : public PhalInterface {
                               FrontPanelPortInfo* fp_port_info));
   MOCK_METHOD3(GetOpticalTransceiverInfo,
                ::util::Status(uint64 module_id, uint32 netif_id,
-                              OpticalChannelInfo* tai_info));
+                              OpticalChannelInfo* oc_info));
   MOCK_METHOD3(SetOpticalTransceiverInfo,
                ::util::Status(uint64 module_id, uint32 netif_id,
-                              const OpticalChannelInfo& tai_info));
+                              const OpticalChannelInfo& oc_info));
   MOCK_METHOD5(SetPortLedState, ::util::Status(int slot, int port, int channel,
                                                LedColor color, LedState state));
   MOCK_METHOD3(
