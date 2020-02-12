@@ -294,6 +294,18 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "optics_adapter_test",
+    srcs = ["optics_adapter_test.cc"],
+    deps = [
+        ":optics_adapter",
+        ":attribute_database_mock",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/lib:utils",
+        "//stratum/glue/status:status_test_util",
+    ],
+)
+
 stratum_cc_library(
     name = "attribute_group",
     srcs = ["attribute_group.cc"],
