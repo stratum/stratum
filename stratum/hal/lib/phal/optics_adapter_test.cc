@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "stratum/hal/lib/phal/optics_adapter.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -72,7 +76,7 @@ MATCHER_P(DbAttributesEqual, other, "") {
       == absl::get<uint64>(other.at(operational_mode_path)));
 
   return equal_frequency && equal_target_output_power && equal_operational_mode;
-};
+};  // NOLINT(readability/braces)
 
 TEST_F(OpticsAdapterTest, TaiPhalGetOpticalTransceiverInfoSuccess) {
   auto db_query_mock = absl::make_unique<QueryMock>();
