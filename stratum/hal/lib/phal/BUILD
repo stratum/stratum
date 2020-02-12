@@ -80,7 +80,6 @@ tai_defines = [
 
 tai_deps = [
     "//stratum/hal/lib/phal/tai:tai_phal",
-    "//stratum/hal/lib/phal:optics_adapter",
 ]
 
 # Default Phal selection (the absence of both with_* and without_*) is done by
@@ -92,7 +91,7 @@ phal_defines = select({
 }) + select({
     ":with_tai": tai_defines,
     ":without_tai": [],
-    "//conditions:default": [],
+    "//conditions:default": tai_defines,
 })
 
 phal_deps = select({
@@ -102,7 +101,7 @@ phal_deps = select({
 }) + select({
     ":with_tai": tai_deps,
     ":without_tai": [],
-    "//conditions:default": [],
+    "//conditions:default": tai_deps,
 })
 
 stratum_cc_library(
