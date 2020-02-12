@@ -116,13 +116,13 @@ PhalSim::~PhalSim() {}
 }
 
 ::util::Status PhalSim::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, TaiOpticalChannelInfo* tai_info) {
+    uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status PhalSim::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info) {
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }

@@ -207,7 +207,7 @@ template <typename T, typename U, typename V>
 template <typename T, typename U, typename V>
 ::util::Status SetOpticalChannelValue(
     uint64 node_id, uint64 port_id, YangParseTree* tree,
-    T* (TaiOpticalChannelInfo::*mutable_instance)(), void (T::*setter)(U),
+    T* (OpticalChannelInfo::*mutable_instance)(), void (T::*setter)(U),
     const V& value) {
   // Create a set request.
   SetRequest req;
@@ -215,7 +215,7 @@ template <typename T, typename U, typename V>
   request->set_node_id(node_id);
   request->set_port_id(port_id);
   T* instance =
-      (request->mutable_tai_optical_channel_info()->*mutable_instance)();
+      (request->mutable_optical_channel_info()->*mutable_instance)();
   (instance->*setter)(value);
   // Request the change of the value. The returned status is ignored as there is
   // no way to notify the controller that something went wrong. The error is
@@ -417,12 +417,12 @@ U GetValue(
 template <typename T, typename U>
 U GetOpticalChannelValue(
     uint64 node_id, uint32 port_id, YangParseTree* tree,
-    const T& (TaiOpticalChannelInfo::*instance_getter)() const,
-    bool (TaiOpticalChannelInfo::*has_instance_getter)() const,
+    const T& (OpticalChannelInfo::*instance_getter)() const,
+    bool (OpticalChannelInfo::*has_instance_getter)() const,
     U (T::*inner_message_get_field_func)() const) {
   // Create a data retrieval request.
   DataRequest req;
-  auto* request = req.add_requests()->mutable_tai_optical_channel_info();
+  auto* request = req.add_requests()->mutable_optical_channel_info();
   request->set_node_id(node_id);
   request->set_port_id(port_id);
 
@@ -432,10 +432,10 @@ U GetOpticalChannelValue(
   // Worker function for DataResponseWriter.
   const auto worker = [&value, instance_getter, has_instance_getter,
       inner_message_get_field_func](const DataResponse& in) {
-      if (!in.has_tai_optical_channel_info())
+      if (!in.has_optical_channel_info())
       return false;
 
-      const TaiOpticalChannelInfo& tai_info = in.tai_optical_channel_info();
+      const OpticalChannelInfo& tai_info = in.optical_channel_info();
       if (!(tai_info.*has_instance_getter)())
       return false;
 
@@ -654,8 +654,8 @@ TreeNodeEventHandler GetOnPollFunctor(
 template <typename T, typename U>
 TreeNodeEventHandler GetOnPollOpticalInfoFunctor(
     uint64 node_id, uint32 port_id, YangParseTree* tree,
-    const T& (TaiOpticalChannelInfo::*instance_getter)() const,
-    bool (TaiOpticalChannelInfo::*has_instance_getter)() const,
+    const T& (OpticalChannelInfo::*instance_getter)() const,
+    bool (OpticalChannelInfo::*has_instance_getter)() const,
     U (T::*inner_message_get_field_func)() const) {
   return [=](const GnmiEvent& event, const ::gnmi::Path& path,
              GnmiSubscribeStream* stream) {
@@ -2230,7 +2230,7 @@ void SetUpComponentsComponentTransceiverStateFormFactor(
 void SetUpComponentsComponentOpticalChannelStateFrequency(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::frequency, &TaiOpticalChannelInfo::has_frequency,
+      &OpticalChannelInfo::frequency, &OpticalChannelInfo::has_frequency,
       &LaserFrequency::value);
 
   auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
@@ -2270,7 +2270,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
 
     ::google::protobuf::uint64 uint_val = typed_value->uint_val();
     auto status = SetOpticalChannelValue(
-        node_id, port_id, tree, &TaiOpticalChannelInfo::mutable_frequency,
+        node_id, port_id, tree, &OpticalChannelInfo::mutable_frequency,
         &LaserFrequency::set_value, uint_val);
     if (status != ::util::OkStatus()) {
       return status;
@@ -2312,8 +2312,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::input_power,
-          &TaiOpticalChannelInfo::has_input_power, &InputPower::instant);
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::instant);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2335,8 +2335,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::input_power,
-          &TaiOpticalChannelInfo::has_input_power, &InputPower::avg);
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::avg);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2356,8 +2356,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
 void SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::input_power,
-      &TaiOpticalChannelInfo::has_input_power, &InputPower::interval);
+      &OpticalChannelInfo::input_power,
+      &OpticalChannelInfo::has_input_power, &InputPower::interval);
   auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortInputPowerChangedEvent::GetInterval);
@@ -2375,8 +2375,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::input_power,
-          &TaiOpticalChannelInfo::has_input_power, &InputPower::max);
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::max);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2396,8 +2396,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
 void SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::input_power,
-      &TaiOpticalChannelInfo::has_input_power, &InputPower::max_time);
+      &OpticalChannelInfo::input_power,
+      &OpticalChannelInfo::has_input_power, &InputPower::max_time);
 
   auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2416,8 +2416,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::input_power,
-          &TaiOpticalChannelInfo::has_input_power, &InputPower::min);
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::min);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2437,8 +2437,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
 void SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::input_power,
-      &TaiOpticalChannelInfo::has_input_power, &InputPower::min_time);
+      &OpticalChannelInfo::input_power,
+      &OpticalChannelInfo::has_input_power, &InputPower::min_time);
 
   auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2457,8 +2457,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::output_power,
-          &TaiOpticalChannelInfo::has_output_power, &OutputPower::instant);
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::instant);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2480,8 +2480,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::output_power,
-          &TaiOpticalChannelInfo::has_output_power, &OutputPower::avg);
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::avg);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2502,8 +2502,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
 void SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::output_power,
-      &TaiOpticalChannelInfo::has_output_power, &OutputPower::interval);
+      &OpticalChannelInfo::output_power,
+      &OpticalChannelInfo::has_output_power, &OutputPower::interval);
 
   auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2522,8 +2522,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::output_power,
-          &TaiOpticalChannelInfo::has_output_power, &OutputPower::max);
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::max);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2544,8 +2544,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
 void SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::output_power,
-      &TaiOpticalChannelInfo::has_output_power, &OutputPower::max_time);
+      &OpticalChannelInfo::output_power,
+      &OpticalChannelInfo::has_output_power, &OutputPower::max_time);
 
   auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2564,8 +2564,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
   auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
                          GnmiSubscribeStream* stream) {
       float float_value = GetOpticalChannelValue(node_id, port_id, tree,
-          &TaiOpticalChannelInfo::output_power,
-          &TaiOpticalChannelInfo::has_output_power, &OutputPower::min);
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::min);
       ::gnmi::Decimal64 decimal_value = FloatToDecimal64Value(float_value, 2);
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
@@ -2586,8 +2586,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
 void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::output_power,
-      &TaiOpticalChannelInfo::has_output_power, &OutputPower::min_time);
+      &OpticalChannelInfo::output_power,
+      &OpticalChannelInfo::has_output_power, &OutputPower::min_time);
 
   auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2630,7 +2630,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     float float_val = Decimal64ValueToFloat(decimal_val);
 
     auto status = SetOpticalChannelValue(node_id, port_id, tree,
-        &TaiOpticalChannelInfo::mutable_target_output_power,
+        &OpticalChannelInfo::mutable_target_output_power,
         &TargetOutputPower::set_value, float_val);
     if (status != ::util::OkStatus()) {
       return status;
@@ -2670,8 +2670,8 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 void SetUpComponentsComponentOpticalChannelStateOperationalMode(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
   auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &TaiOpticalChannelInfo::operational_mode,
-      &TaiOpticalChannelInfo::has_operational_mode, &OperationalMode::value);
+      &OpticalChannelInfo::operational_mode,
+      &OpticalChannelInfo::has_operational_mode, &OperationalMode::value);
 
   auto register_functor = RegisterFunc<PortOperationalModeChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2711,7 +2711,7 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
 
     ::google::protobuf::uint64 uint_val = typed_value->uint_val();
     auto status = SetOpticalChannelValue(node_id, port_id, tree,
-                           &TaiOpticalChannelInfo::mutable_operational_mode,
+                           &OpticalChannelInfo::mutable_operational_mode,
                            &OperationalMode::set_value, uint_val);
     if (status != ::util::OkStatus()) {
       return status;

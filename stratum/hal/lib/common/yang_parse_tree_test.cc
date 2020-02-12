@@ -490,11 +490,11 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
   // Mock switch::RetrieveValue to return the desired value.
   template <typename TOption, typename TSetterValue, typename TValue>
   void SubstituteOpticalChannelRetrieveValue(
-      TOption* (TaiOpticalChannelInfo::*option_getter)(),
+      TOption* (OpticalChannelInfo::*option_getter)(),
       void (TOption::*value_setter)(TSetterValue), const TValue& value) {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
-      TaiOpticalChannelInfo* tai_info = resp.mutable_tai_optical_channel_info();
+      OpticalChannelInfo* tai_info = resp.mutable_optical_channel_info();
       ((tai_info->*option_getter)()->*value_setter)(value);
       w->Write(resp);
     };
@@ -3398,7 +3398,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().tai_optical_channel_info()
+  EXPECT_EQ(req.requests(0).port().optical_channel_info()
       .frequency().value(), expected_value);
 }
 
@@ -3417,7 +3417,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().tai_optical_channel_info()
+  EXPECT_EQ(req.requests(0).port().optical_channel_info()
       .frequency().value(), expected_value);
 }
 
@@ -3482,7 +3482,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_frequency, &LaserFrequency::set_value,
+      &OpticalChannelInfo::mutable_frequency, &LaserFrequency::set_value,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -3506,7 +3506,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_frequency, &LaserFrequency::set_value,
+      &OpticalChannelInfo::mutable_frequency, &LaserFrequency::set_value,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -3528,7 +3528,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_instant,
       10.05);
 
@@ -3554,7 +3554,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_instant,
       10.05);
 
@@ -3607,7 +3607,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_avg,
       10.05);
 
@@ -3632,7 +3632,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_avg,
       10.05);
 
@@ -3686,7 +3686,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_interval,
       expected_value);
 
@@ -3708,7 +3708,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_interval,
       expected_value);
 
@@ -3752,7 +3752,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_max,
       10.05);
 
@@ -3777,7 +3777,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_max,
       10.05);
 
@@ -3831,7 +3831,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_max_time,
       expected_value);
 
@@ -3853,7 +3853,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_max_time,
       expected_value);
 
@@ -3897,7 +3897,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_min,
       10.05);
 
@@ -3922,7 +3922,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_min,
       10.05);
 
@@ -3976,7 +3976,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_min_time,
       expected_value);
 
@@ -3998,7 +3998,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_input_power,
+      &OpticalChannelInfo::mutable_input_power,
       &InputPower::set_min_time,
       expected_value);
 
@@ -4049,7 +4049,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).port().tai_optical_channel_info()
+  float result = req.requests(0).port().optical_channel_info()
       .target_output_power().value();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
@@ -4071,7 +4071,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).port().tai_optical_channel_info()
+  float result = req.requests(0).port().optical_channel_info()
       .target_output_power().value();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
@@ -4180,7 +4180,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_instant,
       10.05);
 
@@ -4206,7 +4206,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_instant,
       10.05);
 
@@ -4259,7 +4259,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_avg,
       10.05);
 
@@ -4285,7 +4285,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_avg,
       10.05);
 
@@ -4339,7 +4339,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_interval,
       expected_value);
 
@@ -4361,7 +4361,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_interval,
       expected_value);
 
@@ -4405,7 +4405,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_max,
       10.05);
 
@@ -4431,7 +4431,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_max,
       10.05);
 
@@ -4485,7 +4485,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_max_time,
       expected_value);
 
@@ -4507,7 +4507,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_max_time,
       expected_value);
 
@@ -4551,7 +4551,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_min,
       10.05);
 
@@ -4577,7 +4577,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_min,
       10.05);
 
@@ -4631,7 +4631,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_min_time,
       expected_value);
 
@@ -4653,7 +4653,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_output_power,
+      &OpticalChannelInfo::mutable_output_power,
       &OutputPower::set_min_time,
       expected_value);
 
@@ -4750,7 +4750,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().tai_optical_channel_info()
+  EXPECT_EQ(req.requests(0).port().optical_channel_info()
       .operational_mode().value(), expected_value);
 }
 
@@ -4770,7 +4770,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().tai_optical_channel_info()
+  EXPECT_EQ(req.requests(0).port().optical_channel_info()
       .operational_mode().value(), expected_value);
 }
 
@@ -4838,7 +4838,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_operational_mode,
+      &OpticalChannelInfo::mutable_operational_mode,
       &OperationalMode::set_value,
       expected_value);
 
@@ -4864,7 +4864,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &TaiOpticalChannelInfo::mutable_operational_mode,
+      &OpticalChannelInfo::mutable_operational_mode,
       &OperationalMode::set_value,
       expected_value);
 

@@ -301,10 +301,10 @@ namespace dummy_switch {
         }
         break;
       }
-      case Request::kTaiOpticalChannelInfo: {
+      case Request::kOpticalChannelInfo: {
         const std::pair<uint64, uint32> node_port_id = {
-            request.tai_optical_channel_info().node_id(),
-            request.tai_optical_channel_info().port_id()};
+            request.optical_channel_info().node_id(),
+            request.optical_channel_info().port_id()};
         if (!IsNodePortIdRelatedToTAI(node_port_id)) {
           break;
         }
@@ -314,7 +314,7 @@ namespace dummy_switch {
 
         ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
             module_network_id.first, module_network_id.second,
-            resp_val.mutable_tai_optical_channel_info());
+            resp_val.mutable_optical_channel_info());
         if (status.ok()) {
           resp = resp_val;
         }
@@ -341,7 +341,7 @@ namespace dummy_switch {
     switch (req.request_case()) {
       case SetRequest::Request::RequestCase::kPort:
         switch (req.port().value_case()) {
-          case SetRequest::Request::Port::ValueCase::kTaiOpticalChannelInfo: {
+          case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
             const std::pair<uint64, uint32> node_port_id = {
                 req.port().node_id(), req.port().port_id()};
 
@@ -355,7 +355,7 @@ namespace dummy_switch {
 
             status = phal_interface_->SetOpticalTransceiverInfo(
                 module_netif_id.first, module_netif_id.second,
-                req.port().tai_optical_channel_info());
+                req.port().optical_channel_info());
             break;
           }
           default:

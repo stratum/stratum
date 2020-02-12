@@ -405,10 +405,10 @@ BcmSwitch::~BcmSwitch() {}
             "A (sample) node debug string.");
         break;
 
-      case DataRequest::Request::kTaiOpticalChannelInfo: {
+      case DataRequest::Request::kOpticalChannelInfo: {
         const std::pair<uint64, uint32> node_port_id = {
-            req.tai_optical_channel_info().node_id(),
-            req.tai_optical_channel_info().port_id()};
+            req.optical_channel_info().node_id(),
+            req.optical_channel_info().port_id()};
         if (!bcm_chassis_manager_->IsNodePortIdRelatedToTAI(node_port_id)) {
           status = MAKE_ERROR(ERR_INTERNAL)
                  << "No related TAI module with current node/port ids";
@@ -421,7 +421,7 @@ BcmSwitch::~BcmSwitch() {}
 
         ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
             module_network_id.first, module_network_id.second,
-            resp_val.mutable_tai_optical_channel_info());
+            resp_val.mutable_optical_channel_info());
         if (status.ok()) {
           resp = resp_val;
         }
@@ -461,7 +461,7 @@ BcmSwitch::~BcmSwitch() {}
           case SetRequest::Request::Port::ValueCase::kLacpSystemPriority:
           case SetRequest::Request::Port::ValueCase::kHealthIndicator:
             break;
-          case SetRequest::Request::Port::ValueCase::kTaiOpticalChannelInfo: {
+          case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
             const std::pair<uint64, uint32> node_port_id = {
                 req.port().node_id(), req.port().port_id()};
 
@@ -476,7 +476,7 @@ BcmSwitch::~BcmSwitch() {}
 
             status = phal_interface_->SetOpticalTransceiverInfo(
                 module_netif_id.first, module_netif_id.second,
-                req.port().tai_optical_channel_info());
+                req.port().optical_channel_info());
             break;
           }
           default:

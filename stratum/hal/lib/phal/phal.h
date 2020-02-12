@@ -57,10 +57,10 @@ class Phal : public PhalInterface {
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status GetOpticalTransceiverInfo(
       uint64 module_id, uint32 netif_id,
-      TaiOpticalChannelInfo* tai_info) override
+      OpticalChannelInfo* tai_info) override
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status SetOpticalTransceiverInfo(uint64 module_id,
-            uint32 netif_id, const TaiOpticalChannelInfo& tai_info) override;
+            uint32 netif_id, const OpticalChannelInfo& tai_info) override;
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override

@@ -127,13 +127,13 @@ class PhalInterface {
   // for the given module_id and netif_id. This method is expected to return
   // error if there is no module is inserted in the given module_id yet.
   virtual ::util::Status GetOpticalTransceiverInfo(
-      uint64 module_id, uint32 netif_id, TaiOpticalChannelInfo* tai_info) = 0;
+      uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) = 0;
 
   // Sets the data from tai_info into a optical transceiver module by querying
   // TAI for the given module_id and netif_id. This method is expected to return
   // error if there is no module is inserted in the given module_id yet.
   virtual ::util::Status SetOpticalTransceiverInfo(uint64 module_id,
-                    uint32 netif_id, const TaiOpticalChannelInfo& tai_info) = 0;
+                    uint32 netif_id, const OpticalChannelInfo& tai_info) = 0;
 
   // Set the color/state of a frontpanel port LED, corresponding to the physical
   // port specified by (slot, port, channel). The caller assumes each physical

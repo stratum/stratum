@@ -37,7 +37,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
  * inserted in the given module_id yet.
  */
 ::util::Status OpticsAdapter::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, TaiOpticalChannelInfo* tai_info) {
+    uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) {
 
   std::vector<Path> paths = {
     {PathEntry("optical_cards", module_id, false, false, true)}
@@ -71,7 +71,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
  * is inserted in the given module_id yet.
  */
 ::util::Status OpticsAdapter::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info) {
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info) {
   AttributeValueMap attrs;
   std::vector<PathEntry> path;
 

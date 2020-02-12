@@ -68,12 +68,12 @@ class DummyPhal : public PhalInterface {
   LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status GetOpticalTransceiverInfo(uint64 module_id, uint32 netif_id,
-                                           TaiOpticalChannelInfo* tai_info)
+                                           OpticalChannelInfo* tai_info)
   SHARED_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info)
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info)
   SHARED_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 

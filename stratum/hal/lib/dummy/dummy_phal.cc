@@ -158,7 +158,7 @@ DummyPhal::~DummyPhal() {}
 }
 
 ::util::Status DummyPhal::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, TaiOpticalChannelInfo* tai_info) {
+    uint64 module_id, uint32 netif_id, OpticalChannelInfo* tai_info) {
   // TODO(unknown): implement this method
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -169,7 +169,7 @@ DummyPhal::~DummyPhal() {}
 }
 
 ::util::Status DummyPhal::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const TaiOpticalChannelInfo& tai_info) {
+    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& tai_info) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }

@@ -1093,7 +1093,7 @@ message FrontPanelPortInfo {
 }
 
 // Optical channel configuration for TAI module.
-message TaiOpticalChannelInfo {
+message OpticalChannelInfo {
   LaserFrequency frequency = 1;
   InputPower input_power = 2;
   OutputPower output_power = 3;
@@ -1246,7 +1246,7 @@ message DataRequest {
       Port front_panel_port_info = 16;
       Port hardware_port = 17;
       Port fec_status = 18;
-      Port tai_optical_channel_info = 19;
+      Port optical_channel_info = 19;
     }
   }
   repeated Request requests = 1;
@@ -1276,7 +1276,7 @@ message DataResponse {
     FrontPanelPortInfo front_panel_port_info = 16;
     HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
-    TaiOpticalChannelInfo tai_optical_channel_info = 19;
+    OpticalChannelInfo optical_channel_info = 19;
   }
 }
 
@@ -1305,7 +1305,7 @@ message SetRequest {
         // The new forwarding viability of the port.
         ForwardingViability forwarding_viability = 10;
         // The new tai optical channel configurable values.
-        TaiOpticalChannelInfo tai_optical_channel_info = 11;
+        OpticalChannelInfo optical_channel_info = 11;
       }
     }
     // Data required to set info for a specific node.
