@@ -115,6 +115,16 @@ the SDE version by using `--define` flag if you need to build with older version
 bazel build //stratum/hal/bin/barefoot:stratum_bf [--define sde_ver=8.9.2]
 ```
 
+## Building the binary without ONLP support
+
+The `--define phal_with_onlp=false` flag tells Bazel not to build with the ONLP Phal
+implementation. Use this flag when you are using a vendor-provided BSP or
+running Stratum with the Tofino software model.
+
+```
+bazel build //stratum/hal/bin/barefoot:stratum_bf --define phal_with_onlp=false [--define sde_ver=8.9.2]
+```
+
 ## Running the binary (with BSP or Tofino software model)
 
 ```

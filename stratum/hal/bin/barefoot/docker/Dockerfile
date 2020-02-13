@@ -67,12 +67,21 @@ RUN strip --strip-all $OUTPUT_BASE/lib/*.so*
 # Prepare the stratum_bf
 ENV BF_SDE_INSTALL $SDE_INSTALL
 WORKDIR /stratum
+
+# Without ONLP
+RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
+    --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
+    --define phal_with_onlp=false && \
+    cp bazel-bin/stratum/hal/bin/barefoot/stratum_bf /tmp/stratum_bf_no_onlp
+
+# With ONLP
 RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION)
 
 ENV STRATUM_BF_BASE stratum/hal/bin/barefoot
 RUN mkdir -p $OUTPUT_BASE/bin && \
     cp bazel-bin/$STRATUM_BF_BASE/stratum_bf $OUTPUT_BASE/bin/ && \
+    cp /tmp/stratum_bf_no_onlp $OUTPUT_BASE/bin/ && \
     cp $STRATUM_BF_BASE/platforms/*.json $OUTPUT_BASE/share/stratum/ && \
     cp $STRATUM_BF_BASE/docker/stratum-entrypoint.sh /output/ && \
     cp $STRATUM_BF_BASE/docker/stratum.flags $OUTPUT_BASE/share/stratum/ && \
