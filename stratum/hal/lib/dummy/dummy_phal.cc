@@ -23,7 +23,6 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
 
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
