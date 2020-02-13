@@ -67,13 +67,13 @@ class DummyPhal : public PhalInterface {
   SHARED_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 
-  ::util::Status GetOpticalTransceiverInfo(uint64 module_id, uint32 netif_id,
+  ::util::Status GetOpticalTransceiverInfo(uint64 node_id, uint32 port_id,
                                            OpticalChannelInfo* oc_info)
   SHARED_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 
-  ::util::Status SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info)
+  ::util::Status SetOpticalTransceiverInfo(uint64 node_id, uint32 port_id,
+                                           const OpticalChannelInfo& oc_info)
   SHARED_LOCKS_REQUIRED(chassis_lock)
   LOCKS_EXCLUDED(phal_lock_) override;
 
@@ -109,6 +109,13 @@ class DummyPhal : public PhalInterface {
   // Store backend interfaces for later Shutdown. Not owned by this class.
   std::vector<stratum::hal::phal::PhalBackendInterface*> phal_interfaces_
       GUARDED_BY(config_lock_);
+
+//   A function for mapping node/port id to TAI module/netif id.
+//   Because the required code lays in TaiPhal which is enabled through the
+//   preprocessor, the necessary calls can be put inside this function, which
+//   will redirect the request to the proper phal.
+  std::function<::util::StatusOr<std::pair<uint32, uint32>>(uint64, uint32)>
+      node_port_id_to_module_netif_id_;
 };
 
 }  // namespace dummy_switch

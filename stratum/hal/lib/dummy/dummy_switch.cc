@@ -24,8 +24,6 @@
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 
-#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
-
 namespace stratum {
 namespace hal {
 namespace dummy_switch {
@@ -66,18 +64,6 @@ namespace dummy_switch {
     std::pair<uint64, uint32> node_port_pair{node_id, port_id};
     node_port_id_to_slot.emplace(node_port_pair, slot);
     node_port_id_to_port.emplace(node_port_pair, port);
-  }
-
-  for (const auto& opticalPort : config.optical_ports()) {
-    std::pair<uint64, uint32> node_port_pair{ opticalPort.node(),
-                                              opticalPort.id() };
-
-    std::pair<uint32, uint32> module_netif_pair = {
-        opticalPort.module_location(), opticalPort.netif_location()};
-    node_port_id_to_module_netif.emplace(node_port_pair, module_netif_pair);
-
-    node_port_id_to_slot.emplace(node_port_pair, opticalPort.slot());
-    node_port_id_to_port.emplace(node_port_pair, opticalPort.port());
   }
 
   return ::util::OkStatus();
@@ -301,19 +287,10 @@ namespace dummy_switch {
         }
         break;
       }
-      case Request::kOpticalChannelInfo: {
-        const std::pair<uint64, uint32> node_port_id = {
-            request.optical_channel_info().node_id(),
-            request.optical_channel_info().port_id()};
-        if (!IsNodePortIdRelatedToTAI(node_port_id)) {
-          break;
-        }
-
-        const std::pair<uint64, uint32> module_network_id =
-            node_port_id_to_module_netif[node_port_id];
-
+      case DataRequest::Request::kOpticalChannelInfo: {
         ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
-            module_network_id.first, module_network_id.second,
+            request.optical_channel_info().node_id(),
+            request.optical_channel_info().port_id(),
             resp_val.mutable_optical_channel_info());
         if (status.ok()) {
           resp = resp_val;
@@ -342,19 +319,8 @@ namespace dummy_switch {
       case SetRequest::Request::RequestCase::kPort:
         switch (req.port().value_case()) {
           case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
-            const std::pair<uint64, uint32> node_port_id = {
-                req.port().node_id(), req.port().port_id()};
-
-            if (!IsNodePortIdRelatedToTAI(node_port_id)) {
-              status = MAKE_ERROR(ERR_INTERNAL)
-                       << "No related TAI module with current node/port ids";
-              break;
-            }
-            const std::pair<uint64, uint32> module_netif_id =
-                node_port_id_to_module_netif[node_port_id];
-
             status = phal_interface_->SetOpticalTransceiverInfo(
-                module_netif_id.first, module_netif_id.second,
+                req.port().node_id(), req.port().port_id(),
                 req.port().optical_channel_info());
             break;
           }
@@ -394,13 +360,6 @@ std::vector<DummyNode*> DummySwitch::GetDummyNodes() {
   }
   return ::util::StatusOr<DummyNode*>(node_element->second);
 }
-
-bool DummySwitch::IsNodePortIdRelatedToTAI(
-    const std::pair<uint64, uint32>& node_port_id) {
-  const auto kIterator = node_port_id_to_module_netif.find(node_port_id);
-  return kIterator != node_port_id_to_module_netif.end();
-}
-
 
 std::unique_ptr<DummySwitch>
   DummySwitch::CreateInstance(PhalInterface* phal_interface,

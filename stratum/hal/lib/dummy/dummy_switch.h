@@ -117,9 +117,6 @@ class DummySwitch : public SwitchInterface {
   std::vector<DummyNode*> GetDummyNodes()
   SHARED_LOCKS_REQUIRED(chassis_lock);
 
-  bool IsNodePortIdRelatedToTAI(
-      const std::pair<uint64, uint32>& node_port_id);
-
   PhalInterface* phal_interface_;
   DummyChassisManager* chassis_mgr_;
   ::absl::flat_hash_map<uint64, DummyNode*> dummy_nodes_;
@@ -130,10 +127,6 @@ class DummySwitch : public SwitchInterface {
 
   // gets port number for a node_id + port_id pair
   std::map<std::pair<uint64, uint32>, int> node_port_id_to_port;
-
-  // gets port netif port number for a node_id + port_id pair
-  std::map<std::pair<uint64, uint32>, std::pair<uint32, uint32>>
-      node_port_id_to_module_netif;
 };
 
 }  // namespace dummy_switch

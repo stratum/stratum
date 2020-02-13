@@ -91,7 +91,7 @@ phal_defines = select({
 }) + select({
     ":with_tai": tai_defines,
     ":without_tai": [],
-    "//conditions:default": tai_defines,
+    "//conditions:default": [],
 })
 
 phal_deps = select({
@@ -101,7 +101,7 @@ phal_deps = select({
 }) + select({
     ":with_tai": tai_deps,
     ":without_tai": [],
-    "//conditions:default": tai_deps,
+    "//conditions:default": [],
 })
 
 stratum_cc_library(
@@ -879,6 +879,7 @@ stratum_cc_library(
         ":phal_cc_proto",
         ":sfp_configurator",
         ":sfp_adapter",
+        ":optics_adapter",
         ":switch_configurator_interface",
         ":attribute_database",
         ":phal_backend_interface",

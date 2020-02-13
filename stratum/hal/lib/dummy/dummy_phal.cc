@@ -23,6 +23,7 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
@@ -65,11 +66,30 @@ DummyPhal::~DummyPhal() {}
           stratum::hal::phal::tai::TAIManager::CreateSingleton();
       auto* tai_phal =
           stratum::hal::phal::tai::TaiPhal::CreateSingleton(tai_manager);
+
+      // Push chassis config to TAI PHAL to be able to convert node/port to the
+      // related module/netif id.
+      tai_phal->PushChassisConfig(config);
+      node_port_id_to_module_netif_id_ = [tai_phal](
+          uint64 node_id, uint32 port_id)
+          -> ::util::StatusOr<std::pair<uint32, uint32>> {
+        return tai_phal->GetRelatedTAIModuleAndNetworkId(node_id, port_id);
+      };
+
       phal_interfaces_.push_back(tai_phal);
       ASSIGN_OR_RETURN(
           auto configurator,
           stratum::hal::phal::tai::TaiSwitchConfigurator::Make(tai_manager));
       configurators.push_back(std::move(configurator));
+    }
+#else
+    {
+      // TAI disabled. Set error message as return-result.
+      node_port_id_to_module_netif_id_ = [](
+          uint64 /*node_id*/, uint32 /*port_id*/)
+          -> ::util::StatusOr<std::pair<uint32, uint32>> {
+        return MAKE_ERROR(ERR_INTERNAL) << "TAI is not initialized!";
+      };
     }
 #endif  // defined(WITH_TAI)
 
@@ -158,24 +178,36 @@ DummyPhal::~DummyPhal() {}
 }
 
 ::util::Status DummyPhal::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, OpticalChannelInfo* oc_info) {
-  // TODO(unknown): implement this method
-  if (!initialized_) {
+    uint64 node_id, uint32 port_id, OpticalChannelInfo* oc_info) {
+  if (!initialized_)
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
-  }
 
-  return optics_adapter_->GetOpticalTransceiverInfo(module_id, netif_id,
-                                                    oc_info);
+  const auto status_or_module_netif_id
+      = node_port_id_to_module_netif_id_(node_id, port_id);
+
+  if (!status_or_module_netif_id.ok())
+    return status_or_module_netif_id.status();
+
+  const auto module_netif_id = status_or_module_netif_id.ValueOrDie();
+  return optics_adapter_->GetOpticalTransceiverInfo(
+      module_netif_id.first, module_netif_id.second, oc_info);
 }
 
 ::util::Status DummyPhal::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info) {
-  if (!initialized_) {
+    uint64 node_id, uint32 port_id, const OpticalChannelInfo& oc_info) {
+  if (!initialized_)
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
-  }
 
-  return optics_adapter_->SetOpticalTransceiverInfo(module_id, netif_id,
-                                                    oc_info);
+  const auto status_or_module_netif_id
+      = node_port_id_to_module_netif_id_(node_id, port_id);
+
+  if (!status_or_module_netif_id.ok())
+    return status_or_module_netif_id.status();
+
+  const auto module_netif_id = status_or_module_netif_id.ValueOrDie();
+
+  return optics_adapter_->SetOpticalTransceiverInfo(
+      module_netif_id.first, module_netif_id.second, oc_info);
 }
 
 ::util::Status DummyPhal::SetPortLedState(int slot, int port, int channel,

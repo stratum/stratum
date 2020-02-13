@@ -69,6 +69,7 @@ stratum_cc_library(
             "//stratum/hal/lib/common:writer_interface",
             "//stratum/hal/lib/common:phal_interface",
             "//stratum/hal/lib/common:constants",
+            "//stratum/lib:utils",
             ":dummy_box",
             ":dummy_global_vars",
     ]

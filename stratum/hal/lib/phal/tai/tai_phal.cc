@@ -71,7 +71,15 @@ TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
 ::util::Status TaiPhal::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&config_lock_);
 
-  // TODO(unknown): Process Chassis Config here
+  for (const auto& optical_port : config.optical_ports()) {
+    uint64 node_id = optical_port.node();
+    uint32 port_id = optical_port.id();
+    std::pair<uint64, uint32> node_port_pair{node_id, port_id};
+
+    std::pair<uint32, uint32> module_netif_pair = {
+        optical_port.module_location(), optical_port.netif_location()};
+    node_port_id_to_module_netif_.emplace(node_port_pair, module_netif_pair);
+  }
 
   return ::util::OkStatus();
 }
@@ -79,6 +87,23 @@ TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
 ::util::Status TaiPhal::VerifyChassisConfig(const ChassisConfig& config) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
+}
+
+// Get TAI module and network identifiers related to the specific node and port
+// (or an error).
+::util::StatusOr<std::pair<uint32, uint32>>
+TaiPhal::GetRelatedTAIModuleAndNetworkId(
+    uint64 node_id, uint32 port_id) const {
+  absl::WriterMutexLock l(&config_lock_);
+  auto iter = node_port_id_to_module_netif_.find({node_id, port_id});
+  if (iter == node_port_id_to_module_netif_.end())
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "No related TAI module is found for "
+        << "node_id=" << node_id
+        << ", "
+        << "port_id" << port_id;
+
+  return iter->second;
 }
 
 ::util::Status TaiPhal::Shutdown() {

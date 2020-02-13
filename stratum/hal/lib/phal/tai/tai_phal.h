@@ -45,6 +45,8 @@ class TaiPhal final : public PhalBackendInterface {
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
+  ::util::StatusOr<std::pair<uint32, uint32>> GetRelatedTAIModuleAndNetworkId(
+      uint64 node_id, uint32 port_id) const LOCKS_EXCLUDED(config_lock_);
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -80,6 +82,12 @@ class TaiPhal final : public PhalBackendInterface {
 
   // Not owned by this class.
   tai::TAIManager* tai_manager_ GUARDED_BY(config_lock_);
+
+  // Map from Stratum port configs (node_id, port_id) to TAI identifiers
+  // (module_id, netif_id) for the related optical transceiver plugged into that
+  // port.
+  std::map<std::pair<uint64, uint32>, std::pair<uint32, uint32>>
+      node_port_id_to_module_netif_;
 };
 
 }  // namespace tai
