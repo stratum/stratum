@@ -235,6 +235,7 @@ stratum_cc_library(
         ":switch_interface",
         ":writer_interface",
         ":utils",
+        ":constants",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",

@@ -78,6 +78,9 @@ constexpr uint8 kIpProtoTcp = 6;
 constexpr uint8 kIpProtoUdp = 17;
 constexpr uint8 kIpProtoGre = 47;
 
+// Precision for converting floating point to ::gnmi::Decimal64
+constexpr uint32 kDefaultPrecision = 2;
+
 }  // namespace hal
 }  // namespace stratum
 

@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include <vector>
+#include <utility>
 
 #include "stratum/hal/lib/common/yang_parse_tree_paths.h"
 
@@ -21,6 +22,7 @@
 #include "openconfig/openconfig.pb.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
 #include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/lib/constants.h"
 #include "absl/container/flat_hash_map.h"
@@ -85,6 +87,39 @@ template <class T>
   resp.mutable_update()->mutable_update(0)->mutable_val()->set_bool_val(
       contents);
   return resp;
+}
+
+// Specialization for '::gnmi::Decimal64'.
+::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path,
+                                      const ::gnmi::Decimal64& contents) {
+  ::gnmi::SubscribeResponse resp = GetResponse(path);
+  *resp.mutable_update()
+    ->mutable_update(0)
+    ->mutable_val()
+    ->mutable_decimal_val() = contents;
+  return resp;
+}
+
+// Convert ::gnmi::Decimal64 to float type.
+float Decimal64ValueToFloat(const ::gnmi::Decimal64 &value) {
+  float result = value.digits();
+  if (value.precision() > 0) {
+    result /= powf(10, value.precision());
+  }
+  return result;
+}
+
+// Convert float to ::gnmi::Decimal64 type.
+::gnmi::Decimal64 FloatToDecimal64Value(
+  float value, ::google::protobuf::uint32 precision) {
+  ::gnmi::Decimal64 decimal;
+  if (precision <= 0) {
+      precision = 0;
+  }
+  decimal.set_digits(
+      static_cast<::google::protobuf::int64>(value * powf(10, precision)));
+  decimal.set_precision(precision);
+  return decimal;
 }
 
 // A helper method that handles writing a response into the output stream.
@@ -160,6 +195,33 @@ template <typename T, typename U, typename V>
   request->set_node_id(node_id);
   request->set_port_id(port_id);
   ((request->*set_request_get_mutable_inner_message_func)()
+       ->*inner_message_set_field_func)(value);
+  // Request the change of the value. The returned status is ignored as there is
+  // no way to notify the controller that something went wrong. The error is
+  // logged when it is created.
+  std::vector<::util::Status> details;
+  tree->GetSwitchInterface()->SetValue(node_id, req, &details).IgnoreError();
+  // Return status of the operation.
+  return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
+}
+
+// Port-specific version. Extra parameters needed:
+// - node ID ('node_id')
+// - port ID ('port_id')
+template <typename T, typename U, typename V, typename W>
+::util::Status SetValue(uint64 node_id, uint64 port_id, YangParseTree* tree,
+                        T* (SetRequest::Request::Port::*
+                                set_request_get_mutable_inner_message_func)(),
+                        U* (T::*inner_message_get_mutable_message_func)(),
+                        void (U::*inner_message_set_field_func)(V),
+                        const W& value) {
+  // Create a set request.
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(node_id);
+  request->set_port_id(port_id);
+  T* inner_msg = (request->*set_request_get_mutable_inner_message_func)();
+  ((inner_msg->*inner_message_get_mutable_message_func)()
        ->*inner_message_set_field_func)(value);
   // Request the change of the value. The returned status is ignored as there is
   // no way to notify the controller that something went wrong. The error is
@@ -355,6 +417,47 @@ U GetValue(
       .IgnoreError();
   // Return the retrieved value.
   return resp;
+}
+
+// Optical-port-specific version.
+template <typename T, typename U>
+U GetOpticalChannelValue(
+    uint64 node_id, uint32 port_id, YangParseTree* tree,
+    const T& (OpticalChannelInfo::*instance_getter)() const,
+    bool (OpticalChannelInfo::*has_instance_getter)() const,
+    U (T::*inner_message_get_field_func)() const) {
+  // Create a data retrieval request.
+  DataRequest req;
+  auto* request = req.add_requests()->mutable_optical_channel_info();
+  request->set_node_id(node_id);
+  request->set_port_id(port_id);
+
+  // Result variable.
+  U value{};
+
+  // Worker function for DataResponseWriter.
+  const auto worker = [&value, instance_getter, has_instance_getter,
+      inner_message_get_field_func](const DataResponse& in) {
+      if (!in.has_optical_channel_info())
+      return false;
+
+      const OpticalChannelInfo& oc_info = in.optical_channel_info();
+      if (!(oc_info.*has_instance_getter)())
+      return false;
+
+      const T& instance = (oc_info.*instance_getter)();
+      value = (instance.*inner_message_get_field_func)();
+
+      return true;
+  };
+  DataResponseWriter writer(std::move(worker));
+
+  // Retrieve value from the switch.
+  tree->GetSwitchInterface()
+      ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+      .IgnoreError();
+
+  return value;
 }
 
 // A helper method that hides the details of registering an event handler into
@@ -553,6 +656,21 @@ TreeNodeEventHandler GetOnPollFunctor(
   };
 }
 
+// Optical-port-specific version.
+template <typename T, typename U>
+TreeNodeEventHandler GetOnPollOpticalInfoFunctor(
+    uint64 node_id, uint32 port_id, YangParseTree* tree,
+    const T& (OpticalChannelInfo::*instance_getter)() const,
+    bool (OpticalChannelInfo::*has_instance_getter)() const,
+    U (T::*inner_message_get_field_func)() const) {
+  return [=](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream) {
+    U value = GetOpticalChannelValue(node_id, port_id, tree, instance_getter,
+        has_instance_getter, inner_message_get_field_func);
+    return SendResponse(GetResponse(path, value), stream);
+  };
+}
+
 // A family of helper functions that create a functor that reads a value of
 // type U from an event of type T. 'get_func' points to the method that reads
 // the actual value from the event.
@@ -573,6 +691,27 @@ TreeNodeEventHandler GetOnChangeFunctor(uint64 node_id, uint32 port_id,
       return ::util::OkStatus();
     }
     return SendResponse(GetResponse(path, (change->*get_func_ptr)()), stream);
+  };
+}
+
+// Port-specific version for optical channel power value which should be
+// converted to Decimal64 type before sending to the client.
+template <typename T>
+TreeNodeEventHandler GetOnChangeFunctorForOpticalChannelPower(
+    uint64 node_id, uint32 port_id, float (T::*get_func_ptr)() const) {
+  return [node_id, port_id, get_func_ptr](const GnmiEvent& event,
+                                          const ::gnmi::Path& path,
+                                          GnmiSubscribeStream* stream) {
+    // Check downcasted event type.
+    const T* change = dynamic_cast<const T*>(&event);
+    if (change == nullptr || change->GetPortId() != port_id)
+      return ::util::OkStatus();
+
+    // Convert floating-point value to decimal and send the response.
+    float float_val = (change->*get_func_ptr)();
+    ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_val, kDefaultPrecision);
+    return SendResponse(GetResponse(path, decimal_value), stream);
   };
 }
 
@@ -2094,6 +2233,619 @@ void SetUpComponentsComponentTransceiverStateFormFactor(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/frequency
+void SetUpComponentsComponentOpticalChannelStateFrequency(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::laser_frequency,
+      &OpticalChannelInfo::has_laser_frequency,
+      &LaserFrequency::value);
+
+  auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortFrequencyChangedEvent::GetFrequency);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/config/frequency
+void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, initial_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortFrequencyChangedEvent::GetFrequency);
+
+  auto on_set_functor = [node_id, port_id, node, tree](
+        const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
+    auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
+    if (!typed_value) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
+    }
+    if (typed_value->value_case() != gnmi::TypedValue::kUintVal) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
+    }
+
+    ::google::protobuf::uint64 uint_val = typed_value->uint_val();
+    auto status = SetValue(
+        node_id, port_id, tree,
+        &SetRequest::Request::Port::mutable_optical_channel_info,
+        &OpticalChannelInfo::mutable_laser_frequency,
+        &LaserFrequency::set_value, uint_val);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_frequency(uint_val);
+            break;
+        }
+    }
+
+    auto poll_functor = [uint_val](const GnmiEvent& /*event*/,
+                                   const ::gnmi::Path& path,
+                                   GnmiSubscribeStream* stream) {
+      return SendResponse(GetResponse(path, uint_val), stream);
+    };
+    node->SetOnPollHandler(poll_functor)
+        ->SetOnTimerHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/instant
+void SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::instant);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortInputPowerChangedEvent::GetInstant);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/avg
+void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::avg);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortInputPowerChangedEvent::GetAvg);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/interval
+void SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::input_power,
+      &OpticalChannelInfo::has_input_power, &InputPower::interval);
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortInputPowerChangedEvent::GetInterval);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/max
+void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::max);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortInputPowerChangedEvent::GetMax);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/max-time
+void SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::input_power,
+      &OpticalChannelInfo::has_input_power, &InputPower::max_time);
+
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortInputPowerChangedEvent::GetMaxTime);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/min
+void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::input_power,
+          &OpticalChannelInfo::has_input_power, &InputPower::min);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortInputPowerChangedEvent::GetMin);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/input-power/min-time
+void SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::input_power,
+      &OpticalChannelInfo::has_input_power, &InputPower::min_time);
+
+  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortInputPowerChangedEvent::GetMinTime);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power/instant
+void SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::instant);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetInstant);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power/avg
+void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::avg);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetAvg);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power
+// /interval
+void SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::output_power,
+      &OpticalChannelInfo::has_output_power, &OutputPower::interval);
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetInterval);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power/max
+void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::max);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetMax);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power
+// /max-time
+void SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::output_power,
+      &OpticalChannelInfo::has_output_power, &OutputPower::max_time);
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetMaxTime);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power/min
+void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = [=](const GnmiEvent& /*event*/, const ::gnmi::Path& path,
+                         GnmiSubscribeStream* stream) {
+      float float_value = GetOpticalChannelValue(node_id, port_id, tree,
+          &OpticalChannelInfo::output_power,
+          &OpticalChannelInfo::has_output_power, &OutputPower::min);
+      ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetMin);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/output-power
+// /min-time
+void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::output_power,
+      &OpticalChannelInfo::has_output_power, &OutputPower::min_time);
+
+  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOutputPowerChangedEvent::GetMinTime);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/config/target-output-power
+void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
+    float initial_value, TreeNode* node, YangParseTree* tree, uint64 node_id,
+    uint32 port_id) {
+  auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    ::gnmi::Decimal64 decimal_value =
+        FloatToDecimal64Value(initial_value, kDefaultPrecision);
+    return SendResponse(GetResponse(path, decimal_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortTargetOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctorForOpticalChannelPower(
+      node_id, port_id, &PortTargetOutputPowerChangedEvent::GetPower);
+
+  auto on_set_functor = [node_id, port_id, node, tree](
+        const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const ::gnmi::TypedValue* typed_value
+        = static_cast<const ::gnmi::TypedValue*>(&val);
+    if (!typed_value) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
+    }
+    if (typed_value->value_case() != gnmi::TypedValue::kDecimalVal) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a decimal value!";
+    }
+    ::gnmi::Decimal64 decimal_val = typed_value->decimal_val();
+    float float_val = Decimal64ValueToFloat(decimal_val);
+
+    auto status = SetValue(node_id, port_id, tree,
+        &SetRequest::Request::Port::mutable_optical_channel_info,
+        &OpticalChannelInfo::mutable_target_output_power,
+        &TargetOutputPower::set_value, float_val);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_target_output_power(float_val);
+            break;
+        }
+    }
+
+    auto poll_functor = [decimal_val](const GnmiEvent& /*event*/,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+      return SendResponse(GetResponse(path, decimal_val), stream);
+    };
+    node->SetOnPollHandler(poll_functor)
+        ->SetOnTimerHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/operational-mode
+void SetUpComponentsComponentOpticalChannelStateOperationalMode(
+    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
+      &OpticalChannelInfo::operational_mode,
+      &OpticalChannelInfo::has_operational_mode, &OperationalMode::value);
+
+  auto register_functor = RegisterFunc<PortOperationalModeChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOperationalModeChangedEvent::GetOperationalMode);
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/config/operational-mode
+void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
+    uint64 initial_value, TreeNode* node, YangParseTree* tree, uint64 node_id,
+    uint32 port_id) {
+  auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, initial_value), stream);
+  };
+
+  auto register_functor = RegisterFunc<PortOperationalModeChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortOperationalModeChangedEvent::GetOperationalMode);
+
+  auto on_set_functor = [node_id, port_id, node, tree](
+        const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+        CopyOnWriteChassisConfig* config) -> ::util::Status {
+    auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
+    if (!typed_value) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Not a TypedValue!";
+    }
+    if (typed_value->value_case() != gnmi::TypedValue::kUintVal) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
+    }
+
+    ::google::protobuf::uint64 uint_val = typed_value->uint_val();
+    auto status =
+        SetValue(node_id, port_id, tree,
+                 &SetRequest::Request::Port::mutable_optical_channel_info,
+                 &OpticalChannelInfo::mutable_operational_mode,
+                 &OperationalMode::set_value, uint_val);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (int i = 0; i < new_config->optical_ports_size(); i++) {
+        auto* optical_port = new_config->mutable_optical_ports(i);
+        if (optical_port->node() == node_id && optical_port->id() == port_id) {
+            optical_port->set_operational_mode(uint_val);
+            break;
+        }
+    }
+
+    auto poll_functor = [uint_val](const GnmiEvent& /*event*/,
+                                   const ::gnmi::Path& path,
+                                   GnmiSubscribeStream* stream) {
+      return SendResponse(GetResponse(path, uint_val), stream);
+    };
+    node->SetOnPollHandler(poll_functor)
+        ->SetOnTimerHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/config/line-port
+void SetUpComponentsComponentOpticalChannelConfigLinePort(
+    const std::string& line_port, TreeNode* node) {
+  auto poll_functor = [line_port](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, line_port), stream);
+  };
+
+  // This /config node represents the component name in the configuration tree,
+  // so it doesn't support OnChange/OnUpdate/OnReplace untill the yang tree
+  // supports nodes renaming.
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/optical-channel/state/line-port
+void SetUpComponentsComponentOpticalChannelStateLinePort(
+    const std::string& line_port, TreeNode* node) {
+  auto poll_functor = [line_port](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, line_port), stream);
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/config/name
+void SetUpComponentsComponentConfigName(
+    const std::string& name, TreeNode* node) {
+  auto poll_functor = [name](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, name), stream);
+  };
+
+  // This /config node represents the component name in the configuration tree,
+  // so it doesn't support OnChange/OnUpdate/OnReplace untill the yang tree
+  // supports nodes renaming.
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/name
+void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
+  auto poll_functor = [name](const GnmiEvent& /*event*/,
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, name), stream);
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/state/type
+void SetUpComponentsComponentStateType(
+    const std::string& name, const std::string& type, TreeNode* node) {
+  auto poll_functor = [name, type](const GnmiEvent& /*event*/,
+                                   const ::gnmi::Path& path,
+                                   GnmiSubscribeStream* stream) {
+    return SendResponse(GetResponse(path, type), stream);
+  };
+
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /qos/interfaces/interface[name=<name>]
 //                    /output/queues/queue[name=<name>]/state/name
 void SetUpQosInterfacesInterfaceOutputQueuesQueueStateName(
@@ -2571,6 +3323,139 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
                                                      port_id);
 }
 
+void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
+    const OpticalPort& optical_port, YangParseTree* tree) {
+  const std::string& name = optical_port.name();
+  uint64 node_id = optical_port.node();
+  uint32 port_id = optical_port.id();
+  TreeNode* node{ nullptr };
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("frequency")());
+  SetUpComponentsComponentOpticalChannelStateFrequency(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("config")("frequency")());
+  uint64 initial_frequency{ optical_port.frequency() };
+  SetUpComponentsComponentOpticalChannelConfigFrequency(
+      initial_frequency, node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("instant")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("avg")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("interval")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("max")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerMax(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("max-time")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("min")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerMin(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("input-power")("min-time")());
+  SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("instant")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("avg")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("interval")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("max")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("max-time")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("min")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("output-power")("min-time")());
+  SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("config")("target-output-power")());
+  float initial_output_power{ optical_port.target_output_power() };
+  SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
+      initial_output_power, node, tree, node_id, port_id);
+
+  // Currently, the OpenConfig considers a 16-bit uint type to represent a
+  // vendor-specific bitmask for the operational-mode leaves. It might be split
+  // into several independent leaves in the future.
+  //
+  // In Stratum, we use 64-bit value at the moment because of the absence of a
+  // 16-bit uint type among the types which are supported by gNMI protocol.
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("operational-mode")());
+  SetUpComponentsComponentOpticalChannelStateOperationalMode(
+      node, tree, node_id, port_id);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("config")("operational-mode")());
+  uint64 initial_operational_mode{ optical_port.operational_mode() };
+  SetUpComponentsComponentOpticalChannelConfigOperationalMode(
+      initial_operational_mode, node, tree, node_id, port_id);
+
+  const std::string& line_port = optical_port.line_port();
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("state")("line-port")());
+  SetUpComponentsComponentOpticalChannelStateLinePort(line_port, node);
+
+  node = tree->AddNode(GetPath("components")("component", name)(
+      "optical-channel")("config")("line-port")());
+  SetUpComponentsComponentOpticalChannelConfigLinePort(line_port, node);
+
+  node = tree->AddNode(GetPath("components")("component", name)("config")(
+      "name")());
+  SetUpComponentsComponentConfigName(name, node);
+
+  node = tree->AddNode(GetPath("components")("component", name)("name")());
+  SetUpComponentsComponentName(name, node);
+
+  node = tree->AddNode(GetPath("components")("component", name)("state")(
+      "type")());
+  const std::string component_type = "OPTICAL_CHANNEL";
+  SetUpComponentsComponentStateType(name, component_type, node);
+}
+
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   // No need to lock the mutex - it is locked by method calling this one.
   TreeNode* tree_node = tree->AddNode(GetPath("debug")("nodes")(
@@ -2742,6 +3627,66 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
           [tree](const GnmiEvent& event, const ::gnmi::Path& path,
                  GnmiSubscribeStream* stream) { return ::util::OkStatus(); })
       ->SetOnPollHandler(interfaces_on_poll);
+}
+
+void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
+  auto on_poll_names = [tree](const GnmiEvent& event,
+                              const ::gnmi::Path& path,
+                              GnmiSubscribeStream* stream)
+  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+    // Execute OnPollHandler and send to the stream.
+    auto execute_poll = [&event, &stream](const TreeNode& leaf) {
+      return (leaf.GetOnPollHandler())(event, stream);
+    };
+
+    // Recursively process on-poll.
+    auto status = tree->PerformActionForAllNonWildcardNodes(
+        GetPath("components")("component")(), GetPath("name")(), execute_poll);
+
+    // Notify the client that all nodes have been processed.
+    APPEND_STATUS_IF_ERROR(
+        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+
+    return status;
+  };  // NOLINT(readability/braces)
+
+  // YANG tree requires all tree nodes to have on-change handler.
+  auto on_change = [tree](const GnmiEvent& event,
+                          const ::gnmi::Path& path,
+                          GnmiSubscribeStream* stream) {
+    // Do nothing be default.
+    return ::util::OkStatus();
+  };
+
+  // Add support for all "/components/component[name]/name" paths.
+  tree->AddNode(GetPath("components")("component", "*")("name")())
+      ->SetOnPollHandler(on_poll_names)
+      ->SetOnChangeHandler(on_change);
+
+  auto on_poll_all_components = [tree](const GnmiEvent& event,
+                                       const ::gnmi::Path& path,
+                                       GnmiSubscribeStream* stream)
+  EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+    // Execute OnPollHandler and send to the stream.
+    auto execute_poll = [&event, &stream](const TreeNode& leaf) {
+      return (leaf.GetOnPollHandler())(event, stream);
+    };
+
+    // Recursively process on-poll.
+    auto status = tree->PerformActionForAllNonWildcardNodes(
+        GetPath("components")("component")(), gnmi::Path(), execute_poll);
+
+    // Notify the client that all nodes have been processed.
+    APPEND_STATUS_IF_ERROR(
+        status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+
+    return status;
+  };  // NOLINT(readability/braces)
+
+  // Add support for the "/components/component/*" path.
+  tree->AddNode(GetPath("components")("component")("*")())
+      ->SetOnPollHandler(on_poll_all_components)
+      ->SetOnChangeHandler(on_change);
 }
 
 void YangParseTreePaths::AddRoot(YangParseTree* tree) {
