@@ -376,7 +376,7 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
     ::stratum::gtl::source_location location)
       : code_(code),
         line_(location.line()),
-        file_(location.file_name().c_str()),
+        file_(location.file_name()),
         log_severity_(INFO),
         log_verbose_level_(0),
         log_type_(LogType::kDisabled) {}
@@ -413,13 +413,13 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
   operator Status() const& {
     Status status(code_, stream_);
     if (log_type_ == LogType::kDisabled) return status;
-    google::LogMessage log_message(file_, line_, log_severity_);
+    google::LogMessage log_message(file_.c_str(), line_, log_severity_);
     log_message.stream() << status;
     return status;
   }
 
   int line() const { return line_; }
-  const char* file() const { return file_; }
+  const std::string& file() const { return file_; }
 
  private:
   enum class LogType {
@@ -430,7 +430,7 @@ class ABSL_MUST_USE_RESULT StatusBuilder {
 
   const ::util::error::Code code_;
   const int line_;
-  const char* const file_;
+  const std::string file_;
   LogSeverity log_severity_;
   int log_verbose_level_;
   LogType log_type_;

@@ -8,7 +8,7 @@ You can pull prebuilt version of this container image from the [Dockerhub](https
 
 ```bash
 $ docker pull stratumproject/stratum-bf:[SDE version]-[Linux kernel version]
-``` 
+```
 
 For example, the container with the latest BF-SDE and Linux kernel 4.14.49 is: <br/>
 `stratumproject/stratum-bf:latest-4.14.49-OpenNetworkLinux`
@@ -28,7 +28,7 @@ Or you can download Linux headers [here][onl-linux-headers] if you are using the
 
 ### Deploy the container to the device
 
-Before deploy the container to the device, make sure you install Docker 18 on the 
+Before deploy the container to the device, make sure you install Docker 18 on the
 device. No other dependency required for the device.
 
 If your switch has connectivity to the Internet, you can pull the image directly from Dockerhub
@@ -74,7 +74,7 @@ If you re-image your switch (reload ONL via ONIE), you will need to run these co
 CONFIG_DIR  # The directory for configuration, default: `/root`
 LOG_DIR     # The directory for logging, default: `/var/log/`.
 SDE_VERSION # The SDE version
-KERNEL_VERSION    # The Linux kernel version, default: `uname -r`. 
+KERNEL_VERSION    # The Linux kernel version, default: `uname -r`.
 DOCKER_IMAGE      # The container image name, default: stratumproject/stratum-bf
 DOCKER_IMAGE_TAG  # The container image tag, default: $SDE_VERSION-$KERNEL_VERSION
 ```
@@ -90,8 +90,5 @@ You can place config files such as chassis config, flag file, phal config to the
 If you would like to build the Docker image yourself, run `build-stratum-bf-container.sh` script with SDE and Linux header tarball, for example:
 
 ```bash
-$ ./build-stratum-bf-container.sh
+$ ./build-stratum-bf-container.sh bf-sde-9.0.0.tgz linux-4.14.49-ONL.tar.gz
 ```
-
-The expected format of container image name will be `stratumproject/stratum-bf:[SDE Version]-[Linux Kernel Version]`  
-

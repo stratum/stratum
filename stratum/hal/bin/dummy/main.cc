@@ -16,9 +16,9 @@
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/hal.h"
+#include "stratum/hal/lib/phal/phal.h"
 #include "stratum/hal/lib/dummy/dummy_switch.h"
 #include "stratum/hal/lib/dummy/dummy_chassis_mgr.h"
-#include "stratum/hal/lib/dummy/dummy_phal.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 
 namespace stratum {
@@ -48,11 +48,11 @@ int DummySwitchMain(int argc, char* argv[]) {
   auto dummy_box = DummyBox::GetSingleton();
   dummy_box->Start();
 
-  PhalInterface* dummy_phal = DummyPhal::CreateSingleton();
+  PhalInterface* phal = phal::Phal::CreateSingleton();
   DummyChassisManager* chassis_mgr = DummyChassisManager::GetSingleton();
 
   std::unique_ptr<DummySwitch> dummy_switch =
-    DummySwitch::CreateInstance(dummy_phal, chassis_mgr);
+    DummySwitch::CreateInstance(phal, chassis_mgr);
 
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   auto credentials_manager = CredentialsManager::CreateInstance();
