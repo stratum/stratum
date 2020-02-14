@@ -387,23 +387,15 @@ class PortInputPowerChangedEvent
     : public PerPortGnmiEvent<PortInputPowerChangedEvent> {
  public:
   PortInputPowerChangedEvent(uint64 node_id, uint32 port_id,
-                             const InputPower new_input_power)
+                             const OpticalChannelInfo::Power new_input_power)
       : PerPortGnmiEvent(node_id, port_id), new_input_power_(new_input_power) {}
   ~PortInputPowerChangedEvent() override {}
 
   // Actual power values.
-  float GetInstant() const {
-    return new_input_power_.instant();
-  }
-  float GetAvg() const {
-    return new_input_power_.avg();
-  }
-  float GetMin() const {
-    return new_input_power_.min();
-  }
-  float GetMax() const {
-    return new_input_power_.max();
-  }
+  float GetInstant() const { return new_input_power_.instant(); }
+  float GetAvg() const { return new_input_power_.avg(); }
+  float GetMin() const { return new_input_power_.min(); }
+  float GetMax() const { return new_input_power_.max(); }
 
   // Time values.
   uint64 GetInterval() const { return new_input_power_.interval(); }
@@ -411,7 +403,7 @@ class PortInputPowerChangedEvent
   uint64 GetMaxTime() const { return new_input_power_.max_time(); }
 
  private:
-  const InputPower new_input_power_;
+  const OpticalChannelInfo::Power new_input_power_;
 };
 
 // Port target output power changed event.
@@ -435,24 +427,16 @@ class PortOutputPowerChangedEvent
     : public PerPortGnmiEvent<PortOutputPowerChangedEvent> {
  public:
   PortOutputPowerChangedEvent(uint64 node_id, uint32 port_id,
-                             const OutputPower new_output_power)
+                              const OpticalChannelInfo::Power new_output_power)
       : PerPortGnmiEvent(node_id, port_id),
         new_output_power_(new_output_power) {}
   ~PortOutputPowerChangedEvent() override {}
 
   // Actual power values.
-  float GetInstant() const {
-    return new_output_power_.instant();
-  }
-  float GetAvg() const {
-    return new_output_power_.avg();
-  }
-  float GetMin() const {
-    return new_output_power_.min();
-  }
-  float GetMax() const {
-    return new_output_power_.max();
-  }
+  float GetInstant() const { return new_output_power_.instant(); }
+  float GetAvg() const { return new_output_power_.avg(); }
+  float GetMin() const { return new_output_power_.min(); }
+  float GetMax() const { return new_output_power_.max(); }
 
   // Time values.
   uint64 GetInterval() const { return new_output_power_.interval(); }
@@ -460,7 +444,7 @@ class PortOutputPowerChangedEvent
   uint64 GetMaxTime() const { return new_output_power_.max_time(); }
 
  private:
-  const OutputPower new_output_power_;
+  const OpticalChannelInfo::Power new_output_power_;
 };
 
 // Port operational mode changed event.

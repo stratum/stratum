@@ -362,14 +362,13 @@ void YangParseTree::AddSubtreeAllInterfaces() {
   YangParseTreePaths::AddSubtreeAllInterfaces(this);
 }
 
-void YangParseTree::AddSubtreeAllComponents() {
-  // No need to lock the mutex - it is locked by method calling this one.
-
   // Setup
   // * the /components/component[name="*"]/name path to make possible all
   //   components' names retrieval.
   // * the /components/component/* path to retrieve all the nodes for the
   //   specific component.
+void YangParseTree::AddSubtreeAllComponents() {
+  // No need to lock the mutex - it is locked by method calling this one.
   YangParseTreePaths::AddSubtreeAllComponents(this);
 }
 

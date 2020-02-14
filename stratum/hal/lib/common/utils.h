@@ -28,6 +28,7 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "gnmi/gnmi.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -227,6 +228,14 @@ std::string ConvertMediaTypeToString(const MediaType& type);
 // A helper function taht convert Stratum HwState to OpenConfig present
 // state string (PRESENT, NOT_PRESENT)
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
+
+// Converts ::gnmi::Decimal64 to float type.
+float Decimal64ValueToFloat(const ::gnmi::Decimal64 &value);
+
+// Converts float to ::gnmi::Decimal64 type.
+::gnmi::Decimal64
+FloatToDecimal64Value(float value, ::google::protobuf::uint32 precision);
+
 }  // namespace hal
 }  // namespace stratum
 

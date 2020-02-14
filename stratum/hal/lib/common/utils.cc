@@ -16,6 +16,7 @@
 
 #include "stratum/hal/lib/common/utils.h"
 
+#include <cmath>
 #include <sstream>  // IWYU pragma: keep
 #include <regex>  // NOLINT
 
@@ -394,6 +395,21 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
     default:
       return "UNKNOWN";
   }
+}
+
+float Decimal64ValueToFloat(const ::gnmi::Decimal64 &value) {
+  float result = value.digits();
+  result /= std::pow(10, value.precision());
+  return result;
+}
+
+::gnmi::Decimal64 FloatToDecimal64Value(
+  float value, ::google::protobuf::uint32 precision) {
+  ::gnmi::Decimal64 decimal;
+  decimal.set_digits(
+      static_cast<::google::protobuf::int64>(value * std::pow(10, precision)));
+  decimal.set_precision(precision);
+  return decimal;
 }
 
 }  // namespace hal

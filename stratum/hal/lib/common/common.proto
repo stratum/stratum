@@ -250,70 +250,6 @@ enum FecMode {
   FEC_MODE_AUTO = 3;
 }
 
-// The input optical power of this port in units of 0.01 decibel-milliwatt.
-// If the port is an aggregate of multiple physical channels, this attribute
-// is the total power or sum of all channels.
-//
-// The time-based values are the timestamps in nanoseconds relative to the
-// Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
-message InputPower {
-  // The instantaneous value of the statistic.
-  float instant = 1;
-  // The arithmetic mean value of the statistic over the time interval.
-  float avg = 2;
-  // The time interval over which the statistics are computed.
-  uint64 interval = 3;
-  // The maximum value of the statistic over the time interval.
-  float max = 4;
-  // The absolute time at which the maximum value occurred.
-  uint64 max_time = 5;
-  // The minimum value of the statistic over the time interval.
-  float min = 6;
-  // The absolute time at which the minimum value occurred.
-  uint64 min_time = 7;
-}
-
-// Current output optical power level of the optical channel, expressed in
-// increments of 0.01 decibel-milliwats.
-//
-// The time-based values are the timestamps in nanoseconds relative to the
-// Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
-message OutputPower {
-  // The instantaneous value of the statistic.
-  float instant = 1;
-  // The arithmetic mean value of the statistic over the time interval.
-  float avg = 2;
-  // The time interval over which the statistics are computed.
-  uint64 interval = 3;
-  // The maximum value of the statistic over the time interval.
-  float max = 4;
-  // The absolute time at which the maximum value occurred.
-  uint64 max_time = 5;
-  // The minimum value of the statistic over the time interval.
-  float min = 6;
-  // The absolute time at which the minimum value occurred.
-  uint64 min_time = 7;
-}
-
-// Target output optical power level of the optical channel, expressed in
-// increments of 0.01 decibel-milliwats.
-message TargetOutputPower {
-  float value = 1;
-}
-
-// NOTE. The name 'LaserFrequency' was chosen to avoid the conflict with
-// 'gnmi_publisher.cc:Frequency'.
-//
-// Optical channel frequency in MHz.
-message LaserFrequency {
-  uint64 value = 1;
-}
-
-// Optical channel operational mode.
-message OperationalMode {
-  uint64 value = 1;
-}
-
 // Config-related parameters for the ports (singleton and trunk ports).
 message PortConfigParams {
   // Per port hash config. Most of the hash configuration is given per node.
@@ -1094,9 +1030,48 @@ message FrontPanelPortInfo {
 
 // Optical channel configuration
 message OpticalChannelInfo {
-  LaserFrequency laser_frequency = 1;
-  InputPower input_power = 2;
-  OutputPower output_power = 3;
+  // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
+  // If the port is an aggregate of multiple physical channels, this attribute
+  // is the total power or sum of all channels.
+  //
+  // The time-based values are the timestamps in nanoseconds relative to the
+  // Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
+  message Power {
+    // The instantaneous value of the statistic.
+    float instant = 1;
+    // The arithmetic mean value of the statistic over the time interval.
+    float avg = 2;
+    // The time interval over which the statistics are computed.
+    uint64 interval = 3;
+    // The maximum value of the statistic over the time interval.
+    float max = 4;
+    // The absolute time at which the maximum value occurred.
+    uint64 max_time = 5;
+    // The minimum value of the statistic over the time interval.
+    float min = 6;
+    // The absolute time at which the minimum value occurred.
+    uint64 min_time = 7;
+  }
+
+  // Target output optical power level of the optical channel, expressed in
+  // increments of 0.01 decibel-milliwats.
+  message TargetOutputPower {
+    float value = 1;
+  }
+
+  // Optical channel frequency in MHz.
+  message Frequency {
+    uint64 value = 1;
+  }
+
+  // Optical channel operational mode.
+  message OperationalMode {
+    uint64 value = 1;
+  }
+
+  Frequency frequency = 1;
+  Power input_power = 2;
+  Power output_power = 3;
   TargetOutputPower target_output_power = 4;
   OperationalMode operational_mode = 5;
 }
