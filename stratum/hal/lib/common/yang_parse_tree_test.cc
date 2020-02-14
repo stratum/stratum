@@ -3383,7 +3383,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   ASSERT_THAT(req.requests(), SizeIs(1));
   EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .laser_frequency().value(), expected_value);
+      .frequency().value(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3402,7 +3402,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   ASSERT_THAT(req.requests(), SizeIs(1));
   EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .laser_frequency().value(), expected_value);
+      .frequency().value(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3466,7 +3466,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::mutable_laser_frequency, &LaserFrequency::set_value,
+      &OpticalChannelInfo::mutable_frequency,
+      &OpticalChannelInfo::Frequency::set_value,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -3490,7 +3491,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::mutable_laser_frequency, &LaserFrequency::set_value,
+      &OpticalChannelInfo::mutable_frequency,
+      &OpticalChannelInfo::Frequency::set_value,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -3513,7 +3515,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_instant,
+      &OpticalChannelInfo::Power::set_instant,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3537,7 +3539,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_instant,
+      &OpticalChannelInfo::Power::set_instant,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3558,7 +3560,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("input-power")("instant")();
 
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_instant(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3584,7 +3586,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_avg,
+      &OpticalChannelInfo::Power::set_avg,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3606,7 +3608,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_avg,
+      &OpticalChannelInfo::Power::set_avg,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3627,7 +3629,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("input-power")("avg")();
 
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_avg(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3654,7 +3656,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_interval,
+      &OpticalChannelInfo::Power::set_interval,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3676,7 +3678,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_interval,
+      &OpticalChannelInfo::Power::set_interval,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3696,7 +3698,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_interval(expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3720,7 +3722,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_max,
+      &OpticalChannelInfo::Power::set_max,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3742,7 +3744,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_max,
+      &OpticalChannelInfo::Power::set_max,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3763,7 +3765,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("input-power")("max")();
 
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_max(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3790,7 +3792,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_max_time,
+      &OpticalChannelInfo::Power::set_max_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3812,7 +3814,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_max_time,
+      &OpticalChannelInfo::Power::set_max_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3832,7 +3834,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_max_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3856,7 +3858,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_min,
+      &OpticalChannelInfo::Power::set_min,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3878,7 +3880,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_min,
+      &OpticalChannelInfo::Power::set_min,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3899,7 +3901,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("input-power")("min")();
 
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_min(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -3926,7 +3928,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_min_time,
+      &OpticalChannelInfo::Power::set_min_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3948,7 +3950,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &InputPower::set_min_time,
+      &OpticalChannelInfo::Power::set_min_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -3968,7 +3970,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("input-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
-  InputPower input_power;
+  OpticalChannelInfo::Power input_power;
   input_power.set_min_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4111,7 +4113,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_instant,
+      &OpticalChannelInfo::Power::set_instant,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4134,7 +4136,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_instant,
+      &OpticalChannelInfo::Power::set_instant,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4155,7 +4157,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("output-power")("instant")();
 
-  OutputPower output_power;
+  OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_instant(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4181,7 +4183,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_avg,
+      &OpticalChannelInfo::Power::set_avg,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4204,7 +4206,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_avg,
+      &OpticalChannelInfo::Power::set_avg,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4225,7 +4227,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("output-power")("avg")();
 
-  OutputPower output_power;
+  OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_avg(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4252,7 +4254,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_interval,
+      &OpticalChannelInfo::Power::set_interval,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4274,7 +4276,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_interval,
+      &OpticalChannelInfo::Power::set_interval,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4294,7 +4296,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
-  OutputPower output_power;
+  OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_interval(expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4318,7 +4320,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_max,
+      &OpticalChannelInfo::Power::set_max,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4341,7 +4343,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_max,
+      &OpticalChannelInfo::Power::set_max,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4362,7 +4364,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("output-power")("max")();
 
-  OutputPower output_power;
+  OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_max(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4389,7 +4391,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_max_time,
+      &OpticalChannelInfo::Power::set_max_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4411,7 +4413,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_max_time,
+      &OpticalChannelInfo::Power::set_max_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4431,7 +4433,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
-  OutputPower output_power;
+  OpticalChannelInfo::Power output_power;
   output_power.set_max_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4455,7 +4457,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_min,
+      &OpticalChannelInfo::Power::set_min,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4478,7 +4480,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_min,
+      &OpticalChannelInfo::Power::set_min,
       10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4499,7 +4501,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "dummy-switch-1")(
       "optical-channel")("state")("output-power")("min")();
 
-  OutputPower output_power;
+  OpticalChannelInfo::Power output_power;
   output_power.set_min(10.05);
 
   ::gnmi::SubscribeResponse resp;
@@ -4526,7 +4528,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_min_time,
+      &OpticalChannelInfo::Power::set_min_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4548,7 +4550,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OutputPower::set_min_time,
+      &OpticalChannelInfo::Power::set_min_time,
       expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4568,7 +4570,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
       "optical-channel")("state")("output-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
-  OutputPower output_power;
+  OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_min_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
@@ -4733,7 +4735,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_operational_mode,
-      &OperationalMode::set_value,
+      &OpticalChannelInfo::OperationalMode::set_value,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -4759,7 +4761,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_operational_mode,
-      &OperationalMode::set_value,
+      &OpticalChannelInfo::OperationalMode::set_value,
       expected_value);
 
   // Retrieve the value that has been mocked.
