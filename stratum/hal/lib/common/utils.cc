@@ -398,9 +398,7 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
 }
 
 float Decimal64ValueToFloat(const ::gnmi::Decimal64 &value) {
-  float result = value.digits();
-  result /= std::pow(10, value.precision());
-  return result;
+  return value.digits() / std::pow(10, value.precision());
 }
 
 ::gnmi::Decimal64 FloatToDecimal64Value(
