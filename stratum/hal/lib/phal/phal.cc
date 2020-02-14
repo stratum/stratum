@@ -24,6 +24,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/switch_configurator_interface.h"
+#include "stratum/hal/lib/phal/optics_adapter.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -35,7 +36,8 @@
 #endif  // defined(WITH_ONLP)
 
 #if defined(WITH_TAI)
-// TODO(plvision): add tai includes here
+#include "stratum/hal/lib/phal/tai/tai_phal.h"
+#include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_path);
@@ -83,7 +85,36 @@ Phal* Phal::CreateSingleton() {
                                               onlp_phal, onlp_wrapper));
       configurators.push_back(std::move(configurator));
     }
-#endif
+#endif  // defined(WITH_ONLP)
+
+#if defined(WITH_TAI)
+    {
+      auto* tai_phal = tai::TaiPhal::CreateSingleton();
+
+      // Push chassis config to TAI PHAL to be able to convert node/port to the
+      // related module/netif id.
+      tai_phal->PushChassisConfig(config);
+      node_port_id_to_module_netif_id_ = [tai_phal](
+          uint64 node_id, uint32 port_id)
+          -> ::util::StatusOr<std::pair<uint32, uint32>> {
+        return tai_phal->GetRelatedTAIModuleAndNetworkId(node_id, port_id);
+      };
+
+      phal_interfaces_.push_back(tai_phal);
+      ASSIGN_OR_RETURN(auto configurator,
+                       tai::TaiSwitchConfigurator::Make());
+      configurators.push_back(std::move(configurator));
+    }
+#else
+    {
+      // TAI disabled. Set error message as return-result.
+      node_port_id_to_module_netif_id_ = [](
+          uint64 /*node_id*/, uint32 /*port_id*/)
+          -> ::util::StatusOr<std::pair<uint32, uint32>> {
+        return MAKE_ERROR(ERR_INTERNAL) << "TAI is not initialized!";
+      };
+    }
+#endif  // defined(WITH_TAI)
 
     // TODO(max): figure out how to have multiple configurators creating a
     // default config.
@@ -94,8 +125,9 @@ Phal* Phal::CreateSingleton() {
             << "No phal_config_path specified and no switch configurator "
                "found! This is probably not what you want. Did you forget to "
                "specify any '--define phal_with_*=true' Bazel flags?";
-      } else {
-        RETURN_IF_ERROR(configurators.at(0)->CreateDefaultConfig(&phal_config));
+      }
+      for (const auto& configurator : configurators) {
+        RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
       }
     } else {
       RETURN_IF_ERROR(
@@ -114,6 +146,9 @@ Phal* Phal::CreateSingleton() {
 
     // Create SfpAdapter
     sfp_adapter_ = absl::make_unique<SfpAdapter>(database_.get());
+
+    // Create OpticsAdapter
+    optics_adapter_ = absl::make_unique<OpticsAdapter>(database_.get());
 
     initialized_ = true;
   }
@@ -173,6 +208,38 @@ Phal* Phal::CreateSingleton() {
   }
 
   return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
+}
+
+::util::Status Phal::GetOpticalTransceiverInfo(
+    uint64 node_id, uint32 port_id, OpticalChannelInfo* oc_info) {
+  if (!initialized_)
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+
+  const auto status_or_module_netif_id
+      = node_port_id_to_module_netif_id_(node_id, port_id);
+
+  if (!status_or_module_netif_id.ok())
+    return status_or_module_netif_id.status();
+
+  const auto module_netif_id = status_or_module_netif_id.ValueOrDie();
+  return optics_adapter_->GetOpticalTransceiverInfo(
+      module_netif_id.first, module_netif_id.second, oc_info);
+}
+
+::util::Status Phal::SetOpticalTransceiverInfo(
+    uint64 node_id, uint32 port_id, const OpticalChannelInfo& oc_info) {
+  if (!initialized_)
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+
+  const auto status_or_module_netif_id
+      = node_port_id_to_module_netif_id_(node_id, port_id);
+
+  if (!status_or_module_netif_id.ok())
+    return status_or_module_netif_id.status();
+
+  const auto module_netif_id = status_or_module_netif_id.ValueOrDie();
+  return optics_adapter_->SetOpticalTransceiverInfo(
+      module_netif_id.first, module_netif_id.second, oc_info);
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,

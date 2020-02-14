@@ -79,7 +79,7 @@ tai_defines = [
 ]
 
 tai_deps = [
-    # TODO(plvision)
+    "//stratum/hal/lib/phal/tai:tai_phal",
 ]
 
 # Default Phal selection (the absence of both with_* and without_*) is done by
@@ -270,6 +270,39 @@ stratum_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
+    ],
+)
+
+stratum_cc_library(
+    name = "optics_adapter",
+    srcs = ["optics_adapter.cc"],
+    hdrs = ["optics_adapter.h"],
+    deps = [
+        ":adapter",
+        ":attribute_database_interface",
+        ":db_cc_proto",
+        ":managed_attribute",
+        "@com_google_protobuf//:protobuf",
+        "@com_google_absl//absl/synchronization",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:utils",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+    ],
+)
+
+stratum_cc_test(
+    name = "optics_adapter_test",
+    srcs = ["optics_adapter_test.cc"],
+    deps = [
+        ":optics_adapter",
+        ":attribute_database_mock",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/lib:utils",
+        "//stratum/glue/status:status_test_util",
     ],
 )
 
@@ -846,6 +879,7 @@ stratum_cc_library(
         ":phal_cc_proto",
         ":sfp_configurator",
         ":sfp_adapter",
+        ":optics_adapter",
         ":switch_configurator_interface",
         ":attribute_database",
         ":phal_backend_interface",
