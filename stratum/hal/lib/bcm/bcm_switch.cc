@@ -261,6 +261,7 @@ BcmSwitch::~BcmSwitch() {}
   if (shutdown) {
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
+  DataResponse resp_val;
   // TODO(b/69920763): Implement this. The code below is just a placeholder.
   for (const auto& req : request.requests()) {
     DataResponse resp;
@@ -401,6 +402,18 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
+
+      case DataRequest::Request::kOpticalChannelInfo: {
+        ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
+            req.optical_channel_info().node_id(),
+            req.optical_channel_info().port_id(),
+            resp_val.mutable_optical_channel_info());
+        if (status.ok()) {
+          resp = resp_val;
+        }
+        break;
+      }
+
       default:
         status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
     }
@@ -434,6 +447,12 @@ BcmSwitch::~BcmSwitch() {}
           case SetRequest::Request::Port::ValueCase::kLacpSystemPriority:
           case SetRequest::Request::Port::ValueCase::kHealthIndicator:
             break;
+          case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
+            status = phal_interface_->SetOpticalTransceiverInfo(
+                req.port().node_id(), req.port().port_id(),
+                req.port().optical_channel_info());
+            break;
+          }
           default:
             status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
         }
