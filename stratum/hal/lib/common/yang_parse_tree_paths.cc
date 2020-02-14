@@ -686,9 +686,9 @@ TreeNodeEventHandler GetOnChangeFunctorForOpticalChannelPower(
       return ::util::OkStatus();
 
     // Convert floating-point value to decimal and send the response.
-    float float_val = (change->*get_func_ptr)();
-    ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_val, kDefaultPrecision);
+    float float_value = (change->*get_func_ptr)();
+    ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                     FloatToDecimal64Value(float_value, kDefaultPrecision));
     return SendResponse(GetResponse(path, decimal_value), stream);
   };
 }
@@ -2303,8 +2303,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
           &OpticalChannelInfo::input_power,
           &OpticalChannelInfo::has_input_power,
           &OpticalChannelInfo::Power::instant);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2328,8 +2328,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
           &OpticalChannelInfo::input_power,
           &OpticalChannelInfo::has_input_power,
           &OpticalChannelInfo::Power::avg);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2371,8 +2371,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
           &OpticalChannelInfo::input_power,
           &OpticalChannelInfo::has_input_power,
           &OpticalChannelInfo::Power::max);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2415,8 +2415,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
           &OpticalChannelInfo::input_power,
           &OpticalChannelInfo::has_input_power,
           &OpticalChannelInfo::Power::min);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2459,8 +2459,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
           &OpticalChannelInfo::output_power,
           &OpticalChannelInfo::has_output_power,
           &OpticalChannelInfo::Power::instant);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2484,8 +2484,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
           &OpticalChannelInfo::output_power,
           &OpticalChannelInfo::has_output_power,
           &OpticalChannelInfo::Power::avg);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2529,8 +2529,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
           &OpticalChannelInfo::output_power,
           &OpticalChannelInfo::has_output_power,
           &OpticalChannelInfo::Power::max);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2574,8 +2574,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
           &OpticalChannelInfo::output_power,
           &OpticalChannelInfo::has_output_power,
           &OpticalChannelInfo::Power::min);
-      ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(float_value, kDefaultPrecision);
+      ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                       FloatToDecimal64Value(float_value, kDefaultPrecision));
       return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2617,8 +2617,8 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
   auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
-    ::gnmi::Decimal64 decimal_value =
-        FloatToDecimal64Value(initial_value, kDefaultPrecision);
+    ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
+                     FloatToDecimal64Value(initial_value, kDefaultPrecision));
     return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
@@ -2638,7 +2638,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a decimal value!";
     }
     ::gnmi::Decimal64 decimal_val = typed_value->decimal_val();
-    float float_val = Decimal64ValueToFloat(decimal_val);
+    ASSIGN_OR_RETURN(float float_val, Decimal64ValueToFloat(decimal_val));
 
     auto status = SetValue(node_id, port_id, tree,
         &SetRequest::Request::Port::mutable_optical_channel_info,
