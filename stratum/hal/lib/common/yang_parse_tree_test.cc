@@ -53,6 +53,9 @@ class YangParseTreeTest : public ::testing::Test {
   static constexpr int kInterface1PortId = 3;
   static constexpr uint32 kInterface1QueueId = 0;
   static constexpr char kInterface1QueueName[] = "BE1";
+  static constexpr int kOpticalInterface1NodeId = 5;
+  static constexpr int kOpticalInterface1PortId = 5;
+  static constexpr uint64 kOpticalInterface1Frequency = 10050;
   static constexpr char kAlarmDescription[] = "alarm";
   static constexpr char kAlarmSeverityText[] = "CRITICAL";
   static constexpr Alarm::Severity kAlarmSeverityEnum = Alarm::CRITICAL;
@@ -139,16 +142,17 @@ class YangParseTreeTest : public ::testing::Test {
     parse_tree_.AddSubtreeInterfaceFromSingleton(*singleton_ptr, node_config);
   }
 
-  // Create /components/conponent[name]/optical-channel subtree from the
+  // Create /components/component[name]/optical-channel subtree from the
   // default OpticalPort instance.
-  void AddOpticalInterface(const std::string& name) {
+  void AddSubtreeOpticalInterface(const std::string& name) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
 
     OpticalPort optical_port;
     optical_port.set_name(name);
     optical_port.set_line_port("line-port-1");
-    optical_port.set_node(kInterface1NodeId);
-    optical_port.set_id(kInterface1PortId);
+    optical_port.set_node(kOpticalInterface1NodeId);
+    optical_port.set_id(kOpticalInterface1PortId);
+    optical_port.set_frequency(kOpticalInterface1Frequency);
     parse_tree_.AddSubtreeInterfaceFromOptical(optical_port);
   }
 
@@ -3344,18 +3348,18 @@ TEST_F(YangParseTreeTest, DebugNodesNodePacketIoDebugStringOnPollSuccess) {
 // Check if the '/components/component/optical-channel/config/frequency'
 // OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigFrequencyOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("frequency")();
+       ComponentsComponentOpticalChannelConfigFrequencyOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("frequency")();
 
   const uint64 frequency = 10245;
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortFrequencyChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, frequency),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortFrequencyChangedEvent(kOpticalInterface1NodeId,
+                                kOpticalInterface1PortId, frequency),
+      &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
@@ -3365,18 +3369,18 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/frequency'
 // OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateFrequencyOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("frequency")();
+       ComponentsComponentOpticalChannelStateFrequencyOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("state")("frequency")();
 
   const uint64 frequency = 10245;
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortFrequencyChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, frequency),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortFrequencyChangedEvent(kOpticalInterface1NodeId,
+                                kOpticalInterface1PortId, frequency),
+      &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
@@ -3386,10 +3390,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/frequency'
 // OnUpdate action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigFrequencyOnUpdateSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("frequency")();
+       ComponentsComponentOpticalChannelConfigFrequencyOnUpdateSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("frequency")();
 
   const uint expected_value = 100500;
   ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
@@ -3398,17 +3402,17 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .frequency(), expected_value);
+  EXPECT_EQ(req.requests(0).port().optical_channel_info().frequency(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
 // OnReplace action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigFrequencyOnReplaceSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("frequency")();
+       ComponentsComponentOpticalChannelConfigFrequencyOnReplaceSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("frequency")();
 
   const uint expected_value = 100500;
   ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
@@ -3417,17 +3421,17 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .frequency(), expected_value);
+  EXPECT_EQ(req.requests(0).port().optical_channel_info().frequency(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigFrequencyOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("frequency")();
+       ComponentsComponentOpticalChannelConfigFrequencyOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("frequency")();
 
   // Set some value to config/ node.
 
@@ -3449,10 +3453,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/frequency'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigFrequencyOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("frequency")();
+       ComponentsComponentOpticalChannelConfigFrequencyOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("frequency")();
 
   const uint expected_value = 100500;
   ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
@@ -3473,17 +3477,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/frequency'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateFrequencyOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("frequency")();
+       ComponentsComponentOpticalChannelStateFrequencyOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("state")("frequency")();
 
   const uint expected_value = 100500;
 
   // Mock switch->RetrieveValue() call.
-  SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::set_frequency,
-      expected_value);
+  SubstituteOpticalChannelRetrieveValue(&OpticalChannelInfo::set_frequency,
+                                        expected_value);
 
   // Retrieve the value that has been mocked.
   ::gnmi::SubscribeResponse resp;
@@ -3497,17 +3500,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/frequency'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateFrequencyOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("frequency")();
+       ComponentsComponentOpticalChannelStateFrequencyOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("state")("frequency")();
 
   const uint expected_value = 100500;
 
   // Mock switch->RetrieveValue() call.
-  SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::set_frequency,
-      expected_value);
+  SubstituteOpticalChannelRetrieveValue(&OpticalChannelInfo::set_frequency,
+                                        expected_value);
 
   // Retrieve the value that has been mocked.
   ::gnmi::SubscribeResponse resp;
@@ -3522,15 +3524,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /instant' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerInstantOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerInstantOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_instant,
-      10.05);
+      &OpticalChannelInfo::Power::set_instant, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3546,15 +3547,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /instant' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerInstantOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerInstantOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_instant,
-      10.05);
+      &OpticalChannelInfo::Power::set_instant, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3569,20 +3569,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /instant' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerInstantOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerInstantOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("instant")();
 
   OpticalChannelInfo::Power input_power;
   input_power.set_instant(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -3593,15 +3593,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /avg' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateInputPowerAvgOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateInputPowerAvgOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_avg,
-      10.05);
+      &OpticalChannelInfo::Power::set_avg, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3615,15 +3614,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /avg' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateInputPowerAvgOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerAvgOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_avg,
-      10.05);
+      &OpticalChannelInfo::Power::set_avg, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3638,20 +3636,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /avg' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerAvgOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerAvgOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("avg")();
 
   OpticalChannelInfo::Power input_power;
   input_power.set_avg(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -3662,16 +3660,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /interval' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateInputPowerIntervalOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateInputPowerIntervalOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_interval,
-      expected_value);
+      &OpticalChannelInfo::Power::set_interval, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3684,16 +3681,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /interval' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerIntervalOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerIntervalOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_interval,
-      expected_value);
+      &OpticalChannelInfo::Power::set_interval, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3704,11 +3700,12 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/state/input-power
 // /interval' OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerIntervalOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelStateInputPowerIntervalOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
@@ -3716,11 +3713,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   input_power.set_interval(expected_value);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
@@ -3729,15 +3726,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /max' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateInputPowerMaxOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateInputPowerMaxOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_max,
-      10.05);
+      &OpticalChannelInfo::Power::set_max, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3751,15 +3747,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /max' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateInputPowerMaxOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMaxOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_max,
-      10.05);
+      &OpticalChannelInfo::Power::set_max, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3774,20 +3769,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /max' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerMaxOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMaxOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max")();
 
   OpticalChannelInfo::Power input_power;
   input_power.set_max(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -3798,16 +3793,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/input-power
 // /max-time' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateInputPowerMaxTimeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateInputPowerMaxTimeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_max_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_max_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3820,16 +3814,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /max-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerMaxTimeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMaxTimeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_max_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_max_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3842,9 +3835,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /max-time' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerMaxTimeOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMaxTimeOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
@@ -3852,11 +3845,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   input_power.set_max_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
@@ -3865,15 +3858,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /min' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateInputPowerMinOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateInputPowerMinOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_min,
-      10.05);
+      &OpticalChannelInfo::Power::set_min, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3887,15 +3879,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /min' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateInputPowerMinOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMinOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_min,
-      10.05);
+      &OpticalChannelInfo::Power::set_min, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3910,20 +3901,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /min' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerMinOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMinOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min")();
 
   OpticalChannelInfo::Power input_power;
   input_power.set_min(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -3934,16 +3925,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/input-power
 // /min-time' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateInputPowerMinTimeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateInputPowerMinTimeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_min_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_min_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -3956,16 +3946,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /min-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerMinTimeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMinTimeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_input_power,
-      &OpticalChannelInfo::Power::set_min_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_min_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -3978,9 +3967,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /min-time' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateInputPowerMinTimeOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateInputPowerMinTimeOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("input-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
@@ -3988,11 +3977,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   input_power.set_min_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortInputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, input_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortInputPowerChangedEvent(kOpticalInterface1NodeId,
+                                 kOpticalInterface1PortId, input_power),
+      &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
@@ -4001,9 +3990,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/output-power'
 // OnUpdate action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCConfigOutputPowerOnUpdateSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCConfigOutputPowerOnUpdateSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("target-output-power")();
 
   ::gnmi::TypedValue value;
@@ -4014,8 +4003,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).port().optical_channel_info()
-      .target_output_power();
+  float result =
+      req.requests(0).port().optical_channel_info().target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -4023,9 +4012,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnReplace action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigOutputPowerOnReplaceSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelConfigOutputPowerOnReplaceSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("target-output-power")();
 
   ::gnmi::TypedValue value;
@@ -4036,17 +4025,17 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result = req.requests(0).port().optical_channel_info()
-      .target_output_power();
+  float result =
+      req.requests(0).port().optical_channel_info().target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
 // Check if the '/components/component/optical-channel/config
 // /target-output-power' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCConfigOutputPowerOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCConfigOutputPowerOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("target-output-power")();
   // Set some value to config/ node.
 
@@ -4071,9 +4060,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /target-output-power' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigTargetOutputPowerOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelConfigTargetOutputPowerOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("target-output-power")();
   // Set some value to config/ node.
 
@@ -4096,19 +4085,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/config
 // /target-output-power' OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigTargetOutputPowerOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("target-output-power")();
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelConfigTargetOutputPowerOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("target-output-power")();
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortTargetOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, 10.05),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortTargetOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                        kOpticalInterface1PortId, 10.05),
+      &resp));
   ASSERT_EQ(resp.update().update_size(), 1);
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -4120,15 +4110,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /instant' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerInstantOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerInstantOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_instant,
-      10.05);
+      &OpticalChannelInfo::Power::set_instant, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4143,15 +4132,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /instant' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerInstantOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerInstantOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("instant")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_instant,
-      10.05);
+      &OpticalChannelInfo::Power::set_instant, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4164,22 +4152,23 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/state/output-power
 // /instant' OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerInstantOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelStateOutputPowerInstantOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("instant")();
 
   OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_instant(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -4190,15 +4179,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /avg' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateOutputPowerAvgOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateOutputPowerAvgOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_avg,
-      10.05);
+      &OpticalChannelInfo::Power::set_avg, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4213,15 +4201,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /avg' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerAvgOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerAvgOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("avg")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_avg,
-      10.05);
+      &OpticalChannelInfo::Power::set_avg, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4236,20 +4223,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /avg' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerAvgOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerAvgOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("avg")();
 
   OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_avg(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -4260,16 +4247,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /interval' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateOutputPowerIntervalOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateOutputPowerIntervalOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_interval,
-      expected_value);
+      &OpticalChannelInfo::Power::set_interval, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4280,18 +4266,18 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/state/output-power
 // /interval' OnTimer action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerIntervalOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelStateOutputPowerIntervalOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_interval,
-      expected_value);
+      &OpticalChannelInfo::Power::set_interval, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4302,11 +4288,12 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/state/output-power
 // /interval' OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerIntervalOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelStateOutputPowerIntervalOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("interval")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
@@ -4314,11 +4301,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   output_power.set_interval(expected_value);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
@@ -4327,15 +4314,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /max' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateOutputPowerMaxOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateOutputPowerMaxOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_max,
-      10.05);
+      &OpticalChannelInfo::Power::set_max, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4350,15 +4336,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /max' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMaxOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerMaxOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_max,
-      10.05);
+      &OpticalChannelInfo::Power::set_max, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4373,20 +4358,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /max' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMaxOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerMaxOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max")();
 
   OpticalChannelInfo::OpticalChannelInfo::Power output_power;
   output_power.set_max(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -4397,16 +4382,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /max-time' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateOutputPowerMaxTimeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateOutputPowerMaxTimeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_max_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_max_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4419,16 +4403,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /max-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMaxTimeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerMaxTimeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_max_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_max_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4439,11 +4422,12 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/state/output-power
 // /max-time' OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMaxTimeOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelStateOutputPowerMaxTimeOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("max-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
@@ -4451,11 +4435,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   output_power.set_max_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
@@ -4464,15 +4448,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /min' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateOutputPowerMinOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateOutputPowerMinOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_min,
-      10.05);
+      &OpticalChannelInfo::Power::set_min, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4487,15 +4470,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /min' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMinOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerMinOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min")();
 
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_min,
-      10.05);
+      &OpticalChannelInfo::Power::set_min, 10.05);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4510,20 +4492,20 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /min' OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMinOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerMinOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min")();
 
   OpticalChannelInfo::Power output_power;
   output_power.set_min(10.05);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
   ASSERT_THAT(resp.update().update(), SizeIs(1));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
@@ -4534,16 +4516,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/output-power
 // /min-time' OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOCStateOutputPowerMinTimeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOCStateOutputPowerMinTimeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_min_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_min_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
@@ -4556,16 +4537,15 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // /min-time' OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMinTimeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateOutputPowerMinTimeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
   SubstituteOpticalChannelRetrieveValue(
       &OpticalChannelInfo::mutable_output_power,
-      &OpticalChannelInfo::Power::set_min_time,
-      expected_value);
+      &OpticalChannelInfo::Power::set_min_time, expected_value);
 
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
@@ -4576,11 +4556,12 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
 // Check if the '/components/component/optical-channel/state/output-power
 // /min-time' OnChange action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOutputPowerMinTimeOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+TEST_F(
+    YangParseTreeOpticalChannelTest,
+    // NOLINTNEXTLINE(whitespace/line_length)
+    ComponentsComponentOpticalChannelStateOutputPowerMinTimeOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("output-power")("min-time")();
 
   const ::google::protobuf::uint64 expected_value = 100500;
@@ -4588,11 +4569,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   output_power.set_min_time(expected_value);
 
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOutputPowerChangedEvent(
-                          kInterface1NodeId, kInterface1PortId, output_power),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOutputPowerChangedEvent(kOpticalInterface1NodeId,
+                                  kOpticalInterface1PortId, output_power),
+      &resp));
 
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(), expected_value);
@@ -4602,19 +4583,18 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigOperationalModeOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("operational-mode")();
+       ComponentsComponentOpticalChannelConfigOperationalModeOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("operational-mode")();
 
   const uint64 operational_mode = 10245;
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOperationalModeChangedEvent(
-                          kInterface1NodeId, kInterface1PortId,
-                          operational_mode),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOperationalModeChangedEvent(
+          kOpticalInterface1NodeId, kOpticalInterface1PortId, operational_mode),
+      &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
@@ -4625,19 +4605,18 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnChange action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOperationalModeOnChangeSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("operational-mode")();
+       ComponentsComponentOpticalChannelStateOperationalModeOnChangeSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("state")("operational-mode")();
 
   const uint64 operational_mode = 10245;
   ::gnmi::SubscribeResponse resp;
-  EXPECT_OK(
-      ExecuteOnChange(path,
-                      PortOperationalModeChangedEvent(
-                          kInterface1NodeId, kInterface1PortId,
-                          operational_mode),
-                      &resp));
+  EXPECT_OK(ExecuteOnChange(
+      path,
+      PortOperationalModeChangedEvent(
+          kOpticalInterface1NodeId, kOpticalInterface1PortId, operational_mode),
+      &resp));
 
   // Check that the result of the call is what is expected.
   ASSERT_EQ(resp.update().update_size(), 1);
@@ -4648,10 +4627,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnUpdate action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigOperationalModeOnUpdateSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("operational-mode")();
+       ComponentsComponentOpticalChannelConfigOperationalModeOnUpdateSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("operational-mode")();
 
   const uint expected_value = 100500;
   ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
@@ -4660,18 +4639,18 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .operational_mode(), expected_value);
+  EXPECT_EQ(req.requests(0).port().optical_channel_info().operational_mode(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
 // OnReplace action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigOperationalOnReplaceSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("operational-mode")();
+       ComponentsComponentOpticalChannelConfigOperationalOnReplaceSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("operational-mode")();
 
   const uint expected_value = 100500;
   ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
@@ -4680,18 +4659,18 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .operational_mode(), expected_value);
+  EXPECT_EQ(req.requests(0).port().optical_channel_info().operational_mode(),
+            expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigOperationalModeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("operational-mode")();
+       ComponentsComponentOpticalChannelConfigOperationalModeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("operational-mode")();
 
   // Set some value to config/ node.
 
@@ -4714,10 +4693,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelConfigOperationalModeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("config")("operational-mode")();
+       ComponentsComponentOpticalChannelConfigOperationalModeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("config")("operational-mode")();
 
   const uint expected_value = 100500;
   ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
@@ -4739,17 +4718,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOperationalModeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("operational-mode")();
+       ComponentsComponentOpticalChannelStateOperationalModeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("state")("operational-mode")();
 
   const uint expected_value = 100500;
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::set_operational_mode,
-      expected_value);
+      &OpticalChannelInfo::set_operational_mode, expected_value);
 
   // Retrieve the value that has been mocked.
   ::gnmi::SubscribeResponse resp;
@@ -4764,17 +4742,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
        // NOLINTNEXTLINE(whitespace/line_length)
-       ComponentsComponentOpticalChannelStateOperationalModeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component",
-      "dummy-switch-1")("optical-channel")("state")("operational-mode")();
+       ComponentsComponentOpticalChannelStateOperationalModeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
+      "optical-channel")("state")("operational-mode")();
 
   const uint expected_value = 100500;
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::set_operational_mode,
-      expected_value);
+      &OpticalChannelInfo::set_operational_mode, expected_value);
 
   // Retrieve the value that has been mocked.
   ::gnmi::SubscribeResponse resp;
@@ -4788,10 +4765,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/line-port'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateLinePortOnPollSuccess_Test) {
-  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateLinePortOnPollSuccess) {
+  // Set "optical-interface-1" subtree with the hardcoded line-port =
+  // "line-port-1".
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("line-port")();
 
   // Retrieve the value from the tree.
@@ -4806,10 +4784,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/state/line-port'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelStateLinePortOnTimerSuccess_Test) {
-  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelStateLinePortOnTimerSuccess) {
+  // Set "optical-interface-1" subtree with the hardcoded line-port =
+  // "line-port-1".
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("line-port")();
 
   // Retrieve the value from the tree.
@@ -4824,10 +4803,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/line-port'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnPollSuccess_Test) {
-  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelConfigLinePortOnPollSuccess) {
+  // Set "optical-interface-1" subtree with the hardcoded line-port =
+  // "line-port-1".
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("line-port")();
 
   // Retrieve the value from the tree.
@@ -4842,10 +4822,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/optical-channel/config/line-port'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentOpticalChannelConfigLinePortOnTimerSuccess_Test) {
-  // Set "dummy-switch-1" subtree with the hardcoded line-port = "line-port-1".
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")(
+       ComponentsComponentOpticalChannelConfigLinePortOnTimerSuccess) {
+  // Set "optical-interface-1" subtree with the hardcoded line-port =
+  // "line-port-1".
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("line-port")();
 
   // Retrieve the value from the tree.
@@ -4858,10 +4839,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
 }
 
 // Check if the '/components/component/name' OnPoll action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentNameOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")("name")();
+TEST_F(YangParseTreeOpticalChannelTest, ComponentsComponentNameOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path =
+      GetPath("components")("component", "optical-interface-1")("name")();
 
   // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
@@ -4869,14 +4850,14 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Check that we retrieve the component name.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "optical-interface-1");
 }
 
 // Check if the '/components/component/name' OnTimer action works correctly.
-TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentNameOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")("name")();
+TEST_F(YangParseTreeOpticalChannelTest, ComponentsComponentNameOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path =
+      GetPath("components")("component", "optical-interface-1")("name")();
 
   // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
@@ -4884,16 +4865,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Check that we retrieve the component name.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "optical-interface-1");
 }
 
 // Check if the '/components/component/config/name'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentConfigNameOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")("config")(
-      "name")();
+       ComponentsComponentConfigNameOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component",
+                                    "optical-interface-1")("config")("name")();
 
   // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
@@ -4901,16 +4882,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Check that we retrieve the component name.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "optical-interface-1");
 }
 
 // Check if the '/components/component/config/name'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentConfigNameOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")("config")(
-      "name")();
+       ComponentsComponentConfigNameOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component",
+                                    "optical-interface-1")("config")("name")();
 
   // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
@@ -4918,16 +4899,16 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Check that we retrieve the component name.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
-  EXPECT_EQ(resp.update().update(0).val().string_val(), "dummy-switch-1");
+  EXPECT_EQ(resp.update().update(0).val().string_val(), "optical-interface-1");
 }
 
 // Check if the '/components/component/state/type'
 // OnPoll action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentStateTypeOnPollSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")("state")(
-      "type")();
+       ComponentsComponentStateTypeOnPollSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component",
+                                    "optical-interface-1")("state")("type")();
 
   // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
@@ -4941,10 +4922,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
 // Check if the '/components/component/state/type'
 // OnTimer action works correctly.
 TEST_F(YangParseTreeOpticalChannelTest,
-       ComponentsComponentStateTypeOnTimerSuccess_Test) {
-  AddOpticalInterface("dummy-switch-1");
-  auto path = GetPath("components")("component", "dummy-switch-1")("state")(
-      "type")();
+       ComponentsComponentStateTypeOnTimerSuccess) {
+  AddSubtreeOpticalInterface("optical-interface-1");
+  auto path = GetPath("components")("component",
+                                    "optical-interface-1")("state")("type")();
 
   // Retrieve the value from the tree.
   ::gnmi::SubscribeResponse resp;
