@@ -399,31 +399,28 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   }
 }
 
-::util::StatusOr<float> Decimal64ValueToFloat(const ::gnmi::Decimal64 &value) {
+::util::StatusOr<float> Decimal64ValueToFloat(const ::gnmi::Decimal64& value) {
   std::feclearexcept(FE_ALL_EXCEPT);
   float result = value.digits() / std::pow(10, value.precision());
   if (std::feclearexcept(FE_INVALID)) {
     return MAKE_ERROR(ERR_OUT_OF_RANGE)
-      << "can not convert decimal"
-      << " with digits " << value.digits()
-      << " and precision " << value.precision()
-      << " to a float value.";
+           << "can not convert decimal"
+           << " with digits " << value.digits() << " and precision "
+           << value.precision() << " to a float value.";
   }
   return result;
 }
 
-::util::StatusOr<::gnmi::Decimal64>
-FloatToDecimal64Value(float value, uint32 precision) {
+::util::StatusOr<::gnmi::Decimal64> FloatToDecimal64Value(float value,
+                                                          uint32 precision) {
   std::feclearexcept(FE_ALL_EXCEPT);
   ::gnmi::Decimal64 decimal;
-  decimal.set_digits(
-      std::llround(value * std::pow(10, precision)));
+  decimal.set_digits(std::llround(value * std::pow(10, precision)));
   decimal.set_precision(precision);
   if (std::fetestexcept(FE_INVALID)) {
     return MAKE_ERROR(ERR_OUT_OF_RANGE)
-      << "can not convert number " << value
-      << " with precision " << precision
-      << " to a Decimal64 value";
+           << "can not convert number " << value << " with precision "
+           << precision << " to a Decimal64 value";
   }
   return decimal;
 }

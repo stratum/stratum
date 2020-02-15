@@ -231,12 +231,11 @@ std::string ConvertMediaTypeToString(const MediaType& type);
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
 
 // Converts ::gnmi::Decimal64 to float type.
-::util::StatusOr<float>
-Decimal64ValueToFloat(const ::gnmi::Decimal64 &value);
+::util::StatusOr<float> Decimal64ValueToFloat(const ::gnmi::Decimal64& value);
 
 // Converts float to ::gnmi::Decimal64 type.
-::util::StatusOr<::gnmi::Decimal64>
-FloatToDecimal64Value(float value, uint32 precision);
+::util::StatusOr<::gnmi::Decimal64> FloatToDecimal64Value(float value,
+                                                          uint32 precision);
 
 }  // namespace hal
 }  // namespace stratum
