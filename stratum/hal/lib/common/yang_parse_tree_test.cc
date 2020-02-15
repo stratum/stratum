@@ -487,6 +487,22 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
         WithArg<2>(Invoke(mockedRetrieve)),
         Return(::util::OkStatus())));
   }
+
+  // Mock switch::RetrieveValue to return the desired value.
+  template <typename TOption, typename TSetterValue, typename TValue>
+  void SubstituteOpticalChannelRetrieveValue(
+      void (TOption::*value_setter)(TSetterValue), const TValue& value) {
+    const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
+      DataResponse resp;
+      OpticalChannelInfo* oc_info = resp.mutable_optical_channel_info();
+      (oc_info->*value_setter)(value);
+      w->Write(resp);
+    };
+
+    EXPECT_CALL(switch_, RetrieveValue(_, _, _, _)).WillOnce(DoAll(
+        WithArg<2>(Invoke(mockedRetrieve)),
+        Return(::util::OkStatus())));
+  }
 };
 
 constexpr char YangParseTreeTest::kInterface1QueueName[];
@@ -3383,7 +3399,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   ASSERT_THAT(req.requests(), SizeIs(1));
   EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .frequency().value(), expected_value);
+      .frequency(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3402,7 +3418,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   ASSERT_THAT(req.requests(), SizeIs(1));
   EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .frequency().value(), expected_value);
+      .frequency(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3466,8 +3482,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::mutable_frequency,
-      &OpticalChannelInfo::Frequency::set_value,
+      &OpticalChannelInfo::set_frequency,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -3491,8 +3506,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::mutable_frequency,
-      &OpticalChannelInfo::Frequency::set_value,
+      &OpticalChannelInfo::set_frequency,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -4001,7 +4015,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_THAT(req.requests(), SizeIs(1));
 
   float result = req.requests(0).port().optical_channel_info()
-      .target_output_power().value();
+      .target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -4023,7 +4037,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_THAT(req.requests(), SizeIs(1));
 
   float result = req.requests(0).port().optical_channel_info()
-      .target_output_power().value();
+      .target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -4647,7 +4661,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   ASSERT_THAT(req.requests(), SizeIs(1));
   EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .operational_mode().value(), expected_value);
+      .operational_mode(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
@@ -4667,7 +4681,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   ASSERT_THAT(req.requests(), SizeIs(1));
   EXPECT_EQ(req.requests(0).port().optical_channel_info()
-      .operational_mode().value(), expected_value);
+      .operational_mode(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
@@ -4734,8 +4748,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::mutable_operational_mode,
-      &OpticalChannelInfo::OperationalMode::set_value,
+      &OpticalChannelInfo::set_operational_mode,
       expected_value);
 
   // Retrieve the value that has been mocked.
@@ -4760,8 +4773,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(
-      &OpticalChannelInfo::mutable_operational_mode,
-      &OpticalChannelInfo::OperationalMode::set_value,
+      &OpticalChannelInfo::set_operational_mode,
       expected_value);
 
   // Retrieve the value that has been mocked.
