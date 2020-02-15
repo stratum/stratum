@@ -1030,12 +1030,6 @@ message FrontPanelPortInfo {
 
 // Optical channel configuration
 message OpticalChannelInfo {
-  // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
-  // If the port is an aggregate of multiple physical channels, this attribute
-  // is the total power or sum of all channels.
-  //
-  // The time-based values are the timestamps in nanoseconds relative to the
-  // Unix Epoch (Jan 1, 1970 00:00:00 UTC)."
   message Power {
     // The instantaneous value of the statistic.
     float instant = 1;
@@ -1055,6 +1049,9 @@ message OpticalChannelInfo {
 
   // Optical channel frequency in MHz.
   uint64 frequency = 1;
+  // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
+  // If the port is an aggregate of multiple physical channels, this attribute
+  // is the total power or sum of all channels.
   Power input_power = 2;
   Power output_power = 3;
   // Target output optical power level of the optical channel, expressed in
