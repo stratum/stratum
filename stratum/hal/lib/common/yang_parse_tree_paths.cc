@@ -183,33 +183,6 @@ template <typename T, typename U, typename V>
   return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
 }
 
-// Port-specific version. Extra parameters needed:
-// - node ID ('node_id')
-// - port ID ('port_id')
-template <typename T, typename U, typename V, typename W>
-::util::Status SetValue(uint64 node_id, uint64 port_id, YangParseTree* tree,
-                        T* (SetRequest::Request::Port::*
-                                set_request_get_mutable_inner_message_func)(),
-                        U* (T::*inner_message_get_mutable_message_func)(),
-                        void (U::*inner_message_set_field_func)(V),
-                        const W& value) {
-  // Create a set request.
-  SetRequest req;
-  auto* request = req.add_requests()->mutable_port();
-  request->set_node_id(node_id);
-  request->set_port_id(port_id);
-  T* inner_msg = (request->*set_request_get_mutable_inner_message_func)();
-  ((inner_msg->*inner_message_get_mutable_message_func)()
-       ->*inner_message_set_field_func)(value);
-  // Request the change of the value. The returned status is ignored as there is
-  // no way to notify the controller that something went wrong. The error is
-  // logged when it is created.
-  std::vector<::util::Status> details;
-  tree->GetSwitchInterface()->SetValue(node_id, req, &details).IgnoreError();
-  // Return status of the operation.
-  return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
-}
-
 // A family of helper functions that create a functor that reads a value of
 // type U from an event of type T. 'get_func' points to the method that reads
 // the actual value from the event.
@@ -2214,10 +2187,11 @@ void SetUpComponentsComponentTransceiverStateFormFactor(
 // /components/component[name=<name>]/optical-channel/state/frequency
 void SetUpComponentsComponentOpticalChannelStateFrequency(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
-  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &OpticalChannelInfo::frequency,
-      &OpticalChannelInfo::has_frequency,
-      &OpticalChannelInfo::Frequency::value);
+  auto poll_functor = GetOnPollFunctor(node_id, port_id, tree,
+      &DataResponse::optical_channel_info,
+      &DataResponse::has_optical_channel_info,
+      &DataRequest::Request::mutable_optical_channel_info,
+      &OpticalChannelInfo::frequency);
 
   auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2258,8 +2232,7 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
     auto status = SetValue(
         node_id, port_id, tree,
         &SetRequest::Request::Port::mutable_optical_channel_info,
-        &OpticalChannelInfo::mutable_frequency,
-        &OpticalChannelInfo::Frequency::set_value, uint_val);
+        &OpticalChannelInfo::set_frequency, uint_val);
     if (status != ::util::OkStatus()) {
       return status;
     }
@@ -2642,8 +2615,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 
     auto status = SetValue(node_id, port_id, tree,
         &SetRequest::Request::Port::mutable_optical_channel_info,
-        &OpticalChannelInfo::mutable_target_output_power,
-        &OpticalChannelInfo::TargetOutputPower::set_value, float_val);
+        &OpticalChannelInfo::set_target_output_power, float_val);
     if (status != ::util::OkStatus()) {
       return status;
     }
@@ -2681,10 +2653,11 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 // /components/component[name=<name>]/optical-channel/state/operational-mode
 void SetUpComponentsComponentOpticalChannelStateOperationalMode(
     TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
-  auto poll_functor = GetOnPollOpticalInfoFunctor(node_id, port_id, tree,
-      &OpticalChannelInfo::operational_mode,
-      &OpticalChannelInfo::has_operational_mode,
-      &OpticalChannelInfo::OperationalMode::value);
+  auto poll_functor = GetOnPollFunctor(node_id, port_id, tree,
+      &DataResponse::optical_channel_info,
+      &DataResponse::has_optical_channel_info,
+      &DataRequest::Request::mutable_optical_channel_info,
+      &OpticalChannelInfo::operational_mode);
 
   auto register_functor = RegisterFunc<PortOperationalModeChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
@@ -2726,8 +2699,7 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
     auto status =
         SetValue(node_id, port_id, tree,
                  &SetRequest::Request::Port::mutable_optical_channel_info,
-                 &OpticalChannelInfo::mutable_operational_mode,
-                 &OpticalChannelInfo::OperationalMode::set_value, uint_val);
+                 &OpticalChannelInfo::set_operational_mode, uint_val);
     if (status != ::util::OkStatus()) {
       return status;
     }

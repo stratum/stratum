@@ -1053,27 +1053,15 @@ message OpticalChannelInfo {
     uint64 min_time = 7;
   }
 
-  // Target output optical power level of the optical channel, expressed in
-  // increments of 0.01 decibel-milliwats.
-  message TargetOutputPower {
-    float value = 1;
-  }
-
   // Optical channel frequency in MHz.
-  message Frequency {
-    uint64 value = 1;
-  }
-
-  // Optical channel operational mode.
-  message OperationalMode {
-    uint64 value = 1;
-  }
-
-  Frequency frequency = 1;
+  uint64 frequency = 1;
   Power input_power = 2;
   Power output_power = 3;
-  TargetOutputPower target_output_power = 4;
-  OperationalMode operational_mode = 5;
+  // Target output optical power level of the optical channel, expressed in
+  // increments of 0.01 decibel-milliwats.
+  float target_output_power = 4;
+  // Vendor-specific optical channel operational mode.
+  uint64 operational_mode = 5;
 }
 
 //------------------------------------------------------------------------------
