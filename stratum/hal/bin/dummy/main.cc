@@ -25,25 +25,10 @@ namespace stratum {
 namespace hal {
 namespace dummy_switch {
 
-// Initialize tai-mux library according to TAI-MUX documentation: https://github.com/Telecominfraproject/oopt-tai-implementations/tree/master/tai_mux#static-platform-adapter
-// which requires to set 2 enviroment variables:
-// "TAI_MUX_PLATFORM_ADAPTER" - indicates witch PlatformAdapter should be used
-// "TAI_MUX_STATIC_CONFIG_FILE" - contains path to 'static.json' file
-void InitTAI(const std::string& exec_path) {
-  setenv("TAI_MUX_PLATFORM_ADAPTER", "static", true);
-
-  std::string static_json_path;
-  static_json_path = exec_path.substr(0, exec_path.find_last_of("\\/"));
-
-  static_json_path.append("/static.json");
-  setenv("TAI_MUX_STATIC_CONFIG_FILE", static_json_path.c_str(), true);
-}
-
 // Entry point of Dummy Switch
 int DummySwitchMain(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
-  InitTAI(argv[0]);
 
   auto dummy_box = DummyBox::GetSingleton();
   dummy_box->Start();

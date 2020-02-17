@@ -26,6 +26,8 @@
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
 
+DEFINE_string(taimux_config_file, "", "The TAI MUX configuration file");
+
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -60,12 +62,31 @@ TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
+    InitTAI();
+
     CHECK_RETURN_IF_FALSE(tai_manager != nullptr);
     tai_manager_ = tai_manager;
 
     initialized_ = true;
   }
   return ::util::OkStatus();
+}
+
+// Initialize the "MUX TAI" library.
+// The "--taimux_config_file" argument should be specified to provide the config
+// location TAI MUX internals.
+//
+// Find the full documentation and HOWTOs in the official TAI repository:
+// https://github.com/Telecominfraproject/oopt-tai-implementations/tree/master
+// /tai_mux#static-platform-adapter.
+void TaiPhal::InitTAI() {
+  // Set platform adapter type.
+  setenv("TAI_MUX_PLATFORM_ADAPTER", "static", true);
+
+  // If passed to Stratum - set the TAI MUX config file.
+  if (!FLAGS_taimux_config_file.empty())
+    setenv(
+      "TAI_MUX_STATIC_CONFIG_FILE", FLAGS_taimux_config_file.c_str(), true);
 }
 
 ::util::Status TaiPhal::PushChassisConfig(const ChassisConfig& config) {

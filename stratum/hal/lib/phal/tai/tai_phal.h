@@ -53,6 +53,8 @@ class TaiPhal final : public PhalBackendInterface {
   static TaiPhal* CreateSingleton(tai::TAIManager* tai_manager)
       LOCKS_EXCLUDED(config_lock_, init_lock_);
 
+  static void InitTAI();
+
   // TaiPhal is neither copyable nor movable.
   TaiPhal(const TaiPhal&) = delete;
   TaiPhal& operator=(const TaiPhal&) = delete;
