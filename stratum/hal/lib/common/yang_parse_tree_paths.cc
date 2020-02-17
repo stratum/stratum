@@ -3302,9 +3302,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("frequency")());
-  uint64 initial_frequency{ optical_port.frequency() };
   SetUpComponentsComponentOpticalChannelConfigFrequency(
-      initial_frequency, node, tree, node_id, port_id);
+      optical_port.frequency(), node, tree, node_id, port_id);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("input-power")("instant")());
@@ -3378,9 +3377,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("target-output-power")());
-  float initial_output_power{ optical_port.target_output_power() };
   SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
-      initial_output_power, node, tree, node_id, port_id);
+      optical_port.target_output_power(), node, tree, node_id, port_id);
 
   // Currently, the OpenConfig considers a 16-bit uint type to represent a
   // vendor-specific bitmask for the operational-mode leaves. It might be split
@@ -3395,9 +3393,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("config")("operational-mode")());
-  uint64 initial_operational_mode{ optical_port.operational_mode() };
   SetUpComponentsComponentOpticalChannelConfigOperationalMode(
-      initial_operational_mode, node, tree, node_id, port_id);
+      optical_port.operational_mode(), node, tree, node_id, port_id);
 
   const std::string& line_port = optical_port.line_port();
   node = tree->AddNode(GetPath("components")("component", name)(
@@ -3417,8 +3414,7 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(GetPath("components")("component", name)("state")(
       "type")());
-  const std::string component_type = "OPTICAL_CHANNEL";
-  SetUpComponentsComponentStateType(name, component_type, node);
+  SetUpComponentsComponentStateType(name, "OPTICAL_CHANNEL", node);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
