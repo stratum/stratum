@@ -386,8 +386,8 @@ U GetOpticalChannelValue(
   // Result variable.
   U value{};
 
-  // Worker function for DataResponseWriter.
-  const auto worker = [&value, instance_getter, has_instance_getter,
+  // Writer for retrieving value
+  DataResponseWriter writer([&value, instance_getter, has_instance_getter,
       inner_message_get_field_func](const DataResponse& in) {
       if (!in.has_optical_channel_info())
       return false;
@@ -400,8 +400,7 @@ U GetOpticalChannelValue(
       value = (instance.*inner_message_get_field_func)();
 
       return true;
-  };
-  DataResponseWriter writer(std::move(worker));
+  });
 
   // Retrieve value from the switch.
   tree->GetSwitchInterface()
