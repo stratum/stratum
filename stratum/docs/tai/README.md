@@ -20,18 +20,18 @@ Here how optical_port configuration is represented in chassis config:
 
 ```
 optical_ports {
-  singleton_port {
-    id: 4
-    name: "1/4/1/SFP"  # slot 1, port 4, channel 1
-    slot: 1
-    port: 4
-    channel: 1
-    speed_bps: 100000000000  # 100Gbps
-    node: 1
-  }
-
+  id: 4
+  name: "card-1"
+  slot: 1
+  port: 3
+  channel: 1
+  node: 1
   module_location: 1
   netif_location: 0
+  frequency: 193500000000000
+  target_output_power: 0
+  operational_mode: 2
+  line_port: "brcm1-brcm2"
 }
 ```
 
