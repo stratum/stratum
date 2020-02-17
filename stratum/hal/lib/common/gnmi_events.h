@@ -367,6 +367,117 @@ class PortAutonegChangedEvent
   const TriState new_state_;
 };
 
+// Port frequency changed event.
+class PortFrequencyChangedEvent
+    : public PerPortGnmiEvent<PortFrequencyChangedEvent> {
+ public:
+  PortFrequencyChangedEvent(uint64 node_id, uint32 port_id,
+                            uint64 new_frequency)
+      : PerPortGnmiEvent(node_id, port_id), new_frequency_(new_frequency) {}
+  ~PortFrequencyChangedEvent() override {}
+
+  uint64 GetFrequency() const { return new_frequency_; }
+
+ private:
+  const uint64 new_frequency_;
+};
+
+// Port input power changed event.
+class PortInputPowerChangedEvent
+    : public PerPortGnmiEvent<PortInputPowerChangedEvent> {
+ public:
+  PortInputPowerChangedEvent(uint64 node_id, uint32 port_id,
+                             const OpticalChannelInfo::Power new_input_power)
+      : PerPortGnmiEvent(node_id, port_id), new_input_power_(new_input_power) {}
+  ~PortInputPowerChangedEvent() override {}
+
+  // Actual power values.
+  float GetInstant() const { return new_input_power_.instant(); }
+  float GetAvg() const { return new_input_power_.avg(); }
+  float GetMin() const { return new_input_power_.min(); }
+  float GetMax() const { return new_input_power_.max(); }
+
+  // Time values.
+  uint64 GetInterval() const { return new_input_power_.interval(); }
+  uint64 GetMinTime() const { return new_input_power_.min_time(); }
+  uint64 GetMaxTime() const { return new_input_power_.max_time(); }
+
+ private:
+  const OpticalChannelInfo::Power new_input_power_;
+};
+
+// Port target output power changed event.
+class PortTargetOutputPowerChangedEvent
+    : public PerPortGnmiEvent<PortTargetOutputPowerChangedEvent> {
+ public:
+  PortTargetOutputPowerChangedEvent(uint64 node_id, uint32 port_id,
+                                    float new_target_output_power)
+      : PerPortGnmiEvent(node_id, port_id),
+        new_target_output_power_(new_target_output_power) {}
+  ~PortTargetOutputPowerChangedEvent() override {}
+
+  float GetPower() const { return new_target_output_power_; }
+
+ private:
+  const float new_target_output_power_;
+};
+
+// Port output power changed event.
+class PortOutputPowerChangedEvent
+    : public PerPortGnmiEvent<PortOutputPowerChangedEvent> {
+ public:
+  PortOutputPowerChangedEvent(uint64 node_id, uint32 port_id,
+                              const OpticalChannelInfo::Power new_output_power)
+      : PerPortGnmiEvent(node_id, port_id),
+        new_output_power_(new_output_power) {}
+  ~PortOutputPowerChangedEvent() override {}
+
+  // Actual power values.
+  float GetInstant() const { return new_output_power_.instant(); }
+  float GetAvg() const { return new_output_power_.avg(); }
+  float GetMin() const { return new_output_power_.min(); }
+  float GetMax() const { return new_output_power_.max(); }
+
+  // Time values.
+  uint64 GetInterval() const { return new_output_power_.interval(); }
+  uint64 GetMinTime() const { return new_output_power_.min_time(); }
+  uint64 GetMaxTime() const { return new_output_power_.max_time(); }
+
+ private:
+  const OpticalChannelInfo::Power new_output_power_;
+};
+
+// Port operational mode changed event.
+class PortOperationalModeChangedEvent
+    : public PerPortGnmiEvent<PortOperationalModeChangedEvent> {
+ public:
+  PortOperationalModeChangedEvent(uint64 node_id, uint32 port_id,
+                                  uint64 new_operational_mode)
+      : PerPortGnmiEvent(node_id, port_id),
+        new_operational_mode_(new_operational_mode) {}
+  ~PortOperationalModeChangedEvent() override {}
+
+  uint64 GetOperationalMode() const { return new_operational_mode_; }
+
+ private:
+  const uint64 new_operational_mode_;
+};
+
+// Port "line port" changed event.
+class PortLinePortChangedEvent
+    : public PerPortGnmiEvent<PortLinePortChangedEvent> {
+ public:
+  PortLinePortChangedEvent(uint64 node_id, uint32 port_id,
+                           const std::string& new_line_port)
+      : PerPortGnmiEvent(node_id, port_id), new_line_port_(new_line_port) {}
+  ~PortLinePortChangedEvent() override {}
+
+  const std::string& GetLinePort() const { return new_line_port_; }
+
+ private:
+  const std::string new_line_port_;
+};
+
 // Configuration Has Been Pushed event.
 class ConfigHasBeenPushedEvent
     : public GnmiEventProcess<ConfigHasBeenPushedEvent> {

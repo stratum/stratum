@@ -17,8 +17,10 @@
 #include "stratum/hal/lib/common/utils.h"
 
 #include <string>
+#include <limits>
 
 #include "stratum/lib/constants.h"
+#include "stratum/glue/status/canonical_errors.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
@@ -399,6 +401,55 @@ TEST(PortUtilsTest, AggregatePortLedColorsStatePairs) {
             AggregatePortLedColorsStatePairs(
                 {std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID),
                  std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID)}));
+}
+
+void FloatToDecimalTest(float from, int64 digits, uint32 precision) {
+  auto res = FloatToDecimal64Value(from, precision);
+  EXPECT_TRUE(res.ok());
+  auto decimal_val = res.ValueOrDie();
+  EXPECT_EQ(decimal_val.digits(), digits);
+  EXPECT_EQ(decimal_val.precision(), precision);
+}
+
+TEST(DecimalUtilTest, TestFromFloatToDecimal64) {
+  FloatToDecimalTest(123.45f, 12345ll, 2);
+  FloatToDecimalTest(123.45f, 123450ll, 3);
+  FloatToDecimalTest(123.45f, 1234ll, 1);
+  FloatToDecimalTest(-123.45f, -12345ll, 2);
+  FloatToDecimalTest(-123.45f, -123450ll, 3);
+  FloatToDecimalTest(-123.45f, -1234ll, 1);
+  FloatToDecimalTest(0.00f, 0ll, 2);
+  FloatToDecimalTest(-0.00f, -0ll, 2);
+
+  // Some edge cases
+  ::util::IsOutOfRange(
+    FloatToDecimal64Value(std::numeric_limits<float>::max(), 0).status());
+  ::util::IsOutOfRange(FloatToDecimal64Value(
+    std::numeric_limits<float>::min(), 0).status());
+  ::util::IsOutOfRange(FloatToDecimal64Value(
+    std::numeric_limits<float>::infinity(), 0).status());
+  ::util::IsOutOfRange(FloatToDecimal64Value(
+    std::numeric_limits<float>::lowest(), 0).status());
+}
+
+void DecimalToFloatTest(int64 digits, uint32 precision, float to) {
+  ::gnmi::Decimal64 from;
+  from.set_digits(digits);
+  from.set_precision(precision);
+  auto res = Decimal64ValueToFloat(from);
+  EXPECT_TRUE(res.ok());
+  EXPECT_EQ(res.ValueOrDie(), to);
+}
+
+TEST(DecimalUtilTest, TestFromDecimal64ToFloat) {
+  DecimalToFloatTest(12345ll, 2, 123.45f);
+  DecimalToFloatTest(123450ll, 3, 123.45f);
+  DecimalToFloatTest(12345ll, 1, 1234.5);
+  DecimalToFloatTest(-12345ll, 2, -123.45f);
+  DecimalToFloatTest(-123450ll, 3, -123.45f);
+  DecimalToFloatTest(-12345ll, 1, -1234.5);
+  DecimalToFloatTest(0ll, 0, 0);
+  DecimalToFloatTest(-0ll, -0, 0);
 }
 
 }  // namespace hal
