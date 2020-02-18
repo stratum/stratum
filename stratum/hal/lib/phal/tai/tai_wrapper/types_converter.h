@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TYPES_CONVERTER_H_
 #define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TYPES_CONVERTER_H_
 
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "gnmi/gnmi.pb.h"
-#include "inc/taitypes.h"
-#include "inc/tainetworkif.h"
+#include "external/com_github_oopt_tai/inc/tainetworkif.h"
+#include "external/com_github_oopt_tai/inc/taitypes.h"
+#include "stratum/glue/integral_types.h"
 
 namespace stratum {
 namespace hal {
@@ -42,16 +41,14 @@ class TypesConverter final {
  public:
   TypesConverter() = delete;
 
-  static ::google::protobuf::uint64 HertzToMegahertz(tai_uint64_t hertz);
-  static tai_uint64_t MegahertzToHertz(google::protobuf::uint64 megahertz);
-  static tai_int32_t OperationalModeToModulation(
-      ::google::protobuf::uint64 operational_mode);
-  static ::google::protobuf::uint64 ModulationToOperationalMode(
-      tai_int32_t modulation);
+  static uint64 HertzToMegahertz(tai_uint64_t hertz);
+  static tai_uint64_t MegahertzToHertz(uint64 megahertz);
+  static tai_int32_t OperationalModeToModulation(uint64 operational_mode);
+  static uint64 ModulationToOperationalMode(tai_int32_t modulation);
 
  private:
   static constexpr uint kMegahertzInHertz = 1000000;
-  static const std::vector<std::pair<::google::protobuf::uint64, tai_int32_t>>
+  static const std::vector<std::pair<uint64, tai_int32_t>>
       kOperationalModeToModulation;
 };
 
