@@ -46,7 +46,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
   const uint64 frequency = phaldb->optical_cards(module_id).frequency();
-  oc_info->mutable_frequency()->set_value(frequency);
+  oc_info->set_frequency(frequency);
 
   const float input_power = phaldb->optical_cards(module_id).input_power();
   oc_info->mutable_input_power()->set_instant(input_power);
@@ -56,10 +56,10 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 
   const float target_output_power
       = phaldb->optical_cards(module_id).target_output_power();
-  oc_info->mutable_target_output_power()->set_value(target_output_power);
+  oc_info->set_target_output_power(target_output_power);
 
   uint64 operational_mode = phaldb->optical_cards(module_id).operational_mode();
-  oc_info->mutable_operational_mode()->set_value(operational_mode);
+  oc_info->set_operational_mode(operational_mode);
 
   return ::util::OkStatus();
 }
@@ -75,20 +75,16 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
   AttributeValueMap attrs;
   std::vector<PathEntry> path;
 
-  path = {PathEntry("optical_cards", module_id),
-                                 PathEntry("frequency")};
-  if (oc_info.has_frequency())
-    attrs[path] = oc_info.frequency().value();
+  path = { PathEntry("optical_cards", module_id), PathEntry("frequency") };
+  attrs[path] = oc_info.frequency();
 
-  path = {PathEntry("optical_cards", module_id),
-                                 PathEntry("target_output_power")};
-  if (oc_info.has_target_output_power())
-    attrs[path] = oc_info.target_output_power().value();
+  path = { PathEntry("optical_cards", module_id),
+           PathEntry("target_output_power") };
+  attrs[path] = oc_info.target_output_power();
 
-  path = {PathEntry("optical_cards", module_id),
-                                 PathEntry("operational_mode")};
-  if (oc_info.has_operational_mode())
-    attrs[path] = oc_info.operational_mode().value();
+  path = { PathEntry("optical_cards", module_id),
+           PathEntry("operational_mode") };
+  attrs[path] = oc_info.operational_mode();
 
   return Set(attrs);
 }
