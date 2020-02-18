@@ -1,6 +1,5 @@
-// Copyright 2018 Google LLC
-// Copyright 2018-present Open Networking Foundation
-// Copyright 2019 Dell EMC
+// Copyright 2020 Open Networking Foundation
+// Copyright 2020 PLVision
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,61 +29,61 @@ namespace phal {
 OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
     : Adapter(ABSL_DIE_IF_NULL(attribute_db_interface)) {}
 
-/*!
- * \brief OpticsAdapter::GetOpticalTransceiverInfo gets the information about
- * a optical transceiver module by querying TAI for the given module_id and
- * netif_id. This method is expected to return error if there is no module is
- * inserted in the given module_id yet.
- */
+// PhalDb is 0-based indexed, while arguments are 1-based.
 ::util::Status OpticsAdapter::GetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, OpticalChannelInfo* oc_info) {
+    int slot, int port, OpticalChannelInfo* oc_info) {
+  if (slot <= 0 || port <= 0) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+  }
 
   std::vector<Path> paths = {
-    {PathEntry("optical_cards", module_id, false, false, true)}
-  };
+      {PathEntry("optical_cards", slot - 1, false, false, true)}};
 
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
-  const uint64 frequency = phaldb->optical_cards(module_id).frequency();
-  oc_info->set_frequency(frequency);
+  CHECK_RETURN_IF_FALSE(phaldb->optical_cards_size() > slot - 1)
+      << "optical card in slot " << slot - 1 << " not found!";
 
-  const float input_power = phaldb->optical_cards(module_id).input_power();
-  oc_info->mutable_input_power()->set_instant(input_power);
+  oc_info->set_frequency(phaldb->optical_cards(slot - 1).frequency());
 
-  const float output_power = phaldb->optical_cards(module_id).output_power();
-  oc_info->mutable_output_power()->set_instant(output_power);
+  oc_info->mutable_input_power()->set_instant(
+      phaldb->optical_cards(slot - 1).input_power());
 
-  const float target_output_power
-      = phaldb->optical_cards(module_id).target_output_power();
-  oc_info->set_target_output_power(target_output_power);
+  oc_info->mutable_output_power()->set_instant(
+      phaldb->optical_cards(slot - 1).output_power());
 
-  uint64 operational_mode = phaldb->optical_cards(module_id).operational_mode();
-  oc_info->set_operational_mode(operational_mode);
+  oc_info->set_target_output_power(
+      phaldb->optical_cards(slot - 1).target_output_power());
+
+  oc_info->set_operational_mode(
+      phaldb->optical_cards(slot - 1).operational_mode());
 
   return ::util::OkStatus();
 }
 
-/*!
- * \brief OpticsAdapter::SetOpticalTransceiverInfo sets the data from oc_info
- * into a optical transceiver module by querying TAI for the given module_id
- * and netif_id. This method is expected to return error if there is no module
- * is inserted in the given module_id yet.
- */
 ::util::Status OpticsAdapter::SetOpticalTransceiverInfo(
-    uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info) {
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  if (slot <= 0 || port <= 0) {
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
+  }
+
   AttributeValueMap attrs;
-  std::vector<PathEntry> path;
+  Path path;
 
-  path = { PathEntry("optical_cards", module_id), PathEntry("frequency") };
-  attrs[path] = oc_info.frequency();
-
-  path = { PathEntry("optical_cards", module_id),
-           PathEntry("target_output_power") };
-  attrs[path] = oc_info.target_output_power();
-
-  path = { PathEntry("optical_cards", module_id),
-           PathEntry("operational_mode") };
-  attrs[path] = oc_info.operational_mode();
+  if (oc_info.frequency()) {
+    path = {PathEntry("optical_cards", slot - 1), PathEntry("frequency")};
+    attrs[path] = oc_info.frequency();
+  }
+  if (oc_info.target_output_power()) {
+    path = {PathEntry("optical_cards", slot - 1),
+            PathEntry("target_output_power")};
+    attrs[path] = oc_info.target_output_power();
+  }
+  if (oc_info.operational_mode()) {
+    path = {PathEntry("optical_cards", slot - 1),
+            PathEntry("operational_mode")};
+    attrs[path] = oc_info.operational_mode();
+  }
 
   return Set(attrs);
 }
