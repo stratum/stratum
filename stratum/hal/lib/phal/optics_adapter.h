@@ -1,5 +1,6 @@
 /*
  * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,11 +41,17 @@ class OpticsAdapter final : public Adapter {
 
   ~OpticsAdapter() = default;
 
-  ::util::Status GetOpticalTransceiverInfo(uint64 module_id, uint32 netif_id,
+  // Gets the information about an optical transceiver module by querying the
+  // Phal database.
+  // See: PhalInterface::GetOpticalTransceiverInfo.
+  ::util::Status GetOpticalTransceiverInfo(int slot, int port,
                                            OpticalChannelInfo* oc_info);
 
-  ::util::Status SetOpticalTransceiverInfo(
-      uint64 module_id, uint32 netif_id, const OpticalChannelInfo& oc_info);
+  // Sets the data from oc_info into an optical transceiver module in the Phal
+  // database.
+  // See: PhalInterface::SetOpticalTransceiverInfo.
+  ::util::Status SetOpticalTransceiverInfo(int slot, int port,
+                                           const OpticalChannelInfo& oc_info);
 
  private:
   // Attribute Db path to get the hardware state of all sfp transceivers.

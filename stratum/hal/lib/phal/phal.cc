@@ -210,36 +210,24 @@ Phal* Phal::CreateSingleton() {
   return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
 }
 
-::util::Status Phal::GetOpticalTransceiverInfo(
-    uint64 node_id, uint32 port_id, OpticalChannelInfo* oc_info) {
-  if (!initialized_)
+::util::Status Phal::GetOpticalTransceiverInfo(int slot, int port,
+                                               OpticalChannelInfo* oc_info) {
+  absl::WriterMutexLock l(&config_lock_);
+  if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
 
-  const auto status_or_module_netif_id
-      = node_port_id_to_module_netif_id_(node_id, port_id);
-
-  if (!status_or_module_netif_id.ok())
-    return status_or_module_netif_id.status();
-
-  const auto module_netif_id = status_or_module_netif_id.ValueOrDie();
-  return optics_adapter_->GetOpticalTransceiverInfo(
-      module_netif_id.first, module_netif_id.second, oc_info);
+  return optics_adapter_->GetOpticalTransceiverInfo(slot, port, oc_info);
 }
 
 ::util::Status Phal::SetOpticalTransceiverInfo(
-    uint64 node_id, uint32 port_id, const OpticalChannelInfo& oc_info) {
-  if (!initialized_)
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  absl::WriterMutexLock l(&config_lock_);
+  if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
 
-  const auto status_or_module_netif_id
-      = node_port_id_to_module_netif_id_(node_id, port_id);
-
-  if (!status_or_module_netif_id.ok())
-    return status_or_module_netif_id.status();
-
-  const auto module_netif_id = status_or_module_netif_id.ValueOrDie();
-  return optics_adapter_->SetOpticalTransceiverInfo(
-      module_netif_id.first, module_netif_id.second, oc_info);
+  return optics_adapter_->SetOpticalTransceiverInfo(slot, port, oc_info);
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,
