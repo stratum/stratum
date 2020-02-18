@@ -116,7 +116,7 @@ message OpticalTransceiver {
   int32 id = 1;
   string vendor_name = 2;
   HwState hardware_state = 3;
-  uint64 frequency = 4;
+  uint64 frequency = 4;           // Measured in Hz.
   double input_power = 5;         // Measured in dBm.
   double output_power = 6;        // Measured in dBm.
   double target_output_power = 7; // Measured in dBm.
