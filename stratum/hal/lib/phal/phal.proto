@@ -68,9 +68,6 @@ message PhalCardConfig {
 message PhalOpticalCardConfig {
   int32 slot = 1;
   CachePolicyConfig cache_policy = 2;
-  uint64 frequency = 3;
-  float target_output_power = 4;
-  uint64 operational_mode = 5;
 }
 
 // This message encapsulates all of the data needed to specify a fan tray.

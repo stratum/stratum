@@ -77,7 +77,12 @@ TaiSwitchConfigurator::Make() {
     int slot, MutableAttributeGroup* mutable_card,
     const PhalOpticalCardConfig& config) {
 
-  // To add optics proper datasources for card attributes
+  // To add optics proper datasources for card attributes:
+  // * frequency;
+  // * target_output_power;
+  // * operational_mode;
+  // * output_power;
+  // * input_power.
 
   return ::util::OkStatus();
 }
