@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #include "stratum/hal/lib/phal/tai/tai_wrapper/types_converter.h"
 
 namespace stratum {
@@ -23,19 +22,18 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-const std::vector<std::pair<::google::protobuf::uint64, tai_int32_t>>
+const std::vector<std::pair<uint64, tai_int32_t>>
     TypesConverter::kOperationalModeToModulation = {
-        { 1, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_QPSK },
-        { 2, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_16_QAM },
-        { 3, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM },
-    };
+        {1, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_QPSK},
+        {2, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_16_QAM},
+        {3, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM},
+};
 
 /*!
  * \brief TypesConverter::HertzToMegahertz method converts \param hertz to
  * megahertz
  */
-::google::protobuf::uint64 TypesConverter::HertzToMegahertz(
-    tai_uint64_t hertz) {
+uint64 TypesConverter::HertzToMegahertz(tai_uint64_t hertz) {
   return hertz / kMegahertzInHertz;
 }
 
@@ -43,8 +41,7 @@ const std::vector<std::pair<::google::protobuf::uint64, tai_int32_t>>
  * \brief TypesConverter::MegahertzToHertz method converts \param megahertz to
  * hertz
  */
-tai_uint64_t TypesConverter::MegahertzToHertz(
-    ::google::protobuf::uint64 megahertz) {
+tai_uint64_t TypesConverter::MegahertzToHertz(uint64 megahertz) {
   return megahertz * kMegahertzInHertz;
 }
 
@@ -56,10 +53,9 @@ tai_uint64_t TypesConverter::MegahertzToHertz(
  * operational mode is equal to zero).
  */
 tai_int32_t TypesConverter::OperationalModeToModulation(
-    ::google::protobuf::uint64 operational_mode) {
+    uint64 operational_mode) {
   for (const auto& kv : kOperationalModeToModulation) {
-    if (kv.first == operational_mode)
-      return kv.second;
+    if (kv.first == operational_mode) return kv.second;
   }
   return TAI_NETWORK_INTERFACE_MODULATION_FORMAT_UNKNOWN;
 }
@@ -70,15 +66,12 @@ tai_int32_t TypesConverter::OperationalModeToModulation(
  * \return a corresponding operational mode if found or zero otherwise (or if
  * the modulation is equal to TAI_NETWORK_INTERFACE_MODULATION_FORMAT_UNKNOWN).
  */
-::google::protobuf::uint64 TypesConverter::ModulationToOperationalMode(
-    tai_int32_t modulation) {
+uint64 TypesConverter::ModulationToOperationalMode(tai_int32_t modulation) {
   for (const auto& kv : kOperationalModeToModulation) {
-    if (kv.second == modulation)
-      return kv.first;
+    if (kv.second == modulation) return kv.first;
   }
   return 0;
 }
-
 
 }  // namespace tai
 }  // namespace phal

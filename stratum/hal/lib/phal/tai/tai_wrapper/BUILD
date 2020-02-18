@@ -60,7 +60,6 @@ stratum_cc_library(
         "@com_github_oopt_tai//:meta_hdrs",
         # tai_manager.h/.cc dependencies
         "//stratum/lib:utils",
-        "//stratum/hal/lib/common:gnmi_events_lib",
         "//stratum/hal/lib/common:common_cc_proto",
     ],
 )
@@ -106,7 +105,6 @@ stratum_cc_test(
         "@com_github_oopt_tai//:meta_hdrs",
         # taimanager.h/.cc dependencies
         "//stratum/lib:utils",
-        "//stratum/hal/lib/common:gnmi_events_lib",
         "//stratum/hal/lib/common:common_cc_proto",
     ]
 )
