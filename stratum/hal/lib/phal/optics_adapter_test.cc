@@ -93,23 +93,23 @@ TEST_F(OpticsAdapterTest, TaiPhalGetOpticalTransceiverInfoSuccess) {
   OpticalChannelInfo oc_info{};
   EXPECT_OK(optics_adapter_->GetOpticalTransceiverInfo(0, 0, &oc_info));
 
-  EXPECT_EQ(oc_info.frequency().value(), 196);
+  EXPECT_EQ(oc_info.frequency(), 196);
   EXPECT_FLOAT_EQ(oc_info.input_power().instant(), 1000.2);
   EXPECT_FLOAT_EQ(oc_info.output_power().instant(), 10000.1);
-  EXPECT_FLOAT_EQ(oc_info.target_output_power().value(), 15.5);
-  EXPECT_EQ(oc_info.operational_mode().value(), 1);
+  EXPECT_FLOAT_EQ(oc_info.target_output_power(), 15.5);
+  EXPECT_EQ(oc_info.operational_mode(), 1);
 }
 
 TEST_F(OpticsAdapterTest, TaiPhalSetOpticalTransceiverInfoSuccess) {
   OpticalChannelInfo oc_info;
-  oc_info.mutable_frequency()->set_value(150);
-  oc_info.mutable_target_output_power()->set_value(140.12);
-  oc_info.mutable_operational_mode()->set_value(3);
+  oc_info.set_frequency(150);
+  oc_info.set_target_output_power(140.12);
+  oc_info.set_operational_mode(3);
 
   AttributeValueMap attrs;
-  attrs[frequency_path] = oc_info.frequency().value();
-  attrs[target_output_power_path] = oc_info.target_output_power().value();
-  attrs[operational_mode_path] = oc_info.operational_mode().value();
+  attrs[frequency_path] = oc_info.frequency();
+  attrs[target_output_power_path] = oc_info.target_output_power();
+  attrs[operational_mode_path] = oc_info.operational_mode();
 
   EXPECT_CALL(*database_.get(), Set(DbAttributesEqual(attrs)))
       .WillOnce(Return(::util::Status::OK));

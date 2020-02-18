@@ -116,12 +116,11 @@ message OpticalTransceiver {
   int32 id = 1;
   string vendor_name = 2;
   HwState hardware_state = 3;
-  double tx_power = 4;
-  uint64 frequency = 5;
-  float input_power = 6;
-  float output_power = 7;
-  float target_output_power = 8;
-  uint64 operational_mode = 9;
+  uint64 frequency = 4;
+  float input_power = 5;
+  float output_power = 6;
+  float target_output_power = 7;
+  uint64 operational_mode = 8;
 }
 
 message Port {

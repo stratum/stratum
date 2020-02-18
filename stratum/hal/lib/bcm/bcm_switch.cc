@@ -442,9 +442,9 @@ BcmSwitch::~BcmSwitch() {}
           case SetRequest::Request::Port::ValueCase::kHealthIndicator:
             break;
           case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
-            status = phal_interface_->SetOpticalTransceiverInfo(
+            status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.port().node_id(), req.port().port_id(),
-                req.port().optical_channel_info());
+                req.port().optical_channel_info()));
             break;
           }
           default:

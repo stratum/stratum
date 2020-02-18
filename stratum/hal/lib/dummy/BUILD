@@ -64,12 +64,9 @@ stratum_cc_library(
     deps = ["@com_google_absl//absl/synchronization",
             "//stratum/glue:logging",
             "//stratum/glue:integral_types",
-            "//stratum/hal/lib/phal:optics_adapter",
-            "//stratum/hal/lib/phal:phal",
             "//stratum/hal/lib/common:writer_interface",
             "//stratum/hal/lib/common:phal_interface",
             "//stratum/hal/lib/common:constants",
-            "//stratum/lib:utils",
             ":dummy_box",
             ":dummy_global_vars",
     ]

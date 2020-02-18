@@ -287,17 +287,6 @@ namespace dummy_switch {
         }
         break;
       }
-      case DataRequest::Request::kOpticalChannelInfo: {
-        ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
-            request.optical_channel_info().node_id(),
-            request.optical_channel_info().port_id(),
-            resp_val.mutable_optical_channel_info());
-        if (status.ok()) {
-          resp = resp_val;
-        }
-        break;
-      }
-
       default:
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;
@@ -312,28 +301,10 @@ namespace dummy_switch {
 }
 
 ::util::Status DummySwitch::SetValue(uint64 node_id, const SetRequest& request,
-                                   std::vector<::util::Status>* details) {
-  for (const auto& req : request.requests()) {
-    ::util::Status status = ::util::OkStatus();
-    switch (req.request_case()) {
-      case SetRequest::Request::RequestCase::kPort:
-        switch (req.port().value_case()) {
-          case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
-            status = phal_interface_->SetOpticalTransceiverInfo(
-                req.port().node_id(), req.port().port_id(),
-                req.port().optical_channel_info());
-            break;
-          }
-          default:
-            status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
-        }
-        break;
-      default:
-        status = MAKE_ERROR(ERR_INTERNAL)
-                 << req.ShortDebugString() << " Not supported yet!";
-    }
-    if (details) details->push_back(status);
-  }
+                                     std::vector<::util::Status>* details) {
+  absl::ReaderMutexLock l(&chassis_lock);
+  // TODO(Yi Tseng): Implement this method.
+  LOG(INFO) << __FUNCTION__;
   return ::util::OkStatus();
 }
 
