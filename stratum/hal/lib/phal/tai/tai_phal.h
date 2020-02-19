@@ -90,4 +90,5 @@ class TaiPhal final : public PhalBackendInterface {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
+
 #endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_PHAL_H_
