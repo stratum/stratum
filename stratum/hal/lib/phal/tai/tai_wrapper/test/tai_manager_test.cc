@@ -1,6 +1,6 @@
 /*
- * Copyright 2018 Google LLC
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ MATCHER(IsObjectSuported, "") {
 }
 
 TEST(TAIManagerTest, CorrectObjectCreation_Test) {
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
 
   const TAIPath callPath = {{TAI_OBJECT_TYPE_MODULE, 0},
                             {TAI_OBJECT_TYPE_HOSTIF, 0}};
@@ -90,7 +90,7 @@ TEST(TAIManagerTest, CorrectObjectCreation_Test) {
 TEST(TAIManagerTest, SetFrequencyValueWithSuccess_Test) {
   const uint64 kFrequency = 45;
 
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -123,7 +123,7 @@ TEST(TAIManagerTest, SetFrequencyValueWithSuccess_Test) {
 TEST(TAIManagerTest, SetFrequencyValueWithInvalidAttributeValue_Test) {
   const uint64 kFrequency = 45;
 
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -162,7 +162,7 @@ TEST(TAIManagerTest, GetFrequencyValueWithSuccess_Test) {
   const uint64 kFrequency = 2350000;
   dummy_tai_attribute.attr.value.u64 = kFrequency;
 
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -191,7 +191,7 @@ TEST(TAIManagerTest, GetFrequencyValueWithSuccess_Test) {
 TEST(TAIManagerTest, SetModulationValueWithSuccess_Test) {
   const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
 
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -225,7 +225,7 @@ TEST(TAIManagerTest, SetModulationValueWithSuccess_Test) {
 TEST(TAIManagerTest, TryToSetModulationValueWithInvalidObjectId_Test) {
   const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
 
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
 
   std::weak_ptr<TAIObjectMock> dummy_weak_ptr;
   EXPECT_CALL(*wrapper.get(),
@@ -252,7 +252,7 @@ TEST(TAIManagerTest, GetModulationValueWithSuccess_Test) {
   const int32 kModulation = TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM;
   dummy_tai_attribute.attr.value.s32 = kModulation;
 
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -280,7 +280,7 @@ TEST(TAIManagerTest, GetModulationValueWithSuccess_Test) {
 }
 
 TEST(TAIManagerTest, SetOutputPowerValueWithSuccess_Test) {
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -311,7 +311,7 @@ TEST(TAIManagerTest, SetOutputPowerValueWithSuccess_Test) {
 }
 
 TEST(TAIManagerTest, SetOutputPowerValueWithErrorFromTai_Test) {
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -342,7 +342,7 @@ TEST(TAIManagerTest, SetOutputPowerValueWithErrorFromTai_Test) {
 }
 
 TEST(TAIManagerTest, GetOutputPowerValueWithSuccess_Test) {
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
@@ -378,7 +378,7 @@ TEST(TAIManagerTest, GetOutputPowerValueWithSuccess_Test) {
 }
 
 TEST(TAIManagerTest, GetInputPowerValueWithSuccess_Test) {
-  std::unique_ptr<tai_wrapper_mock> wrapper(new tai_wrapper_mock());
+  std::unique_ptr<TaiWrapperMock> wrapper(new TaiWrapperMock());
   std::shared_ptr<TAIObjectMock> object_mock =
       std::make_shared<TAIObjectMock>();
 
