@@ -385,7 +385,7 @@ message OpticalPort {
   uint32 module_location = 7; // required
   // The unique netif location that represents the optical port on the module.
   uint32 netif_location = 8; // required
-  // Optical channel frequency in MHz.
+  // Optical channel frequency in Hz.
   uint64 frequency = 9;
   // Target output optical power level of the optical channel, expressed in
   // increments of 0.01 decibel-milliwats.
@@ -1047,7 +1047,7 @@ message OpticalChannelInfo {
     uint64 min_time = 7;
   }
 
-  // Optical channel frequency in MHz.
+  // Optical channel frequency in Hz.
   uint64 frequency = 1;
   // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
   // If the port is an aggregate of multiple physical channels, this attribute
