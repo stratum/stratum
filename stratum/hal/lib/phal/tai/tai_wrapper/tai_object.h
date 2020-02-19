@@ -39,7 +39,7 @@ struct tai_api_method_table_t {
 };
 
 /*!
- * \brief The TAIObject class is base class for each tai object (Module,
+ * \brief The TaiObject class is base class for each tai object (Module,
  * HostInterface and NetworkInterface) and contains all common methods.
  * Example: on picture bellow presents schematic TAI adapter that has one Module
  * with two HostInterfaces and one NetworkInterface all this objects called TAI
@@ -64,26 +64,26 @@ struct tai_api_method_table_t {
  *          |          |                                 |
  * ---------            ---------------------------------
  */
-class TAIObject {
+class TaiObject {
  public:
-  explicit TAIObject(const tai_api_method_table_t& api);
-  virtual ~TAIObject() = default;
+  explicit TaiObject(const tai_api_method_table_t& api);
+  virtual ~TaiObject() = default;
 
-  virtual TAIAttribute GetAttribute(tai_attr_id_t attr_id,
+  virtual TaiAttribute GetAttribute(tai_attr_id_t attr_id,
                                     tai_status_t* return_status) const;
   virtual tai_status_t SetAttribute(const tai_attribute_t* attr) const;
 
   tai_object_id_t GetId() const;
 
-  virtual TAIAttribute GetAlocatedAttributeObject(tai_attr_id_t attr_id) const;
-  virtual TAIAttribute GetAlocatedAttributeObject(
+  virtual TaiAttribute GetAlocatedAttributeObject(tai_attr_id_t attr_id) const;
+  virtual TaiAttribute GetAlocatedAttributeObject(
       const std::string attr_id) const;
 
   // deleted copy/move functionality
-  TAIObject(const TAIObject&) = delete;
-  TAIObject& operator=(const TAIObject&) = delete;
-  TAIObject(TAIObject&&) = delete;
-  TAIObject& operator=(TAIObject&&) = delete;
+  TaiObject(const TaiObject&) = delete;
+  TaiObject& operator=(const TaiObject&) = delete;
+  TaiObject(TaiObject&&) = delete;
+  TaiObject& operator=(TaiObject&&) = delete;
 
  protected:
   /*!

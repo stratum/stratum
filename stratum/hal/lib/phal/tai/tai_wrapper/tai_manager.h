@@ -39,15 +39,15 @@ namespace phal {
 namespace tai {
 
 /*!
- * \brief The TAIManager class provide single access point for user<->TAIWrapper
+ * \brief The TaiManager class provide single access point for user<->TaiWrapper
  * host interaction.
  */
-class TAIManager {
+class TaiManager {
  public:
   // Creates a singleton instance.
-  static TAIManager* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
+  static TaiManager* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
   // Return the singleton instance to be used in the TAI calls.
-  static TAIManager* GetSingleton() LOCKS_EXCLUDED(init_lock_);
+  static TaiManager* GetSingleton() LOCKS_EXCLUDED(init_lock_);
 
   template <typename T>
   ::util::StatusOr<T> GetValue(
@@ -59,43 +59,43 @@ class TAIManager {
       const T& value_to_set, tai_attr_id_t attr_id,
       const std::pair<uint64, uint32>& module_netif_pair) const;
 
-  bool IsObjectValid(const TAIPath& path);
+  bool IsObjectValid(const TaiPath& path);
 
   // Not copyable or movable
-  TAIManager(const TAIManager&) = delete;
-  TAIManager& operator=(const TAIManager&) = delete;
-  TAIManager(TAIManager&&) = delete;
-  TAIManager& operator=(const TAIManager&&) = delete;
+  TaiManager(const TaiManager&) = delete;
+  TaiManager& operator=(const TaiManager&) = delete;
+  TaiManager(TaiManager&&) = delete;
+  TaiManager& operator=(const TaiManager&&) = delete;
 
  private:
   template <typename T>
-  static bool SetValueToTAIAttribute(TAIAttribute* tai_attribute,
+  static bool SetValueToTaiAttribute(TaiAttribute* tai_attribute,
                                      const T& value_to_set);
   template <typename T>
-  static T TaiAttributeToResponse(const TAIAttribute& attribute);
+  static T TaiAttributeToResponse(const TaiAttribute& attribute);
 
  protected:
-  explicit TAIManager(std::unique_ptr<TAIWrapperInterface> wrapper);
+  explicit TaiManager(std::unique_ptr<TaiWrapperInterface> wrapper);
 
  private:
-  // The "TAIWrapper" class manages TAI objects' lifetime, as well as the access
+  // The "TaiWrapper" class manages TAI objects' lifetime, as well as the access
   // to them.
   // Now, to experience a thread-safe TAI manager interaction, this mutex should
   // be LOCKED BEFORE
   //
-  //   * any TAIManager method call
+  //   * any TaiManager method call
   //
   // and UNLOCKED AFTER
   //
   //   * no TAI manager methods calls follow next in the scope of some single
   //     action (e.g., get/set a single attribute);
-  //   * all TAIObject pointers retrieved from the TAIManager are released.
+  //   * all TaiObject pointers retrieved from the TaiManager are released.
   //
-  //  That means, if we retrieve a weak_ptr from the TAIManager, we MUST NOT
+  //  That means, if we retrieve a weak_ptr from the TaiManager, we MUST NOT
   //  unlock the mutex until the pointer is released.
   //
   mutable absl::Mutex tai_wrapper_mutex_;
-  std::unique_ptr<TAIWrapperInterface> tai_wrapper_;
+  std::unique_ptr<TaiWrapperInterface> tai_wrapper_;
 
   // RW mutex lock for protecting the singleton instance initialization and
   // reading it back from other threads. Unlike other singleton classes, we
@@ -103,12 +103,12 @@ class TAIManager {
   static absl::Mutex init_lock_;
 
   // The singleton instance.
-  static TAIManager* singleton_;
+  static TaiManager* singleton_;
   GUARDED_BY(init_lock_);
 };
 
 /*!
- * \brief TAIManager::GetValue method make TAI get value by \param attr_id TAI
+ * \brief TaiManager::GetValue method make TAI get value by \param attr_id TAI
  * attribute
  * \param attr_id it's TAI attribute from what value will be getted
  * \param module_netif_pair it's pair of module id and related to it networkif
@@ -117,13 +117,13 @@ class TAIManager {
  * \note method is thread safe a thread-safe.
  */
 template <typename T>
-::util::StatusOr<T> TAIManager::GetValue(
+::util::StatusOr<T> TaiManager::GetValue(
     const tai_attr_id_t& attr_id,
     const std::pair<uint64, uint32>& module_netif_pair) const {
   absl::ReaderMutexLock wrapper_lock(&tai_wrapper_mutex_);
 
-  const std::shared_ptr<TAIObject> tai_object =
-      tai_wrapper_->GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
+  const std::shared_ptr<TaiObject> tai_object =
+      tai_wrapper_->GetObject(TaiPathValidator::NetworkPath(module_netif_pair))
           .lock();
   if (!tai_object) {
     std::stringstream error_msg;
@@ -137,7 +137,7 @@ template <typename T>
 
   // Retrieve the requested attribute from the TAI object.
   tai_status_t return_code;
-  const TAIAttribute tai_attr = tai_object->GetAttribute(attr_id, &return_code);
+  const TaiAttribute tai_attr = tai_object->GetAttribute(attr_id, &return_code);
   if (return_code != TAI_STATUS_SUCCESS) {
     std::stringstream error_msg;
     error_msg << "Can't get the attribute. TAI return code: " << return_code;
@@ -150,7 +150,7 @@ template <typename T>
 }
 
 /*!
- * \brief TAIManager::SetValue method sets value \param value_to_set to TAI attr
+ * \brief TaiManager::SetValue method sets value \param value_to_set to TAI attr
  * contained in \param attr_id
  * \param value_to_set value that will be setted to \param attr_id
  * \param attr_id it's TAI attribute to what \param value_to_set will be setted
@@ -161,14 +161,14 @@ template <typename T>
  * \note method is a thread-safe
  */
 template <typename T>
-::util::Status TAIManager::SetValue(
+::util::Status TaiManager::SetValue(
     const T& value_to_set, tai_attr_id_t attr_id,
     const std::pair<uint64, uint32>& module_netif_pair) const {
   absl::WriterMutexLock wrapper_lock(&tai_wrapper_mutex_);
 
   // Retrieve related TAI object.
-  const std::shared_ptr<TAIObject> tai_object =
-      tai_wrapper_->GetObject(TAIPathValidator::NetworkPath(module_netif_pair))
+  const std::shared_ptr<TaiObject> tai_object =
+      tai_wrapper_->GetObject(TaiPathValidator::NetworkPath(module_netif_pair))
           .lock();
   if (!tai_object) {
     std::stringstream error_msg;
@@ -180,9 +180,9 @@ template <typename T>
     return MAKE_ERROR(ERR_INTERNAL) << error_msg.str();
   }
 
-  TAIAttribute tai_attribute = tai_object->GetAlocatedAttributeObject(attr_id);
+  TaiAttribute tai_attribute = tai_object->GetAlocatedAttributeObject(attr_id);
 
-  if (!SetValueToTAIAttribute(&tai_attribute, value_to_set))
+  if (!SetValueToTaiAttribute(&tai_attribute, value_to_set))
     return MAKE_ERROR(ERR_INTERNAL) << "Not valid";
 
   if (!tai_attribute.IsValid() || !tai_object) {
@@ -207,7 +207,7 @@ template <typename T>
 }
 
 /*!
- * \brief TAIManager::SetValueToTAIAttribute method sets
+ * \brief TaiManager::SetValueToTaiAttribute method sets
  * value \param value_to_set to special field in \param tai_attribute.
  * \param tai_attribute it's correctly created tai_attribute that will be setted
  * to TAI that should be initialized with \param value_to_set
@@ -215,7 +215,7 @@ template <typename T>
  * \return true if success
  */
 template <typename T>
-bool TAIManager::SetValueToTAIAttribute(TAIAttribute* tai_attribute,
+bool TaiManager::SetValueToTaiAttribute(TaiAttribute* tai_attribute,
                                         const T& value_to_set) {
   if (!tai_attribute) {
     return false;
@@ -240,13 +240,13 @@ bool TAIManager::SetValueToTAIAttribute(TAIAttribute* tai_attribute,
 }
 
 /*!
- * \brief TAIManager::TaiAttributeToResponse method extract TAI value
+ * \brief TaiManager::TaiAttributeToResponse method extract TAI value
  * from \param attribute and return it.
  * \param attribute contains value that returned TAI lib
  * \return value contained in \param attribute
  */
 template <typename T>
-T TAIManager::TaiAttributeToResponse(const TAIAttribute& attribute) {
+T TaiManager::TaiAttributeToResponse(const TaiAttribute& attribute) {
   if (!attribute.IsValid()) return {};
 
   if (attribute.kMeta->objecttype == TAI_OBJECT_TYPE_NETWORKIF) {

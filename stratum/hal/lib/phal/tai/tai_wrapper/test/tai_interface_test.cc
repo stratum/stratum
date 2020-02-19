@@ -16,7 +16,7 @@
  */
 
 /*
-  TAIInterfaceTest testing all TAI related classes like TAIWrapper, Module,
+  TaiInterfaceTest testing all TAI related classes like TaiWrapper, Module,
   HostInterface and NetworkInterface tests is based on TAI stub
 
   Each test should wait for some time(in our case this is 200 milliseconds) for
@@ -57,17 +57,17 @@ std::ostream& operator<<(std::ostream& os, const tai_param& dt) {
   return os;
 }
 
-/************************** TAIWrapperTest ********************************/
-class TAIWrapperTest : public ::testing::Test {
+/************************** TaiWrapperTest ********************************/
+class TaiWrapperTest : public ::testing::Test {
  protected:
   void SetUp() override {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 
-  TAIWrapper wrapper_;
+  TaiWrapper wrapper_;
 };
 
-TEST_F(TAIWrapperTest, TAIWrapperValidPath_Test) {
+TEST_F(TaiWrapperTest, TaiWrapperValidPath_Test) {
   EXPECT_TRUE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 0}}));
   EXPECT_TRUE(wrapper_.IsObjectValid(
       {{TAI_OBJECT_TYPE_MODULE, 0}, {TAI_OBJECT_TYPE_HOSTIF, 0}}));
@@ -101,7 +101,7 @@ TEST_F(TAIWrapperTest, TAIWrapperValidPath_Test) {
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_NETWORKIF, 0}}));
 }
 
-TEST_F(TAIWrapperTest, TAIWrapperInvalidPath_Test) {
+TEST_F(TaiWrapperTest, TaiWrapperInvalidPath_Test) {
   EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_NULL, 0}}));
   EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_MODULE, 5}}));
   EXPECT_FALSE(wrapper_.IsObjectValid({{TAI_OBJECT_TYPE_HOSTIF, 0}}));
@@ -116,7 +116,7 @@ TEST_F(TAIWrapperTest, TAIWrapperInvalidPath_Test) {
       {{TAI_OBJECT_TYPE_MODULE, 3}, {TAI_OBJECT_TYPE_HOSTIF, 2}}));
 }
 
-TEST_F(TAIWrapperTest, TAIWrapperInitialization_Test) {
+TEST_F(TaiWrapperTest, TaiWrapperInitialization_Test) {
   EXPECT_TRUE(wrapper_.IsModuleIdValid(0));
   EXPECT_TRUE(wrapper_.IsModuleIdValid(1));
   EXPECT_TRUE(wrapper_.IsModuleIdValid(2));
@@ -147,8 +147,8 @@ TEST_F(TAIWrapperTest, TAIWrapperInitialization_Test) {
   EXPECT_TRUE(module->IsNetworkInterfaceValid(0));
 }
 
-TEST_F(TAIWrapperTest, TaiGetObjectByPath_Test) {
-  std::shared_ptr<TAIObject> object =
+TEST_F(TaiWrapperTest, TaiGetObjectByPath_Test) {
+  std::shared_ptr<TaiObject> object =
       wrapper_.GetObject({TAI_OBJECT_TYPE_MODULE, 0}).lock();
   EXPECT_NE(object, nullptr);
 
@@ -177,22 +177,22 @@ TEST_F(TAIWrapperTest, TaiGetObjectByPath_Test) {
   EXPECT_NE(object, nullptr);
 }
 
-/**************************** TAIModuleTest ***********************************/
-class TAIModuleTest : public ::testing::Test {
+/**************************** TaiModuleTest ***********************************/
+class TaiModuleTest : public ::testing::Test {
  protected:
   void SetUp() override {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 
-  TAIWrapper wrapper_;
+  TaiWrapper wrapper_;
 };
 
-TEST_F(TAIModuleTest, TaiModuleSetReadWriteAttributes_Test) {
+TEST_F(TaiModuleTest, TaiModuleSetReadWriteAttributes_Test) {
   const std::shared_ptr<Module> module = wrapper_.GetModule(0).lock();
 
   std::string result{"unknown"};
-  tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
-  TAIAttribute attribute =
+  tai_serialize_option_t option(TaiAttribute::DefaultDeserializeOption());
+  TaiAttribute attribute =
       module->GetAlocatedAttributeObject(TAI_MODULE_ATTR_ADMIN_STATUS);
   int ret = tai_deserialize_attribute_value(result.c_str(), attribute.kMeta,
                                             &attribute.attr.value, &option);
@@ -206,12 +206,12 @@ TEST_F(TAIModuleTest, TaiModuleSetReadWriteAttributes_Test) {
   EXPECT_EQ("\"unknown\"", attribute.SerializeAttribute());
 }
 
-TEST_F(TAIModuleTest, TaiModuleSetAttributeByName_Test) {
+TEST_F(TaiModuleTest, TaiModuleSetAttributeByName_Test) {
   const std::shared_ptr<Module> module = wrapper_.GetModule(0).lock();
 
   std::string result{"down"};
-  tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
-  TAIAttribute attribute = module->GetAlocatedAttributeObject("admin-status");
+  tai_serialize_option_t option(TaiAttribute::DefaultDeserializeOption());
+  TaiAttribute attribute = module->GetAlocatedAttributeObject("admin-status");
   int ret = tai_deserialize_attribute_value(result.c_str(), attribute.kMeta,
                                             &attribute.attr.value, &option);
   EXPECT_GE(ret, 0);
@@ -224,8 +224,8 @@ TEST_F(TAIModuleTest, TaiModuleSetAttributeByName_Test) {
   EXPECT_EQ("\"down\"", attribute.SerializeAttribute());
 }
 
-/************************** TAIHostInterfaceTest ******************************/
-class TAIHostInterfaceTest : public ::testing::TestWithParam<tai_param> {
+/************************** TaiHostInterfaceTest ******************************/
+class TaiHostInterfaceTest : public ::testing::TestWithParam<tai_param> {
  protected:
   void SetUp() override {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -240,23 +240,23 @@ class TAIHostInterfaceTest : public ::testing::TestWithParam<tai_param> {
              "\"deep\""}};
   }
 
-  TAIWrapper wrapper_;
+  TaiWrapper wrapper_;
 };
 
 INSTANTIATE_TEST_CASE_P(
-    TAIHostInterfaceParametersTest, TAIHostInterfaceTest,
-    testing::ValuesIn(TAIHostInterfaceTest::host_parameters()),
+    TaiHostInterfaceParametersTest, TaiHostInterfaceTest,
+    testing::ValuesIn(TaiHostInterfaceTest::host_parameters()),
     [](const ::testing::TestParamInfo<tai_param>& param) {
       return param.param.removeExtraCharacters();
     });
 
-TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributes_Test) {
+TEST_P(TaiHostInterfaceTest, TaiHostInterfaceSetAttributes_Test) {
   std::shared_ptr<HostInterface> hostif =
       wrapper_.GetModule(0).lock()->GetHostInterface(0).lock();
 
   auto param = GetParam();
-  TAIAttribute tai_attr = hostif->GetAlocatedAttributeObject(param.attr_id);
-  tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
+  TaiAttribute tai_attr = hostif->GetAlocatedAttributeObject(param.attr_id);
+  tai_serialize_option_t option(TaiAttribute::DefaultDeserializeOption());
   int ret = tai_deserialize_attribute_value(param.value_to_set.c_str(),
                                             tai_attr.kMeta,
                                             &tai_attr.attr.value, &option);
@@ -269,13 +269,13 @@ TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributes_Test) {
   EXPECT_EQ(param.expected_value, tai_attr.SerializeAttribute());
 }
 
-TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributeByName_Test) {
+TEST_P(TaiHostInterfaceTest, TaiHostInterfaceSetAttributeByName_Test) {
   std::shared_ptr<HostInterface> hostif =
       wrapper_.GetModule(0).lock()->GetHostInterface(0).lock();
 
   auto param = GetParam();
-  TAIAttribute tai_attr = hostif->GetAlocatedAttributeObject(param.attr_name);
-  tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
+  TaiAttribute tai_attr = hostif->GetAlocatedAttributeObject(param.attr_name);
+  tai_serialize_option_t option(TaiAttribute::DefaultDeserializeOption());
   int ret = tai_deserialize_attribute_value(param.value_to_set.c_str(),
                                             tai_attr.kMeta,
                                             &tai_attr.attr.value, &option);
@@ -289,8 +289,8 @@ TEST_P(TAIHostInterfaceTest, TaiHostInterfaceSetAttributeByName_Test) {
   EXPECT_EQ(param.expected_value, tai_attr.SerializeAttribute());
 }
 
-/************************** TAINetworkInterfaceTest ***************************/
-class TAINetworkInterfaceTest : public ::testing::TestWithParam<tai_param> {
+/************************** TaiNetworkInterfaceTest ***************************/
+class TaiNetworkInterfaceTest : public ::testing::TestWithParam<tai_param> {
  protected:
   void SetUp() override {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -328,23 +328,23 @@ class TAINetworkInterfaceTest : public ::testing::TestWithParam<tai_param> {
   }
 
  protected:
-  TAIWrapper wrapper_;
+  TaiWrapper wrapper_;
 };
 
 INSTANTIATE_TEST_CASE_P(
-    TAINetworkInterfaceTest, TAINetworkInterfaceTest,
-    testing::ValuesIn(TAINetworkInterfaceTest::network_parameters()),
+    TaiNetworkInterfaceTest, TaiNetworkInterfaceTest,
+    testing::ValuesIn(TaiNetworkInterfaceTest::network_parameters()),
     [](const ::testing::TestParamInfo<tai_param>& param) {
       return param.param.removeExtraCharacters();
     });
 
-TEST_P(TAINetworkInterfaceTest, TaiNetworkInterfaceSetAttributes_Test) {
+TEST_P(TaiNetworkInterfaceTest, TaiNetworkInterfaceSetAttributes_Test) {
   std::shared_ptr<NetworkInterface> netif =
       wrapper_.GetModule(0).lock()->GetNetworkInterface(0).lock();
 
   auto param = GetParam();
-  TAIAttribute tai_attr = netif->GetAlocatedAttributeObject(param.attr_id);
-  tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
+  TaiAttribute tai_attr = netif->GetAlocatedAttributeObject(param.attr_id);
+  tai_serialize_option_t option(TaiAttribute::DefaultDeserializeOption());
   int ret = tai_deserialize_attribute_value(param.value_to_set.c_str(),
                                             tai_attr.kMeta,
                                             &tai_attr.attr.value, &option);
@@ -357,13 +357,13 @@ TEST_P(TAINetworkInterfaceTest, TaiNetworkInterfaceSetAttributes_Test) {
   EXPECT_EQ(param.expected_value, tai_attr.SerializeAttribute());
 }
 
-TEST_P(TAINetworkInterfaceTest, TaiNetworkInterfaceSetAttributeByName_Test) {
+TEST_P(TaiNetworkInterfaceTest, TaiNetworkInterfaceSetAttributeByName_Test) {
   std::shared_ptr<NetworkInterface> netif =
       wrapper_.GetModule(0).lock()->GetNetworkInterface(0).lock();
 
   auto param = GetParam();
-  TAIAttribute tai_attr = netif->GetAlocatedAttributeObject(param.attr_name);
-  tai_serialize_option_t option(TAIAttribute::DefaultDeserializeOption());
+  TaiAttribute tai_attr = netif->GetAlocatedAttributeObject(param.attr_name);
+  tai_serialize_option_t option(TaiAttribute::DefaultDeserializeOption());
   int ret = tai_deserialize_attribute_value(param.value_to_set.c_str(),
                                             tai_attr.kMeta,
                                             &tai_attr.attr.value, &option);

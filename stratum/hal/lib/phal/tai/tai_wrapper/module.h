@@ -35,9 +35,9 @@ class NetworkInterface;
 /*!
  * \brief The Module class represents TAI module object (an optical module
  * itself) that contains TAI host and network interfaces
- * \note the Module object should be created only in TAIWrapper class
+ * \note the Module object should be created only in TaiWrapper class
  */
-class Module final : public TAIObject {
+class Module final : public TaiObject {
  public:
   Module(const tai_api_method_table_t& api, const std::string& location);
   ~Module() override;

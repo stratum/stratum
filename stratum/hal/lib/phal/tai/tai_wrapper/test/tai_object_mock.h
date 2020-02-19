@@ -29,18 +29,18 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-class TAIObjectMock : public TAIObject {
+class TaiObjectMock : public TaiObject {
  public:
-  TAIObjectMock() : TAIObject(tai_api_method_table_t()) {}
+  TaiObjectMock() : TaiObject(tai_api_method_table_t()) {}
 
-  MOCK_CONST_METHOD2(GetAttribute, TAIAttribute(tai_attr_id_t attr_id,
+  MOCK_CONST_METHOD2(GetAttribute, TaiAttribute(tai_attr_id_t attr_id,
                                                 tai_status_t* return_status));
   MOCK_CONST_METHOD1(SetAttribute, tai_status_t(const tai_attribute_t* attr));
 
   MOCK_CONST_METHOD1(GetAlocatedAttributeObject,
-                     TAIAttribute(tai_attr_id_t attr_id));
+                     TaiAttribute(tai_attr_id_t attr_id));
   MOCK_CONST_METHOD1(GetAlocatedAttributeObject,
-                     TAIAttribute(const std::string attr_id));
+                     TaiAttribute(const std::string attr_id));
 
   MOCK_CONST_METHOD1(GetAttributeInterface,
                      tai_status_t(tai_attribute_t* attr));

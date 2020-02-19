@@ -34,23 +34,23 @@ namespace phal {
 namespace tai {
 
 /*!
- * \brief The TAIWrapper class wrap c TAI lib with c++ layer and give access
+ * \brief The TaiWrapper class wrap c TAI lib with c++ layer and give access
  * for TAI attributes through TAI interface objects (like Module, HostInterface
  * or NetworkInterface)
  */
-class TAIWrapper : public TAIWrapperInterface {
+class TaiWrapper : public TaiWrapperInterface {
  public:
-  TAIWrapper();
-  ~TAIWrapper() override;
+  TaiWrapper();
+  ~TaiWrapper() override;
 
   std::weak_ptr<Module> GetModule(std::size_t index) const override;
 
-  std::weak_ptr<TAIObject> GetObject(const TAIPath& objectPath) const override;
-  std::weak_ptr<TAIObject> GetObject(
-      const TAIPathItem& pathItem) const override;
+  std::weak_ptr<TaiObject> GetObject(const TaiPath& objectPath) const override;
+  std::weak_ptr<TaiObject> GetObject(
+      const TaiPathItem& pathItem) const override;
   std::weak_ptr<Module> GetModuleByLocation(const std::string& location) const;
 
-  bool IsObjectValid(const TAIPath& path) const override {
+  bool IsObjectValid(const TaiPath& path) const override {
     return !GetObject(path).expired();
   }
   bool IsModuleIdValid(std::size_t id) const override {
@@ -65,7 +65,7 @@ class TAIWrapper : public TAIWrapperInterface {
  private:
   std::vector<std::shared_ptr<Module>> modules_;
   tai_api_method_table_t api_;
-  TAIPathValidator path_rule_;
+  TaiPathValidator path_rule_;
 
   // thread stops if this value will be set to false.
   std::atomic<bool> thread_running_{true};
@@ -74,7 +74,7 @@ class TAIWrapper : public TAIWrapperInterface {
   // TAI module presence monitoring thread for plug/unplug processing.
   std::thread presence_monitoring_thread_;
   mutable std::mutex data_mux_;
-}; /* class TAIWrapper */
+}; /* class TaiWrapper */
 
 }  // namespace tai
 }  // namespace phal

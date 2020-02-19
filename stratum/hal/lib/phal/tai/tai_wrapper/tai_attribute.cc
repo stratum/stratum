@@ -24,7 +24,7 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-TAIAttribute::TAIAttribute(tai_attr_id_t attr_id,
+TaiAttribute::TaiAttribute(tai_attr_id_t attr_id,
                            const tai_attr_metadata_t* metadata)
     : kMeta(metadata) {
   attr.id = attr_id;
@@ -35,19 +35,19 @@ TAIAttribute::TAIAttribute(tai_attr_id_t attr_id,
   }
 }
 
-TAIAttribute::~TAIAttribute() {
+TaiAttribute::~TaiAttribute() {
   if (tai_metadata_free_attr_value(kMeta, &attr, nullptr) !=
       TAI_STATUS_SUCCESS) {
     LOG(ERROR) << "Failed to free attr memory";
   }
 }
 
-bool TAIAttribute::IsValid() const {
+bool TaiAttribute::IsValid() const {
   return kMeta && attr.id != TAI_INVALID_ATTRIBUTE_ID;
 }
 
 /*!
- * \brief TAIAttribute::DeserializeValue method deserialize \param buff to TAI
+ * \brief TaiAttribute::DeserializeValue method deserialize \param buff to TAI
  * attribute value based on \param option (one of option value human, valueonly
  * and json)
  * \return true if deserializing success
@@ -57,7 +57,7 @@ bool TAIAttribute::IsValid() const {
  *    TAI_NETWORK_INTERFACE_ATTR_LOOPBACK_TYPE then value will be represented as
  *    attr.value.s32 = TAI_NETWORK_INTERFACE_LOOPBACK_TYPE_SHALLOW
  */
-bool TAIAttribute::DeserializeAttribute(const std::string& buff,
+bool TaiAttribute::DeserializeAttribute(const std::string& buff,
                                         const tai_serialize_option_t& option) {
   int ret = tai_deserialize_attribute_value(buff.c_str(), kMeta, &attr.value,
                                             &option);
@@ -67,7 +67,7 @@ bool TAIAttribute::DeserializeAttribute(const std::string& buff,
   return ret == TAI_STATUS_SUCCESS;
 }
 
-tai_serialize_option_t TAIAttribute::DefaultDeserializeOption() {
+tai_serialize_option_t TaiAttribute::DefaultDeserializeOption() {
   tai_serialize_option_t option;
   option.human = true;
   option.valueonly = false;
@@ -76,18 +76,18 @@ tai_serialize_option_t TAIAttribute::DefaultDeserializeOption() {
   return option;
 }
 
-TAIAttribute TAIAttribute::InvalidAttributeObject() {
+TaiAttribute TaiAttribute::InvalidAttributeObject() {
   return {TAI_INVALID_ATTRIBUTE_ID, nullptr};
 }
 
-TAIAttribute::TAIAttribute(const TAIAttribute& src) {
+TaiAttribute::TaiAttribute(const TaiAttribute& src) {
   if (!src.kMeta) return;
 
   tai_metadata_deepcopy_attr_value(src.kMeta, &src.attr, &attr);
   kMeta = src.kMeta;
 }
 
-TAIAttribute& TAIAttribute::operator=(const TAIAttribute& src) {
+TaiAttribute& TaiAttribute::operator=(const TaiAttribute& src) {
   if (!src.kMeta) return *this;
 
   tai_metadata_deepcopy_attr_value(src.kMeta, &src.attr, &attr);
@@ -97,7 +97,7 @@ TAIAttribute& TAIAttribute::operator=(const TAIAttribute& src) {
 }
 
 /*!
- * \brief TAIAttribute::SerializeAttribute method serialize attr member with
+ * \brief TaiAttribute::SerializeAttribute method serialize attr member with
  * kMeta metadata help to human readable string
  * \return serialized string if success otherwise return empty string
  * \note For example kMeta.attrvaluetype = TAI_ATTR_VALUE_TYPE_S32
@@ -107,7 +107,7 @@ TAIAttribute& TAIAttribute::operator=(const TAIAttribute& src) {
  *        attr.value.s32 = 1(enum = TAI_NETWORK_INTERFACE_LOOPBACK_TYPE_SHALLOW)
  *      in this case to out string will be returned: "shallow"
  */
-std::string TAIAttribute::SerializeAttribute() const {
+std::string TaiAttribute::SerializeAttribute() const {
   auto to_return = std::string();
 
   tai_serialize_option_t option;
