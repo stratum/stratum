@@ -30,16 +30,16 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-class TaiWrapperMock : public TAIWrapperInterface {
+class TaiWrapperMock : public TaiWrapperInterface {
  public:
   MOCK_CONST_METHOD1(GetModule, std::weak_ptr<Module>(std::size_t index));
 
   MOCK_CONST_METHOD1(GetObject,
-                     std::weak_ptr<TAIObject>(const TAIPath& objectPath));
+                     std::weak_ptr<TaiObject>(const TaiPath& objectPath));
   MOCK_CONST_METHOD1(GetObject,
-                     std::weak_ptr<TAIObject>(const TAIPathItem& pathItem));
+                     std::weak_ptr<TaiObject>(const TaiPathItem& pathItem));
 
-  MOCK_CONST_METHOD1(IsObjectValid, bool(const TAIPath& path));
+  MOCK_CONST_METHOD1(IsObjectValid, bool(const TaiPath& path));
   MOCK_CONST_METHOD1(IsModuleIdValid, bool(std::size_t id));
 };
 

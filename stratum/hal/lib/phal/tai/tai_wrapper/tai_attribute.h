@@ -28,7 +28,7 @@ namespace phal {
 namespace tai {
 
 /*!
- * \brief The TAIAttribute class takes care about correct TAI attribute creating
+ * \brief The TaiAttribute class takes care about correct TAI attribute creating
  * and deleting with this point this object can't be copied(for now)
  * \note struct tai_attribute_t is a container for data. This struct works in
  * pair with tai_attr_metadata_t struct that tells what data should be created
@@ -36,10 +36,10 @@ namespace tai {
  * creation using tai_metadata_alloc_attr_value and in destructor, we make
  * correct data deleting with tai_metadata_free_attr_value.
  */
-class TAIAttribute {
+class TaiAttribute {
  public:
-  TAIAttribute(tai_attr_id_t attr_id, const tai_attr_metadata_t* metadata);
-  ~TAIAttribute();
+  TaiAttribute(tai_attr_id_t attr_id, const tai_attr_metadata_t* metadata);
+  ~TaiAttribute();
 
   bool IsValid() const;
 
@@ -49,13 +49,13 @@ class TAIAttribute {
       const tai_serialize_option_t& option = DefaultDeserializeOption());
 
   static tai_serialize_option_t DefaultDeserializeOption();
-  static TAIAttribute InvalidAttributeObject();
+  static TaiAttribute InvalidAttributeObject();
 
-  TAIAttribute(const TAIAttribute& src);
-  TAIAttribute& operator=(const TAIAttribute& src);
+  TaiAttribute(const TaiAttribute& src);
+  TaiAttribute& operator=(const TaiAttribute& src);
 
-  TAIAttribute(TAIAttribute&&) = default;
-  TAIAttribute& operator=(TAIAttribute&&) = default;
+  TaiAttribute(TaiAttribute&&) = default;
+  TaiAttribute& operator=(TaiAttribute&&) = default;
 
  public:
   tai_attribute_t attr;

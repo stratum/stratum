@@ -27,27 +27,27 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-TAIManager* TAIManager::singleton_ = nullptr;
-ABSL_CONST_INIT absl::Mutex TAIManager::init_lock_(absl::kConstInit);
+TaiManager* TaiManager::singleton_ = nullptr;
+ABSL_CONST_INIT absl::Mutex TaiManager::init_lock_(absl::kConstInit);
 
-TAIManager* TAIManager::CreateSingleton() {
+TaiManager* TaiManager::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
-  if (!singleton_) singleton_ = new TAIManager(absl::make_unique<TAIWrapper>());
+  if (!singleton_) singleton_ = new TaiManager(absl::make_unique<TaiWrapper>());
 
   return singleton_;
 }
 
-TAIManager* TAIManager::GetSingleton() {
+TaiManager* TaiManager::GetSingleton() {
   absl::ReaderMutexLock l(&init_lock_);
   return singleton_;
 }
 
 /*!
- * \brief TAIManager::IsObjectValid check is \param path is valid
+ * \brief TaiManager::IsObjectValid check is \param path is valid
  * \return true if valid
  * \note Thread-safe. A non-const method because of TAI wrapper mutex lock.
  */
-bool TAIManager::IsObjectValid(const TAIPath& path) {
+bool TaiManager::IsObjectValid(const TaiPath& path) {
   // Lock the TAI wrapper mutex first to get data thread-safely.
   bool result;
   {
@@ -58,7 +58,7 @@ bool TAIManager::IsObjectValid(const TAIPath& path) {
   return result;
 }
 
-TAIManager::TAIManager(std::unique_ptr<TAIWrapperInterface> wrapper)
+TaiManager::TaiManager(std::unique_ptr<TaiWrapperInterface> wrapper)
     : tai_wrapper_(std::move(wrapper)) {}
 
 }  // namespace tai

@@ -47,11 +47,11 @@ pic 1.1 main common.proto components
 
 ![](img/class_diagrams.png)
 
-Main class from which user will begin to interact with TAI is TAIManager.
+Main class from which user will begin to interact with TAI is TaiManager.
 
-TAIManager - is interface class(implemented as singleton) used to interact with TAI library(get/set values). TAIManager converts gNMI requests to TAI requests and passes them to TAIAdapterHost.
+TaiManager - is interface class(implemented as singleton) used to interact with TAI library(get/set values). TaiManager converts gNMI requests to TAI requests and passes them to TaiAdapterHost.
 
-TAIAdapterHost - is class which creates all needed TAIObjects on TAI manager's layer(Module, HostInterface, and NetworkInterface) and provides implantation of [module_presence](https://github.com/Telecominfraproject/oopt-tai/blob/master/inc/tai.h#L90) function used by vendor specific TAI implementation for module presence notification.
+TaiAdapterHost - is class which creates all needed TaiObjects on TAI manager's layer(Module, HostInterface, and NetworkInterface) and provides implantation of [module_presence](https://github.com/Telecominfraproject/oopt-tai/blob/master/inc/tai.h#L90) function used by vendor specific TAI implementation for module presence notification.
 
 [Module](https://github.com/Telecominfraproject/oopt-tai#module-objects) - class which represents TAI Module object in the TAI Manager layer allowing to configure multiple Modules's attributes [tai_module_attr_t](https://github.com/Telecominfraproject/oopt-tai/blob/master/inc/taimodule.h#L88). Also, Module creates and contains HostInterface and NetworkInterface TAI objects.
 

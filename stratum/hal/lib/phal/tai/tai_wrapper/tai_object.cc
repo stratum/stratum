@@ -27,9 +27,9 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-TAIObject::TAIObject(const tai_api_method_table_t& api) : api_(api) {}
+TaiObject::TaiObject(const tai_api_method_table_t& api) : api_(api) {}
 
-const tai_attr_metadata_t* TAIObject::GetMetadata(tai_attr_id_t attr_id) const {
+const tai_attr_metadata_t* TaiObject::GetMetadata(tai_attr_id_t attr_id) const {
   const tai_object_type_t kObjectType = GetObjectType();
   if (kObjectType == TAI_OBJECT_TYPE_NULL) return nullptr;
 
@@ -41,66 +41,66 @@ const tai_attr_metadata_t* TAIObject::GetMetadata(tai_attr_id_t attr_id) const {
 }
 
 /*!
- * \brief TAIObject::GetObjectType method \return current object type
+ * \brief TaiObject::GetObjectType method \return current object type
  */
-tai_object_type_t TAIObject::GetObjectType() const {
+tai_object_type_t TaiObject::GetObjectType() const {
   const tai_object_type_t kObjectType = tai_object_type_query(id_);
   if (kObjectType == TAI_OBJECT_TYPE_NULL) {
-    LOG(ERROR) << "TAIObject type isn't valid.";
+    LOG(ERROR) << "TaiObject type isn't valid.";
   }
 
   return kObjectType;
 }
 
-tai_object_id_t TAIObject::GetId() const { return id_; }
+tai_object_id_t TaiObject::GetId() const { return id_; }
 
 /*!
- * \brief TAIObject::GetAlocatedAttributeObject method create and \return valid
- * TAIAttribute object based on \param attr_id with correct tai_attr_metadata_t
+ * \brief TaiObject::GetAlocatedAttributeObject method create and \return valid
+ * TaiAttribute object based on \param attr_id with correct tai_attr_metadata_t
  * and allocated tai_attribute_t
  */
-TAIAttribute TAIObject::GetAlocatedAttributeObject(
+TaiAttribute TaiObject::GetAlocatedAttributeObject(
     tai_attr_id_t attr_id) const {
   if (attr_id == TAI_INVALID_ATTRIBUTE_ID) {
-    return TAIAttribute::InvalidAttributeObject();
+    return TaiAttribute::InvalidAttributeObject();
   }
 
   const tai_attr_metadata_t* kMeta = GetMetadata(attr_id);
   if (!kMeta) {
-    return TAIAttribute::InvalidAttributeObject();
+    return TaiAttribute::InvalidAttributeObject();
   }
 
   return {attr_id, kMeta};
 }
 
 /*!
- * \brief TAIObject::GetAlocatedAttributeObject method is overloaded with string
+ * \brief TaiObject::GetAlocatedAttributeObject method is overloaded with string
  * \param attr_name
  */
-TAIAttribute TAIObject::GetAlocatedAttributeObject(
+TaiAttribute TaiObject::GetAlocatedAttributeObject(
     const std::string attr_name) const {
   if (attr_name.empty()) {
     LOG(WARNING) << "Parameter \"attr_name\" is empty";
-    TAIAttribute::InvalidAttributeObject();
+    TaiAttribute::InvalidAttributeObject();
   }
 
   int64_t attr_id = DeserializeAttrName(attr_name);
   if (attr_id < 0) {
     LOG(WARNING) << "Deserialize attribute name returned invalid status";
-    TAIAttribute::InvalidAttributeObject();
+    TaiAttribute::InvalidAttributeObject();
   }
 
   return GetAlocatedAttributeObject(static_cast<tai_attr_id_t>(attr_id));
 }
 
 /*!
- * \brief TAIObject::GetAttribute method get attribute \param attr_id from
- * specific TAIObject and sets to \param attr_value
+ * \brief TaiObject::GetAttribute method get attribute \param attr_id from
+ * specific TaiObject and sets to \param attr_value
  * \return TAI_STATUS_SUCCESS if success else return some of TAI_STATUS_CODE
  */
-TAIAttribute TAIObject::GetAttribute(tai_attr_id_t attr_id,
+TaiAttribute TaiObject::GetAttribute(tai_attr_id_t attr_id,
                                      tai_status_t* return_status) const {
-  TAIAttribute attr = GetAlocatedAttributeObject(attr_id);
+  TaiAttribute attr = GetAlocatedAttributeObject(attr_id);
   if (!attr.IsValid()) {
     LOG(ERROR) << "Failed to allocate attr value";
     if (return_status) *return_status = TAI_STATUS_NO_MEMORY;
@@ -129,11 +129,11 @@ TAIAttribute TAIObject::GetAttribute(tai_attr_id_t attr_id,
 }
 
 /*!
- * \brief TAIObject::SetAttribute method sets given \param attr_value to
+ * \brief TaiObject::SetAttribute method sets given \param attr_value to
  * \param attr_id attribute
  * \return TAI_STATUS_SUCCESS if success else return some of TAI_STATUS_CODE
  */
-tai_status_t TAIObject::SetAttribute(const tai_attribute_t* attr) const {
+tai_status_t TaiObject::SetAttribute(const tai_attribute_t* attr) const {
   if (!attr) {
     LOG(ERROR) << "Failed to set attribute";
     return TAI_STATUS_FAILURE;
@@ -147,10 +147,10 @@ tai_status_t TAIObject::SetAttribute(const tai_attribute_t* attr) const {
 }
 
 /*!
- * \brief TAIObject::DeserializeAttrName method converts \param attr_name from
+ * \brief TaiObject::DeserializeAttrName method converts \param attr_name from
  * string to concrete attribute id or \return -1
  */
-int64_t TAIObject::DeserializeAttrName(const std::string& attr_name) const {
+int64_t TaiObject::DeserializeAttrName(const std::string& attr_name) const {
   if (attr_name.empty()) {
     LOG(ERROR) << "Invalid input parameter";
     return -1;

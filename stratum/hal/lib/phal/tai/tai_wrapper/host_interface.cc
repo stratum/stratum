@@ -28,7 +28,7 @@ namespace tai {
 HostInterface::HostInterface(const tai_api_method_table_t& api,
                              const tai_object_id_t module_id,
                              const uint32_t index)
-    : TAIObject(api) {
+    : TaiObject(api) {
   LOG(INFO) << "Create HostInterface with index: " << index;
   std::vector<tai_attribute_t> list;
   tai_attribute_t attr;

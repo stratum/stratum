@@ -30,7 +30,7 @@ namespace phal {
 namespace tai {
 
 Module::Module(const tai_api_method_table_t& api, const std::string& location)
-    : TAIObject(api), location_(location) {
+    : TaiObject(api), location_(location) {
   LOG(INFO) << "Create Module with location: " << location;
 
   std::vector<tai_attribute_t> list;

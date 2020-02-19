@@ -33,7 +33,7 @@ namespace tai {
  * components which transmit/receive one wavelength.
  * \note NetworkInterface object should be created only in Module class
  */
-class NetworkInterface final : public TAIObject {
+class NetworkInterface final : public TaiObject {
  public:
   NetworkInterface(const tai_api_method_table_t& api,
                    const tai_object_id_t module_id, const uint32_t index);

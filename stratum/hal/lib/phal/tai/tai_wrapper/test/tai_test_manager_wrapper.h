@@ -31,10 +31,10 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-class TAIManagerTestWrapper : public TAIManager {
+class TaiManagerTestWrapper : public TaiManager {
  public:
-  explicit TAIManagerTestWrapper(std::unique_ptr<TaiWrapperMock> wrapper_mock)
-      : TAIManager(std::move(wrapper_mock)) {}
+  explicit TaiManagerTestWrapper(std::unique_ptr<TaiWrapperMock> wrapper_mock)
+      : TaiManager(std::move(wrapper_mock)) {}
 };
 
 }  // namespace tai

@@ -31,10 +31,10 @@ namespace tai {
  * \brief The HostInterface class represent TAI host interface that connects to
  * ASIC chip. A host interface object represents an interface between an optical
  * module(the hardware) and the host system, sometimes called client interfaces
- * (in our case this is TAIWrapper).
+ * (in our case this is TaiWrapper).
  * \note the HostInterface object should be created only in Module class
  */
-class HostInterface final : public TAIObject {
+class HostInterface final : public TaiObject {
  public:
   HostInterface(const tai_api_method_table_t& api,
                 const tai_object_id_t module_id, const uint32_t index);

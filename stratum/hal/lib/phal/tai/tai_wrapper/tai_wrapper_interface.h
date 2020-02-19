@@ -33,11 +33,11 @@ namespace tai {
 class Module;
 
 /*!
- * \brief The TAIPathItem struct represents a single TAI object identifier with
+ * \brief The TaiPathItem struct represents a single TAI object identifier with
  * TAI object type and unique index
  */
-struct TAIPathItem {
-  TAIPathItem(tai_object_type_t object_type_, std::size_t object_index_)
+struct TaiPathItem {
+  TaiPathItem(tai_object_type_t object_type_, std::size_t object_index_)
       : object_type(object_type_), object_index(object_index_) {}
 
   tai_object_type_t object_type{tai_object_type_t::TAI_OBJECT_TYPE_NULL};
@@ -45,17 +45,17 @@ struct TAIPathItem {
 
   bool isValid() const;
 
-  bool operator==(const TAIPathItem& path_item) const {
+  bool operator==(const TaiPathItem& path_item) const {
     return (object_type == path_item.object_type) &&
            (object_index == path_item.object_index);
   }
 };
 
-using TAIPath = std::vector<TAIPathItem>;
-using TAIValidPaths = std::vector<std::vector<tai_object_type_t>>;
+using TaiPath = std::vector<TaiPathItem>;
+using TaiValidPaths = std::vector<std::vector<tai_object_type_t>>;
 
 /*!
- * \brief The TAIPathValidator class represents validation layer for TAI object
+ * \brief The TaiPathValidator class represents validation layer for TAI object
  * path.
  * \note User should config object with valid paths. For example valid paths for
  * TAI lib is: {TAI_OBJECT_TYPE_MODULE},
@@ -63,42 +63,42 @@ using TAIValidPaths = std::vector<std::vector<tai_object_type_t>>;
  *             {TAI_OBJECT_TYPE_MODULE, TAI_OBJECT_TYPE_HOSTIF}
  * so all other paths is invalid and will not be accepted
  */
-class TAIPathValidator {
+class TaiPathValidator {
  public:
-  explicit TAIPathValidator(const TAIValidPaths& validPaths)
+  explicit TaiPathValidator(const TaiValidPaths& validPaths)
       : valid_paths_(validPaths) {}
 
-  static TAIPathItem ModulePath(uint64 moduleId);
-  static TAIPath NetworkPath(
+  static TaiPathItem ModulePath(uint64 moduleId);
+  static TaiPath NetworkPath(
       const std::pair<uint64, uint32>& module_netif_pair);
-  static TAIPath HostPath(const std::pair<uint64, uint32>& module_hostif_pair);
+  static TaiPath HostPath(const std::pair<uint64, uint32>& module_hostif_pair);
 
-  static bool IsModule(const TAIPath& path);
-  static bool IsNetwork(const TAIPath& path);
-  static bool IsHost(const TAIPath& path);
+  static bool IsModule(const TaiPath& path);
+  static bool IsNetwork(const TaiPath& path);
+  static bool IsHost(const TaiPath& path);
 
-  bool CheckPath(const TAIPath& path) const;
+  bool CheckPath(const TaiPath& path) const;
 
  private:
-  TAIValidPaths valid_paths_;
+  TaiValidPaths valid_paths_;
 };
 
 /*!
- * \brief The TAIWrapperInterface exists to provide an interface to TAI  layer
+ * \brief The TaiWrapperInterface exists to provide an interface to TAI  layer
  * and all classes which rely on that layer.
  */
-class TAIWrapperInterface {
+class TaiWrapperInterface {
  public:
-  virtual ~TAIWrapperInterface() = default;
+  virtual ~TaiWrapperInterface() = default;
 
   virtual std::weak_ptr<Module> GetModule(std::size_t index) const = 0;
 
-  virtual std::weak_ptr<TAIObject> GetObject(
-      const TAIPath& objectPath) const = 0;
-  virtual std::weak_ptr<TAIObject> GetObject(
-      const TAIPathItem& pathItem) const = 0;
+  virtual std::weak_ptr<TaiObject> GetObject(
+      const TaiPath& objectPath) const = 0;
+  virtual std::weak_ptr<TaiObject> GetObject(
+      const TaiPathItem& pathItem) const = 0;
 
-  virtual bool IsObjectValid(const TAIPath& path) const = 0;
+  virtual bool IsObjectValid(const TaiPath& path) const = 0;
   virtual bool IsModuleIdValid(std::size_t id) const = 0;
 };
 

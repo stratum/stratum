@@ -69,11 +69,11 @@ static void module_presence(bool present, char* location) {
   // plugged/unplugged
   std::lock_guard<std::mutex> guard(modules_location_mux);
   modules_location.push({present, location});
-  // data_cv notify thread created from TAIAdapterHost that update their state
+  // data_cv notify thread created from TaiAdapterHost that update their state
   data_cv.notify_one();
 }
 
-TAIWrapper::TAIWrapper()
+TaiWrapper::TaiWrapper()
     : path_rule_({{tai_object_type_t::TAI_OBJECT_TYPE_MODULE},
                   {tai_object_type_t::TAI_OBJECT_TYPE_MODULE,
                    tai_object_type_t::TAI_OBJECT_TYPE_NETWORKIF},
@@ -82,14 +82,14 @@ TAIWrapper::TAIWrapper()
       thread_running_{true},
       api_initialized_{false},
        // this values should be set before thread starts
-      presence_monitoring_thread_(&TAIWrapper::ModulePresenceHandler, this) {
-  LOG(INFO) << "Initialize TAIWrapper";
+      presence_monitoring_thread_(&TaiWrapper::ModulePresenceHandler, this) {
+  LOG(INFO) << "Initialize TaiWrapper";
   tai_service_method_table_t services;
   services.module_presence = module_presence;
 
   auto status = tai_api_initialize(0, &services);
   if (TAI_STATUS_SUCCESS != status) {
-    LOG(ERROR) << "Failed to initialize TAIWrapper. Error status: " << status;
+    LOG(ERROR) << "Failed to initialize TaiWrapper. Error status: " << status;
     return;
   }
 
@@ -117,11 +117,11 @@ TAIWrapper::TAIWrapper()
   api_initialized_ = true;
 }
 
-TAIWrapper::~TAIWrapper() {
+TaiWrapper::~TaiWrapper() {
   thread_running_ = false;
 
   data_cv.notify_one();
-  LOG(INFO) << "Uninitialize TAIWrapper "
+  LOG(INFO) << "Uninitialize TaiWrapper "
             << "TAI API uninitialize status: " << tai_api_uninitialize();
 
   std::queue<std::pair<bool, std::string>> empty;
@@ -132,7 +132,7 @@ TAIWrapper::~TAIWrapper() {
   }
 }
 
-tai_status_t TAIWrapper::CreateModule(const std::string& location) {
+tai_status_t TaiWrapper::CreateModule(const std::string& location) {
   std::lock_guard<std::mutex> lg(data_mux_);
   auto module = std::make_shared<Module>(api_, location);
   if (!module->GetId()) {
@@ -145,10 +145,10 @@ tai_status_t TAIWrapper::CreateModule(const std::string& location) {
 }
 
 /*!
- * \brief TAIWrapper::GetModule method \return valid module with index
+ * \brief TaiWrapper::GetModule method \return valid module with index
  * \param index otherwise expired std::weak_ptr
  */
-std::weak_ptr<Module> TAIWrapper::GetModule(std::size_t index) const {
+std::weak_ptr<Module> TaiWrapper::GetModule(std::size_t index) const {
   std::lock_guard<std::mutex> lg(data_mux_);
   if (index >= modules_.size()) {
     LOG(WARNING) << "Invalid input parameter";
@@ -159,11 +159,11 @@ std::weak_ptr<Module> TAIWrapper::GetModule(std::size_t index) const {
 }
 
 /*!
- * \brief TAIWrapper::GetObject method \return std::weak_ptr to object with
+ * \brief TaiWrapper::GetObject method \return std::weak_ptr to object with
  * \param objectPath otherwise \return uninitialized std::weak_ptr.
  */
-std::weak_ptr<TAIObject> TAIWrapper::GetObject(
-    const TAIPath& objectPath) const {
+std::weak_ptr<TaiObject> TaiWrapper::GetObject(
+    const TaiPath& objectPath) const {
   if (!path_rule_.CheckPath(objectPath)) {
     LOG(WARNING)
         << "Can't find required module! Please check is object path is valid";
@@ -179,7 +179,7 @@ std::weak_ptr<TAIObject> TAIWrapper::GetObject(
 
   std::shared_ptr<Module> module = weak_module_ptr.lock();
   if (objectPath.size() > 1) {
-    TAIPathItem indexObj = objectPath.at(1);
+    TaiPathItem indexObj = objectPath.at(1);
     if (indexObj.object_type == tai_object_type_t::TAI_OBJECT_TYPE_HOSTIF) {
       std::lock_guard<std::mutex> lg(data_mux_);
       return module->GetHostInterface(indexObj.object_index);
@@ -193,21 +193,21 @@ std::weak_ptr<TAIObject> TAIWrapper::GetObject(
 }
 
 /*!
- * \brief TAIWrapper::GetObject overload for TAIWrapper::GetObject(
- *  const TAIPath& objectPath) with single \param pathItem TAIPathItem
+ * \brief TaiWrapper::GetObject overload for TaiWrapper::GetObject(
+ *  const TaiPath& objectPath) with single \param pathItem TaiPathItem
  */
-std::weak_ptr<TAIObject> TAIWrapper::GetObject(
-    const TAIPathItem& pathItem) const {
-  return GetObject(TAIPath{pathItem});
+std::weak_ptr<TaiObject> TaiWrapper::GetObject(
+    const TaiPathItem& pathItem) const {
+  return GetObject(TaiPath{pathItem});
 }
 
 /*!
- * \brief TAIWrapper::GetModuleByLocation method search module's location
+ * \brief TaiWrapper::GetModuleByLocation method search module's location
  * that match with \param location
  *
  * \return module with given location otherwise invalid weak_ptr
  */
-std::weak_ptr<Module> TAIWrapper::GetModuleByLocation(
+std::weak_ptr<Module> TaiWrapper::GetModuleByLocation(
     const std::string& location) const {
   std::lock_guard<std::mutex> lg(data_mux_);
   for (const auto& module : modules_) {
@@ -220,14 +220,14 @@ std::weak_ptr<Module> TAIWrapper::GetModuleByLocation(
 }
 
 /*!
- * \brief TAIWrapper::ModulePresenceHandler() the method is invoked in a
- * separate thread. Method is needed to update TAIWrapper state whenever there
+ * \brief TaiWrapper::ModulePresenceHandler() the method is invoked in a
+ * separate thread. Method is needed to update TaiWrapper state whenever there
  * is a change in an optical module's presence.
  *
  * \note This thread controls invariant state with 'data_mux_' member.
  * This method should be used only for thread execution!
  */
-void TAIWrapper::ModulePresenceHandler() {
+void TaiWrapper::ModulePresenceHandler() {
   LOG(INFO) << "Started modules location handler thread";
   while (thread_running_) {
     std::unique_lock<std::mutex> lk(modules_location_mux);

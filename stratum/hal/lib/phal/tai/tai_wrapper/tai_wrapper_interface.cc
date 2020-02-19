@@ -22,23 +22,23 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-TAIPathItem TAIPathValidator::ModulePath(uint64 moduleId) {
+TaiPathItem TaiPathValidator::ModulePath(uint64 moduleId) {
   return {TAI_OBJECT_TYPE_MODULE, moduleId};
 }
 
-TAIPath TAIPathValidator::NetworkPath(
+TaiPath TaiPathValidator::NetworkPath(
     const std::pair<uint64, uint32>& module_netif_pair) {
   return {ModulePath(module_netif_pair.first),
           {TAI_OBJECT_TYPE_NETWORKIF, module_netif_pair.second}};
 }
 
-TAIPath TAIPathValidator::HostPath(
+TaiPath TaiPathValidator::HostPath(
     const std::pair<uint64, uint32>& module_hostif_pair) {
   return {ModulePath(module_hostif_pair.first),
           {TAI_OBJECT_TYPE_HOSTIF, module_hostif_pair.second}};
 }
 
-bool TAIPathValidator::IsModule(const TAIPath& path) {
+bool TaiPathValidator::IsModule(const TaiPath& path) {
   if (path.empty()) return false;
 
   if (path.size() == 1) return path.at(0).object_type == TAI_OBJECT_TYPE_MODULE;
@@ -46,7 +46,7 @@ bool TAIPathValidator::IsModule(const TAIPath& path) {
   return false;
 }
 
-bool TAIPathValidator::IsNetwork(const TAIPath& path) {
+bool TaiPathValidator::IsNetwork(const TaiPath& path) {
   if (path.empty()) return false;
 
   if (path.size() == 2) {
@@ -57,7 +57,7 @@ bool TAIPathValidator::IsNetwork(const TAIPath& path) {
   return false;
 }
 
-bool TAIPathValidator::IsHost(const TAIPath& path) {
+bool TaiPathValidator::IsHost(const TaiPath& path) {
   if (path.empty()) return false;
 
   if (path.size() == 2) {
@@ -69,14 +69,14 @@ bool TAIPathValidator::IsHost(const TAIPath& path) {
 }
 
 /*!
- * \brief TAIPathValidator::CheckPath method checks \param path is valid by
+ * \brief TaiPathValidator::CheckPath method checks \param path is valid by
  * comparing \param path with validPaths given in constructor \return true
  * if \param path is valid
  */
-bool TAIPathValidator::CheckPath(const TAIPath& path) const {
+bool TaiPathValidator::CheckPath(const TaiPath& path) const {
   if (path.empty()) return false;
 
-  if (std::any_of(path.cbegin(), path.cend(), [](const TAIPathItem& tiObject) {
+  if (std::any_of(path.cbegin(), path.cend(), [](const TaiPathItem& tiObject) {
         return !tiObject.isValid();
       })) {
     return false;
@@ -85,7 +85,7 @@ bool TAIPathValidator::CheckPath(const TAIPath& path) const {
   decltype(valid_paths_)::value_type objectTypes;
   std::transform(
       path.cbegin(), path.cend(), std::back_inserter(objectTypes),
-      [](const TAIPathItem& tiObject) { return tiObject.object_type; });
+      [](const TaiPathItem& tiObject) { return tiObject.object_type; });
 
   return std::any_of(
       valid_paths_.cbegin(), valid_paths_.cend(),
@@ -94,7 +94,7 @@ bool TAIPathValidator::CheckPath(const TAIPath& path) const {
       });
 }
 
-bool TAIPathItem::isValid() const {
+bool TaiPathItem::isValid() const {
   return !((object_type == tai_object_type_t::TAI_OBJECT_TYPE_NULL) ||
            (object_type == tai_object_type_t::TAI_OBJECT_TYPE_MAX));
 }
