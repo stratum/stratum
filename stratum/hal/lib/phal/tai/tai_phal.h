@@ -1,5 +1,6 @@
 /*
  * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +27,7 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/phal_backend_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -47,7 +49,8 @@ class TaiPhal final : public PhalBackendInterface {
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static TaiPhal* CreateSingleton() LOCKS_EXCLUDED(config_lock_, init_lock_);
+  static TaiPhal* CreateSingleton(tai::TAIManager* tai_manager)
+      LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // TaiPhal is neither copyable nor movable.
   TaiPhal(const TaiPhal&) = delete;
@@ -57,8 +60,9 @@ class TaiPhal final : public PhalBackendInterface {
   // Private constructor.
   TaiPhal();
 
-  // Calls all the one time start initializations.
-  ::util::Status Initialize() LOCKS_EXCLUDED(config_lock_);
+  // Calls all the one time start initialisations
+  ::util::Status Initialize(tai::TAIManager* tai_manager)
+      LOCKS_EXCLUDED(config_lock_);
 
   // Internal mutex lock for protecting the internal maps and initializing the
   // singleton instance.
@@ -74,6 +78,9 @@ class TaiPhal final : public PhalBackendInterface {
 
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
+
+  // Not owned by this class.
+  tai::TAIManager* tai_manager_ GUARDED_BY(config_lock_);
 };
 
 }  // namespace tai
