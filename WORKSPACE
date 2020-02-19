@@ -141,18 +141,6 @@ load("@grpc_py_deps//:requirements.bzl", grpc_pip_install = "pip_install")
 grpc_pip_install()
 
 # ---------------------------------------------------------------------------
-#       Load dependencies for TAI
-# ---------------------------------------------------------------------------
-pip_import(
-    name = "tai_meta_deps",
-    requirements = "@com_github_oopt_tai//:pip-requirements.txt"
-)
-
-load("@tai_meta_deps//:requirements.bzl", tai_meta_deps_pip_install = "pip_install")
-
-tai_meta_deps_pip_install()
-
-# ---------------------------------------------------------------------------
 #       Load dependencies for pipeline PTF rules
 # ---------------------------------------------------------------------------
 pip_import(

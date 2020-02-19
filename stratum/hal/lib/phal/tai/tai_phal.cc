@@ -1,5 +1,4 @@
 // Copyright 2020-present Open Networking Foundation
-// Copyright 2020 PLVision
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +26,8 @@
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
 
+DEFINE_string(taimux_config_file, "", "The TAI MUX configuration file");
+
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -35,19 +36,18 @@ namespace tai {
 TaiPhal* TaiPhal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex TaiPhal::init_lock_(absl::kConstInit);
 
-TaiPhal::TaiPhal()
-    : tai_manager_(nullptr) {}
+TaiPhal::TaiPhal() {}
 
 TaiPhal::~TaiPhal() {}
 
-TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
+TaiPhal* TaiPhal::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
 
   if (!singleton_) {
     singleton_ = new TaiPhal();
   }
 
-  auto status = singleton_->Initialize(tai_manager);
+  auto status = singleton_->Initialize();
   if (!status.ok()) {
     LOG(ERROR) << "TaiPhal failed to initialize: " << status;
     delete singleton_;
@@ -58,16 +58,32 @@ TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
 }
 
 // Initialize the tai interface and phal DB
-::util::Status TaiPhal::Initialize(tai::TAIManager* tai_manager) {
+::util::Status TaiPhal::Initialize() {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
-    CHECK_RETURN_IF_FALSE(tai_manager != nullptr);
-    tai_manager_ = tai_manager;
+    InitTAI();
 
     initialized_ = true;
   }
   return ::util::OkStatus();
+}
+
+// Initialize the "MUX TAI" library.
+// The "--taimux_config_file" argument should be specified to provide the config
+// location TAI MUX internals.
+//
+// Find the full documentation and HOWTOs in the official TAI repository:
+// https://github.com/Telecominfraproject/oopt-tai-implementations/tree/master
+// /tai_mux#static-platform-adapter.
+void TaiPhal::InitTAI() {
+  // Set platform adapter type.
+  setenv("TAI_MUX_PLATFORM_ADAPTER", "static", true);
+
+  // If passed to Stratum - set the TAI MUX config file.
+  if (!FLAGS_taimux_config_file.empty())
+    setenv(
+      "TAI_MUX_STATIC_CONFIG_FILE", FLAGS_taimux_config_file.c_str(), true);
 }
 
 ::util::Status TaiPhal::PushChassisConfig(const ChassisConfig& config) {
@@ -94,13 +110,16 @@ TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
 // Get TAI module and network identifiers related to the specific node and port
 // (or an error).
 ::util::StatusOr<std::pair<uint32, uint32>>
-TaiPhal::GetRelatedTaiModuleAndNetworkId(uint64 node_id, uint32 port_id) const {
+TaiPhal::GetRelatedTAIModuleAndNetworkId(
+    uint64 node_id, uint32 port_id) const {
   absl::WriterMutexLock l(&config_lock_);
   auto iter = node_port_id_to_module_netif_.find({node_id, port_id});
   if (iter == node_port_id_to_module_netif_.end())
-    return MAKE_ERROR(ERR_INTERNAL) << "No related TAI module is found for "
-                                    << "node_id " << node_id << ", "
-                                    << "port_id " << port_id;
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "No related TAI module is found for "
+        << "node_id=" << node_id
+        << ", "
+        << "port_id" << port_id;
 
   return iter->second;
 }
@@ -108,7 +127,7 @@ TaiPhal::GetRelatedTaiModuleAndNetworkId(uint64 node_id, uint32 port_id) const {
 ::util::Status TaiPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
-  tai_manager_ = nullptr;
+  // tai_event_handler_.reset();
   initialized_ = false;
 
   return ::util::OkStatus();

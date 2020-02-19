@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package taish;
+
+service TAI {
+    rpc ListModule(ListModuleRequest) returns (stream ListModuleResponse);
+    rpc ListAttributeMetadata(ListAttributeMetadataRequest) returns (stream ListAttributeMetadataResponse);
+    rpc GetAttributeMetadata(GetAttributeMetadataRequest) returns (GetAttributeMetadataResponse);
+    rpc GetAttribute(GetAttributeRequest) returns (GetAttributeResponse);
+    rpc SetAttribute(SetAttributeRequest) returns (SetAttributeResponse);
+    rpc ClearAttribute(ClearAttributeRequest) returns (ClearAttributeResponse);
+    rpc Monitor(MonitorRequest) returns (stream MonitorResponse);
+    rpc SetLogLevel(SetLogLevelRequest) returns (SetLogLevelResponse);
+    rpc Create(CreateRequest) returns (CreateResponse);
+    rpc Remove(RemoveRequest) returns (RemoveResponse);
+}
+
+enum TAIObjectType {
+    UNKNOWN = 0;
+    MODULE = 1;
+    HOSTIF = 2;
+    NETIF = 3;
+}
+
+enum TAIAPIType {
+    UNSPECIFIED_API = 0;
+    MODULE_API = 1;
+    HOSTIF_API = 2;
+    NETIF_API = 3;
+}
+
+enum TAILogLevel {
+    DEBUG = 0;
+    INFO = 1;
+    NOTICE = 2;
+    WARN = 3;
+    ERROR = 4;
+    CRITICAL = 5;
+}
+
+message SerializeOption {
+    bool human = 1;
+    bool value_only = 2;
+    bool json = 3;
+}
+
+message ListModuleRequest {
+}
+
+message ListModuleResponse {
+    Module module = 1;
+}
+
+message ListAttributeMetadataRequest {
+    TAIObjectType object_type = 1;
+}
+
+message ListAttributeMetadataResponse {
+    AttributeMetadata metadata = 1;
+}
+
+message GetAttributeMetadataRequest {
+    TAIObjectType object_type = 1;
+    oneof attr {
+        uint64 attr_id = 2;
+        string attr_name = 3;
+    }
+    SerializeOption serialize_option = 4;
+}
+
+message GetAttributeMetadataResponse {
+    AttributeMetadata metadata = 1;
+}
+
+message GetAttributeRequest {
+    uint64 oid = 1;
+    Attribute attribute = 2;
+    SerializeOption serialize_option = 3;
+}
+
+message GetAttributeResponse {
+    Attribute attribute = 1;
+}
+
+message SetAttributeRequest {
+    uint64 oid = 1;
+    Attribute attribute = 2;
+    SerializeOption serialize_option = 3;
+}
+
+message SetAttributeResponse {
+}
+
+message ClearAttributeRequest {
+    uint64 oid = 1;
+    uint64 attr_id = 2;
+}
+
+message ClearAttributeResponse {
+}
+
+message MonitorRequest {
+    uint64 oid = 1;
+    uint64 notification_attr_id = 2;
+    SerializeOption serialize_option = 3;
+}
+
+message MonitorResponse {
+    repeated Attribute attrs = 1;
+}
+
+message SetLogLevelRequest {
+    TAIAPIType api = 1;
+    TAILogLevel level = 2;
+}
+
+message SetLogLevelResponse {
+}
+
+message CreateRequest {
+    TAIObjectType object_type = 1;
+    repeated Attribute attrs = 2;
+    uint64 module_id = 3;
+    SerializeOption serialize_option = 4;
+}
+
+message CreateResponse {
+    uint64 oid = 1;
+}
+
+message RemoveRequest {
+    uint64 oid = 1;
+}
+
+message RemoveResponse {
+}
+
+message Attribute {
+    uint64 attr_id = 1;
+    string value = 2;
+}
+
+message AttributeMetadata {
+    uint64 attr_id = 1;
+    string name = 2;
+    string short_name = 3;
+    TAIObjectType object_type = 4;
+    string usage = 5;
+    bool is_readonly = 6;
+    bool is_mandatoryoncreate = 7;
+    bool is_createonly = 8;
+    bool is_createandset = 9;
+    bool is_key = 10;
+}
+
+message HostInterface {
+    uint64 oid = 1;
+    uint32 index = 2;
+}
+
+message NetworkInterface {
+    uint64 oid = 1;
+    uint32 index = 2;
+}
+
+message Module {
+    uint64 oid = 1;
+    string location = 2;
+    repeated HostInterface hostifs = 3;
+    repeated NetworkInterface netifs = 4;
+    bool present = 5;
+}
+
