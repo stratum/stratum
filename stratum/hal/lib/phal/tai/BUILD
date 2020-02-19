@@ -30,13 +30,10 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-DEFAULT_COPTS = ["-Werror=thread-safety"]
-
 stratum_cc_library(
     name = "tai_phal",
     srcs = ["tai_phal.cc"],
     hdrs = ["tai_phal.h"],
-    copts = DEFAULT_COPTS,
     deps = [
         ":tai_switch_configurator",
         "@com_google_absl//absl/memory",
@@ -57,7 +54,6 @@ stratum_cc_library(
     name = "tai_switch_configurator",
     srcs = ["tai_switch_configurator.cc"],
     hdrs = ["tai_switch_configurator.h"],
-    copts = DEFAULT_COPTS,
     deps = [
         "@com_google_protobuf//:protobuf",
         "//stratum/glue/gtl:map_util",
