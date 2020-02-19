@@ -15,6 +15,7 @@
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
+#include "absl/time/clock.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/integral_types.h"
@@ -49,6 +50,7 @@ constexpr int kPort = 1;
 constexpr uint32 kPortId = 12345;
 constexpr uint64 kDefaultSpeedBps = kHundredGigBps;
 constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
+constexpr TriState kDefaultAutoneg = TRI_STATE_UNKNOWN;
 
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
@@ -68,7 +70,8 @@ class ChassisConfigBuilder {
   SingletonPort* AddPort(uint32 port_id, int32 port,
                          AdminState admin_state,
                          uint64 speed_bps = kDefaultSpeedBps,
-                         FecMode fec_mode = kDefaultFecMode) {
+                         FecMode fec_mode = kDefaultFecMode,
+                         TriState autoneg = kDefaultAutoneg) {
     auto* sport = config_.add_singleton_ports();
     sport->set_id(port_id);
     sport->set_node(node_id);
@@ -78,6 +81,7 @@ class ChassisConfigBuilder {
     sport->set_speed_bps(speed_bps);
     sport->mutable_config_params()->set_admin_state(admin_state);
     sport->mutable_config_params()->set_fec_mode(fec_mode);
+    sport->mutable_config_params()->set_autoneg(autoneg);
     return sport;
   }
 
@@ -285,6 +289,36 @@ TEST_F(BFChassisManagerTest, TransceiverEvent) {
   EXPECT_OK(xcvr_event_writer->Write(
       TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
       absl::InfiniteDuration()));
+  // Make sure the event reader reads the event and make expected calls to
+  // phal mock interface.
+  absl::SleepFor(absl::Milliseconds(1000));
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, GetPortData) {
+  ChassisConfigBuilder builder;
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  auto portId = kPortId + 1;
+  auto port = kPort + 1;
+
+  builder.AddPort(
+    portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON, TRI_STATE_TRUE);
+  EXPECT_CALL(*bf_pal_mock_, PortAdd(
+    kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
+  ASSERT_OK(PushChassisConfig(builder));
+
+  DataRequest::Request req;
+  req.mutable_autoneg_status()->set_node_id(kNodeId);
+  req.mutable_autoneg_status()->set_port_id(portId);
+  auto resp = bf_chassis_manager_->GetPortData(req);
+  EXPECT_OK(resp);
+
+  DataResponse data_resp = resp.ValueOrDie();
+  EXPECT_TRUE(data_resp.has_autoneg_status());
+  EXPECT_EQ(data_resp.autoneg_status().state(), TRI_STATE_TRUE);
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

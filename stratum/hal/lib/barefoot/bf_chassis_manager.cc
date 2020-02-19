@@ -426,7 +426,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
     case Request::kAutonegStatus: {
       ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.port_speed().node_id(), request.port_speed().port_id()));
+          request.autoneg_status().node_id(),
+          request.autoneg_status().port_id()));
       if (config->autoneg)
         resp.mutable_autoneg_status()->set_state(*config->autoneg);
       break;
