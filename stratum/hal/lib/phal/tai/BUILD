@@ -55,6 +55,7 @@ stratum_cc_library(
     srcs = ["tai_switch_configurator.cc"],
     hdrs = ["tai_switch_configurator.h"],
     deps = [
+        ":tai_optics_datasource",
         "@com_google_protobuf//:protobuf",
         "//stratum/glue/gtl:map_util",
         "//stratum/hal/lib/common:common_cc_proto",
@@ -62,5 +63,23 @@ stratum_cc_library(
         "//stratum/hal/lib/phal:attribute_database",
         "//stratum/hal/lib/phal:attribute_group",
         "//stratum/hal/lib/phal:phal_cc_proto",
+    ],
+)
+
+stratum_cc_library(
+    name = "tai_optics_datasource",
+    srcs = ["tai_optics_datasource.cc"],
+    hdrs = ["tai_optics_datasource.h"],
+    deps = [
+        "//stratum/hal/lib/phal/tai/tai_wrapper:tai",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/phal:datasource",
+        "//stratum/hal/lib/phal:phal_cc_proto",
+        "//stratum/lib:macros",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
