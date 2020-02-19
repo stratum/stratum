@@ -84,9 +84,8 @@ TaiSwitchConfigurator::Make(tai::TAIManager* tai_manager) {
 
   RETURN_IF_ERROR(mutable_card->AddAttribute(
       "frequency", datasource->GetTxLaserFrequency()));
-  // for now operational mode dirrectly assign to modulation format
   RETURN_IF_ERROR(mutable_card->AddAttribute(
-      "operational_mode", datasource->GetModulationFormat()));
+      "operational_mode", datasource->GetOperationalMode()));
   RETURN_IF_ERROR(mutable_card->AddAttribute(
       "target_output_power", datasource->GetOutputPower()));
   RETURN_IF_ERROR(mutable_card->AddAttribute(

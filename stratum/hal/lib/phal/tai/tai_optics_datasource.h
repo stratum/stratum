@@ -1,5 +1,6 @@
 /*
  * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,15 +49,15 @@ class TaiOpticsDataSource : public DataSource {
   ManagedAttribute* GetModuleVendor() { return &card_vendor_; }
 
   ManagedAttribute* GetTxLaserFrequency() { return &tx_laser_frequency_; }
-  ManagedAttribute* GetModulationFormat() { return &modulation_format_; }
+  ManagedAttribute* GetOperationalMode() { return &operational_mode_; }
   ManagedAttribute* GetOutputPower() { return &output_power_; }
   ManagedAttribute* GetCurrentOutputPower() { return &current_output_power_; }
   ManagedAttribute* GetInputPower() { return &input_power_; }
 
   // Setter functions.
   ::util::Status SetTxLaserFrequency(int slot, uint64 tx_laser_frequency);
-  ::util::Status SetModulationFormat(int slot, uint64 modulation_format);
-  ::util::Status SetOutputPower(int slot, float output_power);
+  ::util::Status SetOperationalMode(int slot, uint64 operational_mode);
+  ::util::Status SetOutputPower(int slot, double output_power);
 
  private:
   // Private constructor.
@@ -74,10 +75,10 @@ class TaiOpticsDataSource : public DataSource {
   TypedAttribute<std::string> card_vendor_{this};
 
   TypedAttribute<uint64> tx_laser_frequency_{this};
-  TypedAttribute<uint64> modulation_format_{this};
-  TypedAttribute<float> output_power_{this};
-  TypedAttribute<float> current_output_power_{this};
-  TypedAttribute<float> input_power_{this};
+  TypedAttribute<uint64> operational_mode_{this};
+  TypedAttribute<double> output_power_{this};
+  TypedAttribute<double> current_output_power_{this};
+  TypedAttribute<double> input_power_{this};
 };
 
 }  // namespace tai
