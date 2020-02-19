@@ -1031,13 +1031,11 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
-        auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id &&
-            singleton_port->id() == port_id) {  // NOLINTNEXTLINE
-            singleton_port->mutable_config_params()->set_admin_state(typed_state);
-            break;
-        }
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.mutable_config_params()->set_admin_state(typed_state);
+        break;
+      }
     }
 
     // Update the YANG parse tree.
@@ -1151,11 +1149,9 @@ void SetUpInterfacesInterfaceEthernetConfigMacAddress(uint64 node_id,
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
-      auto* singleton_port = new_config->mutable_singleton_ports(i);
-      if (singleton_port->node() == node_id &&
-          singleton_port->id() == port_id) {
-        singleton_port->mutable_config_params()->set_mac_address(mac_address);
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.mutable_config_params()->set_mac_address(mac_address);
         break;
       }
     }
@@ -1227,13 +1223,11 @@ void SetUpInterfacesInterfaceEthernetConfigPortSpeed(uint64 node_id,
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
-        auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id &&
-            singleton_port->id() == port_id) {
-            singleton_port->set_speed_bps(speed_bps);
-            break;
-        }
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.set_speed_bps(speed_bps);
+        break;
+      }
     }
 
     // Update the YANG parse tree.
@@ -1299,13 +1293,11 @@ void SetUpInterfacesInterfaceEthernetConfigAutoNegotiate(uint64 node_id,
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->singleton_ports_size(); i++) {
-        auto* singleton_port = new_config->mutable_singleton_ports(i);
-        if (singleton_port->node() == node_id &&
-            singleton_port->id() == port_id) {  // NOLINTNEXTLINE
-            singleton_port->mutable_config_params()->set_autoneg(autoneg_status);
-            break;
-        }
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.mutable_config_params()->set_autoneg(autoneg_status);
+        break;
+      }
     }
 
     // Update the YANG parse tree.
@@ -2238,12 +2230,11 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->optical_ports_size(); i++) {
-        auto* optical_port = new_config->mutable_optical_ports(i);
-        if (optical_port->node() == node_id && optical_port->id() == port_id) {
-            optical_port->set_frequency(uint_val);
-            break;
-        }
+    for (auto& optical_port : *new_config->mutable_optical_ports()) {
+      if (optical_port.node() == node_id && optical_port.id() == port_id) {
+        optical_port.set_frequency(uint_val);
+        break;
+      }
     }
 
     auto poll_functor = [uint_val](const GnmiEvent& /*event*/,
@@ -2621,12 +2612,11 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->optical_ports_size(); i++) {
-        auto* optical_port = new_config->mutable_optical_ports(i);
-        if (optical_port->node() == node_id && optical_port->id() == port_id) {
-            optical_port->set_target_output_power(float_val);
-            break;
-        }
+    for (auto& optical_port : *new_config->mutable_optical_ports()) {
+      if (optical_port.node() == node_id && optical_port.id() == port_id) {
+        optical_port.set_target_output_power(float_val);
+        break;
+      }
     }
 
     auto poll_functor = [decimal_val](const GnmiEvent& /*event*/,
@@ -2705,12 +2695,11 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (int i = 0; i < new_config->optical_ports_size(); i++) {
-        auto* optical_port = new_config->mutable_optical_ports(i);
-        if (optical_port->node() == node_id && optical_port->id() == port_id) {
-            optical_port->set_operational_mode(uint_val);
-            break;
-        }
+    for (auto& optical_port : *new_config->mutable_optical_ports()) {
+      if (optical_port.node() == node_id && optical_port.id() == port_id) {
+        optical_port.set_operational_mode(uint_val);
+        break;
+      }
     }
 
     auto poll_functor = [uint_val](const GnmiEvent& /*event*/,
