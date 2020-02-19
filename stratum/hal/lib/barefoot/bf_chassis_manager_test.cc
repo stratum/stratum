@@ -303,8 +303,8 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   auto portId = kPortId + 1;
   auto port = kPort + 1;
 
-  builder.AddPort(
-    portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON, TRI_STATE_TRUE);
+  builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
+                  FEC_MODE_ON, TRI_STATE_TRUE);
   EXPECT_CALL(*bf_pal_mock_, PortAdd(
     kUnit, portId, kHundredGigBps, FEC_MODE_ON));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
