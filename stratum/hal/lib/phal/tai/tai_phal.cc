@@ -90,7 +90,7 @@ TaiPhal* TaiPhal::CreateSingleton() {
 // Get TAI module and network identifiers related to the specific node and port
 // (or an error).
 ::util::StatusOr<std::pair<uint32, uint32>>
-TaiPhal::GetRelatedTAIModuleAndNetworkId(uint64 node_id, uint32 port_id) const {
+TaiPhal::GetRelatedTaiModuleAndNetworkId(uint64 node_id, uint32 port_id) const {
   absl::WriterMutexLock l(&config_lock_);
   auto iter = node_port_id_to_module_netif_.find({node_id, port_id});
   if (iter == node_port_id_to_module_netif_.end())

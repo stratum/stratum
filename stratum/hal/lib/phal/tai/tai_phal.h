@@ -46,7 +46,7 @@ class TaiPhal final : public PhalBackendInterface {
   ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
 
   // TODO(max): docs
-  ::util::StatusOr<std::pair<uint32, uint32>> GetRelatedTAIModuleAndNetworkId(
+  ::util::StatusOr<std::pair<uint32, uint32>> GetRelatedTaiModuleAndNetworkId(
       uint64 node_id, uint32 port_id) const LOCKS_EXCLUDED(config_lock_);
 
   // Creates the singleton instance. Expected to be called once to initialize
