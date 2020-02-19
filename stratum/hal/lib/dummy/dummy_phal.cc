@@ -90,13 +90,13 @@ DummyPhal::~DummyPhal() {}
 }
 
 ::util::Status DummyPhal::GetOpticalTransceiverInfo(
-    uint64 node_id, uint32 port_id, OpticalChannelInfo* oc_info) {
+    int slot, int port, OpticalChannelInfo* oc_info) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status DummyPhal::SetOpticalTransceiverInfo(
-    uint64 node_id, uint32 port_id, const OpticalChannelInfo& oc_info) {
+    int slot, int port, const OpticalChannelInfo& oc_info) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
