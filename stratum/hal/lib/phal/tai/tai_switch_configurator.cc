@@ -1,4 +1,5 @@
 // Copyright 2020-present Open Networking Foundation
+// Copyright 2020 PLVision
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,19 +28,15 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*!
- * \brief TaiSwitchConfigurator::Make method makes an instance of
- * TaiSwitchConfigurator
- */
+// TaiSwitchConfigurator::Make method makes an instance of
+// TaiSwitchConfigurator
 ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>>
 TaiSwitchConfigurator::Make() {
   return absl::WrapUnique(new TaiSwitchConfigurator());
 }
 
-/*!
- * \brief TaiSwitchConfigurator::CreateDefaultConfig method generates a default
- * config using the TAI API.
- */
+// TaiSwitchConfigurator::CreateDefaultConfig method generates a default
+// config using the TAI API.
 ::util::Status TaiSwitchConfigurator::CreateDefaultConfig(
     PhalInitConfig* phal_config) const {
   auto optical_card = phal_config->add_optical_cards();
@@ -48,10 +45,8 @@ TaiSwitchConfigurator::Make() {
   return ::util::OkStatus();
 }
 
-/*!
- * \brief TaiSwitchConfigurator::ConfigurePhalDB method configures the switch's
- * attribute database with the given PhalInitConfig config.
- */
+// TaiSwitchConfigurator::ConfigurePhalDB method configures the switch's
+// attribute database with the given PhalInitConfig config.
 ::util::Status TaiSwitchConfigurator::ConfigurePhalDB(
     PhalInitConfig* phal_config, AttributeGroup* root) {
   auto mutable_root = root->AcquireMutable();
@@ -76,7 +71,6 @@ TaiSwitchConfigurator::Make() {
 ::util::Status TaiSwitchConfigurator::AddOpticalCard(
     int slot, MutableAttributeGroup* mutable_card,
     const PhalOpticalCardConfig& config) {
-
   // To add optics proper datasources for card attributes:
   // * frequency;
   // * target_output_power;
@@ -90,5 +84,4 @@ TaiSwitchConfigurator::Make() {
 }  // namespace tai
 }  // namespace phal
 }  // namespace hal
-
 }  // namespace stratum

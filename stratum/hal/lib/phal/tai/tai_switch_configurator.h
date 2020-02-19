@@ -32,11 +32,8 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*!
- * \brief TaiSwitchConfigurator class configure relationship between
- * TaiOpticsDataSource and Database.
- */
-class TaiSwitchConfigurator : public SwitchConfiguratorInterface {
+// TaiSwitchConfigurator configures the PhalDb for use with the Tai Datasouce.
+class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
  public:
   static ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>> Make();
 
