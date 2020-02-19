@@ -89,6 +89,18 @@ DummyPhal::~DummyPhal() {}
   return ::util::OkStatus();
 }
 
+::util::Status DummyPhal::GetOpticalTransceiverInfo(
+    int slot, int port, OpticalChannelInfo* oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
+::util::Status DummyPhal::SetOpticalTransceiverInfo(
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
 ::util::Status DummyPhal::SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state) {
   absl::ReaderMutexLock l(&phal_lock_);
