@@ -1,6 +1,6 @@
 /*
- * Copyright 2018 Google LLC
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ namespace tai {
 
 class TAIManagerTestWrapper : public TAIManager {
  public:
-  explicit TAIManagerTestWrapper(std::unique_ptr<tai_wrapper_mock> wrapper_mock)
+  explicit TAIManagerTestWrapper(std::unique_ptr<TaiWrapperMock> wrapper_mock)
       : TAIManager(std::move(wrapper_mock)) {}
 };
 

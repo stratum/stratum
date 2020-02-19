@@ -1,6 +1,6 @@
 /*
- * Copyright 2018 Google LLC
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-class tai_wrapper_mock : public TAIWrapperInterface {
+class TaiWrapperMock : public TAIWrapperInterface {
  public:
   MOCK_CONST_METHOD1(GetModule, std::weak_ptr<Module>(std::size_t index));
 
