@@ -24,7 +24,6 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/switch_configurator_interface.h"
-#include "stratum/hal/lib/phal/optics_adapter.h"
 #include "stratum/lib/channel/channel.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -90,34 +89,13 @@ Phal* Phal::CreateSingleton() {
 #if defined(WITH_TAI)
     {
       auto* tai_phal = tai::TaiPhal::CreateSingleton();
-
-      // Push chassis config to TAI PHAL to be able to convert node/port to the
-      // related module/netif id.
       tai_phal->PushChassisConfig(config);
-      node_port_id_to_module_netif_id_ = [tai_phal](
-          uint64 node_id, uint32 port_id)
-          -> ::util::StatusOr<std::pair<uint32, uint32>> {
-        return tai_phal->GetRelatedTAIModuleAndNetworkId(node_id, port_id);
-      };
-
       phal_interfaces_.push_back(tai_phal);
-      ASSIGN_OR_RETURN(auto configurator,
-                       tai::TaiSwitchConfigurator::Make());
+      ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
       configurators.push_back(std::move(configurator));
-    }
-#else
-    {
-      // TAI disabled. Set error message as return-result.
-      node_port_id_to_module_netif_id_ = [](
-          uint64 /*node_id*/, uint32 /*port_id*/)
-          -> ::util::StatusOr<std::pair<uint32, uint32>> {
-        return MAKE_ERROR(ERR_INTERNAL) << "TAI is not initialized!";
-      };
     }
 #endif  // defined(WITH_TAI)
 
-    // TODO(max): figure out how to have multiple configurators creating a
-    // default config.
     PhalInitConfig phal_config;
     if (FLAGS_phal_config_path.empty()) {
       if (configurators.empty()) {

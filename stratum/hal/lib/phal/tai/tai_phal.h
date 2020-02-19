@@ -44,13 +44,14 @@ class TaiPhal final : public PhalBackendInterface {
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
+
+  // TODO(max): docs
   ::util::StatusOr<std::pair<uint32, uint32>> GetRelatedTAIModuleAndNetworkId(
       uint64 node_id, uint32 port_id) const LOCKS_EXCLUDED(config_lock_);
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static TaiPhal* CreateSingleton()
-      LOCKS_EXCLUDED(config_lock_, init_lock_);
+  static TaiPhal* CreateSingleton() LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // TaiPhal is neither copyable nor movable.
   TaiPhal(const TaiPhal&) = delete;
@@ -60,9 +61,8 @@ class TaiPhal final : public PhalBackendInterface {
   // Private constructor.
   TaiPhal();
 
-  // Calls all the one time start initialisations
-  ::util::Status Initialize()
-      LOCKS_EXCLUDED(config_lock_);
+  // Calls all the one time start initializations.
+  ::util::Status Initialize() LOCKS_EXCLUDED(config_lock_);
 
   // Internal mutex lock for protecting the internal maps and initializing the
   // singleton instance.
