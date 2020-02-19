@@ -2044,9 +2044,9 @@ void SetUpComponentsComponentChassisAlarmsFlowProgrammingExceptionSeverity(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/present
 void SetUpComponentsComponentTransceiverStatePresent(
-        TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+        TreeNode* node, YangParseTree* tree, int32 slot_no, int32 port_no) {
   auto poll_functor = GetOnPollFunctor(
-          node_id, port_id, tree, &DataResponse::front_panel_port_info,
+          slot_no, port_no, tree, &DataResponse::front_panel_port_info,
           &DataResponse::has_front_panel_port_info,
           &DataRequest::Request::mutable_front_panel_port_info,
           &FrontPanelPortInfo::hw_state, ConvertHwStateToPresentString);
@@ -2059,16 +2059,16 @@ void SetUpComponentsComponentTransceiverStatePresent(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/serial-no
 void SetUpComponentsComponentTransceiverStateSerialNo(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 slot_no, int32 port_no) {
 
   auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event, const ::gnmi::Path& path,
+      [tree, slot_no, port_no](const GnmiEvent& event, const ::gnmi::Path& path,
                                GnmiSubscribeStream* stream) {
         // Create a data retrieval request.
         DataRequest req;
         auto* request = req.add_requests()->mutable_front_panel_port_info();
-        request->set_node_id(node_id);
-        request->set_port_id(port_id);
+        request->set_node_id(slot_no);
+        request->set_port_id(port_no);
 
         // In-place definition of method retrieving data from generic response
         // and saving into 'resp' local variable.
@@ -2082,7 +2082,7 @@ void SetUpComponentsComponentTransceiverStateSerialNo(
         // way to notify the controller that something went wrong.
         // The error is logged when it is created.
         tree->GetSwitchInterface()
-            ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+            ->RetrieveValue(slot_no, req, &writer, /* details= */ nullptr)
             .IgnoreError();
         return SendResponse(GetResponse(path, resp), stream);
       };
@@ -2096,17 +2096,17 @@ void SetUpComponentsComponentTransceiverStateSerialNo(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/vendor
 void SetUpComponentsComponentTransceiverStateVendor(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 slot_no, int32 port_no) {
 
   auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event,
+      [tree, slot_no, port_no](const GnmiEvent& event,
                               const ::gnmi::Path& path,
                               GnmiSubscribeStream* stream) {
     // Create a data retrieval request.
     DataRequest req;
     auto* request = req.add_requests()->mutable_front_panel_port_info();
-    request->set_node_id(node_id);
-    request->set_port_id(port_id);
+    request->set_node_id(slot_no);
+    request->set_port_id(port_no);
 
     // In-place definition of method retrieving data from generic response
     // and saving into 'resp' local variable.
@@ -2120,7 +2120,7 @@ void SetUpComponentsComponentTransceiverStateVendor(
     // notify the controller that something went wrong. The error is
     // logged when it is created.
     tree->GetSwitchInterface()
-        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        ->RetrieveValue(slot_no, req, &writer, /* details= */ nullptr)
         .IgnoreError();
     return SendResponse(GetResponse(path, resp), stream);
   };
@@ -2134,16 +2134,16 @@ void SetUpComponentsComponentTransceiverStateVendor(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/vendor-part
 void SetUpComponentsComponentTransceiverStateVendorPart(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 slot_no, int32 port_no) {
   auto poll_functor =
-      [tree, node_id, port_id](const GnmiEvent& event,
+      [tree, slot_no, port_no](const GnmiEvent& event,
                                 const ::gnmi::Path& path,
                                 GnmiSubscribeStream* stream) {
         // Create a data retrieval request.
         DataRequest req;
         auto* request = req.add_requests()->mutable_front_panel_port_info();
-        request->set_node_id(node_id);
-        request->set_port_id(port_id);
+        request->set_node_id(slot_no);
+        request->set_port_id(port_no);
 
         // In-place definition of method retrieving data from generic response
         // and saving into 'resp' local variable.
@@ -2157,7 +2157,7 @@ void SetUpComponentsComponentTransceiverStateVendorPart(
         // way to notify the controller that something went wrong.
         // The error is logged when it is created.
         tree->GetSwitchInterface()
-            ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+            ->RetrieveValue(slot_no, req, &writer, /* details= */ nullptr)
             .IgnoreError();
         return SendResponse(GetResponse(path, resp), stream);
       };
@@ -2170,9 +2170,9 @@ void SetUpComponentsComponentTransceiverStateVendorPart(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/transceiver/state/form-factor
 void SetUpComponentsComponentTransceiverStateFormFactor(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 slot_no, int32 port_no) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::front_panel_port_info,
+      slot_no, port_no, tree, &DataResponse::front_panel_port_info,
       &DataResponse::has_front_panel_port_info,
       &DataRequest::Request::mutable_front_panel_port_info,
       &FrontPanelPortInfo::media_type, ConvertMediaTypeToString);
@@ -3264,27 +3264,29 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
                                                    mac_address, node, tree);
 
   // Paths for transceiver
+  int32 slot_no = singleton.slot();
+  int32 port_no = singleton.port();
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("present")());
-  SetUpComponentsComponentTransceiverStatePresent(node, tree, node_id, port_id);
+  SetUpComponentsComponentTransceiverStatePresent(node, tree, slot_no, port_no);
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("serial-no")());
-  SetUpComponentsComponentTransceiverStateSerialNo(node, tree, node_id,
-                                                   port_id);
+  SetUpComponentsComponentTransceiverStateSerialNo(node, tree, slot_no,
+                                                   port_no);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("vendor")());
-  SetUpComponentsComponentTransceiverStateVendor(node, tree, node_id, port_id);
+  SetUpComponentsComponentTransceiverStateVendor(node, tree, slot_no, port_no);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("vendor-part")());
-  SetUpComponentsComponentTransceiverStateVendorPart(node, tree, node_id,
-                                                     port_id);
+  SetUpComponentsComponentTransceiverStateVendorPart(node, tree, slot_no,
+                                                     port_no);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("transceiver")("state")("form-factor")());
-  SetUpComponentsComponentTransceiverStateFormFactor(node, tree, node_id,
-                                                     port_id);
+  SetUpComponentsComponentTransceiverStateFormFactor(node, tree, slot_no,
+                                                     port_no);
 }
 
 void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
