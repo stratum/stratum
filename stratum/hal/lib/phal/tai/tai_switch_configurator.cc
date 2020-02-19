@@ -22,36 +22,37 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/tai/tai_optics_datasource.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
 
-// TaiSwitchConfigurator::Make method makes an instance of
-// TaiSwitchConfigurator
+// Make an instance of TaiSwitchConfigurator
 ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>>
-TaiSwitchConfigurator::Make() {
-  return absl::WrapUnique(new TaiSwitchConfigurator());
+TaiSwitchConfigurator::Make(tai::TAIManager* tai_manager) {
+  // Make sure we've got a valid TAI Manager
+  CHECK_RETURN_IF_FALSE(tai_manager != nullptr);
+
+  return absl::WrapUnique(new TaiSwitchConfigurator(tai_manager));
 }
 
-// TaiSwitchConfigurator::CreateDefaultConfig method generates a default
-// config using the TAI API.
+// Generate a default config using the TAI API.
 ::util::Status TaiSwitchConfigurator::CreateDefaultConfig(
     PhalInitConfig* phal_config) const {
   auto optical_card = phal_config->add_optical_cards();
-  optical_card->set_slot(1);
+  optical_card->set_slot(0);
 
   return ::util::OkStatus();
 }
 
-// TaiSwitchConfigurator::ConfigurePhalDB method configures the switch's
-// attribute database with the given PhalInitConfig config.
+// Configure the switch's attribute database with the given
+// PhalInitConfig config.
 ::util::Status TaiSwitchConfigurator::ConfigurePhalDB(
     PhalInitConfig* phal_config, AttributeGroup* root) {
   auto mutable_root = root->AcquireMutable();
 
-  // Add cards
   ASSIGN_OR_RETURN(auto card_group,
                    mutable_root->AddRepeatedChildGroup("optical_cards"));
 
@@ -71,12 +72,26 @@ TaiSwitchConfigurator::Make() {
 ::util::Status TaiSwitchConfigurator::AddOpticalCard(
     int slot, MutableAttributeGroup* mutable_card,
     const PhalOpticalCardConfig& config) {
-  // To add optics proper datasources for card attributes:
-  // * frequency;
-  // * target_output_power;
-  // * operational_mode;
-  // * output_power;
-  // * input_power.
+  ASSIGN_OR_RETURN(auto datasource,
+                   TaiOpticsDataSource::Make(slot, tai_manager_, config));
+
+  RETURN_IF_ERROR(
+      mutable_card->AddAttribute("id", datasource->GetModuleSlot()));
+  RETURN_IF_ERROR(
+      mutable_card->AddAttribute("vendor_name", datasource->GetModuleVendor()));
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "hardware_state", datasource->GetModuleHardwareState()));
+
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "frequency", datasource->GetTxLaserFrequency()));
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "operational_mode", datasource->GetOperationalMode()));
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "target_output_power", datasource->GetOutputPower()));
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "output_power", datasource->GetCurrentOutputPower()));
+  RETURN_IF_ERROR(mutable_card->AddAttribute(
+      "input_power", datasource->GetInputPower()));
 
   return ::util::OkStatus();
 }
@@ -84,4 +99,5 @@ TaiSwitchConfigurator::Make() {
 }  // namespace tai
 }  // namespace phal
 }  // namespace hal
+
 }  // namespace stratum

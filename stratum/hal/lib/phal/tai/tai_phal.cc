@@ -35,18 +35,19 @@ namespace tai {
 TaiPhal* TaiPhal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex TaiPhal::init_lock_(absl::kConstInit);
 
-TaiPhal::TaiPhal() {}
+TaiPhal::TaiPhal()
+    : tai_manager_(nullptr) {}
 
 TaiPhal::~TaiPhal() {}
 
-TaiPhal* TaiPhal::CreateSingleton() {
+TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
   absl::WriterMutexLock l(&init_lock_);
 
   if (!singleton_) {
     singleton_ = new TaiPhal();
   }
 
-  auto status = singleton_->Initialize();
+  auto status = singleton_->Initialize(tai_manager);
   if (!status.ok()) {
     LOG(ERROR) << "TaiPhal failed to initialize: " << status;
     delete singleton_;
@@ -57,10 +58,13 @@ TaiPhal* TaiPhal::CreateSingleton() {
 }
 
 // Initialize the tai interface and phal DB
-::util::Status TaiPhal::Initialize() {
+::util::Status TaiPhal::Initialize(tai::TAIManager* tai_manager) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {
+    CHECK_RETURN_IF_FALSE(tai_manager != nullptr);
+    tai_manager_ = tai_manager;
+
     initialized_ = true;
   }
   return ::util::OkStatus();
@@ -80,7 +84,7 @@ TaiPhal* TaiPhal::CreateSingleton() {
 ::util::Status TaiPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
-  // tai_event_handler_.reset();
+  tai_manager_ = nullptr;
   initialized_ = false;
 
   return ::util::OkStatus();

@@ -37,6 +37,7 @@
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
 #include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_path);
@@ -88,10 +89,12 @@ Phal* Phal::CreateSingleton() {
 
 #if defined(WITH_TAI)
     {
-      auto* tai_phal = tai::TaiPhal::CreateSingleton();
+      auto* tai_manager = tai::TAIManager::CreateSingleton();
+      auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_manager);
       tai_phal->PushChassisConfig(config);
       phal_interfaces_.push_back(tai_phal);
-      ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
+      ASSIGN_OR_RETURN(auto configurator,
+                       tai::TaiSwitchConfigurator::Make(tai_manager));
       configurators.push_back(std::move(configurator));
     }
 #endif  // defined(WITH_TAI)
