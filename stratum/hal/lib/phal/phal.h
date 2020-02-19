@@ -27,9 +27,9 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/optics_adapter.h"
 #include "stratum/hal/lib/phal/phal_backend_interface.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
-#include "stratum/hal/lib/phal/optics_adapter.h"
 
 namespace stratum {
 namespace hal {
@@ -102,13 +102,6 @@ class Phal : public PhalInterface {
 
   // Store backend interfaces for later Shutdown. Not owned by this class.
   std::vector<PhalBackendInterface*> phal_interfaces_ GUARDED_BY(config_lock_);
-
-//   A function for mapping node/port id to TAI module/netif id.
-//   Because the required code lays in TaiPhal which is enabled through the
-//   preprocessor, the necessary calls can be put inside this function, which
-//   will redirect the request to the proper phal.
-  std::function<::util::StatusOr<std::pair<uint32, uint32>>(uint64, uint32)>
-      node_port_id_to_module_netif_id_;
 };
 
 }  // namespace phal

@@ -1,4 +1,5 @@
 // Copyright 2020-present Open Networking Foundation
+// Copyright 2020 PLVision
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,16 +90,13 @@ TaiPhal* TaiPhal::CreateSingleton() {
 // Get TAI module and network identifiers related to the specific node and port
 // (or an error).
 ::util::StatusOr<std::pair<uint32, uint32>>
-TaiPhal::GetRelatedTAIModuleAndNetworkId(
-    uint64 node_id, uint32 port_id) const {
+TaiPhal::GetRelatedTAIModuleAndNetworkId(uint64 node_id, uint32 port_id) const {
   absl::WriterMutexLock l(&config_lock_);
   auto iter = node_port_id_to_module_netif_.find({node_id, port_id});
   if (iter == node_port_id_to_module_netif_.end())
-    return MAKE_ERROR(ERR_INTERNAL)
-        << "No related TAI module is found for "
-        << "node_id=" << node_id
-        << ", "
-        << "port_id" << port_id;
+    return MAKE_ERROR(ERR_INTERNAL) << "No related TAI module is found for "
+                                    << "node_id " << node_id << ", "
+                                    << "port_id " << port_id;
 
   return iter->second;
 }

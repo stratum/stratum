@@ -1,5 +1,5 @@
-#
 # Copyright 2020-present Open Networking Foundation
+# Copyright 2020 PLVision
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,23 +30,26 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+DEFAULT_COPTS = ["-Werror=thread-safety"]
+
 stratum_cc_library(
     name = "tai_phal",
     srcs = ["tai_phal.cc"],
     hdrs = ["tai_phal.h"],
+    copts = DEFAULT_COPTS,
     deps = [
         ":tai_switch_configurator",
-        "//stratum/lib/channel:channel",
-        "//stratum/lib:macros",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/hal/lib/common:common_cc_proto",
-        "//stratum/hal/lib/phal:phal_backend_interface",
-        "//stratum/hal/lib/phal:attribute_database",
-        "//stratum/hal/lib/phal:optics_adapter",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:optics_adapter",
+        "//stratum/hal/lib/phal:phal_backend_interface",
+        "//stratum/lib:macros",
+        "//stratum/lib/channel:channel",
     ],
 )
 
@@ -54,6 +57,7 @@ stratum_cc_library(
     name = "tai_switch_configurator",
     srcs = ["tai_switch_configurator.cc"],
     hdrs = ["tai_switch_configurator.h"],
+    copts = DEFAULT_COPTS,
     deps = [
         "@com_google_protobuf//:protobuf",
         "//stratum/glue/gtl:map_util",
