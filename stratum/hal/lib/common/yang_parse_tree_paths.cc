@@ -635,7 +635,7 @@ TreeNodeEventHandler GetOnPollFunctor(
   };
 }
 
-// Node-specific version.
+// Port-specific version.
 // Can be used for two-level nested messages (DataResponse::T::U).
 // We omit the cast from U to V and expect the same type.
 template <typename T, typename U, typename V, typename W>
