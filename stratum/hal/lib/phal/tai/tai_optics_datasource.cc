@@ -45,8 +45,8 @@ TaiOpticsDataSource::Make(int id, const PhalOpticalCardConfig& config) {
                                    config.cache_policy().type(),
                                    config.cache_policy().timed_value()));
 
-  auto optics_datasource = std::shared_ptr<TaiOpticsDataSource>(
-      new TaiOpticsDataSource(id, cache));
+  auto optics_datasource =
+      std::shared_ptr<TaiOpticsDataSource>(new TaiOpticsDataSource(id, cache));
 
   return optics_datasource;
 }
@@ -55,14 +55,14 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
     : DataSource(cache_policy) {
   // These values do not change during the lifetime of the data source.
 
-  #if defined(WITH_GRPC_TAI)
+#if defined(WITH_GRPC_TAI)
   // note server address is hardcoded
-  taish_client_ = absl::make_unique<TaishClient>(grpc::CreateChannel("localhost:50051",
-                                        grpc::InsecureChannelCredentials()));
-  #else
+  taish_client_ = absl::make_unique<TaishClient>(grpc::CreateChannel(
+      "localhost:50051", grpc::InsecureChannelCredentials()));
+#else
   // Pointer to the Tai Manager. Not created or owned by this class.
   tai_manager_ = tai::TAIManager::CreateSingleton();
-  #endif
+#endif
 
   module_slot_.AssignValue(id);
 
@@ -92,25 +92,25 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
   // Update attributes with fresh values from Tai.
 
   int slot = module_slot_.ReadValue<int>().ValueOrDie();
-  #if defined(WITH_GRPC_TAI)
+#if defined(WITH_GRPC_TAI)
   ASSIGN_OR_RETURN(
       auto tx_laser_frequency,
       taish_client_->GetValue(std::to_string(slot), 0,
-                             "TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"));
+                              "TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"));
   tx_laser_frequency_.AssignValue(
       TypesConverter::HertzToMegahertz(tx_laser_frequency));
 
   ASSIGN_OR_RETURN(
       auto operational_mode,
       taish_client_->GetValue(std::to_string(slot), 0,
-                             "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"));
+                              "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"));
   operational_mode_.AssignValue(
       TypesConverter::ModulationToOperationalMode(operational_mode));
 
   ASSIGN_OR_RETURN(
       auto output_power,
       taish_client_->GetValue(std::to_string(slot), 0,
-                             "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"));
+                              "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"));
   output_power_.AssignValue(std::stof(output_power));
 
   ASSIGN_OR_RETURN(auto current_output_power,
@@ -119,13 +119,13 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
                        "TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER"));
   current_output_power_.AssignValue(std::stof(current_output_power));
 
-  ASSIGN_OR_RETURN(
-      auto input_power,
-      taish_client_->GetValue(std::to_string(slot), 0,
-                             "TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER"));
+  ASSIGN_OR_RETURN(auto input_power,
+                   taish_client_->GetValue(
+                       std::to_string(slot), 0,
+                       "TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER"));
   input_power_.AssignValue(std::stof(input_power));
-  #else  // defined(WITH_GRPC_TAI)
-   ASSIGN_OR_RETURN(auto tx_laser_frequency,
+#else  // defined(WITH_GRPC_TAI)
+  ASSIGN_OR_RETURN(auto tx_laser_frequency,
                    tai_manager_->GetValue<uint64>(
                        TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ, {slot, 0}));
   tx_laser_frequency_.AssignValue(tx_laser_frequency);
@@ -152,7 +152,7 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
       tai_manager_->GetValue<double>(
           TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER, {slot, 0}));
   input_power_.AssignValue(input_power);
-  #endif
+#endif
 
   return ::util::OkStatus();
 }
@@ -176,8 +176,8 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
 ::util::Status TaiOpticsDataSource::SetOutputPower(int slot,
                                                    double output_power) {
   return taish_client_->SetValue(std::to_string(slot), 0,
-                                "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER",
-                                std::to_string(output_power));
+                                 "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER",
+                                 std::to_string(output_power));
 }
 
 #else
