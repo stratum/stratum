@@ -1,3 +1,4 @@
+#
 # Copyright 2020-present Open Networking Foundation
 # Copyright 2020 PLVision
 #
@@ -30,23 +31,65 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+
+config_setting(
+    name = "with_grpc_tai",
+    define_values = {
+        "phal_with_grpc_tai": "true",
+    },
+)
+
+tai_defines = select({
+    ":with_grpc_tai": ["WITH_GRPC_TAI"],
+    "//conditions:default": [],
+})
+
+tai_deps = select({
+    ":with_grpc_tai": [
+        ":taish_client",
+        ":types_converter",
+    ],
+    "//conditions:default": [
+        "//stratum/hal/lib/phal/tai/tai_wrapper:tai",
+    ],
+})
+
+proto_library(
+    name = "taish_proto",
+    srcs = ["taish.proto"],
+)
+
+cc_proto_library(
+    name = "taish_cc_proto",
+    deps = [":taish_proto"]
+)
+
+cc_grpc_library(
+    name = "taish_proto_grpc",
+    srcs = [":taish_proto"],
+    deps = [":taish_cc_proto"],
+    grpc_only = True,
+)
+
 stratum_cc_library(
     name = "tai_phal",
     srcs = ["tai_phal.cc"],
     hdrs = ["tai_phal.h"],
     deps = [
         ":tai_switch_configurator",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "//stratum/glue/status:statusor",
+        ":tai_optics_datasource",
+        "//stratum/lib/channel:channel",
+        "//stratum/lib:macros",
         "//stratum/glue/status",
-        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/phal:phal_backend_interface",
         "//stratum/hal/lib/phal:attribute_database",
         "//stratum/hal/lib/phal:optics_adapter",
-        "//stratum/hal/lib/phal:phal_backend_interface",
-        "//stratum/lib:macros",
-        "//stratum/lib/channel:channel",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -67,11 +110,31 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "taish_client",
+    srcs = ["taish_client.cc"],
+    hdrs = ["taish_client.h"],
+    deps = [
+        "@com_github_grpc_grpc//:grpc++",
+        ":taish_proto_grpc",
+        "//stratum/lib:macros",
+        "//stratum/glue:integral_types",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_library(
+    name = "types_converter",
+    srcs = ["types_converter.cc"],
+    hdrs = ["types_converter.h"],
+    deps = ["//stratum/lib:utils"],
+)
+
+stratum_cc_library(
     name = "tai_optics_datasource",
     srcs = ["tai_optics_datasource.cc"],
     hdrs = ["tai_optics_datasource.h"],
+    defines = tai_defines,
     deps = [
-        "//stratum/hal/lib/phal/tai/tai_wrapper:tai",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
@@ -81,5 +144,5 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-    ],
+    ] + tai_deps,
 )

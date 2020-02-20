@@ -29,16 +29,19 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-// Make an instance of TaiSwitchConfigurator
+/*!
+ * \brief TaiSwitchConfigurator::Make method makes an instance of
+ * TaiSwitchConfigurator
+ */
 ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>>
-TaiSwitchConfigurator::Make(tai::TaiManager* tai_manager) {
-  // Make sure we've got a valid TAI Manager
-  CHECK_RETURN_IF_FALSE(tai_manager != nullptr);
-
-  return absl::WrapUnique(new TaiSwitchConfigurator(tai_manager));
+TaiSwitchConfigurator::Make() {
+  return absl::WrapUnique(new TaiSwitchConfigurator());
 }
 
-// Generate a default config using the TAI API.
+/*!
+ * \brief TaiSwitchConfigurator::CreateDefaultConfig method generates a default
+ * config using the TAI API.
+ */
 ::util::Status TaiSwitchConfigurator::CreateDefaultConfig(
     PhalInitConfig* phal_config) const {
   auto optical_card = phal_config->add_optical_cards();
@@ -47,8 +50,10 @@ TaiSwitchConfigurator::Make(tai::TaiManager* tai_manager) {
   return ::util::OkStatus();
 }
 
-// Configure the switch's attribute database with the given
-// PhalInitConfig config.
+/*!
+ * \brief TaiSwitchConfigurator::ConfigurePhalDB method configures the switch's
+ * attribute database with the given PhalInitConfig config.
+ */
 ::util::Status TaiSwitchConfigurator::ConfigurePhalDB(
     PhalInitConfig* phal_config, AttributeGroup* root) {
   auto mutable_root = root->AcquireMutable();
@@ -73,7 +78,7 @@ TaiSwitchConfigurator::Make(tai::TaiManager* tai_manager) {
     int slot, MutableAttributeGroup* mutable_card,
     const PhalOpticalCardConfig& config) {
   ASSIGN_OR_RETURN(auto datasource,
-                   TaiOpticsDataSource::Make(slot, tai_manager_, config));
+                   TaiOpticsDataSource::Make(slot, config));
 
   RETURN_IF_ERROR(
       mutable_card->AddAttribute("id", datasource->GetModuleSlot()));
@@ -84,6 +89,7 @@ TaiSwitchConfigurator::Make(tai::TaiManager* tai_manager) {
 
   RETURN_IF_ERROR(mutable_card->AddAttribute(
       "frequency", datasource->GetTxLaserFrequency()));
+  // for now, operational mode directly assign to modulation format
   RETURN_IF_ERROR(mutable_card->AddAttribute(
       "operational_mode", datasource->GetOperationalMode()));
   RETURN_IF_ERROR(mutable_card->AddAttribute(

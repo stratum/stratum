@@ -27,18 +27,19 @@
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/switch_configurator_interface.h"
-#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
 
-// TaiSwitchConfigurator configures the PhalDb for use with the Tai Datasouce.
+/*!
+ * \brief TaiSwitchConfigurator class configure relationship between
+ * TaiOpticsDataSource and Database.
+ */
 class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
  public:
-  static ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>> Make(
-      tai::TaiManager* tai_manager);
+  static ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>> Make();
 
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
 
@@ -46,14 +47,11 @@ class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
                                  AttributeGroup* root) override;
 
  private:
-  TaiSwitchConfigurator() = delete;
-  explicit TaiSwitchConfigurator(tai::TaiManager* tai_manager)
-      : tai_manager_(tai_manager) {}
+  TaiSwitchConfigurator() = default;
 
   ::util::Status AddOpticalCard(int slot, MutableAttributeGroup* mutable_card,
                                 const PhalOpticalCardConfig& config);
 
-  tai::TaiManager* tai_manager_;
   // Default cache policy config
   CachePolicyConfig cache_policy_config_;
 };

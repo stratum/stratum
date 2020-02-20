@@ -29,19 +29,27 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 #include "stratum/lib/macros.h"
+
+#if defined(WITH_GRPC_TAI)
+#include "stratum/hal/lib/phal/tai/taish_client.h"
+#include "stratum/hal/lib/phal/tai/types_converter.h"
+#else
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
+#endif
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
 
+/*!
+ * \brief TaiOpticsDataSource class updates Database<->TAI with fresh values
+ */
 class TaiOpticsDataSource : public DataSource {
  public:
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>> Make(
-      int id, tai::TaiManager* tai_manager,
-      const PhalOpticalCardConfig& config);
+      int id, const PhalOpticalCardConfig& config);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetModuleSlot() { return &module_slot_; }
@@ -56,18 +64,22 @@ class TaiOpticsDataSource : public DataSource {
 
   // Setter functions.
   ::util::Status SetTxLaserFrequency(int slot, uint64 tx_laser_frequency);
-  ::util::Status SetOperationalMode(int slot, uint64 operational_mode);
+  ::util::Status SetOperationalMode(int slot, uint64 modulation_format);
   ::util::Status SetOutputPower(int slot, double output_power);
 
  private:
   // Private constructor.
-  TaiOpticsDataSource(int id, tai::TaiManager* tai_manager,
-                      CachePolicy* cache_policy);
+  TaiOpticsDataSource(int id, CachePolicy* cache_policy);
 
   ::util::Status UpdateValues() override;
 
+  #if defined(WITH_GRPC_TAI)
+  // datasouce
+  std::unique_ptr<TaishClient> taish_client_;
+  #else
   // Pointer to the Tai Manager. Not created or owned by this class.
-  tai::TaiManager* tai_manager_;
+  tai::TAIManager* tai_manager_;
+  #endif
 
   // Managed attributes.
   TypedAttribute<int> module_slot_{this};
