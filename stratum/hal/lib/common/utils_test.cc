@@ -413,13 +413,13 @@ void DoubleToDecimalTest(double from, int64 digits, uint32 precision) {
 
 TEST(DecimalUtilTest, TestFromDoubleToDecimal64) {
   DoubleToDecimalTest(123.456, 123ll, 0);
-  DoubleToDecimalTest(123.456, 1235ll, 1); // Mind the round up
+  DoubleToDecimalTest(123.456, 1235ll, 1);  // Mind the round up
   DoubleToDecimalTest(123.456, 12346ll, 2);
   DoubleToDecimalTest(123.456, 123456ll, 3);
   DoubleToDecimalTest(123.456, 1234560ll, 4);
 
   DoubleToDecimalTest(-123.456, -123ll, 0);
-  DoubleToDecimalTest(-123.456, -1235ll, 1); // Mind the round up
+  DoubleToDecimalTest(-123.456, -1235ll, 1);  // Mind the round up
   DoubleToDecimalTest(-123.456, -12346ll, 2);
   DoubleToDecimalTest(-123.456, -123456ll, 3);
   DoubleToDecimalTest(-123.456, -1234560ll, 4);
