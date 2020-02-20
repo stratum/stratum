@@ -27,7 +27,6 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/phal_backend_interface.h"
-#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
 
 namespace stratum {
 namespace hal {
@@ -46,11 +45,15 @@ class TaiPhal final : public PhalBackendInterface {
   ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status Shutdown() override LOCKS_EXCLUDED(config_lock_);
+  ::util::StatusOr<std::pair<uint32, uint32>> GetRelatedTAIModuleAndNetworkId(
+      uint64 node_id, uint32 port_id) const LOCKS_EXCLUDED(config_lock_);
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static TaiPhal* CreateSingleton(tai::TaiManager* tai_manager)
+  static TaiPhal* CreateSingleton()
       LOCKS_EXCLUDED(config_lock_, init_lock_);
+
+  static void InitTAI();
 
   // TaiPhal is neither copyable nor movable.
   TaiPhal(const TaiPhal&) = delete;
@@ -61,7 +64,7 @@ class TaiPhal final : public PhalBackendInterface {
   TaiPhal();
 
   // Calls all the one time start initialisations
-  ::util::Status Initialize(tai::TaiManager* tai_manager)
+  ::util::Status Initialize()
       LOCKS_EXCLUDED(config_lock_);
 
   // Internal mutex lock for protecting the internal maps and initializing the
@@ -79,8 +82,11 @@ class TaiPhal final : public PhalBackendInterface {
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
 
-  // Not owned by this class.
-  tai::TaiManager* tai_manager_ GUARDED_BY(config_lock_);
+  // Map from Stratum port configs (node_id, port_id) to TAI identifiers
+  // (module_id, netif_id) for the related optical transceiver plugged into that
+  // port.
+  std::map<std::pair<uint64, uint32>, std::pair<uint32, uint32>>
+      node_port_id_to_module_netif_;
 };
 
 }  // namespace tai
