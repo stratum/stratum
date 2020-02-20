@@ -426,5 +426,11 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   return decimal;
 }
 
+::gnmi::Decimal64 ConvertDoubleToDecimal64OrDie(const double& value) {
+  auto status = ConvertDoubleToDecimal64(value);
+  CHECK(status.ok());
+  return status.ConsumeValueOrDie();
+}
+
 }  // namespace hal
 }  // namespace stratum

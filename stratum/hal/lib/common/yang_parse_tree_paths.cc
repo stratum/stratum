@@ -35,14 +35,6 @@ namespace hal {
 
 namespace {
 
-// A helper method that converts a float to gNMI Decimal64.
-// For use in as a 'process_func', hence no Status return type.
-::gnmi::Decimal64 ConvertDoubleToDecimal64OrDie(const float& value) {
-  auto status = FloatToDecimal64Value(value, kDefaultPrecision);
-  CHECK(status.ok());
-  return status.ConsumeValueOrDie();
-}
-
 // A helper method that prepares the gNMI message.
 ::gnmi::SubscribeResponse GetResponse(const ::gnmi::Path& path) {
   ::gnmi::Notification notification;
@@ -378,7 +370,7 @@ U GetValue(
   return resp;
 }
 
-// Optical-port-specific version.
+// Port-specific version.
 // Can be used for two-level nested messages (DataResponse::T::V).
 template <typename T, typename U, typename V>
 U GetValue(
@@ -538,7 +530,7 @@ TreeNodeEventHandler GetOnPollFunctor(
   };
 }
 
-// Optical-port-specific version.
+// Port-specific version.
 // Can be used for two-level nested messages (DataResponse::T::U).
 template <typename T, typename U, typename V>
 TreeNodeEventHandler GetOnPollFunctor(
@@ -643,7 +635,7 @@ TreeNodeEventHandler GetOnPollFunctor(
   };
 }
 
-// Optical-port-specific version.
+// Node-specific version.
 // Can be used for two-level nested messages (DataResponse::T::U).
 // We omit the cast from U to V and expect the same type.
 template <typename T, typename U, typename V, typename W>
@@ -2622,7 +2614,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a decimal value!";
     }
     auto decimal_val = typed_value->decimal_val();
-    ASSIGN_OR_RETURN(auto output_power, Decimal64ValueToFloat(decimal_val));
+    ASSIGN_OR_RETURN(auto output_power, ConvertDecimal64ToDouble(decimal_val));
 
     auto status =
         SetValue(node_id, port_id, tree,
