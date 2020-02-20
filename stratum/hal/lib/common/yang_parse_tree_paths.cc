@@ -379,6 +379,7 @@ U GetValue(
 }
 
 // Optical-port-specific version.
+// Can be used for two-level nested messages (DataResponse::T::V).
 template <typename T, typename U, typename V>
 U GetValue(
     uint64 node_id, uint32 port_id, YangParseTree* tree,
@@ -386,8 +387,8 @@ U GetValue(
     bool (DataResponse::*data_response_has_inner_message_func)() const,
     DataRequest::Request::Port* (
         DataRequest::Request::*data_request_get_mutable_inner_message_func)(),
-    bool (T::*optical_channel_info_has_inner_message_func)() const,
-    const V& (T::*optical_channel_info_get_inner_message_func)() const,
+    bool (T::*inner_message_has_inner_message_func)() const,
+    const V& (T::*inner_message_get_inner_message_func)() const,
     U (V::*inner_message_get_field_func)() const) {
   // Create a data retrieval request.
   DataRequest req;
@@ -399,20 +400,19 @@ U GetValue(
   // and saving into 'resp' local variable.
   U resp{};
   // Writer for retrieving value
-  DataResponseWriter writer(
-      [&resp, data_response_get_inner_message_func,
-       data_response_has_inner_message_func,
-       optical_channel_info_has_inner_message_func,
-       optical_channel_info_get_inner_message_func,
-       inner_message_get_field_func](const DataResponse& in) {
-        if (!(in.*data_response_has_inner_message_func)()) return false;
-        auto oc_info = (in.*data_response_get_inner_message_func)();
-        if (!(oc_info.*optical_channel_info_has_inner_message_func)())
-          return false;
-        auto power = (oc_info.*optical_channel_info_get_inner_message_func)();
-        resp = (power.*inner_message_get_field_func)();
-        return true;
-      });
+  DataResponseWriter writer([&resp, data_response_get_inner_message_func,
+                             data_response_has_inner_message_func,
+                             inner_message_has_inner_message_func,
+                             inner_message_get_inner_message_func,
+                             inner_message_get_field_func](
+                                const DataResponse& in) {
+    if (!(in.*data_response_has_inner_message_func)()) return false;
+    auto inner_msg = (in.*data_response_get_inner_message_func)();
+    if (!(inner_msg.*inner_message_has_inner_message_func)()) return false;
+    auto inner_msg_field = (inner_msg.*inner_message_get_inner_message_func)();
+    resp = (inner_msg_field.*inner_message_get_field_func)();
+    return true;
+  });
   // Query the switch. The returned status is ignored as there is no way to
   // notify the controller that something went wrong. The error is logged when
   // it is created.
@@ -539,7 +539,7 @@ TreeNodeEventHandler GetOnPollFunctor(
 }
 
 // Optical-port-specific version.
-// Optical port messages are two level nested messages (DataResponse::T::U).
+// Can be used for two-level nested messages (DataResponse::T::U).
 template <typename T, typename U, typename V>
 TreeNodeEventHandler GetOnPollFunctor(
     uint64 node_id, uint32 port_id, YangParseTree* tree,
@@ -547,16 +547,16 @@ TreeNodeEventHandler GetOnPollFunctor(
     bool (DataResponse::*data_response_has_inner_message_func)() const,
     DataRequest::Request::Port* (
         DataRequest::Request::*get_mutable_inner_message_func)(),
-    bool (T::*optical_channel_info_has_inner_message_func)() const,
-    const U& (T::*optical_channel_info_get_inner_message_func)() const,
+    bool (T::*inner_message_has_inner_message_func)() const,
+    const U& (T::*inner_message_get_inner_message_func)() const,
     V (U::*inner_message_get_field_func)() const) {
   return [=](const GnmiEvent& event, const ::gnmi::Path& path,
              GnmiSubscribeStream* stream) {
     V value = GetValue(
         node_id, port_id, tree, data_response_get_inner_message_func,
         data_response_has_inner_message_func, get_mutable_inner_message_func,
-        optical_channel_info_has_inner_message_func,
-        optical_channel_info_get_inner_message_func,
+        inner_message_has_inner_message_func,
+        inner_message_get_inner_message_func,
         inner_message_get_field_func);
     return SendResponse(GetResponse(path, value), stream);
   };
@@ -644,7 +644,7 @@ TreeNodeEventHandler GetOnPollFunctor(
 }
 
 // Optical-port-specific version.
-// Optical port messages are two level nested messages (DataResponse::T::U).
+// Can be used for two-level nested messages (DataResponse::T::U).
 // We omit the cast from U to V and expect the same type.
 template <typename T, typename U, typename V, typename W>
 TreeNodeEventHandler GetOnPollFunctor(
@@ -653,16 +653,16 @@ TreeNodeEventHandler GetOnPollFunctor(
     bool (DataResponse::*data_response_has_inner_message_func)() const,
     DataRequest::Request::Port* (
         DataRequest::Request::*get_mutable_inner_message_func)(),
-    bool (T::*optical_channel_info_has_inner_message_func)() const,
-    const U& (T::*optical_channel_info_get_inner_message_func)() const,
+    bool (T::*inner_message_has_inner_message_func)() const,
+    const U& (T::*inner_message_get_inner_message_func)() const,
     V (U::*inner_message_get_field_func)() const, W (*process_func)(const V&)) {
   return [=](const GnmiEvent& event, const ::gnmi::Path& path,
              GnmiSubscribeStream* stream) {
     V value = GetValue(
         node_id, port_id, tree, data_response_get_inner_message_func,
         data_response_has_inner_message_func, get_mutable_inner_message_func,
-        optical_channel_info_has_inner_message_func,
-        optical_channel_info_get_inner_message_func,
+        inner_message_has_inner_message_func,
+        inner_message_get_inner_message_func,
         inner_message_get_field_func);
     return SendResponse(GetResponse(path, (*process_func)(value)), stream);
   };
