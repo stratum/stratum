@@ -3997,7 +3997,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnPoll(path, &resp));
 
   auto result = resp.update().update(0).val().decimal_val();
-  auto expected = FloatToDecimal64Value(kOpticalInterface1TargetOutputPower,
+  auto expected = DoubleToDecimal64Value(kOpticalInterface1TargetOutputPower,
                                         kDefaultPrecision)
                       .ConsumeValueOrDie();
   EXPECT_EQ(result.digits(), expected.digits());
@@ -4016,7 +4016,7 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnTimer(path, &resp));
 
   ::gnmi::Decimal64 result = resp.update().update(0).val().decimal_val();
-  auto expected = FloatToDecimal64Value(kOpticalInterface1TargetOutputPower,
+  auto expected = DoubleToDecimal64Value(kOpticalInterface1TargetOutputPower,
                                         kDefaultPrecision)
                       .ConsumeValueOrDie();
   EXPECT_EQ(result.digits(), expected.digits());

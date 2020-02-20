@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -231,11 +232,11 @@ std::string ConvertMediaTypeToString(const MediaType& type);
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
 
 // Converts ::gnmi::Decimal64 to float type.
-::util::StatusOr<float> Decimal64ValueToFloat(const ::gnmi::Decimal64& value);
+::util::StatusOr<double> Decimal64ValueToDouble(const ::gnmi::Decimal64& value);
 
 // Converts float to ::gnmi::Decimal64 type.
-::util::StatusOr<::gnmi::Decimal64> FloatToDecimal64Value(float value,
-                                                          uint32 precision);
+::util::StatusOr<::gnmi::Decimal64> DoubleToDecimal64Value(
+    double value, uint32 precision = kDefaultPrecision);
 
 }  // namespace hal
 }  // namespace stratum

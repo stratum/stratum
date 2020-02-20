@@ -738,6 +738,7 @@ stratum_cc_library(
     hdrs = ["utils.h"],
     deps = [
         ":common_cc_proto",
+        ":constants",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
