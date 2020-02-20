@@ -404,7 +404,7 @@ TEST(PortUtilsTest, AggregatePortLedColorsStatePairs) {
 }
 
 void DoubleToDecimalTest(double from, int64 digits, uint32 precision) {
-  auto res = DoubleToDecimal64Value(from, precision);
+  auto res = ConvertDoubleToDecimal64(from, precision);
   EXPECT_TRUE(res.ok());
   auto decimal_val = res.ValueOrDie();
   EXPECT_EQ(decimal_val.digits(), digits);
@@ -436,12 +436,12 @@ TEST(DecimalUtilTest, TestFromDoubleToDecimal64) {
 
   // Some edge cases
   ::util::IsOutOfRange(
-    DoubleToDecimal64Value(std::numeric_limits<double>::max(), 0).status());
-  ::util::IsOutOfRange(DoubleToDecimal64Value(
+    ConvertDoubleToDecimal64(std::numeric_limits<double>::max(), 0).status());
+  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
     std::numeric_limits<double>::min(), 0).status());
-  ::util::IsOutOfRange(DoubleToDecimal64Value(
+  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
     std::numeric_limits<double>::infinity(), 0).status());
-  ::util::IsOutOfRange(DoubleToDecimal64Value(
+  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
     std::numeric_limits<double>::lowest(), 0).status());
 }
 
@@ -449,7 +449,7 @@ void DecimalToDoubleTest(int64 digits, uint32 precision, double to) {
   ::gnmi::Decimal64 from;
   from.set_digits(digits);
   from.set_precision(precision);
-  auto res = Decimal64ValueToDouble(from);
+  auto res = ConvertDecimal64ToDouble(from);
   EXPECT_TRUE(res.ok());
   EXPECT_DOUBLE_EQ(res.ValueOrDie(), to);
 }

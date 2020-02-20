@@ -2600,7 +2600,7 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
     ASSIGN_OR_RETURN(::gnmi::Decimal64 decimal_value,
-                     DoubleToDecimal64Value(initial_value));
+                     ConvertDoubleToDecimal64(initial_value));
     return SendResponse(GetResponse(path, decimal_value), stream);
   };
 

@@ -399,7 +399,7 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   }
 }
 
-::util::StatusOr<double> Decimal64ValueToDouble(
+::util::StatusOr<double> ConvertDecimal64ToDouble(
     const ::gnmi::Decimal64& value) {
   std::feclearexcept(FE_ALL_EXCEPT);
   double result = value.digits() / std::pow(10, value.precision());
@@ -412,8 +412,8 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   return result;
 }
 
-::util::StatusOr<::gnmi::Decimal64> DoubleToDecimal64Value(double value,
-                                                           uint32 precision) {
+::util::StatusOr<::gnmi::Decimal64> ConvertDoubleToDecimal64(double value,
+                                                             uint32 precision) {
   std::feclearexcept(FE_ALL_EXCEPT);
   ::gnmi::Decimal64 decimal;
   decimal.set_digits(std::llround(value * std::pow(10, precision)));

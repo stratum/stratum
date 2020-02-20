@@ -232,10 +232,11 @@ std::string ConvertMediaTypeToString(const MediaType& type);
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
 
 // Converts ::gnmi::Decimal64 to float type.
-::util::StatusOr<double> Decimal64ValueToDouble(const ::gnmi::Decimal64& value);
+::util::StatusOr<double> ConvertDecimal64ToDouble(
+    const ::gnmi::Decimal64& value);
 
 // Converts float to ::gnmi::Decimal64 type.
-::util::StatusOr<::gnmi::Decimal64> DoubleToDecimal64Value(
+::util::StatusOr<::gnmi::Decimal64> ConvertDoubleToDecimal64(
     double value, uint32 precision = kDefaultPrecision);
 
 }  // namespace hal
