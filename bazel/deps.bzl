@@ -326,12 +326,9 @@ def stratum_deps():
             commit = "04dcb585a729330b81c03afbe8f4b5b7bfeee413",
         )
 
-    TAISH_COMMIT="9a673b7310b29c97237b3066a96ea2e43e236cf3" # current master
-    if "com_github_oopt_tai_taish_proto" not in native.existing_rules():
-        http_archive(
-            name = "com_github_oopt_tai_taish_proto",
-            urls = ["https://github.com/Telecominfraproject/oopt-tai/archive/%s.zip" % TAISH_COMMIT],
-            strip_prefix = "oopt-tai-%s/tools/taish/proto" % TAISH_COMMIT,
-            sha256 = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca",
-            build_file = "@//bazel:external/taish_proto.BUILD",
+    if "com_github_tai_implementations" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_tai_implementations",
+            remote = "https://github.com/bohdan-oheruk-plvision/oopt-tai-implementations.git",
+            commit = "b9b8aa49484bb118cc63897445eff8ad9bc030d3",
         )
