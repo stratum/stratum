@@ -26,6 +26,7 @@
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
+#include "stratum/lib/test_utils/matchers.h"
 #include "absl/time/time.h"
 
 using ::testing::_;
@@ -33,6 +34,10 @@ using ::testing::AtMost;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
+using ::testing::DoAll;
+using ::testing::SetArgPointee;
+using ::testing::HasSubstr;
+using ::stratum::test_utils::EqualsProto;
 
 namespace stratum {
 namespace hal {
@@ -296,6 +301,55 @@ TEST_F(BFChassisManagerTest, TransceiverEvent) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+template <typename T>
+T GetPortData(BFChassisManager* bf_chassis_manager_,
+  uint64 node_id, int port_id,
+  DataRequest::Request::Port* (
+    DataRequest::Request::*get_mutable_message_func)(),
+  const T& (DataResponse::*data_response_get_message_func)() const,
+  bool (DataResponse::*data_response_has_message_func)() const) {
+  DataRequest::Request req;
+  (req.*get_mutable_message_func)()->set_node_id(node_id);
+  (req.*get_mutable_message_func)()->set_port_id(port_id);
+  auto resp = bf_chassis_manager_->GetPortData(req);
+  EXPECT_OK(resp);
+
+  DataResponse data_resp = resp.ValueOrDie();
+  EXPECT_TRUE((data_resp.*data_response_has_message_func)());
+  return (data_resp.*data_response_get_message_func)();
+}
+
+template <typename T, typename U>
+void GetPortDataTest(BFChassisManager* bf_chassis_manager_,
+  uint64 node_id, int port_id,
+  DataRequest::Request::Port* (
+    DataRequest::Request::*get_mutable_message_func)(),
+  const T& (DataResponse::*data_response_get_message_func)() const,
+  bool (DataResponse::*data_response_has_message_func)() const,
+  U (T::*get_inner_message_func)() const,
+  U expected_value) {
+  const T& val = GetPortData(bf_chassis_manager_, node_id, port_id,
+                             get_mutable_message_func,
+                             data_response_get_message_func,
+                             data_response_has_message_func);
+  EXPECT_EQ((val.*get_inner_message_func)(), expected_value);
+}
+
+template <typename T>
+void GetPortDataTest(BFChassisManager* bf_chassis_manager_,
+  uint64 node_id, int port_id,
+  DataRequest::Request::Port* (
+    DataRequest::Request::*get_mutable_message_func)(),
+  const T& (DataResponse::*data_response_get_message_func)() const,
+  bool (DataResponse::*data_response_has_message_func)() const,
+  T expected_msg) {
+  T val = GetPortData(bf_chassis_manager_, node_id, port_id,
+                             get_mutable_message_func,
+                             data_response_get_message_func,
+                             data_response_has_message_func);
+  EXPECT_THAT(val, EqualsProto(expected_msg));
+}
+
 TEST_F(BFChassisManagerTest, GetPortData) {
   ChassisConfigBuilder builder;
   ASSERT_OK(PushBaseChassisConfig(&builder));
@@ -308,17 +362,124 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   EXPECT_CALL(*bf_pal_mock_, PortAdd(
     kUnit, portId, kHundredGigBps, FEC_MODE_ON));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
+  EXPECT_CALL(*bf_pal_mock_, PortOperStateGet(kUnit, portId))
+    .WillRepeatedly(Return(PORT_STATE_UP));
+
+  PortCounters counters;
+  counters.set_in_octets(1);
+  counters.set_out_octets(2);
+  counters.set_in_unicast_pkts(3);
+  counters.set_out_unicast_pkts(4);
+  counters.set_in_broadcast_pkts(5);
+  counters.set_out_broadcast_pkts(6);
+  counters.set_in_multicast_pkts(7);
+  counters.set_out_multicast_pkts(8);
+  counters.set_in_discards(9);
+  counters.set_out_discards(10);
+  counters.set_in_unknown_protos(11);
+  counters.set_in_errors(12);
+  counters.set_out_errors(13);
+  counters.set_in_fcs_errors(14);
+
+  EXPECT_CALL(*bf_pal_mock_, PortAllStatsGet(kUnit, portId, _))
+    .WillOnce(DoAll(SetArgPointee<2>(counters),
+                    Return(::util::OkStatus())));
+
+  FrontPanelPortInfo front_panel_port_info;
+  front_panel_port_info.set_physical_port_type(PHYSICAL_PORT_TYPE_QSFP_CAGE);
+  front_panel_port_info.set_media_type(MEDIA_TYPE_QSFP_COPPER);
+  front_panel_port_info.set_vendor_name("dummy");
+  front_panel_port_info.set_part_number("000");
+  front_panel_port_info.set_serial_number("000");
+  front_panel_port_info.set_hw_state(HW_STATE_PRESENT);
+  EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(_, _, _))
+    .WillOnce(DoAll(SetArgPointee<2>(front_panel_port_info),
+                    Return(::util::OkStatus())));
+
+  ON_CALL(*bf_pal_mock_, PortAutonegPolicySet(_, _, _))
+    .WillByDefault(Return(::util::OkStatus()));
+  ON_CALL(*bf_pal_mock_, PortIsValid(_, _))
+    .WillByDefault(Return(true));
   ASSERT_OK(PushChassisConfig(builder));
 
-  DataRequest::Request req;
-  req.mutable_autoneg_status()->set_node_id(kNodeId);
-  req.mutable_autoneg_status()->set_port_id(portId);
-  auto resp = bf_chassis_manager_->GetPortData(req);
-  EXPECT_OK(resp);
+  // Operation status
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_oper_status,
+    &DataResponse::oper_status,
+    &DataResponse::has_oper_status,
+    &OperStatus::state,
+    PORT_STATE_UP);
 
-  DataResponse data_resp = resp.ValueOrDie();
-  EXPECT_TRUE(data_resp.has_autoneg_status());
-  EXPECT_EQ(data_resp.autoneg_status().state(), TRI_STATE_TRUE);
+  // Admin status
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_admin_status,
+    &DataResponse::admin_status,
+    &DataResponse::has_admin_status,
+    &AdminStatus::state,
+    ADMIN_STATE_ENABLED);
+
+  // Port speed
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_port_speed,
+    &DataResponse::port_speed,
+    &DataResponse::has_port_speed,
+    &PortSpeed::speed_bps,
+    kHundredGigBps);
+
+  // Negotiated port speed
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_negotiated_port_speed,
+    &DataResponse::negotiated_port_speed,
+    &DataResponse::has_negotiated_port_speed,
+    &PortSpeed::speed_bps,
+    kHundredGigBps);
+
+  // Port counters
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_port_counters,
+    &DataResponse::port_counters,
+    &DataResponse::has_port_counters,
+    counters);
+
+  // Autoneg status
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_autoneg_status,
+    &DataResponse::autoneg_status,
+    &DataResponse::has_autoneg_status,
+    &AutonegotiationStatus::state,
+    TRI_STATE_TRUE);
+
+  // Front panel info
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_front_panel_port_info,
+    &DataResponse::front_panel_port_info,
+    &DataResponse::has_front_panel_port_info,
+    front_panel_port_info);
+
+  // FEC status
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_fec_status,
+    &DataResponse::fec_status,
+    &DataResponse::has_fec_status,
+    &FecStatus::mode,
+    FEC_MODE_ON);
+
+  // Unsupprorted
+  DataRequest::Request req;
+  req.mutable_lacp_router_mac()->set_node_id(kNodeId);
+  req.mutable_lacp_router_mac()->set_port_id(portId);
+  auto status = bf_chassis_manager_->GetPortData(req);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(status.status().error_code(), ERR_INTERNAL);
+  EXPECT_THAT(status.status().error_message(), HasSubstr("Not supported yet"));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
