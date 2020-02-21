@@ -20,6 +20,7 @@
 #include <cmath>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/numbers.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -111,19 +112,29 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
       auto output_power,
       taish_client_->GetValue(std::to_string(slot), 0,
                               "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"));
-  output_power_.AssignValue(std::stof(output_power));
+  float output_power_f;
+  CHECK_RETURN_IF_FALSE(absl::SimpleAtof(output_power, &output_power_f))
+      << "Could not convert " << output_power << " to float";
+  output_power_.AssignValue(output_power_f);
 
   ASSIGN_OR_RETURN(auto current_output_power,
                    taish_client_->GetValue(
                        std::to_string(slot), 0,
                        "TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER"));
-  current_output_power_.AssignValue(std::stof(current_output_power));
+  float current_output_power_f;
+  CHECK_RETURN_IF_FALSE(
+      absl::SimpleAtof(current_output_power, &current_output_power_f))
+      << "Could not convert " << current_output_power_f << " to float";
+  current_output_power_.AssignValue(current_output_power_f);
 
   ASSIGN_OR_RETURN(auto input_power,
                    taish_client_->GetValue(
                        std::to_string(slot), 0,
                        "TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER"));
-  input_power_.AssignValue(std::stof(input_power));
+  float input_power_f;
+  CHECK_RETURN_IF_FALSE(absl::SimpleAtof(input_power, &input_power_f))
+      << "Could not convert " << input_power_f << " to float";
+  input_power_.AssignValue(input_power_f);
 #else  // defined(WITH_GRPC_TAI)
   ASSIGN_OR_RETURN(auto tx_laser_frequency,
                    tai_manager_->GetValue<uint64>(

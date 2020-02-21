@@ -46,7 +46,7 @@ namespace tai {
 /*!
  * \brief TaiOpticsDataSource class updates Database<->TAI with fresh values
  */
-class TaiOpticsDataSource : public DataSource {
+class TaiOpticsDataSource final : public DataSource {
  public:
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>> Make(
       int id, const PhalOpticalCardConfig& config);
