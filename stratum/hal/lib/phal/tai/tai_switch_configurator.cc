@@ -45,7 +45,7 @@ TaiSwitchConfigurator::Make() {
 ::util::Status TaiSwitchConfigurator::CreateDefaultConfig(
     PhalInitConfig* phal_config) const {
   auto optical_card = phal_config->add_optical_cards();
-  optical_card->set_slot(0);
+  optical_card->set_slot(1);
 
   return ::util::OkStatus();
 }

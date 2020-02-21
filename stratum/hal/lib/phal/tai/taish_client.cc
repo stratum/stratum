@@ -64,13 +64,14 @@ util::StatusOr<std::string> TaishClient::GetValue(
   grpc::ClientContext context;
   taish::GetAttributeRequest request;
 
-  Module module;
-  for (const auto& mod : modules_)
-    if (mod.location_ == module_location) module = mod;
+  auto it = std::find_if(modules_.begin(), modules_.end(), [module_location](Module& m) {
+    return m.location_ == module_location;
+  });
+  CHECK_RETURN_IF_FALSE(it != modules_.end());
+  Module module = *it;
 
-  Netif netif;
-  if (network_index < module.netifs.size())
-    netif = module.netifs.at(network_index);
+  CHECK_RETURN_IF_FALSE(network_index < module.netifs.size());
+  Netif netif = module.netifs.at(network_index);
 
   request.set_oid(netif.object_id_);
   request.mutable_serialize_option()->set_value_only(true);
@@ -83,12 +84,9 @@ util::StatusOr<std::string> TaishClient::GetValue(
   taish::GetAttributeResponse response;
 
   auto status = taish_->GetAttribute(&context, request, &response);
-  std::string value = response.mutable_attribute()->value();
+  CHECK_RETURN_IF_FALSE(status.ok()) << status.error_message();
 
-  if (!status.ok() || value.empty())
-    RETURN_ERROR() << "Unable to get attribute";
-
-  return value;
+  return response.attribute().value();
 }
 
 /*!

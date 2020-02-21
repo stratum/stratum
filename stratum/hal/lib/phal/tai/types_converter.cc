@@ -17,6 +17,9 @@
 
 #include "stratum/hal/lib/phal/tai/types_converter.h"
 
+#include "absl/strings/numbers.h"
+#include "stratum/lib/macros.h"
+
 namespace stratum {
 namespace hal {
 namespace phal {
@@ -34,7 +37,9 @@ const std::vector<std::pair<uint64, std::string>>
  * megahertz
  */
 uint64 TypesConverter::HertzToMegahertz(const std::string hertz) {
-  uint64 u_hertz = std::stoul(hertz);
+  uint64 u_hertz;
+  CHECK(absl::SimpleAtoi(hertz, &u_hertz))
+      << "Could not convert " << hertz << " to uint64.";
   return u_hertz / kMegahertzInHertz;
 }
 
