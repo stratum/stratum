@@ -40,7 +40,7 @@ TaiPhal::TaiPhal()
 
 TaiPhal::~TaiPhal() {}
 
-TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
+TaiPhal* TaiPhal::CreateSingleton(tai::TaiManager* tai_manager) {
   absl::WriterMutexLock l(&init_lock_);
 
   if (!singleton_) {
@@ -58,7 +58,7 @@ TaiPhal* TaiPhal::CreateSingleton(tai::TAIManager* tai_manager) {
 }
 
 // Initialize the tai interface and phal DB
-::util::Status TaiPhal::Initialize(tai::TAIManager* tai_manager) {
+::util::Status TaiPhal::Initialize(tai::TaiManager* tai_manager) {
   absl::WriterMutexLock l(&config_lock_);
 
   if (!initialized_) {

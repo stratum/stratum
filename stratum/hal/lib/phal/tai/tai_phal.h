@@ -49,7 +49,7 @@ class TaiPhal final : public PhalBackendInterface {
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static TaiPhal* CreateSingleton(tai::TAIManager* tai_manager)
+  static TaiPhal* CreateSingleton(tai::TaiManager* tai_manager)
       LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // TaiPhal is neither copyable nor movable.
@@ -61,7 +61,7 @@ class TaiPhal final : public PhalBackendInterface {
   TaiPhal();
 
   // Calls all the one time start initialisations
-  ::util::Status Initialize(tai::TAIManager* tai_manager)
+  ::util::Status Initialize(tai::TaiManager* tai_manager)
       LOCKS_EXCLUDED(config_lock_);
 
   // Internal mutex lock for protecting the internal maps and initializing the
@@ -80,7 +80,7 @@ class TaiPhal final : public PhalBackendInterface {
   bool initialized_ GUARDED_BY(config_lock_) = false;
 
   // Not owned by this class.
-  tai::TAIManager* tai_manager_ GUARDED_BY(config_lock_);
+  tai::TaiManager* tai_manager_ GUARDED_BY(config_lock_);
 };
 
 }  // namespace tai

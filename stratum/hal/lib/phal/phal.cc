@@ -89,7 +89,7 @@ Phal* Phal::CreateSingleton() {
 
 #if defined(WITH_TAI)
     {
-      auto* tai_manager = tai::TAIManager::CreateSingleton();
+      auto* tai_manager = tai::TaiManager::CreateSingleton();
       auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_manager);
       tai_phal->PushChassisConfig(config);
       phal_interfaces_.push_back(tai_phal);

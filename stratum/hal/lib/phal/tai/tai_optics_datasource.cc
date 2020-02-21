@@ -34,7 +34,7 @@ namespace phal {
 namespace tai {
 
 ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-TaiOpticsDataSource::Make(int id, tai::TAIManager* tai_manager,
+TaiOpticsDataSource::Make(int id, tai::TaiManager* tai_manager,
                           const PhalOpticalCardConfig& config) {
   ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
                                    config.cache_policy().type(),
@@ -46,7 +46,7 @@ TaiOpticsDataSource::Make(int id, tai::TAIManager* tai_manager,
   return optics_datasource;
 }
 
-TaiOpticsDataSource::TaiOpticsDataSource(int id, tai::TAIManager* tai_manager,
+TaiOpticsDataSource::TaiOpticsDataSource(int id, tai::TaiManager* tai_manager,
                                          CachePolicy* cache_policy)
     : DataSource(cache_policy), tai_manager_(ABSL_DIE_IF_NULL(tai_manager)) {
   // These values do not change during the lifetime of the data source.

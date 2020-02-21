@@ -38,7 +38,7 @@ namespace tai {
 class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
  public:
   static ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>> Make(
-      tai::TAIManager* tai_manager);
+      tai::TaiManager* tai_manager);
 
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
 
@@ -47,13 +47,13 @@ class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
 
  private:
   TaiSwitchConfigurator() = delete;
-  explicit TaiSwitchConfigurator(tai::TAIManager* tai_manager)
+  explicit TaiSwitchConfigurator(tai::TaiManager* tai_manager)
       : tai_manager_(tai_manager) {}
 
   ::util::Status AddOpticalCard(int slot, MutableAttributeGroup* mutable_card,
                                 const PhalOpticalCardConfig& config);
 
-  tai::TAIManager* tai_manager_;
+  tai::TaiManager* tai_manager_;
   // Default cache policy config
   CachePolicyConfig cache_policy_config_;
 };
