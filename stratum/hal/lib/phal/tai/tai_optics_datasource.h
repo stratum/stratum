@@ -40,7 +40,7 @@ namespace tai {
 class TaiOpticsDataSource : public DataSource {
  public:
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>> Make(
-      int id, tai::TAIManager* tai_manager,
+      int id, tai::TaiManager* tai_manager,
       const PhalOpticalCardConfig& config);
 
   // Accessors for managed attributes.
@@ -61,13 +61,13 @@ class TaiOpticsDataSource : public DataSource {
 
  private:
   // Private constructor.
-  TaiOpticsDataSource(int id, tai::TAIManager* tai_manager,
+  TaiOpticsDataSource(int id, tai::TaiManager* tai_manager,
                       CachePolicy* cache_policy);
 
   ::util::Status UpdateValues() override;
 
   // Pointer to the Tai Manager. Not created or owned by this class.
-  tai::TAIManager* tai_manager_;
+  tai::TaiManager* tai_manager_;
 
   // Managed attributes.
   TypedAttribute<int> module_slot_{this};

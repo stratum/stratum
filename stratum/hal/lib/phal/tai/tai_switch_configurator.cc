@@ -31,7 +31,7 @@ namespace tai {
 
 // Make an instance of TaiSwitchConfigurator
 ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>>
-TaiSwitchConfigurator::Make(tai::TAIManager* tai_manager) {
+TaiSwitchConfigurator::Make(tai::TaiManager* tai_manager) {
   // Make sure we've got a valid TAI Manager
   CHECK_RETURN_IF_FALSE(tai_manager != nullptr);
 
@@ -99,5 +99,4 @@ TaiSwitchConfigurator::Make(tai::TAIManager* tai_manager) {
 }  // namespace tai
 }  // namespace phal
 }  // namespace hal
-
 }  // namespace stratum
