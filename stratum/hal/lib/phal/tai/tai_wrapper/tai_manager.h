@@ -27,7 +27,7 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/tai/tai_wrapper/tai_attribute.h"
-#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_types_converter.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/types_converter.h"
 
 #include "stratum/lib/macros.h"
 
@@ -75,7 +75,6 @@ class TaiManager {
   static T TaiAttributeToResponse(const TaiAttribute& attribute);
 
  protected:
-  ~TaiManager() = default;
   explicit TaiManager(std::unique_ptr<TaiWrapperInterface> wrapper);
 
  private:
@@ -105,9 +104,6 @@ class TaiManager {
 
   // The singleton instance.
   static TaiManager* singleton_ GUARDED_BY(init_lock_);
-
-  // To create TaiManager with TaiWrapperMock in the test.
-  friend class TaiManagerTest;
 };
 
 /*!

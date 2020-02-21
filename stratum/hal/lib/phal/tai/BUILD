@@ -1,3 +1,4 @@
+#
 # Copyright 2020-present Open Networking Foundation
 # Copyright 2020 PLVision
 #
@@ -39,6 +40,38 @@ config_setting(
     },
 )
 
+tai_defines = select({
+    ":with_grpc_tai": ["WITH_GRPC_TAI"],
+    "//conditions:default": [],
+})
+
+tai_deps = select({
+    ":with_grpc_tai": [
+        ":taish_client",
+        ":types_converter",
+    ],
+    "//conditions:default": [
+        "//stratum/hal/lib/phal/tai/tai_wrapper:tai",
+    ],
+})
+
+proto_library(
+    name = "taish_proto",
+    srcs = ["taish.proto"],
+)
+
+cc_proto_library(
+    name = "taish_cc_proto",
+    deps = [":taish_proto"]
+)
+
+cc_grpc_library(
+    name = "taish_proto_grpc",
+    srcs = [":taish_proto"],
+    deps = [":taish_cc_proto"],
+    grpc_only = True,
+)
+
 stratum_cc_library(
     name = "tai_phal",
     srcs = ["tai_phal.cc"],
@@ -77,9 +110,30 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "taish_client",
+    srcs = ["taish_client.cc"],
+    hdrs = ["taish_client.h"],
+    deps = [
+        "@com_github_grpc_grpc//:grpc++",
+        ":taish_proto_grpc",
+        "//stratum/lib:macros",
+        "//stratum/glue:integral_types",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+stratum_cc_library(
+    name = "types_converter",
+    srcs = ["types_converter.cc"],
+    hdrs = ["types_converter.h"],
+    deps = ["//stratum/lib:utils"],
+)
+
+stratum_cc_library(
     name = "tai_optics_datasource",
     srcs = ["tai_optics_datasource.cc"],
     hdrs = ["tai_optics_datasource.h"],
+    defines = tai_defines,
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -90,6 +144,5 @@ stratum_cc_library(
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "//stratum/hal/lib/phal/tai/tai_wrapper:tai_manager",
-    ]
+    ] + tai_deps,
 )

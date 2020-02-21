@@ -30,80 +30,35 @@ package(
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
 stratum_cc_library(
-    name = "tai_primitives",
+    name = "tai",
     srcs = [
+        "tai_manager.cc",
+        "tai_wrapper.cc",
         "tai_object.cc",
         "network_interface.cc",
         "host_interface.cc",
         "module.cc",
+        "types_converter.cc",
         "tai_attribute.cc",
+        "tai_wrapper_interface.cc",
     ],
     hdrs = [
+        "tai_manager.h",
+        "tai_wrapper.h",
         "tai_object.h",
         "network_interface.h",
         "host_interface.h",
         "module.h",
+        "types_converter.h",
         "tai_attribute.h",
+        "tai_wrapper_interface.h",
     ],
     deps = [
-        "@com_github_oopt_tai//:libmetatai.so",
+        "@com_github_tai_implementations//tai_mux:libtai-mux",
+        "@com_github_oopt_tai//:libmetatai",
         "@com_github_oopt_tai//:tai_hdrs",
         "@com_github_oopt_tai//:meta_hdrs",
-        "@com_github_oopt_tai//:libtai-stub.so",
-        "//stratum/lib:utils",
-    ]
-)
-
-stratum_cc_library(
-    name = "tai_wrapper_interface",
-    srcs = [
-        "tai_wrapper_interface.cc"
-    ],
-    hdrs = [
-        "tai_wrapper_interface.h"
-    ],
-    deps = [
-        ":tai_primitives"
-    ]
-)
-
-stratum_cc_library(
-    name = "tai_wrapper",
-    srcs = [
-        "tai_wrapper.cc",
-    ],
-    hdrs = [
-        "tai_wrapper.h",
-    ],
-    deps = [
-        ":tai_wrapper_interface",
-    ]
-)
-
-stratum_cc_library(
-    name = "tai_types_converter",
-    srcs = [
-        "tai_types_converter.cc",
-    ],
-    hdrs = [
-        "tai_types_converter.h",
-    ],
-    deps = [
-        ":tai_primitives"
-    ]
-)
-
-stratum_cc_library(
-    name = "tai_manager",
-    srcs = [
-        "tai_manager.cc",
-    ],
-    hdrs = [
-        "tai_manager.h",
-    ],
-    deps = [
-        ":tai_wrapper",
-        ":tai_types_converter",
+        # tai_manager.h/.cc dependencies
         "//stratum/lib:utils",
         "//stratum/hal/lib/common:common_cc_proto",
     ],
@@ -112,15 +67,31 @@ stratum_cc_library(
 stratum_cc_test(
     name = "tai_tests",
     srcs = [
-        "tai_interface_test.cc",
-        "tai_manager_test.cc",
-        "tai_wrapper_mock.h",
-        "tai_object_mock.h",
+        "test/tai_interface_test.cc",
+        "test/tai_manager_test.cc",
+        "test/tai_wrapper_mock.h",
+        "test/tai_test_manager_wrapper.h",
+        "test/tai_object_mock.h",
+        "tai_manager.cc",
+        "tai_wrapper.cc",
+        "tai_object.cc",
+        "network_interface.cc",
+        "host_interface.cc",
+        "module.cc",
+        "types_converter.cc",
+        "tai_attribute.cc",
+        "tai_wrapper_interface.cc",
+        "tai_manager.h",
+        "tai_wrapper.h",
+        "tai_object.h",
+        "network_interface.h",
+        "host_interface.h",
+        "module.h",
+        "types_converter.h",
+        "tai_attribute.h",
+        "tai_wrapper_interface.h",
     ],
     deps = [
-        ":tai_manager",
-        ":tai_wrapper_interface",
-        ":tai_primitives",
         "//stratum/hal/lib/common:test_main",
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
@@ -128,20 +99,8 @@ stratum_cc_test(
         "@com_github_oopt_tai//:libtai-stub",
         "@com_github_oopt_tai//:tai_hdrs",
         "@com_github_oopt_tai//:meta_hdrs",
+        # taimanager.h/.cc dependencies
         "//stratum/lib:utils",
         "//stratum/hal/lib/common:common_cc_proto",
-    ],
-)
-
-stratum_cc_library(
-    name = "taish_client",
-    srcs = ["taish_client.cc"],
-    hdrs = ["taish_client.h"],
-    deps = [
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_github_oopt_tai_taish_proto//:taish_cc_grpc",
-        "//stratum/lib:macros",
-        "//stratum/glue:integral_types",
-        "@com_google_absl//absl/strings",
     ],
 )

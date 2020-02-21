@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAISH_CLIENT_H_
-#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAISH_CLIENT_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAISH_CLIENT_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAISH_CLIENT_H_
 
 #include <memory>
 #include <string>
@@ -30,8 +30,8 @@
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/macros.h"
 
-#include "taish/taish.grpc.pb.h"
-#include "taish/taish.pb.h"
+#include "stratum/hal/lib/phal/tai/taish.grpc.pb.h"
+#include "stratum/hal/lib/phal/tai/taish.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -124,4 +124,4 @@ class TaishClient {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAISH_CLIENT_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAISH_CLIENT_H_

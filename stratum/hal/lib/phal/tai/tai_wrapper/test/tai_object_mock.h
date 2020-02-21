@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_OBJECT_MOCK_H_
-#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_OBJECT_MOCK_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_OBJECT_MOCK_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_OBJECT_MOCK_H_
 
 #include <string>
 
@@ -32,7 +32,6 @@ namespace tai {
 class TaiObjectMock : public TaiObject {
  public:
   TaiObjectMock() : TaiObject(tai_api_method_table_t()) {}
-  ~TaiObjectMock() override {}
 
   MOCK_CONST_METHOD2(GetAttribute, TaiAttribute(tai_attr_id_t attr_id,
                                                 tai_status_t* return_status));
@@ -58,4 +57,4 @@ class TaiObjectMock : public TaiObject {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_OBJECT_MOCK_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_OBJECT_MOCK_H_
