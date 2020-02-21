@@ -30,18 +30,14 @@
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/lib/macros.h"
-
-#if defined(WITH_GRPC_TAI)
-#include "stratum/hal/lib/phal/tai/taish_client.h"
-#include "stratum/hal/lib/phal/tai/types_converter.h"
-#else
 #include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
-#endif
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
+
+const int kDefaultPortId = 0;
 
 /*!
  * \brief TaiOpticsDataSource class updates Database<->TAI with fresh values
@@ -64,7 +60,7 @@ class TaiOpticsDataSource final : public DataSource {
 
   // Setter functions.
   ::util::Status SetTxLaserFrequency(int slot, uint64 tx_laser_frequency);
-  ::util::Status SetOperationalMode(int slot, uint64 modulation_format);
+  ::util::Status SetOperationalMode(int slot, uint64 operational_mode);
   ::util::Status SetOutputPower(int slot, double output_power);
 
  private:
@@ -73,13 +69,8 @@ class TaiOpticsDataSource final : public DataSource {
 
   ::util::Status UpdateValues() override;
 
-  #if defined(WITH_GRPC_TAI)
-  // datasouce
-  std::unique_ptr<TaishClient> taish_client_;
-  #else
   // Pointer to the Tai Manager. Not created or owned by this class.
-  tai::TAIManager* tai_manager_;
-  #endif
+  tai::TaiManager* tai_manager_;
 
   // Managed attributes.
   TypedAttribute<int> module_slot_{this};

@@ -15,37 +15,41 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_WRAPPER_MOCK_H_
-#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_WRAPPER_MOCK_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAISH_WRAPPER_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAISH_WRAPPER_H_
 
+#include <atomic>
 #include <memory>
+#include <string>
+#include <thread>  // NOLINT(build/c++11)
+#include <utility>
+#include <vector>
 
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_object.h"
 #include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper_interface.h"
-
-#include "gmock/gmock.h"
-
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
 
-class TaiWrapperMock : public TaiWrapperInterface {
+class TaishWrapper : public TaiWrapperInterface {
  public:
-  MOCK_CONST_METHOD1(GetModule, std::weak_ptr<Module>(std::size_t index));
+  TaishWrapper();
+  ~TaishWrapper() override;
 
-  MOCK_CONST_METHOD1(GetObject,
-                     std::weak_ptr<TaiObject>(const TaiPath& objectPath));
-  MOCK_CONST_METHOD1(GetObject,
-                     std::weak_ptr<TaiObject>(const TaiPathItem& pathItem));
+  std::weak_ptr<Module> GetModule(std::size_t index) const override;
+  std::weak_ptr<TaiObject> GetObject(const TaiPath& objectPath) const override;
+  std::weak_ptr<TaiObject>
+  GetObject(const TaiPathItem& pathItem) const override;
 
-  MOCK_CONST_METHOD1(IsObjectValid, bool(const TaiPath& path));
-  MOCK_CONST_METHOD1(IsModuleIdValid, bool(std::size_t id));
-};
+  bool IsObjectValid(const TaiPath& path) const override;
+  bool IsModuleIdValid(std::size_t id) const override;
+}; /* class TaishWrapper */
 
 }  // namespace tai
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_WRAPPER_MOCK_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAISH_WRAPPER_H_

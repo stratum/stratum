@@ -1,6 +1,6 @@
 /*
- * Copyright 2018 Google LLC
- * Copyright 2018-present Open Networking Foundation
+ * Copyright 2020-present Open Networking Foundation
+ * Copyright 2020 PLVision
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,40 +15,34 @@
  * limitations under the License.
  */
 
-#include "stratum/hal/lib/phal/tai/types_converter.h"
-
-#include "absl/strings/numbers.h"
-#include "stratum/lib/macros.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_types_converter.h"
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
 
-const std::vector<std::pair<uint64, std::string>>
+const std::vector<std::pair<uint64, tai_int32_t>>
     TypesConverter::kOperationalModeToModulation = {
-        {1, "dp-qpsk"},
-        {2, "dp-16-qam"},
-        {3, "dp-8-qam"},
+        {1, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_QPSK},
+        {2, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_16_QAM},
+        {3, TAI_NETWORK_INTERFACE_MODULATION_FORMAT_DP_8_QAM},
 };
 
 /*!
  * \brief TypesConverter::HertzToMegahertz method converts \param hertz to
  * megahertz
  */
-uint64 TypesConverter::HertzToMegahertz(const std::string hertz) {
-  uint64 u_hertz;
-  CHECK(absl::SimpleAtoi(hertz, &u_hertz))
-      << "Could not convert " << hertz << " to uint64.";
-  return u_hertz / kMegahertzInHertz;
+uint64 TypesConverter::HertzToMegahertz(tai_uint64_t hertz) {
+  return hertz / kMegahertzInHertz;
 }
 
 /*!
  * \brief TypesConverter::MegahertzToHertz method converts \param megahertz to
  * hertz
  */
-std::string TypesConverter::MegahertzToHertz(uint64 megahertz) {
-  return std::to_string(megahertz * kMegahertzInHertz);
+tai_uint64_t TypesConverter::MegahertzToHertz(uint64 megahertz) {
+  return megahertz * kMegahertzInHertz;
 }
 
 /*!
@@ -58,12 +52,12 @@ std::string TypesConverter::MegahertzToHertz(uint64 megahertz) {
  * TAI_NETWORK_INTERFACE_MODULATION_FORMAT_UNKNOWN otherwise (or if the
  * operational mode is equal to zero).
  */
-std::string TypesConverter::OperationalModeToModulation(
+tai_int32_t TypesConverter::OperationalModeToModulation(
     uint64 operational_mode) {
   for (const auto& kv : kOperationalModeToModulation) {
     if (kv.first == operational_mode) return kv.second;
   }
-  return {};
+  return TAI_NETWORK_INTERFACE_MODULATION_FORMAT_UNKNOWN;
 }
 
 /*!
@@ -72,8 +66,7 @@ std::string TypesConverter::OperationalModeToModulation(
  * \return a corresponding operational mode if found or zero otherwise (or if
  * the modulation is equal to TAI_NETWORK_INTERFACE_MODULATION_FORMAT_UNKNOWN).
  */
-uint64 TypesConverter::ModulationToOperationalMode(
-    const std::string& modulation) {
+uint64 TypesConverter::ModulationToOperationalMode(tai_int32_t modulation) {
   for (const auto& kv : kOperationalModeToModulation) {
     if (kv.second == modulation) return kv.first;
   }

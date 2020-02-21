@@ -15,26 +15,33 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_TEST_MANAGER_WRAPPER_H_
-#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_TEST_MANAGER_WRAPPER_H_
-
-#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_manager.h"
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_WRAPPER_MOCK_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_WRAPPER_MOCK_H_
 
 #include <memory>
-#include <utility>
 
-#include "absl/memory/memory.h"
-#include "stratum/hal/lib/phal/tai/tai_wrapper/test/tai_wrapper_mock.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/tai_wrapper_interface.h"
+
+#include "gmock/gmock.h"
+
 
 namespace stratum {
 namespace hal {
 namespace phal {
 namespace tai {
 
-class TaiManagerTestWrapper : public TaiManager {
+class TaiWrapperMock : public TaiWrapperInterface {
  public:
-  explicit TaiManagerTestWrapper(std::unique_ptr<TaiWrapperMock> wrapper_mock)
-      : TaiManager(std::move(wrapper_mock)) {}
+  ~TaiWrapperMock() override { }
+  MOCK_CONST_METHOD1(GetModule, std::weak_ptr<Module>(std::size_t index));
+
+  MOCK_CONST_METHOD1(GetObject,
+                     std::weak_ptr<TaiObject>(const TaiPath& objectPath));
+  MOCK_CONST_METHOD1(GetObject,
+                     std::weak_ptr<TaiObject>(const TaiPathItem& pathItem));
+
+  MOCK_CONST_METHOD1(IsObjectValid, bool(const TaiPath& path));
+  MOCK_CONST_METHOD1(IsModuleIdValid, bool(std::size_t id));
 };
 
 }  // namespace tai
@@ -42,4 +49,4 @@ class TaiManagerTestWrapper : public TaiManager {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TEST_TAI_TEST_MANAGER_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAI_WRAPPER_TAI_WRAPPER_MOCK_H_

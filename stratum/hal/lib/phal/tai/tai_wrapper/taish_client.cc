@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "stratum/hal/lib/phal/tai/taish_client.h"
+#include "stratum/hal/lib/phal/tai/tai_wrapper/taish_client.h"
 
 #include "absl/strings/str_split.h"
 
@@ -64,7 +64,8 @@ util::StatusOr<std::string> TaishClient::GetValue(
   grpc::ClientContext context;
   taish::GetAttributeRequest request;
 
-  auto it = std::find_if(modules_.begin(), modules_.end(), [module_location](Module& m) {
+  auto it = std::find_if(modules_.begin(), modules_.end(),
+      [module_location](Module& m) {
     return m.location_ == module_location;
   });
   CHECK_RETURN_IF_FALSE(it != modules_.end());

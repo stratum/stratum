@@ -41,32 +41,20 @@ namespace tai {
  * \note Ownership is transferred to the caller
  */
 ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-TaiOpticsDataSource::Make(int id, const PhalOpticalCardConfig& config) {
+TaiOpticsDataSource::Make(int slot, const PhalOpticalCardConfig& config) {
   ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
                                    config.cache_policy().type(),
                                    config.cache_policy().timed_value()));
-
-  auto optics_datasource =
-      std::shared_ptr<TaiOpticsDataSource>(new TaiOpticsDataSource(id, cache));
-
-  return optics_datasource;
+  return std::shared_ptr<TaiOpticsDataSource>(
+      new TaiOpticsDataSource(slot, cache));
 }
 
-TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
+TaiOpticsDataSource::TaiOpticsDataSource(int slot, CachePolicy* cache_policy)
     : DataSource(cache_policy) {
   // These values do not change during the lifetime of the data source.
-
-#if defined(WITH_GRPC_TAI)
-  // note server address is hardcoded
-  taish_client_ = absl::make_unique<TaishClient>(grpc::CreateChannel(
-      "localhost:50051", grpc::InsecureChannelCredentials()));
-#else
   // Pointer to the Tai Manager. Not created or owned by this class.
-  tai_manager_ = tai::TAIManager::CreateSingleton();
-#endif
-
-  module_slot_.AssignValue(id);
-
+  tai_manager_ = tai::TaiManager::CreateSingleton();
+  module_slot_.AssignValue(slot);
   tx_laser_frequency_.AddSetter(
       [this](uint64 requested_tx_laser_frequency) -> ::util::Status {
         int slot = this->module_slot_.ReadValue<int>().ValueOrDie();
@@ -91,111 +79,48 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
  */
 ::util::Status TaiOpticsDataSource::UpdateValues() {
   // Update attributes with fresh values from Tai.
-
   int slot = module_slot_.ReadValue<int>().ValueOrDie();
-#if defined(WITH_GRPC_TAI)
-  ASSIGN_OR_RETURN(
-      auto tx_laser_frequency,
-      taish_client_->GetValue(std::to_string(slot), 0,
-                              "TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"));
-  tx_laser_frequency_.AssignValue(
-      TypesConverter::HertzToMegahertz(tx_laser_frequency));
-
-  ASSIGN_OR_RETURN(
-      auto operational_mode,
-      taish_client_->GetValue(std::to_string(slot), 0,
-                              "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"));
-  operational_mode_.AssignValue(
-      TypesConverter::ModulationToOperationalMode(operational_mode));
-
-  ASSIGN_OR_RETURN(
-      auto output_power,
-      taish_client_->GetValue(std::to_string(slot), 0,
-                              "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"));
-  float output_power_f;
-  CHECK_RETURN_IF_FALSE(absl::SimpleAtof(output_power, &output_power_f))
-      << "Could not convert " << output_power << " to float";
-  output_power_.AssignValue(output_power_f);
-
-  ASSIGN_OR_RETURN(auto current_output_power,
-                   taish_client_->GetValue(
-                       std::to_string(slot), 0,
-                       "TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER"));
-  float current_output_power_f;
-  CHECK_RETURN_IF_FALSE(
-      absl::SimpleAtof(current_output_power, &current_output_power_f))
-      << "Could not convert " << current_output_power_f << " to float";
-  current_output_power_.AssignValue(current_output_power_f);
-
-  ASSIGN_OR_RETURN(auto input_power,
-                   taish_client_->GetValue(
-                       std::to_string(slot), 0,
-                       "TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER"));
-  float input_power_f;
-  CHECK_RETURN_IF_FALSE(absl::SimpleAtof(input_power, &input_power_f))
-      << "Could not convert " << input_power_f << " to float";
-  input_power_.AssignValue(input_power_f);
-#else  // defined(WITH_GRPC_TAI)
   ASSIGN_OR_RETURN(auto tx_laser_frequency,
                    tai_manager_->GetValue<uint64>(
-                       TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ, {slot, 0}));
+                       TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ,
+                       {slot, kDefaultPortId}));
   tx_laser_frequency_.AssignValue(tx_laser_frequency);
 
   ASSIGN_OR_RETURN(
       auto operational_mode,
       tai_manager_->GetValue<uint64>(
-          TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT, {slot, 0}));
+          TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT,
+          {slot, kDefaultPortId}));
   operational_mode_.AssignValue(operational_mode);
 
   ASSIGN_OR_RETURN(auto output_power,
                    tai_manager_->GetValue<double>(
-                       TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER, {slot, 0}));
+                       TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER,
+                       {slot, kDefaultPortId}));
   output_power_.AssignValue(output_power);
 
   ASSIGN_OR_RETURN(
       auto current_output_power,
       tai_manager_->GetValue<double>(
-          TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER, {slot, 0}));
+          TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER,
+          {slot, kDefaultPortId}));
   current_output_power_.AssignValue(current_output_power);
 
   ASSIGN_OR_RETURN(
       auto input_power,
       tai_manager_->GetValue<double>(
-          TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER, {slot, 0}));
+          TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER,
+          {slot, kDefaultPortId}));
   input_power_.AssignValue(input_power);
-#endif
 
   return ::util::OkStatus();
 }
 
-#if defined(WITH_GRPC_TAI)
-::util::Status TaiOpticsDataSource::SetTxLaserFrequency(
-    int slot, uint64 tx_laser_frequency) {
-  return taish_client_->SetValue(
-      std::to_string(slot), 0, "TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ",
-      TypesConverter::MegahertzToHertz(tx_laser_frequency));
-}
-
-::util::Status TaiOpticsDataSource::SetOperationalMode(
-    int slot, uint64 operational_mode) {
-  // Now, the operational mode is only converted to modulation and vice versa.
-  return taish_client_->SetValue(
-      std::to_string(slot), 0, "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT",
-      TypesConverter::OperationalModeToModulation(operational_mode));
-}
-
-::util::Status TaiOpticsDataSource::SetOutputPower(int slot,
-                                                   double output_power) {
-  return taish_client_->SetValue(std::to_string(slot), 0,
-                                 "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER",
-                                 std::to_string(output_power));
-}
-
-#else
 ::util::Status TaiOpticsDataSource::SetTxLaserFrequency(
     int slot, uint64 tx_laser_frequency) {
   return tai_manager_->SetValue<uint64>(
-      tx_laser_frequency, TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ, {slot, 0});
+      tx_laser_frequency, TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ,
+      {slot, kDefaultPortId});
 }
 
 ::util::Status TaiOpticsDataSource::SetOperationalMode(
@@ -203,15 +128,15 @@ TaiOpticsDataSource::TaiOpticsDataSource(int id, CachePolicy* cache_policy)
   // Now, the operational mode is only converted to modulation and vice versa.
   return tai_manager_->SetValue<uint64>(
       operational_mode, TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT,
-      {slot, 0});
+      {slot, kDefaultPortId});
 }
 
 ::util::Status TaiOpticsDataSource::SetOutputPower(int slot,
                                                    double output_power) {
-  return tai_manager_->SetValue<double>(
-      output_power, TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER, {slot, 0});
+  return tai_manager_->SetValue<double>(output_power,
+                                        TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER,
+                                        {slot, kDefaultPortId});
 }
-#endif
 
 }  // namespace tai
 }  // namespace phal
