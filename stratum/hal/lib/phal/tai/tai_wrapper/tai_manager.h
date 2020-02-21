@@ -103,7 +103,7 @@ class TaiManager {
   static absl::Mutex init_lock_;
 
   // The singleton instance.
-  static TAIManager* singleton_ GUARDED_BY(init_lock_);
+  static TaiManager* singleton_ GUARDED_BY(init_lock_);
 };
 
 /*!
