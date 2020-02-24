@@ -17,7 +17,7 @@
 set -e
 set -x
 
-if [ ! -d "/etc/onl" ]; then
+if [ -d "/etc/onl" ]; then
     ONLP_ARG=$(ls /lib/**/libonlp* | awk '{print "-v " $1 ":" $1 " " }')
     ONLP_ARG="$ONLP_ARG \
               -v /lib/platform-config:/lib/platform-config \
