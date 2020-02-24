@@ -1,5 +1,5 @@
 bcm_chassis_maps {
-  id: "ACCTON_7716_100G"
+  id: "ACCTON_AS7716"
   bcm_chassis {
     sdk_properties: "os=unix"
     sdk_properties: "schan_intr_enable=0"
