@@ -539,6 +539,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     case PLT_GENERIC_TOMAHAWK:
       supported_chip_types.insert(BcmChip::TOMAHAWK);
       break;
+    case PLT_GENERIC_TOMAHAWK_PLUS:
+        supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
              << "Unsupported platform: "
