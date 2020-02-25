@@ -385,11 +385,11 @@ message OpticalPort {
   uint32 module_location = 7; // required
   // The unique netif location that represents the optical port on the module.
   uint32 netif_location = 8; // required
-  // Optical channel frequency in MHz.
+  // Optical channel frequency in Hz.
   uint64 frequency = 9;
   // Target output optical power level of the optical channel, expressed in
   // increments of 0.01 decibel-milliwats.
-  float target_output_power = 10;
+  double target_output_power = 10;
   // Optical channel operational mode.
   uint64 operational_mode = 11;
   // Optical channel line port value.
@@ -1032,22 +1032,22 @@ message FrontPanelPortInfo {
 message OpticalChannelInfo {
   message Power {
     // The instantaneous value of the statistic.
-    float instant = 1;
+    double instant = 1;
     // The arithmetic mean value of the statistic over the time interval.
-    float avg = 2;
+    double avg = 2;
     // The time interval over which the statistics are computed.
     uint64 interval = 3;
     // The maximum value of the statistic over the time interval.
-    float max = 4;
+    double max = 4;
     // The absolute time at which the maximum value occurred.
     uint64 max_time = 5;
     // The minimum value of the statistic over the time interval.
-    float min = 6;
+    double min = 6;
     // The absolute time at which the minimum value occurred.
     uint64 min_time = 7;
   }
 
-  // Optical channel frequency in MHz.
+  // Optical channel frequency in Hz.
   uint64 frequency = 1;
   // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
   // If the port is an aggregate of multiple physical channels, this attribute
@@ -1056,7 +1056,7 @@ message OpticalChannelInfo {
   Power output_power = 3;
   // Target output optical power level of the optical channel, expressed in
   // increments of 0.01 decibel-milliwats.
-  float target_output_power = 4;
+  double target_output_power = 4;
   // Vendor-specific optical channel operational mode.
   uint64 operational_mode = 5;
 }

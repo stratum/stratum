@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -230,12 +231,17 @@ std::string ConvertMediaTypeToString(const MediaType& type);
 // state string (PRESENT, NOT_PRESENT)
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
 
-// Converts ::gnmi::Decimal64 to float type.
-::util::StatusOr<float> Decimal64ValueToFloat(const ::gnmi::Decimal64& value);
+// Converts ::gnmi::Decimal64 to double type.
+::util::StatusOr<double> ConvertDecimal64ToDouble(
+    const ::gnmi::Decimal64& value);
 
-// Converts float to ::gnmi::Decimal64 type.
-::util::StatusOr<::gnmi::Decimal64> FloatToDecimal64Value(float value,
-                                                          uint32 precision);
+// Converts double to ::gnmi::Decimal64 type.
+::util::StatusOr<::gnmi::Decimal64> ConvertDoubleToDecimal64(
+    double value, uint32 precision = kDefaultPrecision);
+
+// A helper method that converts a double to gNMI Decimal64.
+// For use in as a 'process_func', hence no Status return type.
+::gnmi::Decimal64 ConvertDoubleToDecimal64OrDie(const double& value);
 
 }  // namespace hal
 }  // namespace stratum

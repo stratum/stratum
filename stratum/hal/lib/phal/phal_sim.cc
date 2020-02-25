@@ -115,6 +115,18 @@ PhalSim::~PhalSim() {}
   return ::util::OkStatus();
 }
 
+::util::Status PhalSim::GetOpticalTransceiverInfo(int slot, int port,
+                                                  OpticalChannelInfo* oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
+::util::Status PhalSim::SetOpticalTransceiverInfo(
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
 ::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
                                         LedColor color, LedState state) {
   // TODO(unknown): Implement this.
