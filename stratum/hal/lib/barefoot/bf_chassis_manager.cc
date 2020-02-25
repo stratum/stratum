@@ -799,6 +799,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
 }
 
 ::util::Status BFChassisManager::UnregisterEventWriters() {
+  absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
