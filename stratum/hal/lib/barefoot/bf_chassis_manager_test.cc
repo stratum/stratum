@@ -15,6 +15,8 @@
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
+#include <cstring>
+
 #include "absl/time/clock.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -481,6 +483,50 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   EXPECT_EQ(status.status().error_code(), ERR_INTERNAL);
   EXPECT_THAT(status.status().error_message(), HasSubstr("Not supported yet"));
 
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, UpdateInvalidPort) {
+  ASSERT_OK(PushBaseChassisConfig());
+  ChassisConfigBuilder builder;
+  SingletonPort* new_port =
+    builder.AddPort(kPortId + 1, kPort + 1, ADMIN_STATE_ENABLED);
+  EXPECT_CALL(*bf_pal_mock_,
+    PortAdd(kUnit, kPortId + 1, kDefaultSpeedBps, FEC_MODE_UNKNOWN))
+    .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_pal_mock_,
+    PortEnable(kUnit, kPortId+1))
+    .WillOnce(Return(::util::OkStatus()));
+  ASSERT_OK(PushChassisConfig(builder));
+
+  EXPECT_CALL(*bf_pal_mock_, PortIsValid(kUnit, kPortId + 1))
+    .WillOnce(Return(false));
+
+  // Update port, but port is invalid.
+  new_port->set_speed_bps(10000000000ULL);
+  auto status = PushChassisConfig(builder);
+
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(status.error_code(), ERR_INTERNAL);
+  std::stringstream err_msg;
+  err_msg << "Port " << kPortId + 1
+      << " in node " << kNodeId << " is not valid.";
+  EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_F(BFChassisManagerTest, ResetPortsConfig) {
+  ASSERT_OK(PushBaseChassisConfig());
+  EXPECT_OK(bf_chassis_manager_->ResetPortsConfig(kNodeId));
+
+  // Invalid node ID
+  auto status = bf_chassis_manager_->ResetPortsConfig(kNodeId + 1);
+  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(status.error_code(), ERR_INVALID_PARAM);
+  std::stringstream err_msg;
+  err_msg << "Node " << kNodeId + 1
+      << " is not configured or not known.";
+  EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
