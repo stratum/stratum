@@ -21,39 +21,6 @@ singleton_ports {
 }
 singleton_ports {
   id: 1
-  name: "1/1"
-  slot: 1
-  port: 1
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 2
-  name: "1/2"
-  slot: 1
-  port: 1
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 3
-  name: "1/3"
-  slot: 1
-  port: 1
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 4
   name: "2/0"
   slot: 1
   port: 2
@@ -64,40 +31,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 5
-  name: "2/1"
-  slot: 1
-  port: 2
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 6
-  name: "2/2"
-  slot: 1
-  port: 2
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 7
-  name: "2/3"
-  slot: 1
-  port: 2
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 12
+  id: 2
   name: "3/0"
   slot: 1
   port: 3
@@ -108,40 +42,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 13
-  name: "3/1"
-  slot: 1
-  port: 3
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 14
-  name: "3/2"
-  slot: 1
-  port: 3
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 15
-  name: "3/3"
-  slot: 1
-  port: 3
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 28
+  id: 3
   name: "4/0"
   slot: 1
   port: 4
@@ -152,40 +53,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 29
-  name: "4/1"
-  slot: 1
-  port: 4
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 30
-  name: "4/2"
-  slot: 1
-  port: 4
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 31
-  name: "4/3"
-  slot: 1
-  port: 4
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 44
+  id: 4
   name: "5/0"
   slot: 1
   port: 5
@@ -196,40 +64,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 45
-  name: "5/1"
-  slot: 1
-  port: 5
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 46
-  name: "5/2"
-  slot: 1
-  port: 5
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 47
-  name: "5/3"
-  slot: 1
-  port: 5
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 60
+  id: 5
   name: "6/0"
   slot: 1
   port: 6
@@ -240,40 +75,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 61
-  name: "6/1"
-  slot: 1
-  port: 6
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 62
-  name: "6/2"
-  slot: 1
-  port: 6
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 63
-  name: "6/3"
-  slot: 1
-  port: 6
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 176
+  id: 6
   name: "7/0"
   slot: 1
   port: 7
@@ -284,40 +86,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 177
-  name: "7/1"
-  slot: 1
-  port: 7
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 178
-  name: "7/2"
-  slot: 1
-  port: 7
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 179
-  name: "7/3"
-  slot: 1
-  port: 7
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 160
+  id: 7
   name: "8/0"
   slot: 1
   port: 8
@@ -328,40 +97,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 161
-  name: "8/1"
-  slot: 1
-  port: 8
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 162
-  name: "8/2"
-  slot: 1
-  port: 8
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 163
-  name: "8/3"
-  slot: 1
-  port: 8
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 144
+  id: 12
   name: "9/0"
   slot: 1
   port: 9
@@ -372,40 +108,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 145
-  name: "9/1"
-  slot: 1
-  port: 9
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 146
-  name: "9/2"
-  slot: 1
-  port: 9
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 147
-  name: "9/3"
-  slot: 1
-  port: 9
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 136
+  id: 13
   name: "10/0"
   slot: 1
   port: 10
@@ -416,40 +119,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 137
-  name: "10/1"
-  slot: 1
-  port: 10
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 138
-  name: "10/2"
-  slot: 1
-  port: 10
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 139
-  name: "10/3"
-  slot: 1
-  port: 10
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 128
+  id: 14
   name: "11/0"
   slot: 1
   port: 11
@@ -460,40 +130,7 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 129
-  name: "11/1"
-  slot: 1
-  port: 11
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 130
-  name: "11/2"
-  slot: 1
-  port: 11
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 131
-  name: "11/3"
-  slot: 1
-  port: 11
-  speed_bps: 25000000000
-  config_params {
-    admin_state: ADMIN_STATE_ENABLED
-  }
-  node: 1
-}
-singleton_ports {
-  id: 132
+  id: 15
   name: "12/0"
   slot: 1
   port: 12
@@ -504,10 +141,373 @@ singleton_ports {
   node: 1
 }
 singleton_ports {
-  id: 133
-  name: "12/1"
+  id: 28
+  name: "13/0"
   slot: 1
-  port: 12
+  port: 13
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 29
+  name: "14/0"
+  slot: 1
+  port: 14
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 30
+  name: "15/0"
+  slot: 1
+  port: 15
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 31
+  name: "16/0"
+  slot: 1
+  port: 16
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 44
+  name: "17/0"
+  slot: 1
+  port: 17
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 45
+  name: "18/0"
+  slot: 1
+  port: 18
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 46
+  name: "19/0"
+  slot: 1
+  port: 19
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 47
+  name: "20/0"
+  slot: 1
+  port: 20
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 60
+  name: "21/0"
+  slot: 1
+  port: 21
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 61
+  name: "22/0"
+  slot: 1
+  port: 22
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 62
+  name: "23/0"
+  slot: 1
+  port: 23
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 63
+  name: "24/0"
+  slot: 1
+  port: 24
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 176
+  name: "25/0"
+  slot: 1
+  port: 25
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 177
+  name: "26/0"
+  slot: 1
+  port: 26
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 178
+  name: "27/0"
+  slot: 1
+  port: 27
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 179
+  name: "28/0"
+  slot: 1
+  port: 28
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 160
+  name: "29/0"
+  slot: 1
+  port: 29
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 161
+  name: "30/0"
+  slot: 1
+  port: 30
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 162
+  name: "31/0"
+  slot: 1
+  port: 31
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 163
+  name: "32/0"
+  slot: 1
+  port: 32
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 144
+  name: "33/0"
+  slot: 1
+  port: 33
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 145
+  name: "34/0"
+  slot: 1
+  port: 34
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 146
+  name: "35/0"
+  slot: 1
+  port: 35
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 147
+  name: "36/0"
+  slot: 1
+  port: 36
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 136
+  name: "37/0"
+  slot: 1
+  port: 37
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 137
+  name: "38/0"
+  slot: 1
+  port: 38
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 138
+  name: "39/0"
+  slot: 1
+  port: 39
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 139
+  name: "40/0"
+  slot: 1
+  port: 40
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 128
+  name: "41/0"
+  slot: 1
+  port: 41
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 129
+  name: "42/0"
+  slot: 1
+  port: 42
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 130
+  name: "43/0"
+  slot: 1
+  port: 43
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 131
+  name: "44/0"
+  slot: 1
+  port: 44
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 132
+  name: "45/0"
+  slot: 1
+  port: 45
+  speed_bps: 25000000000
+  config_params {
+    admin_state: ADMIN_STATE_ENABLED
+  }
+  node: 1
+}
+singleton_ports {
+  id: 133
+  name: "46/0"
+  slot: 1
+  port: 46
   speed_bps: 25000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -516,9 +516,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 134
-  name: "12/2"
+  name: "47/0"
   slot: 1
-  port: 12
+  port: 47
   speed_bps: 25000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -527,9 +527,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 135
-  name: "12/3"
+  name: "48/0"
   slot: 1
-  port: 12
+  port: 48
   speed_bps: 25000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -538,9 +538,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 156
-  name: "13/0"
+  name: "49/0"
   slot: 1
-  port: 13
+  port: 49
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -549,9 +549,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 140
-  name: "14/0"
+  name: "50/0"
   slot: 1
-  port: 14
+  port: 50
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -560,9 +560,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 188
-  name: "15/0"
+  name: "51/0"
   slot: 1
-  port: 15
+  port: 51
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -571,9 +571,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 172
-  name: "16/0"
+  name: "52/0"
   slot: 1
-  port: 16
+  port: 52
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -582,9 +582,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 32
-  name: "17/0"
+  name: "53/0"
   slot: 1
-  port: 17
+  port: 53
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -593,9 +593,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 48
-  name: "18/0"
+  name: "54/0"
   slot: 1
-  port: 18
+  port: 54
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -604,9 +604,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 8
-  name: "19/0"
+  name: "55/0"
   slot: 1
-  port: 19
+  port: 55
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -615,9 +615,9 @@ singleton_ports {
 }
 singleton_ports {
   id: 16
-  name: "20/0"
+  name: "56/0"
   slot: 1
-  port: 20
+  port: 56
   speed_bps: 100000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -626,9 +626,10 @@ singleton_ports {
 }
 singleton_ports {
   id: 64
-  name: "21/0"
+  name: "57/0"
   slot: 1
-  port: 21
+  port: 57
+  channel: 1
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -638,9 +639,10 @@ singleton_ports {
 }
 singleton_ports {
   id: 65
-  name: "21/1"
+  name: "57/1"
   slot: 1
-  port: 21
+  port: 57
+  channel: 2
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -650,9 +652,10 @@ singleton_ports {
 }
 singleton_ports {
   id: 66
-  name: "21/2"
+  name: "57/2"
   slot: 1
-  port: 21
+  port: 57
+  channel: 3
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
@@ -661,9 +664,10 @@ singleton_ports {
 }
 singleton_ports {
   id: 67
-  name: "21/3"
+  name: "57/3"
   slot: 1
-  port: 21
+  port: 57
+  channel: 4
   speed_bps: 10000000000
   config_params {
     admin_state: ADMIN_STATE_ENABLED
