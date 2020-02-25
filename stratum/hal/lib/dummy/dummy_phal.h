@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef STRATUM_HAL_LIB_DUMMY_DUMMY_PHAL_H_
 #define STRATUM_HAL_LIB_DUMMY_DUMMY_PHAL_H_
 
-#include <memory>
 #include <functional>
-#include <utility>
 #include <map>
+#include <memory>
+#include <utility>
 
 #include "absl/synchronization/mutex.h"
-#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/dummy/dummy_box.h"
 #include "stratum/hal/lib/dummy/dummy_global_vars.h"
 #include "stratum/hal/lib/dummy/dummy_phal.h"
@@ -37,35 +36,39 @@ class DummyPhal : public PhalInterface {
   // Methods from PhalInterface
   ~DummyPhal() override;
   ::util::Status PushChassisConfig(const ChassisConfig& config)
-  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
-  LOCKS_EXCLUDED(phal_lock_) override;
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+          LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status VerifyChassisConfig(const ChassisConfig& config)
-  SHARED_LOCKS_REQUIRED(chassis_lock)
-  LOCKS_EXCLUDED(phal_lock_) override;
+      SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(phal_lock_) override;
 
-  ::util::Status Shutdown()
-  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
-  LOCKS_EXCLUDED(phal_lock_) override;
+  ::util::Status Shutdown() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+      LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::StatusOr<int> RegisterTransceiverEventWriter(
-      std::unique_ptr<ChannelWriter<TransceiverEvent>> writer,
-      int priority)
+      std::unique_ptr<ChannelWriter<TransceiverEvent>> writer, int priority)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
-      LOCKS_EXCLUDED(phal_lock_) override;
+          LOCKS_EXCLUDED(phal_lock_) override;
   ::util::Status UnregisterTransceiverEventWriter(int id)
-  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
-  LOCKS_EXCLUDED(phal_lock_) override;
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+          LOCKS_EXCLUDED(phal_lock_) override;
 
-  ::util::Status GetFrontPanelPortInfo(
-      int slot, int port, FrontPanelPortInfo* fp_port_info)
-  SHARED_LOCKS_REQUIRED(chassis_lock)
-  LOCKS_EXCLUDED(phal_lock_) override;
+  ::util::Status GetFrontPanelPortInfo(int slot, int port,
+                                       FrontPanelPortInfo* fp_port_info)
+      SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(phal_lock_) override;
+
+  ::util::Status GetOpticalTransceiverInfo(int slot, int port,
+                                           OpticalChannelInfo* oc_info)
+      SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(phal_lock_) override;
+
+  ::util::Status SetOpticalTransceiverInfo(int slot, int port,
+                                           const OpticalChannelInfo& oc_info)
+      SHARED_LOCKS_REQUIRED(chassis_lock) LOCKS_EXCLUDED(phal_lock_) override;
 
   ::util::Status SetPortLedState(int slot, int port, int channel,
-                                         LedColor color, LedState state)
-  EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
-  LOCKS_EXCLUDED(phal_lock_) override;
+                                 LedColor color, LedState state)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock)
+          LOCKS_EXCLUDED(phal_lock_) override;
 
   // Factory function for creating the instance of the DummyPhal.
   static DummyPhal* CreateSingleton() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
