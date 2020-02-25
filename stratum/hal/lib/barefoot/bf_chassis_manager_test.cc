@@ -15,8 +15,6 @@
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
-#include <cstring>
-
 #include "absl/time/clock.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
