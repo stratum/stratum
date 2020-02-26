@@ -409,10 +409,12 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
     case Request::kNegotiatedPortSpeed: {
       ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.port_speed().node_id(), request.port_speed().port_id()));
+          request.negotiated_port_speed().node_id(),
+          request.negotiated_port_speed().port_id()));
       if (!config->speed_bps) break;
       ASSIGN_OR_RETURN(auto port_state, GetPortState(
-          request.oper_status().node_id(), request.oper_status().port_id()));
+          request.negotiated_port_speed().node_id(),
+          request.negotiated_port_speed().port_id()));
       if (port_state != PORT_STATE_UP) break;
       resp.mutable_negotiated_port_speed()->set_speed_bps(*config->speed_bps);
       break;
@@ -426,7 +428,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
     case Request::kAutonegStatus: {
       ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.port_speed().node_id(), request.port_speed().port_id()));
+          request.autoneg_status().node_id(),
+          request.autoneg_status().port_id()));
       if (config->autoneg)
         resp.mutable_autoneg_status()->set_state(*config->autoneg);
       break;
@@ -796,6 +799,7 @@ void BFChassisManager::TransceiverEventHandler(int slot, int port,
 }
 
 ::util::Status BFChassisManager::UnregisterEventWriters() {
+  absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_ERROR(
       status, bf_pal_interface_->PortStatusChangeUnregisterEventWriter());
