@@ -403,7 +403,11 @@ BcmL3Manager::~BcmL3Manager() {}
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
       entry, ::p4::v1::Update::MODIFY, &bcm_flow_entry));
-  RETURN_IF_ERROR(ModifyLpmOrHostFlow(bcm_flow_entry));
+  if (bcm_flow_entry.bcm_table_type() == BcmFlowEntry::BCM_TABLE_MPLS) {
+    RETURN_IF_ERROR(ModifyMplsFlow(bcm_flow_entry));
+  } else {
+    RETURN_IF_ERROR(ModifyLpmOrHostFlow(bcm_flow_entry));
+  }
   RETURN_IF_ERROR(bcm_table_manager_->UpdateTableEntry(entry));
 
   return ::util::OkStatus();
@@ -447,7 +451,11 @@ BcmL3Manager::~BcmL3Manager() {}
   BcmFlowEntry bcm_flow_entry;
   RETURN_IF_ERROR(bcm_table_manager_->FillBcmFlowEntry(
       entry, ::p4::v1::Update::DELETE, &bcm_flow_entry));
-  RETURN_IF_ERROR(DeleteLpmOrHostFlow(bcm_flow_entry));
+  if (bcm_flow_entry.bcm_table_type() == BcmFlowEntry::BCM_TABLE_MPLS) {
+    RETURN_IF_ERROR(DeleteMplsFlow(bcm_flow_entry));
+  } else {
+    RETURN_IF_ERROR(DeleteLpmOrHostFlow(bcm_flow_entry));
+  }
   RETURN_IF_ERROR(bcm_table_manager_->DeleteTableEntry(entry));
 
   return ::util::OkStatus();
@@ -516,8 +524,12 @@ BcmL3Manager::~BcmL3Manager() {}
       << unit_ << ".";
   CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
                         BcmFlowEntry::BCM_TABLE_MPLS);
-
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+  MplsKey key;
+  MplsActionParams action_params;
+  RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
+  RETURN_IF_ERROR(ExtractMplsActionParams(bcm_flow_entry, &action_params));
+  return bcm_sdk_interface_->ModifyMplsRoute(unit_, key.port, key.mpls_label,
+      action_params.egress_intf_id, action_params.is_intf_multipath);
 }
 
 ::util::Status BcmL3Manager::DeleteMplsFlow(const BcmFlowEntry& bcm_flow_entry) {
@@ -526,8 +538,9 @@ BcmL3Manager::~BcmL3Manager() {}
       << unit_ << ".";
   CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
                         BcmFlowEntry::BCM_TABLE_MPLS);
-
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+  MplsKey key;
+  RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
+  return bcm_sdk_interface_->DeleteMplsRoute(unit_, key.port, key.mpls_label);
 }
 
 std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
