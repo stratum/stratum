@@ -2206,7 +2206,53 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 
 ::util::Status BcmSdkWrapper::ModifyMplsRoute(int unit, int port,
     uint32 mpls_label, int egress_intf_id, bool is_intf_multipath) {
-  // TODO(max): implement
+  CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
+
+  bcm_mpls_tunnel_switch_t tunnel_switch;
+  bcm_mpls_tunnel_switch_t_init(&tunnel_switch);
+  // ingress match
+  tunnel_switch.label = mpls_label;
+
+  // Get exists MPLS entry
+  RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_get(unit, &tunnel_switch));
+
+  // New action for this MPLS entry
+  // We don't know if the wanted action is swap or pop from the match alone.
+  // Therefore we look at the nexthop and decide the action based on it.
+  bcm_mpls_switch_action_t new_action = BCM_MPLS_SWITCH_ACTION_INVALID;
+
+  if (is_intf_multipath) {
+    bcm_l3_egress_ecmp_t egress_intf;
+    egress_intf.ecmp_intf = egress_intf_id;
+    int ecmp_entries;
+    bcm_if_t entries[10];
+    RETURN_IF_BCM_ERROR(
+        bcm_l3_egress_ecmp_get(unit, &egress_intf, 10, entries, &ecmp_entries));
+    LOG(WARNING) << "Found ECMP group with " << ecmp_entries << " entries";
+    for (int i = 0; i < ecmp_entries; ++i) {
+      bcm_l3_egress_t egress;
+      RETURN_IF_BCM_ERROR(bcm_l3_egress_get(unit, entries[i], &egress));
+      LOG(WARNING) << "Entry: " << PrintL3EgressIntf(egress, entries[i]);
+      if (egress.mpls_label != BCM_MPLS_LABEL_INVALID) {
+        new_action = BCM_MPLS_SWITCH_ACTION_SWAP;
+      } else {
+        new_action = BCM_MPLS_SWITCH_ACTION_PHP;  // FIXME: Should be
+                                              // BCM_MPLS_SWITCH_ACTION_POP_DIRECT.
+                                              // Bug in SDK6?
+      }
+    }
+  } else {
+    return MAKE_ERROR(ERR_UNIMPLEMENTED)
+           << "Non-multipath Mpls nexthops are not supported";
+  }
+
+  // Update egress options and insert the entry
+  tunnel_switch.action = new_action;
+  tunnel_switch.egress_if = egress_intf_id;
+  tunnel_switch.flags = BCM_MPLS_SWITCH_REPLACE | BCM_MPLS_SWITCH_WITH_ID;
+  RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_add(unit, &tunnel_switch));
+
+
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
 }
 
