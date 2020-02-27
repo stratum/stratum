@@ -34,6 +34,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
+#include "yaml-cpp/yaml.h"
 
 DECLARE_string(bcm_sdk_config_file);
 
@@ -54,11 +55,11 @@ struct SerdesLaneSetting {
   BcmPort_OpMode op_mode[4];
 };
 
-const char kSdkltOpModeDefault[] = "PC_PM_OPMODE_DEFAULT";
-const char kSdkltOpModeQsgmii[] = "PC_PM_OPMODE_QSGMII";
-const char kSdkltOpModeGphy[] = "PC_PM_OPMODE_GPHY";
+const std::string kSdkltOpModeDefault = "PC_PM_OPMODE_DEFAULT";
+const std::string kSdkltOpModeQsgmii = "PC_PM_OPMODE_QSGMII";
+const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
 
-::util::StatusOr<std::string> toBcmSdkltOpModeStr(BcmPort_OpMode op_mode) {
+::util::StatusOr<std::string> ToBcmSdkltOpModeStr(BcmPort_OpMode op_mode) {
   switch (op_mode) {
     case BcmPort_OpMode_OPMODE_DEFAULT:
       return kSdkltOpModeDefault;
@@ -68,6 +69,26 @@ const char kSdkltOpModeGphy[] = "PC_PM_OPMODE_GPHY";
       return kSdkltOpModeGphy;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown operation mode " << op_mode;
+  }
+}
+
+std::string SpeedBpsToBcmPortSpeedStr(const uint64 speed_bps) {
+  switch (speed_bps) {
+    case 10000000000: return "PC_PORT_OPMODE_10G";
+    case 12000000000: return "PC_PORT_OPMODE_12G";
+    case 13000000000: return "PC_PORT_OPMODE_13G";
+    case 20000000000: return "PC_PORT_OPMODE_20G";
+    case 25000000000: return "PC_PORT_OPMODE_25G";
+    case 21000000000: return "PC_PORT_OPMODE_21G";
+    case 40000000000: return "PC_PORT_OPMODE_40G";
+    case 42000000000: return "PC_PORT_OPMODE_42G";
+    case 50000000000: return "PC_PORT_OPMODE_50G";
+    case 100000000000: return "PC_PORT_OPMODE_100G";
+    case 120000000000: return "PC_PORT_OPMODE_120G";
+    case 127000000000: return "PC_PORT_OPMODE_127G";
+    case 200000000000: return "PC_PORT_OPMODE_200G";
+    case 400000000000: return "PC_PORT_OPMODE_400G";
+    default: return "PC_PORT_OPMODE_ANY";
   }
 }
 
@@ -134,7 +155,7 @@ const char kSdkltOpModeGphy[] = "PC_PM_OPMODE_GPHY";
 
     for (int i = 0; i < bcm_port.num_serdes_lanes(); i++) {
       ASSIGN_OR_RETURN(auto op_mode_str,
-                       toBcmSdkltOpModeStr(serdes_lane_setting->op_mode[i]))
+                       ToBcmSdkltOpModeStr(serdes_lane_setting->op_mode[i]))
       pc_pm << op_mode_str;
     }
     pc_pm << YAML::EndSeq;

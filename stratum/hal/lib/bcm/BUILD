@@ -199,7 +199,11 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
-    ],
+    ] + select({
+        ":bcm_sdk6": [],
+        ":bcm_sdklt": ["@com_github_jbeder_yaml_cpp//:yaml_cpp"],
+        "//conditions:default": ["@com_github_jbeder_yaml_cpp//:yaml_cpp"],
+    }),
 )
 
 stratum_cc_library(
