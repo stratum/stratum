@@ -55,18 +55,14 @@ struct SerdesLaneSetting {
   BcmPort_OpMode op_mode[4];
 };
 
-const std::string kSdkltOpModeDefault = "PC_PM_OPMODE_DEFAULT";
-const std::string kSdkltOpModeQsgmii = "PC_PM_OPMODE_QSGMII";
-const std::string kSdkltOpModeGphy = "PC_PM_OPMODE_GPHY";
-
 ::util::StatusOr<std::string> ToBcmSdkltOpModeStr(BcmPort_OpMode op_mode) {
   switch (op_mode) {
     case BcmPort_OpMode_OPMODE_DEFAULT:
-      return kSdkltOpModeDefault;
+      return std::string("PC_PM_OPMODE_DEFAULT");
     case BcmPort_OpMode_OPMODE_QSGMII:
-      return kSdkltOpModeQsgmii;
+      return std::string("PC_PM_OPMODE_QSGMII");
     case BcmPort_OpMode_OPMODE_GPHY:
-      return kSdkltOpModeGphy;
+      return std::string("PC_PM_OPMODE_GPHY");
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown operation mode " << op_mode;
   }

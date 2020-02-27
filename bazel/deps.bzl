@@ -249,11 +249,10 @@ def stratum_deps():
         )
 
     if "com_github_jbeder_yaml_cpp" not in native.existing_rules():
-        remote_workspace(
+        git_repository(
             name = "com_github_jbeder_yaml_cpp",
-            remote = "https://github.com/jbeder/yaml-cpp",
-            commit = "562aefc114938e388457e6a531ed7b54d9dc1b62",
-            build_file = "@//bazel:external/yamlcpp.BUILD",
+            remote = "https://github.com/jbeder/yaml-cpp.git",
+            commit = "de8253fcb075c049c4ad1c466c504bf3cf022f45",
         )
 
 # -----------------------------------------------------------------------------

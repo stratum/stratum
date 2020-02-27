@@ -201,8 +201,8 @@ stratum_cc_library(
         "//stratum/glue/gtl:stl_util",
     ] + select({
         ":bcm_sdk6": [],
-        ":bcm_sdklt": ["@com_github_jbeder_yaml_cpp//:yaml_cpp"],
-        "//conditions:default": ["@com_github_jbeder_yaml_cpp//:yaml_cpp"],
+        ":bcm_sdklt": ["@com_github_jbeder_yaml_cpp//:yaml-cpp"],
+        "//conditions:default": ["@com_github_jbeder_yaml_cpp//:yaml-cpp"],
     }),
 )
 
