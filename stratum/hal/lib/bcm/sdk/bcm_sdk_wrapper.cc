@@ -2216,6 +2216,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   // Get exists MPLS entry
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_get(unit, &tunnel_switch));
 
+  // TODO(Max): This code is mostly copied from `AddMplsRoute`, need to be cleaned up later
   // New action for this MPLS entry
   // We don't know if the wanted action is swap or pop from the match alone.
   // Therefore we look at the nexthop and decide the action based on it.
