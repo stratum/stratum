@@ -216,7 +216,13 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "bcm_chassis_manager",
-    srcs = ["bcm_chassis_manager.cc"],
+    srcs = [
+        "bcm_chassis_manager.cc",
+    ] + select({
+        ":bcm_sdk6": ["bcm_chassis_manager_config_generator_sdk6.cc"],
+        ":bcm_sdklt": ["bcm_chassis_manager_config_generator_sdklt.cc"],
+        "//conditions:default": ["bcm_chassis_manager_config_generator_sdklt.cc"],
+    }),
     hdrs = ["bcm_chassis_manager.h"],
     deps = [
         ":bcm_chassis_ro_interface",
