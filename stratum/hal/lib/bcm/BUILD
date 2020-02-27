@@ -30,6 +30,21 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
+# Settings to choose which Broadcom SDK to use.
+config_setting(
+    name = "bcm_sdk6",
+    define_values = {
+        "bcm_sdk": "6",
+    },
+)
+
+config_setting(
+    name = "bcm_sdklt",
+    define_values = {
+        "bcm_sdk": "lt",
+    },
+)
+
 proto_library(
     name = "bcm_proto",
     srcs = ["bcm.proto"],
@@ -146,7 +161,13 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "bcm_chassis_manager",
-    srcs = ["bcm_chassis_manager.cc"],
+    srcs = [
+        "bcm_chassis_manager.cc",
+    ] + select({
+        ":bcm_sdk6": ["bcm_chassis_manager_config_generator_sdk6.cc"],
+        ":bcm_sdklt": ["bcm_chassis_manager_config_generator_sdklt.cc"],
+        "//conditions:default": ["bcm_chassis_manager_config_generator_sdklt.cc"],
+    }),
     hdrs = ["bcm_chassis_manager.h"],
     deps = [
         ":bcm_chassis_ro_interface",
