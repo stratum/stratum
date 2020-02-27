@@ -196,26 +196,26 @@ namespace bcm {
            << bcm_port.unit() << "=" << bcm_port.diag_port() << std::endl;
     // Lane remapping handling.
     if (bcm_port.tx_lane_map() > 0) {
-      buffer << "xgxs_tx_lane_map_xe" << bcm_port.diag_port() << "."
+      buffer << "xgxs_tx_lane_map_" << bcm_port.logical_port() << "."
              << bcm_port.unit() << "=0x" << std::hex << std::uppercase
              << bcm_port.tx_lane_map() << std::dec << std::nouppercase
              << std::endl;
     }
     if (bcm_port.rx_lane_map() > 0) {
-      buffer << "xgxs_rx_lane_map_xe" << bcm_port.diag_port() << "."
+      buffer << "xgxs_rx_lane_map_" << bcm_port.logical_port() << "."
              << bcm_port.unit() << "=0x" << std::hex << std::uppercase
              << bcm_port.rx_lane_map() << std::dec << std::nouppercase
              << std::endl;
     }
     // XE ports polarity flip handling for RX and TX.
     if (bcm_port.tx_polarity_flip() > 0) {
-      buffer << "phy_xaui_tx_polarity_flip_xe" << bcm_port.diag_port() << "."
+      buffer << "phy_xaui_tx_polarity_flip_" << bcm_port.logical_port() << "."
              << bcm_port.unit() << "=0x" << std::hex << std::uppercase
              << bcm_port.tx_polarity_flip() << std::dec << std::nouppercase
              << std::endl;
     }
     if (bcm_port.rx_polarity_flip() > 0) {
-      buffer << "phy_xaui_rx_polarity_flip_xe" << bcm_port.diag_port() << "."
+      buffer << "phy_xaui_rx_polarity_flip_" << bcm_port.logical_port() << "."
              << bcm_port.unit() << "=0x" << std::hex << std::uppercase
              << bcm_port.rx_polarity_flip() << std::dec << std::nouppercase
              << std::endl;
