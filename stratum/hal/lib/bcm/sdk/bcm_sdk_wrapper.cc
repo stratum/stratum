@@ -2212,6 +2212,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   bcm_mpls_tunnel_switch_t_init(&tunnel_switch);
   // ingress match
   tunnel_switch.label = mpls_label;
+  tunnel_switch.port = BCM_GPORT_INVALID;
 
   // Get exists MPLS entry
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_get(unit, &tunnel_switch));
@@ -2318,6 +2319,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   bcm_mpls_tunnel_switch_t tunnel_switch;
   bcm_mpls_tunnel_switch_t_init(&tunnel_switch);
   tunnel_switch.label = mpls_label;
+  tunnel_switch.port = BCM_GPORT_INVALID;
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_delete(unit, &tunnel_switch));
 
   VLOG(1) << "Deleted MPLS L3 host route " << "TODO" << " on unit "
