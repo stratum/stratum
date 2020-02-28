@@ -292,7 +292,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 4
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 62
@@ -364,7 +363,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 5
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 68
@@ -436,7 +434,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 6
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 72
@@ -508,7 +505,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 7
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 76
@@ -580,7 +576,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 8
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 80
@@ -652,7 +647,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 9
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 38
@@ -724,7 +718,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 10
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 34
@@ -796,7 +789,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 11
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 46
@@ -868,7 +860,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 12
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 42
@@ -940,7 +931,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 13
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 84
@@ -1012,7 +1002,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 14
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 88
@@ -1084,7 +1073,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 15
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 92
@@ -1156,7 +1144,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 16
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 96
@@ -1228,7 +1215,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 17
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 102
@@ -1300,7 +1286,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 18
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 106
@@ -1372,7 +1357,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 19
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 110
@@ -1444,7 +1428,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 20
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 114
@@ -1516,7 +1499,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 21
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 21
@@ -1588,7 +1570,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 22
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 17
@@ -1660,7 +1641,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 23
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 29
@@ -1732,7 +1712,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 24
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 25
@@ -1804,7 +1783,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 25
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 122
@@ -1876,7 +1854,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 26
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 118
@@ -1948,7 +1925,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 27
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 130
@@ -2020,7 +1996,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 28
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 126
@@ -2092,7 +2067,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 29
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 5
@@ -2164,7 +2138,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 30
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 1
@@ -2236,7 +2209,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 31
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 13
@@ -2308,7 +2280,6 @@ bcm_chassis_maps {
     type: CE
     slot: 1
     port: 32
-    channel: 1
     unit: 0
     speed_bps: 100000000000
     logical_port: 9
