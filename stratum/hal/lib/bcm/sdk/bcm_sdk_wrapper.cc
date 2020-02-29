@@ -606,6 +606,9 @@ std::string PrintL3EgressIntf(const bcm_l3_egress_t& l3_egress,
   buffer << "vlan: " << l3_egress.vlan << ", ";
   buffer << "router_intf_id: " << l3_egress.intf << ", ";
   buffer << "dst_mac: " << BcmMacToStr(l3_egress.mac_addr) << ", ";
+  if (l3_egress.flags) {
+    buffer << "flags: " << l3_egress.flags << ", ";
+  }
   if (l3_egress.mpls_label) {
     buffer << "mpls_label: " << l3_egress.mpls_label << ", ";
     buffer << "mpls_action: " << l3_egress.mpls_action << ", ";
@@ -1317,6 +1320,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(bcm_init(unit));
     RETURN_IF_BCM_ERROR(bcm_l2_init(unit));
     RETURN_IF_BCM_ERROR(bcm_l3_init(unit));
+    RETURN_IF_BCM_ERROR(bcm_mpls_init(unit));
     RETURN_IF_BCM_ERROR(bcm_switch_control_set(unit, bcmSwitchL3EgressMode, 1));
     RETURN_IF_BCM_ERROR(
         bcm_switch_control_set(unit, bcmSwitchL3IngressInterfaceMapSet, 1));
@@ -1333,6 +1337,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(bcm_init(unit));
     RETURN_IF_BCM_ERROR(bcm_l2_init(unit));
     RETURN_IF_BCM_ERROR(bcm_l3_init(unit));
+    RETURN_IF_BCM_ERROR(bcm_mpls_init(unit));
     RETURN_IF_BCM_ERROR(bcm_switch_control_set(unit, bcmSwitchL3EgressMode, 1));
     RETURN_IF_BCM_ERROR(
         bcm_switch_control_set(unit, bcmSwitchL3IngressInterfaceMapSet, 1));
@@ -2075,7 +2080,13 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   tunnel_switch.flags |= BCM_MPLS_SWITCH_TTL_DECREMENT;
   // ingress match
   tunnel_switch.label = mpls_label;
-  tunnel_switch.port = BCM_GPORT_INVALID;  // FIXME: should be port, but causes error
+
+  // By default SDK6 initializes the complete label range as "Port independent".
+  // This means that you can not match on the ingress port. This can be
+  // re-configured with the following registers:
+  // RETURN_IF_BCM_ERROR(WRITE_GLOBAL_MPLS_RANGE_1_UPPERr(unit, 0));
+  // RETURN_IF_BCM_ERROR(WRITE_GLOBAL_MPLS_RANGE_2_UPPERr(unit, 0));
+  tunnel_switch.port = BCM_GPORT_INVALID;
   // egress options
   tunnel_switch.action = action;
   tunnel_switch.egress_if = egress_intf_id;
