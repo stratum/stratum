@@ -514,7 +514,7 @@ BcmL3Manager::~BcmL3Manager() {}
   RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
   RETURN_IF_ERROR(ExtractMplsActionParams(bcm_flow_entry, &action_params));
 
-  return bcm_sdk_interface_->AddMplsRoute(unit_, key.port, key.mpls_label,
+  return bcm_sdk_interface_->AddMplsRoute(unit_, key.mpls_label,
       action_params.egress_intf_id, action_params.is_intf_multipath);
 }
 
@@ -528,7 +528,7 @@ BcmL3Manager::~BcmL3Manager() {}
   MplsActionParams action_params;
   RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
   RETURN_IF_ERROR(ExtractMplsActionParams(bcm_flow_entry, &action_params));
-  return bcm_sdk_interface_->ModifyMplsRoute(unit_, key.port, key.mpls_label,
+  return bcm_sdk_interface_->ModifyMplsRoute(unit_, key.mpls_label,
       action_params.egress_intf_id, action_params.is_intf_multipath);
 }
 
@@ -540,7 +540,7 @@ BcmL3Manager::~BcmL3Manager() {}
                         BcmFlowEntry::BCM_TABLE_MPLS);
   MplsKey key;
   RETURN_IF_ERROR(ExtractMplsKey(bcm_flow_entry, &key));
-  return bcm_sdk_interface_->DeleteMplsRoute(unit_, key.port, key.mpls_label);
+  return bcm_sdk_interface_->DeleteMplsRoute(unit_, key.mpls_label);
 }
 
 std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
@@ -749,35 +749,27 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
 
 ::util::Status BcmL3Manager::ExtractMplsKey(const BcmFlowEntry& bcm_flow_entry,
                                             MplsKey* key) {
-  if (key == nullptr) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Null key!";
-  }
+  CHECK_RETURN_IF_FALSE(key != nullptr) << "Null key!";
   CHECK_RETURN_IF_FALSE(bcm_flow_entry.bcm_table_type() ==
                         BcmFlowEntry::BCM_TABLE_MPLS);
-  if (bcm_flow_entry.fields_size() != 2) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Expected at exactly two fields of type MPLS_LABEL label and IN_PORT: "
-        << bcm_flow_entry.ShortDebugString() << ".";
-  }
+  CHECK_RETURN_IF_FALSE(bcm_flow_entry.fields_size() == 1)
+      << "Expected at exactly one field of type MPLS_LABEL label: "
+      << bcm_flow_entry.ShortDebugString() << ".";
+
   for (const auto& field : bcm_flow_entry.fields()) {
     if (field.type() == BcmField::MPLS_LABEL) {
       key->mpls_label = field.value().u32();
-    } else if (field.type() == BcmField::IN_PORT) {
-      key->port =field.value().u32();
     } else {
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Invalid field type. Expecting MPLS_LABEL and IN_PORT types only: "
-          << bcm_flow_entry.ShortDebugString() << ".";
+             << "Invalid field type. Expecting only MPLS_LABEL type, but got: "
+             << bcm_flow_entry.ShortDebugString() << ".";
     }
   }
   // Validations
   if (!key->mpls_label) {
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "Missing Mpls label key in: "
-        << bcm_flow_entry.ShortDebugString() << ".";
-  }
-  if (!key->port) {
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "Missing port key in: "
-        << bcm_flow_entry.ShortDebugString() << ".";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Missing Mpls label key in: " << bcm_flow_entry.ShortDebugString()
+           << ".";
   }
 
   return ::util::OkStatus();
@@ -785,14 +777,12 @@ std::unique_ptr<BcmL3Manager> BcmL3Manager::CreateInstance(
 
 ::util::Status BcmL3Manager::ExtractMplsActionParams(
       const BcmFlowEntry& bcm_flow_entry, MplsActionParams* action_params) {
-  if (action_params == nullptr) {
-    return MAKE_ERROR(ERR_INTERNAL) << "Null action_params!";
-  }
+  CHECK_RETURN_IF_FALSE(action_params != nullptr) << "Null action_params!";
 
   // Find the egress_intf_id.
   if (bcm_flow_entry.actions_size() > 1) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Expected at most 1 action of type OUTPUT_{PORT,TRUNK,L3}: "
+        << "Expected at most one action of type OUTPUT_{PORT,TRUNK,L3}: "
         << bcm_flow_entry.ShortDebugString() << ".";
   }
   for (const auto& action : bcm_flow_entry.actions()) {

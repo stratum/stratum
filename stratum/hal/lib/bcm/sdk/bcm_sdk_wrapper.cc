@@ -2022,8 +2022,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::AddMplsRoute(int unit, int port,
-                                           uint32 mpls_label,
+::util::Status BcmSdkWrapper::AddMplsRoute(int unit, uint32 mpls_label,
                                            int egress_intf_id,
                                            bool is_intf_multipath) {
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
@@ -2047,9 +2046,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
       if (egress.mpls_label != BCM_MPLS_LABEL_INVALID) {
         action = BCM_MPLS_SWITCH_ACTION_SWAP;
       } else {
-        action = BCM_MPLS_SWITCH_ACTION_PHP;  // FIXME: Should be
-                                              // BCM_MPLS_SWITCH_ACTION_POP_DIRECT.
-                                              // Bug in SDK6?
+        // FIXME: Should be BCM_MPLS_SWITCH_ACTION_POP_DIRECT.
+        // Bug in SDK6?
+        action = BCM_MPLS_SWITCH_ACTION_PHP;
       }
     }
   } else {
@@ -2062,7 +2061,6 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   tunnel_switch.flags |= BCM_MPLS_SWITCH_TTL_DECREMENT;
   // ingress match
   tunnel_switch.label = mpls_label;
-
   // By default SDK6 initializes the complete label range as "Port independent".
   // This means that you can not match on the ingress port. This can be
   // re-configured with the following registers:
@@ -2075,8 +2073,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_add(unit, &tunnel_switch));
 
-  VLOG(1) << "Added MPLS L3 route "
-          << PrintL3MplsRoute(tunnel_switch)
+  VLOG(1) << "Added MPLS L3 route " << PrintL3MplsRoute(tunnel_switch)
           << " on unit " << unit << ".";
 
   return ::util::OkStatus();
@@ -2197,8 +2194,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::ModifyMplsRoute(int unit, int port,
-    uint32 mpls_label, int egress_intf_id, bool is_intf_multipath) {
+::util::Status BcmSdkWrapper::ModifyMplsRoute(int unit, uint32 mpls_label,
+                                              int egress_intf_id,
+                                              bool is_intf_multipath) {
   CHECK_RETURN_IF_FALSE(egress_intf_id > 0);
 
   bcm_mpls_tunnel_switch_t tunnel_switch;
@@ -2210,10 +2208,10 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   // Get exists MPLS entry
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_get(unit, &tunnel_switch));
 
-  // TODO(Max): This code is mostly copied from `AddMplsRoute`, need to be cleaned up later
-  // New action for this MPLS entry
-  // We don't know if the wanted action is swap or pop from the match alone.
-  // Therefore we look at the nexthop and decide the action based on it.
+  // TODO(Max): This code is mostly copied from `AddMplsRoute`, need to be
+  // cleaned up later New action for this MPLS entry We don't know if the wanted
+  // action is swap or pop from the match alone. Therefore we look at the
+  // nexthop and decide the action based on it.
   bcm_mpls_switch_action_t new_action = BCM_MPLS_SWITCH_ACTION_INVALID;
 
   if (is_intf_multipath) {
@@ -2231,9 +2229,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
       if (egress.mpls_label != BCM_MPLS_LABEL_INVALID) {
         new_action = BCM_MPLS_SWITCH_ACTION_SWAP;
       } else {
-        new_action = BCM_MPLS_SWITCH_ACTION_PHP;  // FIXME: Should be
-                                              // BCM_MPLS_SWITCH_ACTION_POP_DIRECT.
-                                              // Bug in SDK6?
+        // FIXME: Should be BCM_MPLS_SWITCH_ACTION_POP_DIRECT.
+        // Bug in SDK6?
+        new_action = BCM_MPLS_SWITCH_ACTION_PHP;
       }
     }
   } else {
@@ -2247,8 +2245,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   tunnel_switch.flags = BCM_MPLS_SWITCH_REPLACE | BCM_MPLS_SWITCH_WITH_ID;
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_add(unit, &tunnel_switch));
 
-
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+  return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeleteL3RouteIpv4(int unit, int vrf,
@@ -2307,16 +2304,16 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::DeleteMplsRoute(int unit, int port,
-    uint32 mpls_label) {
+::util::Status BcmSdkWrapper::DeleteMplsRoute(int unit, uint32 mpls_label) {
   bcm_mpls_tunnel_switch_t tunnel_switch;
   bcm_mpls_tunnel_switch_t_init(&tunnel_switch);
   tunnel_switch.label = mpls_label;
   tunnel_switch.port = BCM_GPORT_INVALID;
   RETURN_IF_BCM_ERROR(bcm_mpls_tunnel_switch_delete(unit, &tunnel_switch));
 
-  VLOG(1) << "Deleted MPLS L3 host route " << "TODO" << " on unit "
-      << unit << ".";
+  VLOG(1) << "Deleted MPLS L3 host route "
+          << "TODO"
+          << " on unit " << unit << ".";
 
   return ::util::OkStatus();
 };

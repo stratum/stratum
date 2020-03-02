@@ -513,9 +513,7 @@ control l3_fwd(inout parsed_packet_t hdr,
     @switchstack("pipeline_stage: L3_MPLS")
     table l3_mpls_table {
         key = {
-            standard_metadata.ingress_port : exact;
             hdr.mpls.label                 : exact;
-            standard_metadata.ingress_port : selector;
             hdr.mpls.label                 : selector;
         }
         actions = {

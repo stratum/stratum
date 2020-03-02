@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_L3_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_L3_MANAGER_H_
 
 #include <memory>
-#include <utility>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
@@ -72,12 +71,9 @@ struct LpmOrHostActionParams {
 
 // This struct encapsulates the key for a Mpls flow.
 struct MplsKey {
-    // The ingress port to match on.
-    int port;
-    // The mpls label to match on.
-    uint32 mpls_label;
-    MplsKey()
-        : port(-1), mpls_label(-1) {}
+  // The mpls label to match on.
+  uint32 mpls_label;
+  MplsKey() : mpls_label(-1) {}
 };
 
 struct MplsActionParams {
@@ -85,8 +81,7 @@ struct MplsActionParams {
   int egress_intf_id;
   // A boolean determining whether the nexthop is an ECMP/WCMP group
   bool is_intf_multipath;
-  MplsActionParams()
-      : egress_intf_id(-1), is_intf_multipath(false) {}
+  MplsActionParams() : egress_intf_id(-1), is_intf_multipath(false) {}
 };
 
 // The "BcmL3Manager" class implements the L3 routing functionality.
@@ -225,8 +220,8 @@ class BcmL3Manager {
                                 MplsKey* key);
 
   // Helper to extract Mpls LSR (transit) flow actions given BcmFlowEntry.
-  ::util::Status ExtractMplsActionParams(
-      const BcmFlowEntry& bcm_flow_entry, MplsActionParams* action_params);
+  ::util::Status ExtractMplsActionParams(const BcmFlowEntry& bcm_flow_entry,
+                                         MplsActionParams* action_params);
 
   // A helper to find the sorted vector of the member egress intf ids of an
   // ECMP group. The output vector is going to have the following format:

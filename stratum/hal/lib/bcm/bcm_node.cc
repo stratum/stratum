@@ -727,7 +727,7 @@ std::unique_ptr<BcmNode> BcmNode::CreateInstance(
                             info.flow_ref_count == 0)
           << "member_id " << member_id << " is already used by "
           << info.group_ref_count << " groups and " << info.flow_ref_count
-          << "flows on node " << node_id_
+          << " flows on node " << node_id_
           << ". ActionProfileMember: " << member.ShortDebugString() << ".";
       // Delete the member from HW.
       RETURN_IF_ERROR(
