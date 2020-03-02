@@ -1343,6 +1343,43 @@ TEST_F(BcmL3ManagerTest, InsertLpmOrHostFlowSuccessForIpv6HostFlow) {
   ASSERT_OK(bcm_l3_manager_->InsertTableEntry(p4_table_entry));
 }
 
+TEST_F(BcmL3ManagerTest, InsertMplsFlowSuccessForIpv4LpmFlowAndMultipathNexthop) {
+  const std::string kBcmFlowEntryText = R"(
+      unit: 3
+      bcm_table_type: BCM_TABLE_MPLS
+      fields: {
+        type: MPLS_LABEL
+        value {
+          u32: 100
+        }
+      }
+      actions: {
+        type: OUTPUT_L3
+        params {
+          type: EGRESS_INTF_ID
+          value {
+            u32: 200256
+          }
+        }
+      }
+  )";
+
+  // Test BcmFlowEntry.
+  BcmFlowEntry bcm_flow_entry;
+  ASSERT_OK(ParseProtoFromString(kBcmFlowEntryText, &bcm_flow_entry));
+  ::p4::v1::TableEntry p4_table_entry =
+      ExpectFlowConversion(::p4::v1::Update::INSERT, bcm_flow_entry);
+
+  // Expectations for the mock objects.
+  EXPECT_CALL(*bcm_sdk_mock_, AddMplsRoute(kUnit, 100, 200256, true))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_table_manager_mock_,
+              AddTableEntry(EqualsProto(p4_table_entry)))
+      .WillOnce(Return(::util::OkStatus()));
+
+  ASSERT_OK(bcm_l3_manager_->InsertTableEntry(p4_table_entry));
+}
+
 TEST_F(BcmL3ManagerTest,
        InsertLpmOrHostFlowFailureWhenIpv4LpmFlowDefinesPortNexthop) {
   const std::string kBcmFlowEntryText = R"(

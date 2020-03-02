@@ -422,11 +422,11 @@ class BcmSdkInterface {
                                        const std::string& ipv6, int class_id,
                                        int egress_intf_id) = 0;
 
-  // Add a MPLS LSR (transit) route for the given source port and MPLS label.
+  // Add a MPLS LSR (transit) route for the given MPLS label and all ports.
   // The egress intf used is given by egress_intf_id and is assumed to be
   // already created. The function will return error if a route with the same
-  // (port, mpls_label) exists.
-  virtual ::util::Status AddMplsRoute(int unit, int port, uint32 mpls_label,
+  // mpls_label exists.
+  virtual ::util::Status AddMplsRoute(int unit, uint32 mpls_label,
                                       int egress_intf_id,
                                       bool is_intf_multipath) = 0;
 
@@ -473,10 +473,10 @@ class BcmSdkInterface {
                                           int egress_intf_id) = 0;
 
   // Modifies egress_intf_id of a existing MPLS LSR (transit) route with key
-  // (port, mpls_label). The new egress intf to use is given by egress_intf_id
-  // and is assumed to be already created. The function will return error if a
-  // route with key (port, mpls_label) does not exist.
-  virtual ::util::Status ModifyMplsRoute(int unit_, int port, uint32 mpls_label,
+  // mpls_label. The new egress intf to use is given by egress_intf_id and is
+  // assumed to be already created. The function will return error if a route
+  // with key mpls_label does not exist.
+  virtual ::util::Status ModifyMplsRoute(int unit_, uint32 mpls_label,
                                          int egress_intf_id,
                                          bool is_intf_multipath) = 0;
 
@@ -500,10 +500,9 @@ class BcmSdkInterface {
   virtual ::util::Status DeleteL3HostIpv6(int unit, int vrf,
                                           const std::string& ipv6) = 0;
 
-  // Deletes a MPLS LSR (transit) route given its (port, mpls_label) key.
+  // Deletes a MPLS LSR (transit) route given its mpls_label key.
   // Returns error if the given key does not exist.
-  virtual ::util::Status DeleteMplsRoute(int unit_, int port,
-                                         uint32 mpls_label) = 0;
+  virtual ::util::Status DeleteMplsRoute(int unit_, uint32 mpls_label) = 0;
 
   // Adds an entry to match the given (vlan, vlan_mask, dst_mac, dst_mac_mask)
   // to the my station TCAM, with the given priority. NOOP if the entry already
