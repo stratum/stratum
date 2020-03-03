@@ -1,3 +1,5 @@
+# Copyright 2018 Google LLC
+# SPDX-License-Identifier: Apache-2.0
 tables {
   preamble {
     id: 33576202

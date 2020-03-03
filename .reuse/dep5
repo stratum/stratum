@@ -1,0 +1,49 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Stratum
+Upstream-Contact: Stratum dev <stratum-dev@lists.stratumproject.org>
+Source: https://github.com/stratum/stratum
+
+Files: stratum/glue/gtl/cleanup.h stratum/glue/gtl/cleanup_test.cc
+Copyright: 2016 The TensorFlow Authors
+License: Apache-2.0
+
+Files: stratum/glue/gtl/map_util.h stratum/glue/gtl/stl_util.h
+Copyright: 2015 The TensorFlow Authors
+License: Apache-2.0
+
+Files: stratum/glue/gtl/map_util_test.cc
+Copyright: 2016 The TensorFlow Authors
+Copyright: 2018 Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/config/**/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/platforms/x86-64-accton-wedge100bf-32x-r0.json
+Copyright: 2019 Barefoot Networks, Inc.
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/platforms/x86-64-inventec-*.json
+Copyright: 2019 Inventec Technology Corporation.
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/platforms/x86-64-inventec-*.json
+Copyright: 2019 Inventec Technology Corporation.
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/platforms/x86-64-stordis-*.json
+Copyright: 2019 Stordis GmbH.
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/platforms/x86-64-delta-ag9064v1-r0.json
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/platforms/x86-64-accton-wedge100bf-65x-r0.json
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: tools/mininet/**/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0

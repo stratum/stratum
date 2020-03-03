@@ -1,3 +1,6 @@
+// Copyright 2019 Google LLC
+// Copyright 2019-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
 // This file contains custom IR definitions for a Stratum p4c backend that maps
 // P4 programs to fixed-function switches.  It exists here with Stratum p4c
 // backend sources, but it must be built with the rest of the p4c IR files

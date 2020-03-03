@@ -1,3 +1,10 @@
+<!--
+Copyright 2019 Google LLC
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Stratum: P4C backend
 
 The p4c_backends directory contains [P4 compiler](https://github.com/p4lang/p4c)

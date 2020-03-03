@@ -1,3 +1,10 @@
+<!--
+Copyright 2019 NoviFlow, Inc.
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Stratum Pipeline Examples
 
 P4 Pipelines used for simple demonstrations of the `Stratum` software using `bmv2`.

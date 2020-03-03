@@ -1,3 +1,10 @@
+<!--
+Copyright 2018 Barefoot Networks, Inc.
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Running Stratum on a Barefoot Tofino based switch
 
 ## Getting Started with Pre-Build Docker Images
@@ -125,7 +132,7 @@ running Stratum with the Tofino software model.
 bazel build //stratum/hal/bin/barefoot:stratum_bf --define phal_with_onlp=false [--define sde_ver=8.9.2]
 ```
 
-## Setting up the huge page 
+## Setting up the huge page
 
 Before start the Stratum, make sure you have set up the huge page for DMA purposes.
 

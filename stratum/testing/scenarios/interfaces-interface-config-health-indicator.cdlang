@@ -1,3 +1,6 @@
+// Copyright 2019 Google LLC
+// Copyright 2019-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
 scenario GetSetHealthIndicator(ifname: string) version 1.0.0 {
   // Set is disabled until problem with unexpected closure of 'gnmi' stream
   // in GetSetHealthIndicatorOnFirstInterface is fixed.

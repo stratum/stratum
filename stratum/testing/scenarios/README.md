@@ -1,3 +1,10 @@
+<!--
+Copyright 2019 Google LLC
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # gNMI test scenarios
 
 This directory contains multiple .cdlang files that contain gNMI test scenarios.

@@ -1,3 +1,9 @@
+<!--
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Compiling main.p4
 
 `main.p4` represents the reference pipeline for Broadcom's fixed-function switches,

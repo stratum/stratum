@@ -1,3 +1,8 @@
+<!--
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # Trellis+Stratum example
 
 This directory contains scripts that use Docker and Mininet to emulate a network
@@ -295,11 +300,11 @@ information on how to use the ONOS web UI please refer to this guide:
 
 To show or hide switch labels, press `L` on your keyboard.
 
-To show or hide link stats, press `A` on your keyboard multiple times until you see 
+To show or hide link stats, press `A` on your keyboard multiple times until you see
 (pkt/second or bit/second).
 
 #### Check forwarding
-      
+
 It is finally time to test connectivity between the hosts of our Mininet
 network. To access the Mininet CLI (Ctrl-A Ctrl-D to exit):
 
