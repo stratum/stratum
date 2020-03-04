@@ -34,25 +34,22 @@ BF_SDE_PI_VER = {
     "9_0_0": "ca0291420b5b47fa2596a00877d1713aab61dc7a",
     "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
 }
+GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
+GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
 
 def stratum_deps():
 # -----------------------------------------------------------------------------
 #        Protobuf + gRPC compiler and external models
 # -----------------------------------------------------------------------------
-    if "com_google_protobuf" not in native.existing_rules():
-        remote_workspace(
-            name = "com_google_protobuf",
-            remote = "https://github.com/google/protobuf",
-            tag = "3.7.1",
-        )
 
     if "com_github_grpc_grpc" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_grpc_grpc",
-            remote = "https://github.com/grpc/grpc",
-            tag = "1.21.3",
-            patches = ["@//bazel/patches:grpc.patch"],
-            patch_args = ["-p1"],
+            urls = [
+                "https://github.com/grpc/grpc/archive/de893acb6aef88484a427e64b96727e4926fdcfd.tar.gz",
+            ],
+            strip_prefix = "grpc-de893acb6aef88484a427e64b96727e4926fdcfd",
+            sha256 = "61272ea6d541f60bdc3752ddef9fd4ca87ff5ab18dd21afc30270faad90c8a34",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
@@ -78,6 +75,7 @@ def stratum_deps():
             build_file = "@com_github_p4lang_PI//bazel/external:judy.BUILD",
             url = "http://archive.ubuntu.com/ubuntu/pool/universe/j/judy/judy_1.0.5.orig.tar.gz",
             strip_prefix = "judy-1.0.5",
+            sha256 = "d2704089f85fdb6f2cd7e77be21170ced4b4375c03ef1ad4cf1075bd414a63eb"
         )
 
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
@@ -125,19 +123,26 @@ def stratum_deps():
         )
 
     if "com_github_openconfig_gnoi" not in native.existing_rules():
-        remote_workspace(
+        http_archive(
             name = "com_github_openconfig_gnoi",
-            remote = "https://github.com/openconfig/gnoi",
-            commit = "437c62e630389aa4547b4f0521d0bca3fb2bf811",
+            urls = ["https://github.com/openconfig/gnoi/archive/%s.zip" % GNOI_COMMIT],
+            strip_prefix = "gnoi-%s" % GNOI_COMMIT,
             build_file = "@//bazel:external/gnoi.BUILD",
+            sha256 = GNOI_SHA,
+            patch_cmds = [
+                "find . -name *.proto | xargs sed -i 's#github.com/openconfig/##g'",
+                "mkdir -p gnoi",
+                "mv bgp cert common diag file interface layer2 mpls otdr system test types wavelength_router gnoi/",
+            ],
         )
 
-    if "io_bazel_rules_python" not in native.existing_rules():
-        remote_workspace(
-            name = "io_bazel_rules_python",
-            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
-            remote = "https://github.com/bazelbuild/rules_python.git",
+    if "rules_python" not in native.existing_rules():
+        http_archive(
+            name = "rules_python",
+            url = "https://github.com/bazelbuild/rules_python/releases/download/0.0.1/rules_python-0.0.1.tar.gz",
+            sha256 = "aa96a691d3a8177f3215b14b0edc9641787abaaa30363a080165d06ab65e1161",
         )
+
     if "cython" not in native.existing_rules():
         http_archive(
             name = "cython",
@@ -226,26 +231,12 @@ def stratum_deps():
             build_file = "@//bazel:external/systemd.BUILD",
         )
 
-    if "boringssl" not in native.existing_rules():
-        remote_workspace(
-            name = "boringssl",
-            remote = "https://github.com/google/boringssl",
-            branch = "chromium-stable-with-bazel",
-            #commit = "90bd81032325ba659e538556e64977c29df32a3c", or afc30d43eef92979b05776ec0963c9cede5fb80f
-        )
-
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
-        remote_workspace(
+        git_repository(
             name = "com_github_nelhage_rules_boost",
+            commit = "ed844db5990d21b75dc3553c057069f324b3916b",
             remote = "https://github.com/nelhage/rules_boost",
-            commit = "a3b25bf1a854ca7245d5786fda4821df77c57827",
-        )
-
-    if "rules_cc" not in native.existing_rules():
-        remote_workspace(
-            name = "rules_cc",
-            remote = "https://github.com/bazelbuild/rules_cc",
-            commit = "cfe68f6bc79dea602f2f6a767797f94a5904997f",
+            shallow_since = "1570056263 -0700",
         )
 
     if "com_github_jbeder_yaml_cpp" not in native.existing_rules():
@@ -264,32 +255,6 @@ def stratum_deps():
             sha256 = "66ca4240628a4e40cc02d7f77f06b93269dad0068e7a844009fd439e5c55f5a9",
             strip_prefix = "bazel-latex-0.17",
             url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
-        )
-
-    if "net_zlib" not in native.existing_rules():
-        native.bind(
-            name = "zlib",
-            actual = "@net_zlib//:zlib",
-        )
-        http_archive(
-            name = "net_zlib",
-            build_file = "@com_google_protobuf//:third_party/zlib.BUILD",
-            sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
-            strip_prefix = "zlib-1.2.11",
-            urls = ["https://zlib.net/zlib-1.2.11.tar.gz"],
-        )
-    if "io_bazel_rules_go" not in native.existing_rules():
-        remote_workspace(
-            name = "io_bazel_rules_go",
-            remote = "https://github.com/bazelbuild/rules_go",
-            commit = "2eb16d80ca4b302f2600ffa4f9fc518a64df2908",
-        )
-
-    if "bazel_gazelle" not in native.existing_rules():
-        remote_workspace(
-            name = "bazel_gazelle",
-            remote = "https://github.com/bazelbuild/bazel-gazelle",
-            commit = "e443c54b396a236e0d3823f46c6a931e1c9939f2",
         )
 # -----------------------------------------------------------------------------
 #        Chipset and Platform specific C/C++ libraries
