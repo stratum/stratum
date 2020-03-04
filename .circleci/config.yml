@@ -36,18 +36,16 @@ save_bazel_cache: &save_bazel_cache
     paths:
       - /tmp/bazel-cache
 
-# Print Bazel profiling info and generate HTML report to upload as artifact.
+# Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
   run:
     name: Analyze Bazel profile
     command: |
-      bazel analyze-profile /tmp/bazel.profile
-      mkdir /tmp/bazel_profile
-      bazel analyze-profile --html /tmp/bazel.profile
-      mv /tmp/bazel.profile.html /tmp/bazel_profile/profile.html
+      bazel analyze-profile /tmp/bazel.profile.json
+
 store_bazel_profile: &store_bazel_profile
   store_artifacts:
-    path: /tmp/bazel_profile
+    path: /tmp/bazel.profile.json
 
 # Use a bazelrc file convenient for CI jobs.
 set_bazelrc: &set_bazelrc
@@ -78,7 +76,7 @@ jobs:
   # Build targets and run unit tests.
   unit_tests:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:bazel-2.2.0
     steps:
       - checkout
       - *restore_bazel_cache
@@ -96,7 +94,7 @@ jobs:
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
-      - image: stratumproject/build:build
+      - image: stratumproject/build:bazel-2.2.0
     steps:
       - checkout
       - *restore_bazel_cache

@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
 licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = ["//visibility:public"],
 )
-
-load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
 
 # TODO(Yi) Move to CC
 py_binary(

@@ -161,7 +161,7 @@ TEST_P(AdminServiceTest, RebootColdSuccess) {
 }
 
 TEST_P(AdminServiceTest, CancelReboot) {
-  ::grpc::ClientContext* context = new ::grpc::ClientContext();
+  ::grpc::ClientContext context1;
   ::gnoi::system::RebootRequest req;
   ::gnoi::system::RebootResponse resp;
   ASSERT_OK(admin_service_->Setup(false));
@@ -170,14 +170,14 @@ TEST_P(AdminServiceTest, CancelReboot) {
   req.set_method(gnoi::system::RebootMethod::COLD);
 
   // Invoke the RPC and validate the results.
-  ::grpc::Status status = stub_->Reboot(context, req, &resp);
+  ::grpc::Status status = stub_->Reboot(&context1, req, &resp);
   EXPECT_TRUE(status.ok());
 
   // Cancel the reboot
-  context = new ::grpc::ClientContext();
+  ::grpc::ClientContext context2;
   ::gnoi::system::CancelRebootRequest cancel_req;
   ::gnoi::system::CancelRebootResponse cancel_resp;
-  status = stub_->CancelReboot(context, cancel_req, &cancel_resp);
+  status = stub_->CancelReboot(&context2, cancel_req, &cancel_resp);
   EXPECT_TRUE(status.ok());
 
   absl::SleepFor(absl::Milliseconds(6));

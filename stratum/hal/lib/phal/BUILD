@@ -19,13 +19,13 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
+    "EMBEDDED_ARCHES",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
     "stratum_cc_library",
     "stratum_cc_test",
     "stratum_package",
-    "EMBEDDED_ARCHES",
-    "HOST_ARCHES",
 )
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
