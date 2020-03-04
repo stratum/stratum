@@ -4,7 +4,7 @@ Containerize Stratum for Barefoot Tofino based device
 This directory provides most material to build the containerized version of the
 Stratum for Barefoot Tofino based device.
 
-You can pull prebuilt version of this container image from the [Dockerhub](https://cloud.docker.com/u/stratumproject/repository/docker/stratumproject/stratum-bf/tags)
+You can pull prebuilt version of this container image from the [Dockerhub](https://hub.docker.com/repository/docker/stratumproject/stratum-bf/tags)
 
 ```bash
 $ docker pull stratumproject/stratum-bf:[SDE version]-[Linux kernel version]
@@ -90,5 +90,5 @@ You can place config files such as chassis config, flag file, phal config to the
 If you would like to build the Docker image yourself, run `build-stratum-bf-container.sh` script with SDE and Linux header tarball, for example:
 
 ```bash
-$ ./build-stratum-bf-container.sh bf-sde-9.0.0.tgz linux-4.14.49-ONL.tar.gz
+$ ./build-stratum-bf-container.sh -s bf-sde-9.0.0.tgz -k linux-4.14.49-ONL.tar.gz
 ```
