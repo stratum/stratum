@@ -23,6 +23,7 @@
 
 #include "absl/base/thread_annotations.h"
 #include "absl/synchronization/mutex.h"
+#include "gnoi/system/system.grpc.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
@@ -32,7 +33,6 @@
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/timer_daemon.h"
-#include "gnoi/system/system.grpc.pb.h"
 
 namespace stratum {
 namespace hal {

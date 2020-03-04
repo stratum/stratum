@@ -20,8 +20,8 @@
 #include <memory>
 #include <vector>
 
-#include "gnoi/types/types.pb.h"
 #include "gnoi/system/system.grpc.pb.h"
+#include "gnoi/types/types.pb.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/integral_types.h"
 
