@@ -205,9 +205,8 @@ TEST_P(PhalDbServiceTest, SetRequestSuccess) {
   AttributeValueMap attrs;
 
   // Create a path
-  std::vector<PathEntry> path = {PathEntry("fan_trays", 0),
-                                 PathEntry("fans", 0),
-                                 PathEntry("rpm", -1, false, false, true)};
+  Path path = {PathEntry("fan_trays", 0), PathEntry("fans", 0),
+               PathEntry("rpm", -1, false, false, true)};
   attrs[path] = 1000.0;
 
   // TODO(max): check correct pb PathQuery to phal::Path translation

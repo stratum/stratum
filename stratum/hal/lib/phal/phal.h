@@ -27,6 +27,7 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
+#include "stratum/hal/lib/phal/optics_adapter.h"
 #include "stratum/hal/lib/phal/phal_backend_interface.h"
 #include "stratum/hal/lib/phal/sfp_adapter.h"
 
@@ -53,6 +54,12 @@ class Phal : public PhalInterface {
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info) override
+      LOCKS_EXCLUDED(config_lock_);
+  ::util::Status GetOpticalTransceiverInfo(int slot, int port,
+                                           OpticalChannelInfo* oc_info) override
+      LOCKS_EXCLUDED(config_lock_);
+  ::util::Status SetOpticalTransceiverInfo(
+      int slot, int port, const OpticalChannelInfo& oc_info) override
       LOCKS_EXCLUDED(config_lock_);
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
@@ -89,6 +96,9 @@ class Phal : public PhalInterface {
 
   // Owned by this class.
   std::unique_ptr<SfpAdapter> sfp_adapter_ GUARDED_BY(config_lock_);
+
+  // Owned by this class.
+  std::unique_ptr<OpticsAdapter> optics_adapter_ GUARDED_BY(config_lock_);
 
   // Store backend interfaces for later Shutdown. Not owned by this class.
   std::vector<PhalBackendInterface*> phal_interfaces_ GUARDED_BY(config_lock_);

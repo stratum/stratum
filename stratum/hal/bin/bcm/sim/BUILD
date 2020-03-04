@@ -38,7 +38,7 @@ stratum_cc_binary(
         "main.cc",
     ],
     arches = HOST_ARCHES,
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
         "-lrt",
