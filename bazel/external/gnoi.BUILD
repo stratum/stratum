@@ -25,7 +25,7 @@ package(
 
 proto_library(
     name = "types_proto",
-    srcs = ["types/types.proto"],
+    srcs = ["gnoi/types/types.proto"],
     deps = [
         "@com_google_protobuf//:descriptor_proto",
         "@com_google_protobuf//:any_proto",
@@ -39,7 +39,7 @@ cc_proto_library(
 
 proto_library(
     name = "common_proto",
-    srcs = ["common/common.proto"],
+    srcs = ["gnoi/common/common.proto"],
     deps = [":types_proto"],
 )
 
@@ -50,7 +50,7 @@ cc_proto_library(
 
 proto_library(
     name = "diag_proto",
-    srcs = ["diag/diag.proto"],
+    srcs = ["gnoi/diag/diag.proto"],
     deps = [":types_proto"],
 )
 
@@ -68,7 +68,7 @@ cc_grpc_library(
 
 proto_library(
     name = "system_proto",
-    srcs = ["system/system.proto"],
+    srcs = ["gnoi/system/system.proto"],
     deps = [
       ":types_proto",
       ":common_proto"
@@ -89,7 +89,7 @@ cc_grpc_library(
 
 proto_library(
     name = "file_proto",
-    srcs = ["file/file.proto"],
+    srcs = ["gnoi/file/file.proto"],
     deps = [
       ":types_proto",
       ":common_proto"
@@ -110,7 +110,7 @@ cc_grpc_library(
 
 proto_library(
     name = "cert_proto",
-    srcs = ["cert/cert.proto"],
+    srcs = ["gnoi/cert/cert.proto"],
     deps = [
       ":types_proto",
       ":common_proto",

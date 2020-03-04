@@ -36,8 +36,7 @@ save_bazel_cache: &save_bazel_cache
     paths:
       - /tmp/bazel-cache
 
-# Wait until JSON profile analyzer released
-# See: https://github.com/bazelbuild/bazel/issues/10140
+# Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
   run:
     name: Analyze Bazel profile

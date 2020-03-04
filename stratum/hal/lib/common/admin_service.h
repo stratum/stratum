@@ -32,7 +32,7 @@
 #include "stratum/hal/lib/common/switch_interface.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/timer_daemon.h"
-#include "system/system.grpc.pb.h"
+#include "gnoi/system/system.grpc.pb.h"
 
 namespace stratum {
 namespace hal {
