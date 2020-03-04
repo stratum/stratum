@@ -42,12 +42,11 @@ analyze_bazel_profile: &analyze_bazel_profile
   run:
     name: Analyze Bazel profile
     command: |
-      echo "Skip analyzing the Bazel profile now"
-      echo "Please download bazel.profile from artifacts and use Chrome to visualized it"
+      bazel analyze-profile /tmp/bazel.profile.json
 
 store_bazel_profile: &store_bazel_profile
   store_artifacts:
-    path: /tmp/bazel.profile
+    path: /tmp/bazel.profile.json
 
 # Use a bazelrc file convenient for CI jobs.
 set_bazelrc: &set_bazelrc
