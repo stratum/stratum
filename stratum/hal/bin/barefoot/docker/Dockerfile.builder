@@ -63,3 +63,6 @@ RUN mkdir -p $OUTPUT_BASE/lib/modules && \
 
 # Strip symbols from all .so files
 RUN strip --strip-all $OUTPUT_BASE/lib/*.so*
+
+# Remove SDE and Linux headers tarball
+RUN rm -r /stratum/*
