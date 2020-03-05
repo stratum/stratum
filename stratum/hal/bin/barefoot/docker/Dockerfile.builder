@@ -24,10 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libelf-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy stratum source code, include SDE and Linux headers tarball
-ADD . /stratum
-
 ARG SDE_TAR
+ARG KERNEL_HEADERS_TAR
+# Copy stratum source code, include SDE and Linux headers tarball
+COPY $SDE_TAR /stratum/
+COPY $KERNEL_HEADERS_TAR /stratum/
+
 ENV SDE /bf-sde
 ENV SDE_INSTALL /$SDE/install
 RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
@@ -41,7 +43,6 @@ RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 
 # Build Barefoot Tofino kernel module
-ARG KERNEL_HEADERS_TAR
 RUN mkdir -p /usr/src/kernel-headers && \
     tar xf /stratum/$KERNEL_HEADERS_TAR -C /usr/src/kernel-headers --strip-components 1
 
