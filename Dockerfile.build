@@ -40,7 +40,7 @@ ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
-    gnupg2 software-properties-common python-pip
+    gnupg2 software-properties-common python-pip python-dev python3-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
