@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ARG SDE_TAR
 ARG KERNEL_HEADERS_TAR
-# Copy stratum source code, include SDE and Linux headers tarball
+# Copy SDE and Linux headers tarball
 COPY $SDE_TAR /stratum/
 COPY $KERNEL_HEADERS_TAR /stratum/
 
