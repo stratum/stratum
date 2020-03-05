@@ -288,6 +288,17 @@ BcmSwitch::~BcmSwitch() {}
         }
         break;
       }
+      // Get singleton port loopback state.
+      case DataRequest::Request::kLoopbackStatus: {
+        auto bcm_port = bcm_chassis_manager_->GetPortLoopbackState(
+            req.loopback_status().node_id(), req.loopback_status().port_id());
+        if (!bcm_port.ok()) {
+          status.Update(bcm_port.status());
+        } else {
+          resp.mutable_loopback_status()->set_state(bcm_port.ValueOrDie());
+        }
+        break;
+      }
       // Get configured singleton port speed in bits per second.
       case DataRequest::Request::kPortSpeed: {
         auto bcm_port = bcm_chassis_manager_->GetBcmPort(
@@ -445,6 +456,13 @@ BcmSwitch::~BcmSwitch() {}
             status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.port().node_id(), req.port().port_id(),
                 req.port().optical_channel_info()));
+            break;
+          }
+          case SetRequest::Request::Port::ValueCase::kLoopbackStatus: {
+            absl::WriterMutexLock l(&chassis_lock);
+            status.Update(bcm_chassis_manager_->SetPortLoopbackState(
+                req.port().node_id(), req.port().port_id(),
+                req.port().loopback_status().state()));
             break;
           }
           default:

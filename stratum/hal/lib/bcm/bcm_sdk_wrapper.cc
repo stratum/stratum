@@ -1598,6 +1598,27 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     }
     RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
   }
+  // Loopback
+  if (options.loopback_mode()) {
+    // SDKLT only supports MAC loopback mode.
+    const char* loopback;
+    if (options.loopback_mode() == LOOPBACK_NONE) {
+      loopback = PC_LPBK_NONEs;
+    } else if (options.loopback_mode() == LOOPBACK_MAC) {
+      loopback = PC_LPBK_MACs;
+    } else {
+      return MAKE_ERROR(ERR_INVALID_PARAM)
+             << "Unsupported loopback mode: "
+             << LoopbackState_Name(options.loopback_mode());
+    }
+    RETURN_IF_BCM_ERROR(bcmlt_entry_allocate(unit, PC_PORTs, &entry_hdl));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_field_add(entry_hdl, PORT_IDs, port));
+    RETURN_IF_BCM_ERROR(
+        bcmlt_entry_field_symbol_add(entry_hdl, LOOPBACK_MODEs, loopback));
+    RETURN_IF_BCM_ERROR(bcmlt_custom_entry_commit(
+        entry_hdl, BCMLT_OPCODE_UPDATE, BCMLT_PRIORITY_NORMAL));
+    RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));
+  }
   return ::util::OkStatus();
 }
 
@@ -1663,6 +1684,18 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
       options->set_autoneg(TRI_STATE_TRUE);
     } else {
       options->set_autoneg(TRI_STATE_FALSE);
+    }
+    // Loopback status
+    const char* loopback;
+    RETURN_IF_BCM_ERROR(
+        bcmlt_entry_field_symbol_get(entry_hdl, LOOPBACK_MODEs, &loopback));
+    std::string loopback_mode(loopback);
+    if (loopback_mode == PC_LPBK_NONEs) {
+      options->set_loopback_mode(LOOPBACK_NONE);
+    } else if (loopback_mode == PC_LPBK_MACs) {
+      options->set_loopback_mode(LOOPBACK_MAC);
+    } else {
+      return MAKE_ERROR(ERR_INTERNAL) << "Unknown loopback mode " << loopback;
     }
   }
   RETURN_IF_BCM_ERROR(bcmlt_entry_free(entry_hdl));

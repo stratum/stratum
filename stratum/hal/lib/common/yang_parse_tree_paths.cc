@@ -882,7 +882,7 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// /interfaces/interface[name=<name>]/state/loopback-status
+// /interfaces/interface[name=<name>]/state/loopback-mode
 //
 void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id,
                                                   uint32 port_id,
@@ -1130,23 +1130,13 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
     LoopbackState typed_state =
         state_bool ? LoopbackState::LOOPBACK_MAC : LoopbackState::LOOPBACK_NONE;
 
-    // Set the value.
+    // Update the hardware.
     auto status = SetValue(node_id, port_id, tree,
                            &SetRequest::Request::Port::mutable_loopback_status,
                            &LoopbackStatus::set_state, typed_state);
     if (status != ::util::OkStatus()) {
       return status;
     }
-
-    // Update the hardware.
-    SetRequest req;
-    auto* request = req.add_requests()->mutable_port();
-    request->set_node_id(node_id);
-    request->set_port_id(port_id);
-    request->mutable_loopback_status()->set_state(LoopbackState::LOOPBACK_MAC);
-    RETURN_IF_ERROR(
-        tree->GetSwitchInterface()->SetValue(node_id, req,
-                                             /* details= */ nullptr));
 
     // Update the YANG parse tree.
     auto poll_functor = [state_bool](const GnmiEvent& event,
@@ -3130,7 +3120,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
   SetUpInterfacesInterfaceStateAdminStatus(node_id, port_id, node, tree);
 
   node = tree->AddNode(
-      GetPath("interfaces")("interface", name)("state")("loopback-status")());
+      GetPath("interfaces")("interface", name)("state")("loopback-mode")());
   SetUpInterfacesInterfaceStateLoopbackStatus(node_id, port_id, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(

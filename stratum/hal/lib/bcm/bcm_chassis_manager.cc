@@ -438,6 +438,23 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   return *admin_state;
 }
 
+::util::StatusOr<LoopbackState> BcmChassisManager::GetPortLoopbackState(
+    uint64 node_id, uint32 port_id) const {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  auto* port_id_to_sdk_port =
+      gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_sdk_port)
+      << "Unknown node " << node_id << ".";
+  auto* sdk_port = gtl::FindOrNull(*port_id_to_sdk_port, port_id);
+  CHECK_RETURN_IF_FALSE(sdk_port) << "Unknown port " << port_id << ".";
+  BcmPortOptions options;
+  RETURN_IF_ERROR(bcm_sdk_interface_->GetPortOptions(
+      sdk_port->unit, sdk_port->logical_port, &options));
+  return options.loopback_mode();
+}
+
 ::util::Status BcmChassisManager::GetPortCounters(uint64 node_id,
                                                   uint32 port_id,
                                                   PortCounters* pc) const {
@@ -467,6 +484,22 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
                                                      HealthState state) {
   // TODO(unknown): Implement this method.
   return ::util::OkStatus();
+}
+
+::util::Status BcmChassisManager::SetPortLoopbackState(uint64 node_id,
+                                                       uint32 port_id,
+                                                       LoopbackState state) {
+  auto* port_id_to_sdk_port =
+      gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_sdk_port)
+      << "Unknown node " << node_id << ".";
+  auto* sdk_port = gtl::FindOrNull(*port_id_to_sdk_port, port_id);
+  CHECK_RETURN_IF_FALSE(sdk_port) << "Unknown port " << port_id << ".";
+  BcmPortOptions options;
+  options.set_loopback_mode(state);
+  LOG(ERROR) << options.ShortDebugString();
+  return bcm_sdk_interface_->SetPortOptions(sdk_port->unit,
+                                            sdk_port->logical_port, options);
 }
 
 std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(

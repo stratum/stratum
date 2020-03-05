@@ -151,6 +151,9 @@ class BcmChassisManager : public BcmChassisRoInterface {
   ::util::StatusOr<AdminState> GetPortAdminState(uint64 node_id,
                                                  uint32 port_id) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
+  ::util::StatusOr<LoopbackState> GetPortLoopbackState(
+      uint64 node_id, uint32 port_id) const override
+      SHARED_LOCKS_REQUIRED(chassis_lock);
   ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
                                  PortCounters* pc) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
@@ -196,6 +199,11 @@ class BcmChassisManager : public BcmChassisRoInterface {
   //    if setting LED color/state fails.
   virtual ::util::Status SetPortHealthState(uint64 node_id, uint32 port_id,
                                             HealthState state)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+
+  // Sets the loopback state of a port, as requested by the SDN controller.
+  virtual ::util::Status SetPortLoopbackState(uint64 node_id, uint32 port_id,
+                                              LoopbackState state)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.

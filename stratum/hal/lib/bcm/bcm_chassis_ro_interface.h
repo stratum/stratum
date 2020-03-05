@@ -95,6 +95,10 @@ class BcmChassisRoInterface {
   virtual ::util::StatusOr<AdminState> GetPortAdminState(
       uint64 node_id, uint32 port_id) const = 0;
 
+  // Returns the loopback state of the given singleton port.
+  virtual ::util::StatusOr<LoopbackState> GetPortLoopbackState(
+      uint64 node_id, uint32 port_id) const = 0;
+
   // Gets the counters for a given singleton port.
   virtual ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
                                          PortCounters* pc) const = 0;
