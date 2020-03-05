@@ -186,6 +186,9 @@ std::string ConvertPortStateToString(const PortState& state);
 // A helper function that convert Stratum admin state enum to string.
 std::string ConvertAdminStateToString(const AdminState& state);
 
+// A helper function that convert Stratum loopback state enum to string.
+std::string ConvertLoopbackStateToString(const LoopbackState& state);
+
 // A helper function that convert speed number to string format.
 std::string ConvertSpeedBpsToString(
     const ::google::protobuf::uint64& speed_bps);
@@ -223,6 +226,9 @@ bool IsPortAutonegEnabled(const TriState& state);
 
 // A helper function that check if port admin state is enabled.
 bool IsAdminStateEnabled(const AdminState& admin_state);
+
+// A helper function that check if port loopback state is enabled.
+bool IsLoopbackStateEnabled(const LoopbackState& loopback_state);
 
 // A helper function that convert Stratum MediaType to string.
 std::string ConvertMediaTypeToString(const MediaType& type);

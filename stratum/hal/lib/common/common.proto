@@ -744,6 +744,18 @@ enum TrunkMemberBlockState {
   TRUNK_MEMBER_BLOCK_STATE_FORWARDING = 2;
 }
 
+// A generic enum for describing the loopback state of a singleton port.
+enum LoopbackState {
+  // Default/invalid state.
+  LOOPBACK_UNKNOWN = 0;
+  // Normal/non-loopback state.
+  LOOPBACK_NONE = 1;
+  // Loopback packets at the MAC layer of the port.
+  LOOPBACK_MAC = 2;
+  // Loopback packets at the PHY layer of the port.
+  LOOPBACK_PHY = 3;
+}
+
 // A generic enum for describing the administrative state (aka admin state) of
 // a HW component. Admin state is typically the "intended oper state". After
 // the admin state of a HW component changes, we expect the oper state to change
@@ -1070,6 +1082,11 @@ message OperStatus {
   PortState state = 1;  // required
 }
 
+// Wrapper around loopback state of a port.
+message LoopbackStatus {
+  LoopbackState state = 1; // required
+}
+
 // Wrapper around admin state of a HW component.
 message AdminStatus {
   AdminState state = 1;  // required
@@ -1207,6 +1224,7 @@ message DataRequest {
       Port hardware_port = 17;
       Port fec_status = 18;
       Port optical_channel_info = 19;
+      Port loopback_status = 20;
     }
   }
   repeated Request requests = 1;
@@ -1237,6 +1255,7 @@ message DataResponse {
     HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
     OpticalChannelInfo optical_channel_info = 19;
+    LoopbackStatus loopback_status = 20;
   }
 }
 
@@ -1266,6 +1285,8 @@ message SetRequest {
         ForwardingViability forwarding_viability = 10;
         // The new optical channel configurable values.
         OpticalChannelInfo optical_channel_info = 11;
+        // The intended loopback state of the port.
+        LoopbackStatus loopback_status = 12;
       }
     }
     // Data required to set info for a specific node.

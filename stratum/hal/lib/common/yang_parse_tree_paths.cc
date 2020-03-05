@@ -882,6 +882,28 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/state/loopback-status
+//
+void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id,
+                                                  uint32 port_id,
+                                                  TreeNode* node,
+                                                  YangParseTree* tree) {
+  auto poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
+                       &DataResponse::has_loopback_status,
+                       &DataRequest::Request::mutable_loopback_status,
+                       &LoopbackStatus::state, ConvertLoopbackStateToString);
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortLoopbackStateChangedEvent::GetNewState,
+      ConvertLoopbackStateToString);
+  auto register_functor = RegisterFunc<PortLoopbackStateChangedEvent>();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/hardware-port
 void SetUpInterfacesInterfaceStateHardwarePort(uint64 node_id, uint32 port_id,
                                                TreeNode* node,
@@ -1073,6 +1095,75 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortAdminStateChangedEvent::GetNewState,
       IsAdminStateEnabled);
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/config/loopback-mode
+//
+void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
+                                                uint64 node_id, uint32 port_id,
+                                                TreeNode* node,
+                                                YangParseTree* tree) {
+  auto poll_functor = [loopback](const GnmiEvent& event,
+                                 const ::gnmi::Path& path,
+                                 GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when
+    // it was configured!
+    return SendResponse(GetResponse(path, loopback), stream);
+  };
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    bool state_bool = typed_val->bool_val();
+    LoopbackState typed_state =
+        state_bool ? LoopbackState::LOOPBACK_MAC : LoopbackState::LOOPBACK_NONE;
+
+    // Set the value.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_loopback_status,
+                           &LoopbackStatus::set_state, typed_state);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the hardware.
+    SetRequest req;
+    auto* request = req.add_requests()->mutable_port();
+    request->set_node_id(node_id);
+    request->set_port_id(port_id);
+    request->mutable_loopback_status()->set_state(LoopbackState::LOOPBACK_MAC);
+    RETURN_IF_ERROR(
+        tree->GetSwitchInterface()->SetValue(node_id, req,
+                                             /* details= */ nullptr));
+
+    // Update the YANG parse tree.
+    auto poll_functor = [state_bool](const GnmiEvent& event,
+                                     const ::gnmi::Path& path,
+                                     GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when
+      // it was configured!
+      return SendResponse(GetResponse(path, state_bool), stream);
+    };
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortLoopbackStateChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortLoopbackStateChangedEvent::GetNewState,
+      IsLoopbackStateEnabled);
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
       ->SetOnUpdateHandler(on_set_functor)
@@ -3038,6 +3129,10 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
       GetPath("interfaces")("interface", name)("state")("admin-status")());
   SetUpInterfacesInterfaceStateAdminStatus(node_id, port_id, node, tree);
 
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("state")("loopback-status")());
+  SetUpInterfacesInterfaceStateLoopbackStatus(node_id, port_id, node, tree);
+
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("hardware-port")());
   SetUpInterfacesInterfaceStateHardwarePort(node_id, port_id, node, tree);
@@ -3257,6 +3352,11 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node,
                                         tree);
+
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("config")("loopback-mode")());
+  SetUpInterfacesInterfaceConfigLoopbackMode(false, node_id, port_id, node,
+                                             tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("mac-address")());
