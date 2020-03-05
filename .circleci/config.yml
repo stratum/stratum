@@ -91,6 +91,27 @@ jobs:
           command: xargs -a .circleci/test-targets.txt bazel test
       - *save_bazel_cache
 
+  # P4 FPM compiler
+  p4c_fpm:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build p4c-fpm targets
+          command: xargs -a .circleci/p4c-fpm-targets.txt bazel build
+      - *analyze_bazel_profile
+      - *store_bazel_profile
+      - run:
+          name: Test p4c-fpm targets
+          command: xargs -a .circleci/p4c-fpm-targets.txt bazel test
+      - run:
+          name: Create p4c-fpm coverate
+          command: xargs -a .circleci/p4c-fpm-targets.txt bazel coverage
+      - *save_bazel_cache
+
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
@@ -172,6 +193,7 @@ workflows:
   build_and_test:
     jobs:
       - unit_tests
+      - p4c_fpm
       - coverage
       - cpp-style-check
   docker-publish:
