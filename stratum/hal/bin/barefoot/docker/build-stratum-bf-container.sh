@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+set -xe
 DOCKERFILE_DIR=$(dirname "${BASH_SOURCE[0]}")
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 2>&1 && pwd )"}
 JOBS=${JOBS:-4}
@@ -30,18 +30,17 @@ Then it runs Bazel build for Stratum code base and copies libraries from builder
 Usage: $0 SDE_TAR [KERNEL_HEADERS_TAR]
 
 Example:
+    $0 ~/bf-sde-9.0.0.tgz
     $0 ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.xz
 
 EOF
 }
 
 BUILD_ARGS="--build-arg JOBS=$JOBS"
+SDE_TAR=""
+KERNEL_HEADERS_TAR=""
 
-if [ "$#" -eq 1 ]; then
-    BUILD_ARGS="$BUILD_ARGS --build-arg SDE_TAR=$1"
-elif [ "$#" -eq 2 ]; then
-    BUILD_ARGS="$BUILD_ARGS --build-arg SDE_TAR=$1 --build-arg KERNEL_HEADERS_TAR=$2"
-else
+if [ "$#" -eq 0 ]; then
     print_help
     exit 1
 fi
@@ -49,23 +48,33 @@ fi
 # Copy tarballs to Stratum root
 echo """Copying SDE and header tarballs to $DOCKERFILE_DIR/
 NOTE: Copied tarballs will be DELETED after the build"""
-cp -i $1 $DOCKERFILE_DIR
-cp -i $2 $DOCKERFILE_DIR
-SDE_TAR=$(basename $1)
-KERNEL_HEADERS_TAR=$(basename $2)
 
-# Build SDE and kernel modules
-BUILDER_IMAGE=stratumproject/stratum-bf-builder:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
+if [ -n "$1" ]; then
+    SDE_TAR=$(basename $1)
+    BUILD_ARGS="$BUILD_ARGS --build-arg SDE_TAR=$SDE_TAR"
+    IMG_TAG=${SDE_TAR%.tgz}
+    cp -f $1 $DOCKERFILE_DIR
+fi
+if [ -n "$2" ]; then
+    KERNEL_HEADERS_TAR=$(basename $2)
+    BUILD_ARGS="$BUILD_ARGS --build-arg KERNEL_HEADERS_TAR=$KERNEL_HEADERS_TAR"
+    IMG_TAG=$IMG_TAG-${KERNEL_HEADERS_TAR%.tar.xz}
+    cp -f $2 $DOCKERFILE_DIR
+fi
 
+BUILDER_IMAGE=stratumproject/stratum-bf-builder:$IMG_TAG
+RUNTIME_IMAGE=stratumproject/stratum-bf:$IMG_TAG
+
+# Build base builder image
 echo "Building $BUILDER_IMAGE"
 docker build -t $BUILDER_IMAGE $BUILD_ARGS \
 	 -f $DOCKERFILE_DIR/Dockerfile.builder $DOCKERFILE_DIR
 
-# Remove copied tarballs
-rm $DOCKERFILE_DIR/$SDE_TAR $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
+# Remove copied tarballs (and ignore the error)
+rm -f $DOCKERFILE_DIR/$SDE_TAR
+rm -f $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
 
-# Run Bazel build and generate runtime image
-RUNTIME_IMAGE=stratumproject/stratum-bf:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
+# Build runtime image
 echo "Building $RUNTIME_IMAGE"
 docker build -t $RUNTIME_IMAGE \
              --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \

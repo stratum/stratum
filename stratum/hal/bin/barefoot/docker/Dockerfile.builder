@@ -29,7 +29,7 @@ ARG KERNEL_HEADERS_TAR
 # Copy SDE and Linux headers tarball
 COPY $SDE_TAR /stratum/
 COPY $KERNEL_HEADERS_TAR /stratum/
-COPY /stratum/stratum/hal/bin/barefoot/docker/build-kdrv.sh /build-kdrv.sh
+COPY stratum/stratum/hal/bin/barefoot/docker/build-kdrv.sh /build-kdrv.sh
 
 ENV SDE /bf-sde
 ENV SDE_INSTALL /$SDE/install
