@@ -46,7 +46,7 @@ SDE_TAR=$(basename $1)
 KERNEL_HEADERS_TAR=$(basename $2)
 
 # Build SDE and kernel modules
-BUILDER_IMAGE=stratumproject/stratum-bf-builder:${SDE_TAR%%.*}-${KERNEL_HEADERS_TAR%%.tar.xz}
+BUILDER_IMAGE=stratumproject/stratum-bf-builder:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
 echo "Building $BUILDER_IMAGE"
 docker build -t $BUILDER_IMAGE \
 	 --build-arg JOBS=$JOBS \
@@ -58,7 +58,7 @@ docker build -t $BUILDER_IMAGE \
 rm $DOCKERFILE_DIR/$SDE_TAR $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
 
 # Run Bazel build and generate runtime image
-RUNTIME_IMAGE=stratumproject/stratum-bf:${SDE_TAR%%.*}-${KERNEL_HEADERS_TAR%%.tar.xz}
+RUNTIME_IMAGE=stratumproject/stratum-bf:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
 echo "Building $RUNTIME_IMAGE"
 docker build -t $RUNTIME_IMAGE \
              --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
