@@ -92,7 +92,7 @@ jobs:
       - *save_bazel_cache
 
   # P4 FPM compiler
-  p4c_fpm:
+  p4c_fpm_tests:
     docker:
       - image: stratumproject/build:build
     steps:
@@ -193,7 +193,7 @@ workflows:
   build_and_test:
     jobs:
       - unit_tests
-      - p4c_fpm
+      - p4c_fpm_tests
       - coverage
       - cpp-style-check
   docker-publish:
