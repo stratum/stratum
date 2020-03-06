@@ -28,9 +28,8 @@ def _generate_p4c_ir(ctx):
     """Preprocesses P4 sources, then runs p4c_ir_json_saver to produce JSON IR."""
 
     # Preprocess all files and create 'p4_preprocessed_file'
-    p4_preprocessed_file = ctx.new_file(
-        ctx.configuration.genfiles_dir,
-        ctx.label.name + ".pp.p4",
+    p4_preprocessed_file = ctx.actions.declare_file(
+        ctx.genfiles_dir.path + ctx.label.name + ".pp.p4",
     )
     cpp_toolchain = find_cpp_toolchain(ctx)
 
@@ -50,7 +49,7 @@ def _generate_p4c_ir(ctx):
     gcc_args.add("-o")
     gcc_args.add(p4_preprocessed_file.path)
 
-    ctx.action(
+    ctx.actions.run(
         arguments = [gcc_args],
         inputs = ([ctx.file.src] + ctx.files.hdrs + [ctx.file._model] +
                   [ctx.file._core] + ctx.files.cpp),
@@ -62,7 +61,7 @@ def _generate_p4c_ir(ctx):
     # Run p4c_ir_json_saver on pre-processed P4_16 sources.
     gen_files = [ctx.outputs.out_ir]
 
-    ctx.action(
+    ctx.actions.run(
         arguments = [
             "--skip_p4c_cpp",
             "--p4_to_json_in",

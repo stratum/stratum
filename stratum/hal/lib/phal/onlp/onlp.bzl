@@ -18,9 +18,9 @@
 # The ONLP_INSTALL environment variable needs to be set
 # otherwise will download the prebuit libraries
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 ONLP_URL = "https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.1.0/onlp-dev_1.1.0_amd64.tar.gz"
 SHA = "bd359f2429368e5645b4d4a77fe7c95fb0702e753f04fee48690adad653c6503"
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # When using cc_import, Bazel links against the SONAME versions of the library,
 # even if they are not available (see

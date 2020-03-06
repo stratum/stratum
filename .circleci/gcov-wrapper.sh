@@ -1,6 +1,6 @@
+#!/bin/bash
 #
-# Copyright 2018 Google LLC
-# Copyright 2018-present Open Networking Foundation
+# Copyright 2020-present Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
-exports_files(glob(["*.patch"]))
+tmpfile=$(mktemp /tmp/abc-script.XXXXXX)
+/usr/bin/x86_64-linux-gnu-gcov-6 $@ > $tmpfile
+touch $tmpfile
+if [ ! $(cat $tmpfile | grep Creating &> /dev/null) ]; then
+    ls *.gcov | awk '{printf "Creating "; print $1}'
+fi
+cat $tmpfile
+rm $tmpfile

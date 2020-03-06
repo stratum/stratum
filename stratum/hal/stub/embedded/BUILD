@@ -32,7 +32,7 @@ package(
 stratum_cc_binary(
     name = "stratum_stub",
     srcs = ["main.cc"],
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
         "-lrt",

@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
-_strict = False
-
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+_strict = False
 
 def _build_http_archive(
     name,
