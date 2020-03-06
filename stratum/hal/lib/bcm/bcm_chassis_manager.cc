@@ -489,6 +489,9 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
 ::util::Status BcmChassisManager::SetPortLoopbackState(uint64 node_id,
                                                        uint32 port_id,
                                                        LoopbackState state) {
+  if (state == LoopbackState::LOOPBACK_UNKNOWN) {
+    return ::util::OkStatus();
+  }
   auto* port_id_to_sdk_port =
       gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_sdk_port)
