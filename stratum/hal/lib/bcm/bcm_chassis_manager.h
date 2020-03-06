@@ -277,7 +277,8 @@ class BcmChassisManager : public BcmChassisRoInterface {
 
   // (Re-)syncs the internal state based the pushed chassis config. Called as
   // part of each chassis config push to regenerate all the internal port maps.
-  ::util::Status SyncInternalState(const ChassisConfig& config);
+  ::util::Status SyncInternalState(const ChassisConfig& config)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Registers/Unregisters all the event Writers (if not done yet).
   ::util::Status RegisterEventWriters();

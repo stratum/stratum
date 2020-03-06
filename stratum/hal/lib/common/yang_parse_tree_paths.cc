@@ -884,10 +884,9 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/loopback-mode
 //
-void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id,
-                                                  uint32 port_id,
-                                                  TreeNode* node,
-                                                  YangParseTree* tree) {
+void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id, uint32 port_id,
+                                                 TreeNode* node,
+                                                 YangParseTree* tree) {
   auto poll_functor =
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
                        &DataResponse::has_loopback_status,
@@ -1136,6 +1135,15 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
                            &LoopbackStatus::set_state, typed_state);
     if (status != ::util::OkStatus()) {
       return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.mutable_config_params()->set_loopback(typed_state);
+        break;
+      }
     }
 
     // Update the YANG parse tree.

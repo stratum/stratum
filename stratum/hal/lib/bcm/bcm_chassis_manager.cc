@@ -489,6 +489,9 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
 ::util::Status BcmChassisManager::SetPortLoopbackState(uint64 node_id,
                                                        uint32 port_id,
                                                        LoopbackState state) {
+  if (state == LoopbackState::LOOPBACK_UNKNOWN) {
+    return ::util::OkStatus();
+  }
   auto* port_id_to_sdk_port =
       gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_sdk_port)
@@ -497,7 +500,6 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   CHECK_RETURN_IF_FALSE(sdk_port) << "Unknown port " << port_id << ".";
   BcmPortOptions options;
   options.set_loopback_mode(state);
-  LOG(ERROR) << options.ShortDebugString();
   return bcm_sdk_interface_->SetPortOptions(sdk_port->unit,
                                             sdk_port->logical_port, options);
 }
@@ -1299,6 +1301,11 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
                 EnablePort(sdk_port, new_admin_state == ADMIN_STATE_ENABLED));
           }
         }
+        // Set the new loopback state. We don't care about the previous state.
+        APPEND_STATUS_IF_ERROR(
+            error,
+            SetPortLoopbackState(node_id, port_id,
+                                 singleton_port.config_params().loopback()));
         break;
       }
     }
