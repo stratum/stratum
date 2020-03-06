@@ -1,4 +1,5 @@
 build --announce_rc
+build --copt -O0
 
 # Set convenient location for Bazel files to cache
 startup --output_user_root=/tmp/bazel-cache/output-root
