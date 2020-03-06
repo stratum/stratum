@@ -13,11 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 
 #include <utility>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
@@ -29,9 +31,6 @@
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/channel/channel_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -514,7 +513,8 @@ TEST_F(BcmSwitchTest, GetPortLoopbackStatus) {
 
   // Expect successful retrieval followed by failure.
   ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
-  EXPECT_CALL(*bcm_chassis_manager_mock_, GetPortLoopbackState(kNodeId, kPortId))
+  EXPECT_CALL(*bcm_chassis_manager_mock_,
+              GetPortLoopbackState(kNodeId, kPortId))
       .WillOnce(Return(LOOPBACK_NONE))
       .WillOnce(Return(error));
   ExpectMockWriteDataResponse(&writer, &resp);
