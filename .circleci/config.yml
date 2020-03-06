@@ -108,7 +108,7 @@ jobs:
           name: Test p4c-fpm targets
           command: xargs -a .circleci/p4c-fpm-targets.txt bazel test
       - run:
-          name: Create p4c-fpm coverate
+          name: Create p4c-fpm coverage
           command: xargs -a .circleci/p4c-fpm-targets.txt bazel coverage
       - *save_bazel_cache
 
