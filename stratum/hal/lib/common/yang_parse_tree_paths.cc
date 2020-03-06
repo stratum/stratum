@@ -1141,7 +1141,7 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
     ChassisConfig* new_config = config->writable();
     for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
       if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
-        singleton_port.mutable_config_params()->set_loopback(typed_state);
+        singleton_port.mutable_config_params()->set_loopback_mode(typed_state);
         break;
       }
     }

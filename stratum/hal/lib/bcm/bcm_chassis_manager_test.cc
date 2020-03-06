@@ -52,10 +52,14 @@ DECLARE_string(bcm_sdk_checkpoint_dir);
 DECLARE_string(test_tmpdir);
 
 using ::testing::_;
+using ::testing::ByRef;
+using ::testing::DoAll;
 using ::testing::HasSubstr;
+using ::testing::Invoke;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
+using ::testing::SetArgPointee;
 
 namespace stratum {
 namespace hal {
@@ -271,6 +275,12 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
     return bcm_chassis_manager_->GetPortAdminState(node_id, port_id);
   }
 
+  ::util::StatusOr<LoopbackState> GetPortLoopbackState(uint64 node_id,
+                                                       uint32 port_id) const {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_chassis_manager_->GetPortLoopbackState(node_id, port_id);
+  }
+
   ::util::Status SetTrunkMemberBlockState(uint64 node_id, uint32 trunk_id,
                                           uint32 port_id,
                                           TrunkMemberBlockState state) {
@@ -289,6 +299,12 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
                                     HealthState state) {
     absl::WriterMutexLock l(&chassis_lock);
     return bcm_chassis_manager_->SetPortHealthState(node_id, port_id, state);
+  }
+
+  ::util::Status SetPortLoopbackState(uint64 node_id, uint32 port_id,
+                                      LoopbackState state) {
+    absl::WriterMutexLock l(&chassis_lock);
+    return bcm_chassis_manager_->SetPortLoopbackState(node_id, port_id, state);
   }
 
   void SendPortOperStateGnmiEvent(int node_id, int port_id, PortState state) {
@@ -5235,12 +5251,72 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
+  ChassisConfig config;
+
+  // Push a config which sets the loopback state to NONE.
+  ASSERT_OK(PushTestConfig(&config));
+
+  // We have to manually save the port options, since the chassis manager does
+  // not cache loopback mode state.
+  BcmPortOptions options;
+  auto save_port_options = [&options](int, int, BcmPortOptions option) {
+    if (option.loopback_mode() > 0) {
+      options = option;
+    }
+  };
+  EXPECT_CALL(*bcm_sdk_mock_, GetPortOptions(0, 34, _))
+      .Times(1)
+      .WillRepeatedly(
+          DoAll(SetArgPointee<2>(ByRef(options)), Return(::util::OkStatus())));
+  EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
+      .WillRepeatedly(
+          DoAll(Invoke(save_port_options), Return(::util::OkStatus())));
+
+  // Check that port loopback state is up.
+  auto loopback_state = GetPortLoopbackState(kNodeId, kPortId);
+  ASSERT_TRUE(loopback_state.ok());
+  EXPECT_EQ(LOOPBACK_UNKNOWN, loopback_state.ValueOrDie());
+
+  // Change the config and set the loopback state to MAC. Then re-push.
+  for (auto& singleton_port : *config.mutable_singleton_ports()) {
+    singleton_port.mutable_config_params()->set_loopback_mode(LOOPBACK_MAC);
+  }
+
+  ASSERT_OK(VerifyChassisConfig(config));
+  ASSERT_OK(PushChassisConfig(config));
+
+  EXPECT_CALL(*bcm_sdk_mock_, GetPortOptions(0, 34, _))
+      .WillRepeatedly(
+          DoAll(SetArgPointee<2>(options), Return(::util::OkStatus())));
+
+  loopback_state = GetPortLoopbackState(kNodeId, kPortId);
+  ASSERT_TRUE(loopback_state.ok());
+  EXPECT_EQ(LOOPBACK_MAC, loopback_state.ValueOrDie());
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
 TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
   ASSERT_OK(PushTestConfig());
 
   // TODO(unknown): Extend the tests when the function is implemneted.
   EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
   EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateByController) {
+  ASSERT_OK(PushTestConfig());
+
+  EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+
+  // TODO(unknown): Extend the tests when the function is implemneted.
+  EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_NONE));
+  EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_MAC));
+  EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_UNKNOWN));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
