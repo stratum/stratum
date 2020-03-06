@@ -259,16 +259,16 @@ std::string ConvertAdminStateToString(const AdminState& state) {
   }
 }
 
-std::string ConvertLoopbackStateToString(const LoopbackState& state) {
+bool ConvertLoopbackStateToBool(const LoopbackState& state) {
   switch (state) {
     case LOOPBACK_NONE:
-      return "NONE";
+      return false;
     case LOOPBACK_MAC:
-      return "MAC";
+      return true;
     case LOOPBACK_PHY:
-      return "PHY";
+      return true;
     default:
-      return "UNKNOWN";
+      return false;
   }
 }
 

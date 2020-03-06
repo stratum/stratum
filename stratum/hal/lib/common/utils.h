@@ -186,8 +186,8 @@ std::string ConvertPortStateToString(const PortState& state);
 // A helper function that convert Stratum admin state enum to string.
 std::string ConvertAdminStateToString(const AdminState& state);
 
-// A helper function that convert Stratum loopback state enum to string.
-std::string ConvertLoopbackStateToString(const LoopbackState& state);
+// A helper function that convert Stratum loopback state enum to bool.
+bool ConvertLoopbackStateToBool(const LoopbackState& state);
 
 // A helper function that convert speed number to string format.
 std::string ConvertSpeedBpsToString(

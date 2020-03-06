@@ -891,10 +891,10 @@ void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id, uint32 port_id,
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
                        &DataResponse::has_loopback_status,
                        &DataRequest::Request::mutable_loopback_status,
-                       &LoopbackStatus::state, ConvertLoopbackStateToString);
+                       &LoopbackStatus::state, ConvertLoopbackStateToBool);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortLoopbackStateChangedEvent::GetNewState,
-      ConvertLoopbackStateToString);
+      ConvertLoopbackStateToBool);
   auto register_functor = RegisterFunc<PortLoopbackStateChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
@@ -3334,12 +3334,15 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
                                                   tree);
   bool port_auto_neg_enabled = false;
   bool port_enabled = false;
+  bool loopback_enabled = false;
   uint64 mac_address = 0;
   if (singleton.has_config_params()) {
     port_auto_neg_enabled =
         IsPortAutonegEnabled(singleton.config_params().autoneg());
     port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
     mac_address = singleton.config_params().mac_address();
+    loopback_enabled =
+        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
   }
 
   node = tree->AddNode(GetPath("interfaces")(
@@ -3353,8 +3356,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("config")("loopback-mode")());
-  SetUpInterfacesInterfaceConfigLoopbackMode(false, node_id, port_id, node,
-                                             tree);
+  SetUpInterfacesInterfaceConfigLoopbackMode(loopback_enabled, node_id, port_id,
+                                             node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("mac-address")());
