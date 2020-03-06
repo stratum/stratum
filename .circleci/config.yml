@@ -112,6 +112,24 @@ jobs:
           command: xargs -a .circleci/p4c-fpm-targets.txt bazel coverage
       - *save_bazel_cache
 
+  # CDLang
+  cdlang_tests:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build CDLang targets
+          command: xargs -a .circleci/cdlang-targets.txt bazel build
+      - *analyze_bazel_profile
+      - *store_bazel_profile
+      - run:
+          name: Test CDLang targets
+          command: xargs -a .circleci/cdlang-targets.txt bazel test
+      - *save_bazel_cache
+
   # Generate coverage report and upload to codecov.io.
   coverage:
     docker:
@@ -194,6 +212,7 @@ workflows:
     jobs:
       - unit_tests
       - p4c_fpm_tests
+      - cdlang_tests
       - coverage
       - cpp-style-check
   docker-publish:
