@@ -22,17 +22,26 @@ JOBS=${JOBS:-4}
 print_help() {
 cat << EOF
 
-The script builds containerized version of Stratum for Barefoot Tofino based device. It builds SDE and kernel modules using Dockerfile.builder and saves artifacts to an intermediate builder image. Then it runs bazel build for Stratum code base and copies libraries from builder to runtime image using Dockerfile.runtime.
+The script builds containerized version of Stratum for Barefoot Tofino based device.
+It builds SDE using Dockerfile.builder and saves artifacts to an intermediate builder image.
+It also builds the kernel module if kernel header tarball is given.
+Then it runs Bazel build for Stratum code base and copies libraries from builder to runtime image using Dockerfile.runtime.
 
-Usage: $0 SDE_TAR KERNEL_HEADERS_TAR
+Usage: $0 SDE_TAR [KERNEL_HEADERS_TAR]
 
 Example:
-    $0 ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.gz
+    $0 ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.xz
 
 EOF
 }
 
-if [ "$#" -ne 2 ]; then
+BUILD_ARGS="--build-arg JOBS=$JOBS"
+
+if [ "$#" -eq 1 ]; then
+    BUILD_ARGS="$BUILD_ARGS --build-arg SDE_TAR=$1"
+elif [ "$#" -eq 2 ]; then
+    BUILD_ARGS="$BUILD_ARGS --build-arg SDE_TAR=$1 --build-arg KERNEL_HEADERS_TAR=$2"
+else
     print_help
     exit 1
 fi
@@ -47,11 +56,9 @@ KERNEL_HEADERS_TAR=$(basename $2)
 
 # Build SDE and kernel modules
 BUILDER_IMAGE=stratumproject/stratum-bf-builder:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
+
 echo "Building $BUILDER_IMAGE"
-docker build -t $BUILDER_IMAGE \
-	 --build-arg JOBS=$JOBS \
-	 --build-arg SDE_TAR=$SDE_TAR \
-	 --build-arg KERNEL_HEADERS_TAR=$KERNEL_HEADERS_TAR \
+docker build -t $BUILDER_IMAGE $BUILD_ARGS \
 	 -f $DOCKERFILE_DIR/Dockerfile.builder $DOCKERFILE_DIR
 
 # Remove copied tarballs

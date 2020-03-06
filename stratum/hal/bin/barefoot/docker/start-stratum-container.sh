@@ -17,13 +17,16 @@
 set -e
 set -x
 
+PLATFORM=${PLATFORM:x86-64-accton-wedge100bf-32x-r0}
+
 if [ -d "/etc/onl" ]; then
     ONLP_ARG=$(ls /lib/**/libonlp* | awk '{print "-v " $1 ":" $1 " " }')
     ONLP_ARG="$ONLP_ARG \
               -v /lib/platform-config:/lib/platform-config \
               -v /etc/onl:/etc/onl"
 else
-    ONLP_ARG="--env WITH_ONLP=false"
+    ONLP_ARG="--env WITH_ONLP=false \
+              --env PLATFORM=$PLATFORM"
 fi
 
 CONFIG_DIR=${CONFIG_DIR:-/root}
