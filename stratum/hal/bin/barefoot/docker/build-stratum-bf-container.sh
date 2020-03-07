@@ -70,9 +70,13 @@ echo "Building $BUILDER_IMAGE"
 docker build -t $BUILDER_IMAGE $BUILD_ARGS \
 	 -f $DOCKERFILE_DIR/Dockerfile.builder $DOCKERFILE_DIR
 
-# Remove copied tarballs (and ignore the error)
-rm -f $DOCKERFILE_DIR/$SDE_TAR
-rm -f $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
+# Remove copied tarballs
+if [ -f "$DOCKERFILE_DIR/$SDE_TAR" ]; then
+    rm -f $DOCKERFILE_DIR/$SDE_TAR
+fi
+if [ -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR" ]; then
+    rm -f $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
+fi
 
 # Build runtime image
 echo "Building $RUNTIME_IMAGE"
