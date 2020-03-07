@@ -86,7 +86,13 @@ You can place config files such as chassis config, flag file, phal config to the
 If you would like to build the Docker image yourself, run `build-stratum-bf-container.sh` script with SDE and Linux header tarball, for example:
 
 ```bash
-$ ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.gz
+$ ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.xz
+```
+
+You can also build the container image without Kernel headers, the script will skip building the Kernel module
+
+```bash
+$ ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz
 ```
 
 __Note:__ This script saves an intermediate image named `stratumproject/stratum-bf-builder` for caching artifacts from building SDE and kernel modules which could be used to speed up future builds when the same SDE and Linux header tarballs are used as input to the script.
