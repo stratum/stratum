@@ -62,6 +62,7 @@ optional arguments:
     PRINT_MSG(msg, "RESPONSE") \
   }
 
+DECLARE_bool(help);
 DEFINE_string(grpc_addr, "127.0.0.1:28000", "gNMI server address");
 DEFINE_string(bool_val, "", "Boolean value to be set");
 DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
@@ -172,35 +173,53 @@ build_gnmi_sub_sample_req(std::string path,
     <::gnmi::SubscribeRequest, ::gnmi::SubscribeResponse>* stream_reader_writer;
 
 int Main(int argc, char** argv) {
-  if (argc < 3) {
+  if (argc < 2 || FLAGS_help) {
     std::cout << kUsage << std::endl;
     return -1;
   }
   ::grpc::ClientContext ctx;
-  std::string cmd = std::string(argv[1]);
-  std::string path = std::string(argv[2]);
-  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr,
-      ::grpc::InsecureChannelCredentials());
-  auto stub = ::gnmi::gNMI::NewStub(channel);
   ::grpc::Status status;
+  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr,
+                                       ::grpc::InsecureChannelCredentials());
+  auto stub = ::gnmi::gNMI::NewStub(channel);
+  std::string cmd = std::string(argv[1]);
+
+  if (cmd.compare("cap") == 0) {
+    ::gnmi::CapabilityRequest req;
+    PRINT_MSG(req, "REQUEST")
+    ::gnmi::CapabilityResponse resp;
+    status = stub->Capabilities(&ctx, req, &resp);
+    LOG_IF_NOT_OK(status)
+    CHECK_AND_PRINT_RESP(status, resp)
+    return 0;
+  }
+
+  if (argc < 3) {
+    std::cout << "Missing path for " << cmd << " request" << std::endl;
+    return -1;
+  }
+  std::string path = std::string(argv[2]);
 
   if (cmd == "get") {
     ::gnmi::GetRequest req = build_gnmi_get_req(path);
     PRINT_MSG(req, "REQUEST")
     ::gnmi::GetResponse resp;
     status = stub->Get(&ctx, req, &resp);
+    LOG_IF_NOT_OK(status)
     CHECK_AND_PRINT_RESP(status, resp)
   } else if (cmd == "set") {
     ::gnmi::SetRequest req = build_gnmi_set_req(path);
     PRINT_MSG(req, "REQUEST")
     ::gnmi::SetResponse resp;
     status = stub->Set(&ctx, req, &resp);
+    LOG_IF_NOT_OK(status)
     CHECK_AND_PRINT_RESP(status, resp)
   } else if (cmd == "del") {
     ::gnmi::SetRequest req = build_gnmi_del_req(path);
     PRINT_MSG(req, "REQUEST")
     ::gnmi::SetResponse resp;
     status = stub->Set(&ctx, req, &resp);
+    LOG_IF_NOT_OK(status)
     CHECK_AND_PRINT_RESP(status, resp)
   } else if (cmd == "sub-onchange") {
     auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
@@ -231,12 +250,6 @@ int Main(int argc, char** argv) {
     }
     status = stream_reader_writer->Finish();
     LOG_IF_NOT_OK(status);
-  } else if (cmd == "cap") {
-    ::gnmi::CapabilityRequest req;
-    PRINT_MSG(req, "REQUEST")
-    ::gnmi::CapabilityResponse resp;
-    stub->Capabilities(&ctx, req, &resp);
-    CHECK_AND_PRINT_RESP(status, resp)
   } else {
     std::cout << "Unknown command: " << cmd << std::endl;
   }
@@ -257,7 +270,7 @@ void HandleSignal(int signal) {
 
 int main(int argc, char** argv) {
   ::gflags::SetUsageMessage(kUsage);
-  ::gflags::ParseCommandLineFlags(&argc, &argv, true);
+  ::gflags::ParseCommandLineNonHelpFlags(&argc, &argv, true);
   std::signal(SIGINT, stratum::tools::gnmi::HandleSignal);
   return stratum::tools::gnmi::Main(argc, argv);
 }
