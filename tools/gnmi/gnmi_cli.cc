@@ -25,7 +25,7 @@
 #include "gnmi/gnmi.grpc.pb.h"
 
 const char kUsage[] =
-R"USAGE(usage: gnmi-cli.py [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
+R"USAGE(usage: gnmi-cli [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
                    [-int_val INT_VAL] [-uint_val UINT_VAL]
                    [-string_val STRING_VAL] [-float_val FLOAT_VAL]
                    {get,set,sub} path
