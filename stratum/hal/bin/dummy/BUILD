@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
-
 licenses(["notice"])  # Apache v2
 
 package(
