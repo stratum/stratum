@@ -12,6 +12,7 @@ nodes {
     vlan_configs {
       vlan_id: 1
       disable_l2_learning: true
+      block_broadcast: true
       block_unknown_multicast: true
       block_unknown_unicast: true
     }
