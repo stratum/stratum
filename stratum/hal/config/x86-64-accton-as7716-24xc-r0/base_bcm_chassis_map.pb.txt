@@ -1,5 +1,5 @@
 bcm_chassis_maps {
-  id: "ACCTON_AS7716"
+  id: "ACCTON_AS7716_24_XC"
   bcm_chassis {
     sdk_properties: "os=unix"
     sdk_properties: "schan_intr_enable=0"
@@ -21,6 +21,7 @@ bcm_chassis_maps {
     pci_bus: 1
     is_oversubscribed: true
   }
+  # 100G ports
   bcm_ports {
     type: CE
     slot: 1
@@ -221,6 +222,215 @@ bcm_chassis_maps {
     slot: 1
     port: 16
     speed_bps: 100000000000
+    logical_port: 102
+    physical_port: 97
+    diag_port: 16
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x2301
+    tx_lane_map: 0x3210
+  }
+  # 40G ports
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 1
+    speed_bps: 40000000000
+    logical_port: 68
+    physical_port: 65
+    diag_port: 1
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x1203
+    tx_lane_map: 0x1302
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 2
+    speed_bps: 40000000000
+    logical_port: 72
+    physical_port: 69
+    diag_port: 2
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x0123
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 3
+    speed_bps: 40000000000
+    logical_port: 76
+    physical_port: 73
+    diag_port: 3
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x0123
+    tx_lane_map: 0x0213
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 4
+    speed_bps: 40000000000
+    logical_port: 80
+    physical_port: 77
+    diag_port: 4
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x0123
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 5
+    speed_bps: 40000000000
+    logical_port: 96
+    physical_port: 93
+    diag_port: 5
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x0123
+    tx_lane_map: 0x3201
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 6
+    speed_bps: 40000000000
+    logical_port: 106
+    physical_port: 101
+    diag_port: 6
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x1032
+    tx_lane_map: 0x3201
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 7
+    speed_bps: 40000000000
+    logical_port: 110
+    physical_port: 105
+    diag_port: 7
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x2301
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 8
+    speed_bps: 40000000000
+    logical_port: 114
+    physical_port: 109
+    diag_port: 8
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x1203
+    tx_lane_map: 0x0123
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 9
+    speed_bps: 40000000000
+    logical_port: 118
+    physical_port: 113
+    diag_port: 9
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x2103
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 10
+    speed_bps: 40000000000
+    logical_port: 122
+    physical_port: 117
+    diag_port: 10
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x3210
+    tx_lane_map: 0x0123
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 11
+    speed_bps: 40000000000
+    logical_port: 126
+    physical_port: 121
+    diag_port: 11
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x3210
+    tx_lane_map: 0x0123
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 12
+    speed_bps: 40000000000
+    logical_port: 130
+    physical_port: 125
+    diag_port: 12
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x0123
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 13
+    speed_bps: 40000000000
+    logical_port: 84
+    physical_port: 81
+    diag_port: 13
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x3201
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 14
+    speed_bps: 40000000000
+    logical_port: 88
+    physical_port: 85
+    diag_port: 14
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x1203
+    tx_lane_map: 0x0123
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 15
+    speed_bps: 40000000000
+    logical_port: 92
+    physical_port: 89
+    diag_port: 15
+    serdes_core: 1
+    num_serdes_lanes: 4
+    rx_lane_map: 0x2301
+    tx_lane_map: 0x3210
+  }
+  bcm_ports {
+    type: XE
+    slot: 1
+    port: 16
+    speed_bps: 40000000000
     logical_port: 102
     physical_port: 97
     diag_port: 16
