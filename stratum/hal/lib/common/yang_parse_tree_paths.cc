@@ -891,10 +891,10 @@ void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id, uint32 port_id,
       GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
                        &DataResponse::has_loopback_status,
                        &DataRequest::Request::mutable_loopback_status,
-                       &LoopbackStatus::state, ConvertLoopbackStateToBool);
+                       &LoopbackStatus::state, IsLoopbackStateEnabled);
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortLoopbackStateChangedEvent::GetNewState,
-      ConvertLoopbackStateToBool);
+      IsLoopbackStateEnabled);
   auto register_functor = RegisterFunc<PortLoopbackStateChangedEvent>();
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)

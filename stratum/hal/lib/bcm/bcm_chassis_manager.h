@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_CHASSIS_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_CHASSIS_MANAGER_H_
 
@@ -28,22 +27,22 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
-#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {

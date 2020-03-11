@@ -259,19 +259,6 @@ std::string ConvertAdminStateToString(const AdminState& state) {
   }
 }
 
-bool ConvertLoopbackStateToBool(const LoopbackState& state) {
-  switch (state) {
-    case LOOPBACK_NONE:
-      return false;
-    case LOOPBACK_MAC:
-      return true;
-    case LOOPBACK_PHY:
-      return true;
-    default:
-      return false;
-  }
-}
-
 std::string ConvertSpeedBpsToString(
     const ::google::protobuf::uint64& speed_bps) {
   switch (speed_bps) {
@@ -373,7 +360,13 @@ bool IsAdminStateEnabled(const AdminState& admin_state) {
 }
 
 bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
-  return loopback_state != LoopbackState::LOOPBACK_NONE;
+  switch (loopback_state) {
+    case LOOPBACK_MAC:
+    case LOOPBACK_PHY:
+      return true;
+    default:
+      return false;
+  }
 }
 
 std::string ConvertMediaTypeToString(const MediaType& type) {

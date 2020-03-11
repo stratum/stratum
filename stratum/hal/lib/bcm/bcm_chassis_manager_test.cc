@@ -5212,10 +5212,10 @@ TEST_P(BcmChassisManagerTest, TestSetTrunkMemberBlockStateByController) {
   // LACP: (node_id: 7654321, trunk_id: 333, port_id: NONE)
 
   // TODO(unknown): Extend the tests when the function is implemneted.
-  EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 222, kPortId,
-                                     TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
-  EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 0, kPortId,
-                                     TRUNK_MEMBER_BLOCK_STATE_FORWARDING));
+  // EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 222, kPortId,
+  //                                    TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
+  // EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 0, kPortId,
+  //                                    TRUNK_MEMBER_BLOCK_STATE_FORWARDING));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
@@ -5254,7 +5254,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
 TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
   ChassisConfig config;
 
-  // Push a config which sets the loopback state to NONE.
+  // Push a config which does not set the loopback state.
   ASSERT_OK(PushTestConfig(&config));
 
   // We have to manually save the port options, since the chassis manager does
@@ -5273,7 +5273,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
       .WillRepeatedly(
           DoAll(Invoke(save_port_options), Return(::util::OkStatus())));
 
-  // Check that port loopback state is up.
+  // Check that port loopback state is undefined/unknown.
   auto loopback_state = GetPortLoopbackState(kNodeId, kPortId);
   ASSERT_TRUE(loopback_state.ok());
   EXPECT_EQ(LOOPBACK_UNKNOWN, loopback_state.ValueOrDie());
@@ -5300,9 +5300,9 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
 TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO(unknown): Extend the tests when the function is implemneted.
-  EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
-  EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
+  // TODO(unknown): Extend the tests when the function is implemented.
+  // EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
+  // EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
@@ -5313,7 +5313,7 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateByController) {
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
       .WillRepeatedly(Return(::util::OkStatus()));
 
-  // TODO(unknown): Extend the tests when the function is implemneted.
+  // TODO(unknown): Extend the tests.
   EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_NONE));
   EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_MAC));
   EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_UNKNOWN));
@@ -5324,9 +5324,9 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateByController) {
 TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO(unknown): Extend the tests when the function is implemneted.
-  EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_BAD));
-  EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
+  // TODO(unknown): Extend the tests when the function is implemented.
+  // EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_BAD));
+  // EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

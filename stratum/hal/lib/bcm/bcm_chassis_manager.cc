@@ -470,20 +470,23 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
     uint64 node_id, uint32 trunk_id, uint32 port_id,
     TrunkMemberBlockState state) {
   // TODO(unknown): Implement this method.
-  return ::util::OkStatus();
+  return MAKE_ERROR(ERR_UNIMPLEMENTED)
+         << "SetTrunkMemberBlockState is not implemented.";
 }
 
 ::util::Status BcmChassisManager::SetPortAdminState(uint64 node_id,
                                                     uint32 port_id,
                                                     AdminState state) {
   // TODO(unknown): Implement this method.
-  return ::util::OkStatus();
+  return MAKE_ERROR(ERR_UNIMPLEMENTED)
+         << "SetPortAdminState is not implemented.";
 }
 ::util::Status BcmChassisManager::SetPortHealthState(uint64 node_id,
                                                      uint32 port_id,
                                                      HealthState state) {
   // TODO(unknown): Implement this method.
-  return ::util::OkStatus();
+  return MAKE_ERROR(ERR_UNIMPLEMENTED)
+         << "SetPortHealthState is not implemented.";
 }
 
 ::util::Status BcmChassisManager::SetPortLoopbackState(uint64 node_id,
@@ -492,16 +495,30 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   if (state == LoopbackState::LOOPBACK_UNKNOWN) {
     return ::util::OkStatus();
   }
-  auto* port_id_to_sdk_port =
-      gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_sdk_port)
+  // Override the transceiver state to PRESENT, since loopback ports do not
+  // generate SFP events.
+  auto* port_id_to_singleton_port_key =
+      gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_singleton_port_key)
       << "Unknown node " << node_id << ".";
-  auto* sdk_port = gtl::FindOrNull(*port_id_to_sdk_port, port_id);
-  CHECK_RETURN_IF_FALSE(sdk_port) << "Unknown port " << port_id << ".";
+  auto* port_key = gtl::FindOrNull(*port_id_to_singleton_port_key, port_id);
+  CHECK_RETURN_IF_FALSE(port_key) << "Unknown port " << port_id << ".";
+  PortKey port_group_key(port_key->slot,
+                         port_key->port);  // We need to drop the channel
+  auto* xcvr_state =
+      gtl::FindOrNull(xcvr_port_key_to_xcvr_state_, port_group_key);
+  CHECK_RETURN_IF_FALSE(xcvr_state)
+      << "Unknown port key " << port_group_key.ToString() << ".";
+  *xcvr_state = state == LOOPBACK_MAC ? HW_STATE_READY : HW_STATE_UNKNOWN;
+  const auto* bcm_port =
+      gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, *port_key);
+  CHECK_RETURN_IF_FALSE(bcm_port != nullptr)
+      << "Unknown singleton port key: " << port_key->ToString() << ".";
+
   BcmPortOptions options;
   options.set_loopback_mode(state);
-  return bcm_sdk_interface_->SetPortOptions(sdk_port->unit,
-                                            sdk_port->logical_port, options);
+  return bcm_sdk_interface_->SetPortOptions(bcm_port->unit(),
+                                            bcm_port->logical_port(), options);
 }
 
 std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
@@ -2079,10 +2096,40 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   }
   // The option applies to all the ports.
   for (const auto* bcm_port : bcm_ports) {
+    BcmPortOptions applied_options = options;
+    // Check if AdminState is set and override options.
+    auto* node_id = gtl::FindOrNull(unit_to_node_id_, bcm_port->unit());
+    CHECK_RETURN_IF_FALSE(node_id)
+        << "Unable to find unit " << bcm_port->unit() << ".";
+    auto* sdk_port_to_port_id =
+        gtl::FindOrNull(node_id_to_sdk_port_to_port_id_, *node_id);
+    CHECK_RETURN_IF_FALSE(sdk_port_to_port_id)
+        << "Unable to find node " << *node_id << ".";
+    SdkPort sdk_port(bcm_port->unit(), bcm_port->logical_port());
+    auto* port_id = gtl::FindOrNull(*sdk_port_to_port_id, sdk_port);
+    CHECK_RETURN_IF_FALSE(port_id)
+        << "Unable to find SdkPort " << sdk_port.ToString() << ".";
+    const auto* port_id_to_admin_state =
+        gtl::FindOrNull(node_id_to_port_id_to_admin_state_, *node_id);
+    CHECK_RETURN_IF_FALSE(port_id_to_admin_state != nullptr)
+        << "Unknown node " << node_id << ".";
+    const auto* admin_state =
+        gtl::FindOrNull(*port_id_to_admin_state, *port_id);
+    CHECK_RETURN_IF_FALSE(admin_state != nullptr)
+        << "Unknown port " << port_id << " on node " << node_id << ".";
+    if (*admin_state == ADMIN_STATE_DISABLED) {
+      applied_options.set_enabled(TRI_STATE_FALSE);
+      applied_options.set_blocked(TRI_STATE_TRUE);
+    } else if (*admin_state == ADMIN_STATE_ENABLED) {
+      applied_options.set_enabled(TRI_STATE_TRUE);
+      applied_options.set_blocked(TRI_STATE_FALSE);
+    }
+
     RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
-        bcm_port->unit(), bcm_port->logical_port(), options));
+        bcm_port->unit(), bcm_port->logical_port(), applied_options));
     VLOG(1) << "Successfully set the following options for SingletonPort "
-            << PrintBcmPort(*bcm_port) << ": " << PrintBcmPortOptions(options);
+            << PrintBcmPort(*bcm_port) << ": "
+            << PrintBcmPortOptions(applied_options);
   }
 
   return ::util::OkStatus();
