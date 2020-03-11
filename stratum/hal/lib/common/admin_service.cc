@@ -182,11 +182,11 @@ AdminService::AdminService(OperationMode mode,
                           "Received relative file path.");
   }
 
-  auto dir_name = dirname(strdup(package.filename().c_str()));
-  if (!helper_->GetFileSystemHelper()->PathExists(dir_name)) {
-    return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
-                          ("Directory " + package.filename() +
-                            " doesn't exist"));
+  if (!helper_->GetFileSystemHelper()->PathExists(
+          DirName(package.filename()))) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::NOT_FOUND,
+        ("Directory " + package.filename() + " doesn't exist"));
   }
 
   return ::grpc::Status::OK;

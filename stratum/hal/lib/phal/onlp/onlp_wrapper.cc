@@ -221,18 +221,19 @@ OnlpWrapper::~OnlpWrapper() {
 }
 
 ::util::StatusOr<std::vector<OnlpOid>> OnlpWrapper::GetOidList(
-      onlp_oid_type_flag_t type) const {
+    onlp_oid_type_flag_t type) const {
   std::vector<OnlpOid> oid_list;
-  biglist_t* oid_hdr_list;
+  biglist_t* oid_hdr_list = nullptr;
 
   OnlpOid root_oid = ONLP_CHASSIS_ID_CREATE(1);
-  onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list);
+  CHECK_RETURN_IF_FALSE(
+      ONLP_SUCCESS(onlp_oid_hdr_get_all(root_oid, type, 0, &oid_hdr_list)));
 
   // Iterate though the returned list and add the OIDs to oid_list
   biglist_t* curr_node = oid_hdr_list;
   while (curr_node != nullptr) {
     onlp_oid_hdr_t* oid_hdr =
-                    reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
+        reinterpret_cast<onlp_oid_hdr_t*>(curr_node->data);
     oid_list.emplace_back(oid_hdr->id);
     curr_node = curr_node->next;
   }
@@ -244,15 +245,13 @@ OnlpWrapper::~OnlpWrapper() {
 ::util::StatusOr<OnlpPortNumber> OnlpWrapper::GetSfpMaxPortNumber() const {
   SfpBitmap bitmap;
   onlp_sfp_bitmap_t_init(&bitmap);
-  int result = onlp_sfp_bitmap_get(&bitmap);
-  if (result < 0) {
-    LOG(ERROR) << "Failed to get valid SFP port bitmap from ONLP.";
-  }
+  CHECK_RETURN_IF_FALSE(ONLP_SUCCESS(onlp_sfp_bitmap_get(&bitmap)))
+      << "Failed to get valid SFP port bitmap from ONLP.";
 
   OnlpPortNumber port_num = ONLP_MAX_FRONT_PORT_NUM;
   int i, j;
-  for (i = 0; i < kOnlpBitmapWordCount; i ++) {
-    for (j = 0; j < kOnlpBitmapBitsPerWord; j ++) {
+  for (i = 0; i < kOnlpBitmapWordCount; ++i) {
+    for (j = 0; j < kOnlpBitmapBitsPerWord; ++j) {
       if (bitmap.words[i] & (1 << j)) {
         port_num = i * kOnlpBitmapBitsPerWord + j + 1;
         // Note: return here only if the valid port numbers start from

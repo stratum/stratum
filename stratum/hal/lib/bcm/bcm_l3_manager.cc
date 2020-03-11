@@ -172,6 +172,8 @@ BcmL3Manager::~BcmL3Manager() {}
   // group.
   // TODO(unknown): This needs to be revisted. We are talking to Broadcom
   // about this. http://b/75337931 is tracking this.
+  // TODO(max): If SDKLT does not have this issue, this workaround should be
+  // moved to the SdkWrapper.
   if (member_ids.size() == 1) {
     VLOG(1) << "Got a group with only one member: " << member_ids[0] << ".";
     member_ids.push_back(member_ids[0]);
@@ -284,6 +286,14 @@ BcmL3Manager::~BcmL3Manager() {}
       << "Received multipath nexthop for unit " << nexthop.unit() << " on unit "
       << unit_ << ".";
   ASSIGN_OR_RETURN(std::vector<int> member_ids, FindEcmpGroupMembers(nexthop));
+  // TODO(unknown): This needs to be revisted. We are talking to Broadcom
+  // about this. http://b/75337931 is tracking this.
+  // TODO(max): If SDKLT does not have this issue, this workaround should be
+  // moved to the SdkWrapper.
+  if (member_ids.size() == 1) {
+    VLOG(1) << "Got a group with only one member: " << member_ids[0] << ".";
+    member_ids.push_back(member_ids[0]);
+  }
   RETURN_IF_ERROR(bcm_sdk_interface_->ModifyEcmpEgressIntf(
       unit_, egress_intf_id, member_ids));
 

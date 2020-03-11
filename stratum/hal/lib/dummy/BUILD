@@ -122,7 +122,6 @@ py_proto_library(
     deps = [
         ":dummy_test_proto"
     ],
-    well_known_protos = False,
 )
 
 stratum_cc_library(

@@ -23,31 +23,29 @@ version: 2.1
 restore_bazel_cache: &restore_bazel_cache
   restore_cache:
     keys:
-      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
-      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
-      - v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
+      - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
     # jobs where the bazel process was killed because it took too long or OOM.
     # Restart the job if you see the bazel server being terminated abruptly.
     when: always
-    key: v2-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
+    key: v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
     paths:
       - /tmp/bazel-cache
 
-# Print Bazel profiling info and generate HTML report to upload as artifact.
+# Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
   run:
     name: Analyze Bazel profile
     command: |
-      bazel analyze-profile /tmp/bazel.profile
-      mkdir /tmp/bazel_profile
-      bazel analyze-profile --html /tmp/bazel.profile
-      mv /tmp/bazel.profile.html /tmp/bazel_profile/profile.html
+      bazel analyze-profile /tmp/bazel.profile.json
+
 store_bazel_profile: &store_bazel_profile
   store_artifacts:
-    path: /tmp/bazel_profile
+    path: /tmp/bazel.profile.json
 
 # Use a bazelrc file convenient for CI jobs.
 set_bazelrc: &set_bazelrc
@@ -91,6 +89,24 @@ jobs:
       - run:
           name: Test Stratum targets
           command: xargs -a .circleci/test-targets.txt bazel test
+      - *save_bazel_cache
+
+  # CDLang
+  cdlang_tests:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build CDLang targets
+          command: xargs -a .circleci/cdlang-targets.txt bazel build
+      - *analyze_bazel_profile
+      - *store_bazel_profile
+      - run:
+          name: Test CDLang targets
+          command: xargs -a .circleci/cdlang-targets.txt bazel test
       - *save_bazel_cache
 
   # Generate coverage report and upload to codecov.io.
@@ -174,6 +190,7 @@ workflows:
   build_and_test:
     jobs:
       - unit_tests
+      - cdlang_tests
       - coverage
       - cpp-style-check
   docker-publish:

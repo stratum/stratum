@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
 def wrapped_proto_library(name,
                           srcs = [],
                           new_proto_dir = "",
@@ -39,6 +41,7 @@ def wrapped_proto_library(name,
                 gen_src = gen_src[len(proto_source_root):]
             gen_src = new_proto_dir + gen_src
             gen_name = name + "_generated_" + src
+            gen_name = gen_name.replace("/", "_")
             native.genrule(
                 name = gen_name,
                 srcs = [src],
@@ -50,7 +53,7 @@ def wrapped_proto_library(name,
         else:
             gen_srcs.append(src)
 
-    native.proto_library(
+    proto_library(
       name = name,
       srcs = gen_srcs,
       deps = deps

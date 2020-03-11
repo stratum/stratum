@@ -15,16 +15,51 @@
 # limitations under the License.
 #
 
-STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../.." >/dev/null 2>&1 && pwd )"}
+DOCKERFILE_DIR=$(dirname "${BASH_SOURCE[0]}")
+STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 2>&1 && pwd )"}
 JOBS=${JOBS:-4}
 
+print_help() {
+cat << EOF
+
+The script builds containerized version of Stratum for Barefoot Tofino based device. It builds SDE and kernel modules using Dockerfile.builder and saves artifacts to an intermediate builder image. Then it runs bazel build for Stratum code base and copies libraries from builder to runtime image using Dockerfile.runtime.
+
+Usage: $0 SDE_TAR KERNEL_HEADERS_TAR
+
+Example:
+    $0 ~/bf-sde-9.0.0.tgz ~/linux-4.14.49-ONL.tar.gz
+
+EOF
+}
+
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 SDE_TAR KERNEL_HEADERS_TAR"
+    print_help
     exit 1
 fi
 
-docker build -t stratumproject/stratum-bf \
-               --build-arg JOBS=$JOBS \
-               --build-arg SDE_TAR=$1 \
-               --build-arg KERNEL_HEADERS_TAR=$2 \
-               -f $STRATUM_ROOT/stratum/hal/bin/barefoot/docker/Dockerfile $STRATUM_ROOT
+# Copy tarballs to Stratum root
+echo """Copying SDE and header tarballs to $DOCKERFILE_DIR/
+NOTE: Copied tarballs will be DELETED after the build"""
+cp -i $1 $DOCKERFILE_DIR
+cp -i $2 $DOCKERFILE_DIR
+SDE_TAR=$(basename $1)
+KERNEL_HEADERS_TAR=$(basename $2)
+
+# Build SDE and kernel modules
+BUILDER_IMAGE=stratumproject/stratum-bf-builder:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
+echo "Building $BUILDER_IMAGE"
+docker build -t $BUILDER_IMAGE \
+	 --build-arg JOBS=$JOBS \
+	 --build-arg SDE_TAR=$SDE_TAR \
+	 --build-arg KERNEL_HEADERS_TAR=$KERNEL_HEADERS_TAR \
+	 -f $DOCKERFILE_DIR/Dockerfile.builder $DOCKERFILE_DIR
+
+# Remove copied tarballs
+rm $DOCKERFILE_DIR/$SDE_TAR $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
+
+# Run Bazel build and generate runtime image
+RUNTIME_IMAGE=stratumproject/stratum-bf:${SDE_TAR%.tgz}-${KERNEL_HEADERS_TAR%.tar.xz}
+echo "Building $RUNTIME_IMAGE"
+docker build -t $RUNTIME_IMAGE \
+             --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
+             -f $DOCKERFILE_DIR/Dockerfile.runtime $STRATUM_ROOT
