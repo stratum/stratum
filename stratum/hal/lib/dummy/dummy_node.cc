@@ -23,7 +23,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 ::util::Status DummyNode::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&node_lock_);
@@ -374,6 +374,6 @@ DummyNode::DummyNode(const uint64 id, const std::string& name,
     index_(index),
     dummy_box_(DummyBox::GetSingleton()) {}
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum

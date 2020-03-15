@@ -23,7 +23,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 // Entry point of Dummy Switch
 int DummySwitchMain(int argc, char* argv[]) {
@@ -69,10 +69,10 @@ int DummySwitchMain(int argc, char* argv[]) {
   return 0;
 }
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 
 int main(int argc, char* argv[]) {
-  return stratum::hal::dummy_switch::DummySwitchMain(argc, argv);
+  return stratum::hal::dummy::DummySwitchMain(argc, argv);
 }

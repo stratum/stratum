@@ -33,7 +33,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 using Request = stratum::hal::DataRequest::Request;
 
@@ -205,7 +205,7 @@ class DummyNodeEventWriter : public WriterInterface<DummyNodeEventPtr> {
 };  // class DummyNodeEventWriter
 };  // class DummyNode
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 

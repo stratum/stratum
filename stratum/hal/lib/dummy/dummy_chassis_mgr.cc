@@ -24,7 +24,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 using Request = stratum::hal::DataRequest::Request;
 
@@ -91,7 +91,7 @@ DummyChassisManager::RetrieveChassisData(const Request request) {
   return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
 }
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 

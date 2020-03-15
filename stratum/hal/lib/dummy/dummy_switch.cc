@@ -26,7 +26,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 ::util::Status DummySwitch::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
@@ -348,6 +348,6 @@ DummySwitch::DummySwitch(PhalInterface* phal_interface,
     gnmi_event_writer_(nullptr) {
 }
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum

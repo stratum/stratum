@@ -31,7 +31,7 @@
 
 syntax = "proto3";
 
-package stratum.hal.dummy_switch;
+package stratum.hal.dummy;
 
 import "stratum/hal/lib/common/common.proto";
 

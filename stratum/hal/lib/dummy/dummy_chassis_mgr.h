@@ -29,7 +29,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 using Request = stratum::hal::DataRequest::Request;
 
@@ -79,7 +79,7 @@ class DummyChassisManager {
   DummyBox* dummy_box_;
 };
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 

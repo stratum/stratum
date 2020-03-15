@@ -29,7 +29,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 class DummyPhal : public PhalInterface {
  public:
@@ -84,7 +84,7 @@ class DummyPhal : public PhalInterface {
   ::absl::Mutex phal_lock_;
 };
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 

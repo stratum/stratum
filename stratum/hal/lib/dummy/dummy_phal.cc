@@ -27,7 +27,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 // Instances
 DummyPhal* phal_singleton_ = nullptr;
@@ -117,7 +117,7 @@ DummyPhal* DummyPhal::CreateSingleton() {
   return phal_singleton_;
 }
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 
