@@ -7,11 +7,11 @@
 namespace stratum {
 
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 ABSL_CONST_INIT absl::Mutex chassis_lock(absl::kConstInit);
 bool shutdown = false;
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum

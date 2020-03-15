@@ -9,7 +9,7 @@
 namespace stratum {
 
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 // Lock which governs chassis state (ports, etc.) across the entire switch.
 extern absl::Mutex chassis_lock;
@@ -17,7 +17,7 @@ extern absl::Mutex chassis_lock;
 // Flag indicating if the switch has been shut down. Initialized to false.
 extern bool shutdown;
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 

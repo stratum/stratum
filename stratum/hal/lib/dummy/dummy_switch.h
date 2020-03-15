@@ -20,7 +20,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 class DummySwitch : public SwitchInterface {
  public:
@@ -120,7 +120,7 @@ class DummySwitch : public SwitchInterface {
   std::map<std::pair<uint64, uint32>, int> node_port_id_to_port;
 };
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 #endif  // STRATUM_HAL_LIB_DUMMY_DUMMY_SWITCH_H_

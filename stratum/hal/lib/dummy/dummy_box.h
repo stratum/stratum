@@ -22,16 +22,16 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 using DeviceStatusUpdateRequest =
-::stratum::hal::dummy_switch::DeviceStatusUpdateRequest;
+::stratum::hal::dummy::DeviceStatusUpdateRequest;
 using DeviceStatusUpdateResponse =
-::stratum::hal::dummy_switch::DeviceStatusUpdateResponse;
+::stratum::hal::dummy::DeviceStatusUpdateResponse;
 using TransceiverEventRequest =
-::stratum::hal::dummy_switch::TransceiverEventRequest;
+::stratum::hal::dummy::TransceiverEventRequest;
 using TransceiverEventResponse =
-::stratum::hal::dummy_switch::TransceiverEventResponse;
+::stratum::hal::dummy::TransceiverEventResponse;
 using TransceiverEventWriter =
 ::stratum::hal::PhalInterface::TransceiverEventWriter;
 using TransceiverEvent =
@@ -130,7 +130,7 @@ class DummyBox : public Test::Service {
   GUARDED_BY(sdk_lock_);
 };
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 

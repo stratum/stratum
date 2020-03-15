@@ -27,7 +27,7 @@ DEFINE_int32(dummy_test_grpc_keepalive_permit, 1, "grpc keep alive permit");
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 
 std::unique_ptr<::grpc::Server> external_server_;
@@ -232,6 +232,6 @@ DummyBox::DummyBox()
 : initialized_(false),
   xcvr_writer_id_(0) {}
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum

@@ -11,7 +11,7 @@
 
 namespace stratum {
 namespace hal {
-namespace dummy_switch {
+namespace dummy {
 
 // Entry point of Dummy Switch
 ::util::Status Main(int argc, char* argv[]) {
@@ -48,10 +48,10 @@ namespace dummy_switch {
   return ::util::OkStatus();
 }
 
-}  // namespace dummy_switch
+}  // namespace dummy
 }  // namespace hal
 }  // namespace stratum
 
 int main(int argc, char* argv[]) {
-  return stratum::hal::dummy_switch::Main(argc, argv).error_code();
+  return stratum::hal::dummy::Main(argc, argv).error_code();
 }

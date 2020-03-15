@@ -9,22 +9,43 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-# TODO(Yi) Move to CC
-py_binary(
-    name = "cli",
-    srcs = ["cli.py"],
+stratum_cc_binary(
+    name = "dummy_cli",
+    srcs = [
+        "dummy_cli.cc"
+    ],
     deps = [
-        "//stratum/hal/lib/dummy:dummy_test_py_grpc",
-        "//stratum/hal/lib/common:common_py_proto",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_protobuf//:protobuf",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
+        "//stratum/hal/lib/dummy:dummy_test_cc_proto",
+        "//stratum/hal/lib/dummy:dummy_test_cc_grpc",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/glue:integral_types"
     ]
 )
 
-py_binary(
+stratum_cc_binary(
     name = "port_counter_sim",
-    srcs = ["port_counter_sim.py"],
-    deps = ["//stratum/hal/bin/dummy:cli",
-            "//stratum/hal/lib/dummy:dummy_test_py_grpc",
-            "//stratum/hal/lib/common:common_py_proto"]
+    srcs = [
+        "port_counter_sim.cc"
+    ],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/time:time",
+        "@com_google_protobuf//:protobuf",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
+        "//stratum/hal/lib/dummy:dummy_test_cc_proto",
+        "//stratum/hal/lib/dummy:dummy_test_cc_grpc",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/glue:integral_types"
+    ]
 )
 
 stratum_cc_binary(
