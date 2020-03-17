@@ -172,6 +172,17 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
     port_id_to_node_id[singleton.id()] = singleton.node();
     singleton_names.insert(singleton.name());
   }
+
+  std::unordered_set<std::string> optical_names;
+  for (const auto& optical : change.new_config_.optical_ports()) {
+    if (optical_names.count(optical.name())) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate optical port name: "
+          << optical.name();
+    }
+    AddSubtreeInterfaceFromOptical(optical);
+    optical_names.insert(optical.name());
+  }
+
   std::unordered_set<std::string> trunk_names;
   for (const auto& trunk : change.new_config_.trunk_ports()) {
     // Find out on which node the trunk is created.
@@ -248,6 +259,7 @@ YangParseTree::YangParseTree(SwitchInterface* switch_interface)
   // The rest of nodes will be added once the config is pushed.
   absl::WriterMutexLock l(&root_access_lock_);
   AddSubtreeAllInterfaces();
+  AddSubtreeAllComponents();
   AddRoot();
 }
 
@@ -331,6 +343,10 @@ void YangParseTree::AddSubtreeInterfaceFromSingleton(
                                                        this);
 }
 
+void YangParseTree::AddSubtreeInterfaceFromOptical(const OpticalPort& optical) {
+  YangParseTreePaths::AddSubtreeInterfaceFromOptical(optical, this);
+}
+
 void YangParseTree::AddSubtreeNode(const Node& node) {
   YangParseTreePaths::AddSubtreeNode(node, this);
 }
@@ -344,6 +360,16 @@ void YangParseTree::AddSubtreeAllInterfaces() {
 
   // Add all nodes defined in YangParseTreePaths class.
   YangParseTreePaths::AddSubtreeAllInterfaces(this);
+}
+
+  // Setup
+  // * the /components/component[name="*"]/name path to make possible all
+  //   components' names retrieval.
+  // * the /components/component/* path to retrieve all the nodes for the
+  //   specific component.
+void YangParseTree::AddSubtreeAllComponents() {
+  // No need to lock the mutex - it is locked by method calling this one.
+  YangParseTreePaths::AddSubtreeAllComponents(this);
 }
 
 void YangParseTree::AddRoot() {

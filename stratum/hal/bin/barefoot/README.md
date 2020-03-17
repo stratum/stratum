@@ -34,7 +34,7 @@ Stratum can be run on Tofino-based platforms in 2 different modes:
 
 ## Installing the SDE
 
-These instructions are valid for SDE versions 8.8.0 through 8.9.0. Barefoot's
+These instructions are valid for SDE versions 8.9.2 and 9.0.0. Barefoot's
 P4Studio Build tool comes with a default Stratum profile, which takes care of
 installing all the necessary dependencies and builds the SDE with the
 appropriate flags.
@@ -56,10 +56,10 @@ export SDE_INSTALL=$BF_SDE_INSTALL
     install the BSP (see [below](#installing-the-reference-bsp-for-the-wedge)).
     Also, we drop Thrift support in Stratum, the Stratum profile will
     be updated in next version. Now you need to remove the Thrift dependency
-    by using `sed` command (see below) if you are using SDE version 8.8.0 or 8.9.1.
+    by using `sed` command (see below) if you are using SDE version 8.9.x.
 ```
 cd $SDE/p4studio_build
-sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.1
+sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.x
 ./p4studio_build.py -up profiles/stratum_profile.yaml
 ```
 
@@ -83,13 +83,19 @@ export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
 Replace step 3 in the sequence above with:
 ```
 cd $SDE/p4studio_build
-sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.1
+sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.x
 ./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH
 ```
 
 You may also still install the BSP manually. If you are not using the reference
 BSP, you will need to install the BSP yourself (under `$BF_SDE_INSTALL`) based
 on your vendor's instructions.
+
+### Supported SDE versions
+
+ - 8.9.2
+ - 9.0.0
+ - 9.1.0
 
 ## Building the binary
 
@@ -102,8 +108,34 @@ downloaded and we will build against it. This is useful if you are building
 switch (in this case just make sure the correct ONLP library for your platform
 is loaded at runtime).
 
+The `stratum_bf` bazel target is designed for the latest Barefoot SDE. You can set up
+the SDE version by using `--define` flag if you need to build with older version (e.g. 8.9.2).
+
 ```
-bazel build //stratum/hal/bin/barefoot:stratum_bf
+bazel build //stratum/hal/bin/barefoot:stratum_bf [--define sde_ver=8.9.2]
+```
+
+## Building the binary without ONLP support
+
+The `--define phal_with_onlp=false` flag tells Bazel not to build with the ONLP Phal
+implementation. Use this flag when you are using a vendor-provided BSP or
+running Stratum with the Tofino software model.
+
+```
+bazel build //stratum/hal/bin/barefoot:stratum_bf --define phal_with_onlp=false [--define sde_ver=8.9.2]
+```
+
+## Setting up the huge page 
+
+Before start the Stratum, make sure you have set up the huge page for DMA purposes.
+
+__Note:__ This step only needs to be done once.
+
+```bash
+sudo echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
+sudo sysctl -p /etc/sysctl.conf
+sudo mkdir /mnt/huge
+sudo mount -t hugetlbfs nodev /mnt/huge
 ```
 
 ## Running the binary (with BSP or Tofino software model)

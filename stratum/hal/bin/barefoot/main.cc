@@ -27,7 +27,7 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+#include "stratum/hal/lib/phal/phal.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
@@ -156,7 +156,7 @@ Main(int argc, char* argv[]) {
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
   } else {
-    phal_impl = phal::onlp::OnlpPhal::CreateSingleton();
+    phal_impl = phal::Phal::CreateSingleton();
   }
   std::map<int, pi::PINode*> unit_to_pi_node = {
     {unit, pi_node.get()},

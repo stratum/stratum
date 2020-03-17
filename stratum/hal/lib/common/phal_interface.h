@@ -124,6 +124,18 @@ class PhalInterface {
   virtual ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info) = 0;
 
+  // Gets the information about the optical transceiver module for the given
+  // (slot, port). This method is expected to return error if there is no
+  // related optics module inserted in the given (slot, port) yet.
+  virtual ::util::Status GetOpticalTransceiverInfo(
+      int slot, int port, OpticalChannelInfo* oc_info) = 0;
+
+  // Sets the data from oc_info into the optical transceiver module for the
+  // given (slot, port). This method is expected to return error if there is no
+  // related optics module inserted yet.
+  virtual ::util::Status SetOpticalTransceiverInfo(
+      int slot, int port, const OpticalChannelInfo& oc_info) = 0;
+
   // Set the color/state of a frontpanel port LED, corresponding to the physical
   // port specified by (slot, port, channel). The caller assumes each physical
   // port has one frontpanel port LED, i.e., if a transceiver has 4 channels we
@@ -145,11 +157,6 @@ class PhalInterface {
   // issue accessing HW.
   virtual ::util::Status SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state) = 0;
-
-  // Register a Sfp configurator with the phal for use with transceiver
-  // state change events.
-  virtual ::util::Status RegisterSfpConfigurator(
-      int slot, int port, phal::SfpConfigurator* configurator) = 0;
 
  protected:
   // Default constructor. To be called by the Mock class instance or any

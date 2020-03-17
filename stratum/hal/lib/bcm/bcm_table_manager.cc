@@ -96,7 +96,7 @@ void FillBcmTableEntryValue(const P4ActionFunction::P4ActionFields& source,
     case P4ActionFunction::P4ActionFields::kB:
       destination->set_b(source.b());
       break;
-    case MappedField::Value::DATA_NOT_SET:
+    case P4ActionFunction::P4ActionFields::VALUE_NOT_SET:
       // Don't do anything if there is no value.
       break;
   }
@@ -1106,13 +1106,13 @@ namespace {
   if (!gtl::InsertIfNotPresent(&member_id_to_nexthop_info_, member_id,
                                member_nexthop_info)) {
     delete member_nexthop_info;
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
            << "Cannot add already existing member_id: " << member_id << ".";
   }
 
   // Save a copy of P4 ActionProfileMember.
   if (!gtl::InsertIfNotPresent(&members_, {member_id, action_profile_member})) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
            << "Inconsistent state. Member with ID " << member_id << " already "
            << "exists in members_.";
   }
@@ -1134,8 +1134,10 @@ namespace {
 
   // Group must not exist when calling this function (however the members of
   // the group must).
-  CHECK_RETURN_IF_FALSE(!group_id_to_nexthop_info_.count(group_id))
-      << "Cannot add already existing group_id: " << group_id << ".";
+  if (ActionProfileGroupExists(group_id)) {
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
+           << "Cannot add already existing group_id: " << group_id << ".";
+  }
 
   // The egress intf ID for this group must not be assigned to an existing
   // group.
@@ -1172,13 +1174,13 @@ namespace {
   if (!gtl::InsertIfNotPresent(&group_id_to_nexthop_info_, group_id,
                                group_nexthop_info)) {
     delete group_nexthop_info;
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
            << "Cannot add already existing group_id: " << group_id << ".";
   }
 
   // Save a copy of P4 ActionProfileGroup.
   if (!gtl::InsertIfNotPresent(&groups_, {group_id, action_profile_group})) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
            << "Inconsistent state. Group with ID " << group_id << " already "
            << "exists in groups_.";
   }
@@ -1199,7 +1201,7 @@ namespace {
   // Save a copy of P4 MulticastGroupEntry.
   if (!gtl::InsertIfNotPresent(&multicast_groups_,
                                {group_id, multicast_group})) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
            << "Inconsistent state. Multicast group with ID " << group_id
            << " already exists in multicast_groups_.";
   }
@@ -1219,7 +1221,7 @@ namespace {
 
   // Save a copy of P4 CloneSessionEntry.
   if (!gtl::InsertIfNotPresent(&clone_sessions_, {session_id, clone_session})) {
-    return MAKE_ERROR(ERR_INVALID_PARAM)
+    return MAKE_ERROR(ERR_ENTRY_EXISTS)
         << "Inconsistent state. Multicast group with ID " << session_id
         << " already exists in multicast_groups_.";
   }

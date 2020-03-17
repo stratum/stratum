@@ -89,24 +89,23 @@ DummyPhal::~DummyPhal() {}
   return ::util::OkStatus();
 }
 
+::util::Status DummyPhal::GetOpticalTransceiverInfo(
+    int slot, int port, OpticalChannelInfo* oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
+::util::Status DummyPhal::SetOpticalTransceiverInfo(
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
+
 ::util::Status DummyPhal::SetPortLedState(int slot, int port, int channel,
                                          LedColor color, LedState state) {
   absl::ReaderMutexLock l(&phal_lock_);
   // TODO(Yi Tseng): Implement this function
   LOG(INFO) << __FUNCTION__;
-  return ::util::OkStatus();
-}
-
-// Register the configurator so we can use later
-::util::Status DummyPhal::RegisterSfpConfigurator(
-    int slot, int port, ::stratum::hal::phal::SfpConfigurator* configurator) {
-
-  LOG(INFO) << __FUNCTION__;
-
-  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
-
-  slot_port_to_configurator_[slot_port_pair] = configurator;
-
   return ::util::OkStatus();
 }
 

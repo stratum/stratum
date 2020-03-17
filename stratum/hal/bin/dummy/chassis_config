@@ -51,3 +51,15 @@ singleton_ports {
     mac_address: 0x222222222222
   }
 }
+optical_ports {
+  id: 3
+  name: "card-1"
+  slot: 1
+  port: 3
+  channel: 1
+  node: 1
+  frequency: 193500000000000
+  target_output_power: 0
+  operational_mode: 2
+  line_port: "oe-17"
+}

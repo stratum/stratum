@@ -33,7 +33,7 @@
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
 // #include "stratum/hal/lib/phal/legacy_phal.h"
 // #include "stratum/hal/lib/phal/udev.h"
-#include "stratum/hal/lib/phal/onlp/onlpphal.h"
+#include "stratum/hal/lib/phal/phal.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 #include "absl/memory/memory.h"
@@ -92,10 +92,10 @@ int Main(int argc, char** argv) {
   // Create chassis-wide and per-node class instances.
   auto* bcm_diag_shell = BcmDiagShell::CreateSingleton();
   auto* bcm_sdk_wrapper = BcmSdkWrapper::CreateSingleton(bcm_diag_shell);
-  auto* onlpphal = stratum::hal::phal::onlp::OnlpPhal::CreateSingleton();
+  auto* phal = phal::Phal::CreateSingleton();
   auto bcm_serdes_db_manager = BcmSerdesDbManager::CreateInstance();
   auto bcm_chassis_manager = BcmChassisManager::CreateInstance(
-      OPERATION_MODE_STANDALONE, onlpphal, bcm_sdk_wrapper,
+      OPERATION_MODE_STANDALONE, phal, bcm_sdk_wrapper,
       bcm_serdes_db_manager.get());
   std::vector<PerNodeInstances> per_node_instances;
   std::map<int, BcmNode*> unit_to_bcm_node;
@@ -111,7 +111,7 @@ int Main(int argc, char** argv) {
   bcm_chassis_manager->SetUnitToBcmNodeMap(unit_to_bcm_node);
   // Create 'BcmSwitch' class instace.
   auto bcm_switch = BcmSwitch::CreateInstance(
-      onlpphal, bcm_chassis_manager.get(), unit_to_bcm_node);
+      phal, bcm_chassis_manager.get(), unit_to_bcm_node);
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   auto credentials_manager = CredentialsManager::CreateInstance();

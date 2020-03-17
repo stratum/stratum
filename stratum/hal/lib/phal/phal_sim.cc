@@ -115,19 +115,21 @@ PhalSim::~PhalSim() {}
   return ::util::OkStatus();
 }
 
-::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
-                                        LedColor color, LedState state) {
-  // TODO(unknown): Implement this.
+::util::Status PhalSim::GetOpticalTransceiverInfo(int slot, int port,
+                                                  OpticalChannelInfo* oc_info) {
+  // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
-// Register the configurator so we can use later
-::util::Status PhalSim::RegisterSfpConfigurator(
-    int slot, int port, phal::SfpConfigurator* configurator) {
-  const std::pair<int, int> slot_port_pair = std::make_pair(slot, port);
+::util::Status PhalSim::SetOpticalTransceiverInfo(
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  // TODO(unknown): Implement this function.
+  return ::util::OkStatus();
+}
 
-  slot_port_to_configurator_[slot_port_pair] = configurator;
-
+::util::Status PhalSim::SetPortLedState(int slot, int port, int channel,
+                                        LedColor color, LedState state) {
+  // TODO(unknown): Implement this.
   return ::util::OkStatus();
 }
 

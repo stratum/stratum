@@ -23,6 +23,7 @@ load(
     "stratum_cc_test",
     "HOST_ARCHES",
 )
+load(":bf_pi.bzl", "barefoot_pi_deps")
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -50,11 +51,5 @@ stratum_cc_library(
            ["@com_github_p4lang_PI//proto/frontend:pifeproto"]
 )
 
-# PI Node for Barefoot targets
-stratum_cc_library(
-    name = "pi_node_bf",
-    srcs = ["pi_node.cc"],
-    hdrs = ["pi_node.h"],
-    deps = pi_node_common_deps +
-           ["@com_github_p4lang_PI_bf//proto/frontend:pifeproto"]
-)
+barefoot_pi_deps(pi_node_common_deps)
+

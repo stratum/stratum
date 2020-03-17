@@ -18,9 +18,9 @@
 # The ONLP_INSTALL environment variable needs to be set
 # otherwise will download the prebuit libraries
 
-ONLP_URL = "https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.0.0/onlp-dev_1.0.0_amd64.tar.gz"
-SHA = "fe74e16c5a74d446cfb83a07082c0cf13406bb39f006ad6ae7d2fcdc2de8772e"
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+ONLP_URL = "https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.1.0/onlp-dev_1.1.0_amd64.tar.gz"
+SHA = "bd359f2429368e5645b4d4a77fe7c95fb0702e753f04fee48690adad653c6503"
 
 # When using cc_import, Bazel links against the SONAME versions of the library,
 # even if they are not available (see
@@ -36,7 +36,7 @@ def _impl(repository_ctx):
         repository_ctx.download_and_extract(url=ONLP_URL,
                                             output="onlp-bin",
                                             sha256=SHA,
-                                            stripPrefix="onlp-dev_1.0.0_amd64")
+                                            stripPrefix="onlp-dev_1.1.0_amd64")
         repository_ctx.symlink("onlp-bin/lib/libonlp.so",
                                "onlp-bin/lib/libonlp.so.1")
         repository_ctx.symlink("onlp-bin/lib/libonlp-platform.so",

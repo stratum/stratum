@@ -1,0 +1,68 @@
+cards {
+  slot: 1
+  ports {
+    port: 1
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 2
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 3
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 4
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 5
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 6
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 7
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 8
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 9
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 10
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 11
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 12
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 13
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 14
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 15
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  ports {
+    port: 16
+    physical_port_type: PHYSICAL_PORT_TYPE_QSFP_CAGE
+  }
+  # Optical ports 17-32 are not managed by ONLP
+}

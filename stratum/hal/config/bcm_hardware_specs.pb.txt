@@ -33,6 +33,40 @@ chip_specs {
   }
 }
 chip_specs {
+  chip_type: TOMAHAWK_PLUS
+  acl {
+    field_processors {
+      stage: VLAN
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+    field_processors {
+      stage: INGRESS
+      slices {
+        count: 12
+        width: 160
+        size: 256
+      }
+    }
+    field_processors {
+      stage: EGRESS
+      slices {
+        count: 4
+        width: 234
+        size: 256
+      }
+    }
+  }
+  udf {
+    chunk_bits: 16
+    chunks_per_set: 8
+    set_count: 2
+  }
+}
+chip_specs {
   chip_type: TRIDENT2
   acl {
     field_processors {

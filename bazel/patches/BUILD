@@ -17,4 +17,4 @@
 
 licenses(["notice"])  # Apache v2
 
-exports_files(glob["*.patch"])
+exports_files(glob(["*.patch"]))

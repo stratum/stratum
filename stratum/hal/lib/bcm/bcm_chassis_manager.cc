@@ -67,6 +67,7 @@ constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTridentPlusMaxBcmPortsInXPipeline;
 constexpr int BcmChassisManager::kTrident2MaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kTomahawkMaxBcmPortsPerChip;
+constexpr int BcmChassisManager::kTomahawkPlusMaxBcmPortsPerChip;
 constexpr int BcmChassisManager::kMaxLinkscanEventDepth;
 constexpr int BcmChassisManager::kMaxXcvrEventDepth;
 
@@ -539,6 +540,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     case PLT_GENERIC_TOMAHAWK:
       supported_chip_types.insert(BcmChip::TOMAHAWK);
       break;
+    case PLT_GENERIC_TOMAHAWK_PLUS:
+        supported_chip_types.insert(BcmChip::TOMAHAWK_PLUS);
+      break;
     default:
       return MAKE_ERROR(ERR_INTERNAL)
              << "Unsupported platform: "
@@ -810,6 +814,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
     uint64 min_speed_bps;
     switch (chip_type) {
       case BcmChip::TOMAHAWK:
+      case BcmChip::TOMAHAWK_PLUS:
         min_speed_bps = kTwentyFiveGigBps;
         break;
       case BcmChip::TRIDENT_PLUS:
@@ -867,7 +872,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   std::map<BcmChip::BcmChipType, size_t> chip_type_to_max_num_ports = {
       {BcmChip::TRIDENT_PLUS, kTridentPlusMaxBcmPortsPerChip},
       {BcmChip::TRIDENT2, kTrident2MaxBcmPortsPerChip},
-      {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip}};
+      {BcmChip::TOMAHAWK, kTomahawkMaxBcmPortsPerChip},
+      {BcmChip::TOMAHAWK_PLUS, kTomahawkPlusMaxBcmPortsPerChip}};
   for (const auto& e : unit_to_chip_type) {
     CHECK_RETURN_IF_FALSE(unit_to_bcm_port_keys[e.first].size() <=
                           chip_type_to_max_num_ports[e.second])
@@ -1833,7 +1839,7 @@ void BcmChassisManager::TransceiverEventHandler(int slot, int port,
   HwState old_state = *mutable_state;
 
   // This handler is supposed to return present or non present for the state of
-  // the transceiver modules. Other values do no make sense.
+  // the transceiver modules. Other values do not make sense.
   if (new_state != HW_STATE_PRESENT && new_state != HW_STATE_NOT_PRESENT) {
     LOG(ERROR) << "Invalid state for transceiver " << xcvr_port_key.ToString()
                << " in TransceiverEventHandler: " << HwState_Name(new_state)

@@ -25,6 +25,7 @@ load(
     "stratum_cc_test",
     "stratum_package",
 )
+
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
 package(
@@ -96,7 +97,7 @@ stratum_cc_test(
 stratum_cc_binary(
     name = "procmon_main",
     srcs = ["procmon_main.cc"],
-    copts = [
+    linkopts = [
         "-lpthread",
         "-ldl",
         "-lrt",

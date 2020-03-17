@@ -156,8 +156,8 @@ void FillTableRefByName(const std::string& table_name,
 void FillTableRefFromIR(const IR::P4Table& ir_table,
                         const hal::P4InfoManager& p4_info_manager,
                         hal::P4ControlTableRef* table_ref) {
-  FillTableRefByName(std::string(
-      ir_table.externalName()), p4_info_manager, table_ref);
+  FillTableRefByName(std::string(ir_table.controlPlaneName()), p4_info_manager,
+                     table_ref);
   table_ref->set_pipeline_stage(GetAnnotatedPipelineStage(ir_table));
 }
 

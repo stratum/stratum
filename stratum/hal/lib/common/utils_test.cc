@@ -17,8 +17,10 @@
 #include "stratum/hal/lib/common/utils.h"
 
 #include <string>
+#include <limits>
 
 #include "stratum/lib/constants.h"
+#include "stratum/glue/status/canonical_errors.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/substitute.h"
@@ -399,6 +401,78 @@ TEST(PortUtilsTest, AggregatePortLedColorsStatePairs) {
             AggregatePortLedColorsStatePairs(
                 {std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID),
                  std::make_pair(LED_COLOR_GREEN, LED_STATE_SOLID)}));
+}
+
+void DoubleToDecimalTest(double from, int64 digits, uint32 precision) {
+  auto res = ConvertDoubleToDecimal64(from, precision);
+  EXPECT_TRUE(res.ok());
+  auto decimal_val = res.ValueOrDie();
+  EXPECT_EQ(decimal_val.digits(), digits);
+  EXPECT_EQ(decimal_val.precision(), precision);
+}
+
+TEST(DecimalUtilTest, TestFromDoubleToDecimal64) {
+  DoubleToDecimalTest(123.456, 123ll, 0);
+  DoubleToDecimalTest(123.456, 1235ll, 1);  // Mind the round up
+  DoubleToDecimalTest(123.456, 12346ll, 2);
+  DoubleToDecimalTest(123.456, 123456ll, 3);
+  DoubleToDecimalTest(123.456, 1234560ll, 4);
+
+  DoubleToDecimalTest(-123.456, -123ll, 0);
+  DoubleToDecimalTest(-123.456, -1235ll, 1);  // Mind the round up
+  DoubleToDecimalTest(-123.456, -12346ll, 2);
+  DoubleToDecimalTest(-123.456, -123456ll, 3);
+  DoubleToDecimalTest(-123.456, -1234560ll, 4);
+
+  // Check zero handling
+  DoubleToDecimalTest(0.00, 0ll, 2);
+  DoubleToDecimalTest(-0.00, -0ll, 2);
+  DoubleToDecimalTest(0.00, 0ll, 1);
+  DoubleToDecimalTest(-0.00, 0ll, 1);
+
+  // Check rounding
+  DoubleToDecimalTest(0.49, 0, 0);
+  DoubleToDecimalTest(0.5, 1, 0);
+
+  // Some edge cases
+  ::util::IsOutOfRange(
+    ConvertDoubleToDecimal64(std::numeric_limits<double>::max(), 0).status());
+  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
+    std::numeric_limits<double>::min(), 0).status());
+  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
+    std::numeric_limits<double>::infinity(), 0).status());
+  ::util::IsOutOfRange(ConvertDoubleToDecimal64(
+    std::numeric_limits<double>::lowest(), 0).status());
+}
+
+void DecimalToDoubleTest(int64 digits, uint32 precision, double to) {
+  ::gnmi::Decimal64 from;
+  from.set_digits(digits);
+  from.set_precision(precision);
+  auto res = ConvertDecimal64ToDouble(from);
+  EXPECT_TRUE(res.ok());
+  EXPECT_DOUBLE_EQ(res.ValueOrDie(), to);
+}
+
+TEST(DecimalUtilTest, TestFromDecimal64ToDouble) {
+  DecimalToDoubleTest(12345ll, 0, 12345.);
+  DecimalToDoubleTest(12345ll, 1, 1234.5);
+  DecimalToDoubleTest(12345ll, 2, 123.45);
+  DecimalToDoubleTest(12345ll, 3, 12.345);
+  DecimalToDoubleTest(12345ll, 4, 1.2345);
+  DecimalToDoubleTest(12345ll, 5, .12345);
+  DecimalToDoubleTest(12345ll, 6, .012345);
+
+  DecimalToDoubleTest(-12345ll, 0, -12345.);
+  DecimalToDoubleTest(-12345ll, 1, -1234.5);
+  DecimalToDoubleTest(-12345ll, 2, -123.45);
+  DecimalToDoubleTest(-12345ll, 3, -12.345);
+  DecimalToDoubleTest(-12345ll, 4, -1.2345);
+  DecimalToDoubleTest(-12345ll, 5, -.12345);
+  DecimalToDoubleTest(-12345ll, 6, -.012345);
+
+  DecimalToDoubleTest(0ll, 0, 0);
+  DecimalToDoubleTest(-0ll, -0, 0);
 }
 
 }  // namespace hal
