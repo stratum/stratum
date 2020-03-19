@@ -901,6 +901,7 @@ enum SfpType {
   SFP_TYPE_QSFP      = 2;
   SFP_TYPE_QSFP_PLUS = 3;
   SFP_TYPE_QSFP28    = 4;
+  SFP_TYPE_SFP28     = 5;
 }
 
 // TODO(unknown): revise these enum as needed per ASIC integration
