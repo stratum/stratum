@@ -235,6 +235,7 @@ class BcmChassisManager : public BcmChassisRoInterface {
   static constexpr int kTridentPlusMaxBcmPortsInXPipeline = 32;
   static constexpr int kTrident2MaxBcmPortsPerChip = 104;
   static constexpr int kTomahawkMaxBcmPortsPerChip = 128;
+  static constexpr int kTomahawkPlusMaxBcmPortsPerChip = 128;
   // Maximum depth of transceiver event Channel.
   static constexpr int kMaxXcvrEventDepth = 256;
   // Maximum depth of linkscan event channel.
