@@ -361,8 +361,8 @@ bool IsAdminStateEnabled(const AdminState& admin_state) {
 
 bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
   switch (loopback_state) {
-    case LOOPBACK_MAC:
-    case LOOPBACK_PHY:
+    case LOOPBACK_STATE_MAC:
+    case LOOPBACK_STATE_PHY:
       return true;
     default:
       return false;

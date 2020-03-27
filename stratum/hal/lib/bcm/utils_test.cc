@@ -106,8 +106,9 @@ TEST(BcmUtilsTest, PrintBcmPortOptionsForNonEmptyOption) {
 
   // Example 5.
   options.Clear();
-  options.set_loopback_mode(LOOPBACK_MAC);
-  EXPECT_EQ("(loopback_mode: LOOPBACK_MAC)", PrintBcmPortOptions(options));
+  options.set_loopback_mode(LOOPBACK_STATE_MAC);
+  EXPECT_EQ("(loopback_mode: LOOPBACK_STATE_MAC)",
+            PrintBcmPortOptions(options));
 }
 
 }  // namespace bcm

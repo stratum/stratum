@@ -200,7 +200,11 @@ class BcmChassisManager : public BcmChassisRoInterface {
                                             HealthState state)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
-  // Sets the loopback state of a port, as requested by the SDN controller.
+  // Sets the loopback state of a port, as requested by the SDN controller. This
+  // method:
+  // 1- Sends a request to SDK to configure the port in loopback mode.
+  // 2- Mutates node_id_to_port_id_to_loopback_state_ for the given pair of
+  //    (node_id, port_id), only if step 1 is successful.
   virtual ::util::Status SetPortLoopbackState(uint64 node_id, uint32 port_id,
                                               LoopbackState state)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
@@ -391,6 +395,12 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // logical_port number for the port are given through an SdkPort object.
   ::util::Status EnablePort(const SdkPort& sdk_port, bool enable) const;
 
+  // A helper method to configure the loopback mode of a port by calling SDK.
+  // The unit and logical_port number for the port are given through an SdkPort
+  // object.
+  ::util::Status LoopbackPort(const SdkPort& sdk_port,
+                              LoopbackState state) const;
+
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
   // therefore needs to do all the SDK initialization itself.
@@ -567,6 +577,19 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // later.
   std::map<uint64, std::map<uint32, HealthState>>
       node_id_to_port_id_to_health_state_;
+
+  // Map from node ID to another map from port ID to LoopbackState representing
+  // the loopback state of the port as set by the SDN controller or the config.
+  // This map is updated as part of each config push or per request from the
+  // SDN controller by calling SetPortLoopbackState(). After each chassis config
+  // push, we honor the valid loopback state of the ports specified in the
+  // config. If no loopback state is specified for a port in the config, we
+  // either keep the state (if there is already a state for the port in this
+  // map), or initialize the state to LOOPBACK_STATE_UNKNOWN (if the port is not
+  // found as a key in the map). A port with loopback state
+  // LOOPBACK_STATE_UNKNOWN will not be forcefully set in HW.
+  std::map<uint64, std::map<uint32, LoopbackState>>
+      node_id_to_port_id_to_loopback_state_;
 
   // Channel for receiving transceiver events from the Phal.
   std::shared_ptr<Channel<PhalInterface::TransceiverEvent>> xcvr_event_channel_;

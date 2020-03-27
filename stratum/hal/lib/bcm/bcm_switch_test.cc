@@ -515,7 +515,7 @@ TEST_F(BcmSwitchTest, GetPortLoopbackStatus) {
   ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
   EXPECT_CALL(*bcm_chassis_manager_mock_,
               GetPortLoopbackState(kNodeId, kPortId))
-      .WillOnce(Return(LOOPBACK_NONE))
+      .WillOnce(Return(LOOPBACK_STATE_NONE))
       .WillOnce(Return(error));
   ExpectMockWriteDataResponse(&writer, &resp);
 
@@ -527,7 +527,7 @@ TEST_F(BcmSwitchTest, GetPortLoopbackStatus) {
 
   EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
   EXPECT_TRUE(resp.has_loopback_status());
-  EXPECT_EQ(LOOPBACK_NONE, resp.loopback_status().state());
+  EXPECT_EQ(LOOPBACK_STATE_NONE, resp.loopback_status().state());
   ASSERT_EQ(details.size(), 1);
   EXPECT_THAT(details.at(0), ::util::OkStatus());
 
@@ -698,7 +698,8 @@ TEST_F(BcmSwitchTest, SetPortLoopbackStatusPass) {
   auto* request = req.add_requests()->mutable_port();
   request->set_node_id(1);
   request->set_port_id(2);
-  request->mutable_loopback_status()->set_state(LoopbackState::LOOPBACK_MAC);
+  request->mutable_loopback_status()->set_state(
+      LoopbackState::LOOPBACK_STATE_MAC);
 
   std::vector<::util::Status> details;
   EXPECT_OK(bcm_switch_->SetValue(

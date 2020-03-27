@@ -749,13 +749,13 @@ enum TrunkMemberBlockState {
 // A generic enum for describing the loopback state of a singleton port.
 enum LoopbackState {
   // Default/invalid state.
-  LOOPBACK_UNKNOWN = 0;
+  LOOPBACK_STATE_UNKNOWN = 0;
   // Normal/non-loopback state.
-  LOOPBACK_NONE = 1;
+  LOOPBACK_STATE_NONE = 1;
   // Loopback packets at the MAC layer of the port.
-  LOOPBACK_MAC = 2;
+  LOOPBACK_STATE_MAC = 2;
   // Loopback packets at the PHY layer of the port.
-  LOOPBACK_PHY = 3;
+  LOOPBACK_STATE_PHY = 3;
 }
 
 // A generic enum for describing the administrative state (aka admin state) of

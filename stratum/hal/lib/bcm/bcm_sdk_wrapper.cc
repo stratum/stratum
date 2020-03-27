@@ -1602,9 +1602,9 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   if (options.loopback_mode()) {
     // SDKLT only supports MAC loopback mode.
     const char* loopback;
-    if (options.loopback_mode() == LOOPBACK_NONE) {
+    if (options.loopback_mode() == LOOPBACK_STATE_NONE) {
       loopback = PC_LPBK_NONEs;
-    } else if (options.loopback_mode() == LOOPBACK_MAC) {
+    } else if (options.loopback_mode() == LOOPBACK_STATE_MAC) {
       loopback = PC_LPBK_MACs;
     } else {
       return MAKE_ERROR(ERR_INVALID_PARAM)
@@ -1691,9 +1691,9 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
         bcmlt_entry_field_symbol_get(entry_hdl, LOOPBACK_MODEs, &loopback));
     std::string loopback_mode(loopback);
     if (loopback_mode == PC_LPBK_NONEs) {
-      options->set_loopback_mode(LOOPBACK_NONE);
+      options->set_loopback_mode(LOOPBACK_STATE_NONE);
     } else if (loopback_mode == PC_LPBK_MACs) {
-      options->set_loopback_mode(LOOPBACK_MAC);
+      options->set_loopback_mode(LOOPBACK_STATE_MAC);
     } else {
       return MAKE_ERROR(ERR_INTERNAL) << "Unknown loopback mode " << loopback;
     }

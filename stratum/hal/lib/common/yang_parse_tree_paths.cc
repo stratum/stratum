@@ -1126,8 +1126,8 @@ void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
     }
     bool state_bool = typed_val->bool_val();
-    LoopbackState typed_state =
-        state_bool ? LoopbackState::LOOPBACK_MAC : LoopbackState::LOOPBACK_NONE;
+    LoopbackState typed_state = state_bool ? LoopbackState::LOOPBACK_STATE_MAC
+                                           : LoopbackState::LOOPBACK_STATE_NONE;
 
     // Update the hardware.
     auto status = SetValue(node_id, port_id, tree,

@@ -100,6 +100,7 @@ BcmChassisManager::BcmChassisManager(OperationMode mode,
       node_id_to_port_id_to_trunk_membership_info_(),
       node_id_to_port_id_to_admin_state_(),
       node_id_to_port_id_to_health_state_(),
+      node_id_to_port_id_to_loopback_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
       phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
@@ -134,6 +135,7 @@ BcmChassisManager::BcmChassisManager()
       node_id_to_port_id_to_trunk_membership_info_(),
       node_id_to_port_id_to_admin_state_(),
       node_id_to_port_id_to_health_state_(),
+      node_id_to_port_id_to_loopback_state_(),
       xcvr_event_channel_(nullptr),
       linkscan_event_channel_(nullptr),
       phal_interface_(nullptr),
@@ -443,16 +445,15 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
-  auto* port_id_to_sdk_port =
-      gtl::FindOrNull(node_id_to_port_id_to_sdk_port_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_sdk_port)
+  const auto* port_id_to_loopback_state =
+      gtl::FindOrNull(node_id_to_port_id_to_loopback_state_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_loopback_state != nullptr)
       << "Unknown node " << node_id << ".";
-  auto* sdk_port = gtl::FindOrNull(*port_id_to_sdk_port, port_id);
-  CHECK_RETURN_IF_FALSE(sdk_port) << "Unknown port " << port_id << ".";
-  BcmPortOptions options;
-  RETURN_IF_ERROR(bcm_sdk_interface_->GetPortOptions(
-      sdk_port->unit, sdk_port->logical_port, &options));
-  return options.loopback_mode();
+  const auto* loopback_state =
+      gtl::FindOrNull(*port_id_to_loopback_state, port_id);
+  CHECK_RETURN_IF_FALSE(loopback_state != nullptr)
+      << "Unknown port " << port_id << " on node " << node_id << ".";
+  return *loopback_state;
 }
 
 ::util::Status BcmChassisManager::GetPortCounters(uint64 node_id,
@@ -492,33 +493,31 @@ BcmChassisManager::GetTrunkIdToSdkTrunkMap(uint64 node_id) const {
 ::util::Status BcmChassisManager::SetPortLoopbackState(uint64 node_id,
                                                        uint32 port_id,
                                                        LoopbackState state) {
-  if (state == LoopbackState::LOOPBACK_UNKNOWN) {
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+  if (state == LoopbackState::LOOPBACK_STATE_UNKNOWN) {
     return ::util::OkStatus();
   }
-  // Override the transceiver state to PRESENT, since loopback ports do not
-  // generate SFP events.
-  auto* port_id_to_singleton_port_key =
-      gtl::FindOrNull(node_id_to_port_id_to_singleton_port_key_, node_id);
-  CHECK_RETURN_IF_FALSE(port_id_to_singleton_port_key)
-      << "Unknown node " << node_id << ".";
-  auto* port_key = gtl::FindOrNull(*port_id_to_singleton_port_key, port_id);
-  CHECK_RETURN_IF_FALSE(port_key) << "Unknown port " << port_id << ".";
-  PortKey port_group_key(port_key->slot,
-                         port_key->port);  // We need to drop the channel
-  auto* xcvr_state =
-      gtl::FindOrNull(xcvr_port_key_to_xcvr_state_, port_group_key);
-  CHECK_RETURN_IF_FALSE(xcvr_state)
-      << "Unknown port key " << port_group_key.ToString() << ".";
-  *xcvr_state = state == LOOPBACK_MAC ? HW_STATE_READY : HW_STATE_UNKNOWN;
-  const auto* bcm_port =
-      gtl::FindPtrOrNull(singleton_port_key_to_bcm_port_, *port_key);
-  CHECK_RETURN_IF_FALSE(bcm_port != nullptr)
-      << "Unknown singleton port key: " << port_key->ToString() << ".";
 
+  ASSIGN_OR_RETURN(auto unit, GetUnitFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto bcm_port, GetBcmPort(node_id, port_id));
   BcmPortOptions options;
   options.set_loopback_mode(state);
-  return bcm_sdk_interface_->SetPortOptions(bcm_port->unit(),
-                                            bcm_port->logical_port(), options);
+  RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
+      bcm_port.unit(), bcm_port.logical_port(), options));
+
+  // Update internal map.
+  auto* port_id_to_loopback_state =
+      gtl::FindOrNull(node_id_to_port_id_to_loopback_state_, node_id);
+  CHECK_RETURN_IF_FALSE(port_id_to_loopback_state)
+      << "Unknown node " << node_id << ".";
+  auto* loopback_state = gtl::FindOrNull(*port_id_to_loopback_state, port_id);
+  CHECK_RETURN_IF_FALSE(loopback_state)
+      << "Unknown port " << port_id << " on node " << node_id << ".";
+  *loopback_state = state;
+
+  return ::util::OkStatus();
 }
 
 std::unique_ptr<BcmChassisManager> BcmChassisManager::CreateInstance(
@@ -1206,6 +1205,8 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
       tmp_node_id_to_port_id_to_admin_state;
   std::map<uint64, std::map<uint32, HealthState>>
       tmp_node_id_to_port_id_to_health_state;
+  std::map<uint64, std::map<uint32, LoopbackState>>
+      tmp_node_id_to_port_id_to_loopback_state;
   ::util::Status error = ::util::OkStatus();  // errors to keep track of.
   for (const auto& singleton_port : config.singleton_ports()) {
     for (const auto& bcm_port : base_bcm_chassis_map_->bcm_ports()) {
@@ -1281,6 +1282,15 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           tmp_node_id_to_port_id_to_health_state[node_id][port_id] =
               HEALTH_STATE_UNKNOWN;
         }
+        const LoopbackState* loopback_state = gtl::FindOrNull(
+            node_id_to_port_id_to_loopback_state_[node_id], port_id);
+        if (loopback_state != nullptr) {
+          tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
+              *loopback_state;
+        } else {
+          tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
+              LOOPBACK_STATE_UNKNOWN;
+        }
         // For the admin state, the admin state specified in the config
         // overrides the previous admin state. But if there is no valid admin
         // state specified for the port in the confing and there is already an
@@ -1309,7 +1319,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           }
         } else {
           // First time we are seeing the port. Need to honor the state
-          // specified in the config and enbale/disable the port accordingly.
+          // specified in the config and enable/disable the port accordingly.
           tmp_node_id_to_port_id_to_admin_state[node_id][port_id] =
               new_admin_state;
           if (new_admin_state != ADMIN_STATE_UNKNOWN) {
@@ -1318,18 +1328,38 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
                 EnablePort(sdk_port, new_admin_state == ADMIN_STATE_ENABLED));
           }
         }
-        // Set the new loopback state. We don't care about the previous state.
+        LoopbackState new_loopback_state =
+            singleton_port.config_params().loopback_mode();
+        const LoopbackState* old_loopback_state = gtl::FindOrNull(
+            node_id_to_port_id_to_loopback_state_[node_id], port_id);
+        if (old_loopback_state != nullptr) {
+          // The port already exists as a key in the map. If the new config
+          // does not have a valid loopback state, keep the old state.
+          // Otherwise, save the new state and if there is a change in the state
+          // (old vs new), configure the port accordingly.
+          if (new_loopback_state == LOOPBACK_STATE_UNKNOWN) {
+            tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
+                *old_loopback_state;
+          } else {
+            tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
+                new_loopback_state;
+          }
+        } else {
+          // First time we are seeing the port. Need to honor the state
+          // specified in the config and enable/disable the port accordingly.
+          tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
+              new_loopback_state;
+        }
         APPEND_STATUS_IF_ERROR(
-            error, SetPortLoopbackState(
-                       node_id, port_id,
-                       singleton_port.config_params().loopback_mode()));
-        break;
+            error, LoopbackPort(sdk_port, new_loopback_state));
       }
     }
   }
   node_id_to_port_id_to_port_state_ = tmp_node_id_to_port_id_to_port_state;
   node_id_to_port_id_to_admin_state_ = tmp_node_id_to_port_id_to_admin_state;
   node_id_to_port_id_to_health_state_ = tmp_node_id_to_port_id_to_health_state;
+  node_id_to_port_id_to_loopback_state_ =
+      tmp_node_id_to_port_id_to_loopback_state;
 
   // Finally populate trunk-related maps.
   for (const auto& trunk_port : config.trunk_ports()) {
@@ -1531,6 +1561,7 @@ void BcmChassisManager::CleanupInternalState() {
   node_id_to_port_id_to_trunk_membership_info_.clear();
   node_id_to_port_id_to_admin_state_.clear();
   node_id_to_port_id_to_health_state_.clear();
+  node_id_to_port_id_to_loopback_state_.clear();
   base_bcm_chassis_map_ = nullptr;
   applied_bcm_chassis_map_ = nullptr;
 }
@@ -2158,6 +2189,19 @@ bool BcmChassisManager::IsInternalPort(const PortKey& port_key) const {
   options.set_enabled(enable ? TRI_STATE_TRUE : TRI_STATE_FALSE);
   RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
         sdk_port.unit, sdk_port.logical_port, options));
+
+  return ::util::OkStatus();
+}
+
+::util::Status BcmChassisManager::LoopbackPort(const SdkPort& sdk_port,
+                                               LoopbackState state) const {
+  if (state == LoopbackState::LOOPBACK_STATE_UNKNOWN) {
+    return ::util::OkStatus();
+  }
+  BcmPortOptions options;
+  options.set_loopback_mode(state);
+  RETURN_IF_ERROR(bcm_sdk_interface_->SetPortOptions(
+      sdk_port.unit, sdk_port.logical_port, options));
 
   return ::util::OkStatus();
 }
