@@ -73,6 +73,7 @@ SDE_VERSION # The SDE version
 KERNEL_VERSION    # The Linux kernel version, default: `uname -r`.
 DOCKER_IMAGE      # The container image name, default: stratumproject/stratum-bf
 DOCKER_IMAGE_TAG  # The container image tag, default: $SDE_VERSION-$KERNEL_VERSION
+PLATFORM          # Use specific platform port map
 ```
 
 ### Custom configurations
