@@ -1268,9 +1268,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           port_group_key_to_non_flex_bcm_ports_[xcvr_port_key].push_back(p);
         }
         // If (node_id, port_id) already exists as a key in any of
-        // node_id_to_port_id_to_{port,health}_state_, we keep the state as is.
-        // Otherwise, we assume this is the first time we are seeing this port
-        // and set the state to unknown.
+        // node_id_to_port_id_to_{port,health,loopback}_state_, we keep the
+        // state as is. Otherwise, we assume this is the first time we are
+        // seeing this port and set the state to unknown.
         const PortState* port_state = gtl::FindOrNull(
             node_id_to_port_id_to_port_state_[node_id], port_id);
         if (port_state != nullptr) {

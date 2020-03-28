@@ -884,7 +884,7 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 ////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/loopback-mode
 //
-void SetUpInterfacesInterfaceStateLoopbackStatus(uint64 node_id, uint32 port_id,
+void SetUpInterfacesInterfaceStateLoopbackMode(uint64 node_id, uint32 port_id,
                                                  TreeNode* node,
                                                  YangParseTree* tree) {
   auto poll_functor =
@@ -3129,7 +3129,7 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
 
   node = tree->AddNode(
       GetPath("interfaces")("interface", name)("state")("loopback-mode")());
-  SetUpInterfacesInterfaceStateLoopbackStatus(node_id, port_id, node, tree);
+  SetUpInterfacesInterfaceStateLoopbackMode(node_id, port_id, node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("hardware-port")());

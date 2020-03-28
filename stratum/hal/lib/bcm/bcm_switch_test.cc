@@ -694,6 +694,10 @@ TEST_F(BcmSwitchTest, SetPortAdminStatusPass) {
 }
 
 TEST_F(BcmSwitchTest, SetPortLoopbackStatusPass) {
+  EXPECT_CALL(*bcm_chassis_manager_mock_,
+              SetPortLoopbackState(1, 2, LOOPBACK_STATE_MAC))
+      .WillOnce(Return(::util::OkStatus()));
+
   SetRequest req;
   auto* request = req.add_requests()->mutable_port();
   request->set_node_id(1);
