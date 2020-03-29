@@ -13,19 +13,20 @@
 // limitations under the License.
 
 #include <grpcpp/grpcpp.h>
+
 #include <csignal>
 #include <iostream>
 #include <memory>
-#include <vector>
-#include <string>
 #include <regex>  // NOLINT
+#include <string>
+#include <vector>
 
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
 
 const char kUsage[] =
-R"USAGE(usage: gnmi-cli [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
+    R"USAGE(usage: gnmi-cli [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
                    [-int_val INT_VAL] [-uint_val UINT_VAL]
                    [-string_val STRING_VAL] [-float_val FLOAT_VAL]
                    {get,set,cap,del,sub-onchange,sub-sample} path
@@ -49,18 +50,18 @@ optional arguments:
   --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
 )USAGE";
 
-#define PRINT_MSG(msg, prompt) \
+#define PRINT_MSG(msg, prompt)      \
   std::cout << prompt << std::endl; \
   std::cout << msg.DebugString() << std::endl;
 
-#define LOG_IF_NOT_OK(status) \
-  if (!status.ok()) { \
+#define LOG_IF_NOT_OK(status)                         \
+  if (!status.ok()) {                                 \
     std::cout << status.error_message() << std::endl; \
   }
 
 #define CHECK_AND_PRINT_RESP(status, msg) \
-  if (status.ok()) { \
-    PRINT_MSG(msg, "RESPONSE") \
+  if (status.ok()) {                      \
+    PRINT_MSG(msg, "RESPONSE")            \
   }
 
 DECLARE_bool(help);
@@ -80,8 +81,8 @@ namespace tools {
 namespace gnmi {
 
 bool str_to_bool(std::string str) {
-  return (str == "y") || (str == "true") || (str == "t")
-         || (str == "yes") || (str == "1");
+  return (str == "y") || (str == "true") || (str == "t") || (str == "yes") ||
+         (str == "1");
 }
 
 void add_path_elem(std::string elem_name, std::string elem_kv,
@@ -114,7 +115,7 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   ::gnmi::GetRequest::DataType data_type;
   if (!::gnmi::GetRequest::DataType_Parse(FLAGS_get_type, &data_type)) {
     std::cout << "Invalid gNMI get data type: " << FLAGS_get_type
-      << " , use ALL as data type." << std::endl;
+              << " , use ALL as data type." << std::endl;
     data_type = ::gnmi::GetRequest::ALL;
   }
   req.set_type(data_type);
@@ -138,7 +139,7 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
     update->mutable_val()->set_uint_val(stoull(FLAGS_uint_val));
   } else if (!FLAGS_float_val.empty()) {
     update->mutable_val()->set_float_val(stof(FLAGS_float_val));
-  }  else if (!FLAGS_string_val.empty()) {
+  } else if (!FLAGS_string_val.empty()) {
     update->mutable_val()->set_string_val(FLAGS_string_val);
   } else {
     std::cout << "No typed value set" << std::endl;
@@ -164,9 +165,8 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   return sub_req;
 }
 
-::gnmi::SubscribeRequest
-build_gnmi_sub_sample_req(std::string path,
-                          ::google::protobuf::uint64 interval) {
+::gnmi::SubscribeRequest build_gnmi_sub_sample_req(
+    std::string path, ::google::protobuf::uint64 interval) {
   ::gnmi::SubscribeRequest sub_req;
   auto* sub_list = sub_req.mutable_subscribe();
   sub_list->set_mode(::gnmi::SubscriptionList::STREAM);
@@ -178,8 +178,8 @@ build_gnmi_sub_sample_req(std::string path,
   return sub_req;
 }
 
-::grpc::ClientReaderWriterInterface
-    <::gnmi::SubscribeRequest, ::gnmi::SubscribeResponse>* stream_reader_writer;
+::grpc::ClientReaderWriterInterface<
+    ::gnmi::SubscribeRequest, ::gnmi::SubscribeResponse>* stream_reader_writer;
 
 int Main(int argc, char** argv) {
   if (argc < 2 || FLAGS_help) {
