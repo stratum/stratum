@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <csignal>
 #include <grpcpp/grpcpp.h>
+#include <csignal>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -28,13 +28,13 @@ const char kUsage[] =
 R"USAGE(usage: gnmi-cli [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
                    [-int_val INT_VAL] [-uint_val UINT_VAL]
                    [-string_val STRING_VAL] [-float_val FLOAT_VAL]
-                   {get,set,sub} path
+                   {get,set,cap,del,sub-onchange,sub-sample} path
 
 Basic gNMI CLI
 
 positional arguments:
-  {get,set,sub,cap}         gNMI command
-  path                      gNMI path
+  {get,set,cap,del,sub-onchange,sub-sample}         gNMI command
+  path                                              gNMI path
 
 optional arguments:
   --help            show this help message and exit
@@ -46,6 +46,7 @@ optional arguments:
   --float_val FLOAT_VAL    [SetRequest only] Set float value
   --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
   --replace                [SetRequest only] Use replace instead of update
+  --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
 )USAGE";
 
 #define PRINT_MSG(msg, prompt) \
@@ -72,6 +73,7 @@ DEFINE_string(float_val, "", "Floating point value to be set");
 
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
+DEFINE_string(get_type, "ALL", "The gNMI get request type");
 
 namespace stratum {
 namespace tools {
@@ -109,6 +111,13 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
   ::gnmi::GetRequest req;
   build_gnmi_path(path, req.add_path());
   req.set_encoding(::gnmi::PROTO);
+  ::gnmi::GetRequest::DataType data_type;
+  if (!::gnmi::GetRequest::DataType_Parse(FLAGS_get_type, &data_type)) {
+    std::cout << "Invalid gNMI get data type: " << FLAGS_get_type
+      << " , use ALL as data type." << std::endl;
+    data_type = ::gnmi::GetRequest::ALL;
+  }
+  req.set_type(data_type);
   return req;
 }
 
