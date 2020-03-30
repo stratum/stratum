@@ -51,7 +51,6 @@ DECLARE_string(bcm_sdk_checkpoint_dir);
 DECLARE_string(test_tmpdir);
 
 using ::testing::_;
-using ::testing::ByRef;
 using ::testing::DoAll;
 using ::testing::HasSubstr;
 using ::testing::Invoke;
@@ -5258,17 +5257,8 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
   // Push a config which does not set the loopback state.
   ASSERT_OK(PushTestConfig(&config));
 
-  // We have to manually save the port options, since the chassis manager does
-  // not cache loopback mode state.
-  BcmPortOptions options;
-  auto save_port_options = [&options](int, int, BcmPortOptions option) {
-    if (option.loopback_mode() > 0) {
-      options = option;
-    }
-  };
   EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
-      .WillRepeatedly(
-          DoAll(Invoke(save_port_options), Return(::util::OkStatus())));
+      .WillRepeatedly(Return(::util::OkStatus()));
 
   // Check that port loopback state is undefined/unknown.
   auto loopback_state = GetPortLoopbackState(kNodeId, kPortId);
@@ -5283,10 +5273,6 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
 
   ASSERT_OK(VerifyChassisConfig(config));
   ASSERT_OK(PushChassisConfig(config));
-
-  EXPECT_CALL(*bcm_sdk_mock_, GetPortOptions(0, 34, _))
-      .WillRepeatedly(
-          DoAll(SetArgPointee<2>(options), Return(::util::OkStatus())));
 
   loopback_state = GetPortLoopbackState(kNodeId, kPortId);
   ASSERT_TRUE(loopback_state.ok());
@@ -5313,6 +5299,10 @@ TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateByController) {
 
   // TODO(unknown): Extend the tests.
   EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_STATE_NONE));
+  auto loopback_state = GetPortLoopbackState(kNodeId, kPortId);
+  ASSERT_TRUE(loopback_state.ok());
+  EXPECT_EQ(LOOPBACK_STATE_NONE, loopback_state.ValueOrDie());
+
   EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_STATE_MAC));
   EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_STATE_UNKNOWN));
 

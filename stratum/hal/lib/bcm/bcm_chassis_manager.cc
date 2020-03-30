@@ -1352,7 +1352,7 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
           }
         } else {
           // First time we are seeing the port. Need to honor the state
-          // specified in the config and enable/disable the port accordingly.
+          // specified in the config and set the loopback mode accordingly.
           tmp_node_id_to_port_id_to_loopback_state[node_id][port_id] =
               new_loopback_state;
         }

@@ -1088,7 +1088,7 @@ message OperStatus {
 
 // Wrapper around loopback state of a port.
 message LoopbackStatus {
-  LoopbackState state = 1; // required
+  LoopbackState state = 1;  // required
 }
 
 // Wrapper around admin state of a HW component.
