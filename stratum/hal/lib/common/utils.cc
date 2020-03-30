@@ -359,6 +359,16 @@ bool IsAdminStateEnabled(const AdminState& admin_state) {
     return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
+bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
+  switch (loopback_state) {
+    case LOOPBACK_STATE_MAC:
+    case LOOPBACK_STATE_PHY:
+      return true;
+    default:
+      return false;
+  }
+}
+
 std::string ConvertMediaTypeToString(const MediaType& type) {
   switch (type) {
     case MEDIA_TYPE_SFP:

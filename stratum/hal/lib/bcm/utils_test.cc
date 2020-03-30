@@ -103,6 +103,12 @@ TEST(BcmUtilsTest, PrintBcmPortOptionsForNonEmptyOption) {
   options.set_num_serdes_lanes(2);
   EXPECT_EQ("(enabled: true, flex: false, autoneg: true, num_serdes_lanes: 2)",
             PrintBcmPortOptions(options));
+
+  // Example 5.
+  options.Clear();
+  options.set_loopback_mode(LOOPBACK_STATE_MAC);
+  EXPECT_EQ("(loopback_mode: LOOPBACK_STATE_MAC)",
+            PrintBcmPortOptions(options));
 }
 
 }  // namespace bcm
