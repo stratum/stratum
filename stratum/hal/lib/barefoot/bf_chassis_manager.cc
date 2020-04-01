@@ -100,7 +100,7 @@ BFChassisManager::~BFChassisManager() = default;
 
   if (config_params.loopback_mode() != LOOPBACK_STATE_UNKNOWN) {
     LOG(INFO) << "Setting port " << port_id << " to loopback mode "
-      << config_params.loopback_mode() << ".";
+        << config_params.loopback_mode() << ".";
     RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
         unit, port_id, config_params.loopback_mode()));
   }
@@ -111,6 +111,7 @@ BFChassisManager::~BFChassisManager() = default;
     RETURN_IF_ERROR(bf_pal_interface_->PortEnable(unit, port_id));
     config->admin_state = ADMIN_STATE_ENABLED;
   }
+
   return ::util::OkStatus();
 }
 

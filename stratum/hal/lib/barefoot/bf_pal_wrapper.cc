@@ -298,7 +298,7 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
                                   lp_mode);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when setting loopback mode on dev"
-                                       << unit << " port " << port_id;
+                                    << unit << " port " << port_id;
   }
   return ::util::OkStatus();
 }
