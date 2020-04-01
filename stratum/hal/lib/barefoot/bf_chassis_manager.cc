@@ -103,8 +103,8 @@ BFChassisManager::~BFChassisManager() = default;
       << config_params.loopback_mode() << ".";
     RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
         unit, port_id, config_params.loopback_mode()));
-    config->loopback_mode = config_params.loopback_mode();
   }
+  config->loopback_mode = config_params.loopback_mode();
 
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id << ".";
