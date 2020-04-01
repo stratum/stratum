@@ -61,6 +61,6 @@ pkg_tar(
     extension = "tar.gz",
     strip_prefix = ".",  # needed to preserve sub-directory structure: https://github.com/bazelbuild/rules_pkg/issues/82
     package_dir = "stratum_configs",
-    srcs = [ ":all_configs" ],
+    srcs = [":all_configs"],
     mode = "0644",
 )
