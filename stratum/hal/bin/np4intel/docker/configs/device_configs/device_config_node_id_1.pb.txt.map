@@ -1,0 +1,16 @@
+#description: Node 1 Device Config
+node_id: 1
+np4_config {
+  path: "/dev/alt_pf1820"
+}
+dpdk_config {
+  device_name: "0000:b1:00.0"
+  rx_ring_size: 1024
+  tx_ring_size: 1024
+  num_rx_rings: 1
+  num_tx_rings: 1
+  num_mbufs: 8191
+  mbuf_cache_size: 250
+  burst_size: 32
+  disabled: false
+}

@@ -113,6 +113,14 @@ def stratum_deps():
                     commit = pi_commit,
                 )
 
+    if "com_github_p4lang_PI_np4" not in native.existing_rules():
+        # ----- PI for Netcope targets -----
+        remote_workspace(
+            name = "com_github_p4lang_PI_np4",
+            remote = "https://github.com/craigsdell/PI.git",
+            commit = "6cf0e128ce0b6d2227eeaf9874faea0a692e881e",
+        )
+
     if "com_github_openconfig_gnmi_proto" not in native.existing_rules():
         http_archive(
             name = "com_github_openconfig_gnmi_proto",

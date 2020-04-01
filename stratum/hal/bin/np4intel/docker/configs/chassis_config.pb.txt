@@ -1,0 +1,34 @@
+description: "NP4 Intel Chassis Config"
+chassis {
+  platform: PLT_NP4_INTEL_N3000
+  name: "np4_intel_n3000"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 1
+  name: "1/1/1"
+  slot: 1
+  port: 1
+  channel: 0
+  speed_bps: 10000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
+  node: 1
+}
+singleton_ports {
+  id: 2
+  name: "1/1/2"
+  slot: 1
+  port: 2
+  channel: 0
+  speed_bps: 10000000
+  config_params {
+    autoneg: TRI_STATE_FALSE
+  }
+  node: 1
+}

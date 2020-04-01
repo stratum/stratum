@@ -50,6 +50,7 @@ enum Platform {
   PLT_P4_SOFT_SWITCH = 10;
   PLT_BAREFOOT_TOFINO = 11;
   PLT_BAREFOOT_TOFINO2 = 12;
+  PLT_NP4_INTEL_N3000 = 13;
   // TODO(unknown): Add all the BCM and MLNX based platforms.
 }
 

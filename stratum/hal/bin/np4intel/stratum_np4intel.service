@@ -1,0 +1,23 @@
+[Unit]
+Description=Stratum node
+ConditionPathExists=/usr/bin/stratum_np4intel
+ConditionPathExists=/etc/stratum/stratum_np4intel.environment
+
+[Service]
+Type=simple
+
+WorkingDirectory=/tmp
+EnvironmentFile=/etc/stratum/stratum_np4intel.environment
+
+ExecStartPre=/bin/mkdir -p /tmp/stratum/hal/bin/np4intel
+ExecStartPre=/bin/cp /etc/stratum/dummy.json /tmp/stratum/hal/bin/np4intel/dummy.json
+
+ExecStart=/usr/bin/stratum_np4intel \
+    --external_hercules_urls=${EXTERNAL_HERCULES_URL} \
+    --forwarding_pipeline_configs_file=${FORWARDING_PIPELINE_CONFIGS_FILE} \
+    --persistent_config_dir=${PERSISTENT_CONFIG_DIR} ${EXTRA_NP_CONFIG}
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

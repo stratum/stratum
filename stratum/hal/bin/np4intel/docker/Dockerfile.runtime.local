@@ -1,0 +1,73 @@
+# Copyright 2020-present Open Networking Foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#----------------------------------------------------------------------
+# This Dockerfile builds a container image used to run the stratum_np4intel
+# binary for use with the Intel PAC N3000 FPGA card.  This "local" version
+# does not rebuld the stratum source code, instead pulling the normal
+# and debug binary images from the local directory.
+#----------------------------------------------------------------------
+
+ARG BUILDER_IMAGE
+ARG RUNTIME_BASE_IMAGE
+
+#----------------------------------------------------------------------
+# Copy out the stratum binaries and other config files
+#----------------------------------------------------------------------
+
+FROM $BUILDER_IMAGE as builder
+
+# Copy stratum source code
+ADD . /stratum
+
+ENV OUTPUT_BASE /output/usr/local
+ENV NP4_INSTALL /usr
+
+WORKDIR /stratum
+
+# Copy into output build directory
+ENV STRATUM_NP4INTEL_BASE stratum/hal/bin/np4intel
+RUN mkdir -p $OUTPUT_BASE/bin && \
+    mkdir -p $OUTPUT_BASE/share/stratum && \
+    cp $STRATUM_NP4INTEL_BASE/docker/stratum_np4intel $OUTPUT_BASE/bin/ && \
+    cp $STRATUM_NP4INTEL_BASE/docker/stratum_np4intel.debug $OUTPUT_BASE/bin/ && \
+    cp $STRATUM_NP4INTEL_BASE/docker/scripts/stratum-entrypoint.sh /output/ && \
+    cp $STRATUM_NP4INTEL_BASE/docker/configs/stratum.flags $OUTPUT_BASE/share/stratum/ && \
+    cp $STRATUM_NP4INTEL_BASE/docker/scripts/build_pipeline_configs.py /output/ && \
+    cp -r $STRATUM_NP4INTEL_BASE/docker/py_out /output/
+
+#----------------------------------------------------------------------
+# Now build the stratum runtime container
+#----------------------------------------------------------------------
+
+FROM $RUNTIME_BASE_IMAGE
+LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
+LABEL description="This Docker image is the runtime container for stratum_np4intel"
+
+COPY --from=builder /output /
+
+ARG JOBS
+
+# Setup stratum_np4intel pre-reqs
+RUN mkdir /stratum_configs && \
+    mkdir /stratum_logs && \
+    mkdir /mnt/huge && \
+    cd /lib/modules && \
+    ln -s 4.15.0-72-generic `uname -r` && \
+    echo "nodev /mnt/huge hugetlbfs defaults 0 0" >> /etc/fstab && \
+    echo "vm.nr_hugepages=8192" >> /etc/sysctl.conf
+
+EXPOSE 28000/tcp
+ENTRYPOINT /stratum-entrypoint.sh
+
