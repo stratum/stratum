@@ -435,6 +435,19 @@ stratum_cc_library(
     ],
 )
 
+stratum_cc_test(
+    name = "onlp_platform_test",
+    srcs = ["onlp_platform_test.cc"],
+    deps = [
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/glue/status",
+        "onlp_wrapper",
+    ],
+    tags = ["manual"],
+    linkstatic = True,
+)
+
 stratum_cc_library(
     name = "onlp_switch_configurator",
     srcs = ["onlp_switch_configurator.cc"],

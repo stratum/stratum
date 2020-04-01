@@ -16,7 +16,7 @@
 
 def stratum_cc_test(name, deps = None, srcs = None, data = None, copts = None,
                     defines = None, linkopts = None, size = "small",
-                    visibility = None):
+                    visibility = None, tags = None, linkstatic = None):
   native.cc_test(
     name = name,
     deps = deps,
@@ -27,4 +27,6 @@ def stratum_cc_test(name, deps = None, srcs = None, data = None, copts = None,
     linkopts = linkopts,
     size = size,
     visibility = visibility,
+    tags = tags,
+    linkstatic = linkstatic,
   )
