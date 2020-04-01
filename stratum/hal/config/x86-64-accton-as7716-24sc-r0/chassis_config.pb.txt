@@ -1,6 +1,6 @@
 description: "16x100G+8x200G chassis config for AS7716"
 chassis {
-  platform: PLT_GENERIC_TOMAHAWK
+  platform: PLT_GENERIC_TOMAHAWK_PLUS
   name: "as7716"
 }
 nodes {

@@ -21,8 +21,8 @@
 #include <map>
 #include <set>
 
-#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "gmock/gmock.h"
+#include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 
 namespace stratum {
 
@@ -60,6 +60,9 @@ class BcmChassisRoMock : public BcmChassisRoInterface {
   MOCK_CONST_METHOD2(GetPortAdminState,
                      ::util::StatusOr<AdminState>(uint64 node_id,
                                                   uint32 port_id));
+  MOCK_CONST_METHOD2(GetPortLoopbackState,
+                     ::util::StatusOr<LoopbackState>(uint64 node_id,
+                                                     uint32 port_id));
   MOCK_CONST_METHOD3(GetPortCounters,
                      ::util::Status(uint64 node_id, uint32 port_id,
                                     PortCounters* pc));

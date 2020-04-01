@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_chassis_manager.h"
 
 #include <memory>
@@ -23,7 +22,13 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
+#include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_node_mock.h"
@@ -36,12 +41,6 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_cat.h"
-#include "absl/synchronization/mutex.h"
 
 DECLARE_string(base_bcm_chassis_map_file);
 DECLARE_string(applied_bcm_chassis_map_file);
@@ -52,10 +51,13 @@ DECLARE_string(bcm_sdk_checkpoint_dir);
 DECLARE_string(test_tmpdir);
 
 using ::testing::_;
+using ::testing::DoAll;
 using ::testing::HasSubstr;
+using ::testing::Invoke;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
+using ::testing::SetArgPointee;
 
 namespace stratum {
 namespace hal {
@@ -160,6 +162,8 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
         bcm_chassis_manager_->node_id_to_port_id_to_admin_state_.empty());
     CHECK_RETURN_IF_FALSE(
         bcm_chassis_manager_->node_id_to_port_id_to_health_state_.empty());
+    CHECK_RETURN_IF_FALSE(
+        bcm_chassis_manager_->node_id_to_port_id_to_loopback_state_.empty());
     CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->base_bcm_chassis_map_ ==
                           nullptr);
     CHECK_RETURN_IF_FALSE(bcm_chassis_manager_->applied_bcm_chassis_map_ ==
@@ -271,6 +275,12 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
     return bcm_chassis_manager_->GetPortAdminState(node_id, port_id);
   }
 
+  ::util::StatusOr<LoopbackState> GetPortLoopbackState(uint64 node_id,
+                                                       uint32 port_id) const {
+    absl::ReaderMutexLock l(&chassis_lock);
+    return bcm_chassis_manager_->GetPortLoopbackState(node_id, port_id);
+  }
+
   ::util::Status SetTrunkMemberBlockState(uint64 node_id, uint32 trunk_id,
                                           uint32 port_id,
                                           TrunkMemberBlockState state) {
@@ -289,6 +299,12 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
                                     HealthState state) {
     absl::WriterMutexLock l(&chassis_lock);
     return bcm_chassis_manager_->SetPortHealthState(node_id, port_id, state);
+  }
+
+  ::util::Status SetPortLoopbackState(uint64 node_id, uint32 port_id,
+                                      LoopbackState state) {
+    absl::WriterMutexLock l(&chassis_lock);
+    return bcm_chassis_manager_->SetPortLoopbackState(node_id, port_id, state);
   }
 
   void SendPortOperStateGnmiEvent(int node_id, int port_id, PortState state) {
@@ -5196,10 +5212,10 @@ TEST_P(BcmChassisManagerTest, TestSetTrunkMemberBlockStateByController) {
   // LACP: (node_id: 7654321, trunk_id: 333, port_id: NONE)
 
   // TODO(unknown): Extend the tests when the function is implemneted.
-  EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 222, kPortId,
-                                     TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
-  EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 0, kPortId,
-                                     TRUNK_MEMBER_BLOCK_STATE_FORWARDING));
+  // EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 222, kPortId,
+  //                                    TRUNK_MEMBER_BLOCK_STATE_BLOCKED));
+  // EXPECT_OK(SetTrunkMemberBlockState(kNodeId, 0, kPortId,
+  //                                    TRUNK_MEMBER_BLOCK_STATE_FORWARDING));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
@@ -5235,12 +5251,60 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateViaConfigPush) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateViaConfigPush) {
+  ChassisConfig config;
+
+  // Push a config which does not set the loopback state.
+  ASSERT_OK(PushTestConfig(&config));
+
+  EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+
+  // Check that port loopback state is undefined/unknown.
+  auto loopback_state = GetPortLoopbackState(kNodeId, kPortId);
+  ASSERT_TRUE(loopback_state.ok());
+  EXPECT_EQ(LOOPBACK_STATE_UNKNOWN, loopback_state.ValueOrDie());
+
+  // Change the config and set the loopback state to MAC. Then re-push.
+  for (auto& singleton_port : *config.mutable_singleton_ports()) {
+    singleton_port.mutable_config_params()->set_loopback_mode(
+        LOOPBACK_STATE_MAC);
+  }
+
+  ASSERT_OK(VerifyChassisConfig(config));
+  ASSERT_OK(PushChassisConfig(config));
+
+  loopback_state = GetPortLoopbackState(kNodeId, kPortId);
+  ASSERT_TRUE(loopback_state.ok());
+  EXPECT_EQ(LOOPBACK_STATE_MAC, loopback_state.ValueOrDie());
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
 TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO(unknown): Extend the tests when the function is implemneted.
-  EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
-  EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
+  // TODO(unknown): Extend the tests when the function is implemented.
+  // EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_DISABLED));
+  // EXPECT_OK(SetPortAdminState(kNodeId, kPortId, ADMIN_STATE_ENABLED));
+
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
+TEST_P(BcmChassisManagerTest, TestSetPortLoopbackStateByController) {
+  ASSERT_OK(PushTestConfig());
+
+  EXPECT_CALL(*bcm_sdk_mock_, SetPortOptions(0, 34, _))
+      .WillRepeatedly(Return(::util::OkStatus()));
+
+  // TODO(unknown): Extend the tests.
+  EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_STATE_NONE));
+  auto loopback_state = GetPortLoopbackState(kNodeId, kPortId);
+  ASSERT_TRUE(loopback_state.ok());
+  EXPECT_EQ(LOOPBACK_STATE_NONE, loopback_state.ValueOrDie());
+
+  EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_STATE_MAC));
+  EXPECT_OK(SetPortLoopbackState(kNodeId, kPortId, LOOPBACK_STATE_UNKNOWN));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
@@ -5248,15 +5312,15 @@ TEST_P(BcmChassisManagerTest, TestSetPortAdminStateByController) {
 TEST_P(BcmChassisManagerTest, TestSetPortHealthStateByController) {
   ASSERT_OK(PushTestConfig());
 
-  // TODO(unknown): Extend the tests when the function is implemneted.
-  EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_BAD));
-  EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
+  // TODO(unknown): Extend the tests when the function is implemented.
+  // EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_BAD));
+  // EXPECT_OK(SetPortHealthState(kNodeId, kPortId, HEALTH_STATE_GOOD));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
 INSTANTIATE_TEST_SUITE_P(BcmChassisManagerTestWithMode, BcmChassisManagerTest,
-                        ::testing::Values(OPERATION_MODE_STANDALONE));
+                         ::testing::Values(OPERATION_MODE_STANDALONE));
 
 }  // namespace bcm
 }  // namespace hal

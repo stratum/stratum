@@ -84,6 +84,7 @@ SfpAdapter::~SfpAdapter() {
   // Need to map connector_type to PhysicalPortType
   PhysicalPortType actual_val;
   switch (sfp.connector_type()) {
+    case SFP_TYPE_SFP28:
     case SFP_TYPE_SFP:
       actual_val = PHYSICAL_PORT_TYPE_SFP_CAGE;
       break;

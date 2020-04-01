@@ -17,13 +17,20 @@
 set -e
 set -x
 
-if [ -d "/etc/onl" ]; then
+if [ -n "$PLATFORM" ]; then
+    # Use specific platorm port map
+    ONLP_ARG="--env WITH_ONLP=false \
+              --env PLATFORM=$PLATFORM"
+elif [ -d "/etc/onl" ]; then
+    # Use ONLP to find platform and it's library
     ONLP_ARG=$(ls /lib/**/libonlp* | awk '{print "-v " $1 ":" $1 " " }')
     ONLP_ARG="$ONLP_ARG \
               -v /lib/platform-config:/lib/platform-config \
               -v /etc/onl:/etc/onl"
 else
-    ONLP_ARG="--env WITH_ONLP=false"
+    # Use default platform port map
+    ONLP_ARG="--env WITH_ONLP=false \
+              --env PLATFORM=x86-64-accton-wedge100bf-32x-r0"
 fi
 
 CONFIG_DIR=${CONFIG_DIR:-/root}

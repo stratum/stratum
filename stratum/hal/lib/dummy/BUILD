@@ -24,7 +24,7 @@ load(
     "HOST_ARCHES",
 )
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
-load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library", "py_grpc_library")
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -118,10 +118,14 @@ cc_grpc_library(
 )
 
 py_proto_library(
+    name = "dummy_test_py_proto",
+    deps = [":dummy_test_proto"],
+)
+
+py_grpc_library(
     name = "dummy_test_py_grpc",
-    deps = [
-        ":dummy_test_proto"
-    ],
+    srcs = [":dummy_test_proto"],
+    deps = [":dummy_test_py_proto"],
 )
 
 stratum_cc_library(
