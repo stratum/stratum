@@ -376,9 +376,11 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   auto port = kPort + 1;
 
   builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
-                  FEC_MODE_ON, TRI_STATE_TRUE);
+                  FEC_MODE_ON, TRI_STATE_TRUE, LOOPBACK_STATE_MAC);
   EXPECT_CALL(*bf_pal_mock_, PortAdd(
     kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  EXPECT_CALL(*bf_pal_mock_, PortLoopbackModeSet(
+      kUnit, portId, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
   EXPECT_CALL(*bf_pal_mock_, PortOperStateGet(kUnit, portId))
     .WillRepeatedly(Return(PORT_STATE_UP));
@@ -489,6 +491,15 @@ TEST_F(BFChassisManagerTest, GetPortData) {
     &DataResponse::has_fec_status,
     &FecStatus::mode,
     FEC_MODE_ON);
+
+  // Loopback mode
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_loopback_status,
+    &DataResponse::loopback_status,
+    &DataResponse::has_loopback_status,
+    &LoopbackStatus::state,
+    LOOPBACK_STATE_MAC);
 
   // Unsupprorted
   DataRequest::Request req;
