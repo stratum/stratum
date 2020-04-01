@@ -882,6 +882,27 @@ void SetUpInterfacesInterfaceStateAdminStatus(uint64 node_id, uint32 port_id,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/state/loopback-mode
+//
+void SetUpInterfacesInterfaceStateLoopbackMode(uint64 node_id, uint32 port_id,
+                                                 TreeNode* node,
+                                                 YangParseTree* tree) {
+  auto poll_functor =
+      GetOnPollFunctor(node_id, port_id, tree, &DataResponse::loopback_status,
+                       &DataResponse::has_loopback_status,
+                       &DataRequest::Request::mutable_loopback_status,
+                       &LoopbackStatus::state, IsLoopbackStateEnabled);
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortLoopbackStateChangedEvent::GetNewState,
+      IsLoopbackStateEnabled);
+  auto register_functor = RegisterFunc<PortLoopbackStateChangedEvent>();
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // /interfaces/interface[name=<name>]/state/hardware-port
 void SetUpInterfacesInterfaceStateHardwarePort(uint64 node_id, uint32 port_id,
                                                TreeNode* node,
@@ -1073,6 +1094,74 @@ void SetUpInterfacesInterfaceConfigEnabled(const bool state,
   auto on_change_functor = GetOnChangeFunctor(
       node_id, port_id, &PortAdminStateChangedEvent::GetNewState,
       IsAdminStateEnabled);
+  node->SetOnTimerHandler(poll_functor)
+      ->SetOnPollHandler(poll_functor)
+      ->SetOnUpdateHandler(on_set_functor)
+      ->SetOnReplaceHandler(on_set_functor)
+      ->SetOnChangeRegistration(register_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /interfaces/interface[name=<name>]/config/loopback-mode
+//
+void SetUpInterfacesInterfaceConfigLoopbackMode(const bool loopback,
+                                                uint64 node_id, uint32 port_id,
+                                                TreeNode* node,
+                                                YangParseTree* tree) {
+  auto poll_functor = [loopback](const GnmiEvent& event,
+                                 const ::gnmi::Path& path,
+                                 GnmiSubscribeStream* stream) {
+    // This leaf represents configuration data. Return what was known when
+    // it was configured!
+    return SendResponse(GetResponse(path, loopback), stream);
+  };
+  auto on_set_functor =
+      [node_id, port_id, node, tree](
+          const ::gnmi::Path& path, const ::google::protobuf::Message& val,
+          CopyOnWriteChassisConfig* config) -> ::util::Status {
+    const gnmi::TypedValue* typed_val =
+        dynamic_cast<const gnmi::TypedValue*>(&val);
+    if (typed_val == nullptr) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "not a TypedValue message!";
+    }
+    bool state_bool = typed_val->bool_val();
+    LoopbackState typed_state = state_bool ? LoopbackState::LOOPBACK_STATE_MAC
+                                           : LoopbackState::LOOPBACK_STATE_NONE;
+
+    // Update the hardware.
+    auto status = SetValue(node_id, port_id, tree,
+                           &SetRequest::Request::Port::mutable_loopback_status,
+                           &LoopbackStatus::set_state, typed_state);
+    if (status != ::util::OkStatus()) {
+      return status;
+    }
+
+    // Update the chassis config
+    ChassisConfig* new_config = config->writable();
+    for (auto& singleton_port : *new_config->mutable_singleton_ports()) {
+      if (singleton_port.node() == node_id && singleton_port.id() == port_id) {
+        singleton_port.mutable_config_params()->set_loopback_mode(typed_state);
+        break;
+      }
+    }
+
+    // Update the YANG parse tree.
+    auto poll_functor = [state_bool](const GnmiEvent& event,
+                                     const ::gnmi::Path& path,
+                                     GnmiSubscribeStream* stream) {
+      // This leaf represents configuration data. Return what was known when
+      // it was configured!
+      return SendResponse(GetResponse(path, state_bool), stream);
+    };
+    node->SetOnTimerHandler(poll_functor)->SetOnPollHandler(poll_functor);
+
+    return ::util::OkStatus();
+  };
+  auto register_functor = RegisterFunc<PortLoopbackStateChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      node_id, port_id, &PortLoopbackStateChangedEvent::GetNewState,
+      IsLoopbackStateEnabled);
   node->SetOnTimerHandler(poll_functor)
       ->SetOnPollHandler(poll_functor)
       ->SetOnUpdateHandler(on_set_functor)
@@ -3038,6 +3127,10 @@ TreeNode* YangParseTreePaths::AddSubtreeInterface(
       GetPath("interfaces")("interface", name)("state")("admin-status")());
   SetUpInterfacesInterfaceStateAdminStatus(node_id, port_id, node, tree);
 
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("state")("loopback-mode")());
+  SetUpInterfacesInterfaceStateLoopbackMode(node_id, port_id, node, tree);
+
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("state")("hardware-port")());
   SetUpInterfacesInterfaceStateHardwarePort(node_id, port_id, node, tree);
@@ -3241,12 +3334,15 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
                                                   tree);
   bool port_auto_neg_enabled = false;
   bool port_enabled = false;
+  bool loopback_enabled = false;
   uint64 mac_address = 0;
   if (singleton.has_config_params()) {
     port_auto_neg_enabled =
         IsPortAutonegEnabled(singleton.config_params().autoneg());
     port_enabled = IsAdminStateEnabled(singleton.config_params().admin_state());
     mac_address = singleton.config_params().mac_address();
+    loopback_enabled =
+        IsLoopbackStateEnabled(singleton.config_params().loopback_mode());
   }
 
   node = tree->AddNode(GetPath("interfaces")(
@@ -3257,6 +3353,11 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
       "interface", name)("config")("enabled")());
   SetUpInterfacesInterfaceConfigEnabled(port_enabled, node_id, port_id, node,
                                         tree);
+
+  node = tree->AddNode(
+      GetPath("interfaces")("interface", name)("config")("loopback-mode")());
+  SetUpInterfacesInterfaceConfigLoopbackMode(loopback_enabled, node_id, port_id,
+                                             node, tree);
 
   node = tree->AddNode(GetPath("interfaces")(
       "interface", name)("ethernet")("config")("mac-address")());

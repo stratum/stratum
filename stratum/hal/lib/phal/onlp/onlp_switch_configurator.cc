@@ -65,6 +65,7 @@ OnlpSwitchConfigurator::Make(OnlpPhalInterface* phal_interface,
     port.set_port(ONLP_OID_ID_GET(oid));
     // See if we've got an sfp type and set the physical port type
     switch (sfp_info.GetSfpType()) {
+      case SFP_TYPE_SFP28:
       case SFP_TYPE_SFP:
         port.set_physical_port_type(PHYSICAL_PORT_TYPE_SFP_CAGE);
         break;

@@ -224,6 +224,9 @@ bool IsPortAutonegEnabled(const TriState& state);
 // A helper function that check if port admin state is enabled.
 bool IsAdminStateEnabled(const AdminState& admin_state);
 
+// A helper function that check if port loopback state is enabled.
+bool IsLoopbackStateEnabled(const LoopbackState& loopback_state);
+
 // A helper function that convert Stratum MediaType to string.
 std::string ConvertMediaTypeToString(const MediaType& type);
 
