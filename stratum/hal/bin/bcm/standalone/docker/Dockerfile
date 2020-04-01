@@ -32,9 +32,6 @@ RUN install_packages \
     mkdir /stratum_configs && \
     mkdir /stratum_logs
 
-RUN wget http://http.us.debian.org/debian/pool/main/g/gcc-6/libasan3_6.3.0-18+deb9u1_amd64.deb
-RUN dpkg -i libasan3_6.3.0-18+deb9u1_amd64.deb
-
 ADD . /
 
 EXPOSE 28000/tcp
