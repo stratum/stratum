@@ -93,21 +93,10 @@ pkg_tar(
     extension = "tar.gz",
     srcs = [
         ":stratum_bcm",
+        "@com_github_opennetworkinglab_sdklt//:kernel_modules",
+        "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
         "start-stratum.sh",
-    ] + select({
-        "//stratum/hal/lib/bcm:bcm_sdklt": [
-            "@com_github_opennetworkinglab_sdklt//:kernel_modules",
-            "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
-        ],
-        "//stratum/hal/lib/bcm:bcm_sdklt_3_16_56": [
-            "@com_github_opennetworkinglab_sdklt_3_16_56//:kernel_modules",
-            "@com_github_opennetworkinglab_sdklt_3_16_56//:sdklt_cli",
-        ],
-        "//conditions:default": [
-            "@com_github_opennetworkinglab_sdklt//:kernel_modules",
-            "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
-        ],
-    }),
+    ],
     deps = [
         "//stratum/hal/config:all_configs_tar",
     ],

@@ -255,17 +255,8 @@ def stratum_deps():
     if "com_github_opennetworkinglab_sdklt" not in native.existing_rules():
         http_archive(
             name = "com_github_opennetworkinglab_sdklt",
-            sha256 = "eb07ac4cff6a23ae49e4d4419f3e1d13efefcd49fe9f9324731ffad36a6923a2",
-            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/more-kernel-versions/sdklt-4.14.49.tgz"],
-            strip_prefix = "sdklt-4.14.49",
-            build_file = "@//bazel:external/sdklt.BUILD",
-        )
-    if "com_github_opennetworkinglab_sdklt_3_16_56" not in native.existing_rules():
-        http_archive(
-            name = "com_github_opennetworkinglab_sdklt_3_16_56",
-            sha256 = "25193768e95e57d3af5c5a9f8508bbd9b90f9da9fd2fdc2d5700046a4e8b9b51",
-            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/more-kernel-versions/sdklt-3.16.56.tgz"],
-            strip_prefix = "sdklt-3.16.56",
+            sha256 = "38a59fe2db5122dd76fcbed234c68c59ccfdb68890199b4b891aeb86817713f4",
+            urls = ["https://github.com/opennetworkinglab/SDKLT/releases/download/r69/sdklt-4.14.49.tgz"],
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
