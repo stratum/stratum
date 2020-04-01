@@ -1637,41 +1637,43 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
     const BcmChassisMap& base_bcm_chassis_map,
     const BcmChassisMap& target_bcm_chassis_map) const {
   std::stringstream buffer;
+  const size_t max_num_units = base_bcm_chassis_map.bcm_chips_size();
 
-  // TODO(Yi): We use default node Id 0, need to support multiple nodes.
   // PC_PM Table
   YAML::Emitter pc_pm;
   pc_pm << YAML::BeginDoc;
   pc_pm << YAML::BeginMap;
   pc_pm << YAML::Key << "device";
   pc_pm << YAML::Value << YAML::BeginMap;
-  pc_pm << YAML::Key << "0";
-  pc_pm << YAML::Value << YAML::BeginMap;
-  pc_pm << YAML::Key << "PC_PM";
-  pc_pm << YAML::Value << YAML::BeginMap;
-
-  for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-    // Key is a map (PC_PM_ID: serdes_core)
-    pc_pm << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
-          << YAML::Value << bcm_port.serdes_core() << YAML::EndMap;
-
+  for (size_t i = 0; i < max_num_units; ++i) {
+    pc_pm << YAML::Key << i;  // <unit>
     pc_pm << YAML::Value << YAML::BeginMap;
+    pc_pm << YAML::Key << "PC_PM";
+    pc_pm << YAML::Value << YAML::BeginMap;
+    for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+      // Key is a map (PC_PM_ID: serdes_core)
+      pc_pm << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
+            << YAML::Value << bcm_port.serdes_core() << YAML::EndMap;
 
-    pc_pm << YAML::Key << "PM_OPMODE" << YAML::Value << YAML::Flow
-          << YAML::BeginSeq << "PC_PM_OPMODE_DEFAULT" << YAML::EndSeq;
+      pc_pm << YAML::Value << YAML::BeginMap;
 
-    pc_pm << YAML::Key << "SPEED_MAX" << YAML::Value << YAML::Flow
-          << YAML::BeginSeq << bcm_port.speed_bps() / kBitsPerMegabit << 0 << 0
-          << 0 << YAML::EndSeq;
+      pc_pm << YAML::Key << "PM_OPMODE" << YAML::Value << YAML::Flow
+            << YAML::BeginSeq << "PC_PM_OPMODE_DEFAULT" << YAML::EndSeq;
 
-    pc_pm << YAML::Key << "LANE_MAP" << YAML::Value << YAML::Flow
-          << YAML::BeginSeq << YAML::Hex << 0xf << 0 << 0 << 0 << YAML::Dec
-          << YAML::EndSeq;
+      // TODO(max): SPEED_MAX has to be set to the highest supported value, else
+      // speed changes are not possible at runtime. We set it to 100G for now.
+      pc_pm << YAML::Key << "SPEED_MAX" << YAML::Value << YAML::Flow
+            << YAML::BeginSeq << 100000 << 0 << 0 << 0 << YAML::EndSeq;
 
-    pc_pm << YAML::EndMap;  // PC_PM_ID
+      pc_pm << YAML::Key << "LANE_MAP" << YAML::Value << YAML::Flow
+            << YAML::BeginSeq << YAML::Hex << 0xf << 0 << 0 << 0 << YAML::Dec
+            << YAML::EndSeq;
+
+      pc_pm << YAML::EndMap;  // PC_PM_ID
+    }
+    pc_pm << YAML::EndMap;  // PC_PM
+    pc_pm << YAML::EndMap;  // <unit>
   }
-  pc_pm << YAML::EndMap;  // PC_PM
-  pc_pm << YAML::EndMap;  // 0
   pc_pm << YAML::EndMap;  // device
   pc_pm << YAML::EndDoc;
   buffer << pc_pm.c_str() << "\n";
@@ -1682,46 +1684,48 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
   pc_pm_core << YAML::BeginMap;
   pc_pm_core << YAML::Key << "device";
   pc_pm_core << YAML::Value << YAML::BeginMap;
-  pc_pm_core << YAML::Key << "0";
-  pc_pm_core << YAML::Value << YAML::BeginMap;
-  pc_pm_core << YAML::Key << "PC_PM_CORE";
-  pc_pm_core << YAML::Value << YAML::BeginMap;
-  for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-    if (bcm_port.tx_lane_map() || bcm_port.rx_lane_map() ||
-        bcm_port.tx_polarity_flip() || bcm_port.rx_polarity_flip()) {
-      // Key is a map (PC_PM_ID: serdes_core, CORE_INDEX: unit)
-      pc_pm_core << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
-                 << YAML::Value << bcm_port.serdes_core() << YAML::Key
-                 << "CORE_INDEX" << YAML::Value << bcm_port.unit()
-                 << YAML::EndMap;
+  for (size_t i = 0; i < max_num_units; ++i) {
+    pc_pm_core << YAML::Key << i;  // <unit>
+    pc_pm_core << YAML::Value << YAML::BeginMap;
+    pc_pm_core << YAML::Key << "PC_PM_CORE";
+    pc_pm_core << YAML::Value << YAML::BeginMap;
+    for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+      if (bcm_port.tx_lane_map() || bcm_port.rx_lane_map() ||
+          bcm_port.tx_polarity_flip() || bcm_port.rx_polarity_flip()) {
+        // Key is a map (PC_PM_ID: serdes_core, CORE_INDEX: unit)
+        pc_pm_core << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
+                   << YAML::Value << bcm_port.serdes_core() << YAML::Key
+                   << "CORE_INDEX" << YAML::Value << bcm_port.unit()
+                   << YAML::EndMap;
 
-      pc_pm_core << YAML::Value << YAML::BeginMap;
+        pc_pm_core << YAML::Value << YAML::BeginMap;
 
-      if (bcm_port.tx_lane_map()) {
-        pc_pm_core << YAML::Key << "TX_LANE_MAP" << YAML::Value
-                   << bcm_port.tx_lane_map();
+        if (bcm_port.tx_lane_map()) {
+          pc_pm_core << YAML::Key << "TX_LANE_MAP" << YAML::Value
+                     << bcm_port.tx_lane_map();
+        }
+
+        if (bcm_port.rx_lane_map()) {
+          pc_pm_core << YAML::Key << "RX_LANE_MAP" << YAML::Value
+                     << bcm_port.rx_lane_map();
+        }
+
+        if (bcm_port.tx_polarity_flip()) {
+          pc_pm_core << YAML::Key << "TX_POLARITY_FLIP" << YAML::Value
+                     << bcm_port.tx_polarity_flip();
+        }
+
+        if (bcm_port.tx_polarity_flip()) {
+          pc_pm_core << YAML::Key << "RX_POLARITY_FLIP" << YAML::Value
+                     << bcm_port.rx_polarity_flip();
+        }
+
+        pc_pm_core << YAML::EndMap;
       }
-
-      if (bcm_port.rx_lane_map()) {
-        pc_pm_core << YAML::Key << "RX_LANE_MAP" << YAML::Value
-                   << bcm_port.rx_lane_map();
-      }
-
-      if (bcm_port.tx_polarity_flip()) {
-        pc_pm_core << YAML::Key << "TX_POLARITY_FLIP" << YAML::Value
-                   << bcm_port.tx_polarity_flip();
-      }
-
-      if (bcm_port.tx_polarity_flip()) {
-        pc_pm_core << YAML::Key << "RX_POLARITY_FLIP" << YAML::Value
-                   << bcm_port.rx_polarity_flip();
-      }
-
-      pc_pm_core << YAML::EndMap;
     }
+    pc_pm_core << YAML::EndMap;  // PC_PM_CORE
+    pc_pm_core << YAML::EndMap;  // <unit>
   }
-  pc_pm_core << YAML::EndMap;  // PC_PM_CORE
-  pc_pm_core << YAML::EndMap;  // 0
   pc_pm_core << YAML::EndMap;  // device
   pc_pm_core << YAML::EndDoc;
   buffer << pc_pm_core.c_str() << "\n";
@@ -1775,24 +1779,27 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
   pc_port << YAML::BeginMap;
   pc_port << YAML::Key << "device";
   pc_port << YAML::Value << YAML::BeginMap;
-  pc_port << YAML::Key << "0";
-  pc_port << YAML::Value << YAML::BeginMap;
-  pc_port << YAML::Key << "PC_PORT";
-  pc_port << YAML::Value << YAML::BeginMap;
+  for (size_t i = 0; i < max_num_units; ++i) {
+    pc_port << YAML::Key << i;  // <unit>
+    pc_port << YAML::Value << YAML::BeginMap;
+    pc_port << YAML::Key << "PC_PORT";
+    pc_port << YAML::Value << YAML::BeginMap;
 
-  for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
-    // Key is a map (PORT_ID: logical_port)
-    pc_port << YAML::Key << YAML::BeginMap << YAML::Key << "PORT_ID"
-            << YAML::Value << bcm_port.logical_port() << YAML::EndMap;
-    pc_port << YAML::Value << YAML::BeginMap << YAML::Key << "PC_PHYS_PORT_ID"
-            << YAML::Value << bcm_port.physical_port() << YAML::Key << "ENABLE"
-            << YAML::Value << 1 << YAML::Key << "OPMODE" << YAML::Value
-            << absl::StrCat("PC_PORT_OPMODE_",
-                            bcm_port.speed_bps() / kBitsPerGigabit, "G")
-            << YAML::EndMap;  // PORT_ID
+    for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+      // Key is a map (PORT_ID: logical_port)
+      pc_port << YAML::Key << YAML::BeginMap << YAML::Key << "PORT_ID"
+              << YAML::Value << bcm_port.logical_port() << YAML::EndMap;
+      pc_port << YAML::Value << YAML::BeginMap << YAML::Key << "PC_PHYS_PORT_ID"
+              << YAML::Value << bcm_port.physical_port() << YAML::Key
+              << "ENABLE" << YAML::Value << 1 << YAML::Key << "OPMODE"
+              << YAML::Value
+              << absl::StrCat("PC_PORT_OPMODE_",
+                              bcm_port.speed_bps() / kBitsPerGigabit, "G")
+              << YAML::EndMap;  // PORT_ID
+    }
+    pc_port << YAML::EndMap;  // PC_PORT
+    pc_port << YAML::EndMap;  // <unit>
   }
-  pc_port << YAML::EndMap;  // PC_PORT
-  pc_port << YAML::EndMap;  // 0
   pc_port << YAML::EndMap;  // device
   pc_port << YAML::EndDoc;
   buffer << pc_port.c_str() << "\n";
