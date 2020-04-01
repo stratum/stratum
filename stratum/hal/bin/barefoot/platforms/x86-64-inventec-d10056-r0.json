@@ -871,7 +871,7 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 3,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 3,
         "rx_pn_swap": 0,
         "serdes_params": {
@@ -907,9 +907,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 0,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 4,
             "tx_eq_post": 0,
@@ -981,7 +981,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 0,
         "rx_lane": 1,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 4,
             "tx_eq_post": 0,
@@ -991,9 +991,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 3,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 4,
             "tx_eq_post": 0,
@@ -1003,7 +1003,7 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
@@ -1015,7 +1015,7 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 2,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 2,
         "rx_pn_swap": 0,
         "serdes_params": {
@@ -1143,7 +1143,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 4,
             "tx_eq_post": 0,

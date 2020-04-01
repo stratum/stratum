@@ -1,5 +1,5 @@
 bcm_chassis_maps {
-  id: "ACCTON_AS7716_24_XC"
+  id: "ACCTON_AS7716_24_SC"
   bcm_chassis {
     sdk_properties: "os=unix"
     sdk_properties: "schan_intr_enable=0"
@@ -16,7 +16,7 @@ bcm_chassis_maps {
     sdk_properties: "dport_map_enable=1"
   }
   bcm_chips {
-    type: TOMAHAWK
+    type: TOMAHAWK_PLUS
     slot: 1
     pci_bus: 1
     is_oversubscribed: true

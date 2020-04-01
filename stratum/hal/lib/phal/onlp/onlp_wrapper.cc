@@ -290,6 +290,8 @@ MediaType SfpInfo::GetMediaType() const {
 
 SfpType SfpInfo::GetSfpType() const {
   switch (sfp_info_.sff.sfp_type) {
+  case SFF_SFP_TYPE_SFP28:
+    return SFP_TYPE_SFP28;
   case SFF_SFP_TYPE_SFP:
     return SFP_TYPE_SFP;
   case SFF_SFP_TYPE_QSFP:

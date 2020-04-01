@@ -29,10 +29,11 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # Apache v2
 
 platform_config_test("x86-64-accton-as7712-32x-r0", bcm_target=True)
+platform_config_test("x86-64-accton-as7716-24sc-r0", bcm_target=True)
+platform_config_test("x86-64-accton-as7716-24xc-r0", bcm_target=True)
 platform_config_test("x86-64-dell-z9100-c2538-r0", bcm_target=True)
 platform_config_test("x86-64-inventec-d7032q28b-r0", bcm_target=True)
 platform_config_test("x86-64-quanta-ix1-rangeley-r0", bcm_target=True)
-platform_config_test("x86-64-accton-as7716-24xc-r0", bcm_target=True)
 
 platform_config_test("x86-64-accton-wedge100bf-32x-r0")
 platform_config_test("x86-64-accton-wedge100bf-65x-r0")
@@ -48,6 +49,7 @@ filegroup(
         "*/chassis_config.pb.txt",
         "*/phal_config.pb.txt",
         "*/SDKLT.yml",
+        "*/config.bcm",
     ]) + [
         "bcm_hardware_specs.pb.txt",
         "dummy_serdes_db.pb.txt",

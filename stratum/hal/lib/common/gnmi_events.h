@@ -183,6 +183,21 @@ class PortAdminStateChangedEvent
   AdminState new_state_;
 };
 
+// A Port's Loopback State Has Changed event.
+class PortLoopbackStateChangedEvent
+    : public PerPortGnmiEvent<PortLoopbackStateChangedEvent> {
+ public:
+  PortLoopbackStateChangedEvent(uint64 node_id, uint32 port_id,
+                                const LoopbackState& new_state)
+      : PerPortGnmiEvent(node_id, port_id), new_state_(new_state) {}
+  ~PortLoopbackStateChangedEvent() override {}
+
+  LoopbackState GetNewState() const { return new_state_; }
+
+ private:
+  LoopbackState new_state_;
+};
+
 // A Port's Speed expressed in Bits Per Second Has Changed event.
 class PortSpeedBpsChangedEvent
     : public PerPortGnmiEvent<PortSpeedBpsChangedEvent> {
