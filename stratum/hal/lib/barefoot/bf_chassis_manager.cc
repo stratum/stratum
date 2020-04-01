@@ -466,7 +466,8 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
     case Request::kLoopbackStatus: {
       ASSIGN_OR_RETURN(auto* config, GetPortConfig(
-          request.loopback_status().node_id(), request.loopback_status().port_id()));
+          request.loopback_status().node_id(),
+          request.loopback_status().port_id()));
       if (config->loopback_mode)
         resp.mutable_loopback_status()->set_state(*config->loopback_mode);
       break;
