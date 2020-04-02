@@ -186,11 +186,6 @@ jobs:
       - CC: clang
       - CXX: clang++
     steps:
-      - run:
-          name: Install docker
-          command: |
-            curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
-            sudo sh /tmp/get-docker.sh
       - setup_remote_docker
       - checkout
       - *restore_bazel_cache
