@@ -25,6 +25,16 @@ ADD . /stratum
 ENV BF_SDE_INSTALL $SDE_INSTALL
 WORKDIR /stratum
 
+# Build Barefoot Kernel module if needed
+ARG KERNEL_HEADERS_TAR
+# Copy SDE and Linux headers tarball
+COPY $SDE_TAR /stratum/
+COPY $KERNEL_HEADERS_TAR /stratum/
+
+ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers
+ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
+RUN /build-kdrv.sh
+
 # Without ONLP
 RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
