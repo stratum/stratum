@@ -29,7 +29,7 @@ WORKDIR /stratum
 ARG KERNEL_HEADERS_TAR
 # Copy Linux headers tarball and build script
 COPY $KERNEL_HEADERS_TAR /stratum/
-COPY /stratum/stratum/hal/bin/barefoot/docker/build-kdrv.sh /build-kdrv.sh
+COPY /stratum/hal/bin/barefoot/docker/build-kdrv.sh /build-kdrv.sh
 
 ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers
 ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
