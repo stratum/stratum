@@ -52,15 +52,15 @@ NOTE: Copied tarballs will be DELETED after the build
 EOF
 
 if [ -n "$1" ]; then
-    SDE_TAR=$(basename "$1")
+    SDE_TAR=$(basename $1)
     IMG_TAG=${SDE_TAR%.tgz}
     RUNTIME_IMG_TAG="$IMG_TAG"
     cp -f "$1" "$DOCKERFILE_DIR"
 fi
 if [ -n "$2" ]; then
-    KERNEL_HEADERS_TAR=$(basename "$2")
+    KERNEL_HEADERS_TAR=$(basename $2)
     RUNTIME_IMG_TAG="$IMG_TAG-${KERNEL_HEADERS_TAR%.tar.xz}"
-    cp -f "$2" "$DOCKERFILE_DIR"
+    cp -f "$2" "$STRATUM_ROOT"
 fi
 
 BUILDER_IMAGE=stratumproject/stratum-bf-builder:$IMG_TAG

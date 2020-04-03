@@ -24,8 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libelf-dev && \
     rm -rf /var/lib/apt/lists/*
 
+# COPY SDE_TAR
 ARG SDE_TAR
-COPY build-kdrv.sh /build-kdrv.sh
+COPY $SDE_TAR /stratum/
 
 ENV SDE /bf-sde
 ENV SDE_INSTALL /$SDE/install
