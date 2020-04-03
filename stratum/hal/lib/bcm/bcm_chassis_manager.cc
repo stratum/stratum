@@ -1739,12 +1739,15 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
   pc_pm << YAML::BeginMap;
   pc_pm << YAML::Key << "device";
   pc_pm << YAML::Value << YAML::BeginMap;
-  for (size_t i = 0; i < max_num_units; ++i) {
-    pc_pm << YAML::Key << i;  // <unit>
+  for (size_t unit = 0; unit < max_num_units; ++unit) {
+    pc_pm << YAML::Key << unit;
     pc_pm << YAML::Value << YAML::BeginMap;
     pc_pm << YAML::Key << "PC_PM";
     pc_pm << YAML::Value << YAML::BeginMap;
     for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+      if (bcm_port.unit() != unit) {
+        continue;
+      }
       // Key is a map (PC_PM_ID: serdes_core)
       pc_pm << YAML::Key << YAML::BeginMap << YAML::Key << "PC_PM_ID"
             << YAML::Value << bcm_port.serdes_core() << YAML::EndMap;
@@ -1778,12 +1781,15 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
   pc_pm_core << YAML::BeginMap;
   pc_pm_core << YAML::Key << "device";
   pc_pm_core << YAML::Value << YAML::BeginMap;
-  for (size_t i = 0; i < max_num_units; ++i) {
-    pc_pm_core << YAML::Key << i;  // <unit>
+  for (size_t unit = 0; unit < max_num_units; ++unit) {
+    pc_pm_core << YAML::Key << unit;
     pc_pm_core << YAML::Value << YAML::BeginMap;
     pc_pm_core << YAML::Key << "PC_PM_CORE";
     pc_pm_core << YAML::Value << YAML::BeginMap;
     for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+      if (bcm_port.unit() != unit) {
+        continue;
+      }
       if (bcm_port.tx_lane_map() || bcm_port.rx_lane_map() ||
           bcm_port.tx_polarity_flip() || bcm_port.rx_polarity_flip()) {
         // Key is a map (PC_PM_ID: serdes_core, CORE_INDEX: unit)
@@ -1873,13 +1879,16 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
   pc_port << YAML::BeginMap;
   pc_port << YAML::Key << "device";
   pc_port << YAML::Value << YAML::BeginMap;
-  for (size_t i = 0; i < max_num_units; ++i) {
-    pc_port << YAML::Key << i;  // <unit>
+  for (size_t unit = 0; unit < max_num_units; ++unit) {
+    pc_port << YAML::Key << unit;
     pc_port << YAML::Value << YAML::BeginMap;
     pc_port << YAML::Key << "PC_PORT";
     pc_port << YAML::Value << YAML::BeginMap;
 
     for (const auto& bcm_port : target_bcm_chassis_map.bcm_ports()) {
+      if (bcm_port.unit() != unit) {
+        continue;
+      }
       // Key is a map (PORT_ID: logical_port)
       pc_port << YAML::Key << YAML::BeginMap << YAML::Key << "PORT_ID"
               << YAML::Value << bcm_port.logical_port() << YAML::EndMap;
