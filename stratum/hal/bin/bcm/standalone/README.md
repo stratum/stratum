@@ -12,13 +12,14 @@ Linux as7712 4.14.49-OpenNetworkLinux #4 SMP Tue May 14 20:43:21 UTC 2019 x86_64
 
 ```bash
 # cat /etc/os-release
-PRETTY_NAME="Debian GNU/Linux 8 (jessie)"
+PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
 NAME="Debian GNU/Linux"
-VERSION_ID="8"
-VERSION="8 (jessie)"
+VERSION_ID="9"
+VERSION="9 (stretch)"
+VERSION_CODENAME=stretch
 ID=debian
-HOME_URL="http://www.debian.org/"
-SUPPORT_URL="http://www.debian.org/support"
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
 BUG_REPORT_URL="https://bugs.debian.org/"
 ```
 
