@@ -36,10 +36,8 @@ Example:
 EOF
 }
 
-BUILD_ARGS="--build-arg JOBS=$JOBS"
 SDE_TAR=""
 KERNEL_HEADERS_TAR=""
-RUNTIME_BUILD_ARGS=""
 RUNTIME_IMG_TAG=""
 
 if [ "$#" -eq 0 ]; then
@@ -61,7 +59,6 @@ if [ -n "$1" ]; then
 fi
 if [ -n "$2" ]; then
     KERNEL_HEADERS_TAR=$(basename "$2")
-    RUNTIME_BUILD_ARGS="--build-arg KERNEL_HEADERS_TAR=$KERNEL_HEADERS_TAR"
     RUNTIME_IMG_TAG="$IMG_TAG-${KERNEL_HEADERS_TAR%.tar.xz}"
     cp -f "$2" "$DOCKERFILE_DIR"
 fi
@@ -71,7 +68,8 @@ RUNTIME_IMAGE=stratumproject/stratum-bf:$RUNTIME_IMG_TAG
 
 # Build base builder image
 echo "Building $BUILDER_IMAGE"
-docker build -t "$BUILDER_IMAGE" "$BUILD_ARGS" \
+docker build -t "$BUILDER_IMAGE" \
+     --build-arg JOBS="$JOBS" \
      --build-arg SDE_TAR="$SDE_TAR" \
 	 -f "$DOCKERFILE_DIR/Dockerfile.builder" "$DOCKERFILE_DIR"
 
@@ -79,7 +77,7 @@ docker build -t "$BUILDER_IMAGE" "$BUILD_ARGS" \
 echo "Building $RUNTIME_IMAGE"
 docker build -t "$RUNTIME_IMAGE" \
              --build-arg BUILDER_IMAGE="$BUILDER_IMAGE" \
-             "$RUNTIME_BUILD_ARGS" \
+             --build-arg KERNEL_HEADERS_TAR="$KERNEL_HEADERS_TAR" \
              -f "$DOCKERFILE_DIR/Dockerfile.runtime" "$STRATUM_ROOT"
 
 # Remove copied tarballs
