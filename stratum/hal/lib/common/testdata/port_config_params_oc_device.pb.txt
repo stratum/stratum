@@ -63,6 +63,9 @@ interface {
         value: true
       }
     }
+    loopback_mode: {
+      value: true
+    }
     id {
       value: 1
     }

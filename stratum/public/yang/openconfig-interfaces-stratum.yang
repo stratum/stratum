@@ -36,11 +36,6 @@ module openconfig-interfaces-stratum {
         deviate not-supported;
     }
 
-    deviation "/oc-if:interfaces/oc-if:interface/oc-if:config/oc-if:loopback-mode" {
-        description "Stratum does not support interface/config/loopback-mode";
-        deviate not-supported;
-    }
-
     deviation "/oc-if:interfaces/oc-if:interface/oc-if:config/oc-if:description" {
         description "Stratum does not support interface/config/description";
         deviate not-supported;
