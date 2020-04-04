@@ -71,7 +71,7 @@ echo "Building $BUILDER_IMAGE"
 docker build -t "$BUILDER_IMAGE" \
      --build-arg JOBS="$JOBS" \
      --build-arg SDE_TAR="$SDE_TAR" \
-	 -f "$DOCKERFILE_DIR/Dockerfile.builder" "$DOCKERFILE_DIR"
+     -f "$DOCKERFILE_DIR/Dockerfile.builder" "$DOCKERFILE_DIR"
 
 # Build runtime image
 echo "Building $RUNTIME_IMAGE"

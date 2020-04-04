@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libelf-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# COPY SDE_TAR
 ARG SDE_TAR
 COPY $SDE_TAR /stratum/
 
