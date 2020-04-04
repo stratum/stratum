@@ -263,6 +263,16 @@ bool YangParseTree::IsWildcard(const std::string& name) const {
 
 YangParseTree::YangParseTree(SwitchInterface* switch_interface)
     : switch_interface_(ABSL_DIE_IF_NULL(switch_interface)) {
+  // Add the minimum nodes:
+  //   /interfaces/interface[name=*]/state/ifindex
+  //   /interfaces/interface[name=*]/state/name
+  //   /interfaces/interface/...
+  //   /
+  // The rest of nodes will be added once the config is pushed.
+  absl::WriterMutexLock l(&root_access_lock_);
+  AddSubtreeAllInterfaces();
+  AddSubtreeAllComponents();
+  AddRoot();
 }
 
 TreeNode* YangParseTree::AddNode(const ::gnmi::Path& path) {
