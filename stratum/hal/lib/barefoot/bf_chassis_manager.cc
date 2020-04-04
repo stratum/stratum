@@ -197,10 +197,11 @@ BFChassisManager::~BFChassisManager() = default;
     config->autoneg = config_params.autoneg();
     config_changed = true;
   }
-  if (config_params.loopback_mode() != config_old.loopback_mode) {
+  if (config_params.loopback_mode() != LOOPBACK_STATE_UNKNOWN &&
+      config_params.loopback_mode() != config_old.loopback_mode) {
+    config->loopback_mode.reset();
     RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
         unit, port_id, config_params.loopback_mode()));
-    config->loopback_mode.reset();
     config->loopback_mode = config_params.loopback_mode();
     config_changed = true;
   }
@@ -573,6 +574,12 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(
           unit, port_id, *config.autoneg));
       config_new->autoneg = *config.autoneg;
+    }
+    if (config.loopback_mode &&
+        config.loopback_mode != LOOPBACK_STATE_UNKNOWN) {
+      RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+        unit, port_id, *config.loopback_mode));
+      config_new->loopback_mode = *config.loopback_mode;
     }
 
     if (config.admin_state == ADMIN_STATE_ENABLED) {
