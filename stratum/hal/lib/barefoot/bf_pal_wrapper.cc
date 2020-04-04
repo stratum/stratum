@@ -291,6 +291,10 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
 
 ::util::Status BFPalWrapper::PortLoopbackModeSet(int unit, uint32 port_id,
                                                  LoopbackState loopback_mode) {
+  if (loopback_mode == LOOPBACK_STATE_UNKNOWN) {
+    // Do nothing if we try to set loopback mode to default one (UNKNOWN).
+    return ::util::OkStatus();
+  }
   ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
   auto bf_status =
     bf_pal_port_loopback_mode_set(static_cast<bf_dev_id_t>(unit),
