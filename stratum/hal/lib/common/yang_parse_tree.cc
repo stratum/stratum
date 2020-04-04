@@ -146,6 +146,18 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
 ::util::Status YangParseTree::ProcessPushedConfig(
     const ConfigHasBeenPushedEvent& change) {
   absl::WriterMutexLock r(&root_access_lock_);
+  // Make sure we clear the tree before we add new nodes.
+  root_.children_.clear();
+
+  // Add the minimum nodes:
+  //   /interfaces/interface[name=*]/state/ifindex
+  //   /interfaces/interface[name=*]/state/name
+  //   /interfaces/interface/...
+  //   /
+  // The rest of nodes will be added once the config is pushed.
+  AddSubtreeAllInterfaces();
+  AddSubtreeAllComponents();
+  AddRoot();
 
   // Translation from node ID to an object describing the node.
   absl::flat_hash_map<uint64, const Node*> node_id_to_node;
@@ -251,16 +263,6 @@ bool YangParseTree::IsWildcard(const std::string& name) const {
 
 YangParseTree::YangParseTree(SwitchInterface* switch_interface)
     : switch_interface_(ABSL_DIE_IF_NULL(switch_interface)) {
-  // Add the minimum nodes:
-  //   /interfaces/interface[name=*]/state/ifindex
-  //   /interfaces/interface[name=*]/state/name
-  //   /interfaces/interface/...
-  //   /
-  // The rest of nodes will be added once the config is pushed.
-  absl::WriterMutexLock l(&root_access_lock_);
-  AddSubtreeAllInterfaces();
-  AddSubtreeAllComponents();
-  AddRoot();
 }
 
 TreeNode* YangParseTree::AddNode(const ::gnmi::Path& path) {
