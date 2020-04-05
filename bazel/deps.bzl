@@ -267,6 +267,14 @@ def stratum_deps():
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
+    if "openNSA" not in native.existing_rules():
+        http_archive(
+            name = "openNSA",
+            sha256 = "321a864e2202d0dd18ecd3a9dfacd24128ed609f4a078096ff714db8edef6616",
+            urls = ["file:///tmp/openNSA.tar.xz"],
+            build_file = "@//bazel:external/openNSA.BUILD",
+        )
+
 # -----------------------------------------------------------------------------
 #        P4 testing modules
 # -----------------------------------------------------------------------------

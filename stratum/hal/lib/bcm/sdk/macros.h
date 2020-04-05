@@ -1,3 +1,27 @@
+/*
+ * Copyright 2018-2019 Google LLC
+ * Copyright 2019-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
+ *
+ * This file depends on Broadcom's OpenNSA SDK.
+ * Additional license terms for OpenNSA are available from Broadcom or online:
+ *     https://github.com/Broadcom-Network-Switching-Software/OpenNSA
+ */
+
+
 #ifndef STRATUM_HAL_LIB_BCM_MACROS_H_
 #define STRATUM_HAL_LIB_BCM_MACROS_H_
 
@@ -17,7 +41,7 @@ namespace bcm {
 // This is used in BCM_RET_CHECK Macro.
 class BooleanBcmStatus {
  public:
-  BooleanBcmStatus(int status) : status_(status) {}
+  explicit BooleanBcmStatus(int status) : status_(status) {}
   // Implicitly cast to bool.
   operator bool() const { return BCM_SUCCESS(status_); }
   // Return the actual value.
@@ -68,7 +92,7 @@ class BooleanBcmStatus {
 // A macro for simplify checking and logging the return value of a BCM function
 // call.
 #define RETURN_IF_BCM_ERROR(expr) \
-  if (const BooleanBcmStatus __ret = (expr)) { \
+  if (const BooleanBcmStatus __ret = BooleanBcmStatus(expr)) { \
   } else  /* NOLINT */ \
     return MAKE_ERROR(__ret.error_code()) \
            << "'" << #expr << "' failed with error message: " \
@@ -79,13 +103,13 @@ class BooleanBcmStatus {
 // will not return. The variable given as "status" must be an object of type
 // ::util::Status.
 #define APPEND_STATUS_IF_BCM_ERROR(status, expr) \
-  if (const BooleanBcmStatus __ret = (expr)) { \
+  if (const BooleanBcmStatus __ret = BooleanBcmStatus(expr)) { \
   } else  /* NOLINT */ \
     status = APPEND_ERROR( \
         !status.ok() \
         ? status \
-        : ::util::Status(HerculesErrorSpace(), __ret.error_code(), "")) \
-        .SetNoLogging() \
+        : ::util::Status(StratumErrorSpace(), __ret.error_code(), "")) \
+        .without_logging() \
         << (status.error_message().empty() || \
             status.error_message().back() == ' ' ? "" : " ") \
         << "'" << #expr << "' failed with error message: " \
