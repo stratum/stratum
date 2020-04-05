@@ -15,6 +15,7 @@
 #
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository", "git_repository")
 
 _strict = False
 
@@ -27,6 +28,7 @@ def _build_http_archive(
     build_file = None,
     patches = [],
     patch_args = [],
+    patch_cmds = [],
     ):
   if not remote.startswith("https://github.com"):
     # This is only currently support for github repos
@@ -76,7 +78,8 @@ def _build_git_repository(
     tag = None,
     build_file = None,
     patches = [],
-    patch_args = []
+    patch_args = [],
+    patch_cmds = [],
     ):
 
   # Strip trailing / from remote
@@ -85,7 +88,7 @@ def _build_git_repository(
 
   # Generate the git_repository rule
   if build_file:
-    native.new_git_repository(
+    new_git_repository(
       name = name,
       remote = remote,
       branch = branch,
@@ -94,9 +97,10 @@ def _build_git_repository(
       patches = patches,
       patch_args = patch_args,
       build_file = build_file,
+      patch_cmds = patch_cmds,
     )
   else:
-    native.git_repository(
+    git_repository(
       name = name,
       remote = remote,
       branch = branch,
@@ -104,6 +108,7 @@ def _build_git_repository(
       tag = tag,
       patches = patches,
       patch_args = patch_args,
+      patch_cmds = patch_cmds,
     )
   return True
 
@@ -117,6 +122,7 @@ def remote_workspace(
     use_git = False,
     patches = [],
     patch_args = [],
+    patch_cmds = [],
     ):
   ref_count = 0
   if branch:
@@ -142,12 +148,12 @@ def remote_workspace(
 
   # Prefer http_archive
   if not use_git and _build_http_archive(
-      name, remote, branch, commit, tag, build_file, patches, patch_args):
+      name, remote, branch, commit, tag, build_file, patches, patch_args, patch_cmds):
     return
 
   # Fall back to git_repository
   if _build_git_repository(
-      name, remote, branch, commit, tag, build_file, patches, patch_args):
+      name, remote, branch, commit, tag, build_file, patches, patch_args, patch_cmds):
     return
 
   fail("could not generate remote workspace for " + name)

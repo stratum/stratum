@@ -269,12 +269,13 @@ def stratum_deps():
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
-    if "openNSA" not in native.existing_rules():
-        http_archive(
-            name = "openNSA",
-            sha256 = "321a864e2202d0dd18ecd3a9dfacd24128ed609f4a078096ff714db8edef6616",
-            urls = ["file:///tmp/openNSA.tar.xz"],
-            build_file = "@//bazel:external/openNSA.BUILD",
+    if "com_github_broadcom_opennsa" not in native.existing_rules():
+        remote_workspace(
+            name = "com_github_broadcom_opennsa",
+            commit = "7cf5a3c9a8b76da0bc8e3217d04b33cfb11b0bcf",
+            remote = "https://github.com/Broadcom-Network-Switching-Software/OpenNSA.git",
+            build_file = "@//bazel:external/opennsa.BUILD",
+            use_git = True, # required for git lfs
         )
 
 # -----------------------------------------------------------------------------
