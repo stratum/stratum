@@ -1,4 +1,25 @@
-#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
+/*
+ * Copyright 2018-2019 Google LLC
+ * Copyright 2019-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
+ *
+ * This file depends on Broadcom's OpenNSA SDK.
+ * Additional license terms for OpenNSA are available from Broadcom or online:
+ *     https://github.com/Broadcom-Network-Switching-Software/OpenNSA
+ */
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -9,18 +30,22 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "third_party/absl/synchronization/mutex.h"
+
+#include <string>
+
+#include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 
 extern "C" {
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-#include "bcm/sdk_build_flags.h"  // NOLINT
+#include "sdk_build_flags.h"  // NOLINT
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 }
 
-#include "base/commandlineflags.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
-#include "third_party/absl/base/macros.h"
+#include "absl/base/macros.h"
 
 DEFINE_int32(bcm_diag_shell_port, 5020,
              "Port to listen to for user telnet sessions.");
@@ -200,7 +225,6 @@ void BcmDiagShell::RunServer() {
 
 void BcmDiagShell::RunDiagShell() {
   LOG(INFO) << "Starting Broadcom Diag Shell.";
-  sh_process(-1, "BCM", TRUE);
   LOG(INFO) << "Broadcom Diag Shell exits.";
 
   // Terminate the telnet connection, so that telnet client will terminate,
