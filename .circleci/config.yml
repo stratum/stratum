@@ -183,13 +183,13 @@ jobs:
       - *clean_bazel_cache
       - *save_bazel_cache
 
-  publish-docker-stratum-bcm:
+  publish-docker-stratum-bcm-sdklt:
     docker:
       - image: stratumproject/build:build
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
-      - DOCKER_IMG: stratumproject/stratum-bcm
+      - DOCKER_IMG: stratumproject/stratum-bcm:sdklt
       - CC: clang
       - CXX: clang++
     steps:
@@ -200,12 +200,36 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
-            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_deb.deb $DOCKER_SCOPE
+            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
       - *docker_build
       - *docker_push
       - *clean_bazel_cache
+      - *save_bazel_cache
+
+  publish-docker-stratum-bcm-opennsa:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bcm:opennsa
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bcm
+          command: |
+            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
+      - *docker_login
+      - *docker_build
+      - *docker_push
       - *save_bazel_cache
 
   cpp-style-check:
@@ -215,7 +239,7 @@ jobs:
       - checkout
       - run:
           name: Run cpplint
-          command: cpplint --recursive --exclude=stratum/hal/lib/bcm/bcm_sdk_wrapper.cc stratum
+          command: cpplint --recursive --exclude=stratum/hal/lib/bcm/sdklt/bcm_sdk_wrapper.cc stratum
 
   license-check:
     docker:
@@ -256,6 +280,9 @@ workflows:
       - publish-docker-p4c-fpm:
           requires:
             - publish-docker-build
-      - publish-docker-stratum-bcm:
+      - publish-docker-stratum-bcm-sdklt:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build

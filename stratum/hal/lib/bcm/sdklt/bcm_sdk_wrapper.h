@@ -1,20 +1,21 @@
 // Copyright 2018 Google LLC
 // Copyright 2018-present Open Networking Foundation
-// Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries. NOLINT
+// Copyright 2019 Broadcom. All rights reserved. The term "Broadcom" refers to
+// Broadcom Inc. and/or its subsidiaries.
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
-#define STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_BCM_SDKLT_BCM_SDK_WRAPPER_H_
+#define STRATUM_HAL_LIB_BCM_SDKLT_BCM_SDK_WRAPPER_H_
 
 #include <pthread.h>
 
 #include <functional>
-#include <string>
-#include <set>
 #include <map>
-#include <vector>
-#include <utility>
 #include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -89,6 +90,9 @@ class BcmSdkWrapper : public BcmSdkInterface {
       const std::string& config_file_path,
       const std::string& config_flush_file_path,
       const std::string& bcm_shell_log_file_path) override;
+  ::util::StatusOr<std::string> GenerateBcmConfigFile(
+      const BcmChassisMap& base_bcm_chassis_map,
+      const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) override;
   ::util::Status FindUnit(int unit, int pci_bus, int pci_slot,
                           BcmChip::BcmChipType chip_type) override
       LOCKS_EXCLUDED(data_lock_);
@@ -238,17 +242,17 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::StatusOr<int> InsertAclFlow(int unit, const BcmFlowEntry& flow,
                                       bool add_stats,
                                       bool color_aware) override;
-  ::util::Status ModifyAclFlow(
-      int unit, int flow_id, const BcmFlowEntry& flow) override;
+  ::util::Status ModifyAclFlow(int unit, int flow_id,
+                               const BcmFlowEntry& flow) override;
   ::util::Status RemoveAclFlow(int unit, int flow_id) override;
   ::util::Status GetAclUdfChunks(int unit, BcmUdfSet* udfs) override;
   ::util::Status GetAclTable(int unit, int table_id,
                              BcmAclTable* table) override;
   ::util::Status GetAclFlow(int unit, int flow_id, BcmFlowEntry* flow) override;
-  ::util::StatusOr<std::string> MatchAclFlow(
-      int unit, int flow_id, const BcmFlowEntry& flow) override;
-  ::util::Status GetAclTableFlowIds(
-      int unit, int table_id, std::vector<int>* flow_ids) override;
+  ::util::StatusOr<std::string> MatchAclFlow(int unit, int flow_id,
+                                             const BcmFlowEntry& flow) override;
+  ::util::Status GetAclTableFlowIds(int unit, int table_id,
+                                    std::vector<int>* flow_ids) override;
   ::util::Status AddAclStats(int unit, int table_id, int flow_id,
                              bool color_aware) override;
   ::util::Status RemoveAclStats(int unit, int flow_id) override;
@@ -393,10 +397,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
     uint64 dst_mac;
     uint64 dst_mac_mask;
     MyStationEntry()
-       : vlan(0),
-         vlan_mask(0),
-         dst_mac(0),
-         dst_mac_mask(0xffffffffffffULL) {}
+        : vlan(0), vlan_mask(0), dst_mac(0), dst_mac_mask(0xffffffffffffULL) {}
     MyStationEntry(int _vlan, int _vlan_mask, uint64 _dst_mac,
                    uint64 _dst_mac_mask)
         : vlan(_vlan),
@@ -404,22 +405,20 @@ class BcmSdkWrapper : public BcmSdkInterface {
           dst_mac(_dst_mac),
           dst_mac_mask(_dst_mac_mask) {}
     bool operator<(const MyStationEntry& other) const {
-      return (vlan < other.vlan ||
-             (vlan == other.vlan &&
-             (vlan_mask < other.vlan_mask ||
-             (vlan_mask == other.vlan_mask &&
-             (dst_mac < other.dst_mac ||
-             (dst_mac == other.dst_mac &&
-             (dst_mac_mask < other.dst_mac_mask)))))));
+      return (
+          vlan < other.vlan ||
+          (vlan == other.vlan && (vlan_mask < other.vlan_mask ||
+                                  (vlan_mask == other.vlan_mask &&
+                                   (dst_mac < other.dst_mac ||
+                                    (dst_mac == other.dst_mac &&
+                                     (dst_mac_mask < other.dst_mac_mask)))))));
     }
     bool operator==(const MyStationEntry& other) const {
-      return (vlan == other.vlan &&
-              vlan_mask == other.vlan_mask && dst_mac == other.dst_mac &&
-              dst_mac_mask == other.dst_mac_mask);
+      return (vlan == other.vlan && vlan_mask == other.vlan_mask &&
+              dst_mac == other.dst_mac && dst_mac_mask == other.dst_mac_mask);
     }
     std::string ToString() const {
-      return absl::StrCat("(vlan:", vlan,
-                          ", vlan_mask:", absl::Hex(vlan_mask),
+      return absl::StrCat("(vlan:", vlan, ", vlan_mask:", absl::Hex(vlan_mask),
                           ", dst_mac:", absl::Hex(dst_mac),
                           ", dst_mac_mask:", absl::Hex(dst_mac_mask), ")");
     }
@@ -442,22 +441,16 @@ class BcmSdkWrapper : public BcmSdkInterface {
   struct L3Interfaces {
     uint64 mac;
     int vlan;
-    L3Interfaces()
-      : mac(0),
-        vlan(0) {}
-    L3Interfaces(uint64 _mac, int _vlan)
-      : mac(_mac),
-        vlan(_vlan) {}
+    L3Interfaces() : mac(0), vlan(0) {}
+    L3Interfaces(uint64 _mac, int _vlan) : mac(_mac), vlan(_vlan) {}
     bool operator<(const L3Interfaces& other) const {
       return (mac < other.mac || (mac == other.mac && vlan < other.vlan));
     }
     bool operator==(const L3Interfaces& other) const {
-      return (vlan == other.vlan &&
-              mac == other.mac);
+      return (vlan == other.vlan && mac == other.mac);
     }
     std::string ToString() const {
-      return absl::StrCat("(vlan:", vlan,
-                          ", mac:", absl::Hex(mac), ")");
+      return absl::StrCat("(vlan:", vlan, ", mac:", absl::Hex(mac), ")");
     }
     template <typename H>
     friend H AbslHashValue(H h, const L3Interfaces& i) {
@@ -601,4 +594,4 @@ class BcmSdkWrapper : public BcmSdkInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_BCM_SDKLT_BCM_SDK_WRAPPER_H_

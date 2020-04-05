@@ -4,9 +4,9 @@ Copyright 2019-present Open Networking Foundation
 
 SPDX-License-Identifier: Apache-2.0
 -->
-# Stratum on a Broadcom SDKLT based switch
+# Stratum on a Broadcom based switch
 
-The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. like Tomahawk) using the Broadcom SDKLT.
+The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. Tomahawk) using Broadcom SDKs.
 
 ## ONLPv2 operating system on the switch
 Stratum requires an ONLPv2 operating system on the switch. ONF maintains a [fork](https://github.com/opennetworkinglab/OpenNetworkLinux) with additional platforms. Follow the [ONL](https://opennetlinux.org/doc-building.html) instructions to setup your device. Here is what your switch should look like:
@@ -43,15 +43,17 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 ## Pre-built Docker image
 
 Stratum for Broadcom switches can be run inside Docker on the switch itself.
+Follow their instructions on how to setup [Docker](https://docs.docker.com/engine/install/).
 As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
+There are two versions, one for SDKLT (`:sdklt`) and one for OpenNSA (`:openNSA`).
 
 ```bash
-docker pull stratumproject/stratum-bcm:latest  # to update the image
+docker pull stratumproject/stratum-bcm:sdklt  # or :opennsa, to update the image
 cd stratum/hal/bin/bcm/standalone/docker
-./start-stratum-container.sh
+DOCKER_IMAGE_TAG=sdklt ./start-stratum-container.sh  # or =opennsa
 ```
 
-## From source
+## Compile from source
 
 Sometimes you have to build Stratum from source, e.g. because you develop some private feature or want to try a fix not yet pushed to GitHub.
 
@@ -59,7 +61,7 @@ Sometimes you have to build Stratum from source, e.g. because you develop some p
 
 Stratum comes with a [development Docker container](https://github.com/stratum/stratum#development-environment) for build purposes. This is the preferred and supported way of building Stratum, as it has all dependencies installed.
 
-If you for some reason want to build natively, here are some pointers to an enviroment that worked for us:
+If you for some reason want to build natively, here are some pointers to an environment that worked for us:
 
 - clang-6.0 or newer
 
@@ -67,7 +69,7 @@ If you for some reason want to build natively, here are some pointers to an envi
 
 - Ubuntu 16.04.6 LTS
 
-### Building the `stratum_bcm` package
+### Building the `stratum_bcm` Debian package
 
 You can build the same package that we publish manually with the following steps:
 
@@ -75,20 +77,58 @@ You can build the same package that we publish manually with the following steps
 git clone https://github.com/stratum/stratum.git
 cd stratum
 ./setup_dev_env.sh  # You're now inside the docker container
-bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
-scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz root@<your_switch_ip>:stratum_bcm_package.tar.gz
+bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb  # or stratum_bcm_opennsa_deb
+scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb root@<your_switch_ip>:
+# On the switch
+apt-get install -f ./stratum_bcm_sdklt_deb.deb
 ```
 
 If you're not building inside the docker container, skip the `./setup_dev_env.sh` step.
 
-### SDKLT
+## Starting Stratum
 
-**ONLY needed when not using Docker!**
-
-SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the `stratum_bcm_package.tar.gz` package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+To start Stratum, use the convenience script we install with the package:
 
 ```bash
-tar xf stratum_bcm_package.tar.gz
+start-stratum.sh
+```
+
+You should see the ports coming up and have a SDKLT shell prompt:
+```
+I0628 18:29:10.806623  7930 bcm_chassis_manager.cc:1738] State of SingletonPort (node_id: 1, port_id: 34, slot: 1, port: 3, unit: 0, logical_port: 34, speed: 40G): UP
+BCMLT.0>
+```
+
+Stratum can be customized with several configuration files, passed as CLI flags.
+We provide sensible defaults for most platforms and the script automatically
+uses the correct ones for the platform.
+
+- base_bcm_chassis_map_file: Protobuf defining chip capabilities and all possible port configurations of a chassis.
+    Example found under: `/stratum/hal/config/**platform name**/base_bcm_chassis_map.pb.txt`
+- chassis_config_file: Protobuf setting the config of a specific node.
+    Selects a subset of the available port configurations from the chassis map. Determines
+    which ports will be available.
+    Example found under: `/stratum/hal/config/**platform name**/chassis_config.pb.txt`
+- bcm_sdk_config_file: Autogenerated SDK configuration file.
+- bcm_hardware_specs_file: ACL and UDF properties of chips. Found under: `/stratum/hal/config/bcm_hardware_specs.pb.txt`
+- bcm_serdes_db_proto_file: Contains SerDes configuration. Not implemented yet, can be an empty file.
+
+If you followed the build instructions, these should be on the switch under `/etc/stratum/stratum_configs`.
+Depending on your actual cabling, setup or hardware, you'll have to adjust the config files.
+
+### Manual SDK setup on the switch
+
+**ONLY needed when not using Docker or the start script!**
+
+The `start-stratum.sh` script takes care of setting up the SDKs for you. Should
+something go wrong, these steps help you troubleshoot:
+
+#### SDKLT
+
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the Debian package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+
+```bash
+cd /usr/lib/stratum/
 # or
 wget https://github.com/opennetworkinglab/SDKLT/releases/...
 tar xf sdklt-4.14.49.tgz
@@ -107,37 +147,25 @@ linux_ngbde            32768  1 linux_ngknet
 [  +2.611898] Broadcom NGBDE loaded successfully
 ```
 
-### Running the `stratum_bcm` binary
+#### OpenNSA
 
-Running `stratum_bcm` requires some configuration files, passed as CLI flags:
-
-- base_bcm_chassis_map_file: Protobuf defining chip capabilities and all possible port configurations of a chassis.
-    Example found under: `/stratum/hal/config/**platform name**/base_bcm_chassis_map.pb.txt`
-- chassis_config_file: Protobuf setting the config of a specific node.
-    Selects a subset of the available port configurations from the chassis map. Determines
-    which ports will be available.
-    Example found under: `/stratum/hal/config/**platform name**/chassis_config.pb.txt`
-- bcm_sdk_config_file: Yaml config passed to the SDKLT. Must match the chassis map.
-    Example found under: `/stratum/hal/config/**platform name**/SDKLT.yml`
-- bcm_hardware_specs_file: ACL and UDF properties of chips. Found under: `/stratum/hal/config/bcm_hardware_specs.pb.txt`
-- bcm_serdes_db_proto_file: Contains SerDes configuration. Not implemented yet, can be an empty file.
-
-We provide defaults for most platforms under `stratum/hal/config`. If you followed the build instructions, these should be on the switch under `/etc/stratum/$PLATFORM`.
-Depending on your actual cabling, you'll have to adjust the config files. Panel ports 31 & 32 are in loopback mode and should work without cables.
-
-To start Stratum, you can use the convenience script we package in:
+From the Stratum package, install the Kernel modules:
 
 ```bash
-cd <extracted package>
-./start-stratum.sh
+insmod linux-kernel-bde.ko && insmod linux-user-bde.ko && insmod linux-bcm-knet.ko
 ```
 
-You should see the ports coming up and have a SDKLT shell prompt:
-```
-I0628 18:29:10.806623  7930 bcm_chassis_manager.cc:1738] State of SingletonPort (node_id: 1, port_id: 34, slot: 1, port: 3, unit: 0, logical_port: 34, speed: 40G): UP
-BCMLT.0>
-```
+Check for correct install:
 
+```bash
+# lsmod
+Module                  Size  Used by
+linux_bcm_knet         77824  0
+linux_user_bde         24576  0
+linux_kernel_bde       61440  2 linux_bcm_knet,linux_user_bde
+# dmesg -H
+[Apr14 21:31] linux-kernel-bde (11885): MSI not used
+```
 
 ## Troubleshooting
 
@@ -146,7 +174,7 @@ BCMLT.0>
 You are trying to insert Kernel modules build for a different Kernel version. Make sure your switch looks exactly like described under Runtime dependencies.
 
 
-### [OpenNSA] No traffic on ports with partial ChassisConfig
+### No traffic on ports with partial ChassisConfig [OpenNSA]
 
 When using a Chassis config that does not contain all possible ports of the
 switch, traffic might not be received or sent on a subset or all of the ports.
@@ -155,3 +183,36 @@ generate from the chassis config. It seems that only initializing some ports
 of a port quad (i.e. 3 and 4, but not 1 and 2, using logical port numbers)
 leads to this behaviour. Easiest fix is to use the full file and set unwanted
 ports administratively to down state.
+
+### OpenNSA config file error
+
+```
+ERROR: Assertion failed: (rm) at /projects/ntsw_sw18_scratch/sdkrel/openbcm/sdk/src/sal/core/unix/sync.c:556
+*** Aborted at 1586901146 (unix time) try "date -d @1586901146" if you are using GNU date ***
+PC: @                0x0 (unknown)
+*** SIGABRT (@0x31e5) received by PID 12773 (TID 0x7f9c73602840) from PID 12773; stack trace: ***
+    @     0x7f9c7241b890 (unknown)
+    @     0x7f9c71650067 gsignal
+    @     0x7f9c71651448 abort
+    @           0x5ebfff _default_assert
+    @           0x5eba08 sal_mutex_take
+    @           0xce1b40 sal_vprintf
+    @           0xce1c2d sal_printf
+    @           0xce28df sal_config_file_process
+    @           0xce2ad5 sal_config_refresh
+    @           0x52b98c stratum::hal::bcm::BcmSdkWrapper::InitializeSdk()
+    @          0x2126983 stratum::hal::bcm::BcmChassisManager::InitializeBcmChips()
+    @          0x211bc1c stratum::hal::bcm::BcmChassisManager::PushChassisConfig()
+    @          0x2108042 stratum::hal::bcm::BcmSwitch::PushChassisConfig()
+    @          0x25f643a stratum::hal::ConfigMonitoringService::PushChassisConfig()
+    @          0x25f5be2 stratum::hal::ConfigMonitoringService::PushSavedChassisConfig()
+    @          0x25f57fc stratum::hal::ConfigMonitoringService::Setup()
+    @          0x2477e72 stratum::hal::Hal::Setup()
+    @           0x51f1e6 stratum::hal::bcm::Main()
+    @     0x7f9c7163cb45 __libc_start_main
+    @           0x447c9a _start
+    @                0x0 (unknown)
+```
+
+Your base chassis map contains values that OpenNSA does not understand. You can
+check which config was generated in `--bcm_sdk_config_file`.

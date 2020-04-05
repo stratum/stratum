@@ -409,7 +409,11 @@ BcmSwitch::~BcmSwitch() {}
             resp.mutable_optical_transceiver_info()));
         break;
       default:
-        status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+        status =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "DataRequest field "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet!";
     }
     if (status.ok()) {
       // If everything is OK send it to the caller.

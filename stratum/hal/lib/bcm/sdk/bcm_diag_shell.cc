@@ -1,3 +1,16 @@
+// Copyright 2018-2019 Google LLC
+// Copyright 2019-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+/*
+ * The Broadcom Switch API header code upon which this file depends is:
+ * Copyright 2007-2020 Broadcom Inc.
+ *
+ * This file depends on Broadcom's OpenNSA SDK.
+ * Additional license terms for OpenNSA are available from Broadcom or online:
+ *     https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
+ */
+
 #include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 
 #include <arpa/inet.h>
@@ -9,18 +22,36 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "third_party/absl/synchronization/mutex.h"
+
+#include <string>
 
 extern "C" {
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-#include "bcm/sdk_build_flags.h"  // NOLINT
+#include "sdk_build_flags.h"                      // NOLINT
+// TODO(bocon) we might be able to prune some of these includes
+#include "appl/diag/bslmgmt.h"
+#include "appl/diag/opennsa_diag.h"
+#include "bcm/error.h"
+#include "bcm/init.h"
+#include "bcm/knet.h"
+#include "bcm/link.h"
+#include "bcm/policer.h"
+#include "bcm/port.h"
+#include "bcm/stack.h"
+#include "bcm/stat.h"
+#include "bcm/types.h"
+#include "kcom.h"  // NOLINT
+#include "sal/core/libc.h"
+#include "shared/bsl.h"
+#include "soc/opensoc.h"
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 }
 
-#include "base/commandlineflags.h"
+#include "absl/base/macros.h"
+#include "absl/synchronization/mutex.h"
+#include "gflags/gflags.h"
 #include "stratum/glue/logging.h"
 #include "stratum/lib/macros.h"
-#include "third_party/absl/base/macros.h"
 
 DEFINE_int32(bcm_diag_shell_port, 5020,
              "Port to listen to for user telnet sessions.");
@@ -30,11 +61,9 @@ namespace hal {
 namespace bcm {
 
 BcmDiagShell::BcmDiagShell()
-    : server_started_(false), server_thread_id_(0), shell_thread_id_(0) {
-}
+    : server_started_(false), server_thread_id_(0), shell_thread_id_(0) {}
 
-BcmDiagShell::~BcmDiagShell() {
-}
+BcmDiagShell::~BcmDiagShell() {}
 
 // Initialization of the static vars.
 constexpr unsigned char BcmDiagShell::kTelnetWillSGA[];
@@ -84,13 +113,13 @@ BcmDiagShell* BcmDiagShell::CreateSingleton() {
   return singleton_;
 }
 
-void* BcmDiagShell::ServerThreadFunc(void *arg) {
+void* BcmDiagShell::ServerThreadFunc(void* arg) {
   BcmDiagShell* bcm_diag_shell = static_cast<BcmDiagShell*>(arg);
   bcm_diag_shell->RunServer();
   return nullptr;
 }
 
-void* BcmDiagShell::ShellThreadFunc(void *arg) {
+void* BcmDiagShell::ShellThreadFunc(void* arg) {
   BcmDiagShell* bcm_diag_shell = static_cast<BcmDiagShell*>(arg);
   bcm_diag_shell->RunDiagShell();
   return nullptr;
@@ -123,7 +152,7 @@ void BcmDiagShell::RunServer() {
     if (bind(server_socket_, reinterpret_cast<struct sockaddr*>(&server),
              sizeof(server)) < 0) {
       LOG(ERROR) << "Cannot bind sockaddress to listening socket: "
-              << strerror(errno);
+                 << strerror(errno);
       close(server_socket_);
       sleep(1);
       continue;
@@ -137,8 +166,8 @@ void BcmDiagShell::RunServer() {
       continue;
     }
     close(server_socket_);
-    if (openpty(&pty_master_fd_, &pty_slave_fd_, nullptr, nullptr,
-                nullptr) < 0) {
+    if (openpty(&pty_master_fd_, &pty_slave_fd_, nullptr, nullptr, nullptr) <
+        0) {
       VLOG(1) << "Failure in openpty(): " << strerror(errno);
       close(client_socket_);
       sleep(1);
@@ -200,7 +229,6 @@ void BcmDiagShell::RunServer() {
 
 void BcmDiagShell::RunDiagShell() {
   LOG(INFO) << "Starting Broadcom Diag Shell.";
-  sh_process(-1, "BCM", TRUE);
   LOG(INFO) << "Broadcom Diag Shell exits.";
 
   // Terminate the telnet connection, so that telnet client will terminate,
@@ -210,8 +238,8 @@ void BcmDiagShell::RunDiagShell() {
 
 void BcmDiagShell::ForwardTelnetSession() {
   fd_set read_fds;
-  int max_fd1 = (client_socket_ > pty_master_fd_ ?
-                 client_socket_ : pty_master_fd_) + 1;
+  int max_fd1 =
+      (client_socket_ > pty_master_fd_ ? client_socket_ : pty_master_fd_) + 1;
   unsigned char pty_buffer[kNumberOfBytesRead + 1];
   int bytes;
 
@@ -244,7 +272,7 @@ void BcmDiagShell::ForwardTelnetSession() {
 }
 
 void BcmDiagShell::ProcessTelnetCommand() {
-  unsigned char command[3] = { kTelnetCmd, 0, 0 };
+  unsigned char command[3] = {kTelnetCmd, 0, 0};
   std::string info = "BcmDiagShell: received TelnetCmd ";
 
   if (ReadNextTelnetCommandByte(&command[1]) != 1) {
@@ -325,7 +353,7 @@ int BcmDiagShell::ProcessTelnetInput() {
 
 // either read from telnet buffer or from telnet session.  Reading from telnet
 // session should not be blocked, assuming integrity of telnet client.
-int BcmDiagShell::ReadNextTelnetCommandByte(unsigned char *data) {
+int BcmDiagShell::ReadNextTelnetCommandByte(unsigned char* data) {
   if (net_buffer_offset_ < net_buffer_count_) {
     *data = net_buffer_[net_buffer_offset_++];
     return 1;
@@ -342,14 +370,14 @@ void BcmDiagShell::SendTelnetDataToPty() {
   }
 }
 
-void BcmDiagShell::WriteToTelnetClient(const void *data, size_t size) {
+void BcmDiagShell::WriteToTelnetClient(const void* data, size_t size) {
   // Set MSG_NOSIGNAL flag to igonre SIGPIPE. b/6362602
   if (send(client_socket_, data, size, MSG_NOSIGNAL) < 0) {
     VLOG(1) << "Failed to send data to the telnet client: " << strerror(errno);
   }
 }
 
-void BcmDiagShell::WriteToPtyMaster(const void *data, size_t size) {
+void BcmDiagShell::WriteToPtyMaster(const void* data, size_t size) {
   if (write(pty_master_fd_, data, size) < 0) {
     VLOG(1) << "Failed to send data to the pty master: " << strerror(errno);
   }

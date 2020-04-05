@@ -12,8 +12,6 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-licenses(["notice"])  # Apache v2
-
 go_binary(
     name = "cdl_tool",
     srcs = ["main.go"],
