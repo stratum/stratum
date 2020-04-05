@@ -29,29 +29,29 @@ class BcmMacrosTest : public ::testing::Test {
 };
 
 TEST_F(BcmMacrosTest, ReturnIfBcmError) {
-  ::util::Status status = FuncWithReturnIfBcmError(SHR_E_PARAM);
+  ::util::Status status = FuncWithReturnIfBcmError(BCM_E_PARAM);
   EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
   EXPECT_EQ(StratumErrorSpace(), status.error_space());
   EXPECT_THAT(status.error_message(),
               HasSubstr("FakeBcmFunc(error_code)' failed with error message: "
                         "Invalid parameter. "));
 
-  status = FuncWithReturnIfBcmError(SHR_E_NONE);
+  status = FuncWithReturnIfBcmError(BCM_E_NONE);
   EXPECT_OK(status);
   EXPECT_EQ("", status.error_message());
 }
 
 TEST_F(BcmMacrosTest, AppendStatusIfBcmErrorWithKnownError) {
   ::util::Status status = ::util::OkStatus();
-  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(SHR_E_PARAM));
-  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(SHR_E_EXISTS));
-  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(SHR_E_NONE));
-  APPEND_STATUS_IF_ERROR(status, FuncWithReturnIfBcmError(SHR_E_INTERNAL));
+  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(BCM_E_PARAM));
+  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(BCM_E_EXISTS));
+  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(BCM_E_NONE));
+  APPEND_STATUS_IF_ERROR(status, FuncWithReturnIfBcmError(BCM_E_INTERNAL));
   EXPECT_EQ(ERR_INVALID_PARAM, status.error_code());
   EXPECT_EQ(StratumErrorSpace(), status.error_space());
   EXPECT_THAT(status.error_message(),
-              HasSubstr("'FakeBcmFunc(SHR_E_PARAM)' failed with error message: "
-                        "Invalid parameter. 'FakeBcmFunc(SHR_E_EXISTS)' failed "
+              HasSubstr("'FakeBcmFunc(BCM_E_PARAM)' failed with error message: "
+                        "Invalid parameter. 'FakeBcmFunc(BCM_E_EXISTS)' failed "
                         "with error message: Entry exists. 'FakeBcmFunc("
                         "error_code)' failed with error message: Internal "
                         "error. "));
@@ -60,13 +60,13 @@ TEST_F(BcmMacrosTest, AppendStatusIfBcmErrorWithKnownError) {
 TEST_F(BcmMacrosTest, AppendStatusIfBcmErrorWithUnknownError) {
   ::util::Status status = ::util::OkStatus();
   APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(-1000));  // Unknown code
-  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(SHR_E_EXISTS));
-  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(SHR_E_NONE));
+  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(BCM_E_EXISTS));
+  APPEND_STATUS_IF_BCM_ERROR(status, FakeBcmFunc(BCM_E_NONE));
   EXPECT_EQ(ERR_UNKNOWN, status.error_code());
   EXPECT_EQ(StratumErrorSpace(), status.error_space());
   EXPECT_THAT(status.error_message(),
               HasSubstr("'FakeBcmFunc(-1000)' failed with error message: "
-                        "Unknown error. 'FakeBcmFunc(SHR_E_EXISTS)' failed "
+                        "Unknown error. 'FakeBcmFunc(BCM_E_EXISTS)' failed "
                         "with error message: Entry exists. "));
 }
 

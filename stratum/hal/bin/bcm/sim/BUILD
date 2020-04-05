@@ -2,15 +2,15 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
     "stratum_package",
-    "HOST_ARCHES",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -32,18 +32,15 @@ stratum_cc_binary(
         "-lutil",
     ],
     deps = [
-        "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
         "//stratum/hal/lib/bcm:bcm_acl_manager",
         "//stratum/hal/lib/bcm:bcm_chassis_manager",
-        "//stratum/hal/lib/bcm:bcm_diag_shell",
         "//stratum/hal/lib/bcm:bcm_l2_manager",
         "//stratum/hal/lib/bcm:bcm_l3_manager",
         "//stratum/hal/lib/bcm:bcm_node",
         "//stratum/hal/lib/bcm:bcm_packetio_manager",
+        "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
         "//stratum/hal/lib/bcm:bcm_sdk_sim",
         "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
         "//stratum/hal/lib/bcm:bcm_switch",
@@ -52,6 +49,9 @@ stratum_cc_binary(
         "//stratum/hal/lib/phal:phal_sim",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 

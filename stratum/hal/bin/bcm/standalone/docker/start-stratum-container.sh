@@ -9,7 +9,7 @@ ONLP_MOUNT=$(ls /lib/**/libonlp* | awk '{print "-v " $1 ":" $1 " " }')
 LOG_DIR=${LOG_DIR:-/var/log/stratum}
 KERNEL_VERSION=$(uname -r)
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bcm}
-DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-latest}
+DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-sdklt}
 PLATFORM=$(cat /etc/onl/platform)
 
 if [ -n "$CHASSIS_CONFIG" ]; then

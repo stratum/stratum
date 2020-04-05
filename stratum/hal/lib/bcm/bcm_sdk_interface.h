@@ -181,6 +181,11 @@ class BcmSdkInterface {
       const std::string& config_flush_file_path,
       const std::string& bcm_shell_log_file_path) = 0;
 
+  // Generates the configuration file (content) for the SDK.
+  virtual ::util::StatusOr<std::string> GenerateBcmConfigFile(
+    const BcmChassisMap& base_bcm_chassis_map,
+    const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) = 0;
+
   // Finds the BCM SOC device given PCI bus/PCI slot, creates a soc_cm_dev_t
   // entry that is the main internal SDK data structure that identifies the
   // given device and ensures that the given unit number can be used as the

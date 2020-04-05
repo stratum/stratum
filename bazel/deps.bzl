@@ -3,12 +3,12 @@
 
 """Load dependencies needed for Stratum."""
 
-load("//bazel:workspace_rule.bzl", "remote_workspace")
+load(
+    "@bazel_tools//tools/build_defs/repo:git.bzl",
+    "git_repository",
+)
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl",
-     "git_repository",
-     "new_git_repository")
-load("@bazel_gazelle//:deps.bzl", "go_repository")
+load("//bazel:workspace_rule.bzl", "remote_workspace")
 
 P4RUNTIME_VER = "1.2.0"
 P4RUNTIME_SHA = "0fce7e06c63e60a8cddfe56f3db3d341953560c054d4c09ffda0e84476124f5a"
@@ -29,9 +29,9 @@ GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
 
 def stratum_deps():
-# -----------------------------------------------------------------------------
-#        Protobuf + gRPC compiler and external models
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #        Protobuf + gRPC compiler and external models
+    # -----------------------------------------------------------------------------
 
     if "com_github_grpc_grpc" not in native.existing_rules():
         http_archive(
@@ -68,7 +68,7 @@ def stratum_deps():
             build_file = "@com_github_p4lang_PI//bazel/external:judy.BUILD",
             url = "http://archive.ubuntu.com/ubuntu/pool/universe/j/judy/judy_1.0.5.orig.tar.gz",
             strip_prefix = "judy-1.0.5",
-            sha256 = "d2704089f85fdb6f2cd7e77be21170ced4b4375c03ef1ad4cf1075bd414a63eb"
+            sha256 = "d2704089f85fdb6f2cd7e77be21170ced4b4375c03ef1ad4cf1075bd414a63eb",
         )
 
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
@@ -98,12 +98,12 @@ def stratum_deps():
         dep_name = "com_github_p4lang_PI_bf_" + sde_ver
         pi_commit = BF_SDE_PI_VER[sde_ver]
         if dep_name not in native.existing_rules():
-                # ----- PI for Barefoot targets -----
-                remote_workspace(
-                    name = dep_name,
-                    remote = "https://github.com/p4lang/PI.git",
-                    commit = pi_commit,
-                )
+            # ----- PI for Barefoot targets -----
+            remote_workspace(
+                name = dep_name,
+                remote = "https://github.com/p4lang/PI.git",
+                commit = pi_commit,
+            )
 
     if "com_github_p4lang_PI_np4" not in native.existing_rules():
         # ----- PI for Netcope targets -----
@@ -189,9 +189,9 @@ def stratum_deps():
             build_file = "@//bazel:external/taish_proto.BUILD",
         )
 
-# -----------------------------------------------------------------------------
-#        Third party C++ libraries for common
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #        Third party C++ libraries for common
+    # -----------------------------------------------------------------------------
     if "com_google_absl" not in native.existing_rules():
         remote_workspace(
             name = "com_google_absl",
@@ -258,9 +258,9 @@ def stratum_deps():
             commit = "de8253fcb075c049c4ad1c466c504bf3cf022f45",
         )
 
-# -----------------------------------------------------------------------------
-#      Golang specific libraries.
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #      Golang specific libraries.
+    # -----------------------------------------------------------------------------
     if "bazel_latex" not in native.existing_rules():
         http_archive(
             name = "bazel_latex",
@@ -268,9 +268,10 @@ def stratum_deps():
             strip_prefix = "bazel-latex-0.17",
             url = "https://github.com/ProdriveTechnologies/bazel-latex/archive/v0.17.tar.gz",
         )
-# -----------------------------------------------------------------------------
-#        Chipset and Platform specific C/C++ libraries
-# -----------------------------------------------------------------------------
+
+    # -----------------------------------------------------------------------------
+    #        Chipset and Platform specific C/C++ libraries
+    # -----------------------------------------------------------------------------
     if "com_github_opennetworkinglab_sdklt" not in native.existing_rules():
         http_archive(
             name = "com_github_opennetworkinglab_sdklt",
@@ -279,9 +280,24 @@ def stratum_deps():
             build_file = "@//bazel:external/sdklt.BUILD",
         )
 
-# -----------------------------------------------------------------------------
-#        P4 testing modules
-# -----------------------------------------------------------------------------
+    if "com_github_broadcom_opennsa" not in native.existing_rules():
+        http_archive(
+            name = "com_github_broadcom_opennsa",
+            sha256 = "80c3a26f688dd7fc08880fdbbad9ac3424b435697b0ccb889487f55f2bc425c4",
+            urls = ["https://docs.broadcom.com/docs-and-downloads/csg/opennsa-6.5.19.tgz"],
+            strip_prefix = "opennsa-6.5.19",
+            build_file = "@//bazel:external/openNSA.BUILD",
+            # TODO(max): This is kind of hacky and should be improved.
+            # Each string is a new bash shell, use && to run dependant commands.
+            patch_cmds = [
+                "wget -qO- https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.0.1/linux-4.14.49-OpenNetworkLinux.tar.xz | tar xz",
+                "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=$(realpath ./linux-4.14.49-OpenNetworkLinux) && cd src/gpl-modules/systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
+            ],
+        )
+
+    # -----------------------------------------------------------------------------
+    #        P4 testing modules
+    # -----------------------------------------------------------------------------
 
     if "com_github_opennetworkinglab_fabric_p4test" not in native.existing_rules():
         remote_workspace(
@@ -290,9 +306,9 @@ def stratum_deps():
             commit = "ac2b0bf26c4fb91d883492cb85394304cde392c6",
         )
 
-# -----------------------------------------------------------------------------
-#        Packaging tools
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    #        Packaging tools
+    # -----------------------------------------------------------------------------
     if "rules_pkg" not in native.existing_rules():
         http_archive(
             name = "rules_pkg",
