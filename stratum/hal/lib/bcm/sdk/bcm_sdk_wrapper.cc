@@ -13,7 +13,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ */
+
+/*
  * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
  *
  * This file depends on Broadcom's OpenNSA SDK.
@@ -44,6 +46,7 @@
 extern "C" {
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 #include "sdk_build_flags.h"  // NOLINT
+//TODO(bocon) we might be able to prune some of these includes
 #include "bcm/init.h"
 #include "bcm/error.h"
 #include "bcm/knet.h"
@@ -58,10 +61,17 @@ extern "C" {
 #include "sal/appl/config.h"
 #include "sal/core/boot.h"
 #include "soc/cmext.h"
-#include "soc/drv.h"
 #include "shared/bslext.h"
+#include "soc/opensoc.h"
+#include "appl/diag/opennsa_diag.h"
+#include "sal/core/libc.h"
+#include "kcom.h"
+#include "shared/bsl.h"
+#include "appl/diag/bslmgmt.h"
+#include "sal/appl/sal.h"
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 
+/* Functions defined in src/diag/demo_opennsa_init.c */
 ibde_t* bde = nullptr;
 int bde_create(void) {
   linux_bde_bus_t bus;
@@ -70,9 +80,9 @@ int bde_create(void) {
   bus.be_other = SYS_BE_OTHER;
   return linux_bde_create(&bus, &bde);
 }
-/* Function defined in linux-user-bde.c */
-extern "C" int bde_icid_get(int d, uint8* data, int len);
-}
+extern int soc_knet_config(void*);
+extern int bde_icid_get(int d, uint8* data, int len);
+} // extern "C"
 
 static_assert(SYS_BE_PIO == 0, "SYS_BE_PIO == 0");
 static_assert(sizeof(COMPILER_UINT64) == 8, "sizeof(COMPILER_UINT64) == 8");
@@ -111,7 +121,7 @@ DECLARE_string(bcm_sdk_checkpoint_dir);
 
 using ::google::protobuf::util::MessageDifferencer;
 
-// TODO: There are many CHECK_RETURN_IF_FALSE in this file which will
+// TODO(unknown): There are many CHECK_RETURN_IF_FALSE in this file which will
 // need to be changed to return ERR_INTERNAL as opposed to ERR_INVALID_PARAM.
 
 namespace stratum {
@@ -410,6 +420,9 @@ extern "C" int bsl_check_hook(bsl_packed_meta_t meta_pack) {
 // Configuration used by the BSL (Broadcom System Logging) module.
 bsl_config_t sdk_bsl_config = {bsl_out_hook, bsl_check_hook};
 
+// Declaration of the KNET-related SDK APIs. These APIs are implemented by SDK.
+// TODO(unknown): add or replace
+
 // Callback for removing KNET intf.
 extern "C" int knet_intf_remover(int unit, bcm_knet_netif_t* netif,
                                  void* dummy) {
@@ -430,7 +443,7 @@ extern "C" void sdk_linkscan_callback(int unit, bcm_port_t port,
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
     return;
   }
-    LOG(INFO) << "Unit: " << unit << " Port: " << port << " Link: "
+  LOG(INFO) << "Unit: " << unit << " Port: " << port << " Link: "
             << "changed.";
   // Forward the event.
   bcm_sdk_wrapper->OnLinkscanEvent(unit, port, info);
@@ -811,7 +824,7 @@ BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
       unit_to_soc_device_(),
       bcm_diag_shell_(bcm_diag_shell),
       linkscan_event_writers_() {
-  // For consistency, we make sure some of the default values hercules stack
+  // For consistency, we make sure some of the default values Stratum stack
   // uses internally match the SDK equivalents. This will make sure we dont
   // have inconsistent defaults in different places.
   static_assert(kDefaultVlan == BCM_VLAN_DEFAULT,
@@ -844,12 +857,9 @@ static void chip_info_vect_config(void) {
   RETURN_IF_BCM_ERROR(sal_appl_init());
   chip_info_vect_config();
   RETURN_IF_BCM_ERROR(bslmgmt_init());
-  // RETURN_IF_BCM_ERROR(bsl_init(&sdk_bsl_config));
+  RETURN_IF_BCM_ERROR(bsl_init(&sdk_bsl_config));
+  RETURN_IF_BCM_ERROR(soc_cm_init());
   diag_init();
-  // soc_phy_fw_init();
-  // RETURN_IF_BCM_ERROR(soc_cm_init());
-
-
   RETURN_IF_BCM_ERROR(soc_knet_config(nullptr));
   if (!bde_) {
     linux_bde_bus_t bus;
@@ -954,7 +964,8 @@ static void chip_info_vect_config(void) {
     //
 
     RETURN_IF_BCM_ERROR(soc_cm_device_init(unit, dev_vec));
-    RETURN_IF_BCM_ERROR(bcm_switch_event_register(unit, sdk_event_handler, nullptr));
+    RETURN_IF_BCM_ERROR(
+        bcm_switch_event_register(unit, sdk_event_handler, nullptr));
     unit_to_soc_device_[unit]->dev_vec = dev_vec;
     // Set MTU for all the L3 intf of this unit to the default value.
     unit_to_mtu_[unit] = kDefaultMtu;
@@ -974,6 +985,7 @@ static void chip_info_vect_config(void) {
     RETURN_IF_BCM_ERROR(bcm_switch_control_set(unit, bcmSwitchL3EgressMode, 1));
     RETURN_IF_BCM_ERROR(
         bcm_switch_control_set(unit, bcmSwitchL3IngressInterfaceMapSet, 1));
+    RETURN_IF_BCM_ERROR(bcm_stat_init(unit));
   } else {
     // Create a new SDK checkpoint file in case of coldboot.
     RETURN_IF_ERROR(CreateSdkCheckpointFile(unit));
@@ -986,6 +998,7 @@ static void chip_info_vect_config(void) {
     RETURN_IF_BCM_ERROR(bcm_switch_control_set(unit, bcmSwitchL3EgressMode, 1));
     RETURN_IF_BCM_ERROR(
         bcm_switch_control_set(unit, bcmSwitchL3IngressInterfaceMapSet, 1));
+    RETURN_IF_BCM_ERROR(bcm_stat_init(unit));
   }
   RETURN_IF_ERROR(CleanupKnet(unit));
 
@@ -1121,9 +1134,42 @@ static void chip_info_vect_config(void) {
 }
 
 ::util::Status BcmSdkWrapper::GetPortCounters(int unit, int port,
-                                             PortCounters* pc) {
+                                              PortCounters* pc) {
+  CHECK_RETURN_IF_FALSE(pc);
+  pc->Clear();
+  uint64 val;
+  // in
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInOctets, &val));
+  pc->set_in_octets(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInUcastPkts, &val));
+  pc->set_in_unicast_pkts(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInMulticastPkts, &val));
+  pc->set_in_multicast_pkts(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInBroadcastPkts, &val));
+  pc->set_in_broadcast_pkts(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInDiscards, &val));
+  pc->set_in_discards(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInErrors, &val));
+  pc->set_in_errors(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfInUnknownProtos, &val));
+  pc->set_in_unknown_protos(val);
+  // out
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfOutOctets, &val));
+  pc->set_out_octets(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfOutUcastPkts, &val));
+  pc->set_out_unicast_pkts(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfOutMulticastPkts, &val));
+  pc->set_out_multicast_pkts(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfOutBroadcastPkts, &val));
+  pc->set_out_broadcast_pkts(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfOutDiscards, &val));
+  pc->set_out_discards(val);
+  RETURN_IF_BCM_ERROR(bcm_stat_get(unit, port, snmpIfOutErrors, &val));
+  pc->set_out_errors(val);
 
-  return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
+  VLOG(2) << "Port counter from port " << port << ":\n" << pc->DebugString();
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::StartDiagShellServer() {
@@ -1786,7 +1832,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                             int logical_port, int trunk_port,
                             int l2_mcast_group_id, int class_id,
                             bool copy_to_cpu, bool dst_drop) {
-  // TODO
+  // TODO(max)
   bcm_l2_addr_t l2_addr;
   bcm_mac_t bcm_mac;
   Uint64ToBcmMac(dst_mac, &bcm_mac);
@@ -1823,7 +1869,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 }
 
 ::util::Status BcmSdkWrapper::DeleteVlanIfFound(int unit, int vlan) {
-  // TODO(aghaffar): Will we need to remove the ports from VLAN first? Most
+  // TODO(unknown): Will we need to remove the ports from VLAN first? Most
   // probably not, but make sure.
   RETURN_IF_BCM_ERROR(bcm_vlan_destroy(unit, vlan));
   VLOG(1) << "Removed VLAN " << vlan << " from unit " << unit << ".";
@@ -1918,6 +1964,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   CHECK_RETURN_IF_FALSE(!intf_type.empty());
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
   CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
+                        chip_type == BcmChip::TOMAHAWK_PLUS ||
                         chip_type == BcmChip::TRIDENT2)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
@@ -2068,7 +2115,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
     CHECK_RETURN_IF_FALSE(e.second.chains > 0);
     CHECK_RETURN_IF_FALSE(!e.second.cos_set.empty());
     for (int c : e.second.cos_set) {
-      CHECK_RETURN_IF_FALSE(c <= 48);
+      CHECK_RETURN_IF_FALSE(c <= 48);  // Maximum number of cos values
     }
   }
 
@@ -2143,7 +2190,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
     int unit, const RateLimitConfig& rate_limit_config) {
   // Sanity checking.
   for (const auto& e : rate_limit_config.per_cos_rate_limit_configs) {
-    CHECK_RETURN_IF_FALSE(e.first <= 48);
+    CHECK_RETURN_IF_FALSE(e.first <= 48);  // Maximum number of cos values
   }
 
   // Apply global and per cos rate limiting.
@@ -2194,6 +2241,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
   rcpu_header.vlan_tag.type = htons(kRcpuEthertype);
 
   // Now fill up the RCPU data.
+  // TODO(unknown): use correct PCI device ID for signature.
   rcpu_header.rcpu_data.rcpu_signature = htons(0 & ~0xf);
   rcpu_header.rcpu_data.rcpu_opcode = kRcpuOpcodeFromCpuPkt;
   rcpu_header.rcpu_data.rcpu_flags |= kRcpuFlagModhdr;  // we add SOBMH later
@@ -2208,6 +2256,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
   // talking about
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
   CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
+                        chip_type == BcmChip::TOMAHAWK_PLUS ||
                         chip_type == BcmChip::TRIDENT2)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
@@ -2231,7 +2280,8 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
     ok &= SetSobField<2, 18, 18>(meta, 1);                  // UNICAST: yes
     ok &= SetSobSplitField<2, 17, 8, 9, 0>(meta, qnum);     // QUEUE_NUM_1 & 2
     ok &= SetSobField<2, 7, 0>(meta, module);               // SRC_MODID
-  } else if (chip_type == BcmChip::TOMAHAWK) {
+  } else if (chip_type == BcmChip::TOMAHAWK ||
+             chip_type == BcmChip::TOMAHAWK_PLUS) {
     ok &= SobFieldSizeVerify<12>(qnum);
     ok &= SetSobField<0, 31, 30>(meta, 0x2);   // INTERNAL_HEADER
     ok &= SetSobField<0, 29, 24>(meta, 0x01);  // SOBMH_FROM_CPU
@@ -2278,6 +2328,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
   rcpu_header.vlan_tag.type = htons(kRcpuEthertype);
 
   // Now fill up the RCPU data.
+  // TODO(unknown): use correct PCI device ID for signature.
   rcpu_header.rcpu_data.rcpu_signature = htons(0 & ~0xf);
   rcpu_header.rcpu_data.rcpu_opcode = kRcpuOpcodeFromCpuPkt;
 
@@ -2327,6 +2378,7 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   // Parse RX meta. The rest of the code is chip-dependent.
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
   CHECK_RETURN_IF_FALSE(chip_type == BcmChip::TOMAHAWK ||
+                        chip_type == BcmChip::TOMAHAWK_PLUS ||
                         chip_type == BcmChip::TRIDENT2)
       << "Un-supported BCM chip type: " << BcmChip::BcmChipType_Name(chip_type);
 
@@ -2340,7 +2392,8 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
     src_port = GetDcbField<uint8, 7, 23, 16>(meta);               // SRC_PORT
     dst_port = GetDcbField<uint8, 6, 7, 0>(meta);                 // DST_PORT
     *cos = GetDcbField<uint8, 4, 5, 0>(meta);                     // COS
-  } else if (chip_type == BcmChip::TOMAHAWK) {
+  } else if (chip_type == BcmChip::TOMAHAWK ||
+             chip_type == BcmChip::TOMAHAWK_PLUS) {
     op_code = GetDcbField<uint8, 9, 10, 8>(meta);                 // OPCODE
     src_module = GetDcbField<uint8, 7, 31, 24>(meta);             // SRC_MODID
     dst_module = GetDcbField<uint8, 6, 15, 8>(meta);              // DST_MODID
@@ -2414,13 +2467,13 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   // Check CPU port ACL enable flags
   if (acl_control.cpu_port_flags.apply) {
     RETURN_IF_BCM_ERROR(
-        bcm_port_control_set(unit, 0, bcmPortControlFilterLookup,
+        bcm_port_control_set(unit, 0 /*cmic port*/, bcmPortControlFilterLookup,
                              acl_control.cpu_port_flags.vfp_enable ? 1 : 0));
     RETURN_IF_BCM_ERROR(
-        bcm_port_control_set(unit, 0, bcmPortControlFilterIngress,
+        bcm_port_control_set(unit, 0 /*cmic port*/, bcmPortControlFilterIngress,
                              acl_control.cpu_port_flags.ifp_enable ? 1 : 0));
     RETURN_IF_BCM_ERROR(
-        bcm_port_control_set(unit, 0, bcmPortControlFilterEgress,
+        bcm_port_control_set(unit, 0 /*cmic port*/, bcmPortControlFilterEgress,
                              acl_control.cpu_port_flags.efp_enable ? 1 : 0));
   }
   // Apply intra-slice double wide enable flag
@@ -2456,7 +2509,7 @@ bcm_field_data_offset_base_t HalPacketLayerToBcm(BcmUdfSet::PacketLayer layer) {
                               bcmFieldDataOffsetBaseCount);
 }
 
-// Returns Hercules type for UDF packet layer or else UNKNOWN.
+// Returns Stratum type for UDF packet layer or else UNKNOWN.
 BcmUdfSet::PacketLayer BcmUdfBaseOffsetToHal(
     bcm_field_data_offset_base_t layer) {
   static auto* pkt_layer_map =
@@ -4523,6 +4576,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
   ASSIGN_OR_RETURN(auto chip_type, GetChipType(unit));
   switch (chip_type) {
     case BcmChip::TOMAHAWK:
+    case BcmChip::TOMAHAWK_PLUS:
       return kSdkCheckpointFileSize;
     default:
       return MAKE_ERROR(ERR_INTERNAL) << "Un-supported BCM chip type: "
@@ -4666,7 +4720,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 
   // Apply Phy control for port. Unfortunately this part is a bit
   // chip-dependant.
-  if (chip_type == BcmChip::TOMAHAWK) {
+  if (chip_type == BcmChip::TOMAHAWK || chip_type == BcmChip::TOMAHAWK_PLUS) {
     RETURN_IF_BCM_ERROR(bcm_port_pause_set(unit, port, 0, 0));
     if (!autoneg) {
       RETURN_IF_BCM_ERROR(

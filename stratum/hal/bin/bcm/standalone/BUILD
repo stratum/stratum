@@ -95,6 +95,7 @@ pkg_tar(
         "@com_github_opennetworkinglab_sdklt//:kernel_modules",
         "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
         "start-stratum.sh",
+        # TODO update for OpenNSA
     ],
     deps = [
         "//stratum/hal/config:all_configs_tar",
