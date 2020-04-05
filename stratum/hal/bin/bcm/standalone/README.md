@@ -105,7 +105,24 @@ linux_ngbde            32768  1 linux_ngknet
 [  +2.611898] Broadcom NGBDE loaded successfully
 ```
 
-### Running the `stratum_bcm` binary
+### Building with OpenNSA
+
+Stratum now experimentally supports building with Broadcom OpenNSA instead of SDKLT.
+
+To build using OpenNSA you'll need to pass `bcm_sdk=nsa` to Bazel:
+```
+bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm --define bcm_sdk=nsa
+```
+
+If you want to be explicit about using SDKLT (Statum's default Broadcom SDK) to build,
+then use: `bcm_sdk=lt`
+
+Please note that OpenNSA support is still a work in progress and you will need to provide
+different config files when starting Stratum.
+
+## Running the `stratum_bcm` binary
+
+### Running the `stratum_bcm` SDKLT binary
 
 Running `stratum_bcm` requires some configuration files, passed as CLI flags:
 

@@ -13,7 +13,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ */
+
+/*
  * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
  *
  * This file depends on Broadcom's OpenNSA SDK.
@@ -39,6 +41,23 @@
 extern "C" {
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 #include "sdk_build_flags.h"  // NOLINT
+//TODO(bocon) we might be able to prune some of these includes
+#include "bcm/init.h"
+#include "bcm/error.h"
+#include "bcm/knet.h"
+#include "bcm/link.h"
+#include "bcm/stat.h"
+#include "bcm/policer.h"
+#include "bcm/port.h"
+#include "bcm/stack.h"
+#include "bcm/types.h"
+#include "soc/opensoc.h"
+#include "appl/diag/opennsa_diag.h"
+#include "sal/core/libc.h"
+#include "kcom.h"
+#include "shared/bsl.h"
+#include "appl/diag/bslmgmt.h"
+#include "sal/appl/sal.h"
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 }
 

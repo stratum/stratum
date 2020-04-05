@@ -17,7 +17,17 @@ package(
     default_visibility = STRATUM_INTERNAL,
 )
 
-# Settings to choose which Broadcom SDK to use.
+# These params are used for OpenNSA builds
+BCM_SDK_WORKSPACE = "com_github_broadcom_opennsa"
+BCM_SDK_TYPE = "nsa"
+
+# Settings to choose which Broadcom SDK to use: SDK (OpenNSA) or SDKLT
+config_setting(
+    name = "bcm_sdk",
+    define_values = {
+        "bcm_sdk": BCM_SDK_TYPE,
+    },
+)
 
 config_setting(
     name = "bcm_sdklt",
@@ -26,37 +36,30 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "bcm_sdk_nsa",
-    define_values = {
-        "bcm_sdk": "nsa",
-    },
-)
-
 sdk_deps = select({
-    ":bcm_sdk_nsa": [
-        "@openNSA//:headers",
-        "@openNSA//:libsdk",
+    ":bcm_sdk": [
+        "@%s//:headers" % BCM_SDK_WORKSPACE,
+        "@%s//:libsdk" % BCM_SDK_WORKSPACE,
     ],
-    "//conditions:default": [
+    "//conditions:default": [ # including "bcm_sdklt"
         "@com_github_opennetworkinglab_sdklt//:bcm_headers",
         "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
     ],
 })
 
 sdk_strip_include_prefix = select({
-    ":bcm_sdk_nsa": "openNSA",
-    "//conditions:default": "sdklt",
+    ":bcm_sdk": "sdk",
+    "//conditions:default": "sdklt", # including "bcm_sdklt"
 })
 
 sdk_wrapper_hdrs = select({
-    ":bcm_sdk_nsa": ["openNSA/bcm_sdk_wrapper.h"],
-    "//conditions:default": ["sdklt/bcm_sdk_wrapper.h"],
+    ":bcm_sdk": ["sdk/bcm_sdk_wrapper.h"],
+    "//conditions:default": ["sdklt/bcm_sdk_wrapper.h"], # including "bcm_sdklt"
 })
 
 sdk_wrapper_srcs = select({
-    ":bcm_sdk_nsa": ["openNSA/bcm_sdk_wrapper.cc"],
-    "//conditions:default": ["sdklt/bcm_sdk_wrapper.cc"],
+    ":bcm_sdk": ["sdk/bcm_sdk_wrapper.cc"],
+    "//conditions:default": ["sdklt/bcm_sdk_wrapper.cc"], # including "bcm_sdklt"
 })
 
 proto_library(
@@ -108,6 +111,7 @@ stratum_cc_library(
         "//stratum/public/proto:p4_annotation_cc_proto",
         "//stratum/glue/gtl:map_util",
     ] + select({
+        # ":bcm_sdk": [":bcm_acl_pipeline"],
         "//conditions:default": [],
     }),
 )
@@ -148,6 +152,7 @@ cc_library(
     ],
 )
 
+# TODO restore this when the file is building
 # stratum_cc_library(
 #     name = "bcm_acl_pipeline",
 #     srcs = ["bcm_acl_pipeline.cc"],
@@ -273,9 +278,21 @@ stratum_cc_test(
 )
 
 cc_library(
+    name = "sdk_build_flags",
+    hdrs = ["sdk/sdk_build_flags.h"],
+    includes = ["sdk"],
+    deps = select({
+        ":bcm_sdk": [
+            "@%s//:headers" % BCM_SDK_WORKSPACE,
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
     name = "bcm_diag_shell",
     srcs = select({
-        ":bcm_sdk_nsa": ["openNSA/bcm_diag_shell.cc"],
+        ":bcm_sdk": ["sdk/bcm_diag_shell.cc"],
         "//conditions:default": ["sdklt/bcm_diag_shell.cc"],
     }),
     hdrs = ["bcm_diag_shell.h"],
@@ -290,7 +307,10 @@ cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
     ] + select({
-        ":bcm_sdk_nsa": ["@openNSA//:headers"],
+        ":bcm_sdk": [
+            "@%s//:headers" % BCM_SDK_WORKSPACE,
+            ":sdk_build_flags",
+        ],
         "//conditions:default": [],
     }),
 )
@@ -644,7 +664,6 @@ cc_library(
         ":bcm_sdk_interface",
         ":constants",
         ":macros",
-        # ":sdk_build_flags",
         ":sdk_build_undef",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
@@ -668,7 +687,12 @@ cc_library(
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
         "//stratum/glue/gtl:cleanup",
-    ] + sdk_deps,
+    ] + sdk_deps + select({
+        ":bcm_sdk": [
+            ":sdk_build_flags",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 stratum_cc_library(
@@ -914,22 +938,32 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "macros",
+    name = "macros_include",
     hdrs = select({
-        ":bcm_sdk_nsa": ["openNSA/macros.h"],
-        "//conditions:default": ["sdklt/macros.h"],
+        ":bcm_sdk": ["sdk/macros_include.h"],
+        "//conditions:default": ["sdklt/macros_include.h"],
     }),
     strip_include_prefix = sdk_strip_include_prefix,
     include_prefix = "stratum/hal/lib/bcm/",
     defines = ["NDEBUG"],
+    deps = select({
+        ":bcm_sdk": [
+            "@%s//:headers" % BCM_SDK_WORKSPACE,
+            ":sdk_build_undef",
+        ],
+        "//conditions:default": ["@com_github_opennetworkinglab_sdklt//:bcm_headers"],
+    }),
+)
+
+stratum_cc_library(
+    name = "macros",
+    hdrs = ["macros.h"],
     deps = [
         "//stratum/glue/status",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
-    ] + select({
-        ":bcm_sdk_nsa": ["@openNSA//:headers"],
-        "//conditions:default": ["@com_github_opennetworkinglab_sdklt//:bcm_headers"],
-    }),
+        ":macros_include",
+    ],
 )
 
 stratum_cc_test(
@@ -937,14 +971,16 @@ stratum_cc_test(
     srcs = ["macros_test.cc"],
     deps = [
         ":macros",
+        ":macros_include",
         ":test_main",
         "@com_google_googletest//:gtest",
-        "@com_github_opennetworkinglab_sdklt//:bcm_headers",
-        "@com_github_opennetworkinglab_sdklt//:bcm_sdklt",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
-    ],
+    ] + select({
+        ":bcm_sdk": ["@%s//:libsdk" % BCM_SDK_WORKSPACE],
+        "//conditions:default": ["@com_github_opennetworkinglab_sdklt//:bcm_sdklt"],
+    }),
 )
 
 stratum_cc_library(

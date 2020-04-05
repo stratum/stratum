@@ -22,17 +22,35 @@ package(
 
 cc_library(
     name = "headers",
-    hdrs = glob(["include/**/*.h"]),
-    includes = ["include"],
+    hdrs = glob([
+        "include/**/*.h",
+        "src/gpl-modules/include/**/*.h",
+        "src/gpl-modules/systems/bde/linux/include/**/*.h",
+    ]),
+    includes = [
+        "include",
+        "src/gpl-modules/include",
+        "src/gpl-modules/systems/bde/linux/include",
+    ],
 )
 
 cc_library(
-  name = "libsdk",
-  srcs = [
-    "lib/libsdk6.a",
-    "lib/version.o",
-    "lib/platform_defines.o",
-    "lib/socdiag.o",
-  ],
-  linkstatic = True,
+    name = "diag",
+    srcs = [
+        "src/diag/version.c",
+        "src/diag/config_init_defaults.c"
+    ],
+    deps = [":headers"],
+)
+
+cc_library(
+    name = "libsdk",
+    srcs = ["lib/x86-64/libopennsa.a"],
+    linkopts = [
+        "-lpthread",
+        "-lm",
+        "-lrt",
+    ],
+    deps = [":diag"],
+    linkstatic = True,
 )
