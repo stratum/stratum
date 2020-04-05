@@ -1517,6 +1517,9 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   for (auto& e : xcvr_port_key_to_xcvr_state_) {
     if (e.second != HW_STATE_READY) {
       BcmPortOptions options;
+      const auto bcm_ports = gtl::FindOrNull(port_group_key_to_non_flex_bcm_ports_, e.first);
+      CHECK(bcm_ports != nullptr && !bcm_ports->empty());
+      options.set_speed_bps(bcm_ports->at(0)->speed_bps());
       options.set_enabled(e.second == HW_STATE_PRESENT ? TRI_STATE_TRUE
                                                        : TRI_STATE_FALSE);
       options.set_blocked(e.second != HW_STATE_PRESENT ? TRI_STATE_TRUE

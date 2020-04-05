@@ -1,3 +1,26 @@
+/*
+ * Copyright 2018-2019 Google LLC
+ * Copyright 2019-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
+ *
+ * This file depends on Broadcom's OpenNSA SDK.
+ * Additional license terms for OpenNSA are available from Broadcom or online:
+ *     https://github.com/Broadcom-Network-Switching-Software/OpenNSA
+ */
+
 #ifndef STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_SDK_WRAPPER_H_
 
@@ -6,25 +29,26 @@
 #include <functional>
 #include <string>
 
-extern "C" {
-#include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-#include "bcm/sdk_build_flags.h"  // NOLINT
-#include "bcm/field.h"
-#include "bcm/port.h"
-#include "bcm/types.h"
-#include "linux-bde.h"  // NOLINT
-#include "soc/cmext.h"
-#include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-}
-
+#include "absl/base/thread_annotations.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm_diag_shell.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/common/constants.h"
-#include "third_party/absl/base/thread_annotations.h"
-#include "third_party/absl/synchronization/mutex.h"
-#include "util/gtl/flat_hash_map.h"
+
+extern "C" {
+#include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+#include "sdk_build_flags.h"  // NOLINT
+#include "bcm/field.h"
+#include "bcm/port.h"
+#include "bcm/types.h"
+#include "ibde.h"
+#include "linux-bde.h"  // NOLINT
+#include "soc/cmext.h"
+#include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
+}
 
 namespace stratum {
 namespace hal {
@@ -114,14 +138,18 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                 const BcmPortOptions& options) override;
   ::util::Status GetPortOptions(int unit, int port,
                                 BcmPortOptions* options) override;
+  ::util::Status GetPortCounters(int unit, int port, PortCounters* pc) override;
   ::util::Status StartDiagShellServer() override;
-  ::util::Status StartLinkscan(int unit) override;
-  ::util::Status StopLinkscan(int unit) override;
+  ::util::Status StartLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
+  ::util::Status StopLinkscan(int unit) override LOCKS_EXCLUDED(data_lock_);
+  void OnLinkscanEvent(int unit, int port, PortState linkstatus) override;
   ::util::StatusOr<int> RegisterLinkscanEventWriter(
       std::unique_ptr<ChannelWriter<LinkscanEvent>> writer,
       int priority) override LOCKS_EXCLUDED(linkscan_writers_lock_);
   ::util::Status UnregisterLinkscanEventWriter(int id) override
       LOCKS_EXCLUDED(linkscan_writers_lock_);
+  ::util::StatusOr<BcmPortOptions::LinkscanMode> GetPortLinkscanMode(
+      int unit, int port) override;
   ::util::Status SetMtu(int unit, int mtu) override LOCKS_EXCLUDED(data_lock_);
   ::util::StatusOr<int> FindOrCreateL3RouterIntf(int unit, uint64 router_mac,
                                                  int vlan) override;
@@ -182,12 +210,26 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status DeleteL3HostIpv4(int unit, int vrf, uint32 ipv4) override;
   ::util::Status DeleteL3HostIpv6(int unit, int vrf,
                                   const std::string& ipv6) override;
-  ::util::StatusOr<int> AddMyStationEntry(int unit, int vlan, uint64 dst_mac,
-                                          int priority) override;
+  ::util::StatusOr<int> AddMyStationEntry(int unit, int priority, int vlan,
+                                          int vlan_mask, uint64 dst_mac,
+                                          uint64 dst_mac_mask) override;
   ::util::Status DeleteMyStationEntry(int unit, int station_id) override;
+  ::util::Status AddL2Entry(int unit, int _vlan, uint64 dst_mac,
+                            int logical_port, int trunk_port,
+                            int l2_mcast_group_id, int class_id,
+                            bool copy_to_cpu, bool dst_drop) override;
+  ::util::Status DeleteL2Entry(int unit, int vlan, uint64 dst_mac) override;
+  ::util::Status AddL2MulticastEntry(int unit, int priority, int vlan,
+                                     int vlan_mask, uint64 dst_mac,
+                                     uint64 dst_mac_mask, bool copy_to_cpu,
+                                     bool drop,
+                                     uint8 l2_mcast_group_id) override;
+  ::util::Status DeleteL2MulticastEntry(int unit, int vlan, int vlan_mask,
+                                        uint64 dst_mac,
+                                        uint64 dst_mac_mask) override;
   ::util::Status DeleteL2EntriesByVlan(int unit, int vlan) override;
   ::util::Status AddVlanIfNotFound(int unit, int vlan) override;
-  ::util::Status DeleteVlan(int unit, int vlan) override;
+  ::util::Status DeleteVlanIfFound(int unit, int vlan) override;
   ::util::Status ConfigureVlanBlock(int unit, int vlan, bool block_broadcast,
                                     bool block_known_multicast,
                                     bool block_unknown_multicast,
@@ -212,10 +254,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::Status SetRateLimit(
       int unit, const RateLimitConfig& rate_limit_config) override;
   ::util::Status GetKnetHeaderForDirectTx(int unit, int port, int cos,
-                                          uint64 smac,
+                                          uint64 smac, size_t packet_len,
                                           std::string* header) override;
   ::util::Status GetKnetHeaderForIngressPipelineTx(
-      int unit, uint64 smac, std::string* header) override;
+      int unit, uint64 smac, size_t packet_len, std::string* header) override;
   size_t GetKnetHeaderSizeForRx(int unit) override;
   ::util::Status ParseKnetHeaderForRx(int unit, const std::string& header,
                                       int* ingress_logical_port,
@@ -249,6 +291,10 @@ class BcmSdkWrapper : public BcmSdkInterface {
                              BcmAclStats* stats) override;
   ::util::Status SetAclPolicer(int unit, int flow_id,
                                const BcmMeterConfig& meter) override;
+  ::util::Status InsertPacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry) override;
+  ::util::Status DeletePacketReplicationEntry(
+      const BcmPacketReplicationEntry& entry) override;
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
@@ -338,20 +384,37 @@ class BcmSdkWrapper : public BcmSdkInterface {
                                            const std::string& attr,
                                            uint32 value);
 
+  // Helper function called in InitializeSdk() to spawn a SDK6 shell.
+  ::util::Status InitCLI();
+
+  // Helper function to create a Knet filter for software multicast.
+  // Required because CreateKnetFilter does not allow setting a FP match filter.
+  ::util::StatusOr<int> CreateKnetFilterForMulticast(int unit, uint8 acl_rule);
+
+  // Helper function the get the front panel port from logical port.
+  // This should work because PC_PHYS_PORT is a R/O table.
+  ::util::StatusOr<int> GetPanelPort(int unit, int port);
+
+  // Helper to check if a unit exists.
+  int CheckIfUnitExists(int unit);
+
+  // Helper to check if a port exists.
+  int CheckIfPortExists(int unit, int port) LOCKS_EXCLUDED(data_lock_);
+
   // RW mutex lock for protecting the internal maps.
   mutable absl::Mutex data_lock_;
 
   // Map from unit number to the current MTU used for all the interfaces of
   // the unit.
-  gtl::flat_hash_map<int, int> unit_to_mtu_ GUARDED_BY(data_lock_);
+  absl::flat_hash_map<int, int> unit_to_mtu_ GUARDED_BY(data_lock_);
 
   // Map from unit to chip type specified.
-  gtl::flat_hash_map<int, BcmChip::BcmChipType> unit_to_chip_type_
+  absl::flat_hash_map<int, BcmChip::BcmChipType> unit_to_chip_type_
       GUARDED_BY(data_lock_);
 
   // Map from each unit to the BcmSocDevice data struct associated with that
   // unit.
-  gtl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
+  absl::flat_hash_map<int, BcmSocDevice*> unit_to_soc_device_
       GUARDED_BY(data_lock_);
 
   // Pointer to BcmDiagShell singleton instance. Not owned by this class.
@@ -363,7 +426,7 @@ class BcmSdkWrapper : public BcmSdkInterface {
   // Writers to forward the linkscan events to. They are registered by
   // external manager classes to receive the SDK linkscan events. The managers
   // can be running in different threads. The is sorted based on the
-  // the priority of the BcmLinkscanEventWriter intances.
+  // the priority of the BcmLinkscanEventWriter instances.
   std::multiset<BcmLinkscanEventWriter, BcmLinkscanEventWriterComp>
       linkscan_event_writers_ GUARDED_BY(linkscan_writers_lock_);
 };

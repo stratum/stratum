@@ -365,7 +365,7 @@ BcmL2Manager::ValidateAndParseMyStationEntry(
       << bcm_flow_entry.ShortDebugString() << ".";
 
   int vlan = 0;
-  uint64 dst_mac;
+  uint64 dst_mac = 0;
   for (const auto& field : bcm_flow_entry.fields()) {
     if (field.type() == BcmField::ETH_DST) {
       dst_mac = field.value().u64();

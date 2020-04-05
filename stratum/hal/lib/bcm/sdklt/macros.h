@@ -8,7 +8,6 @@
 
 extern "C" {
 #include "shr/shr_error.h"
-// #include "soc/error.h"
 }
 
 #include "stratum/glue/status/status.h"
