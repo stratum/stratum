@@ -75,11 +75,9 @@ docker build -t "$BUILDER_IMAGE" \
 
 # Build runtime image
 echo "Building $RUNTIME_IMAGE"
-TMP_IMG_TAG="$RANDOM"
 docker build -t "$RUNTIME_IMAGE" \
              --build-arg BUILDER_IMAGE="$BUILDER_IMAGE" \
              --build-arg KERNEL_HEADERS_TAR="$KERNEL_HEADERS_TAR" \
-             --label stratum-tmp-img-tag="$TMP_IMG_TAG" \
              -f "$DOCKERFILE_DIR/Dockerfile.runtime" "$STRATUM_ROOT"
 
 # Remove copied tarballs
@@ -91,7 +89,7 @@ if [ -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR" ]; then
 fi
 
 # Remove temporary image
-TMP_IMGS=$(docker images --filter "label=stratum-tmp-img-tag=$TMP_IMG_TAG" -q)
+TMP_IMGS=$(docker images -f "dangling=true" -q)
 
 if [ -n $TMP_IMGS ]; then
     docker rmi $TMP_IMGS
