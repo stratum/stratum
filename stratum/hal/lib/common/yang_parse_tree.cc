@@ -226,7 +226,6 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
     AddSubtreeNode(node);
     node_names.insert(node.name());
   }
-  AddRoot();
   return ::util::OkStatus();
 }
 
