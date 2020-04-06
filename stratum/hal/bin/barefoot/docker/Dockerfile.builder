@@ -25,11 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 ARG SDE_TAR
-ARG KERNEL_HEADERS_TAR
-# Copy SDE and Linux headers tarball
 COPY $SDE_TAR /stratum/
-COPY $KERNEL_HEADERS_TAR /stratum/
-COPY build-kdrv.sh /build-kdrv.sh
 
 ENV SDE /bf-sde
 ENV SDE_INSTALL /$SDE/install
@@ -42,11 +38,6 @@ ARG JOBS=4
 RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
-
-# Build Barefoot Tofino kernel module
-ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers
-ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
-RUN /build-kdrv.sh
 
 # Prepare all SDE libraries
 ENV OUTPUT_BASE /output/usr/local

@@ -36,9 +36,9 @@ Example:
 EOF
 }
 
-BUILD_ARGS="--build-arg JOBS=$JOBS"
 SDE_TAR=""
 KERNEL_HEADERS_TAR=""
+RUNTIME_IMG_TAG=""
 
 if [ "$#" -eq 0 ]; then
     print_help
@@ -46,40 +46,53 @@ if [ "$#" -eq 0 ]; then
 fi
 
 # Copy tarballs to Stratum root
-echo """Copying SDE and header tarballs to $DOCKERFILE_DIR/
-NOTE: Copied tarballs will be DELETED after the build"""
+cat << EOF
+Copying SDE and Kernel header tarballs to $DOCKERFILE_DIR/
+NOTE: Copied tarballs will be DELETED after the build
+EOF
 
 if [ -n "$1" ]; then
     SDE_TAR=$(basename $1)
-    BUILD_ARGS="$BUILD_ARGS --build-arg SDE_TAR=$SDE_TAR"
     IMG_TAG=${SDE_TAR%.tgz}
-    cp -f $1 $DOCKERFILE_DIR
+    RUNTIME_IMG_TAG="$IMG_TAG"
+    cp -f "$1" "$DOCKERFILE_DIR"
 fi
 if [ -n "$2" ]; then
     KERNEL_HEADERS_TAR=$(basename $2)
-    BUILD_ARGS="$BUILD_ARGS --build-arg KERNEL_HEADERS_TAR=$KERNEL_HEADERS_TAR"
-    IMG_TAG=$IMG_TAG-${KERNEL_HEADERS_TAR%.tar.xz}
-    cp -f $2 $DOCKERFILE_DIR
+    RUNTIME_IMG_TAG="$IMG_TAG-${KERNEL_HEADERS_TAR%.tar.xz}"
+    cp -f "$2" "$STRATUM_ROOT"
 fi
 
 BUILDER_IMAGE=stratumproject/stratum-bf-builder:$IMG_TAG
-RUNTIME_IMAGE=stratumproject/stratum-bf:$IMG_TAG
+RUNTIME_IMAGE=stratumproject/stratum-bf:$RUNTIME_IMG_TAG
 
 # Build base builder image
 echo "Building $BUILDER_IMAGE"
-docker build -t $BUILDER_IMAGE $BUILD_ARGS \
-	 -f $DOCKERFILE_DIR/Dockerfile.builder $DOCKERFILE_DIR
-
-# Remove copied tarballs
-if [ -f "$DOCKERFILE_DIR/$SDE_TAR" ]; then
-    rm -f $DOCKERFILE_DIR/$SDE_TAR
-fi
-if [ -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR" ]; then
-    rm -f $DOCKERFILE_DIR/$KERNEL_HEADERS_TAR
-fi
+docker build -t "$BUILDER_IMAGE" \
+     --build-arg JOBS="$JOBS" \
+     --build-arg SDE_TAR="$SDE_TAR" \
+     -f "$DOCKERFILE_DIR/Dockerfile.builder" "$DOCKERFILE_DIR"
 
 # Build runtime image
 echo "Building $RUNTIME_IMAGE"
-docker build -t $RUNTIME_IMAGE \
-             --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
-             -f $DOCKERFILE_DIR/Dockerfile.runtime $STRATUM_ROOT
+TMP_IMG_TAG="$RANDOM"
+docker build -t "$RUNTIME_IMAGE" \
+             --build-arg BUILDER_IMAGE="$BUILDER_IMAGE" \
+             --build-arg KERNEL_HEADERS_TAR="$KERNEL_HEADERS_TAR" \
+             --label stratum-tmp-img-tag="$TMP_IMG_TAG" \
+             -f "$DOCKERFILE_DIR/Dockerfile.runtime" "$STRATUM_ROOT"
+
+# Remove copied tarballs
+if [ -f "$DOCKERFILE_DIR/$SDE_TAR" ]; then
+    rm -f "$DOCKERFILE_DIR/$SDE_TAR"
+fi
+if [ -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR" ]; then
+    rm -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR"
+fi
+
+# Remove temporary image
+TMP_IMGS=$(docker images --filter "label=stratum-tmp-img-tag=$TMP_IMG_TAG" -q)
+
+if [ -n $TMP_IMGS ]; then
+    docker rmi $TMP_IMGS
+fi
