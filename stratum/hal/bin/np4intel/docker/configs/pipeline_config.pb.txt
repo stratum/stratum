@@ -138,7 +138,7 @@ node_id_to_config {
           annotations: "@defaultonly"
           scope: DEFAULT_ONLY
         }
-        size: 10
+        size: 20
       }
       tables {
         preamble {

@@ -242,7 +242,7 @@ cd ~/stratum/stratum/hal/bin/np4intel/docker
 5. run the container build script
 
 ```
-./scripts/build-stratum-np4intel-container.sh
+./build-stratum-np4intel-container.sh
 ```
 
 # Running the Stratum container
@@ -269,7 +269,7 @@ The files in the directory are as follows:
 
 ```
 cd ~/stratum/stratum/hal/bin/np4intel/docker
-./scripts/start-stratum-container.sh
+./start-stratum-container.sh
 
 ```
 
@@ -282,7 +282,7 @@ an optional argument "--bash" can be passed to instead run a bash cli to
 allow you to manually start stratum using the stratum-entrypoint.sh script.
 
 ```
-./scripts/start-stratum-container.sh --bash
+./start-stratum-container.sh --bash
 ```
 
 4. Running the debug version of the Stratum binary
@@ -293,7 +293,7 @@ the stratum binary with all the symbol tables included.  This can be used
 to debug problems using gdb and the source code.
 
 ```
-./scripts/start-stratum-container.sh --debug
+./start-stratum-container.sh --debug
 ```
 
 5. At this point the ptf framework can be used to load tables or a real

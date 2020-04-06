@@ -51,7 +51,6 @@ RUN mkdir -p $OUTPUT_BASE/bin && \
     cp bazel-bin/$STRATUM_NP4INTEL_BASE/stratum_np4intel $OUTPUT_BASE/bin/ && \
     cp /tmp/stratum_np4intel.debug $OUTPUT_BASE/bin/ && \
     cp $STRATUM_NP4INTEL_BASE/docker/scripts/stratum-entrypoint.sh /output/ && \
-    cp $STRATUM_NP4INTEL_BASE/docker/configs/stratum.flags $OUTPUT_BASE/share/stratum/ && \
     cp $STRATUM_NP4INTEL_BASE/docker/scripts/build_pipeline_configs.py /output/ && \
     cp -r $STRATUM_NP4INTEL_BASE/docker/py_out /output/
 

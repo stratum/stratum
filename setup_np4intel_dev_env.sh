@@ -95,7 +95,7 @@ do
 done
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-IMAGE_NAME=stratum-np4intel-dev
+IMAGE_NAME=stratumproject/stratum-np4intel-dev
 
 DOCKER_BUILD_OPTIONS="-t $IMAGE_NAME"
 if [ "$PULL_DOCKER" == YES ]; then

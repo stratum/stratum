@@ -17,8 +17,9 @@
 set -e
 set -x
 
-CONFIG_DIR=${CONFIG_DIR:-/root}
-LOG_DIR=${LOG_DIR:-/var/log}
+DOCKERFILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CONFIG_DIR=${CONFIG_DIR:-${DOCKERFILE_DIR}/configs}
+LOG_DIR=${LOG_DIR:-${DOCKERFILE_DIR}/logs}
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-np4intel}
 ENTRYPOINT="/stratum-entrypoint.sh"
 CMD=""

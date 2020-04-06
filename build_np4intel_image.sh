@@ -94,7 +94,7 @@ done
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DOCKERFILE_DIR=$THIS_DIR/stratum/hal/bin/np4intel/docker
 JOBS=${JOBS:-4}
-IMAGE_NAME=stratum-np4intel-builder
+IMAGE_NAME=stratumproject/stratum-np4intel-builder
 
 DOCKER_BUILD_OPTIONS="-t $IMAGE_NAME"
 if [ "$PULL_DOCKER" == YES ]; then
