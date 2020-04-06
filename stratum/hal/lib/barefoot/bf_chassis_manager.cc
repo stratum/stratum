@@ -576,7 +576,7 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
     }
     if (config.loopback_mode) {
       RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
-        unit, port_id, *config.loopback_mode));
+          unit, port_id, *config.loopback_mode));
       config_new->loopback_mode = *config.loopback_mode;
     }
 

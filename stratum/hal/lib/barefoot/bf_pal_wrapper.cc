@@ -203,7 +203,7 @@ LoopbackModeToBf(LoopbackState loopback_mode) {
       return BF_LPBK_MAC_NEAR;
     default:
       RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported loopback mode: "
-        << loopback_mode;
+          << loopback_mode;
   }
 }
 
