@@ -92,5 +92,5 @@ fi
 TMP_IMGS=$(docker images -f "dangling=true" -q)
 
 if [ -n $TMP_IMGS ]; then
-    docker rmi $TMP_IMGS
+    echo "$TMP_IMGS" | xargs docker rmi
 fi
