@@ -297,9 +297,9 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   }
   ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
   auto bf_status =
-    bf_pal_port_loopback_mode_set(static_cast<bf_dev_id_t>(unit),
-                                  static_cast<bf_dev_port_t>(port_id),
-                                  lp_mode);
+      bf_pal_port_loopback_mode_set(static_cast<bf_dev_id_t>(unit),
+                                    static_cast<bf_dev_port_t>(port_id),
+                                    lp_mode);
   if (bf_status != BF_SUCCESS) {
     return MAKE_ERROR(ERR_INTERNAL) << "Error when setting loopback mode on dev"
                                     << unit << " port " << port_id;
