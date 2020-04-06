@@ -197,7 +197,7 @@ BFChassisManager::~BFChassisManager() = default;
     config->autoneg = config_params.autoneg();
     config_changed = true;
   }
-if (config_params.loopback_mode() != config_old.loopback_mode) {
+  if (config_params.loopback_mode() != config_old.loopback_mode) {
     config->loopback_mode.reset();
     RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
         unit, port_id, config_params.loopback_mode()));
