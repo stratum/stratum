@@ -14,7 +14,7 @@
 // limitations under the License.
 
 // This file implements the BcmChassisManager::WriteBcmConfigFile function for
-// Broadcom SDK6.
+// Broadcom OpenNSA.
 
 #include <algorithm>
 #include <set>

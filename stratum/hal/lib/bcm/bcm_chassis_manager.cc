@@ -39,7 +39,6 @@
 #include "stratum/public/lib/error.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/gtl/stl_util.h"
-#include "yaml-cpp/yaml.h"
 
 DEFINE_string(base_bcm_chassis_map_file, "",
               "The file to read the base_bcm_chassis_map proto.");

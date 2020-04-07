@@ -219,9 +219,9 @@ stratum_cc_library(
     srcs = [
         "bcm_chassis_manager.cc",
     ] + select({
-        ":bcm_sdk6": ["bcm_chassis_manager_config_generator_sdk6.cc"],
-        ":bcm_sdklt": ["bcm_chassis_manager_config_generator_sdklt.cc"],
-        "//conditions:default": ["bcm_chassis_manager_config_generator_sdklt.cc"],
+        ":bcm_sdk": ["sdk/bcm_chassis_manager_config_generator_sdk.cc"],
+        ":bcm_sdklt": ["sdklt/bcm_chassis_manager_config_generator_sdklt.cc"],
+        "//conditions:default": ["sdklt/bcm_chassis_manager_config_generator_sdklt.cc"],
     }),
     hdrs = ["bcm_chassis_manager.h"],
     deps = [
@@ -233,7 +233,6 @@ stratum_cc_library(
         ":bcm_serdes_db_manager",
         ":utils",
         "@com_github_google_glog//:glog",
-        "@com_github_jbeder_yaml_cpp//:yaml-cpp",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
@@ -256,9 +255,9 @@ stratum_cc_library(
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
     ] + select({
-        ":bcm_sdk6": [],
-        ":bcm_sdklt": ["@com_github_jbeder_yaml_cpp//:yaml_cpp"],
-        "//conditions:default": ["@com_github_jbeder_yaml_cpp//:yaml_cpp"],
+        ":bcm_sdk": [],
+        ":bcm_sdklt": ["@com_github_jbeder_yaml_cpp//:yaml-cpp"],
+        "//conditions:default": ["@com_github_jbeder_yaml_cpp//:yaml-cpp"],
     }),
 )
 
