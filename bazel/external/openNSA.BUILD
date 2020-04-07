@@ -35,22 +35,17 @@ cc_library(
 )
 
 cc_library(
-    name = "diag",
-    srcs = [
-        "src/diag/version.c",
-        "src/diag/config_init_defaults.c"
-    ],
-    deps = [":headers"],
-)
-
-cc_library(
     name = "libsdk",
-    srcs = ["lib/x86-64/libopennsa.a"],
+    srcs = [
+        "lib/x86-64/libopennsa.a",
+        "src/diag/version.c",
+        "src/diag/config_init_defaults.c",
+    ],
     linkopts = [
         "-lpthread",
         "-lm",
         "-lrt",
     ],
-    deps = [":diag"],
+    deps = [":headers"],
     linkstatic = True,
 )
