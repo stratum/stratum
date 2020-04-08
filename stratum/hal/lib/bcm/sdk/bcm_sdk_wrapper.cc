@@ -16,7 +16,8 @@
  */
 
 /*
- * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
+ * The Broadcom Switch API header code upon which this file depends is Copyright
+ * 2007-2020 Broadcom Inc.
  *
  * This file depends on Broadcom's OpenNSA SDK.
  * Additional license terms for OpenNSA are available from Broadcom or online:
@@ -27,6 +28,7 @@
 
 #include <arpa/inet.h>
 #include <byteswap.h>
+#include <endian.h>
 #include <fcntl.h>
 #include <net/ethernet.h>
 #include <net/if.h>
@@ -34,7 +36,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <endian.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -45,30 +46,30 @@
 
 extern "C" {
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
-#include "sdk_build_flags.h"  // NOLINT
-//TODO(bocon) we might be able to prune some of these includes
-#include "bcm/init.h"
+#include "sdk_build_flags.h"                      // NOLINT
+// TODO(bocon) we might be able to prune some of these includes
+#include "appl/diag/bslmgmt.h"
+#include "appl/diag/opennsa_diag.h"
 #include "bcm/error.h"
+#include "bcm/init.h"
 #include "bcm/knet.h"
+#include "bcm/l2.h"
+#include "bcm/l3.h"
 #include "bcm/link.h"
-#include "bcm/stat.h"
 #include "bcm/policer.h"
 #include "bcm/port.h"
 #include "bcm/stack.h"
+#include "bcm/stat.h"
 #include "bcm/types.h"
-#include "bcm/l3.h"
-#include "bcm/l2.h"
-#include "sal/appl/config.h"
-#include "sal/core/boot.h"
-#include "soc/cmext.h"
-#include "shared/bslext.h"
-#include "soc/opensoc.h"
-#include "appl/diag/opennsa_diag.h"
-#include "sal/core/libc.h"
 #include "kcom.h"
-#include "shared/bsl.h"
-#include "appl/diag/bslmgmt.h"
+#include "sal/appl/config.h"
 #include "sal/appl/sal.h"
+#include "sal/core/boot.h"
+#include "sal/core/libc.h"
+#include "shared/bsl.h"
+#include "shared/bslext.h"
+#include "soc/cmext.h"
+#include "soc/opensoc.h"
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 
 /* Functions defined in src/diag/demo_opennsa_init.c */
@@ -82,7 +83,7 @@ int bde_create(void) {
 }
 extern int soc_knet_config(void*);
 extern int bde_icid_get(int d, uint8* data, int len);
-} // extern "C"
+}  // extern "C"
 
 static_assert(SYS_BE_PIO == 0, "SYS_BE_PIO == 0");
 static_assert(sizeof(COMPILER_UINT64) == 8, "sizeof(COMPILER_UINT64) == 8");
@@ -254,16 +255,20 @@ extern "C" void* sdk_p2l(soc_cm_dev_t* dev, sal_paddr_t addr) {
   return (bde->p2l) ? bde->p2l(dev_num, addr) : 0;
 }
 
-extern "C" int sdk_i2c_device_read(soc_cm_dev_t *dev, uint32 addr, uint32 *value) {
+extern "C" int sdk_i2c_device_read(soc_cm_dev_t* dev, uint32 addr,
+                                   uint32* value) {
   ibde_t* bde = GetBde();
   if (!bde) return -1;
-  return (bde->i2c_device_read) ? bde->i2c_device_read(dev->dev, addr, value) : -1;
+  return (bde->i2c_device_read) ? bde->i2c_device_read(dev->dev, addr, value)
+                                : -1;
 }
 
-extern "C" int sdk_i2c_device_write(soc_cm_dev_t *dev, uint32 addr, uint32 value) {
+extern "C" int sdk_i2c_device_write(soc_cm_dev_t* dev, uint32 addr,
+                                    uint32 value) {
   ibde_t* bde = GetBde();
   if (!bde) return -1;
-  return (bde->i2c_device_write) ? bde->i2c_device_write(dev->dev, addr, value) : -1;
+  return (bde->i2c_device_write) ? bde->i2c_device_write(dev->dev, addr, value)
+                                 : -1;
 }
 
 // Callback function registered to the sdk for receiving switch events
@@ -836,12 +841,10 @@ BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
 
 BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
-static soc_chip_info_vectors_t chip_info_vect = {
-    bde_icid_get
-};
+static soc_chip_info_vectors_t chip_info_vect = {bde_icid_get};
 
 static void chip_info_vect_config(void) {
-    soc_chip_info_vect_config(&chip_info_vect);
+  soc_chip_info_vect_config(&chip_info_vect);
 }
 // end max test
 
@@ -889,7 +892,8 @@ static void chip_info_vect_config(void) {
     // TODO(max): find replacement for linux_bde_get_pci_info
     // RETURN_IF_BCM_ERROR(linux_bde_get_pci_info(
     //     dev_num, &detected_pci_bus, &detected_pci_slot, &detected_pci_func));
-    detected_pci_bus = pci_bus; detected_pci_slot = pci_slot;
+    detected_pci_bus = pci_bus;
+    detected_pci_slot = pci_slot;
     RETURN_IF_BCM_ERROR(soc_cm_device_supported(dev->device, dev->rev));
     if (detected_pci_bus == static_cast<unsigned int>(pci_bus) &&
         detected_pci_slot == static_cast<unsigned int>(pci_slot)) {
@@ -954,7 +958,8 @@ static void chip_info_vect_config(void) {
     dev_vec->p2l = sdk_p2l;
     dev_vec->i2c_device_read = sdk_i2c_device_read;
     dev_vec->i2c_device_write = sdk_i2c_device_write;
-    dev_vec->base_address = bde_->get_dev(unit_to_soc_device_[unit]->dev_num)->base_address;
+    dev_vec->base_address =
+        bde_->get_dev(unit_to_soc_device_[unit]->dev_num)->base_address;
     // dev_vec->bus_type = SOC_DEV_BUS_MSI | bde_->get_dev_type(unit);
     dev_vec->bus_type = bde_->get_dev_type(unit);
 
@@ -1829,9 +1834,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 }
 
 ::util::Status BcmSdkWrapper::AddL2Entry(int unit, int vlan, uint64 dst_mac,
-                            int logical_port, int trunk_port,
-                            int l2_mcast_group_id, int class_id,
-                            bool copy_to_cpu, bool dst_drop) {
+                                         int logical_port, int trunk_port,
+                                         int l2_mcast_group_id, int class_id,
+                                         bool copy_to_cpu, bool dst_drop) {
   // TODO(max)
   bcm_l2_addr_t l2_addr;
   bcm_mac_t bcm_mac;
@@ -1841,30 +1846,33 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 
   RETURN_IF_BCM_ERROR(bcm_l2_addr_add(unit, &l2_addr));
 
-  VLOG(1) << "Added L2 unicast entry " << " to .. on unit " << unit << ".";
+  VLOG(1) << "Added L2 unicast entry "
+          << " to .. on unit " << unit << ".";
 
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::DeleteL2Entry(int unit, int vlan, uint64 dst_mac) {
+::util::Status BcmSdkWrapper::DeleteL2Entry(int unit, int vlan,
+                                            uint64 dst_mac) {
   bcm_mac_t bcm_mac;
   Uint64ToBcmMac(dst_mac, &bcm_mac);
   RETURN_IF_BCM_ERROR(bcm_l2_addr_delete(unit, bcm_mac, vlan));
 
-  VLOG(1) << "Removed L2 unicast to " << " ... on unit " << unit << ".";
+  VLOG(1) << "Removed L2 unicast to "
+          << " ... on unit " << unit << ".";
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::AddL2MulticastEntry(int unit, int priority,
-    int vlan, int vlan_mask, uint64 dst_mac, uint64 dst_mac_mask,
-    bool copy_to_cpu, bool drop, uint8 l2_mcast_group_id) {
-
+::util::Status BcmSdkWrapper::AddL2MulticastEntry(
+    int unit, int priority, int vlan, int vlan_mask, uint64 dst_mac,
+    uint64 dst_mac_mask, bool copy_to_cpu, bool drop, uint8 l2_mcast_group_id) {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
 }
 
-::util::Status BcmSdkWrapper::DeleteL2MulticastEntry(int unit, int vlan, int vlan_mask, uint64 dst_mac,
-                                        uint64 dst_mac_mask) {
-
+::util::Status BcmSdkWrapper::DeleteL2MulticastEntry(int unit, int vlan,
+                                                     int vlan_mask,
+                                                     uint64 dst_mac,
+                                                     uint64 dst_mac_mask) {
   return MAKE_ERROR(ERR_UNIMPLEMENTED) << "not implemented";
 }
 
@@ -2080,7 +2088,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
       filter.match_flags |= BCM_KNET_FILTER_M_REASON;
       break;
     case KnetFilterType::CATCH_ALL:
-      filter.priority = 10; // hardcoded. Lowest priority.
+      filter.priority = 10;  // hardcoded. Lowest priority.
       snprintf(filter.desc, sizeof(filter.desc), "CATCH_ALL");
       break;
     default:
@@ -2386,20 +2394,20 @@ size_t BcmSdkWrapper::GetKnetHeaderSizeForRx(int unit) {
   int src_module = -1, dst_module = -1, src_port = -1, dst_port = -1,
       op_code = -1;
   if (chip_type == BcmChip::TRIDENT2) {
-    op_code = GetDcbField<uint8, 9, 10, 8>(meta);                 // OPCODE
-    src_module = GetDcbField<uint8, 7, 31, 24>(meta);             // SRC_MODID
-    dst_module = GetDcbField<uint8, 6, 15, 8>(meta);              // DST_MODID
-    src_port = GetDcbField<uint8, 7, 23, 16>(meta);               // SRC_PORT
-    dst_port = GetDcbField<uint8, 6, 7, 0>(meta);                 // DST_PORT
-    *cos = GetDcbField<uint8, 4, 5, 0>(meta);                     // COS
+    op_code = GetDcbField<uint8, 9, 10, 8>(meta);      // OPCODE
+    src_module = GetDcbField<uint8, 7, 31, 24>(meta);  // SRC_MODID
+    dst_module = GetDcbField<uint8, 6, 15, 8>(meta);   // DST_MODID
+    src_port = GetDcbField<uint8, 7, 23, 16>(meta);    // SRC_PORT
+    dst_port = GetDcbField<uint8, 6, 7, 0>(meta);      // DST_PORT
+    *cos = GetDcbField<uint8, 4, 5, 0>(meta);          // COS
   } else if (chip_type == BcmChip::TOMAHAWK ||
              chip_type == BcmChip::TOMAHAWK_PLUS) {
-    op_code = GetDcbField<uint8, 9, 10, 8>(meta);                 // OPCODE
-    src_module = GetDcbField<uint8, 7, 31, 24>(meta);             // SRC_MODID
-    dst_module = GetDcbField<uint8, 6, 15, 8>(meta);              // DST_MODID
-    src_port = GetDcbField<uint8, 7, 23, 16>(meta);               // SRC_PORT
-    dst_port = GetDcbField<uint8, 6, 7, 0>(meta);                 // DST_PORT
-    *cos = GetDcbField<uint8, 4, 5, 0>(meta);                     // COS
+    op_code = GetDcbField<uint8, 9, 10, 8>(meta);      // OPCODE
+    src_module = GetDcbField<uint8, 7, 31, 24>(meta);  // SRC_MODID
+    dst_module = GetDcbField<uint8, 6, 15, 8>(meta);   // DST_MODID
+    src_port = GetDcbField<uint8, 7, 23, 16>(meta);    // SRC_PORT
+    dst_port = GetDcbField<uint8, 6, 7, 0>(meta);      // DST_PORT
+    *cos = GetDcbField<uint8, 4, 5, 0>(meta);          // COS
   }
   int module = -1;
   RETURN_IF_BCM_ERROR(bcm_stk_my_modid_get(unit, &module));
@@ -2497,8 +2505,8 @@ namespace {
 bcm_field_data_offset_base_t HalPacketLayerToBcm(BcmUdfSet::PacketLayer layer) {
   static auto* bcm_pkt_layer_map =
       new absl::flat_hash_map<BcmUdfSet::PacketLayer,
-                             bcm_field_data_offset_base_t,
-                             EnumHash<BcmUdfSet::PacketLayer>>({
+                              bcm_field_data_offset_base_t,
+                              EnumHash<BcmUdfSet::PacketLayer>>({
           {BcmUdfSet::PACKET_START, bcmFieldDataOffsetBasePacketStart},
           {BcmUdfSet::L2_HEADER, bcmFieldDataOffsetBaseL2Header},
           {BcmUdfSet::L3_HEADER, bcmFieldDataOffsetBaseOuterL3Header},
@@ -2514,7 +2522,7 @@ BcmUdfSet::PacketLayer BcmUdfBaseOffsetToHal(
     bcm_field_data_offset_base_t layer) {
   static auto* pkt_layer_map =
       new absl::flat_hash_map<bcm_field_data_offset_base_t,
-                             BcmUdfSet::PacketLayer>({
+                              BcmUdfSet::PacketLayer>({
           {bcmFieldDataOffsetBasePacketStart, BcmUdfSet::PACKET_START},
           {bcmFieldDataOffsetBaseL2Header, BcmUdfSet::L2_HEADER},
           {bcmFieldDataOffsetBaseOuterL3Header, BcmUdfSet::L3_HEADER},
@@ -2537,13 +2545,12 @@ BcmUdfSet::PacketLayer BcmUdfBaseOffsetToHal(
   if (num_chunks > 0) {
     chunk_ids->resize(num_chunks);
     chunk_ids->assign(num_chunks, 0);
-    RETURN_IF_BCM_ERROR(
-        bcm_field_data_qualifier_multi_get(unit, num_chunks, chunk_ids->data(),
-                                           &num_chunks));
+    RETURN_IF_BCM_ERROR(bcm_field_data_qualifier_multi_get(
+        unit, num_chunks, chunk_ids->data(), &num_chunks));
     if (num_chunks != chunk_ids->size()) {
       return MAKE_ERROR(ERR_INTERNAL)
-          << "Retrieved wrong UDF chunk count from hardware. Got "
-          << num_chunks << ", expected " << chunk_ids->size() << ".";
+             << "Retrieved wrong UDF chunk count from hardware. Got "
+             << num_chunks << ", expected " << chunk_ids->size() << ".";
     }
   }
   return ::util::OkStatus();
@@ -2551,74 +2558,72 @@ BcmUdfSet::PacketLayer BcmUdfBaseOffsetToHal(
 
 // Supported packet encapsulations for ACL UDF matching.
 const bcm_field_data_packet_format_t kUdfEncaps[] = {
-  { 0, BCM_FIELD_DATA_FORMAT_L2_LLC,  // LLC
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP_NONE,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP_NONE,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IPinIP
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP6in4
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP+GRE+IP
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP+GRE+IPv6
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IPv6
-    BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP6,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_IP_NONE,
-    BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IPinIP
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP6in4
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP+GRE+IP
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP+GRE+IPv6
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IPv6
-    BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP6,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_IP_NONE,
-    BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IPinIP
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP6in4
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP+GRE+IP
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP+GRE+IPv6
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
-    BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE },
-  { 0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IPv6
-    BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP6,
-    BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE }
+    {0, BCM_FIELD_DATA_FORMAT_L2_LLC,  // LLC
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP_NONE,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP_NONE,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IPinIP
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP6in4
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP+GRE+IP
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IP+GRE+IPv6
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+IPv6
+     BCM_FIELD_DATA_FORMAT_VLAN_NO_TAG, BCM_FIELD_DATA_FORMAT_IP6,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP_NONE,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IPinIP
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP6in4
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP+GRE+IP
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IP+GRE+IPv6
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+1VLAN+IPv6
+     BCM_FIELD_DATA_FORMAT_VLAN_SINGLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP6,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP_NONE,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IPinIP
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP6in4
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_IP_IN_IP},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP+GRE+IP
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP4, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IP+GRE+IPv6
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP4,
+     BCM_FIELD_DATA_FORMAT_IP6, BCM_FIELD_DATA_FORMAT_TUNNEL_GRE},
+    {0, BCM_FIELD_DATA_FORMAT_L2_ETH_II,  // EthV2+2VLAN+IPv6
+     BCM_FIELD_DATA_FORMAT_VLAN_DOUBLE_TAGGED, BCM_FIELD_DATA_FORMAT_IP6,
+     BCM_FIELD_DATA_FORMAT_IP_NONE, BCM_FIELD_DATA_FORMAT_TUNNEL_NONE},
 };
 
 }  // namespace
@@ -2642,15 +2647,15 @@ const bcm_field_data_packet_format_t kUdfEncaps[] = {
     // Check for duplicate chunk in BcmUdfSet.
     if (!specified_chunks.insert(udf_chunk.id()).second) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Specified UDF id " << udf_chunk.id() << " multiple times for "
-          << "unit " << unit << " UDF set.";
+             << "Specified UDF id " << udf_chunk.id() << " multiple times for "
+             << "unit " << unit << " UDF set.";
     }
     bcm_field_data_qualifier_t qualifier;
     bcm_field_data_offset_base_t layer = HalPacketLayerToBcm(udf_chunk.layer());
     if (layer == bcmFieldDataOffsetBaseCount) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Received invalid UDF base offset for unit: " << unit
-          << ", chunk: " << udf_chunk.id() << ".";
+             << "Received invalid UDF base offset for unit: " << unit
+             << ", chunk: " << udf_chunk.id() << ".";
     }
     // Check if hardware already contains the chunk id.
     if (gtl::ContainsKey(hw_chunks, udf_chunk.id())) {
@@ -2663,8 +2668,8 @@ const bcm_field_data_packet_format_t kUdfEncaps[] = {
         continue;
       }
       // Mark chunk to be replaced.
-      qualifier.flags = BCM_FIELD_DATA_QUALIFIER_WITH_ID
-          | BCM_FIELD_DATA_QUALIFIER_REPLACE;
+      qualifier.flags =
+          BCM_FIELD_DATA_QUALIFIER_WITH_ID | BCM_FIELD_DATA_QUALIFIER_REPLACE;
     } else {
       bcm_field_data_qualifier_t_init(&qualifier);
       qualifier.flags = BCM_FIELD_DATA_QUALIFIER_WITH_ID;
@@ -2716,7 +2721,7 @@ namespace {
 bcm_field_qualify_t HalAclStageToBcm(BcmAclStage stage) {
   static auto* bcm_stage_map =
       new absl::flat_hash_map<BcmAclStage, bcm_field_qualify_t,
-                             EnumHash<BcmAclStage>>(
+                              EnumHash<BcmAclStage>>(
           {{BCM_ACL_STAGE_VFP, bcmFieldQualifyStageLookup},
            {BCM_ACL_STAGE_IFP, bcmFieldQualifyStageIngress},
            {BCM_ACL_STAGE_EFP, bcmFieldQualifyStageEgress}});
@@ -2728,7 +2733,7 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   // Default mappings for most ACL stages.
   static auto* default_field_map =
       new absl::flat_hash_map<BcmField::Type, bcm_field_qualify_t,
-                             EnumHash<BcmField::Type>>({
+                              EnumHash<BcmField::Type>>({
           {BcmField::ETH_TYPE, bcmFieldQualifyEtherType},
           {BcmField::IP_TYPE, bcmFieldQualifyIpType},
           {BcmField::ETH_SRC, bcmFieldQualifySrcMac},
@@ -2758,7 +2763,7 @@ bcm_field_qualify_t HalAclFieldToBcm(BcmAclStage stage, BcmField::Type field) {
   // Stage specific field mappings.
   static auto* efp_field_map =
       new absl::flat_hash_map<BcmField::Type, bcm_field_qualify_t,
-                             EnumHash<BcmField::Type>>({
+                              EnumHash<BcmField::Type>>({
           {BcmField::OUT_PORT, bcmFieldQualifyOutPort},
       });
   auto* stage_map = (stage == BCM_ACL_STAGE_EFP) ? efp_field_map : nullptr;
@@ -2830,25 +2835,26 @@ namespace {
 // mask value which denotes an exact match. If not found, returns ~0.
 uint32 ExactMatchMask32(BcmField::Type field) {
   static auto* mask_map =
-      new absl::flat_hash_map<BcmField::Type, uint32, EnumHash<BcmField::Type>>({
-          {BcmField::ETH_TYPE, 0xffff},
-          {BcmField::VRF, 0xffffffff},
-          {BcmField::IN_PORT, BCM_FIELD_EXACT_MATCH_MASK},
-          {BcmField::OUT_PORT, BCM_FIELD_EXACT_MATCH_MASK},
-          {BcmField::VLAN_VID, 0xfff},
-          {BcmField::VLAN_PCP, 0x7},
-          {BcmField::IPV4_SRC, 0xffffffff},
-          {BcmField::IPV4_DST, 0xffffffff},
-          {BcmField::IP_PROTO_NEXT_HDR, 0xff},
-          {BcmField::IP_DSCP_TRAF_CLASS, 0xff},
-          {BcmField::IP_TTL_HOP_LIMIT, 0xff},
-          {BcmField::VFP_DST_CLASS_ID, 0xffffffff},
-          {BcmField::L3_DST_CLASS_ID, 0xffffffff},
-          {BcmField::L4_SRC, 0xffff},
-          {BcmField::L4_DST, 0xffff},
-          {BcmField::TCP_FLAGS, 0xff},
-          {BcmField::ICMP_TYPE_CODE, 0xffff},
-      });
+      new absl::flat_hash_map<BcmField::Type, uint32, EnumHash<BcmField::Type>>(
+          {
+              {BcmField::ETH_TYPE, 0xffff},
+              {BcmField::VRF, 0xffffffff},
+              {BcmField::IN_PORT, BCM_FIELD_EXACT_MATCH_MASK},
+              {BcmField::OUT_PORT, BCM_FIELD_EXACT_MATCH_MASK},
+              {BcmField::VLAN_VID, 0xfff},
+              {BcmField::VLAN_PCP, 0x7},
+              {BcmField::IPV4_SRC, 0xffffffff},
+              {BcmField::IPV4_DST, 0xffffffff},
+              {BcmField::IP_PROTO_NEXT_HDR, 0xff},
+              {BcmField::IP_DSCP_TRAF_CLASS, 0xff},
+              {BcmField::IP_TTL_HOP_LIMIT, 0xff},
+              {BcmField::VFP_DST_CLASS_ID, 0xffffffff},
+              {BcmField::L3_DST_CLASS_ID, 0xffffffff},
+              {BcmField::L4_SRC, 0xffff},
+              {BcmField::L4_DST, 0xffff},
+              {BcmField::TCP_FLAGS, 0xff},
+              {BcmField::ICMP_TYPE_CODE, 0xffff},
+          });
   return gtl::FindWithDefault(*mask_map, field, ~0);
 }
 
@@ -2856,10 +2862,11 @@ uint32 ExactMatchMask32(BcmField::Type field) {
 // mask value which denotes an exact match. If not found, returns ~0ULL.
 uint64 ExactMatchMask64(BcmField::Type field) {
   static auto* mask_map =
-      new absl::flat_hash_map<BcmField::Type, uint64, EnumHash<BcmField::Type>>({
-          {BcmField::ETH_DST, 0xffffffffffffULL},
-          {BcmField::ETH_SRC, 0xffffffffffffULL},
-      });
+      new absl::flat_hash_map<BcmField::Type, uint64, EnumHash<BcmField::Type>>(
+          {
+              {BcmField::ETH_DST, 0xffffffffffffULL},
+              {BcmField::ETH_SRC, 0xffffffffffffULL},
+          });
   return gtl::FindWithDefault(*mask_map, field, ~0ULL);
 }
 
@@ -2868,7 +2875,7 @@ uint64 ExactMatchMask64(BcmField::Type field) {
 // an empty string.
 const std::string& ExactMatchMaskBytes(BcmField::Type field) {
   static auto* mask_map = new absl::flat_hash_map<BcmField::Type, std::string,
-                                                 EnumHash<BcmField::Type>>({
+                                                  EnumHash<BcmField::Type>>({
       {BcmField::IPV6_SRC,
        "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"},
       {BcmField::IPV6_DST,
@@ -2966,17 +2973,17 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
                                    const BcmField& field) {
   if (field.type() != BcmField::IN_PORT_BITMAP) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Attempted to add IPBM qualifier with wrong field type: "
-        << BcmField::Type_Name(field.type()) << ".";
+           << "Attempted to add IPBM qualifier with wrong field type: "
+           << BcmField::Type_Name(field.type()) << ".";
   }
   if (field.has_mask()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "IPBM qualifier contained unexpected mask entry.";
+           << "IPBM qualifier contained unexpected mask entry.";
   }
   if (field.value().u32_list().u32_size() > BCM_PBMP_PORT_MAX) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "IPBM qualifier contains " << field.value().u32_list().u32_size()
-        << " ports, more than max count of " << BCM_PBMP_PORT_MAX << ".";
+           << "IPBM qualifier contains " << field.value().u32_list().u32_size()
+           << " ports, more than max count of " << BCM_PBMP_PORT_MAX << ".";
   }
   bcm_pbmp_t pbmp_value;
   BCM_PBMP_CLEAR(pbmp_value);
@@ -2989,8 +2996,8 @@ const std::string& ExactMatchMaskBytes(BcmField::Type field) {
   // TODO(unknown): !!!! Ensure that port bitmap is not being changed
   // under us (as in, only set on chassis config change).
   RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
-  RETURN_IF_BCM_ERROR(bcm_field_qualify_InPorts(
-      unit, entry, pbmp_value, port_cfg.all));
+  RETURN_IF_BCM_ERROR(
+      bcm_field_qualify_InPorts(unit, entry, pbmp_value, port_cfg.all));
   return ::util::OkStatus();
 }
 
@@ -3235,24 +3242,24 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
 ::util::Status VerifyAclActionParams(
     const BcmAction& action,
     const absl::flat_hash_set<BcmAction::Param::Type,
-                             EnumHash<BcmAction::Param::Type>>& required,
+                              EnumHash<BcmAction::Param::Type>>& required,
     const absl::flat_hash_set<BcmAction::Param::Type,
-                             EnumHash<BcmAction::Param::Type>>& optional) {
+                              EnumHash<BcmAction::Param::Type>>& optional) {
   auto req_params = required, opt_params = optional;
   // Check each parameter in action with the given set of parameters.
   for (const auto& param : action.params()) {
     if (!(req_params.erase(param.type()) || opt_params.erase(param.type()))) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Invalid or duplicate parameter for "
-          << BcmAction::Type_Name(action.type()) << ": "
-          << BcmAction::Param::Type_Name(param.type()) << ".";
+             << "Invalid or duplicate parameter for "
+             << BcmAction::Type_Name(action.type()) << ": "
+             << BcmAction::Param::Type_Name(param.type()) << ".";
     }
   }
   // Return error if any unmatched parameters are required.
   if (!req_params.empty()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
-        << "Unmatched parameter(s) for action: " << action.ShortDebugString()
-        << ".";
+           << "Unmatched parameter(s) for action: " << action.ShortDebugString()
+           << ".";
   }
   return ::util::OkStatus();
 }
@@ -3288,8 +3295,8 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
           break;
         default:
           return MAKE_ERROR(ERR_INVALID_PARAM)
-                << "Invalid color parameter for DROP action: "
-                << action.params(0).value().u32() << ".";
+                 << "Invalid color parameter for DROP action: "
+                 << action.params(0).value().u32() << ".";
       }
       break;
     case BcmAction::OUTPUT_PORT: {
@@ -3297,8 +3304,8 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
       RETURN_IF_ERROR(VerifyAclActionParams(action, required, optional));
       bcm_action = bcmFieldActionRedirect;
       bcm_gport_t out_gport;
-      RETURN_IF_BCM_ERROR(bcm_port_gport_get(
-          unit, action.params(0).value().u32(), &out_gport));
+      RETURN_IF_BCM_ERROR(
+          bcm_port_gport_get(unit, action.params(0).value().u32(), &out_gport));
       param_1 = static_cast<uint32>(out_gport);
     } break;
     // TODO(unknown): It may be necessary to add an OUTPUT_PBMP action
@@ -3338,15 +3345,15 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
                 break;
               default:
                 return MAKE_ERROR(ERR_INVALID_PARAM)
-                      << "Invalid color parameter for COPY_TO_CPU action: "
-                      << param.value().u32() << ".";
+                       << "Invalid color parameter for COPY_TO_CPU action: "
+                       << param.value().u32() << ".";
             }
             param_0 = 1;
             break;
           default:
             return MAKE_ERROR(ERR_INVALID_PARAM)
-                  << "Invalid parameter type for COPY_TO_CPU action: "
-                  << BcmAction::Param::Type_Name(param.type()) << ".";
+                   << "Invalid parameter type for COPY_TO_CPU action: "
+                   << BcmAction::Param::Type_Name(param.type()) << ".";
         }
       }
       break;
@@ -3369,8 +3376,8 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
           break;
         default:
           return MAKE_ERROR(ERR_INVALID_PARAM)
-                << "Invalid color parameter for CANCEL_COPY_TO_CPU "
-                << "action: " << action.params(0).value().u32() << ".";
+                 << "Invalid color parameter for CANCEL_COPY_TO_CPU "
+                 << "action: " << action.params(0).value().u32() << ".";
       }
       break;
     case BcmAction::SET_COLOR:
@@ -3382,8 +3389,8 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
           (param_0 != BCM_FIELD_COLOR_YELLOW) ||
           (param_0 != BCM_FIELD_COLOR_RED)) {
         return MAKE_ERROR(ERR_INVALID_PARAM)
-              << "Invalid color parameter for SET_COLOR action: " << param_0
-              << ".";
+               << "Invalid color parameter for SET_COLOR action: " << param_0
+               << ".";
       }
       break;
     case BcmAction::SET_VRF:
@@ -3406,8 +3413,8 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
       break;
     default:
       return MAKE_ERROR(ERR_INVALID_PARAM)
-            << "Attempted to translate unsupported BcmAction::Type: "
-            << BcmAction::Type_Name(action.type()) << ".";
+             << "Attempted to translate unsupported BcmAction::Type: "
+             << BcmAction::Type_Name(action.type()) << ".";
   }
   RETURN_IF_BCM_ERROR(
       bcm_field_action_add(unit, entry, bcm_action, param_0, param_1));
@@ -3416,8 +3423,10 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
 
 }  // namespace
 
-::util::StatusOr<int> BcmSdkWrapper::InsertAclFlow(
-    int unit, const BcmFlowEntry& flow, bool add_stats, bool color_aware) {
+::util::StatusOr<int> BcmSdkWrapper::InsertAclFlow(int unit,
+                                                   const BcmFlowEntry& flow,
+                                                   bool add_stats,
+                                                   bool color_aware) {
   // Generate flow id for new ACL rule.
   bcm_field_entry_t flow_id;
   RETURN_IF_BCM_ERROR(
@@ -3432,9 +3441,9 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
     if (field.value().b().size() != kUdfChunkSize ||
         (field.has_mask() && field.mask().b().size() != kUdfChunkSize)) {
       return MAKE_ERROR(ERR_INVALID_PARAM)
-          << "Attempted to program flow with UDF chunk "
-          << field.udf_chunk_id() << " with value or mask size not equal to "
-          << "chunk size " << kUdfChunkSize << ".";
+             << "Attempted to program flow with UDF chunk "
+             << field.udf_chunk_id() << " with value or mask size not equal to "
+             << "chunk size " << kUdfChunkSize << ".";
     }
     uint8 value[kUdfChunkSize], mask[kUdfChunkSize];
     memcpy(value, field.value().b().data(), kUdfChunkSize);
@@ -3465,8 +3474,8 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
   return flow_id;
 }
 
-::util::Status BcmSdkWrapper::ModifyAclFlow(
-    int unit, int flow_id, const BcmFlowEntry& flow) {
+::util::Status BcmSdkWrapper::ModifyAclFlow(int unit, int flow_id,
+                                            const BcmFlowEntry& flow) {
   // Remove all actions.
   RETURN_IF_BCM_ERROR(bcm_field_action_remove_all(unit, flow_id));
   // Modify or remove policer if it exists.
@@ -3567,13 +3576,11 @@ void FillAclPolicerConfig(const BcmMeterConfig& meter,
 
 ::util::Status BcmSdkWrapper::InsertPacketReplicationEntry(
     const BcmPacketReplicationEntry& entry) {
-
   return ::util::OkStatus();
 }
 
 ::util::Status BcmSdkWrapper::DeletePacketReplicationEntry(
     const BcmPacketReplicationEntry& entry) {
-
   return ::util::OkStatus();
 }
 
@@ -3657,10 +3664,10 @@ inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
     // returned but the flow in fact doesn't use the qualifier.
     if (reinterpret_cast<uint64*>(mask)[0] ||
         reinterpret_cast<uint64*>(mask)[1]) {
-      field->mutable_mask()->set_b(
-          reinterpret_cast<const char*>(mask), sizeof(mask));
-      field->mutable_value()->set_b(
-          reinterpret_cast<const char*>(value), sizeof(value));
+      field->mutable_mask()->set_b(reinterpret_cast<const char*>(mask),
+                                   sizeof(mask));
+      field->mutable_value()->set_b(reinterpret_cast<const char*>(value),
+                                    sizeof(value));
       return true;
     }
   } else if (retval != BCM_E_NOT_FOUND) {
@@ -3680,8 +3687,8 @@ inline uint64 ntohll(uint64 n) { return ntohl(1) == 1 ? n : bswap_64(n); }
   }
   // Get qualifier value and mask from hardware.
   bcm_pbmp_t pbmp_value, pbmp_mask;
-  int retval = bcm_field_qualify_InPorts_get(
-      unit, entry, &pbmp_value, &pbmp_mask);
+  int retval =
+      bcm_field_qualify_InPorts_get(unit, entry, &pbmp_value, &pbmp_mask);
   // Check success and copy over value and mask.
   if (BCM_SUCCESS(retval)) {
     bcm_port_config_t port_cfg;
@@ -3767,8 +3774,8 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
   // Execute appropriate call to get qualifier from hardware flow based on type.
   switch (field->type()) {
     case BcmField::IN_PORT:
-      retval = bcm_get_field_u32<bcm_port_t>(
-          bcm_field_qualify_InPort_get, unit, entry, &value, &mask);
+      retval = bcm_get_field_u32<bcm_port_t>(bcm_field_qualify_InPort_get, unit,
+                                             entry, &value, &mask);
       // InPort_get gives false positives, check that port is in range and that
       // the match is non-trivial.
       if ((value >= BCM_PBMP_PORT_MAX) || !(value & mask)) return false;
@@ -3777,8 +3784,8 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
       return GetAclIPBMQualifier(unit, entry, field);
     case BcmField::OUT_PORT:
       if (stage == BCM_ACL_STAGE_EFP) {
-        retval = bcm_get_field_u32<bcm_port_t>(
-            bcm_field_qualify_OutPort_get, unit, entry, &value, &mask);
+        retval = bcm_get_field_u32<bcm_port_t>(bcm_field_qualify_OutPort_get,
+                                               unit, entry, &value, &mask);
       } else {
         bcm_module_t module = 0, module_mask = 0;
         bcm_port_t port_value = 0, port_mask = 0;
@@ -3910,10 +3917,10 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
   if (mask_is_zero) return false;
   // TODO(unknown): determine if SDK ever shortens UDF qualifiers, in
   // which case length will need to be considered.
-  field->mutable_value()->set_b(
-      reinterpret_cast<const char*>(value), BcmSdkWrapper::kUdfChunkSize);
-  field->mutable_mask()->set_b(
-      reinterpret_cast<const char*>(mask), BcmSdkWrapper::kUdfChunkSize);
+  field->mutable_value()->set_b(reinterpret_cast<const char*>(value),
+                                BcmSdkWrapper::kUdfChunkSize);
+  field->mutable_mask()->set_b(reinterpret_cast<const char*>(mask),
+                               BcmSdkWrapper::kUdfChunkSize);
   return true;
 }
 
@@ -3925,8 +3932,8 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
   bcm_policer_t policer_id = -1;
   int retval = bcm_field_entry_policer_get(unit, entry, 0, &policer_id);
   if (retval == BCM_E_NOT_FOUND) return false;
-  RETURN_IF_BCM_ERROR(retval) << "Failed to obtain policer for unit: "
-                              << unit << ", entry: " << entry << ".";
+  RETURN_IF_BCM_ERROR(retval) << "Failed to obtain policer for unit: " << unit
+                              << ", entry: " << entry << ".";
   bcm_policer_config_t policer_config;
   // Retrieve policer configuration.
   RETURN_IF_BCM_ERROR(bcm_policer_get(unit, policer_id, &policer_config));
@@ -3947,9 +3954,11 @@ inline int bcm_get_field_u32(F func, int unit, int flow_id, uint32* value,
 // Executes the BCM SDK call to retrieve a given action type and its parameters
 // for the given flow entry. If found, returns true. On failure, returns error
 // status.
-inline ::util::StatusOr<bool> CheckGetAclAction(
-    int unit, bcm_field_entry_t entry, bcm_field_action_t bcm_action,
-    uint32* param_0, uint32* param_1) {
+inline ::util::StatusOr<bool> CheckGetAclAction(int unit,
+                                                bcm_field_entry_t entry,
+                                                bcm_field_action_t bcm_action,
+                                                uint32* param_0,
+                                                uint32* param_1) {
   int retval = bcm_field_action_get(unit, entry, bcm_action, param_0, param_1);
   if (retval == BCM_E_NOT_FOUND) return false;
   RETURN_IF_BCM_ERROR(retval)
@@ -3968,8 +3977,8 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
   ASSIGN_OR_RETURN(bool success, CheckGetAclAction(unit, entry, bcm_action,
                                                    &param_0, &param_1));
   if (success) {
-    action->mutable_params(0)->mutable_value()->set_u32(
-        save_param_0 ? param_0 : param_1);
+    action->mutable_params(0)->mutable_value()->set_u32(save_param_0 ? param_0
+                                                                     : param_1);
     return true;
   }
   return false;
@@ -4077,17 +4086,23 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
       // TODO(unknown): in case there are two actions of different
       // color, will end up retrieving only the first hit. This is WRONG.
       uint32 color = 0;
-      ASSIGN_OR_RETURN(success, CheckGetAclAction(
-          unit, entry, bcmFieldActionGpCopyToCpuCancel, &param_0, &param_1));
+      ASSIGN_OR_RETURN(
+          success,
+          CheckGetAclAction(unit, entry, bcmFieldActionGpCopyToCpuCancel,
+                            &param_0, &param_1));
       if (success) color = BCM_FIELD_COLOR_GREEN;
       if (!success) {
-        ASSIGN_OR_RETURN(success, CheckGetAclAction(
-            unit, entry, bcmFieldActionYpCopyToCpuCancel, &param_0, &param_1));
+        ASSIGN_OR_RETURN(
+            success,
+            CheckGetAclAction(unit, entry, bcmFieldActionYpCopyToCpuCancel,
+                              &param_0, &param_1));
         if (success) color = BCM_FIELD_COLOR_YELLOW;
       }
       if (!success) {
-        ASSIGN_OR_RETURN(success, CheckGetAclAction(
-            unit, entry, bcmFieldActionRpCopyToCpuCancel, &param_0, &param_1));
+        ASSIGN_OR_RETURN(
+            success,
+            CheckGetAclAction(unit, entry, bcmFieldActionRpCopyToCpuCancel,
+                              &param_0, &param_1));
         if (success) color = BCM_FIELD_COLOR_RED;
       }
       if (success) {
@@ -4096,8 +4111,10 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
         param->mutable_value()->set_u32(color);
         return true;
       } else {
-        ASSIGN_OR_RETURN(success, CheckGetAclAction(
-            unit, entry, bcmFieldActionCopyToCpuCancel, &param_0, &param_1));
+        ASSIGN_OR_RETURN(
+            success,
+            CheckGetAclAction(unit, entry, bcmFieldActionCopyToCpuCancel,
+                              &param_0, &param_1));
         if (success) return true;
       }
     } break;
@@ -4188,23 +4205,25 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
       if (!got_field) {
         return std::string(absl::Substitute(
             "Failed to match flow $0 in hardware. Did not find UDF qualifier "
-            "with chunk id $1.", flow_id, field.udf_chunk_id()));
+            "with chunk id $1.",
+            flow_id, field.udf_chunk_id()));
       }
       if (!field.has_mask()) {
         for (int i = 0; i < kUdfChunkSize; ++i) {
           if (hw_field.mask().b().data()[i] == 0xff) continue;
           return std::string(absl::Substitute(
               "Failed to match flow $0 in hardware. Expected exact match mask "
-              "for field $1, got $2.", flow_id,
-              field.ShortDebugString().c_str(),
+              "for field $1, got $2.",
+              flow_id, field.ShortDebugString().c_str(),
               hw_field.ShortDebugString().c_str()));
         }
       }
       continue;
     }
     hw_field.set_type(field.type());
-    ASSIGN_OR_RETURN(bool got_field, GetAclQualifier(
-        unit, flow_id, flow.acl_stage(), &hw_field));
+    ASSIGN_OR_RETURN(
+        bool got_field,
+        GetAclQualifier(unit, flow_id, flow.acl_stage(), &hw_field));
     if (!got_field) {
       return std::string(absl::Substitute(
           "Failed to match flow $0 in hardware. Did not find qualifier field "
@@ -4274,13 +4293,16 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
     BcmMeterConfig meter;
     ASSIGN_OR_RETURN(bool success, CheckGetAclPolicer(unit, flow_id, &meter));
     if (!success) {
-      return std::string(absl::Substitute("Flow $0 is expected to but does not "
-                                          "have a meter configured.", flow_id));
+      return std::string(
+          absl::Substitute("Flow $0 is expected to but does not "
+                           "have a meter configured.",
+                           flow_id));
     }
     if (!MessageDifferencer::Equals(flow.meter(), meter)) {
       return std::string(absl::Substitute(
           "Failed to match flow $0 in hardware. Expected meter config $1, "
-          "got $2.", flow_id, flow.meter().ShortDebugString().c_str(),
+          "got $2.",
+          flow_id, flow.meter().ShortDebugString().c_str(),
           meter.ShortDebugString().c_str()));
     }
   }
@@ -4313,16 +4335,16 @@ inline ::util::StatusOr<bool> GetAclActionOneParam(
   return ::util::OkStatus();
 }
 
-::util::Status BcmSdkWrapper::AddAclStats(
-    int unit, int table_id, int flow_id, bool color_aware) {
+::util::Status BcmSdkWrapper::AddAclStats(int unit, int table_id, int flow_id,
+                                          bool color_aware) {
   int stat_id;
   // Create stat object with counter types depending on whether or not color is
   // relevant to the flow.
   bcm_field_stat_t stat_entry[kMaxStatCount];
   if (color_aware) {
     memcpy(stat_entry, kColoredStatEntry, sizeof(kColoredStatEntry));
-    RETURN_IF_BCM_ERROR(bcm_field_stat_create(
-        unit, table_id, kColoredStatCount, stat_entry, &stat_id));
+    RETURN_IF_BCM_ERROR(bcm_field_stat_create(unit, table_id, kColoredStatCount,
+                                              stat_entry, &stat_id));
   } else {
     memcpy(stat_entry, kUncoloredStatEntry, sizeof(kUncoloredStatEntry));
     RETURN_IF_BCM_ERROR(bcm_field_stat_create(
@@ -4678,8 +4700,8 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
         break;
       default:
         return MAKE_ERROR(ERR_INTERNAL)
-            << "Invalid speed for (unit, port) = (" << unit << ", " << port
-            << ") when autoneg is ON: " << speed_bps;
+               << "Invalid speed for (unit, port) = (" << unit << ", " << port
+               << ") when autoneg is ON: " << speed_bps;
     }
     port_ability_mask.interface = bcm_port_intf;
     RETURN_IF_BCM_ERROR(
@@ -4714,8 +4736,8 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
            << "goog_100g_fec_control_set() is not available!";
   } else if (fec && autoneg) {
     return MAKE_ERROR(ERR_INTERNAL)
-        << "Cannot have both FEC and autogen ON for "
-        << "(unit, port) = (" << unit << ", " << port << ").";
+           << "Cannot have both FEC and autogen ON for "
+           << "(unit, port) = (" << unit << ", " << port << ").";
   }
 
   // Apply Phy control for port. Unfortunately this part is a bit
