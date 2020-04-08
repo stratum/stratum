@@ -1527,10 +1527,15 @@ bool IsGePortOnTridentPlus(const BcmPort& bcm_port,
   // Then continue with port options.
   for (auto& e : xcvr_port_key_to_xcvr_state_) {
     if (e.second != HW_STATE_READY) {
+      // Set the speed for non-flex ports.
+      // TODO(max): This check is not perfect since it always excludes flex
+      // ports, ideally we would set the speed of non-flex ports above.
       BcmPortOptions options;
-      const auto bcm_ports = gtl::FindOrNull(port_group_key_to_non_flex_bcm_ports_, e.first);
-      CHECK(bcm_ports != nullptr && !bcm_ports->empty());
-      options.set_speed_bps(bcm_ports->at(0)->speed_bps());
+      const auto bcm_ports =
+          gtl::FindOrNull(port_group_key_to_non_flex_bcm_ports_, e.first);
+      if (bcm_ports != nullptr && !bcm_ports->empty()) {
+        options.set_speed_bps(bcm_ports->at(0)->speed_bps());
+      }
       options.set_enabled(e.second == HW_STATE_PRESENT ? TRI_STATE_TRUE
                                                        : TRI_STATE_FALSE);
       options.set_blocked(e.second != HW_STATE_PRESENT ? TRI_STATE_TRUE
