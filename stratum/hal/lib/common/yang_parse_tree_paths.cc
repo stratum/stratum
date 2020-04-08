@@ -791,7 +791,7 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
     } else {
       // Try parse it with ChassisConfig format.
       RETURN_IF_ERROR(
-        ParseProtoFromString(typed_value->bytes_val(), config->writable()));
+          ParseProtoFromString(typed_value->bytes_val(), config->writable()));
     }
     return ::util::OkStatus();
   };
