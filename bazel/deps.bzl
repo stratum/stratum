@@ -261,7 +261,7 @@ def stratum_deps():
             name = "com_github_broadcom_opennsa",
             commit = "7cf5a3c9a8b76da0bc8e3217d04b33cfb11b0bcf",
             remote = "https://github.com/Broadcom-Network-Switching-Software/OpenNSA.git",
-            build_file = "@//bazel:external/opennsa.BUILD",
+            build_file = "@//bazel:external/openNSA.BUILD",
             use_git = True, # required for git lfs
         )
 
