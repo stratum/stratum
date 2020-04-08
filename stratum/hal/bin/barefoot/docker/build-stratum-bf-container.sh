@@ -87,10 +87,3 @@ fi
 if [ -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR" ]; then
     rm -f "$DOCKERFILE_DIR/$KERNEL_HEADERS_TAR"
 fi
-
-# Remove temporary image
-TMP_IMGS=$(docker images -f "dangling=true" -q)
-
-if [ -n "$TMP_IMGS" ]; then
-    echo "$TMP_IMGS" | xargs docker rmi
-fi
