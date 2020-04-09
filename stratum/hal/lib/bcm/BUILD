@@ -219,9 +219,9 @@ stratum_cc_library(
     srcs = [
         "bcm_chassis_manager.cc",
     ] + select({
-        ":bcm_sdk": ["sdk/bcm_chassis_manager_config_generator_sdk.cc"],
-        ":bcm_sdklt": ["sdklt/bcm_chassis_manager_config_generator_sdklt.cc"],
-        "//conditions:default": ["sdklt/bcm_chassis_manager_config_generator_sdklt.cc"],
+        ":bcm_sdk": ["sdk/bcm_chassis_manager_config_generator.cc"],
+        ":bcm_sdklt": ["sdklt/bcm_chassis_manager_config_generator.cc"],
+        "//conditions:default": ["sdklt/bcm_chassis_manager_config_generator.cc"],
     }),
     hdrs = ["bcm_chassis_manager.h"],
     deps = [
