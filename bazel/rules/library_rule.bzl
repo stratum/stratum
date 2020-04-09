@@ -12,7 +12,9 @@ def stratum_cc_library(name, deps = None, srcs = None, data = None,
 
   alwayslink = 0
   if srcs:
-    if [s for s in srcs if not s.endswith(".h")]:
+    if type(srcs) == "select":
+      alwayslink = 1
+    elif [s for s in srcs if not s.endswith(".h")]:
       alwayslink = 1
 
   native.cc_library(
