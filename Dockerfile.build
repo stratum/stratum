@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-ARG BAZEL_VERSION=2.2.0
+ARG BAZEL_VERSION=3.0.0
 ARG PI_COMMIT=1539ecd8a50c159b011d9c5a9c0eba99f122a845
 ARG BMV2_COMMIT=9ef324838b29419040b4f677a3ff65bc72405c44
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
@@ -102,3 +102,8 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli
+
+# Install git-lfs for OpenNSA
+# TODO the curl line can be dropped in Debian 10
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN apt-get install -y --no-install-recommends git-lfs && git lfs install
