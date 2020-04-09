@@ -216,7 +216,13 @@ stratum_cc_library(
 
 stratum_cc_library(
     name = "bcm_chassis_manager",
-    srcs = ["bcm_chassis_manager.cc"],
+    srcs = [
+        "bcm_chassis_manager.cc",
+    ] + select({
+        ":bcm_sdk": ["sdk/bcm_chassis_manager_config_generator.cc"],
+        ":bcm_sdklt": ["sdklt/bcm_chassis_manager_config_generator.cc"],
+        "//conditions:default": ["sdklt/bcm_chassis_manager_config_generator.cc"],
+    }),
     hdrs = ["bcm_chassis_manager.h"],
     deps = [
         ":bcm_chassis_ro_interface",
@@ -227,7 +233,6 @@ stratum_cc_library(
         ":bcm_serdes_db_manager",
         ":utils",
         "@com_github_google_glog//:glog",
-        "@com_github_jbeder_yaml_cpp//:yaml-cpp",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",
@@ -249,7 +254,11 @@ stratum_cc_library(
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/gtl:stl_util",
-    ],
+    ] + select({
+        ":bcm_sdk": [],
+        ":bcm_sdklt": ["@com_github_jbeder_yaml_cpp//:yaml-cpp"],
+        "//conditions:default": ["@com_github_jbeder_yaml_cpp//:yaml-cpp"],
+    }),
 )
 
 stratum_cc_library(
