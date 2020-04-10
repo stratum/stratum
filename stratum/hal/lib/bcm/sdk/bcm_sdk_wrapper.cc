@@ -83,6 +83,12 @@ int bde_create(void) {
 }
 extern int soc_knet_config(void*);
 extern int bde_icid_get(int d, uint8* data, int len);
+
+/* Function defined in linux-user-bde.c */
+extern int bde_icid_get(int d, uint8* data, int len);
+
+// Over shadow the OpenNSA default symbol.
+void sal_config_init_defaults(void) {}
 }  // extern "C"
 
 static_assert(SYS_BE_PIO == 0, "SYS_BE_PIO == 0");
@@ -418,8 +424,8 @@ extern "C" int bsl_check_hook(bsl_packed_meta_t meta_pack) {
   bsl_source_t source = static_cast<bsl_source_t>(BSL_SOURCE_GET(meta_pack));
   bsl_severity_t severity =
       static_cast<bsl_severity_t>(BSL_SEVERITY_GET(meta_pack));
-  return bsl_check(layer, source, severity, BSL_UNIT_UNKNOWN) ||
-         source == bslSourceShell;
+  // TODO(max): fix
+  return 1;
 }
 
 // Configuration used by the BSL (Broadcom System Logging) module.
@@ -841,39 +847,47 @@ BcmSdkWrapper::BcmSdkWrapper(BcmDiagShell* bcm_diag_shell)
 
 BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
 
-static soc_chip_info_vectors_t chip_info_vect = {bde_icid_get};
-
-static void chip_info_vect_config(void) {
-  soc_chip_info_vect_config(&chip_info_vect);
-}
-// end max test
-
 ::util::Status BcmSdkWrapper::InitializeSdk(
     const std::string& config_file_path,
     const std::string& config_flush_file_path,
     const std::string& bcm_shell_log_file_path) {
+  // Strip out config parameters not understood by OpenNSA.
+  {
+    std::string config;
+    std::string param = "os=unix";
+    RETURN_IF_ERROR(ReadFileToString(config_file_path, &config));
+    auto pos = config.find(param);
+    if (pos != std::string::npos) {
+      config.replace(pos, param.size(), "# " + param);
+    }
+    RETURN_IF_ERROR(WriteStringToFile(config, config_file_path, false));
+  }
+
   // Initialize SDK components.
   RETURN_IF_BCM_ERROR(sal_config_file_set(config_file_path.c_str(),
                                           config_flush_file_path.c_str()));
   RETURN_IF_BCM_ERROR(sal_config_init());
   RETURN_IF_BCM_ERROR(sal_core_init());
   RETURN_IF_BCM_ERROR(sal_appl_init());
-  chip_info_vect_config();
+  soc_chip_info_vectors_t chip_info_vect = {bde_icid_get};
+  RETURN_IF_BCM_ERROR(soc_chip_info_vect_config(&chip_info_vect));
   RETURN_IF_BCM_ERROR(bslmgmt_init());
-  RETURN_IF_BCM_ERROR(bsl_init(&sdk_bsl_config));
+  // TODO(max): fix
+  // RETURN_IF_BCM_ERROR(bsl_init(&sdk_bsl_config));
   RETURN_IF_BCM_ERROR(soc_cm_init());
-  diag_init();
-  RETURN_IF_BCM_ERROR(soc_knet_config(nullptr));
+  // TOOD(max): knet fix
+  // RETURN_IF_BCM_ERROR(soc_knet_config(&knet_vect_bcm_knet));
+
   if (!bde_) {
     linux_bde_bus_t bus;
     bus.be_pio = SYS_BE_PIO;
     bus.be_packet = SYS_BE_PACKET;
     bus.be_other = SYS_BE_OTHER;
     RETURN_IF_BCM_ERROR(linux_bde_create(&bus, &bde_));
-
-    // max use system bde?
-    // bde_create();
   }
+
+  diag_init();
+  cmdlist_init();
 
   return ::util::OkStatus();
 }
@@ -969,8 +983,9 @@ static void chip_info_vect_config(void) {
     //
 
     RETURN_IF_BCM_ERROR(soc_cm_device_init(unit, dev_vec));
-    RETURN_IF_BCM_ERROR(
-        bcm_switch_event_register(unit, sdk_event_handler, nullptr));
+    // TODO(max): fix
+    // RETURN_IF_BCM_ERROR(
+    //     bcm_switch_event_register(unit, sdk_event_handler, nullptr));
     unit_to_soc_device_[unit]->dev_vec = dev_vec;
     // Set MTU for all the L3 intf of this unit to the default value.
     unit_to_mtu_[unit] = kDefaultMtu;
@@ -997,6 +1012,9 @@ static void chip_info_vect_config(void) {
     RETURN_IF_BCM_ERROR(soc_reset_init(unit));
     RETURN_IF_BCM_ERROR(soc_misc_init(unit));
     RETURN_IF_BCM_ERROR(soc_mmu_init(unit));
+    // Workaround for OpenNSA.
+    RETURN_IF_BCM_ERROR(soc_stable_size_set(unit, 1024 * 1024 * 128));
+    RETURN_IF_BCM_ERROR(bcm_attach(unit, nullptr, nullptr, unit));
     RETURN_IF_BCM_ERROR(bcm_init(unit));
     RETURN_IF_BCM_ERROR(bcm_l2_init(unit));
     RETURN_IF_BCM_ERROR(bcm_l3_init(unit));
@@ -1184,6 +1202,7 @@ static void chip_info_vect_config(void) {
     // BCM CLI installs its own signal handler for SIGINT,
     // we have to restore the HAL one afterwards
     sighandler_t h = signal(SIGINT, SIG_IGN);
+    sh_process(-1, "BCM", TRUE);
     signal(SIGINT, h);
   });
   t.detach();
@@ -1898,8 +1917,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
 
   bcm_port_config_t port_cfg;
   RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
-  RETURN_IF_BCM_ERROR(
-      bcm_vlan_port_add(unit, vlan, port_cfg.all, port_cfg.all));
+  // TODO(max): fix
+  // RETURN_IF_BCM_ERROR(
+  //     bcm_vlan_port_add(unit, vlan, port_cfg.all, port_cfg.all));
 
   VLOG(1) << "Added VLAN " << vlan << " on unit " << unit << ".";
 
@@ -1927,7 +1947,8 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   if (block_unknown_unicast) {
     BCM_PBMP_ASSIGN(block.unknown_unicast, vlan_ports);
   }
-  RETURN_IF_BCM_ERROR(bcm_vlan_block_set(unit, vlan, &block));
+  // TODO(max): fix
+  // RETURN_IF_BCM_ERROR(bcm_vlan_block_set(unit, vlan, &block));
 
   VLOG(1) << "Configured block on VLAN " << vlan << " on unit " << unit
           << ". block_broadcast: " << block_broadcast
@@ -4495,11 +4516,12 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 }
 
 ::util::Status BcmSdkWrapper::CleanupKnet(int unit) {
+  // TODO(max): knet fix
   // Cleanup existing KNET filters and KNET intfs.
-  RETURN_IF_BCM_ERROR(
-      bcm_knet_filter_traverse(unit, knet_filter_remover, nullptr));
-  RETURN_IF_BCM_ERROR(
-      bcm_knet_netif_traverse(unit, knet_intf_remover, nullptr));
+  // RETURN_IF_BCM_ERROR(
+  //     bcm_knet_filter_traverse(unit, knet_filter_remover, nullptr));
+  // RETURN_IF_BCM_ERROR(
+  //     bcm_knet_netif_traverse(unit, knet_intf_remover, nullptr));
 
   return ::util::OkStatus();
 }
