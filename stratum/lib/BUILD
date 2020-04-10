@@ -26,7 +26,7 @@ load(
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = STRATUM_INTERNAL,
+    default_visibility = ["//visibility:public"],
 )
 
 stratum_cc_library(

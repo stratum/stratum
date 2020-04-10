@@ -13,12 +13,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/lib/security/credentials_manager.h"
 
-#include "gflags/gflags.h"
-#include "stratum/glue/logging.h"
+#include <memory>
+
 #include "absl/memory/memory.h"
+#include "gflags/gflags.h"
+#include "grpcpp/security/server_credentials.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/lib/utils.h"
+
+DEFINE_string(ca_cert, "", "CA certificate");
+DEFINE_string(server_key, "", "gRPC Server pricate key");
+DEFINE_string(server_cert, "", "gRPC Server certificate");
 
 namespace stratum {
 
@@ -28,7 +36,28 @@ CredentialsManager::~CredentialsManager() {}
 
 std::shared_ptr<::grpc::ServerCredentials>
 CredentialsManager::GenerateExternalFacingServerCredentials() const {
-  return ::grpc::InsecureServerCredentials();
+  if (FLAGS_ca_cert.empty() || FLAGS_server_key.empty() ||
+      FLAGS_server_cert.empty()) {
+    LOG(INFO) << "Using insecure server credentials";
+    return ::grpc::InsecureServerCredentials();
+  }
+  ::grpc::SslServerCredentialsOptions ssl_opts;
+  ::grpc::SslServerCredentialsOptions::PemKeyCertPair key_cert_pair;
+  ::util::Status status;
+  status.Update(
+      ::stratum::ReadFileToString(FLAGS_ca_cert, &ssl_opts.pem_root_certs));
+  status.Update(::stratum::ReadFileToString(FLAGS_server_key,
+                                            &key_cert_pair.private_key));
+  status.Update(::stratum::ReadFileToString(FLAGS_server_cert,
+                                            &key_cert_pair.cert_chain));
+  ssl_opts.pem_key_cert_pairs.push_back(key_cert_pair);
+
+  if (!status.ok()) {
+    LOG(WARNING) << "Invalid server credential, use insecure credential.";
+    return ::grpc::InsecureServerCredentials();
+  }
+
+  return ::grpc::SslServerCredentials(ssl_opts);
 }
 
 std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {

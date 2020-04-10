@@ -143,6 +143,7 @@ stratum_cc_library(
         "@com_github_grpc_grpc//:grpc++",
         "//stratum/glue:logging",
         "//stratum/glue/status",
+        "//stratum/lib:utils",
     ],
 )
 

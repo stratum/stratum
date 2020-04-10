@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
 
 #include <csignal>
 #include <iostream>
@@ -24,12 +25,10 @@
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "stratum/lib/utils.h"
 
 const char kUsage[] =
-    R"USAGE(usage: gnmi-cli [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
-                   [-int_val INT_VAL] [-uint_val UINT_VAL]
-                   [-string_val STRING_VAL] [-float_val FLOAT_VAL]
-                   {get,set,cap,del,sub-onchange,sub-sample} path
+    R"USAGE(usage: gnmi-cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
 
 Basic gNMI CLI
 
@@ -48,6 +47,9 @@ optional arguments:
   --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
   --replace                [SetRequest only] Use replace instead of update
   --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
+  --ca-cert                CA certificate
+  --client-cert            gRPC Client certificate
+  --client-key             gRPC Client key
 )USAGE";
 
 #define PRINT_MSG(msg, prompt)      \
@@ -75,6 +77,9 @@ DEFINE_string(float_val, "", "Floating point value to be set");
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
 DEFINE_string(get_type, "ALL", "The gNMI get request type");
+DEFINE_string(ca_cert, "", "CA certificate");
+DEFINE_string(client_cert, "", "Client certificate");
+DEFINE_string(client_key, "", "Client key");
 
 namespace stratum {
 namespace tools {
@@ -188,8 +193,26 @@ int Main(int argc, char** argv) {
   }
   ::grpc::ClientContext ctx;
   ::grpc::Status status;
-  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr,
-                                       ::grpc::InsecureChannelCredentials());
+  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials =
+      ::grpc::InsecureChannelCredentials();
+  if (!FLAGS_ca_cert.empty()) {
+    auto cred_opts = ::grpc::SslCredentialsOptions();
+    ::util::Status status;
+    status.Update(::stratum::ReadFileToString(FLAGS_ca_cert,
+                                              &cred_opts.pem_root_certs));
+
+    if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
+      status.Update(::stratum::ReadFileToString(FLAGS_client_cert,
+                                                &cred_opts.pem_cert_chain));
+      status.Update(::stratum::ReadFileToString(FLAGS_client_key,
+                                                &cred_opts.pem_private_key));
+    }
+
+    if (status.ok()) {
+      channel_credentials = ::grpc::SslCredentials(cred_opts);
+    }
+  }
+  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
   auto stub = ::gnmi::gNMI::NewStub(channel);
   std::string cmd = std::string(argv[1]);
 
