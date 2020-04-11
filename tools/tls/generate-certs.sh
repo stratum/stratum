@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 THIS_DIR=$(dirname "${BASH_SOURCE[0]}")
-COMMON_NAME="stratum.local"
+COMMON_NAME=${COMMON_NAME:-"stratum.local"}
 
 mkdir -p "$THIS_DIR/certs"
 rm -rf "$THIS_DIR/certs/*"

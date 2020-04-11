@@ -22,10 +22,30 @@
 #include <memory>
 
 #include "grpcpp/grpcpp.h"
+#include "grpcpp/security/tls_credentials_options.h"
 
 #include "stratum/glue/status/status.h"
 
 namespace stratum {
+using TlsCredentialReloadInterface =
+    ::grpc_impl::experimental::TlsCredentialReloadInterface;
+using TlsCredentialReloadArg =
+    ::grpc_impl::experimental::TlsCredentialReloadArg;
+using TlsCredentialReloadConfig =
+    grpc_impl::experimental::TlsCredentialReloadConfig;
+
+class CredentialReloadManager : public TlsCredentialReloadInterface {
+ public:
+  ~CredentialReloadManager() = default;
+  CredentialReloadManager() = default;
+  // Public methods from TlsCredentialReloadInterface
+  int Schedule(TlsCredentialReloadArg *arg) override;
+  void Cancel(TlsCredentialReloadArg *arg) override;
+
+  // CredentialReloadManager is neither copyable nor movable.
+  CredentialReloadManager(const CredentialReloadManager&) = delete;
+  CredentialReloadManager& operator=(const CredentialReloadManager&) = delete;
+};
 
 // CredentialsManager manages the server credentials for (external facing) gRPC
 // servers. It handles starting and shutting down TSI as well as generating the
@@ -51,6 +71,11 @@ class CredentialsManager {
   // Default constructor. To be called by the Mock class instance as well as
   // CreateInstance().
   CredentialsManager();
+ private:
+  std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
+  std::shared_ptr<CredentialReloadManager> credential_reload_;
+  std::shared_ptr<TlsCredentialReloadConfig> credential_reload_config_;
+
 };
 
 }  // namespace stratum

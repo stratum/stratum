@@ -61,5 +61,5 @@ __pycache__/
 *.tar.xz
 
 # SSL certificates
-tools/ssl/certs/
+tools/tls/certs/
 .srl
