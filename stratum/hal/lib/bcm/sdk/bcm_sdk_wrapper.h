@@ -16,20 +16,24 @@
  */
 
 /*
- * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
+ * The Broadcom Switch API header code upon which this file depends is Copyright
+ * 2007-2020 Broadcom Inc.
  *
  * This file depends on Broadcom's OpenNSA SDK.
  * Additional license terms for OpenNSA are available from Broadcom or online:
  *     https://github.com/Broadcom-Network-Switching-Software/OpenNSA
  */
 
-#ifndef STRATUM_HAL_LIB_BCM_SDK_WRAPPER_H_
-#define STRATUM_HAL_LIB_BCM_SDK_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_BCM_SDK_BCM_SDK_WRAPPER_H_
+#define STRATUM_HAL_LIB_BCM_SDK_BCM_SDK_WRAPPER_H_
 
 #include <pthread.h>
 
 #include <functional>
+#include <memory>
+#include <set>
 #include <string>
+#include <vector>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -275,17 +279,17 @@ class BcmSdkWrapper : public BcmSdkInterface {
   ::util::StatusOr<int> InsertAclFlow(int unit, const BcmFlowEntry& flow,
                                       bool add_stats,
                                       bool color_aware) override;
-  ::util::Status ModifyAclFlow(
-      int unit, int flow_id, const BcmFlowEntry& flow) override;
+  ::util::Status ModifyAclFlow(int unit, int flow_id,
+                               const BcmFlowEntry& flow) override;
   ::util::Status RemoveAclFlow(int unit, int flow_id) override;
   ::util::Status GetAclUdfChunks(int unit, BcmUdfSet* udfs) override;
   ::util::Status GetAclTable(int unit, int table_id,
                              BcmAclTable* table) override;
   ::util::Status GetAclFlow(int unit, int flow_id, BcmFlowEntry* flow) override;
-  ::util::StatusOr<std::string> MatchAclFlow(
-      int unit, int flow_id, const BcmFlowEntry& flow) override;
-  ::util::Status GetAclTableFlowIds(
-      int unit, int table_id, std::vector<int>* flow_ids) override;
+  ::util::StatusOr<std::string> MatchAclFlow(int unit, int flow_id,
+                                             const BcmFlowEntry& flow) override;
+  ::util::Status GetAclTableFlowIds(int unit, int table_id,
+                                    std::vector<int>* flow_ids) override;
   ::util::Status AddAclStats(int unit, int table_id, int flow_id,
                              bool color_aware) override;
   ::util::Status RemoveAclStats(int unit, int flow_id) override;
@@ -437,4 +441,4 @@ class BcmSdkWrapper : public BcmSdkInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BCM_SDK_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_BCM_SDK_BCM_SDK_WRAPPER_H_

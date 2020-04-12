@@ -204,6 +204,8 @@ jobs:
       - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
       - DOCKER_FILE: Dockerfile
       - DOCKER_IMG: stratumproject/stratum-bcm:opennsa
+      - CC: clang
+      - CXX: clang++
     steps:
       - setup_remote_docker
       - checkout

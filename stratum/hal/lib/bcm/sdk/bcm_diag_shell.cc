@@ -41,7 +41,7 @@
 extern "C" {
 #include "stratum/hal/lib/bcm/sdk_build_undef.h"  // NOLINT
 #include "sdk_build_flags.h"  // NOLINT
-//TODO(bocon) we might be able to prune some of these includes
+// TODO(bocon) we might be able to prune some of these includes
 #include "bcm/init.h"
 #include "bcm/error.h"
 #include "bcm/knet.h"
