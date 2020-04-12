@@ -10,7 +10,7 @@ CONFIG_DIR=${CONFIG_DIR:-/root/stratum_configs}
 LOG_DIR=${LOG_DIR:-/var/log/stratum}
 KERNEL_VERSION=$(uname -r)
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bcm}
-DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-latest}
+DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-sdklt}
 
 # --shm-size: https://bugs.freedesktop.org/show_bug.cgi?id=100432
 # --cap-add: to create the packetIO interface (bcm-0-0)

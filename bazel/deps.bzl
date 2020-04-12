@@ -257,12 +257,12 @@ def stratum_deps():
         )
 
     if "com_github_broadcom_opennsa" not in native.existing_rules():
-        remote_workspace(
+        new_git_repository(
             name = "com_github_broadcom_opennsa",
             commit = "7cf5a3c9a8b76da0bc8e3217d04b33cfb11b0bcf",
             remote = "https://github.com/Broadcom-Network-Switching-Software/OpenNSA.git",
             build_file = "@//bazel:external/openNSA.BUILD",
-            use_git = True, # required for git lfs
+            shallow_since = "1584070150 -0700",
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.
             patch_cmds = [
