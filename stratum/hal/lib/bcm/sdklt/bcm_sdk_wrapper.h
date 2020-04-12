@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef STRATUM_HAL_LIB_BCM_SDKLT_WRAPPER_H_
-#define STRATUM_HAL_LIB_BCM_SDKLT_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_BCM_SDKLT_BCM_SDK_WRAPPER_H_
+#define STRATUM_HAL_LIB_BCM_SDKLT_BCM_SDK_WRAPPER_H_
 
 #include <pthread.h>
 
@@ -614,4 +614,4 @@ class BcmSdkWrapper : public BcmSdkInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BCM_SDKLT_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_BCM_SDKLT_BCM_SDK_WRAPPER_H_

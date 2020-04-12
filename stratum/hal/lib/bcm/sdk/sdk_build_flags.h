@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef BCM_BUILD_FLAGS_H_
-#define BCM_BUILD_FLAGS_H_
+#ifndef STRATUM_HAL_LIB_BCM_SDK_SDK_BUILD_FLAGS_H_
+#define STRATUM_HAL_LIB_BCM_SDK_SDK_BUILD_FLAGS_H_
 
 #define BCM_WARM_BOOT_SUPPORT
 #define INCLUDE_KNET
@@ -29,4 +29,4 @@
 #define SYS_BE_PIO 0
 #define UNIX
 
-#endif  // BCM_BUILD_FLAGS_H_
+#endif  // STRATUM_HAL_LIB_BCM_SDK_SDK_BUILD_FLAGS_H_
