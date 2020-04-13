@@ -17,7 +17,17 @@ The output tarball can be located by running: `bazel aquery //stratum/pipelines/
 
 ## Docker `p4c-fpm`
 
-We also publish the `p4c-fpm` compiler as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/p4c-fpm).
+We also publish the `p4c-fpm` compiler as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/p4c-fpm). Have a look at the code of our ONF Connect 2019 [demo](https://github.com/opennetworkinglab/stratum-onos-demo/blob/b709e579592f5c7b3293357376c811690e0bec34/p4src/Makefile#L63-L80).
+
+## Debian package
+
+If you prefer a native install, there is a Debian package that you can build:
+
+```bash
+bazel build //stratum/p4c_backends/fpm:p4c_fpm_dep
+
+dpkg -i bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_dep.deb
+```
 
 ## Pushing the pipeline to a switch
 
