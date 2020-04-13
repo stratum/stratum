@@ -16,26 +16,10 @@
 
 # This Dockerfile expects the stratum root as its scope, hence you should build
 # from root e.g.:
+# TODO(max)
 # docker build -t <some tag> -f stratum/p4c_backends/fpm/Dockerfile .
 
-# We use a 2-stage build.
-FROM stratumproject/build:build as builder
-
-# Build FPM backend
-COPY . /tmp/stratum
-WORKDIR /tmp/stratum
-
-RUN bazel build //stratum/p4c_backends/fpm:p4c-fpm
-
-# Put aside binary and other runtime dependencies.
-RUN mkdir -p /output/usr/local/bin
-RUN install bazel-bin/stratum/p4c_backends/fpm/p4c-fpm /output/usr/local/bin/
-
-RUN mkdir -p /output/usr/share/p4c
-RUN cp -r $(bazel info output_base)/external/com_github_p4lang_p4c/p4include /output/usr/share/p4c/
-
-# Final stage, runtime.
-FROM bitnami/minideb:stretch as runtime
+FROM bitnami/minideb:stretch
 
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="Docker-based distribution of the Stratum p4c FPM backend"
@@ -43,7 +27,8 @@ LABEL description="Docker-based distribution of the Stratum p4c FPM backend"
 ENV RUNTIME_DEPS libgmp10 libgmpxx4ldbl gcc
 RUN install_packages ${RUNTIME_DEPS}
 
-COPY --from=builder /output /
+ADD ./p4c_fpm_dep.deb /
+RUN dpkg -i p4c_fpm_dep.deb
 
 ENTRYPOINT ["p4c-fpm"]
 CMD ["-help"]
