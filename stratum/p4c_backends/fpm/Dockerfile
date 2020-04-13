@@ -14,10 +14,12 @@
 # limitations under the License.
 #
 
-# This Dockerfile expects the stratum root as its scope, hence you should build
-# from root e.g.:
-# TODO(max)
-# docker build -t <some tag> -f stratum/p4c_backends/fpm/Dockerfile .
+# This Dockerfile expects its containing directory as its scope with the p4c-fpm
+# Debian package present, hence you should build it like this:
+# bazel build //stratum/p4c_backends/fpm:p4c_fpm_dep
+# cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_dep.deb stratum/p4c_backends/fpm
+# cd stratum/p4c_backends/fpm
+# docker build -t <some tag> -f Dockerfile  .
 
 FROM bitnami/minideb:stretch
 
