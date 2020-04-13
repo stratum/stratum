@@ -1946,7 +1946,7 @@ pkg_tar(
 )
 
 pkg_deb(
-    name = "p4c_fpm_dep",
+    name = "p4c_fpm_deb",
     package = "p4-fpm",
     version = "0.1",
     description = "P4 compiler for FPM",

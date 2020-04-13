@@ -174,8 +174,8 @@ jobs:
       - run:
           name: Build p4c-fpm
           command: |
-            bazel build //stratum/p4c_backends/fpm:p4c_fpm_dep
-            cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_dep.deb $DOCKER_SCOPE
+            bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb
+            cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - run:

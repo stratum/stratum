@@ -24,9 +24,9 @@ We also publish the `p4c-fpm` compiler as a [Docker container](https://hub.docke
 If you prefer a native install, there is a Debian package that you can build:
 
 ```bash
-bazel build //stratum/p4c_backends/fpm:p4c_fpm_dep
+bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb
 
-dpkg -i bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_dep.deb
+dpkg -i bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb
 ```
 
 ## Pushing the pipeline to a switch
