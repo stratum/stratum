@@ -160,12 +160,14 @@ jobs:
       - *docker_push
 
   publish-docker-p4c-fpm:
-    machine: true
+    docker:
+      - image: stratumproject/build:build
     environment:
       - DOCKER_SCOPE: stratum/p4c_backends/fpm
       - DOCKER_FILE: Dockerfile
       - DOCKER_IMG: stratumproject/p4c-fpm
     steps:
+      - setup_remote_docker
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
