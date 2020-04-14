@@ -1,0 +1,22 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c3424b83..fdb58600 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -313,7 +313,7 @@ define_pkg(devel
+   GROUP "devel"
+   DISPLAY_NAME "opae-devel"
+   DESCRIPTION "OPAE headers, sample source, and documentation"
+-  DEB_DEPENDS "uuid-dev , libjson0 , opae-libs"
++  DEB_DEPENDS "uuid-dev , libjson-c3 , opae-libs"
+   )
+ 
+   define_pkg(libs
+@@ -325,7 +325,7 @@ define_pkg(devel
+   GROUP "libs"
+   DISPLAY_NAME "opae-libs"
+   DESCRIPTION "OPAE runtime"
+-  DEB_DEPENDS "uuid-dev , libjson0"
++  DEB_DEPENDS "uuid-dev , libjson-c3"
+   )
+ 
+ #Binary DEB packaging

@@ -20,15 +20,20 @@ ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch mai
 ARG PROTOBUF_TAG=v3.7.1
 ARG GRPC_TAG=v1.21.3
 ARG DPDK_VERSION=v19.08-rc4
-
-# Reasonable for CI
-ARG JOBS=2
+ARG JOBS=4
+ARG NP4_TAR
+ARG NP4_VERSION=4.7.1-1
+ARG NP4_DIR=/np4_intel
 
 FROM ubuntu:18.04
 LABEL maintainer="Stratum Ubuntu dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum on Ubuntu"
 
-ARG JOBS
+# Copy in the NP4 tarball
+ARG NP4_TAR
+ARG NP4_DIR
+COPY $NP4_TAR /
+RUN mkdir $NP4_DIR && tar xf /$NP4_TAR -C $NP4_DIR --strip-components 1
 
 # bazel dependencies
 # + wget to download bazel binary
@@ -43,7 +48,7 @@ ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
     gnupg2 software-properties-common python-pip python-dev python3-dev \
     libfdt1 libnuma-dev libhugetlbfs-dev linux-virtual dkms \
-    libjson-c-dev
+    libjson-c3 libjson-c-dev cmake libhwloc-dev uuid-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
@@ -111,27 +116,17 @@ RUN git clone https://github.com/DPDK/dpdk.git /tmp/dpdk && \
     make install && \
     rm -rf /tmp/dpdk
 
-# Copy in the deploy key
-ARG SSH_DEPLOY_KEY
-RUN mkdir /root/.ssh/ && \
-    chmod 700 /root/.ssh && \
-    echo "${SSH_DEPLOY_KEY}" > /root/.ssh/id_rsa && \
-    chmod 400 /root/.ssh/id_rsa
-
-# make sure your domain is accepted
-RUN touch /root/.ssh/known_hosts && \
-    ssh-keyscan gitlab.com >> /root/.ssh/known_hosts && \
-    chmod 400 /root/.ssh/known_hosts
-
 # Install the NP4 Intel packages
-RUN git clone git@gitlab.com:open-pse/np4_intel_4_7_8.git /tmp/np4 && \
-    cd /tmp/np4/ubuntu && \
-    bash np4-intel-n3000-4.7.1-1-ubuntu.bin offline && \
-    rm -rf /tmp/np4
-
-# Remove the ssh deploy key
-RUN rm /root/.ssh/id_rsa
+ARG NP4_VERSION
+ARG NP4_DIR
+RUN bash $NP4_DIR/ubuntu/np4-intel-n3000-${NP4_VERSION}-ubuntu.bin offline
 
 # Tools for style checking
 RUN pip install setuptools wheel && \
-    pip install cpplint
+    pip install cpplint && \
+    pip install virtualenv
+
+# Remove NP4 tarball
+# Note: leave $NP4_DIR for runtime build
+RUN rm -rf /$NP4_TAR
+

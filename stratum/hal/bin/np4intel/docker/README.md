@@ -5,116 +5,21 @@ on an Intel PAC N3000 card using the Netcope compiler and SDK.
 
 # Setting up the host server with the FPGA card
 
-The Stratum container will run on the server with the FPGA card in it. However before running the Stratum container there are some things that need
-to be done on the OS first. 
+The Stratum container will run on the server with the FPGA card in it. However
+before running the Stratum container there are some things that need to be
+done on the OS first. 
 
-The instructions below are based on running CentOS 7.6 on the host, however other linux distributions could also be used with the equivalent setup.
+You should login to the Intel support site as per the following link and
+install the card and the OPAE software as per the user guide here: https://www.intel.com/content/www/us/en/programmable/documentation/xgz1560360700260.html
 
-1. Load CentOS 7.6.1810 onto server
+The following links point to software bundles referenced in the install guide.
 
-    * Connect virtual media via idrac config to NFS server with iso 172.17.128.141:/export/idracs/CentOS-7-x86_64-Minimal-1810.iso
-    * Use virtual console to set "boot to virtual CD"
-    * Use virtual console to soft boot server
-    * Follow CentOS prompts to install OS
-
-2. Enable iommu support in the kernel
-
-Run the following as root.
-
-```
-vi /etc/default/grub
-# add "iommu=pt intel_iommu=on" to end of GRUB_CMDLINE_LINUX
-grub2-mkconfig -o /boot/grub2/grub.cfg
-reboot
-```
-
-3. Install some pre-req packages on the host system
-
-```
-sudo yum update
-sudo yum install pciutils kernel-devel dkms binutils binutils-devel \
-    elfutils-devel gcc make module-init-tools git patch unzip \
-    flex bison autoconf automake python python-devel python-pip \
-    python-setuptools wget devtoolset-7-gcc* libfdt
-```
-
-# Setting up the Intel PAC N3000 card
-
-*Note:* you'll need to contact your Intel representative to obtain the 
-        Intel N3000 software release.
-
-The following steps are required to setup the Intel PAC N3000.  The below
-steps assume the hardware has already been correctly installed, see the
-"Intel Acceleration Stack User Guide" for details.
-
-1. Plug card into a spare 16x PCIe slot. as this Card is using passive
-cooling, make sure the server fan is set to maximum CFM and don't foget
-to connect the 12V aux power cable as well.
-
-2. Uninstall old OPAE packages from the server if any, as at this moment
-OPAE release only supports specific PAC cards.
-
-```
-sudo yum remove opae*
-```
-
-3. Install the pre-requisite CentOS packages
-
-```
-sudo yum install -y gcc gcc-c++ \
-     cmake make autoconf automake libxml2 \
-     libxml2-devel json-c-devel boost ncurses ncurses-devel \
-     ncurses-libs boost-devel libuuid libuuid-devel python2-jsonschema \
-     doxygen hwloc-devel libpng12 rsync openssl-devel \
-     bc python-devel python-libs python-sphinx openssl python2-pip 
- 
-sudo pip install intelhex
-sudo yum install -y epel-release
-```
-
-3. Install the Intel N3000 PV software release (these procedures are
-assuming no FPGA RTL development is required).
-
-```
-sudo mkdir /opt/pv
-sudo chown <your-user-id>:<your-user-id> /opt/pv
-cd /opt/pv
-
-tar zxf <source-dir-of-tarball>/n3000_ias_1_1_pv_rte_installer.tar.gz
-cd n3000_ias_1_1_pv_rte_installer
-chmod u+x n3000-1.3.6-rte-setup.sh
-sudo ./n3000-1.3.6-rte-setup.sh -y
-cd ..
-chmod +x ./n3000-1.3.6-cfg-8x10G-setup.sh
-sudo ./n3000-1.3.6-cfg-8x10G-setup.sh -y --install-dir /tmp/tmp_cfg
-```
-
-5. Once the software has been installed check to make sure you can see the 
-PAC N3000 card using the `lspci` command. 
-
-```
-lspci | grep 0b30
-```
-
-*Note:* `0b30` is the device id for the Intel PAC N3000 cards and you should
-note down the bus:device:function address for later use in the configuration
-of the card.
-
-6. You'll now need to do a one time N3000 BMC firmware update. This step can
-be skipped if the N3000 card already has the latest firmware. Different
-instructions wil be required if the N3000 card already has Alpha2 or older
-versions of the firmware already installed. 
-
-Refer to `Intel Acceleration Stack User Guide` Section B.2 when dealing with
-these older versions of firmware.
-
-```
-sudo super-rsu /usr/share/opae/n3000/one-time-update/10G/super-rsu.json --with-rsu
-sudo fpgaotsu /usr/share/opae/n3000/one-time-update/10G/otsu-10G.json --rsu
-```
+* `Runtime installer`: https://www.intel.com/content/www/us/en/programmable/f/download/accelerator/license-agreement-pac-n3000.html?swcode=WWW-SWD-DCP-N3000-RTE-11
+* `8x10G configuration installer`: https://www.intel.com/content/www/us/en/programmable/f/download/accelerator/license-agreement-pac-n3000.html?swcode=WWW-SWD-DCP-N3000-136-CFG-810G.
 
 At this point your Intel PAC N3000 FPGA card should be ready for you to
-install FPGA pipeline firmware (i.e. output from the Netcope Portal compiler).
+install the FPGA pipeline firmware (i.e. output from the Netcope Portal
+compiler).
 
 # Compiling a P4 Pipeline for the FPGA card
 
@@ -191,27 +96,30 @@ export PYTHONPATH=./py_out
     --platform np4 --p4info-out configs/p4info_np4.txt
 ```
 
+This will put the resulting NP4 specific p4info file into the configs
+directory ready to be used by the Stratum startup scripts.
+
 # Installing the Netcope SDK on the host server
 
 *Note:* you'll need to contact your Netcope representative to obtain access
-        to the Netcope SDK software bundle.
+        to the Netcope SDK software bundle tarball.
 
-1. Clone the Netcope NP4 Intel SDK and drivers
+1. Untar the Netcope SDK tarball into a directory
 
 ```
 cd ~/
-git clone https://gitlab.com/open-pse/np4_intel_4_7_8.git
+tar xzf np4_intel_4_7_1-1.tgz
 ```
 
 2. Go to the centos driver folder in the Netcope NP4 bundle cloned in the
 previous step and run the install script.
 
 ```
-cd ~/np4_intel_4_7_8/centos
+cd ~/np4_intel_4_7_1-1/centos
 sudo bash np4-intel-n3000-4.7.1-1-centos.bin
 ```
 
-*Note:* a full readme is contained in the ~/np4_intel_4_7_8/centos directory
+*Note:* a full readme is contained in the ~/np4_intel_4_7_1-1/centos directory
 
 # Setting up the docker environment
 
@@ -220,29 +128,17 @@ system running docker.  Refer to your OS for these instructions.
 
 # Building the Stratum NP4 runtime container image
 
-1. Create the deploy ssh private key
-
-As part of the build process you will need to have a private key in your ~/.ssh directory that is named "deploy" and that has read access to the Netcope SDK repo.  This process is not covered here in the instructions below.
-
-2. Clone the stratum repo
-
-```
-cd ~/
-git clone git@github.com:craigsdell/stratum.git
-cd stratum
-git checkout dev/netcope
-```
-
-3. Change to docker directory of stratum for NP4 Intel
+1. Change to docker directory of stratum for NP4 Intel
 
 ```
 cd ~/stratum/stratum/hal/bin/np4intel/docker
 ```
 
-5. run the container build script
+2. run the container build script passing the Netcope SDK tarball as
+   an argument to the command line.
 
 ```
-./build-stratum-np4intel-container.sh
+./build-stratum-np4intel-container.sh ~/np4_intel_4_7_1-1.tgz
 ```
 
 # Running the Stratum container
@@ -298,7 +194,7 @@ to debug problems using gdb and the source code.
 
 5. At this point the ptf framework can be used to load tables or a real
 control plane can be started to talk to Stratum on port 28000.  If it's
-on the local machine it will likely be 172.18.0.2:28000 (depends on your
+on the local machine it will likely be localhost:28000 (depends on your
 docker network settings).  You will need to configure the network to
 redirect packets to this container if your trying to access stratum off
 box (i.e. using ipchains).

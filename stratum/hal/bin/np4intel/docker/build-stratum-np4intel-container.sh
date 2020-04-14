@@ -24,21 +24,23 @@ cat << EOF
 
 The script builds containerized version of Stratum for NP4 Intel based device. It installs NP4 SDK libraries using Dockerfile.builder and saves artifacts to an intermediate builder image. Then it runs bazel build for Stratum code base and copies libraries from builder to runtime image using Dockerfile.runtime.
 
-Usage: $0
+Usage: $0 [options] -- NP4_TAR
     [--local]                       Use the local stratum binaries
 
 Example:
-    $0
+    $0 -- ~/np4_intel_4_7_1-1.tgz
+    $0 --local -- ~/np4_intel_4_7_1-1.tgz
 
 EOF
 }
 
 
+# Process the options
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        -h|--help)
+    -h|--help)
         print_help
         exit 0
         ;;
@@ -57,15 +59,28 @@ do
     esac
 done
 
-# Pass in the deploy key for the NP4 repo
-SSH_DEPLOY_KEY=$(cat ~/.ssh/deploy)
+# We need at least 1 arg
+if [ "$#" -eq 0 ]; then
+    print_help
+    exit 1
+fi
+
+BUILD_ARGS="--build-arg JOBS=$JOBS"
+
+# Grab the NP4 tarball
+echo """Copying NP4 tarball to $DOCKERFILE_DIR/
+NOTE: Copied tarballs will be DELETED after the build"""
+
+if [ -n "$1" ]; then
+    NP4_TAR=$(basename $1)
+    BUILD_ARGS="$BUILD_ARGS --build-arg NP4_TAR=$NP4_TAR"
+    cp -f $1 $DOCKERFILE_DIR
+fi
 
 # Build NP4 SDK and DPDK
 BUILDER_IMAGE=stratumproject/stratum-np4intel-builder
 echo "Building $BUILDER_IMAGE"
-docker build -t $BUILDER_IMAGE \
-	 --build-arg JOBS=$JOBS \
-     --build-arg SSH_DEPLOY_KEY="$SSH_DEPLOY_KEY" \
+docker build -t $BUILDER_IMAGE $BUILD_ARGS \
 	 -f $DOCKERFILE_DIR/Dockerfile.builder $DOCKERFILE_DIR
 ERR=$?
 if [ $ERR -ne 0 ]; then
@@ -73,20 +88,10 @@ if [ $ERR -ne 0 ]; then
     exit $ERR
 fi
 
-# Build Base NP4 Intel runtime image
-# Note: needed so we get rid of the ssh deploy key artifact
-RUNTIME_BASE_IMAGE=stratumproject/stratum-np4intel-base
-echo "Building $RUNTIME_BASE_IMAGE"
-docker build -t $RUNTIME_BASE_IMAGE \
-	 --build-arg JOBS=$JOBS \
-     --build-arg SSH_DEPLOY_KEY="$SSH_DEPLOY_KEY" \
-	 -f $DOCKERFILE_DIR/Dockerfile.runtime.base $DOCKERFILE_DIR
-ERR=$?
-if [ $ERR -ne 0 ]; then
-    >&2 echo "ERROR: Error while building $RUNTIME_BASE_IMAGE"
-    exit $ERR
+# Remove copied tarballs
+if [ -f "$DOCKERFILE_DIR/$NP4_TAR" ]; then
+    rm -f $DOCKERFILE_DIR/$NP4_TAR
 fi
-
 
 # If "local" flag set we'll use the locally generated stratum binaries
 # in the current directory
@@ -94,15 +99,15 @@ RUNTIME_IMAGE=stratumproject/stratum-np4intel
 echo "Building $RUNTIME_IMAGE"
 if [ "$LOCAL" == YES ]; then
     docker build -t $RUNTIME_IMAGE \
+	         --build-arg JOBS=$JOBS \
              --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
-             --build-arg RUNTIME_BASE_IMAGE=$RUNTIME_BASE_IMAGE \
              -f $DOCKERFILE_DIR/Dockerfile.runtime.local $STRATUM_ROOT
 
 # Else we'll build and generate runtime image
 else
     docker build -t $RUNTIME_IMAGE \
+	         --build-arg JOBS=$JOBS \
              --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
-             --build-arg RUNTIME_BASE_IMAGE=$RUNTIME_BASE_IMAGE \
              -f $DOCKERFILE_DIR/Dockerfile.runtime $STRATUM_ROOT
 fi
 
