@@ -26,3 +26,13 @@ rmmod linux_user_bde || true
 rmmod linux_kernel_bde || true
 insmod linux-kernel-bde.ko && insmod linux-user-bde.ko && insmod linux-bcm-knet.ko
 sleep 1
+
+# Setup sym links
+mknod /dev/linux-bcm-knet c 122 0 || true
+mknod /dev/linux-bcm-net c 123 0 || true
+mknod /dev/linux-bcm-diag c 124 0 || true
+ln -sf /dev/linux-bcm-diag /dev/linux-bcm-diag-full || true
+mknod /dev/linux-uk-proxy c 125 0 || true
+mknod /dev/linux-bcm-core c 126 0 || true
+mknod /dev/linux-kernel-bde c 127 0 || true
+ln -sf  /dev/linux-bcm-core  /dev/linux-user-bde || true
