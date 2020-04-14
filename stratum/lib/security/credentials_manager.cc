@@ -44,6 +44,7 @@ using ::grpc_impl::experimental::TlsServerCredentials;
 
 int CredentialReloadManager::Schedule(TlsCredentialReloadArg *arg) {
   if (arg == nullptr) {
+    arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
     return 1;
   }
   ::grpc::string pem_root_certs;
@@ -55,6 +56,10 @@ int CredentialReloadManager::Schedule(TlsCredentialReloadArg *arg) {
                                             &pem_key_cert_pair.private_key));
   status.Update(::stratum::ReadFileToString(FLAGS_server_cert,
                                             &pem_key_cert_pair.cert_chain));
+  if (!status.ok()) {
+    arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
+    return 1;
+  }
   arg->set_pem_root_certs(pem_root_certs);
   arg->add_pem_key_cert_pair(pem_key_cert_pair);
   arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_NEW);
