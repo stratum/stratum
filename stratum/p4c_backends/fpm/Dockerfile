@@ -21,7 +21,13 @@
 # cd stratum/p4c_backends/fpm
 # docker build -t <some tag> -f Dockerfile  .
 
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:stretch as builder
+
+RUN mkdir -p /output
+ADD ./p4c_fpm_deb.deb /
+RUN dpkg -i --instdir=/output p4c_fpm_deb.deb
+
+FROM bitnami/minideb:stretch as runtime
 
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="Docker-based distribution of the Stratum p4c FPM backend"
@@ -29,8 +35,7 @@ LABEL description="Docker-based distribution of the Stratum p4c FPM backend"
 ENV RUNTIME_DEPS libgmp10 libgmpxx4ldbl gcc
 RUN install_packages ${RUNTIME_DEPS}
 
-ADD ./p4c_fpm_deb.deb /
-RUN dpkg -i p4c_fpm_deb.deb
+COPY --from=builder /output /
 
 ENTRYPOINT ["p4c-fpm"]
 CMD ["-help"]
