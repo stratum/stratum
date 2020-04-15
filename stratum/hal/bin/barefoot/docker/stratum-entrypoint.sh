@@ -38,24 +38,20 @@ fi
 
 ln -s $PORT_MAP $BF_SDE_INSTALL/share/port_map.json
 
-lsmod | grep 'kdrv' &> /dev/null
-if [[ $? == 0 ]]
-then
-    echo "bf_kdrv_mod found! Unloading first..."
-    rmmod bf_kdrv
-fi
-
-if [ ! -f "$KDRV_PATH" ]; then
-    echo "Cannot find $KDRV_PATH"
-    exit -1
-fi
-
-echo "loading bf_kdrv_mod..."
-insmod $KDRV_PATH intr_mode="msi" || true
-
-if [[ $? != 0 ]];then
-    echo "Cannot load kernel module, wrong kernel version?"
-    echo "(You can ignore this message if you are using the Tofino Model)"
+if [ -f "$KDRV_PATH" ]; then
+    lsmod | grep 'kdrv' &> /dev/null
+    if [[ $? == 0 ]]
+    then
+        echo "bf_kdrv_mod found! Unloading first..."
+        rmmod bf_kdrv
+    fi
+    echo "loading bf_kdrv_mod..."
+    insmod $KDRV_PATH intr_mode="msi" || true
+    if [[ $? != 0 ]];then
+        echo "Cannot load kernel module, wrong kernel version?"
+    fi
+else
+    echo "Cannot find $KDRV_PATH, skip installing the Kernel module"
 fi
 
 if [ "$WITH_ONLP" = true ]; then

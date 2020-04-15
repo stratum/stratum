@@ -58,6 +58,9 @@ class BFPalMock : public BFPalInterface {
                ::util::Status(int unit, uint32 port_id, int32 mtu));
 
   MOCK_METHOD2(PortIsValid, bool(int unit, uint32 port_id));
+  MOCK_METHOD3(PortLoopbackModeSet,
+               ::util::Status(int uint, uint32 port_id,
+               LoopbackState loopback_mode));
 };
 
 }  // namespace barefoot

@@ -66,7 +66,7 @@ RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
 
 # Google API (e.g. status proto) needed by P4Runtime.
 RUN mkdir -p $PYTHON_PACKAGE_BASE/google && \
-    cp -r bazel-bin/external/com_google_protobuf/google/* $PYTHON_PACKAGE_BASE/google && \
+    cp -r bazel-bin/external/com_google_protobuf/python/google $PYTHON_PACKAGE_BASE/google && \
     cp -r bazel-bin/external/com_google_googleapis/google/* $PYTHON_PACKAGE_BASE/google && \
     touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py

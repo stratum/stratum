@@ -76,6 +76,10 @@ std::string PrintBcmPortOptions(const BcmPortOptions& options) {
     buffer << sep << "linkscan_mode: "
            << BcmPortOptions::LinkscanMode_Name(options.linkscan_mode());
   }
+  if (options.loopback_mode()) {
+    buffer << sep
+           << "loopback_mode: " << LoopbackState_Name(options.loopback_mode());
+  }
   buffer << ")";
 
   return buffer.str();
