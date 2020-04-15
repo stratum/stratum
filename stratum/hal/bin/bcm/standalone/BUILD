@@ -74,6 +74,7 @@ stratum_package(
     ],
 )
 
+# TODO(max): Remove once Debian package is ready.
 pkg_tar(
     name = "stratum_bcm_bin",
     srcs = [
@@ -136,11 +137,9 @@ pkg_tar(
         "start-stratum.sh",
     ] + select({
         "//stratum/hal/lib/bcm:bcm_sdk": [
-            "@com_github_broadcom_opennsa//:kernel_modules",
             "sdk/load-kernel-modules.sh"
         ],
         "//conditions:default": [
-            "@com_github_opennetworkinglab_sdklt//:kernel_modules",
             "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
             "sdklt/load-kernel-modules.sh"
         ],
@@ -150,11 +149,23 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "stratum_bcm_lib",
+    srcs = select({
+        "//stratum/hal/lib/bcm:bcm_sdk": [
+            "@com_github_broadcom_opennsa//:kernel_modules",
+        ],
+        "//conditions:default": [
+            "@com_github_opennetworkinglab_sdklt//:kernel_modules",
+        ],
+    }),
+    package_dir = "/usr/lib/stratum",
+)
+
+pkg_tar(
     name = "stratum_bcm_etc",
     deps = [
         "//stratum/hal/config:all_configs_tar",
     ],
-    mode = "0755",
     package_dir = "/etc/stratum",
 )
 
@@ -162,13 +173,14 @@ pkg_tar(
     name = "statum_bcm_all",
     deps = [
         ":stratum_bcm_bin",
+        ":stratum_bcm_lib",
         ":stratum_bcm_etc",
     ],
 )
 
 pkg_deb(
     name = "stratum_bcm_deb",
-    package = "stratum_bcm",
+    package = "stratum-bcm",
     version = "0.1",
     description = "Stratum for Broadcom switches",
     architecture = "amd64",
