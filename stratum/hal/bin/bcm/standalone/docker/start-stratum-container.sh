@@ -34,6 +34,6 @@ docker run -it --privileged --cap-add ALL --shm-size=512m --network host \
     $ONLP_MOUNT \
     -v /lib/platform-config:/lib/platform-config \
     -v /etc/onl:/etc/onl \
-    -v $CONFIG_DIR:/stratum_configs \
+    -v $CONFIG_DIR:/etc/stratum/stratum_configs \
     -v $LOG_DIR:/stratum_logs \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
