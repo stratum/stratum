@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_
 #define STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_
 
 #include <memory>
 
+#include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/security/tls_credentials_options.h"
-#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 
 namespace stratum {
@@ -54,8 +53,8 @@ class CredentialsManager : public TlsCredentialReloadInterface {
   static std::unique_ptr<CredentialsManager> CreateInstance();
 
   // CredentialsManager is neither copyable nor movable.
-  CredentialsManager(const CredentialsManager&) = delete;
-  CredentialsManager& operator=(const CredentialsManager&) = delete;
+  CredentialsManager(const CredentialsManager &) = delete;
+  CredentialsManager &operator=(const CredentialsManager &) = delete;
 
   // Public methods from TlsCredentialReloadInterface
   int Schedule(TlsCredentialReloadArg *arg) override
@@ -72,6 +71,7 @@ class CredentialsManager : public TlsCredentialReloadInterface {
   // Default constructor. To be called by the Mock class instance as well as
   // CreateInstance().
   CredentialsManager();
+
  private:
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
   std::shared_ptr<TlsCredentialsOptions> tls_opts_;

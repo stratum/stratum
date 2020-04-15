@@ -198,29 +198,25 @@ int Main(int argc, char** argv) {
       ::grpc::InsecureChannelCredentials();
   if (!FLAGS_ca_cert.empty()) {
     ::grpc::string pem_root_certs;
-    ::grpc_impl::experimental::TlsKeyMaterialsConfig::PemKeyCertPair pem_key_cert_pair;
+    ::grpc_impl::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
+        pem_key_cert_pair;
     auto key_materials_config =
-      std::make_shared<::grpc_impl::experimental::TlsKeyMaterialsConfig>();
+        std::make_shared<::grpc_impl::experimental::TlsKeyMaterialsConfig>();
     ::util::Status status;
-    status.Update(::stratum::ReadFileToString(FLAGS_ca_cert,
-                                              &pem_root_certs));
+    status.Update(::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
     key_materials_config->set_pem_root_certs(pem_root_certs);
 
     if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
       status.Update(::stratum::ReadFileToString(FLAGS_client_cert,
                                                 &pem_key_cert_pair.cert_chain));
-      status.Update(::stratum::ReadFileToString(FLAGS_client_key,
-                                                &pem_key_cert_pair.private_key));
+      status.Update(::stratum::ReadFileToString(
+          FLAGS_client_key, &pem_key_cert_pair.private_key));
       key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
     }
 
     auto cred_opts = ::grpc_impl::experimental::TlsCredentialsOptions(
-      GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE,
-      GRPC_TLS_SERVER_VERIFICATION,
-      key_materials_config,
-      nullptr,
-      nullptr
-    );
+        GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
+        key_materials_config, nullptr, nullptr);
 
     if (status.ok()) {
       channel_credentials = grpc::experimental::TlsCredentials(cred_opts);
