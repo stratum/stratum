@@ -235,9 +235,9 @@ workflows:
       - publish-docker-mininet:
           requires:
             - publish-docker-build
-      - publish-docker-p4c-fpm
-          # requires:
-            # - publish-docker-build
+      - publish-docker-p4c-fpm:
+          requires:
+            - publish-docker-build
       - publish-docker-stratum-bcm:
           requires:
             - publish-docker-build
