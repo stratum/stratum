@@ -19,6 +19,7 @@
 #define STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_
 
 #include <memory>
+#include <string>
 
 #include "absl/synchronization/mutex.h"
 #include "grpcpp/grpcpp.h"

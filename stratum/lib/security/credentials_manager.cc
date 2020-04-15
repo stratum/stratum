@@ -16,6 +16,7 @@
 #include "stratum/lib/security/credentials_manager.h"
 
 #include <memory>
+#include <string>
 
 #include "absl/memory/memory.h"
 #include "gflags/gflags.h"
