@@ -23,7 +23,7 @@
 
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/security/tls_credentials_options.h"
-
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/status/status.h"
 
 namespace stratum {
@@ -33,25 +33,15 @@ using TlsCredentialReloadArg =
     ::grpc_impl::experimental::TlsCredentialReloadArg;
 using TlsCredentialReloadConfig =
     grpc_impl::experimental::TlsCredentialReloadConfig;
-
-class CredentialReloadManager : public TlsCredentialReloadInterface {
- public:
-  ~CredentialReloadManager() = default;
-  CredentialReloadManager() = default;
-  // Public methods from TlsCredentialReloadInterface
-  int Schedule(TlsCredentialReloadArg *arg) override;
-  void Cancel(TlsCredentialReloadArg *arg) override;
-
-  // CredentialReloadManager is neither copyable nor movable.
-  CredentialReloadManager(const CredentialReloadManager&) = delete;
-  CredentialReloadManager& operator=(const CredentialReloadManager&) = delete;
-};
+using TlsKeyMaterialsConfig = ::grpc_impl::experimental::TlsKeyMaterialsConfig;
+using TlsCredentialsOptions = ::grpc_impl::experimental::TlsCredentialsOptions;
+using ::grpc_impl::experimental::TlsServerCredentials;
 
 // CredentialsManager manages the server credentials for (external facing) gRPC
 // servers. It handles starting and shutting down TSI as well as generating the
 // server credentials. This class is supposed to be created
 // once for each binary.
-class CredentialsManager {
+class CredentialsManager : public TlsCredentialReloadInterface {
  public:
   virtual ~CredentialsManager();
 
@@ -67,17 +57,30 @@ class CredentialsManager {
   CredentialsManager(const CredentialsManager&) = delete;
   CredentialsManager& operator=(const CredentialsManager&) = delete;
 
+  // Public methods from TlsCredentialReloadInterface
+  int Schedule(TlsCredentialReloadArg *arg) override
+      LOCKS_EXCLUDED(credential_lock_);
+  void Cancel(TlsCredentialReloadArg *arg) override;
+
+  // Loads new credentials
+  ::util::Status LoadNewCredential(const std::string ca_cert,
+                                   const std::string cert,
+                                   const std::string key)
+      LOCKS_EXCLUDED(credential_lock_);
+
  protected:
   // Default constructor. To be called by the Mock class instance as well as
   // CreateInstance().
   CredentialsManager();
  private:
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
-  std::shared_ptr<CredentialReloadManager> credential_reload_;
-  std::shared_ptr<TlsCredentialReloadConfig> credential_reload_config_;
+  std::shared_ptr<TlsCredentialsOptions> tls_opts_;
 
+  absl::Mutex credential_lock_;
+  bool reload_credential GUARDED_BY(credential_lock_);
+  ::grpc::string pem_root_certs_ GUARDED_BY(credential_lock_);
+  ::grpc::string server_private_key_ GUARDED_BY(credential_lock_);
+  ::grpc::string server_cert_ GUARDED_BY(credential_lock_);
 };
-
 }  // namespace stratum
-
 #endif  // STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_

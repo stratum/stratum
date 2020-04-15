@@ -26,6 +26,7 @@
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/lib/utils.h"
+#include "stratum/lib/macros.h"
 
 DEFINE_string(ca_cert, "", "CA certificate path");
 DEFINE_string(server_key, "", "gRPC Server pricate key path");
@@ -33,67 +34,44 @@ DEFINE_string(server_cert, "", "gRPC Server certificate path");
 
 namespace stratum {
 
-using TlsKeyMaterialsConfig = ::grpc_impl::experimental::TlsKeyMaterialsConfig;
-using TlsCredentialReloadConfig =
-    ::grpc_impl::experimental::TlsCredentialReloadConfig;
-using TlsCredentialsOptions = ::grpc_impl::experimental::TlsCredentialsOptions;
-using TlsKeyMaterialsConfig = ::grpc_impl::experimental::TlsKeyMaterialsConfig;
-using TlsCredentialReloadArg =
-    ::grpc_impl::experimental::TlsCredentialReloadArg;
-using ::grpc_impl::experimental::TlsServerCredentials;
-
-int CredentialReloadManager::Schedule(TlsCredentialReloadArg *arg) {
-  if (arg == nullptr) {
-    arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
-    return 1;
-  }
-  ::grpc::string pem_root_certs;
-  TlsKeyMaterialsConfig::PemKeyCertPair pem_key_cert_pair;
-  ::util::Status status;
-  status.Update(
-      ::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
-  status.Update(::stratum::ReadFileToString(FLAGS_server_key,
-                                            &pem_key_cert_pair.private_key));
-  status.Update(::stratum::ReadFileToString(FLAGS_server_cert,
-                                            &pem_key_cert_pair.cert_chain));
-  if (!status.ok()) {
-    arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
-    return 1;
-  }
-  arg->set_pem_root_certs(pem_root_certs);
-  arg->add_pem_key_cert_pair(pem_key_cert_pair);
-  arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_NEW);
-  return 0;
-}
-
-void CredentialReloadManager::Cancel(TlsCredentialReloadArg *arg) {
-  if (arg == nullptr) return;
-  arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
-  arg->set_error_details("Cancelled.");
-}
-
 CredentialsManager::~CredentialsManager() {}
 
-CredentialsManager::CredentialsManager() {
+CredentialsManager::CredentialsManager() :
+    reload_credential(true){
   if (FLAGS_ca_cert.empty() || FLAGS_server_key.empty() ||
       FLAGS_server_cert.empty()) {
-    LOG(INFO) << "Using insecure server credentials";
+    LOG(WARNING) << "Using insecure server credentials";
     server_credentials_ = ::grpc::InsecureServerCredentials();
   } else {
-    credential_reload_ =
-        std::shared_ptr<CredentialReloadManager>(new CredentialReloadManager());
-    credential_reload_config_ = std::shared_ptr<TlsCredentialReloadConfig>(
-        new TlsCredentialReloadConfig(credential_reload_));
+    // Load default credentials
+    ::util::Status status;
+    status.Update(
+        ::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs_));
+    status.Update(::stratum::ReadFileToString(FLAGS_server_key,
+                                              &server_private_key_));
+    status.Update(::stratum::ReadFileToString(FLAGS_server_cert,
+                                              &server_cert_));
+    if (!status.ok()) {
+      LOG(WARNING)
+          << "Unable to load credentials, using insecure server credentials";
+      server_credentials_ = ::grpc::InsecureServerCredentials();
+      return;
+    }
+    auto credential_reload_manager_ =
+        std::shared_ptr<TlsCredentialReloadInterface>(
+            static_cast<TlsCredentialReloadInterface*>(this));
+    auto credential_reload_config_ = std::shared_ptr<TlsCredentialReloadConfig>(
+        new TlsCredentialReloadConfig(credential_reload_manager_));
 
-    TlsCredentialsOptions tls_opts(
+    tls_opts_ = std::shared_ptr<TlsCredentialsOptions>(new TlsCredentialsOptions(
       GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE,
       GRPC_TLS_SERVER_VERIFICATION,
       nullptr,
       credential_reload_config_,
       nullptr
-    );
+    ));
 
-    server_credentials_ = TlsServerCredentials(tls_opts);
+    server_credentials_ = TlsServerCredentials(*tls_opts_);
   }
 }
 
@@ -105,6 +83,49 @@ CredentialsManager::GenerateExternalFacingServerCredentials() const {
 std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {
   return absl::WrapUnique(new CredentialsManager());
 }
+int CredentialsManager::Schedule(TlsCredentialReloadArg *arg) {
+  absl::WriterMutexLock l(&credential_lock_);
+  if (arg == nullptr) {
+    arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
+    return 1;
+  }
+  if (!reload_credential) {
+    arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_UNCHANGED);
+    return 0;
+  }
 
+  TlsKeyMaterialsConfig::PemKeyCertPair pem_key_cert_pair_ = {
+    server_private_key_,
+    server_cert_
+  };
+
+  arg->set_pem_root_certs(pem_root_certs_);
+  arg->add_pem_key_cert_pair(pem_key_cert_pair_);
+  arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_NEW);
+  reload_credential = false;
+  return 0;
+}
+
+void CredentialsManager::Cancel(TlsCredentialReloadArg *arg) {
+  if (arg == nullptr) return;
+  arg->set_status(GRPC_SSL_CERTIFICATE_CONFIG_RELOAD_FAIL);
+  arg->set_error_details("Cancelled.");
+}
+
+::util::Status
+CredentialsManager::LoadNewCredential(const std::string root_certs,
+                                      const std::string cert_chain,
+                                      const std::string private_key) {
+  absl::WriterMutexLock l(&credential_lock_);
+  // TODO(Yi): verify if key and cert are valid format
+  CHECK_RETURN_IF_FALSE(!root_certs.empty());
+  CHECK_RETURN_IF_FALSE(!cert_chain.empty());
+  CHECK_RETURN_IF_FALSE(!private_key.empty());
+  pem_root_certs_ = root_certs;
+  server_cert_ = cert_chain;
+  server_private_key_ = private_key;
+  reload_credential = true;
+  return ::util::OkStatus();
+}
 
 }  // namespace stratum
