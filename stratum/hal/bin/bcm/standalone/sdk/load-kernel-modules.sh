@@ -24,7 +24,9 @@ rmmod linux_ngbde || true
 rmmod linux_bcm_knet || true
 rmmod linux_user_bde || true
 rmmod linux_kernel_bde || true
+pushd /usr/lib/stratum/
 insmod linux-kernel-bde.ko && insmod linux-user-bde.ko && insmod linux-bcm-knet.ko
+popd
 sleep 1
 
 # Setup sym links

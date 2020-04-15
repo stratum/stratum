@@ -190,7 +190,7 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
+            bazel build --define bcm_sdk=lt //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
@@ -215,8 +215,8 @@ jobs:
           name: Build stratum_bcm
           command: |
             git config --global --unset url.ssh://git@github.com.insteadof
-            bazel build --define bcm_sdk=nsa //stratum/hal/bin/bcm/standalone:stratum_bcm_package
-            tar xf bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz -C $DOCKER_SCOPE
+            bazel build --define bcm_sdk=nsa //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - *docker_push
