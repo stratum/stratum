@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
+load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
 
 licenses(["notice"])  # Apache v2
 
