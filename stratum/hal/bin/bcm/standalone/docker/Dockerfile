@@ -29,11 +29,11 @@ RUN install_packages \
     libyaml-0-2 \
     libboost-thread1.62.0 && \
     ldconfig && \
-    mkdir /stratum_configs && \
     mkdir /stratum_logs
 
-ADD . /
+# TODO(max): convert to 2-stage to save space
+ADD ./stratum_bcm_deb.deb /
+RUN dpkg -i stratum_bcm_deb.deb
 
 EXPOSE 28000/tcp
-ENTRYPOINT /stratum-entrypoint.sh
-
+ENTRYPOINT start-stratum.sh
