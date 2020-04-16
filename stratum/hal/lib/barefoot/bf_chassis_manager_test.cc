@@ -56,6 +56,7 @@ constexpr uint32 kPortId = 12345;
 constexpr uint64 kDefaultSpeedBps = kHundredGigBps;
 constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
 constexpr TriState kDefaultAutoneg = TRI_STATE_UNKNOWN;
+constexpr LoopbackState kDefaultLoopbackMode = LOOPBACK_STATE_UNKNOWN;
 
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
@@ -76,7 +77,8 @@ class ChassisConfigBuilder {
                          AdminState admin_state,
                          uint64 speed_bps = kDefaultSpeedBps,
                          FecMode fec_mode = kDefaultFecMode,
-                         TriState autoneg = kDefaultAutoneg) {
+                         TriState autoneg = kDefaultAutoneg,
+                         LoopbackState loopback_mode = kDefaultLoopbackMode) {
     auto* sport = config_.add_singleton_ports();
     sport->set_id(port_id);
     sport->set_node(node_id);
@@ -87,6 +89,7 @@ class ChassisConfigBuilder {
     sport->mutable_config_params()->set_admin_state(admin_state);
     sport->mutable_config_params()->set_fec_mode(fec_mode);
     sport->mutable_config_params()->set_autoneg(autoneg);
+    sport->mutable_config_params()->set_loopback_mode(loopback_mode);
     return sport;
   }
 
@@ -265,6 +268,21 @@ TEST_F(BFChassisManagerTest, AddPortFec) {
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
+TEST_F(BFChassisManagerTest, SetPortLoopback) {
+  ChassisConfigBuilder builder;
+  ASSERT_OK(PushBaseChassisConfig(&builder));
+
+  SingletonPort* sport = builder.GetPort(kPortId);
+  sport->mutable_config_params()->set_loopback_mode(LOOPBACK_STATE_MAC);
+
+  EXPECT_CALL(*bf_pal_mock_, PortLoopbackModeSet(
+      kUnit, kPortId, LOOPBACK_STATE_MAC));
+  EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
+
+  ASSERT_OK(PushChassisConfig(builder));
+  ASSERT_OK(ShutdownAndTestCleanState());
+}
+
 TEST_F(BFChassisManagerTest, ReplayPorts) {
   ASSERT_OK(PushBaseChassisConfig());
 
@@ -358,9 +376,11 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   auto port = kPort + 1;
 
   builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
-                  FEC_MODE_ON, TRI_STATE_TRUE);
+                  FEC_MODE_ON, TRI_STATE_TRUE, LOOPBACK_STATE_MAC);
   EXPECT_CALL(*bf_pal_mock_, PortAdd(
     kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  EXPECT_CALL(*bf_pal_mock_, PortLoopbackModeSet(
+      kUnit, portId, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
   EXPECT_CALL(*bf_pal_mock_, PortOperStateGet(kUnit, portId))
     .WillRepeatedly(Return(PORT_STATE_UP));
@@ -471,6 +491,15 @@ TEST_F(BFChassisManagerTest, GetPortData) {
     &DataResponse::has_fec_status,
     &FecStatus::mode,
     FEC_MODE_ON);
+
+  // Loopback mode
+  GetPortDataTest(bf_chassis_manager_.get(),
+    kNodeId, portId,
+    &DataRequest::Request::mutable_loopback_status,
+    &DataResponse::loopback_status,
+    &DataResponse::has_loopback_status,
+    &LoopbackStatus::state,
+    LOOPBACK_STATE_MAC);
 
   // Unsupprorted
   DataRequest::Request req;

@@ -65,7 +65,7 @@ docker_build: &docker_build
     command: |
       docker pull $DOCKER_IMG || true
       cd $DOCKER_SCOPE
-      docker build -f $DOCKER_FILE -t $DOCKER_IMG --cache-from $DOCKER_IMG .
+      docker build -f $DOCKER_FILE -t $DOCKER_IMG --cache-from $DOCKER_IMG --label vcs-ref=$CIRCLE_SHA1 .
 docker_push: &docker_push
   run:
     name: Push Docker image
@@ -160,21 +160,54 @@ jobs:
       - *docker_push
 
   publish-docker-p4c-fpm:
-    machine: true
+    docker:
+      - image: stratumproject/build:build
     environment:
-      - DOCKER_SCOPE: .
-      - DOCKER_FILE: stratum/p4c_backends/fpm/Dockerfile
+      - DOCKER_SCOPE: stratum/p4c_backends/fpm
+      - DOCKER_FILE: Dockerfile
       - DOCKER_IMG: stratumproject/p4c-fpm
     steps:
+      - setup_remote_docker
       - checkout
-      - *docker_login
+      - *restore_bazel_cache
       - *set_bazelrc
+      - run:
+          name: Build p4c-fpm
+          command: |
+            bazel build //stratum/p4c_backends/fpm:p4c_fpm_deb
+            cp bazel-bin/stratum/p4c_backends/fpm/p4c_fpm_deb.deb $DOCKER_SCOPE
+      - *docker_login
       - *docker_build
       - run:
           name: Test p4c-fpm Docker image
           command: |
             docker run $DOCKER_IMG -version
       - *docker_push
+      - *save_bazel_cache
+
+  publish-docker-stratum-bcm:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/bcm/standalone/docker
+      - DOCKER_FILE: Dockerfile
+      - DOCKER_IMG: stratumproject/stratum-bcm
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build stratum_bcm
+          command: |
+            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
+            tar xf bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz -C $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - *docker_push
+      - *save_bazel_cache
 
   cpp-style-check:
     docker:
@@ -203,5 +236,8 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-p4c-fpm:
+          requires:
+            - publish-docker-build
+      - publish-docker-stratum-bcm:
           requires:
             - publish-docker-build
