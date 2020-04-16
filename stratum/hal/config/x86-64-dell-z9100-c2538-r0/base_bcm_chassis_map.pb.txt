@@ -463,6 +463,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0xc
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 5
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 68
+    physical_port: 65
+    diag_port: 17
+    serdes_core: 16
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x3210
+    rx_lane_map: 0x3201
+    tx_polarity_flip: 0x2
+    rx_polarity_flip: 0xc
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 5
@@ -540,6 +557,23 @@ bcm_chassis_maps {
     port: 6
     unit: 0
     speed_bps: 100000000000
+    logical_port: 72
+    physical_port: 69
+    diag_port: 21
+    serdes_core: 17
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2301
+    rx_lane_map: 0x1302
+    tx_polarity_flip: 0x0
+    rx_polarity_flip: 0x2
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 6
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 72
     physical_port: 69
     diag_port: 21
@@ -641,6 +675,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x2
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 7
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 76
+    physical_port: 73
+    diag_port: 25
+    serdes_core: 18
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x1203
+    tx_polarity_flip: 0x0
+    rx_polarity_flip: 0x2
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 7
@@ -718,6 +769,23 @@ bcm_chassis_maps {
     port: 8
     unit: 0
     speed_bps: 100000000000
+    logical_port: 80
+    physical_port: 77
+    diag_port: 29
+    serdes_core: 19
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x1320
+    rx_lane_map: 0x2301
+    tx_polarity_flip: 0xa
+    rx_polarity_flip: 0xd
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 8
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 80
     physical_port: 77
     diag_port: 29
@@ -819,6 +887,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0xd
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 9
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 38
+    physical_port: 37
+    diag_port: 33
+    serdes_core: 9
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x1032
+    rx_lane_map: 0x312
+    tx_polarity_flip: 0x0
+    rx_polarity_flip: 0xd
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 9
@@ -896,6 +981,23 @@ bcm_chassis_maps {
     port: 10
     unit: 0
     speed_bps: 100000000000
+    logical_port: 34
+    physical_port: 33
+    diag_port: 37
+    serdes_core: 8
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2031
+    rx_lane_map: 0x1302
+    tx_polarity_flip: 0xb
+    rx_polarity_flip: 0xa
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 10
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 34
     physical_port: 33
     diag_port: 37
@@ -997,6 +1099,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x7
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 11
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 46
+    physical_port: 45
+    diag_port: 41
+    serdes_core: 11
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x1023
+    rx_lane_map: 0x2103
+    tx_polarity_flip: 0xe
+    rx_polarity_flip: 0x7
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 11
@@ -1074,6 +1193,23 @@ bcm_chassis_maps {
     port: 12
     unit: 0
     speed_bps: 100000000000
+    logical_port: 42
+    physical_port: 41
+    diag_port: 45
+    serdes_core: 10
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x132
+    rx_lane_map: 0x3210
+    tx_polarity_flip: 0x6
+    rx_polarity_flip: 0xf
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 12
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 42
     physical_port: 41
     diag_port: 45
@@ -1175,6 +1311,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0xf
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 13
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 84
+    physical_port: 81
+    diag_port: 49
+    serdes_core: 20
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x213
+    rx_lane_map: 0x2301
+    tx_polarity_flip: 0x6
+    rx_polarity_flip: 0xf
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 13
@@ -1252,6 +1405,23 @@ bcm_chassis_maps {
     port: 14
     unit: 0
     speed_bps: 100000000000
+    logical_port: 88
+    physical_port: 85
+    diag_port: 53
+    serdes_core: 21
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x1032
+    rx_lane_map: 0x213
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0xd
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 14
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 88
     physical_port: 85
     diag_port: 53
@@ -1353,6 +1523,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x4
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 15
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 92
+    physical_port: 89
+    diag_port: 57
+    serdes_core: 22
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x132
+    rx_lane_map: 0x3210
+    tx_polarity_flip: 0x5
+    rx_polarity_flip: 0x4
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 15
@@ -1430,6 +1617,23 @@ bcm_chassis_maps {
     port: 16
     unit: 0
     speed_bps: 100000000000
+    logical_port: 96
+    physical_port: 93
+    diag_port: 61
+    serdes_core: 23
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x3210
+    tx_polarity_flip: 0x8
+    rx_polarity_flip: 0xb
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 16
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 96
     physical_port: 93
     diag_port: 61
@@ -1531,6 +1735,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x2
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 17
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 102
+    physical_port: 97
+    diag_port: 65
+    serdes_core: 24
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x3201
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0x2
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 17
@@ -1608,6 +1829,23 @@ bcm_chassis_maps {
     port: 18
     unit: 0
     speed_bps: 100000000000
+    logical_port: 106
+    physical_port: 101
+    diag_port: 69
+    serdes_core: 25
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x213
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0xd
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 18
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 106
     physical_port: 101
     diag_port: 69
@@ -1709,6 +1947,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0xf
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 19
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 110
+    physical_port: 105
+    diag_port: 73
+    serdes_core: 26
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x1032
+    rx_lane_map: 0x3210
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0xf
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 19
@@ -1786,6 +2041,23 @@ bcm_chassis_maps {
     port: 20
     unit: 0
     speed_bps: 100000000000
+    logical_port: 114
+    physical_port: 109
+    diag_port: 77
+    serdes_core: 27
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x3210
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0x0
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 20
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 114
     physical_port: 109
     diag_port: 77
@@ -1887,6 +2159,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x0
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 21
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 21
+    physical_port: 21
+    diag_port: 81
+    serdes_core: 5
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2301
+    rx_lane_map: 0x3102
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0x0
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 21
@@ -1964,6 +2253,23 @@ bcm_chassis_maps {
     port: 22
     unit: 0
     speed_bps: 100000000000
+    logical_port: 17
+    physical_port: 17
+    diag_port: 85
+    serdes_core: 4
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x3102
+    rx_lane_map: 0x2103
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0x5
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 22
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 17
     physical_port: 17
     diag_port: 85
@@ -2065,6 +2371,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x0
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 23
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 29
+    physical_port: 29
+    diag_port: 89
+    serdes_core: 7
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x1023
+    rx_lane_map: 0x2301
+    tx_polarity_flip: 0xb
+    rx_polarity_flip: 0x0
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 23
@@ -2142,6 +2465,23 @@ bcm_chassis_maps {
     port: 24
     unit: 0
     speed_bps: 100000000000
+    logical_port: 25
+    physical_port: 25
+    diag_port: 93
+    serdes_core: 6
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2130
+    rx_lane_map: 0x2310
+    tx_polarity_flip: 0xa
+    rx_polarity_flip: 0x2
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 24
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 25
     physical_port: 25
     diag_port: 93
@@ -2243,6 +2583,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0xc
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 25
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 122
+    physical_port: 117
+    diag_port: 97
+    serdes_core: 29
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2310
+    rx_lane_map: 0x3201
+    tx_polarity_flip: 0xf
+    rx_polarity_flip: 0xc
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 25
@@ -2320,6 +2677,23 @@ bcm_chassis_maps {
     port: 26
     unit: 0
     speed_bps: 100000000000
+    logical_port: 118
+    physical_port: 113
+    diag_port: 101
+    serdes_core: 28
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2013
+    rx_lane_map: 0x123
+    tx_polarity_flip: 0x0
+    rx_polarity_flip: 0x8
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 26
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 118
     physical_port: 113
     diag_port: 101
@@ -2421,6 +2795,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x4
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 27
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 130
+    physical_port: 125
+    diag_port: 105
+    serdes_core: 31
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x132
+    rx_lane_map: 0x1023
+    tx_polarity_flip: 0xb
+    rx_polarity_flip: 0x4
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 27
@@ -2498,6 +2889,23 @@ bcm_chassis_maps {
     port: 28
     unit: 0
     speed_bps: 100000000000
+    logical_port: 126
+    physical_port: 121
+    diag_port: 109
+    serdes_core: 30
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x213
+    tx_polarity_flip: 0x7
+    rx_polarity_flip: 0x7
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 28
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 126
     physical_port: 121
     diag_port: 109
@@ -2599,6 +3007,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0x7
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 29
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 5
+    physical_port: 5
+    diag_port: 113
+    serdes_core: 1
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x213
+    rx_lane_map: 0x1203
+    tx_polarity_flip: 0x8
+    rx_polarity_flip: 0x7
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 29
@@ -2676,6 +3101,23 @@ bcm_chassis_maps {
     port: 30
     unit: 0
     speed_bps: 100000000000
+    logical_port: 1
+    physical_port: 1
+    diag_port: 117
+    serdes_core: 0
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x213
+    tx_polarity_flip: 0x3
+    rx_polarity_flip: 0x9
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 30
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 1
     physical_port: 1
     diag_port: 117
@@ -2777,6 +3219,23 @@ bcm_chassis_maps {
     rx_polarity_flip: 0xc
   }
   bcm_ports {
+    type: CE
+    slot: 1
+    port: 31
+    unit: 0
+    speed_bps: 40000000000
+    logical_port: 13
+    physical_port: 13
+    diag_port: 121
+    serdes_core: 3
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x2301
+    rx_lane_map: 0x3201
+    tx_polarity_flip: 0xc
+    rx_polarity_flip: 0xc
+  }
+  bcm_ports {
     type: XE
     slot: 1
     port: 31
@@ -2854,6 +3313,23 @@ bcm_chassis_maps {
     port: 32
     unit: 0
     speed_bps: 100000000000
+    logical_port: 9
+    physical_port: 9
+    diag_port: 125
+    serdes_core: 2
+    serdes_lane: 0
+    num_serdes_lanes: 4
+    tx_lane_map: 0x123
+    rx_lane_map: 0x213
+    tx_polarity_flip: 0x3
+    rx_polarity_flip: 0x8
+  }
+  bcm_ports {
+    type: CE
+    slot: 1
+    port: 32
+    unit: 0
+    speed_bps: 40000000000
     logical_port: 9
     physical_port: 9
     diag_port: 125
