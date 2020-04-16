@@ -1916,8 +1916,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   }
 
   bcm_port_config_t port_cfg;
-  RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
-  // TODO(max): fix
+  // TODO(max): bcm_port_config_get seems to overwrite parts of the stack and
+  // triggers the stack protector.
+  // RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
   // RETURN_IF_BCM_ERROR(
   //     bcm_vlan_port_add(unit, vlan, port_cfg.all, port_cfg.all));
 
