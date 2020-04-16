@@ -109,29 +109,17 @@ pkg_tar(
     srcs = [
         ":stratum_bcm",
         "start-stratum.sh",
-    ] + select({
-        "//stratum/hal/lib/bcm:bcm_sdk": [
-            "sdk/load-kernel-modules.sh"
-        ],
-        "//conditions:default": [
-            "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
-            "sdklt/load-kernel-modules.sh"
-        ],
-    }),
+        "load-kernel-modules.sh",
+    ],
     mode = "0755",
     package_dir = "/usr/bin",
 )
 
 pkg_tar(
     name = "stratum_bcm_lib",
-    srcs = select({
-        "//stratum/hal/lib/bcm:bcm_sdk": [
-            "@com_github_broadcom_opennsa//:kernel_modules",
-        ],
-        "//conditions:default": [
-            "@com_github_opennetworkinglab_sdklt//:kernel_modules",
-        ],
-    }),
+    srcs = [
+        "@com_github_opennetworkinglab_sdklt//:kernel_modules",
+    ],
     package_dir = "/usr/lib/stratum",
 )
 

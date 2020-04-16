@@ -202,7 +202,7 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build --define bcm_sdk=lt //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
+            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
