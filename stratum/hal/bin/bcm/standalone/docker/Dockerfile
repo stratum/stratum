@@ -14,6 +14,12 @@
 # limitations under the License.
 #
 
+FROM bitnami/minideb:stretch as builder
+
+RUN mkdir -p /output
+ADD ./stratum_bcm_deb.deb /
+RUN dpkg -i --instdir=/output stratum_bcm_deb.deb
+
 FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This is the Stratum runtime Docker image for Broadcom switches"
@@ -31,9 +37,7 @@ RUN install_packages \
     ldconfig && \
     mkdir /stratum_logs
 
-# TODO(max): convert to 2-stage to save space
-ADD ./stratum_bcm_deb.deb /
-RUN dpkg -i stratum_bcm_deb.deb
+COPY --from=builder /output /
 
 EXPOSE 28000/tcp
 ENTRYPOINT start-stratum.sh
