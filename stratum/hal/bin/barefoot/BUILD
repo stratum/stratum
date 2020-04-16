@@ -15,13 +15,14 @@
 # limitations under the License.
 #
 
+load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
+load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
+
 licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = ["//visibility:public"],
 )
-
-load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
 
 stratum_cc_binary(
     name = "stratum_bf",
@@ -57,7 +58,7 @@ stratum_cc_binary(
     ],
 )
 
-load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
+# Rules for Debian package
 STRIP_PREFIX="/stratum/hal/bin/barefoot"
 
 pkg_tar(
@@ -69,7 +70,15 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bf_systemd_service",
+    name = "stratum_entry_point",
+    srcs = ["docker/stratum-entrypoint.sh"],
+    mode = "0755",
+    package_dir = "/usr/local/bin",
+    strip_prefix = STRIP_PREFIX + "/docker",
+)
+
+pkg_tar(
+    name = "systemd_service",
     srcs = [
         "deb/stratum_bf.service",
     ],
@@ -79,9 +88,25 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bf_service_env",
+    name = "port_maps",
+    srcs = glob(["platforms/*.json"]),
+    mode = "0644",
+    package_dir = "/usr/local/share/stratum",
+    strip_prefix = STRIP_PREFIX + "/platforms",
+)
+
+pkg_tar(
+    name = "flgs_file",
+    srcs = ["docker/stratum.flags"],
+    mode = "0644",
+    package_dir = "/etc/stratum",
+    strip_prefix = STRIP_PREFIX + "/docker",
+)
+
+pkg_tar(
+    name = "systemd_service_env",
     srcs = [
-        "deb/stratum_bf.environment",
+        "deb/stratum_bf.env",
     ],
     mode = "0644",
     package_dir = "/etc/stratum",
@@ -89,11 +114,13 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bf_config",
+    name = "tofino_configs",
     srcs = [
+        "tofino_skip_p4_no_bsp.conf",
+        "tofino_skip_p4.conf",
     ],
     mode = "0644",
-    package_dir = "/etc/stratum",
+    package_dir = "/usr/local/share/stratum",
     strip_prefix = STRIP_PREFIX,
 )
 
@@ -102,9 +129,12 @@ pkg_tar(
     extension = "tar.gz",
     deps = [
         ":stratum_bf_bin",
-        ":stratum_bf_systemd_service",
-        ":stratum_bf_service_env"
-        ":stratum_bf_config",
+        ":stratum_entry_point",
+        ":systemd_service",
+        ":port_maps",
+        ":flgs_file",
+        ":systemd_service_env",
+        ":tofino_configs",
     ],
 )
 
