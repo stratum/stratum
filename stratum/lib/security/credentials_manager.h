@@ -37,11 +37,47 @@ using TlsKeyMaterialsConfig = ::grpc_impl::experimental::TlsKeyMaterialsConfig;
 using TlsCredentialsOptions = ::grpc_impl::experimental::TlsCredentialsOptions;
 using ::grpc_impl::experimental::TlsServerCredentials;
 
+// CredentialsReloadInterface is an implementation of
+// the TlsCredentialReloadInterface which helps reloading gRPC server
+// credentials(private key and certifications)
+// The `Schedule` function will be called when gRPC server initialized or
+// a new connection is created.
+class CredentialsReloadInterface : public TlsCredentialReloadInterface {
+ public:
+  ~CredentialsReloadInterface() = default;
+  CredentialsReloadInterface(std::string pem_root_certs,
+                             std::string server_private_key,
+                             std::string server_cert);
+
+  // Public methods from TlsCredentialReloadInterface
+  int Schedule(TlsCredentialReloadArg *arg) override
+      LOCKS_EXCLUDED(credential_lock_);
+  void Cancel(TlsCredentialReloadArg *arg) override;
+
+  // Loads new credentials
+  ::util::Status LoadNewCredential(const std::string ca_cert,
+                                   const std::string cert,
+                                   const std::string key)
+      LOCKS_EXCLUDED(credential_lock_);
+
+  // CredentialsReloadInterface is neither copyable nor movable.
+  CredentialsReloadInterface(const CredentialsReloadInterface &) = delete;
+  CredentialsReloadInterface &operator=(const CredentialsReloadInterface &) =
+      delete;
+
+ private:
+  absl::Mutex credential_lock_;
+  bool reload_credential_ GUARDED_BY(credential_lock_);
+  std::string pem_root_certs_ GUARDED_BY(credential_lock_);
+  std::string server_private_key_ GUARDED_BY(credential_lock_);
+  std::string server_cert_ GUARDED_BY(credential_lock_);
+};
+
 // CredentialsManager manages the server credentials for (external facing) gRPC
 // servers. It handles starting and shutting down TSI as well as generating the
 // server credentials. This class is supposed to be created
 // once for each binary.
-class CredentialsManager : public TlsCredentialReloadInterface {
+class CredentialsManager {
  public:
   virtual ~CredentialsManager();
 
@@ -57,16 +93,10 @@ class CredentialsManager : public TlsCredentialReloadInterface {
   CredentialsManager(const CredentialsManager &) = delete;
   CredentialsManager &operator=(const CredentialsManager &) = delete;
 
-  // Public methods from TlsCredentialReloadInterface
-  int Schedule(TlsCredentialReloadArg *arg) override
-      LOCKS_EXCLUDED(credential_lock_);
-  void Cancel(TlsCredentialReloadArg *arg) override;
-
   // Loads new credentials
   ::util::Status LoadNewCredential(const std::string ca_cert,
                                    const std::string cert,
-                                   const std::string key)
-      LOCKS_EXCLUDED(credential_lock_);
+                                   const std::string key);
 
  protected:
   // Default constructor. To be called by the Mock class instance as well as
@@ -76,12 +106,8 @@ class CredentialsManager : public TlsCredentialReloadInterface {
  private:
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
   std::shared_ptr<TlsCredentialsOptions> tls_opts_;
-
-  absl::Mutex credential_lock_;
-  bool reload_credential GUARDED_BY(credential_lock_);
-  ::grpc::string pem_root_certs_ GUARDED_BY(credential_lock_);
-  ::grpc::string server_private_key_ GUARDED_BY(credential_lock_);
-  ::grpc::string server_cert_ GUARDED_BY(credential_lock_);
+  std::shared_ptr<CredentialsReloadInterface> credentials_reload_interface_;
 };
+
 }  // namespace stratum
 #endif  // STRATUM_LIB_SECURITY_CREDENTIALS_MANAGER_H_
