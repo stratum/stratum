@@ -89,6 +89,9 @@ switched_rules_by_language(
     python = True,
 )
 
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()
+
 # ---------------------------------------------------------------------------
 #       Load Golang dependencies.
 # ---------------------------------------------------------------------------
