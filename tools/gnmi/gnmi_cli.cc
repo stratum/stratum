@@ -249,13 +249,6 @@ int Main(int argc, char** argv) {
     status = stub->Get(&ctx, req, &resp);
     LOG_IF_NOT_OK(status)
     CHECK_AND_PRINT_RESP(status, resp)
-
-    ::grpc::ClientContext ctx2;
-    PRINT_MSG(req, "REQUEST")
-    status = stub->Get(&ctx2, req, &resp);
-    LOG_IF_NOT_OK(status)
-    CHECK_AND_PRINT_RESP(status, resp)
-
   } else if (cmd == "set") {
     ::gnmi::SetRequest req = build_gnmi_set_req(path);
     PRINT_MSG(req, "REQUEST")

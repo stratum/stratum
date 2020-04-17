@@ -57,16 +57,17 @@ CredentialsManager::CredentialsManager() {
       return;
     }
     auto credentials_reload_interface_ =
-        std::shared_ptr<CredentialsReloadInterface>(
-            new CredentialsReloadInterface(pem_root_certs_, server_private_key_,
-                                           server_cert_));
-    auto credential_reload_config_ = std::shared_ptr<TlsCredentialReloadConfig>(
-        new TlsCredentialReloadConfig(credentials_reload_interface_));
+        std::make_shared<CredentialsReloadInterface>(pem_root_certs_,
+                                                     server_private_key_,
+                                                     server_cert_);
+    auto credential_reload_config_ =
+        std::make_shared<TlsCredentialReloadConfig>(
+            credentials_reload_interface_);
 
-    tls_opts_ = std::shared_ptr<TlsCredentialsOptions>(
-        new TlsCredentialsOptions(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE,
-                                  GRPC_TLS_SERVER_VERIFICATION, nullptr,
-                                  credential_reload_config_, nullptr));
+    tls_opts_ = std::make_shared<TlsCredentialsOptions>(
+        GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE,
+        GRPC_TLS_SERVER_VERIFICATION, nullptr,
+        credential_reload_config_, nullptr);
     server_credentials_ = TlsServerCredentials(*tls_opts_);
   }
 }
