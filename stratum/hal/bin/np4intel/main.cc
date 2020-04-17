@@ -113,7 +113,7 @@ void registerDeviceMgrLogger() {
         // Call the DPDK EAL init
         auto rc =  ::pi::np4::DeviceMgr::DPDKInit(argv.size()-1, &argv[0]);
 
-        // Now log the return code message 
+        // Now log the return code message
         if (rc != 0) {
             RETURN_ERROR(ERR_INTERNAL) << "DPDK EAL Init failed";
         }

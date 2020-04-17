@@ -138,13 +138,13 @@ class NP4ChassisManagerTest : public ::testing::Test {
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED);
 
-    //EXPECT_CALL(*phal_mock_,
-    //            RegisterTransceiverEventWriter(
-    //                _, PhalInterface::kTransceiverEventWriterPriorityHigh))
-    //    .WillOnce(Return(kTestTransceiverWriterId));
-    //EXPECT_CALL(*phal_mock_,
-    //            UnregisterTransceiverEventWriter(kTestTransceiverWriterId))
-    //    .WillOnce(Return(::util::OkStatus()));
+    // EXPECT_CALL(*phal_mock_,
+    //             RegisterTransceiverEventWriter(
+    //                 _, PhalInterface::kTransceiverEventWriterPriorityHigh))
+    //     .WillOnce(Return(kTestTransceiverWriterId));
+    // EXPECT_CALL(*phal_mock_,
+    //             UnregisterTransceiverEventWriter(kTestTransceiverWriterId))
+    //     .WillOnce(Return(::util::OkStatus()));
 
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
     CHECK_RETURN_IF_FALSE(Initialized())
@@ -210,7 +210,7 @@ TEST_F(NP4ChassisManagerTest, AddPortFec) {
 TEST_F(NP4ChassisManagerTest, TransceiverEvent) {
   ASSERT_OK(PushBaseChassisConfig());
 
-  //EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
+  // EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

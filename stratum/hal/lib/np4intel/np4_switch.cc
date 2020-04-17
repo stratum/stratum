@@ -56,7 +56,6 @@ NP4Switch::~NP4Switch() {}
   // Create PI Nodes
   // Note: we use the node_id for the device_id
   for (auto& node : config.nodes()) {
-
     // Allocate PI node
     std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(node.id()));
     node_id_to_pi_node_[node.id()] =
