@@ -4622,6 +4622,7 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
   switch (chip_type) {
     case BcmChip::TOMAHAWK:
     case BcmChip::TOMAHAWK_PLUS:
+    case BcmChip::TRIDENT2:
       return kSdkCheckpointFileSize;
     default:
       return MAKE_ERROR(ERR_INTERNAL) << "Un-supported BCM chip type: "
