@@ -61,8 +61,8 @@ class CredentialsReloadInterface : public TlsCredentialReloadInterface {
       LOCKS_EXCLUDED(credential_lock_);
 
   // CredentialsReloadInterface is neither copyable nor movable.
-  CredentialsReloadInterface(const CredentialsReloadInterface &) = delete;
-  CredentialsReloadInterface &operator=(const CredentialsReloadInterface &) =
+  CredentialsReloadInterface(const CredentialsReloadInterface&) = delete;
+  CredentialsReloadInterface &operator=(const CredentialsReloadInterface&) =
       delete;
 
  private:
@@ -90,8 +90,8 @@ class CredentialsManager {
   static std::unique_ptr<CredentialsManager> CreateInstance();
 
   // CredentialsManager is neither copyable nor movable.
-  CredentialsManager(const CredentialsManager &) = delete;
-  CredentialsManager &operator=(const CredentialsManager &) = delete;
+  CredentialsManager(const CredentialsManager&) = delete;
+  CredentialsManager &operator=(const CredentialsManager&) = delete;
 
   // Loads new credentials
   ::util::Status LoadNewCredential(const std::string ca_cert,

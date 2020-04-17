@@ -31,8 +31,8 @@ class CredentialsManagerMock : public CredentialsManager {
   MOCK_CONST_METHOD0(GenerateExternalFacingServerCredentials,
                      std::shared_ptr<::grpc::ServerCredentials>());
   MOCK_CONST_METHOD3(LoadNewCredential,
-      ::util::Status<const std::string ca_cert, const std::string cert,
-                     const std::string key>);
+      ::util::Status(const std::string ca_cert, const std::string cert,
+                     const std::string key));
 };
 
 }  // namespace stratum
