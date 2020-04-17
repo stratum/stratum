@@ -113,7 +113,7 @@ class NP4Switch : public SwitchInterface {
   std::map<uint64, std::unique_ptr<pi::PINode>> node_id_to_pi_node_;
 
   // Map from the node ids to a unique point to the PI DeviceMgr
-  std::map<uint64, std::unique_ptr<::pi::fe::proto::DeviceMgr>> 
+  std::map<uint64, std::unique_ptr<::pi::fe::proto::DeviceMgr>>
     node_id_to_device_mgr_;
 };
 

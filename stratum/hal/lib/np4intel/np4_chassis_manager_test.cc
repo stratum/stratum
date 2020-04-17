@@ -108,25 +108,16 @@ class NP4ChassisManagerTest : public ::testing::Test {
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
     np4_chassis_manager_ = NP4ChassisManager::CreateInstance(
-        phal_mock_.get(), np4_pal_mock_.get());
-    ON_CALL(*np4_pal_mock_, PortIsValid(_, _)).WillByDefault(Return(true));
+        phal_mock_.get());
   }
 
   ::util::Status CheckCleanInternalState() {
-    CHECK_RETURN_IF_FALSE(np4_chassis_manager_->unit_to_node_id_.empty());
-    CHECK_RETURN_IF_FALSE(np4_chassis_manager_->node_id_to_unit_.empty());
     CHECK_RETURN_IF_FALSE(
         np4_chassis_manager_->node_id_to_port_id_to_port_state_.empty());
     CHECK_RETURN_IF_FALSE(
         np4_chassis_manager_->node_id_to_port_id_to_port_config_.empty());
     CHECK_RETURN_IF_FALSE(
-        np4_chassis_manager_->node_id_to_port_id_to_singleton_port_key_.empty());
-    CHECK_RETURN_IF_FALSE(
-        np4_chassis_manager_->xcvr_port_key_to_xcvr_state_.empty());
-    CHECK_RETURN_IF_FALSE(
         np4_chassis_manager_->port_status_change_event_channel_ == nullptr);
-    CHECK_RETURN_IF_FALSE(np4_chassis_manager_->xcvr_event_channel_ == nullptr);
-    CHECK_RETURN_IF_FALSE(np4_chassis_manager_->xcvr_event_reader_ == nullptr);
     return ::util::OkStatus();
   }
 
@@ -147,34 +138,18 @@ class NP4ChassisManagerTest : public ::testing::Test {
         << "Can only call PushBaseChassisConfig() for first ChassisConfig!";
     builder->AddPort(kPortId, kPort, ADMIN_STATE_ENABLED);
 
-    // PortStatusChangeRegisterEventWriter called because this is the first call
-    // to PushChassisConfig
-    EXPECT_CALL(*np4_pal_mock_, PortStatusChangeRegisterEventWriter(_));
-    EXPECT_CALL(*np4_pal_mock_, PortAdd(
-        kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
-    EXPECT_CALL(*np4_pal_mock_, PortEnable(kUnit, kPortId));
-
-    EXPECT_CALL(*phal_mock_,
-                RegisterTransceiverEventWriter(
-                    _, PhalInterface::kTransceiverEventWriterPriorityHigh))
-        .WillOnce(Return(kTestTransceiverWriterId));
-    EXPECT_CALL(*phal_mock_,
-                UnregisterTransceiverEventWriter(kTestTransceiverWriterId))
-        .WillOnce(Return(::util::OkStatus()));
+    //EXPECT_CALL(*phal_mock_,
+    //            RegisterTransceiverEventWriter(
+    //                _, PhalInterface::kTransceiverEventWriterPriorityHigh))
+    //    .WillOnce(Return(kTestTransceiverWriterId));
+    //EXPECT_CALL(*phal_mock_,
+    //            UnregisterTransceiverEventWriter(kTestTransceiverWriterId))
+    //    .WillOnce(Return(::util::OkStatus()));
 
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
-    auto unit = GetUnitFromNodeId(kNodeId);
-    CHECK_RETURN_IF_FALSE(unit.ok());
-    CHECK_RETURN_IF_FALSE(unit.ValueOrDie() == kUnit)
-        << "Invalid unit number!";
     CHECK_RETURN_IF_FALSE(Initialized())
         << "Class is not initialized after push!";
     return ::util::OkStatus();
-  }
-
-  ::util::Status ReplayPortsConfig(uint64 node_id) {
-    absl::WriterMutexLock l(&chassis_lock);
-    return np4_chassis_manager_->ReplayPortsConfig(node_id);
   }
 
   ::util::Status PushBaseChassisConfig() {
@@ -182,34 +157,17 @@ class NP4ChassisManagerTest : public ::testing::Test {
     return PushBaseChassisConfig(&builder);
   }
 
-  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const {
-    absl::ReaderMutexLock l(&chassis_lock);
-    return np4_chassis_manager_->GetUnitFromNodeId(node_id);
-  }
-
   ::util::Status Shutdown() {
     return np4_chassis_manager_->Shutdown();
   }
 
   ::util::Status ShutdownAndTestCleanState() {
-    EXPECT_CALL(*np4_pal_mock_,
-                PortStatusChangeUnregisterEventWriter())
-        .WillOnce(Return(::util::OkStatus()));
     RETURN_IF_ERROR(Shutdown());
     RETURN_IF_ERROR(CheckCleanInternalState());
     return ::util::OkStatus();
   }
 
-  std::unique_ptr<ChannelWriter<TransceiverEvent>> GetTransceiverEventWriter() {
-    absl::WriterMutexLock l(&chassis_lock);
-    CHECK(np4_chassis_manager_->xcvr_event_channel_ != nullptr)
-        << "xcvr channel is null!";
-    return ChannelWriter<PhalInterface::TransceiverEvent>::Create(
-        np4_chassis_manager_->xcvr_event_channel_);
-  }
-
   std::unique_ptr<PhalMock> phal_mock_;
-  std::unique_ptr<NP4PalMock> np4_pal_mock_;
   std::unique_ptr<NP4ChassisManager> np4_chassis_manager_;
 
   static constexpr int kTestTransceiverWriterId = 20;
@@ -230,7 +188,6 @@ TEST_F(NP4ChassisManagerTest, RemovePort) {
   ASSERT_OK(PushBaseChassisConfig(&builder));
 
   builder.RemoveLastPort();
-  EXPECT_CALL(*np4_pal_mock_, PortDelete(kUnit, kPortId));
   ASSERT_OK(PushChassisConfig(builder));
 
   ASSERT_OK(ShutdownAndTestCleanState());
@@ -245,43 +202,15 @@ TEST_F(NP4ChassisManagerTest, AddPortFec) {
 
   builder.AddPort(
       portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON);
-  EXPECT_CALL(*np4_pal_mock_, PortAdd(
-      kUnit, portId, kHundredGigBps, FEC_MODE_ON));
-  EXPECT_CALL(*np4_pal_mock_, PortEnable(kUnit, portId));
   ASSERT_OK(PushChassisConfig(builder));
-
-  ASSERT_OK(ShutdownAndTestCleanState());
-}
-
-TEST_F(NP4ChassisManagerTest, ReplayPorts) {
-  ASSERT_OK(PushBaseChassisConfig());
-
-  EXPECT_CALL(*np4_pal_mock_, PortAdd(
-      kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
-  EXPECT_CALL(*np4_pal_mock_, PortEnable(kUnit, kPortId));
-
-  // For now, when replaying the port configuration, we set the mtu and autoneg
-  // even if the values where already the defaults. This seems like a good idea
-  // to ensure configuration consistency.
-  EXPECT_CALL(*np4_pal_mock_, PortMtuSet(kUnit, kPortId, 0)).Times(AtMost(1));
-  EXPECT_CALL(*np4_pal_mock_,
-              PortAutonegPolicySet(kUnit, kPortId, TRI_STATE_UNKNOWN))
-      .Times(AtMost(1));
-
-  EXPECT_OK(ReplayPortsConfig(kNodeId));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }
 
 TEST_F(NP4ChassisManagerTest, TransceiverEvent) {
   ASSERT_OK(PushBaseChassisConfig());
-  auto xcvr_event_writer = GetTransceiverEventWriter();
 
-  EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
-
-  EXPECT_OK(xcvr_event_writer->Write(
-      TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
-      absl::InfiniteDuration()));
+  //EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
 
   ASSERT_OK(ShutdownAndTestCleanState());
 }

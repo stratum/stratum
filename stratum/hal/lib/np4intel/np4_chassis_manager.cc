@@ -19,7 +19,6 @@
 #include <memory>
 #include <utility>  // std::pair
 
-// TODO: need equivalent for np4intel
 #include "stratum/hal/lib/np4intel/np4_chassis_manager.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -100,6 +99,43 @@ namespace {
   for (auto& node : config.nodes()) {
     VLOG(1) << "Updating config for node " << node.id() << ".";
 
+    // Remove or change existing port config
+    for (const auto& port_old : node_id_to_port_id_to_port_config_[node.id()]) {
+      auto port_id = port_old.first;
+      auto* singleton_port = gtl::FindOrNull(
+          node_id_to_port_id_to_port_config[node.id()], port_id);
+
+      if (singleton_port == nullptr) {  // remove port if not present any more
+        auto& config_old = port_old.second.config_params();
+        if (config_old.admin_state() == ADMIN_STATE_ENABLED) {
+          APPEND_STATUS_IF_ERROR(
+              status, RemovePort(node.id(), port_id));
+        }
+      } else {  // change port config if needed
+        auto& config_old = port_old.second.config_params();
+        auto& config = singleton_port->config_params();
+        if (config.admin_state() != config_old.admin_state()) {
+          if (config.admin_state() == ADMIN_STATE_ENABLED) {
+            APPEND_STATUS_IF_ERROR(
+                status,
+                AddPort(node.id(), singleton_port->name(), port_id));
+          } else {
+            APPEND_STATUS_IF_ERROR(
+                status, RemovePort(node.id(), port_id));
+            if (node_id_to_port_id_to_port_state_[node.id()][port_id] ==
+                PORT_STATE_UP) {
+              // TODO(antonin): would it be better to just register a bmv2
+              // callback for PORT_REMOVED event?
+              VLOG(1) << "Sending DOWN notification for port " << port_id
+                      << " in node " << node.id() << ".";
+              SendPortOperStateGnmiEvent(node.id(), port_id, PORT_STATE_DOWN);
+            }
+          }
+        }
+      }
+    }
+
+    // Add a new port config
     for (const auto& port : node_id_to_port_id_to_port_config[node.id()]) {
       auto port_id = port.first;
       auto* singleton_port_old = gtl::FindOrNull(

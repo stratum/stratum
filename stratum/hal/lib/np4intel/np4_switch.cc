@@ -19,6 +19,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <utility>
 
 #include "stratum/hal/lib/np4intel/np4_switch.h"
 #include "stratum/hal/lib/pi/pi_node.h"
@@ -52,14 +53,13 @@ NP4Switch::~NP4Switch() {}
   // Free all PI nodes first
   node_id_to_pi_node_.clear();
   node_id_to_device_mgr_.clear();
-
   // Create PI Nodes
   // Note: we use the node_id for the device_id
   for (auto& node : config.nodes()) {
 
     // Allocate PI node
     std::unique_ptr<DeviceMgr> device_mgr(new DeviceMgr(node.id()));
-    node_id_to_pi_node_[node.id()] = 
+    node_id_to_pi_node_[node.id()] =
         pi::PINode::CreateInstance(device_mgr.get(), node.id());
     node_id_to_device_mgr_[node.id()] = std::move(device_mgr);
   }

@@ -30,7 +30,8 @@
 #include "stratum/hal/bin/np4intel/dpdk_config.pb.h"
 
 DEFINE_string(initial_pipeline, "stratum/hal/bin/np4intel/dummy.json",
-              "Path to initial pipeline for Netcope (required for starting Netcope)");
+              "Path to initial pipeline for Netcope (required for "
+              "starting Netcope)");
 DEFINE_uint32(cpu_port, 128,
               "Netcope port number for CPU port (used for packet I/O)");
 DEFINE_bool(np4_sim, false, "Run with the NP4 simulator");
@@ -88,12 +89,11 @@ void registerDeviceMgrLogger() {
 
 // Initialise the DPDK EAL
 ::util::Status  DPDKEalInit() {
-
     std::string pgm_name = "stratum_np4intel";
 
-    // Argv vector
+    // Arguments vector
     std::vector<char*> argv;
-    argv.push_back((char *)pgm_name.data());
+    argv.push_back(strdup(pgm_name.c_str()));
 
     // Were we passed a dpdk config file
     ::stratum::hal::np4intel::DPDKConfig dpdk_config;
@@ -101,9 +101,9 @@ void registerDeviceMgrLogger() {
         RETURN_IF_ERROR(ReadProtoFromTextFile(FLAGS_dpdk_config,
                                               &dpdk_config));
 
-        // create argvs
+        // create argv
         for (const auto& arg : dpdk_config.eal_args())
-            argv.push_back((char*)arg.data());
+            argv.push_back(strdup(arg.c_str()));
     }
     argv.push_back(nullptr);
 
@@ -111,7 +111,9 @@ void registerDeviceMgrLogger() {
         LOG(INFO) << "DPDK is disabled";
     } else {
         // Call the DPDK EAL init
-        auto rc =  ::pi::np4::DeviceMgr::DPDKInit(argv.size()-1, argv.data());
+        auto rc =  ::pi::np4::DeviceMgr::DPDKInit(argv.size()-1, &argv[0]);
+
+        // Now log the return code message 
         if (rc != 0) {
             RETURN_ERROR(ERR_INTERNAL) << "DPDK EAL Init failed";
         }
@@ -137,11 +139,11 @@ int Main(int argc, char* argv[]) {
   PhalInterface *phal_impl;
   if (FLAGS_np4_sim) {
     phal_impl = PhalSim::CreateSingleton();
-   } else {
+  } else {
     phal_impl = phal::Phal::CreateSingleton();
   }
 
-  auto np4_chassis_manager = 
+  auto np4_chassis_manager =
       NP4ChassisManager::CreateInstance(phal_impl);
   auto pi_switch = NP4Switch::CreateInstance(
       phal_impl, np4_chassis_manager.get());

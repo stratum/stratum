@@ -155,6 +155,8 @@ class NP4ChassisManager {
   // the config of the singleton port uniquely identified by (node ID, port ID).
   std::map<uint64, std::map<uint32, SingletonPort>>
       node_id_to_port_id_to_port_config_ GUARDED_BY(chassis_lock);
+
+  friend class NP4ChassisManagerTest;
 };
 
 }  // namespace np4intel
