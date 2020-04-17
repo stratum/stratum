@@ -65,7 +65,7 @@ pkg_tar(
     name = "stratum_bf_bin",
     srcs = [":stratum_bf"],
     mode = "0755",
-    package_dir = "/usr/local/bin",
+    package_dir = "/usr/bin",
     strip_prefix = STRIP_PREFIX,
 )
 
@@ -73,7 +73,7 @@ pkg_tar(
     name = "stratum_entry_point",
     srcs = ["docker/stratum-entrypoint.sh"],
     mode = "0755",
-    package_dir = "/usr/local/bin",
+    package_dir = "/usr/bin",
     strip_prefix = STRIP_PREFIX + "/docker",
 )
 
@@ -91,7 +91,7 @@ pkg_tar(
     name = "port_maps",
     srcs = glob(["platforms/*.json"]),
     mode = "0644",
-    package_dir = "/usr/local/share/stratum",
+    package_dir = "/usr/share/stratum",
     strip_prefix = STRIP_PREFIX + "/platforms",
 )
 
@@ -120,7 +120,7 @@ pkg_tar(
         "tofino_skip_p4.conf",
     ],
     mode = "0644",
-    package_dir = "/usr/local/share/stratum",
+    package_dir = "/usr/share/stratum",
     strip_prefix = STRIP_PREFIX,
 )
 
@@ -148,7 +148,7 @@ pkg_deb(
     description_file = "deb/description",
     homepage = "https://stratumproject.org/",
     maintainer = "https://stratumproject.org/",
-    package = "stratum_bf",
+    package = "stratum-bf",
     postinst = "deb/postinst",
     version = "0.0.1",
 )
