@@ -27,7 +27,7 @@ import argparse
 
 from p4.v1 import p4runtime_pb2
 from p4.config.v1 import p4info_pb2
-import forwarding_pipeline_configs_pb2
+from stratum.hal import forwarding_pipeline_configs_pb2
 from pi.np4 import p4_device_config_pb2
 from google.protobuf import text_format
 
