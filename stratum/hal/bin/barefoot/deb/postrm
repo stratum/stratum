@@ -1,3 +1,7 @@
+# Remove huge page setting
+umount /mnt/huge
+sed -i '/Required by Stratum/,+2d' /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
 # Remove logs and working directory
 rm -rf /var/run/stratum
 rm -rf /var/log/stratum

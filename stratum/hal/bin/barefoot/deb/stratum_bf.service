@@ -1,21 +1,16 @@
 [Unit]
-Description=Stratum
+Description=Stratum service
 ConditionPathExists=/usr/bin/stratum_bf
-ConditionPathExists=/etc/stratum/stratum_bf.env
 
 [Service]
 Type=simple
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=stratum_bf
-
 WorkingDirectory=/var/run/stratum
-EnvironmentFile=/etc/stratum/stratum_bf.environment
-
-ExecStart=/usr/bin/stratum-entrypoint
-
+EnvironmentFile=/etc/stratum/stratum_bf.env
+ExecStart=/bin/bash /usr/bin/stratum-entrypoint
 ExecStop=/usr/bin/stop-stratum
-
 Restart=on-failure
 
 [Install]

@@ -71,10 +71,10 @@ pkg_tar(
 
 pkg_tar(
     name = "stratum_entry_point",
-    srcs = ["docker/stratum-entrypoint.sh"],
+    srcs = ["deb/stratum-entrypoint"],
     mode = "0755",
     package_dir = "/usr/bin",
-    strip_prefix = STRIP_PREFIX + "/docker",
+    strip_prefix = STRIP_PREFIX + "/deb",
 )
 
 pkg_tar(
@@ -83,7 +83,7 @@ pkg_tar(
         "deb/stratum_bf.service",
     ],
     mode = "0644",
-    package_dir = "/etc/systemd/system",
+    package_dir = "/usr/lib/systemd/system",
     strip_prefix = STRIP_PREFIX + "/deb",
 )
 
@@ -97,10 +97,10 @@ pkg_tar(
 
 pkg_tar(
     name = "flgs_file",
-    srcs = ["docker/stratum.flags"],
+    srcs = ["deb/stratum.flags"],
     mode = "0644",
     package_dir = "/etc/stratum",
-    strip_prefix = STRIP_PREFIX + "/docker",
+    strip_prefix = STRIP_PREFIX + "/deb",
 )
 
 pkg_tar(

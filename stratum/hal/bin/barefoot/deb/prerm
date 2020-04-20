@@ -1,2 +1,3 @@
-# Stop Stratum service
-systemctl enable stratum_bf.service
+# Stop and disable Stratum service
+systemctl stop stratum_bf.service
+systemctl disable stratum_bf.service
