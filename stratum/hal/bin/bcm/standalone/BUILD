@@ -147,5 +147,13 @@ pkg_deb(
     description = "Stratum for Broadcom switches",
     architecture = "amd64",
     data = ":statum_bcm_all",
+    depends = [
+        "kmod",
+        "libboost-thread1.62.0",
+        "libedit2",
+        "libjudydebian1",
+        "libssl1.1",
+        "libyaml-0-2",
+    ],
     maintainer = "https://stratumproject.org/",
 )
