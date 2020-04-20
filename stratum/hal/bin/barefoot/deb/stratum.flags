@@ -1,0 +1,10 @@
+-external_stratum_urls=0.0.0.0:28000
+-grpc_max_recv_msg_size=256
+-bf_sde_install=/usr
+-persistent_config_dir=/etc/stratum/
+-forwarding_pipeline_configs_file=/etc/stratum/pipeline_config.pb.txt
+-chassis_config_file=/etc/stratum/chassis_config.pb.txt
+-write_req_log_file=/var/log/stratum/p4_writes.pb.txt
+-bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+-logtosyslog=false
+-pid-file=/var/run/stratum/pid.txt

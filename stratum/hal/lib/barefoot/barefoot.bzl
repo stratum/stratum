@@ -26,6 +26,7 @@ def _impl(repository_ctx):
     bf_sde_path = repository_ctx.os.environ["BF_SDE_INSTALL"]
     repository_ctx.symlink(bf_sde_path, "barefoot-bin")
     repository_ctx.file("BUILD", """
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -67,6 +68,29 @@ cc_import(
   hdrs = [],  # see cc_library rule above
   shared_library = "barefoot-bin/lib/libbfutils.so",
   alwayslink = 1,
+)
+pkg_tar(
+  name = "bf_library_files",
+  srcs = glob(["barefoot-bin/lib/*.so"]),
+  mode = "0644",
+  package_dir = "/usr",
+  strip_prefix = "barefoot-bin",
+)
+pkg_tar(
+  name = "bf_shareable_files",
+  srcs = glob(["barefoot-bin/share/microp_fw/**"]) +
+         glob(["barefoot-bin/share/bfsys/**"]) +
+         glob(["barefoot-bin/share/tofino_sds_fw/**"]),
+  mode = "0644",
+  package_dir = "/usr",
+  strip_prefix = "barefoot-bin",
+)
+pkg_tar(
+  name = "kernel_module",
+  srcs = glob(["barefoot-bin/lib/modules/*.ko"]),
+  mode = "0644",
+  package_dir = "/usr",
+  strip_prefix = "barefoot-bin",
 )
 """)
 

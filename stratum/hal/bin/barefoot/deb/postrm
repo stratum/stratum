@@ -1,0 +1,3 @@
+# Remove logs and working directory
+rm -rf /var/run/stratum
+rm -rf /var/log/stratum

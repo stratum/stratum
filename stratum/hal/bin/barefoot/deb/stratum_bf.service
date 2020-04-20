@@ -12,11 +12,9 @@ SyslogIdentifier=stratum_bf
 WorkingDirectory=/var/run/stratum
 EnvironmentFile=/etc/stratum/stratum_bf.environment
 
-ExecStartPre=/bin/mkdir -p /var/run/stratum
+ExecStart=/usr/bin/stratum-entrypoint
 
-ExecStart=/usr/local/bin/stratum_bf -flagfile=$FLAG_FILE
-
-ExecStop=/usr/bin/pkill stratum_bf
+ExecStop=/usr/bin/stop-stratum
 
 Restart=on-failure
 

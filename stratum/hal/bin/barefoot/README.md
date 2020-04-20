@@ -237,5 +237,3 @@ To build Debian package, use command below:
 ```
  bazel build //stratum/hal/bin/barefoot:stratum_bf_deb
 ```
-
-Note that this package does not include libraries like SDE and PI, you need to install them manually.

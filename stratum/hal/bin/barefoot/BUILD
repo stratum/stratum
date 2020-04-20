@@ -135,6 +135,9 @@ pkg_tar(
         ":flgs_file",
         ":systemd_service_env",
         ":tofino_configs",
+        "@local_barefoot_bin//:bf_library_files",
+        "@local_barefoot_bin//:bf_shareable_files",
+        "@local_barefoot_bin//:kernel_module",
     ],
 )
 
@@ -143,12 +146,19 @@ pkg_deb(
     architecture = "amd64",
     data = ":stratum_bf_data",
     depends = [
-        "systemd"
+        "systemd",
+        "kmod",
+        "libssl1.1",
+        "libedit2",
+        "libjudydebian1",
+        "libboost-thread1.62.0",
     ],
     description_file = "deb/description",
     homepage = "https://stratumproject.org/",
     maintainer = "https://stratumproject.org/",
     package = "stratum-bf",
     postinst = "deb/postinst",
+    postrm = "deb/postrm",
+    prerm = "deb/prerm",
     version = "0.0.1",
 )

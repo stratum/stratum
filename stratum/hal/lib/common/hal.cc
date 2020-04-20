@@ -16,6 +16,8 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
+#include <unistd.h>
+
 #include <chrono>  // NOLINT
 #include <utility>
 
@@ -29,6 +31,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
+#include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
@@ -52,6 +55,7 @@ DEFINE_uint32(grpc_max_recv_msg_size, 0,
               "grpc server max receive message size in MB");
 DEFINE_uint32(grpc_max_send_msg_size, 0,
               "grpc server max send message size in MB");
+DEFINE_string(pid_file, "", "File which stores the process ID");
 
 namespace stratum {
 namespace hal {
@@ -165,6 +169,11 @@ Hal::~Hal() {
 
   // Successful warmboot or coldboot will clear out the blocking errors.
   error_buffer_->ClearErrors();
+
+  // Write PID to file
+  if (!FLAGS_pid_file.empty()) {
+    WriteStringToFile(absl::StrFormat("%d", getpid()), FLAGS_pid_file);
+  }
 
   return ::util::OkStatus();
 }
