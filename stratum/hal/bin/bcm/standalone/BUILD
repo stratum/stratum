@@ -140,5 +140,5 @@ pkg_deb(
         "libyaml-0-2",
     ],
     maintainer = "The Stratum Project",
-    website = "https://stratumproject.org/",
+    homepage = "https://stratumproject.org/",
 )
