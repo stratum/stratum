@@ -127,7 +127,7 @@ pkg_tar(
 pkg_deb(
     name = "stratum_bcm_deb",
     package = "stratum-bcm",
-    version = "0.1",
+    version = "0.0.1",
     description = "Stratum for Broadcom switches",
     architecture = "amd64",
     data = ":statum_bcm_all",
@@ -139,5 +139,6 @@ pkg_deb(
         "libssl1.1",
         "libyaml-0-2",
     ],
-    maintainer = "https://stratumproject.org/",
+    maintainer = "The Stratum Project",
+    website = "https://stratumproject.org/",
 )
