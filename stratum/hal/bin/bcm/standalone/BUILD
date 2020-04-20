@@ -88,22 +88,6 @@ stratum_package(
     ],
 )
 
-# TODO(max): Remove once Debian package is ready.
-pkg_tar(
-    name = "stratum_bcm_package",
-    extension = "tar.gz",
-    srcs = [
-        ":stratum_bcm",
-        "@com_github_opennetworkinglab_sdklt//:kernel_modules",
-        "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
-        "start-stratum.sh",
-    ],
-    deps = [
-        "//stratum/hal/config:all_configs_tar",
-    ],
-    mode = "0755",
-)
-
 pkg_tar(
     name = "stratum_bcm_bin",
     srcs = [
