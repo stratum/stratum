@@ -74,7 +74,7 @@ RUN mkdir -p $PYTHON_PACKAGE_BASE/google && \
 # Install a version of the protobuf and grpc python bindings that is
 # compatible to that used to generate the P4Runtime ones.
 ARG PROTOBUF_VER=3.7.1
-ARG GRPC_VER=1.21.3
+ARG GRPC_VER=1.28.1
 RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
 RUN pip install --root /output "grpcio<=${GRPC_VER}"
 
