@@ -86,8 +86,9 @@ class CredentialsManager {
   virtual std::shared_ptr<::grpc::ServerCredentials>
   GenerateExternalFacingServerCredentials() const;
 
-  // Factory function for creating the instance of the class.
+  // Factory functions for creating the instance of the class.
   static std::unique_ptr<CredentialsManager> CreateInstance();
+  ::util::Status Initialize();
 
   // CredentialsManager is neither copyable nor movable.
   CredentialsManager(const CredentialsManager&) = delete;

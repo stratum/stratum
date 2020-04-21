@@ -35,8 +35,25 @@ DEFINE_string(server_cert, "", "gRPC Server certificate path");
 namespace stratum {
 
 CredentialsManager::~CredentialsManager() {}
+CredentialsManager::CredentialsManager() {}
 
-CredentialsManager::CredentialsManager() {
+std::shared_ptr<::grpc::ServerCredentials>
+CredentialsManager::GenerateExternalFacingServerCredentials() const {
+  return server_credentials_;
+}
+
+std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {
+  auto instance_ = absl::WrapUnique(new CredentialsManager());
+  auto status = instance_->Initialize();
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to initialize the CredentialsManager instance: "
+               << status.error_message();
+    return nullptr;
+  }
+  return instance_;
+}
+
+::util::Status CredentialsManager::Initialize() {
   if (FLAGS_ca_cert.empty() || FLAGS_server_key.empty() ||
       FLAGS_server_cert.empty()) {
     LOG(WARNING) << "Using insecure server credentials";
@@ -51,10 +68,7 @@ CredentialsManager::CredentialsManager() {
     status.Update(ReadFileToString(FLAGS_server_key, &server_private_key_));
     status.Update(ReadFileToString(FLAGS_server_cert, &server_cert_));
     if (!status.ok()) {
-      LOG(WARNING)
-          << "Unable to load credentials, use insecure server credentials";
-      server_credentials_ = ::grpc::InsecureServerCredentials();
-      return;
+      RETURN_ERROR().without_logging() << "Unable to load credentials.";
     }
     auto credentials_reload_interface_ =
         std::make_shared<CredentialsReloadInterface>(pem_root_certs_,
@@ -70,15 +84,7 @@ CredentialsManager::CredentialsManager() {
         credential_reload_config_, nullptr);
     server_credentials_ = TlsServerCredentials(*tls_opts_);
   }
-}
-
-std::shared_ptr<::grpc::ServerCredentials>
-CredentialsManager::GenerateExternalFacingServerCredentials() const {
-  return server_credentials_;
-}
-
-std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {
-  return absl::WrapUnique(new CredentialsManager());
+  return ::util::OkStatus();
 }
 
 ::util::Status CredentialsManager::LoadNewCredential(
