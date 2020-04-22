@@ -54,7 +54,7 @@ std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {
 }
 
 ::util::Status CredentialsManager::Initialize() {
-  if (FLAGS_ca_cert.empty() || FLAGS_server_key.empty() ||
+  if (FLAGS_ca_cert.empty() && FLAGS_server_key.empty() &&
       FLAGS_server_cert.empty()) {
     LOG(WARNING) << "Using insecure server credentials";
     server_credentials_ = ::grpc::InsecureServerCredentials();
@@ -68,7 +68,8 @@ std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {
     status.Update(ReadFileToString(FLAGS_server_key, &server_private_key_));
     status.Update(ReadFileToString(FLAGS_server_cert, &server_cert_));
     if (!status.ok()) {
-      RETURN_ERROR().without_logging() << "Unable to load credentials.";
+      RETURN_ERROR().without_logging() << "Unable to load credentials: "
+                                       << status.error_message();
     }
     auto credentials_reload_interface_ =
         std::make_shared<CredentialsReloadInterface>(pem_root_certs_,
