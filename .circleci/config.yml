@@ -40,6 +40,11 @@ set_bazelrc: &set_bazelrc
     name: Set bazelrc
     command: cat .circleci/bazelrc >> .bazelrc
 
+fix_gh_url: &fix_gh_url
+  run:
+    name: Replace ssh URLs with https
+    command: git config --global --unset url.ssh://git@github.com.insteadof
+
 # Convenience anchors to update published Docker images. Images are first pulled
 # to allow for layer cache hits and reduce build times.
 docker_login: &docker_login
@@ -68,6 +73,7 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
+      - *fix_gh_url
       - run:
           name: Build Stratum targets
           command: xargs -a .circleci/build-targets.txt bazel build
@@ -86,6 +92,7 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
+      - *fix_gh_url
       - run:
           name: Build CDLang targets
           command: xargs -a .circleci/cdlang-targets.txt bazel build
@@ -104,6 +111,7 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
+      - *fix_gh_url
       - run:
           name: Run test and collect coverage data
           command: xargs -a .circleci/test-targets.txt bazel coverage
@@ -159,6 +167,7 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
+      - *fix_gh_url
       - run:
           name: Build p4c-fpm
           command: |
@@ -187,6 +196,7 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
+      - *fix_gh_url
       - run:
           name: Build stratum_bcm
           command: |
@@ -211,10 +221,10 @@ jobs:
       - checkout
       - *restore_bazel_cache
       - *set_bazelrc
+      - *fix_gh_url
       - run:
           name: Build stratum_bcm
           command: |
-            git config --global --unset url.ssh://git@github.com.insteadof
             bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
       - *docker_login
