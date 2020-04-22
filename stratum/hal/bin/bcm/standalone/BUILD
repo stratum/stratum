@@ -38,7 +38,7 @@ package(
 licenses(["notice"])  # Apache v2
 
 stratum_cc_binary(
-    name = "stratum_bcm",
+    name = "stratum_bcm_sdklt",
     srcs = [
         "main.cc",
     ],
@@ -56,12 +56,12 @@ stratum_cc_binary(
         "//stratum/glue:logging",
         "//stratum/hal/lib/bcm:bcm_acl_manager",
         "//stratum/hal/lib/bcm:bcm_chassis_manager",
-        "//stratum/hal/lib/bcm:bcm_diag_shell",
+        "//stratum/hal/lib/bcm:bcm_sdklt_diag_shell",
         "//stratum/hal/lib/bcm:bcm_l2_manager",
         "//stratum/hal/lib/bcm:bcm_l3_manager",
         "//stratum/hal/lib/bcm:bcm_node",
         "//stratum/hal/lib/bcm:bcm_packetio_manager",
-        "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
+        "//stratum/hal/lib/bcm:bcm_sdklt_wrapper",
         "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
         "//stratum/hal/lib/bcm:bcm_switch",
         "//stratum/hal/lib/bcm:bcm_table_manager",
@@ -80,6 +80,43 @@ stratum_cc_binary(
     ],
 )
 
+stratum_cc_binary(
+    name = "stratum_bcm_opennsa",
+    srcs = [
+        "main.cc",
+    ],
+    arches = EMBEDDED_ARCHES,
+    linkopts = [
+        "-lpthread",
+        "-ldl",
+        "-lutil",
+    ],
+    deps = [
+        "@com_github_google_glog//:glog",
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/hal/lib/bcm:bcm_acl_manager",
+        "//stratum/hal/lib/bcm:bcm_chassis_manager",
+        "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
+        "//stratum/hal/lib/bcm:bcm_l2_manager",
+        "//stratum/hal/lib/bcm:bcm_l3_manager",
+        "//stratum/hal/lib/bcm:bcm_node",
+        "//stratum/hal/lib/bcm:bcm_packetio_manager",
+        "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
+        "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
+        "//stratum/hal/lib/bcm:bcm_switch",
+        "//stratum/hal/lib/bcm:bcm_table_manager",
+        "//stratum/hal/lib/bcm:bcm_tunnel_manager",
+        "//stratum/hal/lib/common:hal",
+        "//stratum/hal/lib/p4:p4_table_mapper",
+        "//stratum/hal/lib/phal:phal",
+        "//stratum/lib/security:auth_policy_checker",
+        "//stratum/lib/security:credentials_manager",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
 stratum_package(
     name = "stratum_pkg",
     bins = [
@@ -87,20 +124,28 @@ stratum_package(
     ],
 )
 
-# TODO(max): Remove once Debian package is ready.
 pkg_tar(
-    name = "stratum_bcm_bin",
+    name = "stratum_bcm_sdklt_bin",
     srcs = [
-        ":stratum_bcm",
-        "start-stratum.sh",
-        "load-kernel-modules.sh",
+        ":stratum_bcm_sdklt",
+        "sdklt/start-stratum.sh",
     ],
     mode = "0755",
     package_dir = "/usr/bin",
 )
 
 pkg_tar(
-    name = "stratum_bcm_lib",
+    name = "stratum_bcm_opennsa_bin",
+    srcs = [
+        ":stratum_bcm_opennsa",
+        "sdk/start-stratum.sh",
+    ],
+    mode = "0755",
+    package_dir = "/usr/bin",
+)
+
+pkg_tar(
+    name = "stratum_bcm_sdklt_lib",
     srcs = [
         "@com_github_opennetworkinglab_sdklt//:kernel_modules",
     ],
@@ -108,69 +153,10 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bcm_etc",
-    deps = [
-        "//stratum/hal/config:all_configs_tar",
-    ],
-    package_dir = "/etc/stratum",
-)
-
-pkg_tar(
-    name = "stratum_bcm_all",
-    deps = [
-        ":stratum_bcm_bin",
-        ":stratum_bcm_lib",
-        ":stratum_bcm_etc",
-    ],
-)
-
-pkg_deb(
-    name = "stratum_bcm_deb",
-    package = "stratum-bcm",
-    version = "0.0.1",
-    description = "Stratum for Broadcom switches",
-    architecture = "amd64",
-    data = ":stratum_bcm_all",
-    depends = [
-        "kmod",
-        "libboost-thread1.62.0",
-        "libedit2",
-        "libjudydebian1",
-        "libssl1.1",
-        "libyaml-0-2",
-    ],
-    maintainer = "The Stratum Project",
-    homepage = "https://stratumproject.org/",
-)
-
-pkg_tar(
-    name = "stratum_bcm_bin",
+    name = "stratum_bcm_opennsa_lib",
     srcs = [
-        ":stratum_bcm",
-        "start-stratum.sh",
-    ] + select({
-        "//stratum/hal/lib/bcm:bcm_sdk": [
-            "sdk/load-kernel-modules.sh"
-        ],
-        "//conditions:default": [
-            "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
-            "sdklt/load-kernel-modules.sh"
-        ],
-    }),
-    mode = "0755",
-    package_dir = "/usr/bin",
-)
-
-pkg_tar(
-    name = "stratum_bcm_lib",
-    srcs = select({
-        "//stratum/hal/lib/bcm:bcm_sdk": [
-            "@com_github_broadcom_opennsa//:kernel_modules",
-        ],
-        "//conditions:default": [
-            "@com_github_opennetworkinglab_sdklt//:kernel_modules",
-        ],
-    }),
+        "@com_github_broadcom_opennsa//:kernel_modules",
+    ],
     package_dir = "/usr/lib/stratum",
 )
 
@@ -183,20 +169,41 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "statum_bcm_all",
+    name = "statum_bcm_sdklt_all",
     deps = [
-        ":stratum_bcm_bin",
-        ":stratum_bcm_lib",
+        ":stratum_bcm_sdklt_bin",
+        ":stratum_bcm_sdklt_lib",
+        ":stratum_bcm_etc",
+    ],
+)
+
+pkg_tar(
+    name = "statum_bcm_opennsa_all",
+    deps = [
+        ":stratum_bcm_opennsa_bin",
+        ":stratum_bcm_opennsa_lib",
         ":stratum_bcm_etc",
     ],
 )
 
 pkg_deb(
-    name = "stratum_bcm_deb",
-    package = "stratum-bcm",
-    version = "0.1",
-    description = "Stratum for Broadcom switches",
+    name = "stratum_bcm_opennsa_deb",
+    package = "stratum-bcm-opennsa",
+    version = "0.0.1",
+    description = "Stratum for Broadcom switches using OpenNSA.",
     architecture = "amd64",
-    data = ":statum_bcm_all",
+    data = ":statum_bcm_opennsa_all",
     maintainer = "https://stratumproject.org/",
+    conflicts = ["stratum-bcm-sdklt"],
+)
+
+pkg_deb(
+    name = "stratum_bcm_sdklt_deb",
+    package = "stratum-bcm-sdklt",
+    version = "0.0.1",
+    description = "Stratum for Broadcom switches using SDKLT.",
+    architecture = "amd64",
+    data = ":statum_bcm_sdklt_all",
+    maintainer = "https://stratumproject.org/",
+    conflicts = ["stratum-bcm-opennsa"],
 )

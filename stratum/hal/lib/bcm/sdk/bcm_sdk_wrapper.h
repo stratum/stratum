@@ -130,6 +130,9 @@ class BcmSdkWrapper : public BcmSdkInterface {
       const std::string& config_file_path,
       const std::string& config_flush_file_path,
       const std::string& bcm_shell_log_file_path) override;
+  ::util::StatusOr<std::string> GenerateBcmConfigFile(
+      const BcmChassisMap& base_bcm_chassis_map,
+      const BcmChassisMap& target_bcm_chassis_map, OperationMode mode) override;
   ::util::Status FindUnit(int unit, int pci_bus, int pci_slot,
                           BcmChip::BcmChipType chip_type) override
       LOCKS_EXCLUDED(data_lock_);

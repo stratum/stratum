@@ -52,7 +52,7 @@ stratum_cc_binary(
         "//stratum/glue:logging",
         "//stratum/hal/lib/bcm:bcm_acl_manager",
         "//stratum/hal/lib/bcm:bcm_chassis_manager",
-        "//stratum/hal/lib/bcm:bcm_diag_shell",
+        "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
         "//stratum/hal/lib/bcm:bcm_l2_manager",
         "//stratum/hal/lib/bcm:bcm_l3_manager",
         "//stratum/hal/lib/bcm:bcm_node",
