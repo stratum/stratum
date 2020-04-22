@@ -96,7 +96,7 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "flgs_file",
+    name = "flags_file",
     srcs = ["deb/stratum.flags"],
     mode = "0644",
     package_dir = "/etc/stratum",
@@ -132,7 +132,7 @@ pkg_tar(
         ":stratum_entry_point",
         ":systemd_service",
         ":port_maps",
-        ":flgs_file",
+        ":flags_file",
         ":systemd_service_env",
         ":tofino_configs",
         "@local_barefoot_bin//:bf_library_files",

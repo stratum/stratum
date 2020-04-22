@@ -9,5 +9,8 @@ sysctl -p /etc/sysctl.conf
 mkdir -p /mnt/huge
 mount -t hugetlbfs nodev /mnt/huge
 
+# Reload libraries
+ldconfig
+
 # Enables Stratum service
 systemctl enable stratum_bf.service
