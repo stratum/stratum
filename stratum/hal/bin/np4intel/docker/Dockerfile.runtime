@@ -99,7 +99,10 @@ RUN mkdir -p $OUTPUT_BASE/bin && \
     cp $STRATUM_NP4INTEL_BASE/docker/scripts/build_pipeline_configs.py /output/ && \
     mkdir /output/opae && \
     cp /opae/mybuild/opae-libs-${OPAE_VERSION}.x86_64.deb /output/opae/ && \
-    cp -r $NP4_DIR /output/$NP4_DIR
+    cp -r $NP4_DIR /output/$NP4_DIR && \
+    mkdir -p /output/stratum/hal/lib/common/ && \
+    cp stratum/hal/lib/common/gnmi_caps.pb.txt /output/stratum/hal/lib/common/
+    # TODO(Yi Tseng): Remove two lines above when we are able to generate cap response automatically
 
 #----------------------------------------------------------------------
 # Now build the stratum runtime container
