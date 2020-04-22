@@ -1723,6 +1723,15 @@ bool BcmChassisManager::IsSingletonPortMatchesBcmPort(
   return result;
 }
 
+::util::Status BcmChassisManager::WriteBcmConfigFile(
+    const BcmChassisMap& base_bcm_chassis_map,
+    const BcmChassisMap& target_bcm_chassis_map) const {
+  ASSIGN_OR_RETURN(auto config,
+                   bcm_sdk_interface_->GenerateBcmConfigFile(
+                       base_bcm_chassis_map, target_bcm_chassis_map, mode_));
+  return WriteStringToFile(config, FLAGS_bcm_sdk_config_file);
+}
+
 void* BcmChassisManager::LinkscanEventHandlerThreadFunc(void* arg) {
   CHECK(arg != nullptr);
   // Retrieve arguments.
