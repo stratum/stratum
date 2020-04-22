@@ -434,6 +434,8 @@ class BcmChassisManagerTest : public ::testing::TestWithParam<OperationMode> {
                                               FLAGS_bcm_sdk_config_flush_file,
                                               FLAGS_bcm_sdk_shell_log_file))
         .WillOnce(Return(::util::OkStatus()));
+    EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+        .WillRepeatedly(Return(std::string("")));
     EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
         .WillOnce(Return(::util::OkStatus()));
     EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -600,6 +602,8 @@ TEST_P(BcmChassisManagerTest, NonGracefulShutdownAfterConfigPush) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -734,6 +738,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1212,6 +1218,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1486,6 +1494,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -1780,6 +1790,8 @@ TEST_P(BcmChassisManagerTest,
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -2096,6 +2108,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithAutoAddSlot) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(2, 5, 0, BcmChip::TRIDENT2))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(2, false))
@@ -2317,6 +2331,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithTrunks) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -2696,6 +2712,8 @@ TEST_P(BcmChassisManagerTest, PushChassisConfigSuccessWithGePortOnTridentPlus) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 21, 0, BcmChip::TRIDENT_PLUS))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4193,6 +4211,8 @@ TEST_P(BcmChassisManagerTest, VerifyChassisConfigReportsRebootRequired) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4523,6 +4543,8 @@ TEST_P(BcmChassisManagerTest, GetPortStateAfterConfigPushAndLinkEvent) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -4933,6 +4955,8 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsSuccess) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_CALL(*bcm_sdk_mock_, FindUnit(0, 7, 1, BcmChip::TOMAHAWK))
       .WillOnce(Return(::util::OkStatus()));
   EXPECT_CALL(*bcm_sdk_mock_, InitializeUnit(0, false))
@@ -5172,6 +5196,8 @@ TEST_P(BcmChassisManagerTest, InitializeBcmChipsFailure) {
                                             FLAGS_bcm_sdk_config_flush_file,
                                             FLAGS_bcm_sdk_shell_log_file))
       .WillOnce(Return(error));
+  EXPECT_CALL(*bcm_sdk_mock_, GenerateBcmConfigFile(_, _, _))
+      .WillRepeatedly(Return(std::string("")));
   EXPECT_EQ(error,
             InitializeBcmChips(base_bcm_chassis_map, target_bcm_chassis_map));
   EXPECT_FALSE(Initialized());
