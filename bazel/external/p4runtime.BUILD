@@ -101,3 +101,14 @@ py_grpc_library(
     srcs = [":p4runtime_proto"],
     deps = [":p4runtime_py_proto"],
 )
+
+py_proto_library(
+    name = "p4data_py_proto",
+    deps = [":p4data_proto"],
+)
+
+py_grpc_library(
+    name = "p4data_py_grpc",
+    srcs = [":p4data_proto"],
+    deps = [":p4data_py_proto"],
+)
