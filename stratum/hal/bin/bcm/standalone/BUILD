@@ -37,6 +37,31 @@ package(
 
 licenses(["notice"])  # Apache v2
 
+stratum_bcm_common_deps = [
+    "@com_github_google_glog//:glog",
+    "@com_google_absl//absl/memory",
+    "@com_google_absl//absl/synchronization",
+    "//stratum/glue:init_google",
+    "//stratum/glue:logging",
+    "//stratum/hal/lib/bcm:bcm_acl_manager",
+    "//stratum/hal/lib/bcm:bcm_chassis_manager",
+    "//stratum/hal/lib/bcm:bcm_l2_manager",
+    "//stratum/hal/lib/bcm:bcm_l3_manager",
+    "//stratum/hal/lib/bcm:bcm_node",
+    "//stratum/hal/lib/bcm:bcm_packetio_manager",
+    "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
+    "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
+    "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
+    "//stratum/hal/lib/bcm:bcm_switch",
+    "//stratum/hal/lib/bcm:bcm_table_manager",
+    "//stratum/hal/lib/bcm:bcm_tunnel_manager",
+    "//stratum/hal/lib/common:hal",
+    "//stratum/hal/lib/p4:p4_table_mapper",
+    "//stratum/hal/lib/phal:phal",
+    "//stratum/lib/security:auth_policy_checker",
+    "//stratum/lib/security:credentials_manager",
+]
+
 stratum_cc_binary(
     name = "stratum_bcm_sdklt",
     srcs = [
@@ -50,34 +75,7 @@ stratum_cc_binary(
         "-lrt",
         "-lyaml",
     ],
-    deps = [
-        "@com_github_google_glog//:glog",
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
-        "//stratum/hal/lib/bcm:bcm_acl_manager",
-        "//stratum/hal/lib/bcm:bcm_chassis_manager",
-        "//stratum/hal/lib/bcm:bcm_sdklt_diag_shell",
-        "//stratum/hal/lib/bcm:bcm_l2_manager",
-        "//stratum/hal/lib/bcm:bcm_l3_manager",
-        "//stratum/hal/lib/bcm:bcm_node",
-        "//stratum/hal/lib/bcm:bcm_packetio_manager",
-        "//stratum/hal/lib/bcm:bcm_sdklt_wrapper",
-        "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
-        "//stratum/hal/lib/bcm:bcm_switch",
-        "//stratum/hal/lib/bcm:bcm_table_manager",
-        "//stratum/hal/lib/bcm:bcm_tunnel_manager",
-        "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/p4:p4_table_mapper",
-        # TODO(craigs): need to add real phal deps here
-        # "//stratum/hal/lib/phal:legacy_phal",
-        # "//stratum/hal/lib/phal:udev",
-        # "//stratum/hal/lib/phal:phal_sim",
-        "//stratum/hal/lib/phal:phal",
-        "//stratum/lib/security:auth_policy_checker",
-        "//stratum/lib/security:credentials_manager",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-    ],
+    deps = stratum_bcm_common_deps,
 )
 
 stratum_cc_binary(
@@ -91,30 +89,7 @@ stratum_cc_binary(
         "-ldl",
         "-lutil",
     ],
-    deps = [
-        "@com_github_google_glog//:glog",
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
-        "//stratum/hal/lib/bcm:bcm_acl_manager",
-        "//stratum/hal/lib/bcm:bcm_chassis_manager",
-        "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
-        "//stratum/hal/lib/bcm:bcm_l2_manager",
-        "//stratum/hal/lib/bcm:bcm_l3_manager",
-        "//stratum/hal/lib/bcm:bcm_node",
-        "//stratum/hal/lib/bcm:bcm_packetio_manager",
-        "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
-        "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
-        "//stratum/hal/lib/bcm:bcm_switch",
-        "//stratum/hal/lib/bcm:bcm_table_manager",
-        "//stratum/hal/lib/bcm:bcm_tunnel_manager",
-        "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/p4:p4_table_mapper",
-        "//stratum/hal/lib/phal:phal",
-        "//stratum/lib/security:auth_policy_checker",
-        "//stratum/lib/security:credentials_manager",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-    ],
+    deps = stratum_bcm_common_deps,
 )
 
 stratum_package(
