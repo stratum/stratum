@@ -116,7 +116,7 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "statum_bcm_all",
+    name = "stratum_bcm_all",
     deps = [
         ":stratum_bcm_bin",
         ":stratum_bcm_lib",
@@ -130,7 +130,7 @@ pkg_deb(
     version = "0.0.1",
     description = "Stratum for Broadcom switches",
     architecture = "amd64",
-    data = ":statum_bcm_all",
+    data = ":stratum_bcm_all",
     depends = [
         "kmod",
         "libboost-thread1.62.0",

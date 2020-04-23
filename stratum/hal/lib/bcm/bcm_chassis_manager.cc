@@ -51,7 +51,7 @@ DEFINE_string(bcm_sdk_config_file, "/var/run/stratum/config.bcm",
               "The BCM config file loaded by SDK while initializing.");
 DEFINE_string(bcm_sdk_config_flush_file, "/var/run/stratum/config.bcm.tmp",
               "The BCM config flush file loaded by SDK while initializing.");
-DEFINE_string(bcm_sdk_shell_log_file, "/var/run/stratum/bcm.log",
+DEFINE_string(bcm_sdk_shell_log_file, "/var/log/stratum/bcm.log",
               "The BCM shell log file loaded by SDK while initializing.");
 DEFINE_string(bcm_sdk_checkpoint_dir, "",
               "The dir used by SDK to save checkpoints. Default is empty and "

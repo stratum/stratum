@@ -19,7 +19,7 @@ set -ex
 
 load-kernel-modules.sh
 
-mkdir -p /var/run/stratum
+mkdir -p /var/run/stratum /var/log/stratum
 
 PLATFORM=$(cat /etc/onl/platform)
 
@@ -33,8 +33,9 @@ stratum_bcm \
     -bcm_serdes_db_proto_file=/etc/stratum/stratum_configs/dummy_serdes_db.pb.txt \
     -bcm_hardware_specs_file=/etc/stratum/stratum_configs/bcm_hardware_specs.pb.txt \
     -forwarding_pipeline_configs_file=/var/run/stratum/pipeline_cfg.pb.txt \
-    -write_req_log_file=/var/run/stratum/p4_writes.pb.txt \
+    -write_req_log_file=/var/log/stratum/p4_writes.pb.txt \
     -bcm_sdk_checkpoint_dir=/tmp/bcm_chkpt \
+    -log_dir=/var/log/stratum \
     -colorlogtostderr \
     -logtosyslog=false \
     -stderrthreshold=0 \

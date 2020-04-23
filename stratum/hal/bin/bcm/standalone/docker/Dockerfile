@@ -22,7 +22,5 @@ ADD ./stratum_bcm_deb.deb /
 RUN install_packages ./stratum_bcm_deb.deb
 RUN rm ./stratum_bcm_deb.deb
 
-RUN ldconfig
-
 EXPOSE 28000/tcp
 ENTRYPOINT start-stratum.sh
