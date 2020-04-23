@@ -1,8 +1,4 @@
 #!/bin/bash
-# Working directory and logs
-mkdir -p /var/run/stratum
-mkdir -p /var/log/stratum
-
 # Setting up huge page for bf_switchd
 echo -e "# Required by Stratum\nvm.nr_hugepages = 128" >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
