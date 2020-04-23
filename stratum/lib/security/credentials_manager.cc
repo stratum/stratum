@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/memory/memory.h"
 #include "gflags/gflags.h"
@@ -42,15 +43,11 @@ CredentialsManager::GenerateExternalFacingServerCredentials() const {
   return server_credentials_;
 }
 
-std::unique_ptr<CredentialsManager> CredentialsManager::CreateInstance() {
+::util::StatusOr<std::unique_ptr<CredentialsManager>>
+    CredentialsManager::CreateInstance() {
   auto instance_ = absl::WrapUnique(new CredentialsManager());
-  auto status = instance_->Initialize();
-  if (!status.ok()) {
-    LOG(ERROR) << "Failed to initialize the CredentialsManager instance: "
-               << status.error_message();
-    return nullptr;
-  }
-  return instance_;
+  RETURN_IF_ERROR(instance_->Initialize());
+  return std::move(instance_);
 }
 
 ::util::Status CredentialsManager::Initialize() {

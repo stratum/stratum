@@ -25,6 +25,7 @@
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/security/tls_credentials_options.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/glue/status/statusor.h"
 
 namespace stratum {
 using TlsCredentialReloadInterface =
@@ -87,8 +88,7 @@ class CredentialsManager {
   GenerateExternalFacingServerCredentials() const;
 
   // Factory functions for creating the instance of the class.
-  static std::unique_ptr<CredentialsManager> CreateInstance();
-  ::util::Status Initialize();
+  static ::util::StatusOr<std::unique_ptr<CredentialsManager>> CreateInstance();
 
   // CredentialsManager is neither copyable nor movable.
   CredentialsManager(const CredentialsManager&) = delete;
@@ -105,6 +105,8 @@ class CredentialsManager {
   CredentialsManager();
 
  private:
+  // Function to initialize the credentials manager.
+  ::util::Status Initialize();
   std::shared_ptr<::grpc::ServerCredentials> server_credentials_;
   std::shared_ptr<TlsCredentialsOptions> tls_opts_;
   std::shared_ptr<CredentialsReloadInterface> credentials_reload_interface_;

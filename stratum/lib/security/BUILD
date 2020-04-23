@@ -143,7 +143,7 @@ stratum_cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "//stratum/glue:logging",
-        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
         "//stratum/lib:utils",
         "//stratum/lib:macros",
     ],
