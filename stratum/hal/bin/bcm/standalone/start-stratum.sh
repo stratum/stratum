@@ -38,4 +38,5 @@ stratum_bcm \
     -colorlogtostderr \
     -logtosyslog=false \
     -stderrthreshold=0 \
-    -v=0
+    -v=0 \
+    $@
