@@ -54,15 +54,11 @@ RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 # As well as the P4Runtime Python bindings installed by PI. This is not needed
 # to run mininet, but it's useful to execute Python scripts acting as a
 # P4Runtime client, e.g. control plane apps or PTF tests.
-RUN bazel build @com_github_p4lang_p4runtime//:p4runtime_py_grpc
+RUN bazel build tools/mininet:p4runtime_py
 
 ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
 RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
-    cp -r bazel-bin/external/com_github_p4lang_p4runtime/p4/* $PYTHON_PACKAGE_BASE/p4 && \
-    touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py
+    tar xf bazel-bin/tools/mininet/p4runtime_py.tar -C $PYTHON_PACKAGE_BASE
 
 # Google API (e.g. status proto) needed by P4Runtime.
 RUN mkdir -p $PYTHON_PACKAGE_BASE/google && \

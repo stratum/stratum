@@ -107,8 +107,12 @@ py_proto_library(
     deps = [":p4data_proto"],
 )
 
-py_grpc_library(
-    name = "p4data_py_grpc",
-    srcs = [":p4data_proto"],
-    deps = [":p4data_py_proto"],
+py_proto_library(
+    name = "p4info_py_proto",
+    deps = [":p4info_proto"],
+)
+
+py_proto_library(
+    name = "p4types_py_proto",
+    deps = [":p4types_proto"],
 )
