@@ -1,5 +1,0 @@
-#!/bin/bash
-PID=$(cat /var/run/stratum/pid.txt)
-if [ -n "$PID" ]; then
-  kill $PID
-fi

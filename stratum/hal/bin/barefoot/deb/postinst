@@ -1,6 +1,6 @@
 #!/bin/bash
 # Setting up huge page for bf_switchd
-echo -e "# Required by Stratum\nvm.nr_hugepages = 128" >> /etc/sysctl.conf
+echo -e "vm.nr_hugepages = 128" >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 mkdir -p /mnt/huge
 mount -t hugetlbfs nodev /mnt/huge
