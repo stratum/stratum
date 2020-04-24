@@ -55,12 +55,12 @@ RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 # to run mininet, but it's useful to execute Python scripts acting as a
 # P4Runtime client, e.g. control plane apps or PTF tests.
 RUN bazel build tools/mininet:p4runtime_py
-
 ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
 RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
     tar xf bazel-bin/tools/mininet/p4runtime_py.tar -C $PYTHON_PACKAGE_BASE
 
 # Google API (e.g. status proto) needed by P4Runtime.
+RUN bazel build @com_google_protobuf//:protobuf_python @com_google_googleapis//google/rpc/...
 RUN mkdir -p $PYTHON_PACKAGE_BASE/google && \
     cp -r bazel-bin/external/com_google_protobuf/python/google $PYTHON_PACKAGE_BASE/google && \
     cp -r bazel-bin/external/com_google_googleapis/google/* $PYTHON_PACKAGE_BASE/google && \
