@@ -16,8 +16,6 @@
 
 #include "stratum/hal/lib/common/hal.h"
 
-#include <unistd.h>
-
 #include <chrono>  // NOLINT
 #include <utility>
 
@@ -31,7 +29,6 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
-#include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
