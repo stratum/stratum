@@ -211,8 +211,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Run reuse
-        command: reuse lint
+          name: Run reuse
+          command: reuse lint
 
 workflows:
   version: 2
