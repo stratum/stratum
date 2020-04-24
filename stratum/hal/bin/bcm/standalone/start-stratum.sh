@@ -23,7 +23,7 @@ mkdir -p /var/run/stratum /var/log/stratum
 
 PLATFORM=$(cat /etc/onl/platform)
 
-stratum_bcm \
+exec stratum_bcm \
     -external_stratum_urls=0.0.0.0:28000 \
     -persistent_config_dir=/etc/stratum \
     -base_bcm_chassis_map_file=/etc/stratum/stratum_configs/${PLATFORM}/base_bcm_chassis_map.pb.txt \
