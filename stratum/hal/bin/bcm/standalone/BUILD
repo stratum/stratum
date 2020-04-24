@@ -89,16 +89,56 @@ stratum_package(
 )
 
 pkg_tar(
-    name = "stratum_bcm_package",
-    extension = "tar.gz",
+    name = "stratum_bcm_bin",
     srcs = [
         ":stratum_bcm",
-        "@com_github_opennetworkinglab_sdklt//:kernel_modules",
-        "@com_github_opennetworkinglab_sdklt//:sdklt_cli",
         "start-stratum.sh",
+        "load-kernel-modules.sh",
     ],
+    mode = "0755",
+    package_dir = "/usr/bin",
+)
+
+pkg_tar(
+    name = "stratum_bcm_lib",
+    srcs = [
+        "@com_github_opennetworkinglab_sdklt//:kernel_modules",
+    ],
+    package_dir = "/usr/lib/stratum",
+)
+
+pkg_tar(
+    name = "stratum_bcm_etc",
     deps = [
         "//stratum/hal/config:all_configs_tar",
     ],
-    mode = "0755",
+    package_dir = "/etc/stratum",
+)
+
+pkg_tar(
+    name = "stratum_bcm_all",
+    deps = [
+        ":stratum_bcm_bin",
+        ":stratum_bcm_lib",
+        ":stratum_bcm_etc",
+    ],
+)
+
+pkg_deb(
+    name = "stratum_bcm_deb",
+    package = "stratum-bcm",
+    version = "0.0.1",
+    description = "Stratum for Broadcom switches",
+    architecture = "amd64",
+    data = ":stratum_bcm_all",
+    depends = [
+        "kmod",
+        "libboost-thread1.62.0",
+        "libedit2",
+        "libjudydebian1",
+        "libssl1.1",
+        "libyaml-0-2",
+    ],
+    maintainer = "The Stratum Project",
+    homepage = "https://stratumproject.org/",
 )
