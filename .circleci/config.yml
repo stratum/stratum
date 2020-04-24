@@ -202,8 +202,8 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
-            tar xf bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz -C $DOCKER_SCOPE
+            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - *docker_push
