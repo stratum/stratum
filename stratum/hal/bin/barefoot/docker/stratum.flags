@@ -1,4 +1,3 @@
--external_stratum_urls=0.0.0.0:28000
 -grpc_max_recv_msg_size=256
 -bf_sde_install=/usr/local
 -persistent_config_dir=/stratum_configs
