@@ -25,6 +25,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/lib/constants.h"
+#include "stratum/lib/utils.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/time/clock.h"
@@ -782,12 +783,16 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a bytes stream!";
     }
     openconfig::Device in;
-    // Deserialize the input proto.
-    CHECK_RETURN_IF_FALSE(in.ParseFromString(typed_value->bytes_val()));
-    // Convert the input proto into the internal format.
-    ASSIGN_OR_RETURN(*config->writable(),
-                     OpenconfigConverter::OcDeviceToChassisConfig(in));
-
+    // Deserialize the input proto to OpenConfig device format.
+    if (in.ParseFromString(typed_value->bytes_val())) {
+      // Convert the input proto into the internal format.
+      ASSIGN_OR_RETURN(*config->writable(),
+          OpenconfigConverter::OcDeviceToChassisConfig(in));
+    } else {
+      // Try parse it with ChassisConfig format.
+      RETURN_IF_ERROR(
+          ParseProtoFromString(typed_value->bytes_val(), config->writable()));
+    }
     return ::util::OkStatus();
   };
   node->SetOnTimerHandler(poll_functor)
