@@ -105,7 +105,8 @@ void registerDeviceMgrLogger() {
   memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
 
   /* Parse bf_switchd arguments */
-  CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "") << "Flag --bf_sde_install is required";
+  CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
+      << "Flag --bf_sde_install is required";
   switchd_main_ctx->install_dir = strdup(FLAGS_bf_sde_install.c_str());
   switchd_main_ctx->conf_file = strdup(FLAGS_bf_switchd_cfg.c_str());
   switchd_main_ctx->skip_p4 = true;
