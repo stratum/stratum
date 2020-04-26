@@ -45,6 +45,6 @@ docker run -it --privileged \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     $ONLP_ARG \
     -p 28000:28000 \
-    -v $CONFIG_DIR:/stratum_configs \
-    -v $LOG_DIR:/stratum_logs \
+    -v $CONFIG_DIR:/etc/stratum \
+    -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG

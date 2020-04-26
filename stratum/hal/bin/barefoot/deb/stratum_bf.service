@@ -14,7 +14,6 @@ ConfigurationDirectory=stratum
 RuntimeDirectoryPreserve=yes
 EnvironmentFile=/etc/stratum/stratum_bf.env
 ExecStart=/bin/bash /usr/bin/stratum-entrypoint
-ExecStop=/usr/bin/stop-stratum
 Restart=on-failure
 
 [Install]

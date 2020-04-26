@@ -15,15 +15,15 @@
 # limitations under the License.
 #
 
-KDRV_PATH=/usr/lib/modules/bf_kdrv.ko
-FLAG_FILE=/etc/stratum/stratum.flags
+KDRV_PATH=${KDRV_PATH:-/usr/lib/modules/bf_kdrv.ko}
+FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
 PLATFORM=${PLATFORM:-x86-64-accton-wedge100bf-32x-r0}
+WITH_ONLP=${WITH_ONLP:-true}
 
 if [ -f "/etc/onl/platform" ]; then
-    PORT_MAP=/usr/share/stratum/$(cat /etc/onl/platform).json
-else
-    PORT_MAP="/usr/share/stratum/$PLATFORM.json"
+    PLATFORM="$(cat /etc/onl/platform)"
 fi
+PORT_MAP="/usr/share/stratum/$PLATFORM.json"
 
 if [ ! -f "$FLAG_FILE" ]; then
     echo "Cannot find flag file $FLAG_FILE"
@@ -50,7 +50,7 @@ if [ -f "$KDRV_PATH" ]; then
         echo "Cannot load kernel module, wrong kernel version?"
     fi
 else
-    echo "Cannot find $KDRV_PATH, skip installing the Kernel module"
+    echo "Cannot find $KDRV_PATH, skip installing the Kernel module."
 fi
 
-/usr/bin/stratum_bf -flagfile=$FLAG_FILE
+exec /usr/bin/stratum_bf -flagfile=$FLAG_FILE

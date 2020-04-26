@@ -28,7 +28,7 @@ ARG SDE_TAR
 COPY $SDE_TAR /stratum/
 
 ENV SDE /bf-sde
-ENV SDE_INSTALL /$SDE/install
+ENV SDE_INSTALL $SDE/install
 RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
 
 WORKDIR $SDE/p4studio_build
@@ -39,17 +39,8 @@ RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yam
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 
-# Prepare all SDE libraries
-ENV OUTPUT_BASE /output/usr/local
-RUN mkdir -p $OUTPUT_BASE/lib/modules && \
-    cp -d $SDE_INSTALL/lib/*.so* $OUTPUT_BASE/lib/ && \
-    mkdir -p $OUTPUT_BASE/share/stratum && \
-    cp -r $SDE_INSTALL/share/microp_fw $OUTPUT_BASE/share/ && \
-    cp -r $SDE_INSTALL/share/bfsys/ $OUTPUT_BASE/share/ && \
-    cp -r $SDE_INSTALL/share/tofino_sds_fw $OUTPUT_BASE/share/
-
 # Strip symbols from all .so files
-RUN strip --strip-all $OUTPUT_BASE/lib/*.so*
+RUN strip --strip-all $SDE_INSTALL/lib/*.so*
 
 # Remove SDE and Linux headers tarball
 RUN rm -r /stratum/*

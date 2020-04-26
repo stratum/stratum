@@ -1,6 +1,6 @@
 #!/bin/bash
-# Setting up huge page for bf_switchd
-echo -e "vm.nr_hugepages = 128" >> /etc/sysctl.conf
+# Set up the huge page
+echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 mkdir -p /mnt/huge
 mount -t hugetlbfs nodev /mnt/huge

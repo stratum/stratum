@@ -158,7 +158,6 @@ pkg_deb(
     maintainer = "https://stratumproject.org/",
     package = "stratum-bf",
     postinst = "deb/postinst",
-    postrm = "deb/postrm",
     prerm = "deb/prerm",
     version = "0.0.1",
 )
