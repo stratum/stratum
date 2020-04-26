@@ -134,10 +134,8 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   // blocks until a P4 pipeline is set
   {
     int status = runner->init_and_start(parser);
-    if (status != 0) {
-      RETURN_ERROR()
-          << "Error when starting bmv2 simple_switch, status: " << status;
-    }
+    CHECK_RETURN_IF_FALSE(status)
+        << "Error when starting bmv2 simple_switch, status: " << status;
   }
 
   int unit(0);

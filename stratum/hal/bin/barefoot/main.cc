@@ -105,9 +105,7 @@ void registerDeviceMgrLogger() {
   memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
 
   /* Parse bf_switchd arguments */
-  if (FLAGS_bf_sde_install == "") {
-    RETURN_ERROR() << "Flag --bf_sde_install is required";
-  }
+  CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "") << "Flag --bf_sde_install is required";
   switchd_main_ctx->install_dir = strdup(FLAGS_bf_sde_install.c_str());
   switchd_main_ctx->conf_file = strdup(FLAGS_bf_switchd_cfg.c_str());
   switchd_main_ctx->skip_p4 = true;
@@ -131,11 +129,9 @@ void registerDeviceMgrLogger() {
 
   {
     int status = bf_switchd_lib_init(switchd_main_ctx);
-    if (status != 0) {
-      RETURN_ERROR() << "Error when starting switchd, status: " << status;
-    } else {
-      LOG(INFO) << "switchd started successfully";
-    }
+    CHECK_RETURN_IF_FALSE(status)
+        << "Error when starting switchd, status: " << status;
+    LOG(INFO) << "switchd started successfully";
   }
 
   // no longer done by the Barefoot SDE starting with 8.7.0
