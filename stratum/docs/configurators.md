@@ -1,3 +1,9 @@
+<!--
+Copyright 2019 Dell EMC
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # Stratum Configurators Design Document
 
 ## Table of contents

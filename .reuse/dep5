@@ -16,8 +16,12 @@ Copyright: 2016 The TensorFlow Authors
 Copyright: 2018 Open Networking Foundation
 License: Apache-2.0
 
-Files: stratum/hal/config/**/*
-Copyright: 2019-present Open Networking Foundation
+Files: stratum/hal/bin/barefoot/tofino_skip_p4.conf
+Copyright: 2019 Barefoot Networks, Inc.
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf
+Copyright: 2019 Barefoot Networks, Inc.
 License: Apache-2.0
 
 Files: stratum/hal/bin/barefoot/platforms/x86-64-accton-wedge100bf-32x-r0.json
@@ -36,6 +40,28 @@ Files: stratum/hal/bin/barefoot/platforms/x86-64-stordis-*.json
 Copyright: 2019 Stordis GmbH.
 License: Apache-2.0
 
+Files: stratum/hal/bin/bcm/sim/bcm_pcid_sim.k8
+Copyright: 2018 Google LLC
+Copyright: 2018-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/testing/cdlang/g3doc/cdlang-pipeline.png
+Copyright: 2018 Google LLC
+Copyright: 2018-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/docs/gnmi/img/* stratum/docs/gnmi/imgsrc/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: tools/mininet/**/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/config/**/* stratum/hal/config/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
 Files: stratum/hal/bin/barefoot/platforms/x86-64-delta-ag9064v1-r0.json
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
@@ -44,6 +70,62 @@ Files: stratum/hal/bin/barefoot/platforms/x86-64-accton-wedge100bf-65x-r0.json
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
 
-Files: tools/mininet/**/*
+Files: .circleci/*.txt
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/docs/plantuml/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/docs/images/*
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/*.pb.txt
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/config/*.pb.tx
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/bmv2/sample_config.proto.txt
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/lib/common/gnmi_caps.pb.txt
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/pipelines/ptf/requirements.txt
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: .clang-format
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: .github/ISSUE_TEMPLATE/bug_report.md
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: bazel/patches/ygot.patch
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/docker/stratum.flags
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/bmv2/debian/description
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/bmv2/dummy.json
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
+
+Files: stratum/hal/bin/dummy/arch.svg
 Copyright: 2019-present Open Networking Foundation
 License: Apache-2.0
