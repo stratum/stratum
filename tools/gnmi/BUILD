@@ -16,5 +16,6 @@ cc_binary(
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
+        "//stratum/lib:utils",
     ]
 )

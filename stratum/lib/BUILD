@@ -6,14 +6,13 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
-    "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = STRATUM_INTERNAL,
+    default_visibility = ["//visibility:public"],
 )
 
 stratum_cc_library(
