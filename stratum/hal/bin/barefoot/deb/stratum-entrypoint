@@ -18,7 +18,6 @@
 KDRV_PATH=${KDRV_PATH:-/usr/lib/modules/bf_kdrv.ko}
 FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
 PLATFORM=${PLATFORM:-x86-64-accton-wedge100bf-32x-r0}
-WITH_ONLP=${WITH_ONLP:-true}
 
 if [ -f "/etc/onl/platform" ]; then
     PLATFORM="$(cat /etc/onl/platform)"
