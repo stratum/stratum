@@ -45,6 +45,7 @@ optional arguments:
   --uint_val UINT_VAL      [SetRequest only] Set uint value (64-bit)
   --string_val STRING_VAL  [SetRequest only] Set string value
   --float_val FLOAT_VAL    [SetRequest only] Set float value
+  --bytes_val_file FILE    [SetRequest only] A file to be sent as bytes value
   --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
   --replace                [SetRequest only] Use replace instead of update
   --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
@@ -74,6 +75,7 @@ DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
 DEFINE_string(uint_val, "", "Unsigned integer value to be set (64-bit)");
 DEFINE_string(string_val, "", "String value to be set");
 DEFINE_string(float_val, "", "Floating point value to be set");
+DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
 
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
@@ -147,6 +149,10 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
     update->mutable_val()->set_float_val(stof(FLAGS_float_val));
   } else if (!FLAGS_string_val.empty()) {
     update->mutable_val()->set_string_val(FLAGS_string_val);
+  } else if (!FLAGS_bytes_val_file.empty()) {
+    std::string buf;
+    ::stratum::ReadFileToString(FLAGS_bytes_val_file, &buf);
+    update->mutable_val()->set_bytes_val(buf);
   } else {
     std::cout << "No typed value set" << std::endl;
   }

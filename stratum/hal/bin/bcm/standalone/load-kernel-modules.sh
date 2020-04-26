@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2020-present Open Networking Foundation
 #
@@ -13,14 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -ex
 
-FROM bitnami/minideb:stretch
-LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
-LABEL description="This is the Stratum runtime Docker image for Broadcom switches"
+# Remove other SDK kernel modules, if present
+rmmod linux_bcm_knet || true
+rmmod linux_user_bde || true
+rmmod linux_kernel_bde || true
 
-ADD ./stratum_bcm_deb.deb /
-RUN install_packages ./stratum_bcm_deb.deb
-RUN rm ./stratum_bcm_deb.deb
-
-EXPOSE 28000/tcp
-ENTRYPOINT start-stratum.sh
+# Reinsert SDKLT kernel modules
+rmmod linux_ngknet || true
+rmmod linux_ngbde || true
+pushd /usr/lib/stratum/
+insmod linux_ngbde.ko && insmod linux_ngknet.ko
+popd
+sleep 1

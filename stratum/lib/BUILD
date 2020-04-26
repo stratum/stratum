@@ -19,7 +19,6 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
-    "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
