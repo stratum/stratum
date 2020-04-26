@@ -207,7 +207,7 @@ jobs:
 
   license-check:
     docker:
-      - image: stratumproject/build:build
+      - image: fsfe/reuse:latest
     steps:
       - checkout
       - run:
