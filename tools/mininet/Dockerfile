@@ -53,19 +53,23 @@ RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 
 # As well as the P4Runtime Python bindings installed by PI. This is not needed
 # to run mininet, but it's useful to execute Python scripts acting as a
-# P4Runtime client, e.g. control plane apps or PTF tests.
-RUN bazel build tools/mininet:p4runtime_py
-ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
-RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
-    tar xf bazel-bin/tools/mininet/p4runtime_py.tar -C $PYTHON_PACKAGE_BASE
-
+# P4Runtime client, e.g. control plane apps or PTF tests. Also includes
 # Google API (e.g. status proto) needed by P4Runtime.
-RUN bazel build @com_google_protobuf//:protobuf_python @com_google_googleapis//google/rpc/...
-RUN mkdir -p $PYTHON_PACKAGE_BASE/google && \
-    cp -r bazel-bin/external/com_google_protobuf/python/google $PYTHON_PACKAGE_BASE/google && \
-    cp -r bazel-bin/external/com_google_googleapis/google/* $PYTHON_PACKAGE_BASE/google && \
+ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
+RUN git clone https://github.com/p4lang/p4runtime.git
+RUN P4RTPROTOS=$(mktemp -d)
+RUN cd p4runtime && \
+    docker build -t p4runtime -f CI/Dockerfile . && \
+    docker run -v $P4RTPROTOS:/out/ -t p4runtime /p4runtime/CI/compile_protos.sh /out/
+RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
+    cp -r $P4RTPROTOS/py_out $PYTHON_PACKAGE_BASE/google \
     touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py
+    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py \
+    cp -r py_out/p4 $PYTHON_PACKAGE_BASE/p4 \
+    touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py
 
 # Install a version of the protobuf and grpc python bindings that is
 # compatible to that used to generate the P4Runtime ones.
