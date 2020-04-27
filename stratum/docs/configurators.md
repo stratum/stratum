@@ -119,7 +119,7 @@ The following class diagram details the relationships between the different clas
 
 ## Phal Init Configuration <a name="phal_init_config"></a>
 
-The phal.proto protobuf file provides the basis for the Phal Initial Configuration file that cam be passed in at runtime using the --phal_config_file flag. The basic structure for the configuration is as follows:
+The phal.proto protobuf file provides the basis for the Phal Initial Configuration file that can be passed in at runtime using the --phal_config_file flag. The basic structure for the configuration is as follows:
 
 * cards: the ports of the switch are contained in the card element and there can be one or more cards in a switch.
 * fan_trays: each fan is a member of one fan_tray and there can be one or more fan_trays in a switch.
