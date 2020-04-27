@@ -48,7 +48,7 @@ constexpr char kLocalStratumUrl[] = "localhost:28000";
 
 // This URL is used by external gNMI, gNOI and P4Runtime clients.
 // This TCP port 9339 is an IANA-reserve port for gNMI and gNOI.
-constexpr char kExternalStratumUrls[] = "0.0.0.0:28000,0.0.0.0:9339"
+constexpr char kExternalStratumUrls[] = "0.0.0.0:28000,0.0.0.0:9339";
 
 // Default URLs for the Sandcastle services Stratum service will connect to
 // over gRPC.
