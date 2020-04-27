@@ -31,7 +31,7 @@ class SwitchConfiguratorInterface {
   virtual ~SwitchConfiguratorInterface() = default;
 
   // Virtual function to create a default config should the
-  // phal_config_path flag not be set.
+  // phal_config_file flag not be set.
   virtual ::util::Status CreateDefaultConfig(PhalInitConfig* config) const = 0;
 
   // Virtual function implemented by each derived class to

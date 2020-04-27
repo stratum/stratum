@@ -28,7 +28,7 @@ exec stratum_bcm \
     -base_bcm_chassis_map_file=/etc/stratum/stratum_configs/${PLATFORM}/base_bcm_chassis_map.pb.txt \
     -chassis_config_file=/etc/stratum/stratum_configs/${PLATFORM}/chassis_config.pb.txt \
     -bcm_sdk_config_file=/etc/stratum/stratum_configs/${PLATFORM}/SDKLT.yml \
-    -phal_config_path=/etc/stratum/stratum_configs/${PLATFORM}/phal_config.pb.txt \
+    -phal_config_file=/etc/stratum/stratum_configs/${PLATFORM}/phal_config.pb.txt \
     -bcm_serdes_db_proto_file=/etc/stratum/stratum_configs/dummy_serdes_db.pb.txt \
     -bcm_hardware_specs_file=/etc/stratum/stratum_configs/bcm_hardware_specs.pb.txt \
     -forwarding_pipeline_configs_file=/var/run/stratum/pipeline_cfg.pb.txt \
