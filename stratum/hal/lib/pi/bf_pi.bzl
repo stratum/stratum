@@ -1,4 +1,4 @@
-# Copyright 2020-present Open Networking Foundation
+# Copyright 2020-present Barefoot Networks, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 load("//bazel:rules.bzl", "stratum_cc_library")

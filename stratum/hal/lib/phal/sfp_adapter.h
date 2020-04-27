@@ -1,5 +1,5 @@
-// Copyright 2019-present Open Networking Foundation
 // Copyright 2019 Dell EMC
+// Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #ifndef STRATUM_HAL_LIB_PHAL_SFP_ADAPTER_H_

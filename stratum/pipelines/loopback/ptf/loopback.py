@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-
 # Copyright 2019 NoviFlow Inc.
 # SPDX-License-Identifier: Apache-2.0
 
