@@ -24,11 +24,11 @@ again.
 
 ### General Information
 
-Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/). Use this document as a guide when submitting code.
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/) and [C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Use these documents as a guide when submitting code.
 
 Some additional points:
 
- - Submit your changes early and often. GitHub has (Draft PRs)[https://github.blog/2019-02-14-introducing-draft-pull-requests/] that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
+ - Submit your changes early and often. GitHub has [Draft PRs](https://github.blog/2019-02-14-introducing-draft-pull-requests/) that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
 
  - Stratum uses a [squash and rebase](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#squash-and-merge-your-pull-request-commits) model. You do **not** have to do this by hand! GitHub will guide you through it, if possible.
 
