@@ -1,5 +1,5 @@
-// Copyright 2018 Google LLC
-// Copyright 2018-present Open Networking Foundation
+// Copyright 2019 Google LLC
+// Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #ifndef STRATUM_TESTING_TESTS_BCM_SIM_TEST_FIXTURE_H_

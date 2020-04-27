@@ -1,4 +1,4 @@
-// Copyright 2019 Open Networking Foundation
+// Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 // This P4 file tests correct state name extraction for states with

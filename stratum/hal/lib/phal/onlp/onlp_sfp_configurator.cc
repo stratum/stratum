@@ -1,4 +1,5 @@
 // Copyright 2019 Dell EMC
+// Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/hal/lib/phal/onlp/onlp_sfp_configurator.h"

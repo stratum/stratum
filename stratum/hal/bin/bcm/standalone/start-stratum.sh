@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2019-present Open Networking Foundation
+# Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 set -ex

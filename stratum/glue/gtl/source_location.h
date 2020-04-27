@@ -1,4 +1,4 @@
-// Copyright 2018 Open Networking Foundation
+// Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #ifndef STRATUM_GLUE_GTL_SOURCE_LOCATION_H_

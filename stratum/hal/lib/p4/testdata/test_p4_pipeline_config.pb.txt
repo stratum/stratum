@@ -1,4 +1,5 @@
 # Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 # This file contains some data for P4TableMap testing.
 # It goes with the P4Info in test_p4_info.pb.txt.

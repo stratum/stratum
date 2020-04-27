@@ -1,6 +1,6 @@
 // Copyright 2019 Edgecore Networks Corporation
 // Phani Karanam <phani_karanam@edge-core.com>
-// Copyright 2019 Open Networking Foundation
+// Copyright 2019-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #ifndef STRATUM_HAL_LIB_PHAL_ONLP_ONLP_THERMAL_DATASOURCE_H_

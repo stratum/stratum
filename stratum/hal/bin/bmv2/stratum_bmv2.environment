@@ -1,4 +1,5 @@
-# Copyright 2019-present Open Networking Foundation
+# Copyright 2018 PLVision
+# Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 EXTERNAL_HERCULES_URL=0.0.0.0:28000
 FORWARDING_PIPELINE_CONFIGS_FILE=/tmp/config.txt
