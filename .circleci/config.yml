@@ -150,6 +150,16 @@ jobs:
       - checkout
       - *docker_login
       - *set_bazelrc
+      - run:
+          name: Compile P4 Runtime python code and protobufs
+          command: |
+            mkdir /tmp/p4runtime
+            git clone -b v1.1.0 https://github.com/p4lang/p4runtime.git
+            pushd p4runtime
+            docker build -t p4runtime -f CI/Dockerfile .
+            docker run -v /tmp/p4runtime:/out/ -t p4runtime /p4runtime/CI/compile_protos.sh /out/
+            popd
+            cp -r /tmp/p4runtime/py_out $DOCKER_SCOPE
       - *docker_build
       - run:
           name: Test Mininet Docker image

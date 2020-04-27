@@ -56,16 +56,11 @@ WORKDIR /tmp/stratum
 # P4Runtime client, e.g. control plane apps or PTF tests. Also includes
 # Google API (e.g. status proto) needed by P4Runtime.
 ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
-RUN git clone https://github.com/p4lang/p4runtime.git
-RUN P4RTPROTOS=$(mktemp -d)
-RUN cd p4runtime && \
-    docker build -t p4runtime -f CI/Dockerfile . && \
-    docker run -v $P4RTPROTOS:/out/ -t p4runtime /p4runtime/CI/compile_protos.sh /out/
-RUN mkdir -p $PYTHON_PACKAGE_BASE/p4 && \
-    cp -r $P4RTPROTOS/py_out $PYTHON_PACKAGE_BASE/google \
+COPY ./py_out /p4runtime
+RUN cp -vr /p4runtime/google $PYTHON_PACKAGE_BASE/google && \
     touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py \
-    cp -r py_out/p4 $PYTHON_PACKAGE_BASE/p4 \
+    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py && \
+    cp -vr /p4runtime/p4 $PYTHON_PACKAGE_BASE/p4 && \
     touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
     touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
