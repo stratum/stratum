@@ -43,13 +43,13 @@ RUN python setup.py install --root /output
 COPY . /tmp/stratum
 WORKDIR /tmp/stratum
 
-# RUN bazel build //stratum/hal/bin/bmv2:stratum_bmv2
+RUN bazel build //stratum/hal/bin/bmv2:stratum_bmv2
 
-# # Put aside stratum_bmv2 binary and shared objects needed for runtime.
-# RUN mkdir -p /output/usr/local/bin
-# RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
-# RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
-# RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
+# Put aside stratum_bmv2 binary and shared objects needed for runtime.
+RUN mkdir -p /output/usr/local/bin
+RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
+RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
+RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 
 # As well as the P4Runtime Python bindings installed by PI. This is not needed
 # to run mininet, but it's useful to execute Python scripts acting as a
