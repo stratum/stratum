@@ -59,22 +59,14 @@ stratum_cc_binary(
 )
 
 # Rules for Debian package
-STRIP_PREFIX="/stratum/hal/bin/barefoot"
-
 pkg_tar(
-    name = "stratum_bf_bin",
-    srcs = [":stratum_bf"],
+    name = "stratum_binaries",
+    srcs = [
+        ":stratum_bf",
+        "deb/stratum-entrypoint",
+    ],
     mode = "0755",
     package_dir = "/usr/bin",
-    strip_prefix = STRIP_PREFIX,
-)
-
-pkg_tar(
-    name = "stratum_entry_point",
-    srcs = ["deb/stratum-entrypoint"],
-    mode = "0755",
-    package_dir = "/usr/bin",
-    strip_prefix = STRIP_PREFIX + "/deb",
 )
 
 pkg_tar(
@@ -84,57 +76,36 @@ pkg_tar(
     ],
     mode = "0644",
     package_dir = "/usr/lib/systemd/system",
-    strip_prefix = STRIP_PREFIX + "/deb",
 )
 
 pkg_tar(
-    name = "port_maps",
-    srcs = glob(["platforms/*.json"]),
+    name = "stratum_shareable_files",
+    srcs = [
+        "tofino_skip_p4_no_bsp.conf",
+        "tofino_skip_p4.conf",
+    ] + glob(["platforms/*.json"]),
     mode = "0644",
     package_dir = "/usr/share/stratum",
-    strip_prefix = STRIP_PREFIX + "/platforms",
 )
 
 pkg_tar(
-    name = "flags_file",
-    srcs = ["deb/stratum.flags"],
-    mode = "0644",
-    package_dir = "/etc/stratum",
-    strip_prefix = STRIP_PREFIX + "/deb",
-)
-
-pkg_tar(
-    name = "systemd_service_env",
+    name = "stratum_configs",
     srcs = [
+        "deb/stratum.flags",
         "deb/stratum_bf.env",
     ],
     mode = "0644",
     package_dir = "/etc/stratum",
-    strip_prefix = STRIP_PREFIX + "/deb",
-)
-
-pkg_tar(
-    name = "tofino_configs",
-    srcs = [
-        "tofino_skip_p4_no_bsp.conf",
-        "tofino_skip_p4.conf",
-    ],
-    mode = "0644",
-    package_dir = "/usr/share/stratum",
-    strip_prefix = STRIP_PREFIX,
 )
 
 pkg_tar(
     name = "stratum_bf_data",
     extension = "tar.gz",
     deps = [
-        ":stratum_bf_bin",
-        ":stratum_entry_point",
+        ":stratum_binaries",
         ":systemd_service",
-        ":port_maps",
-        ":flags_file",
-        ":systemd_service_env",
-        ":tofino_configs",
+        ":stratum_shareable_files",
+        ":stratum_configs",
         "@local_barefoot_bin//:bf_library_files",
         "@local_barefoot_bin//:bf_shareable_files",
         "@local_barefoot_bin//:kernel_module",
