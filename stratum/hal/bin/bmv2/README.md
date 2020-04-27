@@ -70,7 +70,6 @@ Stratum Bazel workspace*:
 
 ```
 ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 \
-    --external_stratum_urls=0.0.0.0:9339,0.0.0.0:28000 \
     --persistent_config_dir=<config dir> \
     --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
     --chassis_config_file=<config dir>/chassis_config.pb.txt \
