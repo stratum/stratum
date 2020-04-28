@@ -51,27 +51,38 @@ RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
 RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
 RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 
-# As well as the P4Runtime Python bindings installed by PI. This is not needed
-# to run mininet, but it's useful to execute Python scripts acting as a
-# P4Runtime client, e.g. control plane apps or PTF tests. Also includes
-# Google API (e.g. status proto) needed by P4Runtime.
-ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
-COPY ./py_out /p4runtime
-RUN cp -vr /p4runtime/google $PYTHON_PACKAGE_BASE/google && \
-    touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py && \
-    cp -vr /p4runtime/p4 $PYTHON_PACKAGE_BASE/p4 && \
-    touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
-    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py
-
 # Install a version of the protobuf and grpc python bindings that is
 # compatible to that used to generate the P4Runtime ones.
 ARG PROTOBUF_VER=3.7.1
 ARG GRPC_VER=1.28.1
 RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
 RUN pip install --root /output "grpcio<=${GRPC_VER}"
+
+# As well as the P4Runtime Python bindings installed by PI. This is not needed
+# to run mininet, but it's useful to execute Python scripts acting as a
+# P4Runtime client, e.g. control plane apps or PTF tests. Also includes
+# Google API (e.g. status proto) needed by P4Runtime.
+FROM p4lang/third-party:latest as proto-builder
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common git
+RUN git clone --depth 1 https://github.com/googleapis/googleapis.git
+RUN git clone -b v1.1.0 https://github.com/p4lang/p4runtime.git
+RUN mkdir -p /output
+RUN protoc p4runtime/proto/p4/v1/p4data.proto \
+    p4runtime/proto/p4/v1/p4runtime.proto \
+    p4runtime/proto/p4/config/v1/p4info.proto \
+    p4runtime/proto/p4/config/v1/p4types.proto \
+    googleapis/google/rpc/status.proto \
+    googleapis/google/rpc/code.proto \
+    -Igoogleapis -Ip4runtime/proto \
+    --python_out /output --grpc_out /output  \
+    --plugin=protoc-gen-grpc=$(which grpc_python_plugin)
+RUN touch /output/p4/__init__.py && \
+    touch /output/p4/v1/__init__.py && \
+    touch /output/p4/config/__init__.py && \
+    touch /output/p4/config/v1/__init__.py \
+    touch /output/google/__init__.py && \
+    touch /output/google/rpc/__init__.py
 
 # Final stage, runtime.
 FROM bitnami/minideb:stretch as runtime
@@ -103,6 +114,7 @@ ENV RUNTIME_DEPS \
 RUN install_packages $RUNTIME_DEPS
 
 COPY --from=builder /output /
+COPY --from=proto-builder /output /usr/local/lib/python2.7/dist-packages
 RUN ldconfig
 
 WORKDIR /root
@@ -117,3 +129,4 @@ EXPOSE 50001-50100
 
 ENTRYPOINT ["mn", "--custom", "/root/stratum.py", "--switch", "stratum-bmv2", "--host", "no-offload-host", "--controller", "none"]
 
+RUN python -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
