@@ -51,38 +51,38 @@ RUN cp ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 /output/usr/local/bin
 RUN cp --parents /usr/local/lib/libsimpleswitch_runner.so.0 /output
 RUN cp --parents /usr/local/lib/libbmpi.so.0 /output
 
+# As well as the P4Runtime Python bindings installed by PI. This is not needed
+# to run mininet, but it's useful to execute Python scripts acting as a
+# P4Runtime client, e.g. control plane apps or PTF tests.
+RUN bazel build @com_github_p4lang_p4runtime//:p4runtime_proto \
+    @com_google_protobuf//:protobuf_python \
+    @com_google_googleapis//google/rpc/... \
+    @com_github_grpc_grpc//src/compiler:grpc_python_plugin
+ENV PYTHON_PACKAGE_BASE /output/usr/local/lib/python2.7/dist-packages
+RUN ./bazel-out/host/bin/external/com_google_protobuf/protoc \
+    ./bazel-stratum/external/com_github_p4lang_p4runtime/p4/v1/p4data.proto \
+    ./bazel-stratum/external/com_github_p4lang_p4runtime/p4/v1/p4runtime.proto \
+    ./bazel-stratum/external/com_github_p4lang_p4runtime/p4/config/v1/p4info.proto \
+    ./bazel-stratum/external/com_github_p4lang_p4runtime/p4/config/v1/p4types.proto \
+    ./bazel-stratum/external/com_google_googleapis/google/rpc/status.proto \
+    ./bazel-stratum/external/com_google_googleapis/google/rpc/code.proto \
+    -I./bazel-stratum/external/com_google_googleapis -I./bazel-stratum/external/com_github_p4lang_p4runtime \
+    -I./bazel-stratum/external/com_google_protobuf/src \
+    --python_out $PYTHON_PACKAGE_BASE --grpc_out $PYTHON_PACKAGE_BASE  \
+    --plugin=protoc-gen-grpc=./bazel-bin/external/com_github_grpc_grpc/src/compiler/grpc_python_plugin
+RUN touch $PYTHON_PACKAGE_BASE/p4/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/v1/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/config/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/p4/config/v1/__init__.py \
+    touch $PYTHON_PACKAGE_BASE/google/__init__.py && \
+    touch $PYTHON_PACKAGE_BASE/google/rpc/__init__.py
+
 # Install a version of the protobuf and grpc python bindings that is
 # compatible to that used to generate the P4Runtime ones.
 ARG PROTOBUF_VER=3.7.1
 ARG GRPC_VER=1.28.1
 RUN pip install --root /output "protobuf<=${PROTOBUF_VER}"
 RUN pip install --root /output "grpcio<=${GRPC_VER}"
-
-# As well as the P4Runtime Python bindings installed by PI. This is not needed
-# to run mininet, but it's useful to execute Python scripts acting as a
-# P4Runtime client, e.g. control plane apps or PTF tests. Also includes
-# Google API (e.g. status proto) needed by P4Runtime.
-FROM p4lang/third-party:latest as proto-builder
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common git
-RUN git clone --depth 1 https://github.com/googleapis/googleapis.git
-RUN git clone -b v1.1.0 https://github.com/p4lang/p4runtime.git
-RUN mkdir -p /output
-RUN protoc p4runtime/proto/p4/v1/p4data.proto \
-    p4runtime/proto/p4/v1/p4runtime.proto \
-    p4runtime/proto/p4/config/v1/p4info.proto \
-    p4runtime/proto/p4/config/v1/p4types.proto \
-    googleapis/google/rpc/status.proto \
-    googleapis/google/rpc/code.proto \
-    -Igoogleapis -Ip4runtime/proto \
-    --python_out /output --grpc_out /output  \
-    --plugin=protoc-gen-grpc=$(which grpc_python_plugin)
-RUN touch /output/p4/__init__.py && \
-    touch /output/p4/v1/__init__.py && \
-    touch /output/p4/config/__init__.py && \
-    touch /output/p4/config/v1/__init__.py \
-    touch /output/google/__init__.py && \
-    touch /output/google/rpc/__init__.py
 
 # Final stage, runtime.
 FROM bitnami/minideb:stretch as runtime
@@ -114,7 +114,6 @@ ENV RUNTIME_DEPS \
 RUN install_packages $RUNTIME_DEPS
 
 COPY --from=builder /output /
-COPY --from=proto-builder /output /usr/local/lib/python2.7/dist-packages
 RUN ldconfig
 
 WORKDIR /root
