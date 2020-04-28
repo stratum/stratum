@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 set -e
 THIS_DIR=$(dirname "${BASH_SOURCE[0]}")
 COMMON_NAME=${COMMON_NAME:-"stratum.local"}
