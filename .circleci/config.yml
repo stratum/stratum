@@ -233,9 +233,9 @@ workflows:
           filters:
             branches:
               only: master
-      - publish-docker-mininet
-          # requires:
-          #   - publish-docker-build
+      - publish-docker-mininet:
+          requires:
+            - publish-docker-build
       - publish-docker-p4c-fpm:
           requires:
             - publish-docker-build
