@@ -127,5 +127,3 @@ ENV PYTHONPATH $PYTHONPATH:/root
 EXPOSE 50001-50100
 
 ENTRYPOINT ["mn", "--custom", "/root/stratum.py", "--switch", "stratum-bmv2", "--host", "no-offload-host", "--controller", "none"]
-
-RUN python -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
