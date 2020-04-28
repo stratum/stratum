@@ -89,6 +89,35 @@ extern int bde_icid_get(int d, uint8* data, int len);
 
 // Over shadow the OpenNSA default symbol.
 void sal_config_init_defaults(void) {}
+
+// From OpenBCM systems/linux/kernel/modules/include/bcm-knet-kcom.h
+extern void* bcm_knet_kcom_open(char* name);
+extern int bcm_knet_kcom_close(void* handle);
+extern int bcm_knet_kcom_msg_send(void* handle, void* msg, unsigned int len,
+                                  unsigned int bufsz);
+extern int bcm_knet_kcom_msg_recv(void* handle, void* msg, unsigned int bufsz);
+
+// From OpenBCM /systems/linux/user/common/socdiag.c
+extern int bde_irq_mask_set(int unit, uint32 addr, uint32 mask);
+extern int bde_hw_unit_get(int unit, int inverse);
+
+// From OpenBCM include/soc/knet.h
+typedef struct soc_knet_vectors_s {
+  kcom_chan_t kcom;
+  int (*irq_mask_set)(int unit, uint32 addr, uint32 mask);
+  int (*hw_unit_get)(int unit, int inverse);
+} soc_knet_vectors_t;
+
+static soc_knet_vectors_t knet_vect_bcm_knet = {
+    {
+        bcm_knet_kcom_open,
+        bcm_knet_kcom_close,
+        bcm_knet_kcom_msg_send,
+        bcm_knet_kcom_msg_recv,
+    },
+    bde_irq_mask_set,
+    bde_hw_unit_get,
+};
 }  // extern "C"
 
 static_assert(SYS_BE_PIO == 0, "SYS_BE_PIO == 0");
@@ -119,6 +148,7 @@ static_assert(sizeof(uint64) == 8, "sizeof(uint64) == 8");
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 // #include "util/endian/endian.h"
+
 DEFINE_int64(linkscan_interval_in_usec, 200000, "Linkscan interval in usecs.");
 DEFINE_int64(port_counters_interval_in_usec, 100 * 1000,
              "Port counter interval in usecs.");
@@ -1059,11 +1089,10 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   soc_chip_info_vectors_t chip_info_vect = {bde_icid_get};
   RETURN_IF_BCM_ERROR(soc_chip_info_vect_config(&chip_info_vect));
   RETURN_IF_BCM_ERROR(bslmgmt_init());
-  // TODO(max): fix
+  // TODO(max): fix, hangs forever
   // RETURN_IF_BCM_ERROR(bsl_init(&sdk_bsl_config));
   RETURN_IF_BCM_ERROR(soc_cm_init());
-  // TOOD(max): knet fix
-  // RETURN_IF_BCM_ERROR(soc_knet_config(&knet_vect_bcm_knet));
+  RETURN_IF_BCM_ERROR(soc_knet_config(&knet_vect_bcm_knet));
 
   if (!bde_) {
     linux_bde_bus_t bus;
@@ -2135,8 +2164,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   if (block_unknown_unicast) {
     BCM_PBMP_ASSIGN(block.unknown_unicast, vlan_ports);
   }
-  // TODO(max): fix
-  // RETURN_IF_BCM_ERROR(bcm_vlan_block_set(unit, vlan, &block));
+  RETURN_IF_BCM_ERROR(bcm_vlan_block_set(unit, vlan, &block));
 
   VLOG(1) << "Configured block on VLAN " << vlan << " on unit " << unit
           << ". block_broadcast: " << block_broadcast
@@ -4704,12 +4732,11 @@ void BcmSdkWrapper::OnLinkscanEvent(int unit, int port, bcm_port_info_t* info) {
 }
 
 ::util::Status BcmSdkWrapper::CleanupKnet(int unit) {
-  // TODO(max): knet fix
   // Cleanup existing KNET filters and KNET intfs.
-  // RETURN_IF_BCM_ERROR(
-  //     bcm_knet_filter_traverse(unit, knet_filter_remover, nullptr));
-  // RETURN_IF_BCM_ERROR(
-  //     bcm_knet_netif_traverse(unit, knet_intf_remover, nullptr));
+  RETURN_IF_BCM_ERROR(
+      bcm_knet_filter_traverse(unit, knet_filter_remover, nullptr));
+  RETURN_IF_BCM_ERROR(
+      bcm_knet_netif_traverse(unit, knet_intf_remover, nullptr));
 
   return ::util::OkStatus();
 }
