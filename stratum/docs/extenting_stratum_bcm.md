@@ -1,14 +1,19 @@
-# How to add a Feature to Stratum (BCM)
+# How to Add a Dataplane Feature to Stratum (BCM)
 
 This guide describes how to add a new feature to Stratum BCM on the example of MPLS.
 
 ## 0. Prepare Testbed
 
-Developing on real hardware instead of simulators
+Stratum does not support simulators for the ASIC, therefore developing on real
+hardware is encouraged and recommended.
 
-## 1. Define Target
+Most features require some form of traffic. Having an additional server with 40G
+NICs connected to a few switch ports can be helpful.
 
-The target has to be defined to set the scope of the solution. To determine when it is fully implemented and tested.
+## 1. Define Target and Scope
+
+First you have to define the scope of the feature you want to add. This helps
+keeping track of progress and forces you to make up a use case beforehand.
 
 For MPLS we aim for a relatively narrow scope:
 
@@ -16,7 +21,7 @@ For MPLS we aim for a relatively narrow scope:
 - Encapsulation of IPv4 into MPLS packets
 - Transit (LSR) of MPLS packets
 - Decapsulation of MPLS into IPv4 packets
-- Compatible with normal LPM IPv4 routing
+- Compatible with existing LPM IPv4 routing code
 
 ### Explore Docs
 
@@ -214,7 +219,7 @@ Then the SDKLT tables have to be mapped to P4 primitives like actions, tables an
 
 As seen in the CLI config script, the encapsulation decision is done in the `L3_IPV4_UC_ROUTE_VRF` forwarding table, by setting a `ENCAP_NHOP` instead of a `L3_UC_NHOP` one.
 
-<image of paper scribbles>
+| TODO: image of paper scribbles
 
 ## 3. Stratum Modifications
 
@@ -223,16 +228,33 @@ As seen in the CLI config script, the encapsulation decision is done in the `L3_
 In general, most features will require changes to multiple areas of Stratum:
 
 - p4c-fpm Compiler
-    - New fields in `p4_annotation.proto`, `p4_table_defs.proto` and `p4_table_map.proto`
-    - New annotations
+
+    Here you decide how your feature will be exposed in P4 code. Hide unnecessary details about implementation details in both Statum and the underlying SDK.
+    - New header fields in `p4_table_defs.proto` and `p4_table_map.proto`
+        - E.g. `P4FieldType::P4_FIELD_TYPE_MPLS_LABEL`
+    - New Pipeline stages in `p4_annotation.proto`
+        - E.g. `P4Annotation::PipelineStage::L3_MPLS`
     - New mappers (rare)
     - Extend standard parser map
+        - Add new parser states
 
 - BCM node Runtime
-    - Add fields to bcm.proto
-    - Handle new feature in lX_manager.cc
+    - Add fields to `bcm.proto`
+        - This is the internal representation for data to be fed into the BCM APIs. Most likely new `BcmField`s, `BcmFlowEntry` types or tunnels.
+    - Handle new feature in `bcm_lX_manager.cc`
+        - Depending on which layer the feature operates, the appropriate manager has to be modified. This involves understanding the new P4 annotations and translating them to the `bcm.proto` equivalents.
     - bcm_sdk_wrapper.cc
+        - New functions that abstract the SDK APIs have to be added. Main purpose is to provide a nice and easy to use C++ interface to the underlying SDK. Avoid pulling in complex data types (protobuf messages) and favor scalar types. Ensure thread-safety, if not provided by the SDK.
 
-- New P4 code
+- Extend `main.p4` pipeline
+
+    Add or modify the new table(s) according to your additions to the compiler.
 
 ## 3. Testing
+
+To ensure a feature works as expected initially and continues to be correctly
+implemented, it's recommended to write dataplane tests. This could either be
+done in a ad-hoc manner with something like [scapy](https://github.com/secdev/scapy),
+or it could become an permanent part of the [TestVectors](https://github.com/stratum/testvectors-runner)
+test [suite](https://github.com/stratum/testvectors) that is run on real devices
+as part of the Continuos Certification Program.
