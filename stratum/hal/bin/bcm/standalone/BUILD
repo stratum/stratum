@@ -49,8 +49,6 @@ stratum_bcm_common_deps = [
     "//stratum/hal/lib/bcm:bcm_l3_manager",
     "//stratum/hal/lib/bcm:bcm_node",
     "//stratum/hal/lib/bcm:bcm_packetio_manager",
-    "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
-    "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
     "//stratum/hal/lib/bcm:bcm_serdes_db_manager",
     "//stratum/hal/lib/bcm:bcm_switch",
     "//stratum/hal/lib/bcm:bcm_table_manager",
@@ -75,7 +73,10 @@ stratum_cc_binary(
         "-lrt",
         "-lyaml",
     ],
-    deps = stratum_bcm_common_deps,
+    deps = stratum_bcm_common_deps + [
+        "//stratum/hal/lib/bcm:bcm_sdklt_wrapper",
+        "//stratum/hal/lib/bcm:bcm_sdklt_diag_shell",
+    ],
 )
 
 stratum_cc_binary(
@@ -89,7 +90,10 @@ stratum_cc_binary(
         "-ldl",
         "-lutil",
     ],
-    deps = stratum_bcm_common_deps,
+    deps = stratum_bcm_common_deps + [
+        "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
+        "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
+    ],
 )
 
 stratum_package(
