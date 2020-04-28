@@ -61,7 +61,7 @@ class AttributeDatabase : public AttributeDatabaseInterface {
   // Creates a new attribute database that runs on a google-developed switch
   // platform. <deprecated>
   // static ::util::StatusOr<std::unique_ptr<AttributeDatabase>> MakeGoogle(
-  //    const std::string& legacy_phal_config_path,
+  //    const std::string& legacy_phal_config_file,
   //    const SystemInterface* system_interface);
 
   // Creates a new Phal attribute database
