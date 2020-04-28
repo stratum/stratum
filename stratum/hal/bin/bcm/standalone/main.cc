@@ -82,7 +82,7 @@ struct PerNodeInstances {
   }
 };
 
-int Main(int argc, char** argv) {
+::util::Status Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
@@ -114,32 +114,26 @@ int Main(int argc, char** argv) {
       phal, bcm_chassis_manager.get(), unit_to_bcm_node);
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
-  auto credentials_manager = CredentialsManager::CreateInstance();
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(OPERATION_MODE_STANDALONE, bcm_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK(hal != nullptr) << "Failed to create the Stratum Hal instance.";
+  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
 
   // Sanity check, setup and start serving RPCs.
-  ::util::Status status = hal->SanityCheck();
-  if (!status.ok()) {
-    LOG(ERROR) << "HAL sanity check failed: " << status.error_message();
-    return -1;
-  }
-  status = hal->Setup();
+  RETURN_IF_ERROR(hal->SanityCheck());
+
+  auto status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
         << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
-  status = hal->Run();  // blocking
-  if (!status.ok()) {
-    LOG(ERROR) << "Error when running Stratum HAL: " << status.error_message();
-    return -1;
-  }
+  RETURN_IF_ERROR(hal->Run());  // blocking
 
   LOG(INFO) << "See you later!";
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace bcm
@@ -147,5 +141,5 @@ int Main(int argc, char** argv) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  return stratum::hal::bcm::Main(argc, argv);
+  return stratum::hal::bcm::Main(argc, argv).error_code();
 }

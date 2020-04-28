@@ -143,7 +143,6 @@ sudo mount -t hugetlbfs nodev /mnt/huge
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
      ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf \
-       --external_stratum_urls=0.0.0.0:28000 \
        --grpc_max_recv_msg_size=256 \
        --bf_sde_install=$BF_SDE_INSTALL \
        --persistent_config_dir=<config dir> \
@@ -208,12 +207,7 @@ FEC can also be configured when adding a port through gNMI.
 
 ## Testing gNMI
 
-You can use the tools/gnmi/gnmi-cli.py script for gNMI get, set, and subscriptions:
-```
-python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 get /interfaces/interface[name=128]/state/ifindex
-python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 set /interfaces/interface[name=1/1/1]/config/health-indicator --string-val GOOD
-python tools/gnmi/gnmi-cli.py --grpc-addr 0.0.0.0:28000 sub /interfaces/interface[name=128]/state/oper-status
-```
+See [gNMI CLI](/tools/gnmi/README.md)
 
 ## Using p4runtime-shell
 

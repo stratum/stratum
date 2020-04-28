@@ -41,6 +41,7 @@ docker run -it --privileged \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     $PLATFORM_ARGS \
     -p 28000:28000 \
+    -p 9339:9339 \
     -v $CONFIG_DIR:/etc/stratum \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
