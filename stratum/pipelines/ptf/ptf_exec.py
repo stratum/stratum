@@ -56,7 +56,7 @@ def setup_and_launch_ptf_runner(device, pipeline_name, protobuf_dir, ptf_dir, sc
     if skip_bmv2_start == True:
         SKIP_BMV2_START = " --skip-bmv2-start"
 
-    # Make ptf python script executable and setup paths ./google/protobuf 
+    # Make ptf python script executable and setup paths ./google/protobuf
     # and ./google/rpc as Python searchable paths in ./py_ptf directory.
 
     ptf_setup_cmd = \
