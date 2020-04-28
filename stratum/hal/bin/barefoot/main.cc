@@ -118,7 +118,7 @@ void registerDeviceMgrLogger() {
 
   {
     int status = bf_switchd_lib_init(switchd_main_ctx);
-    CHECK_RETURN_IF_FALSE(status)
+    CHECK_RETURN_IF_FALSE(status == 0)
         << "Error when starting switchd, status: " << status;
     LOG(INFO) << "switchd started successfully";
   }
