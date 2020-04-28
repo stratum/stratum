@@ -378,6 +378,16 @@ PING 10.0.3.1 (10.0.3.1) 56(84) bytes of data.
 ^C
 ```
 
+#### Run a command on a Mininet host
+
+Use `make mn-host` to run a command on a Mininet host, for example:
+
+```bash
+make mn-host h1 ip a # Run `ip a` command on h1
+make mn-host h1 bash # Run `bash` command on h1, which allows you to attach the shell
+make mn-host h1 # Same as below, the default command is `bash`
+```
+
 ### Congratulations!
 
 You have completed all the steps of this example.
