@@ -20,7 +20,7 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
-DEFINE_string(phal_config_path, "",
+DEFINE_string(phal_config_file, "",
               "The path to read the PhalInitConfig proto file from.");
 
 namespace stratum {
@@ -158,10 +158,10 @@ AttributeDatabase::~AttributeDatabase() {
 }
 
 // ::util::StatusOr<std::unique_ptr<AttributeDatabase>>
-// AttributeDatabase::MakeGoogle(const std::string& legacy_phal_config_path,
+// AttributeDatabase::MakeGoogle(const std::string& legacy_phal_config_file,
 //                              const SystemInterface* system_interface) {
 //  LegacyPhalInitConfig config;
-//  RETURN_IF_ERROR(ReadProtoFromTextFile(legacy_phal_config_path, &config));
+//  RETURN_IF_ERROR(ReadProtoFromTextFile(legacy_phal_config_file, &config));
 //  std::unique_ptr<AttributeGroup> root_group =
 //      AttributeGroup::From(PhalDB::descriptor());
 //  ASSIGN_OR_RETURN(std::unique_ptr<UdevEventHandler> udev,

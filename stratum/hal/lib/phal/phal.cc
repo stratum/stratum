@@ -28,7 +28,7 @@
 #include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
 #endif  // defined(WITH_TAI)
 
-DECLARE_string(phal_config_path);
+DECLARE_string(phal_config_file);
 
 namespace stratum {
 namespace hal {
@@ -86,10 +86,10 @@ Phal* Phal::CreateSingleton() {
 #endif  // defined(WITH_TAI)
 
     PhalInitConfig phal_config;
-    if (FLAGS_phal_config_path.empty()) {
+    if (FLAGS_phal_config_file.empty()) {
       if (configurators.empty()) {
         LOG(ERROR)
-            << "No phal_config_path specified and no switch configurator "
+            << "No phal_config_file specified and no switch configurator "
                "found! This is probably not what you want. Did you forget to "
                "specify any '--define phal_with_*=true' Bazel flags?";
       }
@@ -98,7 +98,7 @@ Phal* Phal::CreateSingleton() {
       }
     } else {
       RETURN_IF_ERROR(
-          ReadProtoFromTextFile(FLAGS_phal_config_path, &phal_config));
+          ReadProtoFromTextFile(FLAGS_phal_config_file, &phal_config));
     }
 
     // Now load the config into the attribute database

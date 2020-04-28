@@ -152,7 +152,7 @@ class OnlpPhalCli {
 };
 
 ::util::Status Main(int argc, char** argv) {
-  InitGoogle("onlpphal_cli --phal_config_path <config_path>", &argc, &argv,
+  InitGoogle("onlpphal_cli --phal_config_file <config_path>", &argc, &argv,
              true);
   stratum::InitStratumLogging();
 

@@ -66,5 +66,6 @@ RUN install_packages \
 
 ENV BF_SDE_INSTALL /usr/local
 EXPOSE 28000/tcp
+EXPOSE 9339/tcp
 ENTRYPOINT /stratum-entrypoint.sh
 
