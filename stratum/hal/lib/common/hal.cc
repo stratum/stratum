@@ -32,7 +32,7 @@
 #include "absl/synchronization/mutex.h"
 
 // TODO(unknown): Use FLAG_DEFINE for all flags.
-DEFINE_string(external_stratum_urls, "",
+DEFINE_string(external_stratum_urls, stratum::kExternalStratumUrls,
             "Comma-separated list of URLs for server to listen to for external"
             " calls from SDN controller, etc.");
 DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,

@@ -40,6 +40,8 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 
 [testvectors](stratum/public/proto/tv.proto)
 
+[SSL/TLS support](stratum/lib/security/README.md)
+
 # Component Overview
 
 ![img](stratum/docs/images/stratum_architecture.png)
