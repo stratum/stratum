@@ -172,7 +172,15 @@ pkg_deb(
     description = "Stratum for Broadcom switches using OpenNSA.",
     architecture = "amd64",
     data = ":statum_bcm_opennsa_all",
-    maintainer = "https://stratumproject.org/",
+    depends = [
+        "kmod",
+        "libboost-thread1.62.0",
+        "libedit2",
+        "libjudydebian1",
+        "libssl1.1",
+    ],
+    maintainer = "The Stratum Project",
+    homepage = "https://stratumproject.org/",
     conflicts = ["stratum-bcm-sdklt"],
 )
 
@@ -183,6 +191,15 @@ pkg_deb(
     description = "Stratum for Broadcom switches using SDKLT.",
     architecture = "amd64",
     data = ":statum_bcm_sdklt_all",
-    maintainer = "https://stratumproject.org/",
+    depends = [
+        "kmod",
+        "libboost-thread1.62.0",
+        "libedit2",
+        "libjudydebian1",
+        "libssl1.1",
+        "libyaml-0-2",
+    ],
+    maintainer = "The Stratum Project",
+    homepage = "https://stratumproject.org/",
     conflicts = ["stratum-bcm-opennsa"],
 )
