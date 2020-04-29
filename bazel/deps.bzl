@@ -266,8 +266,7 @@ def stratum_deps():
             # TODO(max): This is kind of hacky and should be improved.
             # Each string is a new bash shell, use && to run dependant commands.
             patch_cmds = [
-                "wget https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.0.1/linux-4.14.49-OpenNetworkLinux.tar.xz",
-                "tar xf linux-4.14.49-OpenNetworkLinux.tar.xz",
+                "wget -qO- https://github.com/opennetworkinglab/OpenNetworkLinux/releases/download/onlpv2-dev-1.0.1/linux-4.14.49-OpenNetworkLinux.tar.xz | tar xz",
                 "cp -r src/gpl-modules/* .",
                 "export CC=gcc CXX=g++ CFLAGS='-Wno-error=unused-result -fno-pie' KERNDIR=$(realpath ./linux-4.14.49-OpenNetworkLinux) && cd systems/linux/user/x86-smp_generic_64-2_6 && make clean -j && make",
                 "git reset --hard origin/master",
