@@ -16,19 +16,18 @@
 # limitations under the License.
 #
 
-load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+load(
+    "//bazel:rules.bzl",
+    "EMBEDDED_ARCHES",
+    "STRATUM_INTERNAL",
+    "stratum_cc_binary",
+    "stratum_package",
+)
 
 licenses(["notice"])  # Apache v2
 
 exports_files(["LICENSE"])
-
-load(
-    "//bazel:rules.bzl",
-    "STRATUM_INTERNAL",
-    "stratum_cc_binary",
-    "stratum_package",
-    "EMBEDDED_ARCHES",
-)
 
 package(
     #default_hdrs_check = "strict",
@@ -106,8 +105,8 @@ stratum_package(
 pkg_tar(
     name = "stratum_bcm_sdklt_bin",
     srcs = [
-        ":stratum_bcm_sdklt",
         "sdklt/start-stratum.sh",
+        ":stratum_bcm_sdklt",
     ],
     mode = "0755",
     package_dir = "/usr/bin",
@@ -116,8 +115,8 @@ pkg_tar(
 pkg_tar(
     name = "stratum_bcm_opennsa_bin",
     srcs = [
-        ":stratum_bcm_opennsa",
         "sdk/start-stratum.sh",
+        ":stratum_bcm_opennsa",
     ],
     mode = "0755",
     package_dir = "/usr/bin",
@@ -141,36 +140,34 @@ pkg_tar(
 
 pkg_tar(
     name = "stratum_bcm_etc",
+    package_dir = "/etc/stratum",
     deps = [
         "//stratum/hal/config:all_configs_tar",
     ],
-    package_dir = "/etc/stratum",
 )
 
 pkg_tar(
     name = "statum_bcm_sdklt_all",
     deps = [
+        ":stratum_bcm_etc",
         ":stratum_bcm_sdklt_bin",
         ":stratum_bcm_sdklt_lib",
-        ":stratum_bcm_etc",
     ],
 )
 
 pkg_tar(
     name = "statum_bcm_opennsa_all",
     deps = [
+        ":stratum_bcm_etc",
         ":stratum_bcm_opennsa_bin",
         ":stratum_bcm_opennsa_lib",
-        ":stratum_bcm_etc",
     ],
 )
 
 pkg_deb(
     name = "stratum_bcm_opennsa_deb",
-    package = "stratum-bcm-opennsa",
-    version = "0.0.1",
-    description = "Stratum for Broadcom switches using OpenNSA.",
     architecture = "amd64",
+    conflicts = ["stratum-bcm-sdklt"],
     data = ":statum_bcm_opennsa_all",
     depends = [
         "kmod",
@@ -179,17 +176,17 @@ pkg_deb(
         "libjudydebian1",
         "libssl1.1",
     ],
-    maintainer = "The Stratum Project",
+    description = "Stratum for Broadcom switches using OpenNSA.",
     homepage = "https://stratumproject.org/",
-    conflicts = ["stratum-bcm-sdklt"],
+    maintainer = "The Stratum Project",
+    package = "stratum-bcm-opennsa",
+    version = "0.0.1",
 )
 
 pkg_deb(
     name = "stratum_bcm_sdklt_deb",
-    package = "stratum-bcm-sdklt",
-    version = "0.0.1",
-    description = "Stratum for Broadcom switches using SDKLT.",
     architecture = "amd64",
+    conflicts = ["stratum-bcm-opennsa"],
     data = ":statum_bcm_sdklt_all",
     depends = [
         "kmod",
@@ -199,7 +196,9 @@ pkg_deb(
         "libssl1.1",
         "libyaml-0-2",
     ],
-    maintainer = "The Stratum Project",
+    description = "Stratum for Broadcom switches using SDKLT.",
     homepage = "https://stratumproject.org/",
-    conflicts = ["stratum-bcm-opennsa"],
+    maintainer = "The Stratum Project",
+    package = "stratum-bcm-sdklt",
+    version = "0.0.1",
 )
