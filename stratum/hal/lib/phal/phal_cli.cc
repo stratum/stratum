@@ -43,6 +43,12 @@ namespace hal {
 namespace phal {
 
 namespace {
+const char kUsage[] = R"USAGE(Basic PHAL CLI. Query the internal state of the Phal database.
+Examples:
+  Cmd type <get, subscribe, set>: get cards/
+                                  get cards[0]/ports[0]/
+)USAGE";
+
 // Parse PB Query string to Phal DB Path
 ::util::StatusOr<PathQuery> ParseQuery(const std::string& query) {
   PathQuery path_query;
@@ -419,7 +425,8 @@ class PhalCli {
 };
 
 ::util::Status Main(int argc, char** argv) {
-  InitGoogle("phal_cli", &argc, &argv, true);
+  ::gflags::SetUsageMessage(kUsage);
+  InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
 
   PhalCli cli(grpc::CreateChannel(FLAGS_phal_db_url,
