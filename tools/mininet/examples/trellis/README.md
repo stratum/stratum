@@ -59,6 +59,7 @@ reference:
 | `make mn-log`       | Show the Mininet log (i.e., the CLI output)            |
 | `make netcfg`       | Push netcfg.json file (network config) to ONOS         |
 | `make reset`        | Reset the tutorial environment                         |
+| `make mn-host`      | Run a command in a Mininet host.                       |
 
 ## Walktrough
 
@@ -380,6 +381,16 @@ PING 10.0.3.1 (10.0.3.1) 56(84) bytes of data.
 64 bytes from 10.0.3.1: icmp_seq=2 ttl=62 time=8.60 ms
 64 bytes from 10.0.3.1: icmp_seq=3 ttl=62 time=8.45 ms
 ^C
+```
+
+#### Run a command on a Mininet host
+
+Use `make mn-host` to run a command on a Mininet host, for example:
+
+```bash
+make mn-host h1 ip a # Run `ip a` command on h1
+make mn-host h1 bash # Run `bash` command on h1, which allows you to attach the shell
+make mn-host h1 # Same as below, the default command is `bash`
 ```
 
 ### Congratulations!
