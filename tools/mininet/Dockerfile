@@ -38,6 +38,8 @@ RUN curl -L https://github.com/mininet/mininet/tarball/master | \
 RUN mkdir -p /output
 RUN PREFIX=/output make install-mnexec install-manpages
 RUN python setup.py install --root /output
+# Install `m` utility so user can attach to a mininet host directly
+RUN cp util/m /output/bin/m && sed -i 's#sudo##g' /output/bin/m
 
 # Build stratum_bmv2
 COPY . /tmp/stratum
