@@ -4,11 +4,11 @@ This guide describes how to add a new feature to Stratum BCM on the example of M
 
 ## 0. Prepare Testbed
 
-Stratum does not support simulators for the ASIC, therefore developing on real
+Stratum BCM does not support simulators for the ASIC, therefore developing on real
 hardware is encouraged and recommended.
 
-Most features require some form of traffic. Having an additional server with 40G
-NICs connected to a few switch ports can be helpful.
+Most features require some form of traffic to test them. Having an additional
+server with QSFP NICs connected to a few switch ports can be helpful.
 
 ## 1. Define Target and Scope
 
