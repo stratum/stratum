@@ -18,14 +18,15 @@ The `stratum_dummy` binary is a standalone executable which includes following i
 To build the `stratum_dummy`:
 
 ```
-bazel build //stratum/hal/bin/dummy:stratum_dummy
+bazel build //stratum/hal/bin/dummy:stratum_dummy --define phal_with_onlp=false
 ```
 
 ## Running the `stratum_dummy` binary
 
 ```
-bazel run //stratum/hal/bin/dummy:stratum_dummy -- \
-  --external_stratum_urls=0.0.0.0:28000 \
+bazel run //stratum/hal/bin/dummy:stratum_dummy \
+  --define phal_with_onlp=false \
+  -- \
   --persistent_config_dir=/tmp/ \
   --chassis_config_file=$(pwd)/stratum/hal/bin/dummy/chassis_config \
   --forwarding_pipeline_configs_file=/tmp/dummy_pipeline_cfg

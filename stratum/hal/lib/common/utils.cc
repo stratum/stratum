@@ -16,12 +16,15 @@
 
 #include "stratum/hal/lib/common/utils.h"
 
+#include <cfenv>  // NOLINT
+#include <cmath>
 #include <sstream>  // IWYU pragma: keep
 #include <regex>  // NOLINT
 
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/public/lib/error.h"
+#include "stratum/public/proto/error.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -356,6 +359,16 @@ bool IsAdminStateEnabled(const AdminState& admin_state) {
     return admin_state == AdminState::ADMIN_STATE_ENABLED;
 }
 
+bool IsLoopbackStateEnabled(const LoopbackState& loopback_state) {
+  switch (loopback_state) {
+    case LOOPBACK_STATE_MAC:
+    case LOOPBACK_STATE_PHY:
+      return true;
+    default:
+      return false;
+  }
+}
+
 std::string ConvertMediaTypeToString(const MediaType& type) {
   switch (type) {
     case MEDIA_TYPE_SFP:
@@ -394,6 +407,39 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
     default:
       return "UNKNOWN";
   }
+}
+
+::util::StatusOr<double> ConvertDecimal64ToDouble(
+    const ::gnmi::Decimal64& value) {
+  std::feclearexcept(FE_ALL_EXCEPT);
+  double result = value.digits() / std::pow(10, value.precision());
+  if (std::feclearexcept(FE_INVALID)) {
+    return MAKE_ERROR(ERR_OUT_OF_RANGE)
+           << "can not convert decimal"
+           << " with digits " << value.digits() << " and precision "
+           << value.precision() << " to a double value.";
+  }
+  return result;
+}
+
+::util::StatusOr<::gnmi::Decimal64> ConvertDoubleToDecimal64(double value,
+                                                             uint32 precision) {
+  std::feclearexcept(FE_ALL_EXCEPT);
+  ::gnmi::Decimal64 decimal;
+  decimal.set_digits(std::llround(value * std::pow(10, precision)));
+  decimal.set_precision(precision);
+  if (std::fetestexcept(FE_INVALID)) {
+    return MAKE_ERROR(ERR_OUT_OF_RANGE)
+           << "can not convert number " << value << " with precision "
+           << precision << " to a Decimal64 value";
+  }
+  return decimal;
+}
+
+::gnmi::Decimal64 ConvertDoubleToDecimal64OrDie(const double& value) {
+  auto status = ConvertDoubleToDecimal64(value);
+  CHECK(status.ok());
+  return status.ConsumeValueOrDie();
 }
 
 }  // namespace hal

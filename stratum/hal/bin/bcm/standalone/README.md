@@ -1,40 +1,107 @@
-# Running Stratum on a Broadcom SDKLT based switch
+# Stratum on a Broadcom SDKLT based switch
 
 The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. like Tomahawk) using the Broadcom SDKLT.
 
-## Dependencies
+## ONLPv2 operating system on the switch
+Stratum requires an ONLPv2 operating system on the switch. ONF maintains a [fork](https://github.com/opennetworkinglab/OpenNetworkLinux) with additional platforms. Follow the [ONL](https://opennetlinux.org/doc-building.html) instructions to setup your device. Here is what your switch should look like:
 
-Reasonable new GCC or Clang (preferred). [SDKLT](https://github.com/opennetworkinglab/SDKLT) is fetched by bazel automatically during the build process. At runtime two Kernel modules are required, which can be downloaded on [GitHub](https://github.com/opennetworkinglab/SDKLT/releases).
+```bash
+# uname -a
+Linux as7712 4.14.49-OpenNetworkLinux #4 SMP Tue May 14 20:43:21 UTC 2019 x86_64 GNU/Linux
+```
 
-## Building the `stratum_bcm` binary
+```bash
+# cat /etc/os-release
+PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+NAME="Debian GNU/Linux"
+VERSION_ID="9"
+VERSION="9 (stretch)"
+VERSION_CODENAME=stretch
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+```
 
-The `stratum_bcm` binary is a standalone executable which includes:
-- a Stratum implementation for bcm
-- links to the Broadcom SDKLT libraries and headers
+```bash
+# cat /etc/onl/SWI
+images:ONL-onf-ONLPv2_ONL-OS_<some-date>_AMD64.swi
+```
+Note the **ONLPv2**!
 
-To build the `stratum_bcm` binary you will need to:
-1. Clone the Stratum repository
-2. Change into the stratum directory
-3. Setup the development environment (kicks off a container)
-4. Then build the target using Bazel
+```bash
+# cat /etc/onl/platform
+x86-64-<vendor-name>-<box-name>-32x-r0
+```
 
-An example is shown below:
+## Pre-build Docker image
+
+Stratum for Broadcom switches can be run inside Docker on the switch itself.
+As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
+
+ - `cd stratum/hal/bin/bcm/standalone`
+ - `docker pull stratumproject/stratum-bcm:latest`
+ - `start-stratum.sh`
+
+## From source
+
+Sometimes you have to build Stratum from source, e.g. because you develop some private feature or want to try a fix not yet pushed to GitHub.
+
+### Build dependencies
+
+Stratum comes with a [development Docker container](https://github.com/stratum/stratum#development-environment) for build purposes. This is the preferred and supported way of building Stratum, as it has all dependencies installed.
+
+If you for some reason want to build natively, here are some pointers to an enviroment that worked for us:
+
+- clang-6.0 or newer
+
+- Linux 4.4.0-161-generic
+
+- Ubuntu 16.04.6 LTS
+
+### Building the `stratum_bcm` package
+
+You can build the same package that we publish manually with the following steps:
 
 ```
 git clone https://github.com/stratum/stratum.git
 cd stratum
-./setup_dev_env.sh
-bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm
+./setup_dev_env.sh  # You're now inside the docker container
+bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
+scp ./bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz root@<your_switch_ip>:stratum_bcm_package.tar.gz
 ```
 
-You can build the binary on your build server and copy it over to the switch.
+If you're not building inside the docker container, skip the `./setup_dev_env.sh` step.
 
-## Running the `stratum_bcm` binary
+### SDKLT
 
-SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the release [tarball]((https://github.com/opennetworkinglab/SDKLT/releases)). Install them before running stratum:
-`insmod linux_ngbde.ko && insmod linux_ngknet.ko`
+**ONLY needed when not using Docker!**
 
-Running `stratum_bcm` requires five configuration files, passed as CLI flags:
+SDKLT requires two Kernel modules to be installed for Packet IO and interfacing with the ASIC. We provide prebuilt binaries for Kernel 4.14.49 in the `stratum_bcm_package.tar.gz` package and the SDKLT [tarball](https://github.com/opennetworkinglab/SDKLT/releases). Install them before running stratum:
+
+```bash
+tar xf stratum_bcm_package.tar.gz
+# or
+wget https://github.com/opennetworkinglab/SDKLT/releases/...
+tar xf sdklt-4.14.49.tgz
+insmod linux_ngbde.ko && insmod linux_ngknet.ko
+```
+
+Check for correct install:
+
+```bash
+# lsmod
+Module                  Size  Used by
+linux_ngknet          352256  0
+linux_ngbde            32768  1 linux_ngknet
+# dmesg -H
+[Jan10 10:53] linux-kernel-bde (6960): MSI not used
+[  +2.611898] Broadcom NGBDE loaded successfully
+```
+
+### Running the `stratum_bcm` binary
+
+Running `stratum_bcm` requires some configuration files, passed as CLI flags:
 
 - base_bcm_chassis_map_file: Protobuf defining chip capabilities and all possible port configurations of a chassis.
     Example found under: `/stratum/hal/config/**platform name**/base_bcm_chassis_map.pb.txt`
@@ -47,32 +114,14 @@ Running `stratum_bcm` requires five configuration files, passed as CLI flags:
 - bcm_hardware_specs_file: ACL and UDF properties of chips. Found under: `/stratum/hal/config/bcm_hardware_specs.pb.txt`
 - bcm_serdes_db_proto_file: Contains SerDes configuration. Not implemented yet, can be an empty file.
 
+We provide defaults for most platforms under `stratum/hal/config`. If you followed the build instructions, these should be on the switch under `stratum_configs`.
 Depending on your actual cabling, you'll have to adjust the config files. Panel ports 31 & 32 are in loopback mode and should work without cables.
 
-The config flags are best stored in a flag file `stratum.flags`:
+To start Stratum, you can use the convenience script we package in:
 
 ```bash
--external_stratum_urls=0.0.0.0:28000
--persistent_config_dir=/etc/stratum
--base_bcm_chassis_map_file=/etc/stratum/chassis_map.pb.txt
--chassis_config_file=/etc/stratum/chassis_config.pb.txt
--bcm_sdk_config_file=/etc/stratum/sdk_config.yml
--bcm_hardware_specs_file=/etc/stratum/bcm_hardware_specs.pb.txt
--forwarding_pipeline_configs_file=/tmp/stratum/pipeline_cfg.pb.txt
--write_req_log_file=/tmp/stratum/p4_writes.pb.txt
--bcm_serdes_db_proto_file=/etc/stratum/dummy_serdes_db.pb.txt
--bcm_sdk_checkpoint_dir=/tmp/stratum/bcm_chkpt
--colorlogtostderr
--alsologtostderr
--logtosyslog=false
--v=0
-```
-
-(You can also use a bash script, passing the flags individually. Prevents [Issue 61](https://github.com/gflags/gflags/issues/61)).
-
-Start stratum:
-```bash
-./stratum_bcm -flagfile=stratum.flags
+cd <extracted package>
+./start-stratum.sh
 ```
 
 You should see the ports coming up and have a SDKLT shell prompt:
@@ -80,3 +129,10 @@ You should see the ports coming up and have a SDKLT shell prompt:
 I0628 18:29:10.806623  7930 bcm_chassis_manager.cc:1738] State of SingletonPort (node_id: 1, port_id: 34, slot: 1, port: 3, unit: 0, logical_port: 34, speed: 40G): UP
 BCMLT.0>
 ```
+
+
+## Troubleshooting
+
+### `insmod: ERROR: could not insert module linux_ngbde.ko: Invalid module format`
+
+You are trying to insert Kernel modules build for a different Kernel version. Make sure your switch looks exactly like described under Runtime dependencies.

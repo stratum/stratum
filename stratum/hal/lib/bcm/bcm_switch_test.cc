@@ -13,11 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 
 #include <utility>
 
+#include "absl/memory/memory.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "stratum/glue/status/canonical_errors.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_manager_mock.h"
@@ -29,9 +31,6 @@
 #include "stratum/hal/lib/p4/p4_table_mapper_mock.h"
 #include "stratum/lib/channel/channel_mock.h"
 #include "stratum/lib/utils.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/memory/memory.h"
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -506,6 +505,40 @@ TEST_F(BcmSwitchTest, GetPortAdminStatus) {
   EXPECT_EQ(error.ToString(), details.at(0).ToString());
 }
 
+TEST_F(BcmSwitchTest, GetPortLoopbackStatus) {
+  PushChassisConfigSuccess();
+
+  WriterMock<DataResponse> writer;
+  DataResponse resp;
+
+  // Expect successful retrieval followed by failure.
+  ::util::Status error = ::util::UnknownErrorBuilder(GTL_LOC) << "error";
+  EXPECT_CALL(*bcm_chassis_manager_mock_,
+              GetPortLoopbackState(kNodeId, kPortId))
+      .WillOnce(Return(LOOPBACK_STATE_NONE))
+      .WillOnce(Return(error));
+  ExpectMockWriteDataResponse(&writer, &resp);
+
+  DataRequest req;
+  auto* req_info = req.add_requests()->mutable_loopback_status();
+  req_info->set_node_id(kNodeId);
+  req_info->set_port_id(kPortId);
+  std::vector<::util::Status> details;
+
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_TRUE(resp.has_loopback_status());
+  EXPECT_EQ(LOOPBACK_STATE_NONE, resp.loopback_status().state());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+
+  details.clear();
+  resp.Clear();
+  EXPECT_OK(bcm_switch_->RetrieveValue(kNodeId, req, &writer, &details));
+  EXPECT_FALSE(resp.has_loopback_status());
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_EQ(error.ToString(), details.at(0).ToString());
+}
+
 TEST_F(BcmSwitchTest, GetPortSpeed) {
   PushChassisConfigSuccess();
 
@@ -652,6 +685,25 @@ TEST_F(BcmSwitchTest, SetPortAdminStatusPass) {
   request->set_node_id(1);
   request->set_port_id(2);
   request->mutable_admin_status()->set_state(AdminState::ADMIN_STATE_ENABLED);
+
+  std::vector<::util::Status> details;
+  EXPECT_OK(bcm_switch_->SetValue(
+      /* node_id */ 0, req, &details));
+  ASSERT_EQ(details.size(), 1);
+  EXPECT_THAT(details.at(0), ::util::OkStatus());
+}
+
+TEST_F(BcmSwitchTest, SetPortLoopbackStatusPass) {
+  EXPECT_CALL(*bcm_chassis_manager_mock_,
+              SetPortLoopbackState(1, 2, LOOPBACK_STATE_MAC))
+      .WillOnce(Return(::util::OkStatus()));
+
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_port();
+  request->set_node_id(1);
+  request->set_port_id(2);
+  request->mutable_loopback_status()->set_state(
+      LoopbackState::LOOPBACK_STATE_MAC);
 
   std::vector<::util::Status> details;
   EXPECT_OK(bcm_switch_->SetValue(

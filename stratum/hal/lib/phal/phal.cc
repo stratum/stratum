@@ -35,10 +35,11 @@
 #endif  // defined(WITH_ONLP)
 
 #if defined(WITH_TAI)
-// TODO(plvision): add tai includes here
+#include "stratum/hal/lib/phal/tai/tai_phal.h"
+#include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
 #endif  // defined(WITH_TAI)
 
-DECLARE_string(phal_config_path);
+DECLARE_string(phal_config_file);
 
 namespace stratum {
 namespace hal {
@@ -83,23 +84,32 @@ Phal* Phal::CreateSingleton() {
                                               onlp_phal, onlp_wrapper));
       configurators.push_back(std::move(configurator));
     }
-#endif
+#endif  // defined(WITH_ONLP)
 
-    // TODO(max): figure out how to have multiple configurators creating a
-    // default config.
+#if defined(WITH_TAI)
+    {
+      auto* tai_phal = tai::TaiPhal::CreateSingleton();
+      tai_phal->PushChassisConfig(config);
+      phal_interfaces_.push_back(tai_phal);
+      ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
+      configurators.push_back(std::move(configurator));
+    }
+#endif  // defined(WITH_TAI)
+
     PhalInitConfig phal_config;
-    if (FLAGS_phal_config_path.empty()) {
+    if (FLAGS_phal_config_file.empty()) {
       if (configurators.empty()) {
         LOG(ERROR)
-            << "No phal_config_path specified and no switch configurator "
+            << "No phal_config_file specified and no switch configurator "
                "found! This is probably not what you want. Did you forget to "
                "specify any '--define phal_with_*=true' Bazel flags?";
-      } else {
-        RETURN_IF_ERROR(configurators.at(0)->CreateDefaultConfig(&phal_config));
+      }
+      for (const auto& configurator : configurators) {
+        RETURN_IF_ERROR(configurator->CreateDefaultConfig(&phal_config));
       }
     } else {
       RETURN_IF_ERROR(
-          ReadProtoFromTextFile(FLAGS_phal_config_path, &phal_config));
+          ReadProtoFromTextFile(FLAGS_phal_config_file, &phal_config));
     }
 
     // Now load the config into the attribute database
@@ -114,6 +124,9 @@ Phal* Phal::CreateSingleton() {
 
     // Create SfpAdapter
     sfp_adapter_ = absl::make_unique<SfpAdapter>(database_.get());
+
+    // Create OpticsAdapter
+    optics_adapter_ = absl::make_unique<OpticsAdapter>(database_.get());
 
     initialized_ = true;
   }
@@ -173,6 +186,26 @@ Phal* Phal::CreateSingleton() {
   }
 
   return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
+}
+
+::util::Status Phal::GetOpticalTransceiverInfo(int slot, int port,
+                                               OpticalChannelInfo* oc_info) {
+  absl::WriterMutexLock l(&config_lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return optics_adapter_->GetOpticalTransceiverInfo(slot, port, oc_info);
+}
+
+::util::Status Phal::SetOpticalTransceiverInfo(
+    int slot, int port, const OpticalChannelInfo& oc_info) {
+  absl::WriterMutexLock l(&config_lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return optics_adapter_->SetOpticalTransceiverInfo(slot, port, oc_info);
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,

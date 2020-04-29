@@ -1,11 +1,13 @@
 build --announce_rc
+build --copt -O0
 
 # Set convenient location for Bazel files to cache
 startup --output_user_root=/tmp/bazel-cache/output-root
 
 # Bazel doesn't calculate resource ceiling correctly when running under Docker.
 # Memory, CPU cores, disk I/O
-build --local_resources=3072,1.0,1.0
+build --local_cpu_resources=1
+build --local_ram_resources=3072
 build --jobs=1
 
 # Also limit memory allocated to the JVM
@@ -21,7 +23,7 @@ test --test_output=errors
 test --test_verbose_timeout_warnings
 
 # Profile build
-build --profile=/tmp/bazel.profile
+build --profile=/tmp/bazel.profile.json
 
 # Coverage
 coverage --combined_report=lcov --coverage_report_generator @bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main

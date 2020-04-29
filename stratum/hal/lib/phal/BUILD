@@ -19,13 +19,13 @@ licenses(["notice"])  # Apache v2
 
 load(
     "//bazel:rules.bzl",
+    "EMBEDDED_ARCHES",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
     "stratum_cc_library",
     "stratum_cc_test",
     "stratum_package",
-    "EMBEDDED_ARCHES",
-    "HOST_ARCHES",
 )
 
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
@@ -79,7 +79,7 @@ tai_defines = [
 ]
 
 tai_deps = [
-    # TODO(plvision)
+    "//stratum/hal/lib/phal/tai:tai_phal",
 ]
 
 # Default Phal selection (the absence of both with_* and without_*) is done by
@@ -270,6 +270,39 @@ stratum_cc_test(
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
+    ],
+)
+
+stratum_cc_library(
+    name = "optics_adapter",
+    srcs = ["optics_adapter.cc"],
+    hdrs = ["optics_adapter.h"],
+    deps = [
+        ":adapter",
+        ":attribute_database_interface",
+        ":db_cc_proto",
+        ":managed_attribute",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_protobuf//:protobuf",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status",
+        "//stratum/hal/lib/common:phal_interface",
+        "//stratum/hal/lib/common:utils",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+    ],
+)
+
+stratum_cc_test(
+    name = "optics_adapter_test",
+    srcs = ["optics_adapter_test.cc"],
+    deps = [
+        ":attribute_database_mock",
+        ":optics_adapter",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
     ],
 )
 
@@ -844,12 +877,13 @@ stratum_cc_library(
     hdrs = ["phal.h"],
     defines = phal_defines,
     deps = [
-        ":phal_cc_proto",
-        ":sfp_configurator",
-        ":sfp_adapter",
-        ":switch_configurator_interface",
         ":attribute_database",
+        ":optics_adapter",
         ":phal_backend_interface",
+        ":phal_cc_proto",
+        ":sfp_adapter",
+        ":sfp_configurator",
+        ":switch_configurator_interface",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
         "//stratum/hal/lib/common:constants",

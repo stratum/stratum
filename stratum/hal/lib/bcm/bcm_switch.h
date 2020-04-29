@@ -88,7 +88,8 @@ class BcmSwitch : public SwitchInterface {
                                std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
-                          std::vector<::util::Status>* details) override;
+                          std::vector<::util::Status>* details) override
+      LOCKS_EXCLUDED(chassis_lock);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BcmSwitch> CreateInstance(

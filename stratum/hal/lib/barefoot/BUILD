@@ -84,6 +84,7 @@ stratum_cc_test(
     deps = [":bf_pal_mock",
             ":bf_chassis_manager",
             ":test_main",
+            "@com_google_absl//absl/time",
             "@com_google_googletest//:gtest",
             "//stratum/glue:integral_types",
             "//stratum/glue/status",

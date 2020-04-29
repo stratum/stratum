@@ -94,8 +94,7 @@ void registerDeviceMgrLogger() {
 
 }  // namespace
 
-int
-Main(int argc, char* argv[]) {
+::util::Status Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
@@ -106,10 +105,8 @@ Main(int argc, char* argv[]) {
   memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
 
   /* Parse bf_switchd arguments */
-  if (FLAGS_bf_sde_install == "") {
-    LOG(ERROR) << "Flag --bf_sde_install is required";
-    return -1;
-  }
+  CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
+      << "Flag --bf_sde_install is required";
   switchd_main_ctx->install_dir = strdup(FLAGS_bf_sde_install.c_str());
   switchd_main_ctx->conf_file = strdup(FLAGS_bf_switchd_cfg.c_str());
   switchd_main_ctx->skip_p4 = true;
@@ -133,12 +130,9 @@ Main(int argc, char* argv[]) {
 
   {
     int status = bf_switchd_lib_init(switchd_main_ctx);
-    if (status != 0) {
-      LOG(ERROR) << "Error when starting switchd";
-      return status;
-    } else {
-      LOG(INFO) << "switchd started successfully";
-    }
+    CHECK_RETURN_IF_FALSE(status == 0)
+        << "Error when starting switchd, status: " << status;
+    LOG(INFO) << "switchd started successfully";
   }
 
   // no longer done by the Barefoot SDE starting with 8.7.0
@@ -168,15 +162,13 @@ Main(int argc, char* argv[]) {
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
-  auto credentials_manager = CredentialsManager::CreateInstance();
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
                                    bf_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  if (!hal) {
-    LOG(ERROR) << "Failed to create the Stratum Hal instance.";
-    return -1;
-  }
+  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
 
   // Setup and start serving RPCs.
   ::util::Status status = hal->Setup();
@@ -186,21 +178,15 @@ Main(int argc, char* argv[]) {
         << status.error_message();
   }
 
-  status = hal->Run();  // blocking
-  if (!status.ok()) {
-    LOG(ERROR) << "Error when running Stratum HAL: " << status.error_message();
-    return -1;
-  }
-
+  RETURN_IF_ERROR(hal->Run());  // blocking
   LOG(INFO) << "See you later!";
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
 
-int
-main(int argc, char* argv[]) {
-  return stratum::hal::barefoot::Main(argc, argv);
+int main(int argc, char* argv[]) {
+  return stratum::hal::barefoot::Main(argc, argv).error_code();
 }

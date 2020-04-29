@@ -25,9 +25,12 @@
 #include <vector>
 
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/constants.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "gnmi/gnmi.pb.h"
 
 namespace stratum {
 namespace hal {
@@ -221,12 +224,28 @@ bool IsPortAutonegEnabled(const TriState& state);
 // A helper function that check if port admin state is enabled.
 bool IsAdminStateEnabled(const AdminState& admin_state);
 
+// A helper function that check if port loopback state is enabled.
+bool IsLoopbackStateEnabled(const LoopbackState& loopback_state);
+
 // A helper function that convert Stratum MediaType to string.
 std::string ConvertMediaTypeToString(const MediaType& type);
 
 // A helper function taht convert Stratum HwState to OpenConfig present
 // state string (PRESENT, NOT_PRESENT)
 std::string ConvertHwStateToPresentString(const HwState& hw_state);
+
+// Converts ::gnmi::Decimal64 to double type.
+::util::StatusOr<double> ConvertDecimal64ToDouble(
+    const ::gnmi::Decimal64& value);
+
+// Converts double to ::gnmi::Decimal64 type.
+::util::StatusOr<::gnmi::Decimal64> ConvertDoubleToDecimal64(
+    double value, uint32 precision = kDefaultPrecision);
+
+// A helper method that converts a double to gNMI Decimal64.
+// For use in as a 'process_func', hence no Status return type.
+::gnmi::Decimal64 ConvertDoubleToDecimal64OrDie(const double& value);
+
 }  // namespace hal
 }  // namespace stratum
 

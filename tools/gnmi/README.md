@@ -1,41 +1,34 @@
 gNMI tool
 ----
 
-gnmi-cli.py is a script for user to send gNMI **Get**, **Set** request and **Subscribe**.
-
-## Usage
+### Usage
 
 ```
-usage: bazel run //tools/gnmi:gnmi-cli -- [-h] [--grpc-addr GRPC_ADDR] 
-                    [--bool-val BOOL_VAL] [--int-val INT_VAL] [--uint-val UINT_VAL]
-                    [--string-val STRING_VAL] [--float-val FLOAT_VAL]
-                    [--bytes-val BYTES_VAL] [--interval INTERVAL] [--replace]
-                    {get,set,sub-onchange,sub-sample,cap,del} path
+usage: gnmi-cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
 
-Test gNMI subscription
+Basic gNMI CLI
 
 positional arguments:
-  {get,set,sub-onchange,sub-sample,cap,del}     gNMI command
-  path                                          gNMI Path
+  {get,set,cap,del,sub-onchange,sub-sample}         gNMI command
+  path                                              gNMI path
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --grpc-addr GRPC_ADDR
-                        gNMI server address
-  --bool-val BOOL_VAL   [SetRequest only] Set boolean value
-  --int-val INT_VAL     [SetRequest only] Set int value
-  --uint-val UINT_VAL   [SetRequest only] Set uint value
-  --string-val STRING_VAL
-                        [SetRequest only] Set string value
-  --float-val FLOAT_VAL
-                        [SetRequest only] Set float value
-  --bytes-val BYTES_VAL
-                        [SetRequest only] Set bytes value
-  --interval INTERVAL   [Sample subscribe only] Sample subscribe poll interval in ms
-  --replace             [SetRequest only] Use replace instead of update
+  --help            show this help message and exit
+  --grpc_addr GRPC_ADDR    gNMI server address
+  --bool_val BOOL_VAL      [SetRequest only] Set boolean value
+  --int_val INT_VAL        [SetRequest only] Set int value (64-bit)
+  --uint_val UINT_VAL      [SetRequest only] Set uint value (64-bit)
+  --string_val STRING_VAL  [SetRequest only] Set string value
+  --float_val FLOAT_VAL    [SetRequest only] Set float value
+  --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
+  --replace                [SetRequest only] Use replace instead of update
+  --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
+  --ca-cert                CA certificate
+  --client-cert            gRPC Client certificate
+  --client-key             gRPC Client key
 ```
 
-## Examples
+### Examples
 
 ```
 # To get port index
@@ -46,4 +39,7 @@ bazel run //tools/gnmi:gnmi-cli -- set /interfaces/interface[name=1/1/1]/config/
 
 # To subscribe one sample of port operation status per second
 bazel run //tools/gnmi:gnmi-cli -- sub-sample /interfaces/interface[name=1/1/1]/state/oper-status --inverval 1000
+
+# To push chassis config
+bazel run //tools/gnmi:gnmi-cli -- --replace --bytes_val_file [chassis config file] set /
 ```

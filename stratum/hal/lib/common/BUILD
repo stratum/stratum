@@ -210,7 +210,6 @@ py_proto_library(
     deps = [
         ":common_proto"
     ],
-    well_known_protos = False,
 )
 
 stratum_cc_library(
@@ -235,6 +234,7 @@ stratum_cc_library(
         ":switch_interface",
         ":writer_interface",
         ":utils",
+        ":constants",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -737,9 +737,11 @@ stratum_cc_library(
     hdrs = ["utils.h"],
     deps = [
         ":common_cc_proto",
+        ":constants",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
+        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/public/lib:error",
