@@ -233,7 +233,15 @@ To build Debian package, use command below:
 ```
 
 The Debian package includes some necessary libraries like PI so you don't need to install these libraries into the target device.
-However, you still need to install some dependency packages such as **libboost**, **kmod**, and so on. Below are dependencies that required by this package:
+
+To install the package, simply use `apt` command:
+
+```bash
+[sudo] apt update
+[sudo] apt install -y ./bazel-bin/stratum/hal/bin/barefoot/stratum-bf_0.0.1_amd64.deb
+```
+
+The following packages will be installed after command above.
 
  - systemd
  - kmod
@@ -241,3 +249,4 @@ However, you still need to install some dependency packages such as **libboost**
  - libedit2
  - libjudydebian1
  - libboost-thread1.62.0
+ - stratum-bf

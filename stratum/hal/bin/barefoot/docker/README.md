@@ -117,11 +117,6 @@ DOCKER_IMAGE_TAG  # The container image tag, default: $SDE_VERSION-$KERNEL_VERSI
 PLATFORM          # Use specific platform port map
 ```
 
-[onl-linux-headers]: https://github.com/opennetworkinglab/OpenNetworkLinux/releases/tag/onlpv2-dev-1.0.1
-[stratum-flags]: stratum/hal/bin/barefoot/deb/stratum.flags
-[chassis-config-dir]: stratum/hal/config
-[start-stratum-container-sh]: stratum/hal/bin/barefoot/docker/start-stratum-container.sh
-
 ## Building Stratum container for non-OpenNetworkingLinux system (e.g., Ubuntu)
 
 To run Stratum container on an operating system that is not OpenNetworkingLinux.
@@ -133,7 +128,7 @@ Download the Linux header via the package manager, for example:
 
 ```bash
 [sudo] apt update
-[sudo] apt install -y linux-headers-4.15.0-20
+[sudo] apt install -y linux-headers-`uname -r`
 ```
 
 Package the kernel header as a tarball.
@@ -144,10 +139,15 @@ tar cfh linux-`uname -r`.tar.xz -C /usr/src linux-headers-`uname -r`
 
 ### Build Stratum container manually
 
-To build Stratum container image manually without ONLP library included, follow **Building the image manually** section below and add an additional environment variable `WITH_ONLP=false`.
+To build Stratum container image manually without ONLP library included, follow **Building the image manually** section below and add an additional environment variable `WITH_ONLP=false` to disable the Open Networking Linux platform API support.
 
 For example:
 
 ```bash
 WITH_ONLP=false ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz ~/linux-`uname -r`.tar.xz
 ```
+
+[onl-linux-headers]: https://github.com/opennetworkinglab/OpenNetworkLinux/releases/tag/onlpv2-dev-1.0.1
+[stratum-flags]: stratum/hal/bin/barefoot/deb/stratum.flags
+[chassis-config-dir]: stratum/hal/config
+[start-stratum-container-sh]: stratum/hal/bin/barefoot/docker/start-stratum-container.sh
