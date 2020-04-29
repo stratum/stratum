@@ -14,10 +14,12 @@
 # limitations under the License.
 #
 
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 licenses(["notice"])  # Apache v2
 
 package(
-    default_visibility = [ "//visibility:public" ],
+    default_visibility = ["//visibility:public"],
 )
 
 cc_library(
@@ -38,23 +40,23 @@ cc_library(
     name = "libsdk",
     srcs = [
         "lib/x86-64/libopennsa.a",
-        "src/diag/version.c",
         "src/diag/config_init_defaults.c",
+        "src/diag/version.c",
     ],
     linkopts = [
         "-lpthread",
         "-lm",
         "-lrt",
     ],
-    deps = [":headers"],
     linkstatic = True,
+    deps = [":headers"],
 )
 
 filegroup(
-  name = "kernel_modules",
-  srcs = [
-    "systems/linux/user/x86-smp_generic_64-2_6/linux-bcm-knet.ko",
-    "systems/linux/user/x86-smp_generic_64-2_6/linux-kernel-bde.ko",
-    "systems/linux/user/x86-smp_generic_64-2_6/linux-user-bde.ko",
-  ],
+    name = "kernel_modules",
+    srcs = [
+        "systems/linux/user/x86-smp_generic_64-2_6/linux-bcm-knet.ko",
+        "systems/linux/user/x86-smp_generic_64-2_6/linux-kernel-bde.ko",
+        "systems/linux/user/x86-smp_generic_64-2_6/linux-user-bde.ko",
+    ],
 )
