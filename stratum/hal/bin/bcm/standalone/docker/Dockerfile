@@ -18,22 +18,10 @@ FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This is the Stratum runtime Docker image for Broadcom switches"
 
-RUN install_packages \
-    kmod \
-    vim \
-    wget \
-    iproute2 \
-    libssl1.1 \
-    libedit2 \
-    libjudydebian1 \
-    libyaml-0-2 \
-    libboost-thread1.62.0 && \
-    ldconfig && \
-    mkdir /stratum_configs && \
-    mkdir /stratum_logs
-
-ADD . /
+ADD ./stratum_bcm_deb.deb /
+RUN install_packages ./stratum_bcm_deb.deb
+RUN rm ./stratum_bcm_deb.deb
 
 EXPOSE 28000/tcp
-ENTRYPOINT /stratum-entrypoint.sh
-
+EXPOSE 9339/tcp
+ENTRYPOINT start-stratum.sh

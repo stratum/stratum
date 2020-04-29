@@ -1,6 +1,6 @@
+#!/bin/bash
 #
-# Copyright 2018 Google LLC
-# Copyright 2018-present Open Networking Foundation
+# Copyright 2020-present Open Networking Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,22 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -ex
 
-licenses(["notice"])  # Apache v2
+# Remove other SDK kernel modules, if present
+rmmod linux_bcm_knet || true
+rmmod linux_user_bde || true
+rmmod linux_kernel_bde || true
 
-package(
-    default_visibility = ["//visibility:public"],
-)
-
-cc_binary(
-    name = "gnmi-cli",
-    srcs = ["gnmi_cli.cc"],
-    deps = [
-        "@com_github_gflags_gflags//:gflags",
-        "@com_google_protobuf//:protobuf",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_github_openconfig_gnmi_proto//:gnmi_cc_proto",
-        "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
-        "//stratum/lib:utils",
-    ]
-)
+# Reinsert SDKLT kernel modules
+rmmod linux_ngknet || true
+rmmod linux_ngbde || true
+pushd /usr/lib/stratum/
+insmod linux_ngbde.ko && insmod linux_ngknet.ko
+popd
+sleep 1

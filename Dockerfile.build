@@ -35,13 +35,15 @@ ARG JOBS
 # LLVM dependencies
 # + gnupg2 for apt-key
 # + software-properties-common for add-apt-repository
+# OpenNSA dependencies
+# + libelf-dev to build the kernel modules
 ENV PKG_DEPS pkg-config zip zlib1g-dev unzip python wget ca-certificates \
     ssh git gdb vim emacs-nox sudo libudev-dev libjudy-dev bison flex \
     libfl-dev libgmp-dev libi2c-dev python-yaml libyaml-dev build-essential \
     lcov curl autoconf automake libtool libgmp-dev libpcap-dev \
     libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev \
     gnupg2 software-properties-common python-pip python-dev python3-dev \
-    apt-transport-https
+    apt-transport-https libelf-dev
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $PKG_DEPS
