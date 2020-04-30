@@ -97,7 +97,7 @@ extern int bcm_knet_kcom_msg_send(void* handle, void* msg, unsigned int len,
                                   unsigned int bufsz);
 extern int bcm_knet_kcom_msg_recv(void* handle, void* msg, unsigned int bufsz);
 
-// From OpenBCM /systems/linux/user/common/socdiag.c
+// From OpenBCM systems/linux/user/common/socdiag.c
 extern int bde_irq_mask_set(int unit, uint32 addr, uint32 mask);
 extern int bde_hw_unit_get(int unit, int inverse);
 
@@ -118,6 +118,12 @@ static soc_knet_vectors_t knet_vect_bcm_knet = {
     bde_irq_mask_set,
     bde_hw_unit_get,
 };
+
+// From OpenBcm include/soc/drv.h
+typedef bcm_switch_event_t soc_switch_event_t;
+typedef void (*soc_event_cb_t)(int unit, soc_switch_event_t event, uint32 arg1,
+                               uint32 arg2, uint32 arg3, void* userdata);
+extern int soc_event_register(int unit, soc_event_cb_t cb, void* userdata);
 }  // extern "C"
 
 static_assert(SYS_BE_PIO == 0, "SYS_BE_PIO == 0");
@@ -1199,9 +1205,7 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     //
 
     RETURN_IF_BCM_ERROR(soc_cm_device_init(unit, dev_vec));
-    // TODO(max): fix
-    // RETURN_IF_BCM_ERROR(
-    //     bcm_switch_event_register(unit, sdk_event_handler, nullptr));
+    RETURN_IF_BCM_ERROR(soc_event_register(unit, sdk_event_handler, nullptr));
     unit_to_soc_device_[unit]->dev_vec = dev_vec;
     // Set MTU for all the L3 intf of this unit to the default value.
     unit_to_mtu_[unit] = kDefaultMtu;
@@ -2072,7 +2076,7 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
                                          int logical_port, int trunk_port,
                                          int l2_mcast_group_id, int class_id,
                                          bool copy_to_cpu, bool dst_drop) {
-  // TODO(max)
+  // TODO(max): Apply all remaining parameters.
   bcm_l2_addr_t l2_addr;
   bcm_mac_t bcm_mac;
   Uint64ToBcmMac(dst_mac, &bcm_mac);
@@ -2132,11 +2136,9 @@ void PopulateL3HostAction(int class_id, int egress_intf_id,
   }
 
   bcm_port_config_t port_cfg;
-  // TODO(max): bcm_port_config_get seems to overwrite parts of the stack and
-  // triggers the stack protector.
-  // RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
-  // RETURN_IF_BCM_ERROR(
-  //     bcm_vlan_port_add(unit, vlan, port_cfg.all, port_cfg.all));
+  RETURN_IF_BCM_ERROR(bcm_port_config_get(unit, &port_cfg));
+  RETURN_IF_BCM_ERROR(
+      bcm_vlan_port_add(unit, vlan, port_cfg.all, port_cfg.all));
 
   VLOG(1) << "Added VLAN " << vlan << " on unit " << unit << ".";
 
