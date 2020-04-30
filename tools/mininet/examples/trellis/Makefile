@@ -27,6 +27,9 @@ mn-cli:
 mn-log:
 	docker-compose logs -f mininet
 
+mn-host:
+	docker-compose exec mininet m $@
+
 netcfg:
 	${onos_post} ${onos_url}/v1/network/configuration/ -d@./topo/netcfg.json
 
