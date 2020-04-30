@@ -1,20 +1,19 @@
 [Unit]
 Description=Stratum service
+Documentation=https://www.opennetworking.org/stratum/
 ConditionPathExists=/usr/bin/stratum_bf
+ConditionPathExists=/usr/bin/stratum-entrypoint
 
 [Service]
 Type=simple
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=stratum_bf
-WorkingDirectory=/var/run/stratum
-LogsDirectory=stratum
-RuntimeDirectory=stratum
-ConfigurationDirectory=stratum
-RuntimeDirectoryPreserve=yes
-EnvironmentFile=/etc/stratum/stratum_bf.env
 ExecStart=/bin/bash /usr/bin/stratum-entrypoint
 Restart=on-failure
+WorkingDirectory=/var/run/stratum
+SyslogIdentifier=stratum-bf
+RuntimeDirectory=stratum
+EnvironmentFile=/etc/stratum/stratum_bf.env
+StandardOutput=syslog
+StandardError=syslog
 
 [Install]
 WantedBy=multi-user.target
