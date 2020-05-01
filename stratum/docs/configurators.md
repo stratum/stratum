@@ -22,7 +22,7 @@ An attribute database "configurator" is a class that populates the attribute dat
 ## Switch Configurator <a name="switch_configurator"></a>
 The Switch Configurator is responsible for the initial population of the attribute database, wiring the platform data source attributes into the attribute database tree hierarcy.
 
-The Switch Configurator will parse a protobuf text configuration file given to the stratum agent at runtime (via the --phal_config_path flag) and use this model to create and populate the relevant datasources into the right paths in the attribute database tree.
+The Switch Configurator will parse a protobuf text configuration file given to the stratum agent at runtime (via the --phal_config_file flag) and use this model to create and populate the relevant datasources into the right paths in the attribute database tree.
 
 The following diagram details the high level startup sequence where the switch configurator is called to build the attribute database.
 
@@ -44,8 +44,8 @@ The OnlpSwitchConfigurator class is derived from the SwitchConfigurator base cla
 // Initialize the Phal DB
 ::util::Status OnlpPhal::InitializePhalDB() {
 
-  if (FLAGS_phal_config_path.empty())
-      return MAKE_ERROR() << "Must provide a phal_config_path argument.";
+  if (FLAGS_phal_config_file.empty())
+      return MAKE_ERROR() << "Must provide a phal_config_file argument.";
 
   // Create onlp switch configurator instance
   ASSIGN_OR_RETURN(auto configurator,
@@ -53,7 +53,7 @@ The OnlpSwitchConfigurator class is derived from the SwitchConfigurator base cla
 
   // Create attribute database and load initial phal DB
   ASSIGN_OR_RETURN(std::move(database_),
-      AttributeDatabase::MakePhalDB(FLAGS_phal_config_path,
+      AttributeDatabase::MakePhalDB(FLAGS_phal_config_file,
           std::move(configurator)));
 
   return ::util::OkStatus();
@@ -119,7 +119,7 @@ The following class diagram details the relationships between the different clas
 
 ## Phal Init Configuration <a name="phal_init_config"></a>
 
-The phal.proto protobuf file provides the basis for the Phal Initial Configuration file that cam be passed in at runtime using the --phal_config_path flag. The basic structure for the configuration is as follows:
+The phal.proto protobuf file provides the basis for the Phal Initial Configuration file that can be passed in at runtime using the --phal_config_file flag. The basic structure for the configuration is as follows:
 
 * cards: the ports of the switch are contained in the card element and there can be one or more cards in a switch.
 * fan_trays: each fan is a member of one fan_tray and there can be one or more fan_trays in a switch.
@@ -185,7 +185,7 @@ You'll note the structure allows for different caching types per device, per gro
 
 ### Dynamic Phal Init Config Generation
 
-If the phal_config_path flag is not specified at stratum runtime time then it will attempt to build the initial phal config by getting a list of all the ONLP device OIDs from the ONLP API and building the config with a default caching mechanism of "NO CACHE".
+If the phal_config_file flag is not specified at stratum runtime time then it will attempt to build the initial phal config by getting a list of all the ONLP device OIDs from the ONLP API and building the config with a default caching mechanism of "NO CACHE".
 
 ### Device IDs
 
@@ -397,7 +397,7 @@ root@localhost:~# ls
 onlpphal_cli  phal_init_config.pb.txt
 
 # You can tune the phal_init_config.pb.txt to your system then run the command
-root@localhost:~# ./onlpphal --phal_config_path phal_init_config.pb.txt
+root@localhost:~# ./onlpphal --phal_config_file phal_init_config.pb.txt
 WARNING: Logging before InitGoogleLogging() is written to STDERR
 I0404 04:19:29.215922  5282 onlp_wrapper.cc:35] Initializing ONLP.
 Enter a PHAL path:

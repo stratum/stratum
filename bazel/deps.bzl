@@ -46,10 +46,12 @@ def stratum_deps():
         http_archive(
             name = "com_github_grpc_grpc",
             urls = [
-                "https://github.com/grpc/grpc/archive/de893acb6aef88484a427e64b96727e4926fdcfd.tar.gz",
+                # TODO(bocon) switch back to grpc when grpc/grpc#22626 is merged
+                # gRPC version: 1.28.1 + grpc/grpc#22626 cherry-pick
+                "https://github.com/bocon13/grpc/archive/0e11d8fe7388e7147de57bfab1044ec72786ffca.tar.gz",
             ],
-            strip_prefix = "grpc-de893acb6aef88484a427e64b96727e4926fdcfd",
-            sha256 = "61272ea6d541f60bdc3752ddef9fd4ca87ff5ab18dd21afc30270faad90c8a34",
+            strip_prefix = "grpc-0e11d8fe7388e7147de57bfab1044ec72786ffca",
+            sha256 = "fb8af4ad2b7f291fbca7d458c0addd743c8769538248c0f32816250cd3e2d58d",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
@@ -239,6 +241,13 @@ def stratum_deps():
             shallow_since = "1570056263 -0700",
         )
 
+    if "com_github_jbeder_yaml_cpp" not in native.existing_rules():
+        git_repository(
+            name = "com_github_jbeder_yaml_cpp",
+            remote = "https://github.com/jbeder/yaml-cpp.git",
+            commit = "de8253fcb075c049c4ad1c466c504bf3cf022f45",
+        )
+
 # -----------------------------------------------------------------------------
 #      Golang specific libraries.
 # -----------------------------------------------------------------------------
@@ -277,6 +286,6 @@ def stratum_deps():
     if "rules_pkg" not in native.existing_rules():
         http_archive(
             name = "rules_pkg",
-            url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.4/rules_pkg-0.2.4.tar.gz",
-            sha256 = "4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a",
+            url = "https://github.com/bazelbuild/rules_pkg/releases/download/0.2.5/rules_pkg-0.2.5.tar.gz",
+            sha256 = "352c090cc3d3f9a6b4e676cf42a6047c16824959b438895a76c2989c6d7c246a",
         )

@@ -194,6 +194,19 @@ namespace {
   RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid FEC mode.";
 }
 
+::util::StatusOr<bf_loopback_mode_e>
+LoopbackModeToBf(LoopbackState loopback_mode) {
+  switch (loopback_mode) {
+    case LOOPBACK_STATE_NONE:
+      return BF_LPBK_NONE;
+    case LOOPBACK_STATE_MAC:
+      return BF_LPBK_MAC_NEAR;
+    default:
+      RETURN_ERROR(ERR_INVALID_PARAM) << "Unsupported loopback mode: "
+          << LoopbackState_Name(loopback_mode) << ".";
+  }
+}
+
 }  // namespace
 
 ::util::Status BFPalWrapper::PortAdd(
@@ -274,6 +287,25 @@ namespace {
 
 bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
   return (bf_pal_port_is_valid(unit, port_id) == BF_SUCCESS);
+}
+
+::util::Status BFPalWrapper::PortLoopbackModeSet(int unit, uint32 port_id,
+                                                 LoopbackState loopback_mode) {
+  if (loopback_mode == LOOPBACK_STATE_UNKNOWN) {
+    // Do nothing if we try to set loopback mode to the default one (UNKNOWN).
+    return ::util::OkStatus();
+  }
+  ASSIGN_OR_RETURN(bf_loopback_mode_e lp_mode, LoopbackModeToBf(loopback_mode));
+  auto bf_status =
+      bf_pal_port_loopback_mode_set(static_cast<bf_dev_id_t>(unit),
+                                    static_cast<bf_dev_port_t>(port_id),
+                                    lp_mode);
+  if (bf_status != BF_SUCCESS) {
+    return MAKE_ERROR(ERR_INTERNAL)
+        << "Error when setting loopback mode on dev " << unit << " port "
+        << port_id << ".";
+  }
+  return ::util::OkStatus();
 }
 
 BFPalWrapper::BFPalWrapper()

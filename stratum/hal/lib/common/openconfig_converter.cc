@@ -312,6 +312,13 @@ SingletonPortToInterfaces(const SingletonPort &in) {
   interface->mutable_ethernet()->mutable_auto_negotiate()->set_value(
       IsPortAutonegEnabled(in.config_params().autoneg()));
 
+  // SingletonPort.config_params.loopback_mode
+  // -> /interfaces/interface/config/loopback-mode
+  if (in.config_params().loopback_mode() != LOOPBACK_STATE_UNKNOWN) {
+    interface->mutable_loopback_mode()->set_value(
+        IsLoopbackStateEnabled(in.config_params().loopback_mode()));
+  }
+
   // FIXME(Yi Tseng): Should we use other field to store interface channel?
   interface->add_physical_channel()->set_value(in.channel());
 
@@ -702,6 +709,12 @@ TrunkPortToInterfaces(const ChassisConfig &root, const TrunkPort &in) {
     case OPENCONFIGPLATFORMTYPESFECMODETYPE_FEC_AUTO:
       config_params->set_fec_mode(FEC_MODE_AUTO);
       break;
+  }
+
+  if (interface.has_loopback_mode()) {
+    LoopbackState lpbk_mode = interface.loopback_mode().value() ?
+        LOOPBACK_STATE_MAC : LOOPBACK_STATE_NONE;
+    config_params->set_loopback_mode(lpbk_mode);
   }
 
   // FIXME(Yi Tseng): Should we use other field to store interface channel?

@@ -20,7 +20,7 @@ load("//stratum/p4c_backends/common:build_defs.bzl", "p4_fpm_compile")
 
 load("//bazel/rules:p4c_build_defs.bzl", "p4_bmv2_compile")
 
-load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 filegroup(
     name = "annotation_map_files",

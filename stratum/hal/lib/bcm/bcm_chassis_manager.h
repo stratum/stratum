@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #ifndef STRATUM_HAL_LIB_BCM_BCM_CHASSIS_MANAGER_H_
 #define STRATUM_HAL_LIB_BCM_BCM_CHASSIS_MANAGER_H_
 
@@ -28,22 +27,22 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/thread_annotations.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/bcm/bcm.pb.h"
 #include "stratum/hal/lib/bcm/bcm_chassis_ro_interface.h"
 #include "stratum/hal/lib/bcm/bcm_global_vars.h"
+#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/bcm/bcm_sdk_interface.h"
 #include "stratum/hal/lib/bcm/bcm_serdes_db_manager.h"
-#include "stratum/hal/lib/bcm/bcm_node.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/gnmi_events.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/channel/channel.h"
-#include "absl/base/thread_annotations.h"
-#include "absl/synchronization/mutex.h"
 
 namespace stratum {
 namespace hal {
@@ -151,6 +150,9 @@ class BcmChassisManager : public BcmChassisRoInterface {
   ::util::StatusOr<AdminState> GetPortAdminState(uint64 node_id,
                                                  uint32 port_id) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
+  ::util::StatusOr<LoopbackState> GetPortLoopbackState(
+      uint64 node_id, uint32 port_id) const override
+      SHARED_LOCKS_REQUIRED(chassis_lock);
   ::util::Status GetPortCounters(uint64 node_id, uint32 port_id,
                                  PortCounters* pc) const override
       SHARED_LOCKS_REQUIRED(chassis_lock);
@@ -196,6 +198,15 @@ class BcmChassisManager : public BcmChassisRoInterface {
   //    if setting LED color/state fails.
   virtual ::util::Status SetPortHealthState(uint64 node_id, uint32 port_id,
                                             HealthState state)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
+
+  // Sets the loopback state of a port, as requested by the SDN controller. This
+  // method:
+  // 1- Sends a request to SDK to configure the port in loopback mode.
+  // 2- Mutates node_id_to_port_id_to_loopback_state_ for the given pair of
+  //    (node_id, port_id), only if step 1 is successful.
+  virtual ::util::Status SetPortLoopbackState(uint64 node_id, uint32 port_id,
+                                              LoopbackState state)
       EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Factory function for creating the instance of the class.
@@ -270,7 +281,8 @@ class BcmChassisManager : public BcmChassisRoInterface {
 
   // (Re-)syncs the internal state based the pushed chassis config. Called as
   // part of each chassis config push to regenerate all the internal port maps.
-  ::util::Status SyncInternalState(const ChassisConfig& config);
+  ::util::Status SyncInternalState(const ChassisConfig& config)
+      EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
 
   // Registers/Unregisters all the event Writers (if not done yet).
   ::util::Status RegisterEventWriters();
@@ -383,6 +395,12 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // A helper method to enable/disable a port by calling SDK. The unit and
   // logical_port number for the port are given through an SdkPort object.
   ::util::Status EnablePort(const SdkPort& sdk_port, bool enable) const;
+
+  // A helper method to configure the loopback mode of a port by calling SDK.
+  // The unit and logical_port number for the port are given through an SdkPort
+  // object.
+  ::util::Status LoopbackPort(const SdkPort& sdk_port,
+                              LoopbackState state) const;
 
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
@@ -560,6 +578,19 @@ class BcmChassisManager : public BcmChassisRoInterface {
   // later.
   std::map<uint64, std::map<uint32, HealthState>>
       node_id_to_port_id_to_health_state_;
+
+  // Map from node ID to another map from port ID to LoopbackState representing
+  // the loopback state of the port as set by the SDN controller or the config.
+  // This map is updated as part of each config push or per request from the
+  // SDN controller by calling SetPortLoopbackState(). After each chassis config
+  // push, we honor the valid loopback state of the ports specified in the
+  // config. If no loopback state is specified for a port in the config, we
+  // either keep the state (if there is already a state for the port in this
+  // map), or initialize the state to LOOPBACK_STATE_UNKNOWN (if the port is not
+  // found as a key in the map). A port with loopback state
+  // LOOPBACK_STATE_UNKNOWN will not be forcefully set in HW.
+  std::map<uint64, std::map<uint32, LoopbackState>>
+      node_id_to_port_id_to_loopback_state_;
 
   // Channel for receiving transceiver events from the Phal.
   std::shared_ptr<Channel<PhalInterface::TransceiverEvent>> xcvr_event_channel_;

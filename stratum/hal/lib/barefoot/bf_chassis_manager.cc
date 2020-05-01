@@ -97,6 +97,15 @@ BFChassisManager::~BFChassisManager() = default;
         unit, port_id, config_params.autoneg()));
   }
   config->autoneg = config_params.autoneg();
+
+  if (config_params.loopback_mode() != LOOPBACK_STATE_UNKNOWN) {
+    LOG(INFO) << "Setting port " << port_id << " to loopback mode "
+        << config_params.loopback_mode() << ".";
+    RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+        unit, port_id, config_params.loopback_mode()));
+  }
+  config->loopback_mode = config_params.loopback_mode();
+
   if (config_params.admin_state() == ADMIN_STATE_ENABLED) {
     LOG(INFO) << "Enabling port " << port_id << " in node " << node_id << ".";
     RETURN_IF_ERROR(bf_pal_interface_->PortEnable(unit, port_id));
@@ -186,6 +195,13 @@ BFChassisManager::~BFChassisManager() = default;
     RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(
         unit, port_id, config_params.autoneg()));
     config->autoneg = config_params.autoneg();
+    config_changed = true;
+  }
+  if (config_params.loopback_mode() != config_old.loopback_mode) {
+    config->loopback_mode.reset();
+    RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+        unit, port_id, config_params.loopback_mode()));
+    config->loopback_mode = config_params.loopback_mode();
     config_changed = true;
   }
 
@@ -448,6 +464,14 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
         resp.mutable_fec_status()->set_mode(*config->fec_mode);
       break;
     }
+    case Request::kLoopbackStatus: {
+      ASSIGN_OR_RETURN(auto* config, GetPortConfig(
+          request.loopback_status().node_id(),
+          request.loopback_status().port_id()));
+      if (config->loopback_mode)
+        resp.mutable_loopback_status()->set_state(*config->loopback_mode);
+      break;
+    }
     default:
       RETURN_ERROR(ERR_INTERNAL) << "Not supported yet";
   }
@@ -549,6 +573,11 @@ BFChassisManager::GetPortConfig(uint64 node_id, uint32 port_id) const {
       RETURN_IF_ERROR(bf_pal_interface_->PortAutonegPolicySet(
           unit, port_id, *config.autoneg));
       config_new->autoneg = *config.autoneg;
+    }
+    if (config.loopback_mode) {
+      RETURN_IF_ERROR(bf_pal_interface_->PortLoopbackModeSet(
+          unit, port_id, *config.loopback_mode));
+      config_new->loopback_mode = *config.loopback_mode;
     }
 
     if (config.admin_state == ADMIN_STATE_ENABLED) {

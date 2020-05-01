@@ -13,24 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 
 #include <algorithm>
 #include <map>
 #include <set>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -110,7 +109,7 @@ BcmSwitch::~BcmSwitch() {}
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "SaveForwardingPipelineConfig not implemented for this target";
+         << "SaveForwardingPipelineConfig not implemented for this target";
 }
 
 ::util::Status BcmSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
@@ -119,7 +118,7 @@ BcmSwitch::~BcmSwitch() {}
     return MAKE_ERROR(ERR_CANCELLED) << "Switch is shutdown.";
   }
   return MAKE_ERROR(ERR_UNIMPLEMENTED)
-      << "CommitForwardingPipelineConfig not implemented for this target";
+         << "CommitForwardingPipelineConfig not implemented for this target";
 }
 
 ::util::Status BcmSwitch::VerifyForwardingPipelineConfig(
@@ -288,6 +287,18 @@ BcmSwitch::~BcmSwitch() {}
         }
         break;
       }
+      // Get singleton port loopback state.
+      case DataRequest::Request::kLoopbackStatus: {
+        auto loopback_state = bcm_chassis_manager_->GetPortLoopbackState(
+            req.loopback_status().node_id(), req.loopback_status().port_id());
+        if (!loopback_state.ok()) {
+          status.Update(loopback_state.status());
+        } else {
+          resp.mutable_loopback_status()->set_state(
+              loopback_state.ValueOrDie());
+        }
+        break;
+      }
       // Get configured singleton port speed in bits per second.
       case DataRequest::Request::kPortSpeed: {
         auto bcm_port = bcm_chassis_manager_->GetBcmPort(
@@ -440,11 +451,21 @@ BcmSwitch::~BcmSwitch() {}
           case SetRequest::Request::Port::ValueCase::kLacpRouterMac:
           case SetRequest::Request::Port::ValueCase::kLacpSystemPriority:
           case SetRequest::Request::Port::ValueCase::kHealthIndicator:
+            LOG(ERROR) << "Request " << req.port().ShortDebugString()
+                       << " through SetValue() is ignored. Modify the "
+                          "ChassisConfig instead!";
             break;
           case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
             status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.port().node_id(), req.port().port_id(),
                 req.port().optical_channel_info()));
+            break;
+          }
+          case SetRequest::Request::Port::ValueCase::kLoopbackStatus: {
+            absl::WriterMutexLock l(&chassis_lock);
+            status.Update(bcm_chassis_manager_->SetPortLoopbackState(
+                req.port().node_id(), req.port().port_id(),
+                req.port().loopback_status().state()));
             break;
           }
           default:

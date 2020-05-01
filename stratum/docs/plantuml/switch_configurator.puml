@@ -6,9 +6,9 @@ group OnlpPhal::Initialize
   group InitializePhalDB
     OnlpPhal -> OnlpSwitchConfigurator: Make(onlp_interface)
     OnlpPhal <- OnlpSwitchConfigurator: configurator
-    OnlpPhal -> AttributeDatabase: MakePhalDB(phal_config_path, configurator)
+    OnlpPhal -> AttributeDatabase: MakePhalDB(phal_config_file, configurator)
     group MakePhalDB
-      AttributeDatabase -> AttributeDatabase: ReadProtoFromTextFile(phal_config_path, &config)
+      AttributeDatabase -> AttributeDatabase: ReadProtoFromTextFile(phal_config_file, &config)
       AttributeDatabase -> AttributeGroup: From(PhalDB::descriptor())
       AttributeDatabase <- AttributeGroup: root_group
       AttributeDatabase -> OnlpSwitchConfigurator: configurator.ConfigurePhalDB(config, root_group.get())

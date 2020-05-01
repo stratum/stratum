@@ -25,10 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 ARG SDE_TAR
-ARG KERNEL_HEADERS_TAR
-# Copy SDE and Linux headers tarball
 COPY $SDE_TAR /stratum/
-COPY $KERNEL_HEADERS_TAR /stratum/
 
 ENV SDE /bf-sde
 ENV SDE_INSTALL /$SDE/install
@@ -42,21 +39,10 @@ RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yam
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 
-# Build Barefoot Tofino kernel module
-RUN mkdir -p /usr/src/kernel-headers && \
-    tar xf /stratum/$KERNEL_HEADERS_TAR -C /usr/src/kernel-headers --strip-components 1
-
-# Build kernel modules for BF kdrv
-ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
-RUN mkdir -p $SDE_INSTALL/lib/modules
-RUN make -C /usr/src/kernel-headers M=$KDRV_DIR src=$KDRV_DIR modules && \
-    mv $KDRV_DIR/bf_kdrv.ko $SDE_INSTALL/lib/modules/bf_kdrv.ko
-
 # Prepare all SDE libraries
 ENV OUTPUT_BASE /output/usr/local
 RUN mkdir -p $OUTPUT_BASE/lib/modules && \
     cp -d $SDE_INSTALL/lib/*.so* $OUTPUT_BASE/lib/ && \
-    cp $SDE_INSTALL/lib/modules/*.ko $OUTPUT_BASE/lib/modules/ && \
     mkdir -p $OUTPUT_BASE/share/stratum && \
     cp -r $SDE_INSTALL/share/microp_fw $OUTPUT_BASE/share/ && \
     cp -r $SDE_INSTALL/share/bfsys/ $OUTPUT_BASE/share/ && \

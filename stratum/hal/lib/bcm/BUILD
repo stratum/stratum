@@ -157,6 +157,7 @@ stratum_cc_library(
         ":bcm_serdes_db_manager",
         ":utils",
         "@com_github_google_glog//:glog",
+        "@com_github_jbeder_yaml_cpp//:yaml-cpp",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/memory",

@@ -36,6 +36,10 @@ class RoutedHost(Host):
         for ip in self.ips:
             self.cmd('ip addr add %s dev %s' % (ip, self.defaultIntf()))
         self.cmd('ip route add default via %s' % self.gateway)
+        # Disable offload
+        for attr in ["rx", "tx", "sg"]:
+            cmd = "/sbin/ethtool --offload %s %s off" % (self.defaultIntf(), attr)
+            self.cmd(cmd)
 
 
 class TaggedRoutedHost(RoutedHost):

@@ -139,10 +139,13 @@ stratum_cc_library(
     hdrs = ["credentials_manager.h"],
     deps = [
         "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/memory",
         "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
         "//stratum/glue:logging",
-        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:utils",
+        "//stratum/lib:macros",
     ],
 )
 
