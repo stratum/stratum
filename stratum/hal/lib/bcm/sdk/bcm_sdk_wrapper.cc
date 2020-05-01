@@ -1360,6 +1360,21 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
     RETURN_IF_BCM_ERROR(bcm_port_autoneg_set(
         unit, port, options.autoneg() == TRI_STATE_TRUE ? 1 : 0));
   }
+  if (options.loopback_mode()) {
+    int mode;
+    switch (options.loopback_mode()) {
+      case LOOPBACK_STATE_MAC:
+        mode = BCM_PORT_LOOPBACK_MAC;
+        break;
+      case LOOPBACK_STATE_PHY:
+        mode = BCM_PORT_LOOPBACK_PHY;
+        break;
+      case LOOPBACK_STATE_NONE:
+      default:
+        mode = BCM_PORT_LOOPBACK_NONE;
+    }
+    RETURN_IF_BCM_ERROR(bcm_port_loopback_set(unit, port, mode));
+  }
 
   return ::util::OkStatus();
 }
@@ -1370,6 +1385,23 @@ BcmSdkWrapper::~BcmSdkWrapper() { ShutdownAllUnits().IgnoreError(); }
   RETURN_IF_BCM_ERROR(bcm_port_speed_get(unit, port, &speed_mbps));
   CHECK_RETURN_IF_FALSE(speed_mbps > 0);
   options->set_speed_bps(speed_mbps * kBitsPerMegabit);
+
+  int loopback_mode = BCM_PORT_LOOPBACK_NONE;
+  RETURN_IF_BCM_ERROR(bcm_port_loopback_get(unit, port, &loopback_mode));
+  switch (loopback_mode) {
+    case BCM_PORT_LOOPBACK_NONE:
+      options->set_loopback_mode(LOOPBACK_STATE_NONE);
+      break;
+    case BCM_PORT_LOOPBACK_MAC:
+      options->set_loopback_mode(LOOPBACK_STATE_MAC);
+      break;
+    case BCM_PORT_LOOPBACK_PHY:
+      options->set_loopback_mode(LOOPBACK_STATE_PHY);
+      break;
+    default:
+      return MAKE_ERROR(ERR_INTERNAL)
+             << "Unknown loopback mode " << loopback_mode;
+  }
 
   // TODO(unknown): Return the rest of the port options.
 
