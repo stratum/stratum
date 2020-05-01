@@ -37,7 +37,7 @@ Some additional points:
 
 3. Pass all unit tests locally. Create new tests for new code and **add the targets to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! Execute the following command in the Stratum root directory to run all currently enabled tests: `xargs -a .circleci/test-targets.txt bazel test`
 
-4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container).
+4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container). If you're editing Bazel files, consider [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier).
 
 5. Create a [Pull Request](https://github.com/stratum/stratum/compare). Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes if you want direct assistance from maintainers.
 
