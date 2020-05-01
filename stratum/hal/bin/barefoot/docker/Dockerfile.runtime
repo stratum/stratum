@@ -42,7 +42,7 @@ ARG WITH_ONLP=true
 RUN bazel build //stratum/hal/bin/barefoot:stratum_bf_deb \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
     --define phal_with_onlp=$WITH_ONLP
-RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/stratum-bf_0.0.1_amd64.deb $OUTPUT_BASE
+RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb $OUTPUT_BASE
 
 FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"

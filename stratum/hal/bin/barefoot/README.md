@@ -282,7 +282,7 @@ To install the package, simply upload the deb file to your device and use `apt` 
 
 ```bash
 [sudo] apt update
-[sudo] apt install -y stratum_bf_deb.deb
+[sudo] apt install -y ./stratum_bf_deb.deb
 ```
 
 The following packages will be installed after command above.
