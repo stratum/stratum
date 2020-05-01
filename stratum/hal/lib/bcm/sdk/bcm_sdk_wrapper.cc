@@ -443,21 +443,6 @@ extern "C" int sdk_checkpoint_file_write(int unit, uint8* buf, int offset,
 // SDK callback to log to console a BSL message.
 extern "C" int bsl_out_hook(bsl_meta_t* meta, const char* format,
                             va_list args) {
-#if 0
-  const char* file = (meta->file == nullptr ? "<unknown>" : meta->file);
-  const int line = (meta->file == nullptr ? -1 : meta->line);
-  const char* func = (meta->func == nullptr ? "<unknown>" : meta->func);
-  char msg[1024];
-  int rc = vsnprintf(msg, sizeof(msg), format, args);
-  if (meta->severity == BSL_WARN) {
-    LOG(WARNING) << "BSL error (" << file << ":" << line << ":" << func
-              << "): " << msg;
-  } else if (meta->severity == BSL_ERROR) {
-    LOG(ERROR) << "BSL error (" << file << ":" << line << ":" << func
-              << "): " << msg;
-  }
-  return rc;
-#else
   BcmSdkWrapper* bcm_sdk_wrapper = BcmSdkWrapper::GetSingleton();
   if (!bcm_sdk_wrapper) {
     LOG(ERROR) << "BcmSdkWrapper singleton instance is not initialized.";
@@ -486,15 +471,10 @@ extern "C" int bsl_out_hook(bsl_meta_t* meta, const char* format,
   }
 
   return rc;
-#endif
 }
 
 // SDK callback to check if a debug message is to be logged.
 extern "C" int bsl_check_hook(bsl_packed_meta_t meta_pack) {
-#if 0
-  bsl_source_t source = static_cast<bsl_source_t>(BSL_SOURCE_GET(meta_pack));
-  return BSL_SEVERITY_GET(meta_pack) <= bslSeverityWarn || source == bslSourceShell;
-#else
   bsl_layer_t layer = static_cast<bsl_layer_t>(BSL_LAYER_GET(meta_pack));
   bsl_source_t source = static_cast<bsl_source_t>(BSL_SOURCE_GET(meta_pack));
   bsl_severity_t severity =

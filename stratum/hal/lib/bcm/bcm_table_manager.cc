@@ -806,11 +806,9 @@ namespace {
 
   // Fill the MappedAction by calling P4TableMapper::MapActionProfile(). This
   // will include all the mappings that are common to all the platforms.
-  LOG(WARNING) << action_profile_member.ShortDebugString();
   MappedAction mapped_action;
   RETURN_IF_ERROR(p4_table_mapper_->MapActionProfileMember(
       action_profile_member, &mapped_action));
-  LOG(WARNING) << mapped_action.ShortDebugString();
 
   // Common action -> BCM non-multipath nexthop mapping. If the given action
   // profile member ends up being a type we dont expect (i.e. not a nexthop),
@@ -904,7 +902,6 @@ namespace {
                      << action_profile_member.ShortDebugString() << ".";
           }
         }
-        LOG(WARNING) << PrintIterable(mpls_labels, ",");
         bool is_tunnel_init = false;
         for (const auto& header : function.modify_headers()) {
           switch (header.header_type()) {
