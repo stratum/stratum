@@ -91,8 +91,6 @@ BcmL3Manager::~BcmL3Manager() {}
   uint32 mpls_swap_label = nexthop.mpls_swap_label();
   int router_intf_id = -1, egress_intf_id = -1;
 
-  LOG(WARNING) << "FindOrCreateNonMultipathNexthop " << nexthop.ShortDebugString();
-
   // Given the router intf, find or create the egress intf.
   switch (nexthop.type()) {
     case BcmNonMultipathNexthop::NEXTHOP_TYPE_PORT: {
