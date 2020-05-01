@@ -1,6 +1,7 @@
 # How to Add a Dataplane Feature to Stratum (BCM)
 
 This guide describes how to add a new feature to Stratum BCM on the example of MPLS.
+Check PR [#222](https://github.com/stratum/stratum/pull/222) for the code changes.
 
 ## 0. Prepare Testbed
 
