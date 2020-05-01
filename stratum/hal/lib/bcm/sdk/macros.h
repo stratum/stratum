@@ -13,14 +13,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * The Broadcom Switch API header code upon which this file depends is Copyright 2007-2020 Broadcom Inc.
+ */
+
+/*
+ * The Broadcom Switch API header code upon which this file depends is Copyright
+ * 2007-2020 Broadcom Inc.
  *
  * This file depends on Broadcom's OpenNSA SDK.
  * Additional license terms for OpenNSA are available from Broadcom or online:
  *     https://github.com/Broadcom-Network-Switching-Software/OpenNSA
  */
-
 
 #ifndef STRATUM_HAL_LIB_BCM_MACROS_H_
 #define STRATUM_HAL_LIB_BCM_MACROS_H_
