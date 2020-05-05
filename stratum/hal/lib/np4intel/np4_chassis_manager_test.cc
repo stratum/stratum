@@ -16,16 +16,16 @@
 
 #include "stratum/hal/lib/np4intel/np4_chassis_manager.h"
 
+#include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
-#include "absl/time/time.h"
 
 using ::testing::_;
 using ::testing::AtMost;
@@ -53,8 +53,7 @@ constexpr FecMode kDefaultFecMode = FEC_MODE_UNKNOWN;
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
  public:
-  explicit ChassisConfigBuilder(uint64 node_id = kNodeId)
-      : node_id(node_id) {
+  explicit ChassisConfigBuilder(uint64 node_id = kNodeId) : node_id(node_id) {
     config_.set_description("Test config for NP4ChassisManager");
     auto* chassis = config_.mutable_chassis();
     chassis->set_platform(PLT_NP4_INTEL_N3000);
@@ -65,8 +64,7 @@ class ChassisConfigBuilder {
     node->set_slot(kSlot);
   }
 
-  SingletonPort* AddPort(uint32 port_id, int32 port,
-                         AdminState admin_state,
+  SingletonPort* AddPort(uint32 port_id, int32 port, AdminState admin_state,
                          uint64 speed_bps = kDefaultSpeedBps,
                          FecMode fec_mode = kDefaultFecMode) {
     auto* sport = config_.add_singleton_ports();
@@ -88,9 +86,7 @@ class ChassisConfigBuilder {
     return nullptr;
   }
 
-  void RemoveLastPort() {
-    config_.mutable_singleton_ports()->RemoveLast();
-  }
+  void RemoveLastPort() { config_.mutable_singleton_ports()->RemoveLast(); }
 
   const ChassisConfig& Get() const { return config_; }
 
@@ -103,12 +99,11 @@ class ChassisConfigBuilder {
 
 class NP4ChassisManagerTest : public ::testing::Test {
  protected:
-  NP4ChassisManagerTest() { }
+  NP4ChassisManagerTest() {}
 
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
-    np4_chassis_manager_ = NP4ChassisManager::CreateInstance(
-        phal_mock_.get());
+    np4_chassis_manager_ = NP4ChassisManager::CreateInstance(phal_mock_.get());
   }
 
   ::util::Status CheckCleanInternalState() {
@@ -157,9 +152,7 @@ class NP4ChassisManagerTest : public ::testing::Test {
     return PushBaseChassisConfig(&builder);
   }
 
-  ::util::Status Shutdown() {
-    return np4_chassis_manager_->Shutdown();
-  }
+  ::util::Status Shutdown() { return np4_chassis_manager_->Shutdown(); }
 
   ::util::Status ShutdownAndTestCleanState() {
     RETURN_IF_ERROR(Shutdown());
@@ -200,8 +193,8 @@ TEST_F(NP4ChassisManagerTest, AddPortFec) {
   auto portId = kPortId + 1;
   auto port = kPort + 1;
 
-  builder.AddPort(
-      portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON);
+  builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
+                  FEC_MODE_ON);
   ASSERT_OK(PushChassisConfig(builder));
 
   ASSERT_OK(ShutdownAndTestCleanState());

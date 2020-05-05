@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
+#include "stratum/hal/lib/np4intel/np4_switch.h"
 
 #include <algorithm>
 #include <map>
-#include <vector>
 #include <set>
 #include <utility>
+#include <vector>
 
-#include "stratum/hal/lib/np4intel/np4_switch.h"
-#include "stratum/hal/lib/pi/pi_node.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/pi/pi_node.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
-using ::stratum::hal::pi::PINode;
 using ::pi::fe::proto::DeviceMgr;
+using ::stratum::hal::pi::PINode;
 
 namespace stratum {
 namespace hal {
 namespace np4intel {
 
 NP4Switch::NP4Switch(PhalInterface* phal_interface,
-                   NP4ChassisManager* np4_chassis_manager)
+                     NP4ChassisManager* np4_chassis_manager)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
       np4_chassis_manager_(CHECK_NOTNULL(np4_chassis_manager)) {}
 
@@ -48,7 +48,6 @@ NP4Switch::~NP4Switch() {}
 
 ::util::Status NP4Switch::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
-
 
   // Free all PI nodes first
   node_id_to_pi_node_.clear();
@@ -130,13 +129,9 @@ NP4Switch::~NP4Switch() {}
   return status;
 }
 
-::util::Status NP4Switch::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status NP4Switch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status NP4Switch::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status NP4Switch::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status NP4Switch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
@@ -174,7 +169,7 @@ NP4Switch::~NP4Switch() {}
 }
 
 ::util::Status NP4Switch::TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) {
+                                         const ::p4::v1::PacketOut& packet) {
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->TransmitPacket(packet);
 }
@@ -189,9 +184,9 @@ NP4Switch::~NP4Switch() {}
 }
 
 ::util::Status NP4Switch::RetrieveValue(uint64 /*node_id*/,
-                                       const DataRequest& request,
-                                       WriterInterface<DataResponse>* writer,
-                                       std::vector<::util::Status>* details) {
+                                        const DataRequest& request,
+                                        WriterInterface<DataResponse>* writer,
+                                        std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
     ::util::StatusOr<DataResponse> resp;
@@ -219,7 +214,7 @@ NP4Switch::~NP4Switch() {}
 }
 
 ::util::Status NP4Switch::SetValue(uint64 node_id, const SetRequest& request,
-                        std::vector<::util::Status>* details) {
+                                   std::vector<::util::Status>* details) {
   VLOG(1) << "NP4Switch::SetValue\n";
   LOG(INFO) << "NP4Switch::SetValue is not implemented yet, but changes will "
             << "be peformed when ChassisConfig is pushed again.";
@@ -232,16 +227,11 @@ NP4Switch::~NP4Switch() {}
 }
 
 std::unique_ptr<NP4Switch> NP4Switch::CreateInstance(
-    PhalInterface* phal_interface,
-    NP4ChassisManager* np4_chassis_manager) {
-
-  return absl::WrapUnique(new NP4Switch(
-      phal_interface, np4_chassis_manager));
+    PhalInterface* phal_interface, NP4ChassisManager* np4_chassis_manager) {
+  return absl::WrapUnique(new NP4Switch(phal_interface, np4_chassis_manager));
 }
 
-::util::StatusOr<PINode*> NP4Switch::GetPINodeFromNodeId(
-    uint64 node_id) const {
-
+::util::StatusOr<PINode*> NP4Switch::GetPINodeFromNodeId(uint64 node_id) const {
   auto it = node_id_to_pi_node_.find(node_id);
   if (it == node_id_to_pi_node_.end()) {
     return MAKE_ERROR(ERR_INVALID_PARAM)

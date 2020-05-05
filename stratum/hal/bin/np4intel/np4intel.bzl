@@ -1,8 +1,7 @@
-# This Skylark rule imports the netcope shared libraries and headers since 
+# This Skylark rule imports the netcope shared libraries and headers since
 # there is not yet any native support for Bazel in netcope. The NP4_INSTALL
 # environment variable needs to be set, otherwise the Stratum rules which
 # depend on netcope cannot be built.
-
 
 def _impl(repository_ctx):
     if "NP4_INSTALL" not in repository_ctx.os.environ:
@@ -32,6 +31,7 @@ cc_import(
 """)
 
 np4intel_configure = repository_rule(
-    implementation=_impl,
+    implementation = _impl,
     local = True,
-    environ = ["NP4_INSTALL"])
+    environ = ["NP4_INSTALL"],
+)

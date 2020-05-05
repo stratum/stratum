@@ -2,7 +2,7 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-load("//bazel:rules.bzl", "stratum_cc_binary", "HOST_ARCHES")
+load("//bazel:rules.bzl", "HOST_ARCHES", "stratum_cc_binary")
 
 stratum_cc_binary(
     name = "stratum_np4intel",
@@ -10,6 +10,7 @@ stratum_cc_binary(
         "main.cc",
     ],
     arches = HOST_ARCHES,
+    data = ["dummy.json"],
     deps = [
         "@com_github_google_glog//:glog",
         "//stratum/glue:init_google",
@@ -17,7 +18,7 @@ stratum_cc_binary(
         "//stratum/lib:utils",
         "//stratum/hal/lib/common:hal",
         "//stratum/hal/lib/phal:phal_sim",
-        "//stratum/hal/lib/phal:phal",
+        "//stratum/hal/lib/phal",
         "//stratum/hal/lib/pi:pi_node_np4",
         "//stratum/hal/lib/np4intel:np4_switch",
         "//stratum/lib/security:auth_policy_checker",
@@ -27,7 +28,6 @@ stratum_cc_binary(
         "@com_github_p4lang_PI_np4//targets/np4:pi_np4",
         ":dpdk_cc_proto",
     ],
-    data = ["dummy.json"],
 )
 
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
@@ -103,6 +103,5 @@ proto_library(
 
 cc_proto_library(
     name = "dpdk_cc_proto",
-    deps = [":dpdk_proto"]
+    deps = [":dpdk_proto"],
 )
-

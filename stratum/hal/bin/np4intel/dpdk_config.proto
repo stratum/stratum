@@ -25,4 +25,3 @@ message DPDKConfig {
   bool disabled = 1;
   repeated string eal_args = 2;
 }
-

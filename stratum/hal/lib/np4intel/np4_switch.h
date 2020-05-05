@@ -19,14 +19,14 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "stratum/hal/lib/np4intel/np4_chassis_manager.h"
-#include "stratum/hal/lib/pi/pi_node.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/np4intel/np4_chassis_manager.h"
+#include "stratum/hal/lib/pi/pi_node.h"
 
 namespace stratum {
 namespace hal {
@@ -53,8 +53,8 @@ class NP4Switch : public SwitchInterface {
   ::util::Status Freeze() override;
   ::util::Status Unfreeze() override;
   ::util::Status WriteForwardingEntries(
-       const ::p4::v1::WriteRequest& req,
-       std::vector<::util::Status>* results) override;
+      const ::p4::v1::WriteRequest& req,
+      std::vector<::util::Status>* results) override;
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
@@ -71,15 +71,14 @@ class NP4Switch : public SwitchInterface {
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details) override
-        LOCKS_EXCLUDED(chassis_lock);
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
                           std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<NP4Switch> CreateInstance(
-      PhalInterface* phal_interface,
-      NP4ChassisManager* np4_chassis_manager);
+      PhalInterface* phal_interface, NP4ChassisManager* np4_chassis_manager);
 
   // Bmv2Switch is neither copyable nor movable.
   NP4Switch(const NP4Switch&) = delete;
@@ -91,7 +90,7 @@ class NP4Switch : public SwitchInterface {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   NP4Switch(PhalInterface* phal_interface,
-           NP4ChassisManager* np4_chassis_manager);
+            NP4ChassisManager* np4_chassis_manager);
 
   // Helper to get PINode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
@@ -114,7 +113,7 @@ class NP4Switch : public SwitchInterface {
 
   // Map from the node ids to a unique point to the PI DeviceMgr
   std::map<uint64, std::unique_ptr<::pi::fe::proto::DeviceMgr>>
-    node_id_to_device_mgr_;
+      node_id_to_device_mgr_;
 };
 
 }  // namespace np4intel

@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
+#include "stratum/hal/lib/np4intel/np4_chassis_manager.h"
+
 #include <functional>  // std::bind
 #include <map>
 #include <memory>
 #include <utility>  // std::pair
 
-#include "stratum/hal/lib/np4intel/np4_chassis_manager.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
-#include "stratum/hal/lib/common/gnmi_events.h"
-#include "stratum/hal/lib/common/phal_interface.h"
-#include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/hal/lib/common/utils.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/time.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/hal/lib/common/gnmi_events.h"
+#include "stratum/hal/lib/common/phal_interface.h"
+#include "stratum/hal/lib/common/utils.h"
+#include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -42,32 +43,29 @@ constexpr int NP4ChassisManager::kMaxPortStatusChangeEventDepth;
 
 absl::Mutex chassis_lock;
 
-NP4ChassisManager::NP4ChassisManager(
-    PhalInterface* phal_interface)
+NP4ChassisManager::NP4ChassisManager(PhalInterface* phal_interface)
     : initialized_(false),
       phal_interface_(phal_interface),
       port_status_change_event_channel_(nullptr),
       port_status_change_event_reader_(nullptr),
       port_status_change_event_writer_(nullptr),
       node_id_to_port_id_to_port_state_(),
-      node_id_to_port_id_to_port_config_() {
-}
+      node_id_to_port_id_to_port_config_() {}
 
 NP4ChassisManager::~NP4ChassisManager() = default;
 
 namespace {
 
 // helper to add a np4intel port
-::util::Status AddPort(uint64 node_id,
-                       const std::string& port_name, uint32 port_id) {
+::util::Status AddPort(uint64 node_id, const std::string& port_name,
+                       uint32 port_id) {
   LOG(INFO) << "Adding port " << port_id << " to node " << node_id;
 
   return ::util::OkStatus();
 }
 
 // helper to remove a np4intel port
-::util::Status RemovePort(uint64 node_id,
-                          uint32 port_id) {
+::util::Status RemovePort(uint64 node_id, uint32 port_id) {
   LOG(INFO) << "Removing port " << port_id << " from node " << node_id;
 
   return ::util::OkStatus();
@@ -76,7 +74,7 @@ namespace {
 }  // namespace
 
 ::util::Status NP4ChassisManager::PushChassisConfig(
-     const ChassisConfig& config) {
+    const ChassisConfig& config) {
   VLOG(1) << "NP4ChassisManager::PushChassisConfig";
   ::util::Status status = ::util::OkStatus();  // errors to keep track of.
 
@@ -108,8 +106,7 @@ namespace {
       if (singleton_port == nullptr) {  // remove port if not present any more
         auto& config_old = port_old.second.config_params();
         if (config_old.admin_state() == ADMIN_STATE_ENABLED) {
-          APPEND_STATUS_IF_ERROR(
-              status, RemovePort(node.id(), port_id));
+          APPEND_STATUS_IF_ERROR(status, RemovePort(node.id(), port_id));
         }
       } else {  // change port config if needed
         auto& config_old = port_old.second.config_params();
@@ -117,11 +114,9 @@ namespace {
         if (config.admin_state() != config_old.admin_state()) {
           if (config.admin_state() == ADMIN_STATE_ENABLED) {
             APPEND_STATUS_IF_ERROR(
-                status,
-                AddPort(node.id(), singleton_port->name(), port_id));
+                status, AddPort(node.id(), singleton_port->name(), port_id));
           } else {
-            APPEND_STATUS_IF_ERROR(
-                status, RemovePort(node.id(), port_id));
+            APPEND_STATUS_IF_ERROR(status, RemovePort(node.id(), port_id));
             if (node_id_to_port_id_to_port_state_[node.id()][port_id] ==
                 PORT_STATE_UP) {
               // TODO(antonin): would it be better to just register a bmv2
@@ -146,8 +141,7 @@ namespace {
         auto& config = singleton_port.config_params();
         if (config.admin_state() == ADMIN_STATE_ENABLED) {
           APPEND_STATUS_IF_ERROR(
-              status,
-              AddPort(node.id(), singleton_port.name(), port_id));
+              status, AddPort(node.id(), singleton_port.name(), port_id));
         } else {
           LOG(INFO) << "Port " << port_id
                     << " is listed in ChassisConfig for node " << node.id()
@@ -165,7 +159,7 @@ namespace {
 }
 
 ::util::Status NP4ChassisManager::VerifyChassisConfig(
-     const ChassisConfig& config) {
+    const ChassisConfig& config) {
   return ::util::OkStatus();
 }
 
@@ -183,7 +177,7 @@ namespace {
 }
 
 ::util::StatusOr<const SingletonPort*> NP4ChassisManager::GetSingletonPort(
-     uint64 node_id, uint32 port_id) const {
+    uint64 node_id, uint32 port_id) const {
   auto* port_id_to_singleton =
       gtl::FindOrNull(node_id_to_port_id_to_port_config_, node_id);
   CHECK_RETURN_IF_FALSE(port_id_to_singleton != nullptr)
@@ -197,7 +191,7 @@ namespace {
 }
 
 ::util::StatusOr<DataResponse> NP4ChassisManager::GetPortData(
-     const DataRequest::Request& request) {
+    const DataRequest::Request& request) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -205,43 +199,46 @@ namespace {
   using Request = DataRequest::Request;
   switch (request.request_case()) {
     case Request::kOperStatus: {
-      ASSIGN_OR_RETURN(auto port_state, GetPortState(
-          request.oper_status().node_id(), request.oper_status().port_id()));
+      ASSIGN_OR_RETURN(auto port_state,
+                       GetPortState(request.oper_status().node_id(),
+                                    request.oper_status().port_id()));
       resp.mutable_oper_status()->set_state(port_state);
       break;
     }
     case Request::kAdminStatus: {
-      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
-          request.admin_status().node_id(), request.admin_status().port_id()));
+      ASSIGN_OR_RETURN(auto* singleton,
+                       GetSingletonPort(request.admin_status().node_id(),
+                                        request.admin_status().port_id()));
       resp.mutable_admin_status()->set_state(
           singleton->config_params().admin_state());
       break;
     }
     case Request::kPortSpeed: {
-      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
-          request.port_speed().node_id(), request.port_speed().port_id()));
+      ASSIGN_OR_RETURN(auto* singleton,
+                       GetSingletonPort(request.port_speed().node_id(),
+                                        request.port_speed().port_id()));
       resp.mutable_port_speed()->set_speed_bps(singleton->speed_bps());
       break;
     }
     case Request::kNegotiatedPortSpeed: {
-      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
-          request.negotiated_port_speed().node_id(),
-          request.negotiated_port_speed().port_id()));
+      ASSIGN_OR_RETURN(
+          auto* singleton,
+          GetSingletonPort(request.negotiated_port_speed().node_id(),
+                           request.negotiated_port_speed().port_id()));
       resp.mutable_negotiated_port_speed()->set_speed_bps(
           singleton->speed_bps());
       break;
     }
     case Request::kPortCounters: {
-      RETURN_IF_ERROR(GetPortCounters(
-          request.port_counters().node_id(),
-          request.port_counters().port_id(),
-          resp.mutable_port_counters()));
+      RETURN_IF_ERROR(GetPortCounters(request.port_counters().node_id(),
+                                      request.port_counters().port_id(),
+                                      resp.mutable_port_counters()));
       break;
     }
     case Request::kAutonegStatus: {
-      ASSIGN_OR_RETURN(auto* singleton, GetSingletonPort(
-          request.autoneg_status().node_id(),
-          request.autoneg_status().port_id()));
+      ASSIGN_OR_RETURN(auto* singleton,
+                       GetSingletonPort(request.autoneg_status().node_id(),
+                                        request.autoneg_status().port_id()));
       resp.mutable_autoneg_status()->set_state(
           singleton->config_params().autoneg());
       break;
@@ -252,8 +249,8 @@ namespace {
   return resp;
 }
 
-::util::StatusOr<PortState> NP4ChassisManager::GetPortState(
-    uint64 node_id, uint32 port_id) {
+::util::StatusOr<PortState> NP4ChassisManager::GetPortState(uint64 node_id,
+                                                            uint32 port_id) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -280,8 +277,9 @@ namespace {
   return port_state;
 }
 
-::util::Status NP4ChassisManager::GetPortCounters(
-    uint64 node_id, uint32 port_id, PortCounters* counters) {
+::util::Status NP4ChassisManager::GetPortCounters(uint64 node_id,
+                                                  uint32 port_id,
+                                                  PortCounters* counters) {
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
@@ -302,8 +300,9 @@ std::unique_ptr<NP4ChassisManager> NP4ChassisManager::CreateInstance(
   return absl::WrapUnique(new NP4ChassisManager(phal_interface));
 }
 
-void NP4ChassisManager::SendPortOperStateGnmiEvent(
-    uint64 node_id, uint32 port_id, PortState new_state) {
+void NP4ChassisManager::SendPortOperStateGnmiEvent(uint64 node_id,
+                                                   uint32 port_id,
+                                                   PortState new_state) {
   absl::ReaderMutexLock l(&gnmi_event_lock_);
   if (!gnmi_event_writer_) return;
   // Allocate and initialize a PortOperStateChangedEvent event and pass it to
@@ -326,8 +325,9 @@ void NP4ChassisManager::ReadPortStatusChangeEvents() {
     // RegisterEventWriters and then left untouched until UnregisterEventWriters
     // is called. UnregisterEventWriters joins this thread before resetting the
     // reader.
-    int code = port_status_change_event_reader_->Read(
-        &event, absl::InfiniteDuration()).error_code();
+    int code =
+        port_status_change_event_reader_->Read(&event, absl::InfiniteDuration())
+            .error_code();
     // Exit if the Channel is closed.
     if (code == ERR_CANCELLED) break;
     // Read should never timeout.
@@ -366,9 +366,10 @@ void NP4ChassisManager::ReadPortStatusChangeEvents() {
            << "initialized.";
   }
 
-  port_status_change_event_channel_ = Channel<PortStatusChangeEvent>::Create(
-      kMaxPortStatusChangeEventDepth);
+  port_status_change_event_channel_ =
+      Channel<PortStatusChangeEvent>::Create(kMaxPortStatusChangeEventDepth);
 
+  absl::WriterMutexLock l(&port_status_change_event_writer_lock_);
   port_status_change_event_writer_ =
       ChannelWriter<PortStatusChangeEvent>::Create(
           port_status_change_event_channel_);
@@ -376,13 +377,14 @@ void NP4ChassisManager::ReadPortStatusChangeEvents() {
       ChannelReader<PortStatusChangeEvent>::Create(
           port_status_change_event_channel_);
 
-  port_status_change_event_thread_ = std::thread(
-      [this]() { this->ReadPortStatusChangeEvents(); });
+  port_status_change_event_thread_ =
+      std::thread([this]() { this->ReadPortStatusChangeEvents(); });
 
   return ::util::OkStatus();
 }
 
 ::util::Status NP4ChassisManager::UnregisterEventWriters() {
+  absl::WriterMutexLock l(&chassis_lock);
   ::util::Status status = ::util::OkStatus();
   if (!port_status_change_event_channel_->Close()) {
     APPEND_ERROR(status)
