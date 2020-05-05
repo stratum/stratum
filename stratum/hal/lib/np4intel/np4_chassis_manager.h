@@ -83,7 +83,7 @@ class NP4ChassisManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  NP4ChassisManager(PhalInterface* phal_interface);
+  explicit NP4ChassisManager(PhalInterface* phal_interface);
 
   ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
   ::util::Status UnregisterEventWriters()
