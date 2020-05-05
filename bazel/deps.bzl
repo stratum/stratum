@@ -26,8 +26,11 @@ load("@bazel_gazelle//:deps.bzl", "go_repository")
 P4RUNTIME_VER = "1.1.0-rc.1"
 P4RUNTIME_SHA = "fb4eb0767ea9e9697b2359be6979942c54abf64187a2d0f5ff61f227500ec195"
 
-GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a";
+GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
+
+TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
+TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
 BF_SDE_PI_VER = {
     "8_9_2": "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
@@ -177,6 +180,18 @@ def stratum_deps():
             remote = "https://github.com/YangModels/yang",
             commit = "31daa2507ae507776c23b4d4176b6cdcef2a308c",
             build_file = "@//bazel:external/yang.BUILD",
+        )
+
+    # -----------------------------------------------------------------------------
+    #        TAI library
+    # -----------------------------------------------------------------------------
+    if "com_github_telecominfraproject_oopt_tai_taish" not in native.existing_rules():
+        http_archive(
+            name = "com_github_telecominfraproject_oopt_tai_taish",
+            urls = ["https://github.com/Telecominfraproject/oopt-tai/archive/%s.zip" % TAI_COMMIT],
+            sha256 = TAI_SHA,
+            strip_prefix = "oopt-tai-%s/tools/taish/proto/" % TAI_COMMIT,
+            build_file = "@//bazel:external/taish_proto.BUILD",
         )
 
 # -----------------------------------------------------------------------------
