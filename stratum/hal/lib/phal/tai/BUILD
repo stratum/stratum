@@ -56,6 +56,20 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "tai_optics_datasource",
+    srcs = ["tai_optics_datasource.cc"],
+    hdrs = ["tai_optics_datasource.h"],
+    deps = [
+        ":tai_interface",
+        "//stratum/glue:integral_types",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/phal:datasource",
+        "//stratum/lib:macros",
+    ],
+)
+
+stratum_cc_library(
     name = "tai_phal",
     srcs = ["tai_phal.cc"],
     hdrs = ["tai_phal.h"],

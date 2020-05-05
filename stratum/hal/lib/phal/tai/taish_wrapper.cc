@@ -82,7 +82,7 @@ util::Status TaishWrapper::Initialize() {
         taish_stub_->ListAttributeMetadata(&context, attr_meta_req);
     while (attr_meta_reader->Read(&attr_meta_resp)) {
       const auto& attr_meta = attr_meta_resp.metadata();
-      network_interface_attr_map_[attr_meta.name()] = attr_meta.attr_id();
+      netif_attr_map_[attr_meta.name()] = attr_meta.attr_id();
     }
     attr_meta_reader->Finish();
   }
@@ -94,7 +94,7 @@ util::Status TaishWrapper::Initialize() {
         taish_stub_->ListAttributeMetadata(&context, attr_meta_req);
     while (attr_meta_reader->Read(&attr_meta_resp)) {
       const auto& attr_meta = attr_meta_resp.metadata();
-      host_interface_attr_map_[attr_meta.name()] = attr_meta.attr_id();
+      hostif_attr_map_[attr_meta.name()] = attr_meta.attr_id();
     }
     attr_meta_reader->Finish();
   }
@@ -117,13 +117,14 @@ util::StatusOr<std::vector<uint64>> TaishWrapper::GetHostInterfacesFromModule(
   return host_interfaces_;
 }
 
-util::StatusOr<uint64> TaishWrapper::GetFrequency(const uint64 netif_id) {
+util::StatusOr<uint64>
+    TaishWrapper::GetTxLaserFrequency(const uint64 netif_id) {
   auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
                       netif_id);
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
   uint64 attr_id =
-      network_interface_attr_map_["TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"];
+      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"];
   ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
   // TODO(Yi): Handle exceptions.
   return std::stoull(attr_str_val);
@@ -135,7 +136,7 @@ util::StatusOr<double> TaishWrapper::GetCurrentInputPower(
                       netif_id);
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
-  uint64 attr_id = network_interface_attr_map_
+  uint64 attr_id = netif_attr_map_
       ["TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER"];
   ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
   // TODO(Yi): Handle exceptions.
@@ -148,7 +149,7 @@ util::StatusOr<double> TaishWrapper::GetCurrentOutputPower(
                       netif_id);
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
-  uint64 attr_id = network_interface_attr_map_
+  uint64 attr_id = netif_attr_map_
       ["TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER"];
   ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
   // TODO(Yi): Handle exceptions.
@@ -162,7 +163,7 @@ util::StatusOr<double> TaishWrapper::GetTargetOutputPower(
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
   uint64 attr_id =
-      network_interface_attr_map_["TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"];
+      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"];
   ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
   // TODO(Yi): Handle exceptions.
   return std::stod(attr_str_val);
@@ -174,7 +175,7 @@ util::StatusOr<uint64> TaishWrapper::GetModulationFormats(
                       netif_id);
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
-  uint64 attr_id = network_interface_attr_map_
+  uint64 attr_id = netif_attr_map_
       ["TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"];
   ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
   // TODO(Yi): Handle exceptions.
@@ -188,7 +189,7 @@ util::Status TaishWrapper::SetTargetOutputPower(const uint64 netif_id,
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
   uint64 attr_id =
-      network_interface_attr_map_["TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"];
+      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"];
   return SetAttribute(netif_id, attr_id, std::to_string(power));
 }
 
@@ -198,9 +199,19 @@ util::Status TaishWrapper::SetModulationsFormats(const uint64 netif_id,
                       netif_id);
   CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
 
-  uint64 attr_id = network_interface_attr_map_
-      ["TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"];
+  uint64 attr_id =
+      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"];
   return SetAttribute(netif_id, attr_id, std::to_string(mod_format));
+}
+
+util::Status TaishWrapper::SetTxLaserFrequency(const uint64 netif_id,
+                                               const uint64 frequency) {
+  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
+                      netif_id);
+  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
+  uint64 attr_id =
+      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"];
+  return SetAttribute(netif_id, attr_id, std::to_string(frequency));
 }
 
 util::StatusOr<std::string> TaishWrapper::GetAttribute(uint64 obj_id,
@@ -243,6 +254,8 @@ TaishWrapper* TaishWrapper::GetSingleton() {
   if (!singleton_) {
     singleton_ = new TaishWrapper();
     if (!singleton_->Initialize().ok()) {
+      LOG(ERROR) << "Failed to initialize TaishWrapper";
+      delete singleton_;
       return nullptr;
     }
   }

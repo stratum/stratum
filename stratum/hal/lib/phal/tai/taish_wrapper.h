@@ -52,7 +52,7 @@ class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
 
   // Functions for Network Interface
   // Gets frequency from a network interface.
-  util::StatusOr<uint64> GetFrequency(const uint64 netif_id) override;
+  util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) override;
 
   // Gets input power from a network interface.
   util::StatusOr<double> GetCurrentInputPower(const uint64 netif_id) override;
@@ -73,6 +73,9 @@ class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
   // Sets modulation format to a network interface.
   util::Status SetModulationsFormats(const uint64 netif_id,
                                      const uint64 mod_format) override;
+
+  util::Status SetTxLaserFrequency(const uint64 netif_id,
+                                   const uint64 frequency) override;
 
   // Gets the singleton instance.
   static TaishWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
@@ -96,8 +99,8 @@ class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
 
   // Caches attribute name and id when we initialized the wrapper
   absl::flat_hash_map<std::string, uint64> module_attr_map_;
-  absl::flat_hash_map<std::string, uint64> network_interface_attr_map_;
-  absl::flat_hash_map<std::string, uint64> host_interface_attr_map_;
+  absl::flat_hash_map<std::string, uint64> netif_attr_map_;
+  absl::flat_hash_map<std::string, uint64> hostif_attr_map_;
 };
 
 }  // namespace tai
