@@ -124,6 +124,7 @@ typedef bcm_switch_event_t soc_switch_event_t;
 typedef void (*soc_event_cb_t)(int unit, soc_switch_event_t event, uint32 arg1,
                                uint32 arg2, uint32 arg3, void* userdata);
 extern int soc_event_register(int unit, soc_event_cb_t cb, void* userdata);
+extern int soc_esw_hw_qnum_get(int unit, int port, int cos, int *qnum);
 }  // extern "C"
 
 static_assert(SYS_BE_PIO == 0, "SYS_BE_PIO == 0");
@@ -2541,6 +2542,7 @@ int CanonicalRate(int rate) { return rate > 0 ? rate : BCM_RX_RATE_NOLIMIT; }
 
   cos = (cos >= 0 ? cos : BCM_COS_DEFAULT);
   int qbase = 0;
+  RETURN_IF_BCM_ERROR(soc_esw_hw_qnum_get(unit, port, 0, &qbase));
   int qnum = qbase + cos;
   int module = -1;
   RETURN_IF_BCM_ERROR(bcm_stk_my_modid_get(unit, &module));
