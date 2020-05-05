@@ -35,11 +35,6 @@ workspace(name = "com_github_stratum_stratum")
 #       Please do not push changes to this section upstream.
 # ---------------------------------------------------------------------------
 
-#local_repository(
-#    name = "com_github_p4lang_PI_np4",
-#    path = "/home/craigsid/np4_install/PI",
-#)
-
 # ---------------------------------------------------------------------------
 #       Load tools to build Stratum
 # ---------------------------------------------------------------------------
