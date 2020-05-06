@@ -13,7 +13,7 @@ rmmod linux_kernel_bde || true
 rmmod linux_ngknet || true
 rmmod linux_ngbde || true
 pushd /usr/lib/stratum/
-insmod linux_ngbde.ko && insmod linux_ngknet.ko
+insmod linux_ngbde.ko && insmod linux_ngknet.ko default_mtu=3000  # kDefaultKnetIntfMtu
 popd
 sleep 1
 

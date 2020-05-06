@@ -805,7 +805,10 @@ std::string BcmPacketioManager::GetKnetIntfNameTemplate(
   }
 
   // Configure MTU.
-  // FIXME: With SDKLT the MTU is set at KNET interface creation.
+  // TODO(max): With SDKLT the MTU is set at KNET interface creation.
+  // On OpenNSA the MTU is currently configured when loading the KNET Kernel
+  // module, but the ioctl() should work. Need to investigate the KNET module
+  // source code.
   /*
   memset(&ifr, 0, sizeof(ifr));
   strncpy(ifr.ifr_name, intf->netif_name.c_str(), IFNAMSIZ);

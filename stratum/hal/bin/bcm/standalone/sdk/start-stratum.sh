@@ -26,7 +26,7 @@ rmmod linux_bcm_knet || true
 rmmod linux_user_bde || true
 rmmod linux_kernel_bde || true
 pushd /usr/lib/stratum/
-insmod linux-kernel-bde.ko && insmod linux-user-bde.ko && insmod linux-bcm-knet.ko
+insmod linux-kernel-bde.ko && insmod linux-user-bde.ko && insmod linux-bcm-knet.ko default_mtu=3000  # kDefaultKnetIntfMtu
 popd
 
 # Setup devices and symlinks
