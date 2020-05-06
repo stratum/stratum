@@ -37,26 +37,30 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
   }
 
   std::vector<Path> paths = {
-      {PathEntry("optical_cards", slot - 1, false, false, true)}};
+      {PathEntry("optical_modules", slot - 1),
+       PathEntry("ports", port - 1, true, false, true)}};
 
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
-  CHECK_RETURN_IF_FALSE(phaldb->optical_cards_size() > slot - 1)
-      << "optical card in slot " << slot - 1 << " not found!";
+  CHECK_RETURN_IF_FALSE(phaldb->optical_modules_size() > slot - 1)
+      << "optical module in slot " << slot - 1 << " not found!";
 
-  oc_info->set_frequency(phaldb->optical_cards(slot - 1).frequency());
+  auto optical_module = phaldb->optical_modules(slot - 1);
 
-  oc_info->mutable_input_power()->set_instant(
-      phaldb->optical_cards(slot - 1).input_power());
+  CHECK_RETURN_IF_FALSE(optical_module.ports_size() > port - 1)
+      << "optical port in port " << port - 1 << " not found";
 
-  oc_info->mutable_output_power()->set_instant(
-      phaldb->optical_cards(slot - 1).output_power());
+  auto optical_port = optical_module.ports(port - 1);
+  oc_info->set_frequency(optical_port.frequency());
+
+  oc_info->mutable_input_power()->set_instant(optical_port.input_power());
+
+  oc_info->mutable_output_power()->set_instant(optical_port.output_power());
 
   oc_info->set_target_output_power(
-      phaldb->optical_cards(slot - 1).target_output_power());
+      optical_port.target_output_power());
 
-  oc_info->set_operational_mode(
-      phaldb->optical_cards(slot - 1).operational_mode());
+  oc_info->set_operational_mode(optical_port.operational_mode());
 
   return ::util::OkStatus();
 }
@@ -71,16 +75,20 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
   Path path;
 
   if (oc_info.frequency()) {
-    path = {PathEntry("optical_cards", slot - 1), PathEntry("frequency")};
+    path = {PathEntry("optical_modules", slot - 1),
+            PathEntry("ports", port - 1),
+            PathEntry("frequency")};
     attrs[path] = oc_info.frequency();
   }
   if (oc_info.target_output_power()) {
-    path = {PathEntry("optical_cards", slot - 1),
+    path = {PathEntry("optical_modules", slot - 1),
+            PathEntry("ports", port - 1),
             PathEntry("target_output_power")};
     attrs[path] = oc_info.target_output_power();
   }
   if (oc_info.operational_mode()) {
-    path = {PathEntry("optical_cards", slot - 1),
+    path = {PathEntry("optical_modules", slot - 1),
+            PathEntry("ports", port - 1),
             PathEntry("operational_mode")};
     attrs[path] = oc_info.operational_mode();
   }

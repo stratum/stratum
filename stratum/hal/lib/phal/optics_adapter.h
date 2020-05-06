@@ -56,8 +56,7 @@ class OpticsAdapter final : public Adapter {
  private:
   // Attribute Db path to get the hardware state of all sfp transceivers.
   const Path kAllOpticsPath = {
-      PathEntry("optical_cards", -1, true, true, false),
-      PathEntry("hardware_state", -1, false, true, false),
+      PathEntry("optical_modules", -1, true, true, false)
   };
 
   // Mutex guarding internal state.
