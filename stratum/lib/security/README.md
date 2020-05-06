@@ -1,3 +1,9 @@
+<!--
+Copyright 2020-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Stratum security components
 
 ## Authentication policy checker

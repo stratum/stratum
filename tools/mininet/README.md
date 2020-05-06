@@ -1,3 +1,9 @@
+<!--
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Stratum-enabled Mininet
 
 We provide a Docker image that can execute a Mininet emulated network using
@@ -92,10 +98,10 @@ Then, to run a a simple 1-switch 2-host topology:
     *** Configuring hosts
     h1 h2
     *** Starting controller
-    
+
     *** Starting 1 switches
     s1 ....⚡️ stratum_bmv2 @ 50001
-    
+
     *** Starting CLI:
     mininet>
 
@@ -113,11 +119,11 @@ Or a linear one with 3 switches and 3 hosts:
     *** Configuring hosts
     h1 h2 h3
     *** Starting controller
-    
+
     *** Starting 3 switches
     s1 .....⚡️ stratum_bmv2 @ 50001
     s2 .....⚡️ stratum_bmv2 @ 50002
     s3 .....⚡️ stratum_bmv2 @ 50003
-    
+
     *** Starting CLI:
     mininet>

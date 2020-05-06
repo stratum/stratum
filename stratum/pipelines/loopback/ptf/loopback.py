@@ -1,19 +1,6 @@
 #!/usr/bin/env python2
-
 # Copyright 2019 NoviFlow Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
 
 import ptf
 import os
@@ -45,7 +32,7 @@ class LoopbackAllPortsTest(LoopbackTest):
             # port is 9-bit in v1model, i.e. 2 bytes
             ig_port_str = stringify(ig_port, 2)
             eg_port_str = stringify(eg_port, 2)
-      
+
             # check that the entry is hit and that no other packets are received
             testutils.send_packet(self, ig_port, pkt)
             testutils.verify_packets(self, pkt_check, [eg_port])
