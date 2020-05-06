@@ -1,3 +1,6 @@
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
 # General build options
 build --conlyopt='-std=gnu11'
 build --cxxopt='-std=gnu++11'

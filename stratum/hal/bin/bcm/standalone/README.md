@@ -1,3 +1,9 @@
+<!--
+Copyright 2019 Dell, Inc.
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # Stratum on a Broadcom SDKLT based switch
 
 The following guide details how to compile the Stratum binary to run on a Broadcom based switch (i.e. like Tomahawk) using the Broadcom SDKLT.

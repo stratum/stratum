@@ -1,3 +1,5 @@
+// Copyright 2019-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
 module openconfig-platform-stratum {
 
   yang-version "1";
@@ -45,7 +47,7 @@ module openconfig-platform-stratum {
       description "Stratum does not support components/component/subcomponents";
       deviate not-supported;
   }
-  
+
   deviation "/oc-platform:components/oc-platform:component/oc-platform:power-supply" {
       description "Stratum does not support components/component/power-supply";
       deviate not-supported;
@@ -63,8 +65,8 @@ module openconfig-platform-stratum {
   deviation "/oc-platform:components/oc-platform:component/oc-platform:storage" {
       description "Stratum does not support components/component/storage";
       deviate not-supported;
-  }  
-  
+  }
+
   deviation "/oc-platform:components/oc-platform:component/oc-platform:cpu" {
       description "Stratum does not support interface/config/cpu";
       deviate not-supported;

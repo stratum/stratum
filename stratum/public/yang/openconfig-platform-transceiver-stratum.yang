@@ -1,3 +1,5 @@
+// Copyright 2019-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
 module openconfig-platform-transceiver-stratum {
 
   yang-version "1";
@@ -10,7 +12,7 @@ module openconfig-platform-transceiver-stratum {
   // import types
   import openconfig-platform { prefix oc-platform; }
   import openconfig-platform-transceiver { prefix oc-transceiver; }
-  
+
   // meta
   organization "Open Networking Foundation";
 
@@ -78,52 +80,52 @@ module openconfig-platform-transceiver-stratum {
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-status" {
       description "Stratum does not support components/component/transceiver/state/fec-status";
       deviate not-supported;
-  }  
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-uncorrectable-blocks" {
       description "Stratum does not support components/component/transceiver/state/fec-uncorrectable-blocks";
       deviate not-supported;
-  }  
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-uncorrectable-words" {
       description "Stratum does not support components/component/transceiver/state/fec-uncorrectable-words";
       deviate not-supported;
-  }  
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-corrected-bytes" {
       description "Stratum does not support components/component/transceiver/state/fec-corrected-bytes";
       deviate not-supported;
-  }  
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:fec-corrected-bits" {
       description "Stratum does not support components/component/transceiver/state/fec-corrected-bits";
       deviate not-supported;
-  }  
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:pre-fec-ber" {
       description "Stratum does not support components/component/transceiver/state/pre-fec-ber";
       deviate not-supported;
-  }  
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:post-fec-ber" {
       description "Stratum does not support components/component/transceiver/state/porst-fec-ber";
       deviate not-supported;
-  } 
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:output-power" {
       description "Stratum does not support components/component/transceiver/state/output-power";
       deviate not-supported;
-  } 
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:input-power" {
       description "Stratum does not support components/component/transceiver/state/input-power";
       deviate not-supported;
-  } 
+  }
 
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:state/oc-transceiver:laser-bias-current" {
       description "Stratum does not support components/component/transceiver/state/laser-bias-current";
       deviate not-supported;
-  }                
+  }
   deviation "/oc-platform:components/oc-platform:component/oc-transceiver:transceiver/oc-transceiver:physical-channels" {
       description "Stratum does not support components/component/transceiver/physical-channels";
       deviate not-supported;

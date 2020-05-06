@@ -1,3 +1,8 @@
+<!--
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # Trellis+Stratum example
 
 This directory contains scripts that use Docker and Mininet to emulate a network
