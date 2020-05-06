@@ -1,3 +1,10 @@
+<!--
+Copyright 2018 Barefoot Networks, Inc.
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Running Stratum on a Barefoot Tofino based switch
 
 ## Quick start

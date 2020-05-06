@@ -1,3 +1,6 @@
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
 onos_url := http://localhost:8181/onos
 onos_post := curl -sSL --user onos:rocks --noproxy localhost -X POST -H 'Content-Type:application/json'
 

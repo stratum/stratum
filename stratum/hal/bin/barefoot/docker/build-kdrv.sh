@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2019-present Open Networking Foundation
+#
+# SPDX-License-Identifier: Apache-2.0
 
 KERNEL_HEADERS_PATH=${KERNEL_HEADERS_PATH:-/usr/src/kernel-headers}
 KDRV_DIR=${KDRV_DIR:-/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv}

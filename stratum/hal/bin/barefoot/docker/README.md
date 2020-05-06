@@ -1,4 +1,11 @@
+<!--
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Containerize Stratum for Barefoot Tofino based device
+====
 
 This directory provides most material to build the containerized version of the
 Stratum for Barefoot Tofino based device.
