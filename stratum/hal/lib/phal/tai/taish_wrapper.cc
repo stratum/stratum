@@ -16,6 +16,7 @@
 
 #include "stratum/hal/lib/phal/tai/taish_wrapper.h"
 
+#include <algorithm>
 #include <string>
 
 #include "gflags/gflags.h"
@@ -47,15 +48,7 @@ util::Status TaishWrapper::Initialize() {
   auto modules_reader = taish_stub_->ListModule(&context, list_module_req);
   while (modules_reader->Read(&list_module_resp)) {
     const auto& module = list_module_resp.module();
-    modules_.push_back(module.oid());
-
-    for (const auto& netif : module.netifs()) {
-      network_interfaces_.push_back(netif.oid());
-    }
-
-    for (const auto& hostif : module.hostifs()) {
-      host_interfaces_.push_back(hostif.oid());
-    }
+    modules_.push_back(module);
   }
   modules_reader->Finish();
 
@@ -104,114 +97,132 @@ util::Status TaishWrapper::Initialize() {
 }
 
 util::StatusOr<std::vector<uint64>> TaishWrapper::GetModuleIds() {
-  return modules_;
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  std::vector<uint64> oids;
+  for (const auto& module : modules_) {
+    oids.push_back(module.oid());
+  }
+  return oids;
 }
 
 util::StatusOr<std::vector<uint64>>
-TaishWrapper::GetNetworkInterfacesFromModule(const uint64 module_id) {
-  return network_interfaces_;
+    TaishWrapper::GetNetworkInterfaceIds(const uint64 module_id) {
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  auto it = std::find_if(
+      modules_.begin(), modules_.end(),
+      [module_id](taish::Module m) { return m.oid() == module_id; });
+  CHECK_RETURN_IF_FALSE(it != modules_.end())
+      << "Cannot find module with id " << module_id;
+  taish::Module module = *it;
+  std::vector<uint64> oids;
+  for (const auto& netif : module.netifs()) {
+    oids.push_back(netif.oid());
+  }
+  return oids;
 }
 
-util::StatusOr<std::vector<uint64>> TaishWrapper::GetHostInterfacesFromModule(
-    const uint64 module_id) {
-  return host_interfaces_;
+util::StatusOr<std::vector<uint64>>
+    TaishWrapper::GetHostInterfaceIds(const uint64 module_id) {
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  auto it = std::find_if(
+      modules_.begin(), modules_.end(),
+      [module_id](taish::Module m) { return m.oid() == module_id; });
+  CHECK_RETURN_IF_FALSE(it != modules_.end())
+      << "Can not find module with id " << module_id;
+  taish::Module module = *it;
+  std::vector<uint64> oids;
+  for (const auto& hostif : module.hostifs()) {
+    oids.push_back(hostif.oid());
+  }
+  return oids;
 }
 
 util::StatusOr<uint64>
     TaishWrapper::GetTxLaserFrequency(const uint64 netif_id) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id =
-      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"];
-  ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  ASSIGN_OR_RETURN(
+      auto attr_str_val,
+      GetAttribute(netif_id, netif_attr_map_[kNetIfAttrTxLaserFreq]));
   // TODO(Yi): Handle exceptions.
   return std::stoull(attr_str_val);
 }
 
-util::StatusOr<double> TaishWrapper::GetCurrentInputPower(
-    const uint64 netif_id) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id = netif_attr_map_
-      ["TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER"];
-  ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
+util::StatusOr<double>
+    TaishWrapper::GetCurrentInputPower(const uint64 netif_id) {
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  ASSIGN_OR_RETURN(
+      auto attr_str_val,
+      GetAttribute(netif_id, netif_attr_map_[kNetIfAttrCurrentInputPower]));
   // TODO(Yi): Handle exceptions.
   return std::stod(attr_str_val);
 }
 
-util::StatusOr<double> TaishWrapper::GetCurrentOutputPower(
-    const uint64 netif_id) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id = netif_attr_map_
-      ["TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER"];
-  ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
+util::StatusOr<double>
+    TaishWrapper::GetCurrentOutputPower(const uint64 netif_id) {
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  ASSIGN_OR_RETURN(
+      auto attr_str_val,
+      GetAttribute(netif_id, netif_attr_map_[kNetIfAttrCurrentOutputPower]));
   // TODO(Yi): Handle exceptions.
   return std::stod(attr_str_val);
 }
 
-util::StatusOr<double> TaishWrapper::GetTargetOutputPower(
-    const uint64 netif_id) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id =
-      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"];
-  ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
+util::StatusOr<double>
+    TaishWrapper::GetTargetOutputPower(const uint64 netif_id) {
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  ASSIGN_OR_RETURN(
+      auto attr_str_val,
+      GetAttribute(netif_id, netif_attr_map_[kNetIfAttrOutputPower]));
   // TODO(Yi): Handle exceptions.
   return std::stod(attr_str_val);
 }
 
-util::StatusOr<uint64> TaishWrapper::GetModulationFormats(
-    const uint64 netif_id) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id = netif_attr_map_
-      ["TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"];
-  ASSIGN_OR_RETURN(auto attr_str_val, GetAttribute(netif_id, attr_id));
+util::StatusOr<uint64>
+    TaishWrapper::GetModulationFormats(const uint64 netif_id) {
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  ASSIGN_OR_RETURN(
+      auto attr_str_val,
+      GetAttribute(netif_id, netif_attr_map_[kNetIfAttrModulationFormat]));
   // TODO(Yi): Handle exceptions.
   return std::stoull(attr_str_val);
 }
 
 util::Status TaishWrapper::SetTargetOutputPower(const uint64 netif_id,
                                                 const double power) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id =
-      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER"];
-  return SetAttribute(netif_id, attr_id, std::to_string(power));
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  return SetAttribute(netif_id, netif_attr_map_[kNetIfAttrOutputPower],
+                      std::to_string(power));
 }
 
 util::Status TaishWrapper::SetModulationsFormats(const uint64 netif_id,
                                                  const uint64 mod_format) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-
-  uint64 attr_id =
-      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT"];
-  return SetAttribute(netif_id, attr_id, std::to_string(mod_format));
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  return SetAttribute(netif_id, netif_attr_map_[kNetIfAttrModulationFormat],
+                      std::to_string(mod_format));
 }
 
 util::Status TaishWrapper::SetTxLaserFrequency(const uint64 netif_id,
                                                const uint64 frequency) {
-  auto it = std::find(network_interfaces_.begin(), network_interfaces_.end(),
-                      netif_id);
-  CHECK_RETURN_IF_FALSE(it != network_interfaces_.end());
-  uint64 attr_id =
-      netif_attr_map_["TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ"];
-  return SetAttribute(netif_id, attr_id, std::to_string(frequency));
+  absl::WriterMutexLock l(&init_lock_);
+  CHECK_RETURN_IF_FALSE(initialized_);
+  return SetAttribute(netif_id, netif_attr_map_[kNetIfAttrTxLaserFreq],
+                      std::to_string(frequency));
+}
+
+util::Status TaishWrapper::Shutdown() {
+  absl::WriterMutexLock l(&init_lock_);
+  initialized_ = false;
+  return util::OkStatus();
 }
 
 util::StatusOr<std::string> TaishWrapper::GetAttribute(uint64 obj_id,
@@ -249,7 +260,7 @@ util::Status TaishWrapper::SetAttribute(uint64 obj_id, uint64 attr_id,
   return util::OkStatus();
 }
 
-TaishWrapper* TaishWrapper::GetSingleton() {
+TaishWrapper* TaishWrapper::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {
     singleton_ = new TaishWrapper();

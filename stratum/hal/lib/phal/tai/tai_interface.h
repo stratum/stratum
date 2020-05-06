@@ -42,11 +42,11 @@ class TaiInterface {
 
   // Gets all network interface id from a module.
   virtual util::StatusOr<std::vector<uint64>>
-      GetNetworkInterfacesFromModule(const uint64 module_id) = 0;
+      GetNetworkInterfaceIds(const uint64 module_id) = 0;
 
   // Gets all host interface id from a module
   virtual util::StatusOr<std::vector<uint64>>
-      GetHostInterfacesFromModule(const uint64 module_id) = 0;
+      GetHostInterfaceIds(const uint64 module_id) = 0;
 
   // TODO(Yi): Complete functions for Module and Host Interface
 
@@ -81,6 +81,9 @@ class TaiInterface {
   // Sets frequency to a network interface.
   virtual util::Status SetTxLaserFrequency(const uint64 netif_id,
                                            const uint64 frequency) = 0;
+
+  // Shutdowns the TAI interface.
+  virtual util::Status Shutdown() = 0;
 };
 
 }  // namespace tai

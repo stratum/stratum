@@ -14,15 +14,13 @@
 # limitations under the License.
 #
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
-    "stratum_cc_binary",
     "stratum_cc_library",
-    "stratum_cc_test",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -74,6 +72,7 @@ stratum_cc_library(
     srcs = ["tai_phal.cc"],
     hdrs = ["tai_phal.h"],
     deps = [
+        ":tai_interface",
         ":tai_switch_configurator",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
@@ -94,12 +93,14 @@ stratum_cc_library(
     srcs = ["tai_switch_configurator.cc"],
     hdrs = ["tai_switch_configurator.h"],
     deps = [
+        ":tai_optics_datasource",
         "//stratum/glue/gtl:map_util",
         "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/phal:attribute_database",
         "//stratum/hal/lib/phal:attribute_group",
         "//stratum/hal/lib/phal:phal_cc_proto",
+        "//stratum/lib:macros",
         "@com_google_protobuf//:protobuf",
     ],
 )

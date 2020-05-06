@@ -18,8 +18,8 @@
 #define STRATUM_HAL_LIB_PHAL_TAI_TAISH_WRAPPER_H_
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -32,70 +32,63 @@ namespace hal {
 namespace phal {
 namespace tai {
 
+// Attribute names.
+const std::string kNetIfAttrTxLaserFreq =
+    "TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ";
+const std::string kNetIfAttrCurrentInputPower =
+    "TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER";
+const std::string kNetIfAttrCurrentOutputPower =
+    "TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER";
+const std::string kNetIfAttrOutputPower =
+    "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER";
+const std::string kNetIfAttrModulationFormat =
+    "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT";
+
 class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
  public:
-  // Initialize the TAI interface.
   util::Status Initialize() override EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
-
-  // Gets all module id.
   util::StatusOr<std::vector<uint64>> GetModuleIds() override;
-
-  // Gets all network interface id from a module.
-  util::StatusOr<std::vector<uint64>> GetNetworkInterfacesFromModule(
+  util::StatusOr<std::vector<uint64>> GetNetworkInterfaceIds(
       const uint64 module_id) override;
 
-  // Gets all host interface id from a module
-  util::StatusOr<std::vector<uint64>> GetHostInterfacesFromModule(
+  util::StatusOr<std::vector<uint64>> GetHostInterfaceIds(
       const uint64 module_id) override;
 
   // TODO(Yi): Complete functions for Module and Host Interface
 
-  // Functions for Network Interface
-  // Gets frequency from a network interface.
+  // Functions for Network Interface.
   util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) override;
-
-  // Gets input power from a network interface.
   util::StatusOr<double> GetCurrentInputPower(const uint64 netif_id) override;
-
-  // Gets output power from a network interface.
   util::StatusOr<double> GetCurrentOutputPower(const uint64 netif_id) override;
-
-  // Gets target output power from a network interface.
   util::StatusOr<double> GetTargetOutputPower(const uint64 netif_id) override;
-
-  // Gets modulation format from a network interface.
   util::StatusOr<uint64> GetModulationFormats(const uint64 netif_id) override;
-
-  // Sets target output power to a network interafce.
   util::Status SetTargetOutputPower(const uint64 netif_id,
                                     const double power) override;
-
-  // Sets modulation format to a network interface.
   util::Status SetModulationsFormats(const uint64 netif_id,
                                      const uint64 mod_format) override;
-
   util::Status SetTxLaserFrequency(const uint64 netif_id,
                                    const uint64 frequency) override;
+  virtual util::Status Shutdown() override;
 
   // Gets the singleton instance.
-  static TaishWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
+  static TaishWrapper* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
 
  private:
   // Gets an attribute from a TAI object.
-  util::StatusOr<std::string> GetAttribute(uint64 obj_id, uint64 attr_id);
+  util::StatusOr<std::string> GetAttribute(uint64 obj_id, uint64 attr_id)
+      EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
 
   // Sets an attribute to a TAI object.
-  util::Status SetAttribute(uint64 obj_id, uint64 attr_id, std::string value);
+  util::Status SetAttribute(uint64 obj_id, uint64 attr_id, std::string value)
+      EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
 
   static absl::Mutex init_lock_;
   static TaishWrapper* singleton_ GUARDED_BY(init_lock_);
   std::unique_ptr<taish::TAI::Stub> taish_stub_;
   bool initialized_ GUARDED_BY(init_lock_);
 
-  // Caches object ids when we initialized the wrapper
-  std::vector<uint64> modules_;
-  std::vector<uint64> network_interfaces_;
-  std::vector<uint64> host_interfaces_;
+  // Caches TAI modules when we initialized the wrapper
+  std::vector<taish::Module> modules_;
 
   // Caches attribute name and id when we initialized the wrapper
   absl::flat_hash_map<std::string, uint64> module_attr_map_;

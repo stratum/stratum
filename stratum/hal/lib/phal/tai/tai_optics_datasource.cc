@@ -37,7 +37,8 @@ namespace tai {
  * \note Ownership is transferred to the caller
  */
 ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-TaiOpticsDataSource::Make(uint64 id, const PhalOpticalCardConfig& config,
+TaiOpticsDataSource::Make(uint64 id,
+                          const PhalOpticalModuleConfig::Port& config,
                           TaiInterface* tai_interface) {
   ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
                                    config.cache_policy().type(),

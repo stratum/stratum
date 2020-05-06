@@ -88,9 +88,12 @@ Phal* Phal::CreateSingleton() {
 
 #if defined(WITH_TAI)
     {
-      auto* tai_phal = tai::TaiPhal::CreateSingleton();
+      // TODO(Yi): now we only have one implementation of TAI wrapper,
+      // should be able to let user choose which version of TAI wrapper
+      // based on bazel flags.
+      auto* tai_interface = tai::TaishWrapper::CreateSingleton();
+      auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_interface);
       tai_phal->PushChassisConfig(config);
-      phal_interfaces_.push_back(tai_phal);
       ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
       configurators.push_back(std::move(configurator));
     }

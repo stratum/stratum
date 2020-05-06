@@ -35,15 +35,15 @@ namespace tai {
 TaiPhal* TaiPhal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex TaiPhal::init_lock_(absl::kConstInit);
 
-TaiPhal::TaiPhal() {}
+TaiPhal::TaiPhal(TaiInterface* tai_interface) : tai_interface_(tai_interface) {}
 
 TaiPhal::~TaiPhal() {}
 
-TaiPhal* TaiPhal::CreateSingleton() {
+TaiPhal* TaiPhal::CreateSingleton(TaiInterface* tai_interface) {
   absl::WriterMutexLock l(&init_lock_);
 
   if (!singleton_) {
-    singleton_ = new TaiPhal();
+    singleton_ = new TaiPhal(tai_interface);
   }
 
   auto status = singleton_->Initialize();
@@ -56,7 +56,6 @@ TaiPhal* TaiPhal::CreateSingleton() {
   return singleton_;
 }
 
-// Initialize the tai interface and phal DB
 ::util::Status TaiPhal::Initialize() {
   absl::WriterMutexLock l(&config_lock_);
 
@@ -80,6 +79,7 @@ TaiPhal* TaiPhal::CreateSingleton() {
 ::util::Status TaiPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
+  tai_interface_->Shutdown();
   // tai_event_handler_.reset();
   initialized_ = false;
 

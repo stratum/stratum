@@ -42,7 +42,7 @@ namespace tai {
 class TaiOpticsDataSource final : public DataSource {
  public:
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-      Make(uint64 id, const PhalOpticalCardConfig& config,
+      Make(uint64 id, const PhalOpticalModuleConfig::Port& config,
            TaiInterface* tai_interface);
 
   // Accessors for managed attributes.
