@@ -17,31 +17,28 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*!
- * \brief TaiOpticsDataSource::Make method \return constructed
- * TaiOpticsDataSource object
- *
- * \note Ownership is transferred to the caller
+/*
+ * Creates a new TAI optics data source.
  */
 ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-TaiOpticsDataSource::Make(uint64 id,
-                          const PhalOpticalModuleConfig::Port& config,
+TaiOpticsDataSource::Make(const PhalOpticalModuleConfig::Port& config,
                           TaiInterface* tai_interface) {
   ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
                                    config.cache_policy().type(),
                                    config.cache_policy().timed_value()));
+  std::shared_ptr<TaiOpticsDataSource> datasource(
+          new TaiOpticsDataSource(config.port(), config.vendor_specific_id(), cache,
+                                  tai_interface));
 
-  auto optics_datasource = std::shared_ptr<TaiOpticsDataSource>(
-          new TaiOpticsDataSource(id, cache, tai_interface));
-
-  return optics_datasource;
+  datasource->UpdateValuesUnsafelyWithoutCacheOrLock();
+  return datasource;
 }
 
-TaiOpticsDataSource::TaiOpticsDataSource(uint64 id, CachePolicy* cache_policy,
+TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid, CachePolicy* cache_policy,
                                          TaiInterface* tai_interface)
-    : id_(id), DataSource(cache_policy), tai_interface_(tai_interface) {
+    : DataSource(cache_policy), oid_(oid), tai_interface_(tai_interface) {
   // These values do not change during the lifetime of the data source.
-
+  id_.AssignValue(id);
   tx_laser_frequency_.AddSetter(
       [id, tai_interface](uint64 laser_frequency) -> ::util::Status {
         return tai_interface->SetTxLaserFrequency(id, laser_frequency);
@@ -56,27 +53,25 @@ TaiOpticsDataSource::TaiOpticsDataSource(uint64 id, CachePolicy* cache_policy,
       });
 }
 
-/*!
- * \brief TaiOpticsDataSource::UpdateValues method updates attributes with
- * fresh values from TAI.
- * \return ::util::OkStatus if success
+/*
+ * Updates attributes with fresh values from TAI.
  */
 ::util::Status TaiOpticsDataSource::UpdateValues() {
   // Update attributes with fresh values from Tai.
   ASSIGN_OR_RETURN(auto tx_laser_freq,
-                   tai_interface_->GetTxLaserFrequency(id_));
+                   tai_interface_->GetTxLaserFrequency(oid_));
   tx_laser_frequency_.AssignValue(tx_laser_freq);
   ASSIGN_OR_RETURN(auto op_mode,
-                   tai_interface_->GetModulationFormats(id_));
+                   tai_interface_->GetModulationFormats(oid_));
   operational_mode_.AssignValue(op_mode);
   ASSIGN_OR_RETURN(auto current_output_power,
-                   tai_interface_->GetCurrentOutputPower(id_));
+                   tai_interface_->GetCurrentOutputPower(oid_));
   current_output_power_.AssignValue(current_output_power);
   ASSIGN_OR_RETURN(auto current_input_power,
-                   tai_interface_->GetCurrentInputPower(id_));
+                   tai_interface_->GetCurrentInputPower(oid_));
   current_input_power_.AssignValue(current_input_power);
   ASSIGN_OR_RETURN(auto target_output_power,
-                   tai_interface_->GetTargetOutputPower(id_));
+                   tai_interface_->GetTargetOutputPower(oid_));
   target_output_power_.AssignValue(target_output_power);
   return ::util::OkStatus();
 }

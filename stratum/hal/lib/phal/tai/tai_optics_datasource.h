@@ -23,31 +23,27 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*!
- * \brief TaiOpticsDataSource class updates Database<->TAI with fresh values
+/*
+ * TaiOpticsDataSource class updates Database<->TAI with fresh values.
  */
 class TaiOpticsDataSource final : public DataSource {
  public:
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-      Make(uint64 id, const PhalOpticalModuleConfig::Port& config,
+      Make(const PhalOpticalModuleConfig::Port& config,
            TaiInterface* tai_interface);
 
   // Accessors for managed attributes.
+  ManagedAttribute* GetId() { return &id_; }
   ManagedAttribute* GetTxLaserFrequency() { return &tx_laser_frequency_; }
   ManagedAttribute* GetOperationalMode() { return &operational_mode_; }
   ManagedAttribute* GetTargetOutputPower() { return &target_output_power_; }
   ManagedAttribute* GetCurrentOutputPower() { return &current_output_power_; }
   ManagedAttribute* GetCurrentInputPower() { return &current_input_power_; }
 
-  // Setter functions.
-  ::util::Status SetTxLaserFrequency(uint64 tx_laser_frequency);
-  ::util::Status SetOperationalMode(uint64 modulation_format);
-  ::util::Status SetTargetOutputPower(double target_output_power);
-
  private:
-  uint64 id_;
+  uint64 oid_;
   // Private constructor.
-  TaiOpticsDataSource(uint64 id, CachePolicy* cache_policy,
+  TaiOpticsDataSource(int32 id, uint64 oid, CachePolicy* cache_policy,
                       TaiInterface* tai_interface);
 
   ::util::Status UpdateValues() override;
@@ -56,6 +52,7 @@ class TaiOpticsDataSource final : public DataSource {
   TaiInterface* tai_interface_;
 
   // Managed attributes.
+  TypedAttribute<int32> id_{this};
   TypedAttribute<uint64> tx_laser_frequency_{this};
   TypedAttribute<uint64> operational_mode_{this};
   TypedAttribute<double> target_output_power_{this};

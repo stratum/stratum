@@ -35,9 +35,7 @@ class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
   explicit TaiSwitchConfigurator(TaiInterface* tai_interface) :
       tai_interface_(tai_interface) { }
 
-  ::util::Status AddOpticalModule(MutableAttributeGroup* mutable_card,
-                                  PhalOpticalModuleConfig* config);
-  ::util::Status AddOpticalPort(MutableAttributeGroup* mutable_port_group,
+  ::util::Status AddOpticalPort(MutableAttributeGroup* mutable_card,
                                 const PhalOpticalModuleConfig::Port& config);
 
   // Default cache policy config

@@ -62,66 +62,55 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
   auto mutable_root = root->AcquireMutable();
 
   // Add optical modules
-  ASSIGN_OR_RETURN(auto optical_module_group,
-                   mutable_root->AddRepeatedChildGroup("optical_modules"));
-
-  auto mutable_optical_module_group = optical_module_group->AcquireMutable();
   for (auto module : *phal_config->mutable_optical_modules()) {
     if (!module.has_cache_policy()) {
       module.set_allocated_cache_policy(
           new CachePolicyConfig(phal_config->cache_policy()));
     }
-    RETURN_IF_ERROR(
-        AddOpticalModule(mutable_optical_module_group.get(), &module));
-  }
+    ASSIGN_OR_RETURN(auto optical_module_group,
+                     mutable_root->AddRepeatedChildGroup("optical_modules"));
+    auto mutable_optical_module_group = optical_module_group->AcquireMutable();
+    RETURN_IF_ERROR(mutable_optical_module_group->AddAttribute("id",
+                    FixedDataSource<int32>::Make(
+                        module.slot())->GetAttribute()));
 
-  return ::util::OkStatus();
-}
-
-::util::Status TaiSwitchConfigurator::AddOpticalModule(
-    MutableAttributeGroup* mutable_module_group,
-    PhalOpticalModuleConfig* config) {
-  RETURN_IF_ERROR(mutable_module_group->AddAttribute("id",
-                  FixedDataSource<uint64>::Make(
-                      config->vendor_specific_id())->GetAttribute()));
-  for (auto port : *config->mutable_ports()) {
-    if (!port.has_cache_policy()) {
-      port.set_allocated_cache_policy(
-          new CachePolicyConfig(config->cache_policy()));
+    for (auto port : *module.mutable_ports()) {
+      if (!port.has_cache_policy()) {
+        port.set_allocated_cache_policy(
+            new CachePolicyConfig(module.cache_policy()));
+      }
+      RETURN_IF_ERROR(
+          AddOpticalPort(mutable_optical_module_group.get(), port));
     }
-    ASSIGN_OR_RETURN(auto optical_port_group,
-                     mutable_module_group->AddChildGroup("ports"));
-    auto mutable_port_group = optical_port_group->AcquireMutable();
-    RETURN_IF_ERROR(AddOpticalPort(mutable_port_group.get(), port));
   }
-
   return ::util::OkStatus();
 }
 
 ::util::Status TaiSwitchConfigurator::AddOpticalPort(
-    MutableAttributeGroup* mutable_port_group,
-    const PhalOpticalModuleConfig::Port& config) {
+    MutableAttributeGroup* mutable_module_group,
+    const PhalOpticalModuleConfig::Port& port_config) {
   // To add optics proper data sources for network interfaces from a module
-  // * frequency;
-  // * target_output_power;
-  // * operational_mode;
-  // * output_power;
+  // * frequency.
+  // * target_output_power.
+  // * operational_mode.
+  // * output_power.
   // * input_power.
+  ASSIGN_OR_RETURN(auto optical_port,
+                   mutable_module_group->AddRepeatedChildGroup("ports"));
+  auto mutable_optical_port = optical_port->AcquireMutable();
   ASSIGN_OR_RETURN(std::shared_ptr<TaiOpticsDataSource> datasource,
-                   TaiOpticsDataSource::Make(config.vendor_specific_id(),
-                                             config, tai_interface_));
-  RETURN_IF_ERROR(mutable_port_group->AddAttribute("id",
-                  FixedDataSource<uint64>::Make(
-                      config.vendor_specific_id())->GetAttribute()));
-  RETURN_IF_ERROR(mutable_port_group->AddAttribute("frequency",
+                   TaiOpticsDataSource::Make(port_config, tai_interface_));
+  RETURN_IF_ERROR(mutable_optical_port->AddAttribute("id",
+                  datasource->GetId()));
+  RETURN_IF_ERROR(mutable_optical_port->AddAttribute("frequency",
                   datasource->GetTxLaserFrequency()));
-  RETURN_IF_ERROR(mutable_port_group->AddAttribute("target_output_power",
+  RETURN_IF_ERROR(mutable_optical_port->AddAttribute("target_output_power",
                   datasource->GetTargetOutputPower()));
-  RETURN_IF_ERROR(mutable_port_group->AddAttribute("operational_mode",
+  RETURN_IF_ERROR(mutable_optical_port->AddAttribute("operational_mode",
                   datasource->GetOperationalMode()));
-  RETURN_IF_ERROR(mutable_port_group->AddAttribute("output_power",
+  RETURN_IF_ERROR(mutable_optical_port->AddAttribute("output_power",
                   datasource->GetCurrentOutputPower()));
-  RETURN_IF_ERROR(mutable_port_group->AddAttribute("input_power",
+  RETURN_IF_ERROR(mutable_optical_port->AddAttribute("input_power",
                   datasource->GetCurrentInputPower()));
   return ::util::OkStatus();
 }
