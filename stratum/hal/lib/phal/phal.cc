@@ -25,6 +25,7 @@
 
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
+#include "stratum/hal/lib/phal/tai/taish_client.h"
 #include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
 #endif  // defined(WITH_TAI)
 
@@ -83,7 +84,8 @@ Phal* Phal::CreateSingleton() {
       auto* tai_interface = tai::TaishClient::CreateSingleton();
       auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_interface);
       tai_phal->PushChassisConfig(config);
-      ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
+      ASSIGN_OR_RETURN(auto configurator,
+                       tai::TaiSwitchConfigurator::Make(tai_interface));
       configurators.push_back(std::move(configurator));
     }
 #endif  // defined(WITH_TAI)
