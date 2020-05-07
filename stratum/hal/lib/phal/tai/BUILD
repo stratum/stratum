@@ -25,9 +25,9 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "taish_wrapper",
-    srcs = ["taish_wrapper.cc"],
-    hdrs = ["taish_wrapper.h"],
+    name = "taish_client",
+    srcs = ["taish_client.cc"],
+    hdrs = ["taish_client.h"],
     deps = [
         ":tai_interface",
         "//stratum/glue:integral_types",
@@ -62,6 +62,7 @@ stratum_cc_library(
     deps = [
         ":tai_interface",
         ":tai_switch_configurator",
+        ":taish_client",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:common_cc_proto",
