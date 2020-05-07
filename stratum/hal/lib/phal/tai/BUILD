@@ -32,6 +32,7 @@ stratum_cc_library(
         ":tai_interface",
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
+        "//stratum/glue/gtl:map_util",
         "//stratum/lib:macros",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_telecominfraproject_oopt_tai_taish//:taish_cc_grpc",

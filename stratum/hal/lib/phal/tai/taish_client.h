@@ -31,6 +31,11 @@ const std::string kNetIfAttrOutputPower =
 const std::string kNetIfAttrModulationFormat =
     "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT";
 
+// FIXME(Yi): this map is based on
+const absl::flat_hash_map<std::string, uint64> kModulationFormatIds = {
+    {"dp-qpsk", 1}, {"dp-16-qam", 2}, {"dp-8-qam", 3}
+};
+
 class TaishClient : public TaiInterface {
  public:
   util::Status Initialize() override EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
@@ -44,18 +49,18 @@ class TaishClient : public TaiInterface {
   // TODO(Yi): Complete functions for Module and Host Interface
 
   // Functions for Network Interface.
-  util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) override;
-  util::StatusOr<double> GetCurrentInputPower(const uint64 netif_id) override;
-  util::StatusOr<double> GetCurrentOutputPower(const uint64 netif_id) override;
-  util::StatusOr<double> GetTargetOutputPower(const uint64 netif_id) override;
-  util::StatusOr<uint64> GetModulationFormats(const uint64 netif_id) override;
+  util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<double> GetCurrentInputPower(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<double> GetCurrentOutputPower(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<double> GetTargetOutputPower(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<uint64> GetModulationFormats(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
   util::Status SetTargetOutputPower(const uint64 netif_id,
-                                    const double power) override;
+                                    const double power) override LOCKS_EXCLUDED(init_lock_);
   util::Status SetModulationsFormats(const uint64 netif_id,
-                                     const uint64 mod_format) override;
+                                     const uint64 mod_format) override LOCKS_EXCLUDED(init_lock_);
   util::Status SetTxLaserFrequency(const uint64 netif_id,
-                                   const uint64 frequency) override;
-  virtual util::Status Shutdown() override;
+                                   const uint64 frequency) override LOCKS_EXCLUDED(init_lock_);
+  virtual util::Status Shutdown() override LOCKS_EXCLUDED(init_lock_);
 
   // Gets the singleton instance.
   static TaishClient* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
@@ -63,11 +68,14 @@ class TaishClient : public TaiInterface {
  private:
   // Gets an attribute from a TAI object.
   util::StatusOr<std::string> GetAttribute(uint64 obj_id, uint64 attr_id)
-      EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
+      SHARED_LOCKS_REQUIRED(init_lock_);
 
   // Sets an attribute to a TAI object.
   util::Status SetAttribute(uint64 obj_id, uint64 attr_id, std::string value)
-      EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
+      SHARED_LOCKS_REQUIRED(init_lock_);
+
+  util::StatusOr<uint64> GetModulationFormatIds(const std::string& modulation_format);
+  util::StatusOr<std::string> GetModulationFormatName(const uint64 id);
 
   static absl::Mutex init_lock_;
   static TaishClient* singleton_ GUARDED_BY(init_lock_);
