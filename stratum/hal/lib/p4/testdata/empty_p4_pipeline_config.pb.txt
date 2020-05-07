@@ -1,1 +1,4 @@
+# Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 # This file is intentionally left blank to test a P4TableMap with no data.

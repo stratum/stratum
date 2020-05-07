@@ -1,3 +1,9 @@
+<!--
+Copyright 2019 Google LLC
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # gNMI/OpenConfig Contract Definition Language tools
 
 ## Background
