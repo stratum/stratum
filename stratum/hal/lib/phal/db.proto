@@ -103,12 +103,14 @@ message ThermalGroup {
 
 message OpticalModule {
   message Port {
+    int32 id = 1;
     uint64 frequency = 2;           // Measured in Hz.
     double input_power = 3;         // Measured in dBm.
     double output_power = 4;        // Measured in dBm.
     double target_output_power = 5; // Measured in dBm.
     uint64 operational_mode = 6;
   }
+  int32 id = 1;
   repeated Port ports = 2;
 }
 
