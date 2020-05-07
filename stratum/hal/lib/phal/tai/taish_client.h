@@ -44,7 +44,7 @@ const std::string kNetIfAttrOutputPower =
 const std::string kNetIfAttrModulationFormat =
     "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT";
 
-class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
+class TaishClient : public TaiInterface {
  public:
   util::Status Initialize() override EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
   util::StatusOr<std::vector<uint64>> GetModuleIds() override;
@@ -71,7 +71,7 @@ class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
   virtual util::Status Shutdown() override;
 
   // Gets the singleton instance.
-  static TaishWrapper* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
+  static TaishClient* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
 
  private:
   // Gets an attribute from a TAI object.
@@ -83,7 +83,7 @@ class TaishWrapper : public stratum::hal::phal::tai::TaiInterface {
       EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
 
   static absl::Mutex init_lock_;
-  static TaishWrapper* singleton_ GUARDED_BY(init_lock_);
+  static TaishClient* singleton_ GUARDED_BY(init_lock_);
   std::unique_ptr<taish::TAI::Stub> taish_stub_;
   bool initialized_ GUARDED_BY(init_lock_);
 

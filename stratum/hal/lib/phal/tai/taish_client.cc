@@ -30,10 +30,10 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-TaishWrapper* TaishWrapper::singleton_ = nullptr;
-ABSL_CONST_INIT absl::Mutex TaishWrapper::init_lock_(absl::kConstInit);
+TaishClient* TaishClient::singleton_ = nullptr;
+ABSL_CONST_INIT absl::Mutex TaishClient::init_lock_(absl::kConstInit);
 
-util::Status TaishWrapper::Initialize() {
+util::Status TaishClient::Initialize() {
   CHECK_RETURN_IF_FALSE(!initialized_);
   CHECK_RETURN_IF_FALSE(!FLAGS_taish_addr.empty());
   auto channel = ::grpc::CreateChannel(FLAGS_taish_addr,
@@ -96,7 +96,7 @@ util::Status TaishWrapper::Initialize() {
   return util::OkStatus();
 }
 
-util::StatusOr<std::vector<uint64>> TaishWrapper::GetModuleIds() {
+util::StatusOr<std::vector<uint64>> TaishClient::GetModuleIds() {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   std::vector<uint64> oids;
@@ -107,7 +107,7 @@ util::StatusOr<std::vector<uint64>> TaishWrapper::GetModuleIds() {
 }
 
 util::StatusOr<std::vector<uint64>>
-    TaishWrapper::GetNetworkInterfaceIds(const uint64 module_id) {
+    TaishClient::GetNetworkInterfaceIds(const uint64 module_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   auto it = std::find_if(
@@ -124,7 +124,7 @@ util::StatusOr<std::vector<uint64>>
 }
 
 util::StatusOr<std::vector<uint64>>
-    TaishWrapper::GetHostInterfaceIds(const uint64 module_id) {
+    TaishClient::GetHostInterfaceIds(const uint64 module_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   auto it = std::find_if(
@@ -141,7 +141,7 @@ util::StatusOr<std::vector<uint64>>
 }
 
 util::StatusOr<uint64>
-    TaishWrapper::GetTxLaserFrequency(const uint64 netif_id) {
+    TaishClient::GetTxLaserFrequency(const uint64 netif_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(
@@ -152,7 +152,7 @@ util::StatusOr<uint64>
 }
 
 util::StatusOr<double>
-    TaishWrapper::GetCurrentInputPower(const uint64 netif_id) {
+    TaishClient::GetCurrentInputPower(const uint64 netif_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(
@@ -163,7 +163,7 @@ util::StatusOr<double>
 }
 
 util::StatusOr<double>
-    TaishWrapper::GetCurrentOutputPower(const uint64 netif_id) {
+    TaishClient::GetCurrentOutputPower(const uint64 netif_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(
@@ -174,7 +174,7 @@ util::StatusOr<double>
 }
 
 util::StatusOr<double>
-    TaishWrapper::GetTargetOutputPower(const uint64 netif_id) {
+    TaishClient::GetTargetOutputPower(const uint64 netif_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(
@@ -185,7 +185,7 @@ util::StatusOr<double>
 }
 
 util::StatusOr<uint64>
-    TaishWrapper::GetModulationFormats(const uint64 netif_id) {
+    TaishClient::GetModulationFormats(const uint64 netif_id) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(
@@ -195,7 +195,7 @@ util::StatusOr<uint64>
   return std::stoull(attr_str_val);
 }
 
-util::Status TaishWrapper::SetTargetOutputPower(const uint64 netif_id,
+util::Status TaishClient::SetTargetOutputPower(const uint64 netif_id,
                                                 const double power) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
@@ -203,7 +203,7 @@ util::Status TaishWrapper::SetTargetOutputPower(const uint64 netif_id,
                       std::to_string(power));
 }
 
-util::Status TaishWrapper::SetModulationsFormats(const uint64 netif_id,
+util::Status TaishClient::SetModulationsFormats(const uint64 netif_id,
                                                  const uint64 mod_format) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
@@ -211,7 +211,7 @@ util::Status TaishWrapper::SetModulationsFormats(const uint64 netif_id,
                       std::to_string(mod_format));
 }
 
-util::Status TaishWrapper::SetTxLaserFrequency(const uint64 netif_id,
+util::Status TaishClient::SetTxLaserFrequency(const uint64 netif_id,
                                                const uint64 frequency) {
   absl::WriterMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
@@ -219,13 +219,13 @@ util::Status TaishWrapper::SetTxLaserFrequency(const uint64 netif_id,
                       std::to_string(frequency));
 }
 
-util::Status TaishWrapper::Shutdown() {
+util::Status TaishClient::Shutdown() {
   absl::WriterMutexLock l(&init_lock_);
   initialized_ = false;
   return util::OkStatus();
 }
 
-util::StatusOr<std::string> TaishWrapper::GetAttribute(uint64 obj_id,
+util::StatusOr<std::string> TaishClient::GetAttribute(uint64 obj_id,
                                                        uint64 attr_id) {
   grpc::ClientContext context;
   taish::GetAttributeRequest request;
@@ -242,7 +242,7 @@ util::StatusOr<std::string> TaishWrapper::GetAttribute(uint64 obj_id,
   return response.attribute().value();
 }
 
-util::Status TaishWrapper::SetAttribute(uint64 obj_id, uint64 attr_id,
+util::Status TaishClient::SetAttribute(uint64 obj_id, uint64 attr_id,
                                         std::string value) {
   grpc::ClientContext context;
   taish::SetAttributeRequest request;
@@ -260,12 +260,12 @@ util::Status TaishWrapper::SetAttribute(uint64 obj_id, uint64 attr_id,
   return util::OkStatus();
 }
 
-TaishWrapper* TaishWrapper::CreateSingleton() {
+TaishClient* TaishClient::CreateSingleton() {
   absl::WriterMutexLock l(&init_lock_);
   if (!singleton_) {
-    singleton_ = new TaishWrapper();
+    singleton_ = new TaishClient();
     if (!singleton_->Initialize().ok()) {
-      LOG(ERROR) << "Failed to initialize TaishWrapper";
+      LOG(ERROR) << "Failed to initialize TaishClient";
       delete singleton_;
       return nullptr;
     }

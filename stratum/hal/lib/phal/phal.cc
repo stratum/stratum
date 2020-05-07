@@ -91,7 +91,7 @@ Phal* Phal::CreateSingleton() {
       // TODO(Yi): now we only have one implementation of TAI wrapper,
       // should be able to let user choose which version of TAI wrapper
       // based on bazel flags.
-      auto* tai_interface = tai::TaishWrapper::CreateSingleton();
+      auto* tai_interface = tai::TaishClient::CreateSingleton();
       auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_interface);
       tai_phal->PushChassisConfig(config);
       ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
