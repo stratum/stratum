@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 # Set up the huge page
 echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf

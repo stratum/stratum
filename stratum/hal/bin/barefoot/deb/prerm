@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
 # Stop and disable Stratum service
 systemctl stop stratum_bf.service
 systemctl disable stratum_bf.service
