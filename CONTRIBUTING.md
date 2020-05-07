@@ -1,3 +1,8 @@
+<!--
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # How to Contribute
 
 We'd love to accept your patches and contributions to this project. There are
@@ -19,14 +24,14 @@ again.
 
 ### General Information
 
-Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/). Use this document as a guide when submitting code.
+Stratum follows [Google's Engineering Practices](https://google.github.io/eng-practices/review/developer/) and [C++ Style Guide](https://google.github.io/styleguide/cppguide.html). Use these documents as a guide when submitting code.
 
 Some additional points:
- 
- - Submit your changes early and often. GitHub has (Draft PRs)[https://github.blog/2019-02-14-introducing-draft-pull-requests/] that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
- 
+
+ - Submit your changes early and often. GitHub has [Draft PRs](https://github.blog/2019-02-14-introducing-draft-pull-requests/) that allow you to share your code with others during development. Input and corrections early in the process prevent huge changes later.
+
  - Stratum uses a [squash and rebase](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-request-merges#squash-and-merge-your-pull-request-commits) model. You do **not** have to do this by hand! GitHub will guide you through it, if possible.
- 
+
  - Consider opening a separate issue describing the technical details there and [link it to the PR](https://help.github.com/en/github/managing-your-work-on-github/closing-issues-using-keywords). This keeps code review and design discussions clean.
 
 ### Steps to Follow
@@ -37,7 +42,7 @@ Some additional points:
 
 3. Pass all unit tests locally. Create new tests for new code and **add the targets to the [build-targets.txt](.circleci/build-targets.txt) and [test-targets.txt](.circleci/test-targets.txt) files** in the same PR, so CI can pick them up! Execute the following command in the Stratum root directory to run all currently enabled tests: `xargs -a .circleci/test-targets.txt bazel test`
 
-4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container).
+4. Check code style compliance with `cpplint` and `clang-format` (pre-installed in development docker container). If you're editing Bazel files, consider [Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier).
 
 5. Create a [Pull Request](https://github.com/stratum/stratum/compare). Consider [allowing maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork) to make changes if you want direct assistance from maintainers.
 

@@ -1,3 +1,6 @@
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
 onos_url := http://localhost:8181/onos
 onos_post := curl -sSL --user onos:rocks --noproxy localhost -X POST -H 'Content-Type:application/json'
 
@@ -26,6 +29,9 @@ mn-cli:
 
 mn-log:
 	docker-compose logs -f mininet
+
+mn-host:
+	docker-compose exec mininet m $@
 
 netcfg:
 	${onos_post} ${onos_url}/v1/network/configuration/ -d@./topo/netcfg.json

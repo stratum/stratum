@@ -1,17 +1,5 @@
-/* Copyright 2018-present Barefoot Networks, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2018-present Barefoot Networks, Inc.
+// SPDX-License-Identifier: Apache-2.0
 
 #include "bm/bm_sim/options_parse.h"
 #include "bm/simple_switch/runner.h"
@@ -74,7 +62,7 @@ void ParseInterfaces(int argc, char* argv[], bm::OptionsParser& parser) {
   }
 }
 
-int Main(int argc, char* argv[]) {
+::util::Status Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
@@ -134,10 +122,8 @@ int Main(int argc, char* argv[]) {
   // blocks until a P4 pipeline is set
   {
     int status = runner->init_and_start(parser);
-    if (status != 0) {
-      LOG(ERROR) << "Error when starting bmv2 simple_switch";
-      return status;
-    }
+    CHECK_RETURN_IF_FALSE(status == 0)
+        << "Error when starting bmv2 simple_switch, status: " << status;
   }
 
   int unit(0);
@@ -161,15 +147,14 @@ int Main(int argc, char* argv[]) {
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
-  auto credentials_manager = CredentialsManager::CreateInstance();
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_SIM,
                                    pi_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  if (!hal) {
-    LOG(ERROR) << "Failed to create the Stratum Hal instance.";
-    return -1;
-  }
+
+  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
 
   // Setup and start serving RPCs.
   // TODO(antonin): currently this fails because persistent_config_dir flag is
@@ -181,14 +166,10 @@ int Main(int argc, char* argv[]) {
         << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
-  status = hal->Run();  // blocking
-  if (!status.ok()) {
-    LOG(ERROR) << "Error when running Stratum HAL: " << status.error_message();
-    return -1;
-  }
+  RETURN_IF_ERROR(hal->Run());  // blocking
 
   LOG(INFO) << "See you later!";
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace bmv2
@@ -197,5 +178,5 @@ int Main(int argc, char* argv[]) {
 
 int
 main(int argc, char* argv[]) {
-  return stratum::hal::bmv2::Main(argc, argv);
+  return stratum::hal::bmv2::Main(argc, argv).error_code();
 }

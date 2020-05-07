@@ -1,3 +1,9 @@
+<!--
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 Dummy Stratum switch (stratum_dummy)
 ====
 
@@ -27,7 +33,6 @@ bazel build //stratum/hal/bin/dummy:stratum_dummy --define phal_with_onlp=false
 bazel run //stratum/hal/bin/dummy:stratum_dummy \
   --define phal_with_onlp=false \
   -- \
-  --external_stratum_urls=0.0.0.0:28000 \
   --persistent_config_dir=/tmp/ \
   --chassis_config_file=$(pwd)/stratum/hal/bin/dummy/chassis_config \
   --forwarding_pipeline_configs_file=/tmp/dummy_pipeline_cfg

@@ -1,17 +1,6 @@
 // Copyright 2018 Google LLC
 // Copyright 2018-present Open Networking Foundation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 
 #include <memory>
@@ -82,7 +71,7 @@ struct PerNodeInstances {
   }
 };
 
-int Main(int argc, char** argv) {
+::util::Status Main(int argc, char** argv) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
@@ -114,32 +103,26 @@ int Main(int argc, char** argv) {
       phal, bcm_chassis_manager.get(), unit_to_bcm_node);
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
-  auto credentials_manager = CredentialsManager::CreateInstance();
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(OPERATION_MODE_STANDALONE, bcm_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-  CHECK(hal != nullptr) << "Failed to create the Stratum Hal instance.";
+  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
 
   // Sanity check, setup and start serving RPCs.
-  ::util::Status status = hal->SanityCheck();
-  if (!status.ok()) {
-    LOG(ERROR) << "HAL sanity check failed: " << status.error_message();
-    return -1;
-  }
-  status = hal->Setup();
+  RETURN_IF_ERROR(hal->SanityCheck());
+
+  auto status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
         << "Error when setting up Stratum HAL (but we will continue running): "
         << status.error_message();
   }
-  status = hal->Run();  // blocking
-  if (!status.ok()) {
-    LOG(ERROR) << "Error when running Stratum HAL: " << status.error_message();
-    return -1;
-  }
+  RETURN_IF_ERROR(hal->Run());  // blocking
 
   LOG(INFO) << "See you later!";
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace bcm
@@ -147,5 +130,5 @@ int Main(int argc, char** argv) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  return stratum::hal::bcm::Main(argc, argv);
+  return stratum::hal::bcm::Main(argc, argv).error_code();
 }

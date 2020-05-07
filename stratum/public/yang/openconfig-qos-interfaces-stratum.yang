@@ -1,3 +1,5 @@
+// Copyright 2019-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
 module openconfig-qos-interfaces-stratum {
 
   yang-version "1";
@@ -100,7 +102,7 @@ module openconfig-qos-interfaces-stratum {
       description "Stratum does not support qos/queues/queue/config/queue-name";
       deviate not-supported;
   }
-  
+
   deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:config/oc-qos:queue-type" {
       description "Stratum does not support qos/queues/queue/config/queue-type";
       deviate not-supported;
@@ -110,7 +112,7 @@ module openconfig-qos-interfaces-stratum {
       description "Stratum does not support qos/queues/queue/red";
       deviate not-supported;
   }
-  
+
   deviation "/oc-qos:qos/oc-qos:queues/oc-qos:queue/oc-qos:wred" {
       description "Stratum does not support qos/queues/queue/wred";
       deviate not-supported;

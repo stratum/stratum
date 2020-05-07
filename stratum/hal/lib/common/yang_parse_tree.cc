@@ -1,17 +1,6 @@
 // Copyright 2018 Google LLC
 // Copyright 2018-present Open Networking Foundation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/hal/lib/common/yang_parse_tree.h"
 
@@ -146,6 +135,18 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
 ::util::Status YangParseTree::ProcessPushedConfig(
     const ConfigHasBeenPushedEvent& change) {
   absl::WriterMutexLock r(&root_access_lock_);
+  // Make sure we clear the tree before we add new nodes.
+  root_.children_.clear();
+
+  // Add the minimum nodes:
+  //   /interfaces/interface[name=*]/state/ifindex
+  //   /interfaces/interface[name=*]/state/name
+  //   /interfaces/interface/...
+  //   /
+  // The rest of nodes will be added once the config is pushed.
+  AddSubtreeAllInterfaces();
+  AddSubtreeAllComponents();
+  AddRoot();
 
   // Translation from node ID to an object describing the node.
   absl::flat_hash_map<uint64, const Node*> node_id_to_node;
@@ -214,7 +215,6 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
     AddSubtreeNode(node);
     node_names.insert(node.name());
   }
-  AddRoot();
   return ::util::OkStatus();
 }
 

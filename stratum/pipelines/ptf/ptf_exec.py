@@ -1,19 +1,6 @@
 #!/usr/bin/env python2
-#
 # Copyright 2019 NoviFlow Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 import sys
@@ -56,7 +43,7 @@ def setup_and_launch_ptf_runner(device, pipeline_name, protobuf_dir, ptf_dir, sc
     if skip_bmv2_start == True:
         SKIP_BMV2_START = " --skip-bmv2-start"
 
-    # Make ptf python script executable and setup paths ./google/protobuf 
+    # Make ptf python script executable and setup paths ./google/protobuf
     # and ./google/rpc as Python searchable paths in ./py_ptf directory.
 
     ptf_setup_cmd = \

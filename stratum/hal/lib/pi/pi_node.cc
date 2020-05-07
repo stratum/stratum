@@ -1,31 +1,19 @@
-/* Copyright 2018-present Barefoot Networks, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2018-present Barefoot Networks, Inc.
+// SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/hal/lib/pi/pi_node.h"
 
 #include "PI/frontends/proto/device_mgr.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
+#include "google/rpc/code.pb.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
-#include "google/rpc/code.pb.h"
 
 using ::pi::fe::proto::DeviceMgr;
 using Code = ::google::rpc::Code;
@@ -54,8 +42,7 @@ namespace {
     ::p4::v1::Error error;
     detail.UnpackTo(&error);
     results->emplace_back(::util::Status::canonical_space(),
-                          error.canonical_code(),
-                          error.message());
+                          error.canonical_code(), error.message());
   }
   return status;
 }
@@ -69,8 +56,8 @@ namespace {
 
 }  // namespace
 
-void StreamMessageCb(
-    uint64_t node_id, ::p4::v1::StreamMessageResponse *msg, void* cookie) {
+void StreamMessageCb(uint64_t node_id, ::p4::v1::StreamMessageResponse* msg,
+                     void* cookie) {
   auto* pi_node = static_cast<PINode*>(cookie);
   if (!msg->has_packet()) {
     VLOG(1) << "Dropping P4Runtime stream message in node " << node_id
@@ -81,8 +68,10 @@ void StreamMessageCb(
 }
 
 PINode::PINode(::pi::fe::proto::DeviceMgr* device_mgr, int unit)
-    : device_mgr_(device_mgr), unit_(unit), node_id_(0),
-      pipeline_initialized_(false) {}
+    : device_mgr_(device_mgr),
+      unit_(unit),
+      pipeline_initialized_(false),
+      node_id_(0) {}
 
 PINode::~PINode() = default;
 
@@ -108,8 +97,8 @@ PINode::~PINode() = default;
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT,
       config);
   // This is required by DeviceMgr in case the device is re-assigned internally
-  device_mgr_->stream_message_response_register_cb(
-      StreamMessageCb, static_cast<void*>(this));
+  device_mgr_->stream_message_response_register_cb(StreamMessageCb,
+                                                   static_cast<void*>(this));
   pipeline_initialized_ = (status.code() == Code::OK);
   return toUtilStatus(status);
 }
@@ -121,8 +110,8 @@ PINode::~PINode() = default;
       ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE,
       config);
   // This is required by DeviceMgr in case the device is re-assigned internally
-  device_mgr_->stream_message_response_register_cb(
-      StreamMessageCb, static_cast<void*>(this));
+  device_mgr_->stream_message_response_register_cb(StreamMessageCb,
+                                                   static_cast<void*>(this));
   return toUtilStatus(status);
 }
 
@@ -138,8 +127,7 @@ PINode::~PINode() = default;
 ::util::Status PINode::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   auto status = device_mgr_->pipeline_config_set(
-      ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY,
-      config);
+      ::p4::v1::SetForwardingPipelineConfigRequest_Action_VERIFY, config);
   return toUtilStatus(status);
 }
 
@@ -149,13 +137,9 @@ PINode::~PINode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status PINode::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status PINode::Freeze() { return ::util::OkStatus(); }
 
-::util::Status PINode::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status PINode::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status PINode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
