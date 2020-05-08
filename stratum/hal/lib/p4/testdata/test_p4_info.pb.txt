@@ -1,3 +1,6 @@
+# Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 # This is a limited set of P4Info to support P4TableMapper unit tests.
 # It goes with the table mapping data in test_p4_pipeline_config.pb.txt.
 
