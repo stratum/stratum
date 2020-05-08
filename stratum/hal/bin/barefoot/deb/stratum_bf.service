@@ -1,0 +1,21 @@
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+[Unit]
+Description=Stratum service
+Documentation=https://www.opennetworking.org/stratum/
+ConditionPathExists=/usr/bin/stratum_bf
+ConditionPathExists=/usr/bin/stratum-entrypoint
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/bin/stratum-entrypoint
+Restart=on-failure
+WorkingDirectory=/var/run/stratum
+SyslogIdentifier=stratum-bf
+RuntimeDirectory=stratum
+EnvironmentFile=/etc/stratum/stratum_bf.env
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

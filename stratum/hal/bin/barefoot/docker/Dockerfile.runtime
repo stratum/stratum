@@ -24,29 +24,14 @@ ENV KERNEL_HEADERS_PATH=/usr/src/kernel-headers
 ENV KDRV_DIR=/bf-sde/pkgsrc/bf-drivers/kdrv/bf_kdrv
 RUN /build-kdrv.sh
 
-# Without ONLP
-RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
+ENV OUTPUT_BASE /output
+ARG WITH_ONLP=true
+
+# Stratum package
+RUN bazel build //stratum/hal/bin/barefoot:stratum_bf_deb \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
-    --define phal_with_onlp=false && \
-    cp bazel-bin/stratum/hal/bin/barefoot/stratum_bf /tmp/stratum_bf_no_onlp
-
-# With ONLP
-RUN bazel build //stratum/hal/bin/barefoot:stratum_bf \
-    --define sde_ver=$(cat $SDE_INSTALL/share/VERSION)
-
-ENV STRATUM_BF_BASE stratum/hal/bin/barefoot
-RUN mkdir -p $OUTPUT_BASE/bin && \
-    cp bazel-bin/$STRATUM_BF_BASE/stratum_bf $OUTPUT_BASE/bin/ && \
-    cp /tmp/stratum_bf_no_onlp $OUTPUT_BASE/bin/ && \
-    cp $STRATUM_BF_BASE/platforms/*.json $OUTPUT_BASE/share/stratum/ && \
-    cp $STRATUM_BF_BASE/docker/stratum-entrypoint.sh /output/ && \
-    cp $STRATUM_BF_BASE/docker/stratum.flags $OUTPUT_BASE/share/stratum/ && \
-    cp $STRATUM_BF_BASE/*.conf $OUTPUT_BASE/share/stratum/ && \
-    touch $OUTPUT_BASE/share/stratum/phal_config.pb.txt && \
-    cp $STRATUM_BF_BASE/chassis_config.pb.txt $OUTPUT_BASE/share/stratum/ && \
-    mkdir -p /output/stratum/hal/lib/common/ && \
-    cp stratum/hal/lib/common/gnmi_caps.pb.txt /output/stratum/hal/lib/common/
-    # TODO(Yi Tseng): Remove two lines above when we are able to generate cap response automatically
+    --define phal_with_onlp=$WITH_ONLP
+RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb $OUTPUT_BASE
 
 FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
@@ -61,11 +46,11 @@ RUN install_packages \
     libjudydebian1 \
     libboost-thread1.62.0 && \
     ldconfig && \
-    mkdir /stratum_configs && \
-    mkdir /stratum_logs
+    mkdir -p /var/run/stratum
 
-ENV BF_SDE_INSTALL /usr/local
+ENV BF_SDE_INSTALL /usr
 EXPOSE 28000/tcp
 EXPOSE 9339/tcp
-ENTRYPOINT /stratum-entrypoint.sh
 
+WORKDIR /var/run/stratum
+ENTRYPOINT /usr/bin/stratum-entrypoint
