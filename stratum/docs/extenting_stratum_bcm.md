@@ -13,10 +13,10 @@ server with QSFP NICs connected to a few switch ports can be helpful.
 
 ## 1. Define Target and Scope
 
-First you have to define the scope of the feature you want to add. This helps
-keeping track of progress and forces you to make up a use case beforehand.
+First, you have to define the scope of the feature you want to add. This helps
+to keep track of progress and forces you to make up a use case beforehand.
 
-For MPLS we aim for a relatively narrow scope:
+For MPLS, we aim for a relatively narrow scope:
 
 - Single label
 - Encapsulation of IPv4 into MPLS packets
@@ -28,14 +28,14 @@ For MPLS we aim for a relatively narrow scope:
 
 The first step is to make sure the Switch supports and the [SDKLT](https://github.com/opennetworkinglab/SDKLT) actually exposes the required functionality. The [Logical Table Guide](https://broadcom-network-switching-software.github.io/Logical_Table_Documentation_Guide) and [Feature List](https://github.com/Broadcom-Network-Switching-Software/SDKLT/wiki/Tomahawk-Feature-List) are great starting points. Other products like OF-DPA and SDK6 can also provide hints.
 
-For MPLS we find the following tables of interest:
+For MPLS, we find the following tables of interest:
 
 - TNL_MPLS_*
 - L3_EIF, field `TNL_ENCAP_ID`
 
 ### Create Solution in SDKLT CLI Script
 
-It has proven helpful to a functioning target in place to work towards to. One example of this would be a SDKLT CLI script, that configures the switch for a specific target scenario. It also makes sure one fully understands the problem space, the relations between the different tables, and which APIs of SDKLT have to be triggered.
+It has proven helpful to a functioning target in place to work towards to. One example of this would be an SDKLT CLI script that configures the switch for a specific target scenario. It also makes sure one fully understands the problem space, the relations between the different tables, and which APIs of SDKLT have to be triggered.
 
 CLI scripts are simple text files that contain a series of commands as one would type them in the CLI normally. A few examples are [included](https://github.com/opennetworkinglab/SDKLT/tree/master/examples).
 
@@ -90,7 +90,7 @@ lt L3_IIF_PROFILE insert L3_IIF_PROFILE_ID=2 IPV4_UC=1
 # Create L3_IIF index 1 and set VRF_ID=10.
 lt L3_IIF insert L3_IIF_ID=1 VRF_ID=10 L3_IIF_PROFILE_ID=2
 
-# Create VLAN 2 and include port 1.
+# Create VLAN 1 and include port 1.
 lt VLAN insert VLAN_ID=1 UNTAGGED_MEMBER_PORTS=0xffffffffffffffffffffffffffff \
                VLAN_STG_ID=1 L3_IIF_ID=1
 
@@ -108,7 +108,7 @@ lt PORT_POLICY insert PORT_ID=58 PASS_ON_OUTER_TPID_MATCH[0]=1
 lt PORT_POLICY insert PORT_ID=62 PASS_ON_OUTER_TPID_MATCH[0]=1
 
 # Program L2_MY_STATION to enable routing for destination MAC 00:00:00:BB:BB:BB
-# and VLAN_ID 2.
+# and VLAN_ID 1.
 lt L2_MY_STATION insert VLAN_ID=1 VLAN_ID_MASK=0xfff MAC_ADDR=0x000000BBBBBB \
                         MAC_ADDR_MASK=0xffffffffffff IPV4_TERMINATION=1 \
                         COPY_TO_CPU=1
@@ -175,11 +175,11 @@ Depending on the scope and extent of the complete solution, one can either repea
 
 ## 2. Map Feature to P4 code
 
-Next the feature has to be mapped to P4 code. Here we decide how it should be expressed so that the compiler can make sense of it. It's also important to make the additions integrate well in existing features, to maximize code reuse and minimize effort.
+Next, the feature has to be mapped to P4 code. Here we decide how it should be expressed so that the compiler can make sense of it. It's also important to make the additions integrate well in existing features, to maximize code reuse and minimize effort.
 
 ### Headers & Parser
 
-Adding new protocols come with their own headers & types and we have to make the compiler understand them.
+Adding new protocols come with their own headers & types, and we have to make the compiler understand them.
 
 ```p4
 const bit<16> ETHERTYPE_MPLS = 0x8847;
@@ -216,11 +216,11 @@ state parse_mpls {
 }
 ```
 
-Then the SDKLT tables have to be mapped to P4 primitives like actions, tables and table entries. Let's see how this is done for MPLS encap:
+Then the SDKLT tables have to be mapped to P4 primitives like actions, tables, and table entries. Let's see how this is done for MPLS encap:
 
-As seen in the CLI config script, the encapsulation decision is done in the `L3_IPV4_UC_ROUTE_VRF` forwarding table, by setting a `ENCAP_NHOP` instead of a `L3_UC_NHOP` one.
+As seen in the CLI config script, the encapsulation decision is made in the `L3_IPV4_UC_ROUTE_VRF` forwarding table, by setting a `ENCAP_NHOP` instead of a `L3_UC_NHOP` one.
 
-| TODO: image of paper scribbles
+| TODO(max): add images of paper scribbles
 
 ## 3. Stratum Modifications
 
@@ -245,7 +245,7 @@ In general, most features will require changes to multiple areas of Stratum:
     - Handle new feature in `bcm_lX_manager.cc`
         - Depending on which layer the feature operates, the appropriate manager has to be modified. This involves understanding the new P4 annotations and translating them to the `bcm.proto` equivalents.
     - bcm_sdk_wrapper.cc
-        - New functions that abstract the SDK APIs have to be added. Main purpose is to provide a nice and easy to use C++ interface to the underlying SDK. Avoid pulling in complex data types (protobuf messages) and favor scalar types. Ensure thread-safety, if not provided by the SDK.
+        - New functions that abstract the SDK APIs have to be added. The main purpose is to provide a nice and easy to use C++ interface to the underlying SDK. Avoid pulling in complex data types (protobuf messages) and favor scalar types. Ensure thread-safety, if not provided by the SDK.
 
 - Extend `main.p4` pipeline
 
@@ -256,6 +256,6 @@ In general, most features will require changes to multiple areas of Stratum:
 To ensure a feature works as expected initially and continues to be correctly
 implemented, it's recommended to write dataplane tests. This could either be
 done in a ad-hoc manner with something like [scapy](https://github.com/secdev/scapy),
-or it could become an permanent part of the [TestVectors](https://github.com/stratum/testvectors-runner)
+or it could become a permanent part of the [TestVectors](https://github.com/stratum/testvectors-runner)
 test [suite](https://github.com/stratum/testvectors) that is run on real devices
 as part of the Continuos Certification Program.
