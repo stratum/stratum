@@ -132,3 +132,7 @@ License: Apache-2.0
 Files: stratum/hal/bin/np4intel/dummy.json
 Copyright: 2020 Dell EMC
 License: Apache-2.0
+
+Files: stratum/hal/bin/barefoot/deb/stratum.flags
+Copyright: 2019-present Open Networking Foundation
+License: Apache-2.0
