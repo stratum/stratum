@@ -154,7 +154,10 @@ pkg_tar(
 pkg_deb(
     name = "stratum_bcm_opennsa_deb",
     architecture = "amd64",
-    conflicts = ["stratum-bcm-sdklt"],
+    conflicts = [
+        "stratum-bcm-sdk6",
+        "stratum-bcm-sdklt",
+    ],
     data = ":statum_bcm_opennsa_all",
     depends = [
         "kmod",
@@ -173,7 +176,10 @@ pkg_deb(
 pkg_deb(
     name = "stratum_bcm_sdklt_deb",
     architecture = "amd64",
-    conflicts = ["stratum-bcm-opennsa"],
+    conflicts = [
+        "stratum-bcm-opennsa",
+        "stratum-bcm-sdk6",
+    ],
     data = ":statum_bcm_sdklt_all",
     depends = [
         "kmod",
