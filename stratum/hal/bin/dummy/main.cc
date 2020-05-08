@@ -1,17 +1,5 @@
-/* Copyright 2018-present Open Networking Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2018-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -26,7 +14,7 @@ namespace hal {
 namespace dummy_switch {
 
 // Entry point of Dummy Switch
-int DummySwitchMain(int argc, char* argv[]) {
+::util::Status Main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
@@ -40,33 +28,24 @@ int DummySwitchMain(int argc, char* argv[]) {
     DummySwitch::CreateInstance(phal, chassis_mgr);
 
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
-  auto credentials_manager = CredentialsManager::CreateInstance();
+  ASSIGN_OR_RETURN(auto credentials_manager,
+                   CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_SIM,
                                    dummy_switch.get(),
                                    auth_policy_checker.get(),
                                    credentials_manager.get());
-
-  if (!hal) {
-    LOG(ERROR) << "Failed to create the Hal instance.";
-    return -1;
-  }
-
+  CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Hal instance.";
   ::util::Status status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
         << "Error when setting up HAL (but we will continue running): "
         << status.error_message();
   }
-  status = hal->Run();  // blocking
-  if (!status.ok()) {
-    LOG(ERROR) << "Error when running the HAL: " << status.error_message();
-    return -1;
-  }
-
+  RETURN_IF_ERROR(hal->Run());  // blocking
   dummy_box->Shutdown();
 
   LOG(INFO) << "See you later!";
-  return 0;
+  return ::util::OkStatus();
 }
 
 }  // namespace dummy_switch
@@ -74,5 +53,5 @@ int DummySwitchMain(int argc, char* argv[]) {
 }  // namespace stratum
 
 int main(int argc, char* argv[]) {
-  return stratum::hal::dummy_switch::DummySwitchMain(argc, argv);
+  return stratum::hal::dummy_switch::Main(argc, argv).error_code();
 }

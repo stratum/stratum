@@ -1,3 +1,6 @@
+# Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 tables {
   preamble {
     id: 33576202

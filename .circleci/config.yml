@@ -1,18 +1,5 @@
-#
-# Copyright 2018 Stratum Project Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 
 version: 2.1
 
@@ -157,6 +144,7 @@ jobs:
           command: |
             docker run --entrypoint stratum_bmv2 $DOCKER_IMG -version
             docker run --entrypoint mn $DOCKER_IMG --version
+            docker run --rm --entrypoint python $DOCKER_IMG -c "from p4.config.v1 import p4info_pb2;from google.rpc import status_pb2, code_pb2;from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc"
       - *docker_push
 
   publish-docker-p4c-fpm:
@@ -202,8 +190,8 @@ jobs:
       - run:
           name: Build stratum_bcm
           command: |
-            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_package
-            tar xf bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_package.tar.gz -C $DOCKER_SCOPE
+            bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_deb
+            cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_deb.deb $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - *docker_push
@@ -218,6 +206,15 @@ jobs:
           name: Run cpplint
           command: cpplint --recursive --exclude=stratum/hal/lib/bcm/bcm_sdk_wrapper.cc stratum
 
+  license-check:
+    docker:
+      - image: fsfe/reuse:latest
+    steps:
+      - checkout
+      - run:
+          name: Run reuse
+          command: reuse lint
+
 workflows:
   version: 2
   build_and_test:
@@ -226,6 +223,7 @@ workflows:
       - cdlang_tests
       - coverage
       - cpp-style-check
+      - license-check
   docker-publish:
     jobs:
       - publish-docker-build:

@@ -1,3 +1,10 @@
+<!--
+Copyright 2019 NoviFlow, Inc.
+Copyright 2019-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Stratum Pipeline Examples
 
 P4 Pipelines used for simple demonstrations of the `Stratum` software using `bmv2`.
@@ -85,7 +92,7 @@ Manual testing provides an interresting level of visibility as `stratum_bmv2` lo
 4. Start `stratum_bmv2`:
 ```
     # cd <stratum_dir>
-    # ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 --device_id=1 --forwarding_pipeline_configs_file=/tmp/stratum-bmv2/config.txt --persistent_config_dir=/tmp/stratum-bmv2 --cpu_port=64 --external-stratum-urls=0.0.0.0:28000 0@veth1 1@veth3 2@veth5 3@veth7 4@veth9 5@veth11 6@veth13 7@veth15 --bmv2-log-level=trace
+    # ./bazel-bin/stratum/hal/bin/bmv2/stratum_bmv2 --device_id=1 --forwarding_pipeline_configs_file=/tmp/stratum-bmv2/config.txt --persistent_config_dir=/tmp/stratum-bmv2 --cpu_port=64 0@veth1 1@veth3 2@veth5 3@veth7 4@veth9 5@veth11 6@veth13 7@veth15 --bmv2-log-level=trace
 ```
 At this point the switch is started and ready to receive a pipeline.
 

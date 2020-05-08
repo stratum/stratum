@@ -1,18 +1,5 @@
-/*
- * Copyright 2019 Dell EMC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2019 Dell EMC
+// SPDX-License-Identifier: Apache-2.0
 
 
 #ifndef STRATUM_HAL_LIB_PHAL_SWITCH_CONFIGURATOR_INTERFACE_H_
@@ -31,7 +18,7 @@ class SwitchConfiguratorInterface {
   virtual ~SwitchConfiguratorInterface() = default;
 
   // Virtual function to create a default config should the
-  // phal_config_path flag not be set.
+  // phal_config_file flag not be set.
   virtual ::util::Status CreateDefaultConfig(PhalInitConfig* config) const = 0;
 
   // Virtual function implemented by each derived class to

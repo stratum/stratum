@@ -1,17 +1,6 @@
 // Copyright 2018 Google LLC
 // Copyright 2018-present Open Networking Foundation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 #include <utility>
 #include <vector>
@@ -25,6 +14,7 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/hal/lib/common/openconfig_converter.h"
 #include "stratum/lib/constants.h"
+#include "stratum/lib/utils.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/time/clock.h"
@@ -782,12 +772,16 @@ void SetUpRoot(TreeNode* node, YangParseTree* tree) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a bytes stream!";
     }
     openconfig::Device in;
-    // Deserialize the input proto.
-    CHECK_RETURN_IF_FALSE(in.ParseFromString(typed_value->bytes_val()));
-    // Convert the input proto into the internal format.
-    ASSIGN_OR_RETURN(*config->writable(),
-                     OpenconfigConverter::OcDeviceToChassisConfig(in));
-
+    // Deserialize the input proto to OpenConfig device format.
+    if (in.ParseFromString(typed_value->bytes_val())) {
+      // Convert the input proto into the internal format.
+      ASSIGN_OR_RETURN(*config->writable(),
+          OpenconfigConverter::OcDeviceToChassisConfig(in));
+    } else {
+      // Try parse it with ChassisConfig format.
+      RETURN_IF_ERROR(
+          ParseProtoFromString(typed_value->bytes_val(), config->writable()));
+    }
     return ::util::OkStatus();
   };
   node->SetOnTimerHandler(poll_functor)

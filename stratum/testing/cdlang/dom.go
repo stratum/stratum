@@ -1,18 +1,6 @@
-//
 // Copyright 2019 Google LLC
 // Copyright 2019-present Open Networking Foundation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 // Package cdl provides internals of the CDLang transpiler.
 package cdl
@@ -1004,7 +992,7 @@ func (p *protobufFieldSequence) setValue(val interface{}) bool {
 func RandomString(len int) string {
 	bytes := make([]byte, len)
 	for i := 0; i < len; i++ {
-		bytes[i] = byte(65 + rand.Intn(25))  // A=65 and Z = 65+25
+		bytes[i] = byte(65 + rand.Intn(25)) // A=65 and Z = 65+25
 	}
 	return string(bytes)
 }
@@ -1012,11 +1000,11 @@ func RandomString(len int) string {
 func (p *protobufFieldSequence) GetTextproto() []textproto {
 	ret := []textproto{}
 	result := []string{}
-	var m *struct{Name, Type string}
+	var m *struct{ Name, Type string }
 	if p.IsSerialized() {
-		n := "$$"+RandomString(16)
-		ret = append(ret, textproto{nil, p.Name+": \""+n+"\""})
-		m = &struct{Name, Type string}{n, p.CastType}
+		n := "$$" + RandomString(16)
+		ret = append(ret, textproto{nil, p.Name + ": \"" + n + "\""})
+		m = &struct{ Name, Type string }{n, p.CastType}
 	}
 	if len(p.Name) > 0 && p.FieldType != repeatedField && !p.IsSerialized() {
 		result = append(result, p.Name)

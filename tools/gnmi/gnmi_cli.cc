@@ -1,18 +1,9 @@
 // Copyright 2019-present Open Networking Foundation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/security/tls_credentials_options.h>
 
 #include <csignal>
 #include <iostream>
@@ -24,12 +15,10 @@
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "stratum/lib/utils.h"
 
 const char kUsage[] =
-    R"USAGE(usage: gnmi-cli [-h] [-grpc_addr GRPC_ADDR] [-bool_val BOOL_VAL]
-                   [-int_val INT_VAL] [-uint_val UINT_VAL]
-                   [-string_val STRING_VAL] [-float_val FLOAT_VAL]
-                   {get,set,cap,del,sub-onchange,sub-sample} path
+    R"USAGE(usage: gnmi-cli [--help] [Options] {get,set,cap,del,sub-onchange,sub-sample} path
 
 Basic gNMI CLI
 
@@ -45,9 +34,13 @@ optional arguments:
   --uint_val UINT_VAL      [SetRequest only] Set uint value (64-bit)
   --string_val STRING_VAL  [SetRequest only] Set string value
   --float_val FLOAT_VAL    [SetRequest only] Set float value
+  --bytes_val_file FILE    [SetRequest only] A file to be sent as bytes value
   --interval INTERVAL      [Sample subscribe only] Sample subscribe poll interval in ms
   --replace                [SetRequest only] Use replace instead of update
   --get-type               [GetRequest only] Use specific data type for get request (ALL,CONFIG,STATE,OPERATIONAL)
+  --ca-cert                CA certificate
+  --client-cert            gRPC Client certificate
+  --client-key             gRPC Client key
 )USAGE";
 
 #define PRINT_MSG(msg, prompt)      \
@@ -65,16 +58,20 @@ optional arguments:
   }
 
 DECLARE_bool(help);
-DEFINE_string(grpc_addr, "127.0.0.1:28000", "gNMI server address");
+DEFINE_string(grpc_addr, "127.0.0.1:9339", "gNMI server address");
 DEFINE_string(bool_val, "", "Boolean value to be set");
 DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
 DEFINE_string(uint_val, "", "Unsigned integer value to be set (64-bit)");
 DEFINE_string(string_val, "", "String value to be set");
 DEFINE_string(float_val, "", "Floating point value to be set");
+DEFINE_string(bytes_val_file, "", "A file to be sent as bytes value");
 
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms");
 DEFINE_bool(replace, false, "Use replace instead of update");
 DEFINE_string(get_type, "ALL", "The gNMI get request type");
+DEFINE_string(ca_cert, "", "CA certificate");
+DEFINE_string(client_cert, "", "Client certificate");
+DEFINE_string(client_key, "", "Client key");
 
 namespace stratum {
 namespace tools {
@@ -141,6 +138,10 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
     update->mutable_val()->set_float_val(stof(FLAGS_float_val));
   } else if (!FLAGS_string_val.empty()) {
     update->mutable_val()->set_string_val(FLAGS_string_val);
+  } else if (!FLAGS_bytes_val_file.empty()) {
+    std::string buf;
+    ::stratum::ReadFileToString(FLAGS_bytes_val_file, &buf);
+    update->mutable_val()->set_bytes_val(buf);
   } else {
     std::cout << "No typed value set" << std::endl;
   }
@@ -188,8 +189,35 @@ int Main(int argc, char** argv) {
   }
   ::grpc::ClientContext ctx;
   ::grpc::Status status;
-  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr,
-                                       ::grpc::InsecureChannelCredentials());
+  std::shared_ptr<::grpc::ChannelCredentials> channel_credentials =
+      ::grpc::InsecureChannelCredentials();
+  if (!FLAGS_ca_cert.empty()) {
+    ::grpc::string pem_root_certs;
+    ::grpc_impl::experimental::TlsKeyMaterialsConfig::PemKeyCertPair
+        pem_key_cert_pair;
+    auto key_materials_config =
+        std::make_shared<::grpc_impl::experimental::TlsKeyMaterialsConfig>();
+    ::util::Status status;
+    status.Update(::stratum::ReadFileToString(FLAGS_ca_cert, &pem_root_certs));
+    key_materials_config->set_pem_root_certs(pem_root_certs);
+
+    if (!FLAGS_client_cert.empty() && !FLAGS_client_key.empty()) {
+      status.Update(::stratum::ReadFileToString(FLAGS_client_cert,
+                                                &pem_key_cert_pair.cert_chain));
+      status.Update(::stratum::ReadFileToString(
+          FLAGS_client_key, &pem_key_cert_pair.private_key));
+      key_materials_config->add_pem_key_cert_pair(pem_key_cert_pair);
+    }
+
+    auto cred_opts = ::grpc_impl::experimental::TlsCredentialsOptions(
+        GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, GRPC_TLS_SERVER_VERIFICATION,
+        key_materials_config, nullptr, nullptr);
+
+    if (status.ok()) {
+      channel_credentials = grpc::experimental::TlsCredentials(cred_opts);
+    }
+  }
+  auto channel = ::grpc::CreateChannel(FLAGS_grpc_addr, channel_credentials);
   auto stub = ::gnmi::gNMI::NewStub(channel);
   std::string cmd = std::string(argv[1]);
 
