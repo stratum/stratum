@@ -1,3 +1,5 @@
+# Copyright 2020 Dell EMC
+# SPDX-License-Identifier: Apache-2.0
 logs/*
 stratum_np4intel
 stratum_np4intel.debug

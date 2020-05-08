@@ -1,3 +1,8 @@
+<!--
+Copyright 2020 Dell EMC
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # NP4 Intel Docker Stratum runtime
 
 This document details the steps needed in order to run a P4 pipeline
@@ -7,7 +12,7 @@ on an Intel PAC N3000 card using the Netcope compiler and SDK.
 
 The Stratum container will run on the server with the FPGA card in it. However
 before running the Stratum container there are some things that need to be
-done on the OS first. 
+done on the OS first.
 
 You should login to the Intel support site as per the following link and
 install the card and the OPAE software as per the user guide here: https://www.intel.com/content/www/us/en/programmable/documentation/xgz1560360700260.html
@@ -53,7 +58,7 @@ python3.6 /usr/local/bin/PACSign SR -t UPDATE -H openssl_manager \
     -y -i fw.bin -o fw_signed.bin
 
 # Flash card
-sudo fpgasupdate fw_signed.bin 
+sudo fpgasupdate fw_signed.bin
 
 # Reboot card
 sudo rsu bmcimg
@@ -74,7 +79,7 @@ $ p4c-bm2-ss --arch v1model -o ${OUT_DIR}/bmv2.json    \
              top.p4
 ```
 
-where the file `top.p4` is the top level P4 pipeline file from which all 
+where the file `top.p4` is the top level P4 pipeline file from which all
 the others are included (note: that the Netcope compiler requires that the
 top level P4 file be named `top.p4`).
 
@@ -85,7 +90,7 @@ is the P4 port number of the first DPDK port).
 pipeline then this must be commented out in order for the p4c compile
 above to successfully complete.
 
-7. Take the compiler generated p4info.txt file and parse it through a 
+7. Take the compiler generated p4info.txt file and parse it through a
 python translator that fixes some of the problems between P4-14 and the
 generated p4info.txt file for the generated Netcope firmware.
 
@@ -146,7 +151,7 @@ cd ~/stratum/stratum/hal/bin/np4intel/docker
 The following instructions detail how to configure and run the Stratum
 NP4 Intel container on a CentOS host OS.
 
-1. Update the configurations 
+1. Update the configurations
 
 Take a look in the configs directory and update the configs as necessary.
 
@@ -173,7 +178,7 @@ The stratum binary should now be running, log files can be found in the  logs di
 
 3. Running a bash cli in the container
 
-By default the start script will run the stratum NP4 Intel binary but 
+By default the start script will run the stratum NP4 Intel binary but
 an optional argument "--bash" can be passed to instead run a bash cli to
 allow you to manually start stratum using the stratum-entrypoint.sh script.
 

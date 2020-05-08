@@ -2,11 +2,10 @@
 
 # Copyright 2019-present Dell EMC
 # Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 
-#
-# Translate names in tables and counters of the P4Info file to be 
+# Translate names in tables and counters of the P4Info file to be
 # the same as the alias.  Needed for NP4 Intel SDK.
-#
 
 import argparse
 import logging
@@ -133,7 +132,7 @@ def main():
     if args.p4info_out is not None:
         p4info_out = args.p4info_out
 
-    tr_p4info(platform=args.platform, p4info_path=args.p4info, 
+    tr_p4info(platform=args.platform, p4info_path=args.p4info,
               p4info_out_path=p4info_out)
 
 if __name__ == '__main__':

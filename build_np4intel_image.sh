@@ -1,19 +1,6 @@
 #!/bin/bash
-#
-# Copyright 2020-present Open Networking Foundation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# Copyright 2020 Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 
 if [[ $EUID -eq 0 ]]; then
    echo "This script should not be run as root, run it as the user who owns the Stratum source directory"
@@ -27,7 +14,7 @@ BAZEL_CACHE=$HOME/.cache
 print_help() {
 cat << EOF
 Builds a docker image using Dockerfile.builder and to be used as the base
-image used in the setup_ubuntu_dev_env.sh.  The host ssh keys can also be 
+image used in the setup_ubuntu_dev_env.sh.  The host ssh keys can also be
 mounted in the docker to facilitate git usage. The docker image will take some
 time to build the first time this script is run.
 
