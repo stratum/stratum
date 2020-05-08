@@ -1,3 +1,8 @@
+<!--
+Copyright 2020-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # How to Add a Dataplane Feature to Stratum (BCM)
 
 This guide describes how to add a new feature to Stratum BCM on the example of MPLS.
