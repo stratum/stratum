@@ -1,3 +1,8 @@
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+licenses(["notice"])  # Apache v2
+
 load(
     "//bazel:rules.bzl",
     "HOST_ARCHES",

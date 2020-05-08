@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Copyright 2019-present Dell EMC
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
 # See if we've got argument
 if [ $# -gt 0 ]; then
   key="$1"

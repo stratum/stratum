@@ -1,3 +1,10 @@
+# Copyright 2019-present Barefoot Networks, Inc.
+# Copyright 2019-present Dell EMC
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+licenses(["notice"])  # Apache v2
+
 package(
     default_visibility = ["//visibility:public"],
 )

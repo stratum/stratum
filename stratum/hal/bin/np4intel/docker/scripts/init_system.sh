@@ -1,5 +1,9 @@
 #! /usr/bin/bash -
 
+# Copyright 2019-present Dell EMC
+# Copyright 2019-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+
 # Example system init script that needs to be run the first time
 # after boot to initialise the DPDK modules and ports
 
