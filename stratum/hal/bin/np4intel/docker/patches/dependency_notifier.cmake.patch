@@ -1,0 +1,20 @@
+diff --git a/cmake/modules/dependency_notifier.cmake b/cmake/modules/dependency_notifier.cmake
+index cd2e183c..243bd1e6 100644
+--- a/cmake/modules/dependency_notifier.cmake
++++ b/cmake/modules/dependency_notifier.cmake
+@@ -38,7 +38,7 @@ endif()
+ 
+ if(NOT libjson-c_FOUND)
+     message("-- json-c not found. Please install json-c package for you respective distribution:
+-    DEB: apt-get install libjson0-dev
++    DEB: apt-get install libjson-c-dev
+     RPM: yum install json-c-devel
+    If you have already installed this package in a non-standard location 
+    please specify the location by defining the variable LIBJSON-C_ROOT in 
+@@ -83,4 +83,4 @@ endif()
+ if(REQUIRED_DEPENDENCIES)
+     message(FATAL_ERROR "The following dependencies are required; libopae-c will not be built unless they are satisfied. 
+    ---- ${REQUIRED_DEPENDENCIES}----")
+-endif()
+\ No newline at end of file
++endif()

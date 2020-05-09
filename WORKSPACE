@@ -56,6 +56,13 @@ bmv2_configure(name = "local_bmv2_bin")
 load("//stratum/hal/lib/barefoot:barefoot.bzl", "barefoot_configure")
 barefoot_configure(name = "local_barefoot_bin")
 
+load("//stratum/hal/bin/np4intel:np4intel.bzl", "np4intel_configure")
+np4intel_configure(name = "local_np4intel_bin")
+
+# PI NP4 dependancies
+load("@com_github_p4lang_PI_np4//targets/np4:np4.bzl", "np4_configure")
+np4_configure(name = "local_np4_bin")
+
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
 

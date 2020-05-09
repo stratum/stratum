@@ -1,0 +1,2 @@
+disabled: false
+eal_args: "-w0000:88:00.0"

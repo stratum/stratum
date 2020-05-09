@@ -30,6 +30,7 @@ Usage: $0
     [--git-name <name>]             use the provided name for git commits
     [--git-email <email>]           use the provided email for git commits
     [--git-editor <editor command>] use the provided editor for git
+    [--np4-intel]                   create NP4 Intel build environment
     [-- [Docker options]]           additional Docker options for running the container
 EOF
 }
@@ -70,6 +71,10 @@ do
         shift
         shift
         ;;
+    --np4-intel)
+        NP4_INTEL=YES
+        shift
+        ;;
     "--")
         shift
         break
@@ -82,7 +87,14 @@ do
 done
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-IMAGE_NAME=stratum-dev
+if [ "$NP4_INTEL" == YES ]; then
+    IMAGE_NAME=stratumproject/stratum-np4intel-dev
+    DOCKER_FILE=$THIS_DIR/Dockerfile.np4intel.dev
+    BAZEL_CACHE=$HOME/.np4intel_cache
+else
+    IMAGE_NAME=stratum-dev
+    DOCKER_FILE=$THIS_DIR/Dockerfile.dev
+fi
 
 DOCKER_BUILD_OPTIONS="-t $IMAGE_NAME"
 if [ "$PULL_DOCKER" == YES ]; then
@@ -98,7 +110,7 @@ fi
 if [ ! -z "$GIT_EDITOR" ]; then
     DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR=\"$GIT_EDITOR\""
 fi
-eval docker build $DOCKER_BUILD_OPTIONS -f $THIS_DIR/Dockerfile.dev $THIS_DIR
+eval docker build $DOCKER_BUILD_OPTIONS -f $DOCKER_FILE $THIS_DIR
 ERR=$?
 if [ $ERR -ne 0 ]; then
     >&2 echo "ERROR: Error while building dockering development image"
@@ -110,5 +122,14 @@ if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $BAZEL_CACHE:/home/$USER/.cache"
+if [ -n "$NP4_INSTALL" ]; then
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $NP4_INSTALL:/home/$USER/np4_install"
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -e NP4_INSTALL=$NP4_INSTALL"
+else
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -e NP4_INSTALL=/usr"
+fi
+if [ "$NP4_INTEL" == YES ]; then
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v /dev/intel-fpga-fme.0:/dev/intel-fpga-fme.0"
+fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS $@"
 docker run $DOCKER_RUN_OPTIONS -w /stratum --user $USER -ti $IMAGE_NAME bash
