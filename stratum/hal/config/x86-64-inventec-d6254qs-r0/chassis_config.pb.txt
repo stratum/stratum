@@ -1,0 +1,658 @@
+description: "Default chassis config for Inventec D6254"
+chassis {
+  platform: PLT_GENERIC_TRIDENT2
+  name: "Inventec D6254"
+}
+nodes {
+  id: 1
+  slot: 1
+  index: 1
+}
+singleton_ports {
+  id: 1
+  name: "1/0"
+  slot: 1
+  port: 1
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 2
+  name: "2/0"
+  slot: 1
+  port: 2
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 3
+  name: "3/0"
+  slot: 1
+  port: 3
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 4
+  name: "4/0"
+  slot: 1
+  port: 4
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 5
+  name: "5/0"
+  slot: 1
+  port: 5
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 6
+  name: "6/0"
+  slot: 1
+  port: 6
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 7
+  name: "7/0"
+  slot: 1
+  port: 7
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 8
+  name: "8/0"
+  slot: 1
+  port: 8
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 9
+  name: "9/0"
+  slot: 1
+  port: 9
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 10
+  name: "10/0"
+  slot: 1
+  port: 10
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 11
+  name: "11/0"
+  slot: 1
+  port: 11
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 12
+  name: "12/0"
+  slot: 1
+  port: 12
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 13
+  name: "13/0"
+  slot: 1
+  port: 13
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 14
+  name: "14/0"
+  slot: 1
+  port: 14
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 15
+  name: "15/0"
+  slot: 1
+  port: 15
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 16
+  name: "16/0"
+  slot: 1
+  port: 16
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 17
+  name: "17/0"
+  slot: 1
+  port: 17
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 18
+  name: "18/0"
+  slot: 1
+  port: 18
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 19
+  name: "19/0"
+  slot: 1
+  port: 19
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 20
+  name: "20/0"
+  slot: 1
+  port: 20
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 21
+  name: "21/0"
+  slot: 1
+  port: 21
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 22
+  name: "22/0"
+  slot: 1
+  port: 22
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 23
+  name: "23/0"
+  slot: 1
+  port: 23
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 24
+  name: "24/0"
+  slot: 1
+  port: 24
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 25
+  name: "25/0"
+  slot: 1
+  port: 25
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 26
+  name: "26/0"
+  slot: 1
+  port: 26
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 27
+  name: "27/0"
+  slot: 1
+  port: 27
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 28
+  name: "28/0"
+  slot: 1
+  port: 28
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 29
+  name: "29/0"
+  slot: 1
+  port: 29
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 30
+  name: "30/0"
+  slot: 1
+  port: 30
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 31
+  name: "31/0"
+  slot: 1
+  port: 31
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 32
+  name: "32/0"
+  slot: 1
+  port: 32
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 33
+  name: "33/0"
+  slot: 1
+  port: 33
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 34
+  name: "34/0"
+  slot: 1
+  port: 34
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 35
+  name: "35/0"
+  slot: 1
+  port: 35
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 36
+  name: "36/0"
+  slot: 1
+  port: 36
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 37
+  name: "37/0"
+  slot: 1
+  port: 37
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 38
+  name: "38/0"
+  slot: 1
+  port: 38
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 39
+  name: "39/0"
+  slot: 1
+  port: 39
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 40
+  name: "40/0"
+  slot: 1
+  port: 40
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 41
+  name: "41/0"
+  slot: 1
+  port: 41
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 42
+  name: "42/0"
+  slot: 1
+  port: 42
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 43
+  name: "43/0"
+  slot: 1
+  port: 43
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 44
+  name: "44/0"
+  slot: 1
+  port: 44
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 45
+  name: "45/0"
+  slot: 1
+  port: 45
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 46
+  name: "46/0"
+  slot: 1
+  port: 46
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 47
+  name: "47/0"
+  slot: 1
+  port: 47
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 48
+  name: "48/0"
+  slot: 1
+  port: 48
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 49
+  name: "49/0"
+  slot: 1
+  port: 49
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 50
+  name: "50/0"
+  slot: 1
+  port: 50
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 51
+  name: "51/0"
+  slot: 1
+  port: 51
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 52
+  name: "52/0"
+  slot: 1
+  port: 52
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 53
+  name: "53/0"
+  slot: 1
+  port: 53
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 54
+  name: "54/0"
+  slot: 1
+  port: 54
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 55
+  name: "55/0"
+  slot: 1
+  port: 55
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 56
+  name: "56/0"
+  slot: 1
+  port: 56
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 57
+  name: "57/0"
+  slot: 1
+  port: 57
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 58
+  name: "58/0"
+  slot: 1
+  port: 58
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 59
+  name: "59/0"
+  slot: 1
+  port: 59
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 60
+  name: "60/0"
+  slot: 1
+  port: 60
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 61
+  name: "61/0"
+  slot: 1
+  port: 61
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 62
+  name: "62/0"
+  slot: 1
+  port: 62
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 63
+  name: "63/0"
+  slot: 1
+  port: 63
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 64
+  name: "64/0"
+  slot: 1
+  port: 64
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 65
+  name: "65/0"
+  slot: 1
+  port: 65
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 66
+  name: "66/0"
+  slot: 1
+  port: 66
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 67
+  name: "67/0"
+  slot: 1
+  port: 67
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 68
+  name: "68/0"
+  slot: 1
+  port: 68
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 69
+  name: "69/0"
+  slot: 1
+  port: 69
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 70
+  name: "70/0"
+  slot: 1
+  port: 70
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 71
+  name: "71/0"
+  slot: 1
+  port: 71
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}
+singleton_ports {
+  id: 72
+  name: "72/0"
+  slot: 1
+  port: 72
+  channel: 1
+  speed_bps: 10000000000
+  node: 1
+}

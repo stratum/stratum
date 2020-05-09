@@ -1,0 +1,14 @@
+#!/bin/bash
+# Copyright 2020-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
+# Set up the huge page
+echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
+mkdir -p /mnt/huge
+mount -t hugetlbfs nodev /mnt/huge
+
+# Reload libraries
+ldconfig
+
+# Enables Stratum service
+systemctl enable stratum_bf.service
