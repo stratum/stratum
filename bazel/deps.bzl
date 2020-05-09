@@ -1,18 +1,5 @@
-#
 # Copyright 2018-present Open Networking Foundation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
 
 """Load dependencies needed for Stratum."""
 
@@ -114,6 +101,14 @@ def stratum_deps():
                     remote = "https://github.com/p4lang/PI.git",
                     commit = pi_commit,
                 )
+
+    if "com_github_p4lang_PI_np4" not in native.existing_rules():
+        # ----- PI for Netcope targets -----
+        remote_workspace(
+            name = "com_github_p4lang_PI_np4",
+            remote = "https://github.com/craigsdell/PI.git",
+            commit = "12be7a96f3d903afdd6cc3095f7d4003242af60b",
+        )
 
     if "com_github_openconfig_gnmi_proto" not in native.existing_rules():
         http_archive(

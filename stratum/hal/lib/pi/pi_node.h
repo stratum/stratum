@@ -1,17 +1,5 @@
-/* Copyright 2018-present Barefoot Networks, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2018-present Barefoot Networks, Inc.
+// SPDX-License-Identifier: Apache-2.0
 
 #ifndef STRATUM_HAL_LIB_PI_PI_NODE_H_
 #define STRATUM_HAL_LIB_PI_PI_NODE_H_
@@ -20,11 +8,11 @@
 #include <vector>
 
 #include "PI/frontends/proto/device_mgr.h"
+#include "absl/synchronization/mutex.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -39,31 +27,29 @@ class PINode final {
   ~PINode();
 
   ::util::Status PushChassisConfig(const ChassisConfig& config, uint64 node_id)
-        LOCKS_EXCLUDED(lock_);
+      LOCKS_EXCLUDED(lock_);
   ::util::Status VerifyChassisConfig(const ChassisConfig& config,
-                                     uint64 node_id)
-        LOCKS_EXCLUDED(lock_);
+                                     uint64 node_id) LOCKS_EXCLUDED(lock_);
   ::util::Status PushForwardingPipelineConfig(
-       const ::p4::v1::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
   ::util::Status SaveForwardingPipelineConfig(
-       const ::p4::v1::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config);
   ::util::Status CommitForwardingPipelineConfig();
   ::util::Status VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config);
   ::util::Status Shutdown();
   ::util::Status Freeze();
   ::util::Status Unfreeze();
-  ::util::Status WriteForwardingEntries(
-       const ::p4::v1::WriteRequest& req,
-       std::vector<::util::Status>* results);
+  ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
+                                        std::vector<::util::Status>* results);
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
       std::vector<::util::Status>* details);
   ::util::Status RegisterPacketReceiveWriter(
-      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer);
+      const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
       LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status UnregisterPacketReceiveWriter();
+  ::util::Status UnregisterPacketReceiveWriter()
       LOCKS_EXCLUDED(rx_writer_lock_);
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
 
@@ -84,11 +70,10 @@ class PINode final {
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
-                              p4::v1::StreamMessageResponse* msg,
-                              void* cookie);
+                              p4::v1::StreamMessageResponse* msg, void* cookie);
 
   // Write packet on the registered RX writer.
-  void SendPacketIn(const ::p4::v1::PacketIn& packet);
+  void SendPacketIn(const ::p4::v1::PacketIn& packet)
       LOCKS_EXCLUDED(rx_writer_lock_);
 
   // Reader-writer lock used to protect access to node-specific state.
@@ -101,7 +86,7 @@ class PINode final {
   mutable absl::Mutex rx_writer_lock_;
 
   // RX packet handler.
-  std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_{nullptr};
+  std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
       GUARDED_BY(rx_writer_lock_);
 
   const int unit_;

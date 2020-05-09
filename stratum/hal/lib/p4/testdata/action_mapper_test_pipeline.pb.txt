@@ -1,3 +1,6 @@
+# Copyright 2018 Google LLC
+# Copyright 2018-present Open Networking Foundation
+# SPDX-License-Identifier: Apache-2.0
 # This file contains some data for P4ActionMapper testing.  It consists of
 # P4 program action descriptors with various types of links to internal actions.
 # The action descriptor assignments, primitives, and metering operations are

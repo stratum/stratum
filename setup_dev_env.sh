@@ -1,19 +1,6 @@
 #!/usr/bin/env bash
-#
 # Copyright 2018-present Open Networking Foundation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
 
 if [[ $EUID -eq 0 ]]; then
    echo "This script should not be run as root, run it as the user who owns the Stratum source directory"
@@ -43,6 +30,7 @@ Usage: $0
     [--git-name <name>]             use the provided name for git commits
     [--git-email <email>]           use the provided email for git commits
     [--git-editor <editor command>] use the provided editor for git
+    [--np4-intel]                   create NP4 Intel build environment
     [-- [Docker options]]           additional Docker options for running the container
 EOF
 }
@@ -83,6 +71,10 @@ do
         shift
         shift
         ;;
+    --np4-intel)
+        NP4_INTEL=YES
+        shift
+        ;;
     "--")
         shift
         break
@@ -95,7 +87,14 @@ do
 done
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-IMAGE_NAME=stratum-dev
+if [ "$NP4_INTEL" == YES ]; then
+    IMAGE_NAME=stratumproject/stratum-np4intel-dev
+    DOCKER_FILE=$THIS_DIR/Dockerfile.np4intel.dev
+    BAZEL_CACHE=$HOME/.np4intel_cache
+else
+    IMAGE_NAME=stratum-dev
+    DOCKER_FILE=$THIS_DIR/Dockerfile.dev
+fi
 
 DOCKER_BUILD_OPTIONS="-t $IMAGE_NAME"
 if [ "$PULL_DOCKER" == YES ]; then
@@ -111,7 +110,7 @@ fi
 if [ ! -z "$GIT_EDITOR" ]; then
     DOCKER_BUILD_OPTIONS="$DOCKER_BUILD_OPTIONS --build-arg GIT_GLOBAL_EDITOR=\"$GIT_EDITOR\""
 fi
-eval docker build $DOCKER_BUILD_OPTIONS -f $THIS_DIR/Dockerfile.dev $THIS_DIR
+eval docker build $DOCKER_BUILD_OPTIONS -f $DOCKER_FILE $THIS_DIR
 ERR=$?
 if [ $ERR -ne 0 ]; then
     >&2 echo "ERROR: Error while building dockering development image"
@@ -123,5 +122,14 @@ if [ "$MOUNT_SSH" == YES ]; then
     DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $HOME/.ssh:/home/$USER/.ssh"
 fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $BAZEL_CACHE:/home/$USER/.cache"
+if [ -n "$NP4_INSTALL" ]; then
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v $NP4_INSTALL:/home/$USER/np4_install"
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -e NP4_INSTALL=$NP4_INSTALL"
+else
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -e NP4_INSTALL=/usr"
+fi
+if [ "$NP4_INTEL" == YES ]; then
+    DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS -v /dev/intel-fpga-fme.0:/dev/intel-fpga-fme.0"
+fi
 DOCKER_RUN_OPTIONS="$DOCKER_RUN_OPTIONS $@"
 docker run $DOCKER_RUN_OPTIONS -w /stratum --user $USER -ti $IMAGE_NAME bash

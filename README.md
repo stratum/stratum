@@ -1,3 +1,10 @@
+<!--
+Copyright 2018 Google LLC
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 ![stratum logo](stratum/docs/images/stratum-logo.png)
 
 # Stratum - Enabling the era of next-generation SDN
@@ -21,6 +28,8 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 [bmv2](stratum/hal/bin/bmv2/README.md)
 
 [dummy](stratum/hal/bin/dummy/README.md)
+
+[NP4 Intel](stratum/hal/bin/np4intel/docker/README.md)
 
 [Stratum inside Docker](TODO)
 
@@ -114,3 +123,4 @@ If you are using Docker on Linux, make sure that you can use Docker as a
 non-root user, otherwise you will not be able to run setup_dev_env.sh:
 
     sudo usermod -aG docker $USER
+

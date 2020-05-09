@@ -1,18 +1,5 @@
-#
 # Copyright 2018-present Open Networking Foundation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
 
 # This Skylark rule imports the BF SDE shared libraries and headers. The
 # BF_SDE_INSTALL environment variable needs to be set, otherwise the Stratum
@@ -26,6 +13,7 @@ def _impl(repository_ctx):
     bf_sde_path = repository_ctx.os.environ["BF_SDE_INSTALL"]
     repository_ctx.symlink(bf_sde_path, "barefoot-bin")
     repository_ctx.file("BUILD", """
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -67,6 +55,29 @@ cc_import(
   hdrs = [],  # see cc_library rule above
   shared_library = "barefoot-bin/lib/libbfutils.so",
   alwayslink = 1,
+)
+pkg_tar(
+  name = "bf_library_files",
+  srcs = glob(["barefoot-bin/lib/*.so"]),
+  mode = "0644",
+  package_dir = "/usr",
+  strip_prefix = "barefoot-bin",
+)
+pkg_tar(
+  name = "bf_shareable_files",
+  srcs = glob(["barefoot-bin/share/microp_fw/**"]) +
+         glob(["barefoot-bin/share/bfsys/**"]) +
+         glob(["barefoot-bin/share/tofino_sds_fw/**"]),
+  mode = "0644",
+  package_dir = "/usr",
+  strip_prefix = "barefoot-bin",
+)
+pkg_tar(
+  name = "kernel_module",
+  srcs = glob(["barefoot-bin/lib/modules/*.ko"]),
+  mode = "0644",
+  package_dir = "/usr",
+  strip_prefix = "barefoot-bin",
 )
 """)
 

@@ -1,12 +1,47 @@
+<!--
+Copyright 2018 Barefoot Networks, Inc.
+Copyright 2018-present Open Networking Foundation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Running Stratum on a Barefoot Tofino based switch
 
-## Getting Started with Pre-Build Docker Images
+## Quick start
 
-The Docker image contains pre-built Stratum binaries, latest Barefoot Software Development Environment (SDE) binaries, and some required configuration files.
+There are 3 ways to deploy Stratum on a Barefoot Tofino based switch.
 
-For more information, visit the [docker](./docker) directory.
+#### 1. Build Stratum from scratch
 
-## Building Stratum from Scratch
+  Use this method if you want to build Stratum yourself. See [Building Stratum from scratch](#building-stratum-from-scratch).
+
+  **Pros**: Easy to customize and modify the binary if you want do develop Stratum.
+
+  **Cons**: Need to build everything from scratch and install everything to the device manually. Also need to understand how to solve technical issues like missing library, invalid kernel module, placing correct configuration files, and so on.
+
+#### 2. Deploy with Docker
+
+  The Docker image contains pre-built Stratum binary, latest Barefoot Software Development Environment (SDE) libraries, and some required configuration files.
+
+  **Pros**: Easy to use and deploy. All you need is to install Docker on your device system.
+
+  **Cons**: Hard to support external libraries such as BSP.
+
+  For more information, visit the [docker](./docker) directory.
+
+#### 3. Build and deploy Stratum Debian package
+
+  We provide a Bazel target that build the Stratum binary and package all necessary configurations to a single Debian package(.deb file).
+
+  The Debian package also includes systemd service definition so users can use systemd to start the Stratum as a system service.
+
+  **Pros**: No need to pre-install dependency to the device, the `apt` command will take cares of it. And it is easiler to support the BSP.
+
+  **Cons**: System may link the Stratum binary to a different library if user installs dependencies such as PI locally in `/usr/local/lib`, depends on how the system loads libraries.
+
+  Visit this [section](#building-and-installing-the-debian-package) for more information
+
+## Building Stratum from scratch
 
 If you want or need to build Stratum yourself or if you need to make changes to how the BF SDE is built, you can follow
 these instructions.
@@ -34,8 +69,7 @@ Stratum can be run on Tofino-based platforms in 2 different modes:
 
 ## Installing the SDE
 
-These instructions are valid for SDE versions 8.9.2 and 9.0.0. Barefoot's
-P4Studio Build tool comes with a default Stratum profile, which takes care of
+Barefoot's P4Studio Build tool comes with a default Stratum profile, which takes care of
 installing all the necessary dependencies and builds the SDE with the
 appropriate flags.
 
@@ -108,6 +142,12 @@ downloaded and we will build against it. This is useful if you are building
 switch (in this case just make sure the correct ONLP library for your platform
 is loaded at runtime).
 
+```
+bazel build //stratum/hal/bin/barefoot:stratum_bf
+```
+
+### Specify dependency for a different SDE version
+
 The `stratum_bf` bazel target is designed for the latest Barefoot SDE. You can set up
 the SDE version by using `--define` flag if you need to build with older version (e.g. 8.9.2).
 
@@ -115,7 +155,7 @@ the SDE version by using `--define` flag if you need to build with older version
 bazel build //stratum/hal/bin/barefoot:stratum_bf [--define sde_ver=8.9.2]
 ```
 
-## Building the binary without ONLP support
+### Disable the ONLP support
 
 The `--define phal_with_onlp=false` flag tells Bazel not to build with the ONLP Phal
 implementation. Use this flag when you are using a vendor-provided BSP or
@@ -125,7 +165,9 @@ running Stratum with the Tofino software model.
 bazel build //stratum/hal/bin/barefoot:stratum_bf --define phal_with_onlp=false [--define sde_ver=8.9.2]
 ```
 
-## Setting up the huge page
+## Running the Stratum binary
+
+### Setting up the huge page
 
 Before start the Stratum, make sure you have set up the huge page for DMA purposes.
 
@@ -138,7 +180,7 @@ sudo mkdir /mnt/huge
 sudo mount -t hugetlbfs nodev /mnt/huge
 ```
 
-## Running the binary (with BSP or Tofino software model)
+### Running the binary (with BSP or Tofino software model)
 
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
@@ -160,7 +202,7 @@ The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
 `PhalSim`, a "fake" Phal implementation, instead. Use this flag when you are
 using a vendor-provided BSP or running Stratum with the Tofino software model.
 
-## Running the binary in BSP-less mode
+### Running the binary in BSP-less mode
 
 If ONLP support is available for your platform, you do not need to use a
 BSP. Instead the platform vendor can provide a JSON "port mapping" file (see
@@ -223,3 +265,39 @@ To start a shell session, you can use (requires Docker):
 
 Refer to the [p4runtime-shell](https://github.com/p4lang/p4runtime-shell)
 documentation for more information.
+
+## Building and installing the Debian package
+
+### Prerequests
+
+Before building the Debian package, you need to build SDE and/or the BSP, see this [section](#installing-the-sde) for more information.
+
+To build Debian package, use command below:
+
+```
+ bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=8.9.2] [--define phal_with_onlp=false]
+```
+
+For more information of `sde_ver` and `phal_with_onlp`, see [Specify dependency for a different SDE version](#specify-dependency-for-a-different-sde-version) and [Disable the ONLP support](#disable-the-onlp-support)
+
+You can find the Debian package here:
+`bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb`
+
+The Debian package includes some necessary libraries like PI so you don't need to install these libraries into the target device.
+
+To install the package, simply upload the deb file to your device and use `apt` command:
+
+```bash
+[sudo] apt update
+[sudo] apt install -y ./stratum_bf_deb.deb
+```
+
+The following packages will be installed after command above.
+
+ - systemd
+ - kmod
+ - libssl1.1
+ - libedit2
+ - libjudydebian1
+ - libboost-thread1.62.0
+ - stratum-bf
