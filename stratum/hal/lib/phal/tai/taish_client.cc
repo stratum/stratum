@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #include "gflags/gflags.h"
 #include "grpcpp/grpcpp.h"
@@ -259,13 +260,15 @@ util::Status TaishClient::SetAttribute(uint64 obj_id, uint64 attr_id,
   return util::OkStatus();
 }
 
-util::StatusOr<uint64> TaishClient::GetModulationFormatIds(const std::string& modulation_format) {
+util::StatusOr<uint64>
+    TaishClient::GetModulationFormatIds(const std::string& modulation_format) {
   CHECK_RETURN_IF_FALSE(kModulationFormatIds.contains(modulation_format))
       << "Unknown modulation format " << modulation_format;
   return kModulationFormatIds.at(modulation_format);
 }
 
-util::StatusOr<std::string> TaishClient::GetModulationFormatName(const uint64 id) {
+util::StatusOr<std::string>
+    TaishClient::GetModulationFormatName(const uint64 id) {
   const auto it = std::find_if(kModulationFormatIds.begin(),
                                kModulationFormatIds.end(),
                                [id](const std::pair<std::string, uint64>& kv) {

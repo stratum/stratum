@@ -483,7 +483,8 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
       void (TOption::*value_setter)(TSetterValue), const TValue& value) {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
-      OpticalChannelInfo* optical_netif_info = resp.mutable_optical_channel_info();
+      OpticalChannelInfo* optical_netif_info =
+            resp.mutable_optical_channel_info();
       ((optical_netif_info->*option_getter)()->*value_setter)(value);
       w->Write(resp);
     };
@@ -499,7 +500,8 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
       void (TOption::*value_setter)(TSetterValue), const TValue& value) {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
-      OpticalChannelInfo* optical_netif_info = resp.mutable_optical_channel_info();
+      OpticalChannelInfo* optical_netif_info =
+            resp.mutable_optical_channel_info();
       (optical_netif_info->*value_setter)(value);
       w->Write(resp);
     };
@@ -3363,8 +3365,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface().optical_channel_info().frequency(),
-            expected_value);
+  EXPECT_EQ(req.requests(0).optical_network_interface()
+        .optical_channel_info().frequency(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3381,8 +3383,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface().optical_channel_info().frequency(),
-            expected_value);
+  EXPECT_EQ(req.requests(0).optical_network_interface()
+        .optical_channel_info().frequency(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3911,8 +3913,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result =
-      req.requests(0).optical_network_interface().optical_channel_info().target_output_power();
+  float result = req.requests(0).optical_network_interface()
+      .optical_channel_info().target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -3931,8 +3933,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, value, &req, nullptr));
   ASSERT_THAT(req.requests(), SizeIs(1));
 
-  float result =
-      req.requests(0).optical_network_interface().optical_channel_info().target_output_power();
+  float result = req.requests(0).optical_network_interface()
+      .optical_channel_info().target_output_power();
   EXPECT_FLOAT_EQ(result, 10.05);
 }
 
@@ -4423,8 +4425,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface().optical_channel_info().operational_mode(),
-            expected_value);
+  EXPECT_EQ(req.requests(0).optical_network_interface()
+      .optical_channel_info().operational_mode(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'
@@ -4441,8 +4443,8 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
 
   ASSERT_THAT(req.requests(), SizeIs(1));
-  EXPECT_EQ(req.requests(0).optical_network_interface().optical_channel_info().operational_mode(),
-            expected_value);
+  EXPECT_EQ(req.requests(0).optical_network_interface()
+      .optical_channel_info().operational_mode(), expected_value);
 }
 
 // Check if the '/components/component/optical-channel/config/operational-mode'

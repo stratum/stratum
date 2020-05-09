@@ -25,14 +25,15 @@ TaiOpticsDataSource::Make(const PhalOpticalModuleConfig::Port& config,
                                    config.cache_policy().type(),
                                    config.cache_policy().timed_value()));
   std::shared_ptr<TaiOpticsDataSource> datasource(
-          new TaiOpticsDataSource(config.port(), config.vendor_specific_id(), cache,
-                                  tai_interface));
+          new TaiOpticsDataSource(config.port(), config.vendor_specific_id(),
+                                  cache, tai_interface));
 
   datasource->UpdateValuesUnsafelyWithoutCacheOrLock();
   return datasource;
 }
 
-TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid, CachePolicy* cache_policy,
+TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid,
+                                         CachePolicy* cache_policy,
                                          TaiInterface* tai_interface)
     : DataSource(cache_policy), oid_(oid), tai_interface_(tai_interface) {
   // These values do not change during the lifetime of the data source.

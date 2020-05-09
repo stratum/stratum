@@ -189,7 +189,8 @@ Phal* Phal::CreateSingleton() {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  return optics_adapter_->GetOpticalTransceiverInfo(module, network_interface, oc_info);
+  return optics_adapter_->GetOpticalTransceiverInfo(module, network_interface,
+                                                    oc_info);
 }
 
 ::util::Status Phal::SetOpticalChannelInfo(
@@ -199,7 +200,8 @@ Phal* Phal::CreateSingleton() {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  return optics_adapter_->SetOpticalTransceiverInfo(module, network_interface, oc_info);
+  return optics_adapter_->SetOpticalTransceiverInfo(module, network_interface,
+                                                    oc_info);
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,

@@ -29,7 +29,8 @@ class PhalMock : public PhalInterface {
                ::util::Status(int slot, int port,
                               FrontPanelPortInfo* fp_port_info));
   MOCK_METHOD3(GetOpticalChannelInfo,
-               ::util::Status(int module, int network_interface, OpticalChannelInfo* optical_netif_info));
+               ::util::Status(int module, int network_interface,
+                              OpticalChannelInfo* optical_netif_info));
   MOCK_METHOD3(SetOpticalChannelInfo,
                ::util::Status(int module, int network_interface,
                               const OpticalChannelInfo& optical_netif_info));

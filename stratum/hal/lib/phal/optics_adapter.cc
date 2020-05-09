@@ -27,7 +27,8 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 
   std::vector<Path> paths = {
       {PathEntry("optical_modules", module - 1),
-       PathEntry("network_interfaces", network_intweface - 1, true, false, true)}};
+       PathEntry("network_interfaces", network_intweface - 1, true, false, true)
+      }};
 
   ASSIGN_OR_RETURN(auto phaldb, Get(paths));
 
@@ -36,7 +37,8 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 
   auto optical_module = phaldb->optical_modules(module - 1);
 
-  CHECK_RETURN_IF_FALSE(optical_module.network_interfaces_size() > network_intweface - 1)
+  CHECK_RETURN_IF_FALSE(
+      optical_module.network_interfaces_size() > network_intweface - 1)
       << "optical port in port " << network_intweface - 1 << " not found";
 
   auto optical_port = optical_module.network_interfaces(network_intweface - 1);

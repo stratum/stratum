@@ -456,8 +456,8 @@ BcmSwitch::~BcmSwitch() {}
         }
         break;
       case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
-        switch(req.optical_network_interface().value_case()) {
-          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalChannelInfo: {
+        switch (req.optical_network_interface().value_case()) {
+          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalChannelInfo: {  // NOLINT
             status.Update(phal_interface_->SetOpticalChannelInfo(
                 req.optical_network_interface().module(),
                 req.optical_network_interface().network_interface(),

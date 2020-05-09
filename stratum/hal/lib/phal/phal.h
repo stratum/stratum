@@ -45,9 +45,9 @@ class Phal : public PhalInterface {
   ::util::Status GetOpticalChannelInfo(int module, int network_interface,
                                            OpticalChannelInfo* oc_info) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status SetOpticalChannelInfo(
-      int module, int network_interface, const OpticalChannelInfo& oc_info) override
-      LOCKS_EXCLUDED(config_lock_);
+  ::util::Status SetOpticalChannelInfo(int module, int network_interface,
+                                       const OpticalChannelInfo& oc_info)
+      override LOCKS_EXCLUDED(config_lock_);
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
       LOCKS_EXCLUDED(config_lock_);

@@ -343,7 +343,8 @@ void YangParseTree::AddSubtreeInterfaceFromSingleton(
                                                        this);
 }
 
-void YangParseTree::AddSubtreeInterfaceFromOptical(const OpticalNetworkInterface& optical) {
+void YangParseTree::AddSubtreeInterfaceFromOptical(
+    const OpticalNetworkInterface& optical) {
   YangParseTreePaths::AddSubtreeInterfaceFromOptical(optical, this);
 }
 

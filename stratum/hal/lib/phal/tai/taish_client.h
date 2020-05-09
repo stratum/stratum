@@ -1,8 +1,8 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAISH_WRAPPER_H_
-#define STRATUM_HAL_LIB_PHAL_TAI_TAISH_WRAPPER_H_
+#ifndef STRATUM_HAL_LIB_PHAL_TAI_TAISH_CLIENT_H_
+#define STRATUM_HAL_LIB_PHAL_TAI_TAISH_CLIENT_H_
 
 #include <memory>
 #include <string>
@@ -20,18 +20,19 @@ namespace phal {
 namespace tai {
 
 // Attribute names.
-const std::string kNetIfAttrTxLaserFreq =
+constexpr char kNetIfAttrTxLaserFreq[] =
     "TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ";
-const std::string kNetIfAttrCurrentInputPower =
+constexpr char kNetIfAttrCurrentInputPower[] =
     "TAI_NETWORK_INTERFACE_ATTR_CURRENT_INPUT_POWER";
-const std::string kNetIfAttrCurrentOutputPower =
+constexpr char kNetIfAttrCurrentOutputPower[] =
     "TAI_NETWORK_INTERFACE_ATTR_CURRENT_OUTPUT_POWER";
-const std::string kNetIfAttrOutputPower =
+constexpr char kNetIfAttrOutputPower[] =
     "TAI_NETWORK_INTERFACE_ATTR_OUTPUT_POWER";
-const std::string kNetIfAttrModulationFormat =
+constexpr char kNetIfAttrModulationFormat[] =
     "TAI_NETWORK_INTERFACE_ATTR_MODULATION_FORMAT";
 
-// FIXME(Yi): this map is based on
+// FIXME(Yi): this map is based on ONOS ODTH driver, we should complete this
+// map with values from the TAI library.
 const absl::flat_hash_map<std::string, uint64> kModulationFormatIds = {
     {"dp-qpsk", 1}, {"dp-16-qam", 2}, {"dp-8-qam", 3}
 };
@@ -49,18 +50,26 @@ class TaishClient : public TaiInterface {
   // TODO(Yi): Complete functions for Module and Host Interface
 
   // Functions for Network Interface.
-  util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
-  util::StatusOr<double> GetCurrentInputPower(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
-  util::StatusOr<double> GetCurrentOutputPower(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
-  util::StatusOr<double> GetTargetOutputPower(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
-  util::StatusOr<uint64> GetModulationFormats(const uint64 netif_id) override LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) override
+      LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<double> GetCurrentInputPower(const uint64 netif_id) override
+      LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<double> GetCurrentOutputPower(const uint64 netif_id) override
+      LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<double> GetTargetOutputPower(const uint64 netif_id) override
+      LOCKS_EXCLUDED(init_lock_);
+  util::StatusOr<uint64> GetModulationFormats(const uint64 netif_id) override
+      LOCKS_EXCLUDED(init_lock_);
   util::Status SetTargetOutputPower(const uint64 netif_id,
-                                    const double power) override LOCKS_EXCLUDED(init_lock_);
+                                    const double power) override
+      LOCKS_EXCLUDED(init_lock_);
   util::Status SetModulationsFormats(const uint64 netif_id,
-                                     const uint64 mod_format) override LOCKS_EXCLUDED(init_lock_);
+                                     const uint64 mod_format) override
+      LOCKS_EXCLUDED(init_lock_);
   util::Status SetTxLaserFrequency(const uint64 netif_id,
-                                   const uint64 frequency) override LOCKS_EXCLUDED(init_lock_);
-  virtual util::Status Shutdown() override LOCKS_EXCLUDED(init_lock_);
+                                   const uint64 frequency) override
+      LOCKS_EXCLUDED(init_lock_);
+  util::Status Shutdown() override LOCKS_EXCLUDED(init_lock_);
 
   // Gets the singleton instance.
   static TaishClient* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
@@ -74,7 +83,8 @@ class TaishClient : public TaiInterface {
   util::Status SetAttribute(uint64 obj_id, uint64 attr_id, std::string value)
       SHARED_LOCKS_REQUIRED(init_lock_);
 
-  util::StatusOr<uint64> GetModulationFormatIds(const std::string& modulation_format);
+  util::StatusOr<uint64> GetModulationFormatIds(
+      const std::string& modulation_format);
   util::StatusOr<std::string> GetModulationFormatName(const uint64 id);
 
   static absl::Mutex init_lock_;
@@ -96,4 +106,4 @@ class TaishClient : public TaiInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAISH_WRAPPER_H_
+#endif  // STRATUM_HAL_LIB_PHAL_TAI_TAISH_CLIENT_H_
