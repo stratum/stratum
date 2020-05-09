@@ -403,7 +403,7 @@ BcmSwitch::~BcmSwitch() {}
         break;
       case DataRequest::Request::kOpticalChannelInfo:
         // Retrieve current optical channel state from phal.
-        status.Update(phal_interface_->GetOpticalTransceiverInfo(
+        status.Update(phal_interface_->GetOpticalChannelInfo(
             req.optical_channel_info().module(),
             req.optical_channel_info().network_interface(),
             resp.mutable_optical_channel_info()));
@@ -444,12 +444,6 @@ BcmSwitch::~BcmSwitch() {}
                        << " through SetValue() is ignored. Modify the "
                           "ChassisConfig instead!";
             break;
-          case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
-            status.Update(phal_interface_->SetOpticalTransceiverInfo(
-                req.port().node_id(), req.port().port_id(),
-                req.port().optical_channel_info()));
-            break;
-          }
           case SetRequest::Request::Port::ValueCase::kLoopbackStatus: {
             absl::WriterMutexLock l(&chassis_lock);
             status.Update(bcm_chassis_manager_->SetPortLoopbackState(
@@ -461,6 +455,18 @@ BcmSwitch::~BcmSwitch() {}
             status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
         }
         break;
+      case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
+        switch(req.optical_network_interface().value_case()) {
+          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalChannelInfo: {
+            status.Update(phal_interface_->SetOpticalChannelInfo(
+                req.optical_network_interface().module(),
+                req.optical_network_interface().network_interface(),
+                req.optical_network_interface().optical_channel_info()));
+            break;
+          }
+          default:
+            status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+        }
       default:
         status = MAKE_ERROR(ERR_INTERNAL)
                  << req.ShortDebugString() << " Not supported yet!";
