@@ -35,24 +35,28 @@ class OpticsAdapterTest : public ::testing::Test {
 };
 
 constexpr char phaldb_get_response_proto[] = R"PROTO(
-  optical_cards {
-    id: 1
-    vendor_name: "transceiver-vendor1"
-    hardware_state: HW_STATE_PRESENT
-    frequency: 196
-    input_power: 1000.2
-    output_power: 10000.1
-    target_output_power: 15.5
-    operational_mode: 1
+  optical_modules {
+    id: 0
+    network_interfaces {
+      id: 0
+      frequency: 196000000
+      input_power: 1000.2
+      output_power: 10000.1
+      target_output_power: 15.5
+      operational_mode: 1
+    }
   }
 )PROTO";
 
 // Settable atrributes paths.
-const Path frequency_path = {PathEntry("optical_cards", 0),
+const Path frequency_path = {PathEntry("optical_modules", 0),
+                             PathEntry("network_interfaces", 0),
                              PathEntry("frequency")};
-const Path target_output_power_path = {PathEntry("optical_cards", 0),
+const Path target_output_power_path = {PathEntry("optical_modules", 0),
+                                       PathEntry("network_interfaces", 0),
                                        PathEntry("target_output_power")};
-const Path operational_mode_path = {PathEntry("optical_cards", 0),
+const Path operational_mode_path = {PathEntry("optical_modules", 0),
+                                    PathEntry("network_interfaces", 0),
                                     PathEntry("operational_mode")};
 
 // Settable attributes matcher
@@ -98,7 +102,7 @@ TEST_F(OpticsAdapterTest, TaiPhalSetOpticalTransceiverInfoSuccess) {
   oc_info.set_operational_mode(3);
 
   AttributeValueMap attrs;
-  attrs[frequency_path] = oc_info.frequency();
+  attrs[frequency_path] = oc_info.frequency() * 1000000;
   attrs[target_output_power_path] = oc_info.target_output_power();
   attrs[operational_mode_path] = oc_info.operational_mode();
 
