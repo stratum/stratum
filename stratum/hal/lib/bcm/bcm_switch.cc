@@ -404,8 +404,8 @@ BcmSwitch::~BcmSwitch() {}
       case DataRequest::Request::kOpticalChannelInfo:
         // Retrieve current optical channel state from phal.
         status.Update(phal_interface_->GetOpticalTransceiverInfo(
-            req.optical_channel_info().node_id(),
-            req.optical_channel_info().port_id(),
+            req.optical_channel_info().module(),
+            req.optical_channel_info().network_interface(),
             resp.mutable_optical_channel_info()));
         break;
       default:

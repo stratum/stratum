@@ -23,9 +23,7 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*
- * TaiOpticsDataSource class updates Database<->TAI with fresh values.
- */
+// TaiOpticsDataSource class updates Database<->TAI with fresh values.
 class TaiOpticsDataSource final : public DataSource {
  public:
   static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>

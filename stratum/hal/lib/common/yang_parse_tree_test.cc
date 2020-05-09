@@ -136,11 +136,11 @@ class YangParseTreeTest : public ::testing::Test {
   }
 
   // Create /components/component[name]/optical-channel subtree from the
-  // default OpticalPort instance.
+  // default OpticalNetworkInterface instance.
   void AddSubtreeOpticalInterface(const std::string& name) {
     absl::WriterMutexLock l(&parse_tree_.root_access_lock_);
 
-    OpticalPort optical_port;
+    OpticalNetworkInterface optical_port;
     optical_port.set_name(name);
     optical_port.set_line_port("line-port-1");
     optical_port.set_node(kOpticalInterface1NodeId);
@@ -481,8 +481,8 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
       void (TOption::*value_setter)(TSetterValue), const TValue& value) {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
-      OpticalChannelInfo* oc_info = resp.mutable_optical_channel_info();
-      ((oc_info->*option_getter)()->*value_setter)(value);
+      OpticalChannelInfo* optical_netif_info = resp.mutable_optical_channel_info();
+      ((optical_netif_info->*option_getter)()->*value_setter)(value);
       w->Write(resp);
     };
 
@@ -497,8 +497,8 @@ class YangParseTreeOpticalChannelTest : public YangParseTreeTest {
       void (TOption::*value_setter)(TSetterValue), const TValue& value) {
     const auto mockedRetrieve = [=](WriterInterface<DataResponse>* w) {
       DataResponse resp;
-      OpticalChannelInfo* oc_info = resp.mutable_optical_channel_info();
-      (oc_info->*value_setter)(value);
+      OpticalChannelInfo* optical_netif_info = resp.mutable_optical_channel_info();
+      (optical_netif_info->*value_setter)(value);
       w->Write(resp);
     };
 

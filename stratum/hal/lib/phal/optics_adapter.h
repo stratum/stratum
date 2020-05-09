@@ -31,13 +31,13 @@ class OpticsAdapter final : public Adapter {
   // Gets the information about an optical transceiver module by querying the
   // Phal database.
   // See: PhalInterface::GetOpticalTransceiverInfo.
-  ::util::Status GetOpticalTransceiverInfo(int slot, int port,
+  ::util::Status GetOpticalTransceiverInfo(int32 module, int network_interface,
                                            OpticalChannelInfo* oc_info);
 
   // Sets the data from oc_info into an optical transceiver module in the Phal
   // database.
   // See: PhalInterface::SetOpticalTransceiverInfo.
-  ::util::Status SetOpticalTransceiverInfo(int slot, int port,
+  ::util::Status SetOpticalTransceiverInfo(int32 module, int network_interface,
                                            const OpticalChannelInfo& oc_info);
 
  private:

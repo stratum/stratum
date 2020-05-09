@@ -30,7 +30,7 @@ class YangParseTreePaths {
 
   // Adds all supported paths for the specified optical interface.
   static void AddSubtreeInterfaceFromOptical(
-      const OpticalPort& optical_port, YangParseTree* tree)
+      const OpticalNetworkInterface& optical_port, YangParseTree* tree)
       EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_);
 
   // Adds all supported paths for the specified trunk interface.

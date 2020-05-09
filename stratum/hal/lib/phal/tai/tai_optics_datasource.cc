@@ -17,9 +17,7 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*
- * Creates a new TAI optics data source.
- */
+// Creates a new TAI optics data source.
 ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
 TaiOpticsDataSource::Make(const PhalOpticalModuleConfig::Port& config,
                           TaiInterface* tai_interface) {
@@ -53,9 +51,6 @@ TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid, CachePolicy* cach
       });
 }
 
-/*
- * Updates attributes with fresh values from TAI.
- */
 ::util::Status TaiOpticsDataSource::UpdateValues() {
   // Update attributes with fresh values from Tai.
   ASSIGN_OR_RETURN(auto tx_laser_freq,

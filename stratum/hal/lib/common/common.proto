@@ -356,36 +356,26 @@ message SingletonPort {
   PortConfigParams config_params = 8;
 }
 
-// OpticalPort uniquely identifies a single physical optical port on a single
-// chassis and all its flow-related and config-related parameters (As
-// SingletonPort).
-message OpticalPort {
-  // The unique optical port ID.
+// OpticalNetworkInterface uniquely identifies a single physical optical
+// network interface on a single chassis.
+message OpticalNetworkInterface {
+  // The unique optical network interface ID.
   uint32 id = 1;
   // An optional arbitrary name for the optical port. WILL NOT BE PARSED.
   string name = 2;
-  // The 1-base index of the slot (aka linecard) of the port.
-  int32 slot = 3;
-  // The 1-base index of the optical port on the slot.
-  int32 port = 4;
-  // The 1-base channel index (only if the port is channelized). Absence or zero
-  // means non-channelized.
-  int32 channel = 5;
-  // The id of the corresponding node that the port belongs to.
-  uint64 node = 6;
-  // The module location corresponding to module that the port belongs to.
-  uint32 module_location = 7; // required
-  // The unique netif location that represents the optical port on the module.
-  uint32 netif_location = 8; // required
+  // The 1-based module index of this port.
+  int32 module = 3;
+  // The 1-based network interface index of this port.
+  int32 network_interface = 4;
   // Optical channel frequency in Hz.
-  uint64 frequency = 9;
+  uint64 frequency = 5;
   // Target output optical power level of the optical channel, expressed in
   // increments of 0.01 decibel-milliwats.
-  double target_output_power = 10;
+  double target_output_power = 6;
   // Optical channel operational mode.
-  uint64 operational_mode = 11;
+  uint64 operational_mode = 7;
   // Optical channel line port value.
-  string line_port = 12;
+  string line_port = 8;
 }
 
 // TrunkPort uniquely identifies a single trunk port on a single chassis and
@@ -689,7 +679,7 @@ message ChassisConfig {
   repeated TrunkPort trunk_ports = 5;
   repeated PortGroup port_groups = 6;
   VendorConfig vendor_config = 7;
-  repeated OpticalPort optical_ports = 8;
+  repeated OpticalNetworkInterface optical_network_interfaces = 8;
 }
 
 //------------------------------------------------------------------------------
@@ -1033,7 +1023,7 @@ message FrontPanelPortInfo {
   HwState hw_state = 6;
 }
 
-// Optical channel configuration
+// Optical channel state and configuration.
 message OpticalChannelInfo {
   message Power {
     // The instantaneous value of the statistic.
@@ -1052,7 +1042,7 @@ message OpticalChannelInfo {
     uint64 min_time = 7;
   }
 
-  // Optical channel frequency in Hz.
+  // Optical channel frequency in Mega Hz.
   uint64 frequency = 1;
   // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
   // If the port is an aggregate of multiple physical channels, this attribute
@@ -1197,6 +1187,11 @@ message DataRequest {
       uint32 port_id = 2;
       uint32 queue_id = 3;
     }
+    // Data required to set info for a specific optical network interface.
+    message OpticalNetworkInterface {
+      int32 module = 1;
+      int32 network_interface = 2;
+    }
     oneof request {
       Port oper_status = 1;
       Port admin_status = 2;
@@ -1216,7 +1211,7 @@ message DataRequest {
       Port front_panel_port_info = 16;
       Port hardware_port = 17;
       Port fec_status = 18;
-      Port optical_channel_info = 19;
+      OpticalNetworkInterface optical_channel_info = 19;
       Port loopback_status = 20;
     }
   }
@@ -1276,10 +1271,8 @@ message SetRequest {
         AutonegotiationStatus autoneg_status = 9;
         // The new forwarding viability of the port.
         ForwardingViability forwarding_viability = 10;
-        // The new optical channel configurable values.
-        OpticalChannelInfo optical_channel_info = 11;
         // The intended loopback state of the port.
-        LoopbackStatus loopback_status = 12;
+        LoopbackStatus loopback_status = 11;
       }
     }
     // Data required to set info for a specific node.
@@ -1290,10 +1283,20 @@ message SetRequest {
     message Chassis {
       // TODO(unknown): Add this.
     }
+    // Data required to set info for a specific optical network interface.
+    message OpticalNetworkInterface {
+      int32 module = 1;
+      int32 network_interface = 2;
+      oneof value {
+        // The new optical channel configurable values.
+        OpticalChannelInfo optical_channel_info = 3;
+      }
+    }
     oneof request {
       Port port = 1;
       Node node = 2;
       Chassis chassis = 3;
+      OpticalNetworkInterface optical_network_interface = 4;
     }
   }
   repeated Request requests = 1;

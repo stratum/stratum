@@ -96,7 +96,7 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
   // * output_power.
   // * input_power.
   ASSIGN_OR_RETURN(auto optical_port,
-                   mutable_module_group->AddRepeatedChildGroup("ports"));
+                   mutable_module_group->AddRepeatedChildGroup("network_interfaces"));
   auto mutable_optical_port = optical_port->AcquireMutable();
   ASSIGN_OR_RETURN(std::shared_ptr<TaiOpticsDataSource> datasource,
                    TaiOpticsDataSource::Make(port_config, tai_interface_));

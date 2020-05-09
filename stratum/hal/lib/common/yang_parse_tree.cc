@@ -175,7 +175,7 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   }
 
   std::unordered_set<std::string> optical_names;
-  for (const auto& optical : change.new_config_.optical_ports()) {
+  for (const auto& optical : change.new_config_.optical_network_interfaces()) {
     if (optical_names.count(optical.name())) {
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate optical port name: "
           << optical.name();
@@ -343,7 +343,7 @@ void YangParseTree::AddSubtreeInterfaceFromSingleton(
                                                        this);
 }
 
-void YangParseTree::AddSubtreeInterfaceFromOptical(const OpticalPort& optical) {
+void YangParseTree::AddSubtreeInterfaceFromOptical(const OpticalNetworkInterface& optical) {
   YangParseTreePaths::AddSubtreeInterfaceFromOptical(optical, this);
 }
 

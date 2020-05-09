@@ -276,6 +276,17 @@ namespace dummy_switch {
         }
         break;
       }
+      case DataRequest::Request::kOpticalChannelInfo: {
+        // Retrieve current optical channel state from phal.
+        ::util::Status status = phal_interface_->GetOpticalChannelInfo(
+            request.optical_channel_info().module(),
+            request.optical_channel_info().network_interface(),
+            resp_val.mutable_optical_channel_info());
+        if (status.ok()) {
+          resp = resp_val;
+        }
+        break;
+      }
       default:
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
         break;
