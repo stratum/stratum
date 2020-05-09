@@ -40,3 +40,13 @@ stratum_cc_library(
 
 barefoot_pi_deps(pi_node_common_deps)
 
+# PI Node for Netcope targets
+stratum_cc_library(
+    name = "pi_node_np4",
+    srcs = ["pi_node.cc"],
+    hdrs = ["pi_node.h"],
+    deps = pi_node_common_deps +
+           [
+           "@com_github_p4lang_PI_np4//proto/frontend:pifeproto",
+           ]
+)
