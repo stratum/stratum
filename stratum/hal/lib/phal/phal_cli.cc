@@ -13,6 +13,7 @@
 #include "absl/time/time.h"
 #include "gflags/gflags.h"
 #include "grpcpp/grpcpp.h"
+#include "re2/re2.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/status_macros.h"
@@ -23,14 +24,41 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
+DECLARE_bool(colorlogtostderr);
+DECLARE_bool(logtostderr);
+DECLARE_int32(stderrthreshold);
 DEFINE_string(phal_db_url, stratum::kPhalDbServiceUrl,
               "URL to the phalDb server.");
+DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms.");
+DEFINE_uint64(count, -1, "Subscribe poll count. Default is infinite.");
+DEFINE_double(double_val, 0, "Set a double value.");
+DEFINE_int32(int32_val, 0, "Set a int32 value.");
+DEFINE_int64(int64_val, 0, "Set a int64 value.");
+DEFINE_uint64(uint64_val, 0, "Set a uint64 value.");
+DEFINE_bool(bool_val, false, "Set a boolean value.");
+DEFINE_string(string_val, "", "Set a string value.");
 
 namespace stratum {
 namespace hal {
 namespace phal {
 
 namespace {
+const char kUsage[] =
+    R"USAGE({get,set,sub} path [--<type>_val=<value>]
+Basic PHAL CLI. Query the internal state of the Phal database.
+
+Examples:
+  Get:
+  get cards[0]/ports[0]/transceiver/hardware_state # First port from first card
+  get cards[@]/ports[@]/transceiver/hardware_state # All ports from all cards
+
+  Set:
+  set fan_trays[0]/fans[0]/speed_control --int32_val 30
+
+  Subscribe:
+  sub fan_trays[@]/fans[@]/speed_control --interval=500 --count=2
+)USAGE";
+
 // Parse PB Query string to Phal DB Path
 ::util::StatusOr<PathQuery> ParseQuery(const std::string& query) {
   PathQuery path_query;
@@ -46,11 +74,26 @@ namespace {
     query_fields.pop_back();
   }
 
-  for (const auto& field : query_fields) {
-    CHECK_RETURN_IF_FALSE(field != "")
+  for (const auto& query_field : query_fields) {
+    CHECK_RETURN_IF_FALSE(query_field != "")
         << "Encountered unexpected empty query field.";
-    PathQuery::PathEntry entry;
-    entry.set_name(field);
+
+    PathQuery::PathEntry entry;  // Protobuf type
+    RE2 field_regex(R"#((\w+)(\[(?:\d+|\@)\])?)#");
+    RE2 bracket_regex(R"#(\[(\d+)\])#");
+    std::string bracket_match;
+    std::string name_match;
+    CHECK_RETURN_IF_FALSE(
+        RE2::FullMatch(query_field, field_regex, &name_match, &bracket_match))
+        << "Could not parse query field: " << query_field;
+    entry.set_name(name_match);
+    if (!bracket_match.empty()) {
+      entry.set_indexed(true);
+      int index;
+      if (!RE2::FullMatch(bracket_match, bracket_regex, &index))
+        entry.set_all(true);
+      entry.set_index(index);
+    }
     *path_query.add_entries() = entry;
   }
 
@@ -63,6 +106,9 @@ namespace {
 
 // Handles various CLI interactions with an attribute database.
 class PhalCli {
+ private:
+  enum cmd_type { CMD_GET, CMD_SUBSCRIBE, CMD_SET };
+
  public:
   // All CLI queries are run on the given attribute database.
   explicit PhalCli(std::shared_ptr<grpc::Channel> channel)
@@ -90,7 +136,7 @@ class PhalCli {
     }
 
     int64_t execute_duration =
-        (execute_time - start_time) / absl::Microseconds(1);
+        (execute_time - start_time) / absl::Milliseconds(1);
 
     auto result_str = resp.DebugString();
     if (result_str.size() <= 0) {
@@ -98,8 +144,8 @@ class PhalCli {
     } else {
       std::cout << result_str << std::endl;
     }
-    std::cout << "Executed query in " << execute_duration << " us."
-              << std::endl;
+    LOG(INFO) << "Executed query in " << execute_duration << " us.";
+
     return ::util::OkStatus();
   }
 
@@ -112,65 +158,29 @@ class PhalCli {
     SubscribeResponse resp;
     grpc::ClientContext context;
 
-    // Grab the polling interval
-    std::string str;
-    int polling_interval = 5;
-    while (true) {
-      std::cout << "Polling interval(secs) 5: ";
-      std::getline(std::cin, str);
-      if (std::cin.eof() || str == "") break;
-      polling_interval = stoi(str);
-      if (polling_interval > 0) break;
-      std::cout << "Invalid polling interval: " << str << std::endl;
-    }
-
-    // Grab the of responses (0 is infinite)
-    int num_responses = 10;
-    while (true) {
-      std::cout << "Num responses(0 = infinite) 10: ";
-      std::getline(std::cin, str);
-      if (std::cin.eof() || str == "") break;
-      num_responses = stoi(str);
-      if (num_responses >= 0) break;
-      std::cout << "Invalid num responses: " << str << std::endl;
-    }
-
     ASSIGN_OR_RETURN(auto path, ParseQuery(query));
     *req.mutable_path() = path;
-    req.set_polling_interval(polling_interval);
+    req.set_polling_interval(FLAGS_interval * 1000000);
 
     absl::Time start_time = absl::Now();
     std::unique_ptr<grpc::ClientReader<SubscribeResponse>> reader(
         phaldb_svc_->Subscribe(&context, req));
 
-    // Read the stream of responses (Note: return after 10)
-    int cnt = num_responses;
-    while (reader->Read(&resp)) {
-      auto result_str = resp.DebugString();
-      if (result_str.size() <= 0) {
-        std::cout << "No Results" << std::endl;
-      } else {
-        std::cout << result_str << std::endl;
-      }
-      int resp_duration = (absl::Now() - start_time) / absl::Microseconds(1);
-      std::cout << "Response in " << resp_duration << " us." << std::endl;
+    // Read the stream of responses
+    for (int i = 0; i < FLAGS_count && reader->Read(&resp); ++i) {
+      std::cout << resp.DebugString() << std::endl;
+      int resp_duration = (absl::Now() - start_time) / absl::Milliseconds(1);
+      LOG(INFO) << "Response in " << resp_duration << " ms.";
       start_time = absl::Now();
-
-      if (num_responses > 0 && --cnt == 0) {
-        std::cout << "Reached max polls" << std::endl;
-        return ::util::OkStatus();
-      }
     }
-
+    context.TryCancel();
     auto status = reader->Finish();
 
     // RPC failed
-    if (!status.ok()) {
+    if (!status.ok() && status.error_code() != grpc::StatusCode::CANCELLED) {
       return MAKE_ERROR(ERR_INTERNAL)
              << "Subscribe rpc failed: " << status.error_message();
     }
-
-    std::cout << "Subscribe finished" << std::endl;
 
     return ::util::OkStatus();
   }
@@ -186,102 +196,23 @@ class PhalCli {
     ASSIGN_OR_RETURN(auto path, ParseQuery(query));
     *update->mutable_path() = path;
 
-    // Grab value and set it based on type
-    while (true) {
-      // Grab value
-      std::string val_str;
-      std::cout << "Value: ";
-      std::getline(std::cin, val_str);
-      if (val_str == "") {
-        std::cout << "Invalid value." << std::endl;
-        continue;
-      }
-      // Grab type and then set it in the request
-      std::string type;
-      std::cout << "Type: ";
-      std::getline(std::cin, type);
-
-      if (type.compare("int32") == 0) {
-        int32_t val;
-        if (sscanf(val_str.c_str(), "%d", &val) != 1) {
-          std::cout << "Invalid int32" << std::endl;
-          continue;
-        }
-        update->mutable_value()->set_int32_val(val);
-        break;
-
-      } else if (type.compare("int64") == 0) {
-        int64_t val;
-        if (sscanf(val_str.c_str(), "%ld", &val) != 1) {
-          std::cout << "Invalid int64" << std::endl;
-          continue;
-        }
-        update->mutable_value()->set_int64_val(val);
-        break;
-
-      } else if (type.compare("uint32") == 0) {
-        uint32_t val;
-        if (sscanf(val_str.c_str(), "%d", &val) != 1) {
-          std::cout << "Invalid uint32" << std::endl;
-          continue;
-        }
-        update->mutable_value()->set_uint32_val(val);
-        break;
-
-      } else if (type.compare("uint64") == 0) {
-        uint64_t val;
-        if (sscanf(val_str.c_str(), "%ld", &val) != 1) {
-          std::cout << "Invalid uint64" << std::endl;
-          continue;
-        }
-        update->mutable_value()->set_uint64_val(val);
-        break;
-
-      } else if (type.compare("double") == 0) {
-        double val;
-        if (sscanf(val_str.c_str(), "%lf", &val) != 1) {
-          std::cout << "Invalid double" << std::endl;
-          continue;
-        }
-        update->mutable_value()->set_double_val(val);
-        break;
-
-      } else if (type.compare("float") == 0) {
-        float val;
-        if (sscanf(val_str.c_str(), "%f", &val) != 1) {
-          std::cout << "Invalid float" << std::endl;
-          continue;
-        }
-        update->mutable_value()->set_float_val(val);
-        break;
-
-      } else if (type.compare("bool") == 0) {
-        if (val_str.compare("false") == 0) {
-          update->mutable_value()->set_bool_val(false);
-          break;
-
-        } else if (val_str.compare("true") == 0) {
-          update->mutable_value()->set_bool_val(true);
-          break;
-
-        } else {
-          std::cout << "Invalid bool <false|true>" << std::endl;
-          continue;
-        }
-
-      } else if (type.compare("string") == 0) {
-        update->mutable_value()->set_string_val(val_str);
-        break;
-
-      } else if (type.compare("bytes") == 0) {
-        update->mutable_value()->set_bytes_val(val_str);
-        break;
-
-      } else {
-        std::cout << "Must specify a type: <int32, uint32, int64, "
-                  << "uint64, double, float, bool, string, bytes" << std::endl;
-        continue;
-      }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("double_val").is_default) {
+      update->mutable_value()->set_double_val(FLAGS_double_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("int32_val").is_default) {
+      update->mutable_value()->set_int32_val(FLAGS_int32_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("int64_val").is_default) {
+      update->mutable_value()->set_int64_val(FLAGS_int64_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("uint64_val").is_default) {
+      update->mutable_value()->set_uint64_val(FLAGS_uint64_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("bool_val").is_default) {
+      update->mutable_value()->set_bool_val(FLAGS_bool_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("string_val").is_default) {
+      update->mutable_value()->set_string_val(FLAGS_string_val);
     }
 
     absl::Time start_time = absl::Now();
@@ -293,96 +224,45 @@ class PhalCli {
       return MAKE_ERROR(ERR_INTERNAL)
              << "gRPC Get call failed: " << status.error_message();
     }
-
     int64_t execute_duration =
-        (execute_time - start_time) / absl::Microseconds(1);
+        (execute_time - start_time) / absl::Milliseconds(1);
+    std::cout << resp.DebugString() << std::endl;
+    LOG(INFO) << "Executed query in " << execute_duration << " us.";
 
-    auto result_str = resp.DebugString();
-    if (result_str.size() <= 0) {
-      std::cout << "No Results" << std::endl;
-    } else {
-      std::cout << result_str << std::endl;
-    }
-    std::cout << "Executed query in " << execute_duration << " us."
-              << std::endl;
     return ::util::OkStatus();
   }
 
-  enum cmd_type { CMD_GET, CMD_SUBSCRIBE, CMD_SET };
-
-  // Runs the main CLI loop.
-  ::util::Status RunCli() {
-    while (true) {
-      cmd_type cmdtype = CMD_GET;
-
-      // What type of cmd
-      std::string resp;
-      std::cout << "Cmd type <get, subscribe, set>: ";
-      std::getline(std::cin, resp);
-      if (std::cin.eof()) break;
-
-      // Split the string by space
-      std::vector<std::string> r = absl::StrSplit(resp, ' ');
-      if (r.size() == 0 || r[0] == "") {
-        std::cout << "Use ^D to quit." << std::endl;
-        continue;
-      }
-      std::string type = r[0];
-
-      if (type.compare("get") == 0) {
-        cmdtype = CMD_GET;
-
-      } else if (type.compare("set") == 0) {
-        cmdtype = CMD_SET;
-
-      } else if (type.compare("sub") == 0) {
-        cmdtype = CMD_SUBSCRIBE;
-
-      } else {
-        std::cout << "Invalid cmd type " << type << std::endl;
-        continue;
-      }
-
-      // If the query was passed in via the original response use that
-      std::string query;
-      if (r.size() > 1) {
-        query = r[1];
-
-        // Else Grab the query path
-      } else {
-        std::cout << "Enter a PHAL path: ";
-        std::getline(std::cin, query);
-        if (std::cin.eof()) break;
-      }
-      if (query == "") {
-        std::cout << "Path nodes: "
-                  << "cards|fan_trays|led_groups|psu_trays|thermal_groups"
-                  << std::endl;
-        std::cout << "Use ^D to quit." << std::endl;
-        continue;
-      }
-
-      ::util::Status result;
-      switch (cmdtype) {
-        case CMD_GET:
-          result = HandleGet(query);
-          break;
-
-        case CMD_SET:
-          result = HandleSet(query);
-          break;
-
-        case CMD_SUBSCRIBE:
-          result = HandleSubscribe(query);
-          break;
-      }
-      if (!result.ok()) {
-        std::cerr << "ERROR: " << type << " Failed: " << result.error_message()
-                  << std::endl;
-      }
+  ::util::StatusOr<cmd_type> ParseCommand(std::string command) {
+    if (command == "get") {
+      return CMD_GET;
+    } else if (command == "set") {
+      return CMD_SET;
+    } else if (command == "subscribe" || command == "sub") {
+      return CMD_SUBSCRIBE;
     }
 
-    std::cout << "Exiting." << std::endl;
+    return MAKE_ERROR(ERR_INVALID_PARAM) << "Invalid command: " << command;
+  }
+
+  // Runs the main CLI loop.
+  ::util::Status RunCli(int argc, char** argv) {
+    if (argc < 3) {
+      return MAKE_ERROR(ERR_INVALID_PARAM) << "Command and path are required.";
+    }
+
+    ASSIGN_OR_RETURN(const auto cmd, ParseCommand(argv[1]));
+
+    switch (cmd) {
+      case CMD_GET:
+        RETURN_IF_ERROR(HandleGet(argv[2]));
+        break;
+      case CMD_SET:
+        RETURN_IF_ERROR(HandleSet(argv[2]));
+        break;
+      case CMD_SUBSCRIBE:
+        RETURN_IF_ERROR(HandleSubscribe(argv[2]));
+        break;
+    }
 
     return ::util::OkStatus();
   }
@@ -392,13 +272,15 @@ class PhalCli {
 };
 
 ::util::Status Main(int argc, char** argv) {
-  InitGoogle("phal_cli", &argc, &argv, true);
+  FLAGS_colorlogtostderr = true;
+  FLAGS_logtostderr = true;
+  FLAGS_stderrthreshold = 0;
+  ::gflags::SetUsageMessage(kUsage);
+  InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
-
   PhalCli cli(grpc::CreateChannel(FLAGS_phal_db_url,
                                   grpc::InsecureChannelCredentials()));
-
-  cli.RunCli();
+  cli.RunCli(argc, argv);
 
   return ::util::OkStatus();
 }
@@ -413,6 +295,6 @@ int main(int argc, char** argv) {
     return 0;
   } else {
     LOG(ERROR) << status;
-    return 1;
+    return status.error_code();
   }
 }
