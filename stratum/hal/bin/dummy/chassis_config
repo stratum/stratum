@@ -40,15 +40,13 @@ singleton_ports {
     mac_address: 0x222222222222
   }
 }
-optical_ports {
-  id: 3
-  name: "card-1"
-  slot: 1
-  port: 3
-  channel: 1
-  node: 1
+optical_network_interfaces {
+  id: 1
+  name: "netif-1"
+  module: 1
+  network_interface: 1
   frequency: 193500000000000
-  target_output_power: 0
+  target_output_power: -3.0
   operational_mode: 2
-  line_port: "oe-17"
+  line_port: "oe-1"
 }
