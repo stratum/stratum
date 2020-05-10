@@ -29,6 +29,8 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 
 [dummy](stratum/hal/bin/dummy/README.md)
 
+[NP4 Intel](stratum/hal/bin/np4intel/docker/README.md)
+
 [Stratum inside Docker](TODO)
 
 ## Other Topics

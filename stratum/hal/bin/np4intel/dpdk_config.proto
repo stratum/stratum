@@ -1,0 +1,16 @@
+// Copyright 2019 Dell EMC
+// Copyright 2018-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// this file contains the NP4 Intel configuration messages
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal.np4intel;
+
+message DPDKConfig {
+  bool disabled = 1;
+  repeated string eal_args = 2;
+}
