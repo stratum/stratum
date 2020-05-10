@@ -57,19 +57,19 @@ message PhalCardConfig {
 // This message encapsulates all the data needed to specify an optical module.
 message PhalOpticalModuleConfig {
   // This message encapsulates all the data needed to specify a physical
-  // port on an optical module.
-  message Port {
-    // The 1-based index of port on the optical module.
-    uint32 port = 1;
-    // Attribute DB Cache Policy
+  // network interface on an optical module.
+  message NetworkInterface {
+    // The 1-based index of network interface on the optical module.
+    int32 network_interface = 1;
+    // Attribute DB Cache Policy.
     CachePolicyConfig cache_policy = 2;
     // Vendor specific ID for an optical port.
     uint64 vendor_specific_id = 3;
   }
-  // The 1-based index of the slot
-  uint32 slot = 1;
-  repeated Port ports = 2;
-  // Attribute DB Cache Policy
+  // The 1-based index of the module.
+  int32 module = 1;
+  repeated NetworkInterface network_interfaces = 2;
+  // Attribute DB Cache Policy.
   CachePolicyConfig cache_policy = 3;
   // Vendor specific ID for an optical module.
   uint64 vendor_specific_id = 4;

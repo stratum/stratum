@@ -19,13 +19,13 @@ namespace tai {
 
 // Creates a new TAI optics data source.
 ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-TaiOpticsDataSource::Make(const PhalOpticalModuleConfig::Port& config,
+TaiOpticsDataSource::Make(const PhalOpticalModuleConfig::NetworkInterface& config,
                           TaiInterface* tai_interface) {
   ASSIGN_OR_RETURN(auto cache, CachePolicyFactory::CreateInstance(
                                    config.cache_policy().type(),
                                    config.cache_policy().timed_value()));
   std::shared_ptr<TaiOpticsDataSource> datasource(
-          new TaiOpticsDataSource(config.port(), config.vendor_specific_id(),
+          new TaiOpticsDataSource(config.network_interface(), config.vendor_specific_id(),
                                   cache, tai_interface));
 
   datasource->UpdateValuesUnsafelyWithoutCacheOrLock();

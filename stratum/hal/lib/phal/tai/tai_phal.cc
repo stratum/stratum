@@ -69,7 +69,6 @@ TaiPhal* TaiPhal::CreateSingleton(TaiInterface* tai_interface) {
   absl::WriterMutexLock l(&config_lock_);
 
   tai_interface_->Shutdown();
-  // tai_event_handler_.reset();
   initialized_ = false;
 
   return ::util::OkStatus();
