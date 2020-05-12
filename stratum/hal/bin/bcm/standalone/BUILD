@@ -26,6 +26,7 @@ licenses(["notice"])  # Apache v2
 stratum_bcm_common_deps = [
     "@com_github_google_glog//:glog",
     "@com_google_absl//absl/memory",
+    "@com_google_absl//absl/time",
     "@com_google_absl//absl/synchronization",
     "//stratum/glue:init_google",
     "//stratum/glue:logging",
@@ -82,6 +83,23 @@ stratum_cc_binary(
     ],
 )
 
+stratum_cc_binary(
+    name = "stratum_bcm_opennsa_benchmark",
+    srcs = [
+        "benchmark_main.cc",
+    ],
+    arches = EMBEDDED_ARCHES,
+    linkopts = [
+        "-lpthread",
+        "-ldl",
+        "-lutil",
+    ],
+    deps = stratum_bcm_common_deps + [
+        "//stratum/hal/lib/bcm:bcm_sdk_wrapper",
+        "//stratum/hal/lib/bcm:bcm_sdk_diag_shell",
+    ],
+)
+
 stratum_package(
     name = "stratum_pkg",
     bins = [
@@ -104,6 +122,7 @@ pkg_tar(
     srcs = [
         "sdk/start-stratum.sh",
         ":stratum_bcm_opennsa",
+        ":stratum_bcm_opennsa_benchmark"
     ],
     mode = "0755",
     package_dir = "/usr/bin",

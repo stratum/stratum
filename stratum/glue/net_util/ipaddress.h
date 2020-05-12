@@ -27,6 +27,7 @@
 #define STRATUM_GLUE_NET_UTIL_IPADDRESS_H_
 
 #include <netinet/in.h>
+#undef IP_TOS
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
