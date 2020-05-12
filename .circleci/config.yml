@@ -13,6 +13,7 @@ restore_bazel_cache: &restore_bazel_cache
       - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
       - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}
       - v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-master
+      - v3-bazel-cache
 save_bazel_cache: &save_bazel_cache
   save_cache:
     # Always saving the cache, even in case of failures, helps with completing
@@ -202,6 +203,8 @@ jobs:
           command: |
             bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_sdklt_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
+      - store_artifacts:
+          path: bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_sdklt_deb.deb
       - *docker_login
       - *docker_build
       - *docker_push
@@ -227,6 +230,8 @@ jobs:
           command: |
             bazel build //stratum/hal/bin/bcm/standalone:stratum_bcm_opennsa_deb
             cp bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb $DOCKER_SCOPE/stratum_bcm_deb.deb
+      - store_artifacts:
+          path: bazel-bin/stratum/hal/bin/bcm/standalone/stratum_bcm_opennsa_deb.deb
       - *docker_login
       - *docker_build
       - *docker_push
