@@ -1,9 +1,8 @@
-// Copyright 2018-present Barefoot Networks, Inc.
 // Copyright 2019-present Dell EMC
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-// This is the main entry for HAL Barefoot module tests.
+// This is the main entry for HAL NP4 Intel module tests.
 #include <stdlib.h>
 
 #include "gflags/gflags.h"
@@ -20,7 +19,7 @@ int main(int argc, char **argv) {
 
   bool tmpdir_created = false;
   if (FLAGS_test_tmpdir.empty()) {
-    char tmpdir[] = "/tmp/stratum_hal_bf_test.XXXXXX";
+    char tmpdir[] = "/tmp/stratum_np4intel_test.XXXXXX";
     CHECK(mkdtemp(tmpdir));
     FLAGS_test_tmpdir = tmpdir;
     tmpdir_created = true;

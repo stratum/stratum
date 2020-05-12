@@ -27,11 +27,11 @@ DEFINE_bool(console_logging, true,
 DEFINE_string(bmv2_log_level, "info",
               "Log level of Bmv2(trace, debug, info, warn, error, off)");
 
-using ::pi::fe::proto::DeviceMgr;
-
 namespace stratum {
 namespace hal {
 namespace bmv2 {
+
+using ::pi::fe::proto::DeviceMgr;
 
 std::unordered_map<std::string, bm::Logger::LogLevel> log_level_map = {
     {"trace", bm::Logger::LogLevel::TRACE},
