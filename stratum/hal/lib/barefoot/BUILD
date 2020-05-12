@@ -38,6 +38,26 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "bf_switch_bfrt",
+    srcs = ["bf_switch_bfrt.cc"],
+    hdrs = ["bf_switch_bfrt.h"],
+    deps = [":bf_chassis_manager",
+            ":bfrt_node",
+            "@com_google_googleapis//google/rpc:status_cc_proto",
+            "//stratum/glue:integral_types",
+            "//stratum/glue:logging",
+            "//stratum/glue/status:status_macros",
+            "//stratum/hal/lib/common:phal_interface",
+            "//stratum/hal/lib/common:switch_interface",
+            "//stratum/lib:constants",
+            "//stratum/lib:macros",
+            "@com_google_absl//absl/container:flat_hash_map",
+            "//stratum/glue/gtl:map_util",
+            "@local_barefoot_bin//:bf_headers",
+    ],
+)
+
+stratum_cc_library(
     name = "bf_chassis_manager",
     srcs = ["bf_chassis_manager.cc"],
     hdrs = ["bf_chassis_manager.h"],
@@ -175,4 +195,66 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
     ],
+)
+
+stratum_cc_library(
+    name = "bfrt_node",
+    srcs = ["bfrt_node.cc"],
+    hdrs = ["bfrt_node.h"],
+    deps = [
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/common:writer_interface",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/public/proto:error_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bf_switchd",
+        "@local_barefoot_bin//:bf_drivers",
+        "@local_barefoot_bin//:bf_sys",
+        "@local_barefoot_bin//:bf_utils",
+    ]
+)
+
+stratum_cc_library(
+    name = "bfrt_table_manager",
+    srcs = ["bfrt_table_manager.cc"],
+    hdrs = ["bfrt_table_manager.h"],
+    deps = [
+        ":macros",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:writer_interface",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/public/proto:error_cc_proto",
+        "@com_google_absl//absl/strings:strings",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bf_switchd",
+        "@local_barefoot_bin//:bf_drivers",
+        "@local_barefoot_bin//:bf_sys",
+        "@local_barefoot_bin//:bf_utils",
+    ]
+)
+
+stratum_cc_library(
+    name = "macros",
+    hdrs = ["macros.h"],
+    deps = [
+        "//stratum/lib:macros",
+        "@local_barefoot_bin//:bf_headers",
+    ]
 )
