@@ -30,6 +30,9 @@ cc_library(
         "barefoot-bin/include/pipe_mgr/*.h",
         "barefoot-bin/include/tofino/bf_pal/*.h",
         "barefoot-bin/include/tofino/pdfixed/*.h",
+        "barefoot-bin/include/pipe_mgr/*.h",
+        "barefoot-bin/include/bf_rt/*.h",
+        "barefoot-bin/include/bf_rt/*.hpp",
     ]),
     includes = ["barefoot-bin/include"],
     linkopts = [
