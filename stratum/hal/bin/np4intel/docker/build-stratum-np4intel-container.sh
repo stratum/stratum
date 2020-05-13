@@ -7,18 +7,20 @@
 DOCKERFILE_DIR=$(dirname "${BASH_SOURCE[0]}")
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 2>&1 && pwd )"}
 JOBS=${JOBS:-4}
+NP4_CHKSUM="4f8f55fb8a0d95dd1f019ef2c9226427"
 
 print_help() {
 cat << EOF
 
 The script builds containerized version of Stratum for NP4 Intel based device. It installs NP4 SDK libraries using Dockerfile.builder and saves artifacts to an intermediate builder image. Then it runs bazel build for Stratum code base and copies libraries from builder to runtime image using Dockerfile.runtime.
 
-Usage: $0 [options] -- NP4_TAR
+Usage: $0 [options] -- NP4_BIN
     [--local]                       Use the local stratum binaries
+    [--skip-md5]                    Skip Netcope SDK MD5 checksum test
 
 Example:
-    $0 -- ~/np4_intel_4_7_1-1.tgz
-    $0 --local -- ~/np4_intel_4_7_1-1.tgz
+    $0 -- np4-intel-n3000-4.7.1-1-ubuntu.bin
+    $0 --local -- np4-intel-n3000-4.7.1-1-ubuntu.bin
 
 EOF
 }
@@ -35,6 +37,10 @@ do
         ;;
     --local)
         LOCAL=YES
+        shift
+        ;;
+    --skip-md5)
+        SKIP_MD5=YES
         shift
         ;;
     "--")
@@ -56,14 +62,27 @@ fi
 
 BUILD_ARGS="--build-arg JOBS=$JOBS"
 
-# Grab the NP4 tarball
-echo """Copying NP4 tarball to $DOCKERFILE_DIR/
-NOTE: Copied tarballs will be DELETED after the build"""
+# Grab the NP4 binary
+echo """Copying NP4 binary to $DOCKERFILE_DIR/
+NOTE: Copied binary will be DELETED after the build"""
 
 if [ -n "$1" ]; then
-    NP4_TAR=$(basename $1)
-    BUILD_ARGS="$BUILD_ARGS --build-arg NP4_TAR=$NP4_TAR"
+    NP4_BIN=$(basename $1)
+    BUILD_ARGS="$BUILD_ARGS --build-arg NP4_BIN=$NP4_BIN"
     cp -f $1 $DOCKERFILE_DIR
+fi
+
+# Make sure the Netcope SDK binary matches our checksum
+if [ "$SKIP_MD5" != YES ]; then
+    NP4_MD5=${NP4_BIN:0:-4}.md5
+    echo "$NP4_CHKSUM $NP4_BIN" >$NP4_MD5
+    md5sum -c $NP4_MD5
+    ERR=$?
+    if [ $ERR -ne 0 ]; then
+        >&2 echo "ERROR: NP4 binary checksum failed"
+        exit $ERR
+    fi
+    rm $NP4_MD5
 fi
 
 # Build NP4 SDK and DPDK
@@ -78,8 +97,8 @@ if [ $ERR -ne 0 ]; then
 fi
 
 # Remove copied tarballs
-if [ -f "$DOCKERFILE_DIR/$NP4_TAR" ]; then
-    rm -f $DOCKERFILE_DIR/$NP4_TAR
+if [ -f "$DOCKERFILE_DIR/$NP4_BIN" ]; then
+    rm -f $DOCKERFILE_DIR/$NP4_BIN
 fi
 
 # If "local" flag set we'll use the locally generated stratum binaries
@@ -89,6 +108,7 @@ echo "Building $RUNTIME_IMAGE"
 if [ "$LOCAL" == YES ]; then
     docker build -t $RUNTIME_IMAGE \
 	         --build-arg JOBS=$JOBS \
+             --build-arg NP4_BIN=$NP4_BIN \
              --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
              -f $DOCKERFILE_DIR/Dockerfile.runtime.local $STRATUM_ROOT
 
@@ -96,6 +116,7 @@ if [ "$LOCAL" == YES ]; then
 else
     docker build -t $RUNTIME_IMAGE \
 	         --build-arg JOBS=$JOBS \
+             --build-arg NP4_BIN=$NP4_BIN \
              --build-arg BUILDER_IMAGE=$BUILDER_IMAGE \
              -f $DOCKERFILE_DIR/Dockerfile.runtime $STRATUM_ROOT
 fi
