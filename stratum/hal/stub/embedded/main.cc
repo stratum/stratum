@@ -12,6 +12,7 @@
 #include <linux/filter.h>
 #include <linux/if_ether.h>
 #include <net/ethernet.h>
+
 #include <sstream>
 #include <string>
 
@@ -26,7 +27,6 @@
 #include "google/rpc/code.pb.h"
 #include "grpcpp/grpcpp.h"
 #include "openconfig/openconfig.pb.h"
-#include "p4/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/init_google.h"
@@ -166,7 +166,7 @@ static enum {
   IPV4,
 } test_packet_type;
 
-static bool ValidatePacketType(const char* flagname, const string& value) {
+static bool ValidatePacketType(const char* flagname, const std::string& value) {
   if (value == "lldp") {
     test_packet_type = LLDP;
     return true;
@@ -180,7 +180,7 @@ static bool ValidatePacketType(const char* flagname, const string& value) {
 }
 
 static bool dummy __attribute__((__unused__)) =
-    RegisterFlagValidator(&FLAGS_test_packet_type, &ValidatePacketType);
+    gflags::RegisterFlagValidator(&FLAGS_test_packet_type, &ValidatePacketType);
 
 // A helper that initializes correctly ::gnmi::Path.
 class GetPath {
@@ -273,7 +273,7 @@ class HalServiceClient {
     ::gnmi::SetResponse resp;
     ::grpc::ClientContext context;
     auto* replace = req.add_replace();
-    ::oc::Device oc_device;
+    ::openconfig::Device oc_device;
     LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
     oc_device.SerializeToString(replace->mutable_val()->mutable_bytes_val());
     CALL_RPC_AND_CHECK_RESULTS(config_monitoring_service_stub_, Set, context,
@@ -432,7 +432,7 @@ class HalServiceClient {
       // and before being able to use it we need to push configs to it. So read
       // the config from the file and push it to P4TableMapper before doing
       // any packet I/O.
-      ::oc::Device oc_device;
+      ::openconfig::Device oc_device;
       LOG_RETURN_IF_ERROR(ReadProtoFromTextFile(oc_device_file, &oc_device));
       auto ret = OpenconfigConverter::OcDeviceToChassisConfig(oc_device);
       if (!ret.ok()) {
@@ -581,7 +581,7 @@ class HalServiceClient {
     req.mutable_subscribe()->set_mode(::gnmi::SubscriptionList::ONCE);
 
     // A map translating port ID into port name.
-    absl::flat_hash_map<uint64, string> id_to_name;
+    absl::flat_hash_map<uint64, std::string> id_to_name;
 
     LOG(INFO) << "Sending ONCE subscription: " << req.ShortDebugString();
     if (!stream->Write(req)) {
