@@ -66,9 +66,11 @@ int vlan = 1;
 
   std::vector<std::pair<std::function<int(void)>, std::function<int(void)>>>
       dists;
-  dists.push_back(std::make_pair([subnet_base, n = subnet_base]() mutable { return n++; },
-                                 []() { return 0xffffffff; }));
-  // dists.push_back(std::make_pair([subnet_base, n = subnet_base]() mutable { return n--; },
+  dists.push_back(
+      std::make_pair([subnet_base, n = subnet_base]() mutable { return n++; },
+                     []() { return 0xffffffff; }));
+  // dists.push_back(std::make_pair([subnet_base, n = subnet_base]() mutable {
+  // return n--; },
   //                                []() { return 0xffffffff; }));
   // dists.push_back(
   //     std::make_pair([rng = std::mt19937()]() mutable { return rng(); },
@@ -118,7 +120,7 @@ int vlan = 1;
     for (size_t i = 0; i < intervals.size(); ++i) {
       const auto& d = intervals[i];
       LOG(INFO) << i * reporting_step + reporting_step << ", "
-                << absl::ToDoubleMicroseconds(d);
+                << absl::ToDoubleMicroseconds(d) / reporting_step;
     }
 
     // Cleanup
@@ -198,7 +200,7 @@ int vlan = 1;
     for (size_t i = 0; i < intervals.size(); ++i) {
       const auto& d = intervals[i];
       LOG(INFO) << i * reporting_step + reporting_step << ", "
-                << absl::ToDoubleMicroseconds(d);
+                << absl::ToDoubleMicroseconds(d) / reporting_step;
     }
 
     // Cleanup
