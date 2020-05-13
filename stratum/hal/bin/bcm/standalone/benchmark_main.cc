@@ -46,7 +46,7 @@ namespace bcm {
 
 constexpr int kMaxL3RouteTableSize = 16000;
 constexpr int kMaxL3HostTableSize = 14900;
-constexpr int reporting_step = 100;
+constexpr int reporting_step = 10;
 
 int unit = 0;
 int vrf = 0;
