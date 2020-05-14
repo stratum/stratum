@@ -15,10 +15,8 @@ namespace hal {
 namespace phal {
 namespace tai {
 
-/*
- * An interface that defines functions we need to manage optical-relative
- * components such as module, network interface, and host interface.
- */
+// An interface that defines functions we need to manage optical-relative
+// components such as module, network interface, and host interface.
 class TaiInterface {
  public:
   // Initialize the TAI interface.

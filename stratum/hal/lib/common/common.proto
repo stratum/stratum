@@ -1043,7 +1043,7 @@ message OpticalChannelInfo {
     uint64 min_time = 7;
   }
 
-  // Optical channel frequency in Mega Hz.
+  // Optical channel frequency in Hz.
   uint64 frequency = 1;
   // The input/output optical power of this port in units of 0.01 decibel-milliwatt.
   // If the port is an aggregate of multiple physical channels, this attribute

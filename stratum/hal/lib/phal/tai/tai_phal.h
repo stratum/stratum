@@ -65,7 +65,7 @@ class TaiPhal final : public PhalBackendInterface {
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
 
-  // The pointer for TaiInterface taht allows TaiPhal to access TAI specific
+  // The pointer for TaiInterface that allows TaiPhal to access TAI specific
   // features, for example, listen events from TAI.
   TaiInterface* tai_interface_;
 };

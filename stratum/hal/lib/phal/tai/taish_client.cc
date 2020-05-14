@@ -146,8 +146,9 @@ util::StatusOr<uint64>
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrTxLaserFreq]));
-  // TODO(Yi): Handle exceptions.
-  return std::stoull(attr_str_val);
+  uint64 result;
+  CHECK_RETURN_IF_FALSE(absl::SimpleAtoi<uint64>(attr_str_val, &result));
+  return result;
 }
 
 util::StatusOr<double>
@@ -157,8 +158,9 @@ util::StatusOr<double>
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrCurrentInputPower]));
-  // TODO(Yi): Handle exceptions.
-  return std::stod(attr_str_val);
+  double result;
+  CHECK_RETURN_IF_FALSE(absl::SimpleAtod(attr_str_val, &result));
+  return result;
 }
 
 util::StatusOr<double>
@@ -168,8 +170,9 @@ util::StatusOr<double>
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrCurrentOutputPower]));
-  // TODO(Yi): Handle exceptions.
-  return std::stod(attr_str_val);
+  double result;
+  CHECK_RETURN_IF_FALSE(absl::SimpleAtod(attr_str_val, &result));
+  return result;
 }
 
 util::StatusOr<double>
@@ -179,8 +182,9 @@ util::StatusOr<double>
   ASSIGN_OR_RETURN(
       auto attr_str_val,
       GetAttribute(netif_id, netif_attr_map_[kNetIfAttrOutputPower]));
-  // TODO(Yi): Handle exceptions.
-  return std::stod(attr_str_val);
+  double result;
+  CHECK_RETURN_IF_FALSE(absl::SimpleAtod(attr_str_val, &result));
+  return result;
 }
 
 util::StatusOr<uint64>

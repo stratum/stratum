@@ -6,6 +6,7 @@ load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
+    "stratum_cc_test",
 )
 
 licenses(["notice"])  # Apache v2
@@ -93,4 +94,50 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_protobuf//:protobuf",
     ],
+)
+
+stratum_cc_library(
+    name = "tai_interface_mock",
+    hdrs = ["tai_interface_mock.h"],
+    deps = [
+        "//stratum/glue:integral_types",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+    ]
+)
+
+stratum_cc_test(
+    name = "tai_optics_datasource_test",
+    srcs = ["tai_optics_datasource_test.cc"],
+    deps = [
+        ":tai_interface",
+        ":tai_interface_mock",
+        ":tai_optics_datasource",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/memory",
+        "//stratum/lib:macros",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status:status_test_util",
+    ]
+)
+
+stratum_cc_test(
+    name = "tai_switch_configurator_test",
+    srcs = ["tai_switch_configurator_test.cc"],
+    deps = [
+        ":tai_interface",
+        ":tai_interface_mock",
+        ":tai_switch_configurator",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/memory",
+        "//stratum/lib:macros",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/hal/lib/phal:attribute_database",
+        "//stratum/hal/lib/phal:attribute_group_mock",
+        "//stratum/hal/lib/phal:db_cc_proto",
+        "//stratum/hal/lib/phal:phal_cc_proto",
+    ]
 )

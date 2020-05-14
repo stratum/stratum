@@ -39,16 +39,16 @@ TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid,
   // These values do not change during the lifetime of the data source.
   id_.AssignValue(id);
   tx_laser_frequency_.AddSetter(
-      [id, tai_interface](uint64 laser_frequency) -> ::util::Status {
-        return tai_interface->SetTxLaserFrequency(id, laser_frequency);
+      [oid, tai_interface](uint64 laser_frequency) -> ::util::Status {
+        return tai_interface->SetTxLaserFrequency(oid, laser_frequency);
       });
   operational_mode_.AddSetter(
-      [id, tai_interface](uint64 operational_mode) -> ::util::Status {
-        return tai_interface->SetModulationsFormats(id, operational_mode);
+      [oid, tai_interface](uint64 operational_mode) -> ::util::Status {
+        return tai_interface->SetModulationsFormats(oid, operational_mode);
       });
   target_output_power_.AddSetter(
-      [id, tai_interface](double output_power) -> ::util::Status {
-        return tai_interface->SetTargetOutputPower(id, output_power);
+      [oid, tai_interface](double output_power) -> ::util::Status {
+        return tai_interface->SetTargetOutputPower(oid, output_power);
       });
 }
 

@@ -183,7 +183,7 @@ Phal* Phal::CreateSingleton() {
 }
 
 ::util::Status Phal::GetOpticalChannelInfo(int module, int network_interface,
-                                               OpticalChannelInfo* oc_info) {
+                                           OpticalChannelInfo* oc_info) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";

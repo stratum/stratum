@@ -487,10 +487,11 @@ TreeNodeEventHandler GetOnPollFunctor(
 // Optical Port-specific version. Extra parameters needed:
 // - module index ('module')
 // - network interface index ('network_interface')
-template<typename T>
+template<typename T, typename U>
 TreeNodeEventHandler GetOpticalOnPollFunctor(
     int32 module, int32 network_interface, YangParseTree* tree,
-    T (OpticalChannelInfo::*inner_message_get_field_func)() const) {
+    T (OpticalChannelInfo::*inner_message_get_field_func)() const,
+    U (*process_field_func)(const T&)) {
   return [=](const GnmiEvent& event, const ::gnmi::Path& path,
              GnmiSubscribeStream* stream) {
     // Create a data retrieval request.
@@ -2408,7 +2409,8 @@ SetUpComponentsComponentOpticalChannelStateFrequency(TreeNode* node,
                                                      int32 module,
                                                      int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
-      module, network_interface, tree, &OpticalChannelInfo::frequency);
+      module, network_interface, tree, &OpticalChannelInfo::frequency,
+      &DontProcess<uint64>);
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor);
 }
@@ -2837,7 +2839,8 @@ void SetUpComponentsComponentOpticalChannelStateOperationalMode(
     TreeNode* node, YangParseTree* tree, int32 module,
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
-      module, network_interface, tree, &OpticalChannelInfo::operational_mode);
+      module, network_interface, tree, &OpticalChannelInfo::operational_mode,
+      &DontProcess<uint64>);
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor);
 }
