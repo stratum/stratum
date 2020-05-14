@@ -2,15 +2,15 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "absl/strings/str_cat.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/logging.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/testing/tests/bcm_sim_test_fixture.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
-#include "absl/strings/str_cat.h"
-#include "p4/v1/p4runtime.pb.h"
 
 namespace stratum {
 
