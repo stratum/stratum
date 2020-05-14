@@ -2410,7 +2410,10 @@ SetUpComponentsComponentOpticalChannelStateFrequency(TreeNode* node,
                                                      int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree, &OpticalChannelInfo::frequency,
-      &DontProcess<uint64>);
+      [](const uint64 freq) {
+          // Use MHz for OpenConfig model.
+          return freq / 1000000;
+        });
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor);
 }
@@ -2426,6 +2429,8 @@ SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
   auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
+    // Use MHz for OpenConfig model.
+    initial_value = initial_value / 1000000;
     return SendResponse(GetResponse(path, initial_value), stream);
   };
 
@@ -2440,7 +2445,8 @@ SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
     }
 
-    ::google::protobuf::uint64 uint_val = typed_value->uint_val();
+    // Converts MHz to HZ since OpenConfig uses MHz.
+    ::google::protobuf::uint64 uint_val = typed_value->uint_val() * 1000000;
     RETURN_IF_ERROR(SetOpticalValue(module, network_interface, tree,
                                     &OpticalChannelInfo::set_frequency,
                                     uint_val));
