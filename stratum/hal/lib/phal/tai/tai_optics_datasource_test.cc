@@ -1,15 +1,17 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/phal/tai/tai_optics_datasource.h"
+
 #include <memory>
+
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stratum/hal/lib/phal/tai/tai_interface_mock.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/tai/tai_optics_datasource.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/phal/tai/tai_interface_mock.h"
 #include "stratum/lib/macros.h"
-#include "absl/memory/memory.h"
 
 namespace stratum {
 namespace hal {
@@ -48,8 +50,10 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
   EXPECT_CALL(*tai_interface_, GetCurrentInputPower(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<double>(kInputPower)));
   EXPECT_CALL(*tai_interface_, GetTargetOutputPower(kOid))
-      .WillOnce(::testing::Return(::util::StatusOr<double>(kTargetOutputPower)));
-  auto status_or = TaiOpticsDataSource::Make(netif_config_, tai_interface_.get());
+      .WillOnce(
+          ::testing::Return(::util::StatusOr<double>(kTargetOutputPower)));
+  auto status_or =
+      TaiOpticsDataSource::Make(netif_config_, tai_interface_.get());
   ASSERT_OK(status_or);
 
   // Get UpdateValues
@@ -63,7 +67,8 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
   EXPECT_CALL(*tai_interface_, GetCurrentInputPower(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<double>(kInputPower)));
   EXPECT_CALL(*tai_interface_, GetTargetOutputPower(kOid))
-      .WillOnce(::testing::Return(::util::StatusOr<double>(kTargetOutputPower)));
+      .WillOnce(
+          ::testing::Return(::util::StatusOr<double>(kTargetOutputPower)));
   datasource->UpdateValuesAndLock();
 
   // Get individual values
@@ -140,7 +145,8 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
   // OperationalMode (Module format)
   {
     uint64 new_modulation_formats = 42;
-    EXPECT_CALL(*tai_interface_, SetModulationsFormats(kOid, new_modulation_formats))
+    EXPECT_CALL(*tai_interface_,
+                SetModulationsFormats(kOid, new_modulation_formats))
         .WillOnce(::testing::Return(::util::OkStatus()));
     auto attr = datasource->GetOperationalMode();
     ASSERT_TRUE(attr->CanSet());

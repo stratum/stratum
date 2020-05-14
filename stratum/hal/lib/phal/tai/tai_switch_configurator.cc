@@ -11,9 +11,8 @@
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
-#include "stratum/lib/macros.h"
 #include "stratum/hal/lib/phal/tai/tai_optics_datasource.h"
-
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -70,17 +69,16 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
     ASSIGN_OR_RETURN(auto optical_module_group,
                      mutable_root->AddRepeatedChildGroup("optical_modules"));
     auto mutable_optical_module_group = optical_module_group->AcquireMutable();
-    RETURN_IF_ERROR(mutable_optical_module_group->AddAttribute("id",
-                    FixedDataSource<int32>::Make(
-                        module.module())->GetAttribute()));
+    RETURN_IF_ERROR(mutable_optical_module_group->AddAttribute(
+        "id", FixedDataSource<int32>::Make(module.module())->GetAttribute()));
 
     for (auto network_interface : *module.mutable_network_interfaces()) {
       if (!network_interface.has_cache_policy()) {
         network_interface.set_allocated_cache_policy(
             new CachePolicyConfig(module.cache_policy()));
       }
-      RETURN_IF_ERROR(
-          AddOpticalNetworkInterface(mutable_optical_module_group.get(), network_interface));
+      RETURN_IF_ERROR(AddOpticalNetworkInterface(
+          mutable_optical_module_group.get(), network_interface));
     }
   }
   return ::util::OkStatus();
@@ -95,23 +93,24 @@ TaiSwitchConfigurator::Make(TaiInterface* tai_interface) {
   // * operational_mode.
   // * output_power.
   // * input_power.
-  ASSIGN_OR_RETURN(auto optical_netif,
+  ASSIGN_OR_RETURN(
+      auto optical_netif,
       mutable_module_group->AddRepeatedChildGroup("network_interfaces"));
   auto mutable_optical_netif = optical_netif->AcquireMutable();
   ASSIGN_OR_RETURN(std::shared_ptr<TaiOpticsDataSource> datasource,
                    TaiOpticsDataSource::Make(netif_config, tai_interface_));
-  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute("id",
-                  datasource->GetId()));
-  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute("frequency",
-                  datasource->GetTxLaserFrequency()));
-  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute("target_output_power",
-                  datasource->GetTargetOutputPower()));
-  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute("operational_mode",
-                  datasource->GetOperationalMode()));
-  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute("output_power",
-                  datasource->GetCurrentOutputPower()));
-  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute("input_power",
-                  datasource->GetCurrentInputPower()));
+  RETURN_IF_ERROR(
+      mutable_optical_netif->AddAttribute("id", datasource->GetId()));
+  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute(
+      "frequency", datasource->GetTxLaserFrequency()));
+  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute(
+      "target_output_power", datasource->GetTargetOutputPower()));
+  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute(
+      "operational_mode", datasource->GetOperationalMode()));
+  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute(
+      "output_power", datasource->GetCurrentOutputPower()));
+  RETURN_IF_ERROR(mutable_optical_netif->AddAttribute(
+      "input_power", datasource->GetCurrentInputPower()));
   return ::util::OkStatus();
 }
 

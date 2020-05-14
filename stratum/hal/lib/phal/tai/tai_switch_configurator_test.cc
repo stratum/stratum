@@ -1,17 +1,21 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
+
 #include <memory>
+#include <utility>
+#include <vector>
+
+#include "absl/memory/memory.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "stratum/hal/lib/phal/tai/tai_interface_mock.h"
 #include "stratum/glue/status/status_test_util.h"
-#include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
 #include "stratum/glue/status/statusor.h"
-#include "stratum/lib/macros.h"
-#include "absl/memory/memory.h"
-#include "stratum/hal/lib/phal/phal.pb.h"
 #include "stratum/hal/lib/phal/db.pb.h"
+#include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/tai/tai_interface_mock.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -39,9 +43,11 @@ class TaiSwitchConfiguratorTest : public ::testing::Test {
 
 TEST_F(TaiSwitchConfiguratorTest, GenerateDefaultPhalConfig) {
   EXPECT_CALL(*tai_interface_, GetModuleIds())
-      .WillOnce(::testing::Return(::util::StatusOr<std::vector<uint64>>(module_ids_)));
+      .WillOnce(::testing::Return(
+          ::util::StatusOr<std::vector<uint64>>(module_ids_)));
   EXPECT_CALL(*tai_interface_, GetNetworkInterfaceIds(::testing::_))
-      .WillOnce(::testing::Return(::util::StatusOr<std::vector<uint64>>(netif_ids_)));
+      .WillOnce(
+          ::testing::Return(::util::StatusOr<std::vector<uint64>>(netif_ids_)));
 
   auto status_or = TaiSwitchConfigurator::Make(tai_interface_.get());
   ASSERT_OK(status_or);
@@ -87,7 +93,8 @@ TEST_F(TaiSwitchConfiguratorTest, ConfigurPhalDb) {
   EXPECT_CALL(*tai_interface_, GetCurrentInputPower(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<double>(kInputPower)));
   EXPECT_CALL(*tai_interface_, GetTargetOutputPower(kOid))
-      .WillOnce(::testing::Return(::util::StatusOr<double>(kTargetOutputPower)));
+      .WillOnce(
+          ::testing::Return(::util::StatusOr<double>(kTargetOutputPower)));
 
   std::unique_ptr<AttributeGroup> root_group =
       AttributeGroup::From(PhalDB::descriptor());
