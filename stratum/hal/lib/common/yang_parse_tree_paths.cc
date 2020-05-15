@@ -491,7 +491,7 @@ template<typename T, typename U>
 TreeNodeEventHandler GetOpticalOnPollFunctor(
     int32 module, int32 network_interface, YangParseTree* tree,
     T (OpticalChannelInfo::*inner_message_get_field_func)() const,
-    U (*process_field_func)(const T&)) {
+    U (*process_func)(const T&)) {
   return [=](const GnmiEvent& event, const ::gnmi::Path& path,
              GnmiSubscribeStream* stream) {
     // Create a data retrieval request.
@@ -517,7 +517,7 @@ TreeNodeEventHandler GetOpticalOnPollFunctor(
         .IgnoreError();
     // Return the retrieved value.
     T value = (resp.*inner_message_get_field_func)();
-    return SendResponse(GetResponse(path, value), stream);
+    return SendResponse(GetResponse(path, (*process_func)(value)), stream);
   };
 }
 
@@ -2410,10 +2410,7 @@ SetUpComponentsComponentOpticalChannelStateFrequency(TreeNode* node,
                                                      int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree, &OpticalChannelInfo::frequency,
-      [](const uint64 freq) {
-          // Use MHz for OpenConfig model.
-          return freq / 1000000;
-        });
+      &ConvertHzToMHz);
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor);
 }
@@ -2430,8 +2427,7 @@ SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
     // Use MHz for OpenConfig model.
-    initial_value = initial_value / 1000000;
-    return SendResponse(GetResponse(path, initial_value), stream);
+    return SendResponse(GetResponse(path, initial_value / 1000000), stream);
   };
 
   auto on_set_functor = [module, network_interface, node, tree](
