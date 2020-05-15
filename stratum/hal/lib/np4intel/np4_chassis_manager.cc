@@ -27,7 +27,6 @@ namespace stratum {
 namespace hal {
 namespace np4intel {
 
-/* static */
 constexpr int NP4ChassisManager::kMaxPortStatusChangeEventDepth;
 
 absl::Mutex chassis_lock;

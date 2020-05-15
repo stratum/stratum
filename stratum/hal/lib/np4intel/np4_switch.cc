@@ -21,12 +21,12 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-using ::pi::fe::proto::DeviceMgr;
-using ::stratum::hal::pi::PINode;
-
 namespace stratum {
 namespace hal {
 namespace np4intel {
+
+using ::pi::fe::proto::DeviceMgr;
+using ::stratum::hal::pi::PINode;
 
 NP4Switch::NP4Switch(PhalInterface* phal_interface,
                      NP4ChassisManager* np4_chassis_manager)

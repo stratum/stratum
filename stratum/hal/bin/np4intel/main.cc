@@ -26,11 +26,11 @@ DEFINE_uint32(cpu_port, 128,
 DEFINE_bool(np4_sim, false, "Run with the NP4 simulator");
 DEFINE_string(dpdk_config, "", "DPDK EAL init config file");
 
-using ::pi::fe::proto::DeviceMgr;
-
 namespace stratum {
 namespace hal {
 namespace np4intel {
+
+using ::pi::fe::proto::DeviceMgr;
 
 namespace {
 
@@ -142,9 +142,6 @@ void registerDeviceMgrLogger() {
   CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Hal instance.";
 
   // Setup and start serving RPCs.
-  // TODO(antonin): currently this fails because persistent_config_dir flag is
-  // not set. Need to figure out if this is needed and if not how to circumvent
-  // the error.
   ::util::Status status = hal->Setup();
   if (!status.ok()) {
     LOG(ERROR)
