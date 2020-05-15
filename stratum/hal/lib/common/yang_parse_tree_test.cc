@@ -47,7 +47,7 @@ class YangParseTreeTest : public ::testing::Test {
   static constexpr int kOpticalInterface1ModuleId = 5;
   static constexpr int kOpticalInterface1PortId = 5;
   static constexpr int kOpticalInterface1NetIfId = 5;
-  static constexpr uint64 kOpticalInterface1Frequency = 123456;
+  static constexpr uint64 kOpticalInterface1Frequency = 123456000000;
   static constexpr float kOpticalInterface1TargetOutputPower = 1.2345;
   static constexpr uint64 kOpticalInterface1OpMode = 67890;
   static constexpr char kAlarmDescription[] = "alarm";
@@ -3358,8 +3358,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("frequency")();
 
-  const uint expected_value = 100500;
-  ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
+  const uint64 set_value = 100500;
+  const uint64 expected_value = 100500000000;
+  ::gnmi::TypedValue typed_value = GetTypedValue(set_value);
 
   SetRequest req;
   ASSERT_OK(ExecuteOnUpdate(path, typed_value, &req, nullptr));
@@ -3376,8 +3377,9 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("config")("frequency")();
 
-  const uint expected_value = 100500;
-  ::gnmi::TypedValue typed_value = GetTypedValue(expected_value);
+  const uint64 set_value = 100500;
+  const uint64 expected_value = 100500000000ULL;
+  ::gnmi::TypedValue typed_value = GetTypedValue(set_value);
 
   SetRequest req;
   ASSERT_OK(ExecuteOnReplace(path, typed_value, &req, nullptr));
@@ -3398,9 +3400,10 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnPoll(path, &resp));
 
+  const uint64 expected_val = kOpticalInterface1Frequency / 1000000;
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(),
-            kOpticalInterface1Frequency);
+            expected_val);
 }
 
 // Check if the '/components/component/optical-channel/config/frequency'
@@ -3414,10 +3417,11 @@ TEST_F(YangParseTreeOpticalChannelTest,
   ::gnmi::SubscribeResponse resp;
   ASSERT_OK(ExecuteOnTimer(path, &resp));
 
+  const uint64 expected_val = kOpticalInterface1Frequency / 1000000;
   // Check that we retrieve what we set.
   ASSERT_THAT(resp.update().update(), SizeIs(1));
   EXPECT_EQ(resp.update().update(0).val().uint_val(),
-            kOpticalInterface1Frequency);
+            expected_val);
 }
 
 // Check if the '/components/component/optical-channel/state/frequency'
@@ -3427,11 +3431,12 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("frequency")();
 
-  const uint expected_value = 100500;
+  const uint64 value_from_switch_interface = 100500000000;
+  const uint64 expected_value = 100500;
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(&OpticalChannelInfo::set_frequency,
-                                        expected_value);
+                                        value_from_switch_interface);
 
   // Retrieve the value that has been mocked.
   ::gnmi::SubscribeResponse resp;
@@ -3449,11 +3454,12 @@ TEST_F(YangParseTreeOpticalChannelTest,
   auto path = GetPath("components")("component", "optical-interface-1")(
       "optical-channel")("state")("frequency")();
 
-  const uint expected_value = 100500;
+  const uint64 value_from_switch_interface = 100500000000;
+  const uint64 expected_value = 100500;
 
   // Mock switch->RetrieveValue() call.
   SubstituteOpticalChannelRetrieveValue(&OpticalChannelInfo::set_frequency,
-                                        expected_value);
+                                        value_from_switch_interface);
 
   // Retrieve the value that has been mocked.
   ::gnmi::SubscribeResponse resp;
