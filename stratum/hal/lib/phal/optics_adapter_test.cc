@@ -88,7 +88,7 @@ TEST_F(OpticsAdapterTest, TaiPhalGetOpticalTransceiverInfoSuccess) {
   OpticalChannelInfo oc_info{};
   ASSERT_OK(optics_adapter_->GetOpticalTransceiverInfo(1, 1, &oc_info));
 
-  EXPECT_EQ(oc_info.frequency(), 196);
+  EXPECT_EQ(oc_info.frequency(), 196000000);
   EXPECT_DOUBLE_EQ(oc_info.input_power().instant(), 1000.2);
   EXPECT_DOUBLE_EQ(oc_info.output_power().instant(), 10000.1);
   EXPECT_DOUBLE_EQ(oc_info.target_output_power(), 15.5);

@@ -43,8 +43,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 
   auto optical_port = optical_module.network_interfaces(network_intweface - 1);
 
-  // Frequency field in OpticalChannelInfo is in Mega Hz
-  oc_info->set_frequency(optical_port.frequency() / 1000000);
+  oc_info->set_frequency(optical_port.frequency());
   oc_info->mutable_input_power()->set_instant(optical_port.input_power());
   oc_info->mutable_output_power()->set_instant(optical_port.output_power());
   oc_info->set_target_output_power(optical_port.target_output_power());
