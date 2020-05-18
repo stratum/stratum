@@ -125,7 +125,10 @@ pkg_deb(
         "libjudydebian1",
         "libssl1.1",
         "libyaml-0-2",
-    ],
+    ] + select({
+        "//stratum/hal/lib/phal:with_tai": ["cassini-tai"],
+        "//conditions:default": [],
+    }),
     maintainer = "The Stratum Project",
     homepage = "https://stratumproject.org/",
 )
