@@ -26,9 +26,9 @@ TaiOpticsDataSource::Make(
                                    config.cache_policy().type(),
                                    config.cache_policy().timed_value()));
   std::shared_ptr<TaiOpticsDataSource> datasource(
-          new TaiOpticsDataSource(config.network_interface(),
-                                  config.vendor_specific_id(),
-                                  cache, tai_interface));
+      new TaiOpticsDataSource(config.network_interface(),
+                              config.vendor_specific_id(),
+                              cache, tai_interface));
 
   datasource->UpdateValuesUnsafelyWithoutCacheOrLock();
   return datasource;
@@ -59,8 +59,7 @@ TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid,
   ASSIGN_OR_RETURN(auto tx_laser_freq,
                    tai_interface_->GetTxLaserFrequency(oid_));
   tx_laser_frequency_.AssignValue(tx_laser_freq);
-  ASSIGN_OR_RETURN(auto op_mode,
-                   tai_interface_->GetModulationFormats(oid_));
+  ASSIGN_OR_RETURN(auto op_mode, tai_interface_->GetModulationFormats(oid_));
   operational_mode_.AssignValue(op_mode);
   ASSIGN_OR_RETURN(auto current_output_power,
                    tai_interface_->GetCurrentOutputPower(oid_));

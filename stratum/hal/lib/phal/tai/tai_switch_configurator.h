@@ -23,8 +23,8 @@ namespace tai {
 // TaiSwitchConfigurator configures the PhalDb for use with the Tai Datasouce.
 class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
  public:
-  static ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>>
-      Make(TaiInterface* tai_interface);
+  static ::util::StatusOr<std::unique_ptr<TaiSwitchConfigurator>> Make(
+      TaiInterface* tai_interface);
 
   ::util::Status CreateDefaultConfig(PhalInitConfig* config) const override;
 
@@ -32,10 +32,11 @@ class TaiSwitchConfigurator final : public SwitchConfiguratorInterface {
                                  AttributeGroup* root) override;
 
  private:
-  explicit TaiSwitchConfigurator(TaiInterface* tai_interface) :
-      tai_interface_(tai_interface) { }
+  explicit TaiSwitchConfigurator(TaiInterface* tai_interface)
+      : tai_interface_(tai_interface) {}
 
-  ::util::Status AddOpticalNetworkInterface(MutableAttributeGroup* mutable_card,
+  ::util::Status AddOpticalNetworkInterface(
+      MutableAttributeGroup* mutable_card,
       const PhalOpticalModuleConfig::NetworkInterface& config);
 
   // Default cache policy config

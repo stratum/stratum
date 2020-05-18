@@ -9,13 +9,13 @@
 #include <string>
 #include <vector>
 
-#include "stratum/hal/lib/phal/tai/tai_interface.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/phal/datasource.h"
 #include "stratum/hal/lib/phal/phal.pb.h"
+#include "stratum/hal/lib/phal/tai/tai_interface.h"
 #include "stratum/lib/macros.h"
 
 namespace stratum {
@@ -26,9 +26,9 @@ namespace tai {
 // TaiOpticsDataSource class updates Database<->TAI with fresh values.
 class TaiOpticsDataSource final : public DataSource {
  public:
-  static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>>
-      Make(const PhalOpticalModuleConfig::NetworkInterface& config,
-           TaiInterface* tai_interface);
+  static ::util::StatusOr<std::shared_ptr<TaiOpticsDataSource>> Make(
+      const PhalOpticalModuleConfig::NetworkInterface& config,
+      TaiInterface* tai_interface);
 
   // Accessors for managed attributes.
   ManagedAttribute* GetId() { return &id_; }

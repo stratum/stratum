@@ -36,7 +36,7 @@ class TaiPhal final : public PhalBackendInterface {
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
   static TaiPhal* CreateSingleton(TaiInterface* tai_interface)
-        LOCKS_EXCLUDED(config_lock_, init_lock_);
+      LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // TaiPhal is neither copyable nor movable.
   TaiPhal(const TaiPhal&) = delete;

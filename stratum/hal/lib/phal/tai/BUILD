@@ -32,8 +32,8 @@ stratum_cc_library(
     deps = [
         ":tai_interface",
         "//stratum/glue:integral_types",
-        "//stratum/glue/status",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
         "//stratum/lib:macros",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_telecominfraproject_oopt_tai_taish//:taish_cc_grpc",
@@ -103,7 +103,7 @@ stratum_cc_library(
         "//stratum/glue:integral_types",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
-    ]
+    ],
 )
 
 stratum_cc_test(
@@ -113,13 +113,13 @@ stratum_cc_test(
         ":tai_interface",
         ":tai_interface_mock",
         ":tai_optics_datasource",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
-        "//stratum/lib:macros",
         "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
         "//stratum/glue/status:status_test_util",
-    ]
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+    ],
 )
 
 stratum_cc_test(
@@ -129,15 +129,15 @@ stratum_cc_test(
         ":tai_interface",
         ":tai_interface_mock",
         ":tai_switch_configurator",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
-        "//stratum/lib:macros",
         "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
         "//stratum/glue/status:status_test_util",
+        "//stratum/glue/status:statusor",
         "//stratum/hal/lib/phal:attribute_database",
         "//stratum/hal/lib/phal:attribute_group_mock",
         "//stratum/hal/lib/phal:db_cc_proto",
         "//stratum/hal/lib/phal:phal_cc_proto",
-    ]
+        "//stratum/lib:macros",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+    ],
 )

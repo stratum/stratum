@@ -34,10 +34,12 @@ constexpr char kNetIfAttrModulationFormat[] =
 // FIXME(Yi): this map is based on ONOS ODTH driver, we should complete this
 // map with values from the TAI library.
 const absl::flat_hash_map<std::string, uint64> kModulationFormatIds = {
-    {"dp-qpsk", 1}, {"dp-16-qam", 2}, {"dp-8-qam", 3}
+    {"dp-qpsk", 1},
+    {"dp-16-qam", 2},
+    {"dp-8-qam", 3},
 };
 
-class TaishClient : public TaiInterface {
+class TaishClient final : public TaiInterface {
  public:
   util::Status Initialize() override EXCLUSIVE_LOCKS_REQUIRED(init_lock_);
   util::StatusOr<std::vector<uint64>> GetModuleIds() override;
@@ -75,6 +77,8 @@ class TaishClient : public TaiInterface {
   static TaishClient* CreateSingleton() LOCKS_EXCLUDED(init_lock_);
 
  private:
+  TaishClient();
+
   // Gets an attribute from a TAI object.
   util::StatusOr<std::string> GetAttribute(uint64 obj_id, uint64 attr_id)
       SHARED_LOCKS_REQUIRED(init_lock_);
