@@ -25,8 +25,8 @@
 
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
-#include "stratum/hal/lib/phal/tai/taish_client.h"
 #include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
+#include "stratum/hal/lib/phal/tai/taish_client.h"
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_file);
