@@ -97,12 +97,12 @@ TEST_F(OpticsAdapterTest, TaiPhalGetOpticalTransceiverInfoSuccess) {
 
 TEST_F(OpticsAdapterTest, TaiPhalSetOpticalTransceiverInfoSuccess) {
   OpticalChannelInfo oc_info;
-  oc_info.set_frequency(150);
+  oc_info.set_frequency(150000000);
   oc_info.set_target_output_power(140.12);
   oc_info.set_operational_mode(3);
 
   AttributeValueMap attrs;
-  attrs[frequency_path] = oc_info.frequency() * 1000000;
+  attrs[frequency_path] = oc_info.frequency();
   attrs[target_output_power_path] = oc_info.target_output_power();
   attrs[operational_mode_path] = oc_info.operational_mode();
 

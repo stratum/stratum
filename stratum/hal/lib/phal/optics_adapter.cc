@@ -65,8 +65,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
     path = {PathEntry("optical_modules", module - 1),
             PathEntry("network_interfaces", network_intweface - 1),
             PathEntry("frequency")};
-    // Frequency field in OpticalChannelInfo is in Mega Hz
-    attrs[path] = oc_info.frequency() * 1000000;
+    attrs[path] = oc_info.frequency();
   }
   if (oc_info.target_output_power()) {
     path = {PathEntry("optical_modules", module - 1),

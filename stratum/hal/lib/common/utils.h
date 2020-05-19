@@ -238,8 +238,11 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state);
 // don't want to do anything to the value.
 template<typename T> T DontProcess(const T& val) { return val; }
 
-// A helper method that converts frequency from Hz to MHz
+// A helper method that converts frequency from Hz to MHz.
 uint64 ConvertHzToMHz(const uint64& val);
+
+// A helper method that converts frequency from MHz to Hz.
+uint64 ConvertMHzToHz(const uint64& val);
 
 }  // namespace hal
 }  // namespace stratum

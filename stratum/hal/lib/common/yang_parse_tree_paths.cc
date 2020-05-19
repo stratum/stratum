@@ -2427,8 +2427,8 @@ SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
     // Use MHz for OpenConfig model.
-    return SendResponse(
-        GetResponse(path, ConvertHzToMHz(initial_value)), stream);
+    return SendResponse(GetResponse(path, ConvertHzToMHz(initial_value)),
+                        stream);
   };
 
   auto on_set_functor = [module, network_interface, node, tree](
@@ -2443,10 +2443,9 @@ SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
     }
 
     // Converts MHz to HZ since OpenConfig uses MHz.
-    ::google::protobuf::uint64 uint_val = typed_value->uint_val() * 1000000;
-    RETURN_IF_ERROR(SetOpticalValue(module, network_interface, tree,
-                                    &OpticalChannelInfo::set_frequency,
-                                    uint_val));
+    uint64 uint_val = ConvertMHzToHz(typed_value->uint_val());
+    RETURN_IF_ERROR(SetValue(module, network_interface, tree,
+                             &OpticalChannelInfo::set_frequency, uint_val));
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
