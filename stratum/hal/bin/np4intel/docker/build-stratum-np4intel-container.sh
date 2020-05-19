@@ -7,7 +7,7 @@
 DOCKERFILE_DIR=$(dirname "${BASH_SOURCE[0]}")
 STRATUM_ROOT=${STRATUM_ROOT:-"$( cd "$DOCKERFILE_DIR/../../../../.." >/dev/null 2>&1 && pwd )"}
 JOBS=${JOBS:-4}
-NP4_CHKSUM="4f8f55fb8a0d95dd1f019ef2c9226427"
+NP4_CHKSUM="a990c39bffb078d625d7a99d7ebff21e6e012a47c2f4c0579b70dd6eeb8c0294"
 
 print_help() {
 cat << EOF
@@ -16,7 +16,7 @@ The script builds containerized version of Stratum for NP4 Intel based device. I
 
 Usage: $0 [options] -- NP4_BIN
     [--local]                       Use the local stratum binaries
-    [--skip-md5]                    Skip Netcope SDK MD5 checksum test
+    [--skip-chksum]                 Skip Netcope SDK checksum test
 
 Example:
     $0 -- np4-intel-n3000-4.7.1-1-ubuntu.bin
@@ -39,8 +39,8 @@ do
         LOCAL=YES
         shift
         ;;
-    --skip-md5)
-        SKIP_MD5=YES
+    --skip-chksum)
+        SKIP_CHKSUM=YES
         shift
         ;;
     "--")
@@ -73,16 +73,16 @@ if [ -n "$1" ]; then
 fi
 
 # Make sure the Netcope SDK binary matches our checksum
-if [ "$SKIP_MD5" != YES ]; then
-    NP4_MD5=${NP4_BIN:0:-4}.md5
-    echo "$NP4_CHKSUM $NP4_BIN" >$NP4_MD5
-    md5sum -c $NP4_MD5
+if [ "$SKIP_CHKSUM" != YES ]; then
+    NP4_SHA_FILE=${NP4_BIN:0:-4}.sha256
+    echo "$NP4_CHKSUM $NP4_BIN" >$NP4_SHA_FILE
+    sha256sum -c $NP4_SHA_FILE
     ERR=$?
     if [ $ERR -ne 0 ]; then
         >&2 echo "ERROR: NP4 binary checksum failed"
         exit $ERR
     fi
-    rm $NP4_MD5
+    rm $NP4_SHA_FILE
 fi
 
 # Build NP4 SDK and DPDK
