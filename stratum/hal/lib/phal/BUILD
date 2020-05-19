@@ -2,8 +2,9 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+load("@rules_cc//cc:defs.bzl", "cc_proto_library", "cc_test")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load(
     "//bazel:rules.bzl",
     "EMBEDDED_ARCHES",
@@ -15,7 +16,7 @@ load(
     "stratum_package",
 )
 
-load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -46,6 +47,7 @@ config_setting(
         "phal_with_tai": "true",
     },
 )
+
 config_setting(
     name = "without_tai",
     define_values = {
@@ -95,13 +97,13 @@ stratum_cc_library(
     name = "attribute_database_interface",
     hdrs = ["attribute_database_interface.h"],
     deps = [
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/types:variant",
         "//stratum/glue:integral_types",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/phal:db_cc_proto",
         "//stratum/lib/channel",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/types:variant",
     ],
 )
 
@@ -112,8 +114,8 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":attribute_database_interface",
-        "@com_google_googletest//:gtest",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -145,8 +147,8 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":datasource",
         ":managed_attribute",
-        "@com_google_googletest//:gtest",
         "//stratum/glue/status",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -163,22 +165,22 @@ stratum_cc_library(
         ":managed_attribute",
         ":phal_cc_proto",
         ":phaldb_service",
+        ":switch_configurator_interface",
         ":system_interface",
         ":threadpool_interface",
         ":udev_event_handler",
-        ":switch_configurator_interface",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/container:flat_hash_set",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
-        "@com_google_protobuf//:protobuf",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -194,11 +196,6 @@ stratum_cc_test(
         ":attribute_group_mock",
         ":db_cc_proto",
         ":dummy_threadpool",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
-        "@com_google_protobuf//:protobuf",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
@@ -208,6 +205,11 @@ stratum_cc_test(
         "//stratum/lib/channel",
         "//stratum/lib/channel:channel_mock",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -233,16 +235,16 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":db_cc_proto",
         ":managed_attribute",
-        "@com_google_protobuf//:protobuf",
-        "@com_google_absl//absl/synchronization",
+        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
         "//stratum/hal/lib/common:phal_interface",
-        "//stratum/glue/status",
         "//stratum/hal/lib/common:utils",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/channel",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -252,11 +254,11 @@ stratum_cc_test(
     deps = [
         ":attribute_database_mock",
         ":sfp_adapter",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/base:core_headers",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -269,15 +271,15 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":db_cc_proto",
         ":managed_attribute",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_protobuf//:protobuf",
+        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
-        "//stratum/glue/status",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/hal/lib/common:utils",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -287,9 +289,9 @@ stratum_cc_test(
     deps = [
         ":attribute_database_mock",
         ":optics_adapter",
-        "@com_google_googletest//:gtest_main",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:utils",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -302,17 +304,17 @@ stratum_cc_library(
         ":datasource",
         ":managed_attribute",
         ":threadpool_interface",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:node_hash_map",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:protobuf",
-        "//stratum/glue/status",
-        "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:statusor",
-        "//stratum/lib:macros",
-        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -327,11 +329,11 @@ stratum_cc_test(
         ":managed_attribute",
         ":managed_attribute_mock",
         ":test_util",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/base:core_headers",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -343,9 +345,9 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":attribute_group",
-        "@com_google_googletest//:gtest",
-        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -357,11 +359,11 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":managed_attribute",
         ":phal_cc_proto",
+        "//stratum/glue/status",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
-        "//stratum/glue/status",
     ],
 )
 
@@ -373,8 +375,8 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":datasource",
-        "@com_google_googletest//:gtest",
         "//stratum/glue/status",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -388,14 +390,14 @@ proto_library(
 
 cc_proto_library(
     name = "db_cc_proto",
-    deps = [":db_proto"]
+    deps = [":db_proto"],
 )
 
 cc_grpc_library(
     name = "db_cc_grpc",
     srcs = [":db_proto"],
-    deps = [":db_cc_proto"],
     grpc_only = True,
+    deps = [":db_cc_proto"],
 )
 
 stratum_cc_library(
@@ -404,9 +406,9 @@ stratum_cc_library(
     hdrs = ["dummy_threadpool.h"],
     deps = [
         ":threadpool_interface",
+        "//stratum/glue/status",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/synchronization",
-        "//stratum/glue/status",
     ],
 )
 
@@ -433,8 +435,8 @@ stratum_cc_library(
         ":datasource",
         ":managed_attribute",
         ":stringsource_interface",
-        "@com_google_absl//absl/memory",
         "//stratum/lib:macros",
+        "@com_google_absl//absl/memory",
     ],
 )
 
@@ -446,11 +448,11 @@ stratum_cc_test(
         ":fixed_layout_datasource",
         ":fixed_stringsource",
         ":test_util",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/phal/test:test_cc_proto",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -475,15 +477,6 @@ stratum_cc_library(
         ":db_cc_grpc",
         ":db_cc_proto",
         ":managed_attribute",
-        "@com_github_google_glog//:glog",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_absl//absl/time",
-        "@com_google_googleapis//google/rpc:code_cc_proto",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@com_google_protobuf//:protobuf",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:cleanup",
         "//stratum/glue/status",
@@ -497,6 +490,15 @@ stratum_cc_library(
         "//stratum/lib/channel",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -507,15 +509,15 @@ stratum_cc_binary(
     deps = [
         ":db_cc_grpc",
         ":db_cc_proto",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_google_protobuf//:protobuf",
-        "@com_googlesource_code_re2//:re2",
+        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:statusor",
-        "//stratum/glue/status",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_protobuf//:protobuf",
+        "@com_googlesource_code_re2//:re2",
     ],
 )
 
@@ -525,14 +527,6 @@ stratum_cc_test(
     deps = [
         ":attribute_database_mock",
         ":phaldb_service",
-        "@com_github_google_glog//:glog",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/strings",
-        "@com_google_googleapis//google/rpc:code_cc_proto",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_googletest//:gtest",
         "//stratum/glue/net_util:ports",
         "//stratum/glue/status:status_test_util",
         "//stratum/hal/lib/common:phal_mock",
@@ -540,6 +534,14 @@ stratum_cc_test(
         "//stratum/lib/security:auth_policy_checker_mock",
         "//stratum/lib/test_utils:matchers",
         "//stratum/public/lib:error",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googleapis//google/rpc:code_cc_proto",
+        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -608,10 +610,10 @@ cc_test(
         ":reader_writer_datasource",
         ":system_fake",
         ":test_util",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -623,10 +625,10 @@ stratum_cc_library(
         ":datasource",
         ":managed_attribute",
         ":stringsource_interface",
-        "@com_github_google_glog//:glog",
-        "@com_google_absl//absl/memory",
         "//stratum/glue/status",
         "//stratum/lib:macros",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/memory",
         "@com_googlesource_code_re2//:re2",
     ],
 )
@@ -639,10 +641,10 @@ stratum_cc_test(
         ":fixed_stringsource",
         ":regex_datasource",
         ":test_util",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -663,11 +665,11 @@ stratum_cc_library(
     arches = HOST_ARCHES,
     deps = [
         ":system_interface",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -687,13 +689,13 @@ stratum_cc_library(
     arches = EMBEDDED_ARCHES,
     deps = [
         ":system_interface",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "@com_github_systemd_systemd//:libudev",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
+        "@com_github_systemd_systemd//:libudev",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -717,9 +719,9 @@ stratum_cc_library(
         ":attribute_database_interface",
         ":datasource",
         ":managed_attribute",
-        "@com_google_googletest//:gtest",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -727,9 +729,9 @@ stratum_cc_library(
     name = "threadpool_interface",
     hdrs = ["threadpool_interface.h"],
     deps = [
-        "@com_google_absl//absl/base:core_headers",
-        "//stratum/glue/status",
         "//stratum/glue:integral_types",
+        "//stratum/glue/status",
+        "@com_google_absl//absl/base:core_headers",
     ],
 )
 
@@ -750,16 +752,16 @@ stratum_cc_library(
     hdrs = ["udev_event_handler.h"],
     deps = [
         ":system_interface",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/lib:macros",
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/synchronization",
-        "//stratum/glue/status",
-        "//stratum/glue/status:statusor",
-        "//stratum/hal/lib/common:constants",
-        "//stratum/lib:macros",
-        "//stratum/glue/gtl:map_util",
     ],
 )
 
@@ -781,14 +783,14 @@ stratum_cc_test(
         ":system_fake",
         ":udev_event_handler",
         ":udev_event_handler_mock",
-        "@com_google_googletest//:gtest_main",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -823,7 +825,7 @@ proto_library(
 
 cc_proto_library(
     name = "phal_cc_proto",
-    deps = [":phal_proto"]
+    deps = [":phal_proto"],
 )
 
 '''FIXME(boc) google only
@@ -853,8 +855,8 @@ stratum_cc_library(
     name = "phal_backend_interface",
     hdrs = ["phal_backend_interface.h"],
     deps = [
-        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/glue/status",
+        "//stratum/hal/lib/common:common_cc_proto",
     ],
 )
 
@@ -884,10 +886,10 @@ stratum_cc_test(
     srcs = ["phal_test.cc"],
     deps = [
         ":phal",
-        "@com_google_googletest//:gtest_main",
         "//stratum/glue/status",
         "//stratum/glue/status:status_test_util",
         "//stratum/lib:macros",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -898,11 +900,11 @@ stratum_cc_library(
     deps = [
         ":phal_cc_proto",
         ":sfp_configurator",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/synchronization",
         "//stratum/hal/lib/common:constants",
         "//stratum/hal/lib/common:phal_interface",
         "//stratum/lib:macros",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -913,13 +915,13 @@ stratum_cc_library(
     arches = EMBEDDED_ARCHES,
     deps = [
         ":udev_interface",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-        "@com_github_systemd_systemd//:libudev",
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
+        "@com_github_systemd_systemd//:libudev",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/synchronization",
     ],
 )
 
@@ -948,8 +950,8 @@ stratum_cc_library(
     hdrs = ["switch_configurator_interface.h"],
     deps = [
         ":attribute_group",
-        "//stratum/hal/lib/phal:phal_cc_proto",
         "//stratum/glue/status",
+        "//stratum/hal/lib/phal:phal_cc_proto",
     ],
 )
 
@@ -958,8 +960,7 @@ stratum_cc_library(
     hdrs = ["sfp_configurator.h"],
     deps = [
         ":attribute_group",
-        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/glue/status",
+        "//stratum/hal/lib/common:common_cc_proto",
     ],
 )
-

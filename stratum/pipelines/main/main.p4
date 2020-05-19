@@ -15,11 +15,6 @@
 #define CPU_MIRROR_SESSION_ID 511
 #endif
 
-#ifndef LOOPBACK_PORT
-// enforced by FPM / BCM
-#define LOOPBACK_PORT 13
-#endif
-
 #include <core.p4>
 #include <v1model.p4>
 
@@ -321,8 +316,6 @@ control compute_ipv4_checksum(inout parsed_packet_t hdr,
     }
 }
 
-action nop() { }
-
 control punt(inout parsed_packet_t hdr,
              inout local_metadata_t local_metadata,
              inout standard_metadata_t standard_metadata) {
@@ -380,7 +373,9 @@ control punt(inout parsed_packet_t hdr,
             set_queue_and_clone_to_cpu;
             set_queue_and_send_to_cpu;
             set_egress_port;
+            NoAction;
         }
+        const default_action = NoAction();
         meters = ingress_port_meter;
         counters = punt_packet_counter;
         size = 25;
@@ -388,9 +383,6 @@ control punt(inout parsed_packet_t hdr,
 
     apply {
         punt_table.apply();
-        // if (local_metadata.color != METER_GREEN) {
-        //   mark_to_drop();
-        // }
     }
 }
 
@@ -426,10 +418,10 @@ control l3_fwd(inout parsed_packet_t hdr,
         }
         actions = {
             set_nexthop;
-            nop;
+            NoAction;
             drop;
         }
-        const default_action = nop();
+        const default_action = NoAction();
         implementation = wcmp_action_profile;
     }
 
@@ -453,7 +445,9 @@ control l2_fwd(inout parsed_packet_t hdr,
         }
         actions = {
             set_egress_port;
+            NoAction;
         }
+        const default_action = NoAction();
     }
 
     apply {
@@ -476,9 +470,9 @@ control ingress(inout parsed_packet_t hdr,
         }
         actions = {
             set_l3_admit;
-            nop;
+            NoAction;
         }
-        default_action = nop();
+        const default_action = NoAction();
     }
 
     apply {
@@ -487,18 +481,15 @@ control ingress(inout parsed_packet_t hdr,
             hdr.packet_out.setInvalid();
         }
 
-        if (standard_metadata.egress_spec == 0 ||
-                standard_metadata.egress_spec == LOOPBACK_PORT) {
+        if (standard_metadata.egress_spec == 0) {
             // Egress port not valid or not a packet out.
             my_station_table.apply();
             if (local_metadata.l3_admit == 1w1) {
                 l3_fwd.apply(hdr, local_metadata, standard_metadata);
-            }
-            else {
+            } else {
                 l2_fwd.apply(hdr, local_metadata, standard_metadata);
             }
-        }
-        else {
+        } else {
             exit;
         }
 

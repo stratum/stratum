@@ -2,16 +2,16 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#include <map>
-
 #include "stratum/testing/tests/bcm_sim_test_fixture.h"
 
-#include "gflags/gflags.h"
-#include "devtools/build/runtime/get_runfiles_dir.h"
-#include "stratum/lib/macros.h"
-#include "stratum/lib/test_utils/matchers.h"
+#include <map>
+
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+#include "devtools/build/runtime/get_runfiles_dir.h"
+#include "gflags/gflags.h"
+#include "stratum/lib/macros.h"
+#include "stratum/lib/test_utils/matchers.h"
 
 DECLARE_string(base_bcm_chassis_map_file);
 DECLARE_string(bcm_hardware_specs_file);

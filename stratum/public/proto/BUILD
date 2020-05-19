@@ -2,9 +2,11 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load("//bazel:defs.bzl", "STRATUM_INTERNAL")
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -20,10 +22,6 @@ cc_proto_library(
     name = "error_cc_proto",
     deps = [":error_proto"],
 )
-cc_proto_library(
-    name = "openconfig_cc_proto",
-    deps = [":openconfig_proto"]
-)
 
 proto_library(
     name = "p4_annotation_proto",
@@ -33,7 +31,7 @@ proto_library(
 
 cc_proto_library(
     name = "p4_annotation_cc_proto",
-    deps = [":p4_annotation_proto"]
+    deps = [":p4_annotation_proto"],
 )
 
 proto_library(
@@ -43,18 +41,18 @@ proto_library(
 
 cc_proto_library(
     name = "p4_table_defs_cc_proto",
-    deps = [":p4_table_defs_proto"]
+    deps = [":p4_table_defs_proto"],
 )
 
 proto_library(
     name = "openconfig_goog_bcm_proto",
     srcs = ["openconfig-goog-bcm.proto"],
-    deps = ["@com_github_openconfig_ygot_proto//:ywrapper_proto"]
+    deps = ["@com_github_openconfig_ygot_proto//:ywrapper_proto"],
 )
 
 cc_proto_library(
     name = "openconfig_goog_bcm_cc_proto",
-    deps = [":openconfig_goog_bcm_proto"]
+    deps = [":openconfig_goog_bcm_proto"],
 )
 
 ''' FIXME(boc) expose gNMI and P4RT protos
