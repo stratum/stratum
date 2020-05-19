@@ -221,3 +221,9 @@ Supported paths
 ----
 
 See [supported-paths](supported-paths.md)
+
+OpenConfig Model
+----
+
+For an overview of the complete OpenConfig tree, have a look at the interactive
+[HTML](http://ops.openconfig.net/branches/models/master/) version.
