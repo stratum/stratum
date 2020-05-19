@@ -177,21 +177,21 @@ template <typename T, typename U, typename V>
 // - module index ('module')
 // - network interface index ('network_interface')
 template <typename U, typename V>
-::util::Status SetOpticalValue(int32 module, int32 network_interface,
-                               YangParseTree* tree,
-                               void (OpticalChannelInfo::*set_field_func)(U),
-                               const V& value) {
+::util::Status SetValue(int32 module, int32 network_interface,
+                        YangParseTree* tree,
+                        void (OpticalChannelInfo::*set_field_func)(U),
+                        const V& value) {
   // Create a set request.
   SetRequest req;
   auto* request = req.add_requests()->mutable_optical_network_interface();
   request->set_module(module);
   request->set_network_interface(network_interface);
-  (request->mutable_optical_channel_info()
-      ->*set_field_func)(value);
-  // Note that the "node_id" parameter won't be used this this case so we put
+  (request->mutable_optical_channel_info()->*set_field_func)(value);
+  // Note that the "node_id" parameter won't be used in this case so we put
   // a default integer value 0 here.
   std::vector<::util::Status> details;
-  tree->GetSwitchInterface()->SetValue(/*node_id*/0, req, &details)
+  tree->GetSwitchInterface()
+      ->SetValue(/*node_id*/ 0, req, &details)
       .IgnoreError();
   // Return status of the operation.
   return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
@@ -2804,9 +2804,9 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     auto decimal_val = typed_value->decimal_val();
     ASSIGN_OR_RETURN(auto output_power, ConvertDecimal64ToDouble(decimal_val));
 
-    RETURN_IF_ERROR(SetOpticalValue(module, network_interface, tree,
-                        &OpticalChannelInfo::set_target_output_power,
-                        output_power));
+    RETURN_IF_ERROR(SetValue(module, network_interface, tree,
+                             &OpticalChannelInfo::set_target_output_power,
+                             output_power));
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
@@ -2869,9 +2869,10 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
     }
 
-    ::google::protobuf::uint64 uint_val = typed_value->uint_val();
-    RETURN_IF_ERROR(SetOpticalValue(module, network_interface, tree,
-        &OpticalChannelInfo::set_operational_mode, uint_val));
+    uint64 uint_val = typed_value->uint_val();
+    RETURN_IF_ERROR(SetValue(module, network_interface, tree,
+                             &OpticalChannelInfo::set_operational_mode,
+                             uint_val));
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
