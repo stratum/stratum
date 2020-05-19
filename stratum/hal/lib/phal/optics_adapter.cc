@@ -53,7 +53,7 @@ OpticsAdapter::OpticsAdapter(AttributeDatabaseInterface* attribute_db_interface)
 }
 
 ::util::Status OpticsAdapter::SetOpticalTransceiverInfo(
-    int module, int network_intweface, const OpticalChannelInfo& oc_info) {
+    int module, int network_interface, const OpticalChannelInfo& oc_info) {
   if (module <= 0 || network_intweface <= 0) {
     RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid Slot/Port value. ";
   }
