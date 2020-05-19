@@ -2427,7 +2427,8 @@ SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
     // Use MHz for OpenConfig model.
-    return SendResponse(GetResponse(path, ConvertHzToMHz(initial_value)), stream);
+    return SendResponse(
+        GetResponse(path, ConvertHzToMHz(initial_value)), stream);
   };
 
   auto on_set_functor = [module, network_interface, node, tree](
