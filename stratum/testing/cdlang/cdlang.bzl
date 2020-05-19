@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 """Processing of CDLang and Go text template files.
 
 This module defines rules that are used to generate (and compile) files
@@ -33,7 +35,7 @@ def cc_cdlang_library(name, srcs, deps, template, ver = "latest", libs = None, t
     ext = ".cc"
     out_files = [name + ext]
     _genrules(name, srcs, templates, ver, out_files, visibility, ext)
-    native.cc_library(
+    cc_library(
         name = name,
         srcs = [f for f in out_files if f.endswith(ext)],
         deps = deps,

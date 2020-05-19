@@ -2,9 +2,10 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("//stratum/testing/cdlang:cdlang.bzl", "cc_cdlang_library")
+
+licenses(["notice"])  # Apache v2
 
 cc_cdlang_library(
     name = "scenarios",
@@ -15,12 +16,12 @@ cc_cdlang_library(
     ],
     template = "scenarios.cc.tmpl",
     deps = [
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_openconfig_gnmi_proto//:gnmi_cc_grpc",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googletest//:gtest",
-        "//stratum/glue/gtl:map_util",
-        "//stratum/glue/status:status",
     ],
 )
 
@@ -39,8 +40,8 @@ cc_library(
     testonly = 1,
     srcs = ["test_main.cc"],
     deps = [
-        "@com_google_googletest//:gtest",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "@com_google_googletest//:gtest",
     ],
 )

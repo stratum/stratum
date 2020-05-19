@@ -2,14 +2,15 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load(
     "//bazel:rules.bzl",
+    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
-    "HOST_ARCHES",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     #default_hdrs_check = "strict",
@@ -31,7 +32,6 @@ cc_library(
         "//stratum/testing/protos:bcm_sim_test_protos",
     ],
     deps = [
-        "@com_github_google_glog//:glog",
         "//devtools/build/runtime:get_runfiles_dir",
         "//stratum/hal/lib/bcm:bcm_acl_manager",
         "//stratum/hal/lib/bcm:bcm_chassis_manager",
@@ -50,10 +50,11 @@ cc_library(
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/lib/test_utils:matchers",
-        "@com_google_googletest//:gtest",
+        "@com_github_google_glog//:glog",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/synchronization",
-        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_googletest//:gtest",
     ],
 )
 
@@ -63,9 +64,9 @@ stratum_cc_library(
     srcs = ["test_main.cc"],
     arches = HOST_ARCHES,
     deps = [
-        "@com_github_google_glog//:glog",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
+        "@com_github_google_glog//:glog",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -85,8 +86,8 @@ cc_test(
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:macros",
         "//stratum/lib/test_utils:matchers",
-        "@com_google_googletest//:gtest",
-        "@com_google_absl//absl/strings",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest",
     ],
 )

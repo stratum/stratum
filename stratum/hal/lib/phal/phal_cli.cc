@@ -32,11 +32,14 @@ DEFINE_string(phal_db_url, stratum::kPhalDbServiceUrl,
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms.");
 DEFINE_uint64(count, -1, "Subscribe poll count. Default is infinite.");
 DEFINE_double(double_val, 0, "Set a double value.");
+DEFINE_double(float_val, 0, "Set a float value.");
 DEFINE_int32(int32_val, 0, "Set a int32 value.");
 DEFINE_int64(int64_val, 0, "Set a int64 value.");
+DEFINE_uint64(uint32_val, 0, "Set a uint32 value.");
 DEFINE_uint64(uint64_val, 0, "Set a uint64 value.");
 DEFINE_bool(bool_val, false, "Set a boolean value.");
 DEFINE_string(string_val, "", "Set a string value.");
+DEFINE_string(bytes_val, "", "Set a bytes value.");
 
 namespace stratum {
 namespace hal {
@@ -144,7 +147,7 @@ class PhalCli {
     } else {
       std::cout << result_str << std::endl;
     }
-    LOG(INFO) << "Executed query in " << execute_duration << " us.";
+    LOG(INFO) << "Executed query in " << execute_duration << " ms.";
 
     return ::util::OkStatus();
   }
@@ -160,7 +163,8 @@ class PhalCli {
 
     ASSIGN_OR_RETURN(auto path, ParseQuery(query));
     *req.mutable_path() = path;
-    req.set_polling_interval(FLAGS_interval * 1000000);
+    req.set_polling_interval(
+        absl::ToInt64Nanoseconds(absl::Milliseconds(FLAGS_interval)));
 
     absl::Time start_time = absl::Now();
     std::unique_ptr<grpc::ClientReader<SubscribeResponse>> reader(
@@ -199,11 +203,17 @@ class PhalCli {
     if (!::gflags::GetCommandLineFlagInfoOrDie("double_val").is_default) {
       update->mutable_value()->set_double_val(FLAGS_double_val);
     }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("float_val").is_default) {
+      update->mutable_value()->set_float_val(FLAGS_float_val);
+    }
     if (!::gflags::GetCommandLineFlagInfoOrDie("int32_val").is_default) {
       update->mutable_value()->set_int32_val(FLAGS_int32_val);
     }
     if (!::gflags::GetCommandLineFlagInfoOrDie("int64_val").is_default) {
       update->mutable_value()->set_int64_val(FLAGS_int64_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("uint32_val").is_default) {
+      update->mutable_value()->set_uint32_val(FLAGS_uint32_val);
     }
     if (!::gflags::GetCommandLineFlagInfoOrDie("uint64_val").is_default) {
       update->mutable_value()->set_uint64_val(FLAGS_uint64_val);
@@ -213,6 +223,9 @@ class PhalCli {
     }
     if (!::gflags::GetCommandLineFlagInfoOrDie("string_val").is_default) {
       update->mutable_value()->set_string_val(FLAGS_string_val);
+    }
+    if (!::gflags::GetCommandLineFlagInfoOrDie("bytes_val").is_default) {
+      update->mutable_value()->set_bytes_val(FLAGS_bytes_val);
     }
 
     absl::Time start_time = absl::Now();
