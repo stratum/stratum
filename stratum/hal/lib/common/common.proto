@@ -1025,7 +1025,7 @@ message FrontPanelPortInfo {
 }
 
 // Optical channel state and configuration.
-message OpticalChannelInfo {
+message OpticalTransceiverInfo {
   message Power {
     // The instantaneous value of the statistic.
     double instant = 1;
@@ -1212,7 +1212,7 @@ message DataRequest {
       Port front_panel_port_info = 16;
       Port hardware_port = 17;
       Port fec_status = 18;
-      OpticalNetworkInterface optical_channel_info = 19;
+      OpticalNetworkInterface optical_transceiver_info = 19;
       Port loopback_status = 20;
     }
   }
@@ -1243,7 +1243,7 @@ message DataResponse {
     FrontPanelPortInfo front_panel_port_info = 16;
     HardwarePort hardware_port = 17;
     FecStatus fec_status = 18;
-    OpticalChannelInfo optical_channel_info = 19;
+    OpticalTransceiverInfo optical_transceiver_info = 19;
     LoopbackStatus loopback_status = 20;
   }
 }
@@ -1290,7 +1290,7 @@ message SetRequest {
       int32 network_interface = 2;
       oneof value {
         // The new optical channel configurable values.
-        OpticalChannelInfo optical_channel_info = 3;
+        OpticalTransceiverInfo optical_transceiver_info = 3;
       }
     }
     oneof request {

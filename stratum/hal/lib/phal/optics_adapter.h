@@ -32,13 +32,13 @@ class OpticsAdapter final : public Adapter {
   // Phal database.
   // See: PhalInterface::GetOpticalTransceiverInfo.
   ::util::Status GetOpticalTransceiverInfo(int32 module, int network_interface,
-                                           OpticalChannelInfo* oc_info);
+                                           OpticalTransceiverInfo* optical_transceiver_info);
 
-  // Sets the data from oc_info into an optical transceiver module in the Phal
+  // Sets the data from optical_transceiver_info into an optical transceiver module in the Phal
   // database.
   // See: PhalInterface::SetOpticalTransceiverInfo.
   ::util::Status SetOpticalTransceiverInfo(int32 module, int network_interface,
-                                           const OpticalChannelInfo& oc_info);
+                                           const OpticalTransceiverInfo& optical_transceiver_info);
 
  private:
   // Attribute Db path to get the hardware state of all sfp transceivers.

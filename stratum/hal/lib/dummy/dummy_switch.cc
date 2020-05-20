@@ -276,12 +276,12 @@ namespace dummy_switch {
         }
         break;
       }
-      case DataRequest::Request::kOpticalChannelInfo: {
+      case DataRequest::Request::kOpticalTransceiverInfo: {
         // Retrieve current optical channel state from phal.
-        ::util::Status status = phal_interface_->GetOpticalChannelInfo(
-            request.optical_channel_info().module(),
-            request.optical_channel_info().network_interface(),
-            resp_val.mutable_optical_channel_info());
+        ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
+            request.optical_transceiver_info().module(),
+            request.optical_transceiver_info().network_interface(),
+            resp_val.mutable_optical_transceiver_info());
         if (status.ok()) {
           resp = resp_val;
         }

@@ -115,17 +115,17 @@ class PhalInterface {
   // (module, network_interface). This method is expected to return error if
   // there is no related optics module inserted in the
   // given (module, network_interface) yet.
-  virtual ::util::Status GetOpticalChannelInfo(
+  virtual ::util::Status GetOpticalTransceiverInfo(
       int module, int network_interface,
-      OpticalChannelInfo* optical_netif_info) = 0;
+      OpticalTransceiverInfo* optical_netif_info) = 0;
 
   // Sets the data from optical_netif_info into the optical transceiver module
   // for the given (module, network_interface). This method is expected to
   // return error if there is no related optics module or network interface
   // inserted yet.
-  virtual ::util::Status SetOpticalChannelInfo(
+  virtual ::util::Status SetOpticalTransceiverInfo(
       int module, int network_interface,
-      const OpticalChannelInfo& optical_netif_info) = 0;
+      const OpticalTransceiverInfo& optical_netif_info) = 0;
 
   // Set the color/state of a frontpanel port LED, corresponding to the physical
   // port specified by (slot, port, channel). The caller assumes each physical

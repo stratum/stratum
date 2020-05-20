@@ -401,12 +401,12 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
-      case DataRequest::Request::kOpticalChannelInfo:
+      case DataRequest::Request::kOpticalTransceiverInfo:
         // Retrieve current optical channel state from phal.
-        status.Update(phal_interface_->GetOpticalChannelInfo(
-            req.optical_channel_info().module(),
-            req.optical_channel_info().network_interface(),
-            resp.mutable_optical_channel_info()));
+        status.Update(phal_interface_->GetOpticalTransceiverInfo(
+            req.optical_transceiver_info().module(),
+            req.optical_transceiver_info().network_interface(),
+            resp.mutable_optical_transceiver_info()));
         break;
       default:
         status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
@@ -457,11 +457,11 @@ BcmSwitch::~BcmSwitch() {}
         break;
       case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
         switch (req.optical_network_interface().value_case()) {
-          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalChannelInfo: {  // NOLINT
-            status.Update(phal_interface_->SetOpticalChannelInfo(
+          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalTransceiverInfo: {  // NOLINT
+            status.Update(phal_interface_->SetOpticalTransceiverInfo(
                 req.optical_network_interface().module(),
                 req.optical_network_interface().network_interface(),
-                req.optical_network_interface().optical_channel_info()));
+                req.optical_network_interface().optical_transceiver_info()));
             break;
           }
           default:
