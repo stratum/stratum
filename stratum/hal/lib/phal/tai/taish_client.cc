@@ -291,6 +291,8 @@ TaishClient* TaishClient::CreateSingleton() {
   return singleton_;
 }
 
+TaishClient::TaishClient() {}
+
 }  // namespace tai
 }  // namespace phal
 }  // namespace hal
