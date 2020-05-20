@@ -142,7 +142,7 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
     ASSERT_OK(attr->Set(val));
   }
 
-  // OperationalMode (Module format)
+  // OperationalMode (Modulation format)
   {
     uint64 new_modulation_formats = 42;
     EXPECT_CALL(*tai_interface_,
