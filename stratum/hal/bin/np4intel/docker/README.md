@@ -139,11 +139,11 @@ system running docker.  Refer to your OS for these instructions.
 cd ~/stratum/stratum/hal/bin/np4intel/docker
 ```
 
-2. run the container build script passing the Netcope SDK tarball as
+2. run the container build script passing the Netcope Ubuntu SDK binary as
    an argument to the command line.
 
 ```
-./build-stratum-np4intel-container.sh ~/np4_intel_4_7_1-1.tgz
+./build-stratum-np4intel-container.sh ~/np4_intel_4_7_1-1/ubuntu/np4-intel-n3000-4.7.1-1-ubuntu.bin
 ```
 
 # Running the Stratum container
