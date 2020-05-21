@@ -46,7 +46,7 @@ TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid,
       });
   operational_mode_.AddSetter(
       [oid, tai_interface](uint64 operational_mode) -> ::util::Status {
-        return tai_interface->SetModulationsFormats(oid, operational_mode);
+        return tai_interface->SetModulationFormat(oid, operational_mode);
       });
   target_output_power_.AddSetter(
       [oid, tai_interface](double output_power) -> ::util::Status {
@@ -59,7 +59,7 @@ TaiOpticsDataSource::TaiOpticsDataSource(int32 id, uint64 oid,
   ASSIGN_OR_RETURN(auto tx_laser_freq,
                    tai_interface_->GetTxLaserFrequency(oid_));
   tx_laser_frequency_.AssignValue(tx_laser_freq);
-  ASSIGN_OR_RETURN(auto op_mode, tai_interface_->GetModulationFormats(oid_));
+  ASSIGN_OR_RETURN(auto op_mode, tai_interface_->GetModulationFormat(oid_));
   operational_mode_.AssignValue(op_mode);
   ASSIGN_OR_RETURN(auto current_output_power,
                    tai_interface_->GetCurrentOutputPower(oid_));

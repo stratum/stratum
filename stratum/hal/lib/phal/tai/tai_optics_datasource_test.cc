@@ -43,7 +43,7 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
   // TAI interface.
   EXPECT_CALL(*tai_interface_, GetTxLaserFrequency(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<uint64>(kFreq)));
-  EXPECT_CALL(*tai_interface_, GetModulationFormats(kOid))
+  EXPECT_CALL(*tai_interface_, GetModulationFormat(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<uint64>(kModFormat)));
   EXPECT_CALL(*tai_interface_, GetCurrentOutputPower(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<double>(kOutputPower)));
@@ -60,7 +60,7 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
   auto datasource = status_or.ValueOrDie();
   EXPECT_CALL(*tai_interface_, GetTxLaserFrequency(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<uint64>(kFreq)));
-  EXPECT_CALL(*tai_interface_, GetModulationFormats(kOid))
+  EXPECT_CALL(*tai_interface_, GetModulationFormat(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<uint64>(kModFormat)));
   EXPECT_CALL(*tai_interface_, GetCurrentOutputPower(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<double>(kOutputPower)));
@@ -144,13 +144,13 @@ TEST_F(TaiOpticasDataSourceTest, BasicTests) {
 
   // OperationalMode (Modulation format)
   {
-    uint64 new_modulation_formats = 42;
+    uint64 new_modulation_format = 42;
     EXPECT_CALL(*tai_interface_,
-                SetModulationsFormats(kOid, new_modulation_formats))
+                SetModulationFormat(kOid, new_modulation_format))
         .WillOnce(::testing::Return(::util::OkStatus()));
     auto attr = datasource->GetOperationalMode();
     ASSERT_TRUE(attr->CanSet());
-    Attribute val = new_modulation_formats;
+    Attribute val = new_modulation_format;
     ASSERT_OK(attr->Set(val));
   }
 }

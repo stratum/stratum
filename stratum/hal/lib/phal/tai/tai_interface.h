@@ -52,16 +52,15 @@ class TaiInterface {
       GetTargetOutputPower(const uint64 netif_id) = 0;
 
   // Gets modulation format from a network interface.
-  virtual util::StatusOr<uint64>
-      GetModulationFormats(const uint64 netif_id) = 0;
+  virtual util::StatusOr<uint64> GetModulationFormat(const uint64 netif_id) = 0;
 
   // Sets target output power to a network interafce.
   virtual util::Status SetTargetOutputPower(const uint64 netif_id,
                                             const double power) = 0;
 
   // Sets modulation format to a network interface.
-  virtual util::Status SetModulationsFormats(const uint64 netif_id,
-                                             const uint64 mod_format) = 0;
+  virtual util::Status SetModulationFormat(const uint64 netif_id,
+                                           const uint64 mod_format) = 0;
 
   // Sets frequency to a network interface.
   virtual util::Status SetTxLaserFrequency(const uint64 netif_id,

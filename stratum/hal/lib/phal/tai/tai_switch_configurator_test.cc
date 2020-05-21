@@ -86,7 +86,7 @@ TEST_F(TaiSwitchConfiguratorTest, ConfigurPhalDb) {
   // The configurator will create a data source for a network interface
   EXPECT_CALL(*tai_interface_, GetTxLaserFrequency(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<uint64>(kFreq)));
-  EXPECT_CALL(*tai_interface_, GetModulationFormats(kOid))
+  EXPECT_CALL(*tai_interface_, GetModulationFormat(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<uint64>(kModFormat)));
   EXPECT_CALL(*tai_interface_, GetCurrentOutputPower(kOid))
       .WillOnce(::testing::Return(::util::StatusOr<double>(kOutputPower)));

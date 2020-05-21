@@ -32,11 +32,11 @@ class TaiInterfaceMock : public TaiInterface {
                util::StatusOr<double>(const uint64 netif_id));
   MOCK_METHOD1(GetTargetOutputPower,
                util::StatusOr<double>(const uint64 netif_id));
-  MOCK_METHOD1(GetModulationFormats,
+  MOCK_METHOD1(GetModulationFormat,
                util::StatusOr<uint64>(const uint64 netif_id));
   MOCK_METHOD2(SetTargetOutputPower,
                util::Status(const uint64 netif_id, const double power));
-  MOCK_METHOD2(SetModulationsFormats,
+  MOCK_METHOD2(SetModulationFormat,
                util::Status(const uint64 netif_id, const uint64 mod_format));
   MOCK_METHOD2(SetTxLaserFrequency,
                util::Status(const uint64 netif_id, const uint64 frequency));

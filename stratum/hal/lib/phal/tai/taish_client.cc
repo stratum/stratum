@@ -182,8 +182,7 @@ util::StatusOr<double> TaishClient::GetTargetOutputPower(
   return result;
 }
 
-util::StatusOr<uint64> TaishClient::GetModulationFormats(
-    const uint64 netif_id) {
+util::StatusOr<uint64> TaishClient::GetModulationFormat(const uint64 netif_id) {
   absl::ReaderMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(
@@ -200,8 +199,8 @@ util::Status TaishClient::SetTargetOutputPower(const uint64 netif_id,
                       std::to_string(power));
 }
 
-util::Status TaishClient::SetModulationsFormats(const uint64 netif_id,
-                                                const uint64 mod_format) {
+util::Status TaishClient::SetModulationFormat(const uint64 netif_id,
+                                              const uint64 mod_format) {
   absl::ReaderMutexLock l(&init_lock_);
   CHECK_RETURN_IF_FALSE(initialized_);
   ASSIGN_OR_RETURN(auto modulation_format_name,

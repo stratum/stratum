@@ -60,13 +60,13 @@ class TaishClient final : public TaiInterface {
       LOCKS_EXCLUDED(init_lock_);
   util::StatusOr<double> GetTargetOutputPower(const uint64 netif_id) override
       LOCKS_EXCLUDED(init_lock_);
-  util::StatusOr<uint64> GetModulationFormats(const uint64 netif_id) override
+  util::StatusOr<uint64> GetModulationFormat(const uint64 netif_id) override
       LOCKS_EXCLUDED(init_lock_);
   util::Status SetTargetOutputPower(const uint64 netif_id,
                                     const double power) override
       LOCKS_EXCLUDED(init_lock_);
-  util::Status SetModulationsFormats(const uint64 netif_id,
-                                     const uint64 mod_format) override
+  util::Status SetModulationFormat(const uint64 netif_id,
+                                   const uint64 mod_format) override
       LOCKS_EXCLUDED(init_lock_);
   util::Status SetTxLaserFrequency(const uint64 netif_id,
                                    const uint64 frequency) override
