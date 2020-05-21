@@ -10,19 +10,16 @@ ARG PROTOBUF_TAG=v3.7.1
 ARG GRPC_TAG=v1.21.3
 ARG DPDK_VERSION=v19.08-rc4
 ARG JOBS=4
-ARG NP4_TAR
-ARG NP4_VERSION=4.7.1-1
+ARG NP4_BIN
 ARG NP4_DIR=/np4_intel
 
 FROM ubuntu:18.04
 LABEL maintainer="Stratum Ubuntu dev <stratum-dev@lists.stratumproject.org>"
 LABEL description="This Docker image sets up a development environment for Stratum on Ubuntu"
 
-# Copy in the NP4 tarball
-ARG NP4_TAR
-ARG NP4_DIR
-COPY $NP4_TAR /
-RUN mkdir $NP4_DIR && tar xf /$NP4_TAR -C $NP4_DIR --strip-components 1
+# Copy in the NP4 binary
+ARG NP4_BIN
+COPY $NP4_BIN /
 
 # bazel dependencies
 # + wget to download bazel binary
@@ -106,16 +103,13 @@ RUN git clone https://github.com/DPDK/dpdk.git /tmp/dpdk && \
     rm -rf /tmp/dpdk
 
 # Install the NP4 Intel packages
-ARG NP4_VERSION
+ARG NP4_BIN
 ARG NP4_DIR
-RUN bash $NP4_DIR/ubuntu/np4-intel-n3000-${NP4_VERSION}-ubuntu.bin offline
+RUN mkdir $NP4_DIR && mv /$NP4_BIN $NP4_DIR && \
+    bash $NP4_DIR/$NP4_BIN offline
 
 # Tools for style checking
 RUN pip install setuptools wheel && \
     pip install cpplint && \
     pip install virtualenv
-
-# Remove NP4 tarball
-# Note: leave $NP4_DIR for runtime build
-RUN rm -rf /$NP4_TAR
 

@@ -8,9 +8,8 @@
 #----------------------------------------------------------------------
 
 ARG BUILDER_IMAGE
-ARG RUNTIME_BASE_IMAGE
 ARG OPAE_VERSION=1.3.6-4
-ARG NP4_VERSION=4.7.1-1
+ARG NP4_BIN
 ARG NP4_DIR=/np4_intel
 ARG PI_NP4_COMMIT="12be7a96f3d903afdd6cc3095f7d4003242af60b"
 
@@ -79,6 +78,7 @@ RUN cd /tmp/PI/proto && \
     rm -rf /tmp/PI
 
 # Copy into output build directory
+ARG NP4_BIN
 ARG NP4_DIR
 ENV STRATUM_NP4INTEL_BASE stratum/hal/bin/np4intel
 RUN mkdir -p $OUTPUT_BASE/bin && \
@@ -86,6 +86,7 @@ RUN mkdir -p $OUTPUT_BASE/bin && \
     cp bazel-bin/$STRATUM_NP4INTEL_BASE/stratum_np4intel $OUTPUT_BASE/bin/ && \
     cp /tmp/stratum_np4intel.debug $OUTPUT_BASE/bin/ && \
     cp $STRATUM_NP4INTEL_BASE/docker/scripts/stratum-entrypoint.sh /output/ && \
+    cp $STRATUM_NP4INTEL_BASE/docker/configs/stratum.flags $OUTPUT_BASE/share/stratum/ && \
     cp $STRATUM_NP4INTEL_BASE/docker/scripts/build_pipeline_configs.py /output/ && \
     mkdir /output/opae && \
     cp /opae/mybuild/opae-libs-${OPAE_VERSION}.x86_64.deb /output/opae/ && \
@@ -126,10 +127,10 @@ ARG OPAE_VERSION
 RUN dpkg -i /opae/opae-libs-${OPAE_VERSION}.x86_64.deb
 
 # Install the NP4 Intel packages
-ARG NP4_VERSION
+ARG NP4_BIN
 ARG NP4_DIR
-RUN bash $NP4_DIR/ubuntu/np4-intel-n3000-${NP4_VERSION}-ubuntu.bin && \
-    rm -rf $NP4_DIR
+RUN bash $NP4_DIR/$NP4_BIN && \
+    rm -rf /$NP4_DIR
 
 # Setup stratum_np4intel pre-reqs
 RUN mkdir /stratum_configs && \
