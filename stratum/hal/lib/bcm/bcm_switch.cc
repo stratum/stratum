@@ -467,6 +467,7 @@ BcmSwitch::~BcmSwitch() {}
           default:
             status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
         }
+        break;
       default:
         status = MAKE_ERROR(ERR_INTERNAL)
                  << req.ShortDebugString() << " Not supported yet!";
