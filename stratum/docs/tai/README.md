@@ -14,6 +14,14 @@ Figure below shows the overview of components which related to TAI support, we w
 
 ![overview](img/overview.svg)
 
+## Enabling TAI Support in Stratum
+
+To build PHAL with the TAI backend, add the following define to all Bazel build commands:
+
+`bazel build --define phal_with_tai=true //stratum/...`
+
+Follow the relevant build instructions for the chip as usual.
+
 ## Terminology
 
 * Adapter Host - is hardware-independent software which uses the TAI interface to provide optical transponder functionality to other parts of the system. An adapter host loads the shared library adapter.
