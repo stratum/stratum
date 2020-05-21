@@ -389,9 +389,9 @@ class OpticalInputPowerChangedEvent
     : public PerOpticalPortGnmiEvent<OpticalInputPowerChangedEvent> {
  public:
   OpticalInputPowerChangedEvent(int32 module, int32 network_interface,
-                             const OpticalTransceiverInfo::Power new_input_power)
+                                const OpticalTransceiverInfo::Power power)
       : PerOpticalPortGnmiEvent(module, network_interface),
-        new_input_power_(new_input_power) {}
+        new_input_power_(power) {}
   ~OpticalInputPowerChangedEvent() override {}
 
   // Actual power values.
@@ -414,9 +414,9 @@ class OpticalOutputPowerChangedEvent
     : public PerOpticalPortGnmiEvent<OpticalOutputPowerChangedEvent> {
  public:
   OpticalOutputPowerChangedEvent(int32 module, int32 network_interface,
-                              const OpticalTransceiverInfo::Power new_output_power)
+                              const OpticalTransceiverInfo::Power power)
       : PerOpticalPortGnmiEvent(module, network_interface),
-        new_output_power_(new_output_power) {}
+        new_output_power_(power) {}
   ~OpticalOutputPowerChangedEvent() override {}
 
   // Actual power values.

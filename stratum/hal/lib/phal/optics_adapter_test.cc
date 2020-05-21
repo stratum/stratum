@@ -85,30 +85,30 @@ TEST_F(OpticsAdapterTest, TaiPhalGetOpticalTransceiverInfoSuccess) {
   EXPECT_CALL(*db_query, Get())
       .WillOnce(Return(ByMove(std::move(phaldb_resp))));
 
-  OpticalTransceiverInfo optical_transceiver_info{};
-  ASSERT_OK(optics_adapter_->GetOpticalTransceiverInfo(1, 1, &optical_transceiver_info));
+  OpticalTransceiverInfo ot_info{};
+  ASSERT_OK(optics_adapter_->GetOpticalTransceiverInfo(1, 1, &ot_info));
 
-  EXPECT_EQ(optical_transceiver_info.frequency(), 196000000);
-  EXPECT_DOUBLE_EQ(optical_transceiver_info.input_power().instant(), 1000.2);
-  EXPECT_DOUBLE_EQ(optical_transceiver_info.output_power().instant(), 10000.1);
-  EXPECT_DOUBLE_EQ(optical_transceiver_info.target_output_power(), 15.5);
-  EXPECT_EQ(optical_transceiver_info.operational_mode(), 1);
+  EXPECT_EQ(ot_info.frequency(), 196000000);
+  EXPECT_DOUBLE_EQ(ot_info.input_power().instant(), 1000.2);
+  EXPECT_DOUBLE_EQ(ot_info.output_power().instant(), 10000.1);
+  EXPECT_DOUBLE_EQ(ot_info.target_output_power(), 15.5);
+  EXPECT_EQ(ot_info.operational_mode(), 1);
 }
 
 TEST_F(OpticsAdapterTest, TaiPhalSetOpticalTransceiverInfoSuccess) {
-  OpticalTransceiverInfo optical_transceiver_info;
-  optical_transceiver_info.set_frequency(150000000);
-  optical_transceiver_info.set_target_output_power(140.12);
-  optical_transceiver_info.set_operational_mode(3);
+  OpticalTransceiverInfo ot_info;
+  ot_info.set_frequency(150000000);
+  ot_info.set_target_output_power(140.12);
+  ot_info.set_operational_mode(3);
 
   AttributeValueMap attrs;
-  attrs[frequency_path] = optical_transceiver_info.frequency();
-  attrs[target_output_power_path] = optical_transceiver_info.target_output_power();
-  attrs[operational_mode_path] = optical_transceiver_info.operational_mode();
+  attrs[frequency_path] = ot_info.frequency();
+  attrs[target_output_power_path] = ot_info.target_output_power();
+  attrs[operational_mode_path] = ot_info.operational_mode();
 
   EXPECT_CALL(*database_.get(), Set(DbAttributesEqual(attrs)))
       .WillOnce(Return(::util::Status::OK));
-  EXPECT_OK(optics_adapter_->SetOpticalTransceiverInfo(1, 1, optical_transceiver_info));
+  EXPECT_OK(optics_adapter_->SetOpticalTransceiverInfo(1, 1, ot_info));
 }
 
 }  // namespace

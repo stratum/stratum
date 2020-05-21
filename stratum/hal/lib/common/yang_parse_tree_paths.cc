@@ -2481,7 +2481,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::instant, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
@@ -2502,7 +2503,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::avg, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
@@ -2524,7 +2526,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::interval, &DontProcess<uint64>);
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
   auto on_change_functor = GetOpticalOnChangeFunctor(
@@ -2544,7 +2547,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::max, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
@@ -2566,7 +2570,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::max_time, &DontProcess<uint64>);
 
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
@@ -2587,7 +2592,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::min, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
@@ -2609,7 +2615,8 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_input_power, &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
       &OpticalTransceiverInfo::Power::min_time, &DontProcess<uint64>);
 
   auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
@@ -2630,7 +2637,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::instant, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2651,7 +2659,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::avg, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2674,7 +2683,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::interval, &DontProcess<uint64>);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2695,7 +2705,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::max, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2718,7 +2729,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::max_time, &DontProcess<uint64>);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2739,7 +2751,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::min, &ConvertDoubleToDecimal64OrDie);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2762,7 +2775,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
       module, network_interface, tree,
-      &OpticalTransceiverInfo::has_output_power, &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
       &OpticalTransceiverInfo::Power::min_time, &DontProcess<uint64>);
 
   auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
@@ -2841,7 +2855,8 @@ void SetUpComponentsComponentOpticalChannelStateOperationalMode(
     TreeNode* node, YangParseTree* tree, int32 module,
     int32 network_interface) {
   auto poll_functor = GetOpticalOnPollFunctor(
-      module, network_interface, tree, &OpticalTransceiverInfo::operational_mode,
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::operational_mode,
       &DontProcess<uint64>);
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor);
