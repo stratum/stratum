@@ -83,6 +83,7 @@ Phal* Phal::CreateSingleton() {
       // based on bazel flags.
       auto* tai_interface = tai::TaishClient::CreateSingleton();
       auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_interface);
+      phal_interfaces_.push_back(tai_phal);
       ASSIGN_OR_RETURN(auto configurator,
                        tai::TaiSwitchConfigurator::Make(tai_interface));
       configurators.push_back(std::move(configurator));
@@ -124,7 +125,10 @@ Phal* Phal::CreateSingleton() {
     initialized_ = true;
   }
 
-  // TODO(unknown): Process Chassis Config here
+  // PushChassisConfig to all PHAL backends
+  for (const auto& phal_interface : phal_interfaces_) {
+    RETURN_IF_ERROR(phal_interface->PushChassisConfig(config));
+  }
 
   return ::util::OkStatus();
 }

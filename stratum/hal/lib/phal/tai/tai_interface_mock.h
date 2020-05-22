@@ -6,6 +6,7 @@
 
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"

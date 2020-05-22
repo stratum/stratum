@@ -141,3 +141,20 @@ stratum_cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+stratum_cc_test(
+    name = "tai_phal_test",
+    srcs = ["tai_phal_test.cc"],
+    deps = [
+        ":tai_phal",
+        ":tai_interface",
+        ":tai_interface_mock",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/glue/status:statusor",
+        "//stratum/lib:macros",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+    ]
+)

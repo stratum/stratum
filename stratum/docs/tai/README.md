@@ -187,7 +187,7 @@ Here is an example of the optical network interface configuration.
 
 ```
 optical_network_interfaces {
-  id: 1001
+  id: 4 # the object id of TAI
   name: "card-1001"
   module: 1
   network_interface: 1

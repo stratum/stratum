@@ -57,6 +57,16 @@ TaiPhal* TaiPhal::CreateSingleton(TaiInterface* tai_interface) {
 ::util::Status TaiPhal::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&config_lock_);
 
+  // Initialize optical network interfaces
+  for (const auto& netif : config.optical_network_interfaces()) {
+    uint64 oid = netif.id();
+    RETURN_IF_ERROR(
+      tai_interface_->SetTxLaserFrequency(oid, netif.frequency()));
+    RETURN_IF_ERROR(
+        tai_interface_->SetTargetOutputPower(oid, netif.target_output_power()));
+    RETURN_IF_ERROR(
+        tai_interface_->SetModulationFormat(oid, netif.operational_mode()));
+  }
   return ::util::OkStatus();
 }
 
