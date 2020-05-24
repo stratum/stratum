@@ -60,4 +60,3 @@ TEST_F(TaiPhalTest, PushChassisConfig) {
 }  // namespace phal
 }  // namespace hal
 }  // namespace stratum
-

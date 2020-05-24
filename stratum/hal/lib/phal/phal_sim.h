@@ -40,13 +40,11 @@ class PhalSim : public PhalInterface {
   ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info) override
       LOCKS_EXCLUDED(config_lock_);
-  ::util::Status
-  GetOpticalTransceiverInfo(int module, int network_interface,
-                            OpticalTransceiverInfo* ot_info) override
-      LOCKS_EXCLUDED(config_lock_);
-  ::util::Status
-  SetOpticalTransceiverInfo(int module, int network_interface,
-                            const OpticalTransceiverInfo& ot_info)
+  ::util::Status GetOpticalTransceiverInfo(
+      int module, int network_interface, OpticalTransceiverInfo* ot_info)
+      override LOCKS_EXCLUDED(config_lock_);
+  ::util::Status SetOpticalTransceiverInfo(
+      int module, int network_interface, const OpticalTransceiverInfo& ot_info)
       override LOCKS_EXCLUDED(config_lock_);
   ::util::Status SetPortLedState(int slot, int port, int channel,
                                  LedColor color, LedState state) override
