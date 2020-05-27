@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG BAZEL_VERSION=3.0.0
-ARG PI_COMMIT=1539ecd8a50c159b011d9c5a9c0eba99f122a845
-ARG BMV2_COMMIT=9ef324838b29419040b4f677a3ff65bc72405c44
+ARG PI_COMMIT=0fbdac256151eb1537cd5ebf19101d5df60767fa
+ARG BMV2_COMMIT=5bb6075d090e7cc9bbe2df36cf85a2f2635beb59
 ARG JDK_URL=https://mirror.bazel.build/openjdk/azul-zulu11.29.3-ca-jdk11.0.2/zulu11.29.3-ca-jdk11.0.2-linux_x64.tar.gz
 ARG LLVM_REPO_NAME="deb http://apt.llvm.org/stretch/  llvm-toolchain-stretch main"
 
