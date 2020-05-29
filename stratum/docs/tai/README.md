@@ -22,6 +22,18 @@ To build PHAL with the TAI backend, add the following define to all Bazel build 
 
 Follow the relevant build instructions for the chip as usual.
 
+### Additional TAI Switch Setup
+
+When built like described above, the Debian package will depend on the TAI
+package being available on the switch as well. To prepare the switch, download
+the pre-built package `cassini-tai_1.0_amd64.deb` from your distributor and
+install it:
+
+`apt-get install --reinstall cassini-tai_1.0_amd64.deb`
+
+The TAI package itself depends on Docker, so you might want to
+[install](https://docs.docker.com/engine/install/debian/) that first.
+
 ## Terminology
 
 * Adapter Host - is hardware-independent software which uses the TAI interface to provide optical transponder functionality to other parts of the system. An adapter host loads the shared library adapter.
