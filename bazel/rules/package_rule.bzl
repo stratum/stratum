@@ -7,6 +7,8 @@ def stratum_package(*args, **kwargs):
 
 # This rules works exactly like pkg_tar from @rules_pkg, except that it preserves
 # symlinks in the resulting tarball.
+# This is a workaround for https://github.com/bazelbuild/rules_pkg/issues/115
+# TODO(unknown): Remove once fixed upstream.
 def pkg_tar_with_symlinks(
         name,
         srcs,
