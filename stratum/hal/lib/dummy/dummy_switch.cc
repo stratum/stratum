@@ -277,7 +277,6 @@ namespace dummy_switch {
         break;
       }
       case DataRequest::Request::kOpticalTransceiverInfo: {
-        // Retrieve current optical channel state from phal.
         ::util::Status status = phal_interface_->GetOpticalTransceiverInfo(
             request.optical_transceiver_info().module(),
             request.optical_transceiver_info().network_interface(),

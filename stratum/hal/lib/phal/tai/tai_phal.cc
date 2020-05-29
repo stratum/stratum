@@ -61,7 +61,7 @@ TaiPhal* TaiPhal::CreateSingleton(TaiInterface* tai_interface) {
   for (const auto& netif : config.optical_network_interfaces()) {
     uint64 oid = netif.id();
     RETURN_IF_ERROR(
-      tai_interface_->SetTxLaserFrequency(oid, netif.frequency()));
+        tai_interface_->SetTxLaserFrequency(oid, netif.frequency()));
     RETURN_IF_ERROR(
         tai_interface_->SetTargetOutputPower(oid, netif.target_output_power()));
     RETURN_IF_ERROR(

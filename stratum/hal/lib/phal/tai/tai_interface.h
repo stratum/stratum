@@ -26,12 +26,12 @@ class TaiInterface {
   virtual util::StatusOr<std::vector<uint64>> GetModuleIds() = 0;
 
   // Gets all network interface id from a module.
-  virtual util::StatusOr<std::vector<uint64>>
-      GetNetworkInterfaceIds(const uint64 module_id) = 0;
+  virtual util::StatusOr<std::vector<uint64>> GetNetworkInterfaceIds(
+      const uint64 module_id) = 0;
 
   // Gets all host interface id from a module
-  virtual util::StatusOr<std::vector<uint64>>
-      GetHostInterfaceIds(const uint64 module_id) = 0;
+  virtual util::StatusOr<std::vector<uint64>> GetHostInterfaceIds(
+      const uint64 module_id) = 0;
 
   // TODO(Yi): Complete functions for Module and Host Interface
 
@@ -40,16 +40,16 @@ class TaiInterface {
   virtual util::StatusOr<uint64> GetTxLaserFrequency(const uint64 netif_id) = 0;
 
   // Gets input power from a network interface.
-  virtual util::StatusOr<double>
-      GetCurrentInputPower(const uint64 netif_id) = 0;
+  virtual util::StatusOr<double> GetCurrentInputPower(
+      const uint64 netif_id) = 0;
 
   // Gets output power from a network interface.
-  virtual util::StatusOr<double>
-      GetCurrentOutputPower(const uint64 netif_id) = 0;
+  virtual util::StatusOr<double> GetCurrentOutputPower(
+      const uint64 netif_id) = 0;
 
   // Gets target output power from a network interface.
-  virtual util::StatusOr<double>
-      GetTargetOutputPower(const uint64 netif_id) = 0;
+  virtual util::StatusOr<double> GetTargetOutputPower(
+      const uint64 netif_id) = 0;
 
   // Gets modulation format from a network interface.
   virtual util::StatusOr<uint64> GetModulationFormat(const uint64 netif_id) = 0;

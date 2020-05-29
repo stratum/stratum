@@ -185,9 +185,8 @@ Phal* Phal::CreateSingleton() {
   return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
 }
 
-::util::Status
-Phal::GetOpticalTransceiverInfo(int module, int network_interface,
-                                OpticalTransceiverInfo* ot_info) {
+::util::Status Phal::GetOpticalTransceiverInfo(
+    int module, int network_interface, OpticalTransceiverInfo* ot_info) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -197,9 +196,8 @@ Phal::GetOpticalTransceiverInfo(int module, int network_interface,
                                                     ot_info);
 }
 
-::util::Status
-Phal::SetOpticalTransceiverInfo(int module, int network_interface,
-                                const OpticalTransceiverInfo& ot_info) {
+::util::Status Phal::SetOpticalTransceiverInfo(
+    int module, int network_interface, const OpticalTransceiverInfo& ot_info) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";

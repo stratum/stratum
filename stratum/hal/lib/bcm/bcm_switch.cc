@@ -402,7 +402,7 @@ BcmSwitch::~BcmSwitch() {}
             "A (sample) node debug string.");
         break;
       case DataRequest::Request::kOpticalTransceiverInfo:
-        // Retrieve current optical channel state from phal.
+        // Retrieve current optical transceiver state from phal.
         status.Update(phal_interface_->GetOpticalTransceiverInfo(
             req.optical_transceiver_info().module(),
             req.optical_transceiver_info().network_interface(),
