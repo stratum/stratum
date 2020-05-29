@@ -14,6 +14,8 @@ def _impl(repository_ctx):
     repository_ctx.symlink(bf_sde_path, "barefoot-bin")
     repository_ctx.file("BUILD", """
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("@//bazel/rules:package_rule.bzl", "pkg_tar_with_symlinks")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -63,24 +65,12 @@ pkg_tar(
   package_dir = "/usr",
   strip_prefix = "barefoot-bin",
 )
-pkg_tar(
+pkg_tar_with_symlinks(
   name = "bf_shareable_files",
   srcs = glob(["barefoot-bin/share/microp_fw/**"]) +
          glob(["barefoot-bin/share/bfsys/**"]) +
-         glob(["barefoot-bin/share/tofino_sds_fw/credo/**"]) +
-         [
-            "barefoot-bin/share/tofino_sds_fw/avago/firmware/pcie_serdes.0x1066_2147.rom",
-            "barefoot-bin/share/tofino_sds_fw/avago/firmware/sbus_master.0x101D_2001.rom",
-            "barefoot-bin/share/tofino_sds_fw/avago/firmware/serdes.0x106F_204D.rom",
-            "barefoot-bin/share/tofino_sds_fw/avago/firmware/serdes.0x1091_244D.rom",
-         ],
+         glob(["barefoot-bin/share/tofino_sds_fw/**"]),
   mode = "0644",
-  symlinks = {
-    "usr/share/tofino_sds_fw/avago/firmware/pcie_serdes.rom": "pcie_serdes.0x1066_2147.rom",
-    "usr/share/tofino_sds_fw/avago/firmware/sbus_master.rom": "sbus_master.0x101D_2001.rom",
-    "usr/share/tofino_sds_fw/avago/firmware/serdes_A0.rom": "serdes.0x106F_204D.rom",
-    "usr/share/tofino_sds_fw/avago/firmware/serdes_B0.rom": "serdes.0x1091_244D.rom",
-  },
   package_dir = "/usr",
   strip_prefix = "barefoot-bin",
 )
