@@ -14,6 +14,8 @@ def _impl(repository_ctx):
     repository_ctx.symlink(bf_sde_path, "barefoot-bin")
     repository_ctx.file("BUILD", """
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("@//bazel/rules:package_rule.bzl", "pkg_tar_with_symlinks")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -63,7 +65,7 @@ pkg_tar(
   package_dir = "/usr",
   strip_prefix = "barefoot-bin",
 )
-pkg_tar(
+pkg_tar_with_symlinks(
   name = "bf_shareable_files",
   srcs = glob(["barefoot-bin/share/microp_fw/**"]) +
          glob(["barefoot-bin/share/bfsys/**"]) +
