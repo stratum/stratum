@@ -14,13 +14,25 @@ Figure below shows the overview of components which related to TAI support, we w
 
 ![overview](img/overview.svg)
 
+## Terminology
+
+* Adapter Host - is hardware-independent software which uses the TAI interface to provide optical transponder functionality to other parts of the system. An adapter host loads the shared library adapter.
+
+* Module - is an object which represent an optical module (e.g., [AC400](https://acacia-inc.com/product/ac400-flex/) that is used in [Voyager transponder](https://engineering.fb.com/connectivity/an-open-approach-for-switching-routing-and-transport/)).
+
+* Host Interface - is an object which represents an interface between an optical module and the host system, sometimes called client interface. Actually, this is an interface between an optical module and Ethernet ASIC.
+
+* Network Interface - is an object which represents hardware components that transmits/receives one wavelength. Or in other words, this is actually hardware that caries about an optical connection.
+
+![](img/terminology.svg)
+
 ## Enabling TAI Support in Stratum
 
 To build PHAL with the TAI backend, add the following define to all Bazel build commands:
 
 `bazel build --define phal_with_tai=true //stratum/...`
 
-Follow the relevant build instructions for the chip as usual.
+Follow the relevant build instructions for [Broadcom chips](stratum/hal/bin/bcm/standalone/README.md) as usual.
 
 ### Additional TAI Switch Setup
 
@@ -34,17 +46,31 @@ install it:
 The TAI package itself depends on Docker, so you might want to
 [install](https://docs.docker.com/engine/install/debian/) that first.
 
-## Terminology
+TAI is managed by systemd, so use the usual commands to manage that:
 
-* Adapter Host - is hardware-independent software which uses the TAI interface to provide optical transponder functionality to other parts of the system. An adapter host loads the shared library adapter.
+- `systemctl start taish-server.service` # status|stop
+- `systemctl enable taish-server.service`
+- `journalctl -feu taish-server`
 
-* Module - is an object which represent an optical module (e.g., [AC400](https://acacia-inc.com/product/ac400-flex/) that is used in [Voyager transponder](https://engineering.fb.com/connectivity/an-open-approach-for-switching-routing-and-transport/)).
+### TAI Troubleshooting on Cassini
 
-* Host Interface - is an object which represents an interface between an optical module and the host system, sometimes called client interface. Actually, this is an interface between an optical module and Ethernet ASIC.
+#### Optical ports (host interfaces) do not come up in the SDK
+Occasionally the host interfaces will stop coming up in the SDK, but did so
+before and the configuration did not change.
 
-* Network Interface - is an object which represents hardware components that transmits/receives one wavelength. Or in other words, this is actually hardware that caries about an optical connection.
-
-![](img/terminology.svg)
+1. Stop Stratum
+2. Stop Taish server: `systemctl stop taish-server.service`
+3. Pull and re-insert the big line-cards from both switches (on both sides)
+4. Start taish server: `systemctl start taish-server.service`
+5. Check taish logs until this message appears: `docker logs -f taish-server`:
+```
+DEBUG [int tai::nel::HW::controller_status()@1866] [module(1)] auto traffic state: 3
+DEBUG [int tai::nel::HW::controller_status()@1868] [module(1)] auto traffic err history: 0x0
+DEBUG [int tai::nel::HW::controller_status()@1870] [module(1)] RX_LOS: false
+DEBUG [int tai::nel::HW::controller_status()@1872] [module(1)] RXI-LOSI: false, MLD-LOL: false
+```
+6. Start Stratum
+7. Check port status: `ps`
 
 ## Stratum TAI Interface and TAI Wrapper
 
