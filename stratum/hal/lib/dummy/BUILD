@@ -45,21 +45,6 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "dummy_phal",
-    srcs = ["dummy_phal.cc"],
-    hdrs = ["dummy_phal.h"],
-    deps = ["@com_google_absl//absl/synchronization",
-            "//stratum/glue:logging",
-            "//stratum/glue:integral_types",
-            "//stratum/hal/lib/common:writer_interface",
-            "//stratum/hal/lib/common:phal_interface",
-            "//stratum/hal/lib/common:constants",
-            ":dummy_box",
-            ":dummy_global_vars",
-    ]
-)
-
-stratum_cc_library(
     name = "dummy_chassis_mgr",
     srcs = ["dummy_chassis_mgr.cc"],
     hdrs = ["dummy_chassis_mgr.h"],

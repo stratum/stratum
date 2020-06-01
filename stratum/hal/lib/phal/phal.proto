@@ -54,9 +54,25 @@ message PhalCardConfig {
   CachePolicyConfig cache_policy = 3;
 }
 
-message PhalOpticalCardConfig {
-  int32 slot = 1;
-  CachePolicyConfig cache_policy = 2;
+// This message encapsulates all the data needed to specify an optical module.
+message PhalOpticalModuleConfig {
+  // This message encapsulates all the data needed to specify a physical
+  // network interface on an optical module.
+  message NetworkInterface {
+    // The 1-based index of network interface on the optical module.
+    int32 network_interface = 1;
+    // Attribute DB Cache Policy.
+    CachePolicyConfig cache_policy = 2;
+    // Vendor specific ID for an optical port.
+    uint64 vendor_specific_id = 3;
+  }
+  // The 1-based index of the module.
+  int32 module = 1;
+  repeated NetworkInterface network_interfaces = 2;
+  // Attribute DB Cache Policy.
+  CachePolicyConfig cache_policy = 3;
+  // Vendor specific ID for an optical module.
+  uint64 vendor_specific_id = 4;
 }
 
 // This message encapsulates all of the data needed to specify a fan tray.
@@ -140,7 +156,7 @@ message PhalInitConfig {
   repeated PhalPsuTrayConfig psu_trays = 4;
   repeated PhalLedGroupConfig led_groups = 5;
   repeated PhalThermalGroupConfig thermal_groups = 6;
-  repeated PhalOpticalCardConfig optical_cards = 7;
+  repeated PhalOpticalModuleConfig optical_modules = 7;
   // Default Attribute DB Cache Policy
   CachePolicyConfig cache_policy = 8;
 }

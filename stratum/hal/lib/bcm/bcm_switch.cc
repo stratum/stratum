@@ -401,12 +401,12 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
-      case DataRequest::Request::kOpticalChannelInfo:
-        // Retrieve current optical channel state from phal.
+      case DataRequest::Request::kOpticalTransceiverInfo:
+        // Retrieve current optical transceiver state from phal.
         status.Update(phal_interface_->GetOpticalTransceiverInfo(
-            req.optical_channel_info().node_id(),
-            req.optical_channel_info().port_id(),
-            resp.mutable_optical_channel_info()));
+            req.optical_transceiver_info().module(),
+            req.optical_transceiver_info().network_interface(),
+            resp.mutable_optical_transceiver_info()));
         break;
       default:
         status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
@@ -444,17 +444,24 @@ BcmSwitch::~BcmSwitch() {}
                        << " through SetValue() is ignored. Modify the "
                           "ChassisConfig instead!";
             break;
-          case SetRequest::Request::Port::ValueCase::kOpticalChannelInfo: {
-            status.Update(phal_interface_->SetOpticalTransceiverInfo(
-                req.port().node_id(), req.port().port_id(),
-                req.port().optical_channel_info()));
-            break;
-          }
           case SetRequest::Request::Port::ValueCase::kLoopbackStatus: {
             absl::WriterMutexLock l(&chassis_lock);
             status.Update(bcm_chassis_manager_->SetPortLoopbackState(
                 req.port().node_id(), req.port().port_id(),
                 req.port().loopback_status().state()));
+            break;
+          }
+          default:
+            status = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+        }
+        break;
+      case SetRequest::Request::RequestCase::kOpticalNetworkInterface:
+        switch (req.optical_network_interface().value_case()) {
+          case SetRequest::Request::OpticalNetworkInterface::ValueCase::kOpticalTransceiverInfo: {  // NOLINT
+            status.Update(phal_interface_->SetOpticalTransceiverInfo(
+                req.optical_network_interface().module(),
+                req.optical_network_interface().network_interface(),
+                req.optical_network_interface().optical_transceiver_info()));
             break;
           }
           default:

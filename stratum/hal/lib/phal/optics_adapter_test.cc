@@ -35,24 +35,28 @@ class OpticsAdapterTest : public ::testing::Test {
 };
 
 constexpr char phaldb_get_response_proto[] = R"PROTO(
-  optical_cards {
-    id: 1
-    vendor_name: "transceiver-vendor1"
-    hardware_state: HW_STATE_PRESENT
-    frequency: 196
-    input_power: 1000.2
-    output_power: 10000.1
-    target_output_power: 15.5
-    operational_mode: 1
+  optical_modules {
+    id: 0
+    network_interfaces {
+      id: 0
+      frequency: 196000000
+      input_power: 1000.2
+      output_power: 10000.1
+      target_output_power: 15.5
+      operational_mode: 1
+    }
   }
 )PROTO";
 
 // Settable atrributes paths.
-const Path frequency_path = {PathEntry("optical_cards", 0),
+const Path frequency_path = {PathEntry("optical_modules", 0),
+                             PathEntry("network_interfaces", 0),
                              PathEntry("frequency")};
-const Path target_output_power_path = {PathEntry("optical_cards", 0),
+const Path target_output_power_path = {PathEntry("optical_modules", 0),
+                                       PathEntry("network_interfaces", 0),
                                        PathEntry("target_output_power")};
-const Path operational_mode_path = {PathEntry("optical_cards", 0),
+const Path operational_mode_path = {PathEntry("optical_modules", 0),
+                                    PathEntry("network_interfaces", 0),
                                     PathEntry("operational_mode")};
 
 // Settable attributes matcher
@@ -81,30 +85,30 @@ TEST_F(OpticsAdapterTest, TaiPhalGetOpticalTransceiverInfoSuccess) {
   EXPECT_CALL(*db_query, Get())
       .WillOnce(Return(ByMove(std::move(phaldb_resp))));
 
-  OpticalChannelInfo oc_info{};
-  ASSERT_OK(optics_adapter_->GetOpticalTransceiverInfo(1, 1, &oc_info));
+  OpticalTransceiverInfo ot_info{};
+  ASSERT_OK(optics_adapter_->GetOpticalTransceiverInfo(1, 1, &ot_info));
 
-  EXPECT_EQ(oc_info.frequency(), 196);
-  EXPECT_DOUBLE_EQ(oc_info.input_power().instant(), 1000.2);
-  EXPECT_DOUBLE_EQ(oc_info.output_power().instant(), 10000.1);
-  EXPECT_DOUBLE_EQ(oc_info.target_output_power(), 15.5);
-  EXPECT_EQ(oc_info.operational_mode(), 1);
+  EXPECT_EQ(ot_info.frequency(), 196000000);
+  EXPECT_DOUBLE_EQ(ot_info.input_power().instant(), 1000.2);
+  EXPECT_DOUBLE_EQ(ot_info.output_power().instant(), 10000.1);
+  EXPECT_DOUBLE_EQ(ot_info.target_output_power(), 15.5);
+  EXPECT_EQ(ot_info.operational_mode(), 1);
 }
 
 TEST_F(OpticsAdapterTest, TaiPhalSetOpticalTransceiverInfoSuccess) {
-  OpticalChannelInfo oc_info;
-  oc_info.set_frequency(150);
-  oc_info.set_target_output_power(140.12);
-  oc_info.set_operational_mode(3);
+  OpticalTransceiverInfo ot_info;
+  ot_info.set_frequency(150000000);
+  ot_info.set_target_output_power(140.12);
+  ot_info.set_operational_mode(3);
 
   AttributeValueMap attrs;
-  attrs[frequency_path] = oc_info.frequency();
-  attrs[target_output_power_path] = oc_info.target_output_power();
-  attrs[operational_mode_path] = oc_info.operational_mode();
+  attrs[frequency_path] = ot_info.frequency();
+  attrs[target_output_power_path] = ot_info.target_output_power();
+  attrs[operational_mode_path] = ot_info.operational_mode();
 
   EXPECT_CALL(*database_.get(), Set(DbAttributesEqual(attrs)))
       .WillOnce(Return(::util::Status::OK));
-  EXPECT_OK(optics_adapter_->SetOpticalTransceiverInfo(1, 1, oc_info));
+  EXPECT_OK(optics_adapter_->SetOpticalTransceiverInfo(1, 1, ot_info));
 }
 
 }  // namespace
