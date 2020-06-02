@@ -7,6 +7,11 @@ build --cxxopt='-std=gnu++11'
 build --copt -Wall
 build --copt -Wno-sign-compare
 
+# LTO on clang
+build:lto --copt -Wno-unused-command-line-argument
+build:lto --copt -flto
+build:lto --linkopt -flto
+
 # Address sanitizer
 build:asan --strip=never
 build:asan --copt -fsanitize=address
