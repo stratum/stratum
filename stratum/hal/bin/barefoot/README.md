@@ -185,12 +185,9 @@ sudo mount -t hugetlbfs nodev /mnt/huge
 ```
 sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
      ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf \
-       --grpc_max_recv_msg_size=256 \
        --bf_sde_install=$BF_SDE_INSTALL \
-       --persistent_config_dir=<config dir> \
        --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
        --chassis_config_file=<config dir>/chassis_config.pb.txt \
-       --write_req_log_file=<config dir>/p4_writes.pb.txt \
        --bf_sim
 ```
 

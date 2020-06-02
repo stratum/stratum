@@ -19,7 +19,7 @@
 #include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(bcm_hardware_specs_file,
-              "/opt/watchtower/share/bcm_hardware_specs.pb.txt",
+              "/etc/stratum/stratum_configs/bcm_hardware_specs.pb.txt",
               "Path to the file containing the Broadcom hardware map proto.");
 
 namespace stratum {

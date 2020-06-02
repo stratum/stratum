@@ -28,13 +28,14 @@
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
 
-DEFINE_string(forwarding_pipeline_configs_file, "",
+DEFINE_string(forwarding_pipeline_configs_file,
+              "/var/run/stratum/pipeline_cfg.pb.txt",
               "The latest set of verified ForwardingPipelineConfig protos "
               "pushed to the switch. This file is updated whenever "
               "ForwardingPipelineConfig proto for switching node is added or "
               "modified. Default is empty and it is expected to be explicitly "
               "given by flags.");
-DEFINE_string(write_req_log_file, "",
+DEFINE_string(write_req_log_file, "/var/log/stratum/p4_writes.pb.txt",
               "The log file for all the individual write request updates and "
               "the corresponding result. The format for each line is: "
               "<timestamp>;<node_id>;<update proto>;<status>.  Default is "

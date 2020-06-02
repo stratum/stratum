@@ -13,7 +13,8 @@
 #include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 
-DEFINE_string(bcm_serdes_db_proto_file, "",
+DEFINE_string(bcm_serdes_db_proto_file,
+              "/etc/stratum/stratum_configs/dummy_serdes_db.pb.txt",
               "Path to the location of file containing BcmSerdesDb proto in "
               "binary format can be found.");
 
