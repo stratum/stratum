@@ -233,6 +233,17 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state);
 // For use in as a 'process_func', hence no Status return type.
 ::gnmi::Decimal64 ConvertDoubleToDecimal64OrDie(const double& value);
 
+// A helper method that do nothing to the value which pass to it.
+// This is useful if we have a process functor in a helper function but we
+// don't want to do anything to the value.
+template<typename T> T DontProcess(const T& val) { return val; }
+
+// A helper method that converts frequency from Hz to MHz.
+uint64 ConvertHzToMHz(const uint64& val);
+
+// A helper method that converts frequency from MHz to Hz.
+uint64 ConvertMHzToHz(const uint64& val);
+
 }  // namespace hal
 }  // namespace stratum
 

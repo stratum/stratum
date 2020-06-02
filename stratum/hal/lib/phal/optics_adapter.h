@@ -31,20 +31,20 @@ class OpticsAdapter final : public Adapter {
   // Gets the information about an optical transceiver module by querying the
   // Phal database.
   // See: PhalInterface::GetOpticalTransceiverInfo.
-  ::util::Status GetOpticalTransceiverInfo(int slot, int port,
-                                           OpticalChannelInfo* oc_info);
+  ::util::Status GetOpticalTransceiverInfo(int32 module, int network_interface,
+                                           OpticalTransceiverInfo* ot_info);
 
-  // Sets the data from oc_info into an optical transceiver module in the Phal
+  // Sets the data from ot_info into an optical transceiver module in the Phal
   // database.
   // See: PhalInterface::SetOpticalTransceiverInfo.
-  ::util::Status SetOpticalTransceiverInfo(int slot, int port,
-                                           const OpticalChannelInfo& oc_info);
+  ::util::Status
+  SetOpticalTransceiverInfo(int32 module, int network_interface,
+                            const OpticalTransceiverInfo& ot_info);
 
  private:
   // Attribute Db path to get the hardware state of all sfp transceivers.
   const Path kAllOpticsPath = {
-      PathEntry("optical_cards", -1, true, true, false),
-      PathEntry("hardware_state", -1, false, true, false),
+      PathEntry("optical_modules", -1, true, true, false),
   };
 
   // Mutex guarding internal state.

@@ -26,6 +26,7 @@
 #if defined(WITH_TAI)
 #include "stratum/hal/lib/phal/tai/tai_phal.h"
 #include "stratum/hal/lib/phal/tai/tai_switch_configurator.h"
+#include "stratum/hal/lib/phal/tai/taish_client.h"
 #endif  // defined(WITH_TAI)
 
 DECLARE_string(phal_config_file);
@@ -77,10 +78,14 @@ Phal* Phal::CreateSingleton() {
 
 #if defined(WITH_TAI)
     {
-      auto* tai_phal = tai::TaiPhal::CreateSingleton();
-      tai_phal->PushChassisConfig(config);
+      // TODO(Yi): now we only have one implementation of TAI wrapper,
+      // should be able to let user choose which version of TAI wrapper
+      // based on bazel flags.
+      auto* tai_interface = tai::TaishClient::CreateSingleton();
+      auto* tai_phal = tai::TaiPhal::CreateSingleton(tai_interface);
       phal_interfaces_.push_back(tai_phal);
-      ASSIGN_OR_RETURN(auto configurator, tai::TaiSwitchConfigurator::Make());
+      ASSIGN_OR_RETURN(auto configurator,
+                       tai::TaiSwitchConfigurator::Make(tai_interface));
       configurators.push_back(std::move(configurator));
     }
 #endif  // defined(WITH_TAI)
@@ -120,7 +125,10 @@ Phal* Phal::CreateSingleton() {
     initialized_ = true;
   }
 
-  // TODO(unknown): Process Chassis Config here
+  // PushChassisConfig to all PHAL backends
+  for (const auto& phal_interface : phal_interfaces_) {
+    RETURN_IF_ERROR(phal_interface->PushChassisConfig(config));
+  }
 
   return ::util::OkStatus();
 }
@@ -177,24 +185,26 @@ Phal* Phal::CreateSingleton() {
   return sfp_adapter_->GetFrontPanelPortInfo(slot, port, fp_port_info);
 }
 
-::util::Status Phal::GetOpticalTransceiverInfo(int slot, int port,
-                                               OpticalChannelInfo* oc_info) {
+::util::Status Phal::GetOpticalTransceiverInfo(
+    int module, int network_interface, OpticalTransceiverInfo* ot_info) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  return optics_adapter_->GetOpticalTransceiverInfo(slot, port, oc_info);
+  return optics_adapter_->GetOpticalTransceiverInfo(module, network_interface,
+                                                    ot_info);
 }
 
 ::util::Status Phal::SetOpticalTransceiverInfo(
-    int slot, int port, const OpticalChannelInfo& oc_info) {
+    int module, int network_interface, const OpticalTransceiverInfo& ot_info) {
   absl::WriterMutexLock l(&config_lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
   }
 
-  return optics_adapter_->SetOpticalTransceiverInfo(slot, port, oc_info);
+  return optics_adapter_->SetOpticalTransceiverInfo(module, network_interface,
+                                                    ot_info);
 }
 
 ::util::Status Phal::SetPortLedState(int slot, int port, int channel,

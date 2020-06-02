@@ -173,6 +173,30 @@ template <typename T, typename U, typename V>
   return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
 }
 
+// Optical Port-specific version. Extra parameters needed:
+// - module index ('module')
+// - network interface index ('network_interface')
+template <typename U, typename V>
+::util::Status SetValue(int32 module, int32 network_interface,
+                        YangParseTree* tree,
+                        void (OpticalTransceiverInfo::*set_field_func)(U),
+                        const V& value) {
+  // Create a set request.
+  SetRequest req;
+  auto* request = req.add_requests()->mutable_optical_network_interface();
+  request->set_module(module);
+  request->set_network_interface(network_interface);
+  (request->mutable_optical_transceiver_info()->*set_field_func)(value);
+  // Note that the "node_id" parameter won't be used in this case so we put
+  // a default integer value 0 here.
+  std::vector<::util::Status> details;
+  tree->GetSwitchInterface()
+      ->SetValue(/*node_id*/ 0, req, &details)
+      .IgnoreError();
+  // Return status of the operation.
+  return (details.size() == 1) ? details.at(0) : ::util::OkStatus();
+}
+
 // A family of helper functions that create a functor that reads a value of
 // type U from an event of type T. 'get_func' points to the method that reads
 // the actual value from the event.
@@ -460,6 +484,87 @@ TreeNodeEventHandler GetOnPollFunctor(
   };
 }
 
+// Optical Port-specific version. Extra parameters needed:
+// - module index ('module')
+// - network interface index ('network_interface')
+template <typename T, typename U>
+TreeNodeEventHandler GetOnPollFunctor(
+    int32 module, int32 network_interface, YangParseTree* tree,
+    T (OpticalTransceiverInfo::*inner_message_get_field_func)() const,
+    U (*process_func)(const T&)) {
+  return [=](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_optical_transceiver_info();
+    request->set_module(module);
+    request->set_network_interface(network_interface);
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    OpticalTransceiverInfo resp{};
+    // Writer for retrieving value
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_optical_transceiver_info()) return false;
+      resp = in.optical_transceiver_info();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    // Here we ignore the node_id since it is not valid in this case.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(/*node_id*/ 0, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    // Return the retrieved value.
+    T value = (resp.*inner_message_get_field_func)();
+    return SendResponse(GetResponse(path, (*process_func)(value)), stream);
+  };
+}
+
+// Optical Port-specific version. Extra parameters needed:
+// - module index ('module')
+// - network interface index ('network_interface')
+template <typename T, typename U, typename V>
+TreeNodeEventHandler GetOnPollFunctor(
+    int32 module, int32 network_interface, YangParseTree* tree,
+    bool (OpticalTransceiverInfo::*has_inner_msg_func)() const,
+    const T& (OpticalTransceiverInfo::*get_inner_msg_func)() const,
+    U (T::*get_inner_field_func)() const, V (*process_field_func)(const U&)) {
+  return [=](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_optical_transceiver_info();
+    request->set_module(module);
+    request->set_network_interface(network_interface);
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    OpticalTransceiverInfo resp{};
+    // Writer for retrieving value
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_optical_transceiver_info()) return false;
+      resp = in.optical_transceiver_info();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    // Here we ignore the node_id since it is not valid in this case.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(/*node_id*/ 0, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    // Return the retrieved value. Note that we will return a default value if
+    // the second level nest message does not exists.
+    V value{};
+    if ((resp.*has_inner_msg_func)()) {
+      const T& inner_msg = (resp.*get_inner_msg_func)();
+      const U& inner_field = (inner_msg.*get_inner_field_func)();
+      value = process_field_func(inner_field);
+    }
+    return SendResponse(GetResponse(path, value), stream);
+  };
+}
+
 // Qos-queue-on-a-port-specific version. Extra parameters needed:
 // - node ID ('node_id')
 // - port ID ('port_id')
@@ -706,6 +811,25 @@ TreeNodeEventHandler GetOnChangeFunctor(U (T::*get_func_ptr)() const) {
       return ::util::OkStatus();
     }
     return SendResponse(GetResponse(path, (change->*get_func_ptr)()), stream);
+  };
+}
+
+// Optical Network Interface-specific version.
+template <typename T, typename U, typename V>
+TreeNodeEventHandler GetOnChangeFunctor(int32 module, int32 network_interface,
+                                        U (T::*get_func_ptr)() const,
+                                        V (*process_func)(const U&)) {
+  return [=](const GnmiEvent& event, const ::gnmi::Path& path,
+             GnmiSubscribeStream* stream) {
+    // For now, we are interested in events of type T only!
+    const T* change = dynamic_cast<const T*>(&event);
+    if (change == nullptr || change->GetModule() != module ||
+        change->GetNetworkInterface() != network_interface) {
+      // This is not the event you are looking for...
+      return ::util::OkStatus();
+    }
+    return SendResponse(
+        GetResponse(path, (*process_func)((change->*get_func_ptr)())), stream);
   };
 }
 
@@ -2277,45 +2401,30 @@ void SetUpComponentsComponentTransceiverStateFormFactor(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/frequency
-void SetUpComponentsComponentOpticalChannelStateFrequency(TreeNode* node,
-                                                          YangParseTree* tree,
-                                                          uint64 node_id,
-                                                          uint32 port_id) {
-  auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::frequency);
-
-  auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortFrequencyChangedEvent::GetFrequency);
-
-  node->SetOnPollHandler(poll_functor)
-      ->SetOnTimerHandler(poll_functor)
-      ->SetOnChangeRegistration(register_functor)
-      ->SetOnChangeHandler(on_change_functor);
+void SetUpComponentsComponentOpticalChannelStateFrequency(
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
+  auto poll_functor =
+      GetOnPollFunctor(module, network_interface, tree,
+                       &OpticalTransceiverInfo::frequency, &ConvertHzToMHz);
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/config/frequency
-void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
-                                                           TreeNode* node,
-                                                           YangParseTree* tree,
-                                                           uint64 node_id,
-                                                           uint32 port_id) {
+void SetUpComponentsComponentOpticalChannelConfigFrequency(
+    uint64 initial_value, TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
-    return SendResponse(GetResponse(path, initial_value), stream);
+    // Use MHz for OpenConfig model.
+    return SendResponse(GetResponse(path, ConvertHzToMHz(initial_value)),
+                        stream);
   };
 
-  auto register_functor = RegisterFunc<PortFrequencyChangedEvent>();
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortFrequencyChangedEvent::GetFrequency);
-
   auto on_set_functor =
-      [node_id, port_id, node, tree](
+      [module, network_interface, node, tree](
           const ::gnmi::Path& path, const ::google::protobuf::Message& val,
           CopyOnWriteChassisConfig* config) -> ::util::Status {
     auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
@@ -2326,19 +2435,17 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
     }
 
-    ::google::protobuf::uint64 uint_val = typed_value->uint_val();
-    auto status =
-        SetValue(node_id, port_id, tree,
-                 &SetRequest::Request::Port::mutable_optical_channel_info,
-                 &OpticalChannelInfo::set_frequency, uint_val);
-    if (status != ::util::OkStatus()) {
-      return status;
-    }
+    // Converts MHz to HZ since OpenConfig uses MHz.
+    uint64 uint_val = ConvertMHzToHz(typed_value->uint_val());
+    RETURN_IF_ERROR(SetValue(module, network_interface, tree,
+                             &OpticalTransceiverInfo::set_frequency, uint_val));
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (auto& optical_port : *new_config->mutable_optical_ports()) {
-      if (optical_port.node() == node_id && optical_port.id() == port_id) {
+    for (auto& optical_port :
+         *new_config->mutable_optical_network_interfaces()) {
+      if (optical_port.module() == module &&
+          optical_port.network_interface() == network_interface) {
         optical_port.set_frequency(uint_val);
         break;
       }
@@ -2350,14 +2457,11 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
       return SendResponse(GetResponse(path, uint_val), stream);
     };
     node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
-
     return ::util::OkStatus();
   };
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
-      ->SetOnChangeRegistration(register_functor)
-      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2365,17 +2469,16 @@ void SetUpComponentsComponentOpticalChannelConfigFrequency(uint64 initial_value,
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/instant
 void SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::instant, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::Power::instant, &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortInputPowerChangedEvent::GetInstant,
+      module, network_interface, &OpticalInputPowerChangedEvent::GetInstant,
       &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
@@ -2387,18 +2490,17 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/avg
 void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::avg, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power, &OpticalTransceiverInfo::Power::avg,
+      &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
-  auto on_change_functor =
-      GetOnChangeFunctor(node_id, port_id, &PortInputPowerChangedEvent::GetAvg,
-                         &ConvertDoubleToDecimal64OrDie);
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      module, network_interface, &OpticalInputPowerChangedEvent::GetAvg,
+      &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2409,16 +2511,16 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerAvg(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/interval
 void SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::interval);
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::Power::interval, &DontProcess<uint64>);
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortInputPowerChangedEvent::GetInterval);
+      module, network_interface, &OpticalInputPowerChangedEvent::GetInterval,
+      &DontProcess<uint64>);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2429,18 +2531,17 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/max
 void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::max, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power, &OpticalTransceiverInfo::Power::max,
+      &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
-  auto on_change_functor =
-      GetOnChangeFunctor(node_id, port_id, &PortInputPowerChangedEvent::GetMax,
-                         &ConvertDoubleToDecimal64OrDie);
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      module, network_interface, &OpticalInputPowerChangedEvent::GetMax,
+      &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2451,17 +2552,17 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMax(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/max-time
 void SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::max_time);
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::Power::max_time, &DontProcess<uint64>);
 
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortInputPowerChangedEvent::GetMaxTime);
+      module, network_interface, &OpticalInputPowerChangedEvent::GetMaxTime,
+      &DontProcess<uint64>);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2472,18 +2573,17 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/min
 void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::min, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power, &OpticalTransceiverInfo::Power::min,
+      &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
-  auto on_change_functor =
-      GetOnChangeFunctor(node_id, port_id, &PortInputPowerChangedEvent::GetMin,
-                         &ConvertDoubleToDecimal64OrDie);
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      module, network_interface, &OpticalInputPowerChangedEvent::GetMin,
+      &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2494,17 +2594,17 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMin(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/input-power/min-time
 void SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_input_power, &OpticalChannelInfo::input_power,
-      &OpticalChannelInfo::Power::min_time);
+      module, network_interface, tree, &OpticalTransceiverInfo::has_input_power,
+      &OpticalTransceiverInfo::input_power,
+      &OpticalTransceiverInfo::Power::min_time, &DontProcess<uint64>);
 
-  auto register_functor = RegisterFunc<PortInputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalInputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortInputPowerChangedEvent::GetMinTime);
+      module, network_interface, &OpticalInputPowerChangedEvent::GetMinTime,
+      &DontProcess<uint64>);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2515,17 +2615,17 @@ void SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/output-power/instant
 void SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::instant, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::instant, &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortOutputPowerChangedEvent::GetInstant,
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetInstant,
       &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
@@ -2537,18 +2637,18 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/output-power/avg
 void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::avg, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::avg, &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
-  auto on_change_functor =
-      GetOnChangeFunctor(node_id, port_id, &PortOutputPowerChangedEvent::GetAvg,
-                         &ConvertDoubleToDecimal64OrDie);
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetAvg,
+      &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2560,17 +2660,18 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(
 // /components/component[name=<name>]/optical-channel/state/output-power
 // /interval
 void SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::interval);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::interval, &DontProcess<uint64>);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortOutputPowerChangedEvent::GetInterval);
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetInterval,
+      &DontProcess<uint64>);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2581,18 +2682,18 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/output-power/max
 void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::max, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::max, &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
-  auto on_change_functor =
-      GetOnChangeFunctor(node_id, port_id, &PortOutputPowerChangedEvent::GetMax,
-                         &ConvertDoubleToDecimal64OrDie);
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetMax,
+      &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2604,17 +2705,18 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMax(
 // /components/component[name=<name>]/optical-channel/state/output-power
 // /max-time
 void SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::max_time);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::max_time, &DontProcess<uint64>);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortOutputPowerChangedEvent::GetMaxTime);
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetMaxTime,
+      &DontProcess<uint64>);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2625,18 +2727,18 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/output-power/min
 void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::min, &ConvertDoubleToDecimal64OrDie);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::min, &ConvertDoubleToDecimal64OrDie);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
-  auto on_change_functor =
-      GetOnChangeFunctor(node_id, port_id, &PortOutputPowerChangedEvent::GetMin,
-                         &ConvertDoubleToDecimal64OrDie);
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
+  auto on_change_functor = GetOnChangeFunctor(
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetMin,
+      &ConvertDoubleToDecimal64OrDie);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2648,17 +2750,18 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMin(
 // /components/component[name=<name>]/optical-channel/state/output-power
 // /min-time
 void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::has_output_power, &OpticalChannelInfo::output_power,
-      &OpticalChannelInfo::Power::min_time);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::has_output_power,
+      &OpticalTransceiverInfo::output_power,
+      &OpticalTransceiverInfo::Power::min_time, &DontProcess<uint64>);
 
-  auto register_functor = RegisterFunc<PortOutputPowerChangedEvent>();
+  auto register_functor = RegisterFunc<OpticalOutputPowerChangedEvent>();
   auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortOutputPowerChangedEvent::GetMinTime);
+      module, network_interface, &OpticalOutputPowerChangedEvent::GetMinTime,
+      &DontProcess<uint64>);
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
@@ -2669,8 +2772,8 @@ void SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/config/target-output-power
 void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
-    double initial_value, TreeNode* node, YangParseTree* tree, uint64 node_id,
-    uint32 port_id) {
+    double initial_value, TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
@@ -2679,13 +2782,8 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     return SendResponse(GetResponse(path, decimal_value), stream);
   };
 
-  auto register_functor = RegisterFunc<PortTargetOutputPowerChangedEvent>();
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortTargetOutputPowerChangedEvent::GetPower,
-      &ConvertDoubleToDecimal64OrDie);
-
   auto on_set_functor =
-      [node_id, port_id, node, tree](
+      [module, network_interface, node, tree](
           const ::gnmi::Path& path, const ::google::protobuf::Message& val,
           CopyOnWriteChassisConfig* config) -> ::util::Status {
     const ::gnmi::TypedValue* typed_value =
@@ -2699,18 +2797,16 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
     auto decimal_val = typed_value->decimal_val();
     ASSIGN_OR_RETURN(auto output_power, ConvertDecimal64ToDouble(decimal_val));
 
-    auto status =
-        SetValue(node_id, port_id, tree,
-                 &SetRequest::Request::Port::mutable_optical_channel_info,
-                 &OpticalChannelInfo::set_target_output_power, output_power);
-    if (status != ::util::OkStatus()) {
-      return status;
-    }
+    RETURN_IF_ERROR(SetValue(module, network_interface, tree,
+                             &OpticalTransceiverInfo::set_target_output_power,
+                             output_power));
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (auto& optical_port : *new_config->mutable_optical_ports()) {
-      if (optical_port.node() == node_id && optical_port.id() == port_id) {
+    for (auto& optical_port :
+         *new_config->mutable_optical_network_interfaces()) {
+      if (optical_port.module() == module &&
+          optical_port.network_interface() == network_interface) {
         optical_port.set_target_output_power(output_power);
         break;
       }
@@ -2728,8 +2824,6 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
-      ->SetOnChangeRegistration(register_functor)
-      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2737,40 +2831,26 @@ void SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/state/operational-mode
 void SetUpComponentsComponentOpticalChannelStateOperationalMode(
-    TreeNode* node, YangParseTree* tree, uint64 node_id, uint32 port_id) {
+    TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = GetOnPollFunctor(
-      node_id, port_id, tree, &DataResponse::optical_channel_info,
-      &DataResponse::has_optical_channel_info,
-      &DataRequest::Request::mutable_optical_channel_info,
-      &OpticalChannelInfo::operational_mode);
-
-  auto register_functor = RegisterFunc<PortOperationalModeChangedEvent>();
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortOperationalModeChangedEvent::GetOperationalMode);
-
-  node->SetOnPollHandler(poll_functor)
-      ->SetOnTimerHandler(poll_functor)
-      ->SetOnChangeRegistration(register_functor)
-      ->SetOnChangeHandler(on_change_functor);
+      module, network_interface, tree,
+      &OpticalTransceiverInfo::operational_mode, &DontProcess<uint64>);
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/optical-channel/config/operational-mode
 void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
-    uint64 initial_value, TreeNode* node, YangParseTree* tree, uint64 node_id,
-    uint32 port_id) {
+    uint64 initial_value, TreeNode* node, YangParseTree* tree, int32 module,
+    int32 network_interface) {
   auto poll_functor = [initial_value](const GnmiEvent& /*event*/,
                                       const ::gnmi::Path& path,
                                       GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, initial_value), stream);
   };
-
-  auto register_functor = RegisterFunc<PortOperationalModeChangedEvent>();
-  auto on_change_functor = GetOnChangeFunctor(
-      node_id, port_id, &PortOperationalModeChangedEvent::GetOperationalMode);
-
   auto on_set_functor =
-      [node_id, port_id, node, tree](
+      [module, network_interface, node, tree](
           const ::gnmi::Path& path, const ::google::protobuf::Message& val,
           CopyOnWriteChassisConfig* config) -> ::util::Status {
     auto typed_value = static_cast<const gnmi::TypedValue*>(&val);
@@ -2781,19 +2861,17 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
       return MAKE_ERROR(ERR_INVALID_PARAM) << "Expects a uint64 value!";
     }
 
-    ::google::protobuf::uint64 uint_val = typed_value->uint_val();
-    auto status =
-        SetValue(node_id, port_id, tree,
-                 &SetRequest::Request::Port::mutable_optical_channel_info,
-                 &OpticalChannelInfo::set_operational_mode, uint_val);
-    if (status != ::util::OkStatus()) {
-      return status;
-    }
+    uint64 uint_val = typed_value->uint_val();
+    RETURN_IF_ERROR(SetValue(module, network_interface, tree,
+                             &OpticalTransceiverInfo::set_operational_mode,
+                             uint_val));
 
     // Update the chassis config
     ChassisConfig* new_config = config->writable();
-    for (auto& optical_port : *new_config->mutable_optical_ports()) {
-      if (optical_port.node() == node_id && optical_port.id() == port_id) {
+    for (auto& optical_port :
+         *new_config->mutable_optical_network_interfaces()) {
+      if (optical_port.module() == module &&
+          optical_port.network_interface() == network_interface) {
         optical_port.set_operational_mode(uint_val);
         break;
       }
@@ -2811,8 +2889,6 @@ void SetUpComponentsComponentOpticalChannelConfigOperationalMode(
 
   node->SetOnPollHandler(poll_functor)
       ->SetOnTimerHandler(poll_functor)
-      ->SetOnChangeRegistration(register_functor)
-      ->SetOnChangeHandler(on_change_functor)
       ->SetOnUpdateHandler(on_set_functor)
       ->SetOnReplaceHandler(on_set_functor);
 }
@@ -2826,10 +2902,6 @@ void SetUpComponentsComponentOpticalChannelConfigLinePort(
                                   GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, line_port), stream);
   };
-
-  // This /config node represents the component name in the configuration tree,
-  // so it doesn't support OnChange/OnUpdate/OnReplace until the yang tree
-  // supports nodes renaming.
 
   node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
@@ -2849,8 +2921,8 @@ void SetUpComponentsComponentOpticalChannelStateLinePort(
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/config/name
-void SetUpComponentsComponentConfigName(
-    const std::string& name, TreeNode* node) {
+void SetUpComponentsComponentConfigName(const std::string& name,
+                                        TreeNode* node) {
   auto poll_functor = [name](const GnmiEvent& /*event*/,
                              const ::gnmi::Path& path,
                              GnmiSubscribeStream* stream) {
@@ -2861,8 +2933,7 @@ void SetUpComponentsComponentConfigName(
   // so it doesn't support OnChange/OnUpdate/OnReplace until the yang tree
   // supports nodes renaming.
 
-  node->SetOnPollHandler(poll_functor)
-      ->SetOnTimerHandler(poll_functor);
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2874,22 +2945,21 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
     return SendResponse(GetResponse(path, name), stream);
   };
 
-  node->SetOnPollHandler(poll_functor)
-      ->SetOnTimerHandler(poll_functor);
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/type
-void SetUpComponentsComponentStateType(
-    const std::string& name, const std::string& type, TreeNode* node) {
+void SetUpComponentsComponentStateType(const std::string& name,
+                                       const std::string& type,
+                                       TreeNode* node) {
   auto poll_functor = [type](const GnmiEvent& /*event*/,
-                                   const ::gnmi::Path& path,
-                                   GnmiSubscribeStream* stream) {
+                             const ::gnmi::Path& path,
+                             GnmiSubscribeStream* stream) {
     return SendResponse(GetResponse(path, type), stream);
   };
 
-  node->SetOnPollHandler(poll_functor)
-      ->SetOnTimerHandler(poll_functor);
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3060,7 +3130,7 @@ void SetUpDebugNodesNodePacketIoDebugString(uint64 node_id, TreeNode* node,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// /components/component[name=<name-of-component>]/integrated-circuit/config/node-id
+// /components/component[name=<name>]/integrated-circuit/config/node-id
 void SetUpComponentsComponentIntegratedCircuitConfigNodeId(
     uint64 node_id, TreeNode* node, YangParseTree* tree) {
   auto poll_functor = [node_id](const GnmiEvent& event,
@@ -3075,7 +3145,7 @@ void SetUpComponentsComponentIntegratedCircuitConfigNodeId(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// /components/component[name=<name-of-component>]/integrated-circuit/state/node-id
+// /components/component[name=<name>]/integrated-circuit/state/node-id
 void SetUpComponentsComponentIntegratedCircuitStateNodeId(uint64 node_id,
                                                           TreeNode* node,
                                                           YangParseTree* tree) {
@@ -3383,96 +3453,97 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 }
 
 void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
-    const OpticalPort& optical_port, YangParseTree* tree) {
+    const OpticalNetworkInterface& optical_port, YangParseTree* tree) {
   const std::string& name = optical_port.name();
-  uint64 node_id = optical_port.node();
-  uint32 port_id = optical_port.id();
+  int32 module = optical_port.module();
+  int32 network_interface = optical_port.network_interface();
   TreeNode* node{nullptr};
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("frequency")());
-  SetUpComponentsComponentOpticalChannelStateFrequency(node, tree, node_id,
-                                                       port_id);
+  SetUpComponentsComponentOpticalChannelStateFrequency(node, tree, module,
+                                                       network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("config")("frequency")());
   SetUpComponentsComponentOpticalChannelConfigFrequency(
-      optical_port.frequency(), node, tree, node_id, port_id);
+      optical_port.frequency(), node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("input-power")("instant")());
   SetUpComponentsComponentOpticalChannelStateInputPowerInstant(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("input-power")("avg")());
-  SetUpComponentsComponentOpticalChannelStateInputPowerAvg(node, tree, node_id,
-                                                           port_id);
+  SetUpComponentsComponentOpticalChannelStateInputPowerAvg(node, tree, module,
+                                                           network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("input-power")("interval")());
   SetUpComponentsComponentOpticalChannelStateInputPowerInterval(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("input-power")("max")());
-  SetUpComponentsComponentOpticalChannelStateInputPowerMax(node, tree, node_id,
-                                                           port_id);
+  SetUpComponentsComponentOpticalChannelStateInputPowerMax(node, tree, module,
+                                                           network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("input-power")("max-time")());
   SetUpComponentsComponentOpticalChannelStateInputPowerMaxTime(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("input-power")("min")());
-  SetUpComponentsComponentOpticalChannelStateInputPowerMin(node, tree, node_id,
-                                                           port_id);
+  SetUpComponentsComponentOpticalChannelStateInputPowerMin(node, tree, module,
+                                                           network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("input-power")("min-time")());
   SetUpComponentsComponentOpticalChannelStateInputPowerMinTime(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("output-power")("instant")());
   SetUpComponentsComponentOpticalChannelStateOutputPowerInstant(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("output-power")("avg")());
-  SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(node, tree, node_id,
-                                                            port_id);
+  SetUpComponentsComponentOpticalChannelStateOutputPowerAvg(node, tree, module,
+                                                            network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("output-power")("interval")());
   SetUpComponentsComponentOpticalChannelStateOutputPowerInterval(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("output-power")("max")());
-  SetUpComponentsComponentOpticalChannelStateOutputPowerMax(node, tree, node_id,
-                                                            port_id);
+  SetUpComponentsComponentOpticalChannelStateOutputPowerMax(node, tree, module,
+                                                            network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("output-power")("max-time")());
   SetUpComponentsComponentOpticalChannelStateOutputPowerMaxTime(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("output-power")("min")());
-  SetUpComponentsComponentOpticalChannelStateOutputPowerMin(node, tree, node_id,
-                                                            port_id);
+  SetUpComponentsComponentOpticalChannelStateOutputPowerMin(node, tree, module,
+                                                            network_interface);
 
   node = tree->AddNode(GetPath("components")("component", name)(
       "optical-channel")("state")("output-power")("min-time")());
   SetUpComponentsComponentOpticalChannelStateOutputPowerMinTime(
-      node, tree, node_id, port_id);
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("config")("target-output-power")());
   SetUpComponentsComponentOpticalChannelConfigTargetOutputPower(
-      optical_port.target_output_power(), node, tree, node_id, port_id);
+      optical_port.target_output_power(), node, tree, module,
+      network_interface);
 
   // Currently, the OpenConfig considers a 16-bit uint type to represent a
   // vendor-specific bitmask for the operational-mode leaves. It might be split
@@ -3482,13 +3553,13 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
   // 16-bit uint type among the types which are supported by gNMI protocol.
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("state")("operational-mode")());
-  SetUpComponentsComponentOpticalChannelStateOperationalMode(node, tree,
-                                                             node_id, port_id);
+  SetUpComponentsComponentOpticalChannelStateOperationalMode(
+      node, tree, module, network_interface);
 
   node = tree->AddNode(GetPath("components")(
       "component", name)("optical-channel")("config")("operational-mode")());
   SetUpComponentsComponentOpticalChannelConfigOperationalMode(
-      optical_port.operational_mode(), node, tree, node_id, port_id);
+      optical_port.operational_mode(), node, tree, module, network_interface);
 
   const std::string& line_port = optical_port.line_port();
   node = tree->AddNode(GetPath("components")(

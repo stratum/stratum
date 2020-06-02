@@ -13,6 +13,7 @@
 #include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/phal/attribute_database.h"
 #include "stratum/hal/lib/phal/phal_backend_interface.h"
+#include "stratum/hal/lib/phal/tai/tai_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -34,15 +35,17 @@ class TaiPhal final : public PhalBackendInterface {
 
   // Creates the singleton instance. Expected to be called once to initialize
   // the instance.
-  static TaiPhal* CreateSingleton() LOCKS_EXCLUDED(config_lock_, init_lock_);
+  static TaiPhal* CreateSingleton(TaiInterface* tai_interface)
+      LOCKS_EXCLUDED(config_lock_, init_lock_);
 
   // TaiPhal is neither copyable nor movable.
   TaiPhal(const TaiPhal&) = delete;
   TaiPhal& operator=(const TaiPhal&) = delete;
+  TaiPhal() = delete;
 
  private:
   // Private constructor.
-  TaiPhal();
+  explicit TaiPhal(TaiInterface* tai_interface);
 
   // Calls all the one time start initializations.
   ::util::Status Initialize() LOCKS_EXCLUDED(config_lock_);
@@ -61,6 +64,10 @@ class TaiPhal final : public PhalBackendInterface {
 
   // Determines if PHAL is fully initialized.
   bool initialized_ GUARDED_BY(config_lock_) = false;
+
+  // The pointer for TaiInterface that allows TaiPhal to access TAI specific
+  // features, for example, listen events from TAI.
+  TaiInterface* tai_interface_;
 };
 
 }  // namespace tai
