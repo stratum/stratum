@@ -4,6 +4,8 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 
+#include <unistd.h>
+
 #include <memory>
 
 #include "absl/memory/memory.h"
@@ -14,8 +16,6 @@
 #include "stratum/public/proto/error.pb.h"
 
 extern "C" {
-#include <unistd.h>
-
 #include "tofino/bf_pal/dev_intf.h"
 }
 
@@ -211,13 +211,11 @@ BfRtNode::~BfRtNode() = default;
   auto session = bfrt::BfRtSession::sessionCreate();
   session->beginBatch();
   ::util::Status status;
-  for (auto update : req.updates()) {
-    auto update_type = update.type();
-    auto entity = update.entity();
-    switch (entity.entity_case()) {
+  for (const auto& update : req.updates()) {
+    switch (update.entity().entity_case()) {
       case ::p4::v1::Entity::kTableEntry:
-        status = bfrt_tbl_mgr_->WriteTableEntry(session, update_type,
-                                                entity.table_entry());
+        status = bfrt_table_manager_->WriteTableEntry(
+            session, update.type(), update.entity().table_entry());
         break;
       case ::p4::v1::Entity::kExternEntry:
       case ::p4::v1::Entity::kActionProfileMember:
@@ -260,19 +258,18 @@ BfRtNode::~BfRtNode() = default;
 }
 
 // Factory function for creating the instance of the class.
-std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(int unit) {
-  return absl::WrapUnique(new BfRtNode(unit));
+std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
+    BFRuntimeTableManager* bfrt_table_manager, int unit) {
+  return absl::WrapUnique(new BfRtNode(bfrt_table_manager, unit));
 }
 
-BfRtNode::BfRtNode(int unit)
+BfRtNode::BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
+                             int unit)
     : unit_(unit),
       pipeline_initialized_(false),
       initialized_(false),
-      node_id_(0) {
-  bfrt_id_mapper_ = BfRtIdMapper::CreateInstance(unit_);
-  bfrt_tbl_mgr_ =
-      BfRtTableManager::CreateInstance(unit_, bfrt_id_mapper_.get());
-}
+      node_id_(0),
+      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)) {}
 
 void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   // acquire the lock during the Write: SendPacketIn may be called from
