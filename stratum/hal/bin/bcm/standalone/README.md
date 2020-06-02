@@ -149,7 +149,7 @@ You are trying to insert Kernel modules build for a different Kernel version. Ma
 When using a Chassis config that does not contain all possible ports of the
 switch, traffic might not be received or send on a subset or all of the ports.
 This is because of a quirk in the OpenNSA SDK and its config file, which we
-generate from the chassis config. It seems that only initializing higher ports
-(i.e. 3 and 4, but not 1 and 2, using logical port numbers) is only possible
-when all lower ports are also configured. Easiest fix is to use the full file
-and set unwanted ports administratively to down state.
+generate from the chassis config. It seems that only initializing some ports
+of a port quad (i.e. 3 and 4, but not 1 and 2, using logical port numbers)
+lead to this behaviour. Easiest fix is to use the full file and set unwanted
+ports administratively to down state.
