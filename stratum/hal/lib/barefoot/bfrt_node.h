@@ -61,7 +61,8 @@ class BfRtNode final {
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BfRtNode> CreateInstance(int unit);
+  static std::unique_ptr<BfRtNode> CreateInstance(
+      BFRuntimeTableManager* bfrt_table_manager, int unit);
 
   // BfRtNode is neither copyable nor movable.
   BfRtNode(const BfRtNode&) = delete;
@@ -72,7 +73,7 @@ class BfRtNode final {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BfRtNode(int unit);
+  BfRtNode(BFRuntimeTableManager* bfrt_table_manager, int unit);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
@@ -96,6 +97,9 @@ class BfRtNode final {
 
   bool pipeline_initialized_ GUARDED_BY(lock_);
   bool initialized_ GUARDED_BY(lock_);
+
+  // Managers. Not owned by this class.
+  BFRuntimeTableManager* bfrt_table_manager_;
 
   // Paths for pipeline configs
   char prog_name_[_PI_UPDATE_MAX_NAME_SIZE + 1];
