@@ -24,15 +24,15 @@ namespace tai {
 TaiPhal* TaiPhal::singleton_ = nullptr;
 ABSL_CONST_INIT absl::Mutex TaiPhal::init_lock_(absl::kConstInit);
 
-TaiPhal::TaiPhal() {}
+TaiPhal::TaiPhal(TaiInterface* tai_interface) : tai_interface_(tai_interface) {}
 
 TaiPhal::~TaiPhal() {}
 
-TaiPhal* TaiPhal::CreateSingleton() {
+TaiPhal* TaiPhal::CreateSingleton(TaiInterface* tai_interface) {
   absl::WriterMutexLock l(&init_lock_);
 
   if (!singleton_) {
-    singleton_ = new TaiPhal();
+    singleton_ = new TaiPhal(tai_interface);
   }
 
   auto status = singleton_->Initialize();
@@ -45,7 +45,6 @@ TaiPhal* TaiPhal::CreateSingleton() {
   return singleton_;
 }
 
-// Initialize the tai interface and phal DB
 ::util::Status TaiPhal::Initialize() {
   absl::WriterMutexLock l(&config_lock_);
 
@@ -58,6 +57,16 @@ TaiPhal* TaiPhal::CreateSingleton() {
 ::util::Status TaiPhal::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&config_lock_);
 
+  // Initialize optical network interfaces
+  for (const auto& netif : config.optical_network_interfaces()) {
+    uint64 oid = netif.id();
+    RETURN_IF_ERROR(
+        tai_interface_->SetTxLaserFrequency(oid, netif.frequency()));
+    RETURN_IF_ERROR(
+        tai_interface_->SetTargetOutputPower(oid, netif.target_output_power()));
+    RETURN_IF_ERROR(
+        tai_interface_->SetModulationFormat(oid, netif.operational_mode()));
+  }
   return ::util::OkStatus();
 }
 
@@ -69,7 +78,7 @@ TaiPhal* TaiPhal::CreateSingleton() {
 ::util::Status TaiPhal::Shutdown() {
   absl::WriterMutexLock l(&config_lock_);
 
-  // tai_event_handler_.reset();
+  tai_interface_->Shutdown();
   initialized_ = false;
 
   return ::util::OkStatus();

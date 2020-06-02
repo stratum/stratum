@@ -51,6 +51,8 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 
 [SSL/TLS support](stratum/lib/security/README.md)
 
+[TAI](stratum/docs/tai/README.md)
+
 # Component Overview
 
 ![img](stratum/docs/images/stratum_architecture.png)

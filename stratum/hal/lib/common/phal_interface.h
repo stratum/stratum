@@ -111,17 +111,21 @@ class PhalInterface {
   virtual ::util::Status GetFrontPanelPortInfo(
       int slot, int port, FrontPanelPortInfo* fp_port_info) = 0;
 
-  // Gets the information about the optical transceiver module for the given
-  // (slot, port). This method is expected to return error if there is no
-  // related optics module inserted in the given (slot, port) yet.
+  // Gets the information about the optical network interface for the given
+  // (module, network_interface). This method is expected to return error if
+  // there is no related optics module inserted in the
+  // given (module, network_interface) yet.
   virtual ::util::Status GetOpticalTransceiverInfo(
-      int slot, int port, OpticalChannelInfo* oc_info) = 0;
+      int module, int network_interface,
+      OpticalTransceiverInfo* optical_netif_info) = 0;
 
-  // Sets the data from oc_info into the optical transceiver module for the
-  // given (slot, port). This method is expected to return error if there is no
-  // related optics module inserted yet.
+  // Sets the data from optical_netif_info into the optical transceiver module
+  // for the given (module, network_interface). This method is expected to
+  // return error if there is no related optics module or network interface
+  // inserted yet.
   virtual ::util::Status SetOpticalTransceiverInfo(
-      int slot, int port, const OpticalChannelInfo& oc_info) = 0;
+      int module, int network_interface,
+      const OpticalTransceiverInfo& optical_netif_info) = 0;
 
   // Set the color/state of a frontpanel port LED, corresponding to the physical
   // port specified by (slot, port, channel). The caller assumes each physical

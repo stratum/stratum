@@ -431,5 +431,13 @@ std::string ConvertHwStateToPresentString(const HwState& hw_state) {
   return status.ConsumeValueOrDie();
 }
 
+uint64 ConvertHzToMHz(const uint64& val) {
+  return val / 1000000;
+}
+
+uint64 ConvertMHzToHz(const uint64& val) {
+  return val * 1000000;
+}
+
 }  // namespace hal
 }  // namespace stratum

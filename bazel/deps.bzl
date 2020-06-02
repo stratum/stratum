@@ -10,16 +10,20 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl",
      "new_git_repository")
 load("@bazel_gazelle//:deps.bzl", "go_repository")
 
-P4RUNTIME_VER = "1.1.0-rc.1"
-P4RUNTIME_SHA = "fb4eb0767ea9e9697b2359be6979942c54abf64187a2d0f5ff61f227500ec195"
+P4RUNTIME_VER = "fb437abd13dc2a3177256149582cc85c0c39f956" # 1.2.0-dev
+P4RUNTIME_SHA = "2c01f5dff0c84efc3ef6bf33a9d18b3ddc07de4a86da55636b709abed79c36fc"
 
-GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a";
+GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
+
+TAI_COMMIT = "9a673b7310b29c97237b3066a96ea2e43e236cf3"
+TAI_SHA = "6c3562906be3a3608f2e0e26c407d6ba4cbc4b587f87b99d811c8530e74edfca"
 
 BF_SDE_PI_VER = {
     "8_9_2": "aa1f4f338008e48877f7dc407244a4d018a8fb7b",
     "9_0_0": "ca0291420b5b47fa2596a00877d1713aab61dc7a",
     "9_1_0": "41358da0ff32c94fa13179b9cee0ab597c9ccbcc",
+    "9_2_0": "4546038f5770e84dc0d2bba90f1ee7811c9955df",
 }
 GNOI_COMMIT = "437c62e630389aa4547b4f0521d0bca3fb2bf811"
 GNOI_SHA = "77d8c271adc22f94a18a5261c28f209370e87a5e615801a4e7e0d09f06da531f"
@@ -70,7 +74,7 @@ def stratum_deps():
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
         http_archive(
             name = "com_github_p4lang_p4runtime",
-            urls = ["https://github.com/p4lang/p4runtime/archive/v%s.zip" % P4RUNTIME_VER],
+            urls = ["https://github.com/p4lang/p4runtime/archive/%s.zip" % P4RUNTIME_VER],
             sha256 = P4RUNTIME_SHA,
             strip_prefix = "p4runtime-%s/proto" % P4RUNTIME_VER,
             build_file = "@//bazel:external/p4runtime.BUILD",
@@ -88,7 +92,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_p4lang_PI",
             remote = "https://github.com/p4lang/PI.git",
-            commit = "1539ecd8a50c159b011d9c5a9c0eba99f122a845",
+            commit = "0fbdac256151eb1537cd5ebf19101d5df60767fa",
         )
 
     for sde_ver in BF_SDE_PI_VER:
@@ -172,6 +176,18 @@ def stratum_deps():
             remote = "https://github.com/YangModels/yang",
             commit = "31daa2507ae507776c23b4d4176b6cdcef2a308c",
             build_file = "@//bazel:external/yang.BUILD",
+        )
+
+    # -----------------------------------------------------------------------------
+    #        TAI library
+    # -----------------------------------------------------------------------------
+    if "com_github_telecominfraproject_oopt_tai_taish" not in native.existing_rules():
+        http_archive(
+            name = "com_github_telecominfraproject_oopt_tai_taish",
+            urls = ["https://github.com/Telecominfraproject/oopt-tai/archive/%s.zip" % TAI_COMMIT],
+            sha256 = TAI_SHA,
+            strip_prefix = "oopt-tai-%s/tools/taish/proto/" % TAI_COMMIT,
+            build_file = "@//bazel:external/taish_proto.BUILD",
         )
 
 # -----------------------------------------------------------------------------

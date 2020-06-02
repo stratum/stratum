@@ -104,14 +104,14 @@ PhalSim::~PhalSim() {}
   return ::util::OkStatus();
 }
 
-::util::Status PhalSim::GetOpticalTransceiverInfo(int slot, int port,
-                                                  OpticalChannelInfo* oc_info) {
+::util::Status PhalSim::GetOpticalTransceiverInfo(
+    int module, int network_interface, OpticalTransceiverInfo* ot_info) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
 
 ::util::Status PhalSim::SetOpticalTransceiverInfo(
-    int slot, int port, const OpticalChannelInfo& oc_info) {
+    int module, int network_interface, const OpticalTransceiverInfo& ot_info) {
   // TODO(unknown): Implement this function.
   return ::util::OkStatus();
 }
