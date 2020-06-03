@@ -22,27 +22,32 @@ namespace hal {
 namespace barefoot {
 
 class BFRuntimeTableManager {
-
  public:
+  // Initialize pipeline information
+  // This function creates a mapping between P4Info and Barefoot Runtime.
   ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
-                                  bfrt::BfRtInfo* bfrt_info,
-                                  bf_rt_target_t dev_tgt);
+                                  const bfrt::BfRtInfo* bfrt_info);
+
+  // Writes a table entry.
   ::util::Status WriteTableEntry(std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry);
+
+  // Reads a table entry
   ::util::StatusOr<::p4::v1::TableEntry> ReadTableEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::TableEntry& table_entry);
 
+  // Creates a table manager instance for a specific unit.
   static std::unique_ptr<BFRuntimeTableManager> CreateInstance(int unit);
 
  private:
   ::util::Status BuildMapping(uint32_t p4info_id,
                               std::string p4info_name,
-                              bfrt::BfRtInfo* bfrt_info);
+                              const bfrt::BfRtInfo* bfrt_info);
 
   ::util::Status BuildP4InfoAndBfrtInfoMapping(const p4::config::v1::P4Info& p4info,
-                                               bfrt::BfRtInfo* bfrt_info);
+                                               const bfrt::BfRtInfo* bfrt_info);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                bfrt::BfRtTableKey *table_key);
@@ -63,22 +68,33 @@ class BFRuntimeTableManager {
                                 const bfrt::BfRtTable *table,
                                 bfrt::BfRtTableData* table_data);
 
+  // Maps a P4Info ID to a Barefoot Runtime ID
   ::util::StatusOr<uint32_t> GetBfRtId(uint32_t p4info_id);
+
+  // Maps a Barefoot Runtime ID to a P4Info ID
   ::util::StatusOr<uint32_t> GetP4InfoId(bf_rt_id_t bfrt_id);
 
+  // Gets the device pipeline ID for a specific Barefoot Runtime
+  // primitive(e.g. table)
+  // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
+  ::util::StatusOr<bf_rt_target_t> GetDeviceTarget(bf_rt_id_t bfrt_id);
+
+  // Private constructure, we can create the instance by using `CreateInstance`
+  // function only.
   BFRuntimeTableManager(int unit);
+
+  // The unit number, which represent the device ID in SDK level.
   int unit_;
-  bfrt::BfRtInfo* bfrt_info_;
+
+  // The Barefoot Runtime info, requires by some function to get runtime
+  // instances like tables.
+  const bfrt::BfRtInfo* bfrt_info_;
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
 
-  bool initialized_;
-
   absl::flat_hash_map<bf_rt_id_t, uint32_t>bfrt_to_p4info_id_;
   absl::flat_hash_map<uint32_t, bf_rt_id_t>p4info_to_bfrt_id_;
-
-  bf_rt_target_t dev_tgt_;
 };
 
 }  // namespace barefoot

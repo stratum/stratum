@@ -202,6 +202,8 @@ stratum_cc_library(
     srcs = ["bfrt_node.cc"],
     hdrs = ["bfrt_node.h"],
     deps = [
+        ":macros",
+        ":bfrt_table_manager",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",

@@ -12,18 +12,16 @@ namespace hal {
 namespace barefoot {
 
 ::util::Status BFRuntimeTableManager::PushPipelineInfo(
-    const p4::config::v1::P4Info& p4info, bfrt::BfRtInfo* bfrt_info, bf_rt_target_t dev_tgt) {
+    const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   bfrt_info_ = bfrt_info;
-  dev_tgt_ = dev_tgt;
   RETURN_IF_ERROR(BuildP4InfoAndBfrtInfoMapping(p4info, bfrt_info));
-  initialized_ = true;
   return ::util::OkStatus();
 }
 
 ::util::Status BFRuntimeTableManager::BuildMapping(uint32_t p4info_id,
                                                    std::string p4info_name,
-                                                   bfrt::BfRtInfo* bfrt_info) {
+                                                   const bfrt::BfRtInfo* bfrt_info) {
   const bfrt::BfRtTable* table;
   auto bf_status = bfrt_info->bfrtTableFromIdGet(p4info_id, &table);
 
@@ -73,7 +71,7 @@ namespace barefoot {
 // in native P4 core headers, the frontend compiler will
 // generate different IDs between p4info and bfrt info.
 ::util::Status BFRuntimeTableManager::BuildP4InfoAndBfrtInfoMapping(
-    const p4::config::v1::P4Info& p4info, bfrt::BfRtInfo* bfrt_info) {
+    const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
 
   // Try to find P4 tables from BFRT info
   for (const auto& table : p4info.tables()) {
@@ -210,6 +208,7 @@ namespace barefoot {
 
   ASSIGN_OR_RETURN(bf_rt_id_t table_id, GetBfRtId(table_entry.table_id()));
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, GetDeviceTarget(table_id));
 
   table->keyReset(table_key.get());
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
@@ -220,15 +219,15 @@ namespace barefoot {
 
   switch(type) {
     case ::p4::v1::Update::INSERT:
-      BFRT_RETURN_IF_ERROR(table->tableEntryAdd(*bfrt_session, dev_tgt_,
+      BFRT_RETURN_IF_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
                                                 *table_key, *table_data));
       break;
     case ::p4::v1::Update::MODIFY:
-      BFRT_RETURN_IF_ERROR(table->tableEntryMod(*bfrt_session, dev_tgt_,
-                                              *table_key, *table_data));
+      BFRT_RETURN_IF_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
+                                                *table_key, *table_data));
       break;
     case ::p4::v1::Update::DELETE:
-      BFRT_RETURN_IF_ERROR(table->tableEntryDel(*bfrt_session, dev_tgt_, *table_key));
+      BFRT_RETURN_IF_ERROR(table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key));
       break;
     default:
       RETURN_ERROR() << "Unsupported update type: " << type;
@@ -247,8 +246,10 @@ namespace barefoot {
   BFRT_RETURN_IF_ERROR(table->keyReset(table_key.get()));
   BFRT_RETURN_IF_ERROR(table->dataReset(table_data.get()));
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
-  BFRT_RETURN_IF_ERROR(table->tableEntryGet(*bfrt_session, dev_tgt_,
-                                            *table_key, bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, GetDeviceTarget(table_id));
+  BFRT_RETURN_IF_ERROR(table->tableEntryGet(*bfrt_session, bf_dev_tgt,
+                                            *table_key,
+                                            bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
                                             table_data.get()));
   // Build result
   ::p4::v1::TableEntry result;
@@ -311,6 +312,14 @@ namespace barefoot {
 std::unique_ptr<BFRuntimeTableManager> BFRuntimeTableManager::CreateInstance(
     int unit) {
   return absl::WrapUnique(new BFRuntimeTableManager(unit));
+}
+
+::util::StatusOr<bf_rt_target_t> BFRuntimeTableManager::GetDeviceTarget(
+    bf_rt_id_t bfrt_id) {
+  bf_rt_target_t dev_tgt;
+  dev_tgt.dev_id = unit_;
+  dev_tgt.pipe_id = BF_DEV_PIPE_ALL;
+  return dev_tgt;
 }
 
 BFRuntimeTableManager::BFRuntimeTableManager(int unit): unit_(unit) {}

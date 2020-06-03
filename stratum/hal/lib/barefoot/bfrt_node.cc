@@ -28,6 +28,7 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
   initialized_ = true;
+  bfrt_tbl_mgr_ = BFRuntimeTableManager::CreateInstance(unit_);
 
   return ::util::OkStatus();
 }
@@ -54,7 +55,8 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   if (config.has_cookie()) {
     cookie = config.cookie().cookie();
   }
-  p4::config::v1::P4Info p4info = config.p4info();
+
+  p4info_.CopyFrom(config.p4info());
   const char* p4_device_config = config.p4_device_config().c_str();
 
   // Structure of P4 device config for Barefoot device
@@ -82,7 +84,7 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   prog_name_[chunk_size] = '\0';
   device_data_curr += chunk_size;
 
-  // TODO(YI): lots of duplicated code, move to function
+  // TODO(YI): lots of duplicated code, move to a function
   // Tofino bin
   memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
   device_data_curr += sizeof(uint32_t);
@@ -156,13 +158,11 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   if (!initialized_) {
     RETURN_ERROR() << "Not initialized";
   }
-  auto bf_status = bf_pal_device_warm_init_begin(
+  BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_begin(
           unit_,
           BF_DEV_WARM_INIT_FAST_RECFG,
           BF_DEV_SERDES_UPD_NONE,
-          true);
-  CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS)
-      << "Failed to begin warm_init";
+          /* upgrade_agents */true));
   bf_device_profile_t device_profile;
 
   // TODO(Yi): Now we only support single P4 program
@@ -170,7 +170,7 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   bf_p4_program_t p4_program = device_profile.p4_programs[0];
   strncpy(p4_program.prog_name, prog_name_, _PI_UPDATE_MAX_NAME_SIZE);
   p4_program.bfrt_json_file = bfrt_file_path_;
-  p4_program.num_p4_pipelines = 4;
+  p4_program.num_p4_pipelines = 1;
 
   // TODO(Yi): Now we applies single pipelines to all HW pipeline
   bf_p4_pipeline_t pipeline_profile = p4_program.p4_pipelines[0];
@@ -188,13 +188,13 @@ BFRuntimeNode::~BFRuntimeNode() = default;
     pipeline_profile.pipe_scope[p] = p;
   }
 
-  bf_status = bf_pal_device_add(unit_, &device_profile);
-  CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS)
-      << "Failed to add device " << unit_;
+  BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
+  BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
 
-  bf_status = bf_pal_device_warm_init_end(unit_);
-  CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS)
-      << "Failed to finish warn init process.";
+  // Push pipeline config to the table manager
+  BFRT_RETURN_IF_ERROR(bfrt_dev_mgr_.bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
+  bfrt_tbl_mgr_->PushPipelineInfo(p4info_, bfrt_info_);
+
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }
@@ -226,21 +226,23 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   session->beginBatch();
   ::util::Status status;
   for (auto update : req.updates()) {
-    switch(update.entity_case()) {
-      case kTableEntry:
-        status = bfrt_tbl_mgr_->WriteTableEntry(session, update.type(), update.table_entry());
+    auto update_type = update.type();
+    auto entity = update.entity();
+    switch(entity.entity_case()) {
+      case ::p4::v1::Entity::kTableEntry:
+        status = bfrt_tbl_mgr_->WriteTableEntry(session, update_type, entity.table_entry());
         break;
-      case kExternEntry:
-      case kActionProfileMember:
-      case kActionProfileGroup:
-      case kMeterEntry:
-      case kDirectMeterEntry:
-      case kCounterEntry:
-      case kDirectCounterEntry:
-      case kPacketReplicationEngineEntry:
-      case kValueSetEntry:
-      case kRegisterEntry:
-      case kDigestEntry:
+      case ::p4::v1::Entity::kExternEntry:
+      case ::p4::v1::Entity::kActionProfileMember:
+      case ::p4::v1::Entity::kActionProfileGroup:
+      case ::p4::v1::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kDirectMeterEntry:
+      case ::p4::v1::Entity::kCounterEntry:
+      case ::p4::v1::Entity::kDirectCounterEntry:
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+      case ::p4::v1::Entity::kValueSetEntry:
+      case ::p4::v1::Entity::kRegisterEntry:
+      case ::p4::v1::Entity::kDigestEntry:
       default:
         results->push_back(MAKE_ERROR()
             << "Unsupported entity type: " << update.ShortDebugString());
@@ -277,6 +279,7 @@ std::unique_ptr<BFRuntimeNode> BFRuntimeNode::CreateInstance(int unit) {
 BFRuntimeNode::BFRuntimeNode(int unit)
     : unit_(unit), pipeline_initialized_(false),
       initialized_(false), node_id_(0) {
+  // bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
 }
 
 void BFRuntimeNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
