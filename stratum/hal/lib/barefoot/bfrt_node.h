@@ -15,6 +15,8 @@
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
+#include "stratum/hal/lib/barefoot/macros.h"
 
 #define _PI_UPDATE_MAX_NAME_SIZE 100
 #define _PI_UPDATE_MAX_TMP_FILENAME_SIZE (_PI_UPDATE_MAX_NAME_SIZE + 32)
@@ -104,6 +106,15 @@ class BFRuntimeNode final {
   // instance. Assigned on PushChassisConfig() and might change during the
   // lifetime of the class.
   uint64 node_id_ GUARDED_BY(lock_);
+
+  // Stored pipeline information in this node
+  p4::config::v1::P4Info p4info_;
+  const bfrt::BfRtInfo *bfrt_info_;
+
+  // Table manager that manages table entries
+  std::unique_ptr<BFRuntimeTableManager> bfrt_tbl_mgr_;
+
+  const bfrt::BfRtDevMgr& bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
 };
 
 }  // namespace barefoot
