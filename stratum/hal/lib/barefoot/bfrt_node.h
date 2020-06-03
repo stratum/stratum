@@ -93,13 +93,14 @@ class BfRtNode final {
   std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
       GUARDED_BY(rx_writer_lock_);
 
-  const int unit_;
-
   bool pipeline_initialized_ GUARDED_BY(lock_);
   bool initialized_ GUARDED_BY(lock_);
 
   // Managers. Not owned by this class.
   BFRuntimeTableManager* bfrt_table_manager_;
+
+  // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
+  std::unique_ptr<BfRtIdMapper> bfrt_id_mapper_;
 
   // Paths for pipeline configs
   char prog_name_[_PI_UPDATE_MAX_NAME_SIZE + 1];
@@ -107,22 +108,18 @@ class BfRtNode final {
   char ctx_json_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE];
   char bfrt_file_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE];
 
+  // Stored pipeline information in this node
+  p4::config::v1::P4Info p4info_;
+  const bfrt::BfRtInfo* bfrt_info_;
+
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the
   // lifetime of the class.
   uint64 node_id_ GUARDED_BY(lock_);
 
-  // Stored pipeline information in this node
-  p4::config::v1::P4Info p4info_;
-  const bfrt::BfRtInfo* bfrt_info_;
-
-  // Table manager that manages table entries
-  std::unique_ptr<BfRtTableManager> bfrt_tbl_mgr_;
-
-  // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
-  std::unique_ptr<BfRtIdMapper> bfrt_id_mapper_;
-
-  const bfrt::BfRtDevMgr& bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
+  // Fixed zero-based BFRT unit number corresponding to the node/ASIC managed by
+  // this class instance. Assigned in the class constructor.
+  const int unit_;
 };
 
 }  // namespace barefoot
