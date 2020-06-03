@@ -1,5 +1,7 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_TABLE_MANAGER_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_TABLE_MANAGER_H_
 
 #include <memory>
 
@@ -80,3 +82,5 @@ class BfRtTableManager {
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_TABLE_MANAGER_H_
