@@ -1,4 +1,5 @@
 -define phal_with_onlp=false
+-persistent_config_dir=/stratum_configs/
 -forwarding_pipeline_configs_file=/stratum_configs/pipeline_config.pb.txt
 -dpdk_config=/stratum_configs/dpdk_config.pb.txt
 -chassis_config_file=/stratum_configs/chassis_config.pb.txt
