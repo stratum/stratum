@@ -162,6 +162,7 @@ stratum_cc_library(
         "//stratum/glue/status",
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
+        "@com_google_absl//absl/synchronization",
         "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_headers",
     ],

@@ -6,6 +6,8 @@
 
 #include "stratum/hal/lib/barefoot/bf_pd_interface.h"
 
+#include "absl/synchronization/mutex.h"
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -13,12 +15,12 @@ namespace barefoot {
 class BFPdWrapper : public BFPdInterface {
  public:
   // Gets the CPU port of an unit(device).
-  ::util::StatusOr<int> PcieCpuPortGet(int unit) override;
+  ::util::StatusOr<int> GetPcieCpuPort(int unit) override;
 
   // Sets the CPU port to the traffic manager.
-  ::util::Status TmSetCpuPort(int unit, int port) override;
+  ::util::Status SetTmCpuPort(int unit, int port) override;
 
-  static BFPdWrapper* GetSingleton();
+  static BFPdWrapper* GetSingleton() LOCKS_EXCLUDED(init_lock_);
 
   // BFPdWrapper is neither copyable nor movable.
   BFPdWrapper(const BFPdWrapper&) = delete;
@@ -28,6 +30,14 @@ class BFPdWrapper : public BFPdInterface {
 
  private:
   BFPdWrapper();  // Use GetSingleton
+
+  // RW mutex lock for protecting the singleton instance initialization and
+  // reading it back from other threads. Unlike other singleton classes, we
+  // use RW lock as we need the pointer to class to be returned.
+  static absl::Mutex init_lock_;
+
+  // The singleton instance.
+  static BFPdWrapper* singleton_ GUARDED_BY(init_lock_);
 };
 
 }  // namespace barefoot

@@ -14,21 +14,28 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+BFPdWrapper* BFPdWrapper::singleton_ = nullptr;
+ABSL_CONST_INIT absl::Mutex BFPdWrapper::init_lock_(absl::kConstInit);
+
 // Gets the CPU port of an unit(device).
-::util::StatusOr<int> BFPdWrapper::PcieCpuPortGet(int unit) {
+::util::StatusOr<int> BFPdWrapper::GetPcieCpuPort(int unit) {
   return p4_devport_mgr_pcie_cpu_port_get(unit);
 }
 
 // Sets the CPU port to the traffic manager.
-::util::Status BFPdWrapper::TmSetCpuPort(int unit, int port) {
+::util::Status BFPdWrapper::SetTmCpuPort(int unit, int port) {
   CHECK_RETURN_IF_FALSE(p4_pd_tm_set_cpuport(unit, port) == 0)
       << "Unable to set CPU port " << port << " to unit " << unit;;
   return ::util::OkStatus();
 }
 
 BFPdWrapper* BFPdWrapper::GetSingleton() {
-  static BFPdWrapper wrapper;
-  return &wrapper;
+  absl::WriterMutexLock l(&init_lock_);
+  if (!singleton_) {
+    singleton_ = new BFPdWrapper();
+  }
+
+  return singleton_;
 }
 
 BFPdWrapper::BFPdWrapper() { }

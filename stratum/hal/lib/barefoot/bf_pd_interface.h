@@ -15,10 +15,10 @@ class BFPdInterface {
  public:
   virtual ~BFPdInterface() { }
   // Gets the CPU port of an unit(device).
-  virtual ::util::StatusOr<int> PcieCpuPortGet(int unit) = 0;
+  virtual ::util::StatusOr<int> GetPcieCpuPort(int unit) = 0;
 
   // Sets the CPU port to the traffic manager.
-  virtual ::util::Status TmSetCpuPort(int unit, int port) = 0;
+  virtual ::util::Status SetTmCpuPort(int unit, int port) = 0;
 };
 
 }  // namespace barefoot

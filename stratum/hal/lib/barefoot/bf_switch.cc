@@ -28,9 +28,9 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BFChassisManager* bf_chassis_manager,
                    BFPdInterface* bf_pd_interface,
                    const std::map<int, PINode*>& unit_to_pi_node)
-    : phal_interface_(CHECK_NOTNULL(phal_interface)),
-      bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
-      bf_pd_interface_(CHECK_NOTNULL(bf_pd_interface)),
+    : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
+      bf_pd_interface_(ABSL_DIE_IF_NULL(bf_pd_interface)),
       unit_to_pi_node_(unit_to_pi_node),
       node_id_to_pi_node_() {
   for (const auto& entry : unit_to_pi_node_) {
@@ -83,8 +83,8 @@ BFSwitch::~BFSwitch() {}
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_unit, node_id))
       << "Unable to find unit number for node " << node_id;
   int unit = gtl::FindOrDie(node_id_to_unit, node_id);
-  ASSIGN_OR_RETURN(auto cpu_port, bf_pd_interface_->PcieCpuPortGet(unit));
-  RETURN_IF_ERROR(bf_pd_interface_->TmSetCpuPort(unit, cpu_port));
+  ASSIGN_OR_RETURN(auto cpu_port, bf_pd_interface_->GetPcieCpuPort(unit));
+  RETURN_IF_ERROR(bf_pd_interface_->SetTmCpuPort(unit, cpu_port));
   return ::util::OkStatus();
 }
 
