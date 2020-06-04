@@ -7038,10 +7038,10 @@ namespace {
   int rule_id;
   int policy_id;
   int meter_id;
-  std::map<int, bool>* rule_ids;
-  std::map<int, bool>* policy_ids;
-  std::map<int, bool>* meter_ids;
-  std::map<int, bool>* entry_ids;
+  std::map<int, bool>* rule_ids = nullptr;
+  std::map<int, bool>* policy_ids = nullptr;
+  std::map<int, bool>* meter_ids = nullptr;
+  std::map<int, bool>* entry_ids = nullptr;
   auto *fp_rules = gtl::FindPtrOrNull(fp_rule_ids_, unit);
   auto *fp_policies = gtl::FindPtrOrNull(fp_policy_ids_, unit);
   auto *fp_meters = gtl::FindPtrOrNull(fp_meter_ids_, unit);
