@@ -39,9 +39,6 @@ stratum_cc_binary(
     data = [
         "tofino_skip_p4.conf",
         "tofino_skip_p4_no_bsp.conf",
-        "platforms/x86-64-accton-wedge100bf-32x-r0.json",
-        "platforms/x86-64-delta-ag9064v1-r0.json",
-        "platforms/x86-64-inventec-d5254-r0.json"
     ],
 )
 
@@ -70,7 +67,7 @@ pkg_tar(
     srcs = [
         "tofino_skip_p4_no_bsp.conf",
         "tofino_skip_p4.conf",
-    ] + glob(["platforms/*.json"]),
+    ],
     mode = "0644",
     package_dir = "/usr/share/stratum",
 )
