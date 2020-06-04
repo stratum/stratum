@@ -22,6 +22,12 @@ save_bazel_cache: &save_bazel_cache
     key: v3-bazel-cache-{{ .Environment.CIRCLE_JOB }}-{{ .Branch }}-{{ .Revision }}
     paths:
       - /tmp/bazel-cache
+      - /tmp/bazel-disk-cache
+
+clean_bazel_cache: &clean_bazel_cache
+  run:
+    name: Clean Bazel disk cache of files that have not been touched in 30 days
+    command: /usr/bin/find /tmp/bazel-disk-cache -atime +30 -exec rm -v {} \;
 
 # Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
@@ -76,6 +82,7 @@ jobs:
       - run:
           name: Test Stratum targets
           command: xargs -a .circleci/test-targets.txt bazel test
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   # CDLang
@@ -94,6 +101,7 @@ jobs:
       - run:
           name: Test CDLang targets
           command: xargs -a .circleci/cdlang-targets.txt bazel test
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   # Generate coverage report and upload to codecov.io.
@@ -112,6 +120,7 @@ jobs:
       - run:
           name: Upload coverage report
           command: bash <(curl -s https://codecov.io/bash) -f bazel-out/_coverage/_coverage_report.dat -X s3 -C $CIRCLE_SHA1
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   # Update images on Docker Hub
@@ -171,6 +180,7 @@ jobs:
           command: |
             docker run $DOCKER_IMG -version
       - *docker_push
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   publish-docker-stratum-bcm:
@@ -195,6 +205,7 @@ jobs:
       - *docker_login
       - *docker_build
       - *docker_push
+      - *clean_bazel_cache
       - *save_bazel_cache
 
   cpp-style-check:
