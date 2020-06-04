@@ -782,6 +782,7 @@ std::string P4TableMapper::GetMapperNameKey(
       mapped_action->set_profile_group_id(
           table_action.action_profile_group_id());
       break;
+    case ::p4::v1::TableAction::kActionProfileActionSet:
     case ::p4::v1::TableAction::TYPE_NOT_SET: {
       ::util::Status convert_error =
           MAKE_ERROR(ERR_INVALID_PARAM)
