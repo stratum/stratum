@@ -23,4 +23,5 @@ docker run -it --privileged --cap-add ALL --shm-size=512m --network host \
     -v /etc/onl:/etc/onl \
     -v $CONFIG_DIR:/etc/stratum/stratum_configs \
     -v $LOG_DIR:/var/log/stratum \
-    $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
+    $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
+    $@

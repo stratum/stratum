@@ -39,4 +39,4 @@ else
     echo "Cannot find $KDRV_PATH, skip installing the Kernel module."
 fi
 
-exec /usr/bin/stratum_bf -flagfile=$FLAG_FILE
+exec /usr/bin/stratum_bf -flagfile=$FLAG_FILE $@
