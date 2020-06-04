@@ -97,6 +97,16 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "stratum_bfrt_binaries",
+    srcs = [
+        ":stratum_bfrt",
+        "deb/stratum-entrypoint",
+    ],
+    mode = "0755",
+    package_dir = "/usr/bin",
+)
+
+pkg_tar(
     name = "systemd_service",
     srcs = [
         "deb/stratum_bf.service",
@@ -142,6 +152,20 @@ pkg_tar(
     ],
 )
 
+pkg_tar(
+    name = "stratum_bfrt_data",
+    extension = "tar.gz",
+    deps = [
+        ":stratum_bfrt_binaries",
+        ":systemd_service",
+        ":stratum_shareable_files",
+        ":stratum_configs",
+        "@local_barefoot_bin//:bf_library_files",
+        "@local_barefoot_bin//:bf_shareable_files",
+        "@local_barefoot_bin//:kernel_module",
+    ],
+)
+
 pkg_deb(
     name = "stratum_bf_deb",
     architecture = "amd64",
@@ -158,6 +182,29 @@ pkg_deb(
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
     package = "stratum-bf",
+    conflicts = ["stratum-bf"],
+    postinst = "deb/postinst",
+    prerm = "deb/prerm",
+    version = "0.0.1",
+)
+
+pkg_deb(
+    name = "stratum_bfrt_deb",
+    architecture = "amd64",
+    data = ":stratum_bfrt_data",
+    depends = [
+        "systemd",
+        "kmod",
+        "libssl1.1",
+        "libedit2",
+        "libjudydebian1",
+        "libboost-thread1.62.0",
+    ],
+    conflicts = ["stratum-bf"],
+    description = "The Stratum package for Barefoot Tofino-based platform",
+    homepage = "https://stratumproject.org/",
+    maintainer = "The Stratum Project",
+    package = "stratum-bfrt",
     postinst = "deb/postinst",
     prerm = "deb/prerm",
     version = "0.0.1",

@@ -62,7 +62,8 @@ class BfRtNode final {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfRtNode> CreateInstance(
-      BFRuntimeTableManager* bfrt_table_manager, int unit);
+      BFRuntimeTableManager* bfrt_table_manager,
+      ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit);
 
   // BfRtNode is neither copyable nor movable.
   BfRtNode(const BfRtNode&) = delete;
@@ -73,7 +74,8 @@ class BfRtNode final {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BfRtNode(BFRuntimeTableManager* bfrt_table_manager, int unit);
+  BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
+                ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
@@ -98,6 +100,7 @@ class BfRtNode final {
 
   // Managers. Not owned by this class.
   BFRuntimeTableManager* bfrt_table_manager_;
+  ::bfrt::BfRtDevMgr* bfrt_device_manager_;
 
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
   std::unique_ptr<BfRtIdMapper> bfrt_id_mapper_;
