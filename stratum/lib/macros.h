@@ -105,9 +105,6 @@ _error_impl
 #define RETURN_IF_ERROR_WITH_APPEND(expr) RETURN_IF_ERROR(expr).SetAppend()
     END GOOGLE ONLY */
 
-// Replaced by glog CHECK_NOTNULL until it is added to Abseil
-#define ABSL_DIE_IF_NULL CHECK_NOTNULL
-
 // Stringify the result of expansion of a macro to a string
 // e.g:
 // #define A text
