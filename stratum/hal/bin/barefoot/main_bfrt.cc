@@ -5,21 +5,20 @@ extern "C" {
 
 #include "bf_switchd/bf_switchd.h"
 
-int switch_pci_sysfs_str_get(char *name, size_t name_size);
-
+int switch_pci_sysfs_str_get(char* name, size_t name_size);
 }
 
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
-#include "stratum/hal/lib/common/hal.h"
-#include "stratum/hal/lib/phal/phal.h"
-#include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_switch_bfrt.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
+#include "stratum/hal/lib/common/hal.h"
+#include "stratum/hal/lib/phal/phal.h"
+#include "stratum/hal/lib/phal/phal_sim.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
 
@@ -40,9 +39,9 @@ namespace barefoot {
   InitStratumLogging();
 
   char bf_sysfs_fname[128];
-  FILE *fd;
+  FILE* fd;
 
-  bf_switchd_context_t *switchd_main_ctx = new bf_switchd_context_t;
+  bf_switchd_context_t* switchd_main_ctx = new bf_switchd_context_t;
   memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
 
   /* Parse bf_switchd arguments */
@@ -82,29 +81,32 @@ namespace barefoot {
   // does not do any device id checks.
 
   auto bfrt_table_manager = BFRuntimeTableManager::CreateInstance(unit);
-  auto bfrt_node = BfRtNode::CreateInstance(bfrt_table_manager.get(), unit);
+  auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
+  auto bfrt_node = BfRtNode::CreateInstance(bfrt_table_manager.get(),
+                                            &bf_device_manager, unit);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
   } else {
     phal_impl = phal::Phal::CreateSingleton();
   }
+
   std::map<int, BfRtNode*> unit_to_bfrt_node = {
-    {unit, bfrt_node.get()},
+      {unit, bfrt_node.get()},
   };
-  auto bf_chassis_manager = BFChassisManager::CreateInstance(
-      phal_impl, BFPalWrapper::GetSingleton());
-  auto bf_switch = BFSwitch::CreateInstance(
-      phal_impl, bf_chassis_manager.get(), BFPdWrapper::GetSingleton(),
-      unit_to_bfrt_node);
+  auto bf_chassis_manager =
+      BFChassisManager::CreateInstance(phal_impl, BFPalWrapper::GetSingleton());
+  auto bfpd_wrapper = BFPdWrapper::GetSingleton();
+  auto bf_switch =
+      BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
+                               bfpd_wrapper.get(), unit_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   ASSIGN_OR_RETURN(auto credentials_manager,
                    CredentialsManager::CreateInstance());
   auto* hal = Hal::CreateSingleton(stratum::hal::OPERATION_MODE_STANDALONE,
-                                   bf_switch.get(),
-                                   auth_policy_checker.get(),
+                                   bf_switch.get(), auth_policy_checker.get(),
                                    credentials_manager.get());
   CHECK_RETURN_IF_FALSE(hal) << "Failed to create the Stratum Hal instance.";
 

@@ -182,10 +182,11 @@ BfRtNode::~BfRtNode() = default;
   BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
 
-  // Push pipeline config to the ID mapper
+  // Push pipeline config to the table manager
   BFRT_RETURN_IF_ERROR(
-      bfrt_dev_mgr_.bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
+      bfrt_device_manager_->bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
   bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_);
+  bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_);
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
@@ -259,17 +260,20 @@ BfRtNode::~BfRtNode() = default;
 
 // Factory function for creating the instance of the class.
 std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
-    BFRuntimeTableManager* bfrt_table_manager, int unit) {
-  return absl::WrapUnique(new BfRtNode(bfrt_table_manager, unit));
+    BFRuntimeTableManager* bfrt_table_manager,
+    ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit) {
+  return absl::WrapUnique(
+      new BfRtNode(bfrt_table_manager, bfrt_device_manager, unit));
 }
 
-BfRtNode::BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
-                             int unit)
+BFRuntimeNode::BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
+                        ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit)
     : unit_(unit),
       pipeline_initialized_(false),
       initialized_(false),
       node_id_(0),
-      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)) {}
+      bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
+      bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)) {}
 
 void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   // acquire the lock during the Write: SendPacketIn may be called from
