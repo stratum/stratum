@@ -9,19 +9,19 @@ PLATFORM=${PLATFORM:-x86-64-accton-wedge100bf-32x-r0}
 if [ -f "/etc/onl/platform" ]; then
     PLATFORM="$(cat /etc/onl/platform)"
 fi
-PORT_MAP="/usr/share/stratum/$PLATFORM.json"
 
 if [ ! -f "$FLAG_FILE" ]; then
     echo "Cannot find flag file $FLAG_FILE"
     exit 255
 fi
 
+# Set up port map for device
+PORT_MAP="/etc/stratum/stratum_configs/$PLATFORM/port_map.json"
 if [ ! -f "$PORT_MAP" ]; then
     echo "Cannot find port map file $PORT_MAP"
     exit 255
 fi
-
-ln -s $PORT_MAP /usr/share/port_map.json
+ln -s "$PORT_MAP" /usr/share/port_map.json
 
 if [ -f "$KDRV_PATH" ]; then
     lsmod | grep 'kdrv' &> /dev/null
