@@ -78,6 +78,9 @@ pkg_tar(
         "deb/stratum.flags",
         "deb/stratum_bf.env",
     ],
+    deps = [
+        "//stratum/hal/config:all_configs_tar",
+    ],
     mode = "0644",
     package_dir = "/etc/stratum",
 )
