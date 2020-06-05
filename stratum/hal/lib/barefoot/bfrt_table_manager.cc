@@ -15,13 +15,13 @@ namespace barefoot {
     const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key) {
   for (auto mk : table_entry.match()) {
     bf_rt_id_t field_id = mk.field_id();
-    bf_status_t bf_status;
     switch (mk.field_match_type_case()) {
       case ::p4::v1::FieldMatch::kExact: {
         const size_t size = mk.ternary().value().size();
         const uint8_t* val =
             reinterpret_cast<const uint8_t*>(mk.ternary().value().c_str());
-        bf_status = table_key->setValue(field_id, val, size);
+        RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, val, size))
+            << "Could not build table key from " << mk.ShortDebugString();
         break;
       }
       case ::p4::v1::FieldMatch::kTernary: {
@@ -30,7 +30,10 @@ namespace barefoot {
             reinterpret_cast<const uint8_t*>(mk.ternary().value().c_str());
         const uint8_t* mask =
             reinterpret_cast<const uint8_t*>(mk.ternary().mask().c_str());
-        bf_status = table_key->setValueandMask(field_id, val, mask, size);
+        RETURN_IF_BFRT_ERROR(
+            table_key->setValueandMask(field_id, val, mask, size))
+            << "Could not build table key from " << mk.ShortDebugString();
+        ;
         break;
       }
       case ::p4::v1::FieldMatch::kLpm: {
@@ -38,7 +41,10 @@ namespace barefoot {
         const uint8_t* val =
             reinterpret_cast<const uint8_t*>(mk.lpm().value().c_str());
         const int32_t prefix_len = mk.lpm().prefix_len();
-        bf_status = table_key->setValueLpm(field_id, val, prefix_len, size);
+        RETURN_IF_BFRT_ERROR(
+            table_key->setValueLpm(field_id, val, prefix_len, size))
+            << "Could not build table key from " << mk.ShortDebugString();
+        ;
         break;
       }
       case ::p4::v1::FieldMatch::kRange: {
@@ -47,7 +53,10 @@ namespace barefoot {
             reinterpret_cast<const uint8_t*>(mk.range().low().c_str());
         const uint8_t* end =
             reinterpret_cast<const uint8_t*>(mk.range().high().c_str());
-        bf_status = table_key->setValueRange(field_id, start, end, size);
+        RETURN_IF_BFRT_ERROR(
+            table_key->setValueRange(field_id, start, end, size))
+            << "Could not build table key from " << mk.ShortDebugString();
+        ;
         break;
       }
       // case ::p4::v1::FieldMatch::kOptional:
@@ -55,7 +64,6 @@ namespace barefoot {
         RETURN_ERROR() << "Invalid or unsupported match key: "
                        << mk.ShortDebugString();
     }
-    CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS) << bf_err_str(bf_status);
   }
   return ::util::OkStatus();
 }
@@ -133,8 +141,6 @@ namespace barefoot {
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
   const bfrt::BfRtTable* table;
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
@@ -143,9 +149,12 @@ namespace barefoot {
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
-  table->keyReset(table_key.get());
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
 
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
   if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
     RETURN_IF_ERROR(BuildTableData(table_entry, table, table_data.get()));
   }
