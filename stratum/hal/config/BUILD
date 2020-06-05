@@ -40,6 +40,7 @@ filegroup(
         "*/phal_config.pb.txt",
         "*/SDKLT.yml",
         "*/config.bcm",
+        "*/port_map.json",
     ]) + [
         "bcm_hardware_specs.pb.txt",
         "dummy_serdes_db.pb.txt",

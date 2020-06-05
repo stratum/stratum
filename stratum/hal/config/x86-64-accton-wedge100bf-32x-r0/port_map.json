@@ -1,5 +1,5 @@
 {
-  "_comment": "Example Configuration file for bspless support",
+  "_comment": "Configuration file for bspless support on x86-64-accton-wedge100bf-32x-r0",
   "enable_debug_log": 1,
   "board_lane_map_entry": [
     {

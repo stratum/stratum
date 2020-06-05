@@ -1,5 +1,8 @@
 {
-  "_comment": "Example Configuration file for bspless support",  "enable_debug_log": 1,  "board_lane_map_entry": [    {
+  "_comment": "Configuration file for bspless support on x86-64-inventec-d10064-r0",
+  "enable_debug_log": 1,
+  "board_lane_map_entry": [
+    {
       "connector": 1,
       "device_id": 0,
       "mac_block": 31,
@@ -9,7 +12,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -21,7 +24,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -45,7 +48,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -63,7 +66,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -75,7 +78,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -87,7 +90,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -99,7 +102,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -117,7 +120,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 0,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -129,7 +132,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -138,10 +141,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -150,10 +153,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -183,7 +186,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -192,10 +195,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -204,10 +207,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -237,7 +240,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -247,9 +250,9 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -261,7 +264,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -291,7 +294,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -301,7 +304,7 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -331,9 +334,9 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 3,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 3,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -345,7 +348,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -369,7 +372,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 0,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -408,10 +411,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -420,9 +423,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -438,10 +441,10 @@
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -450,10 +453,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -465,7 +468,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -495,7 +498,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 0,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -505,7 +508,7 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 2,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -519,7 +522,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -529,9 +532,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -549,7 +552,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -559,9 +562,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -570,9 +573,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -582,10 +585,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -603,7 +606,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -613,9 +616,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -637,7 +640,7 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -655,9 +658,9 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 2,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -669,7 +672,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -679,9 +682,9 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -691,9 +694,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -711,7 +714,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -721,9 +724,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -733,9 +736,9 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -745,9 +748,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -763,7 +766,7 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 2,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -775,9 +778,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -786,10 +789,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -798,10 +801,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -819,7 +822,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -829,9 +832,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 2,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -840,10 +843,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -852,10 +855,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -871,7 +874,7 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -883,7 +886,7 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 2,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -894,10 +897,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -906,10 +909,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -927,7 +930,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -939,7 +942,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -948,10 +951,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -960,10 +963,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -975,6 +978,60 @@
       "connector": 19,
       "device_id": 0,
       "mac_block": 13,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 20,
+      "device_id": 0,
+      "mac_block": 12,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
@@ -993,7 +1050,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1005,7 +1062,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1017,61 +1074,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      }
-    },
-    {
-      "connector": 20,
-      "device_id": 0,
-      "mac_block": 12,
-      "media_type": "copper",
-      "lane0": {
-        "mac_ch": 0,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane3": {
-        "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1101,7 +1104,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1113,7 +1116,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1125,7 +1128,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1143,7 +1146,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1155,7 +1158,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1165,9 +1168,9 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1197,7 +1200,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 0,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1233,7 +1236,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1251,7 +1254,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1261,9 +1264,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1315,9 +1318,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 2,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1329,7 +1332,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1341,7 +1344,7 @@
         "tx_lane": 1,
         "tx_pn_swap": 0,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1359,7 +1362,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1369,9 +1372,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1380,9 +1383,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -1392,10 +1395,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1411,9 +1414,9 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 2,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1423,9 +1426,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1447,9 +1450,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1467,7 +1470,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1477,9 +1480,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1491,7 +1494,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1501,9 +1504,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1518,10 +1521,10 @@
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1530,10 +1533,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1543,7 +1546,7 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
         "rx_pn_swap": 0,
         "serdes_params": {
@@ -1555,9 +1558,9 @@
       "lane3": {
         "mac_ch": 3,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1572,18 +1575,6 @@
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
@@ -1594,11 +1585,23 @@
             "tx_eq_attn": 0
           }
       },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -1608,10 +1611,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1629,7 +1632,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 0,
         "rx_lane": 3,
-        "rx_pn_swap": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1639,9 +1642,9 @@
       "lane1": {
         "mac_ch": 1,
         "tx_lane": 1,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1653,7 +1656,7 @@
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1665,7 +1668,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1681,9 +1684,9 @@
       "lane0": {
         "mac_ch": 0,
         "tx_lane": 1,
-        "tx_pn_swap": 1,
+        "tx_pn_swap": 0,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1695,7 +1698,7 @@
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1705,9 +1708,9 @@
       "lane2": {
         "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1719,7 +1722,7 @@
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -1730,14 +1733,14 @@
     {
       "connector": 33,
       "device_id": 0,
-      "mac_block": 40,
+      "mac_block": 47,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1746,10 +1749,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1758,10 +1761,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1770,10 +1773,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1784,14 +1787,14 @@
     {
       "connector": 34,
       "device_id": 0,
-      "mac_block": 41,
+      "mac_block": 46,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
+        "tx_lane": 3,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1800,10 +1803,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1812,10 +1815,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1824,9 +1827,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
+        "tx_lane": 0,
         "tx_pn_swap": 1,
-        "rx_lane": 2,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -1838,34 +1841,10 @@
     {
       "connector": 35,
       "device_id": 0,
-      "mac_block": 42,
+      "mac_block": 45,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
@@ -1876,12 +1855,36 @@
             "tx_eq_attn": 0
           }
       },
-      "lane3": {
-        "mac_ch": 3,
+      "lane1": {
+        "mac_ch": 1,
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1892,14 +1895,14 @@
     {
       "connector": 36,
       "device_id": 0,
-      "mac_block": 43,
+      "mac_block": 44,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
+        "tx_lane": 3,
         "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1908,10 +1911,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1920,9 +1923,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 2,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "rx_lane": 1,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -1932,9 +1935,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -1946,13 +1949,13 @@
     {
       "connector": 37,
       "device_id": 0,
-      "mac_block": 44,
+      "mac_block": 43,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
+        "tx_lane": 2,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "rx_lane": 2,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -1962,10 +1965,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -1974,9 +1977,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -1986,10 +1989,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2000,14 +2003,14 @@
     {
       "connector": 38,
       "device_id": 0,
-      "mac_block": 45,
+      "mac_block": 42,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2016,6 +2019,18 @@
       },
       "lane1": {
         "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
@@ -2026,24 +2041,12 @@
             "tx_eq_attn": 0
           }
       },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2054,14 +2057,14 @@
     {
       "connector": 39,
       "device_id": 0,
-      "mac_block": 46,
+      "mac_block": 41,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
+        "tx_lane": 3,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2070,10 +2073,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2082,10 +2085,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2094,10 +2097,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
+        "tx_lane": 0,
         "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2108,14 +2111,14 @@
     {
       "connector": 40,
       "device_id": 0,
-      "mac_block": 47,
+      "mac_block": 40,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2124,10 +2127,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2136,9 +2139,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 3,
+        "rx_lane": 1,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2148,10 +2151,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2162,13 +2165,13 @@
     {
       "connector": 41,
       "device_id": 0,
-      "mac_block": 32,
+      "mac_block": 39,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2178,9 +2181,9 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
+        "tx_lane": 3,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2190,10 +2193,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2202,10 +2205,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2216,34 +2219,10 @@
     {
       "connector": 42,
       "device_id": 0,
-      "mac_block": 33,
+      "mac_block": 38,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 3,
         "tx_pn_swap": 0,
         "rx_lane": 3,
@@ -2254,11 +2233,35 @@
             "tx_eq_attn": 0
           }
       },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2270,14 +2273,14 @@
     {
       "connector": 43,
       "device_id": 0,
-      "mac_block": 34,
+      "mac_block": 37,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2286,10 +2289,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2298,10 +2301,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 3,
         "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2310,10 +2313,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2324,14 +2327,14 @@
     {
       "connector": 44,
       "device_id": 0,
-      "mac_block": 35,
+      "mac_block": 36,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2340,10 +2343,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 0,
+        "tx_lane": 3,
         "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2352,9 +2355,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 1,
+        "rx_lane": 2,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2364,9 +2367,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2378,10 +2381,34 @@
     {
       "connector": 45,
       "device_id": 0,
-      "mac_block": 36,
+      "mac_block": 35,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
@@ -2392,35 +2419,11 @@
             "tx_eq_attn": 0
           }
       },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2432,13 +2435,13 @@
     {
       "connector": 46,
       "device_id": 0,
-      "mac_block": 37,
+      "mac_block": 34,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2448,9 +2451,9 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2460,10 +2463,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2472,9 +2475,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2486,34 +2489,10 @@
     {
       "connector": 47,
       "device_id": 0,
-      "mac_block": 38,
+      "mac_block": 33,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 1,
         "tx_pn_swap": 0,
         "rx_lane": 1,
@@ -2524,11 +2503,35 @@
             "tx_eq_attn": 0
           }
       },
-      "lane3": {
-        "mac_ch": 3,
+      "lane1": {
+        "mac_ch": 1,
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2540,10 +2543,34 @@
     {
       "connector": 48,
       "device_id": 0,
-      "mac_block": 39,
+      "mac_block": 32,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
         "tx_lane": 3,
         "tx_pn_swap": 0,
         "rx_lane": 3,
@@ -2554,35 +2581,11 @@
             "tx_eq_attn": 0
           }
       },
-      "lane1": {
-        "mac_ch": 1,
+      "lane3": {
+        "mac_ch": 3,
         "tx_lane": 2,
         "tx_pn_swap": 0,
         "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane3": {
-        "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2594,88 +2597,10 @@
     {
       "connector": 49,
       "device_id": 0,
-      "mac_block": 56,
+      "mac_block": 63,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane3": {
-        "mac_ch": 3,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      }
-    },
-    {
-      "connector": 50,
-      "device_id": 0,
-      "mac_block": 57,
-      "media_type": "copper",
-      "lane0": {
-        "mac_ch": 0,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
@@ -2686,11 +2611,89 @@
             "tx_eq_attn": 0
           }
       },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
       "lane3": {
         "mac_ch": 3,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      }
+    },
+    {
+      "connector": 50,
+      "device_id": 0,
+      "mac_block": 62,
+      "media_type": "copper",
+      "lane0": {
+        "mac_ch": 0,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
         "tx_lane": 3,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2702,14 +2705,14 @@
     {
       "connector": 51,
       "device_id": 0,
-      "mac_block": 58,
+      "mac_block": 61,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2718,10 +2721,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
+        "tx_lane": 3,
         "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2730,9 +2733,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2742,9 +2745,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
+        "tx_lane": 1,
+        "tx_pn_swap": 0,
+        "rx_lane": 1,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -2756,34 +2759,10 @@
     {
       "connector": 52,
       "device_id": 0,
-      "mac_block": 59,
+      "mac_block": 60,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
@@ -2794,12 +2773,36 @@
             "tx_eq_attn": 0
           }
       },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -2810,10 +2813,34 @@
     {
       "connector": 53,
       "device_id": 0,
-      "mac_block": 60,
+      "mac_block": 59,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 6,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
         "tx_lane": 0,
         "tx_pn_swap": 0,
         "rx_lane": 0,
@@ -2824,35 +2851,11 @@
             "tx_eq_attn": 0
           }
       },
-      "lane1": {
-        "mac_ch": 1,
+      "lane3": {
+        "mac_ch": 3,
         "tx_lane": 1,
         "tx_pn_swap": 0,
         "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 1,
-        "serdes_params": {
-            "tx_eq_pre": 6,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane3": {
-        "mac_ch": 3,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2864,14 +2867,14 @@
     {
       "connector": 54,
       "device_id": 0,
-      "mac_block": 61,
+      "mac_block": 58,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2880,9 +2883,9 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2892,9 +2895,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 2,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2904,10 +2907,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2918,13 +2921,13 @@
     {
       "connector": 55,
       "device_id": 0,
-      "mac_block": 62,
+      "mac_block": 57,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2934,9 +2937,9 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2946,9 +2949,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 2,
+        "tx_lane": 0,
         "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2958,9 +2961,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 0,
-        "rx_lane": 3,
+        "rx_lane": 1,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -2972,14 +2975,14 @@
     {
       "connector": 56,
       "device_id": 0,
-      "mac_block": 63,
+      "mac_block": 56,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 1,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -2988,9 +2991,9 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -3000,9 +3003,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -3012,9 +3015,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 6,
@@ -3026,13 +3029,13 @@
     {
       "connector": 57,
       "device_id": 0,
-      "mac_block": 48,
+      "mac_block": 55,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 2,
+        "rx_lane": 1,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3042,9 +3045,9 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 3,
+        "tx_lane": 0,
         "tx_pn_swap": 1,
-        "rx_lane": 3,
+        "rx_lane": 0,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3054,10 +3057,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3066,10 +3069,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3080,34 +3083,10 @@
     {
       "connector": 58,
       "device_id": 0,
-      "mac_block": 49,
+      "mac_block": 54,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
@@ -3118,11 +3097,35 @@
             "tx_eq_attn": 0
           }
       },
-      "lane3": {
-        "mac_ch": 3,
+      "lane1": {
+        "mac_ch": 1,
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 1,
+        "rx_lane": 2,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3134,10 +3137,34 @@
     {
       "connector": 59,
       "device_id": 0,
-      "mac_block": 50,
+      "mac_block": 53,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
         "tx_lane": 2,
         "tx_pn_swap": 1,
         "rx_lane": 2,
@@ -3148,36 +3175,12 @@
             "tx_eq_attn": 0
           }
       },
-      "lane1": {
-        "mac_ch": 1,
+      "lane3": {
+        "mac_ch": 3,
         "tx_lane": 3,
         "tx_pn_swap": 1,
         "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane3": {
-        "mac_ch": 3,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3188,34 +3191,10 @@
     {
       "connector": 60,
       "device_id": 0,
-      "mac_block": 51,
+      "mac_block": 52,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 0,
         "tx_pn_swap": 1,
         "rx_lane": 0,
@@ -3226,12 +3205,36 @@
             "tx_eq_attn": 0
           }
       },
-      "lane3": {
-        "mac_ch": 3,
+      "lane1": {
+        "mac_ch": 1,
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
         "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3242,36 +3245,12 @@
     {
       "connector": 61,
       "device_id": 0,
-      "mac_block": 52,
+      "mac_block": 51,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
-        "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 3,
-        "tx_pn_swap": 1,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
         "tx_lane": 0,
-        "tx_pn_swap": 0,
+        "tx_pn_swap": 1,
         "rx_lane": 0,
         "rx_pn_swap": 1,
         "serdes_params": {
@@ -3280,12 +3259,36 @@
             "tx_eq_attn": 0
           }
       },
-      "lane3": {
-        "mac_ch": 3,
+      "lane1": {
+        "mac_ch": 1,
         "tx_lane": 1,
         "tx_pn_swap": 1,
         "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
+        "tx_lane": 2,
+        "tx_pn_swap": 0,
+        "rx_lane": 2,
         "rx_pn_swap": 0,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane3": {
+        "mac_ch": 3,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3296,14 +3299,14 @@
     {
       "connector": 62,
       "device_id": 0,
-      "mac_block": 53,
+      "mac_block": 50,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3312,10 +3315,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3324,10 +3327,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 0,
-        "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 0,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3336,9 +3339,9 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 1,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 1,
+        "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3350,13 +3353,13 @@
     {
       "connector": 63,
       "device_id": 0,
-      "mac_block": 54,
+      "mac_block": 49,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 3,
+        "tx_lane": 1,
         "tx_pn_swap": 1,
-        "rx_lane": 3,
+        "rx_lane": 1,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3366,10 +3369,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 2,
+        "tx_lane": 0,
         "tx_pn_swap": 1,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3378,9 +3381,9 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 3,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
+        "rx_lane": 3,
         "rx_pn_swap": 0,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3390,10 +3393,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
             "tx_eq_post": 0,
@@ -3404,10 +3407,34 @@
     {
       "connector": 64,
       "device_id": 0,
-      "mac_block": 55,
+      "mac_block": 48,
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane1": {
+        "mac_ch": 1,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
+        "serdes_params": {
+            "tx_eq_pre": 11,
+            "tx_eq_post": 0,
+            "tx_eq_attn": 0
+          }
+      },
+      "lane2": {
+        "mac_ch": 2,
         "tx_lane": 3,
         "tx_pn_swap": 0,
         "rx_lane": 3,
@@ -3418,35 +3445,11 @@
             "tx_eq_attn": 0
           }
       },
-      "lane1": {
-        "mac_ch": 1,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
-      "lane2": {
-        "mac_ch": 2,
-        "tx_lane": 1,
-        "tx_pn_swap": 1,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
-        "serdes_params": {
-            "tx_eq_pre": 11,
-            "tx_eq_post": 0,
-            "tx_eq_attn": 0
-          }
-      },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
+        "tx_lane": 2,
         "tx_pn_swap": 1,
-        "rx_lane": 0,
+        "rx_lane": 2,
         "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 11,
@@ -3462,10 +3465,10 @@
       "media_type": "copper",
       "lane0": {
         "mac_ch": 0,
-        "tx_lane": 2,
-        "tx_pn_swap": 0,
-        "rx_lane": 2,
-        "rx_pn_swap": 0,
+        "tx_lane": 0,
+        "tx_pn_swap": 1,
+        "rx_lane": 0,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -3474,10 +3477,10 @@
       },
       "lane1": {
         "mac_ch": 1,
-        "tx_lane": 3,
-        "tx_pn_swap": 0,
-        "rx_lane": 3,
-        "rx_pn_swap": 0,
+        "tx_lane": 1,
+        "tx_pn_swap": 1,
+        "rx_lane": 1,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -3486,10 +3489,10 @@
       },
       "lane2": {
         "mac_ch": 2,
-        "tx_lane": 1,
+        "tx_lane": 2,
         "tx_pn_swap": 0,
-        "rx_lane": 1,
-        "rx_pn_swap": 0,
+        "rx_lane": 2,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
@@ -3498,10 +3501,10 @@
       },
       "lane3": {
         "mac_ch": 3,
-        "tx_lane": 0,
-        "tx_pn_swap": 0,
-        "rx_lane": 0,
-        "rx_pn_swap": 0,
+        "tx_lane": 3,
+        "tx_pn_swap": 1,
+        "rx_lane": 3,
+        "rx_pn_swap": 1,
         "serdes_params": {
             "tx_eq_pre": 6,
             "tx_eq_post": 0,
