@@ -10,6 +10,7 @@
 #include <string>
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_pd_interface.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
@@ -67,6 +68,7 @@ class BFSwitch : public SwitchInterface {
   static std::unique_ptr<BFSwitch> CreateInstance(
       PhalInterface* phal_interface,
       BFChassisManager* bf_chassis_manager,
+      BFPdInterface* bf_pd_interface,
       const std::map<int, BfRtNode*>& unit_to_bfrt_node);
 
   // BFSwitch is neither copyable nor movable.
@@ -80,6 +82,7 @@ class BFSwitch : public SwitchInterface {
   // class.
   BFSwitch(PhalInterface* phal_interface,
            BFChassisManager* bf_chassis_manager,
+           BFPdInterface* bf_pd_interface,
            const std::map<int, BfRtNode*>& unit_to_bfrt_node);
 
   // Helper to get BfRtNode pointer from unit number or return error
@@ -110,6 +113,9 @@ class BFSwitch : public SwitchInterface {
   // At any point of time this map will contain a keys the ids of the nodes
   // which had a successful config push.
   std::map<uint64, BfRtNode*> node_id_to_bfrt_node_;  //  pointers not owned
+
+  // Pointer to a BFPdInterface implementation that wraps PD API calls.
+  BFPdInterface* bf_pd_interface_;  // not owned by this class.
 };
 
 }  // namespace barefoot
