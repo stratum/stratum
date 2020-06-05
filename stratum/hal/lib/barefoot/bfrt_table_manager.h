@@ -21,7 +21,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-class BFRuntimeTableManager {
+class BfRtTableManager {
  public:
   // Initialize pipeline information
   // This function creates a mapping between P4Info and Barefoot Runtime.
@@ -39,7 +39,7 @@ class BFRuntimeTableManager {
     const ::p4::v1::TableEntry& table_entry);
 
   // Creates a table manager instance for a specific unit.
-  static std::unique_ptr<BFRuntimeTableManager> CreateInstance(int unit);
+  static std::unique_ptr<BfRtTableManager> CreateInstance(int unit);
 
  private:
   ::util::Status BuildMapping(uint32_t p4info_id,
@@ -81,7 +81,7 @@ class BFRuntimeTableManager {
 
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BFRuntimeTableManager(int unit);
+  BfRtTableManager(int unit);
 
   // The unit number, which represent the device ID in SDK level.
   int unit_;

@@ -24,7 +24,7 @@ namespace barefoot {
 
 BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BFChassisManager* bf_chassis_manager,
-                   const std::map<int, BFRuntimeNode*>& unit_to_bfrt_node)
+                   const std::map<int, BfRtNode*>& unit_to_bfrt_node)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
       bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
       unit_to_bfrt_node_(unit_to_bfrt_node),
@@ -32,7 +32,7 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
   for (const auto& entry : unit_to_bfrt_node_) {
     CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
     CHECK_NE(entry.second, nullptr)
-        << "Detected null BFRuntimeNode for unit " << entry.first << ".";
+        << "Detected null BfRtNode for unit " << entry.first << ".";
   }
 }
 
@@ -48,7 +48,7 @@ BFSwitch::~BFSwitch() {}
   for (const auto& entry : node_id_to_unit) {
     uint64 node_id = entry.first;
     int unit = entry.second;
-    ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromUnit(unit));
+    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromUnit(unit));
     RETURN_IF_ERROR(bfrt_node->PushChassisConfig(config, node_id));
     node_id_to_bfrt_node_[node_id] = bfrt_node;
   }
@@ -66,7 +66,7 @@ BFSwitch::~BFSwitch() {}
 ::util::Status BFSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->PushForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
 
@@ -79,7 +79,7 @@ BFSwitch::~BFSwitch() {}
 ::util::Status BFSwitch::SaveForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->SaveForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
 
@@ -90,7 +90,7 @@ BFSwitch::~BFSwitch() {}
 }
 
 ::util::Status BFSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->CommitForwardingPipelineConfig());
 
   LOG(INFO) << "P4-based forwarding pipeline config committed successfully to "
@@ -101,7 +101,7 @@ BFSwitch::~BFSwitch() {}
 
 ::util::Status BFSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->VerifyForwardingPipelineConfig(config);
 }
 
@@ -126,7 +126,7 @@ BFSwitch::~BFSwitch() {}
   CHECK_RETURN_IF_FALSE(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(req.device_id()));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(req.device_id()));
   return bfrt_node->WriteForwardingEntries(req, results);
 }
 
@@ -138,25 +138,25 @@ BFSwitch::~BFSwitch() {}
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
 
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(req.device_id()));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(req.device_id()));
   return bfrt_node->ReadForwardingEntries(req, writer, details);
 }
 
 ::util::Status BFSwitch::RegisterPacketReceiveWriter(
     uint64 node_id,
     std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->RegisterPacketReceiveWriter(writer);
 }
 
 ::util::Status BFSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->UnregisterPacketReceiveWriter();
 }
 
 ::util::Status BFSwitch::TransmitPacket(uint64 node_id,
                                         const ::p4::v1::PacketOut& packet) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBFRuntimeNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->TransmitPacket(packet);
 }
 
@@ -219,22 +219,22 @@ BFSwitch::~BFSwitch() {}
 std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
     PhalInterface* phal_interface,
     BFChassisManager* bf_chassis_manager,
-    const std::map<int, BFRuntimeNode*>& unit_to_bfrt_node) {
+    const std::map<int, BfRtNode*>& unit_to_bfrt_node) {
   return absl::WrapUnique(
       new BFSwitch(phal_interface, bf_chassis_manager, unit_to_bfrt_node));
 }
 
-::util::StatusOr<BFRuntimeNode*> BFSwitch::GetBFRuntimeNodeFromUnit(int unit) const {
-  BFRuntimeNode* bfrt_node = gtl::FindPtrOrNull(unit_to_bfrt_node_, unit);
+::util::StatusOr<BfRtNode*> BFSwitch::GetBfRtNodeFromUnit(int unit) const {
+  BfRtNode* bfrt_node = gtl::FindPtrOrNull(unit_to_bfrt_node_, unit);
   if (bfrt_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
   }
   return bfrt_node;
 }
 
-::util::StatusOr<BFRuntimeNode*> BFSwitch::GetBFRuntimeNodeFromNodeId(
+::util::StatusOr<BfRtNode*> BFSwitch::GetBfRtNodeFromNodeId(
     uint64 node_id) const {
-  BFRuntimeNode* bfrt_node = gtl::FindPtrOrNull(node_id_to_bfrt_node_, node_id);
+  BfRtNode* bfrt_node = gtl::FindPtrOrNull(node_id_to_bfrt_node_, node_id);
   if (bfrt_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Node with ID " << node_id
