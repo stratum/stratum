@@ -1,5 +1,5 @@
 {
-  "_comment": "Auto-generated configuration file for bspless support (pltfm_bd_map_mavericks_P0C.h)",
+  "_comment": "Auto-generated configuration file for bspless support (pltfm_bd_map_mavericks_P0C.h) on x86-64-stordis-bf2556x-1t-r0",
   "board_lane_map_entry": [
     {
       "connector": 1,
