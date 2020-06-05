@@ -80,14 +80,14 @@ namespace barefoot {
   // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
   // does not do any device id checks.
 
-  auto bfrt_node = BFRuntimeNode::CreateInstance(unit);
+  auto bfrt_node = BfRtNode::CreateInstance(unit);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
   } else {
     phal_impl = phal::Phal::CreateSingleton();
   }
-  std::map<int, BFRuntimeNode*> unit_to_bfrt_node = {
+  std::map<int, BfRtNode*> unit_to_bfrt_node = {
     {unit, bfrt_node.get()},
   };
   auto bf_chassis_manager = BFChassisManager::CreateInstance(
