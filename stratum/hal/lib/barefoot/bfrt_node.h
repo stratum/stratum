@@ -7,16 +7,17 @@
 #include <memory>
 #include <vector>
 
-#include "bf_rt/bf_rt_init.hpp"
 #include "absl/synchronization/mutex.h"
-#include "stratum/glue/integral_types.h"
-#include "stratum/glue/status/status.h"
-#include "stratum/hal/lib/common/common.pb.h"
-#include "stratum/hal/lib/common/writer_interface.h"
+#include "bf_rt/bf_rt_init.hpp"
 #include "p4/v1/p4runtime.grpc.pb.h"
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/barefoot/macros.h"
+#include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 
 #define _PI_UPDATE_MAX_NAME_SIZE 100
 #define _PI_UPDATE_MAX_TMP_FILENAME_SIZE (_PI_UPDATE_MAX_NAME_SIZE + 32)
@@ -27,7 +28,7 @@ namespace barefoot {
 
 // The BfRtNode class encapsulates all per P4-native node/chip/ASIC
 // functionalities, primarily the flow managers. Calls made to this class are
-// processed and passed through to the Barefoot Runtime API.
+// processed and passed through to the BfRt API.
 class BfRtNode final {
  public:
   ~BfRtNode();
@@ -109,10 +110,13 @@ class BfRtNode final {
 
   // Stored pipeline information in this node
   p4::config::v1::P4Info p4info_;
-  const bfrt::BfRtInfo *bfrt_info_;
+  const bfrt::BfRtInfo* bfrt_info_;
 
   // Table manager that manages table entries
   std::unique_ptr<BfRtTableManager> bfrt_tbl_mgr_;
+
+  // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
+  std::unique_ptr<BfRtIdMapper> bfrt_id_mapper_;
 
   const bfrt::BfRtDevMgr& bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
 };
