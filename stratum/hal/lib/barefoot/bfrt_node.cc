@@ -143,6 +143,23 @@ BfRtNode::~BfRtNode() = default;
   if (written == -1) {
     RETURN_ERROR() << "error when writing bfrt file " << ctx_json_path_;
   }
+
+  char actual_tofino_bin_path_[PATH_MAX + 1];
+  char actual_ctx_json_path_[PATH_MAX + 1];
+  char actual_bfrt_file_path_[PATH_MAX + 1];
+  CHECK_RETURN_IF_FALSE(realpath(tofino_bin_path_, actual_tofino_bin_path_) !=
+                        NULL);
+  CHECK_RETURN_IF_FALSE(realpath(ctx_json_path_, actual_ctx_json_path_) !=
+                        NULL);
+  CHECK_RETURN_IF_FALSE(realpath(bfrt_file_path_, actual_bfrt_file_path_) !=
+                        NULL);
+  ::strncpy(tofino_bin_path_, actual_tofino_bin_path_,
+            _PI_UPDATE_MAX_TMP_FILENAME_SIZE);
+  ::strncpy(ctx_json_path_, actual_ctx_json_path_,
+            _PI_UPDATE_MAX_TMP_FILENAME_SIZE);
+  ::strncpy(bfrt_file_path_, actual_bfrt_file_path_,
+            _PI_UPDATE_MAX_TMP_FILENAME_SIZE);
+
   return ::util::OkStatus();
 }
 
@@ -154,29 +171,29 @@ BfRtNode::~BfRtNode() = default;
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_begin(
       unit_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
       /* upgrade_agents */ true));
-  bf_device_profile_t device_profile;
+  bf_device_profile_t device_profile = {};
 
   // TODO(Yi): Now we only support single P4 program
   device_profile.num_p4_programs = 1;
-  bf_p4_program_t p4_program = device_profile.p4_programs[0];
-  strncpy(p4_program.prog_name, prog_name_, _PI_UPDATE_MAX_NAME_SIZE);
-  p4_program.bfrt_json_file = bfrt_file_path_;
-  p4_program.num_p4_pipelines = 1;
+  bf_p4_program_t* p4_program = &device_profile.p4_programs[0];
+  strncpy(p4_program->prog_name, prog_name_, _PI_UPDATE_MAX_NAME_SIZE);
+  p4_program->bfrt_json_file = bfrt_file_path_;
+  p4_program->num_p4_pipelines = 1;
 
   // TODO(Yi): Now we applies single pipelines to all HW pipeline
-  bf_p4_pipeline_t pipeline_profile = p4_program.p4_pipelines[0];
-  strcpy(pipeline_profile.p4_pipeline_name, "pipe");
-  pipeline_profile.cfg_file = tofino_bin_path_;
-  pipeline_profile.runtime_context_file = ctx_json_path_;
+  bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[0];
+  strcpy(pipeline_profile->p4_pipeline_name, "pipe");
+  pipeline_profile->cfg_file = tofino_bin_path_;
+  pipeline_profile->runtime_context_file = ctx_json_path_;
 
   // FIXME(YI): do we need to put p4info here?
-  pipeline_profile.pi_config_file = nullptr;
+  pipeline_profile->pi_config_file = nullptr;
 
   // Single P4 pipeline for all HW pipeline
-  pipeline_profile.num_pipes_in_scope = 4;
+  pipeline_profile->num_pipes_in_scope = 4;
   // pipe_scope = [0, 1, 2, 3]
   for (int p = 0; p < 4; ++p) {
-    pipeline_profile.pipe_scope[p] = p;
+    pipeline_profile->pipe_scope[p] = p;
   }
 
   BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));

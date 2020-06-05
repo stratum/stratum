@@ -70,12 +70,16 @@ class BooleanBfStatus {
   bf_status_t status_;
 };
 
+// TODO: Rename to RETURN_IF_BFRT_ERROR
 #define BFRT_RETURN_IF_ERROR(expr) \
   if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) { \
   } else /* NOLINT */ \
     return MAKE_ERROR(__ret.error_code()) \
            << "'" << #expr << "' failed with error message: " \
            << FixMessage(bf_err_str(__ret.status()))
+
+#define RETURN_IF_BFRT_ERROR BFRT_RETURN_IF_ERROR
+
 #endif
 
 }  // namespace barefoot
