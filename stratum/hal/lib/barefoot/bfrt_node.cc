@@ -20,34 +20,34 @@ extern "C" {
 namespace stratum {
 namespace hal {
 namespace barefoot {
-BFRuntimeNode::~BFRuntimeNode() = default;
+BfRtNode::~BfRtNode() = default;
 
-::util::Status BFRuntimeNode::PushChassisConfig(const ChassisConfig& config,
+::util::Status BfRtNode::PushChassisConfig(const ChassisConfig& config,
                                                 uint64 node_id) {
   (void)config;
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
   initialized_ = true;
-  bfrt_tbl_mgr_ = BFRuntimeTableManager::CreateInstance(unit_);
+  bfrt_tbl_mgr_ = BfRtTableManager::CreateInstance(unit_);
 
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::VerifyChassisConfig(const ChassisConfig& config,
+::util::Status BfRtNode::VerifyChassisConfig(const ChassisConfig& config,
                                                   uint64 node_id) {
   (void)config;
   (void)node_id;
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::PushForwardingPipelineConfig(
+::util::Status BfRtNode::PushForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   // SaveForwardingPipelineConfig + CommitForwardingPipelineConfig
   RETURN_IF_ERROR(SaveForwardingPipelineConfig(config));
   return CommitForwardingPipelineConfig();
 }
 
-::util::Status BFRuntimeNode::SaveForwardingPipelineConfig(
+::util::Status BfRtNode::SaveForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
   RETURN_IF_ERROR(VerifyForwardingPipelineConfig(config));
@@ -129,7 +129,7 @@ BFRuntimeNode::~BFRuntimeNode() = default;
         << "error when writing context file " << ctx_json_path_;
   }
 
-  // BFRuntime JSON file
+  // BfRt JSON file
   memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
   device_data_curr += sizeof(uint32_t);
   snprintf(bfrt_file_path_,
@@ -153,7 +153,7 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::CommitForwardingPipelineConfig() {
+::util::Status BfRtNode::CommitForwardingPipelineConfig() {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     RETURN_ERROR() << "Not initialized";
@@ -199,7 +199,7 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::VerifyForwardingPipelineConfig(
+::util::Status BfRtNode::VerifyForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config) {
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
@@ -207,19 +207,19 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::Shutdown() {
+::util::Status BfRtNode::Shutdown() {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::Freeze() {
+::util::Status BfRtNode::Freeze() {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::Unfreeze() {
+::util::Status BfRtNode::Unfreeze() {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::WriteForwardingEntries(
+::util::Status BfRtNode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   absl::WriterMutexLock l(&lock_);
   auto session = bfrt::BfRtSession::sessionCreate();
@@ -252,37 +252,37 @@ BFRuntimeNode::~BFRuntimeNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::ReadForwardingEntries(const ::p4::v1::ReadRequest& req,
+::util::Status BfRtNode::ReadForwardingEntries(const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::RegisterPacketReceiveWriter(
+::util::Status BfRtNode::RegisterPacketReceiveWriter(
     const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
 return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::UnregisterPacketReceiveWriter() {
+::util::Status BfRtNode::UnregisterPacketReceiveWriter() {
 return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status BfRtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
 return ::util::OkStatus();
 }
 
 // Factory function for creating the instance of the class.
-std::unique_ptr<BFRuntimeNode> BFRuntimeNode::CreateInstance(int unit) {
-  return absl::WrapUnique(new BFRuntimeNode(unit));
+std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(int unit) {
+  return absl::WrapUnique(new BfRtNode(unit));
 }
 
-BFRuntimeNode::BFRuntimeNode(int unit)
+BfRtNode::BfRtNode(int unit)
     : unit_(unit), pipeline_initialized_(false),
       initialized_(false), node_id_(0) {
   // bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
 }
 
-void BFRuntimeNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
+void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   // acquire the lock during the Write: SendPacketIn may be called from
   // different threads and Write is not thread-safe.
   absl::MutexLock l(&rx_writer_lock_);

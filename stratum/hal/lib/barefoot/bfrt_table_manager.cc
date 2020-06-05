@@ -11,7 +11,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::Status BFRuntimeTableManager::PushPipelineInfo(
+::util::Status BfRtTableManager::PushPipelineInfo(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   bfrt_info_ = bfrt_info;
@@ -19,7 +19,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeTableManager::BuildMapping(uint32_t p4info_id,
+::util::Status BfRtTableManager::BuildMapping(uint32_t p4info_id,
                                                    std::string p4info_name,
                                                    const bfrt::BfRtInfo* bfrt_info) {
   const bfrt::BfRtTable* table;
@@ -70,7 +70,7 @@ namespace barefoot {
 // However for some cases, like externs which does not exists
 // in native P4 core headers, the frontend compiler will
 // generate different IDs between p4info and bfrt info.
-::util::Status BFRuntimeTableManager::BuildP4InfoAndBfrtInfoMapping(
+::util::Status BfRtTableManager::BuildP4InfoAndBfrtInfoMapping(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
 
   // Try to find P4 tables from BFRT info
@@ -89,7 +89,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeTableManager::BuildTableKey(const ::p4::v1::TableEntry& table_entry,
+::util::Status BfRtTableManager::BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                                     bfrt::BfRtTableKey *table_key) {
   for (auto mk : table_entry.match()) {
     bf_rt_id_t field_id = mk.field_id();
@@ -135,7 +135,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeTableManager::BuildTableActionData(
+::util::Status BfRtTableManager::BuildTableActionData(
     const ::p4::v1::Action& action,
     const bfrt::BfRtTable *table,
     bfrt::BfRtTableData* table_data) {
@@ -149,7 +149,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeTableManager::BuildTableActionProfileMemberData(
+::util::Status BfRtTableManager::BuildTableActionProfileMemberData(
   const uint32_t action_profile_member_id,
   const bfrt::BfRtTable *table,
   bfrt::BfRtTableData* table_data) {
@@ -162,7 +162,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeTableManager::BuildTableActionProfileGroupData(
+::util::Status BfRtTableManager::BuildTableActionProfileGroupData(
   const uint32_t action_profile_group_id,
   const bfrt::BfRtTable *table,
   bfrt::BfRtTableData* table_data) {
@@ -175,7 +175,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BFRuntimeTableManager::BuildTableData(
+::util::Status BfRtTableManager::BuildTableData(
     const ::p4::v1::TableEntry table_entry,
     const bfrt::BfRtTable *table,
     bfrt::BfRtTableData* table_data) {
@@ -196,7 +196,7 @@ namespace barefoot {
   }
 }
 
-::util::Status BFRuntimeTableManager::WriteTableEntry(
+::util::Status BfRtTableManager::WriteTableEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
@@ -235,7 +235,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<::p4::v1::TableEntry> BFRuntimeTableManager::ReadTableEntry(
+::util::StatusOr<::p4::v1::TableEntry> BfRtTableManager::ReadTableEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::TableEntry& table_entry) {
   const bfrt::BfRtTable* table;
@@ -293,7 +293,7 @@ namespace barefoot {
   return result;
 }
 
-::util::StatusOr<uint32_t> BFRuntimeTableManager::GetBfRtId(
+::util::StatusOr<uint32_t> BfRtTableManager::GetBfRtId(
     uint32_t p4info_id) {
   auto it = p4info_to_bfrt_id_.find(p4info_id);
   CHECK_RETURN_IF_FALSE(it != p4info_to_bfrt_id_.end())
@@ -301,7 +301,7 @@ namespace barefoot {
   return it->second;
 }
 
-::util::StatusOr<uint32_t> BFRuntimeTableManager::GetP4InfoId(
+::util::StatusOr<uint32_t> BfRtTableManager::GetP4InfoId(
     bf_rt_id_t bfrt_id) {
   auto it = bfrt_to_p4info_id_.find(bfrt_id);
   CHECK_RETURN_IF_FALSE(it != bfrt_to_p4info_id_.end())
@@ -309,12 +309,12 @@ namespace barefoot {
   return it->second;
 }
 
-std::unique_ptr<BFRuntimeTableManager> BFRuntimeTableManager::CreateInstance(
+std::unique_ptr<BfRtTableManager> BfRtTableManager::CreateInstance(
     int unit) {
-  return absl::WrapUnique(new BFRuntimeTableManager(unit));
+  return absl::WrapUnique(new BfRtTableManager(unit));
 }
 
-::util::StatusOr<bf_rt_target_t> BFRuntimeTableManager::GetDeviceTarget(
+::util::StatusOr<bf_rt_target_t> BfRtTableManager::GetDeviceTarget(
     bf_rt_id_t bfrt_id) {
   bf_rt_target_t dev_tgt;
   dev_tgt.dev_id = unit_;
@@ -322,7 +322,7 @@ std::unique_ptr<BFRuntimeTableManager> BFRuntimeTableManager::CreateInstance(
   return dev_tgt;
 }
 
-BFRuntimeTableManager::BFRuntimeTableManager(int unit): unit_(unit) {}
+BfRtTableManager::BfRtTableManager(int unit): unit_(unit) {}
 
 }  // namespace barefoot
 }  // namespace hal

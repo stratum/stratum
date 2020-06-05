@@ -25,12 +25,12 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-// The BFRuntimeNode class encapsulates all per P4-native node/chip/ASIC
+// The BfRtNode class encapsulates all per P4-native node/chip/ASIC
 // functionalities, primarily the flow managers. Calls made to this class are
 // processed and passed through to the Barefoot Runtime API.
-class BFRuntimeNode final {
+class BfRtNode final {
  public:
-  ~BFRuntimeNode();
+  ~BfRtNode();
 
   ::util::Status PushChassisConfig(const ChassisConfig& config, uint64 node_id)
       LOCKS_EXCLUDED(lock_);
@@ -60,18 +60,18 @@ class BFRuntimeNode final {
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BFRuntimeNode> CreateInstance(int unit);
+  static std::unique_ptr<BfRtNode> CreateInstance(int unit);
 
-  // BFRuntimeNode is neither copyable nor movable.
-  BFRuntimeNode(const BFRuntimeNode&) = delete;
-  BFRuntimeNode& operator=(const BFRuntimeNode&) = delete;
-  BFRuntimeNode(BFRuntimeNode&&) = delete;
-  BFRuntimeNode& operator=(BFRuntimeNode&&) = delete;
+  // BfRtNode is neither copyable nor movable.
+  BfRtNode(const BfRtNode&) = delete;
+  BfRtNode& operator=(const BfRtNode&) = delete;
+  BfRtNode(BfRtNode&&) = delete;
+  BfRtNode& operator=(BfRtNode&&) = delete;
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFRuntimeNode(int unit);
+  BfRtNode(int unit);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
@@ -112,7 +112,7 @@ class BFRuntimeNode final {
   const bfrt::BfRtInfo *bfrt_info_;
 
   // Table manager that manages table entries
-  std::unique_ptr<BFRuntimeTableManager> bfrt_tbl_mgr_;
+  std::unique_ptr<BfRtTableManager> bfrt_tbl_mgr_;
 
   const bfrt::BfRtDevMgr& bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
 };
