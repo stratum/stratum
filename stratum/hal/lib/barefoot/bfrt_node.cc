@@ -268,12 +268,12 @@ std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
 
 BFRuntimeNode::BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
                         ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit)
-    : unit_(unit),
-      pipeline_initialized_(false),
+    : pipeline_initialized_(false),
       initialized_(false),
-      node_id_(0),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
-      bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)) {}
+      bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
+      node_id_(0),
+      unit_(unit) {}
 
 void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   // acquire the lock during the Write: SendPacketIn may be called from
