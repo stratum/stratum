@@ -54,7 +54,7 @@ class P4Service final : public ::p4::v1::P4Runtime::Service {
           uri_(uri),
           stream_(stream) {}
     // TODO(unknown): Done for unit testing. Find a better way.
-    // stream_(CHECK_NOTNULL(stream)) {}
+    // stream_(ABSL_DIE_IF_NULL(stream)) {}
     uint64 connection_id() const { return connection_id_; }
     uint64 election_id_high() const {
       return absl::Uint128High64(election_id_);
