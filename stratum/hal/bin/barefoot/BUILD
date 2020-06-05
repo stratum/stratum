@@ -11,6 +11,17 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
+stratum_bf_common_deps = [
+    "//stratum/glue:init_google",
+    "//stratum/glue:logging",
+    "//stratum/hal/lib/common:hal",
+    "//stratum/hal/lib/phal:phal_sim",
+    "//stratum/hal/lib/phal",
+    "//stratum/lib/security:auth_policy_checker",
+    "//stratum/lib/security:credentials_manager",
+    "@com_github_google_glog//:glog",
+]
+
 stratum_cc_binary(
     name = "stratum_bf",
     srcs = [
@@ -22,15 +33,10 @@ stratum_cc_binary(
         "tofino_skip_p4_no_bsp.conf",
     ],
     deps = [
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
         "//stratum/hal/lib/barefoot:bf_pal_wrapper",
         "//stratum/hal/lib/barefoot:bf_pd_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
-        "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/phal",
-        "//stratum/hal/lib/phal:phal_sim",
         "//stratum/hal/lib/pi:pi_node_bf",
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
@@ -50,25 +56,17 @@ stratum_cc_binary(
         "tofino_skip_p4_no_bsp.conf",
     ],
     deps = [
-        "//stratum/glue:init_google",
-        "//stratum/glue:logging",
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
         "//stratum/hal/lib/barefoot:bf_pal_wrapper",
         "//stratum/hal/lib/barefoot:bf_pd_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch_bfrt",
         "//stratum/hal/lib/barefoot:bfrt_node",
-        "//stratum/hal/lib/common:hal",
-        "//stratum/hal/lib/phal",
-        "//stratum/hal/lib/phal:phal_sim",
-        "//stratum/lib/security:auth_policy_checker",
-        "//stratum/lib/security:credentials_manager",
-        "@com_github_google_glog//:glog",
         "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_headers",
         "@local_barefoot_bin//:bf_switchd",
         "@local_barefoot_bin//:bf_sys",
         "@local_barefoot_bin//:bf_utils",
-    ],
+    ] + stratum_bf_common_deps,
 )
 
 stratum_cc_binary(
@@ -99,8 +97,8 @@ pkg_tar(
 pkg_tar(
     name = "stratum_bfrt_binaries",
     srcs = [
-        ":stratum_bfrt",
         "deb/stratum-entrypoint",
+        ":stratum_bfrt",
     ],
     mode = "0755",
     package_dir = "/usr/bin",
@@ -139,10 +137,8 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "stratum_bf_data",
-    extension = "tar.gz",
+    name = "stratum_common_data",
     deps = [
-        ":stratum_binaries",
         ":stratum_configs",
         ":stratum_shareable_files",
         ":systemd_service",
@@ -153,22 +149,25 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "stratum_bf_data",
+    deps = [
+        ":stratum_binaries",
+        ":stratum_common_data",
+    ],
+)
+
+pkg_tar(
     name = "stratum_bfrt_data",
-    extension = "tar.gz",
     deps = [
         ":stratum_bfrt_binaries",
-        ":systemd_service",
-        ":stratum_shareable_files",
-        ":stratum_configs",
-        "@local_barefoot_bin//:bf_library_files",
-        "@local_barefoot_bin//:bf_shareable_files",
-        "@local_barefoot_bin//:kernel_module",
+        ":stratum_common_data",
     ],
 )
 
 pkg_deb(
     name = "stratum_bf_deb",
     architecture = "amd64",
+    conflicts = ["stratum-bf"],
     data = ":stratum_bf_data",
     depends = [
         "systemd",
@@ -182,7 +181,6 @@ pkg_deb(
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
     package = "stratum-bf",
-    conflicts = ["stratum-bf"],
     postinst = "deb/postinst",
     prerm = "deb/prerm",
     version = "0.0.1",
@@ -191,6 +189,7 @@ pkg_deb(
 pkg_deb(
     name = "stratum_bfrt_deb",
     architecture = "amd64",
+    conflicts = ["stratum-bf"],
     data = ":stratum_bfrt_data",
     depends = [
         "systemd",
@@ -200,7 +199,6 @@ pkg_deb(
         "libjudydebian1",
         "libboost-thread1.62.0",
     ],
-    conflicts = ["stratum-bf"],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
     maintainer = "The Stratum Project",
