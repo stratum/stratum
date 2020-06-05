@@ -114,6 +114,15 @@ namespace barefoot {
       RETURN_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported action type: " << table_entry.action().type_case();
   }
+
+  // Priority
+  if (table_entry.priority() != 0) {
+    bf_rt_id_t priority_field_id;
+    BFRT_RETURN_IF_ERROR(
+        table->dataFieldIdGet("$PRIORITY", &priority_field_id));
+    BFRT_RETURN_IF_ERROR(table_data->setValue(
+        priority_field_id, static_cast<uint64_t>(table_entry.priority())));
+  }
 }
 
 ::util::Status BfRtTableManager::WriteTableEntry(
