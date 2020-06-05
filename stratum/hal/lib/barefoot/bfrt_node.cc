@@ -5,15 +5,17 @@
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 
 #include <memory>
+
 #include "absl/memory/memory.h"
 #include "bf_rt/bf_rt_init.hpp"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/status/status_macros.h"
-#include "stratum/public/proto/error.pb.h"
 #include "stratum/lib/macros.h"
+#include "stratum/public/proto/error.pb.h"
 
 extern "C" {
 #include <unistd.h>
+
 #include "tofino/bf_pal/dev_intf.h"
 }
 
@@ -23,18 +25,17 @@ namespace barefoot {
 BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::PushChassisConfig(const ChassisConfig& config,
-                                                uint64 node_id) {
+                                           uint64 node_id) {
   (void)config;
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
   initialized_ = true;
-  bfrt_tbl_mgr_ = BfRtTableManager::CreateInstance(unit_);
 
   return ::util::OkStatus();
 }
 
 ::util::Status BfRtNode::VerifyChassisConfig(const ChassisConfig& config,
-                                                  uint64 node_id) {
+                                             uint64 node_id) {
   (void)config;
   (void)node_id;
   return ::util::OkStatus();
@@ -72,7 +73,7 @@ BfRtNode::~BfRtNode() = default;
   // }
 
   // From BF-PI implementation
-  const char *device_data_curr = p4_device_config;
+  const char* device_data_curr = p4_device_config;
   uint32_t chunk_size;
   memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
   device_data_curr += sizeof(uint32_t);
@@ -88,14 +89,12 @@ BfRtNode::~BfRtNode() = default;
   // Tofino bin
   memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
   device_data_curr += sizeof(uint32_t);
-  snprintf(tofino_bin_path_,
-           _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
-           "%s-tofino.bin.XXXXXX",
-           prog_name_);
+  snprintf(tofino_bin_path_, _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
+           "%s-tofino.bin.XXXXXX", prog_name_);
   int cfg_fd = mkstemp(tofino_bin_path_);
   if (cfg_fd == -1) {
-    RETURN_ERROR()
-        << "error when trying to create temp bin file " << tofino_bin_path_;
+    RETURN_ERROR() << "error when trying to create temp bin file "
+                   << tofino_bin_path_;
   }
   ssize_t written = 0;
   while ((written = write(cfg_fd, device_data_curr, chunk_size)) != -1) {
@@ -110,14 +109,12 @@ BfRtNode::~BfRtNode() = default;
   // Context JSON file
   memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
   device_data_curr += sizeof(uint32_t);
-  snprintf(ctx_json_path_,
-           _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
-           "%s-ctx.json.XXXXXX",
-           prog_name_);
+  snprintf(ctx_json_path_, _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
+           "%s-ctx.json.XXXXXX", prog_name_);
   int ctx_fd = mkstemp(ctx_json_path_);
   if (ctx_fd == -1) {
-    RETURN_ERROR()
-        << "error when trying to create temp context file " << ctx_json_path_;
+    RETURN_ERROR() << "error when trying to create temp context file "
+                   << ctx_json_path_;
   }
   while ((written = write(ctx_fd, device_data_curr, chunk_size)) != -1) {
     device_data_curr += written;
@@ -125,21 +122,18 @@ BfRtNode::~BfRtNode() = default;
     if (chunk_size == 0) break;
   }
   if (written == -1) {
-    RETURN_ERROR()
-        << "error when writing context file " << ctx_json_path_;
+    RETURN_ERROR() << "error when writing context file " << ctx_json_path_;
   }
 
   // BfRt JSON file
   memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
   device_data_curr += sizeof(uint32_t);
-  snprintf(bfrt_file_path_,
-           _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
-           "%s-bfrt.json.XXXXXX",
-           prog_name_);
+  snprintf(bfrt_file_path_, _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
+           "%s-bfrt.json.XXXXXX", prog_name_);
   int bfrt_fd = mkstemp(bfrt_file_path_);
   if (bfrt_fd == -1) {
-    RETURN_ERROR()
-        << "error when trying to create temp bfrt file " << bfrt_file_path_;
+    RETURN_ERROR() << "error when trying to create temp bfrt file "
+                   << bfrt_file_path_;
   }
   while ((written = write(bfrt_fd, device_data_curr, chunk_size)) != -1) {
     device_data_curr += written;
@@ -147,8 +141,7 @@ BfRtNode::~BfRtNode() = default;
     if (chunk_size == 0) break;
   }
   if (written == -1) {
-    RETURN_ERROR()
-        << "error when writing bfrt file " << ctx_json_path_;
+    RETURN_ERROR() << "error when writing bfrt file " << ctx_json_path_;
   }
   return ::util::OkStatus();
 }
@@ -159,10 +152,8 @@ BfRtNode::~BfRtNode() = default;
     RETURN_ERROR() << "Not initialized";
   }
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_begin(
-          unit_,
-          BF_DEV_WARM_INIT_FAST_RECFG,
-          BF_DEV_SERDES_UPD_NONE,
-          /* upgrade_agents */true));
+      unit_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
+      /* upgrade_agents */ true));
   bf_device_profile_t device_profile;
 
   // TODO(Yi): Now we only support single P4 program
@@ -191,33 +182,28 @@ BfRtNode::~BfRtNode() = default;
   BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
 
-  // Push pipeline config to the table manager
-  BFRT_RETURN_IF_ERROR(bfrt_dev_mgr_.bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
-  bfrt_tbl_mgr_->PushPipelineInfo(p4info_, bfrt_info_);
+  // Push pipeline config to the ID mapper
+  BFRT_RETURN_IF_ERROR(
+      bfrt_dev_mgr_.bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
+  bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_);
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
 }
 
 ::util::Status BfRtNode::VerifyForwardingPipelineConfig(
-      const ::p4::v1::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) {
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
       << "Missing P4 device config";
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::Shutdown() {
-  return ::util::OkStatus();
-}
+::util::Status BfRtNode::Shutdown() { return ::util::OkStatus(); }
 
-::util::Status BfRtNode::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status BfRtNode::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BfRtNode::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status BfRtNode::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status BfRtNode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
@@ -228,9 +214,10 @@ BfRtNode::~BfRtNode() = default;
   for (auto update : req.updates()) {
     auto update_type = update.type();
     auto entity = update.entity();
-    switch(entity.entity_case()) {
+    switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry:
-        status = bfrt_tbl_mgr_->WriteTableEntry(session, update_type, entity.table_entry());
+        status = bfrt_tbl_mgr_->WriteTableEntry(session, update_type,
+                                                entity.table_entry());
         break;
       case ::p4::v1::Entity::kExternEntry:
       case ::p4::v1::Entity::kActionProfileMember:
@@ -244,15 +231,16 @@ BfRtNode::~BfRtNode() = default;
       case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
       default:
-        results->push_back(MAKE_ERROR()
-            << "Unsupported entity type: " << update.ShortDebugString());
+        results->push_back(MAKE_ERROR() << "Unsupported entity type: "
+                                        << update.ShortDebugString());
     }
   }
   session->endBatch(true);
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::ReadForwardingEntries(const ::p4::v1::ReadRequest& req,
+::util::Status BfRtNode::ReadForwardingEntries(
+    const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   return ::util::OkStatus();
@@ -260,15 +248,15 @@ BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::RegisterPacketReceiveWriter(
     const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
-return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 ::util::Status BfRtNode::UnregisterPacketReceiveWriter() {
-return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 ::util::Status BfRtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
-return ::util::OkStatus();
+  return ::util::OkStatus();
 }
 
 // Factory function for creating the instance of the class.
@@ -277,9 +265,13 @@ std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(int unit) {
 }
 
 BfRtNode::BfRtNode(int unit)
-    : unit_(unit), pipeline_initialized_(false),
-      initialized_(false), node_id_(0) {
-  // bfrt_dev_mgr_ = bfrt::BfRtDevMgr::getInstance();
+    : unit_(unit),
+      pipeline_initialized_(false),
+      initialized_(false),
+      node_id_(0) {
+  bfrt_id_mapper_ = BfRtIdMapper::CreateInstance(unit_);
+  bfrt_tbl_mgr_ =
+      BfRtTableManager::CreateInstance(unit_, bfrt_id_mapper_.get());
 }
 
 void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
@@ -289,7 +281,6 @@ void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
   if (rx_writer_ == nullptr) return;
   rx_writer_->Write(packet);
 }
-
 
 }  // namespace barefoot
 }  // namespace hal

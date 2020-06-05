@@ -204,25 +204,26 @@ stratum_cc_library(
     srcs = ["bfrt_node.cc"],
     hdrs = ["bfrt_node.h"],
     deps = [
-        ":macros",
+        ":bfrt_id_mapper",
         ":bfrt_table_manager",
+        ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
-        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/public/proto:error_cc_proto",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_headers",
         "@local_barefoot_bin//:bf_switchd",
-        "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_sys",
         "@local_barefoot_bin//:bf_utils",
-    ]
+    ],
 )
 
 stratum_cc_library(
@@ -230,28 +231,52 @@ stratum_cc_library(
     srcs = ["bfrt_table_manager.cc"],
     hdrs = ["bfrt_table_manager.h"],
     deps = [
+        ":bfrt_id_mapper",
         ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
+        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
-        "//stratum/glue/status:status",
         "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
-        "//stratum/hal/lib/common:common_cc_proto",
         "//stratum/public/proto:error_cc_proto",
-        "@com_google_absl//absl/strings:strings",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_googleapis//google/rpc:status_cc_proto",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_headers",
         "@local_barefoot_bin//:bf_switchd",
-        "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_sys",
         "@local_barefoot_bin//:bf_utils",
-    ]
+    ],
+)
+
+stratum_cc_library(
+    name = "bfrt_id_mapper",
+    srcs = ["bfrt_id_mapper.cc"],
+    hdrs = ["bfrt_id_mapper.h"],
+    deps = [
+        ":macros",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:writer_interface",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/public/proto:error_cc_proto",
+        "@com_github_p4lang_p4runtime//:p4info_cc_proto",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@local_barefoot_bin//:bf_headers",
+    ],
 )
 
 stratum_cc_library(
@@ -260,5 +285,5 @@ stratum_cc_library(
     deps = [
         "//stratum/lib:macros",
         "@local_barefoot_bin//:bf_headers",
-    ]
+    ],
 )
