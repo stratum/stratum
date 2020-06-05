@@ -26,9 +26,11 @@ namespace barefoot {
 
 BFSwitch::BFSwitch(PhalInterface* phal_interface,
                    BFChassisManager* bf_chassis_manager,
+                   BFPdInterface* bf_pd_interface,
                    const std::map<int, PINode*>& unit_to_pi_node)
     : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
       bf_chassis_manager_(ABSL_DIE_IF_NULL(bf_chassis_manager)),
+      bf_pd_interface_(ABSL_DIE_IF_NULL(bf_pd_interface)),
       unit_to_pi_node_(unit_to_pi_node),
       node_id_to_pi_node_() {
   for (const auto& entry : unit_to_pi_node_) {
@@ -75,6 +77,14 @@ BFSwitch::~BFSwitch() {}
   LOG(INFO) << "P4-based forwarding pipeline config pushed successfully to "
             << "node with ID " << node_id << ".";
 
+  ASSIGN_OR_RETURN(const auto& node_id_to_unit,
+                   bf_chassis_manager_->GetNodeIdToUnitMap());
+
+  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_unit, node_id))
+      << "Unable to find unit number for node " << node_id;
+  int unit = gtl::FindOrDie(node_id_to_unit, node_id);
+  ASSIGN_OR_RETURN(auto cpu_port, bf_pd_interface_->GetPcieCpuPort(unit));
+  RETURN_IF_ERROR(bf_pd_interface_->SetTmCpuPort(unit, cpu_port));
   return ::util::OkStatus();
 }
 
@@ -221,9 +231,11 @@ BFSwitch::~BFSwitch() {}
 std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
     PhalInterface* phal_interface,
     BFChassisManager* bf_chassis_manager,
+    BFPdInterface* bf_pd_interface,
     const std::map<int, PINode*>& unit_to_pi_node) {
   return absl::WrapUnique(
-      new BFSwitch(phal_interface, bf_chassis_manager, unit_to_pi_node));
+      new BFSwitch(phal_interface, bf_chassis_manager, bf_pd_interface,
+                   unit_to_pi_node));
 }
 
 ::util::StatusOr<PINode*> BFSwitch::GetPINodeFromUnit(int unit) const {

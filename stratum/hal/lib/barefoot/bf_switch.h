@@ -10,6 +10,7 @@
 #include <string>
 
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_pd_interface.h"
 #include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
@@ -67,6 +68,7 @@ class BFSwitch : public SwitchInterface {
   static std::unique_ptr<BFSwitch> CreateInstance(
       PhalInterface* phal_interface,
       BFChassisManager* bf_chassis_manager,
+      BFPdInterface* bf_pd_interface,
       const std::map<int, pi::PINode*>& unit_to_pi_node);
 
   // BFSwitch is neither copyable nor movable.
@@ -80,6 +82,7 @@ class BFSwitch : public SwitchInterface {
   // class.
   BFSwitch(PhalInterface* phal_interface,
            BFChassisManager* bf_chassis_manager,
+           BFPdInterface* bf_pd_interface,
            const std::map<int, pi::PINode*>& unit_to_pi_node);
 
   // Helper to get PINode pointer from unit number or return error indicating
@@ -98,6 +101,9 @@ class BFSwitch : public SwitchInterface {
   // Per chassis Managers. Note that there is only one instance of this class
   // per chassis.
   BFChassisManager* bf_chassis_manager_;  // not owned by the class.
+
+  // Pointer to a BFPdInterface implementation that wraps PD API calls.
+  BFPdInterface* bf_pd_interface_;  // not owned by this class.
 
   // Map from zero-based unit number corresponding to a node/ASIC to a pointer
   // to PINode which contain all the per-node managers for that node/ASIC. This
