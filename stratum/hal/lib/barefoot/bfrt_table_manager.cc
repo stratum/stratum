@@ -18,7 +18,10 @@ namespace barefoot {
     bf_status_t bf_status;
     switch (mk.field_match_type_case()) {
       case ::p4::v1::FieldMatch::kExact: {
-        bf_status = table_key->setValue(field_id, mk.exact().value());
+        const size_t size = mk.ternary().value().size();
+        const uint8_t* val =
+            reinterpret_cast<const uint8_t*>(mk.ternary().value().c_str());
+        bf_status = table_key->setValue(field_id, val, size);
         break;
       }
       case ::p4::v1::FieldMatch::kTernary: {
