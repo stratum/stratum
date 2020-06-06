@@ -61,7 +61,8 @@ namespace barefoot {
       return ::util::OkStatus();
     }
   }
-  RETURN_ERROR() << "Unable to find " << p4info_name << " from bfrt info.";
+  return MAKE_ERROR(ERR_INTERNAL)
+         << "Unable to find " << p4info_name << " from bfrt info.";
 }
 
 // Builds mapping between p4info and bfrt info
