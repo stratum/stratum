@@ -7,16 +7,16 @@
 #include <map>
 #include <vector>
 
-#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/barefoot/bfrt_node.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_node.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -121,13 +121,9 @@ BFSwitch::~BFSwitch() {}
   return status;
 }
 
-::util::Status BFSwitch::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status BFSwitch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status BFSwitch::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status BFSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
@@ -227,12 +223,11 @@ BFSwitch::~BFSwitch() {}
 }
 
 std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
-    PhalInterface* phal_interface,
-    BFChassisManager* bf_chassis_manager,
+    PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
     BFPdInterface* bf_pd_interface,
     const std::map<int, BfRtNode*>& unit_to_bfrt_node) {
-  return absl::WrapUnique(
-      new BFSwitch(phal_interface, bf_chassis_manager, bf_pd_interface, unit_to_bfrt_node));
+  return absl::WrapUnique(new BFSwitch(phal_interface, bf_chassis_manager,
+                                       bf_pd_interface, unit_to_bfrt_node));
 }
 
 ::util::StatusOr<BfRtNode*> BFSwitch::GetBfRtNodeFromUnit(int unit) const {

@@ -182,7 +182,8 @@ BfRtNode::~BfRtNode() = default;
 
   // TODO(Yi): Now we applies single pipelines to all HW pipeline
   bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[0];
-  strcpy(pipeline_profile->p4_pipeline_name, "pipe");
+  ::snprintf(pipeline_profile->p4_pipeline_name, _PI_UPDATE_MAX_NAME_SIZE, "%s",
+             "pipe");
   pipeline_profile->cfg_file = tofino_bin_path_;
   pipeline_profile->runtime_context_file = ctx_json_path_;
 
@@ -199,7 +200,7 @@ BfRtNode::~BfRtNode() = default;
   BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
 
-  // Push pipeline config to the table manager
+  // Push pipeline config to the managers
   BFRT_RETURN_IF_ERROR(
       bfrt_device_manager_->bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
   bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_);
@@ -277,18 +278,21 @@ BfRtNode::~BfRtNode() = default;
 
 // Factory function for creating the instance of the class.
 std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
-    BFRuntimeTableManager* bfrt_table_manager,
-    ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit) {
-  return absl::WrapUnique(
-      new BfRtNode(bfrt_table_manager, bfrt_device_manager, unit));
+    BfRtTableManager* bfrt_table_manager,
+    ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
+    int unit) {
+  return absl::WrapUnique(new BfRtNode(bfrt_table_manager, bfrt_device_manager,
+                                       bfrt_id_mapper, unit));
 }
 
-BFRuntimeNode::BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
-                        ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit)
+BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
+                   ::bfrt::BfRtDevMgr* bfrt_device_manager,
+                   BfRtIdMapper* bfrt_id_mapper, int unit)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
+      bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       node_id_(0),
       unit_(unit) {}
 

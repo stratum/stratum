@@ -1,8 +1,8 @@
 // Copyright 2018-present Barefoot Networks, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_H_
-#define STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_H_
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_BFRT_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_BFRT_H_
 
 #include <map>
 #include <memory>
@@ -102,9 +102,12 @@ class BFSwitch : public SwitchInterface {
   // per chassis.
   BFChassisManager* bf_chassis_manager_;  // not owned by the class.
 
+  // Pointer to a BFPdInterface implementation that wraps PD API calls.
+  BFPdInterface* bf_pd_interface_;  // not owned by this class.
+
   // Map from zero-based unit number corresponding to a node/ASIC to a pointer
-  // to BfRtNode which contain all the per-node managers for that node/ASIC. This
-  // map is initialized in the constructor and will not change during the
+  // to BfRtNode which contain all the per-node managers for that node/ASIC.
+  // This map is initialized in the constructor and will not change during the
   // lifetime of the class.
   const std::map<int, BfRtNode*> unit_to_bfrt_node_;  // pointers not owned.
 
@@ -113,13 +116,10 @@ class BFSwitch : public SwitchInterface {
   // At any point of time this map will contain a keys the ids of the nodes
   // which had a successful config push.
   std::map<uint64, BfRtNode*> node_id_to_bfrt_node_;  //  pointers not owned
-
-  // Pointer to a BFPdInterface implementation that wraps PD API calls.
-  BFPdInterface* bf_pd_interface_;  // not owned by this class.
 };
 
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_H_
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_BFRT_H_

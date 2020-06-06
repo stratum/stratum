@@ -1,8 +1,8 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRTUM_HAL_LIB_BAREFOOT_MACROS_H
-#define STRTUM_HAL_LIB_BAREFOOT_MACROS_H
+#ifndef STRATUM_HAL_LIB_BAREFOOT_MACROS_H_
+#define STRATUM_HAL_LIB_BAREFOOT_MACROS_H_
 
 extern "C" {
 #include "bf_rt/bf_rt_common.h"
@@ -22,7 +22,7 @@ class BooleanBfStatus {
   operator bool() const { return status_ == BF_SUCCESS; }
   inline bf_status_t status() const { return status_; }
   inline ErrorCode error_code() const {
-    switch(status_) {
+    switch (status_) {
       case BF_SUCCESS:
         return ERR_SUCCESS;
       case BF_NOT_READY:
@@ -71,18 +71,17 @@ class BooleanBfStatus {
 };
 
 // TODO: Rename to RETURN_IF_BFRT_ERROR
-#define BFRT_RETURN_IF_ERROR(expr) \
-  if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) { \
-  } else /* NOLINT */ \
-    return MAKE_ERROR(__ret.error_code()) \
+#define BFRT_RETURN_IF_ERROR(expr)                            \
+  if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {  \
+  } else /* NOLINT */                                         \
+    return MAKE_ERROR(__ret.error_code())                     \
            << "'" << #expr << "' failed with error message: " \
            << FixMessage(bf_err_str(__ret.status()))
 
 #define RETURN_IF_BFRT_ERROR BFRT_RETURN_IF_ERROR
 
-#endif
+#endif  // STRATUM_HAL_LIB_BAREFOOT_MACROS_H_
 
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
-
