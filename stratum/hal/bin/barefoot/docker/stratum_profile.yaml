@@ -11,7 +11,7 @@ stratum_profile:
     - bf-utils:
       - bf_utils_configure_options: ''
     - bf-drivers:
-      - bf_drivers_configure_options: ''
+      - bf_drivers_configure_options: 'enable_bfrt=yes'
 
   # Tofino architecture
   tofino_architecture: tofino
