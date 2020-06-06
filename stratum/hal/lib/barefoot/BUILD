@@ -43,8 +43,8 @@ stratum_cc_library(
     hdrs = ["bf_switch_bfrt.h"],
     deps = [
         ":bf_chassis_manager",
-        ":bfrt_node",
         ":bf_pd_interface",
+        ":bfrt_node",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
         "//stratum/glue/gtl:map_util",

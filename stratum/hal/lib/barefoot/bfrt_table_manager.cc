@@ -3,6 +3,9 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 
+#include <string>
+#include <vector>
+
 #include "absl/strings/match.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/macros.h"
@@ -10,6 +13,14 @@
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+::util::Status BfRtTableManager::PushPipelineInfo(
+    const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
+  absl::WriterMutexLock l(&lock_);
+  bfrt_info_ = bfrt_info;
+
+  return ::util::OkStatus();
+}
 
 ::util::Status BfRtTableManager::BuildTableKey(
     const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key) {
@@ -33,7 +44,6 @@ namespace barefoot {
         RETURN_IF_BFRT_ERROR(
             table_key->setValueandMask(field_id, val, mask, size))
             << "Could not build table key from " << mk.ShortDebugString();
-        ;
         break;
       }
       case ::p4::v1::FieldMatch::kLpm: {
@@ -44,7 +54,6 @@ namespace barefoot {
         RETURN_IF_BFRT_ERROR(
             table_key->setValueLpm(field_id, val, prefix_len, size))
             << "Could not build table key from " << mk.ShortDebugString();
-        ;
         break;
       }
       case ::p4::v1::FieldMatch::kRange: {
@@ -56,7 +65,6 @@ namespace barefoot {
         RETURN_IF_BFRT_ERROR(
             table_key->setValueRange(field_id, start, end, size))
             << "Could not build table key from " << mk.ShortDebugString();
-        ;
         break;
       }
       // case ::p4::v1::FieldMatch::kOptional:
@@ -140,12 +148,13 @@ namespace barefoot {
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
-  const bfrt::BfRtTable* table;
+  absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+  const bfrt::BfRtTable* table;
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
@@ -181,13 +190,14 @@ namespace barefoot {
 ::util::StatusOr<::p4::v1::TableEntry> BfRtTableManager::ReadTableEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::TableEntry& table_entry) {
-  const bfrt::BfRtTable* table;
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+  const bfrt::BfRtTable* table;
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
   BFRT_RETURN_IF_ERROR(table->keyReset(table_key.get()));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
   BFRT_RETURN_IF_ERROR(table->dataReset(table_data.get()));
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
@@ -244,7 +254,7 @@ std::unique_ptr<BfRtTableManager> BfRtTableManager::CreateInstance(
 }
 
 BfRtTableManager::BfRtTableManager(int unit, const BfRtIdMapper* bfrt_id_mapper)
-    : unit_(unit), bfrt_id_mapper_(bfrt_id_mapper) {}
+    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)), unit_(unit) {}
 
 }  // namespace barefoot
 }  // namespace hal

@@ -80,10 +80,12 @@ namespace barefoot {
   // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
   // does not do any device id checks.
 
-  auto bfrt_table_manager = BFRuntimeTableManager::CreateInstance(unit);
+  auto bfrt_id_mapper = BfRtIdMapper::CreateInstance(unit);
+  auto bfrt_table_manager =
+      BfRtTableManager::CreateInstance(unit, bfrt_id_mapper.get());
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
-  auto bfrt_node = BfRtNode::CreateInstance(bfrt_table_manager.get(),
-                                            &bf_device_manager, unit);
+  auto bfrt_node = BfRtNode::CreateInstance(
+      bfrt_table_manager.get(), &bf_device_manager, bfrt_id_mapper.get(), unit);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
@@ -99,7 +101,7 @@ namespace barefoot {
   auto bfpd_wrapper = BFPdWrapper::GetSingleton();
   auto bf_switch =
       BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
-                               bfpd_wrapper.get(), unit_to_bfrt_node);
+                               bfpd_wrapper, unit_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();

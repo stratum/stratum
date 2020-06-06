@@ -1,8 +1,11 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_ID_MAPPER_H
-#define STRATUM_HAL_LIB_BAREFOOT_BFRT_ID_MAPPER_H
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_ID_MAPPER_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_ID_MAPPER_H_
+
+#include <memory>
+#include <string>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -22,7 +25,8 @@ class BfRtIdMapper {
   // Initialize pipeline information
   // This function creates a mapping between P4Info and BfRt
   ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
-                                  const bfrt::BfRtInfo* bfrt_info);
+                                  const bfrt::BfRtInfo* bfrt_info)
+      LOCKS_EXCLUDED(lock_);
 
   // Gets the device target(device id + pipe id) for a specific BfRt
   // primitive(e.g. table)
@@ -39,29 +43,33 @@ class BfRtIdMapper {
   static std::unique_ptr<BfRtIdMapper> CreateInstance(int unit);
 
  private:
-  ::util::Status BuildMapping(uint32_t p4info_id, std::string p4info_name,
-                              const bfrt::BfRtInfo* bfrt_info);
-
-  ::util::Status BuildP4InfoAndBfrtInfoMapping(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info);
-
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfRtIdMapper(int unit);
+  explicit BfRtIdMapper(int unit);
+
+  ::util::Status BuildMapping(uint32_t p4info_id, std::string p4info_name,
+                              const bfrt::BfRtInfo* bfrt_info)
+      SHARED_LOCKS_REQUIRED(lock_);
+
+  ::util::Status BuildP4InfoAndBfrtInfoMapping(
+      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
+      SHARED_LOCKS_REQUIRED(lock_);
 
   // Reader-writer lock used to protect access to mapping.
   mutable absl::Mutex lock_;
 
   // The unit(device) number for this mapper.
-  int unit_;
+  const int unit_;
 
   // Mappings
-  absl::flat_hash_map<bf_rt_id_t, uint32_t> bfrt_to_p4info_id_;
-  absl::flat_hash_map<uint32_t, bf_rt_id_t> p4info_to_bfrt_id_;
+  absl::flat_hash_map<bf_rt_id_t, uint32_t> bfrt_to_p4info_id_
+      GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32_t, bf_rt_id_t> p4info_to_bfrt_id_
+      GUARDED_BY(lock_);
 };
 
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_ID_MAPPER_H
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_ID_MAPPER_H_
