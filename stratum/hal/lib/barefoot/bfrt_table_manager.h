@@ -25,16 +25,21 @@ namespace barefoot {
 
 class BfRtTableManager {
  public:
+  // Pushes the pipline info.
+  ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
+                                  const bfrt::BfRtInfo* bfrt_info)
+      LOCKS_EXCLUDED(lock_);
+
   // Writes a table entry.
   ::util::Status WriteTableEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type,
-      const ::p4::v1::TableEntry& table_entry);
+      const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
   // Reads a table entry
   ::util::StatusOr<::p4::v1::TableEntry> ReadTableEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::TableEntry& table_entry);
+      const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance for a specific unit.
   static std::unique_ptr<BfRtTableManager> CreateInstance(
@@ -64,12 +69,9 @@ class BfRtTableManager {
   // function only.
   BfRtTableManager(int unit, const BfRtIdMapper* bfrt_id_mapper);
 
-  // The unit number, which represent the device ID in SDK level.
-  int unit_;
-
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
-  const bfrt::BfRtInfo* bfrt_info_;
+  const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
@@ -77,6 +79,9 @@ class BfRtTableManager {
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfRtIdMapper* bfrt_id_mapper_;
+
+  // The unit number, which represent the device ID in SDK level.
+  const int unit_;
 };
 
 }  // namespace barefoot

@@ -3,6 +3,8 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 
+#include <vector>
+
 #include "absl/strings/match.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 
@@ -93,6 +95,7 @@ namespace barefoot {
 }
 
 ::util::StatusOr<uint32_t> BfRtIdMapper::GetBfRtId(uint32_t p4info_id) const {
+  absl::ReaderMutexLock l(&lock_);
   auto it = p4info_to_bfrt_id_.find(p4info_id);
   CHECK_RETURN_IF_FALSE(it != p4info_to_bfrt_id_.end())
       << "Unable to find bfrt id form p4info id: " << p4info_id;
@@ -100,6 +103,7 @@ namespace barefoot {
 }
 
 ::util::StatusOr<uint32_t> BfRtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
+  absl::ReaderMutexLock l(&lock_);
   auto it = bfrt_to_p4info_id_.find(bfrt_id);
   CHECK_RETURN_IF_FALSE(it != bfrt_to_p4info_id_.end())
       << "Unable to find p4info id form bfrt id: " << bfrt_id;

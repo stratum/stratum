@@ -62,8 +62,9 @@ class BfRtNode final {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfRtNode> CreateInstance(
-      BFRuntimeTableManager* bfrt_table_manager,
-      ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit);
+      BfRtTableManager* bfrt_table_manager,
+      ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
+      int unit);
 
   // BfRtNode is neither copyable nor movable.
   BfRtNode(const BfRtNode&) = delete;
@@ -74,8 +75,9 @@ class BfRtNode final {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BfRtNode(BFRuntimeTableManager* bfrt_table_manager,
-                ::bfrt::BfRtDevMgr* bfrt_device_manager, int unit);
+  BfRtNode(BfRtTableManager* bfrt_table_manager,
+           ::bfrt::BfRtDevMgr* bfrt_device_manager,
+           BfRtIdMapper* bfrt_id_mapper, int unit);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
@@ -99,17 +101,17 @@ class BfRtNode final {
   bool initialized_ GUARDED_BY(lock_);
 
   // Managers. Not owned by this class.
-  BFRuntimeTableManager* bfrt_table_manager_;
+  BfRtTableManager* bfrt_table_manager_;
   ::bfrt::BfRtDevMgr* bfrt_device_manager_;
 
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
-  std::unique_ptr<BfRtIdMapper> bfrt_id_mapper_;
+  BfRtIdMapper* bfrt_id_mapper_;  // Not owned by this class
 
   // Paths for pipeline configs
-  char prog_name_[_PI_UPDATE_MAX_NAME_SIZE + 1];
-  char tofino_bin_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE];
-  char ctx_json_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE];
-  char bfrt_file_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE];
+  char prog_name_[_PI_UPDATE_MAX_NAME_SIZE + 1] GUARDED_BY(lock_);
+  char tofino_bin_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE] GUARDED_BY(lock_);
+  char ctx_json_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE] GUARDED_BY(lock_);
+  char bfrt_file_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE] GUARDED_BY(lock_);
 
   // Stored pipeline information in this node
   p4::config::v1::P4Info p4info_;
