@@ -23,8 +23,8 @@ RUN mkdir $SDE && tar xf /stratum/$SDE_TAR -C $SDE --strip-components 1
 WORKDIR $SDE/p4studio_build
 
 ARG JOBS=4
-# Remove Thrift dependency from the profile (for SDE <= 8.9.x)
-RUN sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml
+# Replace the original profile with bfrt ones
+RUN mv /stratum/stratum/hal/bin/barefoot/docker/stratum_profile.yaml profiles/
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 
