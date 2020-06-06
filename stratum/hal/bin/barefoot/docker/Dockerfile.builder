@@ -31,7 +31,7 @@ WORKDIR $SDE/p4studio_build
 
 ARG JOBS=4
 # Replace the original profile with bfrt ones
-RUN mv /stratum/stratum/hal/bin/barefoot/docker/stratum_profile.yaml profiles/
+COPY stratum_profile.yaml $SDE/p4studio_build/profiles/
 RUN ./p4studio_build.py -up stratum_profile -wk -j$JOBS -shc && \
     rm -rf /var/lib/apt/lists/*
 
