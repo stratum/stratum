@@ -7,6 +7,10 @@ sysctl -p /etc/sysctl.conf
 mkdir -p /mnt/huge
 mount -t hugetlbfs nodev /mnt/huge
 
+# Create directories needed by Stratum
+mkdir -p /var/log/stratum
+mkdir -p /var/run/stratum
+
 # Reload libraries
 ldconfig
 
