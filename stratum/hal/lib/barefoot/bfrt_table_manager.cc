@@ -22,25 +22,26 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
+// TODO(max): Replace with P4TableMapper class
 ::util::Status BfRtTableManager::BuildTableKey(
     const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key) {
   for (auto mk : table_entry.match()) {
     bf_rt_id_t field_id = mk.field_id();
     switch (mk.field_match_type_case()) {
       case ::p4::v1::FieldMatch::kExact: {
-        const size_t size = mk.ternary().value().size();
+        const size_t size = mk.exact().value().size();
         const uint8_t* val =
-            reinterpret_cast<const uint8_t*>(mk.ternary().value().c_str());
+            reinterpret_cast<const uint8_t*>(mk.exact().value().c_str());
         RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, val, size))
             << "Could not build table key from " << mk.ShortDebugString();
         break;
       }
       case ::p4::v1::FieldMatch::kTernary: {
         const size_t size = mk.ternary().value().size();
-        const uint8_t* val =
-            reinterpret_cast<const uint8_t*>(mk.ternary().value().c_str());
-        const uint8_t* mask =
-            reinterpret_cast<const uint8_t*>(mk.ternary().mask().c_str());
+        const uint8* val =
+            reinterpret_cast<const uint8*>(mk.ternary().value().c_str());
+        const uint8* mask =
+            reinterpret_cast<const uint8*>(mk.ternary().mask().c_str());
         RETURN_IF_BFRT_ERROR(
             table_key->setValueandMask(field_id, val, mask, size))
             << "Could not build table key from " << mk.ShortDebugString();
@@ -48,9 +49,9 @@ namespace barefoot {
       }
       case ::p4::v1::FieldMatch::kLpm: {
         const size_t size = mk.lpm().value().size();
-        const uint8_t* val =
-            reinterpret_cast<const uint8_t*>(mk.lpm().value().c_str());
-        const int32_t prefix_len = mk.lpm().prefix_len();
+        const uint8* val =
+            reinterpret_cast<const uint8*>(mk.lpm().value().c_str());
+        const int32 prefix_len = mk.lpm().prefix_len();
         RETURN_IF_BFRT_ERROR(
             table_key->setValueLpm(field_id, val, prefix_len, size))
             << "Could not build table key from " << mk.ShortDebugString();
@@ -58,10 +59,10 @@ namespace barefoot {
       }
       case ::p4::v1::FieldMatch::kRange: {
         const size_t size = mk.range().low().size();
-        const uint8_t* start =
-            reinterpret_cast<const uint8_t*>(mk.range().low().c_str());
-        const uint8_t* end =
-            reinterpret_cast<const uint8_t*>(mk.range().high().c_str());
+        const uint8* start =
+            reinterpret_cast<const uint8*>(mk.range().low().c_str());
+        const uint8* end =
+            reinterpret_cast<const uint8*>(mk.range().high().c_str());
         RETURN_IF_BFRT_ERROR(
             table_key->setValueRange(field_id, start, end, size))
             << "Could not build table key from " << mk.ShortDebugString();
@@ -82,15 +83,15 @@ namespace barefoot {
   BFRT_RETURN_IF_ERROR(table->dataReset(action.action_id(), table_data));
   for (auto param : action.params()) {
     const size_t size = param.value().size();
-    const uint8_t* val =
-        reinterpret_cast<const uint8_t*>(param.value().c_str());
+    const uint8* val =
+        reinterpret_cast<const uint8*>(param.value().c_str());
     BFRT_RETURN_IF_ERROR(table_data->setValue(param.param_id(), val, size));
   }
   return ::util::OkStatus();
 }
 
 ::util::Status BfRtTableManager::BuildTableActionProfileMemberData(
-    const uint32_t action_profile_member_id, const bfrt::BfRtTable* table,
+    const uint32 action_profile_member_id, const bfrt::BfRtTable* table,
     bfrt::BfRtTableData* table_data) {
   bf_rt_id_t forward_act_mbr_data_field_id;
   BFRT_RETURN_IF_ERROR(table->dataReset(table_data));
@@ -98,12 +99,12 @@ namespace barefoot {
                                              &forward_act_mbr_data_field_id));
   BFRT_RETURN_IF_ERROR(
       table_data->setValue(forward_act_mbr_data_field_id,
-                           static_cast<uint64_t>(action_profile_member_id)));
+                           static_cast<uint64>(action_profile_member_id)));
   return ::util::OkStatus();
 }
 
 ::util::Status BfRtTableManager::BuildTableActionProfileGroupData(
-    const uint32_t action_profile_group_id, const bfrt::BfRtTable* table,
+    const uint32 action_profile_group_id, const bfrt::BfRtTable* table,
     bfrt::BfRtTableData* table_data) {
   bf_rt_id_t forward_sel_grp_data_field_id;
   BFRT_RETURN_IF_ERROR(table->dataReset(table_data));
@@ -111,7 +112,7 @@ namespace barefoot {
                                              &forward_sel_grp_data_field_id));
   BFRT_RETURN_IF_ERROR(
       table_data->setValue(forward_sel_grp_data_field_id,
-                           static_cast<uint64_t>(action_profile_group_id)));
+                           static_cast<uint64>(action_profile_group_id)));
   return ::util::OkStatus();
 }
 
@@ -140,7 +141,7 @@ namespace barefoot {
     BFRT_RETURN_IF_ERROR(
         table->dataFieldIdGet("$PRIORITY", &priority_field_id));
     BFRT_RETURN_IF_ERROR(table_data->setValue(
-        priority_field_id, static_cast<uint64_t>(table_entry.priority())));
+        priority_field_id, static_cast<uint64>(table_entry.priority())));
   }
 }
 
@@ -156,7 +157,6 @@ namespace barefoot {
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
@@ -168,6 +168,7 @@ namespace barefoot {
     RETURN_IF_ERROR(BuildTableData(table_entry, table, table_data.get()));
   }
 
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
   switch (type) {
     case ::p4::v1::Update::INSERT:
       BFRT_RETURN_IF_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
@@ -217,17 +218,17 @@ namespace barefoot {
         table->dataFieldNameGet(field_id, action_id, &field_name));
     if (field_name.compare("$ACTION_MEMBER_ID") == 0) {
       // Action profile member id
-      uint64_t act_prof_mem_id;
+      uint64 act_prof_mem_id;
       BFRT_RETURN_IF_ERROR(table_data->getValue(field_id, &act_prof_mem_id));
       result.mutable_action()->set_action_profile_member_id(
-          (uint32_t)act_prof_mem_id);
+          static_cast<uint32>(act_prof_mem_id));
       continue;
     } else if (field_name.compare("$SELECTOR_GROUP_ID") == 0) {
       // Action profile group id
-      uint64_t act_prof_grp_id;
+      uint64 act_prof_grp_id;
       BFRT_RETURN_IF_ERROR(table_data->getValue(field_id, &act_prof_grp_id));
       result.mutable_action()->set_action_profile_group_id(
-          (uint32_t)act_prof_grp_id);
+          static_cast<uint32>(act_prof_grp_id));
       continue;
     }
     result.mutable_action()->mutable_action()->set_action_id(action_id);
@@ -237,7 +238,7 @@ namespace barefoot {
     // "field_size" describes how many "bits" is this field, need to convert
     // to bytes with padding.
     field_size = (field_size / 8) + (field_size % 8 == 0 ? 0 : 1);
-    uint8_t field_data[field_size];
+    uint8 field_data[field_size];
     table_data->getValue(field_id, field_size, field_data);
     const void* param_val = reinterpret_cast<const void*>(field_data);
 

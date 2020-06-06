@@ -203,8 +203,8 @@ BfRtNode::~BfRtNode() = default;
   // Push pipeline config to the managers
   BFRT_RETURN_IF_ERROR(
       bfrt_device_manager_->bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
-  bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_);
-  bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_);
+  RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
+  RETURN_IF_ERROR(bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
@@ -227,10 +227,11 @@ BfRtNode::~BfRtNode() = default;
 ::util::Status BfRtNode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   absl::WriterMutexLock l(&lock_);
+  bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
   session->beginBatch();
-  ::util::Status status;
   for (const auto& update : req.updates()) {
+    ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
       case ::p4::v1::Entity::kTableEntry:
         status = bfrt_table_manager_->WriteTableEntry(
@@ -251,8 +252,18 @@ BfRtNode::~BfRtNode() = default;
         results->push_back(MAKE_ERROR() << "Unsupported entity type: "
                                         << update.ShortDebugString());
     }
+    success &= status.ok();
+    results->push_back(status);
   }
   session->endBatch(true);
+
+  if (!success) {
+    return MAKE_ERROR(ERR_AT_LEAST_ONE_OPER_FAILED)
+           << "One or more write operations failed.";
+  }
+
+  LOG(INFO) << "P4-based forwarding entities written successfully to node with "
+            << "ID " << node_id_ << ".";
   return ::util::OkStatus();
 }
 
