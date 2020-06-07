@@ -87,6 +87,11 @@ class BfRtNode final {
   void SendPacketIn(const ::p4::v1::PacketIn& packet)
       LOCKS_EXCLUDED(rx_writer_lock_);
 
+  // Extracts the device config from the packed message and loads it into the
+  // node. It is not loaded into the SDE yet.
+  ::util::Status LoadP4DeviceConfig(const std::string& p4_device_config)
+      EXCLUSIVE_LOCKS_REQUIRED(lock_);
+
   // Reader-writer lock used to protect access to node-specific state.
   mutable absl::Mutex lock_;
 
@@ -107,15 +112,13 @@ class BfRtNode final {
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
   BfRtIdMapper* bfrt_id_mapper_;  // Not owned by this class
 
-  // Paths for pipeline configs
-  char prog_name_[_PI_UPDATE_MAX_NAME_SIZE + 1] GUARDED_BY(lock_);
-  char tofino_bin_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE] GUARDED_BY(lock_);
-  char ctx_json_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE] GUARDED_BY(lock_);
-  char bfrt_file_path_[_PI_UPDATE_MAX_TMP_FILENAME_SIZE] GUARDED_BY(lock_);
-
-  // Stored pipeline information in this node
-  p4::config::v1::P4Info p4info_;
-  const bfrt::BfRtInfo* bfrt_info_;
+  // Stores pipeline information for this node.
+  p4::config::v1::P4Info p4info_ GUARDED_BY(lock_);
+  const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
+  std::string prog_name_ GUARDED_BY(lock_);
+  std::string tofino_bin_ GUARDED_BY(lock_);
+  std::string ctx_json_ GUARDED_BY(lock_);
+  std::string bfrt_file_ GUARDED_BY(lock_);
 
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the
