@@ -9,15 +9,23 @@
 #include <memory>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/strip.h"
+#include "archive.h"
+#include "archive_entry.h"
 #include "bf_rt/bf_rt_init.hpp"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/lib/macros.h"
+#include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
 extern "C" {
 #include "tofino/bf_pal/dev_intf.h"
 }
+
+DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
+              "The dir used by the SDE to load the device configuration.");
 
 namespace stratum {
 namespace hal {
@@ -58,107 +66,7 @@ BfRtNode::~BfRtNode() = default;
   }
 
   p4info_.CopyFrom(config.p4info());
-  const char* p4_device_config = config.p4_device_config().c_str();
-
-  // Structure of P4 device config for Barefoot device
-  // {
-  //   prog_name_size: uint32
-  //   prog_name: byte[prog_name__size]
-  //   tofino_bin_size: uint32
-  //   tofino_bin: byte[tofino_bin_size]
-  //   context_json_size: uint32
-  //   context_json: byte[context_json_size]
-  //   bfrt_json_size: uint32
-  //   bf_rt_json: byte[bfrt_json_size]
-  // }
-
-  // From BF-PI implementation
-  const char* device_data_curr = p4_device_config;
-  uint32_t chunk_size;
-  memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
-  device_data_curr += sizeof(uint32_t);
-  if (chunk_size > _PI_UPDATE_MAX_NAME_SIZE || chunk_size == 0) {
-    RETURN_ERROR(ERR_OUT_OF_RANGE)
-        << "invalid program name size " << chunk_size;
-  }
-  strncpy(prog_name_, device_data_curr, chunk_size);
-  prog_name_[chunk_size] = '\0';
-  device_data_curr += chunk_size;
-
-  // TODO(YI): lots of duplicated code, move to a function
-  // Tofino bin
-  memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
-  device_data_curr += sizeof(uint32_t);
-  snprintf(tofino_bin_path_, _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
-           "%s-tofino.bin.XXXXXX", prog_name_);
-  int cfg_fd = mkstemp(tofino_bin_path_);
-  if (cfg_fd == -1) {
-    RETURN_ERROR() << "error when trying to create temp bin file "
-                   << tofino_bin_path_;
-  }
-  ssize_t written = 0;
-  while ((written = write(cfg_fd, device_data_curr, chunk_size)) != -1) {
-    device_data_curr += written;
-    chunk_size -= written;
-    if (chunk_size == 0) break;
-  }
-  if (written == -1) {
-    RETURN_ERROR() << "error when writing bin file " << tofino_bin_path_;
-  }
-
-  // Context JSON file
-  memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
-  device_data_curr += sizeof(uint32_t);
-  snprintf(ctx_json_path_, _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
-           "%s-ctx.json.XXXXXX", prog_name_);
-  int ctx_fd = mkstemp(ctx_json_path_);
-  if (ctx_fd == -1) {
-    RETURN_ERROR() << "error when trying to create temp context file "
-                   << ctx_json_path_;
-  }
-  while ((written = write(ctx_fd, device_data_curr, chunk_size)) != -1) {
-    device_data_curr += written;
-    chunk_size -= written;
-    if (chunk_size == 0) break;
-  }
-  if (written == -1) {
-    RETURN_ERROR() << "error when writing context file " << ctx_json_path_;
-  }
-
-  // BfRt JSON file
-  memcpy(&chunk_size, device_data_curr, sizeof(uint32_t));
-  device_data_curr += sizeof(uint32_t);
-  snprintf(bfrt_file_path_, _PI_UPDATE_MAX_TMP_FILENAME_SIZE,
-           "%s-bfrt.json.XXXXXX", prog_name_);
-  int bfrt_fd = mkstemp(bfrt_file_path_);
-  if (bfrt_fd == -1) {
-    RETURN_ERROR() << "error when trying to create temp bfrt file "
-                   << bfrt_file_path_;
-  }
-  while ((written = write(bfrt_fd, device_data_curr, chunk_size)) != -1) {
-    device_data_curr += written;
-    chunk_size -= written;
-    if (chunk_size == 0) break;
-  }
-  if (written == -1) {
-    RETURN_ERROR() << "error when writing bfrt file " << ctx_json_path_;
-  }
-
-  char actual_tofino_bin_path_[PATH_MAX + 1];
-  char actual_ctx_json_path_[PATH_MAX + 1];
-  char actual_bfrt_file_path_[PATH_MAX + 1];
-  CHECK_RETURN_IF_FALSE(realpath(tofino_bin_path_, actual_tofino_bin_path_) !=
-                        NULL);
-  CHECK_RETURN_IF_FALSE(realpath(ctx_json_path_, actual_ctx_json_path_) !=
-                        NULL);
-  CHECK_RETURN_IF_FALSE(realpath(bfrt_file_path_, actual_bfrt_file_path_) !=
-                        NULL);
-  ::strncpy(tofino_bin_path_, actual_tofino_bin_path_,
-            _PI_UPDATE_MAX_TMP_FILENAME_SIZE);
-  ::strncpy(ctx_json_path_, actual_ctx_json_path_,
-            _PI_UPDATE_MAX_TMP_FILENAME_SIZE);
-  ::strncpy(bfrt_file_path_, actual_bfrt_file_path_,
-            _PI_UPDATE_MAX_TMP_FILENAME_SIZE);
+  RETURN_IF_ERROR(LoadP4DeviceConfig(config.p4_device_config()));
 
   return ::util::OkStatus();
 }
@@ -173,19 +81,39 @@ BfRtNode::~BfRtNode() = default;
       /* upgrade_agents */ true));
   bf_device_profile_t device_profile = {};
 
+  // Commit new files to disk for SDE to load.
+  std::string context_path =
+      absl::StrCat(FLAGS_bfrt_sde_config_dir, "/context.json");
+  std::string bfrt_path = absl::StrCat(FLAGS_bfrt_sde_config_dir, "/bfrt.json");
+  std::string tofino_bin_path =
+      absl::StrCat(FLAGS_bfrt_sde_config_dir, "/tofino.bin");
+  RETURN_IF_ERROR(RecursivelyCreateDir(FLAGS_bfrt_sde_config_dir));
+  RETURN_IF_ERROR(WriteStringToFile(ctx_json_, context_path));
+  RETURN_IF_ERROR(WriteStringToFile(bfrt_file_, bfrt_path));
+  RETURN_IF_ERROR(WriteStringToFile(tofino_bin_, tofino_bin_path));
+  auto cleanup =
+      gtl::MakeCleanup([&context_path, &bfrt_path, &tofino_bin_path]() {
+        RemoveFile(context_path);
+        RemoveFile(bfrt_path);
+        RemoveFile(tofino_bin_path);
+      });
+  ctx_json_.clear();
+  bfrt_file_.clear();
+  tofino_bin_.clear();
+
   // TODO(Yi): Now we only support single P4 program
   device_profile.num_p4_programs = 1;
   bf_p4_program_t* p4_program = &device_profile.p4_programs[0];
-  strncpy(p4_program->prog_name, prog_name_, _PI_UPDATE_MAX_NAME_SIZE);
-  p4_program->bfrt_json_file = bfrt_file_path_;
+  strncpy(p4_program->prog_name, prog_name_.c_str(), _PI_UPDATE_MAX_NAME_SIZE);
+  p4_program->bfrt_json_file = &bfrt_path[0];
   p4_program->num_p4_pipelines = 1;
 
   // TODO(Yi): Now we applies single pipelines to all HW pipeline
   bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[0];
   ::snprintf(pipeline_profile->p4_pipeline_name, _PI_UPDATE_MAX_NAME_SIZE, "%s",
              "pipe");
-  pipeline_profile->cfg_file = tofino_bin_path_;
-  pipeline_profile->runtime_context_file = ctx_json_path_;
+  pipeline_profile->cfg_file = &tofino_bin_path[0];
+  pipeline_profile->runtime_context_file = &context_path[0];
 
   // FIXME(YI): do we need to put p4info here?
   pipeline_profile->pi_config_file = nullptr;
@@ -284,6 +212,71 @@ BfRtNode::~BfRtNode() = default;
 }
 
 ::util::Status BfRtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+  return ::util::OkStatus();
+}
+
+::util::Status BfRtNode::LoadP4DeviceConfig(
+    const std::string& p4_device_config) {
+  struct archive* a = archive_read_new();
+  archive_read_support_filter_bzip2(a);
+  archive_read_support_format_tar(a);
+  int r = archive_read_open_memory(a, p4_device_config.c_str(),
+                                   p4_device_config.size());
+  CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
+  auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
+
+  // First entry should be a directory named <prog_name>.
+  {
+    struct archive_entry* entry;
+    CHECK_RETURN_IF_FALSE(archive_read_next_header(a, &entry) == ARCHIVE_OK)
+        << "Could not read archive header.";
+    CHECK_RETURN_IF_FALSE(archive_entry_filetype(entry) == AE_IFDIR)
+        << "Expected a directory at root.";
+    prog_name_ =
+        std::string(absl::StripSuffix(archive_entry_pathname(entry), "/"));
+  }
+
+  // Read the remaining parameters
+  std::string p4info;
+  struct archive_entry* entry;
+  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+    std::string path_name = archive_entry_pathname(entry);
+
+    if (absl::StripSuffix(path_name, "p4info.txt") != path_name) {
+      p4info.resize(archive_entry_size(entry));
+      CHECK_RETURN_IF_FALSE(archive_read_data(a, &p4info[0], p4info.size()) >
+                            0);
+      VLOG(2) << "Found p4info file: " << path_name;
+    }
+
+    if (absl::StripSuffix(path_name, "bfrt.json") != path_name) {
+      bfrt_file_.resize(archive_entry_size(entry));
+      CHECK_RETURN_IF_FALSE(
+          archive_read_data(a, &bfrt_file_[0], bfrt_file_.size()) > 0);
+      VLOG(2) << "Found bfrt file: " << path_name;
+    }
+
+    if (absl::StripSuffix(path_name, "context.json") != path_name) {
+      ctx_json_.resize(archive_entry_size(entry));
+      CHECK_RETURN_IF_FALSE(
+          archive_read_data(a, &ctx_json_[0], ctx_json_.size()) > 0);
+      VLOG(2) << "Found context file: " << path_name;
+    }
+
+    if (absl::StripSuffix(path_name, "tofino.bin") != path_name) {
+      tofino_bin_.resize(archive_entry_size(entry));
+      CHECK_RETURN_IF_FALSE(
+          archive_read_data(a, &tofino_bin_[0], tofino_bin_.size()) > 0);
+      VLOG(2) << "Found tofino.bin file: " << path_name;
+    }
+  }
+
+  CHECK_RETURN_IF_FALSE(!p4info.empty()) << "Could not find p4info file.";
+  CHECK_RETURN_IF_FALSE(!bfrt_file_.empty()) << "Could not find bfrt file.";
+  CHECK_RETURN_IF_FALSE(!ctx_json_.empty()) << "Could not find context file.";
+  CHECK_RETURN_IF_FALSE(!tofino_bin_.empty())
+      << "Could not find tofino.bin file.";
+
   return ::util::OkStatus();
 }
 
