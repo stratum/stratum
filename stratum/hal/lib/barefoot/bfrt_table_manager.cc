@@ -30,8 +30,8 @@ namespace barefoot {
     switch (mk.field_match_type_case()) {
       case ::p4::v1::FieldMatch::kExact: {
         const size_t size = mk.exact().value().size();
-        const uint8_t* val =
-            reinterpret_cast<const uint8_t*>(mk.exact().value().c_str());
+        const uint8* val =
+            reinterpret_cast<const uint8*>(mk.exact().value().c_str());
         RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, val, size))
             << "Could not build table key from " << mk.ShortDebugString();
         break;
@@ -191,7 +191,7 @@ namespace barefoot {
 ::util::StatusOr<::p4::v1::TableEntry> BfRtTableManager::ReadTableEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::TableEntry& table_entry) {
-  absl::WriterMutexLock l(&lock_);
+  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
