@@ -80,8 +80,8 @@ class BooleanBfStatus {
 
 #define RETURN_IF_BFRT_ERROR BFRT_RETURN_IF_ERROR
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_MACROS_H_
-
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
+
+#endif  // STRATUM_HAL_LIB_BAREFOOT_MACROS_H_
