@@ -38,9 +38,9 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
-    name = "bf_switch_bfrt",
-    srcs = ["bf_switch_bfrt.cc"],
-    hdrs = ["bf_switch_bfrt.h"],
+    name = "bfrt_switch",
+    srcs = ["bfrt_switch.cc"],
+    hdrs = ["bfrt_switch.h"],
     deps = [
         ":bf_chassis_manager",
         ":bf_pd_interface",
