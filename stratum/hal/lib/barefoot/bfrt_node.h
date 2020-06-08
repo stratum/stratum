@@ -13,6 +13,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/barefoot/macros.h"
@@ -115,10 +116,7 @@ class BfRtNode final {
   // Stores pipeline information for this node.
   p4::config::v1::P4Info p4info_ GUARDED_BY(lock_);
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
-  std::string prog_name_ GUARDED_BY(lock_);
-  std::string tofino_bin_ GUARDED_BY(lock_);
-  std::string ctx_json_ GUARDED_BY(lock_);
-  std::string bfrt_file_ GUARDED_BY(lock_);
+  BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
 
   // Logical node ID corresponding to the node/ASIC managed by this class
   // instance. Assigned on PushChassisConfig() and might change during the

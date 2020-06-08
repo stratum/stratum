@@ -2,6 +2,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+load("@rules_cc//cc:defs.bzl", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load(
     "//bazel:rules.bzl",
     "STRATUM_INTERNAL",
@@ -199,11 +201,22 @@ stratum_cc_library(
     ],
 )
 
+proto_library(
+    name = "bfrt_proto",
+    srcs = ["bfrt.proto"],
+)
+
+cc_proto_library(
+    name = "bfrt_cc_proto",
+    deps = [":bfrt_proto"],
+)
+
 stratum_cc_library(
     name = "bfrt_node",
     srcs = ["bfrt_node.cc"],
     hdrs = ["bfrt_node.h"],
     deps = [
+        ":bfrt_cc_proto",
         ":bfrt_id_mapper",
         ":bfrt_table_manager",
         ":macros",
@@ -218,6 +231,7 @@ stratum_cc_library(
         "//stratum/lib:utils",
         "//stratum/public/proto:error_cc_proto",
         "@com_github_libarchive_libarchive//:libarchive",
+        "@com_github_nlohmann_json//:json",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_googleapis//google/rpc:status_cc_proto",

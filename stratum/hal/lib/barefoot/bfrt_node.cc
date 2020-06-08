@@ -13,6 +13,7 @@
 #include "archive.h"
 #include "archive_entry.h"
 #include "bf_rt/bf_rt_init.hpp"
+#include "nlohmann/json.hpp"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
@@ -73,64 +74,71 @@ BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::CommitForwardingPipelineConfig() {
   absl::WriterMutexLock l(&lock_);
-  if (!initialized_) {
-    RETURN_ERROR() << "Not initialized";
-  }
+  CHECK_RETURN_IF_FALSE(initialized_) << "Not initialized";
+  CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
+  CHECK_RETURN_IF_FALSE(bfrt_config_.device() >= 0);
+
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_begin(
       unit_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
       /* upgrade_agents */ true));
   bf_device_profile_t device_profile = {};
 
-  // Commit new files to disk for SDE to load.
-  std::string context_path =
-      absl::StrCat(FLAGS_bfrt_sde_config_dir, "/context.json");
-  std::string bfrt_path = absl::StrCat(FLAGS_bfrt_sde_config_dir, "/bfrt.json");
-  std::string tofino_bin_path =
-      absl::StrCat(FLAGS_bfrt_sde_config_dir, "/tofino.bin");
+  // Commit new files to disk and build device profile for SDE to load.
   RETURN_IF_ERROR(RecursivelyCreateDir(FLAGS_bfrt_sde_config_dir));
-  RETURN_IF_ERROR(WriteStringToFile(ctx_json_, context_path));
-  RETURN_IF_ERROR(WriteStringToFile(bfrt_file_, bfrt_path));
-  RETURN_IF_ERROR(WriteStringToFile(tofino_bin_, tofino_bin_path));
-  auto cleanup =
-      gtl::MakeCleanup([&context_path, &bfrt_path, &tofino_bin_path]() {
-        RemoveFile(context_path);
-        RemoveFile(bfrt_path);
-        RemoveFile(tofino_bin_path);
-      });
-  ctx_json_.clear();
-  bfrt_file_.clear();
-  tofino_bin_.clear();
+  // Need to extend the lifetime of the path strings until the SDE read them.
+  std::vector<std::unique_ptr<std::string>> path_strings;
+  device_profile.num_p4_programs = bfrt_config_.programs_size();
+  for (int i = 0; i < bfrt_config_.programs_size(); ++i) {
+    const auto& program = bfrt_config_.programs(i);
+    const std::string program_path =
+        absl::StrCat(FLAGS_bfrt_sde_config_dir, "/", program.name());
+    auto bfrt_path = absl::make_unique<std::string>(
+        absl::StrCat(program_path, "/bfrt.json"));
+    RETURN_IF_ERROR(RecursivelyCreateDir(program_path));
+    RETURN_IF_ERROR(WriteStringToFile(program.bfrt(), *bfrt_path));
 
-  // TODO(Yi): Now we only support single P4 program
-  device_profile.num_p4_programs = 1;
-  bf_p4_program_t* p4_program = &device_profile.p4_programs[0];
-  strncpy(p4_program->prog_name, prog_name_.c_str(), _PI_UPDATE_MAX_NAME_SIZE);
-  p4_program->bfrt_json_file = &bfrt_path[0];
-  p4_program->num_p4_pipelines = 1;
+    bf_p4_program_t* p4_program = &device_profile.p4_programs[i];
+    ::snprintf(p4_program->prog_name, _PI_UPDATE_MAX_NAME_SIZE, "%s",
+               program.name().c_str());
+    p4_program->bfrt_json_file = &(*bfrt_path)[0];
+    p4_program->num_p4_pipelines = program.pipelines_size();
+    path_strings.emplace_back(std::move(bfrt_path));
+    CHECK_RETURN_IF_FALSE(program.pipelines_size() > 0);
+    for (int j = 0; j < program.pipelines_size(); ++j) {
+      const auto& pipeline = program.pipelines(j);
+      const std::string pipeline_path =
+          absl::StrCat(program_path, "/", pipeline.name());
+      auto context_path = absl::make_unique<std::string>(
+          absl::StrCat(pipeline_path, "/context.json"));
+      auto config_path = absl::make_unique<std::string>(
+          absl::StrCat(pipeline_path, "/tofino.bin"));
+      RETURN_IF_ERROR(RecursivelyCreateDir(pipeline_path));
+      RETURN_IF_ERROR(WriteStringToFile(pipeline.context(), *context_path));
+      RETURN_IF_ERROR(WriteStringToFile(pipeline.config(), *config_path));
 
-  // TODO(Yi): Now we applies single pipelines to all HW pipeline
-  bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[0];
-  ::snprintf(pipeline_profile->p4_pipeline_name, _PI_UPDATE_MAX_NAME_SIZE, "%s",
-             "pipe");
-  pipeline_profile->cfg_file = &tofino_bin_path[0];
-  pipeline_profile->runtime_context_file = &context_path[0];
+      bf_p4_pipeline_t* pipeline_profile = &p4_program->p4_pipelines[j];
+      ::snprintf(pipeline_profile->p4_pipeline_name, _PI_UPDATE_MAX_NAME_SIZE,
+                 "%s", pipeline.name().c_str());
+      pipeline_profile->cfg_file = &(*config_path)[0];
+      pipeline_profile->runtime_context_file = &(*context_path)[0];
+      path_strings.emplace_back(std::move(config_path));
+      path_strings.emplace_back(std::move(context_path));
 
-  // FIXME(YI): do we need to put p4info here?
-  pipeline_profile->pi_config_file = nullptr;
-
-  // Single P4 pipeline for all HW pipeline
-  pipeline_profile->num_pipes_in_scope = 4;
-  // pipe_scope = [0, 1, 2, 3]
-  for (int p = 0; p < 4; ++p) {
-    pipeline_profile->pipe_scope[p] = p;
+      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= 4);
+      pipeline_profile->num_pipes_in_scope = pipeline.scope_size();
+      for (int p = 0; p < pipeline.scope_size(); ++p) {
+        const auto& scope = pipeline.scope(p);
+        pipeline_profile->pipe_scope[p] = scope;
+      }
+    }
   }
 
   BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
 
   // Push pipeline config to the managers
-  BFRT_RETURN_IF_ERROR(
-      bfrt_device_manager_->bfRtInfoGet(unit_, prog_name_, &bfrt_info_));
+  BFRT_RETURN_IF_ERROR(bfrt_device_manager_->bfRtInfoGet(
+      unit_, bfrt_config_.programs(0).name(), &bfrt_info_));
   RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
   RETURN_IF_ERROR(bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_));
 
@@ -215,59 +223,90 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::LoadP4DeviceConfig(
-    const std::string& p4_device_config) {
+namespace {
+// Helper functions to extract the contents of first file named filename from
+// an in-memory archive.
+::util::StatusOr<std::string> ExtractFromArchive(const std::string& archive,
+                                                 const std::string& filename) {
   struct archive* a = archive_read_new();
   archive_read_support_filter_bzip2(a);
   archive_read_support_format_tar(a);
-  int r = archive_read_open_memory(a, p4_device_config.c_str(),
-                                   p4_device_config.size());
+  int r = archive_read_open_memory(a, archive.c_str(), archive.size());
   CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
   auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
-
-  // First entry should be a directory named <prog_name>.
-  {
-    struct archive_entry* entry;
-    CHECK_RETURN_IF_FALSE(archive_read_next_header(a, &entry) == ARCHIVE_OK)
-        << "Could not read archive header.";
-    CHECK_RETURN_IF_FALSE(archive_entry_filetype(entry) == AE_IFDIR)
-        << "Expected a directory at root.";
-    prog_name_ =
-        std::string(absl::StripSuffix(archive_entry_pathname(entry), "/"));
-  }
-
-  // Read the remaining parameters
   struct archive_entry* entry;
   while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
     std::string path_name = archive_entry_pathname(entry);
-
-    if (absl::StripSuffix(path_name, "bfrt.json") != path_name) {
-      bfrt_file_.resize(archive_entry_size(entry));
-      CHECK_RETURN_IF_FALSE(
-          archive_read_data(a, &bfrt_file_[0], bfrt_file_.size()) > 0);
-      VLOG(2) << "Found bfrt file: " << path_name;
+    if (absl::StripSuffix(path_name, filename) != path_name) {
+      VLOG(2) << "Found file: " << path_name;
+      std::string content;
+      content.resize(archive_entry_size(entry));
+      CHECK_RETURN_IF_FALSE(archive_read_data(a, &content[0], content.size()) ==
+                            content.size());
+      return content;
     }
+  }
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
+}
+}  // namespace
 
-    if (absl::StripSuffix(path_name, "context.json") != path_name) {
-      ctx_json_.resize(archive_entry_size(entry));
-      CHECK_RETURN_IF_FALSE(
-          archive_read_data(a, &ctx_json_[0], ctx_json_.size()) > 0);
-      VLOG(2) << "Found context file: " << path_name;
-    }
-
-    if (absl::StripSuffix(path_name, "tofino.bin") != path_name) {
-      tofino_bin_.resize(archive_entry_size(entry));
-      CHECK_RETURN_IF_FALSE(
-          archive_read_data(a, &tofino_bin_[0], tofino_bin_.size()) > 0);
-      VLOG(2) << "Found tofino.bin file: " << path_name;
+::util::Status BfRtNode::LoadP4DeviceConfig(
+    const std::string& p4_device_config) {
+  // Try a parse of BfrtDeviceConfig.
+  {
+    BfrtDeviceConfig config;
+    if (config.ParseFromString(p4_device_config)) {
+      bfrt_config_ = config;
+      return ::util::OkStatus();
     }
   }
 
-  CHECK_RETURN_IF_FALSE(!bfrt_file_.empty()) << "Could not find bfrt file.";
-  CHECK_RETURN_IF_FALSE(!ctx_json_.empty()) << "Could not find context file.";
-  CHECK_RETURN_IF_FALSE(!tofino_bin_.empty())
-      << "Could not find tofino.bin file.";
+  // Find <prog_name>.conf file
+  nlohmann::json conf;
+  {
+    ASSIGN_OR_RETURN(auto conf_content,
+                     ExtractFromArchive(p4_device_config, ".conf"));
+    try {
+      conf = nlohmann::json::parse(conf_content);
+      LOG(INFO) << conf.dump();
+    } catch (nlohmann::json::exception& e) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Failed to parse .conf: " << e.what();
+    }
+  }
 
+  // Translate JSON conf to protobuf.
+  try {
+    auto device = conf["p4_devices"][0];  // Only support single devices for now
+    bfrt_config_.set_device(device["device-id"]);
+    for (const auto& program : device["p4_programs"]) {
+      auto p = bfrt_config_.add_programs();
+      p->set_name(program["program-name"]);
+      ASSIGN_OR_RETURN(auto bfrt_content,
+                       ExtractFromArchive(p4_device_config, "bfrt.json"));
+      p->set_bfrt(bfrt_content);
+      for (const auto& pipeline : program["p4_pipelines"]) {
+        auto pipe = p->add_pipelines();
+        pipe->set_name(pipeline["p4_pipeline_name"]);
+        for (const auto& scope : pipeline["pipe_scope"]) {
+          pipe->add_scope(scope);
+        }
+        ASSIGN_OR_RETURN(
+            auto context_content,
+            ExtractFromArchive(p4_device_config,
+                               absl::StrCat(pipe->name(), "/context.json")));
+        pipe->set_context(context_content);
+        ASSIGN_OR_RETURN(
+            auto config_content,
+            ExtractFromArchive(p4_device_config,
+                               absl::StrCat(pipe->name(), "/tofino.bin")));
+        pipe->set_config(config_content);
+      }
+    }
+  } catch (nlohmann::json::exception& e) {
+    return MAKE_ERROR(ERR_INTERNAL) << e.what();
+  }
+
+  VLOG(2) << bfrt_config_.DebugString();
   return ::util::OkStatus();
 }
 

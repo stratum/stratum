@@ -1,0 +1,28 @@
+// Copyright 2020-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal.barefoot;
+
+// BfrtDeviceConfig contains all the information of a P4 program that can be
+// loaded into the SDE.
+message BfrtDeviceConfig {
+  message P4Program {
+    string name = 1;
+    bytes bfrt = 2;
+    repeated P4Pipeline pipelines = 3;
+  }
+
+  message P4Pipeline {
+    string name = 1;
+    repeated int32 scope = 2;
+    bytes context = 3;
+    bytes config = 4;
+  }
+
+  int32 device = 1;  // Zero-based device id.
+  repeated P4Program programs = 2;
+}
