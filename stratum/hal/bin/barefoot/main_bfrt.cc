@@ -14,7 +14,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
-#include "stratum/hal/lib/barefoot/bf_switch_bfrt.h"
+#include "stratum/hal/lib/barefoot/bfrt_switch.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"

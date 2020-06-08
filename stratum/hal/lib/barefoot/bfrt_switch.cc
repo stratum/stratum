@@ -1,7 +1,7 @@
 // Copyright 2018-present Barefoot Networks, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-#include "stratum/hal/lib/barefoot/bf_switch_bfrt.h"
+#include "stratum/hal/lib/barefoot/bfrt_switch.h"
 
 #include <algorithm>
 #include <map>
