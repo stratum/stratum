@@ -237,17 +237,9 @@ BfRtNode::~BfRtNode() = default;
   }
 
   // Read the remaining parameters
-  std::string p4info;
   struct archive_entry* entry;
   while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
     std::string path_name = archive_entry_pathname(entry);
-
-    if (absl::StripSuffix(path_name, "p4info.txt") != path_name) {
-      p4info.resize(archive_entry_size(entry));
-      CHECK_RETURN_IF_FALSE(archive_read_data(a, &p4info[0], p4info.size()) >
-                            0);
-      VLOG(2) << "Found p4info file: " << path_name;
-    }
 
     if (absl::StripSuffix(path_name, "bfrt.json") != path_name) {
       bfrt_file_.resize(archive_entry_size(entry));
@@ -271,7 +263,6 @@ BfRtNode::~BfRtNode() = default;
     }
   }
 
-  CHECK_RETURN_IF_FALSE(!p4info.empty()) << "Could not find p4info file.";
   CHECK_RETURN_IF_FALSE(!bfrt_file_.empty()) << "Could not find bfrt file.";
   CHECK_RETURN_IF_FALSE(!ctx_json_.empty()) << "Could not find context file.";
   CHECK_RETURN_IF_FALSE(!tofino_bin_.empty())
