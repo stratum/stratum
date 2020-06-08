@@ -41,8 +41,7 @@ namespace barefoot {
   char bf_sysfs_fname[128];
   FILE* fd;
 
-  bf_switchd_context_t* switchd_main_ctx = new bf_switchd_context_t;
-  memset(switchd_main_ctx, 0, sizeof(bf_switchd_context_t));
+  auto switchd_main_ctx = absl::make_unique<bf_switchd_context_t>();
 
   /* Parse bf_switchd arguments */
   CHECK_RETURN_IF_FALSE(FLAGS_bf_sde_install != "")
@@ -69,7 +68,7 @@ namespace barefoot {
   }
 
   {
-    int status = bf_switchd_lib_init(switchd_main_ctx);
+    int status = bf_switchd_lib_init(switchd_main_ctx.get());
     CHECK_RETURN_IF_FALSE(status == 0)
         << "Error when starting switchd, status: " << status;
     LOG(INFO) << "switchd started successfully";
