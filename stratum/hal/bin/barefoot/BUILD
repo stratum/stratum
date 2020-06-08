@@ -59,7 +59,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bf_chassis_manager",
         "//stratum/hal/lib/barefoot:bf_pal_wrapper",
         "//stratum/hal/lib/barefoot:bf_pd_wrapper",
-        "//stratum/hal/lib/barefoot:bf_switch_bfrt",
+        "//stratum/hal/lib/barefoot:bfrt_switch",
         "//stratum/hal/lib/barefoot:bfrt_node",
         "@local_barefoot_bin//:bf_drivers",
         "@local_barefoot_bin//:bf_headers",
