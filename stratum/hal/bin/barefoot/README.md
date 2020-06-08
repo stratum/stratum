@@ -91,10 +91,12 @@ export SDE_INSTALL=$BF_SDE_INSTALL
     Also, we drop Thrift support in Stratum, the Stratum profile will
     be updated in next version. Now you need to remove the Thrift dependency
     by using `sed` command (see below) if you are using SDE version 8.9.x.
+    Remember to download and pass the correct Kernel sources (`-kdir`) if you
+    are building modules for a specific version other than the host's.
 ```
 cd $SDE/p4studio_build
 sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.x
-./p4studio_build.py -up profiles/stratum_profile.yaml
+./p4studio_build.py -up profiles/stratum_profile.yaml -kdir <path/to/linux/sources>
 ```
 
 If your platform supports BSP-less mode (**recommended**), you do not need to
