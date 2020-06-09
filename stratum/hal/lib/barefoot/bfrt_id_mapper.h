@@ -11,6 +11,7 @@
 #include "absl/synchronization/mutex.h"
 #include "bf_rt/bf_rt_init.hpp"
 #include "p4/config/v1/p4info.pb.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/lib/macros.h"
@@ -18,6 +19,9 @@
 namespace stratum {
 namespace hal {
 namespace barefoot {
+
+constexpr uint32 kTNAExternActionProfileId = 129;
+constexpr uint32 kTNAExternActionSelectorId = 130;
 
 // A helper class that convert IDs between P4Runtime and BfRt.
 class BfRtIdMapper {
