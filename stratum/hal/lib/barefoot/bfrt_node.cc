@@ -79,6 +79,10 @@ BfRtNode::~BfRtNode() = default;
   CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
   CHECK_RETURN_IF_FALSE(bfrt_config_.device() >= 0);
 
+  if (pipeline_initialized_) {
+    // RETURN_IF_BFRT_ERROR(bf_device_remove(unit_));
+  }
+
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_begin(
       unit_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
       /* upgrade_agents */ true));
@@ -155,7 +159,10 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::Shutdown() { return ::util::OkStatus(); }
+::util::Status BfRtNode::Shutdown() {
+  // RETURN_IF_BFRT_ERROR(bf_device_remove(unit_));
+  return ::util::OkStatus();
+}
 
 ::util::Status BfRtNode::Freeze() { return ::util::OkStatus(); }
 
