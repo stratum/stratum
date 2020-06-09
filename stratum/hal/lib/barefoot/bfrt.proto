@@ -11,18 +11,18 @@ package stratum.hal.barefoot;
 // loaded into the SDE.
 message BfrtDeviceConfig {
   message P4Program {
-    string name = 1;
-    bytes bfrt = 2;
+    string name = 1; // For display purposes only.
+    bytes bfrt = 2;  // JSON
     repeated P4Pipeline pipelines = 3;
   }
 
   message P4Pipeline {
-    string name = 1;
-    repeated int32 scope = 2;
-    bytes context = 3;
-    bytes config = 4;
+    string name = 1;          // For display purposes only.
+    repeated int32 scope = 2; // List of pipes this profile is applied to.
+    bytes context = 3;        // JSON
+    bytes config = 4;         // tofino.bin
   }
 
-  int32 device = 1;  // Zero-based device id.
+  int32 device = 1; // Zero-based device id.
   repeated P4Program programs = 2;
 }
