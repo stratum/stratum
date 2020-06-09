@@ -22,6 +22,7 @@
 #include "stratum/public/proto/error.pb.h"
 
 extern "C" {
+#include "dvm/bf_drv_profile.h"
 #include "tofino/bf_pal/dev_intf.h"
 }
 
@@ -124,7 +125,7 @@ BfRtNode::~BfRtNode() = default;
       path_strings.emplace_back(std::move(config_path));
       path_strings.emplace_back(std::move(context_path));
 
-      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= 4);
+      CHECK_RETURN_IF_FALSE(pipeline.scope_size() <= MAX_P4_PIPELINES);
       pipeline_profile->num_pipes_in_scope = pipeline.scope_size();
       for (int p = 0; p < pipeline.scope_size(); ++p) {
         const auto& scope = pipeline.scope(p);
@@ -230,6 +231,7 @@ namespace {
                                                  const std::string& filename) {
   struct archive* a = archive_read_new();
   archive_read_support_filter_bzip2(a);
+  archive_read_support_filter_xz(a);
   archive_read_support_format_tar(a);
   int r = archive_read_open_memory(a, archive.c_str(), archive.size());
   CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
@@ -276,6 +278,8 @@ namespace {
 
   // Translate JSON conf to protobuf.
   try {
+    CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
+        << "Stratum only supports single devices.";
     auto device = conf["p4_devices"][0];  // Only support single devices for now
     bfrt_config_.set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
