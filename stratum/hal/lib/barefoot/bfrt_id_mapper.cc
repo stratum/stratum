@@ -84,6 +84,22 @@ namespace barefoot {
     RETURN_IF_ERROR(BuildMapping(action_profile.preamble().id(),
                                  action_profile.preamble().name(), bfrt_info));
   }
+
+  // Externs
+  for (const auto& p4extern : p4info.externs()) {
+    // TODO(Yi): Now we only support ActionProfile and ActionSelector
+    // Things like DirectCounter are not listed as a table in bfrt.json
+    if (p4extern.extern_type_id() != kTNAExternActionProfileId &&
+        p4extern.extern_type_id() != kTNAExternActionSelectorId) {
+      continue;
+    }
+    for (const auto& extern_instance : p4extern.instances()) {
+      RETURN_IF_ERROR(BuildMapping(extern_instance.preamble().id(),
+                                   extern_instance.preamble().name(),
+                                   bfrt_info));
+    }
+  }
+
   return ::util::OkStatus();
 }
 
