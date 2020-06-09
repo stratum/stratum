@@ -31,4 +31,5 @@ docker run -it --privileged \
     -p 9339:9339 \
     -v $CONFIG_DIR:/etc/stratum \
     -v $LOG_DIR:/var/log/stratum \
-    $DOCKER_IMAGE:$DOCKER_IMAGE_TAG
+    $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
+    $@

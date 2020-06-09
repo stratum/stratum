@@ -7,7 +7,7 @@ load("//bazel:deps.bzl", "BF_SDE_PI_VER")
 def barefoot_pi_deps(pi_node_common_deps):
 
     select_deps = {
-        "//conditions:default": ["@com_github_p4lang_PI_bf_9_1_0//proto/frontend:pifeproto"],
+        "//conditions:default": ["@com_github_p4lang_PI_bf_9_2_0//proto/frontend:pifeproto"],
     }
 
     for sde_ver in BF_SDE_PI_VER:

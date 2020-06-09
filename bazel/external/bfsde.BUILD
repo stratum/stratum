@@ -20,7 +20,9 @@ cc_library(
         "barefoot-bin/include/dvm/*.h",
         "barefoot-bin/include/mc_mgr/*.h",
         "barefoot-bin/include/port_mgr/*.h",
+        "barefoot-bin/include/pipe_mgr/*.h",
         "barefoot-bin/include/tofino/bf_pal/*.h",
+        "barefoot-bin/include/tofino/pdfixed/*.h",
     ]),
     includes = ["barefoot-bin/include"],
 )

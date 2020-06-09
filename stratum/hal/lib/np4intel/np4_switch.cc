@@ -30,8 +30,8 @@ using ::stratum::hal::pi::PINode;
 
 NP4Switch::NP4Switch(PhalInterface* phal_interface,
                      NP4ChassisManager* np4_chassis_manager)
-    : phal_interface_(CHECK_NOTNULL(phal_interface)),
-      np4_chassis_manager_(CHECK_NOTNULL(np4_chassis_manager)) {}
+    : phal_interface_(ABSL_DIE_IF_NULL(phal_interface)),
+      np4_chassis_manager_(ABSL_DIE_IF_NULL(np4_chassis_manager)) {}
 
 NP4Switch::~NP4Switch() {}
 

@@ -1,5 +1,8 @@
 {
-  "_comment": "Example Configuration file for bspless support",  "enable_debug_log": 1,  "board_lane_map_entry": [    {
+  "_comment": "Configuration file for bspless support on x86-64-delta-ag9064v1-r0",
+  "enable_debug_log": 1,
+  "board_lane_map_entry": [
+    {
       "connector": 1,
       "device_id": 0,
       "mac_block": 3,
