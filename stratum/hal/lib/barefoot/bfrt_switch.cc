@@ -22,10 +22,10 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BFSwitch::BFSwitch(PhalInterface* phal_interface,
-                   BFChassisManager* bf_chassis_manager,
-                   BFPdInterface* bf_pd_interface,
-                   const std::map<int, BfRtNode*>& unit_to_bfrt_node)
+BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
+                       BFChassisManager* bf_chassis_manager,
+                       BFPdInterface* bf_pd_interface,
+                       const std::map<int, BfRtNode*>& unit_to_bfrt_node)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
       bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
       bf_pd_interface_(ABSL_DIE_IF_NULL(bf_pd_interface)),
@@ -38,9 +38,9 @@ BFSwitch::BFSwitch(PhalInterface* phal_interface,
   }
 }
 
-BFSwitch::~BFSwitch() {}
+BfrtSwitch::~BfrtSwitch() {}
 
-::util::Status BFSwitch::PushChassisConfig(const ChassisConfig& config) {
+::util::Status BfrtSwitch::PushChassisConfig(const ChassisConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
@@ -60,12 +60,12 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::VerifyChassisConfig(const ChassisConfig& config) {
+::util::Status BfrtSwitch::VerifyChassisConfig(const ChassisConfig& config) {
   (void)config;
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::PushForwardingPipelineConfig(
+::util::Status BfrtSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
@@ -86,7 +86,7 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::SaveForwardingPipelineConfig(
+::util::Status BfrtSwitch::SaveForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
@@ -99,7 +99,7 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
+::util::Status BfrtSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->CommitForwardingPipelineConfig());
 
@@ -109,23 +109,30 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::VerifyForwardingPipelineConfig(
+::util::Status BfrtSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->VerifyForwardingPipelineConfig(config);
 }
 
-::util::Status BFSwitch::Shutdown() {
+::util::Status BfrtSwitch::Shutdown() {
   ::util::Status status = ::util::OkStatus();
+  for (const auto& entry : unit_to_bfrt_node_) {
+    BfRtNode* node = entry.second;
+    APPEND_STATUS_IF_ERROR(status, node->Shutdown());
+  }
   APPEND_STATUS_IF_ERROR(status, bf_chassis_manager_->Shutdown());
+  APPEND_STATUS_IF_ERROR(status, phal_interface_->Shutdown());
+  // APPEND_STATUS_IF_ERROR(status, bf_pd_interface_->Shutdown());
+
   return status;
 }
 
-::util::Status BFSwitch::Freeze() { return ::util::OkStatus(); }
+::util::Status BfrtSwitch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::Unfreeze() { return ::util::OkStatus(); }
+::util::Status BfrtSwitch::Unfreeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::WriteForwardingEntries(
+::util::Status BfrtSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   if (!req.updates_size()) return ::util::OkStatus();  // nothing to do.
   CHECK_RETURN_IF_FALSE(req.device_id()) << "No device_id in WriteRequest.";
@@ -136,7 +143,7 @@ BFSwitch::~BFSwitch() {}
   return bfrt_node->WriteForwardingEntries(req, results);
 }
 
-::util::Status BFSwitch::ReadForwardingEntries(
+::util::Status BfrtSwitch::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
@@ -148,37 +155,37 @@ BFSwitch::~BFSwitch() {}
   return bfrt_node->ReadForwardingEntries(req, writer, details);
 }
 
-::util::Status BFSwitch::RegisterPacketReceiveWriter(
+::util::Status BfrtSwitch::RegisterPacketReceiveWriter(
     uint64 node_id,
     std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->RegisterPacketReceiveWriter(writer);
 }
 
-::util::Status BFSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
+::util::Status BfrtSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->UnregisterPacketReceiveWriter();
 }
 
-::util::Status BFSwitch::TransmitPacket(uint64 node_id,
-                                        const ::p4::v1::PacketOut& packet) {
+::util::Status BfrtSwitch::TransmitPacket(uint64 node_id,
+                                          const ::p4::v1::PacketOut& packet) {
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
   return bfrt_node->TransmitPacket(packet);
 }
 
-::util::Status BFSwitch::RegisterEventNotifyWriter(
+::util::Status BfrtSwitch::RegisterEventNotifyWriter(
     std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) {
   return bf_chassis_manager_->RegisterEventNotifyWriter(writer);
 }
 
-::util::Status BFSwitch::UnregisterEventNotifyWriter() {
+::util::Status BfrtSwitch::UnregisterEventNotifyWriter() {
   return bf_chassis_manager_->UnregisterEventNotifyWriter();
 }
 
-::util::Status BFSwitch::RetrieveValue(uint64 node_id,
-                                       const DataRequest& request,
-                                       WriterInterface<DataResponse>* writer,
-                                       std::vector<::util::Status>* details) {
+::util::Status BfrtSwitch::RetrieveValue(uint64 node_id,
+                                         const DataRequest& request,
+                                         WriterInterface<DataResponse>* writer,
+                                         std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
     ::util::StatusOr<DataResponse> resp;
@@ -207,30 +214,30 @@ BFSwitch::~BFSwitch() {}
   return ::util::OkStatus();
 }
 
-::util::Status BFSwitch::SetValue(uint64 node_id, const SetRequest& request,
-                                  std::vector<::util::Status>* details) {
+::util::Status BfrtSwitch::SetValue(uint64 node_id, const SetRequest& request,
+                                    std::vector<::util::Status>* details) {
   (void)node_id;
   (void)request;
   (void)details;
-  LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
+  LOG(INFO) << "BfrtSwitch::SetValue is not implemented yet, but changes will "
             << "be peformed when ChassisConfig is pushed again.";
   // TODO(antonin)
   return ::util::OkStatus();
 }
 
-::util::StatusOr<std::vector<std::string>> BFSwitch::VerifyState() {
+::util::StatusOr<std::vector<std::string>> BfrtSwitch::VerifyState() {
   return std::vector<std::string>();
 }
 
-std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
+std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
     BFPdInterface* bf_pd_interface,
     const std::map<int, BfRtNode*>& unit_to_bfrt_node) {
-  return absl::WrapUnique(new BFSwitch(phal_interface, bf_chassis_manager,
-                                       bf_pd_interface, unit_to_bfrt_node));
+  return absl::WrapUnique(new BfrtSwitch(phal_interface, bf_chassis_manager,
+                                         bf_pd_interface, unit_to_bfrt_node));
 }
 
-::util::StatusOr<BfRtNode*> BFSwitch::GetBfRtNodeFromUnit(int unit) const {
+::util::StatusOr<BfRtNode*> BfrtSwitch::GetBfRtNodeFromUnit(int unit) const {
   BfRtNode* bfrt_node = gtl::FindPtrOrNull(unit_to_bfrt_node_, unit);
   if (bfrt_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
@@ -238,7 +245,7 @@ std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
   return bfrt_node;
 }
 
-::util::StatusOr<BfRtNode*> BFSwitch::GetBfRtNodeFromNodeId(
+::util::StatusOr<BfRtNode*> BfrtSwitch::GetBfRtNodeFromNodeId(
     uint64 node_id) const {
   BfRtNode* bfrt_node = gtl::FindPtrOrNull(node_id_to_bfrt_node_, node_id);
   if (bfrt_node == nullptr) {

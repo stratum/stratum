@@ -14,8 +14,8 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
-#include "stratum/hal/lib/barefoot/bfrt_switch.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
+#include "stratum/hal/lib/barefoot/bfrt_switch.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/phal/phal.h"
 #include "stratum/hal/lib/phal/phal_sim.h"
@@ -98,9 +98,8 @@ namespace barefoot {
   auto bf_chassis_manager =
       BFChassisManager::CreateInstance(phal_impl, BFPalWrapper::GetSingleton());
   auto bfpd_wrapper = BFPdWrapper::GetSingleton();
-  auto bf_switch =
-      BFSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
-                               bfpd_wrapper, unit_to_bfrt_node);
+  auto bf_switch = BfrtSwitch::CreateInstance(
+      phal_impl, bf_chassis_manager.get(), bfpd_wrapper, unit_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
