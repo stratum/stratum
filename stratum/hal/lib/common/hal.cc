@@ -29,7 +29,7 @@ DEFINE_string(local_stratum_url, stratum::kLocalStratumUrl,
 DEFINE_bool(warmboot, false, "Determines whether HAL is in warmboot stage.");
 DEFINE_string(procmon_service_addr, ::stratum::kProcmonServiceUrl,
               "URL of the procmon service to connect to.");
-DEFINE_string(persistent_config_dir, "",
+DEFINE_string(persistent_config_dir, "/etc/stratum/",
               "The persistent dir where all the config files will be stored.");
 DEFINE_int32(grpc_keepalive_time_ms, 600000, "grpc keep alive time");
 DEFINE_int32(grpc_keepalive_timeout_ms, 20000,
@@ -37,7 +37,7 @@ DEFINE_int32(grpc_keepalive_timeout_ms, 20000,
 DEFINE_int32(grpc_keepalive_min_ping_interval, 10000,
              "grpc keep alive minimum ping interval");
 DEFINE_int32(grpc_keepalive_permit, 1, "grpc keep alive permit");
-DEFINE_uint32(grpc_max_recv_msg_size, 0,
+DEFINE_uint32(grpc_max_recv_msg_size, 256,
               "grpc server max receive message size in MB");
 DEFINE_uint32(grpc_max_send_msg_size, 0,
               "grpc server max send message size in MB");

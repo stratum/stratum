@@ -26,7 +26,7 @@ int switch_pci_sysfs_str_get(char *name, size_t name_size);
 
 using ::pi::fe::proto::DeviceMgr;
 
-DEFINE_string(bf_sde_install, "",
+DEFINE_string(bf_sde_install, "/usr",
               "Absolute path to the directory where the BF SDE is installed");
 DEFINE_bool(bf_switchd_background, false,
             "Run bf_switchd in the background with no interactive features");
