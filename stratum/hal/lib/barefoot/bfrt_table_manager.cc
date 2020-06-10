@@ -9,6 +9,7 @@
 #include "absl/strings/match.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/macros.h"
+#include "stratum/hal/lib/barefoot/bfrt_constants.h"
 
 namespace stratum {
 namespace hal {

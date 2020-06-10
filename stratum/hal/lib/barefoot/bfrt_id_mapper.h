@@ -20,9 +20,6 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-constexpr uint32 kTNAExternActionProfileId = 129;
-constexpr uint32 kTNAExternActionSelectorId = 130;
-
 // A helper class that convert IDs between P4Runtime and BfRt.
 class BfRtIdMapper {
  public:
@@ -32,16 +29,34 @@ class BfRtIdMapper {
                                   const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
+  // Scan context.json file and build mappings for ActionProfile and
+  // ActionSelector.
+  // FIXME(Yi): We may want to remove this workaround if we use the P4 externs
+  // in the future.
+  ::util::Status BuildActionProfileMapping(
+      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info,
+      const std::string& context_json_content) LOCKS_EXCLUDED(lock_);
+
   // Gets the device target(device id + pipe id) for a specific BfRt
   // primitive(e.g. table)
   // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
   ::util::StatusOr<bf_rt_target_t> GetDeviceTarget(bf_rt_id_t bfrt_id) const;
 
   // Maps a P4Info ID to a BfRt ID
-  ::util::StatusOr<uint32_t> GetBfRtId(uint32_t p4info_id) const;
+  ::util::StatusOr<uint32_t> GetBfRtId(uint32_t p4info_id) const
+      LOCKS_EXCLUDED(lock_);
 
   // Maps a BfRt ID to a P4Info ID
-  ::util::StatusOr<uint32_t> GetP4InfoId(bf_rt_id_t bfrt_id) const;
+  ::util::StatusOr<uint32_t> GetP4InfoId(bf_rt_id_t bfrt_id) const
+      LOCKS_EXCLUDED(lock_);
+
+  // Gets the action selector ID of an action profile.
+  ::util::StatusOr<bf_rt_id_t> GetActionSelectorBfRtId(
+      bf_rt_id_t action_profile_id) const LOCKS_EXCLUDED(lock_);
+
+  // Gets the action profile ID of an action selector.
+  ::util::StatusOr<bf_rt_id_t> GetActionProfileBfRtId(
+      bf_rt_id_t action_selector_id) const LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance for a specific unit.
   static std::unique_ptr<BfRtIdMapper> CreateInstance(int unit);
@@ -70,6 +85,11 @@ class BfRtIdMapper {
       GUARDED_BY(lock_);
   absl::flat_hash_map<uint32_t, bf_rt_id_t> p4info_to_bfrt_id_
       GUARDED_BY(lock_);
+
+  // Map for getting an ActionSelector BfRt ID from an ActionProfile BfRt ID.
+  absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_profile_to_selector_mapping_;
+  // Map for getting an ActionProfile BfRt ID from an ActionSelector BfRt ID.
+  absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_selector_to_profile_mapping_;
 };
 
 }  // namespace barefoot

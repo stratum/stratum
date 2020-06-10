@@ -1,4 +1,4 @@
-// Copyright 2018-present Barefoot Networks, Inc.
+// Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
