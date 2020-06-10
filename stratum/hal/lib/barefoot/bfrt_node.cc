@@ -217,9 +217,9 @@ BfRtNode::~BfRtNode() = default;
       case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
       default:
-        results->push_back(MAKE_ERROR() << "Unsupported entity type: "
-                                        << update.ShortDebugString());
-        continue;
+        status = MAKE_ERROR()
+                 << "Unsupported entity type: " << update.ShortDebugString();
+        break;
     }
     success &= status.ok();
     results->push_back(status);
@@ -240,6 +240,88 @@ BfRtNode::~BfRtNode() = default;
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
+  absl::WriterMutexLock l(&lock_);
+  ::p4::v1::ReadResponse resp;
+  bool success = true;
+  auto session = bfrt::BfRtSession::sessionCreate();
+  session->beginBatch();
+  for (auto entity : req.entities()) {
+    switch (entity.entity_case()) {
+      case ::p4::v1::Entity::kTableEntry: {
+        auto status =
+            bfrt_table_manager_->ReadTableEntry(session, entity.table_entry());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        auto table_entry = status.ValueOrDie();
+        auto entity_resp = resp.add_entities();
+        *entity_resp->mutable_table_entry() = table_entry;
+        break;
+      }
+      case ::p4::v1::Entity::kExternEntry: {
+        auto status = ReadExternEntry(session, entity.extern_entry());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        auto extern_entry = status.ValueOrDie();
+        auto entity_resp = resp.add_entities();
+        *entity_resp->mutable_extern_entry() = extern_entry;
+        break;
+      }
+      case ::p4::v1::Entity::kActionProfileMember: {
+        auto status = bfrt_action_profile_manager_->ReadActionProfileMember(
+            session, entity.action_profile_member());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        auto action_profile_member = status.ValueOrDie();
+        auto entity_resp = resp.add_entities();
+        *entity_resp->mutable_action_profile_member() = action_profile_member;
+        break;
+      }
+
+      case ::p4::v1::Entity::kActionProfileGroup: {
+        auto status = bfrt_action_profile_manager_->ReadActionProfileGroup(
+            session, entity.action_profile_group());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        auto action_profile_group = status.ValueOrDie();
+        auto entity_resp = resp.add_entities();
+        *entity_resp->mutable_action_profile_group() = action_profile_group;
+        break;
+      }
+      case ::p4::v1::Entity::kMeterEntry:
+      case ::p4::v1::Entity::kDirectMeterEntry:
+      case ::p4::v1::Entity::kCounterEntry:
+      case ::p4::v1::Entity::kDirectCounterEntry:
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+      case ::p4::v1::Entity::kValueSetEntry:
+      case ::p4::v1::Entity::kRegisterEntry:
+      case ::p4::v1::Entity::kDigestEntry:
+      default: {
+        success = false;
+        details->push_back(MAKE_ERROR()
+                  << "Unsupported entity type: " << entity.ShortDebugString());
+        break;
+      }
+    }
+  }
+  session->endBatch(true);
+  CHECK_RETURN_IF_FALSE(writer->Write(resp))
+      << "Write to stream channel failed.";
+  if (!success) {
+    return MAKE_ERROR(ERR_AT_LEAST_ONE_OPER_FAILED)
+           << "One or more write operations failed.";
+  }
   return ::util::OkStatus();
 }
 
@@ -264,6 +346,20 @@ BfRtNode::~BfRtNode() = default;
     case kTnaExternActionSelectorId:
       return bfrt_action_profile_manager_->WriteActionProfileEntry(bfrt_session,
                                                                    type, entry);
+      break;
+    default:
+      RETURN_ERROR() << "Unsupport extern entry " << entry.ShortDebugString();
+  }
+}
+
+::util::StatusOr<::p4::v1::ExternEntry> BfRtNode::ReadExternEntry(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    const ::p4::v1::ExternEntry& entry) {
+  switch (entry.extern_type_id()) {
+    case kTnaExternActionProfileId:
+    case kTnaExternActionSelectorId:
+      return bfrt_action_profile_manager_->ReadActionProfileEntry(bfrt_session,
+                                                                  entry);
       break;
     default:
       RETURN_ERROR() << "Unsupport extern entry " << entry.ShortDebugString();

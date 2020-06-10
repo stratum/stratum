@@ -62,10 +62,15 @@ class BfRtNode final {
       LOCKS_EXCLUDED(rx_writer_lock_);
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
 
-  // handles extern entries like ActionProfile, DirectCounter, PortMetadata
+  // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry);
+
+  // Read extern entries like ActionProfile, DirectCounter, PortMetadata
+  ::util::StatusOr<::p4::v1::ExternEntry> ReadExternEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::ExternEntry& entry);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfRtNode> CreateInstance(
