@@ -45,26 +45,26 @@ class BfRtActionProfileManager {
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileMember& action_profile_member)
-      EXCLUSIVE_LOCKS_REQUIRED(lock_);
+      LOCKS_EXCLUDED(lock_);
 
   // Reads an action profile member
   ::util::StatusOr<::p4::v1::ActionProfileMember> ReadActionProfileMember(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::ActionProfileMember& action_profile_member)
-      SHARED_LOCKS_REQUIRED(lock_);
+      LOCKS_EXCLUDED(lock_);
 
   // Writes an action profile group
   ::util::Status WriteActionProfileGroup(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileGroup& action_profile_group)
-      EXCLUSIVE_LOCKS_REQUIRED(lock_);
+      LOCKS_EXCLUDED(lock_);
 
   // Reads an action profile Group
   ::util::StatusOr<::p4::v1::ActionProfileGroup> ReadActionProfileGroup(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::ActionProfileGroup& action_profile_group)
-      SHARED_LOCKS_REQUIRED(lock_);
+      LOCKS_EXCLUDED(lock_);
 
   // Creates an action profile manager instance for a specific unit.
   static std::unique_ptr<BfRtActionProfileManager> CreateInstance(
