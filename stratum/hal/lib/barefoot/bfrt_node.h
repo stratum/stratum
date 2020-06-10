@@ -14,6 +14,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bfrt.pb.h"
+#include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/barefoot/macros.h"
@@ -61,9 +62,15 @@ class BfRtNode final {
       LOCKS_EXCLUDED(rx_writer_lock_);
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
 
+  // handles extern entries like ActionProfile, DirectCounter, PortMetadata
+  ::util::Status WriteExternEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry);
+
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfRtNode> CreateInstance(
       BfRtTableManager* bfrt_table_manager,
+      BfRtActionProfileManager* bfrt_action_profile_manager,
       ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
       int unit);
 
@@ -77,6 +84,7 @@ class BfRtNode final {
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
   BfRtNode(BfRtTableManager* bfrt_table_manager,
+           BfRtActionProfileManager* bfrt_action_profile_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
            BfRtIdMapper* bfrt_id_mapper, int unit);
 
@@ -108,6 +116,7 @@ class BfRtNode final {
 
   // Managers. Not owned by this class.
   BfRtTableManager* bfrt_table_manager_;
+  BfRtActionProfileManager* bfrt_action_profile_manager_;
   ::bfrt::BfRtDevMgr* bfrt_device_manager_;
 
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
