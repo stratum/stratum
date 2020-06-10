@@ -57,7 +57,7 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -236,11 +236,7 @@ stratum_cc_library(
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bf_drivers",
-        "@local_barefoot_bin//:bf_headers",
-        "@local_barefoot_bin//:bf_switchd",
-        "@local_barefoot_bin//:bf_sys",
-        "@local_barefoot_bin//:bf_utils",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -266,11 +262,7 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bf_drivers",
-        "@local_barefoot_bin//:bf_headers",
-        "@local_barefoot_bin//:bf_switchd",
-        "@local_barefoot_bin//:bf_sys",
-        "@local_barefoot_bin//:bf_utils",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -296,7 +288,7 @@ stratum_cc_library(
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
-        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -305,7 +297,7 @@ stratum_cc_library(
     hdrs = ["macros.h"],
     deps = [
         "//stratum/lib:macros",
-        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -340,10 +332,6 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bf_drivers",
-        "@local_barefoot_bin//:bf_headers",
-        "@local_barefoot_bin//:bf_switchd",
-        "@local_barefoot_bin//:bf_sys",
-        "@local_barefoot_bin//:bf_utils",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
