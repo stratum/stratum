@@ -27,10 +27,11 @@ ENV OUTPUT_BASE /output
 ARG WITH_ONLP=true
 
 # Stratum package
-RUN bazel build //stratum/hal/bin/barefoot:stratum_bf_deb \
+RUN apt install libbz2-dev
+RUN bazel build //stratum/hal/bin/barefoot:stratum_bfrt_deb \
     --define sde_ver=$(cat $SDE_INSTALL/share/VERSION) \
     --define phal_with_onlp=$WITH_ONLP
-RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb $OUTPUT_BASE
+RUN dpkg -x bazel-bin/stratum/hal/bin/barefoot/stratum_bfrt_deb.deb $OUTPUT_BASE
 
 FROM bitnami/minideb:stretch
 LABEL maintainer="Stratum dev <stratum-dev@lists.stratumproject.org>"
