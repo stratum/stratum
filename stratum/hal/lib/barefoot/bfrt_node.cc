@@ -1,5 +1,4 @@
 // Copyright 2020-present Open Networking Foundation
-// Copyright 2020 Intel/Barefoot Networks
 // SPDX-License-Identifier: Apache-2.0
 
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
@@ -17,6 +16,7 @@
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
@@ -144,8 +144,23 @@ BfRtNode::~BfRtNode() = default;
   // Push pipeline config to the managers
   BFRT_RETURN_IF_ERROR(bfrt_device_manager_->bfRtInfoGet(
       unit_, bfrt_config_.programs(0).name(), &bfrt_info_));
+
   RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
+  // FIXME(Yi): We need to scan all context.json to build correct mapping for
+  // ActionProfiles and ActionSelectors. We may remove this workaround in the
+  // future.
+  for (int i = 0; i < bfrt_config_.programs_size(); ++i) {
+    const auto& program = bfrt_config_.programs(i);
+    for (int j = 0; j < program.pipelines_size(); ++j) {
+      const auto& pipeline = program.pipelines(j);
+      RETURN_IF_ERROR(bfrt_id_mapper_->BuildActionProfileMapping(
+          p4info_, bfrt_info_, pipeline.context()));
+    }
+  }
+
   RETURN_IF_ERROR(bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_action_profile_manager_->PushPipelineInfo(p4info_, bfrt_info_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
@@ -182,8 +197,17 @@ BfRtNode::~BfRtNode() = default;
             session, update.type(), update.entity().table_entry());
         break;
       case ::p4::v1::Entity::kExternEntry:
+        status = WriteExternEntry(session, update.type(),
+                                  update.entity().extern_entry());
+        break;
       case ::p4::v1::Entity::kActionProfileMember:
+        status = bfrt_action_profile_manager_->WriteActionProfileMember(
+            session, update.type(), update.entity().action_profile_member());
+        break;
       case ::p4::v1::Entity::kActionProfileGroup:
+        status = bfrt_action_profile_manager_->WriteActionProfileGroup(
+            session, update.type(), update.entity().action_profile_group());
+        break;
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kCounterEntry:
@@ -195,6 +219,7 @@ BfRtNode::~BfRtNode() = default;
       default:
         results->push_back(MAKE_ERROR() << "Unsupported entity type: "
                                         << update.ShortDebugString());
+        continue;
     }
     success &= status.ok();
     results->push_back(status);
@@ -229,6 +254,20 @@ BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
   return ::util::OkStatus();
+}
+
+::util::Status BfRtNode::WriteExternEntry(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry) {
+  switch (entry.extern_type_id()) {
+    case kTnaExternActionProfileId:
+    case kTnaExternActionSelectorId:
+      return bfrt_action_profile_manager_->WriteActionProfileEntry(bfrt_session,
+                                                                   type, entry);
+      break;
+    default:
+      RETURN_ERROR() << "Unsupport extern entry " << entry.ShortDebugString();
+  }
 }
 
 namespace {
@@ -324,18 +363,23 @@ namespace {
 // Factory function for creating the instance of the class.
 std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
     BfRtTableManager* bfrt_table_manager,
+    BfRtActionProfileManager* bfrt_action_profile_manager,
     ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
     int unit) {
-  return absl::WrapUnique(new BfRtNode(bfrt_table_manager, bfrt_device_manager,
-                                       bfrt_id_mapper, unit));
+  return absl::WrapUnique(
+      new BfRtNode(bfrt_table_manager, bfrt_action_profile_manager,
+                   bfrt_device_manager, bfrt_id_mapper, unit));
 }
 
 BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
+                   BfRtActionProfileManager* bfrt_action_profile_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
                    BfRtIdMapper* bfrt_id_mapper, int unit)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
+      bfrt_action_profile_manager_(
+          ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       node_id_(0),
