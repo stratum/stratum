@@ -90,6 +90,7 @@ BfRtActionProfileManager::ReadActionProfileEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
+  absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_table_id,
       bfrt_id_mapper_->GetBfRtId(action_profile_member.action_profile_id()));
@@ -101,6 +102,7 @@ BfRtActionProfileManager::ReadActionProfileEntry(
 BfRtActionProfileManager::ReadActionProfileMember(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
+  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_table_id,
       bfrt_id_mapper_->GetBfRtId(action_profile_member.action_profile_id()));
@@ -112,6 +114,7 @@ BfRtActionProfileManager::ReadActionProfileMember(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  absl::WriterMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_prof_table_id,
       bfrt_id_mapper_->GetBfRtId(action_profile_group.action_profile_id()));
@@ -126,6 +129,7 @@ BfRtActionProfileManager::ReadActionProfileMember(
 BfRtActionProfileManager::ReadActionProfileGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_prof_table_id,
       bfrt_id_mapper_->GetBfRtId(action_profile_group.action_profile_id()));
@@ -140,6 +144,7 @@ BfRtActionProfileManager::ReadActionProfileGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
+  // Lock is already acquired by the caller
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
   const bfrt::BfRtTable* table;
@@ -178,6 +183,7 @@ BfRtActionProfileManager::ReadActionProfileGroup(
 BfRtActionProfileManager::ReadActionProfileMember(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
+  // Lock is already acquired by the caller
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
@@ -221,6 +227,7 @@ BfRtActionProfileManager::ReadActionProfileMember(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  // Lock is already acquired by the caller
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
   const bfrt::BfRtTable* table;
@@ -259,6 +266,7 @@ BfRtActionProfileManager::ReadActionProfileMember(
 BfRtActionProfileManager::ReadActionProfileGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
+  // Lock is already acquired by the caller
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
