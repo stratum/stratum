@@ -21,8 +21,10 @@
 #include "stratum/lib/utils.h"
 #include "stratum/public/proto/error.pb.h"
 
+// Not all SDE headers include "extern C".
 extern "C" {
 #include "dvm/bf_drv_profile.h"
+#include "pkt_mgr/pkt_mgr_intf.h"
 #include "tofino/bf_pal/dev_intf.h"
 }
 
@@ -36,9 +38,12 @@ BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::PushChassisConfig(const ChassisConfig& config,
                                            uint64 node_id) {
-  (void)config;
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
+  // RETURN_IF_ERROR(bfrt_table_manager_->PushChassisConfig(config, node_id));
+  // RETURN_IF_ERROR(
+  //     bfrt_action_profile_manager_->PushChassisConfig(config, node_id));
+  RETURN_IF_ERROR(bfrt_packetio_manager_->PushChassisConfig(config, node_id));
   initialized_ = true;
 
   return ::util::OkStatus();
@@ -46,8 +51,10 @@ BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::VerifyChassisConfig(const ChassisConfig& config,
                                              uint64 node_id) {
-  (void)config;
-  (void)node_id;
+  // RETURN_IF_ERROR(bfrt_table_manager_->VerifyChassisConfig(config, node_id));
+  // RETURN_IF_ERROR(
+  //     bfrt_action_profile_manager_->VerifyChassisConfig(config, node_id));
+  RETURN_IF_ERROR(bfrt_packetio_manager_->VerifyChassisConfig(config, node_id));
   return ::util::OkStatus();
 }
 
@@ -138,6 +145,8 @@ BfRtNode::~BfRtNode() = default;
     }
   }
 
+  // bf_device_add?
+  // This call re-initializes most SDE components.
   BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
   BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
 
@@ -146,6 +155,8 @@ BfRtNode::~BfRtNode() = default;
       unit_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
   RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_packetio_manager_->PushForwardingPipelineConfig(p4info_));
   // FIXME(Yi): We need to scan all context.json to build correct mapping for
   // ActionProfiles and ActionSelectors. We may remove this workaround in the
   // future.
@@ -309,8 +320,9 @@ BfRtNode::~BfRtNode() = default;
       case ::p4::v1::Entity::kDigestEntry:
       default: {
         success = false;
-        details->push_back(MAKE_ERROR()
-                  << "Unsupported entity type: " << entity.ShortDebugString());
+        details->push_back(MAKE_ERROR(ERR_UNIMPLEMENTED)
+                           << "Unsupported entity type: "
+                           << entity.ShortDebugString());
         break;
       }
     }
@@ -327,15 +339,30 @@ BfRtNode::~BfRtNode() = default;
 
 ::util::Status BfRtNode::RegisterPacketReceiveWriter(
     const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
-  return ::util::OkStatus();
+  absl::WriterMutexLock l(&lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer);
 }
 
 ::util::Status BfRtNode::UnregisterPacketReceiveWriter() {
-  return ::util::OkStatus();
+  absl::WriterMutexLock l(&lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return bfrt_packetio_manager_->UnregisterPacketReceiveWriter();
 }
 
 ::util::Status BfRtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
-  return ::util::OkStatus();
+  absl::WriterMutexLock l(&lock_);
+  if (!initialized_) {
+    return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
+  }
+
+  return bfrt_packetio_manager_->TransmitPacket(packet);
 }
 
 ::util::Status BfRtNode::WriteExternEntry(
@@ -460,15 +487,17 @@ namespace {
 std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
     BfRtTableManager* bfrt_table_manager,
     BfRtActionProfileManager* bfrt_action_profile_manager,
+    BfrtPacketioManager* bfrt_packetio_manager,
     ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
     int unit) {
-  return absl::WrapUnique(
-      new BfRtNode(bfrt_table_manager, bfrt_action_profile_manager,
-                   bfrt_device_manager, bfrt_id_mapper, unit));
+  return absl::WrapUnique(new BfRtNode(
+      bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
+      bfrt_device_manager, bfrt_id_mapper, unit));
 }
 
 BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
                    BfRtActionProfileManager* bfrt_action_profile_manager,
+                   BfrtPacketioManager* bfrt_packetio_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
                    BfRtIdMapper* bfrt_id_mapper, int unit)
     : pipeline_initialized_(false),
@@ -476,18 +505,11 @@ BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
       bfrt_action_profile_manager_(
           ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
+      bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       node_id_(0),
       unit_(unit) {}
-
-void BfRtNode::SendPacketIn(const ::p4::v1::PacketIn& packet) {
-  // acquire the lock during the Write: SendPacketIn may be called from
-  // different threads and Write is not thread-safe.
-  absl::MutexLock l(&rx_writer_lock_);
-  if (rx_writer_ == nullptr) return;
-  rx_writer_->Write(packet);
-}
 
 }  // namespace barefoot
 }  // namespace hal
