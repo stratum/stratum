@@ -19,6 +19,7 @@ ABSL_CONST_INIT absl::Mutex BFPdWrapper::init_lock_(absl::kConstInit);
 
 // Gets the CPU port of an unit(device).
 ::util::StatusOr<int> BFPdWrapper::GetPcieCpuPort(int unit) {
+  // bf_pcie_cpu_port_get?
   int port = p4_devport_mgr_pcie_cpu_port_get(unit);
   CHECK_RETURN_IF_FALSE(port != -1);
   return port;
@@ -26,6 +27,7 @@ ABSL_CONST_INIT absl::Mutex BFPdWrapper::init_lock_(absl::kConstInit);
 
 // Sets the CPU port to the traffic manager.
 ::util::Status BFPdWrapper::SetTmCpuPort(int unit, int port) {
+  // bf_set_copy_to_cpu?
   CHECK_RETURN_IF_FALSE(p4_pd_tm_set_cpuport(unit, port) == 0)
       << "Unable to set CPU port " << port << " to unit " << unit;
   return ::util::OkStatus();

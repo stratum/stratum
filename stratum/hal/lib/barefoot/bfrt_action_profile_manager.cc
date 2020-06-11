@@ -188,11 +188,9 @@ BfRtActionProfileManager::ReadActionProfileMember(
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_BFRT_ERROR(table->keyReset(table_key.get()));
+  RETURN_IF_ERROR(BuildTableKey(table, action_profile_member, table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  RETURN_IF_BFRT_ERROR(table->dataReset(table_data.get()));
-  RETURN_IF_ERROR(BuildTableKey(table, action_profile_member, table_key.get()));
   ASSIGN_OR_RETURN(auto bf_dev_tgt,
                    bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
@@ -273,11 +271,9 @@ BfRtActionProfileManager::ReadActionProfileGroup(
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_BFRT_ERROR(table->keyReset(table_key.get()));
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  RETURN_IF_BFRT_ERROR(table->dataReset(table_data.get()));
   RETURN_IF_ERROR(BuildTableKey(table, action_profile_group, table_key.get()));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
   ASSIGN_OR_RETURN(auto bf_dev_tgt,
                    bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(

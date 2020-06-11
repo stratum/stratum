@@ -16,6 +16,7 @@
 #include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
+#include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
@@ -57,10 +58,10 @@ class BfRtNode final {
       std::vector<::util::Status>* details);
   ::util::Status RegisterPacketReceiveWriter(
       const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
-      LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status UnregisterPacketReceiveWriter()
-      LOCKS_EXCLUDED(rx_writer_lock_);
-  ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
+      LOCKS_EXCLUDED(lock_);
+  ::util::Status UnregisterPacketReceiveWriter() LOCKS_EXCLUDED(lock_);
+  ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
+      LOCKS_EXCLUDED(lock_);
 
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
@@ -76,6 +77,7 @@ class BfRtNode final {
   static std::unique_ptr<BfRtNode> CreateInstance(
       BfRtTableManager* bfrt_table_manager,
       BfRtActionProfileManager* bfrt_action_profile_manager,
+      BfrtPacketioManager* bfrt_packetio_manager,
       ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
       int unit);
 
@@ -90,16 +92,13 @@ class BfRtNode final {
   // class.
   BfRtNode(BfRtTableManager* bfrt_table_manager,
            BfRtActionProfileManager* bfrt_action_profile_manager,
+           BfrtPacketioManager* bfrt_packetio_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
            BfRtIdMapper* bfrt_id_mapper, int unit);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
                               p4::v1::StreamMessageResponse* msg, void* cookie);
-
-  // Write packet on the registered RX writer.
-  void SendPacketIn(const ::p4::v1::PacketIn& packet)
-      LOCKS_EXCLUDED(rx_writer_lock_);
 
   // Extracts the device config from the packed message and loads it into the
   // node. It is not loaded into the SDE yet.
@@ -112,16 +111,13 @@ class BfRtNode final {
   // Mutex used for exclusive access to rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
 
-  // RX packet handler.
-  std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
-      GUARDED_BY(rx_writer_lock_);
-
   bool pipeline_initialized_ GUARDED_BY(lock_);
   bool initialized_ GUARDED_BY(lock_);
 
   // Managers. Not owned by this class.
   BfRtTableManager* bfrt_table_manager_;
   BfRtActionProfileManager* bfrt_action_profile_manager_;
+  BfrtPacketioManager* bfrt_packetio_manager_;
   ::bfrt::BfRtDevMgr* bfrt_device_manager_;
 
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.

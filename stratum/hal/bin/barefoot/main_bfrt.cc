@@ -86,9 +86,11 @@ namespace barefoot {
       BfRtTableManager::CreateInstance(unit, bfrt_id_mapper.get());
   auto bfrt_action_profile_manager =
       BfRtActionProfileManager::CreateInstance(unit, bfrt_id_mapper.get());
+  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(unit);
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
   auto bfrt_node = BfRtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
+      bfrt_packetio_manger.get(),
       &bf_device_manager, bfrt_id_mapper.get(), unit);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
