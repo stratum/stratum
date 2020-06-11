@@ -219,6 +219,7 @@ stratum_cc_library(
         ":bfrt_action_profile_manager",
         ":bfrt_cc_proto",
         ":bfrt_id_mapper",
+        ":bfrt_packetio_manager",
         ":bfrt_table_manager",
         ":macros",
         "//stratum/glue:integral_types",
@@ -332,6 +333,28 @@ stratum_cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/strings",
         "@com_google_googleapis//google/rpc:status_cc_proto",
+        "@local_barefoot_bin//:bfsde",
+    ],
+)
+
+stratum_cc_library(
+    name = "bfrt_packetio_manager",
+    srcs = ["bfrt_packetio_manager.cc"],
+    hdrs = ["bfrt_packetio_manager.h"],
+    deps = [
+        ":macros",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue/status:statusor",
+        "//stratum/hal/lib/common:common_cc_proto",
+        "//stratum/hal/lib/common:constants",
+        "//stratum/hal/lib/common:writer_interface",
+        "//stratum/lib:utils",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_absl//absl/container:flat_hash_map",
         "@local_barefoot_bin//:bfsde",
     ],
 )

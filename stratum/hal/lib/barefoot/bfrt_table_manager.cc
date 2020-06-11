@@ -201,11 +201,9 @@ namespace barefoot {
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
-  BFRT_RETURN_IF_ERROR(table->keyReset(table_key.get()));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  BFRT_RETURN_IF_ERROR(table->dataReset(table_data.get()));
-  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
   BFRT_RETURN_IF_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
