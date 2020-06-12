@@ -187,8 +187,10 @@ BfRtActionProfileManager::ReadActionProfileMember(
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->keyReset(table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   RETURN_IF_BFRT_ERROR(table->dataReset(table_data.get()));
   RETURN_IF_ERROR(BuildTableKey(table, action_profile_member, table_key.get()));
   ASSIGN_OR_RETURN(auto bf_dev_tgt,
@@ -270,8 +272,10 @@ BfRtActionProfileManager::ReadActionProfileGroup(
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->keyReset(table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   RETURN_IF_BFRT_ERROR(table->dataReset(table_data.get()));
   RETURN_IF_ERROR(BuildTableKey(table, action_profile_group, table_key.get()));
   ASSIGN_OR_RETURN(auto bf_dev_tgt,
@@ -299,7 +303,10 @@ BfRtActionProfileManager::ReadActionProfileGroup(
   std::vector<bf_rt_id_t> members;
   RETURN_IF_BFRT_ERROR(table_data->getValue(action_member_arr_id, &members));
   for (bf_rt_id_t member_id : members) {
-    result.add_members()->set_member_id(member_id);
+    auto member = result.add_members();
+    member->set_member_id(member_id);
+    // TODO(Yi): Add weight support.
+    member->set_weight(1);
   }
 
   return result;
