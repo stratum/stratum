@@ -47,7 +47,8 @@ class BfRtTableManager {
 
  private:
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
-                               bfrt::BfRtTableKey* table_key);
+                               bfrt::BfRtTableKey* table_key,
+                               const bfrt::BfRtTable* table);
 
   ::util::Status BuildTableActionData(const ::p4::v1::Action& action,
                                       const bfrt::BfRtTable* table,
