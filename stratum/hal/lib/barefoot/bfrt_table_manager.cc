@@ -8,8 +8,8 @@
 
 #include "absl/strings/match.h"
 #include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
+#include "stratum/hal/lib/barefoot/macros.h"
 
 namespace stratum {
 namespace hal {
@@ -25,7 +25,8 @@ namespace barefoot {
 
 // TODO(max): Replace with P4TableMapper class
 ::util::Status BfRtTableManager::BuildTableKey(
-    const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key) {
+    const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key,
+    const bfrt::BfRtTable* table) {
   for (auto mk : table_entry.match()) {
     bf_rt_id_t field_id = mk.field_id();
     switch (mk.field_match_type_case()) {
@@ -75,6 +76,17 @@ namespace barefoot {
                        << mk.ShortDebugString();
     }
   }
+
+  // Priority
+  if (table_entry.priority() != 0) {
+    bf_rt_id_t priority_field_id;
+    BFRT_RETURN_IF_ERROR(
+        table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id))
+        << "table " << table_entry.table_id()
+        << " doesn't support match priority.";
+    BFRT_RETURN_IF_ERROR(table_key->setValue(
+        priority_field_id, static_cast<uint64>(table_entry.priority())));
+  }
   return ::util::OkStatus();
 }
 
@@ -84,8 +96,7 @@ namespace barefoot {
   BFRT_RETURN_IF_ERROR(table->dataReset(action.action_id(), table_data));
   for (auto param : action.params()) {
     const size_t size = param.value().size();
-    const uint8* val =
-        reinterpret_cast<const uint8*>(param.value().c_str());
+    const uint8* val = reinterpret_cast<const uint8*>(param.value().c_str());
     BFRT_RETURN_IF_ERROR(table_data->setValue(param.param_id(), val, size));
   }
   return ::util::OkStatus();
@@ -135,15 +146,6 @@ namespace barefoot {
       RETURN_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported action type: " << table_entry.action().type_case();
   }
-
-  // Priority
-  if (table_entry.priority() != 0) {
-    bf_rt_id_t priority_field_id;
-    BFRT_RETURN_IF_ERROR(
-        table->dataFieldIdGet("$PRIORITY", &priority_field_id));
-    BFRT_RETURN_IF_ERROR(table_data->setValue(
-        priority_field_id, static_cast<uint64>(table_entry.priority())));
-  }
 }
 
 ::util::Status BfRtTableManager::WriteTableEntry(
@@ -161,7 +163,7 @@ namespace barefoot {
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
 
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
@@ -198,10 +200,12 @@ namespace barefoot {
   const bfrt::BfRtTable* table;
   BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
   BFRT_RETURN_IF_ERROR(table->keyReset(table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   BFRT_RETURN_IF_ERROR(table->dataReset(table_data.get()));
-  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get()));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
   BFRT_RETURN_IF_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
@@ -231,6 +235,10 @@ namespace barefoot {
       result.mutable_action()->set_action_profile_group_id(
           static_cast<uint32>(act_prof_grp_id));
       continue;
+    } else if (field_name.compare("$COUNTER_SPEC_BYTES") == 0 ||
+               field_name.compare("$COUNTER_SPEC_PKTS") == 0) {
+      // Skip counter data
+      continue;
     }
     result.mutable_action()->mutable_action()->set_action_id(action_id);
     size_t field_size;
@@ -247,6 +255,18 @@ namespace barefoot {
     param->set_param_id(field_id);
     param->set_value(param_val, field_size);
   }
+
+  // Priority
+  bf_rt_id_t priority_field_id;
+  bf_status_t status =
+      table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id);
+  // Table may not support match priority
+  if (status == BF_SUCCESS) {
+    uint64 table_entry_priority = 0;
+    table_key->getValue(priority_field_id, &table_entry_priority);
+    result.set_priority(table_entry_priority);
+  }
+
   return result;
 }
 
