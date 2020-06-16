@@ -62,6 +62,8 @@ pkg_tar_with_symlinks(
         "barefoot-bin/share/bfsys/**",
     ]) + glob([
         "barefoot-bin/share/tofino_sds_fw/**",
+    ]) + glob([
+        "barefoot-bin/share/bf_rt_shared/**",
     ]),
     mode = "0644",
     package_dir = "/usr",
