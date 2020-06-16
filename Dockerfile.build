@@ -84,6 +84,7 @@ RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
 RUN pip install setuptools wheel && \
     pip install 'cpplint==1.*'
 RUN wget -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/3.2.1/buildifier
+RUN chmod +x /usr/local/bin/buildifier
 
 # Docker CLI for CI builds
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
