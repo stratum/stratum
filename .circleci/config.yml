@@ -225,6 +225,14 @@ jobs:
       - run:
           name: Run reuse
           command: reuse lint
+  bazel-style-check:
+    docker:
+      - image: stratumproject/build:build
+    steps:
+      - checkout
+      - run:
+          name: Run buildifier
+          command: buildifier --lint=warn -r ./ || true
 
 workflows:
   version: 2
@@ -235,6 +243,7 @@ workflows:
       - coverage
       - cpp-style-check
       - license-check
+      - bazel-style-check
   docker-publish:
     jobs:
       - publish-docker-build:
