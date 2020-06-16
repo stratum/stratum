@@ -62,6 +62,7 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bfrt_switch",
         "//stratum/hal/lib/barefoot:bfrt_node",
         "//stratum/hal/lib/barefoot:bfrt_action_profile_manager",
+        "//stratum/hal/lib/barefoot:bfrt_pre_manager",
         "//stratum/hal/lib/barefoot:bfrt_table_manager",
         "@local_barefoot_bin//:bfsde",
     ] + stratum_bf_common_deps,

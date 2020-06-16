@@ -14,6 +14,15 @@ constexpr uint32 kTnaExternActionProfileId = 129;
 constexpr uint32 kTnaExternActionSelectorId = 130;
 constexpr uint32 kTNAExternDirectCounter = 132;
 
+// Built-in tables and fields
+constexpr char kPreNodeTable[] = "$pre.node";
+constexpr char kMcNodeId[] = "$MULTICAST_NODE_ID";
+constexpr char kMcNodeDevPort[] = "$DEV_PORT";
+constexpr char kPreMgidTable[] = "$pre.mgid";
+constexpr char kMgid[] = "$MGID";
+constexpr char kMcNodeL1XidValid[] = "$MULTICAST_NODE_L1_XID_VALID";
+constexpr char kMcNodeL1Xid[] = "$MULTICAST_NODE_L1_XID";
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
