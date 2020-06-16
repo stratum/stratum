@@ -172,6 +172,7 @@ BfRtNode::~BfRtNode() = default;
   RETURN_IF_ERROR(bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_));
   RETURN_IF_ERROR(
       bfrt_action_profile_manager_->PushPipelineInfo(p4info_, bfrt_info_));
+  RETURN_IF_ERROR(bfrt_pre_manager_->PushPipelineInfo(p4info_, bfrt_info_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
@@ -219,11 +220,15 @@ BfRtNode::~BfRtNode() = default;
         status = bfrt_action_profile_manager_->WriteActionProfileGroup(
             session, update.type(), update.entity().action_profile_group());
         break;
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
+        status = bfrt_pre_manager_->WritePreEntry(
+            session, update.type(),
+            update.entity().packet_replication_engine_entry());
+        break;
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kCounterEntry:
       case ::p4::v1::Entity::kDirectCounterEntry:
-      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
@@ -266,9 +271,8 @@ BfRtNode::~BfRtNode() = default;
           details->push_back(status.status());
           break;
         }
-        auto table_entry = status.ValueOrDie();
-        auto entity_resp = resp.add_entities();
-        *entity_resp->mutable_table_entry() = table_entry;
+        resp.add_entities()->mutable_table_entry()->CopyFrom(
+            status.ValueOrDie());
         break;
       }
       case ::p4::v1::Entity::kExternEntry: {
@@ -278,9 +282,8 @@ BfRtNode::~BfRtNode() = default;
           details->push_back(status.status());
           break;
         }
-        auto extern_entry = status.ValueOrDie();
-        auto entity_resp = resp.add_entities();
-        *entity_resp->mutable_extern_entry() = extern_entry;
+        resp.add_entities()->mutable_extern_entry()->CopyFrom(
+            status.ValueOrDie());
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
@@ -291,9 +294,8 @@ BfRtNode::~BfRtNode() = default;
           details->push_back(status.status());
           break;
         }
-        auto action_profile_member = status.ValueOrDie();
-        auto entity_resp = resp.add_entities();
-        *entity_resp->mutable_action_profile_member() = action_profile_member;
+        resp.add_entities()->mutable_action_profile_member()->CopyFrom(
+            status.ValueOrDie());
         break;
       }
 
@@ -305,16 +307,27 @@ BfRtNode::~BfRtNode() = default;
           details->push_back(status.status());
           break;
         }
-        auto action_profile_group = status.ValueOrDie();
-        auto entity_resp = resp.add_entities();
-        *entity_resp->mutable_action_profile_group() = action_profile_group;
+        resp.add_entities()->mutable_action_profile_group()->CopyFrom(
+            status.ValueOrDie());
+        break;
+      }
+      case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
+        auto status = bfrt_pre_manager_->ReadPreEntry(
+            session, entity.packet_replication_engine_entry());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        resp.add_entities()
+            ->mutable_packet_replication_engine_entry()
+            ->CopyFrom(status.ValueOrDie());
         break;
       }
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kCounterEntry:
       case ::p4::v1::Entity::kDirectCounterEntry:
-      case ::p4::v1::Entity::kPacketReplicationEngineEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
@@ -488,16 +501,17 @@ std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
     BfRtTableManager* bfrt_table_manager,
     BfRtActionProfileManager* bfrt_action_profile_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
-    ::bfrt::BfRtDevMgr* bfrt_device_manager, BfRtIdMapper* bfrt_id_mapper,
-    int unit) {
+    BfRtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
+    BfRtIdMapper* bfrt_id_mapper, int unit) {
   return absl::WrapUnique(new BfRtNode(
       bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_device_manager, bfrt_id_mapper, unit));
+      bfrt_pre_manager, bfrt_device_manager, bfrt_id_mapper, unit));
 }
 
 BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
                    BfRtActionProfileManager* bfrt_action_profile_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
+                   BfRtPreManager* bfrt_pre_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
                    BfRtIdMapper* bfrt_id_mapper, int unit)
     : pipeline_initialized_(false),
@@ -506,6 +520,7 @@ BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
       bfrt_action_profile_manager_(
           ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
       bfrt_packetio_manager_(bfrt_packetio_manager),
+      bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       node_id_(0),
