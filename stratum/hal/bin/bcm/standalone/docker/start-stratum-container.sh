@@ -19,7 +19,7 @@ fi
 # --shm-size: https://bugs.freedesktop.org/show_bug.cgi?id=100432
 # --cap-add: to create the packetIO interface (bcm-0-0)
 # --network host: to have access to the packetIO interface
-docker run -it --privileged --cap-add ALL --shm-size=512m --network host \
+docker run -it --rm --privileged --cap-add ALL --shm-size=512m --network host \
     -v /dev:/dev -v /sys:/sys -v /run:/run \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     $ONLP_MOUNT \

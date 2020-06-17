@@ -34,7 +34,7 @@ KERNEL_VERSION=$(uname -r)
 DOCKER_IMAGE=${DOCKER_IMAGE:-stratumproject/stratum-bf}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-$SDE_VERSION-$KERNEL_VERSION}
 
-docker run -it --privileged \
+docker run -it --rm --privileged \
     -v /dev:/dev -v /sys:/sys  \
     -v /lib/modules/$(uname -r):/lib/modules/$(uname -r) \
     --env PLATFORM=$PLATFORM \

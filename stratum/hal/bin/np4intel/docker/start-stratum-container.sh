@@ -61,10 +61,10 @@ do
     esac
 done
 
-docker run -it --privileged \
+docker run -it --rm --privileged \
     -v /dev:/dev -v /sys:/sys  \
     -p 28000:28000 \
     -v $CONFIG_DIR:/stratum_configs \
     -v $LOG_DIR:/stratum_logs \
     --entrypoint=$ENTRYPOINT \
-    $DOCKER_IMAGE $CMD 
+    $DOCKER_IMAGE $CMD
