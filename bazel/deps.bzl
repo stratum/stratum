@@ -74,10 +74,11 @@ def stratum_deps():
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
         http_archive(
             name = "com_github_p4lang_p4runtime",
-            urls = ["https://github.com/p4lang/p4runtime/archive/%s.zip" % P4RUNTIME_VER],
-            sha256 = P4RUNTIME_SHA,
-            strip_prefix = "p4runtime-%s/proto" % P4RUNTIME_VER,
-            build_file = "@//bazel:external/p4runtime.BUILD",
+            # TODO(smolkaj): Set url to v1.2 release once it is available.
+            urls = ["https://github.com/p4lang/p4runtime/archive/bazel.zip"],
+            strip_prefix = "p4runtime-bazel/proto",
+            # TODO(smolkaj): Include once URL points to stable release.
+            # sha256 = "...",
         )
 
     if "build_stack_rules_proto" not in native.existing_rules():
