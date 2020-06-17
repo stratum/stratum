@@ -37,7 +37,7 @@ to build them yourself as lined out in this document.
 
 Before you can build Stratum, the Barefoot SDE needs to be installed.
 
-Note: To do this, you will need to have SELA with Intel (Barefoot) to access P4
+Note: To do this, you will need to have a SELA with Intel (Barefoot) to access P4
 Studio SDE. Contact Intel for more details.
 
 ```bash
