@@ -21,7 +21,7 @@ The Docker image contains pre-built Stratum binary, latest Barefoot Software
 Development Environment (SDE) libraries, and default configuration files for all
 supported platforms.
 
-Building a Docker image yourself and more us covered in the [Docker README](./docker/README.md).
+Building a Docker image yourself and more is covered in the [Docker README](./docker/README.md).
 
 ### 2. Build and deploy Stratum Debian package
 
