@@ -26,9 +26,13 @@ Building a Docker image yourself and more is covered in the [Docker README](./do
 ### 2. Build and deploy Stratum Debian package
 
 ```bash
-apt-get install --reinstall ./stratum_bf_deb.deb
+apt-get update
+apt-get install -y --reinstall ./stratum_bf_deb.deb
 stratum-entrypoint.sh
 ```
+
+This package installs all dependencies, configuration files and the `stratum_bf`
+[systemd service](#managing-stratum-with-systemd).
 
 In the future we might provide pre-built Debian packages, but for now, you have
 to build them yourself as lined out in this document.
@@ -96,7 +100,7 @@ script with the `--bsp-path` flag.
 ```bash
 tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
 export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
-./p4studio_build.py ... --bsp-path $BSP_PATH
+./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
 ```
 
 ## Building Stratum
@@ -204,6 +208,25 @@ singleton_ports {
 will configure device port 132 in 100G mode with Reed-Solomon (RS) FEC.
 
 FEC can also be configured when adding a port through gNMI.
+
+### Managing Stratum with systemd
+
+Systemd provides service management and Stratum has been integrated into it.
+
+Start Stratum service manually:
+```bash
+systemctl start stratum_bf.service  # stop
+```
+
+Enable (auto-start) Stratum on boot:
+```bash
+systemctl enable stratum_bf.service  # disable
+```
+
+View logs:
+```bash
+journalctl -u stratum_bf.service
+```
 
 ## Testing gNMI
 

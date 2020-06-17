@@ -45,9 +45,11 @@ x86-64-<vendor-name>-<box-name>-32x-r0
 Stratum for Broadcom switches can be run inside Docker on the switch itself.
 As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
 
- - `cd stratum/hal/bin/bcm/standalone/docker`
- - `docker pull stratumproject/stratum-bcm:latest`
- - `./start-stratum-container.sh`
+```bash
+docker pull stratumproject/stratum-bcm:latest  # to update the image
+cd stratum/hal/bin/bcm/standalone/docker
+./start-stratum-container.sh
+```
 
 ## From source
 
