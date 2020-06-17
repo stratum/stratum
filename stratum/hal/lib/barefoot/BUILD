@@ -2,15 +2,14 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 load(
     "//bazel:rules.bzl",
-    "HOST_ARCHES",
     "STRATUM_INTERNAL",
     "stratum_cc_library",
     "stratum_cc_test",
 )
+
+licenses(["notice"])  # Apache v2
 
 package(
     default_visibility = STRATUM_INTERNAL,
@@ -34,7 +33,7 @@ stratum_cc_library(
         "//stratum/lib:macros",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_googleapis//google/rpc:status_cc_proto",
-        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -129,8 +128,7 @@ stratum_cc_library(
         "//stratum/lib:constants",
         "//stratum/lib/channel",
         "@com_google_absl//absl/base:core_headers",
-        "@local_barefoot_bin//:bf_drivers",
-        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -163,8 +161,7 @@ stratum_cc_library(
         "//stratum/glue/status:statusor",
         "//stratum/lib:macros",
         "@com_google_absl//absl/synchronization",
-        "@local_barefoot_bin//:bf_drivers",
-        "@local_barefoot_bin//:bf_headers",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
