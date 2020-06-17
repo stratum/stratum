@@ -192,6 +192,7 @@ pkg_deb(
         "libedit2",
         "libjudydebian1",
         "libboost-thread1.62.0",
+        "libbz2-1.0",
     ],
     description = "The Stratum package for Barefoot Tofino-based platform",
     homepage = "https://stratumproject.org/",
