@@ -1,7 +1,7 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-# This Skylark rule imports the BF SDE shared libraries and headers. The
+# This Starlark rule imports the BF SDE shared libraries and headers. The
 # SDE_INSTALL environment variable needs to be set, otherwise the Stratum
 # rules for barefoot platforms cannot be built.
 

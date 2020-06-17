@@ -35,11 +35,7 @@ stratum_cc_binary(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/lib/security:credentials_manager",
         "@com_github_google_glog//:glog",
-        "@local_barefoot_bin//:bf_drivers",
-        "@local_barefoot_bin//:bf_headers",
-        "@local_barefoot_bin//:bf_switchd",
-        "@local_barefoot_bin//:bf_sys",
-        "@local_barefoot_bin//:bf_utils",
+        "@local_barefoot_bin//:bfsde",
     ],
 )
 
@@ -66,8 +62,8 @@ pkg_tar(
 pkg_tar(
     name = "stratum_shareable_files",
     srcs = [
-        "tofino_skip_p4_no_bsp.conf",
         "tofino_skip_p4.conf",
+        "tofino_skip_p4_no_bsp.conf",
     ],
     mode = "0644",
     package_dir = "/usr/share/stratum",
@@ -79,11 +75,11 @@ pkg_tar(
         "deb/stratum.flags",
         "deb/stratum_bf.env",
     ],
+    mode = "0644",
+    package_dir = "/etc/stratum",
     deps = [
         "//stratum/hal/config:platform_configs_tar",
     ],
-    mode = "0644",
-    package_dir = "/etc/stratum",
 )
 
 pkg_tar(
