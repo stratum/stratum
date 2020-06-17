@@ -4,10 +4,13 @@
 
 KDRV_PATH=${KDRV_PATH:-/usr/lib/modules/bf_kdrv.ko}
 FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
-PLATFORM=${PLATFORM:-x86-64-accton-wedge100bf-32x-r0}
 
-if [ -f "/etc/onl/platform" ]; then
+# Try to load the platform string of not already set.
+if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
     PLATFORM="$(cat /etc/onl/platform)"
+elif [[ -z "$PLATFORM" ]]; then
+    echo "PLATFORM variable must be set manually on non-ONL switches."
+    exit 255
 fi
 
 if [ ! -f "$FLAG_FILE" ]; then
