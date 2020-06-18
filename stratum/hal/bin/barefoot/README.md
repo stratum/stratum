@@ -28,7 +28,7 @@ Building a Docker image yourself and more is covered in the [Docker README](./do
 ```bash
 apt-get update
 apt-get install -y --reinstall ./stratum_bf_deb.deb
-stratum-entrypoint.sh
+start-stratum.sh
 ```
 
 This package installs all dependencies, configuration files and the `stratum_bf`
@@ -140,7 +140,7 @@ Install the package built in the previous step and start Stratum:
 
 ```bash
 apt-get install --reinstall ./stratum_bf_deb.deb
-stratum-entrypoint.sh
+start-stratum.sh
 ```
 
 You can safely ignore warnings like this:
@@ -153,7 +153,7 @@ Try `--help` for a list of all available options.
 ### Running with BSP or on Tofino model
 
 ```bash
-stratum-entrypoint.sh --bf_sim
+start-stratum.sh --bf_sim
 ```
 
 The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
@@ -163,7 +163,7 @@ using a vendor-provided BSP or running Stratum with the Tofino software model.
 ### Running the binary in BSP-less mode
 
 ```bash
-stratum-entrypoint.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
 ```
 
 If ONLP support is available for your platform, you do not need to use a
@@ -173,7 +173,7 @@ this [example](platforms/x86-64-accton-wedge100bf-32x-r0.json) for the Wedge
 available to the SDE as needed.
 
 To start Stratum in BSP-less mode, copy the JSON port mapping file for your
-platform to `/etc/stratum/<platform>/port_map.json` and run `stratum-entrypoint.sh` with
+platform to `/etc/stratum/<platform>/port_map.json` and run `start-stratum.sh` with
 `--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`.
 
 Platforms with repeaters (such as the Wedge 100bf-65x) are not currently

@@ -43,7 +43,7 @@ stratum_cc_binary(
 pkg_tar(
     name = "stratum_binaries",
     srcs = [
-        "deb/stratum-entrypoint.sh",
+        "deb/start-stratum.sh",
         ":stratum_bf",
     ],
     mode = "0755",
