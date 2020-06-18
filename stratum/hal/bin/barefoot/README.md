@@ -213,12 +213,12 @@ FEC can also be configured when adding a port through gNMI.
 
 Systemd provides service management and Stratum has been integrated into it.
 
-Start Stratum service manually:
+Start/stop Stratum service manually:
 ```bash
 systemctl start stratum_bf.service  # stop
 ```
 
-Enable (auto-start) Stratum on boot:
+Enable/disable auto-start of Stratum on boot:
 ```bash
 systemctl enable stratum_bf.service  # disable
 ```
