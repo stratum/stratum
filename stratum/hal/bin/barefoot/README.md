@@ -111,8 +111,8 @@ The [SDE](#installing-the-sde) needs to be installed and set up for this step.
 bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define phal_with_onlp=false] [--define sde_ver=9.2.0]
 ```
 
-We provide a Bazel target that build the Stratum binary and package all
-necessary configurations to a single Debian package(.deb file). The Debian
+We provide a Bazel target that builds the Stratum binary and packages all
+necessary configurations into a single Debian package(.deb file). The Debian
 package also includes systemd service definition so users can use systemd to
 start the Stratum as a system service.
 
@@ -139,7 +139,8 @@ flag tells Bazel not to build with the ONLP Phal implementation.
 Install the package built in the previous step and start Stratum:
 
 ```bash
-apt-get install --reinstall ./stratum_bf_deb.deb
+apt-get update
+apt-get install -y --reinstall ./stratum_bf_deb.deb
 start-stratum.sh
 ```
 
