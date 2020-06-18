@@ -9,199 +9,163 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Quick start
 
-There are 3 ways to deploy Stratum on a Barefoot Tofino based switch.
+There are two ways to deploy Stratum on a Barefoot Tofino based switch.
 
-#### 1. Build Stratum from scratch
+### 1. Deploy with Docker
 
-  Use this method if you want to build Stratum yourself. See [Building Stratum from scratch](#building-stratum-from-scratch).
-
-  **Pros**: Easy to customize and modify the binary if you want do develop Stratum.
-
-  **Cons**: Need to build everything from scratch and install everything to the device manually. Also need to understand how to solve technical issues like missing library, invalid kernel module, placing correct configuration files, and so on.
-
-#### 2. Deploy with Docker
-
-  The Docker image contains pre-built Stratum binary, latest Barefoot Software Development Environment (SDE) libraries, and some required configuration files.
-
-  **Pros**: Easy to use and deploy. All you need is to install Docker on your device system.
-
-  **Cons**: Hard to support external libraries such as BSP.
-
-  For more information, visit the [docker](./docker) directory.
-
-#### 3. Build and deploy Stratum Debian package
-
-  We provide a Bazel target that build the Stratum binary and package all necessary configurations to a single Debian package(.deb file).
-
-  The Debian package also includes systemd service definition so users can use systemd to start the Stratum as a system service.
-
-  **Pros**: No need to pre-install dependency to the device, the `apt` command will take cares of it. And it is easiler to support the BSP.
-
-  **Cons**: System may link the Stratum binary to a different library if user installs dependencies such as PI locally in `/usr/local/lib`, depends on how the system loads libraries.
-
-  Visit this [section](#building-and-installing-the-debian-package) for more information
-
-## Building Stratum from scratch
-
-If you want or need to build Stratum yourself or if you need to make changes to how the BF SDE is built, you can follow
-these instructions.
-
-Note: To do this, you will need to have SELA with Intel (Barefoot) to access P4 Studio SDE. Contact Intel for more details.
-
-First, choose the location where you will be installing the SDE. This environment
-variable MUST be set for the Stratum build.
-```
-export BF_SDE_INSTALL=...
-export PI_INSTALL=$BF_SDE_INSTALL
+```bash
+./stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 ```
 
-## BSP or BSP-less mode (with ONLP)?
+The Docker image contains pre-built Stratum binary, latest Barefoot Software
+Development Environment (SDE) libraries, and default configuration files for all
+supported platforms.
 
-Stratum can be run on Tofino-based platforms in 2 different modes:
- * if your platform comes with ONLPv2 and a JSON "port mapping" file is provided
-   by the platform vendor (see this
-   [example](platforms/x86-64-accton-wedge100bf-32x-r0.json) for the Wedge 100bf-32x),
-   you can use Stratum in "BSP-less mode". Refer to this
-   [section](#running-the-binary-in-bsp-less-mode) for more information. This is
-   the recommended mode.
- * otherwise, you need to build & install the BSP. You will not be able to use
-   the Stratum ONLP support.
+Building a Docker image yourself and more is covered in the [Docker README](./docker/README.md).
+
+### 2. Build and deploy Stratum Debian package
+
+```bash
+apt-get update
+apt-get install -y --reinstall ./stratum_bf_deb.deb
+start-stratum.sh
+```
+
+This package installs all dependencies, configuration files and the `stratum_bf`
+[systemd service](#managing-stratum-with-systemd).
+
+In the future we might provide pre-built Debian packages, but for now, you have
+to build them yourself as lined out in this document.
 
 ## Installing the SDE
 
-Barefoot's P4Studio Build tool comes with a default Stratum profile, which takes care of
-installing all the necessary dependencies and builds the SDE with the
-appropriate flags.
+Before you can build Stratum, the Barefoot SDE needs to be installed.
 
-Please follow these steps:
+Note: To do this, you will need to have a SELA with Intel (Barefoot) to access P4
+Studio SDE. Contact Intel for more details.
 
- 1. Extract the SDE: `tar -xzvf bf-sde-<SDE_VERSION>.tgz`
-
- 2. Set the required environment variables
-```
+```bash
+tar -xzvf bf-sde-<SDE_VERSION>.tgz
 export SDE=`pwd`/bf-sde-<SDE_VERSION>
-export SDE_INSTALL=$BF_SDE_INSTALL
-```
-
- 3. Build and install the SDE. Use the provided profile
-    (`stratum_profile.yaml`). Feel free to customize the profile if needed;
-    please refer to the P4Studio Build documentation. If you are using the
-    reference BSP provided by Barefoot, you may also use P4Studio Build to
-    install the BSP (see [below](#installing-the-reference-bsp-for-the-wedge)).
-    Also, we drop Thrift support in Stratum, the Stratum profile will
-    be updated in next version. Now you need to remove the Thrift dependency
-    by using `sed` command (see below) if you are using SDE version 8.9.x.
-    Remember to download and pass the correct Kernel sources (`-kdir`) if you
-    are building modules for a specific version other than the host's.
-```
+export SDE_INSTALL=$SDE/install
 cd $SDE/p4studio_build
 sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.x
-./p4studio_build.py -up profiles/stratum_profile.yaml -kdir <path/to/linux/sources>
+./p4studio_build.py -up profiles/stratum_profile.yaml [-kdir <path/to/linux/sources>] [--bsp-path $BSP_PATH]
 ```
 
-If your platform supports BSP-less mode (**recommended**), you do not need to
-install the BSP. Refer to the section
-[below](#running-the-binary-in-bsp-less-mode).
+Barefoot's P4Studio Build tool comes with a default Stratum profile
+(`stratum_profile.yaml`), which takes care of installing all the necessary
+dependencies and builds the SDE with the appropriate flags. Feel free to
+customize the profile if needed; please refer to the P4Studio Build documentation.
+If you are using the
+reference BSP provided by Barefoot, you may also use P4Studio Build to
+install the BSP (see [below](#board-support-package-bsp-or-onlpv2)).
+Also, we drop Thrift support in Stratum, the Stratum profile will
+be updated in next version. Now you need to remove the Thrift dependency if you
+are using SDE version 8.9.x.
 
-### Installing the reference BSP for the Wedge
+Remember to download and pass the correct Kernel sources (`-kdir`) if you
+are building modules for a specific version other than the host's.
 
-**Ignore this section if your platform supports ONLPv2 and BSP-less mode.**
-
-If you are using the reference BSP provided by Barefoot (for the Wedge switch),
-you may use P4Studio Build to install the BSP. All you need to do is extract the
-BSP tarball and **use an extra command-line option when running P4Studio
-Build**:
-
-```
-tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
-export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
-```
-Replace step 3 in the sequence above with:
-```
-cd $SDE/p4studio_build
-sed -i.bak '/package_dependencies/d; /thrift/d' profiles/stratum_profile.yaml  # For SDE version <= 8.9.x
-./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH
-```
-
-You may also still install the BSP manually. If you are not using the reference
-BSP, you will need to install the BSP yourself (under `$BF_SDE_INSTALL`) based
-on your vendor's instructions.
+As there are some issues with building the SDE on ONL switches, it's better to
+do that on a separate server.
 
 ### Supported SDE versions
 
  - 8.9.2
  - 9.0.0
  - 9.1.0
+ - 9.2.0
 
-## Building the binary
+### Board support package (BSP) or ONLPv2?
 
-If your platform comes with ONLPv2 and you want to use Stratum in BSP-less mode,
-you may want to set the `ONLP_INSTALL` environment variable to point to your
-ONLP installation before building `stratum_bf`. You can also build `stratum_bf`
-without setting `ONLP_INSTALL`, in which case the default ONLP library will be
-downloaded and we will build against it. This is useful if you are building
-`stratum_bf` for simulation, or if you are not building it directly on the
-switch (in this case just make sure the correct ONLP library for your platform
-is loaded at runtime).
+Stratum can be run on Tofino-based platforms in 2 different modes:
 
-```
-bazel build //stratum/hal/bin/barefoot:stratum_bf
-```
+**ONLPv2**
 
-### Specify dependency for a different SDE version
+If your platform comes with ONLPv2 and a JSON "port mapping" file is provided
+by the platform vendor (see this
+[example](../../config/x86-64-accton-wedge100bf-32x-r0/port_map.json) for the
+Wedge 100bf-32x), you can use Stratum in "BSP-less mode". Refer to this
+[section](#running-the-binary-in-bsp-less-mode) for more information. This is
+the recommended mode. No changes to the SDE needed.
 
-The `stratum_bf` bazel target is designed for the latest Barefoot SDE. You can set up
-the SDE version by using `--define` flag if you need to build with older version (e.g. 8.9.2).
+**BSP**
 
-```
-bazel build //stratum/hal/bin/barefoot:stratum_bf [--define sde_ver=8.9.2]
-```
-
-### Disable the ONLP support
-
-The `--define phal_with_onlp=false` flag tells Bazel not to build with the ONLP Phal
-implementation. Use this flag when you are using a vendor-provided BSP or
-running Stratum with the Tofino software model.
-
-```
-bazel build //stratum/hal/bin/barefoot:stratum_bf --define phal_with_onlp=false [--define sde_ver=8.9.2]
-```
-
-## Running the Stratum binary
-
-### Setting up the huge page
-
-Before start the Stratum, make sure you have set up the huge page for DMA purposes.
-
-__Note:__ This step only needs to be done once.
+Otherwise, you need to build & install the BSP. You will not be able to use
+the Stratum ONLP support. The exact instructions vary by the BSP vendor, here is
+how it works for the Wedge reference switch. Pass the BSP sources to the p4studio_build
+script with the `--bsp-path` flag.
 
 ```bash
-sudo echo "vm.nr_hugepages = 128" >> /etc/sysctl.conf
-sudo sysctl -p /etc/sysctl.conf
-sudo mkdir /mnt/huge
-sudo mount -t hugetlbfs nodev /mnt/huge
+tar -xzvf bf-reference-bsp-<SDE_VERSION>.tgz
+export BSP_PATH=`pwd`/bf-reference-bsp-<SDE_VERSION>
+./p4studio_build.py -up profiles/stratum_profile.yaml --bsp-path $BSP_PATH [-kdir <path/to/linux/sources>]
 ```
 
-### Running the binary (with BSP or Tofino software model)
+## Building Stratum
 
-```
-sudo LD_LIBRARY_PATH=$BF_SDE_INSTALL/lib \
-     ./bazel-bin/stratum/hal/bin/barefoot/stratum_bf \
-       --bf_sde_install=$BF_SDE_INSTALL \
-       --forwarding_pipeline_configs_file=<config dir>/p4_pipeline.pb.txt \
-       --chassis_config_file=<config dir>/chassis_config.pb.txt \
-       --bf_sim
+The [SDE](#installing-the-sde) needs to be installed and set up for this step.
+
+```bash
+bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define phal_with_onlp=false] [--define sde_ver=9.2.0]
 ```
 
-For a sample `chassis_config.pb.txt` file, see sample_config.pb.txt in this
-directory. *Do not use the ucli or the Thrift PAL RPC service for port
-configuration.* You may use the ucli to check port status (`pm show`).
+We provide a Bazel target that builds the Stratum binary and packages all
+necessary configurations into a single Debian package(.deb file). The Debian
+package also includes systemd service definition so users can use systemd to
+start the Stratum as a system service.
+
+The resulting Debian package can be found here:
+`bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb`
+
+Copy this file over to the switch and follow the [running Stratum](#running-stratum)
+instructions.
+
+### Building for a different SDE version
+
+Stratum is designed for the latest Barefoot SDE. You can specify a version by
+using the `--define sde_ver=<SDE version>` flag if you need to build Stratum
+against an older version (e.g. 8.9.2) and set up the SDE [accordingly](#installing-the-sde).
+
+### Disabling ONLPv2 support
+
+If you're using a vendor-provided BSP or running Stratum with the Tofino
+software model, ONLP needs to be disabled. The `--define phal_with_onlp=false`
+flag tells Bazel not to build with the ONLP Phal implementation.
+
+## Running Stratum
+
+Install the package built in the previous step and start Stratum:
+
+```bash
+apt-get update
+apt-get install -y --reinstall ./stratum_bf_deb.deb
+start-stratum.sh
+```
+
+You can safely ignore warnings like this:
+`N: Download is performed unsandboxed as root as file '/root/stratum_bf_deb.deb' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)`
+
+Stratum picks sane defaults for most platforms, but should you need to change some
+of the configs, you can do so by passing additional arguments to the start script.
+Try `--help` for a list of all available options.
+
+### Running with BSP or on Tofino model
+
+```bash
+start-stratum.sh --bf_sim
+```
 
 The `--bf_sim` flag tells Stratum not to use the Phal ONLP implementation, but
 `PhalSim`, a "fake" Phal implementation, instead. Use this flag when you are
 using a vendor-provided BSP or running Stratum with the Tofino software model.
 
 ### Running the binary in BSP-less mode
+
+```bash
+start-stratum.sh --bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
+```
 
 If ONLP support is available for your platform, you do not need to use a
 BSP. Instead the platform vendor can provide a JSON "port mapping" file (see
@@ -210,7 +174,7 @@ this [example](platforms/x86-64-accton-wedge100bf-32x-r0.json) for the Wedge
 available to the SDE as needed.
 
 To start Stratum in BSP-less mode, copy the JSON port mapping file for your
-platform to `$BF_SDE_INSTALL/share` and run `stratum_bf` with
+platform to `/etc/stratum/<platform>/port_map.json` and run `start-stratum.sh` with
 `--bf_switchd_cfg=stratum/hal/bin/barefoot/tofino_skip_p4_no_bsp.conf`.
 
 Platforms with repeaters (such as the Wedge 100bf-65x) are not currently
@@ -246,6 +210,25 @@ will configure device port 132 in 100G mode with Reed-Solomon (RS) FEC.
 
 FEC can also be configured when adding a port through gNMI.
 
+### Managing Stratum with systemd
+
+Systemd provides service management and Stratum has been integrated into it.
+
+Start/stop Stratum service manually:
+```bash
+systemctl start stratum_bf.service  # stop
+```
+
+Enable/disable auto-start of Stratum on boot:
+```bash
+systemctl enable stratum_bf.service  # disable
+```
+
+View logs:
+```bash
+journalctl -u stratum_bf.service
+```
+
 ## Testing gNMI
 
 See [gNMI CLI](/tools/gnmi/README.md)
@@ -264,39 +247,3 @@ To start a shell session, you can use (requires Docker):
 
 Refer to the [p4runtime-shell](https://github.com/p4lang/p4runtime-shell)
 documentation for more information.
-
-## Building and installing the Debian package
-
-### Prerequests
-
-Before building the Debian package, you need to build SDE and/or the BSP, see this [section](#installing-the-sde) for more information.
-
-To build Debian package, use command below:
-
-```
- bazel build //stratum/hal/bin/barefoot:stratum_bf_deb [--define sde_ver=8.9.2] [--define phal_with_onlp=false]
-```
-
-For more information of `sde_ver` and `phal_with_onlp`, see [Specify dependency for a different SDE version](#specify-dependency-for-a-different-sde-version) and [Disable the ONLP support](#disable-the-onlp-support)
-
-You can find the Debian package here:
-`bazel-bin/stratum/hal/bin/barefoot/stratum_bf_deb.deb`
-
-The Debian package includes some necessary libraries like PI so you don't need to install these libraries into the target device.
-
-To install the package, simply upload the deb file to your device and use `apt` command:
-
-```bash
-[sudo] apt update
-[sudo] apt install -y ./stratum_bf_deb.deb
-```
-
-The following packages will be installed after command above.
-
- - systemd
- - kmod
- - libssl1.1
- - libedit2
- - libjudydebian1
- - libboost-thread1.62.0
- - stratum-bf

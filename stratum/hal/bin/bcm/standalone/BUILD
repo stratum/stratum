@@ -97,7 +97,7 @@ pkg_tar(
 pkg_tar(
     name = "stratum_bcm_etc",
     deps = [
-        "//stratum/hal/config:all_configs_tar",
+        "//stratum/hal/config:platform_configs_tar",
     ],
     package_dir = "/etc/stratum",
 )

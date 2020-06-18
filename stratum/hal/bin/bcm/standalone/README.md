@@ -40,14 +40,16 @@ Note the **ONLPv2**!
 x86-64-<vendor-name>-<box-name>-32x-r0
 ```
 
-## Pre-build Docker image
+## Pre-built Docker image
 
 Stratum for Broadcom switches can be run inside Docker on the switch itself.
 As part of CI, we publish Stratum with a pre-compiled binary and a set of default configuration files as a [Docker container](https://hub.docker.com/repository/docker/stratumproject/stratum-bcm).
 
- - `cd stratum/hal/bin/bcm/standalone`
- - `docker pull stratumproject/stratum-bcm:latest`
- - `start-stratum.sh`
+```bash
+docker pull stratumproject/stratum-bcm:latest  # to update the image
+cd stratum/hal/bin/bcm/standalone/docker
+./start-stratum-container.sh
+```
 
 ## From source
 
@@ -120,7 +122,7 @@ Running `stratum_bcm` requires some configuration files, passed as CLI flags:
 - bcm_hardware_specs_file: ACL and UDF properties of chips. Found under: `/stratum/hal/config/bcm_hardware_specs.pb.txt`
 - bcm_serdes_db_proto_file: Contains SerDes configuration. Not implemented yet, can be an empty file.
 
-We provide defaults for most platforms under `stratum/hal/config`. If you followed the build instructions, these should be on the switch under `stratum_configs`.
+We provide defaults for most platforms under `stratum/hal/config`. If you followed the build instructions, these should be on the switch under `/etc/stratum/$PLATFORM`.
 Depending on your actual cabling, you'll have to adjust the config files. Panel ports 31 & 32 are in loopback mode and should work without cables.
 
 To start Stratum, you can use the convenience script we package in:

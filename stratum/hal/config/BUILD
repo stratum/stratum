@@ -33,7 +33,7 @@ platform_config_test("x86-64-stordis-bf2556x-1t-r0")
 platform_config_test("x86-64-stordis-bf6064x-t-r0")
 
 filegroup(
-    name="all_configs",
+    name="platform_configs",
     srcs = glob([
         "*/base_bcm_chassis_map.pb.txt",
         "*/chassis_config.pb.txt",
@@ -48,10 +48,9 @@ filegroup(
 )
 
 pkg_tar(
-    name = "all_configs_tar",
-    extension = "tar.gz",
+    name = "platform_configs_tar",
+    extension = "tar.xz",
     strip_prefix = ".",  # needed to preserve sub-directory structure: https://github.com/bazelbuild/rules_pkg/issues/82
-    package_dir = "stratum_configs",
-    srcs = [":all_configs"],
+    srcs = [":platform_configs"],
     mode = "0644",
 )
