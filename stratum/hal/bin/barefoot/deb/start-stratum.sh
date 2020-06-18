@@ -5,7 +5,7 @@
 KDRV_PATH=${KDRV_PATH:-/usr/lib/modules/bf_kdrv.ko}
 FLAG_FILE=${FLAG_FILE:-/etc/stratum/stratum.flags}
 
-# Try to load the platform string of not already set.
+# Try to load the platform string if not already set.
 if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
     PLATFORM="$(cat /etc/onl/platform)"
 elif [[ -z "$PLATFORM" ]]; then

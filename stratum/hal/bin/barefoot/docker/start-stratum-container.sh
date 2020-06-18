@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 set -ex
 
-# Try to load the platform string of not already set.
+# Try to load the platform string if not already set.
 if [[ -z "$PLATFORM" ]] && [[ -f "/etc/onl/platform" ]]; then
     PLATFORM=$(cat /etc/onl/platform)
 elif [[ -z "$PLATFORM" ]]; then
