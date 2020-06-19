@@ -25,7 +25,7 @@ namespace barefoot {
 BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
                        BFChassisManager* bf_chassis_manager,
                        BFPdInterface* bf_pd_interface,
-                       const std::map<int, BfRtNode*>& unit_to_bfrt_node)
+                       const std::map<int, BfrtNode*>& unit_to_bfrt_node)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
       bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
       bf_pd_interface_(ABSL_DIE_IF_NULL(bf_pd_interface)),
@@ -34,7 +34,7 @@ BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
   for (const auto& entry : unit_to_bfrt_node_) {
     CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
     CHECK_NE(entry.second, nullptr)
-        << "Detected null BfRtNode for unit " << entry.first << ".";
+        << "Detected null BfrtNode for unit " << entry.first << ".";
   }
 }
 
@@ -50,7 +50,7 @@ BfrtSwitch::~BfrtSwitch() {}
   for (const auto& entry : node_id_to_unit) {
     uint64 node_id = entry.first;
     int unit = entry.second;
-    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromUnit(unit));
+    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromUnit(unit));
     RETURN_IF_ERROR(bfrt_node->PushChassisConfig(config, node_id));
     node_id_to_bfrt_node_[node_id] = bfrt_node;
   }
@@ -68,7 +68,7 @@ BfrtSwitch::~BfrtSwitch() {}
 ::util::Status BfrtSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->PushForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
 
@@ -89,7 +89,7 @@ BfrtSwitch::~BfrtSwitch() {}
 ::util::Status BfrtSwitch::SaveForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&chassis_lock);
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->SaveForwardingPipelineConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->ReplayPortsConfig(node_id));
 
@@ -100,7 +100,7 @@ BfrtSwitch::~BfrtSwitch() {}
 }
 
 ::util::Status BfrtSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->CommitForwardingPipelineConfig());
 
   LOG(INFO) << "P4-based forwarding pipeline config committed successfully to "
@@ -111,14 +111,14 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   return bfrt_node->VerifyForwardingPipelineConfig(config);
 }
 
 ::util::Status BfrtSwitch::Shutdown() {
   ::util::Status status = ::util::OkStatus();
   for (const auto& entry : unit_to_bfrt_node_) {
-    BfRtNode* node = entry.second;
+    BfrtNode* node = entry.second;
     APPEND_STATUS_IF_ERROR(status, node->Shutdown());
   }
   APPEND_STATUS_IF_ERROR(status, bf_chassis_manager_->Shutdown());
@@ -139,7 +139,7 @@ BfrtSwitch::~BfrtSwitch() {}
   CHECK_RETURN_IF_FALSE(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(req.device_id()));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(req.device_id()));
   return bfrt_node->WriteForwardingEntries(req, results);
 }
 
@@ -151,25 +151,25 @@ BfrtSwitch::~BfrtSwitch() {}
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
 
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(req.device_id()));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(req.device_id()));
   return bfrt_node->ReadForwardingEntries(req, writer, details);
 }
 
 ::util::Status BfrtSwitch::RegisterPacketReceiveWriter(
     uint64 node_id,
     std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   return bfrt_node->RegisterPacketReceiveWriter(writer);
 }
 
 ::util::Status BfrtSwitch::UnregisterPacketReceiveWriter(uint64 node_id) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   return bfrt_node->UnregisterPacketReceiveWriter();
 }
 
 ::util::Status BfrtSwitch::TransmitPacket(uint64 node_id,
                                           const ::p4::v1::PacketOut& packet) {
-  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfRtNodeFromNodeId(node_id));
+  ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   return bfrt_node->TransmitPacket(packet);
 }
 
@@ -232,22 +232,22 @@ BfrtSwitch::~BfrtSwitch() {}
 std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
     BFPdInterface* bf_pd_interface,
-    const std::map<int, BfRtNode*>& unit_to_bfrt_node) {
+    const std::map<int, BfrtNode*>& unit_to_bfrt_node) {
   return absl::WrapUnique(new BfrtSwitch(phal_interface, bf_chassis_manager,
                                          bf_pd_interface, unit_to_bfrt_node));
 }
 
-::util::StatusOr<BfRtNode*> BfrtSwitch::GetBfRtNodeFromUnit(int unit) const {
-  BfRtNode* bfrt_node = gtl::FindPtrOrNull(unit_to_bfrt_node_, unit);
+::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromUnit(int unit) const {
+  BfrtNode* bfrt_node = gtl::FindPtrOrNull(unit_to_bfrt_node_, unit);
   if (bfrt_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
   }
   return bfrt_node;
 }
 
-::util::StatusOr<BfRtNode*> BfrtSwitch::GetBfRtNodeFromNodeId(
+::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromNodeId(
     uint64 node_id) const {
-  BfRtNode* bfrt_node = gtl::FindPtrOrNull(node_id_to_bfrt_node_, node_id);
+  BfrtNode* bfrt_node = gtl::FindPtrOrNull(node_id_to_bfrt_node_, node_id);
   if (bfrt_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM)
            << "Node with ID " << node_id

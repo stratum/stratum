@@ -21,7 +21,7 @@ namespace hal {
 namespace barefoot {
 
 // A helper class that convert IDs between P4Runtime and BfRt.
-class BfRtIdMapper {
+class BfrtIdMapper {
  public:
   // Initialize pipeline information
   // This function creates a mapping between P4Info and BfRt
@@ -59,12 +59,12 @@ class BfRtIdMapper {
       bf_rt_id_t action_selector_id) const LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance for a specific unit.
-  static std::unique_ptr<BfRtIdMapper> CreateInstance(int unit);
+  static std::unique_ptr<BfrtIdMapper> CreateInstance(int unit);
 
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfRtIdMapper(int unit);
+  explicit BfrtIdMapper(int unit);
 
   ::util::Status BuildMapping(uint32_t p4info_id, std::string p4info_name,
                               const bfrt::BfRtInfo* bfrt_info)

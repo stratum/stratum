@@ -23,7 +23,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-class BfRtActionProfileManager {
+class BfrtActionProfileManager {
  public:
   // Pushes the pipline info.
   ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
@@ -67,8 +67,8 @@ class BfRtActionProfileManager {
       LOCKS_EXCLUDED(lock_);
 
   // Creates an action profile manager instance for a specific unit.
-  static std::unique_ptr<BfRtActionProfileManager> CreateInstance(
-      int unit, const BfRtIdMapper* bfrt_id_mapper);
+  static std::unique_ptr<BfrtActionProfileManager> CreateInstance(
+      int unit, const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   // Writes an action profile member
@@ -132,7 +132,7 @@ class BfRtActionProfileManager {
 
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfRtActionProfileManager(int unit, const BfRtIdMapper* bfrt_id_mapper);
+  BfrtActionProfileManager(int unit, const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
@@ -143,7 +143,7 @@ class BfRtActionProfileManager {
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
-  const BfRtIdMapper* bfrt_id_mapper_;
+  const BfrtIdMapper* bfrt_id_mapper_;
 
   // The unit number, which represent the device ID in SDK level.
   const int unit_;

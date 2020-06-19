@@ -68,7 +68,7 @@ class BfrtSwitch : public SwitchInterface {
   static std::unique_ptr<BfrtSwitch> CreateInstance(
       PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
       BFPdInterface* bf_pd_interface,
-      const std::map<int, BfRtNode*>& unit_to_bfrt_node);
+      const std::map<int, BfrtNode*>& unit_to_bfrt_node);
 
   // BfrtSwitch is neither copyable nor movable.
   BfrtSwitch(const BfrtSwitch&) = delete;
@@ -82,15 +82,15 @@ class BfrtSwitch : public SwitchInterface {
   BfrtSwitch(PhalInterface* phal_interface,
              BFChassisManager* bf_chassis_manager,
              BFPdInterface* bf_pd_interface,
-             const std::map<int, BfRtNode*>& unit_to_bfrt_node);
+             const std::map<int, BfrtNode*>& unit_to_bfrt_node);
 
-  // Helper to get BfRtNode pointer from unit number or return error
+  // Helper to get BfrtNode pointer from unit number or return error
   // indicating invalid unit.
-  ::util::StatusOr<BfRtNode*> GetBfRtNodeFromUnit(int unit) const;
+  ::util::StatusOr<BfrtNode*> GetBfrtNodeFromUnit(int unit) const;
 
-  // Helper to get BfRtNode pointer from node id or return error indicating
+  // Helper to get BfrtNode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
-  ::util::StatusOr<BfRtNode*> GetBfRtNodeFromNodeId(uint64 node_id) const;
+  ::util::StatusOr<BfrtNode*> GetBfrtNodeFromNodeId(uint64 node_id) const;
 
   // Pointer to a PhalInterface implementation. The pointer has been also
   // passed to a few managers for accessing HW. Note that there is only one
@@ -105,16 +105,16 @@ class BfrtSwitch : public SwitchInterface {
   BFPdInterface* bf_pd_interface_;  // not owned by this class.
 
   // Map from zero-based unit number corresponding to a node/ASIC to a pointer
-  // to BfRtNode which contain all the per-node managers for that node/ASIC.
+  // to BfrtNode which contain all the per-node managers for that node/ASIC.
   // This map is initialized in the constructor and will not change during the
   // lifetime of the class.
-  const std::map<int, BfRtNode*> unit_to_bfrt_node_;  // pointers not owned.
+  const std::map<int, BfrtNode*> unit_to_bfrt_node_;  // pointers not owned.
 
-  // Map from the node ids to to a pointer to BfRtNode which contain all the
+  // Map from the node ids to to a pointer to BfrtNode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.
   // At any point of time this map will contain a keys the ids of the nodes
   // which had a successful config push.
-  std::map<uint64, BfRtNode*> node_id_to_bfrt_node_;  //  pointers not owned
+  std::map<uint64, BfrtNode*> node_id_to_bfrt_node_;  //  pointers not owned
 };
 
 }  // namespace barefoot

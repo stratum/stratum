@@ -82,16 +82,16 @@ namespace barefoot {
   // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
   // does not do any device id checks.
 
-  auto bfrt_id_mapper = BfRtIdMapper::CreateInstance(unit);
+  auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(unit);
   auto bfrt_table_manager =
-      BfRtTableManager::CreateInstance(unit, bfrt_id_mapper.get());
+      BfrtTableManager::CreateInstance(unit, bfrt_id_mapper.get());
   auto bfrt_action_profile_manager =
-      BfRtActionProfileManager::CreateInstance(unit, bfrt_id_mapper.get());
+      BfrtActionProfileManager::CreateInstance(unit, bfrt_id_mapper.get());
   auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(unit);
   auto bfrt_pre_manager =
-      BfRtPreManager::CreateInstance(unit, bfrt_id_mapper.get());
+      BfrtPreManager::CreateInstance(unit, bfrt_id_mapper.get());
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
-  auto bfrt_node = BfRtNode::CreateInstance(
+  auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
       bfrt_packetio_manger.get(), bfrt_pre_manager.get(), &bf_device_manager,
       bfrt_id_mapper.get(), unit);
@@ -102,7 +102,7 @@ namespace barefoot {
     phal_impl = phal::Phal::CreateSingleton();
   }
 
-  std::map<int, BfRtNode*> unit_to_bfrt_node = {
+  std::map<int, BfrtNode*> unit_to_bfrt_node = {
       {unit, bfrt_node.get()},
   };
   auto bf_chassis_manager =
