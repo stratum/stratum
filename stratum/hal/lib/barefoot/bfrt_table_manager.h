@@ -23,7 +23,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-class BfRtTableManager {
+class BfrtTableManager {
  public:
   // Pushes the pipline info.
   ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
@@ -42,8 +42,8 @@ class BfRtTableManager {
       const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance for a specific unit.
-  static std::unique_ptr<BfRtTableManager> CreateInstance(
-      int unit, const BfRtIdMapper* bfrt_id_mapper);
+  static std::unique_ptr<BfrtTableManager> CreateInstance(
+      int unit, const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
@@ -68,7 +68,7 @@ class BfRtTableManager {
 
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfRtTableManager(int unit, const BfRtIdMapper* bfrt_id_mapper);
+  BfrtTableManager(int unit, const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
@@ -79,7 +79,7 @@ class BfRtTableManager {
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
-  const BfRtIdMapper* bfrt_id_mapper_;
+  const BfrtIdMapper* bfrt_id_mapper_;
 
   // The unit number, which represent the device ID in SDK level.
   const int unit_;

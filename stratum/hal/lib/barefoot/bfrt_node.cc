@@ -34,9 +34,9 @@ DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
 namespace stratum {
 namespace hal {
 namespace barefoot {
-BfRtNode::~BfRtNode() = default;
+BfrtNode::~BfrtNode() = default;
 
-::util::Status BfRtNode::PushChassisConfig(const ChassisConfig& config,
+::util::Status BfrtNode::PushChassisConfig(const ChassisConfig& config,
                                            uint64 node_id) {
   absl::WriterMutexLock l(&lock_);
   node_id_ = node_id;
@@ -49,7 +49,7 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::VerifyChassisConfig(const ChassisConfig& config,
+::util::Status BfrtNode::VerifyChassisConfig(const ChassisConfig& config,
                                              uint64 node_id) {
   // RETURN_IF_ERROR(bfrt_table_manager_->VerifyChassisConfig(config, node_id));
   // RETURN_IF_ERROR(
@@ -58,14 +58,14 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::PushForwardingPipelineConfig(
+::util::Status BfrtNode::PushForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   // SaveForwardingPipelineConfig + CommitForwardingPipelineConfig
   RETURN_IF_ERROR(SaveForwardingPipelineConfig(config));
   return CommitForwardingPipelineConfig();
 }
 
-::util::Status BfRtNode::SaveForwardingPipelineConfig(
+::util::Status BfrtNode::SaveForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
   RETURN_IF_ERROR(VerifyForwardingPipelineConfig(config));
@@ -74,13 +74,13 @@ BfRtNode::~BfRtNode() = default;
     cookie = config.cookie().cookie();
   }
 
-  p4info_.CopyFrom(config.p4info());
+  p4info_ = config.p4info();
   RETURN_IF_ERROR(LoadP4DeviceConfig(config.p4_device_config()));
 
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::CommitForwardingPipelineConfig() {
+::util::Status BfrtNode::CommitForwardingPipelineConfig() {
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(initialized_) << "Not initialized";
   CHECK_RETURN_IF_FALSE(bfrt_config_.programs_size() > 0);
@@ -90,7 +90,7 @@ BfRtNode::~BfRtNode() = default;
     // RETURN_IF_BFRT_ERROR(bf_device_remove(unit_));
   }
 
-  BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_begin(
+  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_begin(
       unit_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
       /* upgrade_agents */ true));
   bf_device_profile_t device_profile = {};
@@ -147,11 +147,11 @@ BfRtNode::~BfRtNode() = default;
 
   // bf_device_add?
   // This call re-initializes most SDE components.
-  BFRT_RETURN_IF_ERROR(bf_pal_device_add(unit_, &device_profile));
-  BFRT_RETURN_IF_ERROR(bf_pal_device_warm_init_end(unit_));
+  RETURN_IF_BFRT_ERROR(bf_pal_device_add(unit_, &device_profile));
+  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(unit_));
 
   // Push pipeline config to the managers
-  BFRT_RETURN_IF_ERROR(bfrt_device_manager_->bfRtInfoGet(
+  RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       unit_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
   RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
@@ -178,7 +178,7 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::VerifyForwardingPipelineConfig(
+::util::Status BfrtNode::VerifyForwardingPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config) {
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
@@ -186,16 +186,16 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::Shutdown() {
+::util::Status BfrtNode::Shutdown() {
   // RETURN_IF_BFRT_ERROR(bf_device_remove(unit_));
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::Freeze() { return ::util::OkStatus(); }
+::util::Status BfrtNode::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BfRtNode::Unfreeze() { return ::util::OkStatus(); }
+::util::Status BfrtNode::Unfreeze() { return ::util::OkStatus(); }
 
-::util::Status BfRtNode::WriteForwardingEntries(
+::util::Status BfrtNode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   absl::WriterMutexLock l(&lock_);
   bool success = true;
@@ -252,7 +252,7 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::ReadForwardingEntries(
+::util::Status BfrtNode::ReadForwardingEntries(
     const ::p4::v1::ReadRequest& req,
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
@@ -350,7 +350,7 @@ BfRtNode::~BfRtNode() = default;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtNode::RegisterPacketReceiveWriter(
+::util::Status BfrtNode::RegisterPacketReceiveWriter(
     const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
@@ -360,7 +360,7 @@ BfRtNode::~BfRtNode() = default;
   return bfrt_packetio_manager_->RegisterPacketReceiveWriter(writer);
 }
 
-::util::Status BfRtNode::UnregisterPacketReceiveWriter() {
+::util::Status BfrtNode::UnregisterPacketReceiveWriter() {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -369,7 +369,7 @@ BfRtNode::~BfRtNode() = default;
   return bfrt_packetio_manager_->UnregisterPacketReceiveWriter();
 }
 
-::util::Status BfRtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
+::util::Status BfrtNode::TransmitPacket(const ::p4::v1::PacketOut& packet) {
   absl::WriterMutexLock l(&lock_);
   if (!initialized_) {
     return MAKE_ERROR(ERR_NOT_INITIALIZED) << "Not initialized!";
@@ -378,7 +378,7 @@ BfRtNode::~BfRtNode() = default;
   return bfrt_packetio_manager_->TransmitPacket(packet);
 }
 
-::util::Status BfRtNode::WriteExternEntry(
+::util::Status BfrtNode::WriteExternEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry) {
   switch (entry.extern_type_id()) {
@@ -392,7 +392,7 @@ BfRtNode::~BfRtNode() = default;
   }
 }
 
-::util::StatusOr<::p4::v1::ExternEntry> BfRtNode::ReadExternEntry(
+::util::StatusOr<::p4::v1::ExternEntry> BfrtNode::ReadExternEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::ExternEntry& entry) {
   switch (entry.extern_type_id()) {
@@ -434,7 +434,7 @@ namespace {
 }
 }  // namespace
 
-::util::Status BfRtNode::LoadP4DeviceConfig(
+::util::Status BfrtNode::LoadP4DeviceConfig(
     const std::string& p4_device_config) {
   // Try a parse of BfrtDeviceConfig.
   {
@@ -497,23 +497,23 @@ namespace {
 }
 
 // Factory function for creating the instance of the class.
-std::unique_ptr<BfRtNode> BfRtNode::CreateInstance(
-    BfRtTableManager* bfrt_table_manager,
-    BfRtActionProfileManager* bfrt_action_profile_manager,
+std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
+    BfrtTableManager* bfrt_table_manager,
+    BfrtActionProfileManager* bfrt_action_profile_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
-    BfRtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
-    BfRtIdMapper* bfrt_id_mapper, int unit) {
-  return absl::WrapUnique(new BfRtNode(
+    BfrtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
+    BfrtIdMapper* bfrt_id_mapper, int unit) {
+  return absl::WrapUnique(new BfrtNode(
       bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
       bfrt_pre_manager, bfrt_device_manager, bfrt_id_mapper, unit));
 }
 
-BfRtNode::BfRtNode(BfRtTableManager* bfrt_table_manager,
-                   BfRtActionProfileManager* bfrt_action_profile_manager,
+BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
+                   BfrtActionProfileManager* bfrt_action_profile_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
-                   BfRtPreManager* bfrt_pre_manager,
+                   BfrtPreManager* bfrt_pre_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
-                   BfRtIdMapper* bfrt_id_mapper, int unit)
+                   BfrtIdMapper* bfrt_id_mapper, int unit)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
