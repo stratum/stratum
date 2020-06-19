@@ -14,14 +14,14 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::Status BfRtPreManager::PushPipelineInfo(
+::util::Status BfrtPreManager::PushPipelineInfo(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   bfrt_info_ = bfrt_info;
   return ::util::OkStatus();
 }
 
-::util::Status BfRtPreManager::WritePreEntry(
+::util::Status BfrtPreManager::WritePreEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type& type, const PreEntry& entry) {
   absl::WriterMutexLock l(&lock_);
@@ -36,7 +36,7 @@ namespace barefoot {
   }
 }
 
-::util::Status BfRtPreManager::WriteMulticastNodes(
+::util::Status BfrtPreManager::WriteMulticastNodes(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type& type, ::p4::v1::MulticastGroupEntry entry) {
   // Find nodes that we already insatalled for this group, can be empty if we
@@ -55,37 +55,38 @@ namespace barefoot {
   }
   const bfrt::BfRtTable* table;  // PRE node table.
   bf_rt_id_t table_id;
-  BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
-  BFRT_RETURN_IF_ERROR(table->tableIdGet(&table_id));
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
-  BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
-  BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+
+  ASSIGN_OR_RETURN(auto bf_dev_tgt,
+                   bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   for (const auto& replica : replica_ports) {
     uint32 node_id = replica.first;
     std::vector<uint32> egress_ports = replica.second;
-    BFRT_RETURN_IF_ERROR(table->keyReset(table_key.get()));
-    BFRT_RETURN_IF_ERROR(table->dataReset(table_data.get()));
+    RETURN_IF_BFRT_ERROR(table->keyReset(table_key.get()));
+    RETURN_IF_BFRT_ERROR(table->dataReset(table_data.get()));
 
     // $MULTICAST_NODE_ID
     bf_rt_id_t field_id;
-    BFRT_RETURN_IF_ERROR(table->keyFieldIdGet(kMcNodeId, &field_id));
-    BFRT_RETURN_IF_ERROR(
+    RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kMcNodeId, &field_id));
+    RETURN_IF_BFRT_ERROR(
         table_key->setValue(field_id, static_cast<uint64>(node_id)));
 
     if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
       // $DEV_PORT
-      BFRT_RETURN_IF_ERROR(table->dataFieldIdGet(kMcNodeDevPort, &field_id));
-      BFRT_RETURN_IF_ERROR(table_data->setValue(field_id, egress_ports));
+      RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeDevPort, &field_id));
+      RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, egress_ports));
     }
 
-    ASSIGN_OR_RETURN(auto bf_dev_tgt,
-                     bfrt_id_mapper_->GetDeviceTarget(table_id));
     switch (type) {
       case ::p4::v1::Update::INSERT:
-        BFRT_RETURN_IF_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
+        RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
                                                   *table_key, *table_data));
         nodes_exist.insert(node_id);
         break;
@@ -93,17 +94,17 @@ namespace barefoot {
         // If multicast node doesn't exist, we need to add it instead of
         // modify it.
         if (nodes_exist.find(node_id) == nodes_exist.end()) {
-          BFRT_RETURN_IF_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
+          RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
                                                     *table_key, *table_data));
           nodes_exist.insert(node_id);
         } else {
-          BFRT_RETURN_IF_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
+          RETURN_IF_BFRT_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
                                                     *table_key, *table_data));
         }
         break;
       }
       case ::p4::v1::Update::DELETE:
-        BFRT_RETURN_IF_ERROR(
+        RETURN_IF_BFRT_ERROR(
             table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key));
         nodes_to_erase.insert(node_id);
         break;
@@ -119,14 +120,14 @@ namespace barefoot {
         // Skip if we want to keep the node.
         continue;
       }
-      BFRT_RETURN_IF_ERROR(table->keyReset(table_key.get()));
+      RETURN_IF_BFRT_ERROR(table->keyReset(table_key.get()));
 
       // $MULTICAST_NODE_ID
       bf_rt_id_t field_id;
-      BFRT_RETURN_IF_ERROR(table->keyFieldIdGet(kMcNodeId, &field_id));
-      BFRT_RETURN_IF_ERROR(
+      RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kMcNodeId, &field_id));
+      RETURN_IF_BFRT_ERROR(
           table_key->setValue(field_id, static_cast<uint64>(node_id)));
-      BFRT_RETURN_IF_ERROR(
+      RETURN_IF_BFRT_ERROR(
           table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key));
       nodes_to_erase.insert(node_id);
     }
@@ -140,7 +141,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BfRtPreManager::WriteMulticastGroup(
+::util::Status BfrtPreManager::WriteMulticastGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type& type, ::p4::v1::MulticastGroupEntry entry) {
   // Collect instances(node) ID
@@ -151,17 +152,17 @@ namespace barefoot {
 
   const bfrt::BfRtTable* table;  // PRE MGID table.
   bf_rt_id_t table_id;
-  BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
-  BFRT_RETURN_IF_ERROR(table->tableIdGet(&table_id));
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
-  BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
-  BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
   // Match key: $MGID
   bf_rt_id_t field_id;
-  BFRT_RETURN_IF_ERROR(table->keyFieldIdGet(kMgid, &field_id));
-  BFRT_RETURN_IF_ERROR(table_key->setValue(
+  RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kMgid, &field_id));
+  RETURN_IF_BFRT_ERROR(table_key->setValue(
       field_id, static_cast<uint64>(entry.multicast_group_id())));
 
   std::vector<uint32> mc_node_list;
@@ -175,29 +176,29 @@ namespace barefoot {
   }
 
   // Data: $MULTICAST_NODE_ID
-  BFRT_RETURN_IF_ERROR(table->dataFieldIdGet(kMcNodeId, &field_id));
-  BFRT_RETURN_IF_ERROR(table_data->setValue(field_id, mc_node_list));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeId, &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, mc_node_list));
 
   // Data: $MULTICAST_NODE_L1_XID_VALID
-  BFRT_RETURN_IF_ERROR(table->dataFieldIdGet(kMcNodeL1XidValid, &field_id));
-  BFRT_RETURN_IF_ERROR(table_data->setValue(field_id, l1_xid_valid_list));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeL1XidValid, &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, l1_xid_valid_list));
 
   // Data: $MULTICAST_NODE_L1_XID
-  BFRT_RETURN_IF_ERROR(table->dataFieldIdGet(kMcNodeL1Xid, &field_id));
-  BFRT_RETURN_IF_ERROR(table_data->setValue(field_id, l1_xid_list));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeL1Xid, &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, l1_xid_list));
 
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
   switch (type) {
     case ::p4::v1::Update::INSERT:
-      BFRT_RETURN_IF_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
+      RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
                                                 *table_key, *table_data));
       break;
     case ::p4::v1::Update::MODIFY:
-      BFRT_RETURN_IF_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
+      RETURN_IF_BFRT_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
                                                 *table_key, *table_data));
       break;
     case ::p4::v1::Update::DELETE:
-      BFRT_RETURN_IF_ERROR(
+      RETURN_IF_BFRT_ERROR(
           table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key));
       break;
     default:
@@ -206,7 +207,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BfRtPreManager::WriteMulticastGroupEntry(
+::util::Status BfrtPreManager::WriteMulticastGroupEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type& type, ::p4::v1::MulticastGroupEntry entry) {
   // Need to insert/modify/delete in a specific order
@@ -226,7 +227,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<PreEntry> BfRtPreManager::ReadPreEntry(
+::util::StatusOr<PreEntry> BfrtPreManager::ReadPreEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, const PreEntry& entry) {
   absl::ReaderMutexLock l(&lock_);
   PreEntry result;
@@ -246,66 +247,66 @@ namespace barefoot {
   return result;
 }
 
-::util::StatusOr<std::vector<uint32>> BfRtPreManager::GetEgressPortsFromMcNode(
+::util::StatusOr<std::vector<uint32>> BfrtPreManager::GetEgressPortsFromMcNode(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, uint64 mc_node_id) {
   std::vector<uint32> result;
   const bfrt::BfRtTable* table;  // PRE node table.
   bf_rt_id_t table_id;
-  BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
-  BFRT_RETURN_IF_ERROR(table->tableIdGet(&table_id));
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreNodeTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
-  BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
-  BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
   // $MLUTICAST_NODE_ID
   bf_rt_id_t field_id;
-  BFRT_RETURN_IF_ERROR(table->keyFieldIdGet(kMcNodeId, &field_id));
-  BFRT_RETURN_IF_ERROR(
+  RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kMcNodeId, &field_id));
+  RETURN_IF_BFRT_ERROR(
       table_key->setValue(field_id, static_cast<uint64>(mc_node_id)));
 
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
-  BFRT_RETURN_IF_ERROR(table->tableEntryGet(
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
 
   // $DEV_PORT
-  BFRT_RETURN_IF_ERROR(table->dataFieldIdGet(kMcNodeDevPort, &field_id));
-  BFRT_RETURN_IF_ERROR(table_data->getValue(field_id, &result));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeDevPort, &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &result));
 
   return result;
 }
 
 ::util::StatusOr<::p4::v1::MulticastGroupEntry>
-BfRtPreManager::ReadMulticastGroupEntry(
+BfrtPreManager::ReadMulticastGroupEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     ::p4::v1::MulticastGroupEntry entry) {
   ::p4::v1::MulticastGroupEntry result;
   result.set_multicast_group_id(entry.multicast_group_id());
   const bfrt::BfRtTable* table;  // PRE MGID table.
   bf_rt_id_t table_id;
-  BFRT_RETURN_IF_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
-  BFRT_RETURN_IF_ERROR(table->tableIdGet(&table_id));
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromNameGet(kPreMgidTable, &table));
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   std::unique_ptr<bfrt::BfRtTableData> table_data;
-  BFRT_RETURN_IF_ERROR(table->keyAllocate(&table_key));
-  BFRT_RETURN_IF_ERROR(table->dataAllocate(&table_data));
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
   // Match key: $MGID
   bf_rt_id_t field_id;
-  BFRT_RETURN_IF_ERROR(table->keyFieldIdGet(kMgid, &field_id));
-  BFRT_RETURN_IF_ERROR(table_key->setValue(
+  RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kMgid, &field_id));
+  RETURN_IF_BFRT_ERROR(table_key->setValue(
       field_id, static_cast<uint64>(entry.multicast_group_id())));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
-  BFRT_RETURN_IF_ERROR(table->tableEntryGet(
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
 
   // Data: $MULTICAST_NODE_ID
   std::vector<uint32> mc_node_list;
-  BFRT_RETURN_IF_ERROR(table->dataFieldIdGet(kMcNodeId, &field_id));
-  BFRT_RETURN_IF_ERROR(table_data->getValue(field_id, &mc_node_list));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeId, &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &mc_node_list));
 
   // Read egress ports from all multicast ports and build replica list
   for (const auto& mc_node_id : mc_node_list) {
@@ -321,12 +322,12 @@ BfRtPreManager::ReadMulticastGroupEntry(
   return result;
 }
 
-std::unique_ptr<BfRtPreManager> BfRtPreManager::CreateInstance(
-    int unit, const BfRtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfRtPreManager(unit, bfrt_id_mapper));
+std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
+    int unit, const BfrtIdMapper* bfrt_id_mapper) {
+  return absl::WrapUnique(new BfrtPreManager(unit, bfrt_id_mapper));
 }
 
-BfRtPreManager::BfRtPreManager(int unit, const BfRtIdMapper* bfrt_id_mapper)
+BfrtPreManager::BfrtPreManager(int unit, const BfrtIdMapper* bfrt_id_mapper)
     : bfrt_id_mapper_(bfrt_id_mapper), unit_(unit) {}
 
 }  // namespace barefoot

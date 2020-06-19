@@ -24,7 +24,7 @@ namespace barefoot {
 
 using PreEntry = ::p4::v1::PacketReplicationEngineEntry;
 
-class BfRtPreManager {
+class BfrtPreManager {
  public:
   // Pushes the pipline info.
   ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
@@ -41,13 +41,13 @@ class BfRtPreManager {
       std::shared_ptr<bfrt::BfRtSession> bfrt_session, const PreEntry& entry)
       LOCKS_EXCLUDED(lock_);
 
-  static std::unique_ptr<BfRtPreManager> CreateInstance(
-      int unit, const BfRtIdMapper* bfrt_id_mapper);
+  static std::unique_ptr<BfrtPreManager> CreateInstance(
+      int unit, const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfRtPreManager(int unit, const BfRtIdMapper* bfrt_id_mapper);
+  BfrtPreManager(int unit, const BfrtIdMapper* bfrt_id_mapper);
 
   // Insert/Modify/Delete a multicast group entry.
   // This function creates one or more multicast nodes based on replicas in
@@ -88,7 +88,7 @@ class BfRtPreManager {
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
-  const BfRtIdMapper* bfrt_id_mapper_;
+  const BfrtIdMapper* bfrt_id_mapper_;
 
   // The unit number, which represent the device ID in SDK level.
   const int unit_;

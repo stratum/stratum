@@ -30,12 +30,12 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-// The BfRtNode class encapsulates all per P4-native node/chip/ASIC
+// The BfrtNode class encapsulates all per P4-native node/chip/ASIC
 // functionalities, primarily the flow managers. Calls made to this class are
 // processed and passed through to the BfRt API.
-class BfRtNode final {
+class BfrtNode final {
  public:
-  ~BfRtNode();
+  ~BfrtNode();
 
   ::util::Status PushChassisConfig(const ChassisConfig& config, uint64 node_id)
       LOCKS_EXCLUDED(lock_);
@@ -75,28 +75,28 @@ class BfRtNode final {
       const ::p4::v1::ExternEntry& entry);
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BfRtNode> CreateInstance(
-      BfRtTableManager* bfrt_table_manager,
-      BfRtActionProfileManager* bfrt_action_profile_manager,
+  static std::unique_ptr<BfrtNode> CreateInstance(
+      BfrtTableManager* bfrt_table_manager,
+      BfrtActionProfileManager* bfrt_action_profile_manager,
       BfrtPacketioManager* bfrt_packetio_manager,
-      BfRtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
-      BfRtIdMapper* bfrt_id_mapper, int unit);
+      BfrtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
+      BfrtIdMapper* bfrt_id_mapper, int unit);
 
-  // BfRtNode is neither copyable nor movable.
-  BfRtNode(const BfRtNode&) = delete;
-  BfRtNode& operator=(const BfRtNode&) = delete;
-  BfRtNode(BfRtNode&&) = delete;
-  BfRtNode& operator=(BfRtNode&&) = delete;
+  // BfrtNode is neither copyable nor movable.
+  BfrtNode(const BfrtNode&) = delete;
+  BfrtNode& operator=(const BfrtNode&) = delete;
+  BfrtNode(BfrtNode&&) = delete;
+  BfrtNode& operator=(BfrtNode&&) = delete;
 
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BfRtNode(BfRtTableManager* bfrt_table_manager,
-           BfRtActionProfileManager* bfrt_action_profile_manager,
+  BfrtNode(BfrtTableManager* bfrt_table_manager,
+           BfrtActionProfileManager* bfrt_action_profile_manager,
            BfrtPacketioManager* bfrt_packetio_manager,
-           BfRtPreManager* bfrt_pre_manager,
+           BfrtPreManager* bfrt_pre_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
-           BfRtIdMapper* bfrt_id_mapper, int unit);
+           BfrtIdMapper* bfrt_id_mapper, int unit);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
@@ -117,14 +117,14 @@ class BfRtNode final {
   bool initialized_ GUARDED_BY(lock_);
 
   // Managers. Not owned by this class.
-  BfRtTableManager* bfrt_table_manager_;
-  BfRtActionProfileManager* bfrt_action_profile_manager_;
+  BfrtTableManager* bfrt_table_manager_;
+  BfrtActionProfileManager* bfrt_action_profile_manager_;
   BfrtPacketioManager* bfrt_packetio_manager_;
-  BfRtPreManager* bfrt_pre_manager_;
+  BfrtPreManager* bfrt_pre_manager_;
   ::bfrt::BfRtDevMgr* bfrt_device_manager_;
 
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.
-  BfRtIdMapper* bfrt_id_mapper_;  // Not owned by this class
+  BfrtIdMapper* bfrt_id_mapper_;  // Not owned by this class
 
   // Stores pipeline information for this node.
   p4::config::v1::P4Info p4info_ GUARDED_BY(lock_);

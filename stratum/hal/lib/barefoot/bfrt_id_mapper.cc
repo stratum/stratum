@@ -15,14 +15,14 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::Status BfRtIdMapper::PushPipelineInfo(
+::util::Status BfrtIdMapper::PushPipelineInfo(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   RETURN_IF_ERROR(BuildP4InfoAndBfrtInfoMapping(p4info, bfrt_info));
   return ::util::OkStatus();
 }
 
-::util::Status BfRtIdMapper::BuildMapping(uint32_t p4info_id,
+::util::Status BfrtIdMapper::BuildMapping(uint32_t p4info_id,
                                           std::string p4info_name,
                                           const bfrt::BfRtInfo* bfrt_info) {
   const bfrt::BfRtTable* table;
@@ -52,7 +52,7 @@ namespace barefoot {
   // p4info doesn't. We need to scan all tables to see if there is a table
   // called "[pipeline name].[P4 info table name]"
   std::vector<const bfrt::BfRtTable*> bfrt_tables;
-  BFRT_RETURN_IF_ERROR(bfrt_info->bfrtInfoGetTables(&bfrt_tables));
+  RETURN_IF_BFRT_ERROR(bfrt_info->bfrtInfoGetTables(&bfrt_tables));
   for (auto* bfrt_table : bfrt_tables) {
     bf_rt_id_t bfrt_table_id;
     std::string bfrt_table_name;
@@ -74,7 +74,7 @@ namespace barefoot {
 // However for some cases, like externs which does not exists
 // in native P4 core headers, the frontend compiler will
 // generate different IDs between p4info and bfrt info.
-::util::Status BfRtIdMapper::BuildP4InfoAndBfrtInfoMapping(
+::util::Status BfrtIdMapper::BuildP4InfoAndBfrtInfoMapping(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   // Try to find P4 tables from BFRT info
   for (const auto& table : p4info.tables()) {
@@ -106,7 +106,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::Status BfRtIdMapper::BuildActionProfileMapping(
+::util::Status BfrtIdMapper::BuildActionProfileMapping(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info,
     const std::string& context_json_content) {
   absl::WriterMutexLock l(&lock_);
@@ -147,14 +147,14 @@ namespace barefoot {
   absl::flat_hash_map<std::string, bf_rt_id_t> act_prof_bfrt_ids;
   absl::flat_hash_map<std::string, bf_rt_id_t> selector_bfrt_ids;
   std::vector<const bfrt::BfRtTable*> bfrt_tables;
-  BFRT_RETURN_IF_ERROR(bfrt_info->bfrtInfoGetTables(&bfrt_tables));
+  RETURN_IF_BFRT_ERROR(bfrt_info->bfrtInfoGetTables(&bfrt_tables));
   for (auto bfrt_table : bfrt_tables) {
     bfrt::BfRtTable::TableType table_type;
     std::string table_name;
     bf_rt_id_t table_id;
-    BFRT_RETURN_IF_ERROR(bfrt_table->tableTypeGet(&table_type));
-    BFRT_RETURN_IF_ERROR(bfrt_table->tableNameGet(&table_name));
-    BFRT_RETURN_IF_ERROR(bfrt_table->tableIdGet(&table_id));
+    RETURN_IF_BFRT_ERROR(bfrt_table->tableTypeGet(&table_type));
+    RETURN_IF_BFRT_ERROR(bfrt_table->tableNameGet(&table_name));
+    RETURN_IF_BFRT_ERROR(bfrt_table->tableIdGet(&table_id));
 
     if (table_type == bfrt::BfRtTable::TableType::ACTION_PROFILE) {
       act_prof_bfrt_ids[table_name] = table_id;
@@ -198,7 +198,7 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<bf_rt_target_t> BfRtIdMapper::GetDeviceTarget(
+::util::StatusOr<bf_rt_target_t> BfrtIdMapper::GetDeviceTarget(
     bf_rt_id_t bfrt_id) const {
   bf_rt_target_t dev_tgt;
   dev_tgt.dev_id = unit_;
@@ -206,21 +206,21 @@ namespace barefoot {
   return dev_tgt;
 }
 
-::util::StatusOr<uint32_t> BfRtIdMapper::GetBfRtId(uint32_t p4info_id) const {
+::util::StatusOr<uint32_t> BfrtIdMapper::GetBfRtId(uint32_t p4info_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(p4info_to_bfrt_id_, p4info_id))
       << "Unable to find bfrt id form p4info id: " << p4info_id;
   return gtl::FindOrDie(p4info_to_bfrt_id_, p4info_id);
 }
 
-::util::StatusOr<uint32_t> BfRtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
+::util::StatusOr<uint32_t> BfrtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(bfrt_to_p4info_id_, bfrt_id))
       << "Unable to find p4info id form bfrt id: " << bfrt_id;
   return gtl::FindOrDie(bfrt_to_p4info_id_, bfrt_id);
 }
 
-::util::StatusOr<bf_rt_id_t> BfRtIdMapper::GetActionSelectorBfRtId(
+::util::StatusOr<bf_rt_id_t> BfrtIdMapper::GetActionSelectorBfRtId(
     bf_rt_id_t action_profile_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(
@@ -230,7 +230,7 @@ namespace barefoot {
   return gtl::FindOrDie(act_profile_to_selector_mapping_, action_profile_id);
 }
 
-::util::StatusOr<bf_rt_id_t> BfRtIdMapper::GetActionProfileBfRtId(
+::util::StatusOr<bf_rt_id_t> BfrtIdMapper::GetActionProfileBfRtId(
     bf_rt_id_t action_selector_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(
@@ -240,11 +240,11 @@ namespace barefoot {
   return gtl::FindOrDie(act_selector_to_profile_mapping_, action_selector_id);
 }
 
-std::unique_ptr<BfRtIdMapper> BfRtIdMapper::CreateInstance(int unit) {
-  return absl::WrapUnique(new BfRtIdMapper(unit));
+std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int unit) {
+  return absl::WrapUnique(new BfrtIdMapper(unit));
 }
 
-BfRtIdMapper::BfRtIdMapper(int unit) : unit_(unit) {}
+BfrtIdMapper::BfrtIdMapper(int unit) : unit_(unit) {}
 
 }  // namespace barefoot
 }  // namespace hal
