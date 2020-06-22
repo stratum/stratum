@@ -77,24 +77,23 @@ namespace barefoot {
     LOG(INFO) << "switchd started successfully";
   }
 
-  int unit(0);
+  int device_id(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
-  // DeviceMgr with "unit" instead of "node_id". This works because DeviceMgr
-  // does not do any device id checks.
+  // components with "device_id" instead of "node_id".
 
-  auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(unit);
+  auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(device_id);
   auto bfrt_table_manager =
-      BfrtTableManager::CreateInstance(unit, bfrt_id_mapper.get());
+      BfrtTableManager::CreateInstance(bfrt_id_mapper.get());
   auto bfrt_action_profile_manager =
-      BfrtActionProfileManager::CreateInstance(unit, bfrt_id_mapper.get());
-  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(unit);
+      BfrtActionProfileManager::CreateInstance(bfrt_id_mapper.get());
+  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(device_id);
   auto bfrt_pre_manager =
-      BfrtPreManager::CreateInstance(unit, bfrt_id_mapper.get());
+      BfrtPreManager::CreateInstance(bfrt_id_mapper.get());
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
       bfrt_packetio_manger.get(), bfrt_pre_manager.get(), &bf_device_manager,
-      bfrt_id_mapper.get(), unit);
+      bfrt_id_mapper.get(), device_id);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
@@ -102,14 +101,15 @@ namespace barefoot {
     phal_impl = phal::Phal::CreateSingleton();
   }
 
-  std::map<int, BfrtNode*> unit_to_bfrt_node = {
-      {unit, bfrt_node.get()},
+  std::map<int, BfrtNode*> device_id_to_bfrt_node = {
+      {device_id, bfrt_node.get()},
   };
   auto bf_chassis_manager =
       BFChassisManager::CreateInstance(phal_impl, BFPalWrapper::GetSingleton());
   auto bfpd_wrapper = BFPdWrapper::GetSingleton();
-  auto bf_switch = BfrtSwitch::CreateInstance(
-      phal_impl, bf_chassis_manager.get(), bfpd_wrapper, unit_to_bfrt_node);
+  auto bf_switch =
+      BfrtSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
+                                 bfpd_wrapper, device_id_to_bfrt_node);
 
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();

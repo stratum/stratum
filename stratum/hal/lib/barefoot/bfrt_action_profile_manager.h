@@ -66,9 +66,9 @@ class BfrtActionProfileManager {
       const ::p4::v1::ActionProfileGroup& action_profile_group)
       LOCKS_EXCLUDED(lock_);
 
-  // Creates an action profile manager instance for a specific unit.
+  // Creates an action profile manager instance.
   static std::unique_ptr<BfrtActionProfileManager> CreateInstance(
-      int unit, const BfrtIdMapper* bfrt_id_mapper);
+      const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   // Writes an action profile member
@@ -132,7 +132,7 @@ class BfrtActionProfileManager {
 
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtActionProfileManager(int unit, const BfrtIdMapper* bfrt_id_mapper);
+  BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
@@ -144,9 +144,6 @@ class BfrtActionProfileManager {
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfrtIdMapper* bfrt_id_mapper_;
-
-  // The unit number, which represent the device ID in SDK level.
-  const int unit_;
 };
 
 }  // namespace barefoot
