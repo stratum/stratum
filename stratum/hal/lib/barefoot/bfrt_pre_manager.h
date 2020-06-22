@@ -42,12 +42,12 @@ class BfrtPreManager {
       LOCKS_EXCLUDED(lock_);
 
   static std::unique_ptr<BfrtPreManager> CreateInstance(
-      int unit, const BfrtIdMapper* bfrt_id_mapper);
+      const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtPreManager(int unit, const BfrtIdMapper* bfrt_id_mapper);
+  BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // Insert/Modify/Delete a multicast group entry.
   // This function creates one or more multicast nodes based on replicas in
@@ -89,9 +89,6 @@ class BfrtPreManager {
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfrtIdMapper* bfrt_id_mapper_;
-
-  // The unit number, which represent the device ID in SDK level.
-  const int unit_;
 
   // A map which stores multicast group and nodes that already installe to the
   // device.

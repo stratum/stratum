@@ -87,11 +87,11 @@ BfrtNode::~BfrtNode() = default;
   CHECK_RETURN_IF_FALSE(bfrt_config_.device() >= 0);
 
   if (pipeline_initialized_) {
-    // RETURN_IF_BFRT_ERROR(bf_device_remove(unit_));
+    // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
   }
 
   RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_begin(
-      unit_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
+      device_id_, BF_DEV_WARM_INIT_FAST_RECFG, BF_DEV_SERDES_UPD_NONE,
       /* upgrade_agents */ true));
   bf_device_profile_t device_profile = {};
 
@@ -147,12 +147,12 @@ BfrtNode::~BfrtNode() = default;
 
   // bf_device_add?
   // This call re-initializes most SDE components.
-  RETURN_IF_BFRT_ERROR(bf_pal_device_add(unit_, &device_profile));
-  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(unit_));
+  RETURN_IF_BFRT_ERROR(bf_pal_device_add(device_id_, &device_profile));
+  RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(device_id_));
 
   // Push pipeline config to the managers
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
-      unit_, bfrt_config_.programs(0).name(), &bfrt_info_));
+      device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
   RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
   RETURN_IF_ERROR(
@@ -187,7 +187,7 @@ BfrtNode::~BfrtNode() = default;
 }
 
 ::util::Status BfrtNode::Shutdown() {
-  // RETURN_IF_BFRT_ERROR(bf_device_remove(unit_));
+  // RETURN_IF_BFRT_ERROR(bf_device_remove(device_id_));
   return ::util::OkStatus();
 }
 
@@ -502,10 +502,10 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtActionProfileManager* bfrt_action_profile_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
     BfrtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
-    BfrtIdMapper* bfrt_id_mapper, int unit) {
+    BfrtIdMapper* bfrt_id_mapper, int device_id) {
   return absl::WrapUnique(new BfrtNode(
       bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_pre_manager, bfrt_device_manager, bfrt_id_mapper, unit));
+      bfrt_pre_manager, bfrt_device_manager, bfrt_id_mapper, device_id));
 }
 
 BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
@@ -513,7 +513,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
-                   BfrtIdMapper* bfrt_id_mapper, int unit)
+                   BfrtIdMapper* bfrt_id_mapper, int device_id)
     : pipeline_initialized_(false),
       initialized_(false),
       bfrt_table_manager_(ABSL_DIE_IF_NULL(bfrt_table_manager)),
@@ -524,7 +524,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       node_id_(0),
-      unit_(unit) {}
+      device_id_(device_id) {}
 
 }  // namespace barefoot
 }  // namespace hal

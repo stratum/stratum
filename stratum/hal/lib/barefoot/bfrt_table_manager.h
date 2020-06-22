@@ -41,9 +41,9 @@ class BfrtTableManager {
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
-  // Creates a table manager instance for a specific unit.
+  // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
-      int unit, const BfrtIdMapper* bfrt_id_mapper);
+      const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
@@ -68,7 +68,7 @@ class BfrtTableManager {
 
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtTableManager(int unit, const BfrtIdMapper* bfrt_id_mapper);
+  BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
@@ -80,9 +80,6 @@ class BfrtTableManager {
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfrtIdMapper* bfrt_id_mapper_;
-
-  // The unit number, which represent the device ID in SDK level.
-  const int unit_;
 };
 
 }  // namespace barefoot

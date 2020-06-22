@@ -25,16 +25,17 @@ namespace barefoot {
 BfrtSwitch::BfrtSwitch(PhalInterface* phal_interface,
                        BFChassisManager* bf_chassis_manager,
                        BFPdInterface* bf_pd_interface,
-                       const std::map<int, BfrtNode*>& unit_to_bfrt_node)
+                       const std::map<int, BfrtNode*>& device_id_to_bfrt_node)
     : phal_interface_(CHECK_NOTNULL(phal_interface)),
       bf_chassis_manager_(CHECK_NOTNULL(bf_chassis_manager)),
       bf_pd_interface_(ABSL_DIE_IF_NULL(bf_pd_interface)),
-      unit_to_bfrt_node_(unit_to_bfrt_node),
+      device_id_to_bfrt_node_(device_id_to_bfrt_node),
       node_id_to_bfrt_node_() {
-  for (const auto& entry : unit_to_bfrt_node_) {
-    CHECK_GE(entry.first, 0) << "Invalid unit number " << entry.first << ".";
+  for (const auto& entry : device_id_to_bfrt_node_) {
+    CHECK_GE(entry.first, 0)
+        << "Invalid device_id number " << entry.first << ".";
     CHECK_NE(entry.second, nullptr)
-        << "Detected null BfrtNode for unit " << entry.first << ".";
+        << "Detected null BfrtNode for device_id " << entry.first << ".";
   }
 }
 
@@ -44,13 +45,13 @@ BfrtSwitch::~BfrtSwitch() {}
   absl::WriterMutexLock l(&chassis_lock);
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
-  ASSIGN_OR_RETURN(const auto& node_id_to_unit,
-                   bf_chassis_manager_->GetNodeIdToUnitMap());
+  ASSIGN_OR_RETURN(const auto& node_id_to_device_id,
+                   bf_chassis_manager_->GetNodeIdToDeviceIdMap());
   node_id_to_bfrt_node_.clear();
-  for (const auto& entry : node_id_to_unit) {
+  for (const auto& entry : node_id_to_device_id) {
     uint64 node_id = entry.first;
-    int unit = entry.second;
-    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromUnit(unit));
+    int device_id = entry.second;
+    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromUnit(device_id));
     RETURN_IF_ERROR(bfrt_node->PushChassisConfig(config, node_id));
     node_id_to_bfrt_node_[node_id] = bfrt_node;
   }
@@ -75,14 +76,14 @@ BfrtSwitch::~BfrtSwitch() {}
   LOG(INFO) << "P4-based forwarding pipeline config pushed successfully to "
             << "node with ID " << node_id << ".";
 
-  ASSIGN_OR_RETURN(const auto& node_id_to_unit,
-                   bf_chassis_manager_->GetNodeIdToUnitMap());
+  ASSIGN_OR_RETURN(const auto& node_id_to_device_id,
+                   bf_chassis_manager_->GetNodeIdToDeviceIdMap());
 
-  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_unit, node_id))
-      << "Unable to find unit number for node " << node_id;
-  int unit = gtl::FindOrDie(node_id_to_unit, node_id);
-  ASSIGN_OR_RETURN(auto cpu_port, bf_pd_interface_->GetPcieCpuPort(unit));
-  RETURN_IF_ERROR(bf_pd_interface_->SetTmCpuPort(unit, cpu_port));
+  CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_device_id, node_id))
+      << "Unable to find device_id number for node " << node_id;
+  int device_id = gtl::FindOrDie(node_id_to_device_id, node_id);
+  ASSIGN_OR_RETURN(auto cpu_port, bf_pd_interface_->GetPcieCpuPort(device_id));
+  RETURN_IF_ERROR(bf_pd_interface_->SetTmCpuPort(device_id, cpu_port));
   return ::util::OkStatus();
 }
 
@@ -117,7 +118,7 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::Shutdown() {
   ::util::Status status = ::util::OkStatus();
-  for (const auto& entry : unit_to_bfrt_node_) {
+  for (const auto& entry : device_id_to_bfrt_node_) {
     BfrtNode* node = entry.second;
     APPEND_STATUS_IF_ERROR(status, node->Shutdown());
   }
@@ -232,15 +233,18 @@ BfrtSwitch::~BfrtSwitch() {}
 std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
     PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
     BFPdInterface* bf_pd_interface,
-    const std::map<int, BfrtNode*>& unit_to_bfrt_node) {
+    const std::map<int, BfrtNode*>& device_id_to_bfrt_node) {
   return absl::WrapUnique(new BfrtSwitch(phal_interface, bf_chassis_manager,
-                                         bf_pd_interface, unit_to_bfrt_node));
+                                         bf_pd_interface,
+                                         device_id_to_bfrt_node));
 }
 
-::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromUnit(int unit) const {
-  BfrtNode* bfrt_node = gtl::FindPtrOrNull(unit_to_bfrt_node_, unit);
+::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromUnit(
+    int device_id) const {
+  BfrtNode* bfrt_node = gtl::FindPtrOrNull(device_id_to_bfrt_node_, device_id);
   if (bfrt_node == nullptr) {
-    return MAKE_ERROR(ERR_INVALID_PARAM) << "Unit " << unit << " is unknown.";
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Unit " << device_id << " is unknown.";
   }
   return bfrt_node;
 }

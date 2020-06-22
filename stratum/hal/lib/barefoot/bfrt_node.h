@@ -80,7 +80,7 @@ class BfrtNode final {
       BfrtActionProfileManager* bfrt_action_profile_manager,
       BfrtPacketioManager* bfrt_packetio_manager,
       BfrtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
-      BfrtIdMapper* bfrt_id_mapper, int unit);
+      BfrtIdMapper* bfrt_id_mapper, int device_id);
 
   // BfrtNode is neither copyable nor movable.
   BfrtNode(const BfrtNode&) = delete;
@@ -96,7 +96,7 @@ class BfrtNode final {
            BfrtPacketioManager* bfrt_packetio_manager,
            BfrtPreManager* bfrt_pre_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
-           BfrtIdMapper* bfrt_id_mapper, int unit);
+           BfrtIdMapper* bfrt_id_mapper, int device_id);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,
@@ -136,9 +136,9 @@ class BfrtNode final {
   // lifetime of the class.
   uint64 node_id_ GUARDED_BY(lock_);
 
-  // Fixed zero-based BFRT unit number corresponding to the node/ASIC managed by
-  // this class instance. Assigned in the class constructor.
-  const int unit_;
+  // Fixed zero-based BFRT device_id number corresponding to the node/ASIC
+  // managed by this class instance. Assigned in the class constructor.
+  const int device_id_;
 };
 
 }  // namespace barefoot

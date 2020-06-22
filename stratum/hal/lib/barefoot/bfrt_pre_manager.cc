@@ -63,8 +63,7 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
-  ASSIGN_OR_RETURN(auto bf_dev_tgt,
-                   bfrt_id_mapper_->GetDeviceTarget(table_id));
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   for (const auto& replica : replica_ports) {
     uint32 node_id = replica.first;
@@ -323,12 +322,12 @@ BfrtPreManager::ReadMulticastGroupEntry(
 }
 
 std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
-    int unit, const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtPreManager(unit, bfrt_id_mapper));
+    const BfrtIdMapper* bfrt_id_mapper) {
+  return absl::WrapUnique(new BfrtPreManager(bfrt_id_mapper));
 }
 
-BfrtPreManager::BfrtPreManager(int unit, const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(bfrt_id_mapper), unit_(unit) {}
+BfrtPreManager::BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper)
+    : bfrt_id_mapper_(bfrt_id_mapper) {}
 
 }  // namespace barefoot
 }  // namespace hal

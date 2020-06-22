@@ -58,13 +58,13 @@ class BfrtIdMapper {
   ::util::StatusOr<bf_rt_id_t> GetActionProfileBfRtId(
       bf_rt_id_t action_selector_id) const LOCKS_EXCLUDED(lock_);
 
-  // Creates a table manager instance for a specific unit.
-  static std::unique_ptr<BfrtIdMapper> CreateInstance(int unit);
+  // Creates a table manager instance for a specific device.
+  static std::unique_ptr<BfrtIdMapper> CreateInstance(int device_id);
 
  private:
   // Private constructure, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtIdMapper(int unit);
+  explicit BfrtIdMapper(int device_id);
 
   ::util::Status BuildMapping(uint32_t p4info_id, std::string p4info_name,
                               const bfrt::BfRtInfo* bfrt_info)
@@ -77,8 +77,8 @@ class BfrtIdMapper {
   // Reader-writer lock used to protect access to mapping.
   mutable absl::Mutex lock_;
 
-  // The unit(device) number for this mapper.
-  const int unit_;
+  // The device ID for this mapper.
+  const int device_id_;
 
   // Mappings
   absl::flat_hash_map<bf_rt_id_t, uint32_t> bfrt_to_p4info_id_
