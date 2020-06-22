@@ -20,10 +20,18 @@ if [ -d "/etc/onl" ]; then
               -v /etc/onl:/etc/onl"
 fi
 
+# Prepare the host.
+free_hugepages=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/free_hugepages)
+if [[ $free_hugepages -lt 128 ]]; then
+    mkdir -p /mnt/huge
+    mount -t hugetlbfs nodev /mnt/huge
+    sysctl -w vm.nr_hugepages=128
+fi
+
+# Mount user configuration.
 if [ -n "$FLAG_FILE" ]; then
     FLAG_FILE_MOUNT="-v $FLAG_FILE:/etc/stratum/stratum.flags"
 fi
-
 if [ -n "$CHASSIS_CONFIG" ]; then
     CHASSIS_CONFIG_MOUNT="-v $CHASSIS_CONFIG:/etc/stratum/$PLATFORM/chassis_config.pb.txt"
 fi
