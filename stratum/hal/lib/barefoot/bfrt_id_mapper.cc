@@ -201,7 +201,7 @@ namespace barefoot {
 ::util::StatusOr<bf_rt_target_t> BfrtIdMapper::GetDeviceTarget(
     bf_rt_id_t bfrt_id) const {
   bf_rt_target_t dev_tgt;
-  dev_tgt.dev_id = unit_;
+  dev_tgt.dev_id = device_id_;
   dev_tgt.pipe_id = BF_DEV_PIPE_ALL;
   return dev_tgt;
 }
@@ -240,11 +240,11 @@ namespace barefoot {
   return gtl::FindOrDie(act_selector_to_profile_mapping_, action_selector_id);
 }
 
-std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int unit) {
-  return absl::WrapUnique(new BfrtIdMapper(unit));
+std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int device_id) {
+  return absl::WrapUnique(new BfrtIdMapper(device_id));
 }
 
-BfrtIdMapper::BfrtIdMapper(int unit) : unit_(unit) {}
+BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
 
 }  // namespace barefoot
 }  // namespace hal

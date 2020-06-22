@@ -375,16 +375,15 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   return ::util::OkStatus();
 }
 
-// Creates an action profile manager instance for a specific unit.
+// Creates an action profile manager instance.
 std::unique_ptr<BfrtActionProfileManager>
-BfrtActionProfileManager::CreateInstance(int unit,
-                                         const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtActionProfileManager(unit, bfrt_id_mapper));
+BfrtActionProfileManager::CreateInstance(const BfrtIdMapper* bfrt_id_mapper) {
+  return absl::WrapUnique(new BfrtActionProfileManager(bfrt_id_mapper));
 }
 
 BfrtActionProfileManager::BfrtActionProfileManager(
-    int unit, const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)), unit_(unit) {}
+    const BfrtIdMapper* bfrt_id_mapper)
+    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
 }  // namespace barefoot
 }  // namespace hal

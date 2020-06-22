@@ -68,7 +68,7 @@ class BfrtSwitch : public SwitchInterface {
   static std::unique_ptr<BfrtSwitch> CreateInstance(
       PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
       BFPdInterface* bf_pd_interface,
-      const std::map<int, BfrtNode*>& unit_to_bfrt_node);
+      const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
   // BfrtSwitch is neither copyable nor movable.
   BfrtSwitch(const BfrtSwitch&) = delete;
@@ -82,11 +82,11 @@ class BfrtSwitch : public SwitchInterface {
   BfrtSwitch(PhalInterface* phal_interface,
              BFChassisManager* bf_chassis_manager,
              BFPdInterface* bf_pd_interface,
-             const std::map<int, BfrtNode*>& unit_to_bfrt_node);
+             const std::map<int, BfrtNode*>& device_id_to_bfrt_node);
 
-  // Helper to get BfrtNode pointer from unit number or return error
-  // indicating invalid unit.
-  ::util::StatusOr<BfrtNode*> GetBfrtNodeFromUnit(int unit) const;
+  // Helper to get BfrtNode pointer from device_id number or return error
+  // indicating invalid device_id.
+  ::util::StatusOr<BfrtNode*> GetBfrtNodeFromUnit(int device_id) const;
 
   // Helper to get BfrtNode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
@@ -104,11 +104,11 @@ class BfrtSwitch : public SwitchInterface {
   // Pointer to a BFPdInterface implementation that wraps PD API calls.
   BFPdInterface* bf_pd_interface_;  // not owned by this class.
 
-  // Map from zero-based unit number corresponding to a node/ASIC to a pointer
+  // Map from zero-based device_id number corresponding to a node/ASIC to a pointer
   // to BfrtNode which contain all the per-node managers for that node/ASIC.
   // This map is initialized in the constructor and will not change during the
   // lifetime of the class.
-  const std::map<int, BfrtNode*> unit_to_bfrt_node_;  // pointers not owned.
+  const std::map<int, BfrtNode*> device_id_to_bfrt_node_;  // pointers not owned.
 
   // Map from the node ids to to a pointer to BfrtNode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.

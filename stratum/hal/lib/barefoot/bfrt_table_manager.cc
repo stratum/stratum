@@ -266,12 +266,12 @@ namespace barefoot {
 }
 
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
-    int unit, const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtTableManager(unit, bfrt_id_mapper));
+    const BfrtIdMapper* bfrt_id_mapper) {
+  return absl::WrapUnique(new BfrtTableManager(bfrt_id_mapper));
 }
 
-BfrtTableManager::BfrtTableManager(int unit, const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)), unit_(unit) {}
+BfrtTableManager::BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper)
+    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
 }  // namespace barefoot
 }  // namespace hal
