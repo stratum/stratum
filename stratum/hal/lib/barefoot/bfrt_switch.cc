@@ -46,7 +46,7 @@ BfrtSwitch::~BfrtSwitch() {}
   RETURN_IF_ERROR(phal_interface_->PushChassisConfig(config));
   RETURN_IF_ERROR(bf_chassis_manager_->PushChassisConfig(config));
   ASSIGN_OR_RETURN(const auto& node_id_to_device_id,
-                   bf_chassis_manager_->GetNodeIdToDeviceIdMap());
+                   bf_chassis_manager_->GetNodeIdToUnitMap());
   node_id_to_bfrt_node_.clear();
   for (const auto& entry : node_id_to_device_id) {
     uint64 node_id = entry.first;
@@ -77,7 +77,7 @@ BfrtSwitch::~BfrtSwitch() {}
             << "node with ID " << node_id << ".";
 
   ASSIGN_OR_RETURN(const auto& node_id_to_device_id,
-                   bf_chassis_manager_->GetNodeIdToDeviceIdMap());
+                   bf_chassis_manager_->GetNodeIdToUnitMap());
 
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(node_id_to_device_id, node_id))
       << "Unable to find device_id number for node " << node_id;

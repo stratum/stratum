@@ -68,16 +68,6 @@ stratum_cc_binary(
     ] + stratum_bf_common_deps,
 )
 
-stratum_cc_binary(
-    name = "bfrt_flow_test",
-    srcs = [
-        "flow_test_main.cc",
-    ],
-    deps = [
-        "@local_barefoot_bin//:bfsde",
-    ],
-)
-
 # Rules for Debian package
 pkg_tar(
     name = "stratum_binaries",
@@ -92,7 +82,7 @@ pkg_tar(
 pkg_tar(
     name = "stratum_bfrt_binaries",
     srcs = [
-        "deb/stratum-entrypoint",
+        "deb/start-stratum.sh",
         ":stratum_bfrt",
     ],
     mode = "0755",

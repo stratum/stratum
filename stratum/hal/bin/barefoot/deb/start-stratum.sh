@@ -43,7 +43,7 @@ else
     echo "Cannot find $KDRV_PATH, skip installing the Kernel module."
 fi
 
-exec /usr/bin/stratum_bf \
+exec /usr/bin/stratum_bfrt \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
     -log_dir=/var/log/stratum \
     -flagfile=$FLAG_FILE \
