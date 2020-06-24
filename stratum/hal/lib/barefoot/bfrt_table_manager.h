@@ -15,6 +15,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
@@ -26,8 +27,8 @@ namespace barefoot {
 class BfrtTableManager {
  public:
   // Pushes the pipline info.
-  ::util::Status PushForwardingPipelineConfig(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
+                                              const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
   // Writes a table entry.
@@ -46,6 +47,10 @@ class BfrtTableManager {
       const BfrtIdMapper* bfrt_id_mapper);
 
  private:
+  // Private constructor, we can create the instance by using `CreateInstance`
+  // function only.
+  BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
+
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                bfrt::BfRtTableKey* table_key,
                                const bfrt::BfRtTable* table);
@@ -65,10 +70,6 @@ class BfrtTableManager {
   ::util::Status BuildTableData(const ::p4::v1::TableEntry table_entry,
                                 const bfrt::BfRtTable* table,
                                 bfrt::BfRtTableData* table_data);
-
-  // Private constructure, we can create the instance by using `CreateInstance`
-  // function only.
-  BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.

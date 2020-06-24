@@ -32,6 +32,34 @@ DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
 
 namespace stratum {
+namespace {
+// Helper function to extract the contents of first file named filename from
+// an in-memory archive.
+::util::StatusOr<std::string> ExtractFromArchive(const std::string& archive,
+                                                 const std::string& filename) {
+  struct archive* a = archive_read_new();
+  archive_read_support_filter_bzip2(a);
+  archive_read_support_filter_xz(a);
+  archive_read_support_format_tar(a);
+  int r = archive_read_open_memory(a, archive.c_str(), archive.size());
+  CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
+  auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
+  struct archive_entry* entry;
+  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+    std::string path_name = archive_entry_pathname(entry);
+    if (absl::StripSuffix(path_name, filename) != path_name) {
+      VLOG(2) << "Found file: " << path_name;
+      std::string content;
+      content.resize(archive_entry_size(entry));
+      CHECK_RETURN_IF_FALSE(archive_read_data(a, &content[0], content.size()) ==
+                            content.size());
+      return content;
+    }
+  }
+  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
+}
+}  // namespace
+
 namespace hal {
 namespace barefoot {
 BfrtNode::~BfrtNode() = default;
@@ -74,8 +102,65 @@ BfrtNode::~BfrtNode() = default;
     cookie = config.cookie().cookie();
   }
 
-  p4info_ = config.p4info();
-  RETURN_IF_ERROR(LoadP4DeviceConfig(config.p4_device_config()));
+  // Try a parse of BfrtDeviceConfig.
+  {
+    BfrtDeviceConfig device_config;
+    if (device_config.ParseFromString(config.p4_device_config())) {
+      bfrt_config_ = device_config;
+      return ::util::OkStatus();
+    }
+  }
+
+  // Find <prog_name>.conf file
+  nlohmann::json conf;
+  {
+    ASSIGN_OR_RETURN(auto conf_content,
+                     ExtractFromArchive(config.p4_device_config(), ".conf"));
+    try {
+      conf = nlohmann::json::parse(conf_content);
+      LOG(INFO) << conf.dump();
+    } catch (nlohmann::json::exception& e) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Failed to parse .conf: " << e.what();
+    }
+  }
+
+  // Translate JSON conf to protobuf.
+  try {
+    CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
+        << "Stratum only supports single devices.";
+    auto device = conf["p4_devices"][0];  // Only support single devices for now
+    bfrt_config_.set_device(device["device-id"]);
+    for (const auto& program : device["p4_programs"]) {
+      auto p = bfrt_config_.add_programs();
+      p->set_name(program["program-name"]);
+      ASSIGN_OR_RETURN(
+          auto bfrt_content,
+          ExtractFromArchive(config.p4_device_config(), "bfrt.json"));
+      p->set_bfrt(bfrt_content);
+      *p->mutable_p4info() = config.p4info();
+      for (const auto& pipeline : program["p4_pipelines"]) {
+        auto pipe = p->add_pipelines();
+        pipe->set_name(pipeline["p4_pipeline_name"]);
+        for (const auto& scope : pipeline["pipe_scope"]) {
+          pipe->add_scope(scope);
+        }
+        ASSIGN_OR_RETURN(
+            auto context_content,
+            ExtractFromArchive(config.p4_device_config(),
+                               absl::StrCat(pipe->name(), "/context.json")));
+        pipe->set_context(context_content);
+        ASSIGN_OR_RETURN(
+            auto config_content,
+            ExtractFromArchive(config.p4_device_config(),
+                               absl::StrCat(pipe->name(), "/tofino.bin")));
+        pipe->set_config(config_content);
+      }
+    }
+  } catch (nlohmann::json::exception& e) {
+    return MAKE_ERROR(ERR_INTERNAL) << e.what();
+  }
+
+  VLOG(2) << bfrt_config_.DebugString();
 
   return ::util::OkStatus();
 }
@@ -150,31 +235,20 @@ BfrtNode::~BfrtNode() = default;
   RETURN_IF_BFRT_ERROR(bf_pal_device_add(device_id_, &device_profile));
   RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(device_id_));
 
-  // Push pipeline config to the managers
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
+  // Push pipeline config to the managers.
   RETURN_IF_ERROR(
-      bfrt_id_mapper_->PushForwardingPipelineConfig(p4info_, bfrt_info_));
+      bfrt_id_mapper_->PushForwardingPipelineConfig(bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(
-      bfrt_packetio_manager_->PushForwardingPipelineConfig(p4info_));
-  // FIXME(Yi): We need to scan all context.json to build correct mapping for
-  // ActionProfiles and ActionSelectors. We may remove this workaround in the
-  // future.
-  for (int i = 0; i < bfrt_config_.programs_size(); ++i) {
-    const auto& program = bfrt_config_.programs(i);
-    for (int j = 0; j < program.pipelines_size(); ++j) {
-      const auto& pipeline = program.pipelines(j);
-      RETURN_IF_ERROR(bfrt_id_mapper_->BuildActionProfileMapping(
-          p4info_, bfrt_info_, pipeline.context()));
-    }
-  }
-  RETURN_IF_ERROR(
-      bfrt_table_manager_->PushForwardingPipelineConfig(p4info_, bfrt_info_));
+      bfrt_packetio_manager_->PushForwardingPipelineConfig(bfrt_config_));
+  RETURN_IF_ERROR(bfrt_table_manager_->PushForwardingPipelineConfig(
+      bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(bfrt_action_profile_manager_->PushForwardingPipelineConfig(
-      p4info_, bfrt_info_));
-  RETURN_IF_ERROR(
-      bfrt_pre_manager_->PushForwardingPipelineConfig(p4info_, bfrt_info_));
+      bfrt_config_, bfrt_info_));
+  RETURN_IF_ERROR(bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_,
+                                                                  bfrt_info_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
@@ -406,96 +480,6 @@ BfrtNode::~BfrtNode() = default;
     default:
       RETURN_ERROR() << "Unsupport extern entry " << entry.ShortDebugString();
   }
-}
-
-namespace {
-// Helper functions to extract the contents of first file named filename from
-// an in-memory archive.
-::util::StatusOr<std::string> ExtractFromArchive(const std::string& archive,
-                                                 const std::string& filename) {
-  struct archive* a = archive_read_new();
-  archive_read_support_filter_bzip2(a);
-  archive_read_support_filter_xz(a);
-  archive_read_support_format_tar(a);
-  int r = archive_read_open_memory(a, archive.c_str(), archive.size());
-  CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
-  auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
-  struct archive_entry* entry;
-  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-    std::string path_name = archive_entry_pathname(entry);
-    if (absl::StripSuffix(path_name, filename) != path_name) {
-      VLOG(2) << "Found file: " << path_name;
-      std::string content;
-      content.resize(archive_entry_size(entry));
-      CHECK_RETURN_IF_FALSE(archive_read_data(a, &content[0], content.size()) ==
-                            content.size());
-      return content;
-    }
-  }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
-}
-}  // namespace
-
-::util::Status BfrtNode::LoadP4DeviceConfig(
-    const std::string& p4_device_config) {
-  // Try a parse of BfrtDeviceConfig.
-  {
-    BfrtDeviceConfig config;
-    if (config.ParseFromString(p4_device_config)) {
-      bfrt_config_ = config;
-      return ::util::OkStatus();
-    }
-  }
-
-  // Find <prog_name>.conf file
-  nlohmann::json conf;
-  {
-    ASSIGN_OR_RETURN(auto conf_content,
-                     ExtractFromArchive(p4_device_config, ".conf"));
-    try {
-      conf = nlohmann::json::parse(conf_content);
-      LOG(INFO) << conf.dump();
-    } catch (nlohmann::json::exception& e) {
-      return MAKE_ERROR(ERR_INTERNAL) << "Failed to parse .conf: " << e.what();
-    }
-  }
-
-  // Translate JSON conf to protobuf.
-  try {
-    CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
-        << "Stratum only supports single devices.";
-    auto device = conf["p4_devices"][0];  // Only support single devices for now
-    bfrt_config_.set_device(device["device-id"]);
-    for (const auto& program : device["p4_programs"]) {
-      auto p = bfrt_config_.add_programs();
-      p->set_name(program["program-name"]);
-      ASSIGN_OR_RETURN(auto bfrt_content,
-                       ExtractFromArchive(p4_device_config, "bfrt.json"));
-      p->set_bfrt(bfrt_content);
-      for (const auto& pipeline : program["p4_pipelines"]) {
-        auto pipe = p->add_pipelines();
-        pipe->set_name(pipeline["p4_pipeline_name"]);
-        for (const auto& scope : pipeline["pipe_scope"]) {
-          pipe->add_scope(scope);
-        }
-        ASSIGN_OR_RETURN(
-            auto context_content,
-            ExtractFromArchive(p4_device_config,
-                               absl::StrCat(pipe->name(), "/context.json")));
-        pipe->set_context(context_content);
-        ASSIGN_OR_RETURN(
-            auto config_content,
-            ExtractFromArchive(p4_device_config,
-                               absl::StrCat(pipe->name(), "/tofino.bin")));
-        pipe->set_config(config_content);
-      }
-    }
-  } catch (nlohmann::json::exception& e) {
-    return MAKE_ERROR(ERR_INTERNAL) << e.what();
-  }
-
-  VLOG(2) << bfrt_config_.DebugString();
-  return ::util::OkStatus();
 }
 
 // Factory function for creating the instance of the class.

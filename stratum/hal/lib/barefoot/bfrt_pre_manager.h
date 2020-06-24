@@ -28,7 +28,7 @@ class BfrtPreManager {
  public:
   // Pushes the pipline info.
   ::util::Status PushForwardingPipelineConfig(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
+      const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
   // Writes a PRE entry.
@@ -45,7 +45,7 @@ class BfrtPreManager {
       const BfrtIdMapper* bfrt_id_mapper);
 
  private:
-  // Private constructure, we can create the instance by using `CreateInstance`
+  // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper);
 

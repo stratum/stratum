@@ -42,8 +42,11 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 
 // TODO(max): handle multiple pushes
 ::util::Status BfrtPacketioManager::PushForwardingPipelineConfig(
-    const p4::config::v1::P4Info& p4_info) {
-  RETURN_IF_ERROR(BuildMetadataMapping(p4_info));
+    const BfrtDeviceConfig& config) {
+  CHECK_RETURN_IF_FALSE(config.programs_size() == 1);
+  const auto& program = config.programs(0);
+
+  RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
 
   for (int tx_ring = BF_PKT_TX_RING_0; tx_ring < BF_PKT_TX_RING_MAX;
        tx_ring++) {

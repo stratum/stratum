@@ -204,6 +204,9 @@ stratum_cc_library(
 proto_library(
     name = "bfrt_proto",
     srcs = ["bfrt.proto"],
+    deps = [
+        "@com_github_p4lang_p4runtime//:p4info_proto",
+    ],
 )
 
 cc_proto_library(
@@ -247,6 +250,7 @@ stratum_cc_library(
     srcs = ["bfrt_table_manager.cc"],
     hdrs = ["bfrt_table_manager.h"],
     deps = [
+        ":bfrt_cc_proto",
         ":bfrt_id_mapper",
         ":macros",
         "//stratum/glue:integral_types",
@@ -273,6 +277,7 @@ stratum_cc_library(
     srcs = ["bfrt_id_mapper.cc"],
     hdrs = ["bfrt_id_mapper.h"],
     deps = [
+        ":bfrt_cc_proto",
         ":bfrt_constants",
         ":macros",
         "//stratum/glue:integral_types",
@@ -316,6 +321,7 @@ stratum_cc_library(
     srcs = ["bfrt_action_profile_manager.cc"],
     hdrs = ["bfrt_action_profile_manager.h"],
     deps = [
+        ":bfrt_cc_proto",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",
@@ -343,6 +349,7 @@ stratum_cc_library(
     srcs = ["bfrt_packetio_manager.cc"],
     hdrs = ["bfrt_packetio_manager.h"],
     deps = [
+        ":bfrt_cc_proto",
         ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
@@ -365,6 +372,7 @@ stratum_cc_library(
     srcs = ["bfrt_pre_manager.cc"],
     hdrs = ["bfrt_pre_manager.h"],
     deps = [
+        ":bfrt_cc_proto",
         ":bfrt_constants",
         ":bfrt_id_mapper",
         ":macros",
