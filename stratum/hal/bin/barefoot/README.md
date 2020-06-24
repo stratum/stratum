@@ -247,3 +247,22 @@ To start a shell session, you can use (requires Docker):
 
 Refer to the [p4runtime-shell](https://github.com/p4lang/p4runtime-shell)
 documentation for more information.
+
+## Troubleshooting
+
+### Huge pages / DMA allocation error
+
+`ERROR: bf_sys_dma_buffer_alloc for dev_id 0 failed(-1)`
+
+This error means that the Tofino driver could not allocate DMA memory from the
+huge pages pool. Ensure that at least 128 huge pages are mounted and available:
+
+```bash
+> grep HugePages_ /proc/meminfo
+HugePages_Total:     128
+HugePages_Free:      128
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+```
+
+To enable them or allocate more, follow the steps from the [post install script](deb/postinst).
