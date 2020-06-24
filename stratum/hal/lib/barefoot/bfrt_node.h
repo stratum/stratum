@@ -102,11 +102,6 @@ class BfrtNode final {
   friend void StreamMessageCb(uint64_t node_id,
                               p4::v1::StreamMessageResponse* msg, void* cookie);
 
-  // Extracts the device config from the packed message and loads it into the
-  // node. It is not loaded into the SDE yet.
-  ::util::Status LoadP4DeviceConfig(const std::string& p4_device_config)
-      EXCLUSIVE_LOCKS_REQUIRED(lock_);
-
   // Reader-writer lock used to protect access to node-specific state.
   mutable absl::Mutex lock_;
 
@@ -127,7 +122,6 @@ class BfrtNode final {
   BfrtIdMapper* bfrt_id_mapper_;  // Not owned by this class
 
   // Stores pipeline information for this node.
-  p4::config::v1::P4Info p4info_ GUARDED_BY(lock_);
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
   BfrtDeviceConfig bfrt_config_ GUARDED_BY(lock_);
 

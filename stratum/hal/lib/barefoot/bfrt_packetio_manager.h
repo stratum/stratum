@@ -12,6 +12,7 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "pkt_mgr/pkt_mgr_intf.h"
 #include "stratum/glue/status/status.h"
+#include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/utils.h"
@@ -39,7 +40,7 @@ class BfrtPacketioManager {
   // Pushes the forwarding pipeline to this class. If this is the first time, it
   // will also set up the necessary callbacks for packet IO.
   virtual ::util::Status PushForwardingPipelineConfig(
-      const p4::config::v1::P4Info& p4_info);
+      const BfrtDeviceConfig& config);
 
   // Performs coldboot shutdown. Note that there is no public Initialize().
   // Initialization is done as part of PushChassisConfig() if the class is not
