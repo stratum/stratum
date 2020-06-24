@@ -15,7 +15,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::Status BfrtTableManager::PushPipelineInfo(
+::util::Status BfrtTableManager::PushForwardingPipelineConfig(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   bfrt_info_ = bfrt_info;
@@ -173,18 +173,26 @@ namespace barefoot {
   switch (type) {
     case ::p4::v1::Update::INSERT:
       RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
-                                                *table_key, *table_data));
+                                                *table_key, *table_data))
+          << "Failed to insert table entry " << table_entry.ShortDebugString()
+          << ".";
       break;
     case ::p4::v1::Update::MODIFY:
       RETURN_IF_BFRT_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
-                                                *table_key, *table_data));
+                                                *table_key, *table_data))
+          << "Failed to modify table entry " << table_entry.ShortDebugString()
+          << ".";
       break;
     case ::p4::v1::Update::DELETE:
       RETURN_IF_BFRT_ERROR(
-          table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key));
+          table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key))
+          << "Failed to delete table entry " << table_entry.ShortDebugString()
+          << ".";
       break;
     default:
-      RETURN_ERROR() << "Unsupported update type: " << type;
+      RETURN_ERROR(ERR_INTERNAL)
+          << "Unsupported update type: " << type << " in table entry "
+          << table_entry.ShortDebugString() << ".";
   }
   return ::util::OkStatus();
 }

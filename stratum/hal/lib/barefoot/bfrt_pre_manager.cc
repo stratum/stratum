@@ -14,7 +14,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-::util::Status BfrtPreManager::PushPipelineInfo(
+::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   bfrt_info_ = bfrt_info;

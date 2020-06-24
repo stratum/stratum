@@ -26,8 +26,8 @@ namespace barefoot {
 class BfrtActionProfileManager {
  public:
   // Pushes the pipline info.
-  ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
-                                  const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(
+      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
   // Writes an action profile member
   ::util::Status WriteActionProfileEntry(

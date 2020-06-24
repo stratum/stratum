@@ -25,8 +25,8 @@ class BfrtIdMapper {
  public:
   // Initialize pipeline information
   // This function creates a mapping between P4Info and BfRt
-  ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
-                                  const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(
+      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
   // Scan context.json file and build mappings for ActionProfile and

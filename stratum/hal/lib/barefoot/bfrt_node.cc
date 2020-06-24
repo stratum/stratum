@@ -154,7 +154,8 @@ BfrtNode::~BfrtNode() = default;
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
-  RETURN_IF_ERROR(bfrt_id_mapper_->PushPipelineInfo(p4info_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_id_mapper_->PushForwardingPipelineConfig(p4info_, bfrt_info_));
   RETURN_IF_ERROR(
       bfrt_packetio_manager_->PushForwardingPipelineConfig(p4info_));
   // FIXME(Yi): We need to scan all context.json to build correct mapping for
@@ -168,11 +169,12 @@ BfrtNode::~BfrtNode() = default;
           p4info_, bfrt_info_, pipeline.context()));
     }
   }
-
-  RETURN_IF_ERROR(bfrt_table_manager_->PushPipelineInfo(p4info_, bfrt_info_));
   RETURN_IF_ERROR(
-      bfrt_action_profile_manager_->PushPipelineInfo(p4info_, bfrt_info_));
-  RETURN_IF_ERROR(bfrt_pre_manager_->PushPipelineInfo(p4info_, bfrt_info_));
+      bfrt_table_manager_->PushForwardingPipelineConfig(p4info_, bfrt_info_));
+  RETURN_IF_ERROR(bfrt_action_profile_manager_->PushForwardingPipelineConfig(
+      p4info_, bfrt_info_));
+  RETURN_IF_ERROR(
+      bfrt_pre_manager_->PushForwardingPipelineConfig(p4info_, bfrt_info_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
