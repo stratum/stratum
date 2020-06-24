@@ -11,7 +11,7 @@ namespace hal {
 namespace barefoot {
 
 ::util::Status BfrtActionProfileManager::PushForwardingPipelineConfig(
-    const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
+    const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
   bfrt_info_ = bfrt_info;
   return ::util::OkStatus();

@@ -14,6 +14,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/lib/macros.h"
 
 namespace stratum {
@@ -25,17 +26,9 @@ class BfrtIdMapper {
  public:
   // Initialize pipeline information
   // This function creates a mapping between P4Info and BfRt
-  ::util::Status PushForwardingPipelineConfig(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
+                                              const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
-
-  // Scan context.json file and build mappings for ActionProfile and
-  // ActionSelector.
-  // FIXME(Yi): We may want to remove this workaround if we use the P4 externs
-  // in the future.
-  ::util::Status BuildActionProfileMapping(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info,
-      const std::string& context_json_content) LOCKS_EXCLUDED(lock_);
 
   // Gets the device target(device id + pipe id) for a specific BfRt
   // primitive(e.g. table)
@@ -62,7 +55,7 @@ class BfrtIdMapper {
   static std::unique_ptr<BfrtIdMapper> CreateInstance(int device_id);
 
  private:
-  // Private constructure, we can create the instance by using `CreateInstance`
+  // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
   explicit BfrtIdMapper(int device_id);
 
@@ -70,15 +63,16 @@ class BfrtIdMapper {
                               const bfrt::BfRtInfo* bfrt_info)
       SHARED_LOCKS_REQUIRED(lock_);
 
-  ::util::Status BuildP4InfoAndBfrtInfoMapping(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
-      SHARED_LOCKS_REQUIRED(lock_);
+  // Scan context.json file and build mappings for ActionProfile and
+  // ActionSelector.
+  // FIXME(Yi): We may want to remove this workaround if we use the P4 externs
+  // in the future.
+  ::util::Status BuildActionProfileMapping(
+      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info,
+      const std::string& context_json_content) SHARED_LOCKS_REQUIRED(lock_);
 
   // Reader-writer lock used to protect access to mapping.
   mutable absl::Mutex lock_;
-
-  // The device ID for this mapper.
-  const int device_id_;
 
   // Mappings
   absl::flat_hash_map<bf_rt_id_t, uint32_t> bfrt_to_p4info_id_
@@ -87,9 +81,14 @@ class BfrtIdMapper {
       GUARDED_BY(lock_);
 
   // Map for getting an ActionSelector BfRt ID from an ActionProfile BfRt ID.
-  absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_profile_to_selector_mapping_;
+  absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_profile_to_selector_mapping_
+      GUARDED_BY(lock_);
   // Map for getting an ActionProfile BfRt ID from an ActionSelector BfRt ID.
-  absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_selector_to_profile_mapping_;
+  absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_selector_to_profile_mapping_
+      GUARDED_BY(lock_);
+
+  // The device ID for this mapper.
+  const int device_id_;
 };
 
 }  // namespace barefoot

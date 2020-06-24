@@ -15,10 +15,55 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
+
 ::util::Status BfrtIdMapper::PushForwardingPipelineConfig(
-    const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
+    const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
-  RETURN_IF_ERROR(BuildP4InfoAndBfrtInfoMapping(p4info, bfrt_info));
+
+  // Builds mapping between p4info and bfrt info
+  // In most cases, such as table id, we don't really need to map
+  // from p4info ID to bfrt ID.
+  // However for some cases, like externs which does not exists
+  // in native P4 core headers, the frontend compiler will
+  // generate different IDs between p4info and bfrt info.
+  for (const auto& program : config.programs()) {
+    // Try to find P4 tables from BFRT info
+    for (const auto& table : program.p4info().tables()) {
+      RETURN_IF_ERROR(BuildMapping(table.preamble().id(),
+                                   table.preamble().name(), bfrt_info));
+    }
+
+    // Action profiles
+    for (const auto& action_profile : program.p4info().action_profiles()) {
+      RETURN_IF_ERROR(BuildMapping(action_profile.preamble().id(),
+                                   action_profile.preamble().name(),
+                                   bfrt_info));
+    }
+    // FIXME(Yi): We need to scan all context.json to build correct mapping for
+    // ActionProfiles and ActionSelectors. We may remove this workaround in the
+    // future.
+    for (const auto& pipeline : program.pipelines()) {
+      RETURN_IF_ERROR(BuildActionProfileMapping(program.p4info(), bfrt_info,
+                                                pipeline.context()));
+    }
+
+    // Externs
+    for (const auto& p4extern : program.p4info().externs()) {
+      // TODO(Yi): Now we only support ActionProfile and ActionSelector
+      // Things like DirectCounter are not listed as a table in bfrt.json
+      if (p4extern.extern_type_id() != kTnaExternActionProfileId &&
+          p4extern.extern_type_id() != kTnaExternActionSelectorId) {
+        continue;
+      }
+      for (const auto& extern_instance : p4extern.instances()) {
+        RETURN_IF_ERROR(BuildMapping(extern_instance.preamble().id(),
+                                     extern_instance.preamble().name(),
+                                     bfrt_info));
+      }
+    }
+  }
+
   return ::util::OkStatus();
 }
 
@@ -68,48 +113,9 @@ namespace barefoot {
          << "Unable to find " << p4info_name << " from bfrt info.";
 }
 
-// Builds mapping between p4info and bfrt info
-// In most case, such as table id, we don't really need to map
-// from p4info ID to bfrt ID.
-// However for some cases, like externs which does not exists
-// in native P4 core headers, the frontend compiler will
-// generate different IDs between p4info and bfrt info.
-::util::Status BfrtIdMapper::BuildP4InfoAndBfrtInfoMapping(
-    const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info) {
-  // Try to find P4 tables from BFRT info
-  for (const auto& table : p4info.tables()) {
-    RETURN_IF_ERROR(BuildMapping(table.preamble().id(), table.preamble().name(),
-                                 bfrt_info));
-  }
-
-  // Action profiles
-  for (const auto& action_profile : p4info.action_profiles()) {
-    RETURN_IF_ERROR(BuildMapping(action_profile.preamble().id(),
-                                 action_profile.preamble().name(), bfrt_info));
-  }
-
-  // Externs
-  for (const auto& p4extern : p4info.externs()) {
-    // TODO(Yi): Now we only support ActionProfile and ActionSelector
-    // Things like DirectCounter are not listed as a table in bfrt.json
-    if (p4extern.extern_type_id() != kTnaExternActionProfileId &&
-        p4extern.extern_type_id() != kTnaExternActionSelectorId) {
-      continue;
-    }
-    for (const auto& extern_instance : p4extern.instances()) {
-      RETURN_IF_ERROR(BuildMapping(extern_instance.preamble().id(),
-                                   extern_instance.preamble().name(),
-                                   bfrt_info));
-    }
-  }
-
-  return ::util::OkStatus();
-}
-
 ::util::Status BfrtIdMapper::BuildActionProfileMapping(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info,
     const std::string& context_json_content) {
-  absl::WriterMutexLock l(&lock_);
   nlohmann::json context_json;
   {
     try {
@@ -243,8 +249,6 @@ namespace barefoot {
 std::unique_ptr<BfrtIdMapper> BfrtIdMapper::CreateInstance(int device_id) {
   return absl::WrapUnique(new BfrtIdMapper(device_id));
 }
-
-BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
 
 }  // namespace barefoot
 }  // namespace hal

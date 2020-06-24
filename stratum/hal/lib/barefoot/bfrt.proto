@@ -7,13 +7,16 @@ option cc_generic_services = false;
 
 package stratum.hal.barefoot;
 
+import "p4/config/v1/p4info.proto";
+
 // BfrtDeviceConfig contains all the information of a P4 program that can be
 // loaded into the SDE.
 message BfrtDeviceConfig {
   message P4Program {
     string name = 1; // For display purposes only.
     bytes bfrt = 2;  // JSON
-    repeated P4Pipeline pipelines = 3;
+    p4.config.v1.P4Info p4info = 3;
+    repeated P4Pipeline pipelines = 4;
   }
 
   message P4Pipeline {

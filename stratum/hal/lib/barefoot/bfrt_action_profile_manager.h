@@ -16,6 +16,7 @@
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
+#include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
 
@@ -26,8 +27,8 @@ namespace barefoot {
 class BfrtActionProfileManager {
  public:
   // Pushes the pipline info.
-  ::util::Status PushForwardingPipelineConfig(
-      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
+                                              const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
   // Writes an action profile member
   ::util::Status WriteActionProfileEntry(
@@ -71,6 +72,10 @@ class BfrtActionProfileManager {
       const BfrtIdMapper* bfrt_id_mapper);
 
  private:
+  // Private constructor, we can create the instance by using `CreateInstance`
+  // function only.
+  BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
+
   // Writes an action profile member
   ::util::Status WriteActionProfileMember(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
@@ -129,10 +134,6 @@ class BfrtActionProfileManager {
       const bfrt::BfRtTable* table,
       const ::p4::v1::ActionProfileGroup& action_profile_group,
       bfrt::BfRtTableData* table_data);
-
-  // Private constructure, we can create the instance by using `CreateInstance`
-  // function only.
-  BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
