@@ -27,8 +27,8 @@ using PreEntry = ::p4::v1::PacketReplicationEngineEntry;
 class BfrtPreManager {
  public:
   // Pushes the pipline info.
-  ::util::Status PushPipelineInfo(const p4::config::v1::P4Info& p4info,
-                                  const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(
+      const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
   // Writes a PRE entry.
