@@ -98,7 +98,7 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
   // called "[pipeline name].[P4 info table name]"
   std::vector<const bfrt::BfRtTable*> bfrt_tables;
   RETURN_IF_BFRT_ERROR(bfrt_info->bfrtInfoGetTables(&bfrt_tables));
-  for (auto* bfrt_table : bfrt_tables) {
+  for (const auto* bfrt_table : bfrt_tables) {
     bf_rt_id_t bfrt_table_id;
     std::string bfrt_table_name;
     bfrt_table->tableIdGet(&bfrt_table_id);
@@ -116,37 +116,45 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
 ::util::Status BfrtIdMapper::BuildActionProfileMapping(
     const p4::config::v1::P4Info& p4info, const bfrt::BfRtInfo* bfrt_info,
     const std::string& context_json_content) {
-  nlohmann::json context_json;
-  {
-    try {
-      context_json = nlohmann::json::parse(context_json_content);
-    } catch (nlohmann::json::exception& e) {
-      return MAKE_ERROR(ERR_INTERNAL)
-             << "Failed to parse context.json: " << e.what();
-    }
-  }
-  // Action profile name to selector name.
   absl::flat_hash_map<std::string, std::string> prof_to_sel;
-  // Builds mappings for ActionProfile and ActionSelector.
-  for (auto table : context_json["tables"]) {
-    auto action_profile_name = table["action_profile"];
-    if (action_profile_name.empty()) {
-      // Skip the table if there is no ActionProfile supported.
-      continue;
-    }
-    auto action_data_table_refs = table["action_data_table_refs"];
-    auto selection_table_refs = table["selection_table_refs"];
-    if (selection_table_refs.empty()) {
-      // Skip the table if it supports ActionProfile only, since we don't need
-      // to create the mapping for this table.
-      continue;
-    }
+  try {
+    nlohmann::json context_json =
+        nlohmann::json::parse(context_json_content, nullptr, false);
+    CHECK_RETURN_IF_FALSE(!context_json.is_discarded())
+        << "Failed to parse context.json";
 
-    auto action_selector_name = selection_table_refs[0]["name"];
-    CHECK_RETURN_IF_FALSE(!action_selector_name.empty())
-        << "ActionSelector for ActionProfile " << action_profile_name
-        << " name is empty, this should not happened";
-    prof_to_sel[action_profile_name] = action_selector_name;
+    // Builds mappings for ActionProfile and ActionSelector.
+    for (const auto& table : context_json["tables"]) {
+      if (!table.contains("action_profile")) {
+        continue;
+      }
+      const auto& action_profile_name = table["action_profile"];
+      if (action_profile_name.empty()) {
+        // Skip the table if there is no ActionProfile supported.
+        continue;
+      }
+
+      if (!table.contains("selection_table_refs")) {
+        continue;
+      }
+      const auto& selection_table_refs = table["selection_table_refs"];
+      if (selection_table_refs.empty()) {
+        // Skip the table if it supports ActionProfile only, since we don't need
+        // to create the mapping for this table.
+        continue;
+      }
+
+      const auto& action_selector_name = selection_table_refs[0]["name"];
+      CHECK_RETURN_IF_FALSE(!action_selector_name.empty())
+          << "ActionSelector for ActionProfile " << action_profile_name
+          << " name is empty, this should not happened";
+      CHECK_RETURN_IF_FALSE(gtl::InsertIfNotPresent(
+          &prof_to_sel, action_profile_name, action_selector_name))
+          << "Action profile with name " << action_profile_name
+          << " already exists.";
+    }
+  } catch (nlohmann::json::exception& e) {
+    return MAKE_ERROR(ERR_INTERNAL) << e.what();
   }
 
   // Searching all action profile and selector tables from bfrt.json
@@ -154,7 +162,7 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
   absl::flat_hash_map<std::string, bf_rt_id_t> selector_bfrt_ids;
   std::vector<const bfrt::BfRtTable*> bfrt_tables;
   RETURN_IF_BFRT_ERROR(bfrt_info->bfrtInfoGetTables(&bfrt_tables));
-  for (auto bfrt_table : bfrt_tables) {
+  for (const auto* bfrt_table : bfrt_tables) {
     bfrt::BfRtTable::TableType table_type;
     std::string table_name;
     bf_rt_id_t table_id;
@@ -163,31 +171,35 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
     RETURN_IF_BFRT_ERROR(bfrt_table->tableIdGet(&table_id));
 
     if (table_type == bfrt::BfRtTable::TableType::ACTION_PROFILE) {
-      act_prof_bfrt_ids[table_name] = table_id;
+      CHECK_RETURN_IF_FALSE(
+          gtl::InsertIfNotPresent(&act_prof_bfrt_ids, table_name, table_id))
+          << "Action profile with name " << table_name << " already exists.";
     } else if (table_type == bfrt::BfRtTable::TableType::SELECTOR) {
-      selector_bfrt_ids[table_name] = table_id;
+      CHECK_RETURN_IF_FALSE(
+          gtl::InsertIfNotPresent(&selector_bfrt_ids, table_name, table_id))
+          << "Action selector with name " << table_name << " already exists.";
     }
   }
 
   // Use the prof_to_sel name mapping to build the ID mapping.
   // Note that the context.json may not include the pipe name as prefix
   // of the table name. So we need to do linear search to find IDs.
-  for (auto name_pair : prof_to_sel) {
-    auto prof = name_pair.first;
-    auto sel = name_pair.second;
+  for (const auto& name_pair : prof_to_sel) {
+    const auto& prof = name_pair.first;
+    const auto& sel = name_pair.second;
     bf_rt_id_t prof_id = 0;
     bf_rt_id_t sel_id = 0;
-    for (auto act_prof_name_id_pair : act_prof_bfrt_ids) {
-      auto act_prof_name = act_prof_name_id_pair.first;
-      auto act_prof_id = act_prof_name_id_pair.second;
+    for (const auto& act_prof_name_id_pair : act_prof_bfrt_ids) {
+      const auto& act_prof_name = act_prof_name_id_pair.first;
+      const auto& act_prof_id = act_prof_name_id_pair.second;
       if (absl::StrContains(act_prof_name, prof)) {
         prof_id = act_prof_id;
         break;
       }
     }
-    for (auto sel_name_id_pair : selector_bfrt_ids) {
-      auto act_sel_name = sel_name_id_pair.first;
-      auto act_sel_id = sel_name_id_pair.second;
+    for (const auto& sel_name_id_pair : selector_bfrt_ids) {
+      const auto& act_sel_name = sel_name_id_pair.first;
+      const auto& act_sel_id = sel_name_id_pair.second;
       if (absl::StrContains(act_sel_name, sel)) {
         sel_id = act_sel_id;
         break;
