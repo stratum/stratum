@@ -3,6 +3,8 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
 
+#include <vector>
+
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 
@@ -28,7 +30,7 @@ namespace barefoot {
       ::p4::v1::ActionProfileMember act_prof_member;
       CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
           << "Entry " << entry.ShortDebugString()
-          << " is not an action profile member";
+          << " is not an action profile member.";
       return WriteActionProfileMember(bfrt_session, bfrt_table_id, type,
                                       act_prof_member);
       break;
@@ -37,13 +39,14 @@ namespace barefoot {
       ::p4::v1::ActionProfileGroup act_prof_group;
       CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
           << "Entry " << entry.ShortDebugString()
-          << " is not an action profile group";
+          << " is not an action profile group.";
       return WriteActionProfileGroup(bfrt_session, bfrt_table_id, type,
                                      act_prof_group);
       break;
     }
     default:
-      RETURN_ERROR() << "Unsupport extern type " << entry.extern_type_id();
+      RETURN_ERROR() << "Unsupported extern type " << entry.extern_type_id()
+                     << ".";
   }
   return ::util::OkStatus();
 }
@@ -80,7 +83,8 @@ BfrtActionProfileManager::ReadActionProfileEntry(
       break;
     }
     default:
-      RETURN_ERROR() << "Unsupport extern type " << entry.extern_type_id();
+      RETURN_ERROR() << "Unsupported extern type " << entry.extern_type_id()
+                     << ".";
   }
   return result;
 }
@@ -154,7 +158,8 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
-    RETURN_IF_ERROR(BuildData(table, action_profile_member, table_data.get()));
+    RETURN_IF_ERROR(
+        BuildTableData(table, action_profile_member, table_data.get()));
   }
   ASSIGN_OR_RETURN(auto bf_dev_tgt,
                    bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
@@ -236,7 +241,8 @@ BfrtActionProfileManager::ReadActionProfileMember(
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
-    RETURN_IF_ERROR(BuildData(table, action_profile_group, table_data.get()));
+    RETURN_IF_ERROR(
+        BuildTableData(table, action_profile_group, table_data.get()));
   }
   ASSIGN_OR_RETURN(auto bf_dev_tgt,
                    bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
@@ -287,7 +293,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   uint64_t max_size;
   RETURN_IF_BFRT_ERROR(
       table_data->getValue(max_group_size_field_id, &max_size));
-  result.set_max_size((int32)max_size);
+  result.set_max_size(static_cast<int32>(max_size));
 
   // Members
   bf_rt_id_t action_member_arr_id;
@@ -329,7 +335,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   return ::util::OkStatus();
 }
 
-::util::Status BfrtActionProfileManager::BuildData(
+::util::Status BfrtActionProfileManager::BuildTableData(
     const bfrt::BfRtTable* table,
     const ::p4::v1::ActionProfileMember& action_profile_member,
     bfrt::BfRtTableData* table_data) {
@@ -343,7 +349,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   return ::util::OkStatus();
 }
 
-::util::Status BfrtActionProfileManager::BuildData(
+::util::Status BfrtActionProfileManager::BuildTableData(
     const bfrt::BfRtTable* table,
     const ::p4::v1::ActionProfileGroup& action_profile_group,
     bfrt::BfRtTableData* table_data) {

@@ -49,7 +49,7 @@ class BfrtTableManager {
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                bfrt::BfRtTableKey* table_key,

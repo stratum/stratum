@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include <deque>
+#include <string>
 
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/hal/lib/barefoot/macros.h"
@@ -43,7 +44,8 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 // TODO(max): handle multiple pushes
 ::util::Status BfrtPacketioManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config) {
-  CHECK_RETURN_IF_FALSE(config.programs_size() == 1);
+  CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
+      << "Only one program is supported.";
   const auto& program = config.programs(0);
 
   RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));

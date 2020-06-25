@@ -6,12 +6,14 @@
 #include <unistd.h>
 
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/strip.h"
-#include "archive.h"
-#include "archive_entry.h"
 #include "bf_rt/bf_rt_init.hpp"
+#include "libarchive/archive.h"
+#include "libarchive/archive_entry.h"
 #include "nlohmann/json.hpp"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/cleanup.h"
@@ -116,19 +118,17 @@ BfrtNode::~BfrtNode() = default;
   {
     ASSIGN_OR_RETURN(auto conf_content,
                      ExtractFromArchive(config.p4_device_config(), ".conf"));
-    try {
-      conf = nlohmann::json::parse(conf_content);
-      LOG(INFO) << conf.dump();
-    } catch (nlohmann::json::exception& e) {
-      return MAKE_ERROR(ERR_INTERNAL) << "Failed to parse .conf: " << e.what();
-    }
+    conf = nlohmann::json::parse(conf_content, nullptr, false);
+    CHECK_RETURN_IF_FALSE(!conf.is_discarded()) << "Failed to parse .conf";
+    VLOG(1) << ".conf content: " << conf.dump();
   }
 
   // Translate JSON conf to protobuf.
   try {
     CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";
-    auto device = conf["p4_devices"][0];  // Only support single devices for now
+    // Only support single devices for now
+    const auto& device = conf["p4_devices"][0];
     bfrt_config_.set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
       auto p = bfrt_config_.add_programs();
@@ -145,12 +145,12 @@ BfrtNode::~BfrtNode() = default;
           pipe->add_scope(scope);
         }
         ASSIGN_OR_RETURN(
-            auto context_content,
+            const auto context_content,
             ExtractFromArchive(config.p4_device_config(),
                                absl::StrCat(pipe->name(), "/context.json")));
         pipe->set_context(context_content);
         ASSIGN_OR_RETURN(
-            auto config_content,
+            const auto config_content,
             ExtractFromArchive(config.p4_device_config(),
                                absl::StrCat(pipe->name(), "/tofino.bin")));
         pipe->set_config(config_content);
@@ -255,7 +255,7 @@ BfrtNode::~BfrtNode() = default;
 }
 
 ::util::Status BfrtNode::VerifyForwardingPipelineConfig(
-    const ::p4::v1::ForwardingPipelineConfig& config) {
+    const ::p4::v1::ForwardingPipelineConfig& config) const {
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
       << "Missing P4 device config";
@@ -464,7 +464,8 @@ BfrtNode::~BfrtNode() = default;
                                                                    type, entry);
       break;
     default:
-      RETURN_ERROR() << "Unsupport extern entry " << entry.ShortDebugString();
+      RETURN_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
+                     << ".";
   }
 }
 
@@ -478,7 +479,8 @@ BfrtNode::~BfrtNode() = default;
                                                                   entry);
       break;
     default:
-      RETURN_ERROR() << "Unsupport extern entry " << entry.ShortDebugString();
+      RETURN_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
+                     << ".";
   }
 }
 

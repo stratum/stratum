@@ -3,6 +3,8 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 
+#include <vector>
+
 #include "absl/container/flat_hash_map.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_macros.h"
