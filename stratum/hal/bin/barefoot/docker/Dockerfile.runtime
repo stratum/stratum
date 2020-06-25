@@ -11,7 +11,6 @@ FROM $BUILDER_IMAGE as builder
 ADD . /stratum
 
 # Prepare the stratum_bf
-ENV BF_SDE_INSTALL $SDE_INSTALL
 WORKDIR /stratum
 
 # Build Barefoot Kernel module if needed
@@ -48,9 +47,8 @@ RUN install_packages \
     ldconfig && \
     mkdir -p /var/run/stratum
 
-ENV BF_SDE_INSTALL /usr
 EXPOSE 28000/tcp
 EXPOSE 9339/tcp
 
 WORKDIR /var/run/stratum
-ENTRYPOINT /usr/bin/stratum-entrypoint
+ENTRYPOINT /usr/bin/start-stratum.sh

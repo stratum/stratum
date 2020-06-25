@@ -4,11 +4,11 @@
 Description=Stratum service
 Documentation=https://www.opennetworking.org/stratum/
 ConditionPathExists=/usr/bin/stratum_bf
-ConditionPathExists=/usr/bin/stratum-entrypoint
+ConditionPathExists=/usr/bin/start-stratum.sh
 
 [Service]
 Type=simple
-ExecStart=/bin/bash /usr/bin/stratum-entrypoint
+ExecStart=/bin/bash /usr/bin/start-stratum.sh
 Restart=on-failure
 WorkingDirectory=/var/run/stratum
 SyslogIdentifier=stratum-bf

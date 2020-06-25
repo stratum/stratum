@@ -45,6 +45,7 @@ pkg_tar(
         "barefoot-bin/lib/libavago.so",
         "barefoot-bin/lib/libbfsys.so",
         "barefoot-bin/lib/libdriver.so",
+        "barefoot-bin/lib/libdru_sim.so",
         "barefoot-bin/lib/libpython3.4m.so",
     ],
     mode = "0644",

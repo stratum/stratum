@@ -108,14 +108,15 @@ You also need to upload [start-stratum-container.sh][start-stratum-container-sh]
 After setting up everything, run `start-stratum-container.sh` on the device with some environment variables(see below) if needed.
 
 ```bash
-export CONFIG_DIR=[to directory you place configs and the flag file]
+export CHASSIS_CONFIG=/path/to/chassis_config.pb.txt
 start-stratum-container.sh
 ```
 
 ### Environment variables for `start-stratum-container.sh`
 
 ```bash
-CONFIG_DIR  # The directory for configuration, default: `/root`
+CHASSIS_CONFIG  # Override the default chassis config file.
+FLAG_FILE   # Override the default flag file.
 LOG_DIR     # The directory for logging, default: `/var/log/`.
 SDE_VERSION # The SDE version
 KERNEL_VERSION    # The Linux kernel version, default: `uname -r`.

@@ -11,10 +11,10 @@ mkdir -p /var/run/stratum /var/log/stratum
 PLATFORM=$(cat /etc/onl/platform)
 
 exec stratum_bcm \
-    -base_bcm_chassis_map_file=/etc/stratum/stratum_configs/${PLATFORM}/base_bcm_chassis_map.pb.txt \
-    -chassis_config_file=/etc/stratum/stratum_configs/${PLATFORM}/chassis_config.pb.txt \
-    -bcm_sdk_config_file=/etc/stratum/stratum_configs/${PLATFORM}/SDKLT.yml \
-    -phal_config_file=/etc/stratum/stratum_configs/${PLATFORM}/phal_config.pb.txt \
+    -base_bcm_chassis_map_file=/etc/stratum/${PLATFORM}/base_bcm_chassis_map.pb.txt \
+    -chassis_config_file=/etc/stratum/${PLATFORM}/chassis_config.pb.txt \
+    -bcm_sdk_config_file=/etc/stratum/${PLATFORM}/SDKLT.yml \
+    -phal_config_file=/etc/stratum/${PLATFORM}/phal_config.pb.txt \
     -bcm_sdk_checkpoint_dir=/tmp/bcm_chkpt \
     -log_dir=/var/log/stratum \
     -colorlogtostderr \
