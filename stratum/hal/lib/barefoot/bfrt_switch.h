@@ -1,8 +1,8 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_BFRT_H_
-#define STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_BFRT_H_
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_SWITCH_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_SWITCH_H_
 
 #include <map>
 #include <memory>
@@ -104,11 +104,11 @@ class BfrtSwitch : public SwitchInterface {
   // Pointer to a BFPdInterface implementation that wraps PD API calls.
   BFPdInterface* bf_pd_interface_;  // not owned by this class.
 
-  // Map from zero-based device_id number corresponding to a node/ASIC to a pointer
-  // to BfrtNode which contain all the per-node managers for that node/ASIC.
-  // This map is initialized in the constructor and will not change during the
-  // lifetime of the class.
-  const std::map<int, BfrtNode*> device_id_to_bfrt_node_;  // pointers not owned.
+  // Map from zero-based device_id number corresponding to a node/ASIC to a
+  // pointer to BfrtNode which contain all the per-node managers for that
+  // node/ASIC. This map is initialized in the constructor and will not change
+  // during the lifetime of the class.
+  const std::map<int, BfrtNode*> device_id_to_bfrt_node_;  // pointers not owned
 
   // Map from the node ids to to a pointer to BfrtNode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.
@@ -121,4 +121,4 @@ class BfrtSwitch : public SwitchInterface {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BF_SWITCH_BFRT_H_
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_SWITCH_H_

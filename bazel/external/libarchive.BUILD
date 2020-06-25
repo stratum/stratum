@@ -18,6 +18,7 @@ cc_library(
         "local-install/include/archive.h",
         "local-install/include/archive_entry.h",
     ],
+    include_prefix = "libarchive",
     linkopts = [
         "-lbz2",
     ],
