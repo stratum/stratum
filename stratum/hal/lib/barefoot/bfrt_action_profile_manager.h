@@ -1,8 +1,8 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_ACT_PROF_MANAGER_H
-#define STRATUM_HAL_LIB_BAREFOOT_BFRT_ACT_PROF_MANAGER_H
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_ACTION_PROFILE_MANAGER_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_ACTION_PROFILE_MANAGER_H_
 
 #include <memory>
 
@@ -74,7 +74,7 @@ class BfrtActionProfileManager {
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // Writes an action profile member
   ::util::Status WriteActionProfileMember(
@@ -119,7 +119,7 @@ class BfrtActionProfileManager {
   // Builds data for an action profile member (ActionProfile entry in TNA).
   // The data contains the action ID and action parameters (like a normal
   // entry).
-  ::util::Status BuildData(
+  ::util::Status BuildTableData(
       const bfrt::BfRtTable* table,
       const ::p4::v1::ActionProfileMember& action_profile_member,
       bfrt::BfRtTableData* table_data);
@@ -130,17 +130,17 @@ class BfrtActionProfileManager {
   // $ACTION_MEMBER_STATUS: An std::vector<bool> of action profile member.
   // status, which makes member activate or not.
   // $MAX_GROUP_SIZE: uint64, the max size of this group.
-  ::util::Status BuildData(
+  ::util::Status BuildTableData(
       const bfrt::BfRtTable* table,
       const ::p4::v1::ActionProfileGroup& action_profile_group,
       bfrt::BfRtTableData* table_data);
 
+  // Reader-writer lock used to protect access to pipeline state.
+  mutable absl::Mutex lock_;
+
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
-
-  // Reader-writer lock used to protect access to pipeline state.
-  mutable absl::Mutex lock_;
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
@@ -151,4 +151,4 @@ class BfrtActionProfileManager {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_ACT_PROF_MANAGER_H
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_ACTION_PROFILE_MANAGER_H_

@@ -44,36 +44,26 @@ class BfrtNode final {
   ::util::Status PushForwardingPipelineConfig(
       const ::p4::v1::ForwardingPipelineConfig& config);
   ::util::Status SaveForwardingPipelineConfig(
-      const ::p4::v1::ForwardingPipelineConfig& config);
-  ::util::Status CommitForwardingPipelineConfig();
+      const ::p4::v1::ForwardingPipelineConfig& config) LOCKS_EXCLUDED(lock_);
+  ::util::Status CommitForwardingPipelineConfig() LOCKS_EXCLUDED(lock_);
   ::util::Status VerifyForwardingPipelineConfig(
-      const ::p4::v1::ForwardingPipelineConfig& config);
+      const ::p4::v1::ForwardingPipelineConfig& config) const;
   ::util::Status Shutdown();
   ::util::Status Freeze();
   ::util::Status Unfreeze();
   ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
-                                        std::vector<::util::Status>* results);
+                                        std::vector<::util::Status>* results)
+      LOCKS_EXCLUDED(lock_);
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details);
+      std::vector<::util::Status>* details) LOCKS_EXCLUDED(lock_);
   ::util::Status RegisterPacketReceiveWriter(
       const std::shared_ptr<WriterInterface<::p4::v1::PacketIn>>& writer)
       LOCKS_EXCLUDED(lock_);
   ::util::Status UnregisterPacketReceiveWriter() LOCKS_EXCLUDED(lock_);
   ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
       LOCKS_EXCLUDED(lock_);
-
-  // Write extern entries like ActionProfile, DirectCounter, PortMetadata
-  ::util::Status WriteExternEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry);
-
-  // Read extern entries like ActionProfile, DirectCounter, PortMetadata
-  ::util::StatusOr<::p4::v1::ExternEntry> ReadExternEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::ExternEntry& entry);
-
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtNode> CreateInstance(
       BfrtTableManager* bfrt_table_manager,
@@ -97,6 +87,16 @@ class BfrtNode final {
            BfrtPreManager* bfrt_pre_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
            BfrtIdMapper* bfrt_id_mapper, int device_id);
+
+  // Write extern entries like ActionProfile, DirectCounter, PortMetadata
+  ::util::Status WriteExternEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry);
+
+  // Read extern entries like ActionProfile, DirectCounter, PortMetadata
+  ::util::StatusOr<::p4::v1::ExternEntry> ReadExternEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::ExternEntry& entry);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64_t node_id,

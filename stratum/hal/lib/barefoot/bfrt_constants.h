@@ -1,8 +1,8 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H
-#define STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
 
 #include "stratum/glue/integral_types.h"
 
@@ -27,4 +27,4 @@ constexpr char kMcNodeL1Xid[] = "$MULTICAST_NODE_L1_XID";
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_

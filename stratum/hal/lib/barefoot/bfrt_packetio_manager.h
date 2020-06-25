@@ -1,8 +1,12 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_H_
-#define STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_H_
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_PACKETIO_MANAGER_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_PACKETIO_MANAGER_H_
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
@@ -73,7 +77,7 @@ class BfrtPacketioManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BfrtPacketioManager(int device_id);
+  explicit BfrtPacketioManager(int device_id);
 
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info);
 
@@ -118,4 +122,4 @@ class BfrtPacketioManager {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BCM_BCM_PACKETIO_MANAGER_H_
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_PACKETIO_MANAGER_H_

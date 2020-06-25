@@ -4,6 +4,7 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_PRE_MANAGER_H_
 
 #include <memory>
+#include <vector>
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
@@ -27,8 +28,8 @@ using PreEntry = ::p4::v1::PacketReplicationEngineEntry;
 class BfrtPreManager {
  public:
   // Pushes the pipline info.
-  ::util::Status PushForwardingPipelineConfig(
-      const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info)
+  ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
+                                              const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
 
   // Writes a PRE entry.
@@ -47,7 +48,7 @@ class BfrtPreManager {
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper);
 
   // Insert/Modify/Delete a multicast group entry.
   // This function creates one or more multicast nodes based on replicas in
@@ -100,4 +101,4 @@ class BfrtPreManager {
 }  // namespace hal
 }  // namespace stratum
 
-#endif
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_PRE_MANAGER_H_
