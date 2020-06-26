@@ -1,4 +1,5 @@
 <!--
+Copyright 2020 Technische Universität Darmstadt
 Copyright 2020-present Open Networking Foundation
 
 SPDX-License-Identifier: Apache-2.0
@@ -17,14 +18,16 @@ The coarse steps are as follows:
 - On host: register switch in ONOS using `netcfg`
 
 
-## Build ONL
+## Build or download ONL
 
-:warning: You have to build ONL - if you use a pre-built installer, you will run into trouble with Stratum.
+You have two choices to obtain an ONL image.
+
+### 1) Building ONL yourself
 
 ONL can be built wherever you like.
 
 ```
-git clone --depth 1  --single-branch --branch ONLPv2 git@github.com:opencomputeproject/OpenNetworkLinux.git
+git clone --depth 1  --single-branch --branch onf-ONLPv2 https://github.com/opennetworkinglab/OpenNetworkLinux
 cd OpenNetworkLinux
 VERSION=9 make docker
 # or
@@ -37,6 +40,12 @@ There should be an installer file with a filename similar to:
 `./RELEASE/stretch/amd64/ONL-ONLPv2_ONL-OS_2020-06-22.1054-bb20e13_AMD64_INSTALLED_INSTALLER`.
 
 This is the ONL image you have to install on the switch in the next step. 
+
+### 2) Using a pre-built ONL
+
+You can also download a pre-built ONL from [here](https://github.com/opennetworkinglab/OpenNetworkLinux/releases).
+
+:warning: You have to build or use the ONL from the fork mentioned above - if you use a pre-built installer by ONL itself, you will run into trouble with Stratum.
 
 
 ## Install ONL using ONIE
@@ -59,6 +68,7 @@ The switch should restart after ONIE finished installing ONL.
 ## Start Stratum with Docker
 
 On the switch, install [Docker](https://linuxize.com/post/how-to-install-and-use-docker-on-debian-9/).
+Docker is already installed in the pre-built version from the fork mentioned above.
 
 ```
 git clone git@github.com:stratum/stratum.git # or checkout a specific branch/tag via --branch some_branch
@@ -68,7 +78,7 @@ cd stratum
 
 This will start Stratum in the foreground (not detached).
 
-:warning: **Important**: Huge table allocation **must** be activated on the host system (:warning: **TODO**: add link after [this PR](https://github.com/stratum/stratum/pull/278) is merged).
+:warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/README.md#huge-pages--dma-allocation-error).
 
 :pencil2: You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
 
@@ -189,6 +199,8 @@ In case of problems with these instructions, feel free to create an issue or PR.
 
 ## Useful links
 
+- ["Running Stratum on a Barefoot Tofino based switch"](https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/README.md)
+    - mostly about building/running Stratum, not preparing the OS or integrating with ONOS
 - [fabric-tofino](https://github.com/opencord/fabric-tofino)
 - ["Running Stratum on a Barefoot Tofino based switch"](https://github.com/stratum/stratum/tree/master/stratum/hal/bin/barefoot)
 - ["Trellis+Stratum example" (Untested)](https://github.com/stratum/stratum/tree/master/tools/mininet/examples/trellis)
