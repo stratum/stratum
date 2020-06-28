@@ -5,7 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 # Containerize Stratum for Barefoot Tofino based device
-====
 
 This directory provides most material to build the containerized version of the
 Stratum for Barefoot Tofino based device.
@@ -93,15 +92,9 @@ $ [sudo] mount -t hugetlbfs nodev /mnt/huge
 
 If you re-image your switch (reload ONL via ONIE), you will need to run these commands again.
 
-### Upload configs and script to the switch
+### Upload script to the switch
 
-You can simply copy the [stratum.flags][stratum-flags] file and a [chassis config file][chassis-config-dir] to your device.
-
-Or create a custom one if needed.
-
-You can place those configs in any directory, as long as the Docker can mount it to the container.
-
-You also need to upload [start-stratum-container.sh][start-stratum-container-sh] to the device so you can start the container easily.
+You can upload [start-stratum-container.sh][start-stratum-container-sh] to the device so you can start the container easily.
 
 ### Start the Stratum container
 
@@ -156,6 +149,4 @@ WITH_ONLP=false ./build-stratum-bf-container.sh ~/bf-sde-9.0.0.tgz ~/linux-`unam
 ```
 
 [onl-linux-headers]: https://github.com/opennetworkinglab/OpenNetworkLinux/releases/tag/onlpv2-dev-1.0.1
-[stratum-flags]: stratum/hal/bin/barefoot/deb/stratum.flags
-[chassis-config-dir]: stratum/hal/config
-[start-stratum-container-sh]: stratum/hal/bin/barefoot/docker/start-stratum-container.sh
+[start-stratum-container-sh]: https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/docker/start-stratum-container.sh
