@@ -10,9 +10,10 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+// TNA Extern types
 constexpr uint32 kTnaExternActionProfileId = 129;
 constexpr uint32 kTnaExternActionSelectorId = 130;
-constexpr uint32 kTNAExternDirectCounter = 132;
+constexpr uint32 kTnaExternDirectCounter = 132;
 
 // Built-in tables and fields
 constexpr char kPreNodeTable[] = "$pre.node";

@@ -15,6 +15,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/hal/lib/barefoot/bf_pal_wrapper.h"
 #include "stratum/hal/lib/barefoot/bf_pd_wrapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
@@ -87,13 +88,15 @@ namespace barefoot {
   auto bfrt_action_profile_manager =
       BfrtActionProfileManager::CreateInstance(bfrt_id_mapper.get());
   auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(device_id);
-  auto bfrt_pre_manager =
-      BfrtPreManager::CreateInstance(bfrt_id_mapper.get());
+  auto bfrt_pre_manager = BfrtPreManager::CreateInstance(bfrt_id_mapper.get());
+  auto bfrt_counter_manager =
+      BfrtCounterManager::CreateInstance(bfrt_id_mapper.get());
   auto& bf_device_manager = bfrt::BfRtDevMgr::getInstance();
   auto bfrt_node = BfrtNode::CreateInstance(
       bfrt_table_manager.get(), bfrt_action_profile_manager.get(),
-      bfrt_packetio_manger.get(), bfrt_pre_manager.get(), &bf_device_manager,
-      bfrt_id_mapper.get(), device_id);
+      bfrt_packetio_manger.get(), bfrt_pre_manager.get(),
+      bfrt_counter_manager.get(), &bf_device_manager, bfrt_id_mapper.get(),
+      device_id);
   PhalInterface* phal_impl;
   if (FLAGS_bf_sim) {
     phal_impl = PhalSim::CreateSingleton();
