@@ -42,6 +42,19 @@ class BfrtTableManager {
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
+  // Modify the counter data of a table entry.
+  ::util::Status WriteDirectCounterEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::DirectCounterEntry& direct_counter_entry)
+      LOCKS_EXCLUDED(lock_);
+
+  // Read the counter data of a table entry.
+  ::util::StatusOr<::p4::v1::DirectCounterEntry> ReadDirectCounterEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::DirectCounterEntry& direct_counter_entry)
+      LOCKS_EXCLUDED(lock_);
+
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
       const BfrtIdMapper* bfrt_id_mapper);

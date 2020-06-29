@@ -62,6 +62,12 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
                                      bfrt_info));
       }
     }
+
+    // Indirect counters
+    for (const auto& counter : program.p4info().counters()) {
+      RETURN_IF_ERROR(BuildMapping(counter.preamble().id(),
+                                  counter.preamble().name(), bfrt_info));
+    }
   }
 
   return ::util::OkStatus();

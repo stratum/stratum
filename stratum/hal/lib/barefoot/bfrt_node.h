@@ -19,6 +19,7 @@
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
@@ -69,7 +70,9 @@ class BfrtNode final {
       BfrtTableManager* bfrt_table_manager,
       BfrtActionProfileManager* bfrt_action_profile_manager,
       BfrtPacketioManager* bfrt_packetio_manager,
-      BfrtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
+      BfrtPreManager* bfrt_pre_manager,
+      BfrtCounterManager* bfrt_counter_manager,
+      ::bfrt::BfRtDevMgr* bfrt_device_manager,
       BfrtIdMapper* bfrt_id_mapper, int device_id);
 
   // BfrtNode is neither copyable nor movable.
@@ -85,6 +88,7 @@ class BfrtNode final {
            BfrtActionProfileManager* bfrt_action_profile_manager,
            BfrtPacketioManager* bfrt_packetio_manager,
            BfrtPreManager* bfrt_pre_manager,
+           BfrtCounterManager* bfrt_counter_manager,
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
            BfrtIdMapper* bfrt_id_mapper, int device_id);
 
@@ -116,6 +120,7 @@ class BfrtNode final {
   BfrtActionProfileManager* bfrt_action_profile_manager_;
   BfrtPacketioManager* bfrt_packetio_manager_;
   BfrtPreManager* bfrt_pre_manager_;
+  BfrtCounterManager* bfrt_counter_manager_;
   ::bfrt::BfRtDevMgr* bfrt_device_manager_;
 
   // ID mapper which maps P4Runtime ID to BfRt ones, vice versa.

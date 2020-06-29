@@ -249,6 +249,8 @@ BfrtNode::~BfrtNode() = default;
       bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(bfrt_pre_manager_->PushForwardingPipelineConfig(bfrt_config_,
                                                                   bfrt_info_));
+  RETURN_IF_ERROR(bfrt_counter_manager_->PushForwardingPipelineConfig(
+      bfrt_config_, bfrt_info_));
 
   pipeline_initialized_ = true;
   return ::util::OkStatus();
@@ -301,10 +303,16 @@ BfrtNode::~BfrtNode() = default;
             session, update.type(),
             update.entity().packet_replication_engine_entry());
         break;
+      case ::p4::v1::Entity::kDirectCounterEntry:
+        status = bfrt_table_manager_->WriteDirectCounterEntry(
+            session, update.type(), update.entity().direct_counter_entry());
+        break;
+      case ::p4::v1::Entity::kCounterEntry:
+        status = bfrt_counter_manager_->WriteIndirectCounterEntry(
+            session, update.type(), update.entity().counter_entry());
+        break;
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
-      case ::p4::v1::Entity::kCounterEntry:
-      case ::p4::v1::Entity::kDirectCounterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
@@ -400,10 +408,32 @@ BfrtNode::~BfrtNode() = default;
             ->CopyFrom(status.ValueOrDie());
         break;
       }
+      case ::p4::v1::Entity::kDirectCounterEntry: {
+        auto status = bfrt_table_manager_->ReadDirectCounterEntry(
+            session, entity.direct_counter_entry());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        resp.add_entities()->mutable_direct_counter_entry()->CopyFrom(
+            status.ValueOrDie());
+        break;
+      }
+      case ::p4::v1::Entity::kCounterEntry: {
+        auto status = bfrt_counter_manager_->ReadIndirectCounterEntry(
+            session, entity.counter_entry());
+        if (!status.ok()) {
+          success = false;
+          details->push_back(status.status());
+          break;
+        }
+        resp.add_entities()->mutable_counter_entry()->CopyFrom(
+            status.ValueOrDie());
+        break;
+      }
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
-      case ::p4::v1::Entity::kCounterEntry:
-      case ::p4::v1::Entity::kDirectCounterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
       case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
@@ -489,17 +519,20 @@ std::unique_ptr<BfrtNode> BfrtNode::CreateInstance(
     BfrtTableManager* bfrt_table_manager,
     BfrtActionProfileManager* bfrt_action_profile_manager,
     BfrtPacketioManager* bfrt_packetio_manager,
-    BfrtPreManager* bfrt_pre_manager, ::bfrt::BfRtDevMgr* bfrt_device_manager,
-    BfrtIdMapper* bfrt_id_mapper, int device_id) {
+    BfrtPreManager* bfrt_pre_manager, BfrtCounterManager* bfrt_counter_manager,
+    ::bfrt::BfRtDevMgr* bfrt_device_manager, BfrtIdMapper* bfrt_id_mapper,
+    int device_id) {
   return absl::WrapUnique(new BfrtNode(
       bfrt_table_manager, bfrt_action_profile_manager, bfrt_packetio_manager,
-      bfrt_pre_manager, bfrt_device_manager, bfrt_id_mapper, device_id));
+      bfrt_pre_manager, bfrt_counter_manager, bfrt_device_manager,
+      bfrt_id_mapper, device_id));
 }
 
 BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
                    BfrtActionProfileManager* bfrt_action_profile_manager,
                    BfrtPacketioManager* bfrt_packetio_manager,
                    BfrtPreManager* bfrt_pre_manager,
+                   BfrtCounterManager* bfrt_counter_manager,
                    ::bfrt::BfRtDevMgr* bfrt_device_manager,
                    BfrtIdMapper* bfrt_id_mapper, int device_id)
     : pipeline_initialized_(false),
@@ -509,6 +542,7 @@ BfrtNode::BfrtNode(BfrtTableManager* bfrt_table_manager,
           ABSL_DIE_IF_NULL(bfrt_action_profile_manager)),
       bfrt_packetio_manager_(bfrt_packetio_manager),
       bfrt_pre_manager_(ABSL_DIE_IF_NULL(bfrt_pre_manager)),
+      bfrt_counter_manager_(ABSL_DIE_IF_NULL(bfrt_counter_manager)),
       bfrt_device_manager_(ABSL_DIE_IF_NULL(bfrt_device_manager)),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)),
       node_id_(0),

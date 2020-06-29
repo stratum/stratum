@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "bf_rt/bf_rt_table_operations.hpp"
+#include "gflags/gflags.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/macros.h"
@@ -211,6 +213,24 @@ namespace barefoot {
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+
+  // Sync table counter
+  std::set<bfrt::TableOperationsType> supported_ops;
+  RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
+  if (supported_ops.find(bfrt::TableOperationsType::COUNTER_SYNC) !=
+      supported_ops.end()) {
+    std::unique_ptr<bfrt::BfRtTableOperations> table_op;
+    RETURN_IF_BFRT_ERROR(table->operationsAllocate(
+        bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
+    RETURN_IF_BFRT_ERROR(table_op->counterSyncSet(
+        *bfrt_session, bf_dev_tgt,
+        [table_id](const bf_rt_target_t& dev_tgt, void* cookie) {
+          VLOG(1) << "Table counter for table " << table_id << " synced.";
+        },
+        nullptr));
+    RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
+  }
+
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
@@ -224,23 +244,31 @@ namespace barefoot {
     std::string field_name;
     RETURN_IF_BFRT_ERROR(
         table->dataFieldNameGet(field_id, action_id, &field_name));
-    if (field_name.compare("$ACTION_MEMBER_ID") == 0) {
+    if (field_name == "$ACTION_MEMBER_ID") {
       // Action profile member id
       uint64 act_prof_mem_id;
       RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &act_prof_mem_id));
       result.mutable_action()->set_action_profile_member_id(
           static_cast<uint32>(act_prof_mem_id));
       continue;
-    } else if (field_name.compare("$SELECTOR_GROUP_ID") == 0) {
+    } else if (field_name == "$SELECTOR_GROUP_ID") {
       // Action profile group id
       uint64 act_prof_grp_id;
       RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &act_prof_grp_id));
       result.mutable_action()->set_action_profile_group_id(
           static_cast<uint32>(act_prof_grp_id));
       continue;
-    } else if (field_name.compare("$COUNTER_SPEC_BYTES") == 0 ||
-               field_name.compare("$COUNTER_SPEC_PKTS") == 0) {
-      // Skip counter data
+    } else if (field_name == "$COUNTER_SPEC_BYTES") {
+      uint64 counter_val;
+      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
+      result.mutable_counter_data()->set_byte_count(
+          static_cast<int64>(counter_val));
+      continue;
+    } else if (field_name == "$COUNTER_SPEC_PKTS") {
+      uint64 counter_val;
+      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
+      result.mutable_counter_data()->set_packet_count(
+          static_cast<int64>(counter_val));
       continue;
     }
     result.mutable_action()->mutable_action()->set_action_id(action_id);
@@ -268,6 +296,110 @@ namespace barefoot {
     uint64 table_entry_priority = 0;
     table_key->getValue(priority_field_id, &table_entry_priority);
     result.set_priority(table_entry_priority);
+  }
+
+  return result;
+}
+
+// Modify the counter data of a table entry.
+::util::Status BfrtTableManager::WriteDirectCounterEntry(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
+  absl::WriterMutexLock l(&lock_);
+  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+      << "Update.Type must be MODIFY";
+
+  auto table_entry = direct_counter_entry.table_entry();
+  auto counter_data = direct_counter_entry.data();
+
+  // Read table entry first.
+  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
+                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *bfrt_session, bf_dev_tgt, *table_key,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+
+  // Rewrite the counter data and modify it.
+  bf_rt_id_t field_id;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->setValue(
+      field_id, static_cast<uint64>(counter_data.byte_count())));
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
+  RETURN_IF_BFRT_ERROR(table_data->setValue(
+      field_id, static_cast<uint64>(counter_data.packet_count())));
+  RETURN_IF_BFRT_ERROR(
+      table->tableEntryMod(*bfrt_session, bf_dev_tgt, *table_key, *table_data));
+
+  return ::util::OkStatus();
+}
+
+// Read the counter data of a table entry.
+::util::StatusOr<::p4::v1::DirectCounterEntry>
+BfrtTableManager::ReadDirectCounterEntry(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
+  absl::ReaderMutexLock l(&lock_);
+  auto table_entry = direct_counter_entry.table_entry();
+  ::p4::v1::DirectCounterEntry result = direct_counter_entry;
+  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
+                   bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+
+  // Sync table counter
+  std::set<bfrt::TableOperationsType> supported_ops;
+  RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
+  if (supported_ops.find(bfrt::TableOperationsType::COUNTER_SYNC) !=
+      supported_ops.end()) {
+    std::unique_ptr<bfrt::BfRtTableOperations> table_op;
+    RETURN_IF_BFRT_ERROR(table->operationsAllocate(
+        bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
+    RETURN_IF_BFRT_ERROR(table_op->counterSyncSet(
+        *bfrt_session, bf_dev_tgt,
+        [table_id](const bf_rt_target_t& dev_tgt, void* cookie) {
+          VLOG(1) << "Table counter for table " << table_id << " synced.";
+        },
+        nullptr));
+    RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
+  }
+
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *bfrt_session, bf_dev_tgt, *table_key,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+
+  bf_rt_id_t action_id;
+  RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
+  bf_rt_id_t field_id;
+  // Try to read byte counter
+  auto bf_status =
+      table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id);
+  if (bf_status == BF_SUCCESS) {
+    uint64 counter_val;
+    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
+    result.mutable_data()->set_byte_count(static_cast<int64>(counter_val));
+  }
+
+  // Try to read packet counter
+  bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id, &field_id);
+  if (bf_status == BF_SUCCESS) {
+    uint64 counter_val;
+    RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
+    result.mutable_data()->set_packet_count(static_cast<int64>(counter_val));
   }
 
   return result;
