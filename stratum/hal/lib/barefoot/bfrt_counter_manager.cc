@@ -101,8 +101,8 @@ BfrtCounterManager::ReadIndirectCounterEntry(
     RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
 
     // Wait until sync done or timeout.
-    CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
-        absl::Seconds(kDefaultSyncTimeout)))
+    CHECK_RETURN_IF_FALSE(
+        sync_notifier.WaitForNotificationWithTimeout(kDefaultSyncTimeout))
         << "Unable to sync table counter for table " << table_id
         << ", timeout.";
   }
