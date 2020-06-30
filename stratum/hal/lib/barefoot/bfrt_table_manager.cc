@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "absl/synchronization/notification.h"
 #include "bf_rt/bf_rt_table_operations.hpp"
 #include "gflags/gflags.h"
 #include "stratum/glue/status/status_macros.h"
@@ -215,21 +216,28 @@ namespace barefoot {
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   // Sync table counter
+  absl::Notification sync_notifier;
   std::set<bfrt::TableOperationsType> supported_ops;
   RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
-  if (supported_ops.find(bfrt::TableOperationsType::COUNTER_SYNC) !=
-      supported_ops.end()) {
+  if (supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
     RETURN_IF_BFRT_ERROR(table_op->counterSyncSet(
         *bfrt_session, bf_dev_tgt,
-        [table_id](const bf_rt_target_t& dev_tgt, void* cookie) {
+        [table_id, &sync_notifier](const bf_rt_target_t& dev_tgt,
+                                   void* cookie) {
           VLOG(1) << "Table counter for table " << table_id << " synced.";
+          sync_notifier.Notify();
         },
         nullptr));
     RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
   }
+
+  // Wait until sync done or timeout.
+  CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
+      absl::Seconds(kDefaultSyncTimeout)))
+      << "Unable to sync table counter for table " << table_id << ", timeout.";
 
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
@@ -362,21 +370,29 @@ BfrtTableManager::ReadDirectCounterEntry(
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   // Sync table counter
+  absl::Notification sync_notifier;
   std::set<bfrt::TableOperationsType> supported_ops;
   RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
-  if (supported_ops.find(bfrt::TableOperationsType::COUNTER_SYNC) !=
-      supported_ops.end()) {
+  if (supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
+    std::shared_ptr<bfrt::BfRtSession> s_ = bfrt::BfRtSession::sessionCreate();
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
     RETURN_IF_BFRT_ERROR(table_op->counterSyncSet(
         *bfrt_session, bf_dev_tgt,
-        [table_id](const bf_rt_target_t& dev_tgt, void* cookie) {
+        [table_id, &sync_notifier](const bf_rt_target_t& dev_tgt,
+                                   void* cookie) {
           VLOG(1) << "Table counter for table " << table_id << " synced.";
+          sync_notifier.Notify();
         },
         nullptr));
     RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
   }
+
+  // Wait until sync done or timeout.
+  CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
+      absl::Seconds(kDefaultSyncTimeout)))
+      << "Unable to sync table counter for table " << table_id << ", timeout.";
 
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
@@ -401,7 +417,6 @@ BfrtTableManager::ReadDirectCounterEntry(
     RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
     result.mutable_data()->set_packet_count(static_cast<int64>(counter_val));
   }
-
   return result;
 }
 
