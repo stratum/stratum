@@ -342,7 +342,6 @@ BfrtNode::~BfrtNode() = default;
   ::p4::v1::ReadResponse resp;
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
-  session->beginBatch();
   for (auto entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
@@ -444,7 +443,6 @@ BfrtNode::~BfrtNode() = default;
       }
     }
   }
-  session->endBatch(true);
   CHECK_RETURN_IF_FALSE(writer->Write(resp))
       << "Write to stream channel failed.";
   if (!success) {
