@@ -26,5 +26,5 @@ RUN install_packages ${RUNTIME_DEPS}
 
 COPY --from=builder /output /
 
-ENTRYPOINT ["p4c-fpm"]
+ENTRYPOINT ["/usr/bin/p4c-fpm"]
 CMD ["-help"]
