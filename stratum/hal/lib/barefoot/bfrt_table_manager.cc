@@ -232,8 +232,8 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
+  // Sync table counter
   if (table_entry.has_counter_data()) {
-    // Sync table counter
     absl::Notification sync_notifier;
     std::set<bfrt::TableOperationsType> supported_ops;
     RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
