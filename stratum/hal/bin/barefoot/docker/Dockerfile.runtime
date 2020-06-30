@@ -51,4 +51,4 @@ EXPOSE 28000/tcp
 EXPOSE 9339/tcp
 
 WORKDIR /var/run/stratum
-ENTRYPOINT /usr/bin/start-stratum.sh
+ENTRYPOINT start-stratum.sh
