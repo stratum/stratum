@@ -232,12 +232,13 @@ namespace barefoot {
         },
         nullptr));
     RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
-  }
 
-  // Wait until sync done or timeout.
-  CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
-      absl::Seconds(kDefaultSyncTimeout)))
-      << "Unable to sync table counter for table " << table_id << ", timeout.";
+    // Wait until sync done or timeout.
+    CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
+        absl::Seconds(kDefaultSyncTimeout)))
+        << "Unable to sync table counter for table " << table_id
+        << ", timeout.";
+  }
 
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
@@ -386,12 +387,13 @@ BfrtTableManager::ReadDirectCounterEntry(
         },
         nullptr));
     RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
-  }
 
-  // Wait until sync done or timeout.
-  CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
-      absl::Seconds(kDefaultSyncTimeout)))
-      << "Unable to sync table counter for table " << table_id << ", timeout.";
+    // Wait until sync done or timeout.
+    CHECK_RETURN_IF_FALSE(sync_notifier.WaitForNotificationWithTimeout(
+        absl::Seconds(kDefaultSyncTimeout)))
+        << "Unable to sync table counter for table " << table_id
+        << ", timeout.";
+  }
 
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
