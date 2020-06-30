@@ -216,10 +216,11 @@ namespace barefoot {
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   // Sync table counter
-  absl::Notification sync_notifier;
   std::set<bfrt::TableOperationsType> supported_ops;
   RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
-  if (supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
+  if (table_entry.has_counter_data() &&
+      supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
+    absl::Notification sync_notifier;
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
@@ -268,16 +269,20 @@ namespace barefoot {
           static_cast<uint32>(act_prof_grp_id));
       continue;
     } else if (field_name == "$COUNTER_SPEC_BYTES") {
-      uint64 counter_val;
-      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
-      result.mutable_counter_data()->set_byte_count(
-          static_cast<int64>(counter_val));
+      if (table_entry.has_counter_data()) {
+        uint64 counter_val;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
+        result.mutable_counter_data()->set_byte_count(
+            static_cast<int64>(counter_val));
+      }
       continue;
     } else if (field_name == "$COUNTER_SPEC_PKTS") {
-      uint64 counter_val;
-      RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
-      result.mutable_counter_data()->set_packet_count(
-          static_cast<int64>(counter_val));
+      if (table_entry.has_counter_data()) {
+        uint64 counter_val;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
+        result.mutable_counter_data()->set_packet_count(
+            static_cast<int64>(counter_val));
+      }
       continue;
     }
     result.mutable_action()->mutable_action()->set_action_id(action_id);
@@ -371,10 +376,10 @@ BfrtTableManager::ReadDirectCounterEntry(
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   // Sync table counter
-  absl::Notification sync_notifier;
   std::set<bfrt::TableOperationsType> supported_ops;
   RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
   if (supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
+    absl::Notification sync_notifier;
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
