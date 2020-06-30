@@ -24,6 +24,8 @@ constexpr char kMgid[] = "$MGID";
 constexpr char kMcNodeL1XidValid[] = "$MULTICAST_NODE_L1_XID_VALID";
 constexpr char kMcNodeL1Xid[] = "$MULTICAST_NODE_L1_XID";
 
+constexpr int kDefaultSyncTimeout = 5;  // Second
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
