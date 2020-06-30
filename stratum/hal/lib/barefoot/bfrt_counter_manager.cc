@@ -8,9 +8,6 @@
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 
-DEFINE_uint64(bfrt_counter_sync_interval_ms, 30000,
-              "The interval of synchronizing indirect counters.");
-
 namespace stratum {
 namespace hal {
 namespace barefoot {

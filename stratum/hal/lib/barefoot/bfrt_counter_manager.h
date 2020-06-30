@@ -19,7 +19,6 @@
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
-#include "stratum/lib/timer_daemon.h"
 
 namespace stratum {
 namespace hal {
@@ -52,9 +51,6 @@ class BfrtCounterManager {
   // function only.
   BfrtCounterManager(const BfrtIdMapper* bfrt_id_mapper);
 
-  // And timer action that sync all counters.
-  ::util::Status SyncCounters();
-
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
@@ -65,9 +61,6 @@ class BfrtCounterManager {
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
   const BfrtIdMapper* bfrt_id_mapper_;
-
-  // The timer that sync up counters periodically
-  TimerDaemon::DescriptorPtr counter_sync_timer_;
 };
 
 }  // namespace barefoot

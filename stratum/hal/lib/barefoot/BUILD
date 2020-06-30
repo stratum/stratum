@@ -418,7 +418,6 @@ stratum_cc_library(
         "//stratum/hal/lib/common:writer_interface",
         "//stratum/lib:constants",
         "//stratum/lib:macros",
-        "//stratum/lib:timer_daemon",
         "//stratum/public/proto:error_cc_proto",
         "@com_github_p4lang_p4runtime//:p4info_cc_proto",
         "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
