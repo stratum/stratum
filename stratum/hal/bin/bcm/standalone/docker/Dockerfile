@@ -11,4 +11,4 @@ RUN rm ./stratum_bcm_deb.deb
 
 EXPOSE 28000/tcp
 EXPOSE 9339/tcp
-ENTRYPOINT start-stratum.sh
+ENTRYPOINT ["/usr/bin/start-stratum.sh"]
