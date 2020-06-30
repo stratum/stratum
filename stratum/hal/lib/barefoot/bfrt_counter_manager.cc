@@ -27,7 +27,14 @@ namespace barefoot {
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
       << "Update.Type must be MODIFY";
   CHECK_RETURN_IF_FALSE(counter_entry.has_index())
-      << "Query indirect counter without counter index is not supported now.";
+      << "Modify indirect counter without counter index is not supported now.";
+  CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
+      << "Counter index must be greater than or equal to zero.";
+
+  if(!counter_entry.has_data()) {
+    // Nothing to be modified
+    return ::util::OkStatus();
+  }
 
   // Find counter table
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
@@ -68,8 +75,12 @@ BfrtCounterManager::ReadIndirectCounterEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::CounterEntry& counter_entry) {
   absl::ReaderMutexLock l(&lock_);
+  CHECK_RETURN_IF_FALSE(counter_entry.counter_id() != 0)
+      << "Query indirect counter without counter id is not supported now.";
   CHECK_RETURN_IF_FALSE(counter_entry.has_index())
       << "Query indirect counter without counter index is not supported now.";
+  CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
+      << "Counter index must be greater than or equal to zero.";
   ::p4::v1::CounterEntry result = counter_entry;
 
   // Find counter table
