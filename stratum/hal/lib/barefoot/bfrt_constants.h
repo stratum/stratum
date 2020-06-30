@@ -5,6 +5,7 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_CONSTANTS_H_
 
 #include "stratum/glue/integral_types.h"
+#include "absl/time/time.h"
 
 namespace stratum {
 namespace hal {
@@ -24,7 +25,7 @@ constexpr char kMgid[] = "$MGID";
 constexpr char kMcNodeL1XidValid[] = "$MULTICAST_NODE_L1_XID_VALID";
 constexpr char kMcNodeL1Xid[] = "$MULTICAST_NODE_L1_XID";
 
-constexpr int kDefaultSyncTimeout = 1;  // Second
+constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(1);
 
 }  // namespace barefoot
 }  // namespace hal

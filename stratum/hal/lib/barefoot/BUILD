@@ -315,6 +315,7 @@ stratum_cc_library(
     hdrs = ["bfrt_constants.h"],
     deps = [
         "//stratum/glue:integral_types",
+        "@com_google_absl//absl/time",
     ],
 )
 
