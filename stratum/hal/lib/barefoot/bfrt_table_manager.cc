@@ -374,7 +374,6 @@ BfrtTableManager::ReadDirectCounterEntry(
   std::set<bfrt::TableOperationsType> supported_ops;
   RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
   if (supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
-    std::shared_ptr<bfrt::BfRtSession> s_ = bfrt::BfRtSession::sessionCreate();
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
