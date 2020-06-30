@@ -147,6 +147,23 @@ namespace barefoot {
       RETURN_ERROR(ERR_UNIMPLEMENTED)
           << "Unsupported action type: " << table_entry.action().type_case();
   }
+
+  if (table_entry.has_counter_data()) {
+    auto counter_data = table_entry.counter_data();
+    bf_rt_id_t field_id;
+    if (counter_data.byte_count()) {
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
+      RETURN_IF_BFRT_ERROR(table_data->setValue(
+          field_id, static_cast<uint64>(counter_data.byte_count())));
+    }
+    if (counter_data.packet_count()) {
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
+      RETURN_IF_BFRT_ERROR(table_data->setValue(
+          field_id, static_cast<uint64>(counter_data.packet_count())));
+    }
+  }
 }
 
 ::util::Status BfrtTableManager::WriteTableEntry(
@@ -215,12 +232,15 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
-  // Sync table counter
-  std::set<bfrt::TableOperationsType> supported_ops;
-  RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
-  if (table_entry.has_counter_data() &&
-      supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC)) {
+  if (table_entry.has_counter_data()) {
+    // Sync table counter
     absl::Notification sync_notifier;
+    std::set<bfrt::TableOperationsType> supported_ops;
+    RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
+    // Controller tries to read counter, but the table doesn't support it.
+    CHECK_RETURN_IF_FALSE(
+        supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC))
+        << "Counter does not supported by table " << table_id;
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
@@ -325,6 +345,10 @@ namespace barefoot {
       << "Update.Type must be MODIFY";
 
   auto table_entry = direct_counter_entry.table_entry();
+  if (!direct_counter_entry.has_data()) {
+    // Nothing to be updated.
+    return ::util::OkStatus();
+  }
   auto counter_data = direct_counter_entry.data();
 
   // Read table entry first.
@@ -344,12 +368,19 @@ namespace barefoot {
 
   // Rewrite the counter data and modify it.
   bf_rt_id_t field_id;
-  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
-  RETURN_IF_BFRT_ERROR(table_data->setValue(
-      field_id, static_cast<uint64>(counter_data.byte_count())));
-  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
-  RETURN_IF_BFRT_ERROR(table_data->setValue(
-      field_id, static_cast<uint64>(counter_data.packet_count())));
+  if (counter_data.byte_count()) {
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
+    RETURN_IF_BFRT_ERROR(table_data->setValue(
+        field_id, static_cast<uint64>(counter_data.byte_count())));
+  }
+  if (counter_data.packet_count()) {
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
+    RETURN_IF_BFRT_ERROR(table_data->setValue(
+        field_id, static_cast<uint64>(counter_data.packet_count())));
+  }
+
   RETURN_IF_BFRT_ERROR(
       table->tableEntryMod(*bfrt_session, bf_dev_tgt, *table_key, *table_data));
 
