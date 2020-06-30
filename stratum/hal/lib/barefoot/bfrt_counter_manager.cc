@@ -31,7 +31,7 @@ namespace barefoot {
   CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
 
-  if(!counter_entry.has_data()) {
+  if (!counter_entry.has_data()) {
     // Nothing to be modified
     return ::util::OkStatus();
   }
