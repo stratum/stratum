@@ -272,16 +272,20 @@ namespace barefoot {
         << ", timeout.";
   }
 
+  // Fetch entry data.
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
       << "Could not find table entry " << table_entry.ShortDebugString() << ".";
+
   // Build result
   ::p4::v1::TableEntry result = table_entry;
   bf_rt_id_t action_id;
   RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
   std::vector<bf_rt_id_t> field_id_list;
   RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &field_id_list));
+  // FIXME: Enforce that the TableAction type is only set once.
+  result.mutable_action()->mutable_action()->set_action_id(action_id);
   for (const auto& field_id : field_id_list) {
     std::string field_name;
     RETURN_IF_BFRT_ERROR(
@@ -317,7 +321,6 @@ namespace barefoot {
       }
       continue;
     }
-    result.mutable_action()->mutable_action()->set_action_id(action_id);
     size_t field_size;
     RETURN_IF_BFRT_ERROR(
         table->dataFieldSizeGet(field_id, action_id, &field_size));
