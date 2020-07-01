@@ -12,7 +12,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "bf_types/bf_types.h"
+#include "bf_rt/bf_rt_common.h"
 #include "p4/v1/p4runtime.pb.h"
 #include "pkt_mgr/pkt_mgr_intf.h"
 #include "stratum/glue/status/status.h"

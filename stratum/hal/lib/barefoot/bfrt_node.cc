@@ -25,8 +25,6 @@
 
 // Not all SDE headers include "extern C".
 extern "C" {
-#include "dvm/bf_drv_profile.h"
-#include "pkt_mgr/pkt_mgr_intf.h"
 #include "tofino/bf_pal/dev_intf.h"
 }
 
