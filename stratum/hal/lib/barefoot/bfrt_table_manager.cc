@@ -42,6 +42,9 @@ namespace barefoot {
         break;
       }
       case ::p4::v1::FieldMatch::kTernary: {
+        CHECK_RETURN_IF_FALSE(table_entry.priority())
+            << "Ternary field matches require a priority in table entry "
+            << table_entry.ShortDebugString() << ".";
         const size_t size = mk.ternary().value().size();
         const uint8* val =
             reinterpret_cast<const uint8*>(mk.ternary().value().c_str());
@@ -63,6 +66,9 @@ namespace barefoot {
         break;
       }
       case ::p4::v1::FieldMatch::kRange: {
+        CHECK_RETURN_IF_FALSE(table_entry.priority())
+            << "Range field matches require a priority in table entry "
+            << table_entry.ShortDebugString() << ".";
         const size_t size = mk.range().low().size();
         const uint8* start =
             reinterpret_cast<const uint8*>(mk.range().low().c_str());
@@ -73,15 +79,19 @@ namespace barefoot {
             << "Could not build table key from " << mk.ShortDebugString();
         break;
       }
-      // case ::p4::v1::FieldMatch::kOptional:
+      case ::p4::v1::FieldMatch::kOptional:
+        CHECK_RETURN_IF_FALSE(table_entry.priority())
+            << "Optional field matches require a priority in table entry "
+            << table_entry.ShortDebugString() << ".";
+        ABSL_FALLTHROUGH_INTENDED;
       default:
-        RETURN_ERROR() << "Invalid or unsupported match key: "
-                       << mk.ShortDebugString();
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Invalid or unsupported match key: " << mk.ShortDebugString();
     }
   }
 
   // Priority
-  if (table_entry.priority() != 0) {
+  if (table_entry.priority()) {
     bf_rt_id_t priority_field_id;
     RETURN_IF_BFRT_ERROR(
         table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id))
@@ -90,6 +100,7 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table_key->setValue(
         priority_field_id, static_cast<uint64>(table_entry.priority())));
   }
+
   return ::util::OkStatus();
 }
 
