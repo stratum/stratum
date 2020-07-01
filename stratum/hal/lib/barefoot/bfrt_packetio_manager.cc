@@ -17,11 +17,6 @@
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/utils.h"
 
-extern "C" {
-#include "pkt_mgr/pkt_mgr_intf.h"
-#include "tofino/bf_pal/dev_intf.h"
-}
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
