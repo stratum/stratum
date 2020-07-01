@@ -263,7 +263,8 @@ namespace barefoot {
 
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
+      << "Could not find table entry " << table_entry.ShortDebugString() << ".";
   // Build result
   ::p4::v1::TableEntry result = table_entry;
   bf_rt_id_t action_id;
@@ -364,7 +365,9 @@ namespace barefoot {
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
+      << "Could not find table entry for direct counter "
+      << direct_counter_entry.ShortDebugString() << ".";
 
   // Rewrite the counter data and modify it.
   bf_rt_id_t field_id;
@@ -433,7 +436,9 @@ BfrtTableManager::ReadDirectCounterEntry(
 
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
+      << "Could not find table entry for direct counter "
+      << direct_counter_entry.ShortDebugString() << ".";
 
   bf_rt_id_t action_id;
   RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
