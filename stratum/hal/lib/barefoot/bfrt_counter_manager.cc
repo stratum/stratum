@@ -25,16 +25,13 @@ namespace barefoot {
     const ::p4::v1::CounterEntry& counter_entry) {
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update.Type must be MODIFY";
+      << "Update type of CounterEntry " << counter_entry.ShortDebugString()
+      << " must be MODIFY.";
   CHECK_RETURN_IF_FALSE(counter_entry.has_index())
-      << "Modify indirect counter without counter index is not supported now.";
+      << "Modifying an indirect counter without counter index is currently not "
+         "supported.";
   CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
-
-  if (!counter_entry.has_data()) {
-    // Nothing to be modified
-    return ::util::OkStatus();
-  }
 
   // Find counter table
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
@@ -52,6 +49,11 @@ namespace barefoot {
       field_id, static_cast<uint64>(counter_entry.index().index())));
 
   // Counter data: $COUNTER_SPEC_BYTES, $COUNTER_SPEC_PKTS
+  if (!counter_entry.has_data()) {
+    // Nothing to be modified
+    return ::util::OkStatus();
+  }
+
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
@@ -67,6 +69,7 @@ namespace barefoot {
   }
   RETURN_IF_BFRT_ERROR(
       table->tableEntryMod(*bfrt_session, bf_dev_tgt, *table_key, *table_data));
+
   return ::util::OkStatus();
 }
 
@@ -76,12 +79,11 @@ BfrtCounterManager::ReadIndirectCounterEntry(
     const ::p4::v1::CounterEntry& counter_entry) {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(counter_entry.counter_id() != 0)
-      << "Query indirect counter without counter id is not supported now.";
+      << "Querying an indirect counter without counter id is not supported.";
   CHECK_RETURN_IF_FALSE(counter_entry.has_index())
-      << "Query indirect counter without counter index is not supported now.";
+      << "Querying an indirect counter without counter index is not supported.";
   CHECK_RETURN_IF_FALSE(counter_entry.index().index() >= 0)
       << "Counter index must be greater than or equal to zero.";
-  ::p4::v1::CounterEntry result = counter_entry;
 
   // Find counter table
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
@@ -130,16 +132,18 @@ BfrtCounterManager::ReadIndirectCounterEntry(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
 
+  ::p4::v1::CounterEntry result = counter_entry;
   // Counter data: $COUNTER_SPEC_BYTES, $COUNTER_SPEC_PKTS
-  uint64 counter_data;
   auto bf_status = table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id);
   if (bf_status == BF_SUCCESS) {
+    uint64 counter_data;
     RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
     result.mutable_data()->set_byte_count(counter_data);
   }
 
   bf_status = table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id);
   if (bf_status == BF_SUCCESS) {
+    uint64 counter_data;
     RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_data));
     result.mutable_data()->set_packet_count(counter_data);
   }
