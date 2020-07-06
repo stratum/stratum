@@ -79,7 +79,14 @@ class BfrtPacketioManager {
   // class.
   explicit BfrtPacketioManager(int device_id);
 
+  // Builds the packet header structure for controller packets.
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info);
+
+  // Registers the necessary Rx/Tx callbacks with the SDE.
+  ::util::Status StartIo();
+
+  // Deregisters the necessary Rx/Tx callbacks with the SDE.
+  ::util::Status StopIo();
 
   // bf_pkt tx done callback function.
   static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
