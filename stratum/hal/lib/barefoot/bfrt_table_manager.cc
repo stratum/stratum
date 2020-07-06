@@ -240,7 +240,7 @@ namespace barefoot {
     // Controller tries to read counter, but the table doesn't support it.
     CHECK_RETURN_IF_FALSE(
         supported_ops.count(bfrt::TableOperationsType::COUNTER_SYNC))
-        << "Counter does not supported by table " << table_id;
+        << "Counters are not supported by table " << table_id << ".";
     std::unique_ptr<bfrt::BfRtTableOperations> table_op;
     RETURN_IF_BFRT_ERROR(table->operationsAllocate(
         bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
@@ -343,16 +343,11 @@ namespace barefoot {
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-      << "Update.Type must be MODIFY";
-
-  auto table_entry = direct_counter_entry.table_entry();
-  if (!direct_counter_entry.has_data()) {
-    // Nothing to be updated.
-    return ::util::OkStatus();
-  }
-  auto counter_data = direct_counter_entry.data();
+      << "Update type of DirectCounterEntry "
+      << direct_counter_entry.ShortDebugString() << " must be MODIFY.";
 
   // Read table entry first.
+  auto table_entry = direct_counter_entry.table_entry();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
@@ -370,14 +365,20 @@ namespace barefoot {
       << direct_counter_entry.ShortDebugString() << ".";
 
   // Rewrite the counter data and modify it.
-  bf_rt_id_t field_id;
+  if (!direct_counter_entry.has_data()) {
+    // Nothing to be updated.
+    return ::util::OkStatus();
+  }
+  auto counter_data = direct_counter_entry.data();
   if (counter_data.byte_count()) {
+    bf_rt_id_t field_id;
     RETURN_IF_BFRT_ERROR(
         table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
     RETURN_IF_BFRT_ERROR(table_data->setValue(
         field_id, static_cast<uint64>(counter_data.byte_count())));
   }
   if (counter_data.packet_count()) {
+    bf_rt_id_t field_id;
     RETURN_IF_BFRT_ERROR(
         table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
     RETURN_IF_BFRT_ERROR(table_data->setValue(
@@ -459,6 +460,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &counter_val));
     result.mutable_data()->set_packet_count(static_cast<int64>(counter_val));
   }
+
   return result;
 }
 
