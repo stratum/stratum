@@ -4,7 +4,7 @@
 
 #----------------------------------------------------------------------
 # This Dockerfile builds a container image used to run the stratum_np4intel
-# binary for use with the Intel PAC N3000 FPGA card.  
+# binary for use with the Intel PAC N3000 FPGA card.
 #----------------------------------------------------------------------
 
 ARG BUILDER_IMAGE
@@ -142,5 +142,5 @@ RUN mkdir /stratum_configs && \
     echo "vm.nr_hugepages=8192" >> /etc/sysctl.conf
 
 EXPOSE 28000/tcp
-ENTRYPOINT /stratum-entrypoint.sh
+ENTRYPOINT ["/stratum-entrypoint.sh"]
 
