@@ -41,11 +41,11 @@ There should be an installer file with a filename similar to:
 
 This is the ONL image you have to install on the switch in the next step. 
 
-### 2) Using a pre-built ONL
+### 2) Using a pre-built ONL (recommended)
 
 You can also download a pre-built ONL from [here](https://github.com/opennetworkinglab/OpenNetworkLinux/releases).
 
-:warning: You have to build or use the ONL from the fork mentioned above - if you use a pre-built installer by ONL itself, you will run into trouble with Stratum.
+:warning: You have to build or use the ONL from the fork mentioned above - if you use a pre-built installer from the official [OpenNetworkLinux website](https://opennetlinux.org/binaries/), you will run into trouble with Stratum.
 
 
 ## Install ONL using ONIE
@@ -80,7 +80,7 @@ This will start Stratum in the foreground (not detached).
 
 :warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/README.md#huge-pages--dma-allocation-error).
 
-:pencil2: You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
+:pencil2: (Optional) You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
 
 ```
 for port in 9339 28000; do
@@ -109,7 +109,7 @@ docker run \
     --publish 5005:5005 \
     --publish 830:830 \
     --name onos \
-    onosproject/onos:2.2.2
+    onosproject/onos:2.2.3
 
 docker logs --follow onos
 ```
@@ -118,7 +118,7 @@ Visit [http://localhost:8181/onos/ui/login.html](http://localhost:8181/onos/ui/l
 
 :pencil2: The `user:password` for ONOS is `onos:rocks`.
 
-:pencil2: For easier handling, you can tunnel the ONOS ports to your local machine:
+:pencil2: (Optional) For easier handling, you can tunnel the ONOS ports to your local machine:
 ```
 HOST="THE_SSH_HOST_YOU_STARTED_ONOS_ON"
 for port in 8181 8101 5005 830; do
@@ -133,6 +133,7 @@ done
 This tunnels the ports to your local machine which enables you to execute ONOS commands locally, e.g., `onos onos@localhost` (user/password is the same as for the GUI).
 
 
+
 ## Enable ONOS apps
 
 Enter the ONOS CLI (`onos onos@localhost`) and execute
@@ -145,7 +146,7 @@ onos> app activate org.onosproject.segmentrouting
 
 [Main page](https://github.com/opencord/fabric-tofino)
 
-You now have to install a ONOS driver for the Tofino switch.
+You now have to install a ONOS pipeconf for the Tofino switch.
 
 ```
 git clone git@github.com:opencord/fabric-tofino.git
@@ -163,7 +164,7 @@ Adapt the `tofino-netcfg.json` in the `fabric-tofino` to your switch. See [fabri
 
 In particular, you have to adapt the `pipeconf` part in the `tofino-netcfg.json` to your switch.
 
-There are two codenames for Tofino ASCIs, namely: `montara` (Tofino 18D/20D/32D), and `mavericks` (Tofino 32Q/64Q).
+There are two codenames for Tofino ASICs, namely: `montara` (Tofino 18D/20D/32D), and `mavericks` (Tofino 32Q/64Q).
 The Accton Wedge 100BF-32X is powered by `montara`.
 
 The management address is the management IP of the switch.
