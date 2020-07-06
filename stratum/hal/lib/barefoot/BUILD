@@ -356,6 +356,7 @@ stratum_cc_library(
         ":macros",
         "//stratum/glue:integral_types",
         "//stratum/glue:logging",
+        "//stratum/glue/gtl:cleanup",
         "//stratum/glue/gtl:map_util",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
