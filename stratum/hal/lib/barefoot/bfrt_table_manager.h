@@ -84,12 +84,12 @@ class BfrtTableManager {
                                 const bfrt::BfRtTable* table,
                                 bfrt::BfRtTableData* table_data);
 
+  // Reader-writer lock used to protect access to pipeline state.
+  mutable absl::Mutex lock_;
+
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
-
-  // Reader-writer lock used to protect access to pipeline state.
-  mutable absl::Mutex lock_;
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class
