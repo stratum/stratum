@@ -208,7 +208,7 @@ BfrtActionProfileManager::ReadActionProfileMember(
   result.mutable_action()->set_action_id(action_id);
   std::vector<bf_rt_id_t> field_id_list;
   RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &field_id_list));
-  for (auto field_id : field_id_list) {
+  for (const auto& field_id : field_id_list) {
     size_t field_size;
     RETURN_IF_BFRT_ERROR(
         table->dataFieldSizeGet(field_id, action_id, &field_size));
@@ -341,7 +341,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
     bfrt::BfRtTableData* table_data) {
   const ::p4::v1::Action action = action_profile_member.action();
   RETURN_IF_BFRT_ERROR(table->dataReset(action.action_id(), table_data));
-  for (auto param : action.params()) {
+  for (const auto& param : action.params()) {
     const size_t size = param.value().size();
     const uint8* val = reinterpret_cast<const uint8*>(param.value().c_str());
     RETURN_IF_BFRT_ERROR(table_data->setValue(param.param_id(), val, size));
@@ -355,7 +355,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
     bfrt::BfRtTableData* table_data) {
   std::vector<bf_rt_id_t> members;
   std::vector<bool> member_status;
-  for (auto member : action_profile_group.members()) {
+  for (const auto& member : action_profile_group.members()) {
     members.push_back(member.member_id());
     member_status.push_back(true);  // Activate the member.
   }

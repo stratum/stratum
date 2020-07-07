@@ -342,7 +342,7 @@ BfrtNode::~BfrtNode() = default;
   ::p4::v1::ReadResponse resp;
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
-  for (auto entity : req.entities()) {
+  for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
         auto status =
