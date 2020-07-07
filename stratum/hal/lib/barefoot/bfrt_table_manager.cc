@@ -296,14 +296,12 @@ namespace barefoot {
       RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &act_prof_mem_id));
       result.mutable_action()->set_action_profile_member_id(
           static_cast<uint32>(act_prof_mem_id));
-      continue;
     } else if (field_name == "$SELECTOR_GROUP_ID") {
       // Action profile group id
       uint64 act_prof_grp_id;
       RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &act_prof_grp_id));
       result.mutable_action()->set_action_profile_group_id(
           static_cast<uint32>(act_prof_grp_id));
-      continue;
     } else if (field_name == "$COUNTER_SPEC_BYTES") {
       if (table_entry.has_counter_data()) {
         uint64 counter_val;
@@ -311,7 +309,6 @@ namespace barefoot {
         result.mutable_counter_data()->set_byte_count(
             static_cast<int64>(counter_val));
       }
-      continue;
     } else if (field_name == "$COUNTER_SPEC_PKTS") {
       if (table_entry.has_counter_data()) {
         uint64 counter_val;
@@ -319,21 +316,21 @@ namespace barefoot {
         result.mutable_counter_data()->set_packet_count(
             static_cast<int64>(counter_val));
       }
-      continue;
-    }
-    size_t field_size;
-    RETURN_IF_BFRT_ERROR(
-        table->dataFieldSizeGet(field_id, action_id, &field_size));
-    // "field_size" describes how many "bits" is this field, need to convert
-    // to bytes with padding.
-    field_size = (field_size / 8) + (field_size % 8 == 0 ? 0 : 1);
-    uint8 field_data[field_size];
-    table_data->getValue(field_id, field_size, field_data);
-    const void* param_val = reinterpret_cast<const void*>(field_data);
+    } else {
+      size_t field_size;
+      RETURN_IF_BFRT_ERROR(
+          table->dataFieldSizeGet(field_id, action_id, &field_size));
+      // "field_size" describes how many "bits" is this field, need to convert
+      // to bytes with padding.
+      field_size = (field_size + 7) / 8;
+      uint8 field_data[field_size];
+      table_data->getValue(field_id, field_size, field_data);
+      const void* param_val = reinterpret_cast<const void*>(field_data);
 
-    auto* param = result.mutable_action()->mutable_action()->add_params();
-    param->set_param_id(field_id);
-    param->set_value(param_val, field_size);
+      auto* param = result.mutable_action()->mutable_action()->add_params();
+      param->set_param_id(field_id);
+      param->set_value(param_val, field_size);
+    }
   }
 
   // Priority
