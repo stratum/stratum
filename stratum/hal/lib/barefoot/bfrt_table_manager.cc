@@ -30,7 +30,7 @@ namespace barefoot {
 ::util::Status BfrtTableManager::BuildTableKey(
     const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key,
     const bfrt::BfRtTable* table) {
-  for (auto mk : table_entry.match()) {
+  for (const auto& mk : table_entry.match()) {
     bf_rt_id_t field_id = mk.field_id();
     switch (mk.field_match_type_case()) {
       case ::p4::v1::FieldMatch::kExact: {
@@ -97,7 +97,7 @@ namespace barefoot {
     const ::p4::v1::Action& action, const bfrt::BfRtTable* table,
     bfrt::BfRtTableData* table_data) {
   RETURN_IF_BFRT_ERROR(table->dataReset(action.action_id(), table_data));
-  for (auto param : action.params()) {
+  for (const auto& param : action.params()) {
     const size_t size = param.value().size();
     const uint8* val = reinterpret_cast<const uint8*>(param.value().c_str());
     RETURN_IF_BFRT_ERROR(table_data->setValue(param.param_id(), val, size));
@@ -149,20 +149,16 @@ namespace barefoot {
   }
 
   if (table_entry.has_counter_data()) {
-    auto counter_data = table_entry.counter_data();
+    const auto& counter_data = table_entry.counter_data();
     bf_rt_id_t field_id;
-    if (counter_data.byte_count()) {
-      RETURN_IF_BFRT_ERROR(
-          table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
-      RETURN_IF_BFRT_ERROR(table_data->setValue(
-          field_id, static_cast<uint64>(counter_data.byte_count())));
-    }
-    if (counter_data.packet_count()) {
-      RETURN_IF_BFRT_ERROR(
-          table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
-      RETURN_IF_BFRT_ERROR(table_data->setValue(
-          field_id, static_cast<uint64>(counter_data.packet_count())));
-    }
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
+    RETURN_IF_BFRT_ERROR(table_data->setValue(
+        field_id, static_cast<uint64>(counter_data.byte_count())));
+    RETURN_IF_BFRT_ERROR(
+        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
+    RETURN_IF_BFRT_ERROR(table_data->setValue(
+        field_id, static_cast<uint64>(counter_data.packet_count())));
   }
 }
 
@@ -170,14 +166,16 @@ namespace barefoot {
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::TableEntry& table_entry) {
-  absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type != ::p4::v1::Update::UNSPECIFIED)
       << "Invalid update type " << type;
 
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  }
 
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
@@ -220,11 +218,13 @@ namespace barefoot {
 ::util::StatusOr<::p4::v1::TableEntry> BfrtTableManager::ReadTableEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::TableEntry& table_entry) {
-  absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  }
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
@@ -271,7 +271,7 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
   std::vector<bf_rt_id_t> field_id_list;
   RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &field_id_list));
-  for (auto field_id : field_id_list) {
+  for (const auto& field_id : field_id_list) {
     std::string field_name;
     RETURN_IF_BFRT_ERROR(
         table->dataFieldNameGet(field_id, action_id, &field_name));
@@ -341,23 +341,40 @@ namespace barefoot {
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
-  absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
       << "Update type of DirectCounterEntry "
       << direct_counter_entry.ShortDebugString() << " must be MODIFY.";
 
   // Read table entry first.
-  auto table_entry = direct_counter_entry.table_entry();
+  const auto& table_entry = direct_counter_entry.table_entry();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  }
+
+  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+
+  // Table key
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
+
+  // Table data
+  bf_rt_id_t action_id = table_entry.action().action().action_id();
+  bf_rt_id_t field_id_bytes;
+  RETURN_IF_BFRT_ERROR(
+      table->dataFieldIdGet("$COUNTER_SPEC_BYTES", action_id, &field_id_bytes));
+  bf_rt_id_t field_id_packets;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdGet("$COUNTER_SPEC_PKTS", action_id,
+                                             &field_id_packets));
+  std::vector<bf_rt_id_t> ids{field_id_bytes, field_id_packets};
   std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(ids, action_id, &table_data));
+
+  // Fetch existing entry with action data.
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
@@ -369,21 +386,12 @@ namespace barefoot {
     // Nothing to be updated.
     return ::util::OkStatus();
   }
-  auto counter_data = direct_counter_entry.data();
-  if (counter_data.byte_count()) {
-    bf_rt_id_t field_id;
-    RETURN_IF_BFRT_ERROR(
-        table->dataFieldIdGet("$COUNTER_SPEC_BYTES", &field_id));
-    RETURN_IF_BFRT_ERROR(table_data->setValue(
-        field_id, static_cast<uint64>(counter_data.byte_count())));
-  }
-  if (counter_data.packet_count()) {
-    bf_rt_id_t field_id;
-    RETURN_IF_BFRT_ERROR(
-        table->dataFieldIdGet("$COUNTER_SPEC_PKTS", &field_id));
-    RETURN_IF_BFRT_ERROR(table_data->setValue(
-        field_id, static_cast<uint64>(counter_data.packet_count())));
-  }
+
+  const auto& counter_data = direct_counter_entry.data();
+  RETURN_IF_BFRT_ERROR(table_data->setValue(
+      field_id_bytes, static_cast<uint64>(counter_data.byte_count())));
+  RETURN_IF_BFRT_ERROR(table_data->setValue(
+      field_id_packets, static_cast<uint64>(counter_data.packet_count())));
 
   RETURN_IF_BFRT_ERROR(
       table->tableEntryMod(*bfrt_session, bf_dev_tgt, *table_key, *table_data));
@@ -396,18 +404,14 @@ namespace barefoot {
 BfrtTableManager::ReadDirectCounterEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
     const ::p4::v1::DirectCounterEntry& direct_counter_entry) {
-  absl::ReaderMutexLock l(&lock_);
-  auto table_entry = direct_counter_entry.table_entry();
-  ::p4::v1::DirectCounterEntry result = direct_counter_entry;
+  const auto& table_entry = direct_counter_entry.table_entry();
   ASSIGN_OR_RETURN(bf_rt_id_t table_id,
                    bfrt_id_mapper_->GetBfRtId(table_entry.table_id()));
   const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  }
   ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
 
   // Sync table counter
@@ -435,14 +439,19 @@ BfrtTableManager::ReadDirectCounterEntry(
         << ", timeout.";
   }
 
+  bf_rt_id_t action_id = table_entry.action().action().action_id();
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(action_id, &table_data));
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
       << "Could not find table entry for direct counter "
       << direct_counter_entry.ShortDebugString() << ".";
 
-  bf_rt_id_t action_id;
-  RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
+  ::p4::v1::DirectCounterEntry result = direct_counter_entry;
   bf_rt_id_t field_id;
   // Try to read byte counter
   auto bf_status =

@@ -66,7 +66,7 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
     // Indirect counters
     for (const auto& counter : program.p4info().counters()) {
       RETURN_IF_ERROR(BuildMapping(counter.preamble().id(),
-                                  counter.preamble().name(), bfrt_info));
+                                   counter.preamble().name(), bfrt_info));
     }
   }
 
@@ -86,6 +86,7 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
     bfrt_to_p4info_id_[p4info_id] = p4info_id;
     return ::util::OkStatus();
   }
+
   // Unable to find table by id, because bfrt uses a different id, we
   // can try to search it by name.
   bf_status = bfrt_info->bfrtTableFromNameGet(p4info_name, &table);
@@ -116,7 +117,8 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
     }
   }
   return MAKE_ERROR(ERR_INTERNAL)
-         << "Unable to find " << p4info_name << " from bfrt info.";
+         << "Unable to find bfrt ID for P4Info entity " << p4info_name
+         << " with ID " << p4info_id << ".";
 }
 
 ::util::Status BfrtIdMapper::BuildActionProfileMapping(
