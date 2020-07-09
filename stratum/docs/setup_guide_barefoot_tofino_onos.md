@@ -73,10 +73,12 @@ Docker is already installed in the pre-built version from the fork mentioned abo
 ```
 git clone git@github.com:stratum/stratum.git # or checkout a specific branch/tag via --branch some_branch
 cd stratum
+# Show options
+./stratum/hal/bin/barefoot/docker/start-stratum-container.sh -help
+
+# Start Stratum in foreground
 ./stratum/hal/bin/barefoot/docker/start-stratum-container.sh
 ```
-
-This will start Stratum in the foreground (not detached).
 
 :warning: **Important**: Huge table allocation **must** be activated on the host system, see [here](https://github.com/stratum/stratum/blob/master/stratum/hal/bin/barefoot/README.md#huge-pages--dma-allocation-error).
 
@@ -172,6 +174,10 @@ The Accton Wedge 100BF-32X is powered by `montara`.
 
 :pencil: **Note**: if you have the Barefoot SDE installed on your switch, you can get the chip type by using using the SDE shell:
 ```
+./stratum/hal/bin/barefoot/docker/start-stratum-container.sh -bf_switchd_background=false
+
+# A lot of logs ...
+
 bf-sde> pipe_mgr dev
 -------------------------------------
 Device|Type |#pipe|#stg|#prsr|#macblk
