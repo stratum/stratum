@@ -3709,6 +3709,60 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
                 return status;
               });
 
+  // Add support for "/interfaces/interface[name=*]/state/counters".
+  tree->AddNode(GetPath("interfaces")("interface", "*")("state")("counters")())
+      ->SetOnChangeRegistration(
+          [tree](const EventHandlerRecordPtr& record)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Subscribing to a wildcard node means that all matching nodes
+                // have to be registered for received events.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("counters")(),
+                    [&record](const TreeNode& node) {
+                      return node.DoOnChangeRegistration(record);
+                    });
+                return status;
+              })
+      ->SetOnChangeHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream) { return ::util::OkStatus(); })
+      ->SetOnPollHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Polling a wildcard node means that all matching nodes have to
+                // be polled.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("counters")(),
+                    [&event, &stream](const TreeNode& leaf) {
+                      return (leaf.GetOnPollHandler())(event, stream);
+                    });
+                // Notify the client that all nodes have been processed.
+                APPEND_STATUS_IF_ERROR(
+                    status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+                return status;
+              })
+      ->SetOnTimerHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Polling a wildcard node means that all matching nodes have to
+                // be polled.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("interfaces")("interface")(),
+                    GetPath("state")("counters")(),
+                    [&event, &stream](const TreeNode& leaf) {
+                      return (leaf.GetOnPollHandler())(event, stream);
+                    });
+                // Notify the client that all nodes have been processed.
+                APPEND_STATUS_IF_ERROR(
+                    status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+                return status;
+              });
+
+
   auto interfaces_on_chage_reg = [tree](const EventHandlerRecordPtr& record)
   EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
     // Subscribing to a wildcard node means that all matching nodes
