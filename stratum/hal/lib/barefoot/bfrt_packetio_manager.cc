@@ -282,8 +282,8 @@ class BitBuffer {
 
 bf_status_t BfrtPacketioManager::BfPktTxNotifyCallback(bf_dev_id_t dev_id,
                                                        bf_pkt_tx_ring_t tx_ring,
-                                                       uint64_t tx_cookie,
-                                                       uint32_t status) {
+                                                       uint64 tx_cookie,
+                                                       uint32 status) {
   VLOG(1) << "BfPktTxNotifyCallback:" << dev_id << ":" << tx_ring << ":"
           << tx_cookie << ":" << status;
 

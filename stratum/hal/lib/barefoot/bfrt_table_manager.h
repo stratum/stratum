@@ -73,11 +73,11 @@ class BfrtTableManager {
                                       bfrt::BfRtTableData* table_data);
 
   ::util::Status BuildTableActionProfileMemberData(
-      const uint32_t action_profile_member_id, const bfrt::BfRtTable* table,
+      const uint32 action_profile_member_id, const bfrt::BfRtTable* table,
       bfrt::BfRtTableData* table_data);
 
   ::util::Status BuildTableActionProfileGroupData(
-      const uint32_t action_profile_group_id, const bfrt::BfRtTable* table,
+      const uint32 action_profile_group_id, const bfrt::BfRtTable* table,
       bfrt::BfRtTableData* table_data);
 
   ::util::Status BuildTableData(const ::p4::v1::TableEntry table_entry,
