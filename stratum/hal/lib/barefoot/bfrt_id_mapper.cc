@@ -73,7 +73,7 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
   return ::util::OkStatus();
 }
 
-::util::Status BfrtIdMapper::BuildMapping(uint32_t p4info_id,
+::util::Status BfrtIdMapper::BuildMapping(uint32 p4info_id,
                                           std::string p4info_name,
                                           const bfrt::BfRtInfo* bfrt_info) {
   const bfrt::BfRtTable* table;
@@ -232,14 +232,14 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
   return dev_tgt;
 }
 
-::util::StatusOr<uint32_t> BfrtIdMapper::GetBfRtId(uint32_t p4info_id) const {
+::util::StatusOr<uint32> BfrtIdMapper::GetBfRtId(uint32 p4info_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(p4info_to_bfrt_id_, p4info_id))
       << "Unable to find bfrt id form p4info id: " << p4info_id;
   return gtl::FindOrDie(p4info_to_bfrt_id_, p4info_id);
 }
 
-::util::StatusOr<uint32_t> BfrtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
+::util::StatusOr<uint32> BfrtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(bfrt_to_p4info_id_, bfrt_id))
       << "Unable to find p4info id form bfrt id: " << bfrt_id;
