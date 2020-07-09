@@ -276,9 +276,11 @@ BfrtNode::~BfrtNode() = default;
 ::util::Status BfrtNode::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
   absl::WriterMutexLock l(&lock_);
+  CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
+      << "Request device id must be same as id of this BfrtNode.";
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
-  session->beginBatch();
+  RETURN_IF_BFRT_ERROR(session->beginBatch());
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
     switch (update.entity().entity_case()) {
@@ -324,7 +326,7 @@ BfrtNode::~BfrtNode() = default;
     success &= status.ok();
     results->push_back(status);
   }
-  session->endBatch(true);
+  RETURN_IF_BFRT_ERROR(session->endBatch(true));
 
   if (!success) {
     return MAKE_ERROR(ERR_AT_LEAST_ONE_OPER_FAILED)
@@ -341,6 +343,8 @@ BfrtNode::~BfrtNode() = default;
     WriterInterface<::p4::v1::ReadResponse>* writer,
     std::vector<::util::Status>* details) {
   absl::WriterMutexLock l(&lock_);
+  CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
+      << "Request device id must be same as id of this BfrtNode.";
   ::p4::v1::ReadResponse resp;
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
