@@ -123,13 +123,14 @@ BfrtNode::~BfrtNode() = default;
 
   // Translate JSON conf to protobuf.
   try {
+    BfrtDeviceConfig bfrt_config;
     CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";
     // Only support single devices for now
     const auto& device = conf["p4_devices"][0];
-    bfrt_config_.set_device(device["device-id"]);
+    bfrt_config.set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
-      auto p = bfrt_config_.add_programs();
+      auto p = bfrt_config.add_programs();
       p->set_name(program["program-name"]);
       ASSIGN_OR_RETURN(
           auto bfrt_content,
@@ -154,6 +155,7 @@ BfrtNode::~BfrtNode() = default;
         pipe->set_config(config_content);
       }
     }
+    bfrt_config_ = bfrt_config;
   } catch (nlohmann::json::exception& e) {
     return MAKE_ERROR(ERR_INTERNAL) << e.what();
   }
