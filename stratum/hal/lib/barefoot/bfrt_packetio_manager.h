@@ -91,7 +91,7 @@ class BfrtPacketioManager {
   // bf_pkt tx done callback function.
   static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
                                            bf_pkt_tx_ring_t tx_ring,
-                                           uint64_t tx_cookie, uint32_t status);
+                                           uint64 tx_cookie, uint32 status);
 
   // bf_pkt rx callback function.
   static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,

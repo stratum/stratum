@@ -290,7 +290,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   bf_rt_id_t max_group_size_field_id;
   RETURN_IF_BFRT_ERROR(
       table->dataFieldIdGet("$MAX_GROUP_SIZE", &max_group_size_field_id));
-  uint64_t max_size;
+  uint64 max_size;
   RETURN_IF_BFRT_ERROR(
       table_data->getValue(max_group_size_field_id, &max_size));
   result.set_max_size(static_cast<int32>(max_size));

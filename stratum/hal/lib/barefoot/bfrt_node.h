@@ -15,11 +15,11 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_action_profile_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_packetio_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
-#include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
@@ -72,8 +72,8 @@ class BfrtNode final {
       BfrtPacketioManager* bfrt_packetio_manager,
       BfrtPreManager* bfrt_pre_manager,
       BfrtCounterManager* bfrt_counter_manager,
-      ::bfrt::BfRtDevMgr* bfrt_device_manager,
-      BfrtIdMapper* bfrt_id_mapper, int device_id);
+      ::bfrt::BfRtDevMgr* bfrt_device_manager, BfrtIdMapper* bfrt_id_mapper,
+      int device_id);
 
   // BfrtNode is neither copyable nor movable.
   BfrtNode(const BfrtNode&) = delete;
@@ -103,7 +103,7 @@ class BfrtNode final {
       const ::p4::v1::ExternEntry& entry);
 
   // Callback registered with DeviceMgr to receive stream messages.
-  friend void StreamMessageCb(uint64_t node_id,
+  friend void StreamMessageCb(uint64 node_id,
                               p4::v1::StreamMessageResponse* msg, void* cookie);
 
   // Reader-writer lock used to protect access to node-specific state.

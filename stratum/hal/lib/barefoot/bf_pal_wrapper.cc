@@ -41,7 +41,7 @@ constexpr int32 BFPalWrapper::kDefaultMtu;
 
 ::util::Status BFPalWrapper::PortAllStatsGet(int unit, uint32 port_id,
                                              PortCounters* counters) {
-  uint64_t stats[BF_NUM_RMON_COUNTERS];
+  uint64 stats[BF_NUM_RMON_COUNTERS];
   auto bf_status =
       bf_pal_port_all_stats_get(static_cast<bf_dev_id_t>(unit),
                                 static_cast<bf_dev_port_t>(port_id), stats);

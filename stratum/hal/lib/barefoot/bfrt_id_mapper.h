@@ -36,11 +36,11 @@ class BfrtIdMapper {
   ::util::StatusOr<bf_rt_target_t> GetDeviceTarget(bf_rt_id_t bfrt_id) const;
 
   // Maps a P4Info ID to a BfRt ID
-  ::util::StatusOr<uint32_t> GetBfRtId(uint32_t p4info_id) const
+  ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const
       LOCKS_EXCLUDED(lock_);
 
   // Maps a BfRt ID to a P4Info ID
-  ::util::StatusOr<uint32_t> GetP4InfoId(bf_rt_id_t bfrt_id) const
+  ::util::StatusOr<uint32> GetP4InfoId(bf_rt_id_t bfrt_id) const
       LOCKS_EXCLUDED(lock_);
 
   // Gets the action selector ID of an action profile.
@@ -59,7 +59,7 @@ class BfrtIdMapper {
   // function only.
   explicit BfrtIdMapper(int device_id);
 
-  ::util::Status BuildMapping(uint32_t p4info_id, std::string p4info_name,
+  ::util::Status BuildMapping(uint32 p4info_id, std::string p4info_name,
                               const bfrt::BfRtInfo* bfrt_info)
       SHARED_LOCKS_REQUIRED(lock_);
 
@@ -75,10 +75,8 @@ class BfrtIdMapper {
   mutable absl::Mutex lock_;
 
   // Mappings
-  absl::flat_hash_map<bf_rt_id_t, uint32_t> bfrt_to_p4info_id_
-      GUARDED_BY(lock_);
-  absl::flat_hash_map<uint32_t, bf_rt_id_t> p4info_to_bfrt_id_
-      GUARDED_BY(lock_);
+  absl::flat_hash_map<bf_rt_id_t, uint32> bfrt_to_p4info_id_ GUARDED_BY(lock_);
+  absl::flat_hash_map<uint32, bf_rt_id_t> p4info_to_bfrt_id_ GUARDED_BY(lock_);
 
   // Map for getting an ActionSelector BfRt ID from an ActionProfile BfRt ID.
   absl::flat_hash_map<bf_rt_id_t, bf_rt_id_t> act_profile_to_selector_mapping_
