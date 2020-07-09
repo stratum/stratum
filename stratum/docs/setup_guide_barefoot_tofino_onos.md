@@ -162,14 +162,25 @@ make pipeconf-install ONOS_HOST=localhost
 
 Adapt the `tofino-netcfg.json` in the `fabric-tofino` to your switch. See [fabric-tofino README](https://github.com/opencord/fabric-tofino#4---connect-onos-to-a-stratum-switch) for more information.
 
+The `managementAddress` is the IP of the management port of the switch.
+
+### Selecting the pipeconf for your device
 In particular, you have to adapt the `pipeconf` part in the `tofino-netcfg.json` to your switch.
 
-There are two codenames for Tofino ASICs, namely: `montara` (Tofino 18D/20D/32D), and `mavericks` (Tofino 32Q/64Q).
+There are two Edgecore-internal codenames for Tofino ASICs, namely: `montara` (Tofino 18D/20D/32D), and `mavericks` (Tofino 32Q/64Q).
 The Accton Wedge 100BF-32X is powered by `montara`.
 
-The management address is the management IP of the switch.
+:pencil: **Note**: if you have the Barefoot SDE installed on your switch, you can get the chip type by using using the SDE shell:
+```
+bf-sde> pipe_mgr dev
+-------------------------------------
+Device|Type |#pipe|#stg|#prsr|#macblk
+------|-----|-----|----|-----|-------
+0     |T32D |2    |12  |18   |-1
+```
+In this case, you would have to use either `org.opencord.fabric.tofino.montara_sde_9_0_0`  (default), `org.opencord.fabric-bng.tofino.montara_sde_9_0_0`, `org.opencord.fabric-spgw.tofino.montara_sde_9_0_0`, or `org.opencord.fabric-int.tofino.montara_sde_9_0_0` as the pipeconf for your device.
 
-
+### Apply netcfg to ONOS
 Register the switch in ONOS by executing:
 ```
 make netcfg ONOS_HOST=localhost
