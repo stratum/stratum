@@ -56,9 +56,8 @@ def stratum_deps():
         # ----- p4c -----
         git_repository(
             name = "com_github_p4lang_p4c",
-            remote = "https://github.com/EileenFeng/p4c",
-            commit = "a95afbe803b98da96bb4f563f0b086697f594529",
-            # build_file = "@//bazel:external/p4c.BUILD",
+            remote = "https://github.com/p4lang/p4c",
+            commit = "17d1d55c8fa647eb6dd15141048c70d96def34a9",
             repo_mapping = {
                 # Tells p4c where to look for `:ir_extensions` target: in this project.
                 "@com_github_p4lang_p4c_extension" : "@com_github_stratum_stratum",
