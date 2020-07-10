@@ -280,6 +280,7 @@ BfrtNode::~BfrtNode() = default;
       << "Request device id must be same as id of this BfrtNode.";
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
+  CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
   RETURN_IF_BFRT_ERROR(session->beginBatch());
   for (const auto& update : req.updates()) {
     ::util::Status status = ::util::OkStatus();
@@ -348,6 +349,7 @@ BfrtNode::~BfrtNode() = default;
   ::p4::v1::ReadResponse resp;
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
+  CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
   for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
