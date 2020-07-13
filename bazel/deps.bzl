@@ -10,8 +10,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl",
      "new_git_repository")
 load("@bazel_gazelle//:deps.bzl", "go_repository")
 
-P4RUNTIME_VER = "fb437abd13dc2a3177256149582cc85c0c39f956" # 1.2.0-dev
-P4RUNTIME_SHA = "2c01f5dff0c84efc3ef6bf33a9d18b3ddc07de4a86da55636b709abed79c36fc"
+P4RUNTIME_VER = "1.2.0"
+P4RUNTIME_SHA = "0fce7e06c63e60a8cddfe56f3db3d341953560c054d4c09ffda0e84476124f5a"
 
 GNMI_COMMIT = "39cb2fffed5c9a84970bde47b3d39c8c716dc17a"
 GNMI_SHA = "3701005f28044065608322c179625c8898beadb80c89096b3d8aae1fbac15108"
@@ -74,10 +74,9 @@ def stratum_deps():
     if "com_github_p4lang_p4runtime" not in native.existing_rules():
         http_archive(
             name = "com_github_p4lang_p4runtime",
-            urls = ["https://github.com/p4lang/p4runtime/archive/%s.zip" % P4RUNTIME_VER],
-            sha256 = P4RUNTIME_SHA,
+            urls = ["https://github.com/p4lang/p4runtime/archive/v%s.zip" % P4RUNTIME_VER],
             strip_prefix = "p4runtime-%s/proto" % P4RUNTIME_VER,
-            build_file = "@//bazel:external/p4runtime.BUILD",
+            sha256 = P4RUNTIME_SHA,
         )
 
     if "build_stack_rules_proto" not in native.existing_rules():
