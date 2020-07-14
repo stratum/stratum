@@ -209,6 +209,10 @@ namespace {
 void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                      const std::vector<::util::Status>& results,
                      const absl::Time timestamp) {
+  // Skip logging if flag is empty.
+  if (FLAGS_write_req_log_file.empty()) {
+    return;
+  }
   if (results.size() != req.updates_size()) {
     LOG(ERROR) << "Size mismatch: " << results.size()
                << " != " << req.updates_size() << ". Did not log anything!";
@@ -270,10 +274,8 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                << ": " << status.error_message();
   }
 
-  // Log debug info for future debugging if flag is not empty.
-  if (!FLAGS_write_req_log_file.empty()) {
-    LogWriteRequest(node_id, *req, results, timestamp);
-  }
+  // Log debug info for future debugging.
+  LogWriteRequest(node_id, *req, results, timestamp);
 
   return ToGrpcStatus(status, results);
 }
