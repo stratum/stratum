@@ -198,7 +198,7 @@ namespace barefoot {
     RETURN_IF_ERROR(BuildTableData(table_entry, table, table_data.get()));
   }
 
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   switch (type) {
     case ::p4::v1::Update::INSERT:
       RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
@@ -241,7 +241,7 @@ namespace barefoot {
   RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   // Sync table counter
   if (table_entry.has_counter_data()) {
@@ -366,7 +366,7 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   }
 
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   // Table key
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
@@ -423,7 +423,7 @@ BfrtTableManager::ReadDirectCounterEntry(
     absl::ReaderMutexLock l(&lock_);
     RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   }
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   // Sync table counter
   std::set<bfrt::TableOperationsType> supported_ops;

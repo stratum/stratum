@@ -38,7 +38,7 @@ namespace barefoot {
                    bfrt_id_mapper_->GetBfRtId(counter_entry.counter_id()));
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   // Counter key: $COUNTER_INDEX
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
@@ -90,7 +90,7 @@ BfrtCounterManager::ReadIndirectCounterEntry(
                    bfrt_id_mapper_->GetBfRtId(counter_entry.counter_id()));
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   // Sync table counter
   std::set<bfrt::TableOperationsType> supported_ops;

@@ -224,8 +224,7 @@ BfrtIdMapper::BfrtIdMapper(int device_id) : device_id_(device_id) {}
   return ::util::OkStatus();
 }
 
-::util::StatusOr<bf_rt_target_t> BfrtIdMapper::GetDeviceTarget(
-    bf_rt_id_t bfrt_id) const {
+bf_rt_target_t BfrtIdMapper::GetDeviceTarget() const {
   bf_rt_target_t dev_tgt = {};
   dev_tgt.dev_id = device_id_;
   dev_tgt.pipe_id = BF_DEV_PIPE_ALL;

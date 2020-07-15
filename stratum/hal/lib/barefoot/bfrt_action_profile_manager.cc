@@ -161,8 +161,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
     RETURN_IF_ERROR(
         BuildTableData(table, action_profile_member, table_data.get()));
   }
-  ASSIGN_OR_RETURN(auto bf_dev_tgt,
-                   bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   switch (type) {
     case ::p4::v1::Update::INSERT:
@@ -195,8 +194,7 @@ BfrtActionProfileManager::ReadActionProfileMember(
   RETURN_IF_ERROR(BuildTableKey(table, action_profile_member, table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt,
-                   bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
@@ -244,8 +242,7 @@ BfrtActionProfileManager::ReadActionProfileMember(
     RETURN_IF_ERROR(
         BuildTableData(table, action_profile_group, table_data.get()));
   }
-  ASSIGN_OR_RETURN(auto bf_dev_tgt,
-                   bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   switch (type) {
     case ::p4::v1::Update::INSERT:
@@ -278,8 +275,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   RETURN_IF_ERROR(BuildTableKey(table, action_profile_group, table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt,
-                   bfrt_id_mapper_->GetDeviceTarget(bfrt_table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
