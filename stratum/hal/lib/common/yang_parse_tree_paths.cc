@@ -3708,7 +3708,6 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
                     status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
                 return status;
               });
-
   // Add support for "/interfaces/interface[name=*]/state/counters".
   tree->AddNode(GetPath("interfaces")("interface", "*")("state")("counters")())
       ->SetOnChangeRegistration(
@@ -3761,7 +3760,6 @@ void YangParseTreePaths::AddSubtreeAllInterfaces(YangParseTree* tree) {
                     status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
                 return status;
               });
-
 
   auto interfaces_on_chage_reg = [tree](const EventHandlerRecordPtr& record)
   EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
