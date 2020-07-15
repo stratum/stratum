@@ -209,6 +209,9 @@ namespace {
 void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                      const std::vector<::util::Status>& results,
                      const absl::Time timestamp) {
+  if (FLAGS_write_req_log_file.empty()) {
+    return;
+  }
   if (results.size() != req.updates_size()) {
     LOG(ERROR) << "Size mismatch: " << results.size()
                << " != " << req.updates_size() << ". Did not log anything!";
