@@ -351,6 +351,38 @@ BFChassisManager::~BFChassisManager() = default;
 
 ::util::Status BFChassisManager::VerifyChassisConfig(
     const ChassisConfig& config) {
+  if (config.trunk_ports_size()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Trunk ports are not supported on Tofino.";
+  }
+  if (config.port_groups_size()) {
+    return MAKE_ERROR(ERR_INVALID_PARAM)
+           << "Port groups are not supported on Tofino.";
+  }
+
+  // If the class is initialized, we also need to check if the new config will
+  // require a change in the port layout. If so, report reboot required.
+  if (initialized_) {
+    std::map<uint64, std::map<uint32, PortKey>>
+        node_id_to_port_id_to_singleton_port_key;
+
+    for (const auto& singleton_port : config.singleton_ports()) {
+      uint32 port_id = singleton_port.id();
+      uint64 node_id = singleton_port.node();
+
+      node_id_to_port_id_to_singleton_port_key[node_id][port_id] =
+          PortKey(singleton_port.slot(), singleton_port.port(),
+                  singleton_port.channel());
+    }
+
+    if (node_id_to_port_id_to_singleton_port_key !=
+        node_id_to_port_id_to_singleton_port_key_) {
+      return MAKE_ERROR(ERR_REBOOT_REQUIRED)
+             << "The switch is already initialized, but we detected the "
+             << "newly pushed config requires a change in the port layout. "
+             << "The stack needs to be rebooted to finish config push.";
+    }
+  }
   return ::util::OkStatus();
 }
 
