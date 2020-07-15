@@ -4,9 +4,8 @@
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BF_PD_WRAPPER_H_
 #define STRATUM_HAL_LIB_BAREFOOT_BF_PD_WRAPPER_H_
 
-#include "stratum/hal/lib/barefoot/bf_pd_interface.h"
-
 #include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/barefoot/bf_pd_interface.h"
 
 namespace stratum {
 namespace hal {

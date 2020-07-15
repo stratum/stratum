@@ -7,16 +7,16 @@
 #include <map>
 #include <vector>
 
-#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
-#include "stratum/hal/lib/pi/pi_node.h"
-#include "stratum/glue/logging.h"
-#include "stratum/glue/status/status_macros.h"
-#include "stratum/lib/constants.h"
-#include "stratum/lib/macros.h"
-#include "stratum/glue/integral_types.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "stratum/glue/gtl/map_util.h"
+#include "stratum/glue/integral_types.h"
+#include "stratum/glue/logging.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/pi/pi_node.h"
+#include "stratum/lib/constants.h"
+#include "stratum/lib/macros.h"
 
 using ::stratum::hal::pi::PINode;
 
@@ -123,13 +123,9 @@ BFSwitch::~BFSwitch() {}
   return status;
 }
 
-::util::Status BFSwitch::Freeze() {
-  return ::util::OkStatus();
-}
+::util::Status BFSwitch::Freeze() { return ::util::OkStatus(); }
 
-::util::Status BFSwitch::Unfreeze() {
-  return ::util::OkStatus();
-}
+::util::Status BFSwitch::Unfreeze() { return ::util::OkStatus(); }
 
 ::util::Status BFSwitch::WriteForwardingEntries(
     const ::p4::v1::WriteRequest& req, std::vector<::util::Status>* results) {
@@ -229,13 +225,11 @@ BFSwitch::~BFSwitch() {}
 }
 
 std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
-    PhalInterface* phal_interface,
-    BFChassisManager* bf_chassis_manager,
+    PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
     BFPdInterface* bf_pd_interface,
     const std::map<int, PINode*>& unit_to_pi_node) {
-  return absl::WrapUnique(
-      new BFSwitch(phal_interface, bf_chassis_manager, bf_pd_interface,
-                   unit_to_pi_node));
+  return absl::WrapUnique(new BFSwitch(phal_interface, bf_chassis_manager,
+                                       bf_pd_interface, unit_to_pi_node));
 }
 
 ::util::StatusOr<PINode*> BFSwitch::GetPINodeFromUnit(int unit) const {
@@ -246,8 +240,7 @@ std::unique_ptr<BFSwitch> BFSwitch::CreateInstance(
   return pi_node;
 }
 
-::util::StatusOr<PINode*> BFSwitch::GetPINodeFromNodeId(
-    uint64 node_id) const {
+::util::StatusOr<PINode*> BFSwitch::GetPINodeFromNodeId(uint64 node_id) const {
   PINode* pi_node = gtl::FindPtrOrNull(node_id_to_pi_node_, node_id);
   if (pi_node == nullptr) {
     return MAKE_ERROR(ERR_INVALID_PARAM)

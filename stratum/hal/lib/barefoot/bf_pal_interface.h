@@ -24,22 +24,21 @@ class BFPalInterface {
     PortState state;
   };
 
-  virtual ~BFPalInterface() { }
+  virtual ~BFPalInterface() {}
 
-  virtual ::util::StatusOr<PortState> PortOperStateGet(
-      int unit, uint32 port_id) = 0;
+  virtual ::util::StatusOr<PortState> PortOperStateGet(int unit,
+                                                       uint32 port_id) = 0;
 
-  virtual ::util::Status PortAllStatsGet(
-      int unit, uint32 port_id, PortCounters* counters) = 0;
+  virtual ::util::Status PortAllStatsGet(int unit, uint32 port_id,
+                                         PortCounters* counters) = 0;
 
   virtual ::util::Status PortStatusChangeRegisterEventWriter(
-       std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer) = 0;
+      std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer) = 0;
 
   virtual ::util::Status PortStatusChangeUnregisterEventWriter() = 0;
 
-  virtual ::util::Status PortAdd(
-      int unit, uint32 port_id, uint64 speed_bps,
-      FecMode fec_mode = FEC_MODE_UNKNOWN) = 0;
+  virtual ::util::Status PortAdd(int unit, uint32 port_id, uint64 speed_bps,
+                                 FecMode fec_mode = FEC_MODE_UNKNOWN) = 0;
 
   virtual ::util::Status PortDelete(int unit, uint32 port_id) = 0;
 
@@ -47,8 +46,8 @@ class BFPalInterface {
 
   virtual ::util::Status PortDisable(int unit, uint32 port_id) = 0;
 
-  virtual ::util::Status PortAutonegPolicySet(
-      int unit, uint32 port_id, TriState autoneg) = 0;
+  virtual ::util::Status PortAutonegPolicySet(int unit, uint32 port_id,
+                                              TriState autoneg) = 0;
 
   virtual ::util::Status PortMtuSet(int unit, uint32 port_id, int32 mtu) = 0;
 

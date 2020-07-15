@@ -2,9 +2,10 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include <memory>
 
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
 #include "gflags/gflags.h"
 #include "stratum/glue/init_google.h"
 #include "stratum/glue/logging.h"
@@ -20,13 +21,9 @@
 #include "stratum/hal/lib/bcm/bcm_switch.h"
 #include "stratum/hal/lib/common/hal.h"
 #include "stratum/hal/lib/p4/p4_table_mapper.h"
-// #include "stratum/hal/lib/phal/legacy_phal.h"
-// #include "stratum/hal/lib/phal/udev.h"
 #include "stratum/hal/lib/phal/phal.h"
 #include "stratum/lib/security/auth_policy_checker.h"
 #include "stratum/lib/security/credentials_manager.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
 
 DEFINE_int32(max_units, 1,
              "Maximum number of units supported on the switch platform.");
@@ -99,8 +96,8 @@ struct PerNodeInstances {
   // those managers are passed a pointer to BcmChassisManager on creation.
   bcm_chassis_manager->SetUnitToBcmNodeMap(unit_to_bcm_node);
   // Create 'BcmSwitch' class instace.
-  auto bcm_switch = BcmSwitch::CreateInstance(
-      phal, bcm_chassis_manager.get(), unit_to_bcm_node);
+  auto bcm_switch = BcmSwitch::CreateInstance(phal, bcm_chassis_manager.get(),
+                                              unit_to_bcm_node);
   // Create the 'Hal' class instance.
   auto auth_policy_checker = AuthPolicyChecker::CreateInstance();
   ASSIGN_OR_RETURN(auto credentials_manager,

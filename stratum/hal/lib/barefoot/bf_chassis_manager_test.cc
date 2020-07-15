@@ -4,28 +4,28 @@
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 
 #include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
-#include "stratum/glue/status/statusor.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bf_pal_mock.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/phal_mock.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/test_utils/matchers.h"
-#include "absl/time/time.h"
 
+using ::stratum::test_utils::EqualsProto;
 using ::testing::_;
 using ::testing::AtMost;
+using ::testing::DoAll;
+using ::testing::HasSubstr;
 using ::testing::Matcher;
 using ::testing::Mock;
 using ::testing::Return;
-using ::testing::DoAll;
 using ::testing::SetArgPointee;
-using ::testing::HasSubstr;
-using ::stratum::test_utils::EqualsProto;
 
 namespace stratum {
 namespace hal {
@@ -49,8 +49,7 @@ constexpr LoopbackState kDefaultLoopbackMode = LOOPBACK_STATE_UNKNOWN;
 // A helper class to build a single-node ChassisConfig message.
 class ChassisConfigBuilder {
  public:
-  explicit ChassisConfigBuilder(uint64 node_id = kNodeId)
-      : node_id(node_id) {
+  explicit ChassisConfigBuilder(uint64 node_id = kNodeId) : node_id(node_id) {
     config_.set_description("Test config for BFChassisManager");
     auto* chassis = config_.mutable_chassis();
     chassis->set_platform(PLT_BAREFOOT_TOFINO);
@@ -61,8 +60,7 @@ class ChassisConfigBuilder {
     node->set_slot(kSlot);
   }
 
-  SingletonPort* AddPort(uint32 port_id, int32 port,
-                         AdminState admin_state,
+  SingletonPort* AddPort(uint32 port_id, int32 port, AdminState admin_state,
                          uint64 speed_bps = kDefaultSpeedBps,
                          FecMode fec_mode = kDefaultFecMode,
                          TriState autoneg = kDefaultAutoneg,
@@ -88,9 +86,7 @@ class ChassisConfigBuilder {
     return nullptr;
   }
 
-  void RemoveLastPort() {
-    config_.mutable_singleton_ports()->RemoveLast();
-  }
+  void RemoveLastPort() { config_.mutable_singleton_ports()->RemoveLast(); }
 
   const ChassisConfig& Get() const { return config_; }
 
@@ -103,13 +99,13 @@ class ChassisConfigBuilder {
 
 class BFChassisManagerTest : public ::testing::Test {
  protected:
-  BFChassisManagerTest() { }
+  BFChassisManagerTest() {}
 
   void SetUp() override {
     phal_mock_ = absl::make_unique<PhalMock>();
     bf_pal_mock_ = absl::make_unique<BFPalMock>();
-    bf_chassis_manager_ = BFChassisManager::CreateInstance(
-        phal_mock_.get(), bf_pal_mock_.get());
+    bf_chassis_manager_ =
+        BFChassisManager::CreateInstance(phal_mock_.get(), bf_pal_mock_.get());
     ON_CALL(*bf_pal_mock_, PortIsValid(_, _)).WillByDefault(Return(true));
   }
 
@@ -151,8 +147,8 @@ class BFChassisManagerTest : public ::testing::Test {
     // PortStatusChangeRegisterEventWriter called because this is the first call
     // to PushChassisConfig
     EXPECT_CALL(*bf_pal_mock_, PortStatusChangeRegisterEventWriter(_));
-    EXPECT_CALL(*bf_pal_mock_, PortAdd(
-        kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
+    EXPECT_CALL(*bf_pal_mock_,
+                PortAdd(kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
     EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
     EXPECT_CALL(*phal_mock_,
@@ -166,8 +162,7 @@ class BFChassisManagerTest : public ::testing::Test {
     RETURN_IF_ERROR(PushChassisConfig(builder->Get()));
     auto unit = GetUnitFromNodeId(kNodeId);
     CHECK_RETURN_IF_FALSE(unit.ok());
-    CHECK_RETURN_IF_FALSE(unit.ValueOrDie() == kUnit)
-        << "Invalid unit number!";
+    CHECK_RETURN_IF_FALSE(unit.ValueOrDie() == kUnit) << "Invalid unit number!";
     CHECK_RETURN_IF_FALSE(Initialized())
         << "Class is not initialized after push!";
     return ::util::OkStatus();
@@ -188,13 +183,10 @@ class BFChassisManagerTest : public ::testing::Test {
     return bf_chassis_manager_->GetUnitFromNodeId(node_id);
   }
 
-  ::util::Status Shutdown() {
-    return bf_chassis_manager_->Shutdown();
-  }
+  ::util::Status Shutdown() { return bf_chassis_manager_->Shutdown(); }
 
   ::util::Status ShutdownAndTestCleanState() {
-    EXPECT_CALL(*bf_pal_mock_,
-                PortStatusChangeUnregisterEventWriter())
+    EXPECT_CALL(*bf_pal_mock_, PortStatusChangeUnregisterEventWriter())
         .WillOnce(Return(::util::OkStatus()));
     RETURN_IF_ERROR(Shutdown());
     RETURN_IF_ERROR(CheckCleanInternalState());
@@ -246,10 +238,10 @@ TEST_F(BFChassisManagerTest, AddPortFec) {
   auto portId = kPortId + 1;
   auto port = kPort + 1;
 
-  builder.AddPort(
-      portId, port, ADMIN_STATE_ENABLED, kHundredGigBps, FEC_MODE_ON);
-  EXPECT_CALL(*bf_pal_mock_, PortAdd(
-      kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
+                  FEC_MODE_ON);
+  EXPECT_CALL(*bf_pal_mock_,
+              PortAdd(kUnit, portId, kHundredGigBps, FEC_MODE_ON));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
   ASSERT_OK(PushChassisConfig(builder));
 
@@ -263,8 +255,8 @@ TEST_F(BFChassisManagerTest, SetPortLoopback) {
   SingletonPort* sport = builder.GetPort(kPortId);
   sport->mutable_config_params()->set_loopback_mode(LOOPBACK_STATE_MAC);
 
-  EXPECT_CALL(*bf_pal_mock_, PortLoopbackModeSet(
-      kUnit, kPortId, LOOPBACK_STATE_MAC));
+  EXPECT_CALL(*bf_pal_mock_,
+              PortLoopbackModeSet(kUnit, kPortId, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
   ASSERT_OK(PushChassisConfig(builder));
@@ -274,8 +266,8 @@ TEST_F(BFChassisManagerTest, SetPortLoopback) {
 TEST_F(BFChassisManagerTest, ReplayPorts) {
   ASSERT_OK(PushBaseChassisConfig());
 
-  EXPECT_CALL(*bf_pal_mock_, PortAdd(
-      kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
+  EXPECT_CALL(*bf_pal_mock_,
+              PortAdd(kUnit, kPortId, kDefaultSpeedBps, kDefaultFecMode));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId));
 
   // For now, when replaying the port configuration, we set the mtu and autoneg
@@ -297,9 +289,9 @@ TEST_F(BFChassisManagerTest, TransceiverEvent) {
 
   EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(kSlot, kPort, _));
 
-  EXPECT_OK(xcvr_event_writer->Write(
-      TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
-      absl::InfiniteDuration()));
+  EXPECT_OK(
+      xcvr_event_writer->Write(TransceiverEvent{kSlot, kPort, HW_STATE_PRESENT},
+                               absl::InfiniteDuration()));
   // Make sure the event reader reads the event and make expected calls to
   // phal mock interface.
   absl::SleepFor(absl::Milliseconds(1000));
@@ -308,12 +300,12 @@ TEST_F(BFChassisManagerTest, TransceiverEvent) {
 }
 
 template <typename T>
-T GetPortData(BFChassisManager* bf_chassis_manager_,
-  uint64 node_id, int port_id,
-  DataRequest::Request::Port* (
-    DataRequest::Request::*get_mutable_message_func)(),
-  const T& (DataResponse::*data_response_get_message_func)() const,
-  bool (DataResponse::*data_response_has_message_func)() const) {
+T GetPortData(BFChassisManager* bf_chassis_manager_, uint64 node_id,
+              int port_id,
+              DataRequest::Request::Port* (
+                  DataRequest::Request::*get_mutable_message_func)(),
+              const T& (DataResponse::*data_response_get_message_func)() const,
+              bool (DataResponse::*data_response_has_message_func)() const) {
   DataRequest::Request req;
   (req.*get_mutable_message_func)()->set_node_id(node_id);
   (req.*get_mutable_message_func)()->set_port_id(port_id);
@@ -326,33 +318,34 @@ T GetPortData(BFChassisManager* bf_chassis_manager_,
 }
 
 template <typename T, typename U>
-void GetPortDataTest(BFChassisManager* bf_chassis_manager_,
-  uint64 node_id, int port_id,
-  DataRequest::Request::Port* (
-    DataRequest::Request::*get_mutable_message_func)(),
-  const T& (DataResponse::*data_response_get_message_func)() const,
-  bool (DataResponse::*data_response_has_message_func)() const,
-  U (T::*get_inner_message_func)() const,
-  U expected_value) {
-  const T& val = GetPortData(bf_chassis_manager_, node_id, port_id,
-                             get_mutable_message_func,
-                             data_response_get_message_func,
-                             data_response_has_message_func);
+void GetPortDataTest(BFChassisManager* bf_chassis_manager_, uint64 node_id,
+                     int port_id,
+                     DataRequest::Request::Port* (
+                         DataRequest::Request::*get_mutable_message_func)(),
+                     const T& (DataResponse::*data_response_get_message_func)()
+                         const,
+                     bool (DataResponse::*data_response_has_message_func)()
+                         const,
+                     U (T::*get_inner_message_func)() const, U expected_value) {
+  const T& val = GetPortData(
+      bf_chassis_manager_, node_id, port_id, get_mutable_message_func,
+      data_response_get_message_func, data_response_has_message_func);
   EXPECT_EQ((val.*get_inner_message_func)(), expected_value);
 }
 
 template <typename T>
-void GetPortDataTest(BFChassisManager* bf_chassis_manager_,
-  uint64 node_id, int port_id,
-  DataRequest::Request::Port* (
-    DataRequest::Request::*get_mutable_message_func)(),
-  const T& (DataResponse::*data_response_get_message_func)() const,
-  bool (DataResponse::*data_response_has_message_func)() const,
-  T expected_msg) {
+void GetPortDataTest(BFChassisManager* bf_chassis_manager_, uint64 node_id,
+                     int port_id,
+                     DataRequest::Request::Port* (
+                         DataRequest::Request::*get_mutable_message_func)(),
+                     const T& (DataResponse::*data_response_get_message_func)()
+                         const,
+                     bool (DataResponse::*data_response_has_message_func)()
+                         const,
+                     T expected_msg) {
   T val = GetPortData(bf_chassis_manager_, node_id, port_id,
-                             get_mutable_message_func,
-                             data_response_get_message_func,
-                             data_response_has_message_func);
+                      get_mutable_message_func, data_response_get_message_func,
+                      data_response_has_message_func);
   EXPECT_THAT(val, EqualsProto(expected_msg));
 }
 
@@ -365,13 +358,13 @@ TEST_F(BFChassisManagerTest, GetPortData) {
 
   builder.AddPort(portId, port, ADMIN_STATE_ENABLED, kHundredGigBps,
                   FEC_MODE_ON, TRI_STATE_TRUE, LOOPBACK_STATE_MAC);
-  EXPECT_CALL(*bf_pal_mock_, PortAdd(
-    kUnit, portId, kHundredGigBps, FEC_MODE_ON));
-  EXPECT_CALL(*bf_pal_mock_, PortLoopbackModeSet(
-      kUnit, portId, LOOPBACK_STATE_MAC));
+  EXPECT_CALL(*bf_pal_mock_,
+              PortAdd(kUnit, portId, kHundredGigBps, FEC_MODE_ON));
+  EXPECT_CALL(*bf_pal_mock_,
+              PortLoopbackModeSet(kUnit, portId, LOOPBACK_STATE_MAC));
   EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, portId));
   EXPECT_CALL(*bf_pal_mock_, PortOperStateGet(kUnit, portId))
-    .WillRepeatedly(Return(PORT_STATE_UP));
+      .WillRepeatedly(Return(PORT_STATE_UP));
 
   PortCounters counters;
   counters.set_in_octets(1);
@@ -390,8 +383,7 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   counters.set_in_fcs_errors(14);
 
   EXPECT_CALL(*bf_pal_mock_, PortAllStatsGet(kUnit, portId, _))
-    .WillOnce(DoAll(SetArgPointee<2>(counters),
-                    Return(::util::OkStatus())));
+      .WillOnce(DoAll(SetArgPointee<2>(counters), Return(::util::OkStatus())));
 
   FrontPanelPortInfo front_panel_port_info;
   front_panel_port_info.set_physical_port_type(PHYSICAL_PORT_TYPE_QSFP_CAGE);
@@ -401,93 +393,71 @@ TEST_F(BFChassisManagerTest, GetPortData) {
   front_panel_port_info.set_serial_number("000");
   front_panel_port_info.set_hw_state(HW_STATE_PRESENT);
   EXPECT_CALL(*phal_mock_, GetFrontPanelPortInfo(_, _, _))
-    .WillOnce(DoAll(SetArgPointee<2>(front_panel_port_info),
-                    Return(::util::OkStatus())));
+      .WillOnce(DoAll(SetArgPointee<2>(front_panel_port_info),
+                      Return(::util::OkStatus())));
 
   ON_CALL(*bf_pal_mock_, PortAutonegPolicySet(_, _, _))
-    .WillByDefault(Return(::util::OkStatus()));
-  ON_CALL(*bf_pal_mock_, PortIsValid(_, _))
-    .WillByDefault(Return(true));
+      .WillByDefault(Return(::util::OkStatus()));
+  ON_CALL(*bf_pal_mock_, PortIsValid(_, _)).WillByDefault(Return(true));
   ASSERT_OK(PushChassisConfig(builder));
 
   // Operation status
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_oper_status,
-    &DataResponse::oper_status,
-    &DataResponse::has_oper_status,
-    &OperStatus::state,
-    PORT_STATE_UP);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_oper_status,
+                  &DataResponse::oper_status, &DataResponse::has_oper_status,
+                  &OperStatus::state, PORT_STATE_UP);
 
   // Admin status
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_admin_status,
-    &DataResponse::admin_status,
-    &DataResponse::has_admin_status,
-    &AdminStatus::state,
-    ADMIN_STATE_ENABLED);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_admin_status,
+                  &DataResponse::admin_status, &DataResponse::has_admin_status,
+                  &AdminStatus::state, ADMIN_STATE_ENABLED);
 
   // Port speed
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_port_speed,
-    &DataResponse::port_speed,
-    &DataResponse::has_port_speed,
-    &PortSpeed::speed_bps,
-    kHundredGigBps);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_port_speed,
+                  &DataResponse::port_speed, &DataResponse::has_port_speed,
+                  &PortSpeed::speed_bps, kHundredGigBps);
 
   // Negotiated port speed
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_negotiated_port_speed,
-    &DataResponse::negotiated_port_speed,
-    &DataResponse::has_negotiated_port_speed,
-    &PortSpeed::speed_bps,
-    kHundredGigBps);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_negotiated_port_speed,
+                  &DataResponse::negotiated_port_speed,
+                  &DataResponse::has_negotiated_port_speed,
+                  &PortSpeed::speed_bps, kHundredGigBps);
 
   // Port counters
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_port_counters,
-    &DataResponse::port_counters,
-    &DataResponse::has_port_counters,
-    counters);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_port_counters,
+                  &DataResponse::port_counters,
+                  &DataResponse::has_port_counters, counters);
 
   // Autoneg status
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_autoneg_status,
-    &DataResponse::autoneg_status,
-    &DataResponse::has_autoneg_status,
-    &AutonegotiationStatus::state,
-    TRI_STATE_TRUE);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_autoneg_status,
+                  &DataResponse::autoneg_status,
+                  &DataResponse::has_autoneg_status,
+                  &AutonegotiationStatus::state, TRI_STATE_TRUE);
 
   // Front panel info
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_front_panel_port_info,
-    &DataResponse::front_panel_port_info,
-    &DataResponse::has_front_panel_port_info,
-    front_panel_port_info);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_front_panel_port_info,
+                  &DataResponse::front_panel_port_info,
+                  &DataResponse::has_front_panel_port_info,
+                  front_panel_port_info);
 
   // FEC status
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_fec_status,
-    &DataResponse::fec_status,
-    &DataResponse::has_fec_status,
-    &FecStatus::mode,
-    FEC_MODE_ON);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_fec_status,
+                  &DataResponse::fec_status, &DataResponse::has_fec_status,
+                  &FecStatus::mode, FEC_MODE_ON);
 
   // Loopback mode
-  GetPortDataTest(bf_chassis_manager_.get(),
-    kNodeId, portId,
-    &DataRequest::Request::mutable_loopback_status,
-    &DataResponse::loopback_status,
-    &DataResponse::has_loopback_status,
-    &LoopbackStatus::state,
-    LOOPBACK_STATE_MAC);
+  GetPortDataTest(bf_chassis_manager_.get(), kNodeId, portId,
+                  &DataRequest::Request::mutable_loopback_status,
+                  &DataResponse::loopback_status,
+                  &DataResponse::has_loopback_status, &LoopbackStatus::state,
+                  LOOPBACK_STATE_MAC);
 
   // Unsupprorted
   DataRequest::Request req;
@@ -505,17 +475,16 @@ TEST_F(BFChassisManagerTest, UpdateInvalidPort) {
   ASSERT_OK(PushBaseChassisConfig());
   ChassisConfigBuilder builder;
   SingletonPort* new_port =
-    builder.AddPort(kPortId + 1, kPort + 1, ADMIN_STATE_ENABLED);
+      builder.AddPort(kPortId + 1, kPort + 1, ADMIN_STATE_ENABLED);
   EXPECT_CALL(*bf_pal_mock_,
-    PortAdd(kUnit, kPortId + 1, kDefaultSpeedBps, FEC_MODE_UNKNOWN))
-    .WillOnce(Return(::util::OkStatus()));
-  EXPECT_CALL(*bf_pal_mock_,
-    PortEnable(kUnit, kPortId+1))
-    .WillOnce(Return(::util::OkStatus()));
+              PortAdd(kUnit, kPortId + 1, kDefaultSpeedBps, FEC_MODE_UNKNOWN))
+      .WillOnce(Return(::util::OkStatus()));
+  EXPECT_CALL(*bf_pal_mock_, PortEnable(kUnit, kPortId + 1))
+      .WillOnce(Return(::util::OkStatus()));
   ASSERT_OK(PushChassisConfig(builder));
 
   EXPECT_CALL(*bf_pal_mock_, PortIsValid(kUnit, kPortId + 1))
-    .WillOnce(Return(false));
+      .WillOnce(Return(false));
 
   // Update port, but port is invalid.
   new_port->set_speed_bps(10000000000ULL);
@@ -524,8 +493,8 @@ TEST_F(BFChassisManagerTest, UpdateInvalidPort) {
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(status.error_code(), ERR_INTERNAL);
   std::stringstream err_msg;
-  err_msg << "Port " << kPortId + 1
-      << " in node " << kNodeId << " is not valid.";
+  err_msg << "Port " << kPortId + 1 << " in node " << kNodeId
+          << " is not valid.";
   EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
   ASSERT_OK(ShutdownAndTestCleanState());
 }
@@ -539,8 +508,7 @@ TEST_F(BFChassisManagerTest, ResetPortsConfig) {
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(status.error_code(), ERR_INVALID_PARAM);
   std::stringstream err_msg;
-  err_msg << "Node " << kNodeId + 1
-      << " is not configured or not known.";
+  err_msg << "Node " << kNodeId + 1 << " is not configured or not known.";
   EXPECT_THAT(status.error_message(), HasSubstr(err_msg.str()));
   ASSERT_OK(ShutdownAndTestCleanState());
 }
