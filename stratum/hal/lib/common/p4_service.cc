@@ -209,7 +209,6 @@ namespace {
 void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
                      const std::vector<::util::Status>& results,
                      const absl::Time timestamp) {
-  // Skip logging if flag is empty.
   if (FLAGS_write_req_log_file.empty()) {
     return;
   }
