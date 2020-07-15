@@ -65,7 +65,7 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
 
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
 
   for (const auto& replica : replica_ports) {
     uint32 node_id = replica.first;
@@ -188,7 +188,7 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->dataFieldIdGet(kMcNodeL1Xid, &field_id));
   RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, l1_xid_list));
 
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   switch (type) {
     case ::p4::v1::Update::INSERT:
       RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
@@ -267,7 +267,7 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(
       table_key->setValue(field_id, static_cast<uint64>(mc_node_id)));
 
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
@@ -299,7 +299,7 @@ BfrtPreManager::ReadMulticastGroupEntry(
   RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kMgid, &field_id));
   RETURN_IF_BFRT_ERROR(table_key->setValue(
       field_id, static_cast<uint64>(entry.multicast_group_id())));
-  ASSIGN_OR_RETURN(auto bf_dev_tgt, bfrt_id_mapper_->GetDeviceTarget(table_id));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
       bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));

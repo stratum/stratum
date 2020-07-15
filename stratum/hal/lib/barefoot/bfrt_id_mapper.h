@@ -33,7 +33,7 @@ class BfrtIdMapper {
   // Gets the device target(device id + pipe id) for a specific BfRt
   // primitive(e.g. table)
   // FIXME: Now we only return the device target with pipe "BF_DEV_PIPE_ALL"
-  ::util::StatusOr<bf_rt_target_t> GetDeviceTarget(bf_rt_id_t bfrt_id) const;
+  bf_rt_target_t GetDeviceTarget() const;
 
   // Maps a P4Info ID to a BfRt ID
   ::util::StatusOr<uint32> GetBfRtId(uint32 p4info_id) const
