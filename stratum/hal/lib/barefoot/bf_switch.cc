@@ -88,9 +88,9 @@ BFSwitch::~BFSwitch() {}
     for (const auto& entry : node_id_to_unit) {
       uint64 node_id = entry.first;
       int unit = entry.second;
-      ASSIGN_OR_RETURN(auto* bfrt_node, GetPINodeFromUnit(unit));
+      ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromUnit(unit));
       APPEND_STATUS_IF_ERROR(status,
-                             bfrt_node->VerifyChassisConfig(config, node_id));
+                             pi_node->VerifyChassisConfig(config, node_id));
     }
   }
 
