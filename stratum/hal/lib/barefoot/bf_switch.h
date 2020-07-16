@@ -6,15 +6,15 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
+#include "absl/synchronization/mutex.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bf_pd_interface.h"
-#include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/hal/lib/common/phal_interface.h"
 #include "stratum/hal/lib/common/switch_interface.h"
-#include "absl/synchronization/mutex.h"
+#include "stratum/hal/lib/pi/pi_node.h"
 
 namespace stratum {
 namespace hal {
@@ -41,8 +41,8 @@ class BFSwitch : public SwitchInterface {
   ::util::Status Freeze() override;
   ::util::Status Unfreeze() override;
   ::util::Status WriteForwardingEntries(
-       const ::p4::v1::WriteRequest& req,
-       std::vector<::util::Status>* results) override;
+      const ::p4::v1::WriteRequest& req,
+      std::vector<::util::Status>* results) override;
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
@@ -59,15 +59,14 @@ class BFSwitch : public SwitchInterface {
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details) override
-        LOCKS_EXCLUDED(chassis_lock);
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
                           std::vector<::util::Status>* details) override;
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFSwitch> CreateInstance(
-      PhalInterface* phal_interface,
-      BFChassisManager* bf_chassis_manager,
+      PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
       BFPdInterface* bf_pd_interface,
       const std::map<int, pi::PINode*>& unit_to_pi_node);
 
@@ -80,8 +79,7 @@ class BFSwitch : public SwitchInterface {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFSwitch(PhalInterface* phal_interface,
-           BFChassisManager* bf_chassis_manager,
+  BFSwitch(PhalInterface* phal_interface, BFChassisManager* bf_chassis_manager,
            BFPdInterface* bf_pd_interface,
            const std::map<int, pi::PINode*>& unit_to_pi_node);
 

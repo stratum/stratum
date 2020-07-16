@@ -18,20 +18,18 @@ class BFPalMock : public BFPalInterface {
   MOCK_METHOD2(PortOperStateGet,
                ::util::StatusOr<PortState>(int unit, uint32 port_id));
 
-  MOCK_METHOD3(PortAllStatsGet,
-               ::util::Status(int unit, uint32 port_id,
-                              PortCounters* counters));
+  MOCK_METHOD3(PortAllStatsGet, ::util::Status(int unit, uint32 port_id,
+                                               PortCounters* counters));
 
   MOCK_METHOD1(
       PortStatusChangeRegisterEventWriter,
       ::util::Status(
-           std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer));
+          std::unique_ptr<ChannelWriter<PortStatusChangeEvent> > writer));
 
   MOCK_METHOD0(PortStatusChangeUnregisterEventWriter, ::util::Status());
 
-  MOCK_METHOD4(PortAdd,
-               ::util::Status(int unit, uint32 port_id, uint64 speed_bps,
-                              FecMode fec_mode));
+  MOCK_METHOD4(PortAdd, ::util::Status(int unit, uint32 port_id,
+                                       uint64 speed_bps, FecMode fec_mode));
 
   MOCK_METHOD2(PortDelete, ::util::Status(int unit, uint32 port_id));
 
@@ -42,13 +40,12 @@ class BFPalMock : public BFPalInterface {
   MOCK_METHOD3(PortAutonegPolicySet,
                ::util::Status(int unit, uint32 port_id, TriState autoneg));
 
-  MOCK_METHOD3(PortMtuSet,
-               ::util::Status(int unit, uint32 port_id, int32 mtu));
+  MOCK_METHOD3(PortMtuSet, ::util::Status(int unit, uint32 port_id, int32 mtu));
 
   MOCK_METHOD2(PortIsValid, bool(int unit, uint32 port_id));
   MOCK_METHOD3(PortLoopbackModeSet,
                ::util::Status(int uint, uint32 port_id,
-               LoopbackState loopback_mode));
+                              LoopbackState loopback_mode));
 };
 
 }  // namespace barefoot
