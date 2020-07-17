@@ -455,7 +455,7 @@ BfrtNode::~BfrtNode() = default;
       << "Write to stream channel failed.";
   if (!success) {
     return MAKE_ERROR(ERR_AT_LEAST_ONE_OPER_FAILED)
-           << "One or more write operations failed.";
+           << "One or more read operations failed.";
   }
   return ::util::OkStatus();
 }
