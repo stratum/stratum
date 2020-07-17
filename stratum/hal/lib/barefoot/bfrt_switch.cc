@@ -202,8 +202,12 @@ BfrtSwitch::~BfrtSwitch() {}
         resp = bf_chassis_manager_->GetPortData(req);
         break;
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
+        resp = MAKE_ERROR(ERR_UNIMPLEMENTED)
+               << "Request type "
+               << DataRequest::Request::descriptor()
+                      ->FindFieldByNumber(req.request_case())
+                      ->name()
+               << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
     if (resp.ok()) {
@@ -217,12 +221,10 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::SetValue(uint64 node_id, const SetRequest& request,
                                     std::vector<::util::Status>* details) {
-  (void)node_id;
-  (void)request;
-  (void)details;
-  LOG(INFO) << "BfrtSwitch::SetValue is not implemented yet, but changes will "
-            << "be peformed when ChassisConfig is pushed again.";
-  // TODO(antonin)
+  LOG(INFO) << "BFSwitch::SetValue is not implemented yet, but changes will "
+            << "be peformed when ChassisConfig is pushed again. "
+            << request.ShortDebugString() << ".";
+
   return ::util::OkStatus();
 }
 
