@@ -23,7 +23,12 @@ namespace hal {
 namespace barefoot {
 
 BfrtPacketioManager::BfrtPacketioManager(int device_id)
-    : device_id_(device_id) {}
+    : packetin_header_(),
+      packetout_header_(),
+      packetin_header_size_(),
+      packetout_header_size_(),
+      initialized_(false),
+      device_id_(device_id) {}
 
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
@@ -47,11 +52,16 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
       << "Only one program is supported.";
 
   const auto& program = config.programs(0);
-  RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
+  {
+    absl::WriterMutexLock l(&data_lock_);
+    RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
 
-  // Try to unregister callbacks first.
-  StopIo().IgnoreError();
-  RETURN_IF_ERROR(StartIo());
+    // PushForwardingPipelineConfig might be called multiple times.
+    if (!initialized_) {
+      RETURN_IF_ERROR(StartIo());
+    }
+    initialized_ = true;
+  }
 
   return ::util::OkStatus();
 }
@@ -97,16 +107,18 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
 
 ::util::Status BfrtPacketioManager::Shutdown() {
   RETURN_IF_ERROR(StopIo());
-
-  packetin_header_.clear();
-  packetout_header_.clear();
-  packetin_header_size_ = 0;
-  packetout_header_size_ = 0;
   {
     absl::WriterMutexLock l(&rx_writer_lock_);
     rx_writer_ = nullptr;
   }
-  device_id_ = 0;
+  {
+    absl::WriterMutexLock l(&data_lock_);
+    packetin_header_.clear();
+    packetout_header_.clear();
+    packetin_header_size_ = 0;
+    packetout_header_size_ = 0;
+    initialized_ = false;
+  }
 
   return ::util::OkStatus();
 }
@@ -185,23 +197,25 @@ class BitBuffer {
     const ::p4::v1::PacketOut& packet) {
   std::vector<uint8> buf;
   BitBuffer bit_buf;
+  {
+    absl::ReaderMutexLock l(&data_lock_);
+    for (const auto& p : packetout_header_) {
+      const auto id = p.first;
+      const auto bitwidth = p.second;
 
-  for (const auto& p : packetout_header_) {
-    const auto id = p.first;
-    const auto bitwidth = p.second;
+      auto it = std::find_if(packet.metadata().begin(), packet.metadata().end(),
+                             [&id](::p4::v1::PacketMetadata metadata) {
+                               return metadata.metadata_id() == id;
+                             });
+      CHECK_RETURN_IF_FALSE(it != packet.metadata().end())
+          << "Missing metadata with Id " << id << " in PacketOut "
+          << packet.ShortDebugString();
 
-    auto it = std::find_if(packet.metadata().begin(), packet.metadata().end(),
-                           [&id](::p4::v1::PacketMetadata metadata) {
-                             return metadata.metadata_id() == id;
-                           });
-    CHECK_RETURN_IF_FALSE(it != packet.metadata().end())
-        << "Missing metadata with Id " << id << " in PacketOut "
-        << packet.ShortDebugString();
-
-    auto v = ByteStreamToUint<uint64>(it->value());
-    VLOG(1) << "Encoded metadata field with id " << id << " bitwidth "
-            << bitwidth << " value 0x" << std::hex << v;
-    bit_buf.AddField(bitwidth, v);
+      auto v = ByteStreamToUint<uint64>(it->value());
+      VLOG(1) << "Encoded metadata field with id " << id << " bitwidth "
+              << bitwidth << " value 0x" << std::hex << v;
+      bit_buf.AddField(bitwidth, v);
+    }
   }
   auto hdr_buf = bit_buf.PopAll();
   buf.insert(buf.end(), hdr_buf.begin(), hdr_buf.end());
@@ -225,14 +239,17 @@ class BitBuffer {
                                                    bf_pkt_rx_ring_t rx_ring) {
   ::p4::v1::PacketIn packet;
 
-  BitBuffer bit_buf(bf_pkt_get_pkt_data(pkt), packetin_header_size_);
-  for (const auto& p : packetin_header_) {
-    auto metadata = packet.add_metadata();
-    metadata->set_metadata_id(p.first);
-    metadata->set_value(bit_buf.PopField(p.second));
+  {
+    absl::ReaderMutexLock l(&data_lock_);
+    BitBuffer bit_buf(bf_pkt_get_pkt_data(pkt), packetin_header_size_);
+    for (const auto& p : packetin_header_) {
+      auto metadata = packet.add_metadata();
+      metadata->set_metadata_id(p.first);
+      metadata->set_value(bit_buf.PopField(p.second));
+    }
+    packet.set_payload(bf_pkt_get_pkt_data(pkt) + packetin_header_size_,
+                       bf_pkt_get_pkt_size(pkt) - packetin_header_size_);
   }
-  packet.set_payload(bf_pkt_get_pkt_data(pkt) + packetin_header_size_,
-                     bf_pkt_get_pkt_size(pkt) - packetin_header_size_);
   {
     absl::WriterMutexLock l(&rx_writer_lock_);
     rx_writer_->Write(packet);
@@ -246,6 +263,8 @@ class BitBuffer {
 // functionality.
 ::util::Status BfrtPacketioManager::BuildMetadataMapping(
     const p4::config::v1::P4Info& p4_info) {
+  std::vector<std::pair<uint32, int>> packetin_header;
+  std::vector<std::pair<uint32, int>> packetout_header;
   size_t packetin_bits = 0;
   size_t packetout_bits = 0;
   for (const auto& controller_packet_metadata :
@@ -261,10 +280,10 @@ class BitBuffer {
       uint32 id = metadata.id();
       int bitwidth = metadata.bitwidth();
       if (name == kIngressMetadataPreambleName) {
-        packetin_header_.push_back(std::make_pair(id, bitwidth));
+        packetin_header.push_back(std::make_pair(id, bitwidth));
         packetin_bits += bitwidth;
       } else {
-        packetout_header_.push_back(std::make_pair(id, bitwidth));
+        packetout_header.push_back(std::make_pair(id, bitwidth));
         packetout_bits += bitwidth;
       }
     }
@@ -274,6 +293,8 @@ class BitBuffer {
       << "PacketIn header size must be multiple of 8 bits.";
   CHECK_RETURN_IF_FALSE(packetout_bits % 8 == 0)
       << "PacketOut header size must be multiple of 8 bits.";
+  packetin_header_ = std::move(packetin_header);
+  packetout_header_ = std::move(packetout_header);
   packetin_header_size_ = packetin_bits / 8;
   packetout_header_size_ = packetout_bits / 8;
 

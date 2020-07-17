@@ -33,7 +33,8 @@ class BfrtPacketioManager {
   // about. If the class is not initialized (i.e. if config is pushed for the
   // first time), this function also initializes class.
   virtual ::util::Status PushChassisConfig(const ChassisConfig& config,
-                                           uint64 node_id);
+                                           uint64 node_id)
+      LOCKS_EXCLUDED(data_lock_);
 
   // Verifies the parts of ChassisConfig proto that this class cares about.
   // The given node_id is used to understand which part of the ChassisConfig is
@@ -44,12 +45,12 @@ class BfrtPacketioManager {
   // Pushes the forwarding pipeline to this class. If this is the first time, it
   // will also set up the necessary callbacks for packet IO.
   virtual ::util::Status PushForwardingPipelineConfig(
-      const BfrtDeviceConfig& config);
+      const BfrtDeviceConfig& config) LOCKS_EXCLUDED(data_lock_);
 
   // Performs coldboot shutdown. Note that there is no public Initialize().
   // Initialization is done as part of PushChassisConfig() if the class is not
   // initialized by the time we push config.
-  virtual ::util::Status Shutdown();
+  virtual ::util::Status Shutdown() LOCKS_EXCLUDED(data_lock_);
 
   // Registers a writer to be invoked when we capture a packet on a PCIe
   // interface.
@@ -80,7 +81,8 @@ class BfrtPacketioManager {
   explicit BfrtPacketioManager(int device_id);
 
   // Builds the packet header structure for controller packets.
-  ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info);
+  ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info)
+      EXCLUSIVE_LOCKS_REQUIRED(data_lock_);
 
   // Registers the necessary Rx/Tx callbacks with the SDE.
   ::util::Status StartIo();
@@ -98,8 +100,7 @@ class BfrtPacketioManager {
                                            void* cookie,
                                            bf_pkt_rx_ring_t rx_ring);
 
-  // Deparses a received packets and hands it over the registered receive
-  // writer.
+  // Deparses a received packet and hands it over the registered receive writer.
   ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
                                 bf_pkt_rx_ring_t rx_ring)
       LOCKS_EXCLUDED(rx_writer_lock_);
@@ -107,20 +108,26 @@ class BfrtPacketioManager {
   // Mutex lock for protecting rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
 
+  // Mutex lock to protect the metadata mappings.
+  mutable absl::Mutex data_lock_;
+
   // Stores the registered writer for PacketIns.
   std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> rx_writer_
       GUARDED_BY(rx_writer_lock_);
 
   // List of metadata id and bitwidth pairs. Stores the size and structure of
   // the CPU packet headers.
-  std::vector<std::pair<uint32, int>> packetin_header_;
-  std::vector<std::pair<uint32, int>> packetout_header_;
-  size_t packetin_header_size_;
-  size_t packetout_header_size_;
+  std::vector<std::pair<uint32, int>> packetin_header_ GUARDED_BY(data_lock_);
+  std::vector<std::pair<uint32, int>> packetout_header_ GUARDED_BY(data_lock_);
+  size_t packetin_header_size_ GUARDED_BY(data_lock_);
+  size_t packetout_header_size_ GUARDED_BY(data_lock_);
+
+  // Initialized to false, set once only on first PushForwardingPipelineConfig.
+  bool initialized_ GUARDED_BY(data_lock_);
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.
-  int device_id_;
+  const int device_id_;
 
   friend class BfrtPacketioManagerTest;
 };
