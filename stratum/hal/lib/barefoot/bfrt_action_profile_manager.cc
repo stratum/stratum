@@ -339,7 +339,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   RETURN_IF_BFRT_ERROR(table->dataReset(action.action_id(), table_data));
   for (const auto& param : action.params()) {
     const size_t size = param.value().size();
-    const uint8* val = reinterpret_cast<const uint8*>(param.value().c_str());
+    const uint8* val = reinterpret_cast<const uint8*>(param.value().data());
     RETURN_IF_BFRT_ERROR(table_data->setValue(param.param_id(), val, size));
   }
   return ::util::OkStatus();
