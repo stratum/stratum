@@ -36,7 +36,7 @@ namespace barefoot {
       case ::p4::v1::FieldMatch::kExact: {
         const size_t size = mk.exact().value().size();
         const uint8* val =
-            reinterpret_cast<const uint8*>(mk.exact().value().c_str());
+            reinterpret_cast<const uint8*>(mk.exact().value().data());
         RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, val, size))
             << "Could not build table key from " << mk.ShortDebugString();
         break;
@@ -47,9 +47,9 @@ namespace barefoot {
             << table_entry.ShortDebugString() << ".";
         const size_t size = mk.ternary().value().size();
         const uint8* val =
-            reinterpret_cast<const uint8*>(mk.ternary().value().c_str());
+            reinterpret_cast<const uint8*>(mk.ternary().value().data());
         const uint8* mask =
-            reinterpret_cast<const uint8*>(mk.ternary().mask().c_str());
+            reinterpret_cast<const uint8*>(mk.ternary().mask().data());
         RETURN_IF_BFRT_ERROR(
             table_key->setValueandMask(field_id, val, mask, size))
             << "Could not build table key from " << mk.ShortDebugString();
@@ -58,7 +58,7 @@ namespace barefoot {
       case ::p4::v1::FieldMatch::kLpm: {
         const size_t size = mk.lpm().value().size();
         const uint8* val =
-            reinterpret_cast<const uint8*>(mk.lpm().value().c_str());
+            reinterpret_cast<const uint8*>(mk.lpm().value().data());
         const int32 prefix_len = mk.lpm().prefix_len();
         RETURN_IF_BFRT_ERROR(
             table_key->setValueLpm(field_id, val, prefix_len, size))
@@ -71,9 +71,9 @@ namespace barefoot {
             << table_entry.ShortDebugString() << ".";
         const size_t size = mk.range().low().size();
         const uint8* start =
-            reinterpret_cast<const uint8*>(mk.range().low().c_str());
+            reinterpret_cast<const uint8*>(mk.range().low().data());
         const uint8* end =
-            reinterpret_cast<const uint8*>(mk.range().high().c_str());
+            reinterpret_cast<const uint8*>(mk.range().high().data());
         RETURN_IF_BFRT_ERROR(
             table_key->setValueRange(field_id, start, end, size))
             << "Could not build table key from " << mk.ShortDebugString();
@@ -110,7 +110,7 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->dataReset(action.action_id(), table_data));
   for (const auto& param : action.params()) {
     const size_t size = param.value().size();
-    const uint8* val = reinterpret_cast<const uint8*>(param.value().c_str());
+    const uint8* val = reinterpret_cast<const uint8*>(param.value().data());
     RETURN_IF_BFRT_ERROR(table_data->setValue(param.param_id(), val, size));
   }
   return ::util::OkStatus();
