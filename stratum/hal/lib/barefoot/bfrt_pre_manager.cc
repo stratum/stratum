@@ -16,6 +16,9 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+BfrtPreManager::BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper)
+    : bfrt_id_mapper_(bfrt_id_mapper) {}
+
 ::util::Status BfrtPreManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
@@ -327,9 +330,6 @@ std::unique_ptr<BfrtPreManager> BfrtPreManager::CreateInstance(
     const BfrtIdMapper* bfrt_id_mapper) {
   return absl::WrapUnique(new BfrtPreManager(bfrt_id_mapper));
 }
-
-BfrtPreManager::BfrtPreManager(const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(bfrt_id_mapper) {}
 
 }  // namespace barefoot
 }  // namespace hal
