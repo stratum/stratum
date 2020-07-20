@@ -58,11 +58,6 @@ class BfrtPreManager {
       const ::p4::v1::Update::Type& type, ::p4::v1::MulticastGroupEntry entry)
       EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
-  // Reads a multicast group entry.
-  ::util::StatusOr<::p4::v1::MulticastGroupEntry> ReadMulticastGroupEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      ::p4::v1::MulticastGroupEntry entry) SHARED_LOCKS_REQUIRED(lock_);
-
   // Insert/Modify/Delete a multicast node ($pre.node table).
   ::util::Status WriteMulticastNodes(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
@@ -75,26 +70,31 @@ class BfrtPreManager {
       const ::p4::v1::Update::Type& type, ::p4::v1::MulticastGroupEntry entry)
       EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
+  // Reads a multicast group entry.
+  ::util::StatusOr<::p4::v1::MulticastGroupEntry> ReadMulticastGroupEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      ::p4::v1::MulticastGroupEntry entry) SHARED_LOCKS_REQUIRED(lock_);
+
   // Gets all egress ports from a multicast node.
   ::util::StatusOr<std::vector<uint32>> GetEgressPortsFromMcNode(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session, uint64 mc_node_id)
       SHARED_LOCKS_REQUIRED(lock_);
 
-  // The BfRt info, requires by some function to get runtime
-  // instances like tables.
-  const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
-
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
 
-  // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
-  // Not owned by this class
-  const BfrtIdMapper* bfrt_id_mapper_;
+  // The BfRt info, requires by some function to get runtime
+  // instances like tables.
+  const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
 
   // A map which stores multicast group and nodes that already installe to the
   // device.
   absl::flat_hash_map<uint64, absl::flat_hash_set<uint32>> mcast_nodes_installed
       GUARDED_BY(lock_);
+
+  // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
+  // Not owned by this class
+  const BfrtIdMapper* bfrt_id_mapper_;
 };
 
 }  // namespace barefoot
