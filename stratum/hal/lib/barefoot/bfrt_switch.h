@@ -25,43 +25,53 @@ class BfrtSwitch : public SwitchInterface {
   ~BfrtSwitch() override;
 
   // SwitchInterface public methods.
-  ::util::Status PushChassisConfig(const ChassisConfig& config) override;
-  ::util::Status VerifyChassisConfig(const ChassisConfig& config) override;
+  ::util::Status PushChassisConfig(const ChassisConfig& config) override
+      LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status VerifyChassisConfig(const ChassisConfig& config) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status PushForwardingPipelineConfig(
-      uint64 node_id,
-      const ::p4::v1::ForwardingPipelineConfig& config) override;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SaveForwardingPipelineConfig(
-      uint64 node_id,
-      const ::p4::v1::ForwardingPipelineConfig& config) override;
-  ::util::Status CommitForwardingPipelineConfig(uint64 node_id) override;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
+      LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status CommitForwardingPipelineConfig(uint64 node_id) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status VerifyForwardingPipelineConfig(
-      uint64 node_id,
-      const ::p4::v1::ForwardingPipelineConfig& config) override;
-  ::util::Status Shutdown() override;
+      uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) override
+      LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status Shutdown() override LOCKS_EXCLUDED(chassis_lock);
   ::util::Status Freeze() override;
   ::util::Status Unfreeze() override;
-  ::util::Status WriteForwardingEntries(
-      const ::p4::v1::WriteRequest& req,
-      std::vector<::util::Status>* results) override;
+  ::util::Status WriteForwardingEntries(const ::p4::v1::WriteRequest& req,
+                                        std::vector<::util::Status>* results)
+      override LOCKS_EXCLUDED(chassis_lock);
   ::util::Status ReadForwardingEntries(
       const ::p4::v1::ReadRequest& req,
       WriterInterface<::p4::v1::ReadResponse>* writer,
-      std::vector<::util::Status>* details) override;
+      std::vector<::util::Status>* details) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterPacketReceiveWriter(
       uint64 node_id,
-      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override;
-  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override;
+      std::shared_ptr<WriterInterface<::p4::v1::PacketIn>> writer) override
+      LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status UnregisterPacketReceiveWriter(uint64 node_id) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status TransmitPacket(uint64 node_id,
-                                const ::p4::v1::PacketOut& packet) override;
+                                const ::p4::v1::PacketOut& packet) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RegisterEventNotifyWriter(
-      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override;
-  ::util::Status UnregisterEventNotifyWriter() override;
+      std::shared_ptr<WriterInterface<GnmiEventPtr>> writer) override
+      LOCKS_EXCLUDED(chassis_lock);
+  ::util::Status UnregisterEventNotifyWriter() override
+      LOCKS_EXCLUDED(chassis_lock) LOCKS_EXCLUDED(chassis_lock);
   ::util::Status RetrieveValue(uint64 node_id, const DataRequest& requests,
                                WriterInterface<DataResponse>* writer,
                                std::vector<::util::Status>* details) override
       LOCKS_EXCLUDED(chassis_lock);
   ::util::Status SetValue(uint64 node_id, const SetRequest& request,
-                          std::vector<::util::Status>* details) override;
+                          std::vector<::util::Status>* details) override
+      LOCKS_EXCLUDED(chassis_lock);
   ::util::StatusOr<std::vector<std::string>> VerifyState() override;
 
   // Factory function for creating the instance of the class.
@@ -86,7 +96,7 @@ class BfrtSwitch : public SwitchInterface {
 
   // Helper to get BfrtNode pointer from device_id number or return error
   // indicating invalid device_id.
-  ::util::StatusOr<BfrtNode*> GetBfrtNodeFromUnit(int device_id) const;
+  ::util::StatusOr<BfrtNode*> GetBfrtNodeFromDeviceId(int device_id) const;
 
   // Helper to get BfrtNode pointer from node id or return error indicating
   // invalid/unknown/uninitialized node.
@@ -108,12 +118,14 @@ class BfrtSwitch : public SwitchInterface {
   // pointer to BfrtNode which contain all the per-node managers for that
   // node/ASIC. This map is initialized in the constructor and will not change
   // during the lifetime of the class.
+  // TODO(max): Does this need to be protected by chassis_lock?
   const std::map<int, BfrtNode*> device_id_to_bfrt_node_;  // pointers not owned
 
   // Map from the node ids to to a pointer to BfrtNode which contain all the
   // per-node managers for that node/ASIC. Created everytime a config is pushed.
   // At any point of time this map will contain a keys the ids of the nodes
   // which had a successful config push.
+  // TODO(max): Does this need to be protected by chassis_lock?
   std::map<uint64, BfrtNode*> node_id_to_bfrt_node_;  //  pointers not owned
 };
 
