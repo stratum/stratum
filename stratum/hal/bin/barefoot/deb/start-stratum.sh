@@ -45,5 +45,6 @@ fi
 
 exec /usr/bin/stratum_bf \
     -chassis_config_file=/etc/stratum/$PLATFORM/chassis_config.pb.txt \
+    -log_dir=/var/log/stratum \
     -flagfile=$FLAG_FILE \
     $@
