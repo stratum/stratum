@@ -51,7 +51,7 @@ BfrtSwitch::~BfrtSwitch() {}
   for (const auto& entry : node_id_to_device_id) {
     uint64 node_id = entry.first;
     int device_id = entry.second;
-    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromUnit(device_id));
+    ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromDeviceId(device_id));
     RETURN_IF_ERROR(bfrt_node->PushChassisConfig(config, node_id));
     node_id_to_bfrt_node_[node_id] = bfrt_node;
   }
@@ -140,6 +140,7 @@ BfrtSwitch::~BfrtSwitch() {}
   CHECK_RETURN_IF_FALSE(results != nullptr)
       << "Need to provide non-null results pointer for non-empty updates.";
 
+  absl::ReaderMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(req.device_id()));
   return bfrt_node->WriteForwardingEntries(req, results);
 }
@@ -152,6 +153,7 @@ BfrtSwitch::~BfrtSwitch() {}
   CHECK_RETURN_IF_FALSE(writer) << "Channel writer must be non-null.";
   CHECK_RETURN_IF_FALSE(details) << "Details pointer must be non-null.";
 
+  absl::ReaderMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(req.device_id()));
   return bfrt_node->ReadForwardingEntries(req, writer, details);
 }
@@ -241,7 +243,7 @@ std::unique_ptr<BfrtSwitch> BfrtSwitch::CreateInstance(
                                          device_id_to_bfrt_node));
 }
 
-::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromUnit(
+::util::StatusOr<BfrtNode*> BfrtSwitch::GetBfrtNodeFromDeviceId(
     int device_id) const {
   BfrtNode* bfrt_node = gtl::FindPtrOrNull(device_id_to_bfrt_node_, device_id);
   if (bfrt_node == nullptr) {
