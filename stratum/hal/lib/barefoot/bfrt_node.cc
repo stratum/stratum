@@ -278,6 +278,12 @@ BfrtNode::~BfrtNode() = default;
   absl::WriterMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(req.device_id() == node_id_)
       << "Request device id must be same as id of this BfrtNode.";
+  CHECK_RETURN_IF_FALSE(req.atomicity() ==
+                        ::p4::v1::WriteRequest::CONTINUE_ON_ERROR)
+      << "Request atomicity "
+      << ::p4::v1::WriteRequest::Atomicity_Name(req.atomicity())
+      << " is not supported.";
+
   bool success = true;
   auto session = bfrt::BfRtSession::sessionCreate();
   CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
