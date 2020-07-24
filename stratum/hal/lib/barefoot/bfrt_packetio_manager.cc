@@ -56,10 +56,9 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     absl::WriterMutexLock l(&data_lock_);
     RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
 
-    // PushForwardingPipelineConfig might be called multiple times.
-    if (!initialized_) {
-      RETURN_IF_ERROR(StartIo());
-    }
+    // PushForwardingPipelineConfig resets the bf_pkt driver.
+    RETURN_IF_ERROR(StartIo());
+
     initialized_ = true;
   }
 
@@ -85,6 +84,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
         device_id_, BfrtPacketioManager::BfPktRxNotifyCallback,
         static_cast<bf_pkt_rx_ring_t>(rx_ring), this));
   }
+  VLOG(1) << "Registered packetio callbacks on device " << device_id_ << ".";
 
   return ::util::OkStatus();
 }
@@ -101,6 +101,7 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     RETURN_IF_BFRT_ERROR(bf_pkt_rx_deregister(
         device_id_, static_cast<bf_pkt_rx_ring_t>(rx_ring)));
   }
+  VLOG(1) << "Unregistered packetio callbacks on device " << device_id_ << ".";
 
   return ::util::OkStatus();
 }
@@ -195,6 +196,10 @@ class BitBuffer {
 
 ::util::Status BfrtPacketioManager::TransmitPacket(
     const ::p4::v1::PacketOut& packet) {
+  {
+    absl::ReaderMutexLock l(&data_lock_);
+    if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+  }
   std::vector<uint8> buf;
   BitBuffer bit_buf;
   {
@@ -237,8 +242,11 @@ class BitBuffer {
 ::util::Status BfrtPacketioManager::HandlePacketRx(bf_dev_id_t dev_id,
                                                    bf_pkt* pkt,
                                                    bf_pkt_rx_ring_t rx_ring) {
+  {
+    absl::ReaderMutexLock l(&data_lock_);
+    if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+  }
   ::p4::v1::PacketIn packet;
-
   {
     absl::ReaderMutexLock l(&data_lock_);
     BitBuffer bit_buf(bf_pkt_get_pkt_data(pkt), packetin_header_size_);

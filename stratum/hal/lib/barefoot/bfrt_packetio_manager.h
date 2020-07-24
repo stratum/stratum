@@ -62,7 +62,8 @@ class BfrtPacketioManager {
       LOCKS_EXCLUDED(rx_writer_lock_);
 
   // Transmits a packet to the PCIe interface.
-  virtual ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet);
+  virtual ::util::Status TransmitPacket(const ::p4::v1::PacketOut& packet)
+      LOCKS_EXCLUDED(data_lock_);
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BfrtPacketioManager> CreateInstance(int device_id);
@@ -103,7 +104,7 @@ class BfrtPacketioManager {
   // Deparses a received packet and hands it over the registered receive writer.
   ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
                                 bf_pkt_rx_ring_t rx_ring)
-      LOCKS_EXCLUDED(rx_writer_lock_);
+      LOCKS_EXCLUDED(rx_writer_lock_) LOCKS_EXCLUDED(data_lock_);
 
   // Mutex lock for protecting rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
