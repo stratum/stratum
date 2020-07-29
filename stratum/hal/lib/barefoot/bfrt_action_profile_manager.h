@@ -19,6 +19,7 @@
 #include "stratum/hal/lib/barefoot/bfrt.pb.h"
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
+#include "stratum/hal/lib/common/writer_interface.h"
 
 namespace stratum {
 namespace hal {
@@ -30,42 +31,44 @@ class BfrtActionProfileManager {
   ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
                                               const bfrt::BfRtInfo* bfrt_info)
       LOCKS_EXCLUDED(lock_);
-  // Writes an action profile member
+
+  // Writes an action profile member.
   ::util::Status WriteActionProfileEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ExternEntry& action_profile_entry) LOCKS_EXCLUDED(lock_);
 
-  // Reads an action profile entry
-  ::util::StatusOr<::p4::v1::ExternEntry> ReadActionProfileEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::ExternEntry& action_profile_entry) LOCKS_EXCLUDED(lock_);
-
-  // Writes an action profile member
+  // Writes an action profile member.
   ::util::Status WriteActionProfileMember(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileMember& action_profile_member)
       LOCKS_EXCLUDED(lock_);
 
-  // Reads an action profile member
-  ::util::StatusOr<::p4::v1::ActionProfileMember> ReadActionProfileMember(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::ActionProfileMember& action_profile_member)
-      LOCKS_EXCLUDED(lock_);
-
-  // Writes an action profile group
+  // Writes an action profile group.
   ::util::Status WriteActionProfileGroup(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileGroup& action_profile_group)
       LOCKS_EXCLUDED(lock_);
 
-  // Reads an action profile Group
-  ::util::StatusOr<::p4::v1::ActionProfileGroup> ReadActionProfileGroup(
+  // Reads the P4 ActionProfileEntry(s) matched by the given extern entry.
+  ::util::Status ReadActionProfileEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::ActionProfileGroup& action_profile_group)
-      LOCKS_EXCLUDED(lock_);
+      const ::p4::v1::ExternEntry& action_profile_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
+  // Reads the P4 ActionProfileMember(s) matched by the given entry.
+  ::util::Status ReadActionProfileMember(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::ActionProfileMember& action_profile_member,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
+
+  // Reads the P4 ActionProfileGroup(s) matched by the given entry.
+  ::util::Status ReadActionProfileGroup(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::ActionProfileGroup& action_profile_group,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Creates an action profile manager instance.
   static std::unique_ptr<BfrtActionProfileManager> CreateInstance(
@@ -76,30 +79,32 @@ class BfrtActionProfileManager {
   // function only.
   explicit BfrtActionProfileManager(const BfrtIdMapper* bfrt_id_mapper);
 
-  // Writes an action profile member
-  ::util::Status WriteActionProfileMember(
+  // Internal version of WriteActionProfileMember which takes no locks.
+  ::util::Status DoWriteActionProfileMember(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
       const ::p4::v1::Update::Type type,
       const ::p4::v1::ActionProfileMember& action_profile_member)
       EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
-  // Reads an action profile member
-  ::util::StatusOr<::p4::v1::ActionProfileMember> ReadActionProfileMember(
+  // Internal version of WriteActionProfileGroup which takes no locks.
+  ::util::Status DoWriteActionProfileGroup(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
-      const ::p4::v1::ActionProfileMember& action_profile_member)
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::ActionProfileGroup& action_profile_group)
+      EXCLUSIVE_LOCKS_REQUIRED(lock_);
+
+  // Internal version of ReadActionProfileMember which takes no locks.
+  ::util::Status DoReadActionProfileMember(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
+      const ::p4::v1::ActionProfileMember& action_profile_member,
+      WriterInterface<::p4::v1::ReadResponse>* writer)
       SHARED_LOCKS_REQUIRED(lock_);
 
-  // Writes an action profile group
-  ::util::Status WriteActionProfileGroup(
+  // Internal version of ReadActionProfileGroup which takes no locks.
+  ::util::Status DoReadActionProfileGroup(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
-      const ::p4::v1::Update::Type type,
-      const ::p4::v1::ActionProfileGroup& action_profile_group)
-      EXCLUSIVE_LOCKS_REQUIRED(lock_);
-
-  // Reads an action profile Group
-  ::util::StatusOr<::p4::v1::ActionProfileGroup> ReadActionProfileGroup(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
-      const ::p4::v1::ActionProfileGroup& action_profile_group)
+      const ::p4::v1::ActionProfileGroup& action_profile_group,
+      WriterInterface<::p4::v1::ReadResponse>* writer)
       SHARED_LOCKS_REQUIRED(lock_);
 
   // Builds key for an action profile member (ActionProfile entry in TNA).
@@ -134,6 +139,14 @@ class BfrtActionProfileManager {
       const bfrt::BfRtTable* table,
       const ::p4::v1::ActionProfileGroup& action_profile_group,
       bfrt::BfRtTableData* table_data);
+
+  ::util::StatusOr<::p4::v1::ActionProfileMember> BuildP4ActionProfileMember(
+      const bfrt::BfRtTable* table, const bfrt::BfRtTableKey& table_key,
+      const bfrt::BfRtTableData& table_data);
+
+  ::util::StatusOr<::p4::v1::ActionProfileGroup> BuildP4ActionProfileGroup(
+      const bfrt::BfRtTable* table, const bfrt::BfRtTableKey& table_key,
+      const bfrt::BfRtTableData& table_data);
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;

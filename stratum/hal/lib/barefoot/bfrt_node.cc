@@ -359,64 +359,37 @@ BfrtNode::~BfrtNode() = default;
   for (const auto& entity : req.entities()) {
     switch (entity.entity_case()) {
       case ::p4::v1::Entity::kTableEntry: {
-        auto status =
-            bfrt_table_manager_->ReadTableEntry(session, entity.table_entry());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()->mutable_table_entry()->CopyFrom(
-            status.ValueOrDie());
+        auto status = bfrt_table_manager_->ReadTableEntry(
+            session, entity.table_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kExternEntry: {
-        auto status = ReadExternEntry(session, entity.extern_entry());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()->mutable_extern_entry()->CopyFrom(
-            status.ValueOrDie());
+        auto status = ReadExternEntry(session, entity.extern_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kActionProfileMember: {
         auto status = bfrt_action_profile_manager_->ReadActionProfileMember(
-            session, entity.action_profile_member());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()->mutable_action_profile_member()->CopyFrom(
-            status.ValueOrDie());
+            session, entity.action_profile_member(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
-
       case ::p4::v1::Entity::kActionProfileGroup: {
         auto status = bfrt_action_profile_manager_->ReadActionProfileGroup(
-            session, entity.action_profile_group());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()->mutable_action_profile_group()->CopyFrom(
-            status.ValueOrDie());
+            session, entity.action_profile_group(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kPacketReplicationEngineEntry: {
         auto status = bfrt_pre_manager_->ReadPreEntry(
-            session, entity.packet_replication_engine_entry());
-        if (!status.ok()) {
-          success = false;
-          details->push_back(status.status());
-          break;
-        }
-        resp.add_entities()
-            ->mutable_packet_replication_engine_entry()
-            ->CopyFrom(status.ValueOrDie());
+            session, entity.packet_replication_engine_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
         break;
       }
       case ::p4::v1::Entity::kDirectCounterEntry: {
@@ -509,18 +482,19 @@ BfrtNode::~BfrtNode() = default;
   }
 }
 
-::util::StatusOr<::p4::v1::ExternEntry> BfrtNode::ReadExternEntry(
+::util::Status BfrtNode::ReadExternEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-    const ::p4::v1::ExternEntry& entry) {
+    const ::p4::v1::ExternEntry& entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
   switch (entry.extern_type_id()) {
     case kTnaExternActionProfileId:
     case kTnaExternActionSelectorId:
-      return bfrt_action_profile_manager_->ReadActionProfileEntry(bfrt_session,
-                                                                  entry);
+      return bfrt_action_profile_manager_->ReadActionProfileEntry(
+          bfrt_session, entry, writer);
       break;
     default:
-      RETURN_ERROR() << "Unsupported extern entry: " << entry.ShortDebugString()
-                     << ".";
+      RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
+          << "Unsupported extern entry: " << entry.ShortDebugString() << ".";
   }
 }
 
