@@ -1,8 +1,8 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_COUNTER_MANAGER_H
-#define STRATUM_HAL_LIB_BAREFOOT_BFRT_COUNTER_MANAGER_H
+#ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_COUNTER_MANAGER_H_
+#define STRATUM_HAL_LIB_BAREFOOT_BFRT_COUNTER_MANAGER_H_
 
 #include <memory>
 
@@ -67,4 +67,4 @@ class BfrtCounterManager {
 }  // namespace hal
 }  // namespace stratum
 
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_COUNTER_MANAGER_H
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BFRT_COUNTER_MANAGER_H_

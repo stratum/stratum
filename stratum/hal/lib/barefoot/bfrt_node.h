@@ -98,9 +98,10 @@ class BfrtNode final {
       const ::p4::v1::Update::Type type, const ::p4::v1::ExternEntry& entry);
 
   // Read extern entries like ActionProfile, DirectCounter, PortMetadata
-  ::util::StatusOr<::p4::v1::ExternEntry> ReadExternEntry(
+  ::util::Status ReadExternEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::ExternEntry& entry);
+      const ::p4::v1::ExternEntry& entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer);
 
   // Callback registered with DeviceMgr to receive stream messages.
   friend void StreamMessageCb(uint64 node_id,
