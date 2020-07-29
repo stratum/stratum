@@ -7,6 +7,7 @@
 
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/macros.h"
+#include "stratum/hal/lib/barefoot/utils.h"
 
 namespace stratum {
 namespace hal {
@@ -31,8 +32,8 @@ namespace barefoot {
       CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
           << "Entry " << entry.ShortDebugString()
           << " is not an action profile member.";
-      return WriteActionProfileMember(bfrt_session, bfrt_table_id, type,
-                                      act_prof_member);
+      return DoWriteActionProfileMember(bfrt_session, bfrt_table_id, type,
+                                        act_prof_member);
       break;
     }
     case kTnaExternActionSelectorId: {
@@ -40,8 +41,8 @@ namespace barefoot {
       CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
           << "Entry " << entry.ShortDebugString()
           << " is not an action profile group.";
-      return WriteActionProfileGroup(bfrt_session, bfrt_table_id, type,
-                                     act_prof_group);
+      return DoWriteActionProfileGroup(bfrt_session, bfrt_table_id, type,
+                                       act_prof_group);
       break;
     }
     default:
@@ -51,10 +52,10 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-::util::StatusOr<::p4::v1::ExternEntry>
-BfrtActionProfileManager::ReadActionProfileEntry(
+::util::Status BfrtActionProfileManager::ReadActionProfileEntry(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-    const ::p4::v1::ExternEntry& entry) {
+    const ::p4::v1::ExternEntry& entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(bf_rt_id_t bfrt_table_id,
                    bfrt_id_mapper_->GetBfRtId(entry.extern_id()));
@@ -65,10 +66,8 @@ BfrtActionProfileManager::ReadActionProfileEntry(
       CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_member))
           << "Entry " << entry.ShortDebugString()
           << " is not an action profile member";
-      ASSIGN_OR_RETURN(act_prof_member,
-                       ReadActionProfileMember(bfrt_session, bfrt_table_id,
-                                               act_prof_member));
-      result.mutable_entry()->PackFrom(act_prof_member);
+      RETURN_IF_ERROR(DoReadActionProfileMember(bfrt_session, bfrt_table_id,
+                                                act_prof_member, writer));
       break;
     }
     case kTnaExternActionSelectorId: {
@@ -76,17 +75,16 @@ BfrtActionProfileManager::ReadActionProfileEntry(
       CHECK_RETURN_IF_FALSE(entry.entry().UnpackTo(&act_prof_group))
           << "Entry " << entry.ShortDebugString()
           << " is not an action profile group";
-      ASSIGN_OR_RETURN(
-          act_prof_group,
-          ReadActionProfileGroup(bfrt_session, bfrt_table_id, act_prof_group));
-      result.mutable_entry()->PackFrom(act_prof_group);
+      RETURN_IF_ERROR(DoReadActionProfileGroup(bfrt_session, bfrt_table_id,
+                                               act_prof_group, writer));
       break;
     }
     default:
-      RETURN_ERROR() << "Unsupported extern type " << entry.extern_type_id()
-                     << ".";
+      RETURN_ERROR(ERR_OPER_NOT_SUPPORTED)
+          << "Unsupported extern type " << entry.extern_type_id() << ".";
   }
-  return result;
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtActionProfileManager::WriteActionProfileMember(
@@ -97,20 +95,20 @@ BfrtActionProfileManager::ReadActionProfileEntry(
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_table_id,
       bfrt_id_mapper_->GetBfRtId(action_profile_member.action_profile_id()));
-  return WriteActionProfileMember(bfrt_session, bfrt_table_id, type,
-                                  action_profile_member);
+  return DoWriteActionProfileMember(bfrt_session, bfrt_table_id, type,
+                                    action_profile_member);
 }
 
-::util::StatusOr<::p4::v1::ActionProfileMember>
-BfrtActionProfileManager::ReadActionProfileMember(
+::util::Status BfrtActionProfileManager::ReadActionProfileMember(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-    const ::p4::v1::ActionProfileMember& action_profile_member) {
+    const ::p4::v1::ActionProfileMember& action_profile_member,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_table_id,
       bfrt_id_mapper_->GetBfRtId(action_profile_member.action_profile_id()));
-  return ReadActionProfileMember(bfrt_session, bfrt_table_id,
-                                 action_profile_member);
+  return DoReadActionProfileMember(bfrt_session, bfrt_table_id,
+                                   action_profile_member, writer);
 }
 
 ::util::Status BfrtActionProfileManager::WriteActionProfileGroup(
@@ -124,14 +122,14 @@ BfrtActionProfileManager::ReadActionProfileMember(
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_sel_table_id,
       bfrt_id_mapper_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
-  return WriteActionProfileGroup(bfrt_session, bfrt_act_sel_table_id, type,
-                                 action_profile_group);
+  return DoWriteActionProfileGroup(bfrt_session, bfrt_act_sel_table_id, type,
+                                   action_profile_group);
 }
 
-::util::StatusOr<::p4::v1::ActionProfileGroup>
-BfrtActionProfileManager::ReadActionProfileGroup(
+::util::Status BfrtActionProfileManager::ReadActionProfileGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-    const ::p4::v1::ActionProfileGroup& action_profile_group) {
+    const ::p4::v1::ActionProfileGroup& action_profile_group,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
   absl::ReaderMutexLock l(&lock_);
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_prof_table_id,
@@ -139,11 +137,11 @@ BfrtActionProfileManager::ReadActionProfileGroup(
   ASSIGN_OR_RETURN(
       bf_rt_id_t bfrt_act_sel_table_id,
       bfrt_id_mapper_->GetActionSelectorBfRtId(bfrt_act_prof_table_id));
-  return ReadActionProfileGroup(bfrt_session, bfrt_act_sel_table_id,
-                                action_profile_group);
+  return DoReadActionProfileGroup(bfrt_session, bfrt_act_sel_table_id,
+                                  action_profile_group, writer);
 }
 
-::util::Status BfrtActionProfileManager::WriteActionProfileMember(
+::util::Status BfrtActionProfileManager::DoWriteActionProfileMember(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileMember& action_profile_member) {
@@ -183,26 +181,28 @@ BfrtActionProfileManager::ReadActionProfileGroup(
 }
 
 ::util::StatusOr<::p4::v1::ActionProfileMember>
-BfrtActionProfileManager::ReadActionProfileMember(
-    std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
-    const ::p4::v1::ActionProfileMember& action_profile_member) {
-  // Lock is already acquired by the caller
-  const bfrt::BfRtTable* table;
-  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_ERROR(BuildTableKey(table, action_profile_member, table_key.get()));
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
-  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
-      *bfrt_session, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
+BfrtActionProfileManager::BuildP4ActionProfileMember(
+    const bfrt::BfRtTable* table, const bfrt::BfRtTableKey& table_key,
+    const bfrt::BfRtTableData& table_data) {
+  ::p4::v1::ActionProfileMember result;
+  // Action profile id
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+  ASSIGN_OR_RETURN(auto action_profile_id,
+                   bfrt_id_mapper_->GetP4InfoId(table_id));
+  result.set_action_profile_id(action_profile_id);
 
-  // Build result
-  ::p4::v1::ActionProfileMember result = action_profile_member;
+  // Member id
+  bf_rt_id_t action_member_field_id;
+  uint64 member_id;
+  RETURN_IF_BFRT_ERROR(
+      table->keyFieldIdGet("$ACTION_MEMBER_ID", &action_member_field_id));
+  RETURN_IF_BFRT_ERROR(table_key.getValue(action_member_field_id, &member_id));
+  result.set_member_id(member_id);
+
+  // Action
   bf_rt_id_t action_id;
-  RETURN_IF_BFRT_ERROR(table_data->actionIdGet(&action_id));
+  RETURN_IF_BFRT_ERROR(table_data.actionIdGet(&action_id));
   result.mutable_action()->set_action_id(action_id);
   std::vector<bf_rt_id_t> field_id_list;
   RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(action_id, &field_id_list));
@@ -214,17 +214,123 @@ BfrtActionProfileManager::ReadActionProfileMember(
     // to bytes with padding.
     field_size = (field_size + 7) / 8;
     uint8 field_data[field_size];
-    table_data->getValue(field_id, field_size, field_data);
+    RETURN_IF_BFRT_ERROR(table_data.getValue(field_id, field_size, field_data));
     const void* param_val = reinterpret_cast<const void*>(field_data);
 
     auto* param = result.mutable_action()->add_params();
     param->set_param_id(field_id);
     param->set_value(param_val, field_size);
   }
+  VLOG(1) << "BuildP4ActionProfileMember " << result.ShortDebugString();
+
   return result;
 }
 
-::util::Status BfrtActionProfileManager::WriteActionProfileGroup(
+::util::StatusOr<::p4::v1::ActionProfileGroup>
+BfrtActionProfileManager::BuildP4ActionProfileGroup(
+    const bfrt::BfRtTable* table, const bfrt::BfRtTableKey& table_key,
+    const bfrt::BfRtTableData& table_data) {
+  ::p4::v1::ActionProfileGroup result;
+  // Action profile id
+  bf_rt_id_t table_id;
+  RETURN_IF_BFRT_ERROR(table->tableIdGet(&table_id));
+  ASSIGN_OR_RETURN(auto action_profile_id,
+                   bfrt_id_mapper_->GetActionProfileBfRtId(table_id));
+  ASSIGN_OR_RETURN(auto p4_action_profile_id,
+                   bfrt_id_mapper_->GetP4InfoId(action_profile_id));
+  result.set_action_profile_id(p4_action_profile_id);
+
+  // Group id
+  uint64 group_id;
+  bf_rt_id_t selector_group_field_id;
+  RETURN_IF_BFRT_ERROR(
+      table->keyFieldIdGet("$SELECTOR_GROUP_ID", &selector_group_field_id));
+  RETURN_IF_BFRT_ERROR(table_key.getValue(selector_group_field_id, &group_id));
+  result.set_group_id(group_id);
+
+  // Maximum group size
+  uint64 max_group_size;
+  bf_rt_id_t max_group_size_field_id;
+  RETURN_IF_BFRT_ERROR(
+      table->dataFieldIdGet("$MAX_GROUP_SIZE", &max_group_size_field_id));
+  RETURN_IF_BFRT_ERROR(
+      table_data.getValue(max_group_size_field_id, &max_group_size));
+  result.set_max_size(max_group_size);
+
+  // Members
+  std::vector<bf_rt_id_t> members;
+  bf_rt_id_t action_member_list_id;
+  RETURN_IF_BFRT_ERROR(
+      table->dataFieldIdGet("$ACTION_MEMBER_ID", &action_member_list_id));
+  RETURN_IF_BFRT_ERROR(table_data.getValue(action_member_list_id, &members));
+  for (const auto& member_id : members) {
+    auto* member = result.add_members();
+    member->set_member_id(member_id);
+    member->set_weight(1);
+  }
+
+  VLOG(1) << "BuildP4ActionProfileGroup " << result.ShortDebugString();
+
+  return result;
+}
+
+::util::Status BfrtActionProfileManager::DoReadActionProfileMember(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
+    const ::p4::v1::ActionProfileMember& action_profile_member,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(action_profile_member.action_profile_id() != 0)
+      << "Reading all action profiles is not supported yet.";
+
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
+
+  // Check if wildcard read for all members.
+  if (action_profile_member.member_id() == 0) {
+    ::p4::v1::ReadResponse resp;
+    std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+    std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+    RETURN_IF_ERROR(
+        GetAllEntries(bfrt_session, bf_dev_tgt, table, &keys, &datums));
+    for (size_t i = 0; i < keys.size(); ++i) {
+      const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+      const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+      ASSIGN_OR_RETURN(auto result, BuildP4ActionProfileMember(
+                                        table, *table_key, *table_data));
+      *resp.add_entities()->mutable_action_profile_member() = result;
+    }
+
+    if (!writer->Write(resp)) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+    }
+
+    return ::util::OkStatus();
+  }
+
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  RETURN_IF_ERROR(BuildTableKey(table, action_profile_member, table_key.get()));
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+      *bfrt_session, bf_dev_tgt, *table_key,
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
+      << "Could not find action profile member "
+      << action_profile_member.ShortDebugString();
+  ASSIGN_OR_RETURN(auto result,
+                   BuildP4ActionProfileMember(table, *table_key, *table_data));
+  ::p4::v1::ReadResponse resp;
+  auto* entity = resp.add_entities();
+  *entity->mutable_action_profile_member() = result;
+
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtActionProfileManager::DoWriteActionProfileGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
     const ::p4::v1::Update::Type type,
     const ::p4::v1::ActionProfileGroup& action_profile_group) {
@@ -263,48 +369,60 @@ BfrtActionProfileManager::ReadActionProfileMember(
   return ::util::OkStatus();
 }
 
-::util::StatusOr<::p4::v1::ActionProfileGroup>
-BfrtActionProfileManager::ReadActionProfileGroup(
+::util::Status BfrtActionProfileManager::DoReadActionProfileGroup(
     std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t bfrt_table_id,
-    const ::p4::v1::ActionProfileGroup& action_profile_group) {
-  // Lock is already acquired by the caller
+    const ::p4::v1::ActionProfileGroup& action_profile_group,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  CHECK_RETURN_IF_FALSE(action_profile_group.action_profile_id() != 0)
+      << "Reading all action profiles is not supported yet.";
   const bfrt::BfRtTable* table;
   RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(bfrt_table_id, &table));
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
+
+  // Check if wildcard read for all groups.
+  if (action_profile_group.group_id() == 0) {
+    ::p4::v1::ReadResponse resp;
+    std::vector<std::unique_ptr<bfrt::BfRtTableKey>> keys;
+    std::vector<std::unique_ptr<bfrt::BfRtTableData>> datums;
+    RETURN_IF_ERROR(
+        GetAllEntries(bfrt_session, bf_dev_tgt, table, &keys, &datums));
+    for (size_t i = 0; i < keys.size(); ++i) {
+      const std::unique_ptr<bfrt::BfRtTableData>& table_data = datums[i];
+      const std::unique_ptr<bfrt::BfRtTableKey>& table_key = keys[i];
+      ASSIGN_OR_RETURN(auto result, BuildP4ActionProfileGroup(table, *table_key,
+                                                              *table_data));
+      *resp.add_entities()->mutable_action_profile_group() = result;
+    }
+
+    if (!writer->Write(resp)) {
+      return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
+    }
+
+    return ::util::OkStatus();
+  }
+
   std::unique_ptr<bfrt::BfRtTableKey> table_key;
   RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
   RETURN_IF_ERROR(BuildTableKey(table, action_profile_group, table_key.get()));
   std::unique_ptr<bfrt::BfRtTableData> table_data;
   RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
   RETURN_IF_BFRT_ERROR(table->tableEntryGet(
       *bfrt_session, bf_dev_tgt, *table_key,
-      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()));
-  // Build result
-  ::p4::v1::ActionProfileGroup result = action_profile_group;
+      bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
+      << "Could not find action profile group "
+      << action_profile_group.ShortDebugString();
 
-  // Max size
-  bf_rt_id_t max_group_size_field_id;
-  RETURN_IF_BFRT_ERROR(
-      table->dataFieldIdGet("$MAX_GROUP_SIZE", &max_group_size_field_id));
-  uint64 max_size;
-  RETURN_IF_BFRT_ERROR(
-      table_data->getValue(max_group_size_field_id, &max_size));
-  result.set_max_size(static_cast<int32>(max_size));
+  ASSIGN_OR_RETURN(auto result,
+                   BuildP4ActionProfileGroup(table, *table_key, *table_data));
+  ::p4::v1::ReadResponse resp;
+  auto* entity = resp.add_entities();
+  *entity->mutable_action_profile_group() = result;
 
-  // Members
-  bf_rt_id_t action_member_arr_id;
-  RETURN_IF_BFRT_ERROR(
-      table->dataFieldIdGet("$ACTION_MEMBER_ID", &action_member_arr_id));
-  std::vector<bf_rt_id_t> members;
-  RETURN_IF_BFRT_ERROR(table_data->getValue(action_member_arr_id, &members));
-  for (bf_rt_id_t member_id : members) {
-    auto member = result.add_members();
-    member->set_member_id(member_id);
-    // TODO(Yi): Add weight support.
-    member->set_weight(1);
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream channel failed.";
   }
 
-  return result;
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtActionProfileManager::BuildTableKey(
@@ -335,7 +453,7 @@ BfrtActionProfileManager::ReadActionProfileGroup(
     const bfrt::BfRtTable* table,
     const ::p4::v1::ActionProfileMember& action_profile_member,
     bfrt::BfRtTableData* table_data) {
-  const ::p4::v1::Action action = action_profile_member.action();
+  const ::p4::v1::Action& action = action_profile_member.action();
   RETURN_IF_BFRT_ERROR(table->dataReset(action.action_id(), table_data));
   for (const auto& param : action.params()) {
     const size_t size = param.value().size();

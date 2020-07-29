@@ -4,6 +4,7 @@
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_TABLE_MANAGER_H_
 
 #include <memory>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/synchronization/mutex.h"
@@ -37,10 +38,11 @@ class BfrtTableManager {
       const ::p4::v1::Update::Type type,
       const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
 
-  // Reads a table entry
-  ::util::StatusOr<::p4::v1::TableEntry> ReadTableEntry(
-      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
+  // Reads the P4 TableEntry(s) matched by the given table entry.
+  ::util::Status ReadTableEntry(std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+                                const ::p4::v1::TableEntry& table_entry,
+                                WriterInterface<::p4::v1::ReadResponse>* writer)
+      LOCKS_EXCLUDED(lock_);
 
   // Modify the counter data of a table entry.
   ::util::Status WriteDirectCounterEntry(
@@ -80,9 +82,41 @@ class BfrtTableManager {
       const uint32 action_profile_group_id, const bfrt::BfRtTable* table,
       bfrt::BfRtTableData* table_data);
 
-  ::util::Status BuildTableData(const ::p4::v1::TableEntry table_entry,
+  ::util::Status BuildDirectCounterEntryData(
+      const ::p4::v1::DirectCounterEntry& entry, const bfrt::BfRtTable* table,
+      bfrt::BfRtTableData* table_data);
+
+  ::util::Status BuildTableData(const ::p4::v1::TableEntry& table_entry,
                                 const bfrt::BfRtTable* table,
                                 bfrt::BfRtTableData* table_data);
+
+  ::util::StatusOr<std::vector<uint32>> GetP4TableIds();
+
+  ::util::Status SyncTableCounters(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::TableEntry& table_entry);
+
+  ::util::Status ReadSingleTableEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::TableEntry& table_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer);
+
+  ::util::Status ReadDefaultTableEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::TableEntry& table_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer);
+
+  ::util::Status ReadAllTableEntries(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::TableEntry& table_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer);
+
+  // Construct a P4RT table entry from a table entry request, table key and
+  // table data.
+  ::util::StatusOr<::p4::v1::TableEntry> BuildP4TableEntry(
+      const ::p4::v1::TableEntry& request, const bfrt::BfRtTable* table,
+      const bfrt::BfRtTableKey& table_key,
+      const bfrt::BfRtTableData& table_data);
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;

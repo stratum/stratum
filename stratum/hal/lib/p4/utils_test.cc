@@ -2,18 +2,17 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // Unit tests for p4_utils.
 
 #include "stratum/hal/lib/p4/utils.h"
 
-#include "stratum/lib/test_utils/matchers.h"
-#include "stratum/lib/utils.h"
-#include "gtest/gtest.h"
 #include "absl/strings/substitute.h"
+#include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
 #include "stratum/glue/gtl/map_util.h"
 #include "stratum/glue/status/status_test_util.h"
+#include "stratum/lib/test_utils/matchers.h"
+#include "stratum/lib/utils.h"
 
 using ::testing::HasSubstr;
 
@@ -57,7 +56,7 @@ TEST(PrintP4ObjectIDTest, TestInvalidID) {
   const int kBaseID = 0x54321;
   const int kObjectId =
       ((::p4::config::v1::P4Ids_Prefix_OTHER_EXTERNS_START - 1) << 24) +
-       kBaseID;
+      kBaseID;
   const std::string print_id = PrintP4ObjectID(kObjectId);
   EXPECT_THAT(print_id, HasSubstr("0x54321"));
   EXPECT_THAT(print_id, HasSubstr("INVALID"));
@@ -71,20 +70,20 @@ class TableMapValueTest : public testing::Test {
   void SetUp() override {
     P4TableMapValue table_map_value;
     table_map_value.mutable_table_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "table", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "table",
+                     table_map_value);
     table_map_value.mutable_field_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "field", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "field",
+                     table_map_value);
     table_map_value.mutable_action_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "action", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "action",
+                     table_map_value);
     table_map_value.mutable_header_descriptor();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "header", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "header",
+                     table_map_value);
     table_map_value.mutable_internal_action();
-    gtl::InsertOrDie(
-        test_pipeline_config_.mutable_table_map(), "internal", table_map_value);
+    gtl::InsertOrDie(test_pipeline_config_.mutable_table_map(), "internal",
+                     table_map_value);
   }
 
   P4PipelineConfig test_pipeline_config_;
@@ -171,6 +170,139 @@ TEST_F(TableMapValueTest, FindFailValueWithWrongDescriptorCaseWithLogObject) {
   EXPECT_THAT(status.status().error_message(), HasSubstr("field"));
   EXPECT_THAT(status.status().error_message(), HasSubstr("referenced by P4"));
   EXPECT_THAT(status.status().error_message(), HasSubstr("p4-object"));
+}
+
+TEST(IsDontCareMatchTest, RejectAllExactMatch) {
+  {
+    ::p4::v1::FieldMatch::Exact m;
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Exact m;
+    m.set_value("\x00", 1);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Exact m;
+    m.set_value("\x00", 0);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Exact m;
+    m.set_value("\xff", 1);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+}
+
+TEST(IsDontCareMatchTest, ClassifyLpmMatch) {
+  {
+    ::p4::v1::FieldMatch::LPM m;
+    m.set_prefix_len(1);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::LPM m;
+    m.set_prefix_len(0);
+    EXPECT_TRUE(IsDontCareMatch(m));
+  }
+}
+
+TEST(IsDontCareMatchTest, ClassifyTernaryMatch) {
+  {
+    ::p4::v1::FieldMatch::Ternary m;
+    m.set_mask("\xff", 1);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Ternary m;
+    m.set_mask("\x00", 1);
+    EXPECT_TRUE(IsDontCareMatch(m));
+  }
+}
+
+TEST(IsDontCareMatchTest, ClassifyRangeMatch) {
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\xff", 1);
+    EXPECT_TRUE(IsDontCareMatch(m, 8)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\xff", 1);
+    EXPECT_FALSE(IsDontCareMatch(m, 16)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\x00", 1);
+    EXPECT_FALSE(IsDontCareMatch(m, 8)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\xff", 1);
+    m.set_high("\xff", 1);
+    EXPECT_FALSE(IsDontCareMatch(m, 8)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\x0f", 1);
+    EXPECT_TRUE(IsDontCareMatch(m, 4)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x0f", 1);
+    m.set_high("\x0f", 1);
+    EXPECT_FALSE(IsDontCareMatch(m, 4)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\xff\xff", 2);
+    EXPECT_TRUE(IsDontCareMatch(m, 16)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\x0f\xff", 2);
+    EXPECT_FALSE(IsDontCareMatch(m, 16)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
+    EXPECT_TRUE(IsDontCareMatch(m, 80)) << m.DebugString();
+  }
+  {
+    ::p4::v1::FieldMatch::Range m;
+    m.set_low("\x00", 1);
+    m.set_high("\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 10);
+    EXPECT_FALSE(IsDontCareMatch(m, 81)) << m.DebugString();
+  }
+}
+
+TEST(IsDontCareMatchTest, RejectAllOptionalMatch) {
+  {
+    ::p4::v1::FieldMatch::Optional m;
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Optional m;
+    m.set_value("\x00", 1);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Optional m;
+    m.set_value("\x00", 0);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
+  {
+    ::p4::v1::FieldMatch::Optional m;
+    m.set_value("\xff", 1);
+    EXPECT_FALSE(IsDontCareMatch(m));
+  }
 }
 
 }  // namespace hal

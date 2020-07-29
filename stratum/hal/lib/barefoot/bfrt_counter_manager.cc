@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 
+#include <set>
+
 #include "absl/synchronization/notification.h"
 #include "bf_rt/bf_rt_table_operations.hpp"
 #include "gflags/gflags.h"
