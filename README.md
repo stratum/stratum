@@ -67,7 +67,7 @@ mechanism.
 [SDKLT](https://github.com/Broadcom-Network-Switching-Software/SDKLT) is used
 to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
-# Supported Devices
+# Supported Devices / Chips
 
 ## Tofino
 
@@ -85,13 +85,18 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 ## Broadcom
 
-- Edgecore AS7712-32X
-
-- Dell Z9100
-
-- Inventec D7032
-
-- QCT QuantaMesh T7032-IX1
+- Tomahawk
+    - Edgecore AS7712-32X
+    - Dell Z9100
+    - Inventec D7032
+    - QCT QuantaMesh T7032-IX1
+- Tomahawk+
+    - AS7716-24XC Cassini
+    - AS7716-24SC Cassini
+- Tomahawk2
+- Tomahawk3
+- Trident2
+    - Edgecore AS6712
 
 ## Software Switches
 
