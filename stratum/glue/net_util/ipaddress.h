@@ -44,10 +44,10 @@
 
 namespace stratum {
 
-#ifdef OS_MACOSX
+#ifdef __APPLE__
 #define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
-#endif
+#endif  // __APPLE__
 
 // Forward declaration for IPAddress::ipv4_address() -- see the full
 // explanation below.
