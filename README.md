@@ -87,11 +87,11 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 - Tomahawk
     - Edgecore AS7712-32X
+    - Edgecore AS7716-24XC Cassini
     - Dell Z9100
     - Inventec D7032
     - QCT QuantaMesh T7032-IX1
 - Tomahawk+
-    - Edgecore AS7716-24XC Cassini
     - Edgecore AS7716-24SC Cassini
 - Tomahawk2
 - Tomahawk3
