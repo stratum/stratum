@@ -67,7 +67,7 @@ mechanism.
 [SDKLT](https://github.com/Broadcom-Network-Switching-Software/SDKLT) is used
 to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
-# Supported Devices / Chips
+# Supported Devices
 
 ## Tofino
 
