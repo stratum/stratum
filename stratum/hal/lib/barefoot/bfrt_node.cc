@@ -235,6 +235,12 @@ BfrtNode::~BfrtNode() = default;
   RETURN_IF_BFRT_ERROR(bf_pal_device_add(device_id_, &device_profile));
   RETURN_IF_BFRT_ERROR(bf_pal_device_warm_init_end(device_id_));
 
+  // Set SDE log levels for modules of interest.
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_BFRT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+  CHECK_RETURN_IF_FALSE(
+      bf_sys_log_level_set(BF_MOD_PKT, BF_LOG_DEST_STDOUT, BF_LOG_WARN) == 0);
+
   RETURN_IF_BFRT_ERROR(bfrt_device_manager_->bfRtInfoGet(
       device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
