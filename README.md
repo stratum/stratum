@@ -91,7 +91,7 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
     - Inventec D7032
     - QCT QuantaMesh T7032-IX1
 - Tomahawk+
-    - AS7716-24XC Cassini
+    - Edgecore AS7716-24XC Cassini
     - AS7716-24SC Cassini
 - Tomahawk2
 - Tomahawk3
@@ -130,4 +130,3 @@ If you are using Docker on Linux, make sure that you can use Docker as a
 non-root user, otherwise you will not be able to run setup_dev_env.sh:
 
     sudo usermod -aG docker $USER
-
