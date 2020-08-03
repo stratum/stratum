@@ -32,6 +32,11 @@ config_setting(
     },
 )
 
+config_setting(
+    name = "llvm_compiler",
+    values = {"compiler": "clang"},
+)
+
 stratum_package(
     name = "stratum_package_standalone",
     deps = [

@@ -4,6 +4,8 @@
 load(
     "//bazel:rules.bzl",
     "HOST_ARCHES",
+    "STRATUM_DEFAULT_COPTS",
+    "STRATUM_DEFAULT_LINKOPTS",
     "STRATUM_INTERNAL",
     "stratum_cc_binary",
 )
@@ -18,6 +20,8 @@ stratum_cc_binary(
     name = "gnmi-cli",
     srcs = ["gnmi_cli.cc"],
     arches = HOST_ARCHES,
+    copts = STRATUM_DEFAULT_COPTS,
+    linkopts = STRATUM_DEFAULT_LINKOPTS,
     deps = [
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
