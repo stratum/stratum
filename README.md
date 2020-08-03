@@ -85,13 +85,18 @@ to program fixed-pipeline switches using the Tomahawk chip from Broadcom.
 
 ## Broadcom
 
-- Edgecore AS7712-32X
-
-- Dell Z9100
-
-- Inventec D7032
-
-- QCT QuantaMesh T7032-IX1
+- Tomahawk
+    - Edgecore AS7712-32X
+    - Edgecore AS7716-24XC Cassini
+    - Dell Z9100
+    - Inventec D7032
+    - QCT QuantaMesh T7032-IX1
+- Tomahawk+
+    - Edgecore AS7716-24SC Cassini
+- Tomahawk2
+- Tomahawk3
+- Trident2
+    - Edgecore AS6712
 
 ## Software Switches
 
@@ -125,4 +130,3 @@ If you are using Docker on Linux, make sure that you can use Docker as a
 non-root user, otherwise you will not be able to run setup_dev_env.sh:
 
     sudo usermod -aG docker $USER
-
