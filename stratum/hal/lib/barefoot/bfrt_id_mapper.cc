@@ -234,14 +234,14 @@ bf_rt_target_t BfrtIdMapper::GetDeviceTarget() const {
 ::util::StatusOr<uint32> BfrtIdMapper::GetBfRtId(uint32 p4info_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(p4info_to_bfrt_id_, p4info_id))
-      << "Unable to find bfrt id form p4info id: " << p4info_id;
+      << "Unable to find bfrt id from p4info id: " << p4info_id;
   return gtl::FindOrDie(p4info_to_bfrt_id_, p4info_id);
 }
 
 ::util::StatusOr<uint32> BfrtIdMapper::GetP4InfoId(bf_rt_id_t bfrt_id) const {
   absl::ReaderMutexLock l(&lock_);
   CHECK_RETURN_IF_FALSE(gtl::ContainsKey(bfrt_to_p4info_id_, bfrt_id))
-      << "Unable to find p4info id form bfrt id: " << bfrt_id;
+      << "Unable to find p4info id from bfrt id: " << bfrt_id;
   return gtl::FindOrDie(bfrt_to_p4info_id_, bfrt_id);
 }
 
