@@ -239,41 +239,44 @@ namespace barefoot {
   }
 
   auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
-  switch (type) {
-    case ::p4::v1::Update::INSERT:
-      RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
-                                                *table_key, *table_data))
-          << "Failed to insert table entry " << table_entry.ShortDebugString()
-          << ".";
-      break;
-    case ::p4::v1::Update::MODIFY:
-      if (table_entry.is_default_action()) {
-        CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
-            << "Default action must not contain match fields.";
-        CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
-            << "Default action must not contain a priority field.";
-        RETURN_IF_BFRT_ERROR(
-            table->tableDefaultEntrySet(*bfrt_session, bf_dev_tgt, *table_data))
-            << "Failed to modify default table entry "
-            << table_entry.ShortDebugString() << ".";
-      } else {
+  if (table_entry.is_default_action()) {
+    CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+        << "The table default entry can only be modified.";
+    CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
+        << "Default action must not contain match fields.";
+    CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
+        << "Default action must not contain a priority field.";
+    RETURN_IF_BFRT_ERROR(
+        table->tableDefaultEntrySet(*bfrt_session, bf_dev_tgt, *table_data))
+        << "Failed to modify default table entry "
+        << table_entry.ShortDebugString() << ".";
+  } else {
+    switch (type) {
+      case ::p4::v1::Update::INSERT:
+        RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
+                                                  *table_key, *table_data))
+            << "Failed to insert table entry " << table_entry.ShortDebugString()
+            << ".";
+        break;
+      case ::p4::v1::Update::MODIFY:
         RETURN_IF_BFRT_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
                                                   *table_key, *table_data))
             << "Failed to modify table entry " << table_entry.ShortDebugString()
             << ".";
-      }
-      break;
-    case ::p4::v1::Update::DELETE:
-      RETURN_IF_BFRT_ERROR(
-          table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key))
-          << "Failed to delete table entry " << table_entry.ShortDebugString()
-          << ".";
-      break;
-    default:
-      RETURN_ERROR(ERR_INTERNAL)
-          << "Unsupported update type: " << type << " in table entry "
-          << table_entry.ShortDebugString() << ".";
+        break;
+      case ::p4::v1::Update::DELETE:
+        RETURN_IF_BFRT_ERROR(
+            table->tableEntryDel(*bfrt_session, bf_dev_tgt, *table_key))
+            << "Failed to delete table entry " << table_entry.ShortDebugString()
+            << ".";
+        break;
+      default:
+        RETURN_ERROR(ERR_INTERNAL)
+            << "Unsupported update type: " << type << " in table entry "
+            << table_entry.ShortDebugString() << ".";
+    }
   }
+
   return ::util::OkStatus();
 }
 
@@ -496,9 +499,13 @@ namespace barefoot {
       *bfrt_session, bf_dev_tgt, bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW,
       table_data.get()));
 
+  // FIXME: BuildP4TableEntry is not suitable for default entries.
   ASSIGN_OR_RETURN(
       ::p4::v1::TableEntry result,
       BuildP4TableEntry(table_entry, table, *table_key, *table_data));
+  result.set_is_default_action(true);
+  result.clear_match();
+
   ::p4::v1::ReadResponse resp;
   *resp.add_entities()->mutable_table_entry() = result;
   if (!writer->Write(resp)) {
