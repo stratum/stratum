@@ -35,7 +35,14 @@
 #ifndef STRATUM_GLUE_NET_UTIL_BITS_H_
 #define STRATUM_GLUE_NET_UTIL_BITS_H_
 
+#if defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define bswap_16(x) OSSwapInt16(x)
+#define bswap_32(x) OSSwapInt32(x)
+#define bswap_64(x) OSSwapInt64(x)
+#else
 #include <byteswap.h>
+#endif  // __APPLE__
 
 #include "stratum/glue/logging.h"
 #include "absl/base/casts.h"

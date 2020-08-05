@@ -9,7 +9,6 @@
 
 #include <arpa/inet.h>
 #include <assert.h>
-#include <byteswap.h>
 #include <ctype.h>
 #include <limits.h>
 #include <netdb.h>
