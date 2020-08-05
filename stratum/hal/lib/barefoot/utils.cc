@@ -156,7 +156,7 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
   }
   CHECK_RETURN_IF_FALSE(data_type == bfrt::DataType::STRING)
-      << "Setting uint64 but field has type " << static_cast<int>(data_type);
+      << "Setting string but field has type " << static_cast<int>(data_type);
   RETURN_IF_BFRT_ERROR(table_data->setValue(field_id, field_value));
 
   return ::util::OkStatus();
