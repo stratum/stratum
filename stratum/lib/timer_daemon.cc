@@ -68,9 +68,9 @@ bool TimerDaemon::Execute() {
   if (front != nullptr) {
     // Execute the timer's action!
     if (front->ExecuteAction() != ::util::OkStatus()) {
-      LOG(ERROR) << "something went wrong";
+      VLOG(0) << "something went wrong";
     } else {
-      LOG(INFO) << "Timer has been triggered!";
+      VLOG(1) << "Timer has been triggered!";
     }
   }
   return true;
@@ -87,7 +87,7 @@ bool TimerDaemon::Execute() {
   if (pthread_create(&GetInstance()->tid_, nullptr, &Timer, nullptr) != 0) {
     return MAKE_ERROR(ERR_INTERNAL) << "Failed to create the timer thread.";
   } else {
-    LOG(INFO) << "The timer daemon has been started.";
+    VLOG(1) << "The timer daemon has been started.";
     return ::util::OkStatus();
   }
 }
@@ -105,7 +105,7 @@ bool TimerDaemon::Execute() {
     GetInstance()->timers_.clear();
     GetInstance()->tid_ = 0;
 
-    LOG(INFO) << "The timer daemon has been stopped.";
+    VLOG(1) << "The timer daemon has been stopped.";
     return ::util::OkStatus();
   }
 }
@@ -130,7 +130,7 @@ bool TimerDaemon::Execute() {
                                           DescriptorPtr* desc) {
   absl::WriterMutexLock l(&access_lock_);
 
-  LOG(INFO) << "Registered timer.";
+  VLOG(1) << "Registered timer.";
 
   absl::Time now = absl::Now();
   *desc = std::make_shared<Descriptor>(repeat, action);
