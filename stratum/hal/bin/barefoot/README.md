@@ -231,7 +231,7 @@ journalctl -u stratum_bf.service
 
 ## Testing gNMI
 
-See [gNMI CLI](/tools/gnmi/README.md)
+See [gNMI CLI](/stratum/tools/gnmi/README.md)
 
 ## Using p4runtime-shell
 
