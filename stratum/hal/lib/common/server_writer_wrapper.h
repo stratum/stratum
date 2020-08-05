@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 #define STRATUM_HAL_LIB_COMMON_SERVER_WRITER_WRAPPER_H_
 
@@ -19,6 +18,7 @@ class ServerWriterWrapper : public WriterInterface<T> {
   explicit ServerWriterWrapper(::grpc::ServerWriter<T>* writer)
       : writer_(writer) {}
   bool Write(const T& msg) override {
+    VLOG(1) << "ServerWriterWrapper write: " << msg.ShortDebugString();
     if (writer_) return writer_->Write(msg);
     return false;
   }
