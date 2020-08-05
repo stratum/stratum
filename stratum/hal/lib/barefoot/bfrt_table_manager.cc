@@ -466,6 +466,7 @@ namespace barefoot {
       BuildP4TableEntry(table_entry, table, *table_key, *table_data));
   ::p4::v1::ReadResponse resp;
   *resp.add_entities()->mutable_table_entry() = result;
+  VLOG(1) << "ReadSingleTableEntry resp " << resp.DebugString();
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
   }
@@ -508,6 +509,7 @@ namespace barefoot {
 
   ::p4::v1::ReadResponse resp;
   *resp.add_entities()->mutable_table_entry() = result;
+  VLOG(1) << "ReadDefaultTableEntry resp " << resp.DebugString();
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
   }
@@ -551,6 +553,7 @@ namespace barefoot {
     *resp.add_entities()->mutable_table_entry() = result;
   }
 
+  VLOG(1) << "ReadAllTableEntries resp " << resp.DebugString();
   if (!writer->Write(resp)) {
     return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
   }
