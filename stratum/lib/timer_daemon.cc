@@ -67,10 +67,11 @@ bool TimerDaemon::Execute() {
   auto front = daemon->GetAction();
   if (front != nullptr) {
     // Execute the timer's action!
-    if (front->ExecuteAction() != ::util::OkStatus()) {
-      VLOG(0) << "something went wrong";
-    } else {
+    const auto& status = front->ExecuteAction();
+    if (status.ok()) {
       VLOG(1) << "Timer has been triggered!";
+    } else {
+      LOG(ERROR) << "Error executing action: " << status;
     }
   }
   return true;
