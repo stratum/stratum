@@ -8,11 +8,12 @@ load(
     "//bazel:rules.bzl",
     "stratum_cc_library",
     "stratum_cc_test",
+    "STRATUM_INTERNAL",
 )
 
 package(
     #default_hdrs_check = "strict",
-    default_visibility = ["//visibility:public"],
+    default_visibility = STRATUM_INTERNAL,
 )
 
 stratum_cc_library(

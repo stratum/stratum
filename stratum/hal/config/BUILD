@@ -11,7 +11,7 @@ load(
 load(":platform_config_test.bzl", "platform_config_test")
 load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_deb")
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = STRATUM_INTERNAL)
 
 licenses(["notice"])  # Apache v2
 
