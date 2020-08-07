@@ -105,6 +105,7 @@ BfrtNode::~BfrtNode() = default;
   // Try a parse of BfrtDeviceConfig.
   {
     BfrtDeviceConfig device_config;
+    // The pipeline config is stored as raw bytes in the p4_device_config.
     if (device_config.ParseFromString(config.p4_device_config())) {
       bfrt_config_ = device_config;
       return ::util::OkStatus();
