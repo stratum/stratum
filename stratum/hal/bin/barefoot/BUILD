@@ -23,6 +23,23 @@ stratum_bf_common_deps = [
 ]
 
 stratum_cc_binary(
+    name = "device_config_builder",
+    srcs = [
+        "device_config_builder.cc",
+    ],
+    arches = HOST_ARCHES,
+    deps = [
+        "//stratum/lib:utils",
+        "//stratum/glue:init_google",
+        "//stratum/glue:logging",
+        "//stratum/glue/status:status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/hal/lib/barefoot:bfrt_cc_proto",
+        "@com_github_nlohmann_json//:json",
+    ],
+)
+
+stratum_cc_binary(
     name = "stratum_bf",
     srcs = [
         "main.cc",
