@@ -7,6 +7,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Running Stratum with the P4.org bmv2 software switch
 
+**Note:** Stratum bmv2 is also distributed with the Stratum-enabled
+Mininet Docker image. Refer to the [Mininet](/tools/mininet/README.md) README
+for further details.
+
 The `stratum_bmv2` binary is a standalone executable which includes:
 1. a Stratum implementation for bmv2
 2. the `v1model` datapath
