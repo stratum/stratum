@@ -38,6 +38,10 @@ DEFINE_string(write_req_log_file, "/var/log/stratum/p4_writes.pb.txt",
               "The log file for all the individual write request updates and "
               "the corresponding result. The format for each line is: "
               "<timestamp>;<node_id>;<update proto>;<status>.");
+DEFINE_string(read_req_log_file, "/var/log/stratum/p4_reads.pb.txt",
+              "The log file for all the individual read request and "
+              "the corresponding result. The format for each line is: "
+              "<timestamp>;<node_id>;<request proto>;<status>.");
 DEFINE_int32(max_num_controllers_per_node, 5,
              "Max number of controllers that can manage a node.");
 DEFINE_int32(max_num_controller_connections, 20,
@@ -233,6 +237,35 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   }
 }
 
+// Helper to facilitate logging the read requests to the desired log file.
+void LogReadRequest(uint64 node_id, const ::p4::v1::ReadRequest& req,
+                     const std::vector<::util::Status>& results,
+                     const absl::Time timestamp) {
+  if (FLAGS_read_req_log_file.empty()) {
+    return;
+  }
+  // TODO(max): wildcard reads have #input != #output
+  // if (results.size() != req.entities_size()) {
+  //   LOG(ERROR) << "Size mismatch: " << results.size()
+  //              << " != " << req.entities_size() << ". Did not log anything!";
+  //   return;
+  // }
+  std::string msg = "";
+  std::string ts =
+      absl::FormatTime("%Y-%m-%d %H:%M:%E6S", timestamp, absl::LocalTimeZone());
+  for (size_t i = 0; i < results.size(); ++i) {
+    absl::StrAppend(&msg, ts, ";", node_id, ";",
+                    req.entities(i).ShortDebugString(), ";",
+                    results[i].error_message(), "\n");
+  }
+  ::util::Status status =
+      WriteStringToFile(msg, FLAGS_read_req_log_file, /*append=*/true);
+  if (!status.ok()) {
+    LOG_EVERY_N(ERROR, 50) << "Failed to log the read request: "
+                           << status.error_message();
+  }
+}
+
 }  // namespace
 
 ::grpc::Status P4Service::Write(::grpc::ServerContext* context,
@@ -292,12 +325,16 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
 
   ServerWriterWrapper<::p4::v1::ReadResponse> wrapper(writer);
   std::vector<::util::Status> details = {};
+  absl::Time timestamp = absl::Now();
   ::util::Status status =
       switch_interface_->ReadForwardingEntries(*req, &wrapper, &details);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to read forwarding entries from node "
                << req->device_id() << ": " << status.error_message();
   }
+
+  // Log debug info for future debugging.
+  LogReadRequest(req->device_id(), *req, details, timestamp);
 
   return ToGrpcStatus(status, details);
 }
