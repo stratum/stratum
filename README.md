@@ -19,6 +19,10 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 
 # Documentation
 
+## Getting Started with P4
+
+If you're completly new to the world of P4 and are looking for step-by-step instructions with batteries included, the [NG-SDN](https://github.com/opennetworkinglab/ngsdn-tutorial) tutorial is a good starting point. 
+
 ## Running Stratum
 
 [Broadcom](stratum/hal/bin/bcm/standalone/README.md)
@@ -30,8 +34,6 @@ Build status (master): [![CircleCI](https://circleci.com/gh/stratum/stratum/tree
 [dummy](stratum/hal/bin/dummy/README.md)
 
 [NP4 Intel](stratum/hal/bin/np4intel/docker/README.md)
-
-[Stratum inside Docker](TODO)
 
 ## Other Topics
 
