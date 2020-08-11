@@ -50,15 +50,12 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     const BfrtDeviceConfig& config) {
   CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
       << "Only one program is supported.";
-
   const auto& program = config.programs(0);
   {
     absl::WriterMutexLock l(&data_lock_);
     RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
-
     // PushForwardingPipelineConfig resets the bf_pkt driver.
     RETURN_IF_ERROR(StartIo());
-
     initialized_ = true;
   }
 
@@ -144,11 +141,12 @@ class BitBuffer {
   BitBuffer() = default;
   BitBuffer(const uint8* buf, size_t len) {
     for (size_t i = 0; i < len; ++i) {
-      AddField(sizeof(buf[i]) * 8, buf[i]);
+      CHECK(AddField(sizeof(buf[i]) * 8, buf[i]).ok());
     }
   }
 
   // Add a field to the back of the buffer.
+  // TODO(max): Accept byte strings of any length.
   template <typename U>
   ::util::Status AddField(size_t bitwidth, U value) {
     const int kMaxBitWidth = sizeof(U) * 8;
@@ -200,7 +198,6 @@ class BitBuffer {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
-  std::vector<uint8> buf;
   BitBuffer bit_buf;
   {
     absl::ReaderMutexLock l(&data_lock_);
@@ -212,17 +209,21 @@ class BitBuffer {
                              [&id](::p4::v1::PacketMetadata metadata) {
                                return metadata.metadata_id() == id;
                              });
-      CHECK_RETURN_IF_FALSE(it != packet.metadata().end())
-          << "Missing metadata with Id " << id << " in PacketOut "
-          << packet.ShortDebugString();
+      uint64 v = 0;
+      if (it != packet.metadata().end()) {
+        v = ByteStreamToUint<uint64>(it->value());
+      } else {
+        VLOG(1) << "Missing metadata with Id " << id << " in PacketOut "
+                << packet.ShortDebugString();
+      }
 
-      auto v = ByteStreamToUint<uint64>(it->value());
-      VLOG(1) << "Encoded metadata field with id " << id << " bitwidth "
-              << bitwidth << " value 0x" << std::hex << v;
-      bit_buf.AddField(bitwidth, v);
+      VLOG(1) << "Encoded PacketOut metadata field with id " << id
+              << " bitwidth " << bitwidth << " value 0x" << std::hex << v;
+      RETURN_IF_ERROR(bit_buf.AddField(bitwidth, v));
     }
   }
   auto hdr_buf = bit_buf.PopAll();
+  std::vector<uint8> buf;
   buf.insert(buf.end(), hdr_buf.begin(), hdr_buf.end());
   buf.insert(buf.end(), packet.payload().begin(), packet.payload().end());
 
@@ -269,6 +270,7 @@ class BitBuffer {
 
 // This function is based on P4TableMapper and implements a subset of its
 // functionality.
+// TODO(max): Check and reject if a mapping cannot be handled at runtime
 ::util::Status BfrtPacketioManager::BuildMetadataMapping(
     const p4::config::v1::P4Info& p4_info) {
   std::vector<std::pair<uint32, int>> packetin_header;
