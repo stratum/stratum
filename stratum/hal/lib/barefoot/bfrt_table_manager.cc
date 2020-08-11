@@ -37,6 +37,7 @@ namespace barefoot {
     bf_rt_id_t field_id = mk.field_id();
     switch (mk.field_match_type_case()) {
       case ::p4::v1::FieldMatch::kExact: {
+        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
         const size_t size = mk.exact().value().size();
         const uint8* val =
             reinterpret_cast<const uint8*>(mk.exact().value().data());
@@ -45,6 +46,7 @@ namespace barefoot {
         break;
       }
       case ::p4::v1::FieldMatch::kTernary: {
+        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
         CHECK_RETURN_IF_FALSE(table_entry.priority())
             << "Ternary field matches require a priority in table entry "
             << table_entry.ShortDebugString() << ".";
@@ -59,6 +61,7 @@ namespace barefoot {
         break;
       }
       case ::p4::v1::FieldMatch::kLpm: {
+        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
         const size_t size = mk.lpm().value().size();
         const uint8* val =
             reinterpret_cast<const uint8*>(mk.lpm().value().data());
@@ -69,6 +72,9 @@ namespace barefoot {
         break;
       }
       case ::p4::v1::FieldMatch::kRange: {
+        size_t range_bitwidth;
+        RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(field_id, &range_bitwidth));
+        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.range(), range_bitwidth));
         CHECK_RETURN_IF_FALSE(table_entry.priority())
             << "Range field matches require a priority in table entry "
             << table_entry.ShortDebugString() << ".";
@@ -83,6 +89,7 @@ namespace barefoot {
         break;
       }
       case ::p4::v1::FieldMatch::kOptional:
+        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()));
         CHECK_RETURN_IF_FALSE(table_entry.priority())
             << "Optional field matches require a priority in table entry "
             << table_entry.ShortDebugString() << ".";
