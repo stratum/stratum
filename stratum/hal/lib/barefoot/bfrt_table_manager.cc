@@ -579,7 +579,8 @@ namespace barefoot {
     absl::ReaderMutexLock l(&lock_);
     RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   }
-  absl::Notification sync_notifier;
+  auto sync_notifier = std::make_shared<absl::Notification>();
+  std::weak_ptr<absl::Notification> weak_ref(sync_notifier);
   std::set<bfrt::TableOperationsType> supported_ops;
   RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
   // Controller tries to read counter, but the table doesn't support it.
@@ -591,15 +592,20 @@ namespace barefoot {
       bfrt::TableOperationsType::COUNTER_SYNC, &table_op));
   RETURN_IF_BFRT_ERROR(table_op->counterSyncSet(
       *bfrt_session, bf_dev_tgt,
-      [table_id, &sync_notifier](const bf_rt_target_t& dev_tgt, void* cookie) {
-        VLOG(1) << "Table counter for table " << table_id << " synced.";
-        sync_notifier.Notify();
+      [table_id, weak_ref](const bf_rt_target_t& dev_tgt, void* cookie) {
+        if (auto notifier = weak_ref.lock()) {
+          VLOG(1) << "Table counter for table " << table_id << " synced.";
+          notifier->Notify();
+        } else {
+          VLOG(1) << "Notifier expired before table " << table_id
+                  << " could be synced.";
+        }
       },
       nullptr));
   RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
 
   // Wait until sync done or timeout.
-  if (!sync_notifier.WaitForNotificationWithTimeout(kDefaultSyncTimeout)) {
+  if (!sync_notifier->WaitForNotificationWithTimeout(kDefaultSyncTimeout)) {
     return MAKE_ERROR(ERR_OPER_TIMEOUT)
            << "Timeout while syncing table counters of table " << table_id
            << ".";
