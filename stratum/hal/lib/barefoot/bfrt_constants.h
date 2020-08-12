@@ -31,7 +31,7 @@ constexpr uint16 kMaxCloneSessionId = 1015;
 constexpr uint16 kMaxMulticastGroupId = 65535;
 constexpr uint32 kMaxMulticastNodeId = 0x1000000;
 
-constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(1);
+constexpr absl::Duration kDefaultSyncTimeout = absl::Seconds(3);
 
 }  // namespace barefoot
 }  // namespace hal
