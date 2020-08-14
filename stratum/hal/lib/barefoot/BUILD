@@ -465,3 +465,21 @@ stratum_cc_library(
         "@local_barefoot_bin//:bfsde",
     ],
 )
+
+stratum_cc_test(
+    name = "utils_test",
+    srcs = [
+        "utils_test.cc",
+    ],
+    deps = [
+        ":utils",
+        "//stratum/glue/gtl:map_util",
+        "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "//stratum/lib/test_utils:matchers",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_grpc",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+        "@local_barefoot_bin//:bfsde",
+    ],
+)

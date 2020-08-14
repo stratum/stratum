@@ -248,6 +248,32 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
+
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Exact& exact) { return false; }
+
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::LPM& lpm) {
+  return lpm.prefix_len() == 0;
+}
+
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
+  return std::all_of(ternary.mask().begin(), ternary.mask().end(),
+                     [](const char c) { return c == '\x00'; });
+}
+
+// BFRT defines a "don't care" range match as all zeros for low and high,
+// contrary to the P4RT definition.
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
+                     int field_width) {
+  return std::all_of(range.low().begin(), range.low().end(),
+                     [](const char c) { return c == '\x00'; }) &&
+         std::all_of(range.high().begin(), range.high().end(),
+                     [](const char c) { return c == '\x00'; });
+}
+
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional) {
+  return false;
+}
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
