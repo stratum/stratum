@@ -11,6 +11,7 @@
 #include "bf_rt/bf_rt_init.hpp"
 #include "bf_rt/bf_rt_session.hpp"
 #include "bf_rt/bf_rt_table_key.hpp"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
@@ -104,6 +105,18 @@ template <typename T>
     bf_rt_target_t bf_dev_target, const bfrt::BfRtTable* table,
     std::vector<std::unique_ptr<bfrt::BfRtTableKey>>* table_keys,
     std::vector<std::unique_ptr<bfrt::BfRtTableData>>* table_datums);
+
+// A set of helper functions to determine whether a P4 match object constructed
+// from a bfrt table key is a "don't care" match.
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Exact& exact);
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::LPM& lpm);
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary);
+// The field width is only taken as a upper bound, byte strings longer than that
+// are not checked.
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range, int field_width);
+// If the Optional match should be a wildcard, the FieldMatch must be omitted.
+// Otherwise, this behaves like an exact match.
+bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional);
 
 }  // namespace barefoot
 }  // namespace hal

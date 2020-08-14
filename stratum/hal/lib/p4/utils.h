@@ -35,18 +35,6 @@ std::string PrintP4ObjectID(int object_id);
     P4TableMapValue::DescriptorCase descriptor_case,
     const std::string& log_p4_object);
 
-// A set of helper functions to determine whether a P4 match object contains a
-// "don't care" match.
-bool IsDontCareMatch(const ::p4::v1::FieldMatch::Exact& exact);
-bool IsDontCareMatch(const ::p4::v1::FieldMatch::LPM& lpm);
-bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary);
-// The field width is only taken as a upper bound, byte strings longer than that
-// are not checked.
-bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range, int field_width);
-// If the Optional match should be a wildcard, the FieldMatch must be omitted.
-// Otherwise, this behaves like an exact match.
-bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional);
-
 }  // namespace hal
 }  // namespace stratum
 
