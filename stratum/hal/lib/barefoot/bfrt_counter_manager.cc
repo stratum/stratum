@@ -10,6 +10,8 @@
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/hal/lib/barefoot/macros.h"
 
+DECLARE_uint32(bfrt_table_sync_timeout_ms);
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -117,7 +119,8 @@ BfrtCounterManager::ReadIndirectCounterEntry(
         nullptr));
     RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
     // Wait until sync done or timeout.
-    if (!sync_notifier->WaitForNotificationWithTimeout(kDefaultSyncTimeout)) {
+    if (!sync_notifier->WaitForNotificationWithTimeout(
+            absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms))) {
       return MAKE_ERROR(ERR_OPER_TIMEOUT)
              << "Timeout while syncing (indirect) table counters of table "
              << table_id << ".";
