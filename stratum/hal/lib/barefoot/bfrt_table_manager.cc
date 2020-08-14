@@ -18,6 +18,11 @@
 #include "stratum/hal/lib/p4/utils.h"
 #include "stratum/lib/utils.h"
 
+DEFINE_uint32(
+    bfrt_table_sync_timeout_ms,
+    stratum::hal::barefoot::kDefaultSyncTimeout / absl::Milliseconds(1),
+    "The timeout for table sync operation like counters and registers.");
+
 namespace stratum {
 namespace hal {
 namespace barefoot {
@@ -605,7 +610,8 @@ namespace barefoot {
   RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
 
   // Wait until sync done or timeout.
-  if (!sync_notifier->WaitForNotificationWithTimeout(kDefaultSyncTimeout)) {
+  if (!sync_notifier->WaitForNotificationWithTimeout(
+          absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms))) {
     return MAKE_ERROR(ERR_OPER_TIMEOUT)
            << "Timeout while syncing table counters of table " << table_id
            << ".";
