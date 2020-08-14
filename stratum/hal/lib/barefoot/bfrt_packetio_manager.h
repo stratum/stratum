@@ -4,6 +4,8 @@
 #ifndef STRATUM_HAL_LIB_BAREFOOT_BFRT_PACKETIO_MANAGER_H_
 #define STRATUM_HAL_LIB_BAREFOOT_BFRT_PACKETIO_MANAGER_H_
 
+#include <pthread.h>
+
 #include <memory>
 #include <utility>
 #include <vector>
@@ -12,11 +14,10 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
-#include "bf_rt/bf_rt_common.h"
 #include "p4/v1/p4runtime.pb.h"
-#include "pkt_mgr/pkt_mgr_intf.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bfrt.pb.h"
+#include "stratum/hal/lib/barefoot/bfrt_sde_interface.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
 #include "stratum/lib/utils.h"
@@ -66,7 +67,8 @@ class BfrtPacketioManager {
       LOCKS_EXCLUDED(data_lock_);
 
   // Factory function for creating the instance of the class.
-  static std::unique_ptr<BfrtPacketioManager> CreateInstance(int device_id);
+  static std::unique_ptr<BfrtPacketioManager> CreateInstance(
+      BfrtSdeInterface* bfrt_sde_interface, int device_id);
 
   // BfrtPacketioManager is neither copyable nor movable.
   BfrtPacketioManager(const BfrtPacketioManager&) = delete;
@@ -79,32 +81,30 @@ class BfrtPacketioManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  explicit BfrtPacketioManager(int device_id);
+  explicit BfrtPacketioManager(BfrtSdeInterface* bfrt_sde_interface,
+                               int device_id);
 
   // Builds the packet header structure for controller packets.
   ::util::Status BuildMetadataMapping(const p4::config::v1::P4Info& p4_info)
       EXCLUSIVE_LOCKS_REQUIRED(data_lock_);
 
-  // Registers the necessary Rx/Tx callbacks with the SDE.
-  ::util::Status StartIo();
+  // Handles a received packets and hands it over the registered receive writer.
+  ::util::Status HandleSdePacketRx() LOCKS_EXCLUDED(rx_writer_lock_)
+      LOCKS_EXCLUDED(data_lock_);
 
-  // Deregisters the necessary Rx/Tx callbacks with the SDE.
-  ::util::Status StopIo();
+  // SDE cpu interface RX thread function.
+  static void* SdeRxThreadFunc(void* arg);
 
-  // bf_pkt tx done callback function.
-  static bf_status_t BfPktTxNotifyCallback(bf_dev_id_t dev_id,
-                                           bf_pkt_tx_ring_t tx_ring,
-                                           uint64 tx_cookie, uint32 status);
+  // Deparses a PacketOut into the buffer by serializing the metadata fields in
+  // front of the payload.
+  ::util::Status DeparsePacketOut(const ::p4::v1::PacketOut& packet,
+                                  std::string* buffer)
+      LOCKS_EXCLUDED(data_lock_);
 
-  // bf_pkt rx callback function.
-  static bf_status_t BfPktRxNotifyCallback(bf_dev_id_t dev_id, bf_pkt* pkt,
-                                           void* cookie,
-                                           bf_pkt_rx_ring_t rx_ring);
-
-  // Deparses a received packet and hands it over the registered receive writer.
-  ::util::Status HandlePacketRx(bf_dev_id_t dev_id, bf_pkt* pkt,
-                                bf_pkt_rx_ring_t rx_ring)
-      LOCKS_EXCLUDED(rx_writer_lock_) LOCKS_EXCLUDED(data_lock_);
+  // Parses a binary string into a PacketIn, filling the metadata fields.
+  ::util::Status ParsePacketIn(const std::string& buffer,
+                               ::p4::v1::PacketIn* packet)
+      LOCKS_EXCLUDED(data_lock_);
 
   // Deparses a PacketOut into the buffer by serializing the metadata fields in
   // front of the payload.
@@ -134,8 +134,16 @@ class BfrtPacketioManager {
   size_t packetin_header_size_ GUARDED_BY(data_lock_);
   size_t packetout_header_size_ GUARDED_BY(data_lock_);
 
+  std::shared_ptr<Channel<std::string>> packet_receive_channel_
+      GUARDED_BY(data_lock_);
+
+  pthread_t sde_rx_thread_id_ GUARDED_BY(data_lock_);
+
   // Initialized to false, set once only on first PushForwardingPipelineConfig.
   bool initialized_ GUARDED_BY(data_lock_);
+
+  // Pointer to a BfrtSdeInterface implementation that wraps all the SDE calls.
+  BfrtSdeInterface* bfrt_sde_interface_ = nullptr;  // not owned by this class.
 
   // Fixed zero-based Tofino device number corresponding to the node/ASIC
   // managed by this class instance. Assigned in the class constructor.

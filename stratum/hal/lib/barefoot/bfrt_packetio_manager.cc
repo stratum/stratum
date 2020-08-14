@@ -14,7 +14,6 @@
 
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/gtl/map_util.h"
-#include "stratum/hal/lib/barefoot/macros.h"
 #include "stratum/hal/lib/common/constants.h"
 #include "stratum/lib/utils.h"
 
@@ -22,27 +21,27 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtPacketioManager::BfrtPacketioManager(int device_id)
+BfrtPacketioManager::BfrtPacketioManager(BfrtSdeInterface* bfrt_sde_interface,
+                                         int device_id)
     : packetin_header_(),
       packetout_header_(),
       packetin_header_size_(),
       packetout_header_size_(),
+      sde_rx_thread_id_(0),
       initialized_(false),
+      bfrt_sde_interface_(ABSL_DIE_IF_NULL(bfrt_sde_interface)),
       device_id_(device_id) {}
 
 BfrtPacketioManager::~BfrtPacketioManager() {}
 
 std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
-    int device_id) {
-  return absl::WrapUnique(new BfrtPacketioManager(device_id));
+    BfrtSdeInterface* bfrt_sde_interface, int device_id) {
+  return absl::WrapUnique(
+      new BfrtPacketioManager(bfrt_sde_interface, device_id));
 }
 
 ::util::Status BfrtPacketioManager::PushChassisConfig(
     const ChassisConfig& config, uint64 node_id) {
-  if (!bf_pkt_is_inited(device_id_)) {
-    RETURN_IF_BFRT_ERROR(bf_pkt_init());
-  }
-
   return ::util::OkStatus();
 }
 
@@ -55,7 +54,20 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     absl::WriterMutexLock l(&data_lock_);
     RETURN_IF_ERROR(BuildMetadataMapping(program.p4info()));
     // PushForwardingPipelineConfig resets the bf_pkt driver.
-    RETURN_IF_ERROR(StartIo());
+    RETURN_IF_ERROR(bfrt_sde_interface_->StartPacketIo(device_id_));
+    if (!initialized_) {
+      packet_receive_channel_ = Channel<std::string>::Create(128);
+      int ret = pthread_create(&sde_rx_thread_id_, nullptr,
+                               &BfrtPacketioManager::SdeRxThreadFunc, this);
+      if (ret != 0) {
+        RETURN_ERROR(ERR_INTERNAL)
+            << "Failed to spawn RX thread for SDE wrapper for device with ID "
+            << device_id_ << ". Err: " << ret << ".";
+      }
+      RETURN_IF_ERROR(bfrt_sde_interface_->RegisterPacketReceiveWriter(
+          device_id_,
+          ChannelWriter<std::string>::Create(packet_receive_channel_)));
+    }
     initialized_ = true;
   }
 
@@ -67,44 +79,10 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
   return ::util::OkStatus();
 }
 
-::util::Status BfrtPacketioManager::StartIo() {
-  for (int tx_ring = BF_PKT_TX_RING_0; tx_ring < BF_PKT_TX_RING_MAX;
-       ++tx_ring) {
-    RETURN_IF_BFRT_ERROR(bf_pkt_tx_done_notif_register(
-        device_id_, BfrtPacketioManager::BfPktTxNotifyCallback,
-        static_cast<bf_pkt_tx_ring_t>(tx_ring)));
-  }
-
-  for (int rx_ring = BF_PKT_RX_RING_0; rx_ring < BF_PKT_RX_RING_MAX;
-       ++rx_ring) {
-    RETURN_IF_BFRT_ERROR(bf_pkt_rx_register(
-        device_id_, BfrtPacketioManager::BfPktRxNotifyCallback,
-        static_cast<bf_pkt_rx_ring_t>(rx_ring), this));
-  }
-  VLOG(1) << "Registered packetio callbacks on device " << device_id_ << ".";
-
-  return ::util::OkStatus();
-}
-
-::util::Status BfrtPacketioManager::StopIo() {
-  for (int tx_ring = BF_PKT_TX_RING_0; tx_ring < BF_PKT_TX_RING_MAX;
-       ++tx_ring) {
-    RETURN_IF_BFRT_ERROR(bf_pkt_tx_done_notif_deregister(
-        device_id_, static_cast<bf_pkt_tx_ring_t>(tx_ring)));
-  }
-
-  for (int rx_ring = BF_PKT_RX_RING_0; rx_ring < BF_PKT_RX_RING_MAX;
-       ++rx_ring) {
-    RETURN_IF_BFRT_ERROR(bf_pkt_rx_deregister(
-        device_id_, static_cast<bf_pkt_rx_ring_t>(rx_ring)));
-  }
-  VLOG(1) << "Unregistered packetio callbacks on device " << device_id_ << ".";
-
-  return ::util::OkStatus();
-}
-
 ::util::Status BfrtPacketioManager::Shutdown() {
-  RETURN_IF_ERROR(StopIo());
+  RETURN_IF_ERROR(bfrt_sde_interface_->StopPacketIo(device_id_));
+  RETURN_IF_ERROR(
+      bfrt_sde_interface_->UnregisterPacketReceiveWriter(device_id_));
   {
     absl::WriterMutexLock l(&rx_writer_lock_);
     rx_writer_ = nullptr;
@@ -115,6 +93,8 @@ std::unique_ptr<BfrtPacketioManager> BfrtPacketioManager::CreateInstance(
     packetout_header_.clear();
     packetin_header_size_ = 0;
     packetout_header_size_ = 0;
+    packet_receive_channel_->Close();
+    pthread_join(sde_rx_thread_id_, nullptr);
     initialized_ = false;
   }
 
@@ -271,36 +251,37 @@ class BitBuffer {
   std::string buf;
   RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
 
-  bf_pkt* pkt = nullptr;
-  bf_pkt_tx_ring_t tx_ring = BF_PKT_TX_RING_0;
-  RETURN_IF_BFRT_ERROR(
-      bf_pkt_alloc(device_id_, &pkt, buf.size(), BF_DMA_CPU_PKT_TRANSMIT_0));
-  auto pkt_cleaner =
-      gtl::MakeCleanup([pkt, this]() { bf_pkt_free(device_id_, pkt); });
-  RETURN_IF_BFRT_ERROR(bf_pkt_data_copy(
-      pkt, reinterpret_cast<const uint8_t*>(buf.data()), buf.size()));
-  RETURN_IF_BFRT_ERROR(bf_pkt_tx(device_id_, pkt, tx_ring, pkt));
-  pkt_cleaner.release();
+  RETURN_IF_ERROR(bfrt_sde_interface_->TxPacket(device_id_, buf));
 
   return ::util::OkStatus();
 }
 
-::util::Status BfrtPacketioManager::HandlePacketRx(bf_dev_id_t dev_id,
-                                                   bf_pkt* pkt,
-                                                   bf_pkt_rx_ring_t rx_ring) {
+::util::Status BfrtPacketioManager::HandleSdePacketRx() {
+  std::unique_ptr<ChannelReader<std::string>> reader;
   {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
+    reader = ChannelReader<std::string>::Create(packet_receive_channel_);
   }
-  ::p4::v1::PacketIn packet;
-  std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
-                     bf_pkt_get_pkt_size(pkt));
-  RETURN_IF_ERROR(ParsePacketIn(buffer, &packet));
-  {
-    absl::WriterMutexLock l(&rx_writer_lock_);
-    rx_writer_->Write(packet);
+
+  while (true) {
+    std::string buffer;
+    int code = reader->Read(&buffer, absl::InfiniteDuration()).error_code();
+    if (code == ERR_CANCELLED) break;
+    if (code == ERR_ENTRY_NOT_FOUND) {
+      LOG(ERROR) << "Read with infinite timeout failed with ENTRY_NOT_FOUND.";
+      continue;
+    }
+
+    ::p4::v1::PacketIn packet_in;
+    RETURN_IF_ERROR(ParsePacketIn(buffer, &packet_in));
+    {
+      LOG(WARNING) << "Getting rx_writer_lock_ " << &rx_writer_lock_;
+      absl::WriterMutexLock l(&rx_writer_lock_);
+      rx_writer_->Write(packet_in);
+    }
+    VLOG(1) << "Handled PacketIn: " << packet_in.ShortDebugString();
   }
-  VLOG(1) << "Handled packet in: " << packet.ShortDebugString();
 
   return ::util::OkStatus();
 }
@@ -348,22 +329,14 @@ class BitBuffer {
   return ::util::OkStatus();
 }
 
-bf_status_t BfrtPacketioManager::BfPktTxNotifyCallback(bf_dev_id_t dev_id,
-                                                       bf_pkt_tx_ring_t tx_ring,
-                                                       uint64 tx_cookie,
-                                                       uint32 status) {
-  VLOG(1) << "BfPktTxNotifyCallback:" << dev_id << ":" << tx_ring << ":"
-          << tx_cookie << ":" << status;
+void* BfrtPacketioManager::SdeRxThreadFunc(void* arg) {
+  BfrtPacketioManager* mgr = reinterpret_cast<BfrtPacketioManager*>(arg);
+  ::util::Status status = mgr->HandleSdePacketRx();
+  if (!status.ok()) {
+    LOG(ERROR) << "Non-OK exit of RX thread for SDE interface.";
+  }
 
-  bf_pkt* pkt = reinterpret_cast<bf_pkt*>(tx_cookie);
-  return bf_pkt_free(dev_id, pkt);
-}
-
-bf_status_t BfrtPacketioManager::BfPktRxNotifyCallback(
-    bf_dev_id_t dev_id, bf_pkt* pkt, void* cookie, bf_pkt_rx_ring_t rx_ring) {
-  static_cast<BfrtPacketioManager*>(cookie)->HandlePacketRx(dev_id, pkt,
-                                                            rx_ring);
-  return bf_pkt_free(dev_id, pkt);
+  return nullptr;
 }
 
 }  // namespace barefoot

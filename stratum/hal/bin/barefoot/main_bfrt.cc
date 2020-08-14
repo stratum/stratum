@@ -19,6 +19,7 @@ int switch_pci_sysfs_str_get(char* name, size_t name_size);
 #include "stratum/hal/lib/barefoot/bfrt_counter_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
 #include "stratum/hal/lib/barefoot/bfrt_pre_manager.h"
+#include "stratum/hal/lib/barefoot/bfrt_sde_wrapper.h"
 #include "stratum/hal/lib/barefoot/bfrt_switch.h"
 #include "stratum/hal/lib/barefoot/bfrt_table_manager.h"
 #include "stratum/hal/lib/common/hal.h"
@@ -88,7 +89,9 @@ namespace barefoot {
       BfrtTableManager::CreateInstance(bfrt_id_mapper.get());
   auto bfrt_action_profile_manager =
       BfrtActionProfileManager::CreateInstance(bfrt_id_mapper.get());
-  auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(device_id);
+  auto* bfrt_sde_wrapper = BfrtSdeWrapper::CreateSingleton();
+  auto bfrt_packetio_manger =
+      BfrtPacketioManager::CreateInstance(bfrt_sde_wrapper, device_id);
   auto bfrt_pre_manager = BfrtPreManager::CreateInstance(bfrt_id_mapper.get());
   auto bfrt_counter_manager =
       BfrtCounterManager::CreateInstance(bfrt_id_mapper.get());
