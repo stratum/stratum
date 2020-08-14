@@ -81,23 +81,13 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
                      [](const char c) { return c == '\x00'; });
 }
 
+// BFRT defines a "don't care" range match as all zeros for low and high,
+// contrary to the P4RT definition.
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
                      int field_width) {
-  if (range.high().size() * 8 < field_width) {
-    return false;
-  }
-  auto it = range.high().rbegin();
-  while (it != range.high().rend() && field_width > 0) {
-    int cmp = (1u << std::min(field_width, 8)) - 1;
-    int v = static_cast<uint8_t>(*it);
-    if (v != cmp) {
-      return false;
-    }
-    field_width -= 8;
-    ++it;
-  }
-
   return std::all_of(range.low().begin(), range.low().end(),
+                     [](const char c) { return c == '\x00'; }) &&
+         std::all_of(range.high().begin(), range.high().end(),
                      [](const char c) { return c == '\x00'; });
 }
 
