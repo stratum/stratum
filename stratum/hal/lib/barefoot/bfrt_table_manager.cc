@@ -38,75 +38,105 @@ namespace barefoot {
 ::util::Status BfrtTableManager::BuildTableKey(
     const ::p4::v1::TableEntry& table_entry, bfrt::BfRtTableKey* table_key,
     const bfrt::BfRtTable* table) {
-  for (const auto& mk : table_entry.match()) {
-    bf_rt_id_t field_id = mk.field_id();
-    switch (mk.field_match_type_case()) {
-      case ::p4::v1::FieldMatch::kExact: {
-        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
-        const size_t size = mk.exact().value().size();
-        const uint8* val =
-            reinterpret_cast<const uint8*>(mk.exact().value().data());
-        RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, val, size))
-            << "Could not build table key from " << mk.ShortDebugString();
-        break;
+  bool needs_priority = false;
+  std::vector<bf_rt_id_t> match_field_ids;
+  RETURN_IF_BFRT_ERROR(table->keyFieldIdListGet(&match_field_ids));
+
+  for (const auto& expected_field_id : match_field_ids) {
+    bfrt::KeyFieldType field_type;
+    RETURN_IF_BFRT_ERROR(
+        table->keyFieldTypeGet(expected_field_id, &field_type));
+    needs_priority = needs_priority ||
+                     field_type == bfrt::KeyFieldType::TERNARY ||
+                     field_type == bfrt::KeyFieldType::RANGE;
+    auto it =
+        std::find_if(table_entry.match().begin(), table_entry.match().end(),
+                     [&expected_field_id](const ::p4::v1::FieldMatch& match) {
+                       return match.field_id() == expected_field_id;
+                     });
+    if (it != table_entry.match().end()) {
+      auto mk = *it;
+      const auto field_id = mk.field_id();
+      switch (it->field_match_type_case()) {
+        case ::p4::v1::FieldMatch::kExact: {
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.exact()));
+          RETURN_IF_BFRT_ERROR(table_key->setValue(
+              field_id,
+              reinterpret_cast<const uint8*>(mk.exact().value().data()),
+              mk.exact().value().size()))
+              << "Could not build table key from " << mk.ShortDebugString();
+          break;
+        }
+        case ::p4::v1::FieldMatch::kTernary: {
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
+          RETURN_IF_BFRT_ERROR(table_key->setValueandMask(
+              field_id,
+              reinterpret_cast<const uint8*>(mk.ternary().value().data()),
+              reinterpret_cast<const uint8*>(mk.ternary().mask().data()),
+              mk.ternary().value().size()))
+              << "Could not build table key from " << mk.ShortDebugString();
+          break;
+        }
+        case ::p4::v1::FieldMatch::kLpm: {
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
+          RETURN_IF_BFRT_ERROR(table_key->setValueLpm(
+              field_id, reinterpret_cast<const uint8*>(mk.lpm().value().data()),
+              mk.lpm().prefix_len(), mk.lpm().value().size()))
+              << "Could not build table key from " << mk.ShortDebugString();
+          break;
+        }
+        case ::p4::v1::FieldMatch::kRange: {
+          RETURN_IF_BFRT_ERROR(table_key->setValueRange(
+              field_id, reinterpret_cast<const uint8*>(mk.range().low().data()),
+              reinterpret_cast<const uint8*>(mk.range().high().data()),
+              mk.range().low().size()))
+              << "Could not build table key from " << mk.ShortDebugString();
+          break;
+        }
+        case ::p4::v1::FieldMatch::kOptional:
+          CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()));
+          ABSL_FALLTHROUGH_INTENDED;
+        default:
+          RETURN_ERROR(ERR_INVALID_PARAM)
+              << "Invalid or unsupported match key: " << mk.ShortDebugString();
       }
-      case ::p4::v1::FieldMatch::kTernary: {
-        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.ternary()));
-        CHECK_RETURN_IF_FALSE(table_entry.priority())
-            << "Ternary field matches require a priority in table entry "
-            << table_entry.ShortDebugString() << ".";
-        const size_t size = mk.ternary().value().size();
-        const uint8* val =
-            reinterpret_cast<const uint8*>(mk.ternary().value().data());
-        const uint8* mask =
-            reinterpret_cast<const uint8*>(mk.ternary().mask().data());
-        RETURN_IF_BFRT_ERROR(
-            table_key->setValueandMask(field_id, val, mask, size))
-            << "Could not build table key from " << mk.ShortDebugString();
-        break;
+    } else {
+      switch (field_type) {
+        case bfrt::KeyFieldType::EXACT:
+        case bfrt::KeyFieldType::TERNARY:
+        case bfrt::KeyFieldType::LPM:
+          // Nothing to be done. Zero values implement a don't care match.
+          break;
+        case bfrt::KeyFieldType::RANGE: {
+          size_t range_bitwidth;
+          RETURN_IF_BFRT_ERROR(
+              table->keyFieldSizeGet(expected_field_id, &range_bitwidth));
+          size_t field_size = (range_bitwidth + 7) / 8;
+          RETURN_IF_BFRT_ERROR(table_key->setValueRange(
+              expected_field_id,
+              reinterpret_cast<const uint8*>(
+                  RangeDefaultLow(range_bitwidth).data()),
+              reinterpret_cast<const uint8*>(
+                  RangeDefaultHigh(range_bitwidth).data()),
+              field_size));
+          break;
+        }
+        default:
+          RETURN_ERROR(ERR_INVALID_PARAM)
+              << "Invalid field match type " << static_cast<int>(field_type)
+              << ".";
       }
-      case ::p4::v1::FieldMatch::kLpm: {
-        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.lpm()));
-        const size_t size = mk.lpm().value().size();
-        const uint8* val =
-            reinterpret_cast<const uint8*>(mk.lpm().value().data());
-        const int32 prefix_len = mk.lpm().prefix_len();
-        RETURN_IF_BFRT_ERROR(
-            table_key->setValueLpm(field_id, val, prefix_len, size))
-            << "Could not build table key from " << mk.ShortDebugString();
-        break;
-      }
-      case ::p4::v1::FieldMatch::kRange: {
-        size_t range_bitwidth;
-        RETURN_IF_BFRT_ERROR(table->keyFieldSizeGet(field_id, &range_bitwidth));
-        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.range(), range_bitwidth));
-        CHECK_RETURN_IF_FALSE(table_entry.priority())
-            << "Range field matches require a priority in table entry "
-            << table_entry.ShortDebugString() << ".";
-        const size_t size = mk.range().low().size();
-        const uint8* start =
-            reinterpret_cast<const uint8*>(mk.range().low().data());
-        const uint8* end =
-            reinterpret_cast<const uint8*>(mk.range().high().data());
-        RETURN_IF_BFRT_ERROR(
-            table_key->setValueRange(field_id, start, end, size))
-            << "Could not build table key from " << mk.ShortDebugString();
-        break;
-      }
-      case ::p4::v1::FieldMatch::kOptional:
-        CHECK_RETURN_IF_FALSE(!IsDontCareMatch(mk.optional()));
-        CHECK_RETURN_IF_FALSE(table_entry.priority())
-            << "Optional field matches require a priority in table entry "
-            << table_entry.ShortDebugString() << ".";
-        ABSL_FALLTHROUGH_INTENDED;
-      default:
-        RETURN_ERROR(ERR_INVALID_PARAM)
-            << "Invalid or unsupported match key: " << mk.ShortDebugString();
     }
   }
 
-  // Priority
-  if (table_entry.priority()) {
+  // Priority handling.
+  if (!needs_priority && table_entry.priority()) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Non-zero priority for ternary/range/optional match.";
+  } else if (needs_priority && table_entry.priority() == 0) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Zero priority for ternary/range/optional match.";
+  } else if (needs_priority) {
     bf_rt_id_t priority_field_id;
     RETURN_IF_BFRT_ERROR(
         table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id))
