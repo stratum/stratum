@@ -248,7 +248,6 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
-
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Exact& exact) { return false; }
 
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::LPM& lpm) {
@@ -260,18 +259,29 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Ternary& ternary) {
                      [](const char c) { return c == '\x00'; });
 }
 
-// BFRT defines a "don't care" range match as all zeros for low and high,
-// contrary to the P4RT definition.
+// For BFRT we explicitly insert the "don't care" range match as the
+// [minimum, maximum] value range.
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range,
                      int field_width) {
-  return std::all_of(range.low().begin(), range.low().end(),
-                     [](const char c) { return c == '\x00'; }) &&
-         std::all_of(range.high().begin(), range.high().end(),
-                     [](const char c) { return c == '\x00'; });
+  return range.low() == RangeDefaultLow(field_width) &&
+         range.high() == RangeDefaultHigh(field_width);
 }
 
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional) {
   return false;
+}
+
+std::string RangeDefaultLow(size_t bitwidth) {
+  return std::string((bitwidth + 7) / 8, '\x00');
+}
+
+std::string RangeDefaultHigh(size_t bitwidth) {
+  const size_t nbytes = (bitwidth + 7) / 8;
+  std::string high(nbytes, '\xff');
+  size_t zero_nbits = (nbytes * 8) - bitwidth;
+  char mask = 0xff >> zero_nbits;
+  high[0] &= mask;
+  return high;
 }
 
 }  // namespace barefoot
