@@ -288,10 +288,15 @@ namespace barefoot {
         << "Default action must not contain match fields.";
     CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
         << "Default action must not contain a priority field.";
-    RETURN_IF_BFRT_ERROR(
-        table->tableDefaultEntrySet(*bfrt_session, bf_dev_tgt, *table_data))
-        << "Failed to modify default table entry "
-        << table_entry.ShortDebugString() << ".";
+    if (table_entry.action().action().action_id() != 0) {
+      RETURN_IF_BFRT_ERROR(
+          table->tableDefaultEntrySet(*bfrt_session, bf_dev_tgt, *table_data))
+          << "Failed to modify default table entry "
+          << table_entry.ShortDebugString() << ".";
+    } else {
+      RETURN_IF_BFRT_ERROR(
+          table->tableDefaultEntryReset(*bfrt_session, bf_dev_tgt));
+    }
   } else {
     switch (type) {
       case ::p4::v1::Update::INSERT:
