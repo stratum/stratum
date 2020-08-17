@@ -118,6 +118,10 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Range& range, int field_width);
 // Otherwise, this behaves like an exact match.
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional);
 
+// Returns the "don't care" match values for a range type match field.
+std::string RangeDefaultLow(size_t bitwidth);
+std::string RangeDefaultHigh(size_t bitwidth);
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
