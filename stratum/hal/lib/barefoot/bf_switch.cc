@@ -229,6 +229,12 @@ BFSwitch::~BFSwitch() {}
       case DataRequest::Request::kLoopbackStatus:
         resp = bf_chassis_manager_->GetPortData(req);
         break;
+      case DataRequest::Request::kNodeInfo: {
+        auto* node_info = resp.mutable_node_info();
+        node_info->set_vendor("Barefoot");
+        node_info->set_chip_name("Generic Tofino");
+        break;
+      }
       default:
         // TODO(antonin)
         resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";

@@ -3160,6 +3160,40 @@ void SetUpComponentsComponentIntegratedCircuitStateNodeId(uint64 node_id,
       ->SetOnChangeHandler(on_change_functor);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/integrated-circuit/state/part-no
+void SetUpComponentsComponentIntegratedCircuitStatePartNo(uint64 node_id,
+                                                          TreeNode* node,
+                                                          YangParseTree* tree) {
+  auto poll_functor = [node_id, tree](const GnmiEvent& event,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_node_info();
+    request->set_node_id(node_id);
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_node_info()) return false;
+      resp = in.node_info().chip_name();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
+  auto on_change_functor = UnsupportedFunc();
+  node->SetOnPollHandler(poll_functor)
+      ->SetOnTimerHandler(poll_functor)
+      ->SetOnChangeHandler(on_change_functor);
+}
+
 }  // namespace
 
 // Path of leafs created by this method are defined 'manualy' by analysing
@@ -3587,15 +3621,18 @@ void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   TreeNode* tree_node = tree->AddNode(GetPath("debug")("nodes")(
       "node", node.name())("packet-io")("debug-string")());
   SetUpDebugNodesNodePacketIoDebugString(node.id(), tree_node, tree);
-  tree_node = tree->AddNode(GetPath("components")("component", node.name())
-      ("integrated-circuit")("config")("node-id")());
-  SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(),
-                                                        tree_node, tree);
-
-  tree_node = tree->AddNode(GetPath("components")("component", node.name())
-      ("integrated-circuit")("state")("node-id")());
-  SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(),
-                                                       tree_node, tree);
+  tree_node = tree->AddNode(GetPath("components")(
+      "component", node.name())("integrated-circuit")("config")("node-id")());
+  SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(), tree_node,
+                                                        tree);
+  tree_node = tree->AddNode(GetPath("components")(
+      "component", node.name())("integrated-circuit")("state")("node-id")());
+  SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(), tree_node,
+                                                       tree);
+  tree_node = tree->AddNode(GetPath("components")(
+      "component", node.name())("integrated-circuit")("state")("part-no")());
+  SetUpComponentsComponentIntegratedCircuitStatePartNo(node.id(), tree_node,
+                                                       tree);
 }
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
