@@ -231,7 +231,7 @@ BFSwitch::~BFSwitch() {}
         break;
       case DataRequest::Request::kNodeInfo: {
         auto* node_info = resp.mutable_node_info();
-        node_info->set_vendor("Barefoot");
+        node_info->set_vendor_name("Barefoot");
         node_info->set_chip_name("Generic Tofino");
         break;
       }

@@ -412,7 +412,7 @@ BcmSwitch::~BcmSwitch() {}
             status.Update(bcm_chip.status());
           } else {
             auto* node_info = resp.mutable_node_info();
-            node_info->set_vendor("Broadcom");
+            node_info->set_vendor_name("Broadcom");
             node_info->set_chip_name(
                 BcmChip::BcmChipType_Name(bcm_chip.ValueOrDie().type()));
           }

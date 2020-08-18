@@ -81,7 +81,7 @@ DummyChassisManager::RetrieveChassisData(const Request request) {
     case Request::kNodeInfo: {
       DataResponse resp;
       NodeInfo* node_info = resp.mutable_node_info();
-      node_info->set_vendor("dummy vendor");
+      node_info->set_vendor_name("dummy vendor");
       node_info->set_chip_name("dummy chip name");
       return resp;
     }

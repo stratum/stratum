@@ -76,4 +76,13 @@ module openconfig-platform-stratum {
       description "Stratum does not support components/component/backplane";
       deviate not-supported;
   }
+
+  augment "/oc-platform:components/oc-platform:component/oc-platform:integrated-circuit/oc-platform:state" {
+      leaf part-no {
+          type string;
+      }
+      leaf mfg-name {
+          type string;
+      }
+  }
 }
