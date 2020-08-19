@@ -55,11 +55,8 @@ stratum_cc_binary(
         "//stratum/hal/lib/barefoot:bf_pd_wrapper",
         "//stratum/hal/lib/barefoot:bf_switch",
         "//stratum/hal/lib/pi:pi_node_bf",
-        "//stratum/lib/security:auth_policy_checker",
-        "//stratum/lib/security:credentials_manager",
-        "@com_github_google_glog//:glog",
         "@local_barefoot_bin//:bfsde",
-    ],
+    ] + stratum_bf_common_deps,
 )
 
 stratum_cc_binary(
