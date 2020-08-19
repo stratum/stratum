@@ -207,7 +207,7 @@ class GnmiPublisher {
                 if (FLAGS_v >= 1) LOG(INFO) << "Configuration has changed.";
                 if (auto* event = dynamic_cast<const ConfigHasBeenPushedEvent*>(
                         &event_base)) {
-                  return parse_tree_.ProcessPushedConfig(*event);
+                  parse_tree_.ProcessPushedConfig(*event);
                 }
                 return ::util::OkStatus();
               };  // NOLINT
