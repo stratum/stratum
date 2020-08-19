@@ -3436,7 +3436,10 @@ void YangParseTreePaths::AddSubtreeInterfaceFromTrunk(
 void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
     const SingletonPort& singleton, const NodeConfigParams& node_config,
     YangParseTree* tree) {
-  const std::string& name = singleton.name();
+  const std::string& name =
+      !singleton.name().empty()
+          ? singleton.name()
+          : absl::StrFormat("%d/%d", singleton.port(), singleton.slot());
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
   TreeNode* node =
@@ -3513,7 +3516,10 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
 void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
     const OpticalNetworkInterface& optical_port, YangParseTree* tree) {
-  const std::string& name = optical_port.name();
+  const std::string& name =
+      !optical_port.name().empty()
+          ? optical_port.name()
+          : absl::StrFormat("netif-%d", optical_port.network_interface());
   int32 module = optical_port.module();
   int32 network_interface = optical_port.network_interface();
   TreeNode* node{nullptr};
@@ -3643,35 +3649,35 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   // No need to lock the mutex - it is locked by method calling this one.
-  std::string node_name = node.name();
-  if (node_name.empty()) {
-    node_name = absl::StrFormat("node-%d", node.id());
-  }
-  TreeNode* tree_node = tree->AddNode(GetPath("debug")("nodes")(
-      "node", node_name)("packet-io")("debug-string")());
+  const std::string& name = !node.name().empty()
+                                ? node.name()
+                                : absl::StrFormat("node-%d", node.id());
+  TreeNode* tree_node = tree->AddNode(
+      GetPath("debug")("nodes")("node", name)("packet-io")("debug-string")());
   SetUpDebugNodesNodePacketIoDebugString(node.id(), tree_node, tree);
   tree_node = tree->AddNode(GetPath("components")(
-      "component", node_name)("integrated-circuit")("config")("node-id")());
+      "component", name)("integrated-circuit")("config")("node-id")());
   SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(), tree_node,
                                                         tree);
   tree_node = tree->AddNode(GetPath("components")(
-      "component", node_name)("integrated-circuit")("state")("node-id")());
+      "component", name)("integrated-circuit")("state")("node-id")());
   SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(), tree_node,
                                                        tree);
   tree_node = tree->AddNode(
-      GetPath("components")("component", node_name)("state")("type")());
+      GetPath("components")("component", name)("state")("type")());
   SetUpComponentsComponentStateType("INTEGRATED_CIRCUIT", tree_node);
   tree_node = tree->AddNode(
-      GetPath("components")("component", node_name)("state")("part-no")());
+      GetPath("components")("component", name)("state")("part-no")());
   SetUpComponentsComponentStatePartNo(node.id(), tree_node, tree);
   tree_node = tree->AddNode(
-      GetPath("components")("component", node_name)("state")("mfg-name")());
+      GetPath("components")("component", name)("state")("mfg-name")());
   SetUpComponentsComponentStateMfgName(node.id(), tree_node, tree);
 }
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
                                            YangParseTree* tree) {
-  const std::string& name = chassis.name();
+  const std::string& name =
+      !chassis.name().empty() ? chassis.name() : "chassis";
   TreeNode* node = tree->AddNode(GetPath("components")(
       "component", name)("chassis")("alarms")("memory-error")());
   SetUpComponentsComponentChassisAlarmsMemoryError(node, tree);
