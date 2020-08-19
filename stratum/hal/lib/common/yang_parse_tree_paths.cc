@@ -3439,7 +3439,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
   const std::string& name =
       !singleton.name().empty()
           ? singleton.name()
-          : absl::StrFormat("%d/%d", singleton.port(), singleton.slot());
+          : absl::StrFormat("%d/%d/%d", singleton.port(), singleton.slot(),
+                            singleton.channel());
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
   TreeNode* node =
