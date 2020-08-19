@@ -270,34 +270,17 @@ namespace barefoot {
     RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
   }
 
-  std::unique_ptr<bfrt::BfRtTableKey> table_key;
-  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
-  RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
-
-  std::unique_ptr<bfrt::BfRtTableData> table_data;
-  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
-  if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
-    RETURN_IF_ERROR(BuildTableData(table_entry, table, table_data.get()));
-  }
-
   auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
-  if (table_entry.is_default_action()) {
-    CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
-        << "The table default entry can only be modified.";
-    CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
-        << "Default action must not contain match fields.";
-    CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
-        << "Default action must not contain a priority field.";
-    if (table_entry.action().action().action_id() != 0) {
-      RETURN_IF_BFRT_ERROR(
-          table->tableDefaultEntrySet(*bfrt_session, bf_dev_tgt, *table_data))
-          << "Failed to modify default table entry "
-          << table_entry.ShortDebugString() << ".";
-    } else {
-      RETURN_IF_BFRT_ERROR(
-          table->tableDefaultEntryReset(*bfrt_session, bf_dev_tgt));
+  if (!table_entry.is_default_action()) {
+    std::unique_ptr<bfrt::BfRtTableKey> table_key;
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+    RETURN_IF_ERROR(BuildTableKey(table_entry, table_key.get(), table));
+
+    std::unique_ptr<bfrt::BfRtTableData> table_data;
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+    if (type == ::p4::v1::Update::INSERT || type == ::p4::v1::Update::MODIFY) {
+      RETURN_IF_ERROR(BuildTableData(table_entry, table, table_data.get()));
     }
-  } else {
     switch (type) {
       case ::p4::v1::Update::INSERT:
         RETURN_IF_BFRT_ERROR(table->tableEntryAdd(*bfrt_session, bf_dev_tgt,
@@ -321,6 +304,26 @@ namespace barefoot {
         RETURN_ERROR(ERR_INTERNAL)
             << "Unsupported update type: " << type << " in table entry "
             << table_entry.ShortDebugString() << ".";
+    }
+  } else {
+    CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+        << "The table default entry can only be modified.";
+    CHECK_RETURN_IF_FALSE(table_entry.match_size() == 0)
+        << "Default action must not contain match fields.";
+    CHECK_RETURN_IF_FALSE(table_entry.priority() == 0)
+        << "Default action must not contain a priority field.";
+
+    if (table_entry.has_action()) {
+      std::unique_ptr<bfrt::BfRtTableData> table_data;
+      RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+      RETURN_IF_ERROR(BuildTableData(table_entry, table, table_data.get()));
+      RETURN_IF_BFRT_ERROR(
+          table->tableDefaultEntrySet(*bfrt_session, bf_dev_tgt, *table_data))
+          << "Failed to modify default table entry "
+          << table_entry.ShortDebugString() << ".";
+    } else {
+      RETURN_IF_BFRT_ERROR(
+          table->tableDefaultEntryReset(*bfrt_session, bf_dev_tgt));
     }
   }
 
