@@ -1133,6 +1133,7 @@ message Alarm {
   bool status = 4;          // required.
 }
 
+// Wrapper around the optional node info.
 message NodeInfo {
   string vendor_name = 1;
   string chip_name = 2;
