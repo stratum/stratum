@@ -401,6 +401,24 @@ BcmSwitch::~BcmSwitch() {}
         resp.mutable_node_packetio_debug_info()->set_debug_string(
             "A (sample) node debug string.");
         break;
+      case DataRequest::Request::kNodeInfo: {
+        auto unit =
+            bcm_chassis_manager_->GetUnitFromNodeId(req.node_info().node_id());
+        if (!unit.ok()) {
+          status.Update(unit.status());
+        } else {
+          auto bcm_chip = bcm_chassis_manager_->GetBcmChip(unit.ValueOrDie());
+          if (!bcm_chip.ok()) {
+            status.Update(bcm_chip.status());
+          } else {
+            auto* node_info = resp.mutable_node_info();
+            node_info->set_vendor_name("Broadcom");
+            node_info->set_chip_name(
+                BcmChip::BcmChipType_Name(bcm_chip.ValueOrDie().type()));
+          }
+        }
+        break;
+      }
       case DataRequest::Request::kOpticalTransceiverInfo:
         // Retrieve current optical transceiver state from phal.
         status.Update(phal_interface_->GetOpticalTransceiverInfo(

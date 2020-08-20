@@ -455,7 +455,7 @@ class YangParseTree {
       LOCKS_EXCLUDED(root_access_lock_);
 
   // An action that modifies the tree to reflect new configuration.
-  ::util::Status ProcessPushedConfig(const ConfigHasBeenPushedEvent& change)
+  void ProcessPushedConfig(const ConfigHasBeenPushedEvent& change)
       LOCKS_EXCLUDED(root_access_lock_);
 
  protected:

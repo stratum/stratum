@@ -6,7 +6,6 @@
 
 #include <list>
 #include <string>
-#include <unordered_set>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
@@ -132,7 +131,7 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
   }
 }
 
-::util::Status YangParseTree::ProcessPushedConfig(
+void YangParseTree::ProcessPushedConfig(
     const ConfigHasBeenPushedEvent& change) {
   absl::WriterMutexLock r(&root_access_lock_);
 
@@ -147,40 +146,23 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
 
   // Translation from port ID to node ID.
   absl::flat_hash_map<uint32, uint64> port_id_to_node_id;
-  std::unordered_set<std::string> singleton_names;
   for (const auto& singleton : change.new_config_.singleton_ports()) {
-    if (singleton_names.count(singleton.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Duplicate singleton port name: " << singleton.name();
-    }
     const NodeConfigParams& node_config =
         node_id_to_node[singleton.node()]
             ? node_id_to_node[singleton.node()]->config_params()
             : empty_node_config;
     AddSubtreeInterfaceFromSingleton(singleton, node_config);
     port_id_to_node_id[singleton.id()] = singleton.node();
-    singleton_names.insert(singleton.name());
   }
 
-  std::unordered_set<std::string> optical_names;
   for (const auto& optical : change.new_config_.optical_network_interfaces()) {
-    if (optical_names.count(optical.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM) << "Duplicate optical port name: "
-          << optical.name();
-    }
     AddSubtreeInterfaceFromOptical(optical);
-    optical_names.insert(optical.name());
   }
 
-  std::unordered_set<std::string> trunk_names;
   for (const auto& trunk : change.new_config_.trunk_ports()) {
     // Find out on which node the trunk is created.
     // TODO(b/70300190): Once TrunkPort message in common.proto is extended to
     // include node_id remove 3 following lines.
-    if (trunk_names.count(trunk.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Duplicate trunk name: " << trunk.name();
-    }
     constexpr uint64 kNodeIdUnknown = 0xFFFF;
     uint64 node_id = trunk.members_size() ? port_id_to_node_id[trunk.members(0)]
                                           : kNodeIdUnknown;
@@ -189,21 +171,13 @@ void YangParseTree::SendNotification(const GnmiEventPtr& event) {
                                   : empty_node_config;
     AddSubtreeInterfaceFromTrunk(trunk.name(), node_id, trunk.id(),
                                  node_config);
-    trunk_names.insert(trunk.name());
   }
   // Add all chassis-related gNMI paths.
   AddSubtreeChassis(change.new_config_.chassis());
   // Add all node-related gNMI paths.
-  std::unordered_set<std::string> node_names;
   for (const auto& node : change.new_config_.nodes()) {
-    if (node_names.count(node.name())) {
-      return MAKE_ERROR(ERR_INVALID_PARAM)
-             << "Duplicate node name: " << node.name();
-    }
     AddSubtreeNode(node);
-    node_names.insert(node.name());
   }
-  return ::util::OkStatus();
 }
 
 bool YangParseTree::IsWildcard(const std::string& name) const {

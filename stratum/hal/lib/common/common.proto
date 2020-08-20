@@ -1133,6 +1133,12 @@ message Alarm {
   bool status = 4;          // required.
 }
 
+// Wrapper around the optional node info.
+message NodeInfo {
+  string vendor_name = 1;
+  string chip_name = 2;
+}
+
 // Wrapper around an optional debug info for a node/chip.
 message NodeDebugInfo {
   string debug_string = 1;
@@ -1214,6 +1220,7 @@ message DataRequest {
       Port fec_status = 18;
       OpticalNetworkInterface optical_transceiver_info = 19;
       Port loopback_status = 20;
+      Node node_info = 21;
     }
   }
   repeated Request requests = 1;
@@ -1245,6 +1252,7 @@ message DataResponse {
     FecStatus fec_status = 18;
     OpticalTransceiverInfo optical_transceiver_info = 19;
     LoopbackStatus loopback_status = 20;
+    NodeInfo node_info = 21;
   }
 }
 

@@ -77,7 +77,17 @@ DummyChassisManager* DummyChassisManager::GetSingleton() {
 ::util::StatusOr<DataResponse>
 DummyChassisManager::RetrieveChassisData(const Request request) {
   // TODO(Yi Tseng): Implement this method.
-  return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+  switch (request.request_case()) {
+    case Request::kNodeInfo: {
+      DataResponse resp;
+      NodeInfo* node_info = resp.mutable_node_info();
+      node_info->set_vendor_name("dummy vendor");
+      node_info->set_chip_name("dummy chip name");
+      return resp;
+    }
+    default:
+      return MAKE_ERROR(ERR_INTERNAL) << "Not supported yet!";
+  }
 }
 
 }  // namespace dummy_switch

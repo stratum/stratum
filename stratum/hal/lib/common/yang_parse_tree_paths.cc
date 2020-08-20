@@ -2950,8 +2950,7 @@ void SetUpComponentsComponentName(const std::string& name, TreeNode* node) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // /components/component[name=<name>]/state/type
-void SetUpComponentsComponentStateType(const std::string& name,
-                                       const std::string& type,
+void SetUpComponentsComponentStateType(const std::string& type,
                                        TreeNode* node) {
   auto poll_functor = [type](const GnmiEvent& /*event*/,
                              const ::gnmi::Path& path,
@@ -2959,6 +2958,66 @@ void SetUpComponentsComponentStateType(const std::string& name,
     return SendResponse(GetResponse(path, type), stream);
   };
 
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/state/part-no
+void SetUpComponentsComponentStatePartNo(uint64 node_id, TreeNode* node,
+                                         YangParseTree* tree) {
+  auto poll_functor = [node_id, tree](const GnmiEvent& event,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_node_info();
+    request->set_node_id(node_id);
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_node_info()) return false;
+      resp = in.node_info().chip_name();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
+  node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// /components/component[name=<name>]/state/mfg-name
+void SetUpComponentsComponentStateMfgName(uint64 node_id, TreeNode* node,
+                                          YangParseTree* tree) {
+  auto poll_functor = [node_id, tree](const GnmiEvent& event,
+                                      const ::gnmi::Path& path,
+                                      GnmiSubscribeStream* stream) {
+    // Create a data retrieval request.
+    DataRequest req;
+    auto* request = req.add_requests()->mutable_node_info();
+    request->set_node_id(node_id);
+    // In-place definition of method retrieving data from generic response
+    // and saving into 'resp' local variable.
+    std::string resp{};
+    DataResponseWriter writer([&resp](const DataResponse& in) {
+      if (!in.has_node_info()) return false;
+      resp = in.node_info().vendor_name();
+      return true;
+    });
+    // Query the switch. The returned status is ignored as there is no way to
+    // notify the controller that something went wrong. The error is logged when
+    // it is created.
+    tree->GetSwitchInterface()
+        ->RetrieveValue(node_id, req, &writer, /* details= */ nullptr)
+        .IgnoreError();
+    return SendResponse(GetResponse(path, resp), stream);
+  };
   node->SetOnPollHandler(poll_functor)->SetOnTimerHandler(poll_functor);
 }
 
@@ -3377,7 +3436,11 @@ void YangParseTreePaths::AddSubtreeInterfaceFromTrunk(
 void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
     const SingletonPort& singleton, const NodeConfigParams& node_config,
     YangParseTree* tree) {
-  const std::string& name = singleton.name();
+  const std::string& name =
+      !singleton.name().empty()
+          ? singleton.name()
+          : absl::StrFormat("%d/%d/%d", singleton.slot(), singleton.port(),
+                            singleton.channel());
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
   TreeNode* node =
@@ -3454,7 +3517,10 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 
 void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
     const OpticalNetworkInterface& optical_port, YangParseTree* tree) {
-  const std::string& name = optical_port.name();
+  const std::string& name =
+      !optical_port.name().empty()
+          ? optical_port.name()
+          : absl::StrFormat("netif-%d", optical_port.network_interface());
   int32 module = optical_port.module();
   int32 network_interface = optical_port.network_interface();
   TreeNode* node{nullptr};
@@ -3579,28 +3645,40 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
   node = tree->AddNode(
       GetPath("components")("component", name)("state")("type")());
-  SetUpComponentsComponentStateType(name, "OPTICAL_CHANNEL", node);
+  SetUpComponentsComponentStateType("OPTICAL_CHANNEL", node);
 }
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   // No need to lock the mutex - it is locked by method calling this one.
-  TreeNode* tree_node = tree->AddNode(GetPath("debug")("nodes")(
-      "node", node.name())("packet-io")("debug-string")());
+  const std::string& name = !node.name().empty()
+                                ? node.name()
+                                : absl::StrFormat("node-%d", node.id());
+  TreeNode* tree_node = tree->AddNode(
+      GetPath("debug")("nodes")("node", name)("packet-io")("debug-string")());
   SetUpDebugNodesNodePacketIoDebugString(node.id(), tree_node, tree);
-  tree_node = tree->AddNode(GetPath("components")("component", node.name())
-      ("integrated-circuit")("config")("node-id")());
-  SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(),
-                                                        tree_node, tree);
-
-  tree_node = tree->AddNode(GetPath("components")("component", node.name())
-      ("integrated-circuit")("state")("node-id")());
-  SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(),
-                                                       tree_node, tree);
+  tree_node = tree->AddNode(GetPath("components")(
+      "component", name)("integrated-circuit")("config")("node-id")());
+  SetUpComponentsComponentIntegratedCircuitConfigNodeId(node.id(), tree_node,
+                                                        tree);
+  tree_node = tree->AddNode(GetPath("components")(
+      "component", name)("integrated-circuit")("state")("node-id")());
+  SetUpComponentsComponentIntegratedCircuitStateNodeId(node.id(), tree_node,
+                                                       tree);
+  tree_node = tree->AddNode(
+      GetPath("components")("component", name)("state")("type")());
+  SetUpComponentsComponentStateType("INTEGRATED_CIRCUIT", tree_node);
+  tree_node = tree->AddNode(
+      GetPath("components")("component", name)("state")("part-no")());
+  SetUpComponentsComponentStatePartNo(node.id(), tree_node, tree);
+  tree_node = tree->AddNode(
+      GetPath("components")("component", name)("state")("mfg-name")());
+  SetUpComponentsComponentStateMfgName(node.id(), tree_node, tree);
 }
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
                                            YangParseTree* tree) {
-  const std::string& name = chassis.name();
+  const std::string& name =
+      !chassis.name().empty() ? chassis.name() : "chassis";
   TreeNode* node = tree->AddNode(GetPath("components")(
       "component", name)("chassis")("alarms")("memory-error")());
   SetUpComponentsComponentChassisAlarmsMemoryError(node, tree);
