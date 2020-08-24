@@ -217,7 +217,8 @@ BFSwitch::~BFSwitch() {}
                                        std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
-    ::util::StatusOr<DataResponse> resp;
+    DataResponse resp;
+    ::util::Status status = ::util::OkStatus();
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
@@ -226,9 +227,15 @@ BFSwitch::~BFSwitch() {}
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
-      case DataRequest::Request::kLoopbackStatus:
-        resp = bf_chassis_manager_->GetPortData(req);
+      case DataRequest::Request::kLoopbackStatus: {
+        auto port_data = bf_chassis_manager_->GetPortData(req);
+        if (!port_data.ok()) {
+          status.Update(port_data.status());
+        } else {
+          resp = port_data.ConsumeValueOrDie();
+        }
         break;
+      }
       case DataRequest::Request::kNodeInfo: {
         auto* node_info = resp.mutable_node_info();
         node_info->set_vendor_name("Barefoot");
@@ -236,15 +243,18 @@ BFSwitch::~BFSwitch() {}
         break;
       }
       default:
-        // TODO(antonin)
-        resp = MAKE_ERROR(ERR_INTERNAL) << "Not supported yet";
+        status =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "Request type "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
-    if (resp.ok()) {
+    if (status.ok()) {
       // If everything is OK send it to the caller.
-      writer->Write(resp.ValueOrDie());
+      writer->Write(resp);
     }
-    if (details) details->push_back(resp.status());
+    if (details) details->push_back(status);
   }
   return ::util::OkStatus();
 }
