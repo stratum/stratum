@@ -45,4 +45,5 @@ docker run -it --rm --privileged \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
+    -log_dir=/dev/null \
     $@

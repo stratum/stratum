@@ -28,4 +28,5 @@ docker run -it --rm --privileged --cap-add ALL --shm-size=512m --network host \
     $CHASSIS_CONFIG_MOUNT \
     -v $LOG_DIR:/var/log/stratum \
     $DOCKER_IMAGE:$DOCKER_IMAGE_TAG \
+    -log_dir=/dev/null \
     $@
