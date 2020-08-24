@@ -70,6 +70,9 @@ class BFChassisManager {
   ::util::StatusOr<std::map<uint64, int>> GetNodeIdToUnitMap() const
       SHARED_LOCKS_REQUIRED(chassis_lock);
 
+  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
+      SHARED_LOCKS_REQUIRED(chassis_lock);
+
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
       PhalInterface* phal_interface, BFPalInterface* bf_pal_interface);
@@ -110,9 +113,6 @@ class BFChassisManager {
 
   ::util::Status RegisterEventWriters() EXCLUSIVE_LOCKS_REQUIRED(chassis_lock);
   ::util::Status UnregisterEventWriters() LOCKS_EXCLUDED(chassis_lock);
-
-  ::util::StatusOr<int> GetUnitFromNodeId(uint64 node_id) const
-      SHARED_LOCKS_REQUIRED(chassis_lock);
 
   // Cleans up the internal state. Resets all the internal port maps and
   // deletes the pointers.
