@@ -5,6 +5,7 @@ chassis {
 }
 nodes {
   id: 1
+  name: "node-1"
   slot: 1
   index: 1
 }

@@ -1,11 +1,11 @@
 description: "Stratum device device:s204"
 chassis {
   platform: PLT_GENERIC_TRIDENT2
-  name: "asdf"
+  name: "Edgecore AS6712 32X"
 }
 nodes {
   id: 1
-  name: "asdf leaf 2"
+  name: "node-1"
   slot: 1
   index: 1
   config_params {
