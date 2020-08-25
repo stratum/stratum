@@ -5,6 +5,7 @@
 
 #include <utility>
 
+#include "lld/lld_sku.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/public/lib/error.h"
 
@@ -282,6 +283,54 @@ std::string RangeDefaultHigh(size_t bitwidth) {
   char mask = 0xff >> zero_nbits;
   high[0] &= mask;
   return high;
+}
+
+std::string TofinoDevTypeToString(int dev_type) {
+  switch (dev_type) {
+    case BF_DEV_BFNT10064Q:
+      return "TOFINO_64Q";
+    case BF_DEV_BFNT10032Q:
+      return "TOFINO_32Q";
+    case BF_DEV_BFNT10032D:
+      return "TOFINO_32D";
+    case BF_DEV_BFNT10024D:
+      return "TOFINO_24D";
+    case BF_DEV_BFNT10018Q:
+      return "TOFINO_18Q";
+    case BF_DEV_BFNT10018D:
+      return "TOFINO_18D";
+    case BF_DEV_BFNT10017D:
+      return "TOFINO_17D";
+    case BF_DEV_BFNT20128Q:
+      return "TOFINO2_128Q";
+    case BF_DEV_BFNT20096T:
+      return "TOFINO2_96T";
+    case BF_DEV_BFNT20080T:
+      return "TOFINO2_80T";
+    case BF_DEV_BFNT20064Q:
+      return "TOFINO2_64Q";
+    case BF_DEV_BFNT20064D:
+      return "TOFINO2_64D";
+    case BF_DEV_BFNT20032D:
+      return "TOFINO2_32D";
+    case BF_DEV_BFNT20032S:
+      return "TOFINO2_32S";
+    case BF_DEV_BFNT20048D:
+      return "TOFINO2_48D";
+    case BF_DEV_BFNT20036D:
+      return "TOFINO2_36D";
+    case BF_DEV_BFNT20032E:
+      return "TOFINO2_32E";
+    case BF_DEV_BFNT20064E:
+      return "TOFINO2_64E";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+std::string GetBfChipType(bf_dev_id_t dev_id) {
+  bf_dev_type_t dev_type = lld_sku_get_dev_type(dev_id);
+  return TofinoDevTypeToString(dev_type);
 }
 
 }  // namespace barefoot
