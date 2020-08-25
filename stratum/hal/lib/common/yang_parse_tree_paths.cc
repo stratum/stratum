@@ -3449,8 +3449,11 @@ void YangParseTreePaths::AddSubtreeInterfaceFromTrunk(
 void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
     const SingletonPort& singleton, const NodeConfigParams& node_config,
     YangParseTree* tree) {
-  const std::string& name = absl::StrFormat(
-      "%d/%d/%d", singleton.slot(), singleton.port(), singleton.channel());
+  const std::string& name =
+      singleton.name().empty()
+          ? absl::StrFormat("%d/%d/%d", singleton.slot(), singleton.port(),
+                            singleton.channel())
+          : singleton.name();
   uint64 node_id = singleton.node();
   uint32 port_id = singleton.id();
   TreeNode* node =
@@ -3532,7 +3535,9 @@ void YangParseTreePaths::AddSubtreeInterfaceFromSingleton(
 void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
     const OpticalNetworkInterface& optical_port, YangParseTree* tree) {
   const std::string& name =
-      absl::StrFormat("netif-%d", optical_port.network_interface());
+      optical_port.name().empty()
+          ? absl::StrFormat("netif-%d", optical_port.network_interface())
+          : optical_port.name();
   int32 module = optical_port.module();
   int32 network_interface = optical_port.network_interface();
   TreeNode* node{nullptr};
@@ -3666,7 +3671,8 @@ void YangParseTreePaths::AddSubtreeInterfaceFromOptical(
 
 void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
   // No need to lock the mutex - it is locked by method calling this one.
-  const std::string& name = absl::StrFormat("node-%d", node.id());
+  const std::string& name =
+      node.name().empty() ? absl::StrFormat("node-%d", node.id()) : node.name();
   TreeNode* tree_node = tree->AddNode(
       GetPath("debug")("nodes")("node", name)("packet-io")("debug-string")());
   SetUpDebugNodesNodePacketIoDebugString(node.id(), tree_node, tree);
@@ -3694,7 +3700,7 @@ void YangParseTreePaths::AddSubtreeNode(const Node& node, YangParseTree* tree) {
 
 void YangParseTreePaths::AddSubtreeChassis(const Chassis& chassis,
                                            YangParseTree* tree) {
-  const std::string& name = "chassis";
+  const std::string& name = chassis.name().empty() ? "chassis" : chassis.name();
   TreeNode* node = tree->AddNode(GetPath("components")(
       "component", name)("chassis")("alarms")("memory-error")());
   SetUpComponentsComponentChassisAlarmsMemoryError(node, tree);
