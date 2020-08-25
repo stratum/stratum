@@ -285,7 +285,7 @@ message PortConfigParams {
 message Chassis {
   // The chassis platforms. Required for any platform-specific code.
   Platform platform = 1;  // required
-  // An arbitrary, but unique name for the chassis. WILL NOT BE PARSED.
+  // An optional arbitrary name for the chassis. WILL NOT BE PARSED.
   // Example: ju1u1t1.cbf97.net.google.com.
   string name = 2;
   // Parameters configured for the entire chassis when config is pushed to the
@@ -299,7 +299,7 @@ message Node {
   // The unique ID of the switching node on the chassis as used by the
   // controller.
   uint64 id = 1;  // required
-  // An arbitrary, but unique name for the switching node. WILL NOT BE PARSED.
+  // An optional arbitrary name for the switching node. WILL NOT BE PARSED.
   // Example: jka1switch.prod.google.com.
   string name = 2;
   // The 1-base index of the slot (aka linecard) which this node belongs.
@@ -334,7 +334,7 @@ message SingletonPort {
   // using the same integer ID for a singleton port and a trunk port is not
   // allowed.
   uint32 id = 1;  // required
-  // An arbitrary, but unique name for the singleton port. WILL NOT BE
+  // An optional arbitrary name for the singleton port. WILL NOT BE
   // PARSED. Example: "ju1u1.xyz99.net.google.com:ce-1/32". Used only for
   // logging purposes.
   string name = 2;
@@ -362,7 +362,7 @@ message SingletonPort {
 message OpticalNetworkInterface {
   // The unique optical network interface ID.
   uint32 id = 1;
-  // An arbitrary, but unique name for the optical port. WILL NOT BE PARSED.
+  // An optional arbitrary name for the optical port. WILL NOT BE PARSED.
   string name = 2;
   // The 1-based module index of this port.
   int32 module = 3;
@@ -395,7 +395,7 @@ message TrunkPort {
   // using the same integer ID for a singleton port and a trunk port is not
   // allowed.
   uint32 id = 1;  // required
-  // An arbitrary, but unique name for the trunk port. WILL NOT BE PARSED.
+  // An optional arbitrary name for the trunk port. WILL NOT BE PARSED.
   // Example: trk-df101s1i1.cbf96-2.
   string name = 2;
   // The id of the corresponding node that the trunk belongs to.
@@ -423,7 +423,7 @@ message PortGroup {
   }
   // The unique ID of the port group used for flow programming.
   uint32 id = 1;
-  // An arbitrary, but unique name for the port group. WILL NOT BE PARSED.
+  // An optional arbitrary name for the port group. WILL NOT BE PARSED.
   string name = 2;
   // The port group members.
   repeated PortGroupMember members = 3;
