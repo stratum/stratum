@@ -2,20 +2,14 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <utility>
+#include <string>
+
 #include "stratum/hal/lib/common/config_monitoring_service.h"
 
-#include <string>
-#include <utility>
-
-#include "absl/container/flat_hash_set.h"
-#include "absl/memory/memory.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
 #include "gflags/gflags.h"
 #include "google/protobuf/any.pb.h"
 #include "openconfig/openconfig.pb.h"
-#include "stratum/glue/gtl/map_util.h"
-#include "stratum/glue/gtl/stl_util.h"
 #include "stratum/glue/logging.h"
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/common/gnmi_publisher.h"
@@ -23,6 +17,10 @@
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
+#include "absl/memory/memory.h"
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
+#include "stratum/glue/gtl/map_util.h"
 
 DEFINE_string(chassis_config_file, "",
               "The latest verified ChassisConfig proto pushed to the switch. "
@@ -113,7 +111,6 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 ::util::Status ConfigMonitoringService::PushChassisConfig(
     bool warmboot, std::unique_ptr<ChassisConfig> config) {
   absl::WriterMutexLock l(&config_lock_);
-  RETURN_IF_ERROR(VerifyChassisConfig(*config));
   // Push the config to hardware only if it is a coltboot setup.
   if (!warmboot) {
     ::util::Status status = switch_interface_->PushChassisConfig(*config);
@@ -130,60 +127,6 @@ ConfigMonitoringService::~ConfigMonitoringService() {
   // Notify the gNMI GnmiPublisher that the config has changed.
   RETURN_IF_ERROR(gnmi_publisher_.HandleChange(
       ConfigHasBeenPushedEvent(*running_chassis_config_)));
-
-  return ::util::OkStatus();
-}
-
-namespace {
-template <typename T>
-bool AreUniqueNames(const T& values) {
-  absl::flat_hash_set<std::string> unique_names;
-  for (const auto& e : values) {
-    if (!gtl::InsertIfNotPresent(&unique_names, e.name())) {
-      return false;
-    }
-  }
-  return true;
-}
-}  // namespace
-
-::util::Status ConfigMonitoringService::VerifyChassisConfig(
-    const ChassisConfig& config) {
-  // Validate the names of the components.
-  if (config.has_chassis()) {
-    CHECK_RETURN_IF_FALSE(!config.chassis().name().empty())
-        << "Chassis name cannot be empty.";
-  }
-  for (const auto& node : config.nodes()) {
-    CHECK_RETURN_IF_FALSE(!node.name().empty()) << "Node name cannot be empty.";
-  }
-  for (const auto& singleton_port : config.singleton_ports()) {
-    CHECK_RETURN_IF_FALSE(!singleton_port.name().empty())
-        << "SingletonPort name cannot be empty.";
-  }
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.singleton_ports()));
-  CHECK_RETURN_IF_FALSE(
-      gtl::STLIsUnique(config.singleton_ports(),
-                       [](const SingletonPort& a, const SingletonPort& b) {
-                         return a.name() == b.name();
-                       }));
-
-  for (const auto& trunk_port : config.trunk_ports()) {
-    CHECK_RETURN_IF_FALSE(!trunk_port.name().empty())
-        << "TrunkPort name cannot be empty.";
-  }
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.trunk_ports()));
-  for (const auto& port_group : config.port_groups()) {
-    CHECK_RETURN_IF_FALSE(!port_group.name().empty())
-        << "PortGroup name cannot be empty.";
-  }
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.port_groups()));
-  for (const auto& optical_network_interface :
-       config.optical_network_interfaces()) {
-    CHECK_RETURN_IF_FALSE(!optical_network_interface.name().empty())
-        << "OpticalNetworkInterface name cannot be empty.";
-  }
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.optical_network_interfaces()));
 
   return ::util::OkStatus();
 }
@@ -264,12 +207,7 @@ bool AreUniqueNames(const T& values) {
 
   if (config.HasBeenChanged()) {
     // ChassisConfig has changed, so, we need to push it now!
-    ::util::Status status = VerifyChassisConfig(*config);
-    if (!status.ok()) {
-      return ::grpc::Status(ToGrpcCode(status.CanonicalCode()),
-                            status.error_message());
-    }
-    status = switch_interface_->PushChassisConfig(*config);
+    ::util::Status status = switch_interface_->PushChassisConfig(*config);
     // If the config push was successful or reported reboot required, save the
     // config on the switch. Any other config push error is considered
     // blocking.

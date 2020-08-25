@@ -19,7 +19,6 @@ limitations under the License.
 #define STRATUM_GLUE_GTL_STL_UTIL_H_
 
 #include <stddef.h>
-
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -113,26 +112,6 @@ template <typename T>
 inline void STLSortAndRemoveDuplicates(T* v) {
   std::sort(v->begin(), v->end());
   v->erase(std::unique(v->begin(), v->end()), v->end());
-}
-
-// Checks whether a sequence container holds only unique elements.
-template <typename T, typename BinaryPredicate>
-inline bool STLIsUnique(const T& v, BinaryPredicate p) {
-  if (v.empty()) return true;
-  auto first = v.begin();
-  auto last = v.end();
-  while (first != last) {
-    auto cmp = first + 1;
-    while (cmp != last) {
-      if (p(*first, *cmp)) {
-        return false;
-      }
-      ++cmp;
-    }
-    ++first;
-  }
-
-  return true;
 }
 
 }  // namespace gtl
