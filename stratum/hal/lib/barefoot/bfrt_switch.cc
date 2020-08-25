@@ -15,6 +15,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
 #include "stratum/hal/lib/barefoot/bfrt_node.h"
+#include "stratum/hal/lib/barefoot/utils.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
@@ -191,7 +192,8 @@ BfrtSwitch::~BfrtSwitch() {}
                                          std::vector<::util::Status>* details) {
   absl::ReaderMutexLock l(&chassis_lock);
   for (const auto& req : request.requests()) {
-    ::util::StatusOr<DataResponse> resp;
+    DataResponse resp;
+    ::util::Status status = ::util::OkStatus();
     switch (req.request_case()) {
       case DataRequest::Request::kOperStatus:
       case DataRequest::Request::kAdminStatus:
@@ -200,23 +202,40 @@ BfrtSwitch::~BfrtSwitch() {}
       case DataRequest::Request::kPortCounters:
       case DataRequest::Request::kAutonegStatus:
       case DataRequest::Request::kFrontPanelPortInfo:
-      case DataRequest::Request::kLoopbackStatus:
-        resp = bf_chassis_manager_->GetPortData(req);
+      case DataRequest::Request::kLoopbackStatus: {
+        auto port_data = bf_chassis_manager_->GetPortData(req);
+        if (!port_data.ok()) {
+          status.Update(port_data.status());
+        } else {
+          resp = port_data.ConsumeValueOrDie();
+        }
         break;
+      }
+      case DataRequest::Request::kNodeInfo: {
+        auto device_id =
+            bf_chassis_manager_->GetUnitFromNodeId(req.node_info().node_id());
+        if (!device_id.ok()) {
+          status.Update(device_id.status());
+        } else {
+          auto* node_info = resp.mutable_node_info();
+          node_info->set_vendor_name("Barefoot");
+          node_info->set_chip_name(GetBfChipType(device_id.ValueOrDie()));
+        }
+        break;
+      }
       default:
-        resp = MAKE_ERROR(ERR_UNIMPLEMENTED)
-               << "Request type "
-               << DataRequest::Request::descriptor()
-                      ->FindFieldByNumber(req.request_case())
-                      ->name()
-               << " is not supported yet: " << req.ShortDebugString() << ".";
+        status =
+            MAKE_ERROR(ERR_UNIMPLEMENTED)
+            << "Request type "
+            << req.descriptor()->FindFieldByNumber(req.request_case())->name()
+            << " is not supported yet: " << req.ShortDebugString() << ".";
         break;
     }
-    if (resp.ok()) {
+    if (status.ok()) {
       // If everything is OK send it to the caller.
-      writer->Write(resp.ValueOrDie());
+      writer->Write(resp);
     }
-    if (details) details->push_back(resp.status());
+    if (details) details->push_back(status);
   }
   return ::util::OkStatus();
 }
