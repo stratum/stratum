@@ -122,6 +122,8 @@ bool IsDontCareMatch(const ::p4::v1::FieldMatch::Optional& optional);
 std::string RangeDefaultLow(size_t bitwidth);
 std::string RangeDefaultHigh(size_t bitwidth);
 
+std::string GetBfChipType(bf_dev_id_t dev_id);
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
