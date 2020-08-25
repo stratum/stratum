@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #include "stratum/hal/lib/bcm/utils.h"
 
 #include <sstream>  // IWYU pragma: keep
@@ -76,6 +75,21 @@ std::string PrintBcmPortOptions(const BcmPortOptions& options) {
   buffer << ")";
 
   return buffer.str();
+}
+
+std::string PrintBcmChipNumber(const BcmChip::BcmChipType& chip_type) {
+  switch (chip_type) {
+    case BcmChip::TRIDENT_PLUS:
+      return "BCM56846";
+      case BcmChip::TRIDENT2:
+      return "BCM56850";
+      case BcmChip::TOMAHAWK:
+      return "BCM56960";
+      case BcmChip::TOMAHAWK_PLUS:
+      return "BCM56965";
+    default:
+      return "UNKNOWN";
+  }
 }
 
 }  // namespace bcm
