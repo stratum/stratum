@@ -106,6 +106,17 @@ class BfrtPacketioManager {
                                 bf_pkt_rx_ring_t rx_ring)
       LOCKS_EXCLUDED(rx_writer_lock_) LOCKS_EXCLUDED(data_lock_);
 
+  // Deparses a PacketOut into the buffer by serializing the metadata fields in
+  // front of the payload.
+  ::util::Status DeparsePacketOut(const ::p4::v1::PacketOut& packet,
+                                  std::string* buffer)
+      LOCKS_EXCLUDED(data_lock_);
+
+  // Parses a binary string into a PacketIn, filling the metadata fields.
+  ::util::Status ParsePacketIn(const std::string& buffer,
+                               ::p4::v1::PacketIn* packet)
+      LOCKS_EXCLUDED(data_lock_);
+
   // Mutex lock for protecting rx_writer_.
   mutable absl::Mutex rx_writer_lock_;
 

@@ -139,21 +139,40 @@ namespace {
 class BitBuffer {
  public:
   BitBuffer() = default;
-  BitBuffer(const uint8* buf, size_t len) {
-    for (size_t i = 0; i < len; ++i) {
-      CHECK(AddField(sizeof(buf[i]) * 8, buf[i]).ok());
-    }
-  }
 
-  // Add a field to the back of the buffer.
-  // TODO(max): Accept byte strings of any length.
-  template <typename U>
-  ::util::Status AddField(size_t bitwidth, U value) {
-    const int kMaxBitWidth = sizeof(U) * 8;
-    CHECK_RETURN_IF_FALSE(bitwidth <= kMaxBitWidth);
-    for (int bit = bitwidth - 1; bit >= 0; --bit) {
-      bits_.push_back((value >> bit) & 1);
+  // Add a bytestring to the back of the buffer.
+  ::util::Status PushBack(const std::string& bytestring, size_t bitwidth) {
+    CHECK_RETURN_IF_FALSE(bytestring.size() <=
+                          (bitwidth + kBitsPerByte - 1) / kBitsPerByte)
+        << "Bytestring " << StringToHex(bytestring) << " overflows bit width "
+        << bitwidth << ".";
+
+    // Push all bits to a new buffer.
+    std::deque<uint8> new_bits;
+    for (const uint8 c : bytestring) {
+      new_bits.push_back((c >> 7) & 1u);
+      new_bits.push_back((c >> 6) & 1u);
+      new_bits.push_back((c >> 5) & 1u);
+      new_bits.push_back((c >> 4) & 1u);
+      new_bits.push_back((c >> 3) & 1u);
+      new_bits.push_back((c >> 2) & 1u);
+      new_bits.push_back((c >> 1) & 1u);
+      new_bits.push_back((c >> 0) & 1u);
     }
+    // Remove bits from partial byte at the front.
+    while (new_bits.size() > bitwidth) {
+      CHECK_RETURN_IF_FALSE(new_bits.front() == 0)
+          << "Bytestring " << StringToHex(bytestring) << " overflows bit width "
+          << bitwidth << ".";
+      new_bits.pop_front();
+    }
+    // Pad to full width.
+    while (new_bits.size() < bitwidth) {
+      new_bits.push_front(0);
+    }
+    // Append to internal buffer.
+    bits_.insert(bits_.end(), new_bits.begin(), new_bits.end());
+
     return ::util::OkStatus();
   }
 
@@ -175,7 +194,10 @@ class BitBuffer {
   }
 
   // Returns and empties the entire buffer.
-  std::string PopAll(void) { return PopField(bits_.size()); }
+  std::string PopAll(void) {
+    CHECK(bits_.size() % 8 == 0);
+    return PopField(bits_.size());
+  }
 
   // Returns a human-readable representation of the buffer.
   std::string ToString() {
@@ -188,9 +210,57 @@ class BitBuffer {
   }
 
  private:
+  const int kBitsPerByte = 8;
   std::deque<uint8> bits_;
 };
 }  // namespace
+
+::util::Status BfrtPacketioManager::DeparsePacketOut(
+    const ::p4::v1::PacketOut& packet, std::string* buffer) {
+  absl::ReaderMutexLock l(&data_lock_);
+  BitBuffer bit_buf;
+  for (const auto& p : packetout_header_) {
+    const auto id = p.first;
+    const auto bitwidth = p.second;
+    auto it = std::find_if(packet.metadata().begin(), packet.metadata().end(),
+                           [&id](::p4::v1::PacketMetadata metadata) {
+                             return metadata.metadata_id() == id;
+                           });
+    CHECK_RETURN_IF_FALSE(it != packet.metadata().end())
+        << "Missing metadata with Id " << id << " in PacketOut "
+        << packet.ShortDebugString();
+    RETURN_IF_ERROR(bit_buf.PushBack(it->value(), bitwidth));
+    VLOG(1) << "Encoded PacketOut metadata field with id " << id << " bitwidth "
+            << bitwidth << " value 0x" << StringToHex(it->value());
+  }
+  auto hdr_buf = bit_buf.PopAll();
+  buffer->resize(0);
+  buffer->insert(buffer->end(), hdr_buf.begin(), hdr_buf.end());
+  buffer->insert(buffer->end(), packet.payload().begin(),
+                 packet.payload().end());
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtPacketioManager::ParsePacketIn(const std::string& buffer,
+                                                  ::p4::v1::PacketIn* packet) {
+  absl::ReaderMutexLock l(&data_lock_);
+  CHECK_RETURN_IF_FALSE(buffer.size() >= packetin_header_size_)
+      << "Received packet is too small.";
+
+  BitBuffer bit_buf;
+  RETURN_IF_ERROR(bit_buf.PushBack(buffer.substr(0, packetin_header_size_),
+                                   packetin_header_size_ * 8));
+  for (const auto& p : packetin_header_) {
+    auto metadata = packet->add_metadata();
+    metadata->set_metadata_id(p.first);
+    metadata->set_value(bit_buf.PopField(p.second));
+  }
+  packet->set_payload(buffer.data() + packetin_header_size_,
+                      buffer.size() - packetin_header_size_);
+
+  return ::util::OkStatus();
+}
 
 ::util::Status BfrtPacketioManager::TransmitPacket(
     const ::p4::v1::PacketOut& packet) {
@@ -198,31 +268,8 @@ class BitBuffer {
     absl::ReaderMutexLock l(&data_lock_);
     if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
-  BitBuffer bit_buf;
-  {
-    absl::ReaderMutexLock l(&data_lock_);
-    for (const auto& p : packetout_header_) {
-      const auto id = p.first;
-      const auto bitwidth = p.second;
-
-      auto it = std::find_if(packet.metadata().begin(), packet.metadata().end(),
-                             [&id](::p4::v1::PacketMetadata metadata) {
-                               return metadata.metadata_id() == id;
-                             });
-      CHECK_RETURN_IF_FALSE(it != packet.metadata().end())
-          << "Missing metadata with Id " << id << " in PacketOut "
-          << packet.ShortDebugString();
-
-      auto v = ByteStreamToUint<uint64>(it->value());
-      VLOG(1) << "Encoded metadata field with id " << id << " bitwidth "
-              << bitwidth << " value 0x" << std::hex << v;
-      RETURN_IF_ERROR(bit_buf.AddField(bitwidth, v));
-    }
-  }
-  auto hdr_buf = bit_buf.PopAll();
-  std::vector<uint8> buf;
-  buf.insert(buf.end(), hdr_buf.begin(), hdr_buf.end());
-  buf.insert(buf.end(), packet.payload().begin(), packet.payload().end());
+  std::string buf;
+  RETURN_IF_ERROR(DeparsePacketOut(packet, &buf));
 
   bf_pkt* pkt = nullptr;
   bf_pkt_tx_ring_t tx_ring = BF_PKT_TX_RING_0;
@@ -230,7 +277,8 @@ class BitBuffer {
       bf_pkt_alloc(device_id_, &pkt, buf.size(), BF_DMA_CPU_PKT_TRANSMIT_0));
   auto pkt_cleaner =
       gtl::MakeCleanup([pkt, this]() { bf_pkt_free(device_id_, pkt); });
-  RETURN_IF_BFRT_ERROR(bf_pkt_data_copy(pkt, buf.data(), buf.size()));
+  RETURN_IF_BFRT_ERROR(bf_pkt_data_copy(
+      pkt, reinterpret_cast<const uint8_t*>(buf.data()), buf.size()));
   RETURN_IF_BFRT_ERROR(bf_pkt_tx(device_id_, pkt, tx_ring, pkt));
   pkt_cleaner.release();
 
@@ -245,17 +293,9 @@ class BitBuffer {
     if (!initialized_) RETURN_ERROR(ERR_NOT_INITIALIZED) << "Not initialized.";
   }
   ::p4::v1::PacketIn packet;
-  {
-    absl::ReaderMutexLock l(&data_lock_);
-    BitBuffer bit_buf(bf_pkt_get_pkt_data(pkt), packetin_header_size_);
-    for (const auto& p : packetin_header_) {
-      auto metadata = packet.add_metadata();
-      metadata->set_metadata_id(p.first);
-      metadata->set_value(bit_buf.PopField(p.second));
-    }
-    packet.set_payload(bf_pkt_get_pkt_data(pkt) + packetin_header_size_,
-                       bf_pkt_get_pkt_size(pkt) - packetin_header_size_);
-  }
+  std::string buffer(reinterpret_cast<const char*>(bf_pkt_get_pkt_data(pkt)),
+                     bf_pkt_get_pkt_size(pkt));
+  RETURN_IF_ERROR(ParsePacketIn(buffer, &packet));
   {
     absl::WriterMutexLock l(&rx_writer_lock_);
     rx_writer_->Write(packet);
