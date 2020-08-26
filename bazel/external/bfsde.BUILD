@@ -30,6 +30,7 @@ cc_library(
         "barefoot-bin/include/lld/*.h",
         "barefoot-bin/include/mc_mgr/*.h",
         "barefoot-bin/include/pipe_mgr/*.h",
+        "barefoot-bin/include/pkt_mgr/*.h",
         "barefoot-bin/include/port_mgr/*.h",
         "barefoot-bin/include/tofino/bf_pal/*.h",
         "barefoot-bin/include/tofino/pdfixed/*.h",
