@@ -38,12 +38,12 @@ namespace {
 ::util::StatusOr<std::string> ExtractFromArchive(const std::string& archive,
                                                  const std::string& filename) {
   struct archive* a = archive_read_new();
+  auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
   archive_read_support_filter_bzip2(a);
   archive_read_support_filter_xz(a);
   archive_read_support_format_tar(a);
   int r = archive_read_open_memory(a, archive.c_str(), archive.size());
   CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
-  auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
   struct archive_entry* entry;
   while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
     std::string path_name = archive_entry_pathname(entry);
