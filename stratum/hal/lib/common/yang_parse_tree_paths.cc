@@ -3943,6 +3943,29 @@ void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
   tree->AddNode(GetPath("components")("component")("*")())
       ->SetOnPollHandler(on_poll_all_components)
       ->SetOnChangeHandler(on_change);
+
+  // Add support for
+  // "/components/component[name=*]/integrated-circuit/state/node-id".
+  tree->AddNode(GetPath("components")("component", "*")("integrated-circuit")(
+                    "state")("node-id")())
+      ->SetOnChangeHandler(on_change)
+      ->SetOnPollHandler(
+          [tree](const GnmiEvent& event, const ::gnmi::Path& path,
+                 GnmiSubscribeStream* stream)
+              EXCLUSIVE_LOCKS_REQUIRED(tree->root_access_lock_) {
+                // Polling a wildcard node means that all matching nodes have to
+                // be polled.
+                auto status = tree->PerformActionForAllNonWildcardNodes(
+                    GetPath("components")("component")(),
+                    GetPath("integrated-circuit")("state")("node-id")(),
+                    [&event, &stream](const TreeNode& leaf) {
+                      return (leaf.GetOnPollHandler())(event, stream);
+                    });
+                // Notify the client that all nodes have been processed.
+                APPEND_STATUS_IF_ERROR(
+                    status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
+                return status;
+              });
 }
 
 void YangParseTreePaths::AddRoot(YangParseTree* tree) {
