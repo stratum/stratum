@@ -3905,19 +3905,12 @@ void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
 
     return status;
   };  // NOLINT(readability/braces)
+  auto on_change_functor = UnsupportedFunc();
 
-  // YANG tree requires all tree nodes to have on-change handler.
-  auto on_change = [tree](const GnmiEvent& event,
-                          const ::gnmi::Path& path,
-                          GnmiSubscribeStream* stream) {
-    // Do nothing be default.
-    return ::util::OkStatus();
-  };
-
-  // Add support for all "/components/component[name]/name" paths.
+  // Add support for "/components/component[name=*]/name".
   tree->AddNode(GetPath("components")("component", "*")("name")())
       ->SetOnPollHandler(on_poll_names)
-      ->SetOnChangeHandler(on_change);
+      ->SetOnChangeHandler(on_change_functor);
 
   auto on_poll_all_components = [tree](const GnmiEvent& event,
                                        const ::gnmi::Path& path,
@@ -3939,16 +3932,16 @@ void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
     return status;
   };  // NOLINT(readability/braces)
 
-  // Add support for the "/components/component/*" path.
+  // Add support for "/components/component/*".
   tree->AddNode(GetPath("components")("component")("*")())
       ->SetOnPollHandler(on_poll_all_components)
-      ->SetOnChangeHandler(on_change);
+      ->SetOnChangeHandler(on_change_functor);
 
   // Add support for
   // "/components/component[name=*]/integrated-circuit/state/node-id".
   tree->AddNode(GetPath("components")("component", "*")("integrated-circuit")(
                     "state")("node-id")())
-      ->SetOnChangeHandler(on_change)
+      ->SetOnChangeHandler(on_change_functor)
       ->SetOnPollHandler(
           [tree](const GnmiEvent& event, const ::gnmi::Path& path,
                  GnmiSubscribeStream* stream)
