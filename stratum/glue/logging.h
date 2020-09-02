@@ -2,13 +2,13 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 #ifndef STRATUM_GLUE_LOGGING_H_
 #define STRATUM_GLUE_LOGGING_H_
 
 #include "gflags/gflags.h"
 
-// If for some reason ERROR gets defined somewhere, glog will not compile
+// P4c lib/log.h already defines the ERROR macro.
+// Issue: https://github.com/p4lang/p4c/issues/2523
 #ifdef ERROR
 #undef ERROR
 #endif
@@ -22,7 +22,6 @@ DECLARE_bool(logtostderr);
 #endif  // STRATUM_ARCH_PPC
 
 DECLARE_bool(logtosyslog);
-
 
 // These are exported in open source glog but not base/logging.h
 using ::google::ERROR;
