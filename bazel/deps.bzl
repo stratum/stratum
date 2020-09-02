@@ -56,8 +56,8 @@ def stratum_deps():
         # ----- p4c -----
         remote_workspace(
             name = "com_github_p4lang_p4c",
-            remote = "https://github.com/p4lang/p4c",
-            commit = "43568b75796d68a6424ad22eebeee62f46ccd3fe",
+            remote = "https://github.com/pudelkoM/p4c",
+            commit = "5e05765e0c0d8d69e0ffe4ed4392e0e976203937",
             build_file = "@//bazel:external/p4c.BUILD",
         )
 
@@ -246,9 +246,9 @@ def stratum_deps():
     if "com_github_nelhage_rules_boost" not in native.existing_rules():
         git_repository(
             name = "com_github_nelhage_rules_boost",
-            commit = "ed844db5990d21b75dc3553c057069f324b3916b",
-            remote = "https://github.com/nelhage/rules_boost",
-            shallow_since = "1570056263 -0700",
+            commit = "aecb39a96c9153bbe4d8b9f625e74f5eb17d18dc",
+            remote = "https://github.com/pudelkoM/rules_boost.git",
+            # shallow_since = "1596677845 -0700"
         )
 
     if "com_github_jbeder_yaml_cpp" not in native.existing_rules():
