@@ -270,8 +270,8 @@ void ParserDecoder::DecodeSimpleSelectKeySet(
   }
 
   ParserKeySetValue* case_value = decoded_case->add_keyset_values();
-  case_value->mutable_constant()->set_value(static_cast<uint64>(value));
-  case_value->mutable_constant()->set_mask(static_cast<uint64>(mask));
+  case_value->mutable_constant()->set_value(static_cast<int64>(value));
+  case_value->mutable_constant()->set_mask(static_cast<int64>(mask));
 }
 
 // A ListExpression means the select key uses a combination of multiple
