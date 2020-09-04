@@ -81,11 +81,11 @@ std::string PrintBcmChipNumber(const BcmChip::BcmChipType& chip_type) {
   switch (chip_type) {
     case BcmChip::TRIDENT_PLUS:
       return "BCM56846";
-      case BcmChip::TRIDENT2:
+    case BcmChip::TRIDENT2:
       return "BCM56850";
-      case BcmChip::TOMAHAWK:
+    case BcmChip::TOMAHAWK:
       return "BCM56960";
-      case BcmChip::TOMAHAWK_PLUS:
+    case BcmChip::TOMAHAWK_PLUS:
       return "BCM56965";
     default:
       return "UNKNOWN";
