@@ -190,6 +190,7 @@ bool YangParseTree::IsWildcard(const std::string& name) const {
     const gnmi::Path& path, const gnmi::Path& subpath,
     const std::function<::util::Status(const TreeNode& leaf)>& action) const {
   const auto* root = root_.FindNodeOrNull(path);
+  CHECK_RETURN_IF_FALSE(root);
   ::util::Status ret = ::util::OkStatus();
   for (const auto& entry : root->children_) {
     if (IsWildcard(entry.first)) {
@@ -199,11 +200,9 @@ bool YangParseTree::IsWildcard(const std::string& name) const {
     auto* leaf = subpath.elem_size() ? entry.second.FindNodeOrNull(subpath)
                                      : &entry.second;
     if (leaf == nullptr) {
-      // Should not happen!
-      ::util::Status status = MAKE_ERROR(ERR_INTERNAL)
-                              << "Found node without "
-                              << subpath.ShortDebugString() << " leaf!";
-      APPEND_STATUS_IF_ERROR(ret, status);
+      // This will happen if the subpath does not exist in the path.
+      // For example, trying to query node-id from all components
+      // but some components do not have node-id leaf.
       continue;
     }
     APPEND_STATUS_IF_ERROR(ret, action(*leaf));
