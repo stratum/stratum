@@ -3953,7 +3953,7 @@ void YangParseTreePaths::AddSubtreeAllComponents(YangParseTree* tree) {
                     GetPath("integrated-circuit")("state")("node-id")(),
                     [&event, &stream](const TreeNode& leaf) {
                       return (leaf.GetOnPollHandler())(event, stream);
-                    }, true);
+                    });
                 // Notify the client that all nodes have been processed.
                 APPEND_STATUS_IF_ERROR(
                     status, YangParseTreePaths::SendEndOfSeriesMessage(stream));
