@@ -211,7 +211,7 @@ def stratum_deps():
         remote_workspace(
             name = "com_github_google_glog",
             remote = "https://github.com/google/glog",
-            commit = "ba8a9f6952d04d1403b97df24e6836227751454e",
+            commit = "5b4fb63d277795eea3400e3e6af542f3b765f2d2",
         )
 
     if "com_github_gflags_gflags" not in native.existing_rules():
