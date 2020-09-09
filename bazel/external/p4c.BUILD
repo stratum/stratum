@@ -325,6 +325,9 @@ cc_library(
     ]),
     copts = P4C_BUILD_DEFAULT_COPTS,
     includes = ["."],
+    # Workaround for gcc < 7 for p4c boost multiprecision dependency, see:
+    # https://github.com/boostorg/math/issues/272
+    defines = ["BOOST_MATH_DISABLE_FLOAT128"],
     deps = [
         ":config_h",
         "@boost//:format",
