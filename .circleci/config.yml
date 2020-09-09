@@ -26,8 +26,9 @@ save_bazel_cache: &save_bazel_cache
 
 clean_bazel_cache: &clean_bazel_cache
   run:
-    name: Clean Bazel disk cache of files that have not been touched in 30 days
-    command: /usr/bin/find /tmp/bazel-disk-cache -atime +30 -exec rm -v {} \;
+    name: Clean Bazel disk cache of files that have not been modified in 30 days
+    # mtime is the only time preserved after untaring the cache.
+    command: /usr/bin/find /tmp/bazel-disk-cache -mtime +30 -exec rm -v {} \;
 
 # Print Bazel profiling info and generate JSON report to upload as artifact.
 analyze_bazel_profile: &analyze_bazel_profile
