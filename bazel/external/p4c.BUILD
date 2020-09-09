@@ -51,6 +51,7 @@ cc_library(
         "config.h",
     ],
     includes = ["."],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     visibility = ["//visibility:private"],
 )
 
@@ -115,6 +116,7 @@ cc_library(
         "lib/",
         "tools/ir-generator",
     ],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     visibility = [":__subpackages__"],
 )
 
@@ -128,6 +130,7 @@ cc_library(
     ]) + glob([
         "frontends/common/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     #visibility = ["//visibility:private"],
 )
 
@@ -167,6 +170,7 @@ cc_library(
     ] + glob([
         "tools/ir-generator/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_includes",
         ":p4c_toolkit",
@@ -179,6 +183,7 @@ cc_binary(
     srcs = ["tools/ir-generator/generator.cpp"],
     linkopts = ["-lgmp"],
     visibility = [":__subpackages__"],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_ir_generator_lib",
         ":p4c_toolkit",
@@ -241,6 +246,7 @@ cc_library(
         "ir/*.h",
     ]),
     #visibility = STRATUM_INTERNAL,
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_frontend_h",
         ":p4c_includes",
@@ -317,6 +323,7 @@ cc_library(
     hdrs = glob([
         "lib/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     includes = ["."],
     deps = [
         ":config_h",
@@ -334,6 +341,7 @@ cc_library(
         ["control-plane/*.h"],
     ),
     # visibility = STRATUM_INTERNAL,
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_frontend_h",
         ":p4c_ir",
