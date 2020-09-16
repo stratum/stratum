@@ -15,6 +15,10 @@
 #define STRIP_FLAG_HELP 1  // remove additional flag help text from gflag
 #include "gflags/gflags.h"
 #include "gnmi/gnmi.grpc.pb.h"
+#include "stratum/glue/init_google.h"
+#include "stratum/glue/status/status.h"
+#include "stratum/glue/status/status_macros.h"
+#include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 
 const char kUsage[] =
@@ -43,21 +47,28 @@ optional arguments:
   --client-key             gRPC Client key
 )USAGE";
 
-#define PRINT_MSG(msg, prompt)      \
-  std::cout << prompt << std::endl; \
-  std::cout << msg.DebugString() << std::endl;
+#define PRINT_MSG(msg, prompt)                   \
+  do {                                           \
+    std::cout << prompt << std::endl;            \
+    std::cout << msg.DebugString() << std::endl; \
+  } while (0)
 
-#define LOG_IF_NOT_OK(status)                         \
-  if (!status.ok()) {                                 \
-    std::cout << status.error_message() << std::endl; \
-  }
+#define RETURN_IF_GRPC_ERROR(expr)                                           \
+  do {                                                                       \
+    const ::grpc::Status _grpc_status = (expr);                              \
+    if (ABSL_PREDICT_FALSE(!_grpc_status.ok())) {                            \
+      ::util::Status _status(                                                \
+          static_cast<::util::error::Code>(_grpc_status.error_code()),       \
+          _grpc_status.error_message());                                     \
+      LOG(ERROR) << "Return Error: " << #expr << " failed with " << _status; \
+      return _status;                                                        \
+    }                                                                        \
+  } while (0)
 
-#define CHECK_AND_PRINT_RESP(status, msg) \
-  if (status.ok()) {                      \
-    PRINT_MSG(msg, "RESPONSE")            \
-  }
+DECLARE_bool(colorlogtostderr);
+DECLARE_bool(logtostderr);
+DECLARE_int32(stderrthreshold);
 
-DECLARE_bool(help);
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "gNMI server address");
 DEFINE_string(bool_val, "", "Boolean value to be set");
 DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
@@ -182,10 +193,10 @@ void build_gnmi_path(std::string path_str, ::gnmi::Path* path) {
 ::grpc::ClientReaderWriterInterface<
     ::gnmi::SubscribeRequest, ::gnmi::SubscribeResponse>* stream_reader_writer;
 
-int Main(int argc, char** argv) {
-  if (argc < 2 || FLAGS_help) {
+::util::Status Main(int argc, char** argv) {
+  if (argc < 2) {
     std::cout << kUsage << std::endl;
-    return -1;
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Invalid number of arguments.";
   }
   ::grpc::ClientContext ctx;
   ::grpc::Status status;
@@ -221,76 +232,69 @@ int Main(int argc, char** argv) {
   auto stub = ::gnmi::gNMI::NewStub(channel);
   std::string cmd = std::string(argv[1]);
 
-  if (cmd.compare("cap") == 0) {
+  if (cmd == "cap") {
     ::gnmi::CapabilityRequest req;
-    PRINT_MSG(req, "REQUEST")
+    PRINT_MSG(req, "REQUEST");
     ::gnmi::CapabilityResponse resp;
-    status = stub->Capabilities(&ctx, req, &resp);
-    LOG_IF_NOT_OK(status)
-    CHECK_AND_PRINT_RESP(status, resp)
-    return 0;
+    RETURN_IF_GRPC_ERROR(stub->Capabilities(&ctx, req, &resp));
+    PRINT_MSG(resp, "RESPONSE");
+    return ::util::OkStatus();
   }
 
   if (argc < 3) {
-    std::cout << "Missing path for " << cmd << " request" << std::endl;
-    return -1;
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Missing path for " << cmd << " request.";
   }
   std::string path = std::string(argv[2]);
 
   if (cmd == "get") {
     ::gnmi::GetRequest req = build_gnmi_get_req(path);
-    PRINT_MSG(req, "REQUEST")
+    PRINT_MSG(req, "REQUEST");
     ::gnmi::GetResponse resp;
-    status = stub->Get(&ctx, req, &resp);
-    LOG_IF_NOT_OK(status)
-    CHECK_AND_PRINT_RESP(status, resp)
+    RETURN_IF_GRPC_ERROR(stub->Get(&ctx, req, &resp));
+    PRINT_MSG(resp, "RESPONSE");
   } else if (cmd == "set") {
     ::gnmi::SetRequest req = build_gnmi_set_req(path);
-    PRINT_MSG(req, "REQUEST")
+    PRINT_MSG(req, "REQUEST");
     ::gnmi::SetResponse resp;
-    status = stub->Set(&ctx, req, &resp);
-    LOG_IF_NOT_OK(status)
-    CHECK_AND_PRINT_RESP(status, resp)
+    RETURN_IF_GRPC_ERROR(stub->Set(&ctx, req, &resp));
+    PRINT_MSG(resp, "RESPONSE");
   } else if (cmd == "del") {
     ::gnmi::SetRequest req = build_gnmi_del_req(path);
-    PRINT_MSG(req, "REQUEST")
+    PRINT_MSG(req, "REQUEST");
     ::gnmi::SetResponse resp;
-    status = stub->Set(&ctx, req, &resp);
-    LOG_IF_NOT_OK(status)
-    CHECK_AND_PRINT_RESP(status, resp)
+    RETURN_IF_GRPC_ERROR(stub->Set(&ctx, req, &resp));
+    PRINT_MSG(resp, "RESPONSE");
   } else if (cmd == "sub-onchange") {
     auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
     stream_reader_writer = stream_reader_writer_ptr.get();
     ::gnmi::SubscribeRequest req = build_gnmi_sub_onchange_req(path);
-    PRINT_MSG(req, "REQUEST")
-    if (!stream_reader_writer->Write(req)) {
-      std::cout << "Can not write request" << std::endl;
-    }
+    PRINT_MSG(req, "REQUEST");
+    CHECK_RETURN_IF_FALSE(stream_reader_writer->Write(req))
+        << "Can not write request.";
     ::gnmi::SubscribeResponse resp;
     while (stream_reader_writer->Read(&resp)) {
-      PRINT_MSG(resp, "RESPONSE")
+      PRINT_MSG(resp, "RESPONSE");
     }
-    status = stream_reader_writer->Finish();
-    LOG_IF_NOT_OK(status);
+    RETURN_IF_GRPC_ERROR(stream_reader_writer->Finish());
   } else if (cmd == "sub-sample") {
     auto stream_reader_writer_ptr = stub->Subscribe(&ctx);
     stream_reader_writer = stream_reader_writer_ptr.get();
     ::gnmi::SubscribeRequest req =
         build_gnmi_sub_sample_req(path, FLAGS_interval);
-    PRINT_MSG(req, "REQUEST")
-    if (!stream_reader_writer->Write(req)) {
-      std::cout << "Can not write request" << std::endl;
-    }
+    PRINT_MSG(req, "REQUEST");
+    CHECK_RETURN_IF_FALSE(stream_reader_writer->Write(req))
+        << "Can not write request.";
     ::gnmi::SubscribeResponse resp;
     while (stream_reader_writer->Read(&resp)) {
-      PRINT_MSG(resp, "RESPONSE")
+      PRINT_MSG(resp, "RESPONSE");
     }
-    status = stream_reader_writer->Finish();
-    LOG_IF_NOT_OK(status);
+    RETURN_IF_GRPC_ERROR(stream_reader_writer->Finish());
   } else {
-    std::cout << "Unknown command: " << cmd << std::endl;
+    RETURN_ERROR(ERR_INVALID_PARAM) << "Unknown command: " << cmd;
   }
-  return 0;
+
+  return ::util::OkStatus();
 }
 
 void HandleSignal(int signal) {
@@ -306,8 +310,12 @@ void HandleSignal(int signal) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
+  FLAGS_colorlogtostderr = true;
+  FLAGS_logtostderr = true;
+  FLAGS_stderrthreshold = 0;
   ::gflags::SetUsageMessage(kUsage);
-  ::gflags::ParseCommandLineNonHelpFlags(&argc, &argv, true);
+  InitGoogle(argv[0], &argc, &argv, true);
+  stratum::InitStratumLogging();
   std::signal(SIGINT, stratum::tools::gnmi::HandleSignal);
-  return stratum::tools::gnmi::Main(argc, argv);
+  return stratum::tools::gnmi::Main(argc, argv).error_code();
 }
