@@ -536,13 +536,29 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
         break;
       }
       case ::p4::v1::StreamMessageRequest::kPacket: {
-        // If this stream is not the master stream do not do anything.
-        if (!IsMasterController(node_id, connection_id)) break;
+        // If this stream is not the master stream generate a stream error.
+        if (!IsMasterController(node_id, connection_id)) {
+          ::p4::v1::StreamMessageResponse resp;
+          auto stream_error = resp.mutable_error();
+          stream_error->set_canonical_code(ERR_PERMISSION_DENIED);
+          stream_error->set_message("Controller is not master.");
+          *stream_error->mutable_packet_out()->mutable_packet_out() =
+              req.packet();
+          stream->Write(resp);  // Best effort.
+          break;
+        }
         // If master, try to transmit the packet. No error reporting.
         ::util::Status status =
             switch_interface_->TransmitPacket(node_id, req.packet());
         if (!status.ok()) {
           LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
+          ::p4::v1::StreamMessageResponse resp;
+          auto stream_error = resp.mutable_error();
+          stream_error->set_canonical_code(status.error_code());
+          stream_error->set_message(status.error_message());
+          *stream_error->mutable_packet_out()->mutable_packet_out() =
+              req.packet();
+          stream->Write(resp);  // Best effort.
         }
         break;
       }

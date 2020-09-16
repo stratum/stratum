@@ -1012,9 +1012,12 @@ TEST_P(P4ServiceTest, StreamChannelSuccess) {
 
   //----------------------------------------------------------------------------
   // Controller #1 tries sends some packet out too. However its packet will be
-  // dropped as it is not master any more.
+  // dropped as it is not master any more and a stream error will be generated.
   *req.mutable_packet() = packet1;
   ASSERT_TRUE(stream1->Write(req));
+  ASSERT_TRUE(stream1->Read(&resp));
+  ASSERT_EQ(::google::rpc::PERMISSION_DENIED, resp.error().canonical_code());
+  ASSERT_TRUE(ProtoEqual(resp.error().packet_out().packet_out(), packet1));
 
   //----------------------------------------------------------------------------
   // Controller #3 connects. Master will be still Controller #2, as it has the
