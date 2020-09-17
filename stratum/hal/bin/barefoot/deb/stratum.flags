@@ -2,3 +2,4 @@
 -bf_switchd_background=true
 -colorlogtostderr
 -stderrthreshold=0
+-logtostderr

@@ -40,5 +40,6 @@ exec stratum_bcm_opennsa \
     -log_dir=/var/log/stratum \
     -colorlogtostderr \
     -stderrthreshold=0 \
+    -logtostderr \
     -v=0 \
     $@
