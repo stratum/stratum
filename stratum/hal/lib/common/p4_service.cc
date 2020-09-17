@@ -540,22 +540,25 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
         if (!IsMasterController(node_id, connection_id)) {
           ::p4::v1::StreamMessageResponse resp;
           auto stream_error = resp.mutable_error();
-          stream_error->set_canonical_code(ERR_PERMISSION_DENIED);
+          stream_error->set_canonical_code(
+              ::grpc::StatusCode::PERMISSION_DENIED);
           stream_error->set_message("Controller is not master.");
           *stream_error->mutable_packet_out()->mutable_packet_out() =
               req.packet();
           stream->Write(resp);  // Best effort.
           break;
         }
-        // If master, try to transmit the packet. No error reporting.
+        // If master, try to transmit the packet.
         ::util::Status status =
             switch_interface_->TransmitPacket(node_id, req.packet());
         if (!status.ok()) {
           LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
           ::p4::v1::StreamMessageResponse resp;
           auto stream_error = resp.mutable_error();
-          stream_error->set_canonical_code(status.error_code());
+          stream_error->set_canonical_code(
+              ToGoogleRpcCode(status.CanonicalCode()));
           stream_error->set_message(status.error_message());
+          stream_error->set_code(status.error_code());
           *stream_error->mutable_packet_out()->mutable_packet_out() =
               req.packet();
           stream->Write(resp);  // Best effort.
