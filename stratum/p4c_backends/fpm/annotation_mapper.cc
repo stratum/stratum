@@ -113,7 +113,7 @@ bool AnnotationMapper::ProcessAnnotations(
   // all @switchstack annotations, so it can be used to set idle_pipeline_stages
   // in the P4PipelineConfig.
   if (!success) return false;
-  for (const auto iter : pipeline_stage_usage_) {
+  for (const auto& iter : pipeline_stage_usage_) {
     if (!iter.second) p4_pipeline_config->add_idle_pipeline_stages(iter.first);
   }
 

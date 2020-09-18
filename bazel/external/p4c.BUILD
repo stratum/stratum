@@ -1,13 +1,12 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-licenses(["notice"])  # Apache v2
-
 # Bazel BUILD file for p4c in Stratum, limited to the following outputs:
 #   - Several cc_library targets to link with Stratum-specific p4c backends.
 #   - The p4c IR definitions and IR generator binary.
 #   - A cc_binary for the simple_switch variation of the bmv2 backend.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load(
     "@com_github_stratum_stratum//bazel:defs.bzl",
     "STRATUM_INTERNAL",
@@ -27,8 +26,10 @@ load(
     "P4C_BACKEND_IR_FILES",
 )
 
+licenses(["notice"])  # Apache v2
+
 package(
-    default_visibility = [ "//visibility:public" ],
+    default_visibility = ["//visibility:public"],
 )
 
 # Instead of using cmake to generate the config.h, this genrule produces
@@ -50,6 +51,7 @@ cc_library(
         "config.h",
     ],
     includes = ["."],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     visibility = ["//visibility:private"],
 )
 
@@ -114,6 +116,7 @@ cc_library(
         "lib/",
         "tools/ir-generator",
     ],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     visibility = [":__subpackages__"],
 )
 
@@ -127,6 +130,7 @@ cc_library(
     ]) + glob([
         "frontends/common/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     #visibility = ["//visibility:private"],
 )
 
@@ -164,8 +168,9 @@ cc_library(
         "tools/ir-generator/ir-generator-lex.c",
         "tools/ir-generator/ir-generator-yacc.hh",
     ] + glob([
-        "tools/ir-generator/*.h"
+        "tools/ir-generator/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_includes",
         ":p4c_toolkit",
@@ -176,8 +181,9 @@ cc_library(
 cc_binary(
     name = "irgenerator",
     srcs = ["tools/ir-generator/generator.cpp"],
-    visibility = [":__subpackages__"],
     linkopts = ["-lgmp"],
+    visibility = [":__subpackages__"],
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_ir_generator_lib",
         ":p4c_toolkit",
@@ -240,9 +246,10 @@ cc_library(
         "ir/*.h",
     ]),
     #visibility = STRATUM_INTERNAL,
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
-        ":p4c_includes",
         ":p4c_frontend_h",
+        ":p4c_includes",
         ":p4c_toolkit",
     ],
 )
@@ -316,10 +323,15 @@ cc_library(
     hdrs = glob([
         "lib/*.h",
     ]),
+    copts = P4C_BUILD_DEFAULT_COPTS,
     includes = ["."],
+    # Workaround for gcc < 7 for p4c boost multiprecision dependency, see:
+    # https://github.com/boostorg/math/issues/272
+    defines = ["BOOST_MATH_DISABLE_FLOAT128"],
     deps = [
         ":config_h",
         "@boost//:format",
+        "@boost//:multiprecision",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -332,6 +344,7 @@ cc_library(
         ["control-plane/*.h"],
     ),
     # visibility = STRATUM_INTERNAL,
+    copts = P4C_BUILD_DEFAULT_COPTS,
     deps = [
         ":p4c_frontend_h",
         ":p4c_ir",
@@ -341,7 +354,6 @@ cc_library(
         "@com_github_p4lang_p4runtime//:p4types_cc_proto",
     ],
 )
-
 
 # These rules build p4c binaries with the bmv2 soft switch and PSA backends.
 # These binaries are for example purposes.  Backends for Stratum production will
@@ -437,14 +449,14 @@ cc_library(
         "backends/p4test/version.h",
     ],
     copts = P4C_BUILD_DEFAULT_COPTS,
+    data = [
+        ":p4c_p4test_version",
+    ],
     deps = [
         ":p4c_frontend_midend",
         ":p4c_ir",
         ":p4c_toolkit",
     ],
-    data = [
-        ":p4c_p4test_version",
-    ]
 )
 
 cc_binary(
@@ -460,15 +472,15 @@ cc_binary(
     deps = [
         ":control_plane",
         ":control_plane_h",
+        ":p4c_backend_p4test_lib",
         ":p4c_frontend_midend",
         ":p4c_ir",
         ":p4c_toolkit",
-        ":p4c_backend_p4test_lib",
     ],
 )
 
 # Includes all valid P4_16 test files
 filegroup(
     name = "testdata_p4_16_samples",
-    data = glob(["testdata/p4_16_samples/*.p4"])
+    data = glob(["testdata/p4_16_samples/*.p4"]),
 )
