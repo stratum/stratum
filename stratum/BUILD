@@ -34,7 +34,12 @@ config_setting(
 
 config_setting(
     name = "llvm_compiler",
-    values = {"compiler": "clang"},
+    flag_values = {"@bazel_tools//tools/cpp:compiler": "clang"},
+)
+
+config_setting(
+    name = "gcc_compiler",
+    flag_values = {"@bazel_tools//tools/cpp:compiler": "gcc"},
 )
 
 stratum_package(
