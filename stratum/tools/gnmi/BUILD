@@ -19,6 +19,9 @@ stratum_cc_binary(
     srcs = ["gnmi_cli.cc"],
     arches = HOST_ARCHES,
     deps = [
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/lib:macros",
         "//stratum/lib:utils",
         "@com_github_gflags_gflags//:gflags",
         "@com_github_grpc_grpc//:grpc++",
