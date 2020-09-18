@@ -46,7 +46,7 @@ RUN apt-get update && \
 ARG USE_BAZEL_VERSION
 ARG BAZELISK_VERSION
 RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 && \
-    mv bazelisk-linux-amd64 /usr/bin/bazel && \
+    mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
     chmod +x /usr/local/bin/bazel && \
     bazel version
 
