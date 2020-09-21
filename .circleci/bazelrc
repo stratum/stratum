@@ -22,9 +22,9 @@ build --verbose_failures=true
 
 # Produce output suitable for consumption on the CircleCI logs
 build --curses=no --color=yes
-#test --test_summary=terse
-#test --test_output=errors
-#test --test_verbose_timeout_warnings
+test --test_summary=terse
+test --test_output=errors
+test --test_verbose_timeout_warnings
 
 # Profile build
 build --profile=/tmp/bazel.profile.json
