@@ -1,5 +1,2 @@
 -bf_switchd_cfg=/usr/share/stratum/tofino_skip_p4_no_bsp.conf
 -bf_switchd_background=true
--colorlogtostderr
--stderrthreshold=0
--logtostderr
