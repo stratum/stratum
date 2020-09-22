@@ -2,7 +2,6 @@
 // Copyright 2018-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-
 // This file describes protobufs used in P4 annotations accepted by the Stratum
 // SwitchStack.
 syntax = "proto3";
@@ -20,6 +19,7 @@ import "stratum/public/proto/p4_table_defs.proto";
 // Examples:
 //   @switchstack("pipeline_stage: VLAN_ACL")
 //   @switchstack("field_type: P4_FIELD_TYPE_VRF")
+//   @switchstack("register_reset_interval_ms: 100")
 //
 // Note about "HIDDEN" tables:
 //   Tables annotated with "HIDDEN" are defined by the P4 program, but they do
@@ -33,7 +33,7 @@ import "stratum/public/proto/p4_table_defs.proto";
 message P4Annotation {
   // Defines the set of physical pipeline stages.
   enum PipelineStage {
-    DEFAULT_STAGE = 0;  // Invalid. Reserved for future use.
+    DEFAULT_STAGE = 0; // Invalid. Reserved for future use.
     VLAN_ACL = 1;
     L2 = 2;
     L3_LPM = 3;
@@ -53,4 +53,13 @@ message P4Annotation {
   // needs additional information to identify field types, which can be
   // provided by the P4 program with this annotation.
   P4FieldType field_type = 2;
+
+  // Specifies the time in milliseconds between register clears by Stratum. Can
+  // be used together with the register_reset_value annotation to set a specific
+  // value.
+  uint64 register_reset_interval_ms = 3;
+
+  // If used together with the register_reset_interval_ms annotation, this
+  // annotation specifies the clear value to set each interval.
+  uint64 register_reset_value = 4;
 }

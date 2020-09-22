@@ -249,6 +249,54 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
+::util::Status DumpTableData(const bfrt::BfRtTableData* table_data) {
+  const bfrt::BfRtTable* table;
+  RETURN_IF_BFRT_ERROR(table_data->getParent(&table));
+
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    bfrt::DataType data_type;
+    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
+    size_t field_size;
+    RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &field_size));
+
+    std::string value;
+    switch (data_type) {
+      case bfrt::DataType::UINT64: {
+        uint64 v;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
+        value = std::to_string(v);
+        break;
+      }
+      case bfrt::DataType::BYTE_STREAM: {
+        uint8 v[(field_size + 7) / 8];
+        RETURN_IF_BFRT_ERROR(
+            table_data->getValue(field_id, (field_size + 7) / 8, v));
+        value = PrintArray(v, (field_size + 7) / 8, ",");
+        break;
+      }
+      case bfrt::DataType::INT_ARR: {
+        std::vector<uint64_t> v;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &v));
+        value = PrintVector(v, ",");
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INTERNAL)
+            << "Unknown data_type: " << static_cast<int>(data_type) << ".";
+    }
+
+    LOG(INFO) << "Table data {" << field_name << ": field_id: " << field_id
+              << " data_type: " << static_cast<int>(data_type)
+              << " field_size: " << field_size << " value: " << value << "}";
+  }
+
+  return ::util::OkStatus();
+}
+
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::Exact& exact) { return false; }
 
 bool IsDontCareMatch(const ::p4::v1::FieldMatch::LPM& lpm) {

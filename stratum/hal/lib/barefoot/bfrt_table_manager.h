@@ -20,6 +20,8 @@
 #include "stratum/hal/lib/barefoot/bfrt_id_mapper.h"
 #include "stratum/hal/lib/common/common.pb.h"
 #include "stratum/hal/lib/common/writer_interface.h"
+#include "stratum/hal/lib/p4/p4_info_manager.h"
+#include "stratum/lib/timer_daemon.h"
 
 namespace stratum {
 namespace hal {
@@ -30,6 +32,12 @@ class BfrtTableManager {
   // Pushes the pipline info.
   ::util::Status PushForwardingPipelineConfig(const BfrtDeviceConfig& config,
                                               const bfrt::BfRtInfo* bfrt_info)
+      LOCKS_EXCLUDED(lock_);
+
+  // Verifies a P4-based forwarding pipeline configuration intended for this
+  // manager.
+  ::util::Status VerifyForwardingPipelineConfig(
+      const ::p4::v1::ForwardingPipelineConfig& config) const
       LOCKS_EXCLUDED(lock_);
 
   // Writes a table entry.
@@ -51,11 +59,23 @@ class BfrtTableManager {
       const ::p4::v1::DirectCounterEntry& direct_counter_entry)
       LOCKS_EXCLUDED(lock_);
 
+  // Modify the data of a register entry.
+  ::util::Status WriteRegisterEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::Update::Type type,
+      const ::p4::v1::RegisterEntry& register_entry) LOCKS_EXCLUDED(lock_);
+
   // Read the counter data of a table entry.
   ::util::StatusOr<::p4::v1::DirectCounterEntry> ReadDirectCounterEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
       const ::p4::v1::DirectCounterEntry& direct_counter_entry)
       LOCKS_EXCLUDED(lock_);
+
+  // Read the data of a register entry.
+  ::util::Status ReadRegisterEntry(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+      const ::p4::v1::RegisterEntry& register_entry,
+      WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
@@ -94,7 +114,11 @@ class BfrtTableManager {
 
   ::util::Status SyncTableCounters(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
-      const ::p4::v1::TableEntry& table_entry);
+      const ::p4::v1::TableEntry& table_entry) LOCKS_EXCLUDED(lock_);
+
+  ::util::Status SyncTableRegisters(
+      std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t table_id)
+      LOCKS_EXCLUDED(lock_);
 
   ::util::Status ReadSingleTableEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
@@ -121,9 +145,17 @@ class BfrtTableManager {
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;
 
+  std::vector<TimerDaemon::DescriptorPtr> register_timer_descriptors_
+      GUARDED_BY(lock_);
+
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
   const bfrt::BfRtInfo* bfrt_info_ GUARDED_BY(lock_);
+
+  // Helper class to validate the P4Info and requests against it.
+  // TODO(max): Maybe this manager should be created in the node and passed down
+  // to all feature managers.
+  std::unique_ptr<P4InfoManager> p4_info_manager_ GUARDED_BY(lock_);
 
   // The ID mapper that maps P4Runtime ID to BfRt ones (vice versa).
   // Not owned by this class

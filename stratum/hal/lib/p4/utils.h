@@ -10,6 +10,7 @@
 #include <string>
 
 #include "stratum/glue/status/statusor.h"
+#include "stratum/glue/integral_types.h"
 #include "stratum/hal/lib/p4/p4_pipeline_config.pb.h"
 #include "stratum/hal/lib/p4/p4_table_map.pb.h"
 
@@ -34,6 +35,12 @@ std::string PrintP4ObjectID(int object_id);
     const std::string& table_map_key,
     P4TableMapValue::DescriptorCase descriptor_case,
     const std::string& log_p4_object);
+
+// These two functions take an unsigned 64/32 bit integer and encode it as a
+// byte stream in network order. Leading zeros are stripped off.
+// TODO(max): move to stratum/lib/utils.h where ByteStreamToUint() is?
+std::string Uint64ToByteStream(uint64 val);
+std::string Uint32ToByteStream(uint32 val);
 
 }  // namespace hal
 }  // namespace stratum

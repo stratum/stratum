@@ -25,6 +25,7 @@ constexpr char kPreMgidTable[] = "$pre.mgid";
 constexpr char kMgid[] = "$MGID";
 constexpr char kMcNodeL1XidValid[] = "$MULTICAST_NODE_L1_XID_VALID";
 constexpr char kMcNodeL1Xid[] = "$MULTICAST_NODE_L1_XID";
+constexpr char kRegisterIndex[] = "$REGISTER_INDEX";
 
 // TNA specific limits
 constexpr uint16 kMaxCloneSessionId = 1015;

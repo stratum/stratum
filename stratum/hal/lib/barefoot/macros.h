@@ -70,12 +70,33 @@ class BooleanBfStatus {
   bf_status_t status_;
 };
 
+// A macro for simplify checking and logging the return value of a SDE function
+// call.
 #define RETURN_IF_BFRT_ERROR(expr)                            \
   if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {  \
   } else /* NOLINT */                                         \
     return MAKE_ERROR(__ret.error_code())                     \
            << "'" << #expr << "' failed with error message: " \
            << FixMessage(bf_err_str(__ret.status()))
+
+// A macro for simplify creating a new error or appending new info to an
+// error based on the return value of a SDE function call. The caller function
+// will not return. The variable given as "status" must be an object of type
+// ::util::Status.
+#define APPEND_STATUS_IF_BFRT_ERROR(status, expr)                           \
+  if (const BooleanBfStatus __ret = BooleanBfStatus(expr)) {                \
+  } else /* NOLINT */                                                       \
+    status =                                                                \
+        APPEND_ERROR(!status.ok() ? status                                  \
+                                  : ::util::Status(StratumErrorSpace(),     \
+                                                   __ret.error_code(), "")) \
+            .without_logging()                                              \
+        << (status.error_message().empty() ||                               \
+                    status.error_message().back() == ' '                    \
+                ? ""                                                        \
+                : " ")                                                      \
+        << "'" << #expr << "' failed with error message: "                  \
+        << FixMessage(bf_err_str(__ret.status()))
 
 }  // namespace barefoot
 }  // namespace hal

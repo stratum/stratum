@@ -27,11 +27,70 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+BfrtTableManager::BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper)
+    : register_timer_descriptors_(),
+      p4_info_manager_(nullptr),
+      bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
+
 ::util::Status BfrtTableManager::PushForwardingPipelineConfig(
     const BfrtDeviceConfig& config, const bfrt::BfRtInfo* bfrt_info) {
   absl::WriterMutexLock l(&lock_);
+  CHECK_RETURN_IF_FALSE(config.programs_size() == 1)
+      << "Only one P4 program is supported.";
+  register_timer_descriptors_.clear();
   bfrt_info_ = bfrt_info;
+  const auto& program = config.programs(0);
+  const auto& p4_info = program.p4info();
+  std::unique_ptr<P4InfoManager> p4_info_manager =
+      absl::make_unique<P4InfoManager>(p4_info);
+  RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
 
+  // Create reset timers for P4 registers with the annotation.
+  for (const auto& reg : p4_info.registers()) {
+    ASSIGN_OR_RETURN(
+        P4Annotation annotation,
+        p4_info_manager->GetSwitchStackAnnotations(reg.preamble().name()));
+    if (annotation.register_reset_interval_ms()) {
+      TimerDaemon::DescriptorPtr handle;
+      std::string clear_value =
+          Uint64ToByteStream(annotation.register_reset_value());
+      RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
+          0, annotation.register_reset_interval_ms(),
+          [this, reg, clear_value]() -> ::util::Status {
+            auto session = bfrt::BfRtSession::sessionCreate();
+            CHECK_RETURN_IF_FALSE(session != nullptr)
+                << "Unable to create session.";
+            RETURN_IF_BFRT_ERROR(session->beginBatch());
+            ::p4::v1::RegisterEntry register_entry;
+            register_entry.set_register_id(reg.preamble().id());
+            register_entry.mutable_data()->set_bitstring(clear_value);
+            register_entry.clear_index();
+            auto t1 = absl::Now();
+            ::util::Status status = this->WriteRegisterEntry(
+                session, ::p4::v1::Update::MODIFY, register_entry);
+            auto t2 = absl::Now();
+            // We need to end the batch and destroy the session in every case.
+            APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
+            APPEND_STATUS_IF_BFRT_ERROR(status,
+                                        session->sessionCompleteOperations());
+            APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
+            VLOG(1) << "Resetted register " << reg.preamble().name() << " in "
+                    << (t2 - t1) / absl::Milliseconds(1) << " milliseconds.";
+            return status;
+          },
+          &handle));
+      register_timer_descriptors_.push_back(handle);
+    }
+  }
+
+  p4_info_manager_ = std::move(p4_info_manager);
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::VerifyForwardingPipelineConfig(
+    const ::p4::v1::ForwardingPipelineConfig& config) const {
+  // TODO(unknown): Implement if needed.
   return ::util::OkStatus();
 }
 
@@ -661,6 +720,51 @@ namespace barefoot {
   return ::util::OkStatus();
 }
 
+// TODO(max): Converge with SyncTableCounters
+::util::Status BfrtTableManager::SyncTableRegisters(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session, bf_rt_id_t table_id) {
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
+  const bfrt::BfRtTable* table;
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+  }
+  auto sync_notifier = std::make_shared<absl::Notification>();
+  std::weak_ptr<absl::Notification> weak_ref(sync_notifier);
+  std::set<bfrt::TableOperationsType> supported_ops;
+  RETURN_IF_BFRT_ERROR(table->tableOperationsSupported(&supported_ops));
+  // Controller tries to read register, but the table doesn't support it.
+  CHECK_RETURN_IF_FALSE(
+      supported_ops.count(bfrt::TableOperationsType::REGISTER_SYNC))
+      << "Registers are not supported by table " << table_id << ".";
+  std::unique_ptr<bfrt::BfRtTableOperations> table_op;
+  RETURN_IF_BFRT_ERROR(table->operationsAllocate(
+      bfrt::TableOperationsType::REGISTER_SYNC, &table_op));
+  RETURN_IF_BFRT_ERROR(table_op->registerSyncSet(
+      *bfrt_session, bf_dev_tgt,
+      [table_id, weak_ref](const bf_rt_target_t& dev_tgt, void* cookie) {
+        if (auto notifier = weak_ref.lock()) {
+          VLOG(1) << "Table registers for table " << table_id << " synced.";
+          notifier->Notify();
+        } else {
+          VLOG(1) << "Notifier expired before table " << table_id
+                  << " could be synced.";
+        }
+      },
+      nullptr));
+  RETURN_IF_BFRT_ERROR(table->tableOperationsExecute(*table_op.get()));
+
+  // Wait until sync done or timeout.
+  if (!sync_notifier->WaitForNotificationWithTimeout(
+          absl::Milliseconds(FLAGS_bfrt_table_sync_timeout_ms))) {
+    return MAKE_ERROR(ERR_OPER_TIMEOUT)
+           << "Timeout while syncing table registers of table " << table_id
+           << ".";
+  }
+
+  return ::util::OkStatus();
+}
+
 ::util::StatusOr<std::vector<uint32>> BfrtTableManager::GetP4TableIds() {
   std::vector<uint32> ids;
   std::vector<const bfrt::BfRtTable*> bfrt_tables;
@@ -860,13 +964,197 @@ BfrtTableManager::ReadDirectCounterEntry(
   return result;
 }
 
+namespace {
+// Helper function to get the field ID of the "f1" register data field.
+// TODO(max): Maybe use table name and strip off "pipe." at the beginning?
+// std::string table_name;
+// RETURN_IF_BFRT_ERROR(table->tableNameGet(&table_name));
+// RETURN_IF_BFRT_ERROR(
+//     table->dataFieldIdGet(absl::StrCat(table_name, ".", "f1"), &field_id));
+::util::StatusOr<bf_rt_id_t> GetRegisterDataFieldId(
+    const bfrt::BfRtTable* table) {
+  std::vector<bf_rt_id_t> data_field_ids;
+  RETURN_IF_BFRT_ERROR(table->dataFieldIdListGet(&data_field_ids));
+  for (const auto& field_id : data_field_ids) {
+    std::string field_name;
+    RETURN_IF_BFRT_ERROR(table->dataFieldNameGet(field_id, &field_name));
+    bfrt::DataType data_type;
+    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
+    if (absl::EndsWith(field_name, ".f1")) {
+      return field_id;
+    }
+  }
+
+  RETURN_ERROR(ERR_INTERNAL) << "Could not find register data field id.";
+}
+}  // namespace
+
+::util::Status BfrtTableManager::ReadRegisterEntry(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    const ::p4::v1::RegisterEntry& register_entry,
+    WriterInterface<::p4::v1::ReadResponse>* writer) {
+  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
+                   bfrt_id_mapper_->GetBfRtId(register_entry.register_id()));
+  const bfrt::BfRtTable* table;
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+    RETURN_IF_ERROR(p4_info_manager_->VerifyRegisterEntry(register_entry));
+  }
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
+  RETURN_IF_ERROR(SyncTableRegisters(bfrt_session, table_id));
+
+  size_t lowest_id, highest_id;
+  if (register_entry.has_index()) {
+    lowest_id = register_entry.index().index();
+    highest_id = lowest_id + 1;
+  } else {
+    size_t table_size;
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+    lowest_id = 0;
+    highest_id = table_size;
+  }
+  ::p4::v1::ReadResponse resp;
+  for (size_t i = lowest_id; i < highest_id; ++i) {
+    // Allocate table entry
+    std::unique_ptr<bfrt::BfRtTableKey> table_key;
+    RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+
+    // Table key: $REGISTER_INDEX
+    bf_rt_id_t field_id;
+    RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kRegisterIndex, &field_id));
+    RETURN_IF_BFRT_ERROR(table_key->setValue(field_id, static_cast<uint64>(i)));
+
+    // Read the register data.
+    std::unique_ptr<bfrt::BfRtTableData> table_data;
+    RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+    RETURN_IF_BFRT_ERROR(table->tableEntryGet(
+        *bfrt_session, bf_dev_tgt, *table_key,
+        bfrt::BfRtTable::BfRtTableGetFlag::GET_FROM_SW, table_data.get()))
+        << "Could not find table entry for register "
+        << register_entry.ShortDebugString() << ".";
+
+    ::p4::v1::RegisterEntry result;
+    result.set_register_id(register_entry.register_id());
+    // Register key: $REGISTER_INDEX
+    uint64 register_index;
+    RETURN_IF_BFRT_ERROR(table->keyFieldIdGet(kRegisterIndex, &field_id));
+    RETURN_IF_BFRT_ERROR(table_key->getValue(field_id, &register_index));
+    result.mutable_index()->set_index(register_index);
+
+    // Register data: <register_name>.f1
+    ASSIGN_OR_RETURN(field_id, GetRegisterDataFieldId(table));
+    bfrt::DataType data_type;
+    RETURN_IF_BFRT_ERROR(table->dataFieldDataTypeGet(field_id, &data_type));
+    switch (data_type) {
+      case bfrt::DataType::BYTE_STREAM: {
+        // Even though the data type says byte stream, we can only fetch the
+        // data in an uint vector with one entry per pipe.
+        std::vector<uint64> register_data;
+        RETURN_IF_BFRT_ERROR(table_data->getValue(field_id, &register_data));
+        result.mutable_data()->set_bitstring(
+            Uint64ToByteStream(register_data[0]));
+        // TODO(max): Switch to tuple form, once compiler support landed.
+        // ::p4::v1::P4StructLike register_tuple;
+        // for (const auto& data : register_data) {
+        //   LOG(INFO) << data;
+        //   register_tuple.add_members()->set_bitstring(Uint64ToByteStream(data));
+        // }
+        // *result.mutable_data()->mutable_tuple() = register_tuple;
+        break;
+      }
+      default:
+        RETURN_ERROR(ERR_INVALID_PARAM)
+            << "Unsupported register data type " << static_cast<int>(data_type)
+            << " for RegisterEntry " << register_entry.ShortDebugString();
+    }
+
+    {
+      absl::ReaderMutexLock l(&lock_);
+      RETURN_IF_ERROR(p4_info_manager_->VerifyRegisterEntry(result));
+    }
+    *resp.add_entities()->mutable_register_entry() = result;
+  }
+  VLOG(1) << "ReadRegisterEntry resp " << resp.DebugString();
+  if (!writer->Write(resp)) {
+    return MAKE_ERROR(ERR_INTERNAL) << "Write to stream for failed.";
+  }
+
+  return ::util::OkStatus();
+}
+
+::util::Status BfrtTableManager::WriteRegisterEntry(
+    std::shared_ptr<bfrt::BfRtSession> bfrt_session,
+    const ::p4::v1::Update::Type type,
+    const ::p4::v1::RegisterEntry& register_entry) {
+  CHECK_RETURN_IF_FALSE(type == ::p4::v1::Update::MODIFY)
+      << "Update type of RegisterEntry " << register_entry.ShortDebugString()
+      << " must be MODIFY.";
+  CHECK_RETURN_IF_FALSE(register_entry.has_data())
+      << "RegisterEntry " << register_entry.ShortDebugString()
+      << " must have data.";
+  CHECK_RETURN_IF_FALSE(register_entry.data().data_case() ==
+                        ::p4::v1::P4Data::kBitstring)
+      << "Only bitstring registers data types are supported.";
+
+  ASSIGN_OR_RETURN(bf_rt_id_t table_id,
+                   bfrt_id_mapper_->GetBfRtId(register_entry.register_id()));
+  const bfrt::BfRtTable* table;
+  {
+    absl::ReaderMutexLock l(&lock_);
+    RETURN_IF_BFRT_ERROR(bfrt_info_->bfrtTableFromIdGet(table_id, &table));
+    RETURN_IF_ERROR(p4_info_manager_->VerifyRegisterEntry(register_entry));
+  }
+  auto bf_dev_tgt = bfrt_id_mapper_->GetDeviceTarget();
+
+  // Table key: $REGISTER_INDEX
+  std::unique_ptr<bfrt::BfRtTableKey> table_key;
+  RETURN_IF_BFRT_ERROR(table->keyAllocate(&table_key));
+  bf_rt_id_t register_index_field_id;
+  RETURN_IF_BFRT_ERROR(
+      table->keyFieldIdGet(kRegisterIndex, &register_index_field_id));
+
+  // Table data: <register_name>.f1
+  std::unique_ptr<bfrt::BfRtTableData> table_data;
+  RETURN_IF_BFRT_ERROR(table->dataAllocate(&table_data));
+  bf_rt_id_t field_id;
+  ASSIGN_OR_RETURN(field_id, GetRegisterDataFieldId(table));
+  size_t data_field_size;
+  RETURN_IF_BFRT_ERROR(table->dataFieldSizeGet(field_id, &data_field_size));
+  // The SDE expects any array with the full width.
+  std::string value((data_field_size + 7) / 8, '\x00');
+  value.replace(value.size() - register_entry.data().bitstring().size(),
+                register_entry.data().bitstring().size(),
+                register_entry.data().bitstring());
+  RETURN_IF_BFRT_ERROR(table_data->setValue(
+      field_id, reinterpret_cast<const uint8*>(value.data()), value.size()));
+
+  if (register_entry.has_index()) {
+    // Single index target.
+    RETURN_IF_BFRT_ERROR(table_key->setValue(
+        register_index_field_id,
+        static_cast<uint64>(register_entry.index().index())));
+    RETURN_IF_BFRT_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
+                                              *table_key, *table_data));
+  } else {
+    // Wildcard write to all indices.
+    size_t table_size;
+    RETURN_IF_BFRT_ERROR(table->tableSizeGet(&table_size));
+    for (size_t i = 0; i < table_size; ++i) {
+      RETURN_IF_BFRT_ERROR(
+          table_key->setValue(register_index_field_id, static_cast<uint64>(i)));
+      RETURN_IF_BFRT_ERROR(table->tableEntryMod(*bfrt_session, bf_dev_tgt,
+                                                *table_key, *table_data));
+    }
+  }
+
+  return ::util::OkStatus();
+}
+
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
     const BfrtIdMapper* bfrt_id_mapper) {
   return absl::WrapUnique(new BfrtTableManager(bfrt_id_mapper));
 }
-
-BfrtTableManager::BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper)
-    : bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
 }  // namespace barefoot
 }  // namespace hal

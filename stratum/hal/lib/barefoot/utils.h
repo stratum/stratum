@@ -13,6 +13,7 @@
 #include "bf_rt/bf_rt_table_key.hpp"
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/integral_types.h"
+#include "stratum/lib/utils.h"
 #include "stratum/glue/status/status.h"
 #include "stratum/glue/status/statusor.h"
 #include "stratum/hal/lib/barefoot/bfrt.pb.h"
@@ -105,6 +106,9 @@ template <typename T>
     bf_rt_target_t bf_dev_target, const bfrt::BfRtTable* table,
     std::vector<std::unique_ptr<bfrt::BfRtTableKey>>* table_keys,
     std::vector<std::unique_ptr<bfrt::BfRtTableData>>* table_datums);
+
+// Debugging helper function that prints a Bfrt TableKey to LOG(INFO).
+::util::Status DumpTableData(const bfrt::BfRtTableData* table_data);
 
 // A set of helper functions to determine whether a P4 match object constructed
 // from a bfrt table key is a "don't care" match.
