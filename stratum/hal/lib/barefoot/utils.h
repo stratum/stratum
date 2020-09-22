@@ -124,6 +124,13 @@ std::string RangeDefaultHigh(size_t bitwidth);
 
 std::string GetBfChipType(bf_dev_id_t dev_id);
 
+// Check and converts priority value from P4Rutime to Bfrt, vice versa.
+// In P4Runtime, a higher number indicates that the entry must
+// be given higher priority, however, in Bfrt the lower number means higher
+// priority for table lookup.
+::util::StatusOr<uint64> ConvertPriorityFromP4rtToBfrt(int32 priority);
+::util::StatusOr<int32> ConvertPriorityFromBfrtToP4rt(uint64 priority);
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum

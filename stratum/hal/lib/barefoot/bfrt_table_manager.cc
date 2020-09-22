@@ -142,8 +142,9 @@ namespace barefoot {
         table->keyFieldIdGet("$MATCH_PRIORITY", &priority_field_id))
         << "table " << table_entry.table_id()
         << " doesn't support match priority.";
-    RETURN_IF_BFRT_ERROR(table_key->setValue(
-        priority_field_id, static_cast<uint64>(table_entry.priority())));
+    ASSIGN_OR_RETURN(uint64 priority,
+                     ConvertPriorityFromP4rtToBfrt(table_entry.priority()));
+    RETURN_IF_BFRT_ERROR(table_key->setValue(priority_field_id, priority));
   }
 
   return ::util::OkStatus();
@@ -356,7 +357,9 @@ namespace barefoot {
       uint64 table_entry_priority = 0;
       RETURN_IF_BFRT_ERROR(
           table_key.getValue(key_field_id, &table_entry_priority));
-      result.set_priority(table_entry_priority);
+      ASSIGN_OR_RETURN(int32 p4rt_priority,
+                       ConvertPriorityFromBfrtToP4rt(table_entry_priority));
+      result.set_priority(p4rt_priority);
     } else {
       ::p4::v1::FieldMatch match;  // Added to the entry later.
       match.set_field_id(key_field_id);
