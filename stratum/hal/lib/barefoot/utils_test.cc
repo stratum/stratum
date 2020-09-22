@@ -13,6 +13,7 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/test_utils/matchers.h"
 #include "stratum/lib/utils.h"
+#include "stratum/public/proto/error.pb.h"
 
 using ::testing::HasSubstr;
 
@@ -151,6 +152,47 @@ TEST(IsDontCareMatchTest, RejectAllOptionalMatch) {
     m.set_value("\xff", 1);
     EXPECT_FALSE(IsDontCareMatch(m));
   }
+}
+
+TEST(ConvertPriorityTest, ToAndFromP4Runtime) {
+  const int32 kP4rtPriority = 1;
+  auto bfrt_priority = ConvertPriorityFromP4rtToBfrt(kP4rtPriority);
+  EXPECT_OK(bfrt_priority);
+  EXPECT_EQ(bfrt_priority.ValueOrDie(), 0xfffffe);
+  auto p4rt_priority_from_bfrt =
+      ConvertPriorityFromBfrtToP4rt(bfrt_priority.ValueOrDie());
+  EXPECT_OK(p4rt_priority_from_bfrt);
+  EXPECT_EQ(kP4rtPriority, p4rt_priority_from_bfrt.ValueOrDie());
+}
+
+TEST(ConvertPriorityTest, ToAndFromBfrt) {
+  const uint64 kBfrtPriority = 1;
+  auto p4rt_priority = ConvertPriorityFromBfrtToP4rt(kBfrtPriority);
+  EXPECT_OK(p4rt_priority);
+  EXPECT_EQ(p4rt_priority.ValueOrDie(), 0xfffffe);
+  auto bfrt_priority_from_p4rt =
+      ConvertPriorityFromBfrtToP4rt(p4rt_priority.ValueOrDie());
+  EXPECT_OK(bfrt_priority_from_p4rt);
+  EXPECT_EQ(kBfrtPriority, bfrt_priority_from_p4rt.ValueOrDie());
+}
+
+TEST(ConvertPriorityTest, InvalidP4rtPriority) {
+  {
+    auto result = ConvertPriorityFromP4rtToBfrt(0x1000000);
+    EXPECT_THAT(result.status().error_code(),
+                stratum::ErrorCode::ERR_INVALID_PARAM);
+  }
+  {
+    auto result = ConvertPriorityFromP4rtToBfrt(-1);
+    EXPECT_THAT(result.status().error_code(),
+                stratum::ErrorCode::ERR_INVALID_PARAM);
+  }
+}
+
+TEST(ConvertPriorityTest, InvalidBfrtPriority) {
+  auto result = ConvertPriorityFromBfrtToP4rt(0x1000000);
+  EXPECT_THAT(result.status().error_code(),
+              stratum::ErrorCode::ERR_INVALID_PARAM);
 }
 
 }  // namespace barefoot

@@ -333,6 +333,17 @@ std::string GetBfChipType(bf_dev_id_t dev_id) {
   return TofinoDevTypeToString(dev_type);
 }
 
+::util::StatusOr<uint64> ConvertPriorityFromP4rtToBfrt(int32 priority) {
+  CHECK_RETURN_IF_FALSE(priority >= 0);
+  CHECK_RETURN_IF_FALSE(priority <= kMaxPriority);
+  return kMaxPriority - priority;
+}
+
+::util::StatusOr<int32> ConvertPriorityFromBfrtToP4rt(uint64 priority) {
+  CHECK_RETURN_IF_FALSE(priority <= kMaxPriority);
+  return static_cast<int32>(kMaxPriority - priority);
+}
+
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
