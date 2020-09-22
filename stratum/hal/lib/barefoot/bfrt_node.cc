@@ -268,6 +268,7 @@ BfrtNode::~BfrtNode() = default;
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
       << "Missing P4 device config";
+  RETURN_IF_ERROR(bfrt_table_manager_->VerifyForwardingPipelineConfig(config));
   return ::util::OkStatus();
 }
 
@@ -327,10 +328,14 @@ BfrtNode::~BfrtNode() = default;
         status = bfrt_counter_manager_->WriteIndirectCounterEntry(
             session, update.type(), update.entity().counter_entry());
         break;
+      case ::p4::v1::Entity::kRegisterEntry: {
+        status = bfrt_table_manager_->WriteRegisterEntry(
+            session, update.type(), update.entity().register_entry());
+        break;
+      }
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
-      case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
       default:
         status = MAKE_ERROR()
@@ -423,10 +428,16 @@ BfrtNode::~BfrtNode() = default;
             status.ValueOrDie());
         break;
       }
+      case ::p4::v1::Entity::kRegisterEntry: {
+        auto status = bfrt_table_manager_->ReadRegisterEntry(
+            session, entity.register_entry(), writer);
+        success &= status.ok();
+        details->push_back(status);
+        break;
+      }
       case ::p4::v1::Entity::kMeterEntry:
       case ::p4::v1::Entity::kDirectMeterEntry:
       case ::p4::v1::Entity::kValueSetEntry:
-      case ::p4::v1::Entity::kRegisterEntry:
       case ::p4::v1::Entity::kDigestEntry:
       default: {
         success = false;

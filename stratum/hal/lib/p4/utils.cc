@@ -6,6 +6,8 @@
 
 #include "stratum/hal/lib/p4/utils.h"
 
+#include <arpa/inet.h>
+
 #include "absl/strings/str_format.h"
 #include "absl/strings/substitute.h"
 #include "p4/config/v1/p4info.pb.h"
@@ -66,6 +68,30 @@ std::string AddP4ObjectReferenceString(const std::string& log_p4_object) {
   }
 
   return map_value;
+}
+
+std::string Uint64ToByteStream(uint64 val) {
+  uint64 tmp = (htonl(1) == 1)
+                   ? val
+                   : (static_cast<uint64>(htonl(val)) << 32) | htonl(val >> 32);
+  std::string bytes = "";
+  bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint64));
+  // Strip leading zeroes.
+  while (bytes.size() > 1 && bytes[0] == '\x00') {
+    bytes = bytes.substr(1);
+  }
+  return bytes;
+}
+
+std::string Uint32ToByteStream(uint32 val) {
+  uint32 tmp = htonl(val);
+  std::string bytes = "";
+  bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
+  // Strip leading zeroes.
+  while (bytes.size() > 1 && bytes[0] == '\x00') {
+    bytes = bytes.substr(1);
+  }
+  return bytes;
 }
 
 }  // namespace hal
