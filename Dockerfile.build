@@ -42,13 +42,6 @@ RUN add-apt-repository "$LLVM_REPO_NAME"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends clang-format clang
 
-ADD .bazelversion .
-ARG BAZELISK_VERSION
-RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 && \
-    mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
-    chmod +x /usr/local/bin/bazel && \
-    bazel version
-
 # Install java and lcov for Bazel coverage
 ARG JDK_URL
 ENV JAVA_HOME /usr/local/lib/jvm
@@ -80,6 +73,14 @@ RUN git clone https://github.com/p4lang/behavioral-model.git /tmp/bmv2 && \
     cd targets/simple_switch && \
     make -j${JOBS} && make install && ldconfig && \
     rm -rf /tmp/bmv2
+
+# Bazelisk and Bazel
+ADD .bazelversion .
+ARG BAZELISK_VERSION
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64 && \
+    mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
+    chmod +x /usr/local/bin/bazel && \
+    bazel version
 
 # Tools for style and license checking
 RUN pip install setuptools wheel && \
