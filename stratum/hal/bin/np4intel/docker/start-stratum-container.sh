@@ -64,6 +64,8 @@ done
 docker run -it --rm --privileged \
     -v /dev:/dev -v /sys:/sys  \
     -p 28000:28000 \
+    -p 9339:9339 \
+    -p 9559:9559 \
     -v $CONFIG_DIR:/stratum_configs \
     -v $LOG_DIR:/stratum_logs \
     --entrypoint=$ENTRYPOINT \
