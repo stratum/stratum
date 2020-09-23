@@ -71,6 +71,9 @@ jobs:
   unit_tests:
     docker:
       - image: stratumproject/build:build
+    environment:
+      - CC: clang
+      - CXX: clang++
     steps:
       - checkout
       - *restore_bazel_cache
@@ -90,6 +93,9 @@ jobs:
   cdlang_tests:
     docker:
       - image: stratumproject/build:build
+    environment:
+      - CC: clang
+      - CXX: clang++
     steps:
       - checkout
       - *restore_bazel_cache
@@ -109,6 +115,9 @@ jobs:
   coverage:
     docker:
       - image: stratumproject/build:build
+    environment:
+      - CC: clang
+      - CXX: clang++
     steps:
       - checkout
       - *restore_bazel_cache
@@ -116,6 +125,7 @@ jobs:
       - run:
           name: Run test and collect coverage data
           command: xargs -a .circleci/test-targets.txt bazel coverage
+          no_output_timeout: 20m
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
@@ -164,6 +174,8 @@ jobs:
       - DOCKER_SCOPE: stratum/p4c_backends/fpm
       - DOCKER_FILE: Dockerfile
       - DOCKER_IMG: stratumproject/p4c-fpm
+      - CC: clang
+      - CXX: clang++
     steps:
       - setup_remote_docker
       - checkout
