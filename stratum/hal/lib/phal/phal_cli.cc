@@ -24,9 +24,6 @@
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
 
-DECLARE_bool(colorlogtostderr);
-DECLARE_bool(logtostderr);
-DECLARE_int32(stderrthreshold);
 DEFINE_string(phal_db_url, stratum::kPhalDbServiceUrl,
               "URL to the phalDb server.");
 DEFINE_uint64(interval, 5000, "Subscribe poll interval in ms.");
@@ -285,9 +282,6 @@ class PhalCli {
 };
 
 ::util::Status Main(int argc, char** argv) {
-  FLAGS_colorlogtostderr = true;
-  FLAGS_logtostderr = true;
-  FLAGS_stderrthreshold = 0;
   ::gflags::SetUsageMessage(kUsage);
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
