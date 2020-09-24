@@ -33,8 +33,9 @@ constexpr char kDefaultAuthPolicyFilePath[] =
 constexpr char kLocalStratumUrl[] = "localhost:28000";
 
 // This URL is used by external gNMI, gNOI and P4Runtime clients.
-// This TCP port 9339 is an IANA-reserved port for gNMI and gNOI.
+// TCP port 9339 is an IANA-reserved port for gNMI and gNOI.
 // TCP port 9559 is an IANA-reserved port for P4Runtime.
+// TODO(max): Remove the deprecated port 28000 from default list.
 constexpr char kExternalStratumUrls[] =
     "0.0.0.0:28000,0.0.0.0:9339,0.0.0.0:9559";
 
