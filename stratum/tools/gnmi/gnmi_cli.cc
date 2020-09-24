@@ -65,10 +65,6 @@ optional arguments:
     }                                                                        \
   } while (0)
 
-DECLARE_bool(colorlogtostderr);
-DECLARE_bool(logtostderr);
-DECLARE_int32(stderrthreshold);
-
 DEFINE_string(grpc_addr, "127.0.0.1:9339", "gNMI server address");
 DEFINE_string(bool_val, "", "Boolean value to be set");
 DEFINE_string(int_val, "", "Integer value to be set (64-bit)");
@@ -310,9 +306,6 @@ void HandleSignal(int signal) {
 }  // namespace stratum
 
 int main(int argc, char** argv) {
-  FLAGS_colorlogtostderr = true;
-  FLAGS_logtostderr = true;
-  FLAGS_stderrthreshold = 0;
   ::gflags::SetUsageMessage(kUsage);
   InitGoogle(argv[0], &argc, &argv, true);
   stratum::InitStratumLogging();
