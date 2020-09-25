@@ -144,7 +144,6 @@ jobs:
       - run:
           name: Run test and collect coverage data
           command: xargs -a .circleci/test-targets.txt bazel coverage
-          no_output_timeout: 20m
       - *analyze_bazel_profile
       - *store_bazel_profile
       - run:
