@@ -65,6 +65,25 @@ docker_push: &docker_push
     name: Push Docker image
     command: docker push $DOCKER_IMG
 
+commands:
+    docker_build2:
+      parameters:
+          image:
+            type: string
+          tag:
+            type: string
+          file:
+            type: string
+          scope:
+            type: string
+      steps:
+          - run:
+              name: Build Docker image
+              command: |
+                docker pull <<parameters.image>>:build || true
+                cd <<parameters.scope>>
+                docker build -f <<parameters.file>> -t <<parameters.image>>:<<parameters.tag>> --cache-from <<parameters.image>>:build --label vcs-ref=$CIRCLE_SHA1 .
+
 jobs:
 
   # Build targets and run unit tests.
@@ -153,14 +172,17 @@ jobs:
     environment:
       - DOCKER_SCOPE: .
       - DOCKER_FILE: Dockerfile.build
-      - DOCKER_IMG: stratumproject/build:git-$CIRCLE_SHA1
+      - DOCKER_IMG: stratumproject/build
     steps:
       - setup_remote_docker
       - checkout
-      - run: echo "$CIRCLE_SHA1" && echo $DOCKER_IMG && exit 1
       - *docker_login
-      - *docker_build
-      - run: docker image inspect --format='{{index .RepoDigests 0}}' $DOCKER_IMG
+      - docker_build2:
+          image: stratumproject/build
+          tag: git-$CIRCLE_SHA1
+          file: Dockerfile.build
+          scope: .
+      - run: docker image inspect $DOCKER_IMG:git-$CIRCLE_SHA1
       - *docker_push
 
   publish-docker-mininet:
