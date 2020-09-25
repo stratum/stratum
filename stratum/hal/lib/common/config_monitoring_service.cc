@@ -135,10 +135,10 @@ ConfigMonitoringService::~ConfigMonitoringService() {
 }
 
 namespace {
-// Helper function to determine whether a container of protobuf messages have an
-// unique name field.
+// Helper function to determine whether all protobuf messages in a container
+// have an unique name field.
 template <typename T>
-bool AreUniqueNames(const T& values) {
+bool ContainsUniqueNames(const T& values) {
   absl::flat_hash_set<std::string> unique_names;
   for (const auto& e : values) {
     if (e.name().empty()) continue;
@@ -153,16 +153,12 @@ bool AreUniqueNames(const T& values) {
 ::util::Status ConfigMonitoringService::VerifyChassisConfig(
     const ChassisConfig& config) {
   // Validate the names of the components, if given.
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.nodes()));
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.singleton_ports()));
-  CHECK_RETURN_IF_FALSE(gtl::STLIsUnique(
-      config.singleton_ports(),
-      [](const SingletonPort& a, const SingletonPort& b) {
-        return !a.name().empty() && !b.name().empty() && a.name() == b.name();
-      }));
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.trunk_ports()));
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.port_groups()));
-  CHECK_RETURN_IF_FALSE(AreUniqueNames(config.optical_network_interfaces()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.nodes()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.singleton_ports()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.trunk_ports()));
+  CHECK_RETURN_IF_FALSE(ContainsUniqueNames(config.port_groups()));
+  CHECK_RETURN_IF_FALSE(
+      ContainsUniqueNames(config.optical_network_interfaces()));
 
   return ::util::OkStatus();
 }
