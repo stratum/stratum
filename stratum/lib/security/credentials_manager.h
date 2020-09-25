@@ -16,14 +16,14 @@
 
 namespace stratum {
 using TlsCredentialReloadInterface =
-    ::grpc_impl::experimental::TlsCredentialReloadInterface;
+    ::grpc::experimental::TlsCredentialReloadInterface;
 using TlsCredentialReloadArg =
-    ::grpc_impl::experimental::TlsCredentialReloadArg;
+    ::grpc::experimental::TlsCredentialReloadArg;
 using TlsCredentialReloadConfig =
-    grpc_impl::experimental::TlsCredentialReloadConfig;
-using TlsKeyMaterialsConfig = ::grpc_impl::experimental::TlsKeyMaterialsConfig;
-using TlsCredentialsOptions = ::grpc_impl::experimental::TlsCredentialsOptions;
-using ::grpc_impl::experimental::TlsServerCredentials;
+    ::grpc::experimental::TlsCredentialReloadConfig;
+using TlsKeyMaterialsConfig = ::grpc::experimental::TlsKeyMaterialsConfig;
+using TlsCredentialsOptions = ::grpc::experimental::TlsCredentialsOptions;
+using ::grpc::experimental::TlsServerCredentials;
 
 // CredentialsReloadInterface is an implementation of
 // the TlsCredentialReloadInterface which helps reloading gRPC server
