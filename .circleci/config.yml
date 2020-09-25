@@ -147,6 +147,22 @@ jobs:
       - *docker_build
       - *docker_push
 
+  publish-docker-build2:
+    docker:
+      - image: docker:19
+    environment:
+      - DOCKER_SCOPE: .
+      - DOCKER_FILE: Dockerfile.build
+      - DOCKER_IMG: stratumproject/build:git-$CIRCLE_SHA1
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run: echo "$CIRCLE_SHA1" && echo $DOCKER_IMG && exit 1
+      - *docker_login
+      - *docker_build
+      - run: docker image inspect --format='{{index .RepoDigests 0}}' $DOCKER_IMG
+      - *docker_push
+
   publish-docker-mininet:
     machine: true
     environment:
@@ -275,12 +291,25 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - unit_tests
-      - cdlang_tests
-      - coverage
-      - cpp-style-check
-      - license-check
-      - bazel-style-check
+      - publish-docker-build2
+      - unit_tests:
+          requires:
+            - publish-docker-build2
+      - cdlang_tests:
+          requires:
+            - publish-docker-build2
+      - coverage:
+          requires:
+            - publish-docker-build2
+      - cpp-style-check:
+          requires:
+            - publish-docker-build2
+      - license-check:
+          requires:
+            - publish-docker-build2
+      - bazel-style-check:
+          requires:
+            - publish-docker-build2
   docker-publish:
     jobs:
       - publish-docker-build:
