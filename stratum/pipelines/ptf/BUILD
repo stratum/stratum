@@ -4,7 +4,7 @@
 
 licenses(["notice"])  # Apache v2
 
-load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
+# load("@build_stack_rules_proto//python:python_grpc_library.bzl", "python_grpc_library")
 load(":scapy_exec.bzl", "scapy_exec")
 
 exports_files(["LICENSE"])
@@ -25,10 +25,10 @@ filegroup(
     srcs = ["scapy_exec.py"]
 )
 
-python_grpc_library(
-    name = "ptf_py_lib",
-    deps = ["@com_google_googleapis//google/rpc:code_proto"],
-)
+# python_grpc_library(
+#     name = "ptf_py_lib",
+#     deps = ["@com_google_googleapis//google/rpc:code_proto"],
+# )
 
 scapy_exec(
     name = "scapy"
