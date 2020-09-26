@@ -246,6 +246,9 @@ BfrtNode::~BfrtNode() = default;
       device_id_, bfrt_config_.programs(0).name(), &bfrt_info_));
 
   // Push pipeline config to the managers.
+  // TODO(max): Do not pass bfrt_info_ (or other bfrt resources) directly to
+  // other managers. On (a second) pipeline push these will get freed while
+  // still in use.
   RETURN_IF_ERROR(
       bfrt_id_mapper_->PushForwardingPipelineConfig(bfrt_config_, bfrt_info_));
   RETURN_IF_ERROR(
