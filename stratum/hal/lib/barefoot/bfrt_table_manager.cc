@@ -29,6 +29,7 @@ namespace barefoot {
 
 BfrtTableManager::BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper)
     : register_timer_descriptors_(),
+      bfrt_info_(nullptr),
       p4_info_manager_(nullptr),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
 
