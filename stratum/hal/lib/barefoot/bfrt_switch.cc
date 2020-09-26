@@ -102,6 +102,7 @@ BfrtSwitch::~BfrtSwitch() {}
 }
 
 ::util::Status BfrtSwitch::CommitForwardingPipelineConfig(uint64 node_id) {
+  absl::WriterMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   RETURN_IF_ERROR(bfrt_node->CommitForwardingPipelineConfig());
 
@@ -113,6 +114,7 @@ BfrtSwitch::~BfrtSwitch() {}
 
 ::util::Status BfrtSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& config) {
+  absl::WriterMutexLock l(&chassis_lock);
   ASSIGN_OR_RETURN(auto* bfrt_node, GetBfrtNodeFromNodeId(node_id));
   return bfrt_node->VerifyForwardingPipelineConfig(config);
 }
