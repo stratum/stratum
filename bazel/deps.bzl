@@ -37,12 +37,10 @@ def stratum_deps():
         http_archive(
             name = "com_github_grpc_grpc",
             urls = [
-                # TODO(bocon) switch back to grpc when grpc/grpc#22626 is merged
-                # gRPC version: 1.28.1 + grpc/grpc#22626 cherry-pick
-                "https://github.com/bocon13/grpc/archive/0e11d8fe7388e7147de57bfab1044ec72786ffca.tar.gz",
+                "https://github.com/grpc/grpc/archive/v1.30.0.tar.gz",
             ],
-            strip_prefix = "grpc-0e11d8fe7388e7147de57bfab1044ec72786ffca",
-            sha256 = "fb8af4ad2b7f291fbca7d458c0addd743c8769538248c0f32816250cd3e2d58d",
+            strip_prefix = "grpc-1.30.0",
+            sha256 = "419dba362eaf8f1d36849ceee17c3e2ff8ff12ac666b42d3ff02a164ebe090e9",
         )
 
     if "com_google_googleapis" not in native.existing_rules():
