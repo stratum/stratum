@@ -61,7 +61,8 @@ class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
       LOCKS_EXCLUDED(config_lock_);
 
   // Verifies platform independent properties of the given ChassisConfig proto.
-  // Note that PushChassisConfig calls VerifyChassisConfig at the beginning.
+  // It is called by PushChassisConfig at the beginning and by Set operations to
+  // verify the new configuration.
   ::util::Status VerifyChassisConfig(const ChassisConfig& config);
 
   // Returns the set of capabilities that is supported by the switch.
