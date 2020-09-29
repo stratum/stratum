@@ -100,6 +100,11 @@ TEST(BcmUtilsTest, PrintBcmPortOptionsForNonEmptyOption) {
             PrintBcmPortOptions(options));
 }
 
+TEST(BcmUtilsTest, PrintBcmChipNumber) {
+  BcmChip::BcmChipType chip_type = BcmChip::TOMAHAWK;
+  EXPECT_EQ("BCM56960", PrintBcmChipNumber(chip_type));
+}
+
 }  // namespace bcm
 }  // namespace hal
 }  // namespace stratum
