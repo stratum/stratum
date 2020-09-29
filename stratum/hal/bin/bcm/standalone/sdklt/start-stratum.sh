@@ -28,7 +28,5 @@ exec stratum_bcm_sdklt \
     -phal_config_file=/etc/stratum/${PLATFORM}/phal_config.pb.txt \
     -bcm_sdk_checkpoint_dir=/tmp/bcm_chkpt \
     -log_dir=/var/log/stratum \
-    -colorlogtostderr \
-    -stderrthreshold=0 \
     -v=0 \
     $@
