@@ -60,6 +60,11 @@ class ConfigMonitoringService final : public ::gnmi::gNMI::Service {
                                    std::unique_ptr<ChassisConfig> config)
       LOCKS_EXCLUDED(config_lock_);
 
+  // Verifies platform independent properties of the given ChassisConfig proto.
+  // It is called by PushChassisConfig at the beginning and by Set operations to
+  // verify the new configuration.
+  ::util::Status VerifyChassisConfig(const ChassisConfig& config);
+
   // Returns the set of capabilities that is supported by the switch.
   ::grpc::Status Capabilities(::grpc::ServerContext* context,
                               const ::gnmi::CapabilityRequest* req,

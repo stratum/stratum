@@ -225,6 +225,7 @@ stratum_cc_library(
         "@com_github_google_glog//:glog",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -245,6 +246,7 @@ stratum_cc_library(
         "//stratum/lib/security:auth_policy_checker",
         "//stratum/public/lib:error",
         "//stratum/glue/gtl:map_util",
+        "//stratum/glue/gtl:stl_util",
         #FIXME(boc)
         #"//util/time:clock",
     ],
