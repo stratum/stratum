@@ -29,7 +29,8 @@ namespace barefoot {
 
 BfrtTableManager::BfrtTableManager(OperationMode mode,
                                    const BfrtIdMapper* bfrt_id_mapper)
-    : register_timer_descriptors_(),
+    : mode_(mode),
+      register_timer_descriptors_(),
       bfrt_info_(nullptr),
       p4_info_manager_(nullptr),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
@@ -52,7 +53,8 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
     ASSIGN_OR_RETURN(
         P4Annotation annotation,
         p4_info_manager->GetSwitchStackAnnotations(reg.preamble().name()));
-    if (annotation.register_reset_interval_ms()) {
+    if (annotation.register_reset_interval_ms() &&
+        mode_ == OPERATION_MODE_STANDALONE) {
       TimerDaemon::DescriptorPtr handle;
       std::string clear_value =
           Uint64ToByteStream(annotation.register_reset_value());

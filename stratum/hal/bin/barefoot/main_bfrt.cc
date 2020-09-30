@@ -92,7 +92,7 @@ namespace barefoot {
   } else {
     mode = OPERATION_MODE_STANDALONE;
   }
-  LOG(ERROR) << "on_sw_model " << on_sw_model << " mode " << mode;
+  VLOG(1) << "Detected is_on_sw_model: " << on_sw_model;
 
   auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(device_id);
   auto bfrt_table_manager =

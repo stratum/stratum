@@ -149,6 +149,16 @@ class BFChassisManager {
                                   const PortConfig& config_old,
                                   PortConfig* config);
 
+  // Determines the mode of operation:
+  // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
+  // therefore needs to do all the SDK initialization itself.
+  // - OPERATION_MODE_COUPLED: when Stratum stack runs as part of Sandcastle
+  // stack, coupled with the rest of stack processes.
+  // - OPERATION_MODE_SIM: when Stratum stack runs in simulation mode.
+  // Note that this variable is set upon initialization and is never changed
+  // afterwards.
+  OperationMode mode_;
+
   bool initialized_ GUARDED_BY(chassis_lock);
 
   std::shared_ptr<Channel<BFPalInterface::PortStatusChangeEvent>>

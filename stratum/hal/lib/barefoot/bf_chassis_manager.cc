@@ -41,7 +41,8 @@ constexpr int BFChassisManager::kMaxXcvrEventDepth;
 BFChassisManager::BFChassisManager(OperationMode mode,
                                    PhalInterface* phal_interface,
                                    BFPalInterface* bf_pal_interface)
-    : initialized_(false),
+    : mode_(mode),
+      initialized_(false),
       port_status_change_event_channel_(nullptr),
       xcvr_event_writer_id_(kInvalidWriterId),
       phal_interface_(phal_interface),
