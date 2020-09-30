@@ -66,7 +66,7 @@ p4c -b bmv2 -a v1model -o /tmp/ --p4runtime-format text --p4runtime-file /tmp/<p
 # run P4Runtime client
 cp stratum/hal/bin/bmv2/update_config.py /tmp/ && \
 [sudo] docker run -v /tmp:/tmp -w /tmp p4lang/pi ./update_config.py \
-    --grpc-addr <YOUR_HOST_IP_ADDRESS>:28000 --json <prog>.json --p4info <prog>.proto.txt
+    --grpc-addr <YOUR_HOST_IP_ADDRESS>:9559 --json <prog>.json --p4info <prog>.proto.txt
 ```
 
 You can use the loopback program under `stratum/pipelines/loopback/p4c-out/bmv2` if you do not have your own

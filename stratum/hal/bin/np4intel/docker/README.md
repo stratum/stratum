@@ -198,7 +198,7 @@ to debug problems using gdb and the source code.
 ```
 
 5. At this point the ptf framework can be used to load tables or a real
-control plane can be started to talk to Stratum on port 28000.  If it's
+control plane can be started to talk to Stratum on port 9559. If it's
 on the local machine it will likely be localhost:28000 (depends on your
 docker network settings).  You will need to configure the network to
 redirect packets to this container if your trying to access stratum off

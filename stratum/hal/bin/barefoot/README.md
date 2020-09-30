@@ -242,7 +242,7 @@ want to read the forwarding state of the switch.
 
 To start a shell session, you can use (requires Docker):
 ```
-./p4runtime-sh-docker --grpc-addr <Stratum IP>:28000 --device-id 1 --election-id 0,1
+./p4runtime-sh-docker --grpc-addr <Stratum IP>:9559 --device-id 1 --election-id 0,1
 ```
 
 Refer to the [p4runtime-shell](https://github.com/p4lang/p4runtime-shell)
