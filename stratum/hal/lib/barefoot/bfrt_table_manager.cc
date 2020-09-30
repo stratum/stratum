@@ -27,7 +27,8 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-BfrtTableManager::BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper)
+BfrtTableManager::BfrtTableManager(OperationMode mode,
+                                   const BfrtIdMapper* bfrt_id_mapper)
     : register_timer_descriptors_(),
       bfrt_info_(nullptr),
       p4_info_manager_(nullptr),
@@ -1153,8 +1154,8 @@ namespace {
 }
 
 std::unique_ptr<BfrtTableManager> BfrtTableManager::CreateInstance(
-    const BfrtIdMapper* bfrt_id_mapper) {
-  return absl::WrapUnique(new BfrtTableManager(bfrt_id_mapper));
+    OperationMode mode, const BfrtIdMapper* bfrt_id_mapper) {
+  return absl::WrapUnique(new BfrtTableManager(mode, bfrt_id_mapper));
 }
 
 }  // namespace barefoot

@@ -82,10 +82,11 @@ namespace barefoot {
   int device_id(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // components with "device_id" instead of "node_id".
+  const OperationMode mode = OPERATION_MODE_STANDALONE;
 
   auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(device_id);
   auto bfrt_table_manager =
-      BfrtTableManager::CreateInstance(bfrt_id_mapper.get());
+      BfrtTableManager::CreateInstance(mode, bfrt_id_mapper.get());
   auto bfrt_action_profile_manager =
       BfrtActionProfileManager::CreateInstance(bfrt_id_mapper.get());
   auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(device_id);
@@ -108,8 +109,8 @@ namespace barefoot {
   std::map<int, BfrtNode*> device_id_to_bfrt_node = {
       {device_id, bfrt_node.get()},
   };
-  auto bf_chassis_manager =
-      BFChassisManager::CreateInstance(phal_impl, BFPalWrapper::GetSingleton());
+  auto bf_chassis_manager = BFChassisManager::CreateInstance(
+      mode, phal_impl, BFPalWrapper::GetSingleton());
   auto bfpd_wrapper = BFPdWrapper::GetSingleton();
   auto bf_switch =
       BfrtSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),

@@ -75,7 +75,8 @@ class BFChassisManager {
 
   // Factory function for creating the instance of the class.
   static std::unique_ptr<BFChassisManager> CreateInstance(
-      PhalInterface* phal_interface, BFPalInterface* bf_pal_interface);
+      OperationMode mode, PhalInterface* phal_interface,
+      BFPalInterface* bf_pal_interface);
 
   // BFChassisManager is neither copyable nor movable.
   BFChassisManager(const BFChassisManager&) = delete;
@@ -86,7 +87,7 @@ class BFChassisManager {
  private:
   // Private constructor. Use CreateInstance() to create an instance of this
   // class.
-  BFChassisManager(PhalInterface* phal_interface,
+  BFChassisManager(OperationMode mode, PhalInterface* phal_interface,
                    BFPalInterface* bf_pal_interface);
 
   // Maximum depth of port status change event channel.

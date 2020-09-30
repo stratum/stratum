@@ -79,12 +79,13 @@ class BfrtTableManager {
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
-      const BfrtIdMapper* bfrt_id_mapper);
+      OperationMode mode, const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtTableManager(OperationMode mode,
+                            const BfrtIdMapper* bfrt_id_mapper);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                bfrt::BfRtTableKey* table_key,
