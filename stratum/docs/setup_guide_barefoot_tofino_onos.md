@@ -39,7 +39,7 @@ There should be an installer file with a filename similar to:
 
 `./RELEASE/stretch/amd64/ONL-ONLPv2_ONL-OS_2020-06-22.1054-bb20e13_AMD64_INSTALLED_INSTALLER`.
 
-This is the ONL image you have to install on the switch in the next step. 
+This is the ONL image you have to install on the switch in the next step.
 
 ### 2) Using a pre-built ONL (recommended)
 
@@ -85,7 +85,7 @@ cd stratum
 :pencil2: (Optional) You can tunnel the ports exposed by Stratum (P4Runtime, gNMI, gNOI) via SSH tunnels:
 
 ```
-for port in 9339 28000; do
+for port in 9339 9559 28000; do
     ssh \
         -o ExitOnForwardFailure=yes \
         -f \
@@ -210,7 +210,7 @@ onos> devices
 onos> drivers
 onos> pipeconfs | grep tofino
 onos> apps
-``` 
+```
 
 In case of problems with these instructions, feel free to create an issue or PR.
 

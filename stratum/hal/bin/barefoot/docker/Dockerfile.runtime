@@ -49,6 +49,7 @@ RUN install_packages \
 
 EXPOSE 28000/tcp
 EXPOSE 9339/tcp
+EXPOSE 9559/tcp
 
 WORKDIR /var/run/stratum
 ENTRYPOINT ["start-stratum.sh"]
