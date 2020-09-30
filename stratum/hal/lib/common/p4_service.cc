@@ -233,6 +233,19 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
   }
 }
 
+// Helper function to generate a StreamMessageResponse from a failed Status.
+::p4::v1::StreamMessageResponse ToStreamMessageResponse(
+    const ::util::Status& status) {
+  CHECK(!status.ok());
+  ::p4::v1::StreamMessageResponse resp;
+  auto stream_error = resp.mutable_error();
+  stream_error->set_canonical_code(ToGoogleRpcCode(status.CanonicalCode()));
+  stream_error->set_message(status.error_message());
+  stream_error->set_code(status.error_code());
+
+  return resp;
+}
+
 }  // namespace
 
 ::grpc::Status P4Service::Write(::grpc::ServerContext* context,
@@ -536,13 +549,27 @@ void LogWriteRequest(uint64 node_id, const ::p4::v1::WriteRequest& req,
         break;
       }
       case ::p4::v1::StreamMessageRequest::kPacket: {
-        // If this stream is not the master stream do not do anything.
-        if (!IsMasterController(node_id, connection_id)) break;
-        // If master, try to transmit the packet. No error reporting.
+        // If this stream is not the master stream generate a stream error.
+        if (!IsMasterController(node_id, connection_id)) {
+          ::util::Status status = MAKE_ERROR(ERR_PERMISSION_DENIED)
+                                  << "Controller with connection ID "
+                                  << connection_id << "is not a master";
+          LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
+          auto resp = ToStreamMessageResponse(status);
+          *resp.mutable_error()->mutable_packet_out()->mutable_packet_out() =
+              req.packet();
+          stream->Write(resp);  // Best effort.
+          break;
+        }
+        // If master, try to transmit the packet.
         ::util::Status status =
             switch_interface_->TransmitPacket(node_id, req.packet());
         if (!status.ok()) {
           LOG_EVERY_N(INFO, 500) << "Failed to transmit packet: " << status;
+          auto resp = ToStreamMessageResponse(status);
+          *resp.mutable_error()->mutable_packet_out()->mutable_packet_out() =
+              req.packet();
+          stream->Write(resp);  // Best effort.
         }
         break;
       }
