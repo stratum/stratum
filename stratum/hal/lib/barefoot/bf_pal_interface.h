@@ -55,6 +55,8 @@ class BFPalInterface {
 
   virtual ::util::Status PortLoopbackModeSet(int uint, uint32 port_id,
                                              LoopbackState loopback_mode) = 0;
+
+  virtual ::util::StatusOr<bool> IsSoftwareModel(int unit) = 0;
 };
 
 }  // namespace barefoot
