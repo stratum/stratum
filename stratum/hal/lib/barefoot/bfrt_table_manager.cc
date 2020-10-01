@@ -53,37 +53,41 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
     ASSIGN_OR_RETURN(
         P4Annotation annotation,
         p4_info_manager->GetSwitchStackAnnotations(reg.preamble().name()));
-    if (annotation.register_reset_interval_ms() &&
-        mode_ == OPERATION_MODE_STANDALONE) {
-      TimerDaemon::DescriptorPtr handle;
-      std::string clear_value =
-          Uint64ToByteStream(annotation.register_reset_value());
-      RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
-          0, annotation.register_reset_interval_ms(),
-          [this, reg, clear_value]() -> ::util::Status {
-            auto session = bfrt::BfRtSession::sessionCreate();
-            CHECK_RETURN_IF_FALSE(session != nullptr)
-                << "Unable to create session.";
-            RETURN_IF_BFRT_ERROR(session->beginBatch());
-            ::p4::v1::RegisterEntry register_entry;
-            register_entry.set_register_id(reg.preamble().id());
-            register_entry.mutable_data()->set_bitstring(clear_value);
-            register_entry.clear_index();
-            auto t1 = absl::Now();
-            ::util::Status status = this->WriteRegisterEntry(
-                session, ::p4::v1::Update::MODIFY, register_entry);
-            auto t2 = absl::Now();
-            // We need to end the batch and destroy the session in every case.
-            APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
-            APPEND_STATUS_IF_BFRT_ERROR(status,
-                                        session->sessionCompleteOperations());
-            APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
-            VLOG(1) << "Resetted register " << reg.preamble().name() << " in "
-                    << (t2 - t1) / absl::Milliseconds(1) << " milliseconds.";
-            return status;
-          },
-          &handle));
-      register_timer_descriptors_.push_back(handle);
+    if (annotation.register_reset_interval_ms()) {
+      if (mode_ == OPERATION_MODE_STANDALONE) {
+        TimerDaemon::DescriptorPtr handle;
+        std::string clear_value =
+            Uint64ToByteStream(annotation.register_reset_value());
+        RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
+            0, annotation.register_reset_interval_ms(),
+            [this, reg, clear_value]() -> ::util::Status {
+              auto session = bfrt::BfRtSession::sessionCreate();
+              CHECK_RETURN_IF_FALSE(session != nullptr)
+                  << "Unable to create session.";
+              RETURN_IF_BFRT_ERROR(session->beginBatch());
+              ::p4::v1::RegisterEntry register_entry;
+              register_entry.set_register_id(reg.preamble().id());
+              register_entry.mutable_data()->set_bitstring(clear_value);
+              register_entry.clear_index();
+              auto t1 = absl::Now();
+              ::util::Status status = this->WriteRegisterEntry(
+                  session, ::p4::v1::Update::MODIFY, register_entry);
+              auto t2 = absl::Now();
+              // We need to end the batch and destroy the session in every case.
+              APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
+              APPEND_STATUS_IF_BFRT_ERROR(status,
+                                          session->sessionCompleteOperations());
+              APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
+              VLOG(1) << "Resetted register " << reg.preamble().name() << " in "
+                      << (t2 - t1) / absl::Milliseconds(1) << " milliseconds.";
+              return status;
+            },
+            &handle));
+        register_timer_descriptors_.push_back(handle);
+      } else {
+        LOG(WARNING)
+            << "Register clearing is not available in simulation mode.";
+      }
     }
   }
 

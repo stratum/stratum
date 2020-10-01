@@ -84,15 +84,11 @@ namespace barefoot {
   int device_id(0);
 
   auto bf_pal_wrapper = BFPalWrapper::GetSingleton();
-  ASSIGN_OR_RETURN(bool on_sw_model,
+  ASSIGN_OR_RETURN(bool is_sw_model,
                    bf_pal_wrapper->IsSoftwareModel(device_id));
-  OperationMode mode = OPERATION_MODE_UNKNOWN;
-  if (on_sw_model) {
-    mode = OPERATION_MODE_SIM;
-  } else {
-    mode = OPERATION_MODE_STANDALONE;
-  }
-  VLOG(1) << "Detected is_on_sw_model: " << on_sw_model;
+  const OperationMode mode =
+      is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
+  VLOG(1) << "Detected is_sw_model: " << is_sw_model;
 
   auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(device_id);
   auto bfrt_table_manager =
