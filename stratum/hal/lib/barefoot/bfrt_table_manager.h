@@ -79,12 +79,13 @@ class BfrtTableManager {
 
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
-      const BfrtIdMapper* bfrt_id_mapper);
+      OperationMode mode, const BfrtIdMapper* bfrt_id_mapper);
 
  private:
   // Private constructor, we can create the instance by using `CreateInstance`
   // function only.
-  explicit BfrtTableManager(const BfrtIdMapper* bfrt_id_mapper);
+  explicit BfrtTableManager(OperationMode mode,
+                            const BfrtIdMapper* bfrt_id_mapper);
 
   ::util::Status BuildTableKey(const ::p4::v1::TableEntry& table_entry,
                                bfrt::BfRtTableKey* table_key,
@@ -141,6 +142,16 @@ class BfrtTableManager {
       const ::p4::v1::TableEntry& request, const bfrt::BfRtTable* table,
       const bfrt::BfRtTableKey& table_key,
       const bfrt::BfRtTableData& table_data);
+
+  // Determines the mode of operation:
+  // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
+  // therefore needs to do all the SDK initialization itself.
+  // - OPERATION_MODE_COUPLED: when Stratum stack runs as part of Sandcastle
+  // stack, coupled with the rest of stack processes.
+  // - OPERATION_MODE_SIM: when Stratum stack runs in simulation mode.
+  // Note that this variable is set upon initialization and is never changed
+  // afterwards.
+  OperationMode mode_;
 
   // Reader-writer lock used to protect access to pipeline state.
   mutable absl::Mutex lock_;

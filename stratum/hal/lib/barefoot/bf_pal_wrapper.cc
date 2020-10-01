@@ -5,6 +5,7 @@
 
 extern "C" {
 #include "tofino/bf_pal/bf_pal_port_intf.h"
+#include "tofino/bf_pal/pltfm_intf.h"
 }
 
 #include <memory>
@@ -278,6 +279,15 @@ bool BFPalWrapper::PortIsValid(int unit, uint32 port_id) {
            << port_id << ".";
   }
   return ::util::OkStatus();
+}
+
+::util::StatusOr<bool> BFPalWrapper::IsSoftwareModel(int unit) {
+  bool is_sw_model;
+  auto bf_status = bf_pal_pltfm_type_get(unit, &is_sw_model);
+  CHECK_RETURN_IF_FALSE(bf_status == BF_SUCCESS)
+      << "Error getting software model status.";
+
+  return is_sw_model;
 }
 
 BFPalWrapper::BFPalWrapper() : port_status_change_event_writer_(nullptr) {}

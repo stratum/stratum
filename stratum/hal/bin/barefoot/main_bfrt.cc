@@ -79,13 +79,20 @@ namespace barefoot {
     LOG(INFO) << "switchd started successfully";
   }
 
-  int device_id(0);
   // TODO(antonin): The SDE expects 0-based device ids, so we instantiate
   // components with "device_id" instead of "node_id".
+  int device_id(0);
+
+  auto bf_pal_wrapper = BFPalWrapper::GetSingleton();
+  ASSIGN_OR_RETURN(bool is_sw_model,
+                   bf_pal_wrapper->IsSoftwareModel(device_id));
+  const OperationMode mode =
+      is_sw_model ? OPERATION_MODE_SIM : OPERATION_MODE_STANDALONE;
+  VLOG(1) << "Detected is_sw_model: " << is_sw_model;
 
   auto bfrt_id_mapper = BfrtIdMapper::CreateInstance(device_id);
   auto bfrt_table_manager =
-      BfrtTableManager::CreateInstance(bfrt_id_mapper.get());
+      BfrtTableManager::CreateInstance(mode, bfrt_id_mapper.get());
   auto bfrt_action_profile_manager =
       BfrtActionProfileManager::CreateInstance(bfrt_id_mapper.get());
   auto bfrt_packetio_manger = BfrtPacketioManager::CreateInstance(device_id);
@@ -109,7 +116,7 @@ namespace barefoot {
       {device_id, bfrt_node.get()},
   };
   auto bf_chassis_manager =
-      BFChassisManager::CreateInstance(phal_impl, BFPalWrapper::GetSingleton());
+      BFChassisManager::CreateInstance(mode, phal_impl, bf_pal_wrapper);
   auto bfpd_wrapper = BFPdWrapper::GetSingleton();
   auto bf_switch =
       BfrtSwitch::CreateInstance(phal_impl, bf_chassis_manager.get(),
