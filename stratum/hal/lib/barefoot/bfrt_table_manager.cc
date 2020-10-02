@@ -67,13 +67,14 @@ struct RegisterClearThreadData {
     for (const auto& reg : p4_info.registers()) {
       data->registers.push_back(reg);
     }
-    VLOG(1) << "pre pthread_create";
     int ret = pthread_create(&register_reset_thread_, nullptr,
                              &BfrtTableManager::RegisterClearThreadFunc, data);
     if (ret != 0) {
       RETURN_ERROR(ERR_INTERNAL) << "Failed to spawn register reset thread.";
     }
-    VLOG(1) << "post pthread_create";
+  } else {
+    LOG(FATAL)
+        << "Multiple pipeline pushes are not supported with register resets.";
   }
 
 #if 0
@@ -140,13 +141,20 @@ struct RegisterClearThreadData {
   ::util::Status status = ::util::OkStatus();
   for (;;) {
     auto t1 = absl::Now();
+    uint64 min_reset_interval_ms = 10000;
     RETURN_IF_BFRT_ERROR(session->beginBatch());
     for (const auto& reg : registers) {
-      ASSIGN_OR_RETURN(
-          P4Annotation annotation,
-          p4_info_manager_->GetSwitchStackAnnotations(reg.preamble().name()));
+      P4Annotation annotation;
+      {
+        absl::ReaderMutexLock l(&lock_);
+        ASSIGN_OR_RETURN(
+            annotation,
+            p4_info_manager_->GetSwitchStackAnnotations(reg.preamble().name()));
+      }
       std::string clear_value =
           Uint64ToByteStream(annotation.register_reset_value());
+      min_reset_interval_ms = std::min(annotation.register_reset_interval_ms(),
+                                       min_reset_interval_ms);
       ::p4::v1::RegisterEntry register_entry;
       register_entry.set_register_id(reg.preamble().id());
       register_entry.mutable_data()->set_bitstring(clear_value);
@@ -162,9 +170,18 @@ struct RegisterClearThreadData {
     APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
     APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionCompleteOperations());
     auto t2 = absl::Now();
+    CHECK(t1 <= t2);
+    int64 remaining_sleep_ms =
+        std::max(static_cast<int64>(min_reset_interval_ms -
+                                    (t2 - t1) / absl::Milliseconds(1)),
+                 0l);
     VLOG(1) << "Reset all registers in " << (t2 - t1) / absl::Milliseconds(1)
-            << " milliseconds.";
-    absl::SleepFor(absl::Seconds(1));
+            << " milliseconds. Next reset in " << remaining_sleep_ms << "ms.";
+    if (!status.ok()) {
+      LOG(ERROR) << "Error resetting registers: " << status;
+    }
+    status = ::util::OkStatus();
+    absl::SleepFor(absl::Milliseconds(remaining_sleep_ms));
   }
   APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
 
