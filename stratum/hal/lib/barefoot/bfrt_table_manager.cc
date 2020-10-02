@@ -22,6 +22,8 @@ DEFINE_uint32(
     bfrt_table_sync_timeout_ms,
     stratum::hal::barefoot::kDefaultSyncTimeout / absl::Milliseconds(1),
     "The timeout for table sync operation like counters and registers.");
+DEFINE_bool(incompatible_enable_register_reset_annotations, false,
+            "Enables handling of annotions to reset registers.");
 
 namespace stratum {
 namespace hal {
@@ -31,7 +33,6 @@ BfrtTableManager::BfrtTableManager(OperationMode mode,
                                    const BfrtIdMapper* bfrt_id_mapper)
     : mode_(mode),
       register_timer_descriptors_(),
-      register_reset_thread_(0),
       bfrt_info_(nullptr),
       p4_info_manager_(nullptr),
       bfrt_id_mapper_(ABSL_DIE_IF_NULL(bfrt_id_mapper)) {}
@@ -57,73 +58,8 @@ struct RegisterClearThreadData {
   std::unique_ptr<P4InfoManager> p4_info_manager =
       absl::make_unique<P4InfoManager>(p4_info);
   RETURN_IF_ERROR(p4_info_manager->InitializeAndVerify());
-
-  // pthread_t t = 0;
-  // if (t > 0 && pthread_join(register_reset_thread_, nullptr) != 0) {
-  //   RETURN_ERROR(ERR_INTERNAL) << "Failed to join thread " << t;
-  // }
-  if (register_reset_thread_ == 0 /*&& mode_ != OPERATION_MODE_SIM*/) {
-    RegisterClearThreadData* data = new RegisterClearThreadData(this);
-    for (const auto& reg : p4_info.registers()) {
-      data->registers.push_back(reg);
-    }
-    int ret = pthread_create(&register_reset_thread_, nullptr,
-                             &BfrtTableManager::RegisterClearThreadFunc, data);
-    if (ret != 0) {
-      RETURN_ERROR(ERR_INTERNAL) << "Failed to spawn register reset thread.";
-    }
-  } else {
-    // TODO(max): fix this
-    LOG(FATAL)
-        << "Multiple pipeline pushes are not supported with register resets.";
-  }
-
-#if 0
-  // Create reset timers for P4 registers with the annotation.
-  for (const auto& reg : p4_info.registers()) {
-    ASSIGN_OR_RETURN(
-        P4Annotation annotation,
-        p4_info_manager->GetSwitchStackAnnotations(reg.preamble().name()));
-    if (annotation.register_reset_interval_ms()) {
-      if (mode_ == OPERATION_MODE_STANDALONE) {
-        TimerDaemon::DescriptorPtr handle;
-        std::string clear_value =
-            Uint64ToByteStream(annotation.register_reset_value());
-        RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
-            0, annotation.register_reset_interval_ms(),
-            [this, reg, clear_value]() -> ::util::Status {
-              auto session = bfrt::BfRtSession::sessionCreate();
-              CHECK_RETURN_IF_FALSE(session != nullptr)
-                  << "Unable to create session.";
-              RETURN_IF_BFRT_ERROR(session->beginBatch());
-              ::p4::v1::RegisterEntry register_entry;
-              register_entry.set_register_id(reg.preamble().id());
-              register_entry.mutable_data()->set_bitstring(clear_value);
-              register_entry.clear_index();
-              auto t1 = absl::Now();
-              ::util::Status status = this->WriteRegisterEntry(
-                  session, ::p4::v1::Update::MODIFY, register_entry);
-              auto t2 = absl::Now();
-              // We need to end the batch and destroy the session in every case.
-              APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
-              APPEND_STATUS_IF_BFRT_ERROR(status,
-                                          session->sessionCompleteOperations());
-              APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
-              VLOG(1) << "Resetted register " << reg.preamble().name() << " in "
-                      << (t2 - t1) / absl::Milliseconds(1) << " milliseconds.";
-              return status;
-            },
-            &handle));
-        register_timer_descriptors_.push_back(handle);
-      } else {
-        LOG(WARNING)
-            << "Register clearing is not available in simulation mode.";
-      }
-    }
-  }
-#endif
-
   p4_info_manager_ = std::move(p4_info_manager);
+  RETURN_IF_ERROR(SetupRegisterReset(p4_info));
 
   return ::util::OkStatus();
 }
@@ -134,70 +70,89 @@ struct RegisterClearThreadData {
   return ::util::OkStatus();
 }
 
-::util::Status BfrtTableManager::HandleRegisterReset(
-    std::vector<p4::config::v1::Register>& registers) {
-  LOG(INFO) << "Started reset thread for registers.";
-  auto session = bfrt::BfRtSession::sessionCreate();
-  CHECK_RETURN_IF_FALSE(session != nullptr) << "Unable to create session.";
-  ::util::Status status = ::util::OkStatus();
-  for (;;) {
-    auto t1 = absl::Now();
-    uint64 min_reset_interval_ms = 10000;
-    RETURN_IF_BFRT_ERROR(session->beginBatch());
-    for (const auto& reg : registers) {
-      P4Annotation annotation;
-      {
-        absl::ReaderMutexLock l(&lock_);
-        ASSIGN_OR_RETURN(
-            annotation,
-            p4_info_manager_->GetSwitchStackAnnotations(reg.preamble().name()));
-      }
-      std::string clear_value =
-          Uint64ToByteStream(annotation.register_reset_value());
-      min_reset_interval_ms = std::min(annotation.register_reset_interval_ms(),
-                                       min_reset_interval_ms);
-      ::p4::v1::RegisterEntry register_entry;
-      register_entry.set_register_id(reg.preamble().id());
-      register_entry.mutable_data()->set_bitstring(clear_value);
-      register_entry.clear_index();
-      // TODO(max): remove after testing
-      if (mode_ == OPERATION_MODE_SIM) {
-        register_entry.mutable_index()->set_index(0);
-      }
-      // TODO(max): append to outer status.
-      ::util::Status status =
-          WriteRegisterEntry(session, ::p4::v1::Update::MODIFY, register_entry);
-      VLOG(1) << "cleared register " << reg.preamble().name() << ".";
-    }
-    APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
-    APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionCompleteOperations());
-    auto t2 = absl::Now();
-    CHECK(t1 <= t2);
-    int64 remaining_sleep_ms =
-        std::max(static_cast<int64>(min_reset_interval_ms -
-                                    (t2 - t1) / absl::Milliseconds(1)),
-                 0l);
-    VLOG(1) << "Reset all registers in " << (t2 - t1) / absl::Milliseconds(1)
-            << " milliseconds. Next reset in " << remaining_sleep_ms << "ms.";
-    if (!status.ok()) {
-      LOG(ERROR) << "Error resetting registers: " << status;
-    }
-    status = ::util::OkStatus();
-    absl::SleepFor(absl::Milliseconds(remaining_sleep_ms));
+::util::Status BfrtTableManager::SetupRegisterReset(
+    const ::p4::config::v1::P4Info& p4_info) {
+  if (!FLAGS_incompatible_enable_register_reset_annotations) {
+    return ::util::OkStatus();
   }
-  APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
-
-  return status;
-}
-
-void* BfrtTableManager::RegisterClearThreadFunc(void* arg) {
-  RegisterClearThreadData* data = static_cast<RegisterClearThreadData*>(arg);
-  ::util::Status status = data->mgr->HandleRegisterReset(data->registers);
-  if (!status.ok()) {
-    LOG(ERROR) << "Non-OK exit of register reset thread.";
+  // Crude check to prevent consecutive pipeline pushes.
+  static bool first_time = true;
+  if (!first_time) {
+    LOG(FATAL) << "Multiple pipeline pushes are not allowed when using "
+                  "register reset annotations.";
   }
-  delete data;
-  return nullptr;
+  first_time = false;
+  if (mode_ == OPERATION_MODE_SIM) {
+    LOG(WARNING)
+        << "Register reset annotations are disabled in simulation mode.";
+    return ::util::OkStatus();
+  }
+
+  // Validate consistent reset intervals.
+  std::vector<uint64> intervals_ms;
+  for (const auto& reg : p4_info.registers()) {
+    ASSIGN_OR_RETURN(
+        P4Annotation annotation,
+        p4_info_manager_->GetSwitchStackAnnotations(reg.preamble().name()));
+    if (annotation.register_reset_interval_ms()) {
+      intervals_ms.push_back(annotation.register_reset_interval_ms());
+    }
+  }
+  if (intervals_ms.empty()) {
+    return ::util::OkStatus();
+  }
+  std::sort(intervals_ms.begin(), intervals_ms.end());
+  auto last = std::unique(intervals_ms.begin(), intervals_ms.end());
+  intervals_ms.erase(last, intervals_ms.end());
+  if (intervals_ms.size() != 1) {
+    RETURN_ERROR(ERR_INVALID_PARAM)
+        << "Inconsistent register reset intervals are not supported.";
+  }
+
+  TimerDaemon::DescriptorPtr handle;
+  RETURN_IF_ERROR(TimerDaemon::RequestPeriodicTimer(
+      0, intervals_ms[0],
+      [this, p4_info]() -> ::util::Status {
+        auto t1 = absl::Now();
+        auto session = bfrt::BfRtSession::sessionCreate();
+        CHECK_RETURN_IF_FALSE(session != nullptr)
+            << "Unable to create session.";
+        RETURN_IF_BFRT_ERROR(session->beginBatch());
+        ::util::Status status = ::util::OkStatus();
+        for (const auto& reg : p4_info.registers()) {
+          P4Annotation annotation;
+          {
+            absl::ReaderMutexLock l(&lock_);
+            ASSIGN_OR_RETURN(annotation,
+                             p4_info_manager_->GetSwitchStackAnnotations(
+                                 reg.preamble().name()));
+          }
+          std::string clear_value =
+              Uint64ToByteStream(annotation.register_reset_value());
+          ::p4::v1::RegisterEntry register_entry;
+          register_entry.set_register_id(reg.preamble().id());
+          register_entry.mutable_data()->set_bitstring(clear_value);
+          register_entry.clear_index();
+          APPEND_STATUS_IF_ERROR(
+              status, this->WriteRegisterEntry(
+                          session, ::p4::v1::Update::MODIFY, register_entry));
+          VLOG(1) << "Cleared register " << reg.preamble().name() << ".";
+        }
+        // We need to end the batch and destroy the session in every case.
+        APPEND_STATUS_IF_BFRT_ERROR(status, session->endBatch(true));
+        APPEND_STATUS_IF_BFRT_ERROR(status,
+                                    session->sessionCompleteOperations());
+        APPEND_STATUS_IF_BFRT_ERROR(status, session->sessionDestroy());
+        auto t2 = absl::Now();
+        VLOG(1) << "Reset all registers in "
+                << (t2 - t1) / absl::Milliseconds(1) << " ms.";
+
+        return status;
+      },
+      &handle));
+  register_timer_descriptors_.push_back(handle);
+
+  return ::util::OkStatus();
 }
 
 ::util::Status BfrtTableManager::BuildTableKey(
