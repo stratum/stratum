@@ -164,6 +164,7 @@ struct RegisterClearThreadData {
       if (mode_ == OPERATION_MODE_SIM) {
         register_entry.mutable_index()->set_index(0);
       }
+      // TODO(max): append to outer status.
       ::util::Status status =
           WriteRegisterEntry(session, ::p4::v1::Update::MODIFY, register_entry);
       VLOG(1) << "cleared register " << reg.preamble().name() << ".";
