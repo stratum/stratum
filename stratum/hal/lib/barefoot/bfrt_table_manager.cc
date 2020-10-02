@@ -73,6 +73,7 @@ struct RegisterClearThreadData {
       RETURN_ERROR(ERR_INTERNAL) << "Failed to spawn register reset thread.";
     }
   } else {
+    // TODO(max): fix this
     LOG(FATAL)
         << "Multiple pipeline pushes are not supported with register resets.";
   }
