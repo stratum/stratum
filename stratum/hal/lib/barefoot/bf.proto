@@ -1,0 +1,31 @@
+// Copyright 2020-present Open Networking Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+option cc_generic_services = false;
+
+package stratum.hal.barefoot;
+
+import "p4/config/v1/p4info.proto";
+
+// BfDeviceConfig contains all the information of a P4 program that can be
+// loaded into the SDE.
+message BfDeviceConfig {
+  message P4Program {
+    string name = 1; // For display purposes only.
+    bytes bfrt = 2;  // JSON
+    p4.config.v1.P4Info p4info = 3;
+    repeated P4Pipeline pipelines = 4;
+  }
+
+  message P4Pipeline {
+    string name = 1;          // For display purposes only.
+    repeated int32 scope = 2; // List of pipes this profile is applied to.
+    bytes context = 3;        // JSON
+    bytes config = 4;         // tofino.bin
+  }
+
+  int32 device = 1; // Zero-based device id.
+  repeated P4Program programs = 2;
+}
