@@ -18,12 +18,12 @@ stratum_cc_binary(
     ],
     arches = HOST_ARCHES,
     deps = [
-        "//stratum/lib:utils",
         "//stratum/glue:init_google",
         "//stratum/glue:logging",
-        "//stratum/glue/status:status",
+        "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
         "//stratum/hal/lib/barefoot:bf_cc_proto",
+        "//stratum/lib:utils",
         "@com_github_nlohmann_json//:json",
     ],
 )
@@ -61,6 +61,7 @@ pkg_tar(
     name = "stratum_binaries",
     srcs = [
         "deb/start-stratum.sh",
+        ":device_config_builder",
         ":stratum_bf",
     ],
     mode = "0755",

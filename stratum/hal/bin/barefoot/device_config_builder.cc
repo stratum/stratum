@@ -21,16 +21,12 @@ DEFINE_string(bfrt_device_config_text_file, "bfrt_device_config.pb.txt",
               "Path to text file for BfDeviceConfig output");
 DEFINE_string(bfrt_device_config_binary_file, "bfrt_device_config.pb.bin",
               "Path to file for serialized BfDeviceConfig output");
-DECLARE_int32(stderrthreshold);
-DECLARE_bool(colorlogtostderr);
 
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
 static ::util::Status Main(int argc, char* argv[]) {
-  FLAGS_stderrthreshold = 0;
-  FLAGS_colorlogtostderr = true;
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 
