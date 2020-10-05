@@ -20,24 +20,34 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-TEST(IsDontCareMatchTest, RejectAllExactMatch) {
-  {
-    ::p4::v1::FieldMatch::Exact m;
-    EXPECT_FALSE(IsDontCareMatch(m));
-  }
-  {
-    ::p4::v1::FieldMatch::Exact m;
-    m.set_value("\x00", 1);
-    EXPECT_FALSE(IsDontCareMatch(m));
-  }
-  {
-    ::p4::v1::FieldMatch::Exact m;
-    m.set_value("\x00", 0);
-    EXPECT_FALSE(IsDontCareMatch(m));
-  }
-  {
-    ::p4::v1::FieldMatch::Exact m;
-    m.set_value("\xff", 1);
-    EXPECT_FALSE(IsDontCareMatch(m));
-  }
+TEST(BfPipelineConvertTest, ParseBfrt) {
+//   {
+//     ::p4::v1::FieldMatch::Exact m;
+//     EXPECT_FALSE(IsDontCareMatch(m));
+//   }
+//   {
+//     ::p4::v1::FieldMatch::Exact m;
+//     m.set_value("\x00", 1);
+//     EXPECT_FALSE(IsDontCareMatch(m));
+//   }
+//   {
+//     ::p4::v1::FieldMatch::Exact m;
+//     m.set_value("\x00", 0);
+//     EXPECT_FALSE(IsDontCareMatch(m));
+//   }
+//   {
+//     ::p4::v1::FieldMatch::Exact m;
+//     m.set_value("\xff", 1);
+//     EXPECT_FALSE(IsDontCareMatch(m));
+//   }
 }
+
+TEST(BfPipelineConvertTest, ParseTar) {
+}
+
+TEST(BfPipelineConvertTest, ToLegacyBfPiFormat) {
+}
+
+}  // namespace barefoot
+}  // namespace hal
+}  // namespace stratum

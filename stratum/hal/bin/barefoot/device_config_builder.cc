@@ -18,9 +18,9 @@
 DEFINE_string(p4c_conf_file, "",
               "Path to the JSON output .conf file of the p4c compiler");
 DEFINE_string(bfrt_device_config_text_file, "bfrt_device_config.pb.txt",
-              "Path to text file for BfDeviceConfig output");
+              "Path to text file for BfPipelineConfig output");
 DEFINE_string(bfrt_device_config_binary_file, "bfrt_device_config.pb.bin",
-              "Path to file for serialized BfDeviceConfig output");
+              "Path to file for serialized BfPipelineConfig output");
 
 namespace stratum {
 namespace hal {
@@ -44,7 +44,7 @@ static ::util::Status Main(int argc, char* argv[]) {
 
   // Translate compiler output JSON conf to protobuf.
   // Taken from bfrt_node.cc
-  BfDeviceConfig bfrt_config;
+  BfPipelineConfig bfrt_config;
   try {
     CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";

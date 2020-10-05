@@ -173,6 +173,21 @@ stratum_cc_library(
     srcs = ["bf_pipeline_utils.cc"],
     hdrs = ["bf_pipeline_utils.h"],
     deps = [
+        ":bf_cc_proto",
+        "//stratum/glue/gtl:cleanup",
+        "//stratum/glue/status",
+        "//stratum/glue/status:status_macros",
+        "//stratum/glue:integral_types",
+        "//stratum/glue:logging",
+        "//stratum/lib:constants",
+        "//stratum/lib:macros",
+        "//stratum/lib:utils",
+        "//stratum/public/lib:error",
+        "@com_google_absl//absl/strings",
+        "@com_github_libarchive_libarchive//:libarchive",
+        "@com_github_nlohmann_json//:json",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+
     ],
 )
 

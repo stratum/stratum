@@ -9,9 +9,9 @@ package stratum.hal.barefoot;
 
 import "p4/config/v1/p4info.proto";
 
-// BfDeviceConfig contains all the information of a P4 program that can be
+// BfPipelineConfig contains all the information of a P4 program that can be
 // loaded into the SDE.
-message BfDeviceConfig {
+message BfPipelineConfig {
   message P4Program {
     string name = 1; // For display purposes only.
     bytes bfrt = 2;  // JSON

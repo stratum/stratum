@@ -106,56 +106,28 @@ BFSwitch::~BFSwitch() {}
 }
 
 namespace {
-std::string Uint32ToLeByteStream(uint32 val) {
-  uint32 tmp = (htonl(1) == 1) ? __builtin_bswap32(val) : val;
-  std::string bytes = "";
-  bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
-  return bytes;
+// Parses the P4 ForwardingPipelineConfig to check the format of the
+// p4_device_config. If it uses a newer Stratum format, this method converts
+// it to the legacy format used by the Barefoot PI implementatation. Otherwise,
+// the provided value is used.
+::util::Status ParseForwardingPipelineConfig(
+    ::p4::v1::ForwardingPipelineConfig* config) {
+  BfDeviceConfig bf_config;
+  if(ExtractBfDeviceConfig(_config, &bf_config)) {
+    std::string new_config;
+    RETURN_IF_ERROR(BfPipelineConfigToPiConfig(bf_config, &new_config));
+    config.set_p4_device_config(new_config);
+  }
+  return ::util::OkStatus();
 }
-
-::util::Status BfDeviceConfigToPiNodeConfig(const BfDeviceConfig& device_config,
-                                            std::string* pi_node_config) {
-  CHECK_RETURN_IF_FALSE(pi_node_config) << "null pointer.";
-
-  // Validate restrictions.
-  CHECK_RETURN_IF_FALSE(device_config.programs_size() == 1)
-      << "Only single program P4 configs are supported.";
-  const auto& program = device_config.programs(0);
-  CHECK_RETURN_IF_FALSE(program.pipelines_size() == 1)
-      << "Only single pipeline P4 configs are supported.";
-  const auto& pipeline = program.pipelines(0);
-
-  pi_node_config->clear();
-  // Program name
-  pi_node_config->append(Uint32ToLeByteStream(program.name().size()));
-  pi_node_config->append(program.name());
-  // Tofino bin
-  pi_node_config->append(Uint32ToLeByteStream(pipeline.config().size()));
-  pi_node_config->append(pipeline.config());
-  // Context json
-  pi_node_config->append(Uint32ToLeByteStream(pipeline.context().size()));
-  pi_node_config->append(pipeline.context());
-  VLOG(1) << "PI node config: " << StringToHex(*pi_node_config);
-
-  return util::OkStatus();
-}
-}  // namespace
+} // namespace
 
 ::util::Status BFSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
 
   ::p4::v1::ForwardingPipelineConfig config = _config;
-  // Try parsing as BfDeviceConfig.
-  {
-    BfDeviceConfig device_config;
-    // The pipeline config is stored as raw bytes in the p4_device_config.
-    if (device_config.ParseFromString(_config.p4_device_config())) {
-      std::string new_config;
-      RETURN_IF_ERROR(BfDeviceConfigToPiNodeConfig(device_config, &new_config));
-      config.set_p4_device_config(new_config);
-    }
-  }
+  RETURN_IF_ERROR(ParseForwardingPipelineConfig(&config));
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->PushForwardingPipelineConfig(config));
@@ -180,16 +152,7 @@ std::string Uint32ToLeByteStream(uint32 val) {
   absl::WriterMutexLock l(&chassis_lock);
 
   ::p4::v1::ForwardingPipelineConfig config = _config;
-  // Try parsing as BfDeviceConfig.
-  {
-    BfDeviceConfig device_config;
-    // The pipeline config is stored as raw bytes in the p4_device_config.
-    if (device_config.ParseFromString(_config.p4_device_config())) {
-      std::string new_config;
-      RETURN_IF_ERROR(BfDeviceConfigToPiNodeConfig(device_config, &new_config));
-      config.set_p4_device_config(new_config);
-    }
-  }
+  RETURN_IF_ERROR(ParseForwardingPipelineConfig(&config));
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->SaveForwardingPipelineConfig(config));
@@ -214,16 +177,7 @@ std::string Uint32ToLeByteStream(uint32 val) {
 ::util::Status BFSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   ::p4::v1::ForwardingPipelineConfig config = _config;
-  // Try parsing as BfDeviceConfig.
-  {
-    BfDeviceConfig device_config;
-    // The pipeline config is stored as raw bytes in the p4_device_config.
-    if (device_config.ParseFromString(_config.p4_device_config())) {
-      std::string new_config;
-      RETURN_IF_ERROR(BfDeviceConfigToPiNodeConfig(device_config, &new_config));
-      config.set_p4_device_config(new_config);
-    }
-  }
+  RETURN_IF_ERROR(ParseForwardingPipelineConfig(&config));
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->VerifyForwardingPipelineConfig(config);
