@@ -3,8 +3,6 @@
 
 #include "stratum/hal/lib/barefoot/bf_switch.h"
 
-#include <arpa/inet.h>
-
 #include <algorithm>
 #include <map>
 #include <vector>
