@@ -7,6 +7,7 @@
 #include <string>
 
 #include "p4/v1/p4runtime.pb.h"
+#include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
 
 namespace stratum {
