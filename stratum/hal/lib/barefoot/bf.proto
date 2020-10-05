@@ -13,17 +13,17 @@ import "p4/config/v1/p4info.proto";
 // loaded into the SDE.
 message BfPipelineConfig {
   message P4Program {
+    message P4Pipeline {
+      string name = 1;          // For display purposes only.
+      repeated int32 scope = 2; // List of pipes this profile is applied to.
+      bytes context = 3;        // JSON
+      bytes config = 4;         // tofino.bin
+    }
+
     string name = 1; // For display purposes only.
     bytes bfrt = 2;  // JSON
     p4.config.v1.P4Info p4info = 3;
     repeated P4Pipeline pipelines = 4;
-  }
-
-  message P4Pipeline {
-    string name = 1;          // For display purposes only.
-    repeated int32 scope = 2; // List of pipes this profile is applied to.
-    bytes context = 3;        // JSON
-    bytes config = 4;         // tofino.bin
   }
 
   int32 device = 1; // Zero-based device id.
