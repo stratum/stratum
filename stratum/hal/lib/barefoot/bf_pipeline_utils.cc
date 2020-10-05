@@ -6,10 +6,11 @@
 
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 
-#include <string>
-#include <memory>
 #include <arpa/inet.h>
 #include <unistd.h>
+
+#include <memory>
+#include <string>
 #include <vector>
 
 #include "absl/strings/strip.h"
@@ -19,9 +20,9 @@
 #include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
-#include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/public/lib/error.h"
 
 namespace stratum {
@@ -51,37 +52,33 @@ namespace {
   }
   return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
 }
-} // namespace
+}  // namespace
 
 namespace {
-// Helper function to convert a uint32 to a little-endian byte string
+// Helper function to convert a uint32 to a little-endian byte string.
 std::string Uint32ToLeByteStream(uint32 val) {
   uint32 tmp = (htonl(1) == 1) ? __builtin_bswap32(val) : val;
   std::string bytes = "";
   bytes.assign(reinterpret_cast<char*>(&tmp), sizeof(uint32));
   return bytes;
 }
-} // namespace
+}  // namespace
 
 namespace hal {
 namespace barefoot {
 
-::util::Status ExtractBfDeviceConfig(
+::util::Status ExtractBfPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config,
     BfPipelineConfig* bf_config) {
+  bf_config->Clear();
 
-  // FORMAT 1: p4_device_config is BfrtDeviceConfig instance
-  // Try a parse of BfrtDeviceConfig.
-  {
-    bf_config->Clear();
-    // The pipeline config is stored as raw bytes in the p4_device_config.
-    if (bf_config->ParseFromString(config.p4_device_config())) {
-      return util::OkStatus();
-    }
+  // Format 1: p4_device_config is a serialized BfPipelineConfig proto message.
+  if (bf_config->ParseFromString(config.p4_device_config())) {
+    return util::OkStatus();
   }
 
-  // FORMAT 2: p4_device_config is an archive of the compiler output
-  // Find <prog_name>.conf file
+  // Format 2: p4_device_config is an archive of the compiler output.
+  // Find <prog_name>.conf file.
   nlohmann::json conf;
   {
     ASSIGN_OR_RETURN(auto conf_content,
@@ -93,7 +90,6 @@ namespace barefoot {
 
   // Translate JSON conf to protobuf.
   try {
-    bf_config->Clear();
     CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";
     // Only support single devices for now
@@ -135,7 +131,7 @@ namespace barefoot {
 }
 
 ::util::Status BfPipelineConfigToPiConfig(const BfPipelineConfig& bf_config,
-                                            std::string* pi_node_config) {
+                                          std::string* pi_node_config) {
   CHECK_RETURN_IF_FALSE(pi_node_config) << "null pointer.";
 
   // Validate restrictions.
@@ -156,8 +152,8 @@ namespace barefoot {
   // Context json
   pi_node_config->append(Uint32ToLeByteStream(pipeline.context().size()));
   pi_node_config->append(pipeline.context());
-  // FIXME what is the right wey to log this?
-  VLOG(1) << "PI node config: " << StringToHex(*pi_node_config);
+  VLOG(1) << "First 16 bytes of converted PI node config: "
+          << StringToHex(pi_node_config->substr(0, 16));
 
   return util::OkStatus();
 }
@@ -166,4 +162,4 @@ namespace barefoot {
 }  // namespace hal
 }  // namespace stratum
 
-#endif // STRATUM_HAL_LIB_BAREFOOT_BF_PIPELINE_UTIL_H_
+#endif  // STRATUM_HAL_LIB_BAREFOOT_BF_PIPELINE_UTIL_H_

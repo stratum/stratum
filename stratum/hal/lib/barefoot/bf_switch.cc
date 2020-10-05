@@ -17,6 +17,7 @@
 #include "stratum/glue/status/status_macros.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/hal/lib/barefoot/bf_chassis_manager.h"
+#include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 #include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
@@ -108,26 +109,29 @@ BFSwitch::~BFSwitch() {}
 namespace {
 // Parses the P4 ForwardingPipelineConfig to check the format of the
 // p4_device_config. If it uses a newer Stratum format, this method converts
-// it to the legacy format used by the Barefoot PI implementatation. Otherwise,
-// the provided value is used.
-::util::Status ParseForwardingPipelineConfig(
-    ::p4::v1::ForwardingPipelineConfig* config) {
-  BfDeviceConfig bf_config;
-  if(ExtractBfDeviceConfig(_config, &bf_config)) {
-    std::string new_config;
-    RETURN_IF_ERROR(BfPipelineConfigToPiConfig(bf_config, &new_config));
-    config.set_p4_device_config(new_config);
+// it to the legacy format used by the Barefoot PI implementation. Otherwise,
+// the provided value is used as is.
+::util::Status ConvertToLegacyForwardingPipelineConfig(
+    const ::p4::v1::ForwardingPipelineConfig& forwarding_config,
+    ::p4::v1::ForwardingPipelineConfig* legacy_config) {
+  *legacy_config = forwarding_config;
+  BfPipelineConfig bf_config;
+  if (ExtractBfPipelineConfig(forwarding_config, &bf_config).ok()) {
+    std::string pi_p4_device_config;
+    RETURN_IF_ERROR(
+        BfPipelineConfigToPiConfig(bf_config, &pi_p4_device_config));
+    legacy_config->set_p4_device_config(pi_p4_device_config);
   }
   return ::util::OkStatus();
 }
-} // namespace
+}  // namespace
 
 ::util::Status BFSwitch::PushForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
 
-  ::p4::v1::ForwardingPipelineConfig config = _config;
-  RETURN_IF_ERROR(ParseForwardingPipelineConfig(&config));
+  ::p4::v1::ForwardingPipelineConfig config;
+  RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->PushForwardingPipelineConfig(config));
@@ -151,8 +155,8 @@ namespace {
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
   absl::WriterMutexLock l(&chassis_lock);
 
-  ::p4::v1::ForwardingPipelineConfig config = _config;
-  RETURN_IF_ERROR(ParseForwardingPipelineConfig(&config));
+  ::p4::v1::ForwardingPipelineConfig config;
+  RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   RETURN_IF_ERROR(pi_node->SaveForwardingPipelineConfig(config));
@@ -176,8 +180,8 @@ namespace {
 
 ::util::Status BFSwitch::VerifyForwardingPipelineConfig(
     uint64 node_id, const ::p4::v1::ForwardingPipelineConfig& _config) {
-  ::p4::v1::ForwardingPipelineConfig config = _config;
-  RETURN_IF_ERROR(ParseForwardingPipelineConfig(&config));
+  ::p4::v1::ForwardingPipelineConfig config;
+  RETURN_IF_ERROR(ConvertToLegacyForwardingPipelineConfig(_config, &config));
 
   ASSIGN_OR_RETURN(auto* pi_node, GetPINodeFromNodeId(node_id));
   return pi_node->VerifyForwardingPipelineConfig(config);
