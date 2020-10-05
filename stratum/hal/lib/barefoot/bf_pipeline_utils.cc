@@ -8,7 +8,7 @@
 
 #include <string>
 #include <memory>
-#include <netinet/ip.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <vector>
 
