@@ -169,6 +169,24 @@ stratum_cc_library(
 )
 
 stratum_cc_library(
+    name = "bf_pipeline_utils",
+    srcs = ["bf_pipeline_utils.cc"],
+    hdrs = ["bf_pipeline_utils.h"],
+    deps = [
+    ],
+)
+
+stratum_cc_test(
+    name = "bf_pipeline_utils_test",
+    srcs = [
+        "bf_pipeline_utils_test.cc",
+    ],
+    deps = [
+        ":bf_pipeline_utils",
+    ],
+)
+
+stratum_cc_library(
     name = "test_main",
     testonly = 1,
     srcs = ["test_main.cc"],
