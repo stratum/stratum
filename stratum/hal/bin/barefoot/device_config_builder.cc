@@ -16,7 +16,7 @@
 #include "stratum/lib/utils.h"
 
 DEFINE_string(p4c_conf_file, "",
-              "Path to the JSON output .conf file of the p4c compiler");
+              "Path to the JSON output .conf file of the bf-p4c compiler");
 DEFINE_string(bfrt_device_config_text_file, "bfrt_device_config.pb.txt",
               "Path to text file for BfPipelineConfig output");
 DEFINE_string(bfrt_device_config_binary_file, "bfrt_device_config.pb.bin",
@@ -26,7 +26,16 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
+static const char kUsage[] =
+    R"USAGE(usage: -p4c_conf_file=/path/to/bf-p4c/output/program.conf -bfrt_device_config_binary_file=$PWD/bf-pipeline.pb.bin
+
+This program assembles a Stratum-bf pipeline protobuf message from the output of
+the Barefoot P4 compiler. This message can be pushed to Stratum in the
+p4_device_config field of the P4Runtime SetForwardingPipelineConfig message.
+)USAGE";
+
 static ::util::Status Main(int argc, char* argv[]) {
+  ::gflags::SetUsageMessage(kUsage);
   InitGoogle(argv[0], &argc, &argv, true);
   InitStratumLogging();
 

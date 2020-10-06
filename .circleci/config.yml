@@ -244,6 +244,35 @@ jobs:
       - *docker_push
       - *save_bazel_cache
 
+  publish-docker-bf-pipeline-builder:
+    docker:
+      - image: stratumproject/build:build
+    environment:
+      - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
+      - DOCKER_FILE: Dockerfile.device_config_builder
+      - DOCKER_IMG: stratumproject/stratum-bf-pipeline-builder
+      - CC: clang
+      - CXX: clang++
+    steps:
+      - setup_remote_docker
+      - checkout
+      - *restore_bazel_cache
+      - *set_bazelrc
+      - run:
+          name: Build pipeline builder
+          command: |
+            bazel build //stratum/hal/bin/barefoot:device_config_builder
+            cp bazel-bin/stratum/hal/bin/barefoot/device_config_builder $DOCKER_SCOPE
+      - *docker_login
+      - *docker_build
+      - run:
+          name: Test stratum-bf-pipeline-builder Docker image
+          command: |
+            docker run $DOCKER_IMG -help
+      - *docker_push
+      - *clean_bazel_cache
+      - *save_bazel_cache
+
   cpp-style-check:
     docker:
       - image: stratumproject/build:build
@@ -298,3 +327,4 @@ workflows:
       - publish-docker-stratum-bcm-opennsa:
           requires:
             - publish-docker-build
+      - publish-docker-bf-pipeline-builder
