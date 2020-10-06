@@ -15,7 +15,7 @@ namespace stratum {
 namespace hal {
 namespace barefoot {
 
-const auto& bf_config_1pipe_str = 
+const auto& bf_config_1pipe_str =
    R"pb(device: 1
         programs {
             name: "prog1"
@@ -185,7 +185,7 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
   0x00, 0x00, 0x00, 0xc0, 0x5c, 0xf9, 0x00, 0xbe, 0x32, 0xc5, 0x34, 0x00,
   0x28, 0x00, 0x00
   };
-  const unsigned int my_pipe_tgz_len = 495; // generated using ... | wc
+  const unsigned int my_pipe_tgz_len = 495;  // generated using ... | wc
   std::string my_pipe_tgz(my_pipe_tgz_bytes,
       my_pipe_tgz_bytes + my_pipe_tgz_len / sizeof my_pipe_tgz_bytes[0]);
   ASSERT_EQ(my_pipe_tgz_len, my_pipe_tgz.size());
