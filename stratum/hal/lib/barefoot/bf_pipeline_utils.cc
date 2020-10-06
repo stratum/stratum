@@ -93,7 +93,7 @@ namespace barefoot {
   }
 
   // Format 2: p4_device_config is an archive of the compiler output.
-  if(CheckArchive(config.p4_device_config()).ok()) {
+  if (CheckArchive(config.p4_device_config()).ok()) {
     // Find <prog_name>.conf file.
     nlohmann::json conf;
     {
