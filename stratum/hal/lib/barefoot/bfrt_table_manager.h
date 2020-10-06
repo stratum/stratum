@@ -77,11 +77,6 @@ class BfrtTableManager {
       const ::p4::v1::RegisterEntry& register_entry,
       WriterInterface<::p4::v1::ReadResponse>* writer) LOCKS_EXCLUDED(lock_);
 
-  // Called in the context of the register reset thread. Includes a loop to
-  // ... .
-  ::util::Status HandleRegisterReset(
-      std::vector<p4::config::v1::Register>& registers) LOCKS_EXCLUDED(lock_);
-
   // Creates a table manager instance.
   static std::unique_ptr<BfrtTableManager> CreateInstance(
       OperationMode mode, const BfrtIdMapper* bfrt_id_mapper);
@@ -148,8 +143,8 @@ class BfrtTableManager {
       const bfrt::BfRtTableKey& table_key,
       const bfrt::BfRtTableData& table_data);
 
-  // Register clear thread function.
-  static void* RegisterClearThreadFunc(void* arg);
+  ::util::Status SetupRegisterReset(const ::p4::config::v1::P4Info& p4_info)
+      EXCLUSIVE_LOCKS_REQUIRED(lock_);
 
   // Determines the mode of operation:
   // - OPERATION_MODE_STANDALONE: when Stratum stack runs independently and
@@ -166,8 +161,6 @@ class BfrtTableManager {
 
   std::vector<TimerDaemon::DescriptorPtr> register_timer_descriptors_
       GUARDED_BY(lock_);
-
-  pthread_t register_reset_thread_ GUARDED_BY(lock_);
 
   // The BfRt info, requires by some function to get runtime
   // instances like tables.
