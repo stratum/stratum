@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "absl/strings/strip.h"
+#include "google/protobuf/text_format.h"
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
 #include "nlohmann/json.hpp"
@@ -34,6 +35,7 @@ namespace {
   struct archive* a = archive_read_new();
   auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
   archive_read_support_filter_bzip2(a);
+  archive_read_support_filter_gzip(a);
   archive_read_support_filter_xz(a);
   archive_read_support_format_tar(a);
   int r = archive_read_open_memory(a, archive.c_str(), archive.size());
@@ -97,23 +99,39 @@ namespace barefoot {
     bf_config->set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
       auto p = bf_config->add_programs();
+      // name
       p->set_name(program["program-name"]);
+      // bfrt.json
       ASSIGN_OR_RETURN(
           auto bfrt_content,
           ExtractFromArchive(config.p4_device_config(), "bfrt.json"));
       p->set_bfrt(bfrt_content);
+      // p4info.txt
       *p->mutable_p4info() = config.p4info();
+      ASSIGN_OR_RETURN(
+          auto p4info_content,
+          ExtractFromArchive(config.p4_device_config(), "p4info.txt"));
+      ::p4::config::v1::P4Info p4info_from_tar;
+      CHECK_RETURN_IF_FALSE(google::protobuf::TextFormat::ParseFromString(
+          p4info_content, &p4info_from_tar)) << "Invalid p4info.txt file";
+      CHECK_RETURN_IF_FALSE(ProtoEqual(p4info_from_tar, config.p4info())) <<
+          "P4Info from P4 ForwardingPipelineConfig and archive do not match";
+      // pipes
       for (const auto& pipeline : program["p4_pipelines"]) {
         auto pipe = p->add_pipelines();
+        // pipe name
         pipe->set_name(pipeline["p4_pipeline_name"]);
+        // pipe scope
         for (const auto& scope : pipeline["pipe_scope"]) {
           pipe->add_scope(scope);
         }
+        // pipe context.json
         ASSIGN_OR_RETURN(
             const auto context_content,
             ExtractFromArchive(config.p4_device_config(),
                                absl::StrCat(pipe->name(), "/context.json")));
         pipe->set_context(context_content);
+        // pipe tofino.bin
         ASSIGN_OR_RETURN(
             const auto config_content,
             ExtractFromArchive(config.p4_device_config(),

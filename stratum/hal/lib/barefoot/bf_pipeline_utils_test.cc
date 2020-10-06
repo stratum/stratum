@@ -1,11 +1,10 @@
 // Copyright 2020-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-// Unit tests for p4_utils.
+// Unit tests for bf_pipeline_utils.
 
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 
-// #include "absl/strings/substitute.h"
 #include "absl/strings/escaping.h"
 #include "gtest/gtest.h"
 #include "p4/config/v1/p4info.pb.h"
@@ -13,136 +12,233 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
 
-// #include "stratum/glue/gtl/map_util.h"
-// #include "stratum/glue/status/status_test_util.h"
-// #include "stratum/lib/test_utils/matchers.h"
-// #include "stratum/lib/utils.h"
-// #include "stratum/public/proto/error.pb.h"
-
-// using ::testing::HasSubstr;
-
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
-TEST(ExtractBfPipelineTest, FromProto) {
-    BfPipelineConfig bf_config;
-    ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-        R"pb(device: 1
-                programs {
-                    name: "prog1"
-                    bfrt: "{json: true}"
-                    pipelines {
-                        name: "pipe1"
-                        context: "{json: true}"
-                        config: "<raw bin>"
+const auto& bf_config_1pipe_str = 
+   R"pb(device: 1
+        programs {
+            name: "prog1"
+            bfrt: "{json: true}"
+            pipelines {
+                name: "pipe1"
+                context: "{json: true}"
+                config: "<raw bin>"
+            }
+        })pb";
+
+const auto& bf_config_2pipe_str =
+   R"pb(device: 1
+        programs {
+            name: "prog1"
+            bfrt: "{json: true}"
+            pipelines {
+                name: "pipe1"
+                context: "{json: true}"
+                config: "<raw bin>"
+            }
+            pipelines {
+                name: "pipe2"
+                context: "{json: true}"
+                config: "<raw bin>"
+            }
+        })pb";
+
+const auto& bf_config_tar_str =
+   R"pb(device:1
+        programs {
+            name: "my_prog"
+            bfrt: "{\"bfrt\": 1}"
+            p4info {
+                actions {
+                    preamble {
+                        id: 3
+                        name: "my_pipe.drop"
+                        alias: "drop"
                     }
-                })pb", &bf_config));
+                }
+            }
+            pipelines {
+                name: "pipe"
+                scope: 0
+                scope: 1
+                scope: 2
+                scope: 3
+                context: "{\"ctx\":2}"
+                config: "<bin data>"
+            }
+        })pb";
 
-    std::string bf_config_bytes;
-    ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
+TEST(ExtractBfPipelineTest, FromProto) {
+  BfPipelineConfig bf_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      bf_config_1pipe_str, &bf_config));
 
-    ::p4::v1::ForwardingPipelineConfig p4_config;
-    p4_config.set_p4_device_config(bf_config_bytes);
+  std::string bf_config_bytes;
+  ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
 
-    BfPipelineConfig extracted_bf_config;
-    EXPECT_OK(ExtractBfDeviceConfig(p4_config, &extracted_bf_config));
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  p4_config.set_p4_device_config(bf_config_bytes);
 
-    EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
+  VLOG(1) << extracted_bf_config.DebugString();
+
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
 }
 
-TEST(ExtractBfPipelineTest, FromProtoMultiPipe) {
-    BfPipelineConfig bf_config;
-    ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-        R"pb(device: 1
-             programs {
-                 name: "prog1"
-                 bfrt: "{json: true}"
-                 pipelines {
-                     name: "pipe1"
-                     context: "{json: true}"
-                     config: "<raw bin>"
-                 }
-                 pipelines {
-                     name: "pipe2"
-                     context: "{json: true}"
-                     config: "<raw bin>"
-                 }
-                 })pb", &bf_config));
+TEST(ExtractBfPipelineTest, FromProto2Pipe) {
+  BfPipelineConfig bf_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      bf_config_2pipe_str, &bf_config));
 
-    std::string bf_config_bytes;
-    ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
+  std::string bf_config_bytes;
+  ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
 
-    ::p4::v1::ForwardingPipelineConfig p4_config;
-    p4_config.set_p4_device_config(bf_config_bytes);
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  p4_config.set_p4_device_config(bf_config_bytes);
 
-    BfPipelineConfig extracted_bf_config;
-    EXPECT_OK(ExtractBfDeviceConfig(p4_config, &extracted_bf_config));
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
+  VLOG(1) << extracted_bf_config.DebugString();
 
-    EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
 }
 
+TEST(ExtractBfPipelineTest, FromTarGzip) {
+  BfPipelineConfig bf_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      bf_config_tar_str, &bf_config));
 
-TEST(ExtractBfPipelineTest, FromTar) {
-    // TODO (bocon): add tar test
+  // embedded my_pipe.tgz
+  //   Generated using:
+  //     tar --sort=name --owner=root:0 --group=root:0
+  //         --mtime='UTC 2019-01-01' -c . | gzip -9 | xxd -i
+  //   Contents of my_pipe.tgz:
+  //     ./
+  //     ./bfrt.json
+  //     ./my_prog.conf
+  //     ./p4info.txt
+  //     ./pipe/
+  //     ./pipe/context.json
+  //     ./pipe/tofino.bin
+  //   Contents of my_prog.conf:
+  //     {
+  //       "p4_devices": [{
+  //         "p4_programs": [{
+  //             "p4_pipelines": [{
+  //                 "context": "/tmp/pipe/context.json",
+  //                 "pipe_scope": [
+  //                     0,
+  //                     1,
+  //                     2,
+  //                     3
+  //                 ],
+  //                 "p4_pipeline_name": "pipe",
+  //                 "config": "/tmp/pipe/tofino.bin",
+  //                 "path": "/tmp"
+  //             }],
+  //             "bfrt-config": "/tmp/bfrt.json",
+  //             "program-name": "my_prog"
+  //         }],
+  //         "device-id": 1
+  //       }]
+  //     }
+  const unsigned char my_pipe_tgz_bytes[] = {
+  0x1f, 0x8b, 0x08, 0x00, 0x98, 0xdb, 0x7c, 0x5f, 0x02, 0x03, 0xed, 0x98,
+  0x4b, 0x6e, 0x83, 0x30, 0x10, 0x86, 0x59, 0x73, 0x0a, 0xe4, 0x75, 0x02,
+  0xd8, 0x3c, 0x22, 0x45, 0x55, 0x2f, 0x52, 0x45, 0xc8, 0xe1, 0x91, 0xba,
+  0x0a, 0x18, 0x81, 0x5b, 0xa5, 0x8a, 0xb8, 0x7b, 0x6d, 0x0a, 0x49, 0xa1,
+  0x0d, 0xa8, 0x8b, 0x90, 0x96, 0xcc, 0xb7, 0x01, 0x99, 0xb1, 0x35, 0xf6,
+  0x78, 0x7e, 0x8f, 0x31, 0x2d, 0xed, 0xea, 0xd8, 0x92, 0x95, 0xe7, 0xd5,
+  0x4f, 0x49, 0xff, 0x59, 0xbf, 0x63, 0xc7, 0xc5, 0xc4, 0x23, 0xbe, 0x5f,
+  0xb7, 0xaf, 0x56, 0xd8, 0xd6, 0x0c, 0x4f, 0x9b, 0x80, 0xd7, 0x52, 0xd0,
+  0xc2, 0x30, 0xb4, 0x82, 0x73, 0x31, 0x64, 0x37, 0xf6, 0xfd, 0x9f, 0x62,
+  0x5a, 0xdb, 0xa4, 0x10, 0xe6, 0x4b, 0xc9, 0xb3, 0xab, 0xc6, 0xdf, 0x77,
+  0xdd, 0xcb, 0xf1, 0xc7, 0x4e, 0x37, 0xfe, 0x18, 0x7b, 0x0e, 0xd1, 0x0c,
+  0x1b, 0xe2, 0x7f, 0x75, 0x8e, 0x48, 0xc5, 0x1f, 0xad, 0x0d, 0x5c, 0x69,
+  0xc0, 0xfd, 0x61, 0x5a, 0xe9, 0x7b, 0x90, 0x17, 0x7c, 0x67, 0x86, 0x3c,
+  0x4b, 0x6e, 0x92, 0xff, 0xd8, 0xf5, 0x70, 0x2f, 0xff, 0x09, 0x71, 0x5c,
+  0xc8, 0xff, 0x49, 0xf2, 0x5f, 0x37, 0x24, 0x28, 0x77, 0x83, 0x28, 0x7e,
+  0x63, 0x61, 0x5c, 0x4a, 0x29, 0x78, 0xaa, 0xdb, 0x14, 0xc7, 0xd3, 0x5b,
+  0x6b, 0xa5, 0xb6, 0x4a, 0x41, 0xd3, 0xae, 0xd9, 0xcf, 0xe6, 0x9d, 0x6e,
+  0x2c, 0x8f, 0xf7, 0x2c, 0x8b, 0x7f, 0xee, 0x37, 0xdc, 0xff, 0x34, 0x8e,
+  0xdc, 0xa1, 0x22, 0x3e, 0x28, 0xb1, 0x42, 0x96, 0x48, 0x73, 0x4b, 0x0d,
+  0x6a, 0x35, 0x8d, 0xf5, 0x09, 0x86, 0x16, 0xc3, 0x03, 0xa8, 0x0e, 0x41,
+  0x19, 0xf2, 0x3c, 0x1e, 0x74, 0xa3, 0xc5, 0x5e, 0x8c, 0x9a, 0xe0, 0x71,
+  0x13, 0x32, 0x6e, 0xe2, 0x0c, 0x5a, 0x6c, 0xc6, 0x66, 0x75, 0x5e, 0xde,
+  0x20, 0xa3, 0xa9, 0x9a, 0x5b, 0x3d, 0xd3, 0xb1, 0xd5, 0x50, 0x09, 0xcf,
+  0x76, 0xdd, 0xd5, 0x14, 0x3c, 0x61, 0x19, 0x37, 0xb7, 0x6c, 0x7c, 0x2d,
+  0xa9, 0x78, 0x6e, 0xfb, 0xa2, 0x8b, 0xa6, 0x95, 0xfe, 0x8b, 0x19, 0xd5,
+  0x47, 0xd1, 0xb2, 0xe7, 0xd6, 0xa9, 0x3c, 0xb9, 0xe0, 0x10, 0x6a, 0x76,
+  0xe4, 0xb2, 0x9d, 0x7a, 0xa3, 0x67, 0xdf, 0x7d, 0xea, 0xfa, 0xd2, 0xf3,
+  0x01, 0x7d, 0x6e, 0xff, 0x25, 0x8b, 0xd4, 0x59, 0xa8, 0x77, 0xfb, 0x6c,
+  0xf4, 0x4a, 0x9f, 0xad, 0xfe, 0xe7, 0x2e, 0xcb, 0x12, 0x6e, 0x8a, 0xc3,
+  0xd5, 0xe4, 0x6d, 0xac, 0xfe, 0x93, 0x72, 0xdf, 0xaf, 0xff, 0x7c, 0xd7,
+  0x01, 0xfd, 0x9f, 0x02, 0x1a, 0x0a, 0xc6, 0xb3, 0xb2, 0x96, 0xde, 0xbc,
+  0x88, 0x69, 0xba, 0xdd, 0xc7, 0x8d, 0x0e, 0xb3, 0x68, 0xdd, 0x28, 0x93,
+  0x4a, 0xad, 0x26, 0xb3, 0xa4, 0x48, 0x98, 0x51, 0xc1, 0x9b, 0x94, 0xa7,
+  0x7b, 0x46, 0x4b, 0xf9, 0xa5, 0x6d, 0xa9, 0xe6, 0x9b, 0x28, 0xf3, 0xcd,
+  0x7f, 0xa5, 0xfb, 0x7f, 0xeb, 0xfe, 0x8f, 0xa5, 0x5c, 0x78, 0x70, 0xff,
+  0x9f, 0x30, 0xfe, 0x5f, 0xab, 0xa8, 0x1b, 0xdc, 0xff, 0xfb, 0xf5, 0xbf,
+  0x43, 0x30, 0xd4, 0xff, 0x13, 0xdd, 0xff, 0x43, 0x71, 0x40, 0x6b, 0x02,
+  0xb7, 0xff, 0xbb, 0xd6, 0xff, 0x73, 0xdd, 0x7f, 0x93, 0xff, 0x7f, 0xfd,
+  0xfa, 0x8f, 0xf8, 0xc4, 0x87, 0xfc, 0x9f, 0x82, 0x07, 0x19, 0x72, 0x23,
+  0xa2, 0x82, 0x3e, 0x42, 0x2e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0xc0, 0x5c, 0xf9, 0x00, 0xbe, 0x32, 0xc5, 0x34, 0x00,
+  0x28, 0x00, 0x00
+  };
+  const unsigned int my_pipe_tgz_len = 495; // generated using ... | wc
+  std::string my_pipe_tgz(my_pipe_tgz_bytes,
+      my_pipe_tgz_bytes + my_pipe_tgz_len / sizeof my_pipe_tgz_bytes[0]);
+  ASSERT_EQ(my_pipe_tgz_len, my_pipe_tgz.size());
+
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  p4_config.set_p4_device_config(my_pipe_tgz);
+  ASSERT_EQ(my_pipe_tgz_len, p4_config.p4_device_config().size());
+  *(p4_config.mutable_p4info()) = bf_config.programs()[0].p4info();
+
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_OK(ExtractBfPipelineConfig(p4_config, &extracted_bf_config));
+  VLOG(1) << extracted_bf_config.DebugString();
+
+  EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
 }
 
 TEST(ExtractBfPipelineTest, RandomBytes) {
-    ::p4::v1::ForwardingPipelineConfig p4_config;
-    p4_config.set_p4_device_config("<random vendor blob>");
+  ::p4::v1::ForwardingPipelineConfig p4_config;
+  p4_config.set_p4_device_config("<random vendor blob>");
 
-    BfPipelineConfig extracted_bf_config;
-    EXPECT_FALSE(ExtractBfDeviceConfig(p4_config, &extracted_bf_config).ok());
+  BfPipelineConfig extracted_bf_config;
+  EXPECT_FALSE(ExtractBfPipelineConfig(p4_config, &extracted_bf_config).ok());
 }
 
 TEST(BfPipelineConvertTest, ToLegacyBfPiFormat) {
-    BfPipelineConfig bf_config;
-    ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-        R"pb(device: 1
-             programs {
-                 name: "prog1"
-                 bfrt: "{json: true}"
-                 pipelines {
-                     name: "pipe1"
-                     context: "{json: true}"
-                     config: "<raw bin>"
-                 }
-             })pb", &bf_config));
+  BfPipelineConfig bf_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      bf_config_1pipe_str, &bf_config));
 
-    std::string expected_config;
-    absl::CUnescape(
-        "\\x5\\0\\0\\0prog1\\x9\\0\\0\\0<raw bin>\\xc\\0\\0\\0{json: true}",
-        &expected_config);
-    LOG(INFO) << absl::CHexEscape(expected_config);
+  std::string expected_config;
+  absl::CUnescape(
+      "\\x5\\0\\0\\0prog1\\x9\\0\\0\\0<raw bin>\\xc\\0\\0\\0{json: true}",
+      &expected_config);
+  LOG(INFO) << absl::CHexEscape(expected_config);
 
-    std::string extracted_config;
-    EXPECT_OK(BfPipelineConfigToPiConfig(bf_config, &extracted_config));
+  std::string extracted_config;
+  EXPECT_OK(BfPipelineConfigToPiConfig(bf_config, &extracted_config));
 
-    LOG(INFO) << absl::CHexEscape(extracted_config);
-    EXPECT_EQ(expected_config, extracted_config);
+  LOG(INFO) << absl::CHexEscape(extracted_config);
+  EXPECT_EQ(expected_config, extracted_config);
 }
 
 TEST(BfPipelineConvertTest, MultiPipeFail) {
-    BfPipelineConfig bf_config;
-    ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-        R"pb(device: 1
-             programs {
-                 name: "prog1"
-                 bfrt: "{json: true}"
-                 pipelines {
-                     name: "pipe1"
-                     context: "{json: true}"
-                     config: "<raw bin>"
-                }
-                pipelines {
-                     name: "pipe2"
-                     context: "{json: true}"
-                     config: "<raw bin>"
-                }
-             })pb", &bf_config));
+  BfPipelineConfig bf_config;
+  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
+      bf_config_2pipe_str, &bf_config));
 
-    std::string extracted_config;
-    EXPECT_FALSE(BfPipelineConfigToPiConfig(bf_config, &extracted_config).ok());
+  std::string extracted_config;
+  EXPECT_FALSE(BfPipelineConfigToPiConfig(bf_config, &extracted_config).ok());
 }
 
 }  // namespace barefoot
