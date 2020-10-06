@@ -243,7 +243,15 @@ You can use the device config builder to generate it:
 ```bash
 bazel run //stratum/hal/bin/barefoot:device_config_builder -- \
     -p4c_conf_file=/path/to/bf-p4c/compiler/output.conf \
-    -bfrt_device_config_binary_file=$PWD/device_config.pb.bin
+    -bf_pipeline_config_binary_file=$PWD/device_config.pb.bin
+```
+
+The tool is also available as a [Docker image](https://hub.docker.com/repository/docker/stratumproject/stratum-bf-pipeline-builder):
+
+```bash
+docker run --rm -v $PWD:$PWD stratumproject/stratum-bf-pipeline-builder:latest \
+    -p4c_conf_file=./output.conf \
+    -bf_pipeline_config_binary_file=./device_config.pb.bin
 ```
 
 The output goes into the `p4_device_config` field of the P4Runtime

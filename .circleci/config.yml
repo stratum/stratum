@@ -268,7 +268,7 @@ jobs:
       - run:
           name: Test stratum-bf-pipeline-builder Docker image
           command: |
-            docker run $DOCKER_IMG -help
+            docker run $DOCKER_IMG -version
       - *docker_push
       - *clean_bazel_cache
       - *save_bazel_cache
@@ -328,3 +328,5 @@ workflows:
           requires:
             - publish-docker-build
       - publish-docker-bf-pipeline-builder
+          # requires:
+          #   - publish-docker-build

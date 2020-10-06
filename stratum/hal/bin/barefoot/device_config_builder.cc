@@ -17,9 +17,9 @@
 
 DEFINE_string(p4c_conf_file, "",
               "Path to the JSON output .conf file of the bf-p4c compiler");
-DEFINE_string(bfrt_device_config_text_file, "bfrt_device_config.pb.txt",
+DEFINE_string(bf_pipeline_config_text_file, "bf_pipeline_config.pb.txt",
               "Path to text file for BfPipelineConfig output");
-DEFINE_string(bfrt_device_config_binary_file, "bfrt_device_config.pb.bin",
+DEFINE_string(bf_pipeline_config_binary_file, "bf_pipeline_config.pb.bin",
               "Path to file for serialized BfPipelineConfig output");
 
 namespace stratum {
@@ -27,7 +27,7 @@ namespace hal {
 namespace barefoot {
 
 static const char kUsage[] =
-    R"USAGE(usage: -p4c_conf_file=/path/to/bf-p4c/output/program.conf -bfrt_device_config_binary_file=$PWD/bf-pipeline.pb.bin
+    R"USAGE(usage: -p4c_conf_file=/path/to/bf-p4c/output/program.conf -bf_pipeline_config_binary_file=$PWD/bf-pipeline.pb.bin
 
 This program assembles a Stratum-bf pipeline protobuf message from the output of
 the Barefoot P4 compiler. This message can be pushed to Stratum in the
@@ -53,15 +53,15 @@ static ::util::Status Main(int argc, char* argv[]) {
 
   // Translate compiler output JSON conf to protobuf.
   // Taken from bfrt_node.cc
-  BfPipelineConfig bfrt_config;
+  BfPipelineConfig bf_config;
   try {
     CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
         << "Stratum only supports single devices.";
     // Only support single devices for now.
     const auto& device = conf["p4_devices"][0];
-    bfrt_config.set_device(device["device-id"]);
+    bf_config.set_device(device["device-id"]);
     for (const auto& program : device["p4_programs"]) {
-      auto p = bfrt_config.add_programs();
+      auto p = bf_config.add_programs();
       p->set_name(program["program-name"]);
       LOG(INFO) << "Found P4 program: " << p->name();
       std::string bfrt_content;
@@ -93,9 +93,9 @@ static ::util::Status Main(int argc, char* argv[]) {
   }
 
   RETURN_IF_ERROR(
-      WriteProtoToTextFile(bfrt_config, FLAGS_bfrt_device_config_text_file));
+      WriteProtoToTextFile(bf_config, FLAGS_bf_pipeline_config_text_file));
   RETURN_IF_ERROR(
-      WriteProtoToBinFile(bfrt_config, FLAGS_bfrt_device_config_binary_file));
+      WriteProtoToBinFile(bf_config, FLAGS_bf_pipeline_config_binary_file));
 
   return ::util::OkStatus();
 }
