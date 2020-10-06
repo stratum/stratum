@@ -1,27 +1,17 @@
 // Copyright 2012-present Open Networking Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef STRATUM_HAL_LIB_BAREFOOT_BF_PIPELINE_UTIL_H_
-#define STRATUM_HAL_LIB_BAREFOOT_BF_PIPELINE_UTIL_H_
-
 #include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 
 #include <arpa/inet.h>
-#include <unistd.h>
-
-#include <memory>
 #include <string>
-#include <vector>
 
 #include "absl/strings/strip.h"
-#include "google/protobuf/text_format.h"
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
 #include "nlohmann/json.hpp"
-#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
-#include "stratum/hal/lib/barefoot/bf.pb.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
 #include "stratum/public/lib/error.h"
@@ -123,8 +113,9 @@ namespace barefoot {
           auto p4info_content,
           ExtractFromArchive(config.p4_device_config(), "p4info.txt"));
       ::p4::config::v1::P4Info p4info_from_tar;
-      CHECK_RETURN_IF_FALSE(google::protobuf::TextFormat::ParseFromString(
-          p4info_content, &p4info_from_tar)) << "Invalid p4info.txt file";
+      RETURN_IF_ERROR_WITH_APPEND(
+        ParseProtoFromString(p4info_content, &p4info_from_tar)) <<
+          "Invalid p4info.txt file";
       CHECK_RETURN_IF_FALSE(ProtoEqual(p4info_from_tar, config.p4info())) <<
           "P4Info from P4 ForwardingPipelineConfig and archive do not match";
       // pipes
@@ -191,5 +182,3 @@ namespace barefoot {
 }  // namespace barefoot
 }  // namespace hal
 }  // namespace stratum
-
-#endif  // STRATUM_HAL_LIB_BAREFOOT_BF_PIPELINE_UTIL_H_

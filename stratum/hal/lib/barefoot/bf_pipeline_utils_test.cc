@@ -7,8 +7,7 @@
 
 #include "absl/strings/escaping.h"
 #include "gtest/gtest.h"
-#include "p4/config/v1/p4info.pb.h"
-#include "google/protobuf/text_format.h"
+#include "p4/v1/p4runtime.pb.h"
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
 
@@ -72,8 +71,7 @@ const auto& bf_config_tar_str =
 
 TEST(ExtractBfPipelineTest, FromProto) {
   BfPipelineConfig bf_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-      bf_config_1pipe_str, &bf_config));
+  ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
 
   std::string bf_config_bytes;
   ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
@@ -90,8 +88,7 @@ TEST(ExtractBfPipelineTest, FromProto) {
 
 TEST(ExtractBfPipelineTest, FromProto2Pipe) {
   BfPipelineConfig bf_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-      bf_config_2pipe_str, &bf_config));
+  ASSERT_OK(ParseProtoFromString(bf_config_2pipe_str, &bf_config));
 
   std::string bf_config_bytes;
   ASSERT_TRUE(bf_config.SerializeToString(&bf_config_bytes));
@@ -108,8 +105,7 @@ TEST(ExtractBfPipelineTest, FromProto2Pipe) {
 
 TEST(ExtractBfPipelineTest, FromTarGzip) {
   BfPipelineConfig bf_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-      bf_config_tar_str, &bf_config));
+  ASSERT_OK(ParseProtoFromString(bf_config_tar_str, &bf_config));
 
   // embedded my_pipe.tgz
   //   Generated using:
@@ -216,8 +212,7 @@ TEST(ExtractBfPipelineTest, RandomBytes) {
 
 TEST(BfPipelineConvertTest, ToLegacyBfPiFormat) {
   BfPipelineConfig bf_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-      bf_config_1pipe_str, &bf_config));
+  ASSERT_OK(ParseProtoFromString(bf_config_1pipe_str, &bf_config));
 
   std::string expected_config;
   absl::CUnescape(
@@ -234,8 +229,7 @@ TEST(BfPipelineConvertTest, ToLegacyBfPiFormat) {
 
 TEST(BfPipelineConvertTest, MultiPipeFail) {
   BfPipelineConfig bf_config;
-  ASSERT_TRUE(google::protobuf::TextFormat::ParseFromString(
-      bf_config_2pipe_str, &bf_config));
+  ASSERT_OK(ParseProtoFromString(bf_config_2pipe_str, &bf_config));
 
   std::string extracted_config;
   EXPECT_FALSE(BfPipelineConfigToPiConfig(bf_config, &extracted_config).ok());

@@ -10,8 +10,6 @@
 #include "stratum/glue/status/status.h"
 #include "stratum/hal/lib/barefoot/bf.pb.h"
 
-#include "stratum/glue/status/status_macros.h"
-
 namespace stratum {
 namespace hal {
 namespace barefoot {

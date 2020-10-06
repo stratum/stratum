@@ -180,7 +180,6 @@ stratum_cc_library(
         "//stratum/glue/gtl:cleanup",
         "//stratum/glue/status",
         "//stratum/glue/status:status_macros",
-        "//stratum/lib:constants",
         "//stratum/lib:macros",
         "//stratum/lib:utils",
         "//stratum/public/lib:error",
@@ -199,9 +198,10 @@ stratum_cc_test(
     deps = [
         ":bf_pipeline_utils",
         ":test_main",
-        "@com_google_googletest//:gtest_main",
-        "//stratum/lib/test_utils:matchers",
         "//stratum/glue/status:status_test_util",
+        "//stratum/lib:utils",
+        "@com_github_p4lang_p4runtime//:p4runtime_cc_proto",
+        "@com_google_absl//absl/strings",
     ],
 )
 
