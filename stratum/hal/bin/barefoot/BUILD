@@ -12,9 +12,9 @@ package(
 )
 
 stratum_cc_binary(
-    name = "device_config_builder",
+    name = "bf_pipeline_builder",
     srcs = [
-        "device_config_builder.cc",
+        "bf_pipeline_builder.cc",
     ],
     arches = HOST_ARCHES,
     deps = [
@@ -61,7 +61,7 @@ pkg_tar(
     name = "stratum_binaries",
     srcs = [
         "deb/start-stratum.sh",
-        ":device_config_builder",
+        ":bf_pipeline_builder",
         ":stratum_bf",
     ],
     mode = "0755",

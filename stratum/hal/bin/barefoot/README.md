@@ -233,7 +233,7 @@ journalctl -u stratum_bf.service
 
 See [gNMI CLI](/stratum/tools/gnmi/README.md)
 
-## P4DeviceConfig format and the DeviceConfigBuilder
+## P4DeviceConfig format and the BfPipelineBuilder
 
 Stratum supports two different device configuration formats for pushing the P4
 pipeline over P4Runtime. The older binary packing used by [PI](https://github.com/p4lang/PI)
@@ -241,7 +241,7 @@ and a newer more flexible protobuf based format ([bf.proto](stratum/hal/lib/bare
 You can use the device config builder to generate it:
 
 ```bash
-bazel run //stratum/hal/bin/barefoot:device_config_builder -- \
+bazel run //stratum/hal/bin/barefoot:bf_pipeline_builder -- \
     -p4c_conf_file=/path/to/bf-p4c/compiler/output.conf \
     -bf_pipeline_config_binary_file=$PWD/device_config.pb.bin
 ```

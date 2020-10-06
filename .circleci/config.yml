@@ -249,7 +249,7 @@ jobs:
       - image: stratumproject/build:build
     environment:
       - DOCKER_SCOPE: stratum/hal/bin/barefoot/docker
-      - DOCKER_FILE: Dockerfile.device_config_builder
+      - DOCKER_FILE: Dockerfile.bf_pipeline_builder
       - DOCKER_IMG: stratumproject/stratum-bf-pipeline-builder
       - CC: clang
       - CXX: clang++
@@ -261,8 +261,8 @@ jobs:
       - run:
           name: Build pipeline builder
           command: |
-            bazel build //stratum/hal/bin/barefoot:device_config_builder
-            cp bazel-bin/stratum/hal/bin/barefoot/device_config_builder $DOCKER_SCOPE
+            bazel build //stratum/hal/bin/barefoot:bf_pipeline_builder
+            cp bazel-bin/stratum/hal/bin/barefoot/bf_pipeline_builder $DOCKER_SCOPE
       - *docker_login
       - *docker_build
       - run:
