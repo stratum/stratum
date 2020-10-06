@@ -84,7 +84,7 @@ TEST(ExtractBfPipelineTest, FromProtoMultiPipe) {
 
 
 TEST(ExtractBfPipelineTest, FromTar) {
-    //TODO
+    // TODO (bocon): add tar test
 }
 
 TEST(ExtractBfPipelineTest, RandomBytes) {
