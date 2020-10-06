@@ -198,6 +198,10 @@ stratum_cc_test(
     ],
     deps = [
         ":bf_pipeline_utils",
+        ":test_main",
+        "@com_google_googletest//:gtest_main",
+        "//stratum/lib/test_utils:matchers",
+        "//stratum/glue/status:status_test_util",
     ],
 )
 
