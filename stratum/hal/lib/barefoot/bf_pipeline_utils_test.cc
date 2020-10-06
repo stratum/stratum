@@ -223,12 +223,12 @@ TEST(BfPipelineConvertTest, ToLegacyBfPiFormat) {
   absl::CUnescape(
       "\\x5\\0\\0\\0prog1\\x9\\0\\0\\0<raw bin>\\xc\\0\\0\\0{json: true}",
       &expected_config);
-  LOG(INFO) << absl::CHexEscape(expected_config);
+  VLOG(1) << absl::CHexEscape(expected_config);
 
   std::string extracted_config;
   EXPECT_OK(BfPipelineConfigToPiConfig(bf_config, &extracted_config));
+  VLOG(1) << absl::CHexEscape(extracted_config);
 
-  LOG(INFO) << absl::CHexEscape(extracted_config);
   EXPECT_EQ(expected_config, extracted_config);
 }
 
