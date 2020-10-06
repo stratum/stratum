@@ -19,7 +19,6 @@
 #include "stratum/hal/lib/pi/pi_node.h"
 #include "stratum/lib/constants.h"
 #include "stratum/lib/macros.h"
-#include "stratum/lib/utils.h"
 
 using ::stratum::hal::pi::PINode;
 
