@@ -92,6 +92,11 @@ class BfrtNode final {
            ::bfrt::BfRtDevMgr* bfrt_device_manager,
            BfrtIdMapper* bfrt_id_mapper, int device_id);
 
+  // Extract and verify p4_device_config
+  ::util::Status DoVerifyForwardingPipelineConfig(
+      const ::p4::v1::ForwardingPipelineConfig& config,
+      BfPipelineConfig* bf_config) const;
+
   // Write extern entries like ActionProfile, DirectCounter, PortMetadata
   ::util::Status WriteExternEntry(
       std::shared_ptr<bfrt::BfRtSession> bfrt_session,
