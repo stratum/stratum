@@ -10,14 +10,9 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
-#include "absl/strings/strip.h"
 #include "bf_rt/bf_rt_init.hpp"
-#include "libarchive/archive.h"
-#include "libarchive/archive_entry.h"
-#include "nlohmann/json.hpp"
-#include "p4/config/v1/p4info.pb.h"
-#include "stratum/glue/gtl/cleanup.h"
 #include "stratum/glue/status/status_macros.h"
+#include "stratum/hal/lib/barefoot/bf_pipeline_utils.h"
 #include "stratum/hal/lib/barefoot/bfrt_constants.h"
 #include "stratum/lib/macros.h"
 #include "stratum/lib/utils.h"
@@ -32,34 +27,6 @@ DEFINE_string(bfrt_sde_config_dir, "/var/run/stratum/bfrt_config",
               "The dir used by the SDE to load the device configuration.");
 
 namespace stratum {
-namespace {
-// Helper function to extract the contents of first file named filename from
-// an in-memory archive.
-::util::StatusOr<std::string> ExtractFromArchive(const std::string& archive,
-                                                 const std::string& filename) {
-  struct archive* a = archive_read_new();
-  auto cleanup = gtl::MakeCleanup([&a]() { archive_read_free(a); });
-  archive_read_support_filter_bzip2(a);
-  archive_read_support_filter_xz(a);
-  archive_read_support_format_tar(a);
-  int r = archive_read_open_memory(a, archive.c_str(), archive.size());
-  CHECK_RETURN_IF_FALSE(r == ARCHIVE_OK) << "Failed to read archive";
-  struct archive_entry* entry;
-  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-    std::string path_name = archive_entry_pathname(entry);
-    if (absl::StripSuffix(path_name, filename) != path_name) {
-      VLOG(2) << "Found file: " << path_name;
-      std::string content;
-      content.resize(archive_entry_size(entry));
-      CHECK_RETURN_IF_FALSE(archive_read_data(a, &content[0], content.size()) ==
-                            content.size());
-      return content;
-    }
-  }
-  return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
-}
-}  // namespace
-
 namespace hal {
 namespace barefoot {
 BfrtNode::~BfrtNode() = default;
@@ -97,83 +64,24 @@ BfrtNode::~BfrtNode() = default;
     const ::p4::v1::ForwardingPipelineConfig& config) {
   absl::WriterMutexLock l(&lock_);
   RETURN_IF_ERROR(VerifyForwardingPipelineConfig(config));
-  uint64 cookie = 0;
-  if (config.has_cookie()) {
-    cookie = config.cookie().cookie();
-  }
+  BfPipelineConfig bf_config;
+  RETURN_IF_ERROR(ExtractBfPipelineConfig(config, &bf_config));
+  VLOG(2) << bf_config.DebugString();
 
-  // Try parsing as BfPipelineConfig.
-  {
-    BfPipelineConfig pipeline_config;
-    // The pipeline config is stored as raw bytes in the p4_device_config.
-    if (pipeline_config.ParseFromString(config.p4_device_config())) {
-      VLOG(1) << "Pipeline is in BfPipelineConfig format.";
-      BfrtDeviceConfig bfrt_config;
-      auto program = bfrt_config.add_programs();
-      program->set_name(pipeline_config.p4_name());
-      program->set_bfrt(pipeline_config.bfruntime_info());
-      *program->mutable_p4info() = config.p4info();
-      for (const auto& profile : pipeline_config.profiles()) {
-        auto pipeline = program->add_pipelines();
-        pipeline->set_name(profile.profile_name());
-        pipeline->set_context(profile.context());
-        pipeline->set_config(profile.binary());
-        *pipeline->mutable_scope() = profile.pipe_scope();
-      }
-      bfrt_config_ = bfrt_config;
-      VLOG(2) << bfrt_config_.DebugString();
-      return ::util::OkStatus();
-    }
+  // Create internal BfrtDeviceConfig.
+  BfrtDeviceConfig bfrt_config;
+  auto program = bfrt_config.add_programs();
+  program->set_name(bf_config.p4_name());
+  program->set_bfrt(bf_config.bfruntime_info());
+  *program->mutable_p4info() = config.p4info();
+  for (const auto& profile : bf_config.profiles()) {
+    auto pipeline = program->add_pipelines();
+    pipeline->set_name(profile.profile_name());
+    pipeline->set_context(profile.context());
+    pipeline->set_config(profile.binary());
+    *pipeline->mutable_scope() = profile.pipe_scope();
   }
-
-  // Find <prog_name>.conf file
-  nlohmann::json conf;
-  {
-    ASSIGN_OR_RETURN(auto conf_content,
-                     ExtractFromArchive(config.p4_device_config(), ".conf"));
-    conf = nlohmann::json::parse(conf_content, nullptr, false);
-    CHECK_RETURN_IF_FALSE(!conf.is_discarded()) << "Failed to parse .conf";
-    VLOG(1) << ".conf content: " << conf.dump();
-  }
-
-  // Translate JSON conf to protobuf.
-  try {
-    BfrtDeviceConfig bfrt_config;
-    CHECK_RETURN_IF_FALSE(conf["p4_devices"].size() == 1)
-        << "Stratum only supports single devices.";
-    // Only support single devices for now
-    const auto& device = conf["p4_devices"][0];
-    for (const auto& program : device["p4_programs"]) {
-      auto p = bfrt_config.add_programs();
-      p->set_name(program["program-name"]);
-      ASSIGN_OR_RETURN(
-          auto bfrt_content,
-          ExtractFromArchive(config.p4_device_config(), "bfrt.json"));
-      p->set_bfrt(bfrt_content);
-      *p->mutable_p4info() = config.p4info();
-      for (const auto& pipeline : program["p4_pipelines"]) {
-        auto pipe = p->add_pipelines();
-        pipe->set_name(pipeline["p4_pipeline_name"]);
-        for (const auto& scope : pipeline["pipe_scope"]) {
-          pipe->add_scope(scope);
-        }
-        ASSIGN_OR_RETURN(
-            const auto context_content,
-            ExtractFromArchive(config.p4_device_config(),
-                               absl::StrCat(pipe->name(), "/context.json")));
-        pipe->set_context(context_content);
-        ASSIGN_OR_RETURN(
-            const auto config_content,
-            ExtractFromArchive(config.p4_device_config(),
-                               absl::StrCat(pipe->name(), "/tofino.bin")));
-        pipe->set_config(config_content);
-      }
-    }
-    bfrt_config_ = bfrt_config;
-  } catch (nlohmann::json::exception& e) {
-    return MAKE_ERROR(ERR_INTERNAL) << e.what();
-  }
-
+  bfrt_config_ = bfrt_config;
   VLOG(2) << bfrt_config_.DebugString();
 
   return ::util::OkStatus();
@@ -283,6 +191,8 @@ BfrtNode::~BfrtNode() = default;
   CHECK_RETURN_IF_FALSE(config.has_p4info()) << "Missing P4 info";
   CHECK_RETURN_IF_FALSE(!config.p4_device_config().empty())
       << "Missing P4 device config";
+  BfPipelineConfig bf_config;
+  RETURN_IF_ERROR(ExtractBfPipelineConfig(config, &bf_config));
   RETURN_IF_ERROR(bfrt_table_manager_->VerifyForwardingPipelineConfig(config));
   return ::util::OkStatus();
 }
