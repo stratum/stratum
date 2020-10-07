@@ -233,7 +233,7 @@ journalctl -u stratum_bf.service
 
 See [gNMI CLI](/stratum/tools/gnmi/README.md)
 
-## P4DeviceConfig format and the BfPipelineBuilder
+## Stratum-Bf P4DeviceConfig format and the BfPipelineBuilder
 
 Stratum supports two different device configuration formats for pushing the P4
 pipeline over P4Runtime. The older binary packing used by [PI](https://github.com/p4lang/PI)
