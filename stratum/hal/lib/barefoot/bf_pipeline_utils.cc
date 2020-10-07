@@ -22,6 +22,9 @@ DEFINE_bool(incompatible_enable_p4_device_config_tar, false,
 
 
 namespace stratum {
+namespace hal {
+namespace barefoot {
+
 namespace {
 // Helper function to check if a binary string is a valid archive.
 bool IsArchive(const std::string& archive) {
@@ -61,9 +64,7 @@ bool IsArchive(const std::string& archive) {
   }
   return MAKE_ERROR(ERR_ENTRY_NOT_FOUND) << "File not found: " << filename;
 }
-}  // namespace
 
-namespace {
 // Helper function to convert a uint32 to a little-endian byte string.
 std::string Uint32ToLeByteStream(uint32 val) {
   uint32 tmp = (htonl(1) == 1) ? __builtin_bswap32(val) : val;
@@ -72,9 +73,6 @@ std::string Uint32ToLeByteStream(uint32 val) {
   return bytes;
 }
 }  // namespace
-
-namespace hal {
-namespace barefoot {
 
 ::util::Status ExtractBfPipelineConfig(
     const ::p4::v1::ForwardingPipelineConfig& config,

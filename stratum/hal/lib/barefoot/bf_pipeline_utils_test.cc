@@ -12,13 +12,14 @@
 #include "stratum/glue/status/status_test_util.h"
 #include "stratum/lib/utils.h"
 
+using gflags::FlagSaver;
 DECLARE_bool(incompatible_enable_p4_device_config_tar);
 
 namespace stratum {
 namespace hal {
 namespace barefoot {
 
-static constexpr auto& bf_config_1pipe_str =
+static constexpr char bf_config_1pipe_str[] =
    R"PROTO(device: 1
         programs {
             name: "prog1"
@@ -30,7 +31,7 @@ static constexpr auto& bf_config_1pipe_str =
             }
         })PROTO";
 
-static constexpr auto& bf_config_2pipe_str =
+static constexpr char bf_config_2pipe_str[] =
    R"PROTO(device: 1
         programs {
             name: "prog1"
@@ -47,7 +48,7 @@ static constexpr auto& bf_config_2pipe_str =
             }
         })PROTO";
 
-static constexpr auto& bf_config_tar_str =
+static constexpr char bf_config_tar_str[] =
    R"PROTO(device:1
         programs {
             name: "my_prog"
@@ -184,9 +185,10 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
   ::p4::v1::ForwardingPipelineConfig p4_config;
   p4_config.set_p4_device_config(
     std::string(my_pipe_tgz, sizeof(my_pipe_tgz)));
-  *(p4_config.mutable_p4info()) = bf_config.programs()[0].p4info();
+  *p4_config.mutable_p4info() = bf_config.programs(0).p4info();
 
-  bool tar_flag = FLAGS_incompatible_enable_p4_device_config_tar;
+  // Reverts FLAGS_incompatible_enable_p4_device_config_tar to default.
+  FlagSaver flag_saver_;
 
   BfPipelineConfig extracted_bf_config;
   FLAGS_incompatible_enable_p4_device_config_tar = false;
@@ -197,8 +199,6 @@ TEST(ExtractBfPipelineTest, FromTarGzip) {
   VLOG(1) << extracted_bf_config.DebugString();
 
   EXPECT_TRUE(ProtoEqual(bf_config, extracted_bf_config));
-
-  FLAGS_incompatible_enable_p4_device_config_tar = tar_flag;
 }
 
 TEST(ExtractBfPipelineTest, RandomBytes) {

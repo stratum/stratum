@@ -193,9 +193,7 @@ stratum_cc_library(
 
 stratum_cc_test(
     name = "bf_pipeline_utils_test",
-    srcs = [
-        "bf_pipeline_utils_test.cc",
-    ],
+    srcs = ["bf_pipeline_utils_test.cc"],
     deps = [
         ":bf_pipeline_utils",
         ":test_main",
