@@ -10,6 +10,8 @@
 FROM stratumproject/build:build as builder
 
 ENV BUILD_DEPS \
+    python-setuptools \
+    python-pip \
     python3-setuptools \
     python3-pip \
     help2man
@@ -88,6 +90,7 @@ ENV RUNTIME_DEPS \
     iperf \
     arping \
     telnet \
+    python-pexpect \
     python3-pexpect \
     tcpdump \
     screen \
